@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.6  2001/08/15 10:26:14  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.5  2001/05/31 16:18:15  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -202,8 +205,8 @@ PortableServer::_objref_AdapterActivator::~_objref_AdapterActivator() {}
 
 
 PortableServer::_objref_AdapterActivator::_objref_AdapterActivator(omniIOR* ior,
-         omniIdentity* id, omniLocalIdentity* lid)
- : omniObjRef(PortableServer::AdapterActivator::_PD_repoId, ior, id, lid, 1)
+         omniIdentity* id)
+ : omniObjRef(PortableServer::AdapterActivator::_PD_repoId, ior, id, 1)
 {
   _PR_setobj(this);
 }
@@ -263,10 +266,9 @@ PortableServer::_pof_AdapterActivator::~_pof_AdapterActivator() {}
 
 
 omniObjRef*
-PortableServer::_pof_AdapterActivator::newObjRef(omniIOR* ior,
-               omniIdentity* id, omniLocalIdentity* lid)
+PortableServer::_pof_AdapterActivator::newObjRef(omniIOR* ior,omniIdentity* id)
 {
-  return new PortableServer::_objref_AdapterActivator(ior, id, lid);
+  return new PortableServer::_objref_AdapterActivator(ior, id);
 }
 
 
@@ -373,8 +375,8 @@ PortableServer::_objref_ServantManager::~_objref_ServantManager() {}
 
 
 PortableServer::_objref_ServantManager::_objref_ServantManager(omniIOR* ior,
-         omniIdentity* id, omniLocalIdentity* lid)
- : omniObjRef(PortableServer::ServantManager::_PD_repoId, ior, id, lid, 1)
+         omniIdentity* id)
+ : omniObjRef(PortableServer::ServantManager::_PD_repoId, ior, id, 1)
 {
   _PR_setobj(this);
 }
@@ -396,10 +398,9 @@ PortableServer::_pof_ServantManager::~_pof_ServantManager() {}
 
 
 omniObjRef*
-PortableServer::_pof_ServantManager::newObjRef(omniIOR* ior,
-               omniIdentity* id, omniLocalIdentity* lid)
+PortableServer::_pof_ServantManager::newObjRef(omniIOR* ior, omniIdentity* id)
 {
-  return new PortableServer::_objref_ServantManager(ior, id, lid);
+  return new PortableServer::_objref_ServantManager(ior, id);
 }
 
 
@@ -506,9 +507,9 @@ PortableServer::_objref_ServantActivator::~_objref_ServantActivator() {}
 
 
 PortableServer::_objref_ServantActivator::_objref_ServantActivator(omniIOR* ior,
-         omniIdentity* id, omniLocalIdentity* lid)
- : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id, lid),
-   omniObjRef(PortableServer::ServantActivator::_PD_repoId, ior, id, lid, 1)
+         omniIdentity* id)
+ : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id),
+   omniObjRef(PortableServer::ServantActivator::_PD_repoId, ior, id, 1)
 {
   _PR_setobj(this);
 }
@@ -611,9 +612,9 @@ PortableServer::_pof_ServantActivator::~_pof_ServantActivator() {}
 
 omniObjRef*
 PortableServer::_pof_ServantActivator::newObjRef(omniIOR* ior,
-               omniIdentity* id, omniLocalIdentity* lid)
+						 omniIdentity* id)
 {
-  return new PortableServer::_objref_ServantActivator(ior, id, lid);
+  return new PortableServer::_objref_ServantActivator(ior, id);
 }
 
 
@@ -724,9 +725,9 @@ PortableServer::_objref_ServantLocator::~_objref_ServantLocator() {}
 
 
 PortableServer::_objref_ServantLocator::_objref_ServantLocator(omniIOR* ior,
-         omniIdentity* id, omniLocalIdentity* lid)
- : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id, lid),
-   omniObjRef(PortableServer::ServantLocator::_PD_repoId, ior, id, lid, 1)
+         omniIdentity* id)
+ : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id),
+   omniObjRef(PortableServer::ServantLocator::_PD_repoId, ior, id, 1)
 {
   _PR_setobj(this);
 }
@@ -832,10 +833,9 @@ PortableServer::_pof_ServantLocator::~_pof_ServantLocator() {}
 
 
 omniObjRef*
-PortableServer::_pof_ServantLocator::newObjRef(omniIOR* ior,
-               omniIdentity* id, omniLocalIdentity* lid)
+PortableServer::_pof_ServantLocator::newObjRef(omniIOR* ior, omniIdentity* id)
 {
-  return new PortableServer::_objref_ServantLocator(ior, id, lid);
+  return new PortableServer::_objref_ServantLocator(ior, id);
 }
 
 

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.8  2001/08/15 10:26:11  dpg1
+ New object table behaviour, correct POA semantics.
+
  Revision 1.2.2.7  2001/08/03 17:41:17  sll
  System exception minor code overhaul. When a system exeception is raised,
  a meaning minor code is provided.
@@ -111,7 +114,8 @@ omniCallDescriptor::unmarshalReturnedValues(cdrStream&)
 
 
 void
-omniCallDescriptor::userException(IOP_C& iop_c, const char* repoId)
+omniCallDescriptor::userException(cdrStream& stream, IOP_C* iop_c,
+				  const char* repoId)
 {
   // Server side returns a user-defined exception, but we seem
   // to think the operation has none.  The IDL used on each side
@@ -127,9 +131,10 @@ omniCallDescriptor::userException(IOP_C& iop_c, const char* repoId)
     omniORB::log.flush();
   }
 
-  iop_c.RequestCompleted(1);
+  if (iop_c) iop_c->RequestCompleted(1);
+
   OMNIORB_THROW(UNKNOWN,UNKNOWN_UserException,
-		(CORBA::CompletionStatus)iop_c.getStream().completion());
+		(CORBA::CompletionStatus)stream.completion());
 }
 
 void

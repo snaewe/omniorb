@@ -87,7 +87,6 @@ ORB_SRCS =  \
 	    remoteIdentity.cc \
 	    inProcessIdentity.cc \
             callHandle.cc \
-	    taskqueue.cc \
 	    tracedthread.cc \
 	    rmutex.cc \
 	    uri.cc \

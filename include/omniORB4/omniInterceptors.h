@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/15 10:26:08  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.1.2.3  2001/04/18 17:50:44  sll
   Big checkin with the brand new internal APIs.
   Scoped where appropriate with the omni namespace.
@@ -324,14 +327,11 @@ class omniInterceptors {
     class info_T {
     public:
       omniIOR*            ior;
-      omniLocalIdentity*& invoke_handle_if_local;
       omniIdentity*&      invoke_handle;
       CORBA::Boolean      held_internalLock;
 
-      info_T(omniIOR* i,omniLocalIdentity*& local_id,
-	     omniIdentity*& id,CORBA::Boolean b) :
-	ior(i),invoke_handle_if_local(local_id),invoke_handle(id),
-	held_internalLock(b) {}
+      info_T(omniIOR* i, omniIdentity*& id, CORBA::Boolean b) :
+	ior(i), invoke_handle(id), held_internalLock(b) {}
     };
 
     typedef CORBA::Boolean (*interceptFunc)(info_T& info);

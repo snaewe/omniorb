@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.12  2001/08/15 10:26:10  dpg1
+# New object table behaviour, correct POA semantics.
+#
 # Revision 1.5.2.11  2001/08/03 17:41:17  sll
 # System exception minor code overhaul. When a system exeception is raised,
 # a meaning minor code is provided.
@@ -353,7 +356,7 @@ public:
   @operations@
 
   inline _objref_@name@() { _PR_setobj(0); }  // nil
-  _objref_@name@(omniIOR*, omniIdentity*, omniLocalIdentity*);
+  _objref_@name@(omniIOR*, omniIdentity*);
 
 protected:
   virtual ~_objref_@name@();
@@ -373,7 +376,7 @@ public:
   inline _pof_@name@() : _OMNI_NS(proxyObjectFactory)(@name@::_PD_repoId) {}
   virtual ~_pof_@name@();
 
-  virtual omniObjRef* newObjRef(omniIOR*,omniIdentity*, omniLocalIdentity*);
+  virtual omniObjRef* newObjRef(omniIOR*,omniIdentity*);
   virtual _CORBA_Boolean is_a(const char*) const;
 };
 """

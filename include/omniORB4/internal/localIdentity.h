@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/08/15 10:26:09  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.1.4.3  2001/06/13 20:11:37  sll
   Minor update to make the ORB compiles with MSVC++.
 
@@ -77,37 +80,37 @@ class omniLocalIdentity : public omniIdentity {
 public:
   inline ~omniLocalIdentity() {}
 
-  inline omniLocalIdentity(omniObjKey& key)
-    : omniIdentity(key),
-      pd_nInvocations(1),
-      pd_servant(0),
-      pd_adapter(0),
-      pd_servantsNextIdentity(0),
-      pd_nextInObjectTable(0),
-      pd_localRefs(0),
-      pd_nextInOAObjList(0),
-      pd_prevInOAObjList(0)
-    {}
-  // May consume <key>.  Constructs an identity with ref count
-  // of 1.  Initially has no implementation.
+  inline omniLocalIdentity(omniObjKey& key,
+			   omniServant* servant,
+			   _OMNI_NS(omniObjAdapter)* adapter,
+			   classCompare_fn compare = thisClassCompare)
 
-  inline omniLocalIdentity(const _CORBA_Octet* key, int keysize)
-    : omniIdentity(key, keysize),
+    : omniIdentity(key, compare),
       pd_nInvocations(1),
-      pd_servant(0),
-      pd_adapter(0),
-      pd_servantsNextIdentity(0),
-      pd_nextInObjectTable(0),
-      pd_localRefs(0),
-      pd_nextInOAObjList(0),
-      pd_prevInOAObjList(0)
+      pd_servant(servant),
+      pd_adapter(adapter),
+      pd_deactivated(0)
+    {}
+  // May consume <key> (if it is bigger than inline key buffer).
+  // Constructs an identity with ref count of 1.
+
+  inline omniLocalIdentity(const _CORBA_Octet* key, int keysize,
+			   omniServant* servant,
+			   _OMNI_NS(omniObjAdapter)* adapter,
+			   classCompare_fn compare = thisClassCompare)
+
+    : omniIdentity(key, keysize, compare),
+      pd_nInvocations(1),
+      pd_servant(servant),
+      pd_adapter(adapter),
+      pd_deactivated(0)
     {}
   // Copies <key>.  Constructs an identity with ref count
-  // of 1.  Initially has no implementation.
+  // of 1.
 
   virtual void dispatch(omniCallDescriptor&);
-  virtual void gainObjRef(omniObjRef*);
-  virtual void loseObjRef(omniObjRef*);
+  virtual void gainRef(omniObjRef* obj = 0);
+  virtual void loseRef(omniObjRef* obj = 0);
   virtual void locateRequest();
 protected:
   virtual omniIdentity::equivalent_fn get_real_is_equivalent() const;
@@ -122,85 +125,13 @@ public:
   //  Must hold <omni::internalLock> on entry.  It is not held
   // on exit.
 
-  void finishedWithDummyId();
-  // Called when the ORB no longer needs a dummy id, because
-  // there are no more local references to it. This must really
-  // be a dummy id!
-  //  Must hold <omni::internalLock>.
-
-  inline void deactivate() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    OMNIORB_ASSERT(pd_nInvocations > 0);
-    --pd_nInvocations;
-  }
-  // This should only be called after doing omni::deactivateObject().
-  //  Must hold <omni::internalLock>.
-
-  void die();
-  // May be called after the object has been deactivated (above),
-  // and all outstanding requests have completed.
-  // Frees any resources it was using, and delete's itself.
-  //  Must not hold <omni::internalLock>.
-
-  inline omniServant*       servant() const  { return pd_servant;       }
-  inline _OMNI_NS(omniObjAdapter)* adapter() const  { return pd_adapter; }
-  inline int                is_idle() const  { return !pd_nInvocations; }
+  inline omniServant*              servant() const { return pd_servant; }
+  inline _OMNI_NS(omniObjAdapter)* adapter() const { return pd_adapter; }
+  inline int                       is_idle() const { return !pd_nInvocations;}
+  inline _CORBA_Boolean        deactivated() const { return pd_deactivated; }
   // For each of the above the ownership of the returned value
   // is the responsibility of this object.  No reference counts
   // are incremented.
-
-  inline omniObjRef* localRefList() const {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return pd_localRefs;
-  }
-
-  inline omniLocalIdentity* nextInObjectTable() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return pd_nextInObjectTable;
-  }
-  inline omniLocalIdentity** addrOfNextInObjectTable() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return &pd_nextInObjectTable;
-  }
-
-  inline omniLocalIdentity* servantsNextIdentity() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return pd_servantsNextIdentity;
-  }
-  inline omniLocalIdentity** addrOfServantsNextIdentity() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return &pd_servantsNextIdentity;
-  }
-
-  inline omniLocalIdentity* nextInOAObjList() { return pd_nextInOAObjList; }
-  inline void insertIntoOAObjList(omniLocalIdentity** p_head) {
-    OMNIORB_ASSERT(!pd_nextInOAObjList && !pd_prevInOAObjList);
-    OMNIORB_ASSERT(p_head);
-    pd_nextInOAObjList = *p_head;
-    pd_prevInOAObjList = p_head;
-    *p_head = this;
-    if( pd_nextInOAObjList )
-      pd_nextInOAObjList->pd_prevInOAObjList = &pd_nextInOAObjList;
-  }
-  inline void removeFromOAObjList() {
-    OMNIORB_ASSERT(pd_prevInOAObjList);
-    *pd_prevInOAObjList = pd_nextInOAObjList;
-    if( pd_nextInOAObjList )
-      pd_nextInOAObjList->pd_prevInOAObjList = pd_prevInOAObjList;
-    pd_nextInOAObjList = 0;
-    pd_prevInOAObjList = 0;
-  }
-  inline void reRootOAObjList(omniLocalIdentity** new_head) {
-    OMNIORB_ASSERT(pd_prevInOAObjList);  OMNIORB_ASSERT(new_head);
-    *pd_prevInOAObjList = 0;
-    pd_prevInOAObjList = new_head;
-    *new_head = this;
-  }
-  inline CORBA::Boolean deactivated() {
-    return pd_adapter && !pd_prevInOAObjList;
-  }
-  // Locking for these methods is the responsiblility of
-  // the object adapter which owns this list.
 
   inline void setServant(omniServant* servant, _OMNI_NS(omniObjAdapter)* oa) {
     OMNIORB_ASSERT(!pd_servant);  OMNIORB_ASSERT(servant);
@@ -209,15 +140,18 @@ public:
     pd_adapter = oa;
   }
 
-private:
-  friend class _OMNI_NS(omniLocalIdentity_RefHolder);
+  virtual _CORBA_Boolean inThisAddressSpace();
+  // Override omniIdentity.
 
-  omniLocalIdentity(const omniLocalIdentity&);
-  omniLocalIdentity& operator = (const omniLocalIdentity&);
-  // Not implemented.
+  static void* thisClassCompare(omniIdentity*, void*);
 
+  static inline omniLocalIdentity* downcast(omniIdentity* id)
+  {
+    return (omniLocalIdentity*)(id->classCompare()(id, thisClassCompare));
+  }
 
-  int                    pd_nInvocations;
+protected:
+  int pd_nInvocations;
   // This count gives the number of method calls in progress
   // on this object.  When it goes to zero, we check to see
   // if anyone is interested in such an event.
@@ -227,13 +161,13 @@ private:
   // this reason.  deactivate() decrements this value, so that
   // the adapter will be told when there are no invocations.
 
-  omniServant*           pd_servant;
+  omniServant* pd_servant;
   // Nil if this object is not yet incarnated, but once set
   // is immutable.
   //  The object adapter is responsible for managing the
   // etherealisation of the servant.
 
-  _OMNI_NS(omniObjAdapter)*        pd_adapter;
+  _OMNI_NS(omniObjAdapter)* pd_adapter;
   // Nil if this object is not yet incarnated, but once set
   // is immutable.  We cannot have a pointer to the adapter
   // before the object is incarnated, since the adapter itself
@@ -241,31 +175,19 @@ private:
   //  We do not hold a reference to this adapter, since it will
   // (must!) outlive this object.
 
-  omniLocalIdentity*     pd_servantsNextIdentity;
-  // Linked list of a particular servant's identities.  An
-  // identity is only in this list whilst it is in the
-  // active object map.
-
-  omniLocalIdentity*     pd_nextInObjectTable;
-  // Local object table is a hash table with chaining.  This
-  // is the linked list of objects which hash to the same
-  // entry.
-
-  omniObjRef*            pd_localRefs;
-  // Pointer to a linked list of local references to this object.
-  // Protected by <omni::internalLock>.
-
-  omniLocalIdentity*     pd_nextInOAObjList;
-  omniLocalIdentity**    pd_prevInOAObjList;
-  // Doubly linked list of all objects active in this adapter.
-  // <pd_nextInOAObjList> is zero for last entry in list.  If
-  // <pd_prevInOAObjList> is zero, then we are not in any list.
-  //  This needs to be doubly linked for fast removal -- since
-  // it is likely to be a long list.
-  //  Protected by the adapter which owns this object.
-
   static _CORBA_Boolean real_is_equivalent(const omniIdentity*,
 					   const omniIdentity*);
+
+  _CORBA_Boolean pd_deactivated;
+  // True if this localIdentity is no longer active, and cannot be
+  // used for invocations.
+
+private:
+  friend class _OMNI_NS(omniLocalIdentity_RefHolder);
+
+  omniLocalIdentity(const omniLocalIdentity&);
+  omniLocalIdentity& operator = (const omniLocalIdentity&);
+  // Not implemented.
 };
 
 

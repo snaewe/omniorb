@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/08/15 10:26:09  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.1.4.6  2001/08/01 10:08:21  dpg1
   Main thread policy.
 
@@ -90,7 +93,6 @@
 
 #include <objectAdapter.h>
 #include <poamanager.h>
-#include <taskqueue.h>
 #include <rmutex.h>
 
 #include <omniORB4/callHandle.h>
@@ -282,8 +284,9 @@ public:
   // Throws OBJ_ADAPTER if an adapter activator throws a system
   // exception.
 
-  PortableServer::ObjectId* localId_to_ObjectId(omniLocalIdentity* lid);
-  // For the given omniLocalIdentity within this POA, return its ObjectId.
+  PortableServer::ObjectId* localId_to_ObjectId(omniIdentity* lid);
+  void localId_to_ObjectId(omniIdentity* lid, PortableServer::ObjectId& oid);
+  // For the given omniIdentity within this POA, return its ObjectId.
 
 private:
   void create_key(omniObjKey& key_out, const CORBA::Octet* id, int idsize);
@@ -319,12 +322,12 @@ private:
   // POA is in the HOLDING state, releases <omni::internalLock> and
   // throws CORBA::TRANSIENT.
 
-  void deactivate_objects(omniLocalIdentity* idle_objs);
+  void deactivate_objects(omniObjTableEntry* entries);
   // Deactivate all objects in the given list.  Does not etherealise
   // (or detach) any of them.
   //  Must hold <omni::internalLock>.
 
-  void complete_object_deactivation(omniLocalIdentity* id);
+  void complete_object_deactivation(omniObjTableEntry* entries);
   // Call omniLocalIdentity::deactivate() on each object in the
   // list.  Assumes that all the objects have been deactivated
   // using deactivate_objects() above.  The objects must also
@@ -332,16 +335,15 @@ private:
   // them when they become idle.
   //  Must hold <omni::internalLock>.
 
-  void etherealise_objects(omniLocalIdentity* id_list,
+  void etherealise_objects(omniObjTableEntry* entries,
 			   _CORBA_Boolean etherealise,
 			   PortableServer::ServantActivator_ptr sa);
   // Etherealises the objects in the given list (if <etherealise>
   // is true).  The objects *must* all be idle.
   //  <sa> may be zero.
 
-  void add_object_to_etherealisation_queue(PortableServer::Servant s,
+  void add_object_to_etherealisation_queue(omniObjTableEntry* entry,
 				PortableServer::ServantActivator_ptr sa,
-				const _CORBA_Octet* key, int keysize,
 				int cleanup_in_progress, int detached=0);
   // Places the servant associated with the given object onto a queue
   // to be etherealised by the given ServantActivator.  This is done
@@ -404,32 +406,6 @@ private:
   // Returns true if this POA is in the process of invoking an
   // AdapterActivator to create the child <name>.
   //  Must hold <poa_lock>.
-
-
-  class Etherealiser : public omniTaskQueue::Task {
-  public:
-    inline Etherealiser(PortableServer::Servant s,
-			PortableServer::ServantActivator_ptr sa,
-			omniOrbPOA* poa, const _CORBA_Octet* id,
-			int idsize, CORBA::Boolean cleanup)
-      : pd_servant(s), pd_sa(sa),
-	pd_poa(poa), pd_cleanup(cleanup) {
-      pd_oid.length(idsize);
-      memcpy(pd_oid.NP_data(), id, idsize);
-    }
-    inline void set_is_last(int il) { pd_is_last = il; }
-
-    virtual void doit();
-
-  private:
-    PortableServer::Servant              pd_servant;
-    int                                  pd_is_last;
-    PortableServer::ServantActivator_ptr pd_sa;
-    omniOrbPOA*                          pd_poa;
-    PortableServer::ObjectId             pd_oid;
-    CORBA::Boolean                       pd_cleanup;
-  };
-  friend class Etherealiser;
 
 
   int                                  pd_destroyed;
@@ -542,7 +518,7 @@ private:
   // Used by create_new_key().
   //  Protected by <pd_lock>.
 
-  omniLocalIdentity*                   pd_activeObjList;
+  omniObjTableEntry*                   pd_activeObjList;
   // A list of objects activated in this adapter.  Includes only
   // those in the active object map.
   //  Protected by <pd_lock>.

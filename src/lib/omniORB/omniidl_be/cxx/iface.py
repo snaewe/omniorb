@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.8  2001/08/15 10:26:10  dpg1
+# New object table behaviour, correct POA semantics.
+#
 # Revision 1.1.4.7  2001/07/25 13:40:52  dpg1
 # Suppress compiler warning about unused variable in _dispatch() for
 # empty interfaces.
@@ -287,7 +290,7 @@ class _objref_I(Class):
       if objref_name.needFlatName(self._environment):
         objref_str = objref_name.flatName()
 
-      this_inherits_str = objref_str + "(ior, id, lid),\n"
+      this_inherits_str = objref_str + "(ior, id),\n"
 
       # FIXME:
       # The powerpc-aix OMNIORB_BASE_CTOR workaround still works here

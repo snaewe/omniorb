@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.8  2001/08/15 10:26:14  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.7  2001/08/03 17:41:24  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -256,11 +259,10 @@ PortableServer::ServantBase::_do_this(const char* repoId)
   {
     omni_tracedmutex_lock sync(*omni::internalLock);
 
-    omniLocalIdentity* id = _identities();
-
-    if( id && !id->servantsNextIdentity() ) {
+    if (_activations().size() == 1) {
       // We only have a single activation -- return a reference to it.
-      omniObjRef* ref = omni::createObjRef(_mostDerivedRepoId(), repoId, id);
+      omniObjRef* ref = omni::createLocalObjRef(_mostDerivedRepoId(), repoId,
+						_activations()[0]);
       OMNIORB_ASSERT(ref);
       return ref->_ptrToObjRef(repoId);
     }

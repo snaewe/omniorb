@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.18  2001/08/15 10:26:13  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.17  2001/08/03 17:41:23  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -117,7 +120,7 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/minorCode.h>
 #include <omniORB4/callDescriptor.h>
-#include <localIdentity.h>
+#include <objectTable.h>
 #include <objectAdapter.h>
 #include <excepthandler.h>
 #include <exceptiondefs.h>
@@ -165,15 +168,17 @@ omniObjRef::_realNarrow(const char* repoId)
   if( target ) {
     omni::internalLock->lock();
 
-    if (_localId() && _localId()->servant() &&
-	_localId()->servant()->_ptrToInterface(repoId)) {
+    omniLocalIdentity* lid = omniLocalIdentity::downcast(_identity());
+    if (lid && !lid->deactivated() &&
+	lid->servant()->_ptrToInterface(repoId)) {
 
+      // The object is local and activated, and the servant supports
+      // the required repoId.
       omni::internalLock->unlock();
       omni::duplicateObjRef(this);
     }
     else {
-      // The object is local, but cannot be used in the local case
-      // optimisation. Use an inProcessIdentity.
+      // Create a new objref based on the IOR
       omni::internalLock->unlock();
 
       omniObjRef* objref;
@@ -186,7 +191,7 @@ omniObjRef::_realNarrow(const char* repoId)
 
       {
 	omni_tracedmutex_lock sync(*omni::internalLock);
-	objref = omni::createObjRef(repoId,ior,1,0,0);
+	objref = omni::createObjRef(repoId,ior,1,0);
 	objref->pd_flags.forward_location = pd_flags.forward_location;
       }
 
@@ -225,8 +230,9 @@ omniObjRef::_realNarrow(const char* repoId)
 
       {
 	omni_tracedmutex_lock sync(*omni::internalLock);
-	objref = omni::createObjRef(repoId,ior,1,_identity(),_localId());
+	objref = omni::createObjRef(repoId,ior,1,_identity());
 	objref->pd_flags.forward_location = pd_flags.forward_location;
+	objref->pd_flags.type_verified = 1;
       }
 
       if( objref ) {
@@ -292,10 +298,7 @@ omniObjRef::__is_equivalent(omniObjRef* o_obj)
   {
     omni_tracedmutex_lock sync(*omni::internalLock);
 
-    omniIdentity* mid = (pd_localId) ? pd_localId : pd_id;
-    omniIdentity* oid = (o_obj->pd_localId) ? o_obj->pd_localId : o_obj->pd_id;
-
-    return mid->is_equivalent(oid);
+    return pd_id->is_equivalent(o_obj->pd_id);
   }
 }
 
@@ -453,9 +456,9 @@ omniObjRef::~omniObjRef()
     if( pd_mostDerivedRepoId )  delete[] pd_mostDerivedRepoId;
   }
 
-  if (pd_ior) {
-    pd_ior->release();
-  }
+  if (pd_ior) pd_ior->release();
+
+  OMNIORB_ASSERT(pd_id == 0);
 }
 
 
@@ -464,22 +467,17 @@ omniObjRef::omniObjRef()
     pd_mostDerivedRepoId(0),
     pd_intfRepoId(0),
     pd_ior(0),
-    pd_id(0),
-    pd_localId(0),
-    pd_nextInLocalRefList(0)
+    pd_id(0)
 {
   // Nil objref.
 }
 
 
 omniObjRef::omniObjRef(const char* intfRepoId, omniIOR* ior,
-		       omniIdentity* id, omniLocalIdentity* lid,
-		       _CORBA_Boolean static_repoId)
+		       omniIdentity* id, _CORBA_Boolean static_repoId)
   : pd_refCount(1),
     pd_ior(ior),
-    pd_id(id),
-    pd_localId(lid),
-    pd_nextInLocalRefList(0)
+    pd_id(id)
 {
   OMNIORB_ASSERT(intfRepoId);
   OMNIORB_ASSERT(ior);
@@ -503,7 +501,7 @@ omniObjRef::omniObjRef(const char* intfRepoId, omniIOR* ior,
 
   pd_flags.forward_location = 0;
   pd_flags.type_verified = 1;
-  pd_flags.object_exists = (id == lid);
+  pd_flags.object_exists = omniObjTableEntry::downcast(id) ? 1 : 0;
   pd_flags.transient_exception_handler = 0;
   pd_flags.commfail_exception_handler = 0;
   pd_flags.system_exception_handler = 0;
@@ -544,24 +542,8 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
       omni::internalLock->lock();
       fwd = pd_flags.forward_location;
-      omniIdentity* id = _identity();
 
-      if (!call_desc.haslocalCallFn() && _localId()) {
-	// This is a local object so a call to id->dispatch will cause
-	// the local call function in the call descriptor to be invoked.
-	// But we do not have a local call function! We have to create
-	// an identity with the loop back transport to dispatch the call.
-	// The identity  object will be deleted automatically when the
-	// call finishes.
-	//
-	// This is not the normal case but could happen in rare circumstance,
-	// such as a DII call descriptor invoking on a local object.
-
-	// **** Should use inProcessIdentity
-	id = omni::createLoopBackIdentity(_getIOR(),id->key(),id->keysize());
-      }
-
-      id->dispatch(call_desc);
+      _identity()->dispatch(call_desc);
       return;
 
     }
@@ -744,7 +726,7 @@ omniObjRef::_unMarshal(const char* repoId, cdrStream& s)
 	// to use bidirectional on its callback objects.
 	omniCurrent* current = omniCurrent::get();
 	omniCallDescriptor* desc = ((current)? current->callDescriptor() : 0);
-	if (desc && desc->poa()->acceptBiDirectional()) {
+	if (desc && desc->poa() && desc->poa()->acceptBiDirectional()) {
 	  const char* sendfrom = g.connection->peeraddress();
 	  omniIOR::add_TAG_OMNIORB_BIDIR(sendfrom,*ior);
 	}
@@ -828,8 +810,8 @@ omniObjRef::_locateRequest()
     try{
 
       omni::internalLock->lock();
-      if( pd_id == pd_localId ) {
-	// Its a local object, and we know its here.
+      if( omniObjTableEntry::downcast(pd_id) ) {
+	// Its a local activated object, and we know its here.
 	omni::internalLock->unlock();
 	return;
       }
@@ -892,5 +874,18 @@ omniObjRef::_locateRequest()
       }
       omni::locationForward(this,ex.get_obj()->_PR_getobj(),ex.is_permanent());
     }
+  }
+}
+
+
+void
+omniObjRef::_setIdentity(omniIdentity* id)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+
+  if (id != pd_id) {
+    if (pd_id) pd_id->loseRef(this);
+    pd_id = id;
+    if (pd_id) pd_id->gainRef(this);
   }
 }

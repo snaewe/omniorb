@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.5  2001/08/15 10:26:08  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.4  2001/05/29 17:03:48  dpg1
   In process identity.
 
@@ -56,17 +59,19 @@
 #ifndef __OMNISERVANT_H__
 #define __OMNISERVANT_H__
 
+#include <omniORB4/omniutilities.h>
+
 class omniObjRef;
-class omniIdentity;
 class omniCallHandle;
+class omniObjTableEntry;
+
 
 //: Base class for all Servants.
 
-
 class omniServant {
 protected:
-  inline omniServant() : pd_identities(0) {}
-  inline omniServant(const omniServant&) : pd_identities(0) {}
+  inline omniServant() {}
+  inline omniServant(const omniServant&) {}
   inline omniServant& operator = (const omniServant&) { return *this; }
 
 public:
@@ -132,27 +137,28 @@ public:
   // thread-safe if this servant is to be activated in a multi-threaded
   // object adapter.
 
-  void _addIdentity(omniLocalIdentity*);
-  // Add an identity to this servant's list.
+  void _addActivation(omniObjTableEntry*);
+  // Add an activation to this servant's list.
   //  Must hold <omni::internalLock>.
 
-  void _removeIdentity(omniLocalIdentity*);
-  // Remove an identity from this servant's list.
+  void _removeActivation(omniObjTableEntry*);
+  // Remove an activation from this servant's list.
   //  Must hold <omni::internalLock>.
 
-  inline omniLocalIdentity* _identities() const {
+  inline const omnivector<omniObjTableEntry*>& _activations() const {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return pd_identities;
+    return pd_activations;
   }
   // Must hold <omni::internalLock>.
 
 private:
-  omniLocalIdentity* pd_identities;
-  // A linked list of the object identities that this servant is
-  // incarnating.  If it is not incarnating any objects, this will
-  // be nil.  Note that when an object is deactivated the identity
-  // will be removed from this list.  However, the identity may
-  // still hold a reference to this servant until it is destroyed.
+
+  omnivector<omniObjTableEntry*> pd_activations;
+  // A list of the object identities that this servant is incarnating.
+  // If it is not incarnating any objects, this will be empty.  Note
+  // that when an object is deactivated the identity will be removed
+  // from this list.  However, the identity may still hold a reference
+  // to this servant until it is destroyed.
 };
 
 #endif  // __OMNISERVANT_H__

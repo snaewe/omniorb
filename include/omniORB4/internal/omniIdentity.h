@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/08/15 10:26:09  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.1.4.2  2001/06/13 20:11:37  sll
   Minor update to make the ORB compiles with MSVC++.
 
@@ -75,22 +78,27 @@ public:
   // Dispatch a call from an object reference.  Grabs a reference
   // to this identity, which it holds until the call returns.
   //  Must hold <omni::internalLock> on entry.  It is not held
-  // on exit.
+  //  on exit.
 
-  virtual void gainObjRef(omniObjRef*) = 0;
-  virtual void loseObjRef(omniObjRef*) = 0;
-  // Must hold <omni::internalLock>.
+  virtual void gainRef(omniObjRef* obj = 0) = 0;
+  virtual void loseRef(omniObjRef* obj = 0) = 0;
+  // Reference counting for identity objects. An identity may wish to
+  // keep track of objrefs referring to it, so when objrefs gain/lose
+  // a ref to an identity, the objref pointer is passed as an
+  // argument. Other entities holding references to identities use the
+  // default zero objref.
+  //  Must hold <omni::internalLock>.
 
   virtual void locateRequest() = 0;
   // If this returns normally, then the object exists.
   // Throws OBJECT_NOT_EXIST, or omniORB::LOCATION_FORWARD
   // otherwise.
-  // Caller must hold <internalLock>. On return or raised exception, the
-  // lock is released.
+  // Caller must hold <omni::internalLock>. On return or raised
+  // exception, the lock is released.
 
-  _CORBA_Boolean is_equivalent(const omniIdentity* id) {
+  inline _CORBA_Boolean is_equivalent(const omniIdentity* id) {
     // Returns TRUE(1) if the two identity objects refer to the same CORBA
-    // Object. This function do not raise any exception.
+    // Object. This function does not raise any exceptions.
 
     // We rely on the concrete implementation of this abstract class to
     // supply its equivalent function. Only call the equivalent function
@@ -102,6 +110,32 @@ public:
     else
       return 0;
   }
+
+  virtual _CORBA_Boolean inThisAddressSpace() = 0;
+  // Return true if the identity represents an object in this address
+  // space.
+
+
+  // Support for downcasting in the absense of dynamic_cast<>.
+  // classCompare_fn's second argument is really of type
+  // classCompare_fn, but that can't be declared.
+  //
+  // See e.g. localIdentity.h to see how it's used. The basic idea is
+  // that a derived class registers its class compare function with
+  // this base class. To downcast, you pass the omniIdentity* to be
+  // downcast and the static class compare function of the target
+  // class to the registered class compare function. The class compare
+  // function tests to see if the function is has been given belongs
+  // to either its own class, or one of its parent classes. If so, it
+  // returns the omniIdentity pointer suitably cast to the derived
+  // class.
+  //
+  // It's hard to explain. Just look at the code...
+
+  typedef void* (*classCompare_fn)(omniIdentity*, void*);
+
+  inline classCompare_fn classCompare() { return pd_classCompare; }
+
 
 protected:
 #ifndef __GNUG__
@@ -115,16 +149,18 @@ protected:
   // have a virtual dtor.
 #endif
 
-  inline omniIdentity(omniObjKey& key)
-    : pd_key(key, 1) {}
-  // May consume <key>.
+  inline omniIdentity(omniObjKey& key, classCompare_fn compare)
+    : pd_key(key, 1), pd_classCompare(compare) {}
+  // May consume <key> (if it is bigger than inline key buffer).
 
-  inline omniIdentity(const _CORBA_Octet* key, int keysize)
-    : pd_key(key, keysize) {}
+  inline omniIdentity(const _CORBA_Octet* key, int keysize,
+		      classCompare_fn compare)
+    : pd_key(key, keysize), pd_classCompare(compare) {}
   // Copies <key>.
 
-  inline omniIdentity(_CORBA_Octet* key, int keysize)
-    : pd_key(key, keysize) {}
+  inline omniIdentity(_CORBA_Octet* key, int keysize,
+		      classCompare_fn compare)
+    : pd_key(key, keysize), pd_classCompare(compare) {}
   // Consumes <key>.
 
 public:
@@ -136,7 +172,6 @@ protected:
   // return a pointer to the function that can compute whether 2 identity
   // objects of the same derived class are equivalent.
 
-
 private:
   omniIdentity(const omniIdentity&);
   omniIdentity& operator = (const omniIdentity&);
@@ -145,6 +180,10 @@ private:
 
   omniObjKey pd_key;
   // Immutable.
+
+  classCompare_fn pd_classCompare;
+  // Class comparison function to implement downcast()
+  // Immutable
 };
 
 

@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.4  2001/08/15 10:26:09  dpg1
+ New object table behaviour, correct POA semantics.
+
  Revision 1.1.4.3  2001/07/31 16:34:53  sll
  New function listMyEndpoints(). Remove explicit instantiation of
  giopServer, do it via interceptor.
@@ -198,7 +201,8 @@ public:
   // case the object adapter calls this), or when any outstanding
   // method invocations complete (in which case the
   // omniLocalIdentity calls this).
-  //  The caller must not hold any locks.
+  //  The caller must hold <omni::internalLock> on entry. It is
+  //  released on exit.
 
 
   ////////////////////

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/08/15 10:26:08  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.7  2001/05/31 16:21:13  dpg1
   object references optionally just store a pointer to their repository
   id string rather than copying it.
@@ -92,6 +95,7 @@ class omniIOR;
 class omniCallDescriptor;
 class omniIdentity;
 class omniLocalIdentity;
+class omniObjTableEntry;
 class omniRemoteIdentity;
 class omniServant;
 
@@ -212,26 +216,9 @@ public:
   // to the exception handler.
   //  This function is thread-safe.
 
-  inline omniObjRef** _addrOfLocalRefList() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return &pd_nextInLocalRefList;
-  }
-  inline omniObjRef* _nextInLocalRefList() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return pd_nextInLocalRefList;
-  }
-  // Used by omniLocalIdentity to insert/remove this from its local
-  // ref list.
-
   inline omniIdentity* _identity() {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     return pd_id;
-  }
-  // Must hold <omni::internalLock>.
-
-  inline omniLocalIdentity* _localId() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    return pd_localId;
   }
   // Must hold <omni::internalLock>.
 
@@ -241,7 +228,7 @@ public:
   }
   //  Must hold <omni::internalLock>.
 
-  inline _CORBA_Boolean _is_nil() { return !pd_id; }
+  inline _CORBA_Boolean _is_nil() { return !pd_ior; }
   // This function is thread-safe.
 
   inline void _noExistentCheck() {
@@ -289,6 +276,10 @@ public:
   static char* _toString(omniObjRef*);
   static omniObjRef* _fromString(const char*);
 
+  void _setIdentity(omniIdentity* id);
+  // Set or change the identity to dispatch to.
+  //  Must hold <omni::internalLock>.
+
 protected:
   virtual ~omniObjRef();
   // Must not hold <omni::internalLock>.
@@ -299,18 +290,16 @@ protected:
   // in the public interface.
 
   omniObjRef(const char* intfRepoId, omniIOR* ior,
-	     omniIdentity* id, omniLocalIdentity* lid,
-	     _CORBA_Boolean static_repoId = 0);
-  // Constructed with an initial ref count of 1.
-  // If static_repoId is true, assumes that the intfRepoId string
-  // will remain valid for the entire life time of the objref, meaning
-  // that there is no need to copy it.
+	     omniIdentity* id, _CORBA_Boolean static_repoId = 0);
+  // Constructed with an initial ref count of 1.  If <static_repoId>
+  // is true, assumes that the <intfRepoId> string will remain valid
+  // for the entire life time of the objref, meaning that there is no
+  // need to copy it.
 
   void _locateRequest();
   // Issues a GIOP LocateRequest.  Throws OBJECT_NOT_EXIST, or
   // returns normally if the object does exist.
   // This function is thread-safe.
-
 
 private:
   omniObjRef(const omniObjRef&);
@@ -325,29 +314,17 @@ private:
   friend class omniPy;
   friend void omni::duplicateObjRef(omniObjRef*);
   friend void omni::releaseObjRef(omniObjRef*);
-  friend omniLocalIdentity* omni::activateObject(omniServant*,omniObjAdapter*,
-						 omniObjKey&);
-  friend omniLocalIdentity* omni::deactivateObject(const _CORBA_Octet* key,
-						   int keysize);
-  friend omniObjRef* omni::createObjRef(const char*,omniIOR* ior,
-					_CORBA_Boolean,omniIdentity*,
-					omniLocalIdentity*);
-  friend omniObjRef* omni::createObjRef(const char*,const char*,
-					omniLocalIdentity*);
+
+  friend omniObjRef* omni::createObjRef(const char*,omniIOR*,
+					_CORBA_Boolean,omniIdentity*);
+
+  friend omniObjRef* omni::createLocalObjRef(const char*, const char*,
+					     omniObjTableEntry*);
 
   friend void omni::revertToOriginalProfile(omniObjRef*);
   friend void omni::locationForward(omniObjRef*,
 				    omniObjRef*,
 				    _CORBA_Boolean);
-
-
-  inline void _setIdentity(omniIdentity* id, omniLocalIdentity* lid) {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-    pd_id = id;
-    pd_localId = lid;
-  }
-  // Must hold <omni::internalLock>.
-
 
   //////////////////
   // Data members //
@@ -386,12 +363,6 @@ private:
   // key of a remote object.
   //  Mutable.  Protected by <omni::internalLock>.
 
-  omniLocalIdentity* pd_localId;
-  // If this is a reference to a local object, this is a pointer
-  // to the entry in the object table (which contains the key).
-  // Nil otherwise.
-  //  Mutable.  Protected by <omni::internalLock>.
-
   struct {
     unsigned forward_location            : 1;
     // True if we have had a LOCATION_FORWARD.  In this case the
@@ -422,10 +393,6 @@ private:
 
   } pd_flags;
   // Mutable.  Protected by <omni::internalLock>.
-
-  omniObjRef* pd_nextInLocalRefList;
-  // Linked list of all references to a particular local object.
-  // Protected by <omni::internalLock>.
 };
 
 

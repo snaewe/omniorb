@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.9  2001/08/15 10:26:12  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.16.2.8  2001/08/03 17:41:18  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -113,7 +116,7 @@
 #include <corbaBoa.h>
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/callHandle.h>
-#include <localIdentity.h>
+#include <objectTable.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
@@ -375,7 +378,7 @@ omniOrbBOA::destroy()
   if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
 
   omniOrbBOA* boa = 0;
-  omniLocalIdentity* obj_list = 0;
+  omniObjTableEntry* obj_list = 0;
   int do_inactive = 0;
 
   {
@@ -424,10 +427,17 @@ omniOrbBOA::destroy()
 
   // Remove all my objects from the object table.
   omni::internalLock->lock();
-  omniLocalIdentity* id = obj_list;
-  while( id ) {
-    omni::deactivateObject(id->key(), id->keysize());
-    id = id->nextInOAObjList();
+  omniObjTableEntry* entry = obj_list;
+  while( entry ) {
+    while (entry->state() == omniObjTableEntry::ACTIVATING)
+      entry->wait(omniObjTableEntry::ACTIVE |
+		  omniObjTableEntry::DEACTIVATING |
+		  omniObjTableEntry::ETHEREALISING);
+
+    if (entry->state() == omniObjTableEntry::ACTIVE)
+      entry->setDeactivating();
+
+    entry = entry->nextInOAObjList();
   }
 
   // We need to kick anyone stuck in synchronise_request(),
@@ -437,26 +447,24 @@ omniOrbBOA::destroy()
   // Wait until outstanding invocations have completed.
   waitForAllRequestsToComplete(1);
 
-  // Delete the identities, but not the servant itself.
+  entry = obj_list;
+  while( entry ) {
+    if (entry->state() == omniObjTableEntry::DEACTIVATING)
+      entry->setEtherealising();
+
+    OMNIORB_ASSERT(entry->is_idle());
+    entry = entry->nextInOAObjList();
+  }
+
+  // Kill the identities, but not the servants themselves.
   // (See user's guide 5.4).
-  {
-    omniLocalIdentity* id = obj_list;
+  entry = obj_list;
+  while( entry ) {
+    OMNIORB_ASSERT(entry->is_idle());
 
-    while( id ) {
-      id->deactivate();
-      OMNIORB_ASSERT(id->is_idle());
-      id = id->nextInOAObjList();
-    }
-
-    omni::internalLock->unlock();
-
-    id = obj_list;
-
-    while( id ) {
-      omniLocalIdentity* next = id->nextInOAObjList();
-      id->die();
-      id = next;
-    }
+    omniObjTableEntry* next = entry->nextInOAObjList();
+    entry->setDead();
+    entry = next;
   }
 
   // Wait for objects which have been detached to complete
@@ -502,7 +510,7 @@ omniOrbBOA::dispose(CORBA::Object_ptr obj)
 
   boa_lock.lock();
   omni::internalLock->lock();
-  dispose(obj->_PR_getobj()->_localId());
+  dispose(obj->_PR_getobj()->_identity());
   // The locks will have been released on return.
 }
 
@@ -741,17 +749,26 @@ omniOrbBOA::objectExists(const _CORBA_Octet* key, int keysize)
 void
 omniOrbBOA::lastInvocationHasCompleted(omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+
+  omniObjTableEntry* entry = omniObjTableEntry::downcast(id);
+  OMNIORB_ASSERT(entry);
+  // This function should only ever be called with a localIdentity
+  // which is an objectTableEntry, since those are the only ones which
+  // can be deactivated.
 
   if( omniORB::trace(15) ) {
     omniORB::logger l;
-    l << "BOA etherealising detached object.\n"
+    l << "BOA etherealising object.\n"
       << " id: " << id->servant()->_mostDerivedRepoId() << "\n";
   }
 
+  entry->setEtherealising();
+  entry->setDead();
+
+  omni::internalLock->unlock();
   delete id->servant();
   met_detached_object();
-  id->die();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -771,7 +788,7 @@ omniOrbBOA::theBOA()
 
 
 void
-omniOrbBOA::dispose(omniLocalIdentity* lid)
+omniOrbBOA::dispose(omniIdentity* id)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(boa_lock, 1);
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
@@ -783,31 +800,21 @@ omniOrbBOA::dispose(omniLocalIdentity* lid)
 		  CORBA::COMPLETED_NO);
   }
 
-  if( !lid || !lid->servant() ) {
+  omniObjTableEntry* entry = omniObjTableEntry::downcast(id);
+
+  if( !entry || entry->state() != omniObjTableEntry::ACTIVE ) {
     omni::internalLock->unlock();
     boa_lock.unlock();
     return;
   }
 
-  omniLocalIdentity* id = omni::deactivateObject(lid->key(), lid->keysize());
-  if( !id ) {
-    omni::internalLock->unlock();
+  entry->setDeactivating();
+  entry->removeFromOAObjList();
+
+  if( entry->is_idle() ) {
+    detached_object();
     boa_lock.unlock();
-    return;
-  }
-  OMNIORB_ASSERT(id == lid);
-
-  id->deactivate();
-  id->removeFromOAObjList();
-
-  if( id->is_idle() ) {
-    omni::internalLock->unlock();
-    boa_lock.unlock();
-
-    omniORB::logs(15, "Object is idle -- delete now.");
-
-    delete id->servant();
-    id->die();
+    lastInvocationHasCompleted(entry);
   }
   else {
     // When outstanding requests have completed the object
@@ -892,7 +899,10 @@ omniOrbBoaServant::_dispose()
   CORBA::BOA_var ref_holder(boa);
 
   omni::internalLock->lock();
-  boa->dispose(_identities());
+  if (_activations().size() != 0) {
+    OMNIORB_ASSERT(_activations().size() == 1);
+    boa->dispose(_activations()[0]);
+  }
 }
 
 
@@ -911,17 +921,19 @@ omniOrbBoaServant::_obj_is_ready()
 
   omni::internalLock->lock();
 
-  omniLocalIdentity* id = omni::activateObject(this, the_boa, key);
+  omniObjTableEntry* entry = omniObjTable::newEntry(key);
 
-  if( !id ) {
+  if( !entry ) {
     omni::internalLock->unlock();
     boa_lock.unlock();
     OMNIORB_THROW(OBJECT_NOT_EXIST,
 		  OBJECT_NOT_EXIST_NoMatch, CORBA::COMPLETED_NO);
   }
 
+  entry->setActive(this, the_boa);
+
   omni::internalLock->unlock();
-  id->insertIntoOAObjList(the_boa->activeObjList());
+  entry->insertIntoOAObjList(the_boa->activeObjList());
   boa_lock.unlock();
 }
 
@@ -931,17 +943,20 @@ omniOrbBoaServant::_this(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
 
-  CORBA::ULong hash = omni::hash((const CORBA::Octet*) &pd_key,
-				 sizeof(omniOrbBoaKey));
-
   omni::internalLock->lock();
-  omniLocalIdentity* id = _identities();
-  if( !id )
-    // We do know the key, so we can generate a reference anyway.
-    id = omni::locateIdentity((const CORBA::Octet*) &pd_key,
-			      sizeof(omniOrbBoaKey), hash, 1);
 
-  omniObjRef* objref = omni::createObjRef(_mostDerivedRepoId(),repoId, id);
+  omniObjRef* objref;
+
+  if (_activations().size() > 0) {
+    omniObjTableEntry* entry = _activations()[0];
+    
+    objref = omni::createLocalObjRef(_mostDerivedRepoId(), repoId, entry);
+  }
+  else {
+    objref = omni::createLocalObjRef(_mostDerivedRepoId(), repoId,
+				     (const CORBA::Octet*)&pd_key,
+				     sizeof(omniOrbBoaKey));
+  }
   omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);

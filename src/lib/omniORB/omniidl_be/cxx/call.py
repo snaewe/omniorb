@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.7  2001/08/15 10:26:10  dpg1
+# New object table behaviour, correct POA semantics.
+#
 # Revision 1.1.4.6  2001/05/31 16:18:11  dpg1
 # inline string matching functions, re-ordered string matching in
 # _ptrToInterface/_ptrToObjRef
@@ -408,7 +411,7 @@ class CallDescriptor:
         if self.__exceptions != []:
             base_ctor = base_ctor + ", _user_exns, "
             user_exceptions_decl = \
-            "void userException(_OMNI_NS(IOP_C)&, const char*);\n" + \
+            "void userException(cdrStream&,_OMNI_NS(IOP_C)*,const char*);\n"+\
             "static const char* const _user_exns[];\n"
         else:
             base_ctor = base_ctor + ", 0, "
@@ -667,14 +670,8 @@ class CallDescriptor:
                 repoID = scopedName + ["_PD_repoId"]
                 repoID_str = id.Name(repoID).fullyQualify()
                 exname = id.Name(scopedName).fullyQualify()
-                block.out( \
-                      "if ( omni::strMatch(repoId, @repoID_str@) ) {\n" + \
-                      "  @exname@ _ex;\n" + \
-                      "  _ex <<= s;\n" + \
-                      "  iop_client.RequestCompleted();\n" + \
-                      "  throw _ex;\n" + \
-                      "}\n",
-                      repoID_str = repoID_str, exname = exname)
+                block.out(template.interface_proxy_exn_handle,
+                          repoID_str = repoID_str, exname = exname)
             repoIDs = map(lambda x: "\"" + x.repoId() + "\"", exceptions)
             # write the user exception template
             stream.out(template.interface_proxy_exn,

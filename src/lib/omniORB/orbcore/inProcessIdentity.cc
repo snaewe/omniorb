@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  2001/08/15 10:26:12  dpg1
+ New object table behaviour, correct POA semantics.
+
  Revision 1.1.2.2  2001/08/03 17:41:21  sll
  System exception minor code overhaul. When a system exeception is raised,
  a meaning minor code is provided.
@@ -48,7 +51,7 @@
 #endif
 
 #include <inProcessIdentity.h>
-#include <localIdentity.h>
+#include <objectTable.h>
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/callHandle.h>
 #include <objectAdapter.h>
@@ -106,9 +109,6 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
 #ifdef HAS_Cplusplus_catch_exception_by_base
   try {
 #endif
-    // Create a callHandle object
-    omniCallHandle call_handle(&call_desc);
-
     // Can we find the object in the local object table?
     if (keysize() < 0)
       OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
@@ -118,9 +118,32 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
 
     omni::internalLock->lock();
     omniLocalIdentity* id;
-    id = omni::locateIdentity(key(), keysize(), hash);
+    id = omniObjTable::locateActive(key(), keysize(), hash, 1);
 
-    if (id && id->servant()) {
+    if (id) {
+      // Found an entry in the object table. Either the servant has
+      // been activated since this InProcessIdentity was created, or
+      // the object reference invoked upon is incompatible with the
+      // servant (or both).
+
+      if (call_desc.haslocalCallFn() &&
+	  id->servant()->
+	    _ptrToInterface(call_desc.objref()->_localServantTarget())) {
+
+	// The call descriptor has a local call function and the
+	// servant is compatible with the objref, so set the objref's
+	// identity to the local identity, and dispatch directly.
+	if (omniORB::trace(15)) {
+	  omniORB::logger l;
+	  l << this << " is now active. Using local identity.\n";
+	}
+	call_desc.objref()->_setIdentity(id);
+	id->dispatch(call_desc);
+	return;
+      }
+      // Can't do a fast local call -- create a callHandle object and
+      // dispatch with that.
+      omniCallHandle call_handle(&call_desc, 0);
       id->dispatch(call_handle);
       return;
     }
@@ -132,6 +155,7 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
     omniObjAdapter_var adapter(omniObjAdapter::getAdapter(key(),keysize()));
 
     if (adapter) {
+      omniCallHandle call_handle(&call_desc, 1);
       adapter->dispatch(call_handle, key(), keysize());
       return;
     }
@@ -161,7 +185,7 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
 
 
 void
-omniInProcessIdentity::gainObjRef(omniObjRef*)
+omniInProcessIdentity::gainRef(omniObjRef*)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
@@ -170,7 +194,7 @@ omniInProcessIdentity::gainObjRef(omniObjRef*)
 
 
 void
-omniInProcessIdentity::loseObjRef(omniObjRef*)
+omniInProcessIdentity::loseRef(omniObjRef*)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
@@ -182,10 +206,24 @@ omniInProcessIdentity::loseObjRef(omniObjRef*)
 
 void
 omniInProcessIdentity::locateRequest() {
-  // **** For now, always indicate the object is here ****
-
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+
+  CORBA::ULong hash = omni::hash(key(), keysize());
+  omniLocalIdentity* lid = omniObjTable::locateActive(key(),keysize(),hash,1);
+  if (lid) {
+    // Object exists
+    omni::internalLock->unlock();
+    return;
+  }
+  // Is there an object adapter which can activate it on demand?  This
+  // may activate the adapter.
   omni::internalLock->unlock();
+
+  omniObjAdapter_var adapter(omniObjAdapter::getAdapter(key(), keysize()));
+  if (adapter && adapter->objectExists(key(), keysize()))
+    return;
+  
+  OMNIORB_THROW(OBJECT_NOT_EXIST, 0, CORBA::COMPLETED_NO);
 }
 
 
@@ -209,4 +247,21 @@ omniInProcessIdentity::real_is_equivalent(const omniIdentity* id1,
       return 0;
 
   return 1;
+}
+
+_CORBA_Boolean
+omniInProcessIdentity::inThisAddressSpace()
+{
+  return 1;
+}
+
+void*
+omniInProcessIdentity::thisClassCompare(omniIdentity* id, void* vfn)
+{
+  classCompare_fn fn = (classCompare_fn)vfn;
+
+  if (fn == omniInProcessIdentity::thisClassCompare)
+    return (omniInProcessIdentity*)id;
+
+  return 0;
 }

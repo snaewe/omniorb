@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2001/08/15 10:26:13  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.1.2.7  2001/06/11 17:53:22  sll
    The omniIOR ctor used by genior and corbaloc now has the option to
    select whether to call interceptors and what set of interceptors to call.
@@ -58,7 +61,7 @@
 #include <initialiser.h>
 #include <giopStreamImpl.h>
 #include <omniORB4/omniInterceptors.h>
-#include <localIdentity.h>
+#include <objectTable.h>
 #include <giopRope.h>
 
 omni_tracedmutex*                omniIOR::lock = 0;
@@ -87,23 +90,26 @@ omniIOR::omniIOR(char* repoId, IOP::TaggedProfile* iop, CORBA::ULong niops,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-omniIOR::omniIOR(const char* repoId, omniLocalIdentity* id) :
+omniIOR::omniIOR(const char* repoId, const _CORBA_Octet* key, int keysize) :
   pd_iopProfiles(0),
   pd_addr_selected_profile_index(-1),
   pd_addr_mode(GIOP::KeyAddr), 
   pd_iorInfo(0),
   pd_refCount(1)
 {
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+
   pd_repositoryID = repoId;   // copied.
 
   IIOP::ProfileBody iiop;
 
   iiop.version = _OMNI_NS(giopStreamImpl)::maxVersion()->version();
 
-  iiop.object_key.replace((CORBA::ULong)id->keysize(),
-			  (CORBA::ULong)id->keysize(),
-			  (CORBA::Octet*)id->key(),0);
-
+  iiop.object_key.replace((CORBA::ULong)keysize, (CORBA::ULong)keysize,
+			  (CORBA::Octet*)key, 0);
+  // Forgive the dodgy cast to remove the const from the key. The
+  // object_key sequence is only used to convert to an encoded
+  // profile, without modification.
 
   pd_iopProfiles = new IOP::TaggedProfileList();
   {

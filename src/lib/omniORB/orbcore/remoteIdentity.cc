@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.10  2001/08/15 10:26:14  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.9  2001/08/03 17:41:24  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -165,7 +168,8 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
     {
       // Retrieve the Interface Repository ID of the exception.
       CORBA::String_var repoId(s.unmarshalRawString());
-      call_desc.userException(iop_client, repoId);
+      call_desc.userException(iop_client->getStream(), &(IOP_C&)iop_client,
+			      repoId);
       // Never get here - this must throw either a user exception
       // or CORBA::MARSHAL.
       OMNIORB_ASSERT(0);
@@ -203,7 +207,7 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
 
 
 void
-omniRemoteIdentity::gainObjRef(omniObjRef*)
+omniRemoteIdentity::gainRef(omniObjRef*)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
@@ -212,7 +216,7 @@ omniRemoteIdentity::gainObjRef(omniObjRef*)
 
 
 void
-omniRemoteIdentity::loseObjRef(omniObjRef*)
+omniRemoteIdentity::loseRef(omniObjRef*)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
@@ -314,4 +318,21 @@ omniRemoteIdentity::real_is_equivalent(const omniIdentity* id1,
       return 0;
 
   return 1;
+}
+
+_CORBA_Boolean
+omniRemoteIdentity::inThisAddressSpace()
+{
+  return 0;
+}
+
+void*
+omniRemoteIdentity::thisClassCompare(omniIdentity* id, void* vfn)
+{
+  classCompare_fn fn = (classCompare_fn)vfn;
+
+  if (fn == omniRemoteIdentity::thisClassCompare)
+    return (omniRemoteIdentity*)id;
+
+  return 0;
 }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.16  2001/08/15 10:26:13  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.15  2001/08/03 17:41:23  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -146,7 +149,7 @@
 
 #include <omniORB4/proxyFactory.h>
 #include <omniORB4/omniServant.h>
-#include <localIdentity.h>
+#include <objectTable.h>
 #include <inProcessIdentity.h>
 #include <remoteIdentity.h>
 #include <objectAdapter.h>
@@ -182,7 +185,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 // The local object table.  This is a dynamically resized
 // open hash table.
-static omniLocalIdentity**       objectTable = 0;
+static omniObjTableEntry**       objectTable = 0;
 static _CORBA_ULong              objectTableSize = 0;
 static int                       objectTableSizeI = 0;
 static _CORBA_ULong              numObjectsInTable = 0;
@@ -210,101 +213,46 @@ static int objTblSizes[] = {
   134217728 + 39,
   268435456 + 9,
   536870912 + 5,
-  1073741824 + 83       // 2^30 -- I'd be suprised if this is exceeded!
+  1073741824 + 83,      // 2^30 -- I'd be suprised if this is exceeded!
+  -1                    // Sentinel to detect the end, just to be paranoid.
 };
 
-//////////////////////////////////////////////////////////////////////
-//////////////////////////// omniInternal ////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-//: Just a few helper methods. Local to this file.
-
-class omniInternal {
-public:
-
-  static void replaceImplementation(omniObjRef* objref,
-				    omniIdentity* id,
-				    omniLocalIdentity* local_id);
-  // Removes the old identity from an object reference,
-  // replacing it with a new one.  <local_id> must be nil if
-  // the object implementation is not local.  If the new
-  // identity is the same one as the old one, then this does
-  // nothing.
-  //  <objref->pd_flags.forward_location> and <type_verified>
-  // are not modified by this function.
-  //  Must hold <omni::internalLock>.
-
-  static void removeAndDestroyDummyId(omniLocalIdentity* id);
-  // Remove a dummy entry from the object table.  Consumes <id>.
-  //  Must hold <omni::internalLock>.
-
-  static void resizeObjectTable();
-  // Does what it says on the can!
-  //  Must hold <omni::internalLock>.
-
-};
+OMNI_NAMESPACE_END(omni)
 
 
 void
-omniInternal::replaceImplementation(omniObjRef* objref, omniIdentity* id,
-				    omniLocalIdentity* local_id)
+omniObjTable::resize()
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-  OMNIORB_ASSERT(objref);
-  OMNIORB_ASSERT(id);
 
-  omniLocalIdentity* old_lid = objref->_localId();
-  omniIdentity* old_id = objref->_identity();
-
-  if( old_id != id )  old_id->loseObjRef(objref);
-  if( old_lid && old_lid != old_id )
-    old_lid->omniLocalIdentity::loseObjRef(objref);
-
-  objref->_setIdentity(id, local_id);
-
-  if( old_id != id )  id->gainObjRef(objref);
-  if( local_id && local_id != id )
-    local_id->omniLocalIdentity::gainObjRef(objref);
-
-  if( old_lid && !old_lid->servant() && !old_lid->localRefList() )
-    removeAndDestroyDummyId(old_lid);
-}
-
-
-void
-omniInternal::removeAndDestroyDummyId(omniLocalIdentity* id)
-{
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-  OMNIORB_ASSERT(id);
-
-  omniORB::logs(15, "Removing dummy entry from object table -- no local refs");
-
-  omniLocalIdentity** pid = objectTable +
-    omni::hash(id->key(), id->keysize()) % objectTableSize;
-
-  while( *pid != id ) {
-    OMNIORB_ASSERT(*pid);
-    pid = (*pid)->addrOfNextInObjectTable();
-  }
-
-  *pid = id->nextInObjectTable();
-  --numObjectsInTable;
-
-  id->finishedWithDummyId();
-}
-
-
-void
-omniInternal::resizeObjectTable()
-{
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(numObjectsInTable > maxNumObjects ||
 		 numObjectsInTable < minNumObjects && objectTableSizeI > 0);
 
-  if( numObjectsInTable > maxNumObjects )  ++objectTableSizeI;
-  else                                     --objectTableSizeI;
+  if (numObjectsInTable > maxNumObjects) {
+    ++objectTableSizeI;
+  }
+  else if (numObjectsInTable < minNumObjects && objectTableSizeI > 0) {
+    --objectTableSizeI;
+  }
+  else
+    return;
 
-  _CORBA_ULong newsize = objTblSizes[objectTableSizeI];
+  int newsizei = objTblSizes[objectTableSizeI];
+
+  if (newsizei == -1) {
+    // Wow, we fell off the bottom of the table!  If this happens,
+    // I'll eat my hat...
+    if (omniORB::trace(5)) {
+      omniORB::logger l;
+      l << "More than " << maxNumObjects << " active objects!  "
+	<< "Consider extending the available object table sizes in "
+	<< __FILE__ << ".\n";
+    }
+    objectTableSizeI--;
+    maxNumObjects = 1ul << 31;
+    return;
+  }
+  CORBA::ULong newsize = newsizei;
 
   if( omniORB::trace(15) ) {
     omniORB::logf("Object table resizing from %lu to %lu",
@@ -313,16 +261,16 @@ omniInternal::resizeObjectTable()
   }
 
   // Create and initialise new object table.
-  omniLocalIdentity** newtable = new omniLocalIdentity* [newsize];
+  omniObjTableEntry** newtable = new omniObjTableEntry* [newsize];
   CORBA::ULong i;
   for( i = 0; i < newsize; i++ )  newtable[i] = 0;
 
   // Move the objects across...
   for( i = 0; i < objectTableSize; i++ ) {
-    omniLocalIdentity* id = objectTable[i];
+    omniObjTableEntry* id = objectTable[i];
 
     while( id ) {
-      omniLocalIdentity* next = id->nextInObjectTable();
+      omniObjTableEntry* next = id->nextInObjectTable();
 
       _CORBA_ULong j = omni::hash(id->key(), id->keysize()) % newsize;
       *(id->addrOfNextInObjectTable()) = newtable[j];
@@ -340,8 +288,6 @@ omniInternal::resizeObjectTable()
   minNumObjects =
     objectTableSizeI ? (objTblSizes[objectTableSizeI - 1] / 3) : 0;
 }
-
-OMNI_NAMESPACE_END(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////// omni ////////////////////////////////
@@ -406,39 +352,13 @@ omni::releaseObjRef(omniObjRef* objref)
     return;
   }
 
-  // If this is a reference to a local object, remove this reference
-  // from the object's id's list of local references.
-  //  NB. We have to be darn sure that no-one tries to copy this
-  // reference from the local ref list.  The only place this is
-  // done is in omni::createObjRef() -- which checks that it is
-  // safe first.
-
-  omni::internalLock->lock();
-
-  omniLocalIdentity* lid = objref->_localId();
-
-  if( objref->_identity() != lid )
-    objref->_identity()->loseObjRef(objref);
-
-  if( lid ) {
-
-    lid->omniLocalIdentity::loseObjRef(objref);
-
-    if( omniORB::trace(15) ) {
-      omniORB::logger l;
-      l << "Ref to: " << lid << " -- deleted.\n";
-    }
-
-    // If this id is a dummy entry (ie. the object is not activated)
-    // and there are no more local references, we can remove it from
-    // the object table.
-    if( !lid->servant() && !lid->localRefList() )
-      omniInternal::removeAndDestroyDummyId(lid);
+  // Clear objref's identity
+  {
+    omni_tracedmutex_lock sync(*internalLock);
+    objref->_setIdentity(0);
   }
 
-  internalLock->unlock();
-
-  if( !lid && omniORB::trace(15) )
+  if( omniORB::trace(15) )
     omniORB::logf("ObjRef(%s) -- deleted.", objref->_mostDerivedRepoId());
 
   // Destroy the reference.
@@ -446,172 +366,316 @@ omni::releaseObjRef(omniObjRef* objref)
 }
 
 
-omniServant*
-omni::objRefToServant(omniObjRef* objref)
+omniObjTableEntry*
+omniObjTable::locateActive(const _CORBA_Octet* key, int keysize,
+			   _CORBA_ULong hashv, _CORBA_Boolean wait)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
-  OMNIORB_ASSERT(objref);
 
-  omniLocalIdentity* lid = objref->_localId();
-  if( !lid )  return 0;
+ again:
+  omniObjTableEntry** head  = objectTable + hashv % objectTableSize;
+  omniObjTableEntry*  entry = *head;
 
-  return lid ? lid->servant() : 0;
+  while (entry) {
+    if (entry->is_equal(key, keysize)) break;
+
+    entry = entry->nextInObjectTable();
+  }
+
+  omniObjTableEntry::State state;
+
+  if (entry) {
+    if (wait) {
+      while (entry->state() == omniObjTableEntry::ACTIVATING) {
+
+	state = entry->wait(omniObjTableEntry::ACTIVE |
+			    omniObjTableEntry::DEACTIVATING |
+			    omniObjTableEntry::ETHEREALISING);
+
+	if (state == omniObjTableEntry::DEAD) {
+	  // The entry has been removed from the object table. Have to
+	  // start from scratch in case a new entry has been created.
+	  goto again;
+	}
+      }
+    }
+    if (entry->state() & (omniObjTableEntry::ACTIVE |
+			  omniObjTableEntry::DEACTIVATING))
+      return entry;
+  }
+  return 0;
 }
 
 
-omniLocalIdentity*
-omni::locateIdentity(const CORBA::Octet* key, int keysize, _CORBA_ULong hashv,
-		     _CORBA_Boolean create_dummy)
+omniObjTableEntry*
+omniObjTable::locate(const _CORBA_Octet* key, int keysize,
+		     _CORBA_ULong hashv, _CORBA_ULong set)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
 
-  omniLocalIdentity** head = objectTable + hashv % objectTableSize;
-  omniLocalIdentity* id = *head;
+ again:
+  omniObjTableEntry** head  = objectTable + hashv % objectTableSize;
+  omniObjTableEntry*  entry = *head;
 
-  while( id ) {
-    if( id->is_equal(key, keysize) )  return id;
+  while (entry) {
+    if (entry->is_equal(key, keysize)) break;
 
-    id = id->nextInObjectTable();
+    entry = entry->nextInObjectTable();
   }
 
-  if( !create_dummy )  return 0;
+  if (entry) {
+    while (!(entry->state() & set)) {
+      if (omniORB::trace(15)) {
+	omniORB::logger l;
+	l << "Waiting for object table entry " << entry << "\n";
+      }
+      if (entry->wait(set) == omniObjTableEntry::DEAD) {
+	// The entry has been removed from the object table. Have to
+	// start from scratch in case a new entry has been created.
+	goto again;
+      }
+    }
+    return entry;
+  }
+  return 0;
+}
+
+omniObjTableEntry*
+omniObjTable::newEntry(omniObjKey& key)
+{
+  CORBA::ULong hashv = omni::hash(key.key(), key.size());
+  return newEntry(key, hashv);
+}
+
+omniObjTableEntry*
+omniObjTable::newEntry(omniObjKey& key, _CORBA_ULong hashv)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
+
+  omniObjTableEntry** head  = objectTable + hashv % objectTableSize;
+  omniObjTableEntry*  entry = *head;
+
+  while (entry) {
+    if (entry->is_equal(key.key(), key.size())) return 0;
+    entry = entry->nextInObjectTable();
+  }
 
   if( ++numObjectsInTable > maxNumObjects ) {
-    omniInternal::resizeObjectTable();
+    omniObjTable::resize();
     head = objectTable + hashv % objectTableSize;
   }
 
-  id = new omniLocalIdentity(key, keysize);
-  *(id->addrOfNextInObjectTable()) = *head;
-  *head = id;
+  entry = new omniObjTableEntry(key);
+  
+  *(entry->addrOfNextInObjectTable()) = *head;
+  *head = entry;
 
-  return id;
+  if (omniORB::trace(10)) {
+    omniORB::logger l;
+    l << "Adding " << entry << " to object table.\n";
+  }
+  return entry;
 }
 
 
-omniLocalIdentity*
-omni::activateObject(omniServant* servant, omniObjAdapter* adapter,
-		     omniObjKey& key)
+omniObjTableEntry::~omniObjTableEntry()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
+  if (pd_cond) delete pd_cond;
+  if (omniORB::trace(15)) {
+    omniORB::logger l;
+    l << "Object table entry " << this << " deleted.\n";
+  }
+}
 
-  CORBA::ULong hashv = hash(key.key(), key.size());
 
-  omniLocalIdentity* id = locateIdentity(key.key(), key.size(), hashv, 1);
+void
+omniObjTableEntry::setActive(omniServant* servant, omniObjAdapter* adapter)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  OMNIORB_ASSERT(pd_state == ACTIVATING);
 
-  if( id->servant() )  return 0;
+  setServant(servant, adapter);
+  servant->_addActivation(this);
 
-  id->setServant(servant, adapter);
-  servant->_addIdentity(id);
+  if( omniORB::trace(15) ) {
+    omniORB::logger l;
+    l << "State " << this << " -> active\n";
+  }
 
-  omniObjRef* objreflist = id->localRefList();
+  pd_state = ACTIVE;
+
+  if (pd_waiters)
+    pd_cond->broadcast();
+}
+
+void
+omniObjTableEntry::setDeactivating()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  OMNIORB_ASSERT(pd_state == ACTIVE);
+  OMNIORB_ASSERT(pd_nInvocations > 0);
+
+  if( omniORB::trace(15) ) {
+    omniORB::logger l;
+    l << "State " << this << " -> deactivating\n";
+  }
+
+  pd_state = DEACTIVATING;
+  --pd_nInvocations;
+
+  if (pd_waiters)
+    pd_cond->broadcast();
+}
+
+void
+omniObjTableEntry::setEtherealising()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  OMNIORB_ASSERT(pd_state == DEACTIVATING);
+
+  pd_servant->_removeActivation(this);
+
+  if( omniORB::trace(15) ) {
+    omniORB::logger l;
+    l << "State " << this << " -> etherealising\n";
+  }
+
+  pd_state       = ETHEREALISING;
+  pd_deactivated = 1;
+
+  if (pd_waiters)
+    pd_cond->broadcast();
+}
+
+void
+omniObjTableEntry::setDead()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+
+  omniObjTableEntry** pid =
+    objectTable + omni::hash(key(), keysize()) % objectTableSize;
+
+  while (*pid) {
+    if (*pid == this) break;
+    pid = (*pid)->addrOfNextInObjectTable();
+  }
+  OMNIORB_ASSERT(*pid);
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Activating: " << id;
-    if( objreflist )  l << " (has local refs)";
-    l << '\n';
+    l << "Removing " << this << " from object table\n";
   }
+  *pid = nextInObjectTable();
 
-  while( objreflist ) {
-    objreflist->pd_flags.object_exists = 1;
-    if (servant->_ptrToInterface(objreflist->_localServantTarget())) {
-      omniInternal::replaceImplementation(objreflist, id, id);
-      objreflist->pd_flags.type_verified = 1;
-    }
-    else {
-      OMNIORB_ASSERT(objreflist->_identity() != objreflist->_localId());
-      objreflist->pd_flags.type_verified = 0;
-    }
-    objreflist = *(objreflist->_addrOfLocalRefList());
+  if( --numObjectsInTable < minNumObjects )
+    omniObjTable::resize();
+
+  if (pd_state != ETHEREALISING && pd_servant) {
+    pd_servant->_removeActivation(this);
+    pd_deactivated = 1;
   }
+  pd_state = DEAD;
 
-  return id;
+  if (pd_waiters)
+    pd_cond->broadcast();
+
+  loseRef(); // Drop the object table's entry to ourselves
 }
 
 
-omniLocalIdentity*
-omni::deactivateObject(const CORBA::Octet* key, int keysize)
+omniObjTableEntry::State
+omniObjTableEntry::wait(_CORBA_ULong set)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
-  omniLocalIdentity** pid = objectTable + hash(key, keysize) % objectTableSize;
+  if (pd_state & set) return pd_state;
 
-  while( *pid ) {
-    if( (*pid)->is_equal(key, keysize) )
-      break;
+  if (!pd_cond) pd_cond = new omni_tracedcondition(omni::internalLock);
 
-    pid = (*pid)->addrOfNextInObjectTable();
+  gainRef();
+  ++pd_waiters;
+  if (omniORB::trace(15)) {
+    omniORB::logger l;
+    l << "Waiting for " << this << "\n";
   }
+  while ((pd_state != DEAD) && !(pd_state & set)) pd_cond->wait();
+  --pd_waiters;
 
-  omniLocalIdentity* id = *pid;
-  if( !(id && id->servant()) )  return 0;
+  State ret = pd_state;
+  // If the state is now DEAD, the call to loseRef() below might
+  // delete this object, so we must save the return state here.
 
-  omniObjRef* objreflist = id->localRefList();
+  loseRef();
 
-  if( objreflist ) {
-
-    if( omniORB::trace(10) ) {
-      omniORB::logger l;
-      l << "Deactivating: " << id << " (has local refs).\n";
-    }
-
-    // Replace the object table entry with a dummy entry.
-
-    omniLocalIdentity* newid = new omniLocalIdentity(id->key(), id->keysize());
-
-    *newid->addrOfNextInObjectTable() = id->nextInObjectTable();
-    *pid = newid;
-    *id->addrOfNextInObjectTable() = 0;
-
-    // Go through each local reference, and replace its
-    // implementation with a loop-back (if not already
-    // using one).
-
-    omniIdentity* remote_id = 0;
-
-    while( objreflist ) {
-      omniObjRef* next = *(objreflist->_addrOfLocalRefList());
-      objreflist->pd_flags.object_exists = 0;
-
-      if( !remote_id ) {
-	int has_remote_id = objreflist->_identity() != objreflist->_localId();
-
-	if( has_remote_id )
-	  remote_id = objreflist->_identity();
-	else {
-	  remote_id = createInProcessIdentity(newid->key(),newid->keysize());
-	}
-      }
-      omniInternal::replaceImplementation(objreflist, remote_id, newid);
-      objreflist = next;
-    }
-    OMNIORB_ASSERT(id->localRefList() == 0);
-  }
-  else {
-    if( omniORB::trace(10) ) {
-      omniORB::logger l;
-      l << "Deactivating: " << id << '\n';
-    }
-
-    // No local refs to the id -- just remove it from the table.
-    *pid = id->nextInObjectTable();
-
-    if( --numObjectsInTable < minNumObjects )
-      omniInternal::resizeObjectTable();
-  }
-
-  // Remove <id> from the servants list of identities.
-  id->servant()->_removeIdentity(id);
-
-  return id;
+  return ret;
 }
+
+
+void
+omniObjTableEntry::gainRef(omniObjRef* objref)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  ++pd_refCount;
+  if (objref)
+    pd_objRefs.push_back(objref);
+}
+
+void
+omniObjTableEntry::loseRef(omniObjRef* objref)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+
+  if (objref) {
+    CORBA::Boolean reference_found = 0;
+
+    omnivector<omniObjRef*>::iterator i    = pd_objRefs.begin();
+    omnivector<omniObjRef*>::iterator last = pd_objRefs.end();
+
+    for (; i != last; i++) {
+      if (*i == objref) {
+	pd_objRefs.erase(i);
+	reference_found = 1;
+	break;
+      }
+    }
+    OMNIORB_ASSERT(reference_found);
+  }
+  
+  if (--pd_refCount > 0) return;
+
+  OMNIORB_ASSERT(pd_refCount == 0);
+  // < 0 means someone has released too many references.
+
+  OMNIORB_ASSERT(pd_waiters  == 0);
+  // Waiting threads hold a reference to us, so pd_waiters should be
+  // zero by the time we get here.
+
+  OMNIORB_ASSERT(pd_objRefs.empty());
+  // If this fails, an object reference released its reference to us
+  // without passing the objref pointer.
+
+  delete this;
+}
+
+void*
+omniObjTableEntry::thisClassCompare(omniIdentity* id, void* vfn)
+{
+  classCompare_fn fn = (classCompare_fn)vfn;
+
+  if (fn == omniObjTableEntry::thisClassCompare)
+    return (omniObjTableEntry*)id;
+
+  if (fn == omniLocalIdentity::thisClassCompare)
+    return (omniLocalIdentity*)id;
+
+  return 0;
+}
+
 
 
 omniIdentity*
-omni::createIdentity(omniIOR* ior,omniLocalIdentity*& local_id,
-		     const char* target, CORBA::Boolean locked) {
-
+omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
+{
   omniIOR_var holder(ior); // Place the ior inside a var. If ever
                            // any function we called results in an
                            // exception being thrown, the ior is released
@@ -621,25 +685,10 @@ omni::createIdentity(omniIOR* ior,omniLocalIdentity*& local_id,
                            // sure that _retn() is called on the var so
                            // that the ior is not released incorrectly!
 
-  if (local_id) {
-    // We are told this is a local object, check to see if we can just
-    // use the localIdentity or we have to use an in process identity
-    if (local_id->servant() && local_id->servant()->_ptrToInterface(target)) {
-      return local_id;
-    }
-    else {
-      // Return in process identity
-      return createInProcessIdentity(local_id->key(),local_id->keysize());
-    }
-  }
-
-  // Reach here means that we have to look into the IOR to find out
-  // what identity object to return.
-
+  // Try an interceptor
   omniIdentity* result = 0;
   {
-    omniInterceptors::createIdentity_T::info_T info(ior,local_id,
-						    result,locked);
+    omniInterceptors::createIdentity_T::info_T info(ior, result, locked);
     omniORB::getInterceptors()->createIdentity.visit(info);
   }
   if (result) {
@@ -647,6 +696,7 @@ omni::createIdentity(omniIOR* ior,omniLocalIdentity*& local_id,
     return result;
   }
 
+  // Decode the profiles
   const IOP::TaggedProfileList& profiles = ior->iopProfiles();
 
   if (ior->addr_selected_profile_index() < 0) {
@@ -673,8 +723,8 @@ omni::createIdentity(omniIOR* ior,omniLocalIdentity*& local_id,
   // calling omniIOR::decodeIOPprofile() first, because createIdentity
   // may be called with the same ior more than once. It is highly
   // undesirable if the IOP profile is decoded in each of these calls.
-  // Not only is this inefficent but doing so would create a thread safety
-  // nightmare.
+  // Not only is this inefficent but doing so would create a thread
+  // safety nightmare.
 
   CORBA::Boolean is_local = 0;
   Rope* rope;
@@ -691,22 +741,25 @@ omni::createIdentity(omniIOR* ior,omniLocalIdentity*& local_id,
 
   if (is_local) {
 
-    CORBA::ULong hashv = hash(object_key.get_buffer(),object_key.length());
+    CORBA::ULong hashv = hash(object_key.get_buffer(), object_key.length());
     omni_optional_lock sync(*internalLock,locked,locked);
-    // If the identity does not exist in the local object table, this will
-    // insert a dummy entry
-    local_id = locateIdentity(object_key.get_buffer(),object_key.length(),
-			      hashv, 1);
 
-    if (local_id->servant() && local_id->servant()->_ptrToInterface(target)) {
-      return local_id;
+    omniObjTableEntry* entry =
+      omniObjTable::locateActive(object_key.get_buffer(),
+				 object_key.length(), hashv, 0);
+
+    if (entry && entry->servant()->_ptrToInterface(target)) {
+      // Compatible activated object
+      return entry;
     }
     else {
-      // Return in process identity
-      return createInProcessIdentity(local_id->key(),local_id->keysize());
+      // Not active or servant incompatible with target
+      return createInProcessIdentity(object_key.get_buffer(),
+				     object_key.length());
     }
   }
   else {
+    // Remote
     holder._retn();
     result = new omniRemoteIdentity(ior,
 				    object_key.get_buffer(),
@@ -734,16 +787,23 @@ omniObjRef*
 omni::createObjRef(const char* targetRepoId,
 		   omniIOR* ior,
 		   CORBA::Boolean locked,
-		   omniIdentity* id,
-		   omniLocalIdentity* local_id)
+		   omniIdentity* id)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, locked);
   OMNIORB_ASSERT(targetRepoId);
   OMNIORB_ASSERT(ior);
 
-  if (!id) {
+  if (id) {
+    omniLocalIdentity* lid = omniLocalIdentity::downcast(id);
+
+    if (lid && !lid->servant()->_ptrToInterface(targetRepoId)) {
+      // Local id can't be used by the objref
+      id = createInProcessIdentity(lid->key(), lid->keysize());
+    }
+  }
+  else {
     ior->duplicate();  // consumed by createIdentity
-    id = omni::createIdentity(ior,local_id,targetRepoId,locked);
+    id = omni::createIdentity(ior, targetRepoId, locked);
     if ( !id ) {
       ior->release();
       return 0;
@@ -757,10 +817,6 @@ omni::createObjRef(const char* targetRepoId,
 
     // We know that <mostDerivedRepoId> is not derived from
     // <targetRepoId>. 
-
-    OMNIORB_ASSERT(id != local_id);
-    // createIdentity() should have made sure that the local id is
-    // compatible with the target type.
 
     pof = 0;
   }
@@ -795,52 +851,53 @@ omni::createObjRef(const char* targetRepoId,
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Creating ref to " << ((id == local_id) ? "local" : "remote")
-      << ": " << id << "\n"
+    l << "Creating ref to ";
+    if      (omniLocalIdentity    ::downcast(id)) l << "local";
+    else if (omniInProcessIdentity::downcast(id)) l << "in process";
+    else if (omniRemoteIdentity   ::downcast(id)) l << "remote";
+    else                                          l << "unknown";
+
+    l << ": " << id << "\n"
       " target id      : " << targetRepoId << "\n"
       " most derived id: " << (const char*)ior->repositoryID() << "\n";
   }
 
   // Now create the object reference itself.
 
-  omniObjRef* objref = pof->newObjRef(ior, id, local_id);
+  omniObjRef* objref = pof->newObjRef(ior, id);
   if( target_intf_not_confirmed )  objref->pd_flags.type_verified = 0;
 
   {
     omni_optional_lock sync(*internalLock, locked, locked);
-    if (id != local_id)
-      id->gainObjRef(objref);
-    if (local_id)
-      local_id->gainObjRef(objref);
+    id->gainRef(objref);
   }
 
   return objref;
 }
 
 omniObjRef*
-omni::createObjRef(const char* mostDerivedRepoId,
-		   const char* targetRepoId,
-		   omniLocalIdentity* local_id)
+omni::createLocalObjRef(const char* mostDerivedRepoId,
+			const char* targetRepoId,
+			omniObjTableEntry* entry)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
   OMNIORB_ASSERT(targetRepoId);
-  OMNIORB_ASSERT(local_id);
-
-  omniIdentity* id = 0;
+  OMNIORB_ASSERT(entry);
 
   // See if a suitable reference exists in the local ref list.
   // Suitable means having the same most-derived-intf-repo-id, and
   // also supporting the <targetRepoId>.
   {
-    omniObjRef* objref = local_id->localRefList();
+    omniObjRef* objref;
 
-    while( objref ) {
+    omnivector<omniObjRef*>::iterator i    = entry->objRefs().begin();
+    omnivector<omniObjRef*>::iterator last = entry->objRefs().end();
+
+    for (; i != last; i++) {
+      objref = *i;
 
       if( omni::ptrStrMatch(mostDerivedRepoId, objref->_mostDerivedRepoId()) &&
 	  objref->_ptrToObjRef(targetRepoId) ) {
-
-	omniORB::logs(15, "createObjRef -- reusing reference from local"
-		      " ref list.");
 
 	// We just need to check that the ref count is not zero here,
 	// 'cos if it is then the objref is about to be deleted!
@@ -852,23 +909,43 @@ omni::createObjRef(const char* mostDerivedRepoId,
 	objref_rc_lock->unlock();
 
 	if( !dying ) {
+	  omniORB::logs(15, "createLocalObjRef -- reusing reference from local"
+			" ref list.");
 	  return objref;
 	}
       }
-
-      if( objref->_identity() != objref->_localId() )
-	// If there is a id available, just keep a
-	// note of it in case we need it.
-	id = objref->_identity();
-
-      objref = objref->_nextInLocalRefList();
     }
   }
-  
   // Reach here if we have to create a new objref.
-  omniIOR* ior = new omniIOR(mostDerivedRepoId,local_id);
-  return createObjRef(targetRepoId,ior,1,id,local_id);
+  omniIOR* ior = new omniIOR(mostDerivedRepoId,
+			     entry->key(), entry->keysize());
+
+  return createObjRef(targetRepoId,ior,1,entry);
 }
+
+omniObjRef*
+omni::createLocalObjRef(const char* mostDerivedRepoId,
+			const char* targetRepoId,
+			const _CORBA_Octet* key, int keysize)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
+  OMNIORB_ASSERT(targetRepoId);
+  OMNIORB_ASSERT(key && keysize);
+
+  // See if there's a suitable entry in the object table
+  CORBA::ULong hashv = hash(key, keysize);
+
+  omniObjTableEntry* entry = omniObjTable::locateActive(key, keysize,
+							hashv, 0);
+
+  if (entry)
+    return createLocalObjRef(mostDerivedRepoId, targetRepoId, entry);
+
+  omniIOR* ior = new omniIOR(mostDerivedRepoId, key, keysize);
+
+  return createObjRef(targetRepoId,ior,1,entry);
+}
+
 
 
 void
@@ -885,14 +962,13 @@ omni::revertToOriginalProfile(omniObjRef* objref)
 
   // We might have already been reverted... We check here
   // rather than sooner, so as to avoid holding <internalLock>
-  // longer than necassary.
+  // longer than necessary.
   if( !objref->pd_flags.forward_location ) {
     return;
   }
 
   ior->duplicate(); // consumed by createIdentity
-  omniLocalIdentity* local_id = 0;
-  omniIdentity* id = omni::createIdentity(ior, local_id,
+  omniIdentity* id = omni::createIdentity(ior, 
 					  objref->_localServantTarget(), 1);
   if( !id ) {
     OMNIORB_THROW(INV_OBJREF,INV_OBJREF_CorruptedObjRef, CORBA::COMPLETED_NO);
@@ -904,7 +980,7 @@ omni::revertToOriginalProfile(omniObjRef* objref)
   objref->pd_flags.type_verified = 1;
   objref->pd_flags.object_exists = 1;
 
-  omniInternal::replaceImplementation(objref, id, local_id);
+  objref->_setIdentity(id);
 }
 
 
@@ -948,35 +1024,22 @@ omni::locationForward(omniObjRef* objref, omniObjRef* new_location,
     // that the servant supports the correct c++ type
     // interface.
 
-    omniIdentity*      nl_id  = new_location->_identity();
-    omniLocalIdentity* nl_lid = new_location->_localId();
+    omniIdentity* new_id = new_location->_identity();
 
-    if( nl_id == nl_lid &&
-	nl_lid->servant()->_ptrToInterface(objref->_localServantTarget()) ) {
+    omniLocalIdentity* new_lid = omniLocalIdentity::downcast(new_id);
 
-      omniInternal::replaceImplementation(objref, nl_lid, nl_lid);
-    }
-    else {
-      // This means that we have been forwarded to an implementation
-      // that we cannot connect to directly. So:
-      // 
-      //   o  it is remote
-      //   o  it is local but doesn't yet exist
-      //   o  it is local & exists but doesn't support our interface
-      //
-      // In all of these cases we need to use a remote id, and set
-      // type_verified to 0 to ensure we re-check the type before
-      // using it.
+    if (new_lid) {
 
-      if ( nl_id == nl_lid ) {
-	// local & exists but doesn't support our interface
+      if (new_lid->deactivated() ||
+	  !new_lid->servant()->_ptrToInterface(objref->_localServantTarget())){
+	// Identity in new location is either dead or incompatible
+	// with this object reference. Use an inProcessIdentity.
 
-	// Create in process identity
-	nl_id = createInProcessIdentity(nl_id->key(),nl_id->keysize());
+	new_id = createInProcessIdentity(new_lid->key(), new_lid->keysize());
 	objref->pd_flags.type_verified = 0;
       }
-      omniInternal::replaceImplementation(objref, nl_id, nl_lid);
     }
+    objref->_setIdentity(new_id);
 
     if (permanent) {
       // This location forwarding is permanent, replace the IOR of this
@@ -994,10 +1057,6 @@ omni::locationForward(omniObjRef* objref, omniObjRef* new_location,
 }
 
 
-// omni::stringToObject() and omni::objectToString are replaced by
-// functions in omniURI::
-
-
 void
 omni::assertFail(const char* file, int line, const char* expr)
 {
@@ -1008,7 +1067,7 @@ omni::assertFail(const char* file, int line, const char* expr)
       "been shut down.\n"
       " file: " << file << "\n"
       " line: " << line << "\n"
-      " info: " << expr << '\n';
+      " info: " << expr << "\n";
   }
   throw omniORB::fatalException(file, line, expr);
 }
@@ -1023,7 +1082,7 @@ omni::ucheckFail(const char* file, int line, const char* expr)
       " using omniORB.  See the comment in the source code for more info.\n"
       " file: " << file << "\n"
       " line: " << line << "\n"
-      " info: " << expr << '\n';
+      " info: " << expr << "\n";
   }
 }
 
@@ -1056,7 +1115,7 @@ public:
       maxNumObjects = objectTableSize * 2 / 3;
     }
 
-    objectTable = new omniLocalIdentity* [objectTableSize];
+    objectTable = new omniObjTableEntry* [objectTableSize];
     for( CORBA::ULong i = 0; i < objectTableSize; i++ )  objectTable[i] = 0;
   }
 

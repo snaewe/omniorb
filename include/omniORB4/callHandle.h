@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  2001/08/15 10:26:07  dpg1
+ New object table behaviour, correct POA semantics.
+
  Revision 1.1.2.3  2001/08/01 10:08:19  dpg1
  Main thread policy.
 
@@ -62,22 +65,26 @@ public:
       pd_postinvoke_hook(0),
       pd_poa(0),
       pd_localId(0),
-      pd_mainthread_mu(0)
+      pd_mainthread_mu(0),
+      pd_try_direct(0)
   {}
 
-  inline omniCallHandle(omniCallDescriptor* call_desc)
+  inline omniCallHandle(omniCallDescriptor* call_desc,
+			_CORBA_Boolean try_direct)
     : pd_iop_s(0),
       pd_call_desc(call_desc),
       pd_op(call_desc->op()),
       pd_postinvoke_hook(0),
       pd_poa(0),
       pd_localId(0),
-      pd_mainthread_mu(0)
+      pd_mainthread_mu(0),
+      pd_try_direct(try_direct)
   {}
 
   inline const char*         operation_name() const { return pd_op; }
   inline _OMNI_NS(IOP_S*)    iop_s()          const { return pd_iop_s; }
   inline omniCallDescriptor* call_desc()      const { return pd_call_desc; }
+  inline _CORBA_Boolean      try_direct()     const { return pd_try_direct; }
 
   void upcall(omniServant* servant, omniCallDescriptor& desc);
 
@@ -92,7 +99,6 @@ public:
   inline void postinvoke_hook(PostInvokeHook* hook) {
     pd_postinvoke_hook = hook;
   }
-  inline PostInvokeHook* postinvoke_hook() { return pd_postinvoke_hook; }
 
   void SkipRequestBody();
   // SkipRequestBody is called if an exception occurs while
@@ -107,6 +113,13 @@ public:
     pd_mainthread_cond = cond;
   }
 
+  // Accessors
+  inline PostInvokeHook*       postinvoke_hook() { return pd_postinvoke_hook; }
+  inline _OMNI_NS(omniOrbPOA)* poa()             { return pd_poa; }
+  inline omniLocalIdentity*    localId()         { return pd_localId; }
+  inline omni_tracedmutex*     mainthread_mu()   { return pd_mainthread_mu; }
+  inline omni_tracedcondition* mainthread_cond() { return pd_mainthread_cond; }
+
 private:
   _OMNI_NS(IOP_S)*      pd_iop_s;
   omniCallDescriptor*   pd_call_desc;
@@ -116,6 +129,7 @@ private:
   omniLocalIdentity*    pd_localId;
   omni_tracedmutex*     pd_mainthread_mu;
   omni_tracedcondition* pd_mainthread_cond;
+  _CORBA_Boolean        pd_try_direct;
 
 private:
   // Not implemented

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/08/15 10:26:12  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.6  2001/08/03 17:41:22  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -96,13 +99,16 @@ public:
     omni::internalLock->lock();
     pd_id->pd_nInvocations--;
     pd_id->pd_adapter->leaveAdapter();
-    int done = pd_id->pd_nInvocations > 0;
-    omni::internalLock->unlock();
-    if( done )  return;
+    if (pd_id->pd_nInvocations > 0) {
+      omni::internalLock->unlock();
+      return;
+    }
     // Object has been deactivated, and the last invocation
     // has completed.  Pass the object back to the adapter
     // so it can be etherealised.
     pd_id->adapter()->lastInvocationHasCompleted(pd_id);
+
+    // lastInvocationHasCompleted() has released <omni::internalLock>.
   }
 
 private:
@@ -122,6 +128,28 @@ omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(pd_adapter && pd_servant);
+
+  if (pd_deactivated || !call_desc.haslocalCallFn()) {
+    // This localIdentity is dead and unusable, or the call descriptor
+    // is unable to do a direct local call (because it's a DII call).
+    // Either way, replace the object reference's identity with an
+    // inProcessIdentity and invoke on that.
+    //
+    // Note that in the case of a DII call, we have dropped the
+    // localIdentity, meaning the next non-DII call will have to
+    // re-discover it. We do it this way since if the application has
+    // done one DII call, it's likely to do more, so it's best to
+    // avoid repeatedly creating inProcessIdentities.
+
+    if (omniORB::trace(15)) {
+      omniORB::logger l;
+      l << this << " is no longer active. Using in process identity.\n";
+    }
+    omniIdentity* id = omni::createInProcessIdentity(key(), keysize());
+    call_desc.objref()->_setIdentity(id);
+    id->dispatch(call_desc);
+    return;
+  }
 
   call_desc.localId(this);
 
@@ -173,59 +201,20 @@ omniLocalIdentity::dispatch(omniCallHandle& handle)
 
 
 void
-omniLocalIdentity::finishedWithDummyId()
+omniLocalIdentity::gainRef(omniObjRef*)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-  OMNIORB_ASSERT(!pd_servant && !pd_adapter && !pd_localRefs);
-
-  omniORB::logs(15, "Dummy omniLocalIdentity deleted (no more local refs).");
-
-  delete this;
+  OMNIORB_ASSERT(0);
+  // An omniLocalIdentity should never be used as the identity within
+  // an object reference. omniObjTableEntry should be used instead.
 }
 
 
 void
-omniLocalIdentity::die()
+omniLocalIdentity::loseRef(omniObjRef*)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
-  OMNIORB_ASSERT(pd_nInvocations == 0);
-  OMNIORB_ASSERT(pd_localRefs == 0);
-
-  // The servant is cleaned up by the caller.
-  // We do not hold a ref to the adapter.
-
-  omniORB::logs(15, "omniLocalIdentity deleted.");
-
-  delete this;
-}
-
-
-void
-omniLocalIdentity::gainObjRef(omniObjRef* objref)
-{
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-  OMNIORB_ASSERT(objref);
-
-  *(objref->_addrOfLocalRefList()) = pd_localRefs;
-  pd_localRefs = objref;
-}
-
-
-void
-omniLocalIdentity::loseObjRef(omniObjRef* objref)
-{
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-  OMNIORB_ASSERT(objref);
-
-  omniObjRef** p = &pd_localRefs;
-
-  while( *p != objref ) {
-    OMNIORB_ASSERT(*p);
-    p = (*p)->_addrOfLocalRefList();
-  }
-
-  *p = *(*p)->_addrOfLocalRefList();
-  *(objref->_addrOfLocalRefList()) = 0;
+  OMNIORB_ASSERT(0);
+  // An omniLocalIdentity should never be used as the identity within
+  // an object reference. omniObjTableEntry should be used instead.
 }
 
 void
@@ -255,4 +244,21 @@ omniLocalIdentity::real_is_equivalent(const omniIdentity* id1,
       return 0;
 
   return 1;
+}
+
+_CORBA_Boolean
+omniLocalIdentity::inThisAddressSpace()
+{
+  return 1;
+}
+
+void*
+omniLocalIdentity::thisClassCompare(omniIdentity* id, void* vfn)
+{
+  classCompare_fn fn = (classCompare_fn)vfn;
+
+  if (fn == omniLocalIdentity::thisClassCompare)
+    return (omniLocalIdentity*)id;
+
+  return 0;
 }

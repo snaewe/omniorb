@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.11  2001/08/15 10:26:08  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.10  2001/08/01 10:08:19  dpg1
   Main thread policy.
 
@@ -203,6 +206,7 @@
 class omniObjRef;
 class omniServant;
 class omniIOR;
+class omniObjTableEntry;
 class omniLocalIdentity;
 class omniRemoteIdentity;
 class omniIdentity;
@@ -260,18 +264,19 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_VAR _core_attr const alignment_t                max_alignment;
   // Maximum value of alignment_t
 
-  _CORBA_MODULE_VAR _core_attr int                       remoteInvocationCount;
-  _CORBA_MODULE_VAR _core_attr int                       localInvocationCount;
+  _CORBA_MODULE_VAR _core_attr int remoteInvocationCount;
+  _CORBA_MODULE_VAR _core_attr int localInvocationCount;
   // These are updated whilst internalLock is held.  However it is
   // suggested that they may be read without locking, since integer
   // reads are likely to be atomic.
 
-  _CORBA_MODULE_VAR _core_attr int                       mainThreadId;
+  _CORBA_MODULE_VAR _core_attr int mainThreadId;
   // id of the main thread. 0 by default. Can be changed by calling
   // omniORB::setMainThread().
 
 
-  _CORBA_MODULE_FN inline ptr_arith_t align_to(ptr_arith_t p, alignment_t align) {
+  _CORBA_MODULE_FN inline ptr_arith_t align_to(ptr_arith_t p,
+					       alignment_t align) {
     return (p + ((int) align - 1)) & ~((int) align - 1);
   }
 
@@ -290,43 +295,6 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN void releaseObjRef(omniObjRef*);
   // Must not hold <internalLock>.
 
-  _CORBA_MODULE_FN omniServant* objRefToServant(omniObjRef* obj);
-  // Returns the servant associated with the given reference in
-  // the object table.  Returns 0 if this is not a reference to
-  // a local object, or the object is not incarnated.  Does not
-  // increment the reference count of the servant.
-  //  Must hold <internalLock>.
-
-  _CORBA_MODULE_FN omniLocalIdentity* locateIdentity(const _CORBA_Octet* key,
-						     int keysize, 
-						     _CORBA_ULong hash,
-						     _CORBA_Boolean create_dummy = 0);
-  // Searches the servant table for the given key.  Returns the identity
-  // if found.  If not and <create_dummy> is true, it creates a dummy
-  // identity and puts it in the table -- and returns that.  Does not
-  // increment the ref count of the id if found.
-  //  Must hold <internalLock>.
-
-  _CORBA_MODULE_FN omniLocalIdentity* activateObject(omniServant* servant,
-						     omniObjAdapter* adapter,
-						     omniObjKey& key);
-  // Insert the given servant into the object table.  Returns 0 if
-  // an object has already been activated with the given key.  May
-  // consume <key>.  On success, consumes <servant> and returns the
-  // identity of the object.
-  //  NB. The adapter *must* outlive all its objects -- so a
-  // reference to it is not needed.
-  //  Must hold <internalLock>.
-  //  This function does not throw any exceptions.
-
-  _CORBA_MODULE_FN omniLocalIdentity* deactivateObject(const _CORBA_Octet* key,
-						       int keysize);
-  // Deactivate the object with the given key.  Returns 0
-  // if the given object was not active, otherwise returns
-  // the identity.  The caller should decrement the reference
-  // count of the returned id when finished with it.
-  //  Must hold <internalLock>.
-  //  This function does not throw any exceptions.
 
   // Each of the reference creating functions below return a
   // reference which supports the c++ type interface give by
@@ -334,28 +302,15 @@ _CORBA_MODULE_BEG
   // which we have static information.  <mostDerivedRepoId> is
   // the interface repository ID recorded in the original IOR.
   // This may be the empty string (but *not* null).
-  //  If <targetRepoId> is neither equal to <mostDerivedRepoId>
-  // nor the latter is a derived interface of the former, these
-  // methods return 0.
 
   _CORBA_MODULE_FN omniIdentity* createIdentity(omniIOR* ior,
-						omniLocalIdentity*& local_id,
 						const char* target,
 						_CORBA_Boolean locked);
-  // Create an identity object that can be used to invoke operations on
-  // the CORBA object identified by <ior>.
-  //
-  // <local_id> if non-zero means that the object is local and its
-  // localIdentity is contained in <local_id>. 
-  //
-  // If <local_id> is zero and  the object is found to be local,
-  // the argument is updated to the localIdentity of that object on return.
-  // Returns 0 to indicate that it is not possible to create an identity 
-  // object.
-  //
-  // If a local identity is given or found, and it contains a non-zero
-  // servant pointer, the local identity is only returned if
-  // _ptrToInterface(<target>) returns non-zero.
+  // Create an identity object that can be used to invoke operations
+  // on the CORBA object identified by <ior>. If the object is local
+  // and activated, the servant is checked for compatibility with
+  // <target>. If they are compatible, the localIdentity is returned;
+  // otherwise, an inProcessIdentity is used.
   //
   // <ior> is always consumed even if the function returns 0.
   //
@@ -369,37 +324,34 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN omniIdentity* createLoopBackIdentity(omniIOR* ior,
 							const _CORBA_Octet* k,
 							int keysize);
-  // Returns an instance of omniIdentity to contact a local object identified
-  // by the call arguments. <ior> is consumed.
-
-  // Each of the reference creating functions below return a
-  // reference which supports the c++ type interface give by
-  // the repository id <targetRepoId> -- it must be a type for
-  // which we have static information.  <mostDerivedRepoId> is
-  // the interface repository ID recorded in the original IOR.
-  // This may be the empty string (but *not* null).
+  // Returns an instance of omniRemoteIdentity to contact a local
+  // object identified by the call arguments. <ior> is consumed.
 
    _CORBA_MODULE_FN omniObjRef* createObjRef(const char* targetRepoId,
 					     omniIOR* ior,
 					     _CORBA_Boolean locked,
-					     omniIdentity* id = 0,
-					     omniLocalIdentity* local_id = 0);
+					     omniIdentity* id = 0);
   // Returns an object reference identified by <ior>.  If <id> is not 0, it
-  // is a readily available identity object. Similarily a non-zero <local_id>,
-  // this is the localIdentity object for this object reference.
+  // is a readily available identity object.
   // Return 0 if a type error is detected and the object reference cannot be
   // created.
-  // <ior> is always consumed even if the function returns 0.
+  //  <ior> is always consumed even if the function returns 0.
   //  <locked> => hold <internalLock>.
 
-  _CORBA_MODULE_FN omniObjRef* createObjRef(const char* mostDerivedRepoId,
-					    const char* targetRepoId,
-					    omniLocalIdentity* id);
-  // Return a reference to the given local object (which may or
-  // may not have an entry in the local object table).  May
-  // return an existing reference if a suitable one exists, or
-  // may create a new one.
+  _CORBA_MODULE_FN omniObjRef* createLocalObjRef(const char* mostDerivedRepoId,
+						 const char* targetRepoId,
+						 omniObjTableEntry* entry);
+  // Return a reference to the specified activated local object.
   //  Must hold <internalLock>.
+
+  _CORBA_MODULE_FN omniObjRef* createLocalObjRef(const char* mostDerivedRepoId,
+						 const char* targetRepoId,
+						 const _CORBA_Octet* key,
+						 int keysize);
+  // Return a reference to the local object with the given key, which
+  // may or may not be active.
+  //  Must hold <internalLock>.
+
 
   _CORBA_MODULE_FN void revertToOriginalProfile(omniObjRef* objref);
   // Reset the implementation of the reference to that stored

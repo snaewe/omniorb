@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  2001/08/15 10:26:09  dpg1
+ New object table behaviour, correct POA semantics.
+
  Revision 1.1.2.1  2001/05/29 17:03:49  dpg1
  In process identity.
 
@@ -53,22 +56,23 @@ class omniInProcessIdentity : public omniIdentity {
 public:
   inline ~omniInProcessIdentity() {}
 
-  inline omniInProcessIdentity(omniObjKey& key)
-    : omniIdentity(key),
+  inline omniInProcessIdentity(omniObjKey& key,
+			       classCompare_fn compare = thisClassCompare)
+    : omniIdentity(key, compare),
       pd_refCount(0)
     {}
-  // May consume <key>.  Constructs an identity with ref count
-  // of 1.  Initially has no implementation.
+  // May consume <key>.
 
-  inline omniInProcessIdentity(const _CORBA_Octet* key, int keysize)
-    : omniIdentity(key, keysize)
+  inline omniInProcessIdentity(const _CORBA_Octet* key, int keysize,
+			       classCompare_fn compare = thisClassCompare)
+    : omniIdentity(key, keysize, compare),
+      pd_refCount(0)
     {}
-  // Copies <key>.  Constructs an identity with ref count
-  // of 1.  Initially has no implementation.
+  // Copies <key>.
 
   virtual void dispatch(omniCallDescriptor&);
-  virtual void gainObjRef(omniObjRef*);
-  virtual void loseObjRef(omniObjRef*);
+  virtual void gainRef(omniObjRef* obj = 0);
+  virtual void loseRef(omniObjRef* obj = 0);
   virtual omniIdentity::equivalent_fn get_real_is_equivalent() const;
   // Overrides omniIdentity.
 
@@ -78,6 +82,16 @@ public:
   // otherwise.
   // Caller must hold <internalLock>. On return or raised exception, the
   // lock is released.
+
+  virtual _CORBA_Boolean inThisAddressSpace();
+  // Override omniIdentity.
+
+  static void* thisClassCompare(omniIdentity*, void*);
+
+  static inline omniInProcessIdentity* downcast(omniIdentity* id)
+  {
+    return (omniInProcessIdentity*)(id->classCompare()(id, thisClassCompare));
+  }
 
 private:
   friend class _OMNI_NS(omniInProcessIdentity_RefHolder);

@@ -33,7 +33,7 @@
 #include <poaimpl.h>
 #include <poacurrentimpl.h>
 #include <initialiser.h>
-#include <localIdentity.h>
+#include <objectTable.h>
 #include <exceptiondefs.h>
 
 
@@ -285,8 +285,20 @@ omniOrbPOACurrent::real_get_reference(omniCallDescriptor* call_desc)
   OMNIORB_ASSERT(id->servant());
 
   omni::internalLock->lock();
-  omniObjRef* objref = omni::createObjRef(id->servant()->_mostDerivedRepoId(),
-					  CORBA::Object::_PD_repoId, id);
+  omniObjTableEntry* entry = omniObjTableEntry::downcast(id);
+
+  omniObjRef* objref;
+
+  if (entry) {
+    objref = omni::createLocalObjRef(id->servant()->_mostDerivedRepoId(),
+				     CORBA::Object::_PD_repoId,
+				     entry);
+  }
+  else {
+    objref = omni::createLocalObjRef(id->servant()->_mostDerivedRepoId(),
+				     CORBA::Object::_PD_repoId,
+				     id->key(), id->keysize());
+  }
   omni::internalLock->unlock();
   OMNIORB_ASSERT(objref);
   return objref;

@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.5  2001/08/15 10:26:11  dpg1
+  New object table behaviour, correct POA semantics.
+
   Revision 1.2.2.4  2001/05/31 16:20:13  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -90,10 +93,9 @@ omniAnonObjRef_pof::~omniAnonObjRef_pof() {}
 
 
 omniObjRef*
-omniAnonObjRef_pof::newObjRef(omniIOR* ior,
-			      omniIdentity* id, omniLocalIdentity* lid)
+omniAnonObjRef_pof::newObjRef(omniIOR* ior, omniIdentity* id)
 {
-  return new omniAnonObjRef(ior, id, lid);
+  return new omniAnonObjRef(ior, id);
 }
 
 
