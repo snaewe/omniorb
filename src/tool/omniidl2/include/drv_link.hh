@@ -104,12 +104,14 @@ typedef void (* DRV_PF_BE_produce)();
 typedef void (* DRV_PF_BE_abort)();
 typedef void (* DRV_PF_BE_prep_arg)(char *, idl_bool);
 typedef void (* DRV_PF_BE_version)();
+typedef void (* DRV_PF_BE_parse_args)(int argc, char **argv);
 
 extern DRV_PF_BE_init		DRV_BE_init;
 extern DRV_PF_BE_produce 	DRV_BE_produce;
 extern DRV_PF_BE_abort   	DRV_BE_abort;
 extern DRV_PF_BE_prep_arg	DRV_BE_prep_arg;
 extern DRV_PF_BE_version	DRV_BE_version;
+extern DRV_PF_BE_parse_args     DRV_BE_parse_args;
 
 // Functions
 
