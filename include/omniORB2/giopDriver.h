@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.8  1999/01/07 18:32:42  djr
+  Replaced _OMNIORB_NTDLL_IMPORT with _LC_attr.
+
   Revision 1.7  1998/04/07 20:03:01  sll
    Replace _OMNIORB2_NTDLL_ specification on class GIOP_basetypes
   _OMNIORB_NTDLL_IMPORT on static member constants.
@@ -64,13 +67,13 @@ public:
   class MessageHeader {
   public:
     typedef _CORBA_Char HeaderType[8];
-    static _OMNIORB_NTDLL_IMPORT const HeaderType Request;
-    static _OMNIORB_NTDLL_IMPORT const HeaderType Reply;
-    static _OMNIORB_NTDLL_IMPORT const HeaderType CancelRequest;
-    static _OMNIORB_NTDLL_IMPORT const HeaderType LocateRequest;
-    static _OMNIORB_NTDLL_IMPORT const HeaderType LocateReply;
-    static _OMNIORB_NTDLL_IMPORT const HeaderType CloseConnection;
-    static _OMNIORB_NTDLL_IMPORT const HeaderType MessageError;
+    static _LC_attr const HeaderType Request;
+    static _LC_attr const HeaderType Reply;
+    static _LC_attr const HeaderType CancelRequest;
+    static _LC_attr const HeaderType LocateRequest;
+    static _LC_attr const HeaderType LocateReply;
+    static _LC_attr const HeaderType CloseConnection;
+    static _LC_attr const HeaderType MessageError;
   };
   struct _SysExceptRepoID {
     _CORBA_Char *id;
@@ -82,43 +85,44 @@ public:
   };
   class SysExceptRepoID {
   public:
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID UNKNOWN;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID BAD_PARAM;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID NO_MEMORY;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID IMP_LIMIT;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID COMM_FAILURE;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID INV_OBJREF;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID OBJECT_NOT_EXIST;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID NO_PERMISSION;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID INTERNAL;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID MARSHAL;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID INITIALIZE;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID NO_IMPLEMENT;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID BAD_TYPECODE;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID BAD_OPERATION;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID NO_RESOURCES;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID NO_RESPONSE;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID PERSIST_STORE;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID BAD_INV_ORDER;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID TRANSIENT;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID FREE_MEM;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID INV_IDENT;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID INV_FLAG;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID INTF_REPOS;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID BAD_CONTEXT;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID OBJ_ADAPTER;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID DATA_CONVERSION;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID TRANSACTION_REQUIRED;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID TRANSACTION_ROLLEDBACK;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID INVALID_TRANSACTION;
-    static _OMNIORB_NTDLL_IMPORT const _SysExceptRepoID WRONG_TRANSACTION;
-    static _OMNIORB_NTDLL_IMPORT const _CORBA_ULong maxIDLen;
-    static _OMNIORB_NTDLL_IMPORT const _CORBA_Char *version;
-    static _OMNIORB_NTDLL_IMPORT const _CORBA_ULong versionLen;
+    static _LC_attr const _SysExceptRepoID UNKNOWN;
+    static _LC_attr const _SysExceptRepoID BAD_PARAM;
+    static _LC_attr const _SysExceptRepoID NO_MEMORY;
+    static _LC_attr const _SysExceptRepoID IMP_LIMIT;
+    static _LC_attr const _SysExceptRepoID COMM_FAILURE;
+    static _LC_attr const _SysExceptRepoID INV_OBJREF;
+    static _LC_attr const _SysExceptRepoID OBJECT_NOT_EXIST;
+    static _LC_attr const _SysExceptRepoID NO_PERMISSION;
+    static _LC_attr const _SysExceptRepoID INTERNAL;
+    static _LC_attr const _SysExceptRepoID MARSHAL;
+    static _LC_attr const _SysExceptRepoID INITIALIZE;
+    static _LC_attr const _SysExceptRepoID NO_IMPLEMENT;
+    static _LC_attr const _SysExceptRepoID BAD_TYPECODE;
+    static _LC_attr const _SysExceptRepoID BAD_OPERATION;
+    static _LC_attr const _SysExceptRepoID NO_RESOURCES;
+    static _LC_attr const _SysExceptRepoID NO_RESPONSE;
+    static _LC_attr const _SysExceptRepoID PERSIST_STORE;
+    static _LC_attr const _SysExceptRepoID BAD_INV_ORDER;
+    static _LC_attr const _SysExceptRepoID TRANSIENT;
+    static _LC_attr const _SysExceptRepoID FREE_MEM;
+    static _LC_attr const _SysExceptRepoID INV_IDENT;
+    static _LC_attr const _SysExceptRepoID INV_FLAG;
+    static _LC_attr const _SysExceptRepoID INTF_REPOS;
+    static _LC_attr const _SysExceptRepoID BAD_CONTEXT;
+    static _LC_attr const _SysExceptRepoID OBJ_ADAPTER;
+    static _LC_attr const _SysExceptRepoID DATA_CONVERSION;
+    static _LC_attr const _SysExceptRepoID TRANSACTION_REQUIRED;
+    static _LC_attr const _SysExceptRepoID TRANSACTION_ROLLEDBACK;
+    static _LC_attr const _SysExceptRepoID INVALID_TRANSACTION;
+    static _LC_attr const _SysExceptRepoID WRONG_TRANSACTION;
+    static _LC_attr const _CORBA_ULong maxIDLen;
+    static _LC_attr const _CORBA_Char *version;
+    static _LC_attr const _CORBA_ULong versionLen;
 #define omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen 46
   };
-  static _OMNIORB_NTDLL_IMPORT size_t max_giop_message_size;
+  static _LC_attr size_t max_giop_message_size;
 };
+
 
 class GIOP_C : public GIOP_Basetypes, public NetBufferedStream {
 public:
@@ -386,5 +390,6 @@ private:
   void HandleCloseConnection();
   void SendMsgErrorMessage();
 };
+
 
 #endif // __GIOPDRIVER_H__
