@@ -125,6 +125,39 @@ export:: $(lib)
          )
 
 endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+CXXOPTIONS += -fpic
+COPTIONS   += -fpic
+
+libname = libtcpwrapGK.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+all:: $(lib)
+
+$(lib): $(OBJS) $(CXXOBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
+       )
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
 endif
 
 #############################################################################

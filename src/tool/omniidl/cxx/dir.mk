@@ -140,8 +140,8 @@ CXXOPTIONS += -fPIC
 $(lib): $(OBJS) $(PYOBJS)
 	(set -x; \
 	$(RM) $@; \
-	$(CXXLINK) $(CXXLINKOPTIONS) -shared -o $@ -Wl-soname,$(soname) $(IMPORT_LIBRARY_FLAGS) $(OMNIORB2_LIB_NODYN_DEPEND)\
-	 $(filter-out $(LibSuffixPattern),$^) $(OMNIORB2_LIB_NODYN)\
+	$(CXXLINK) $(CXXLINKOPTIONS) -shared -o $@ -Wl-soname,$(soname) $(IMPORT_LIBRARY_FLAGS) \
+	 $(filter-out $(LibSuffixPattern),$^) \
 	)
 
 endif

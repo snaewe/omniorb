@@ -1,3 +1,12 @@
+Tue May  2 16:22:06 BST 2000 dpg1
+=================================
+
+- Makefile fixes for gcc on Solaris
+
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/tool/omniidl/cxx/dir.mk
+
+
 Fri Apr 28 11:19:12 BST 2000 dme
 ================================
 - merge changes of Jan 18 & 19 from omni2_8_develop
