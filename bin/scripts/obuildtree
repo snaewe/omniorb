@@ -12,7 +12,7 @@
 #
 
 myread() {
-  eval "$1="'`head -1`'
+  eval "$1=\"`head -1`\""
 }
 
 
