@@ -1,3 +1,24 @@
+Mon Aug 30 19:16:15 BST 1999 sll
+================================
+
+- Removed any reference to syslog in tcpwrapper gatekeeper.
+
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/diag.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/fix_options.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/options.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/percent_x.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/refuse.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/rfc931.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/shell_cmd.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/socket.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/tli.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/update.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/workarounds.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/hosts_access.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/fakelog2.c
+
+
+
 Mon Aug 30 17:41:36 BST 1999 sll
 ================================
 
