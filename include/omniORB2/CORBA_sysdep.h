@@ -6,15 +6,20 @@
 // Copyright (C) Olivetti Research Limited, 1996
 //
 // Description:
+//	*** PROPRIETORY INTERFACE ***
+//
 // 	Define a set of flags in C++ macros. These flags provide information
 //      about the system and the compiler used.
 // 
 
 /*
  $Log$
- Revision 1.3  1997/02/19 11:13:32  ewc
- Added support for Windows NT.
+ Revision 1.4  1997/03/09 14:35:59  sll
+ Minor cleanup.
 
+ * Revision 1.3  1997/02/19  11:13:32  ewc
+ * Added support for Windows NT.
+ *
  * Revision 1.2  1997/01/08  18:56:09  ewc
  * Added entry for NT byte - order
  *
