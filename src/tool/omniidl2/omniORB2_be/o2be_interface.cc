@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.39.6.3  1999/09/27 11:41:27  djr
+  Generate old BOA-style tie templates.
+
   Revision 1.39.6.2  1999/09/24 15:35:13  djr
   Removed 'else if' nesting in ::_dispatch routine in stubs.  Makes life
   easier for brain-dead compilers.
@@ -156,6 +159,7 @@
 #define POA_SKELETON_PREFIX       "POA_"
 #define BOA_SKELETON_PREFIX       "_sk_"
 #define POA_TIE_CLASS_POSTFIX     "_tie"
+#define BOA_TIE_CLASS_PREFIX      "_tie_"
 #define HELPER_CLASS_POSTFIX      "_Helper"
 
 #define FIELD_MEMBER_TEMPLATE     "_CORBA_ObjRef_Member"
@@ -1623,15 +1627,29 @@ o2be_interface::produce_typedef_poa_hdr(std::fstream& s, o2be_typedef* tdef)
 void
 o2be_interface::produce_tie_templates(std::fstream& s)
 {
-  StringBuf flat_name;
-  flat_name += POA_SKELETON_PREFIX;
-  flat_name += _scopename();
-  flat_name += uqname();
+  StringBuf class_name;
+  class_name += POA_SKELETON_PREFIX;
+  class_name += _fqname();
+  class_name += POA_TIE_CLASS_POSTFIX;
 
-  StringBuf cn;
-  cn += flat_name;
-  cn += POA_TIE_CLASS_POSTFIX;
-  internal_produce_tie_templates(s, this, cn, server_fqname());
+  StringBuf base_class;
+  base_class += POA_SKELETON_PREFIX;
+  base_class += fqname();
+
+  internal_produce_tie_templates(s, this, class_name, base_class);
+
+  if( idl_global->compile_flags() & IDL_BE_GENERATE_BOA_SKEL ) {
+    class_name.clear();
+    class_name += BOA_TIE_CLASS_PREFIX;
+    class_name += _fqname();
+
+    base_class.clear();
+    base_class += scopename();
+    base_class += BOA_SKELETON_PREFIX;
+    base_class += uqname();
+
+    internal_produce_tie_templates(s, this, class_name, base_class);
+  }
 }
 
 
