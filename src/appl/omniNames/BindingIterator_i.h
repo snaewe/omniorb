@@ -27,14 +27,16 @@
 
 #include <NamingContext_i.h>
 
-class BindingIterator_i : public virtual CosNaming::_sk_BindingIterator {
+class BindingIterator_i : public POA_CosNaming::BindingIterator,
+			  public PortableServer::RefCountServantBase
+{
 
 public:
 
-  BindingIterator_i(CORBA::BOA_ptr boa, CosNaming::BindingList* l)
+  BindingIterator_i(PortableServer::POA_ptr poa, CosNaming::BindingList* l)
     : list(l)
   {
-    _obj_is_ready(boa);
+    poa->activate_object(this);
   }
 
   CORBA::Boolean next_one(CosNaming::Binding*& b) {
@@ -78,7 +80,8 @@ public:
 
   void destroy(void) {
     // remember the destructor for an object should never be called explicitly.
-    _dispose();
+    PortableServer::ObjectId_var id = the_poa->servant_to_id(this);
+    the_poa->deactivate_object(id);
   }
 
 private:

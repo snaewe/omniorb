@@ -25,7 +25,7 @@
 #ifndef _log_h_
 #define _log_h_
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 #include <fstream.h>
 
 #ifndef LOGDIR_ENV_VAR
@@ -35,7 +35,7 @@
 class omniNameslog {
 
   CORBA::ORB_ptr orb;
-  CORBA::BOA_ptr boa;
+  PortableServer::POA_ptr poa;
   char *active;
   char *backup;
   char *checkpt;
@@ -55,7 +55,7 @@ class omniNameslog {
 
   void putPort(int port, ostream& file);
 
-  void putCreate(const omniORB::objectKey& key, ostream& file);
+  void putCreate(const PortableServer::ObjectId& id, ostream& file);
 
   void putDestroy(CosNaming::NamingContext_ptr nc, ostream& file);
 
@@ -66,7 +66,7 @@ class omniNameslog {
   void putUnbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
 		 ostream& file);
 
-  void putKey(const omniORB::objectKey& key, ostream& file);
+  void putKey(const PortableServer::ObjectId& id, ostream& file);
 
   void putString(const char* str, ostream& file);
 
@@ -84,7 +84,7 @@ class omniNameslog {
 
   void getUnbind(istream& file);
 
-  void getKey(omniORB::objectKey& k, istream& file);
+  void getKey(PortableServer::ObjectId& id, istream& file);
 
   void getFinalString(char*& buf, istream& file);
 
@@ -99,9 +99,9 @@ public:
 
   omniNameslog(int& port,char* logdir=0);
 
-  void init(CORBA::ORB_ptr o, CORBA::BOA_ptr b);
+  void init(CORBA::ORB_ptr o, PortableServer::POA_ptr p);
 
-  void create(const omniORB::objectKey& key);
+  void create(const PortableServer::ObjectId& id);
   void destroy(CosNaming::NamingContext_ptr nc);
   void bind(CosNaming::NamingContext_ptr nc,
 	    const CosNaming::Name& n, CORBA::Object_ptr obj,

@@ -48,13 +48,16 @@
 #define DEFAULT_IDLE_TIME_BTW_CHKPT  (15*60)
 
 
+PortableServer::POA_var the_poa;
+
+
 void
 usage()
 {
   cerr << "\nusage: omniNames [-start <port>]\n"
        <<   "                 [-logdir <directory name>]\n"
        <<   "                 [-errlog <file name>]\n"
-       <<   "                 [<omniORB2-options>...]" << endl;
+       <<   "                 [<omniORB-options>...]" << endl;
   cerr << "\nUse -start option to start omniNames for the first time."
        << endl;
   cerr << "\nUse -logdir option to specify the directory where the log/data files are kept.\n";
@@ -132,8 +135,7 @@ main(int argc, char **argv)
       }
       removeArgs(argc, argv, 1, 2);
     }
-    else if ((strncmp(argv[1], "-BOA", 4) != 0) &&
-	     (strncmp(argv[1], "-ORB", 4) != 0)) {
+    else if ((strncmp(argv[1], "-ORB", 4) != 0)) {
       usage();
     }
     else {
@@ -146,15 +148,15 @@ main(int argc, char **argv)
   // number from the log file if "-start" wasn't specified.
   //
 
-  omniNameslog l(port,logdir);
+  omniNameslog l(port, logdir);
 
 
   //
-  // Add a fake command line option to tell the BOA which port to use.
+  // Add a fake command line option to tell the POA which port to use.
   //
 
   insertArgs(argc, argv, 1, 2);
-  argv[1] = strdup("-BOAiiop_port");
+  argv[1] = strdup("-ORBpoa_iiop_port");
   argv[2] = new char[16];
   sprintf(argv[2], "%d", port);
 
@@ -163,17 +165,26 @@ main(int argc, char **argv)
   // Initialize the ORB and the object adaptor.
   //
 
-  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
-  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-  boa->impl_is_ready(0,1);
+  CORBA::Object_var poaref = orb->resolve_initial_references("RootPOA");
+  PortableServer::POA_var poa = PortableServer::POA::_narrow(poaref);
+
+  PortableServer::POAManager_var pman = poa->the_POAManager();
+
+  CORBA::PolicyList pl(1);
+  pl.length(1);
+  pl[0] = poa->create_lifespan_policy(PortableServer::PERSISTENT);
+
+  the_poa = poa->create_POA("", pman, pl);
+  pman->activate();
 
 
   //
   // Read the log file and set up all the naming contexts described in it.
   //
 
-  l.init(orb, boa);
+  l.init(orb, the_poa);
 
 
   //

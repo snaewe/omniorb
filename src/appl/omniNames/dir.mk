@@ -1,4 +1,6 @@
 
+CXXDEBUGFLAGS = -g
+
 ifdef Win32Platform
 
 ifdef OMNINAMES_LOG_DEFAULT_LOCATION
@@ -25,7 +27,9 @@ endif
 
 CXXSRCS = omniNames.cc NamingContext_i.cc log.cc
 
+
 omniNames = $(patsubst %,$(BinPattern),omniNames)
+
 
 all:: $(omniNames)
 
@@ -38,4 +42,4 @@ export:: $(omniNames)
 OBJS = $(CXXSRCS:.cc=.o)
 
 $(omniNames): $(OBJS) $(CORBA_LIB_DEPEND)
-	@(libs="$(CORBA_LIB)"; $(CXXExecutable))
+	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))

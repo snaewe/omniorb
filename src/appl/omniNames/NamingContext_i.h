@@ -27,16 +27,23 @@
 
 #include <ReadersWritersLock.h>
 #include <log.h>
-#include <omniORB2/Naming.hh>
+#include <omniORB3/Naming.hh>
 
-class NamingContext_i : public virtual CosNaming::_sk_NamingContext {
+
+extern PortableServer::POA_var the_poa;
+
+
+class NamingContext_i : public POA_CosNaming::NamingContext,
+			public PortableServer::RefCountServantBase
+{
 
   friend class ObjectBinding;
   friend class omniNameslog;
 
 public:
 
-  NamingContext_i(CORBA::BOA_ptr boa, const omniORB::objectKey& k,
+  NamingContext_i(PortableServer::POA_ptr poa,
+		  const PortableServer::ObjectId& id,
 		  omniNameslog* l);
 
   //

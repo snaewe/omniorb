@@ -46,19 +46,19 @@ NamingContext_i* NamingContext_i::tailContext = (NamingContext_i*)0;
 #if defined(__WIN32__) && defined(_MSC_VER)
 
 // Work-around MSVC++ 4.2 nested class bug
-typedef CosNaming::_sk_NamingContext CosNaming__sk_NamingContext;
+//??typedef CosNaming::_sk_NamingContext CosNaming__sk_NamingContext;
 
-NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
-				 const omniORB::objectKey& k,
+NamingContext_i::NamingContext_i(PortableServer::POA_ptr poa,
+				 const PortableServer::ObjectId& id,
 				 omniNameslog* l)
-  : CosNaming__sk_NamingContext(k), redolog(l)
+  : redolog(l)
 
 #else
 
-NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
-				 const omniORB::objectKey& k, 
+NamingContext_i::NamingContext_i(PortableServer::POA_ptr poa,
+				 const PortableServer::ObjectId& id,
 				 omniNameslog* l)
-  : CosNaming::_sk_NamingContext(k), redolog(l)
+  : redolog(l)
 
 #endif
 {
@@ -67,7 +67,7 @@ NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
 
   WriterLock w(lock);
 
-  redolog->create(k);
+  redolog->create(id);
 
   prev = tailContext;
   next = (NamingContext_i*)0;
@@ -78,7 +78,7 @@ NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
     headContext = this;
   }
 
-  _obj_is_ready(boa);
+  poa->activate_object_with_id(id, this);
 }
 
 
@@ -89,10 +89,11 @@ NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
 CosNaming::NamingContext_ptr
 NamingContext_i::new_context()
 {
-  omniORB::objectKey k;
-  omniORB::generateNewKey(k);
+  CORBA::Object_var ref = the_poa->create_reference(
+				    CosNaming::NamingContext::_PD_repoId);
+  PortableServer::ObjectId_var id = the_poa->reference_to_id(ref);
 
-  NamingContext_i* nc = new NamingContext_i(_boa(), k, redolog);
+  NamingContext_i* nc = new NamingContext_i(the_poa, id, redolog);
 
   return nc->_this();
 }
@@ -437,7 +438,8 @@ NamingContext_i::destroy()
   CosNaming::NamingContext_var nc = _this();
   redolog->destroy(nc);
 
-  _dispose();
+  PortableServer::ObjectId_var id = the_poa->servant_to_id(this);
+  the_poa->deactivate_object(id);
 }
 
 
@@ -472,7 +474,7 @@ NamingContext_i::list(CORBA::ULong how_many, CosNaming::BindingList*& bl,
 
   lock.readerOut();
 
-  BindingIterator_i* bii = new BindingIterator_i(_boa(), all);
+  BindingIterator_i* bii = new BindingIterator_i(the_poa, all);
 
   bi = bii->_this();
 

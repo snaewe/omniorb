@@ -323,10 +323,10 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
 
 
 void
-omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
+omniNameslog::init(CORBA::ORB_ptr the_orb, PortableServer::POA_ptr the_poa)
 {
-  orb = o;
-  boa = b;
+  orb = the_orb;
+  poa = the_poa;
 
   if (firstTime) {
 
@@ -355,10 +355,13 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 #endif
       putPort(port, logf);
 
-      omniORB::objectKey k;
-      omniORB::generateNewKey(k);
+      {
+	CORBA::Object_var ref = poa->create_reference(
+				    CosNaming::NamingContext::_PD_repoId);
+	PortableServer::ObjectId_var refid = poa->reference_to_id(ref);
 
-      putCreate(k, logf);
+	putCreate(refid, logf);
+      }
 
       logf.close();
       if (!logf)
@@ -495,11 +498,11 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
 
 void
-omniNameslog::create(const omniORB::objectKey& key)
+omniNameslog::create(const PortableServer::ObjectId& id)
 {
   if (!startingUp) {
     try {
-      putCreate(key, logf);
+      putCreate(id, logf);
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
@@ -606,7 +609,8 @@ omniNameslog::checkpoint(void)
     NamingContext_i* nci;
 
     for (nci = NamingContext_i::headContext; nci; nci = nci->next) {
-      putCreate(nci->_key(), ckpf);
+      PortableServer::ObjectId_var id = poa->servant_to_id(nci);
+      putCreate(id, ckpf);
     }
 
     for (nci = NamingContext_i::headContext; nci; nci = nci->next) {
@@ -772,10 +776,10 @@ omniNameslog::getPort(istream& file)
 
 
 void
-omniNameslog::putCreate(const omniORB::objectKey& key, ostream& file)
+omniNameslog::putCreate(const PortableServer::ObjectId& id, ostream& file)
 {
   file << "create ";
-  putKey(key, file);
+  putKey(id, file);
   file << '\n' << flush;
   if (!file) throw IOError();
 }
@@ -788,9 +792,9 @@ omniNameslog::getCreate(istream& file)
   // Argument to "create" is the object key of the naming context.
   //
 
-  omniORB::objectKey k;
-  getKey(k, file);
-  NamingContext_i* rc = new NamingContext_i(boa, k, this);
+  PortableServer::ObjectId id;
+  getKey(id, file);
+  NamingContext_i* rc = new NamingContext_i(poa, id, this);
 }
 
 
@@ -996,40 +1000,36 @@ omniNameslog::getUnbind(istream& file)
 
 
 void
-omniNameslog::putKey(const omniORB::objectKey& key, ostream& file)
+omniNameslog::putKey(const PortableServer::ObjectId& id, ostream& file)
 {
-  omniORB::seqOctets* os = omniORB::keyToOctetSequence(key);
   file << hex;
-  for (unsigned int i = 0; i < os->length(); i++) {
+  for (int i = 0; i < id.length(); i++) {
 #if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
-    file << setfill('0') << setw(2) << (int)(*os)[i];
+    file << setfill('0') << setw(2) << (int)id[i];
 #else
     // Eventually, use the following for all standard C++ compilers
-    file << std::setfill('0') << std::setw(2) << (int)(*os)[i];
+    file << std::setfill('0') << std::setw(2) << (int)id[i];
 #endif
   }
   file << dec;
-  delete os;
 }
 
 
 void
-omniNameslog::getKey(omniORB::objectKey& k, istream& file)
+omniNameslog::getKey(PortableServer::ObjectId& id, istream& file)
 {
   char* str;
   getFinalString(str, file);
 
   int l = strlen(str) / 2;
-  omniORB::seqOctets os(l);
-  os.length(l);
+  id.length(l);
   char* p = str;
   for (int i = 0; i < l; i++) {
     int n;
     sscanf(p,"%02x",&n);
-    os[i] = n;
+    id[i] = n;
     p += 2;
   }
-  k = omniORB::octetSequenceToKey(os);  
   delete [] str;
 }
 
