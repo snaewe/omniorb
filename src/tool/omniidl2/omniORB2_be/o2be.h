@@ -10,6 +10,9 @@
 
 /*
  $Log$
+ Revision 1.4  1997/01/24 19:38:02  sll
+ *** empty log message ***
+
  Revision 1.3  1997/01/23 17:04:51  sll
  Now say friend class X instead of just friend X.
 
@@ -622,6 +625,8 @@ public:
   const char *nil_fqname() const { return pd_nil_fqname; }
   const char *IRrepoId() const { return pd_IRrepoId; }
   const size_t IRrepoIdSize() const { return pd_IRrepoIdSize; }
+
+  static idl_bool check_opname_clash(o2be_interface *p,char *opname);
 
 private:
   char *pd_objref_uqname;
