@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.13  2003/08/06 20:34:00  dgrisby
+  More vxWorks patches.
+
   Revision 1.19.2.12  2003/07/25 16:04:57  dgrisby
   vxWorks patches.
 
@@ -316,7 +319,7 @@ again:
 
 # endif
 
-#elif defined(__vxWorks__) && __OSVERSION__ < 54
+#elif defined(__vxWorks__)
   int ip4 = hostGetByName(const_cast<char*>(node)); // grep /etc/hosts
   if (ip4 == ERROR) return 0;
   return new IP4AddrInfo(ip4, port);

@@ -49,7 +49,11 @@ BUILTIN_STUB_SRCS = \
 	    objectStub.cc \
 	    poastubs.cc 
 
-ifndef vxWorksPlatform
+ifdef vxWorksPlatform
+ifndef vxNamesRequired
+BUILTIN_STUB_SRCS += Namingstub.cc
+endif
+else 
 BUILTIN_STUB_SRCS += Namingstub.cc
 endif
 

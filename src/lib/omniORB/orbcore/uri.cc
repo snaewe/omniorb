@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.17  2003/08/06 20:34:00  dgrisby
+// More vxWorks patches.
+//
 // Revision 1.2.2.16  2003/02/17 02:03:09  dgrisby
 // vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 //
@@ -647,8 +650,7 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
 }
 
 
-#ifndef __vxWorks__
-
+#if !(defined(__vxWorks__) && defined(__vxNames__))
 /////////////////////////////////////////////////////////////////////////////
 // corbaname: format
 /////////////////////////////////////////////////////////////////////////////
@@ -995,8 +997,7 @@ omniURI::addrAndNameToURI(const char* addr, const char* sn)
   return url;
 }
 
-#endif //__vxWorks__
-
+#endif // !(defined(__vxWorks__) && defined(__vxNames__))
 
 /////////////////////////////////////////////////////////////////////////////
 // initialiser
@@ -1004,9 +1005,9 @@ omniURI::addrAndNameToURI(const char* addr, const char* sn)
 static iorURIHandler       iorURIHandler_;
 static corbalocURIHandler  corbalocURIHandler_;
 
-#ifndef __vxWorks__
+#if !(defined(__vxWorks__) && defined(__vxNames__))
 static corbanameURIHandler corbanameURIHandler_;
-#endif //__vxWorks__
+#endif // !(defined(__vxWorks__) && defined(__vxNames__))
 
 // No need to register the initialiser to ORB_init unless attach () does
 // something.
@@ -1015,11 +1016,10 @@ public:
   omni_uri_initialiser() {
     handlers.push_back(&iorURIHandler_);
     handlers.push_back(&corbalocURIHandler_);
-#ifndef __vxWorks__
+#if !(defined(__vxWorks__) && defined(__vxNames__))
     handlers.push_back(&corbanameURIHandler_);
-#endif //__vxWorks__
+#endif // !(defined(__vxWorks__) && defined(__vxNames__))  
   }
-
   void attach() {}
   void detach() {}
 };

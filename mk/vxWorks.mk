@@ -2,11 +2,16 @@
 # Standard make variables and rules for all VxWorks platforms.
 # You must specify the host you are building from
 #
-HOST_PLATFORM_WIN32 = 0
-HOST_PLATFORM_SUN = 1
-HOST_PLATFORM_LINUX = 0
+#HOST_PLATFORM_WIN32 = 1
+#HOST_PLATFORM_SUN   = 1
+#HOST_PLATFORM_LINUX = 1
+#HOST_PLATFORM_HPUX  = 1
 
 vxWorksPlatform = 1
+
+# Set vxNames = 1 to use Michael Sturm's cut down vxNames (see
+# /etc/vxworks.zip), otherwise use standard omniNames.
+# vxNamesRequired = 1
 
 # Define OrbCoreOnly if only want to build the runtime with no support 
 # for dynamic interfaces, e.g. DII, DSI, Any, Typecode etc.
@@ -36,6 +41,15 @@ HOSTBINDIR = bin/sun4_sosV_5.6
 WTXTCL = wtxtcl
 WRS_INCLUDE = $(WIND_BASE)/target/h
 MUNCH_TCL_SCRIPT = $(subst \,\/, $(WIND_BASE)/host/src/hutils/munch.tcl)
+else
+ifeq ($(HOST_PLATFORM_HPUX),1)
+SYSTEM_OBJECTS=$(WIND_BASE)/target/config/pcPentium
+HOSTBINDIR = $(WIND_HOST_TYPE)/bin
+WTXTCL = wtxtcl
+WRS_INCLUDE = $(WIND_BASE)/target/h
+MUNCH_TCL_SCRIPT = $(subst \,\/, $(WIND_BASE)/host/src/hutils/munch.tcl)
+IMPORT_LIBRARY_DIRS=$(WIND_BASE)/target/lib
+endif
 endif
 endif
 endif
