@@ -1,4 +1,19 @@
 
+Fri Apr 30 18:20:12 BST 1999 tjr
+================================
+
+- add RMC's bootstrap agent code
+
+src/lib/omniORBj/omniorb/orb/GIOPServerRequest.java
+src/lib/omniORBj/omniorb/orb/IIOPProfileBody.java
+src/lib/omniORBj/omniorb/orb/IOPTaggedProfile.java
+src/lib/omniORBj/omniorb/orb/IOR.java
+src/lib/omniORBj/omniorb/orb/ORBImpl.java
+src/lib/omniORBj/omniorb/orb/ObjectAdapter.java
+src/lib/omniORBj/omniorb/orb/ObjectKey.java
+src/lib/omniORBj/dir.mk
+
+
 Wed Apr 21 12:14:54 BST 1999 djr
 ================================
 
