@@ -10,6 +10,9 @@
 
 /*
  $Log$
+ Revision 1.5  1997/03/10 16:19:04  sll
+ *** empty log message ***
+
  Revision 1.4  1997/01/24 19:38:02  sll
  *** empty log message ***
 
@@ -240,11 +243,15 @@ public:
   void set_skel_produced_in_field() { pd_skel_produced_in_field = I_TRUE; }
   idl_bool get_skel_produced_in_field() { return pd_skel_produced_in_field; }
 
+  const char *out_adptarg_name() const { return pd_out_adptarg_name; }
+
 private:
   idl_bool pd_hdr_produced_in_field;
   idl_bool pd_skel_produced_in_field;
   idl_bool pd_isvar;
   idl_bool pd_nodefault;
+  char *pd_out_adptarg_name;
+
   o2be_union();
 
 };
@@ -290,10 +297,14 @@ public:
   void set_skel_produced_in_field() { pd_skel_produced_in_field = I_TRUE; }
   idl_bool get_skel_produced_in_field() { return pd_skel_produced_in_field; }
 
+  const char *out_adptarg_name() const { return pd_out_adptarg_name; }
+
 private:
   idl_bool pd_hdr_produced_in_field;
   idl_bool pd_skel_produced_in_field;
   idl_bool pd_isvar;
+  char *pd_out_adptarg_name;
+
   o2be_structure();
 
 };
@@ -372,10 +383,11 @@ public:
   void produce_struct_member_decl (fstream &s, AST_Decl *fieldtype);
   void produce_union_member_decl (fstream &s, AST_Decl *fieldtype);
 
+  const char *out_adptarg_name(o2be_typedef* tdef) const;
+
 private:
   o2be_array();
   void _produce_member_decl(fstream &s, char *varname);
-
 };
 
 class o2be_sequence : public virtual AST_Sequence,
@@ -388,6 +400,7 @@ public:
   ~o2be_sequence() {}
 
   char* seq_template_name() { return pd_seq_template_name; }
+  const char* seq_member_name() { return pd_seq_baseclass_name; }
 
   DEF_NARROW_METHODS1(o2be_sequence, AST_Sequence);
   DEF_NARROW_FROM_DECL(o2be_sequence);
@@ -400,8 +413,11 @@ public:
   static void produce_hdr_for_predefined_types(fstream &s);
   static AST_Sequence *attach_seq_to_base_type(AST_Sequence *se);
 
+  const char *out_adptarg_name(o2be_typedef* tdef) const;
+
 private:
   char *pd_seq_template_name;
+  const char *pd_seq_baseclass_name;
   o2be_sequence();
   enum seqnametype { EFFECTIVE_TYPE, IMMEDIATE_TYPE };
   char *pd_effname;
@@ -483,10 +499,12 @@ public:
 
   void produce_decl(fstream &s,
 		    const char *prefix = 0,
+		    const char *alias_prefix = 0,
 		    idl_bool out_var_default = I_TRUE);
   // produce the declaration of the mapping of this operation
 
-  void produce_proxy_skel(fstream &s,o2be_interface &defined_in);
+  void produce_proxy_skel(fstream &s,o2be_interface &defined_in,
+			  const char* alias_prefix=0);
   // produce the definition of the proxy's method to invoke this
   // operation
 
@@ -494,8 +512,26 @@ public:
   // produce the code fragment within the server's dispatch routine
   // to handle this operation
 
-  void produce_nil_skel(fstream &s);
+  void produce_nil_skel(fstream &s,const char* alias_prefix=0);
   // produce the definition of the nil object's method
+
+  void produce_mapping_with_indirection(fstream& s,
+					const char* alias_prefix);
+  // produce the mapping for this operation using the adaptation classes
+  // <T>_INOUT_arg and <T>_OUT_arg.
+
+  idl_bool has_variable_out_arg();
+  // Return true if there is any variable length OUT argument
+
+  idl_bool has_pointer_inout_arg();
+  // Return true if there is any string or objref INOUT argument
+
+  idl_bool return_is_void();
+  // returns I_TRUE if the return value of this operation is void
+
+  void produce_invoke(fstream &s);
+  // produce an invocation. Use the argument names as defined in the
+  // IDL.
 
   friend class o2be_attribute;
   friend class o2be_structure;
@@ -525,12 +561,6 @@ public:
 
 private:
   o2be_operation();
-  void produce_invoke(fstream &s);
-  // produce an invocation. Use the argument names as defined in the
-  // IDL.
-
-  idl_bool return_is_void();
-  // returns I_TRUE if the return value of this operation is void
 
   idl_bool no_user_exception();
   // returns I_TRUE if this operation does not raise a user exception
@@ -625,6 +655,8 @@ public:
   const char *nil_fqname() const { return pd_nil_fqname; }
   const char *IRrepoId() const { return pd_IRrepoId; }
   const size_t IRrepoIdSize() const { return pd_IRrepoIdSize; }
+  const char *inout_adptarg_name() const { return pd_inout_adptarg_name; }
+  const char *out_adptarg_name() const { return pd_out_adptarg_name; }
 
   static idl_bool check_opname_clash(o2be_interface *p,char *opname);
 
@@ -641,6 +673,9 @@ private:
   char *pd_nil_fqname;
   char *pd_IRrepoId;
   size_t pd_IRrepoIdSize;
+  char *pd_inout_adptarg_name;
+  char *pd_out_adptarg_name;
+
   o2be_interface();
 };
 
