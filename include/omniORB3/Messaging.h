@@ -8,6 +8,8 @@
 #define USE_omniORB_logStream
 #endif
 
+#include <limits.h>
+
 #ifndef __CORBA_H_EXTERNAL_GUARD__
 #include <omniORB3/CORBA.h>
 #endif
@@ -41,6 +43,8 @@
 # endif
 #endif
 
+#include <omniORB3/omniAMI.h>
+
 _CORBA_MODULE Messaging
 
 _CORBA_MODULE_BEG
@@ -50,7 +54,7 @@ _CORBA_MODULE_BEG
 #endif
 
 // ExceptionHolder valuetype
-struct ExceptionHolder: ExceptionHolder_base{
+struct ExceptionHolder: ExceptionHolder_base, CORBA::ValueBase{
   ExceptionHolder(): local_exception_object(NULL){ } 
   virtual ~ExceptionHolder();
 
@@ -58,6 +62,14 @@ struct ExceptionHolder: ExceptionHolder_base{
   // kept here, or it can exit in marshalled form inside the 
   // sequeence<octet>
   CORBA::Exception *local_exception_object;
+
+  // Fields in a valuetype look like fields in a union, using accessor
+  // functions.
+  CORBA::Boolean is_system_exception(){ return pd_is_system_exception; }
+  CORBA::Boolean byte_order(){ return pd_byte_order; }
+  ExceptionHolder_base::_pd_marshaled_exception_seq marshaled_exception(){ 
+    return pd_marshaled_exception;
+  }
 
   // Functions to handle insertion and extraction of exception from
   // the sequence<octet>
@@ -77,36 +89,89 @@ typedef _CORBA_ConstrType_Variable_OUT_arg<ExceptionHolder, ExceptionHolder_var>
 
 _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ExceptionHolder;
 
-// Poller valuetype
-struct Poller: public POA_CORBA::Pollable{
-protected:
-  Poller(): pd_state_cond(&pd_state_lock),
-	    reply_received(0),
-	    reply_already_read(0),
-            pd_is_from_poller(0){ }
 
+// Poller "valuetype"
+struct Poller: public CORBA::ValueBase{
+
+protected:
+  Poller(CORBA::Object_ptr target, const char *opname): 
+    pd_state_cond(&pd_state_lock),
+    reply_received(0),
+    reply_already_read(0),
+    pd_is_from_poller(0),
+    pd_associated_handler(Messaging::ReplyHandler::_nil()),
+    op_name(opname) { }
+
+
+  // lock internal data, allow for blocking waits
+  omni_mutex      pd_state_lock;
+  omni_condition  pd_state_cond;
+
+  CORBA::Boolean  reply_received;     // true if reply arrived from server
+  CORBA::Boolean  reply_already_read; // true if someone already looked at it
+  CORBA::Boolean  pd_is_from_poller;  // true if exception came from the AMI
+                                      // system and has nothing to do with
+                                      // the remote server
+
+  // If we have set an external ReplyHandler callback, then forward the
+  // result to this object
+  ReplyHandler_ptr pd_associated_handler;
+
+  public:
+  // Type-specific Pollers are defined _per IDL interface_ however they
+  // are used _per OPERATION_. Therefore it is possible to ask for the 
+  // wrong reply from a poller. Convenience function to throw the exception.
   void _NP_wrong_transaction(){
     pd_is_from_poller = 1;
     throw CORBA::WRONG_TRANSACTION();
   }
-public:
-  virtual ~Poller() { }
+  void _NP_do_timeout(CORBA::ULong timeout){
+    if (!is_ready(timeout)) throw CORBA::TIMEOUT();
+  }
+  void _NP_reply_received(){
+    omni_mutex_lock lock(pd_state_lock);
+    reply_received = 1;
+    // ** Question- if two threads are blocked, should both be woken up and
+    // one throw an exception?
+    pd_state_cond.signal();
+  }
+  // Called when the reply is known to have been received (ie is_ready returned
+  // TRUE) to prevent two threads simultaneously taking the results.
+  void _NP_reply_obtained(){
+    omni_mutex_lock lock(pd_state_lock);
+    
+    if (reply_already_read)
+      throw CORBA::OBJECT_NOT_EXIST();
+    
+    reply_already_read = 1;
+  }
+
+  public:
+  virtual ~Poller() {
+    CORBA::release(pd_associated_handler);
+    CORBA::release(pd_target);
+  }
 
   // readonly attribute Object operation_target;
   //  6.6.1: The target of the asynchronous invocation is accessible from
   //         any Poller.
-  virtual CORBA::Object_ptr operation_target() = 0;
+  CORBA::Object_ptr operation_target(){ 
+    return CORBA::Object::_duplicate(pd_target);
+  }
+
   // readonly attribute string opeartion_name;
   //  6.6.2: The name of the operation that was invoked asynchronously is
   //         accessible from any Poller. The returned string is identical
   //         to the operation name from the target interface's InterfaceDef.
-  virtual const char* operation_name() = 0;
+  const char* operation_name() { return op_name; }
+
   // attribute ReplyHandler associated_handler;
-  //  6.6.3: If the associated_handler is set to nil, the pollinb model is
+  //  6.6.3: If the associated_handler is set to nil, the polling model is
   //         used to obtain the reply to the request. If it is non-nil, the
   //         associated ReplyHandler is invoked when a reply becomes available.
   ReplyHandler_ptr associated_handler();
   void associated_handler(ReplyHandler_ptr);
+
   // readonly attribute boolean is_from_poller
   //  6.6.4: The attribute returns the value TRUE if and only if the poller
   //         operation itself raised a system exception. If the Poller has
@@ -118,21 +183,9 @@ public:
   CORBA::PollableSet_ptr create_pollable_set();
 
   // Object target
-  CORBA::Object_Member target;
+  CORBA::Object_Member pd_target;
   // string op_name
-  CORBA::String_member op_name;
-
-public:
-  // store the state of the request- has a reply been received?
-  omni_mutex      pd_state_lock;
-  omni_condition  pd_state_cond;
-  CORBA::Boolean  reply_received;
-  CORBA::Boolean  reply_already_read;
-  CORBA::Boolean  pd_is_from_poller;
-
-  // Are we using the ReplyHandler callback mode
-  ReplyHandler_ptr pd_associated_handler;
-  
+  const char* op_name;
 
 };
 

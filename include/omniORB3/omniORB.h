@@ -29,6 +29,15 @@
 
 /*
   $Log$
+  Revision 1.3.2.2  2000/09/27 17:09:29  djs
+  Renamed ExceptionHolder_base struct members
+  Added CORBA::ValueBase
+  More compliant Messaging::Poller
+  Refactored AMI call descriptor and main execution path
+  Removed inefficient internal ReplyHander servant in the polling case
+  Added command line options
+  Added omniInitialiser for AMI
+
   Revision 1.3.2.1  2000/08/04 17:10:24  dpg1
   Long long support
 
@@ -588,6 +597,38 @@ _CORBA_MODULE_BEG
   // the outstanding ones return. (The default value is 5.)    	       	//
   //   	       	       	       	       	       	       	       	       	//
   _CORBA_MODULE_VAR _core_attr unsigned int maxTcpConnectionPerServer;  //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // AMIMaxQueueSize                                                    //
+  //   Asycnronous requests are stuck in a queue which can be made to be//
+  // unbounded (if this variable == 0) or to have a finite bound. Note  //
+  // that if an attempt to add a request to the queue is made whilst the//
+  // queue is full, the calling thread will block. Not ideal since the  //
+  // AMI calls are meant to be non-blocking. (The default value is 0, ie//
+  // unbounded)                                                         //
+  //                                                                    //
+  _CORBA_MODULE_VAR _core_attr unsigned int AMIMaxQueueSize;            //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // AMIMaxWorkerThreads                                                //
+  //   Asynchronous requests are processed by a pool of system threads. //
+  // This variable indicates the maximum number of threads that will be //
+  // spawned to service the request queue. (The default value is 5)     //
+  //                                                                    //
+  _CORBA_MODULE_VAR _core_attr unsigned int AMIMaxWorkerThreads;        //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // AMIWorkerTimeout                                                   //
+  //   Threads dealing with AMI requests wait for a certain time        //
+  // interval before shutting themselves down, in case more requests    //
+  // appear. This variable indicates how many seconds after the queue   //
+  // empties and the threads are idle before they unblock and begin the //
+  // shutdown procedure. (The default is 30 seconds)                    //
+  //                                                                    //
+  _CORBA_MODULE_VAR _core_attr unsigned int AMIWorkerTimeout;           //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
