@@ -1,3 +1,11 @@
+Mon Jul  3 17:53:37 BST 2000 dpg1
+=================================
+
+- Remove -g from omniNames debug flags
+
+src/appl/omniNames/dir.mk
+
+
 Mon Jul  3 16:31:48 BST 2000 dpg1
 =================================
 

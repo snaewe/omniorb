@@ -1,5 +1,5 @@
 
-CXXDEBUGFLAGS = -g
+#CXXDEBUGFLAGS = -g
 
 ifdef Win32Platform
 
