@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.19  1999/02/12 11:52:12  djr
+ * Typecodes for arrays were marshalled/unmarshalled incorrectly.
+ *
  * Revision 1.18  1999/02/09 17:45:34  djr
  * Fixed bug in TypeCode_alignTable generation for structures and exceptions.
  *
@@ -1536,8 +1539,8 @@ void
 TypeCode_array::NP_marshalComplexParams(MemBufferedStream &s,
 					TypeCode_offsetTable* otbl) const
 {
-  pd_length >>= s;
   TypeCode_marshaller::marshal(ToTcBase(pd_content), s, otbl);
+  pd_length >>= s;
 }
 
 TypeCode_base*
@@ -1548,8 +1551,8 @@ TypeCode_array::NP_unmarshalComplexParams(MemBufferedStream &s,
 
   otbl->addEntry(otbl->currentOffset(), _ptr);
 
-  _ptr->pd_length <<= s;
   _ptr->pd_content = TypeCode_marshaller::unmarshal(s, otbl);
+  _ptr->pd_length <<= s;
   _ptr->pd_complete = 1;
   _ptr->generateAlignmentTable();
 
