@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.7  2000/06/26 16:23:11  djs
+# Added new backend arguments.
+# Better error handling when encountering unsupported IDL (eg valuetypes)
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.30.2.6  2000/04/26 18:22:14  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -159,7 +164,7 @@
 
 from omniidl import idlutil, idltype, idlast
 
-from omniidl_be.cxx import util, config, id
+from omniidl_be.cxx import util, id
 
 import string, re
 

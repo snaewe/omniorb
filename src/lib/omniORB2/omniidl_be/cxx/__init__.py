@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.7  2000/06/26 16:23:09  djs
+# Added new backend arguments.
+# Better error handling when encountering unsupported IDL (eg valuetypes)
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.18.2.6  2000/05/31 15:11:11  dpg1
 # C++ back-end properly handles Windows paths.
 #
@@ -133,6 +138,7 @@ cpp_args = ["-D__OMNIIDL_CXX__"]
 usage_string = """\
   -Wbh=<suffix>     Specify suffix for generated header files
   -Wbs=<suffix>     Specify suffix for generated stub files
+  -Wbd=<suffix>     Specify suffix for generated dynamic files
   -Wba              Generate code for TypeCodes and Any
   -Wbtp             Generate 'tie' implementation skeletons
   -Wbtf             Generate flattened 'tie' implementation skeletons
@@ -141,111 +147,91 @@ usage_string = """\
   -WbF              Generate code fragments (for expert only)
   -WbBOA            Generate BOA compatible skeletons
   -Wbold            Generate old CORBA 2.1 signatures for skeletons
-  -Wbold_prefix     Map C++ reserved words with prefix _"""
+  -Wbold_prefix     Map C++ reserved words with prefix _
+  -Wbkeep_inc_path  Preserve IDL #include path in header #includes
+  -Wbuse_quotes     Use quotes in #includes: \"foo\" rather than <foo>"""
 
-# -----------------------------
-# Process back end specific arguments
-
-def typecode_any():
-    config.setTypecodeFlag(1)
-
-def tie():
-    config.setTieFlag(1)
-
-def flat_tie():
-    config.setFlatTieFlag(1)
-
-def fragments():
-    config.setFragmentFlag(1)
-
-def boa():
-    config.setBOAFlag(1)
-
-def old():
-    config.setOldFlag(1)
-
-def splice_modules():
-    config.setSpliceModulesFlag(1)
-
-def example():
-    config.setExampleFlag(1)
-
-def old_prefix():
-    config.setReservedPrefix("_")
-
-def headersuffix(hh):
-    config.sethdrsuffix(hh)
-
-def stubsuffix(sk):
-    config.setskelsuffix(sk)
-
+# Encountering an unknown AST node will cause an AttributeError exception
+# to be thrown in one of the visitors. Store a list of those not-supported
+# so we can produce a friendly error message later.
+AST_unsupported_nodes = [ "Native", "StateMember", "Factory", "ValueForward",
+                          "ValueBox", "ValueAbs", "Value" ]
 
 def process_args(args):
     for arg in args:
         if arg == "a":
-            typecode_any()
+            config.state['Typecode']          = 1
         elif arg == "tp":
-            tie()
+            config.state['Normal Tie']        = 1
         elif arg == "tf":
-            flat_tie()
+            config.state['Flattened Tie']     = 1
         elif arg == "splice-modules":
-            splice_modules()
+            config.state['Splice Modules']    = 1
         elif arg == "example":
-            example()
+            config.state['Example Code']      = 1
         elif arg == "F":
-            fragments()
+            config.state['Fragment']          = 1
         elif arg == "BOA":
-            boa()
+            config.state['BOA Skeletons']     = 1
         elif arg == "old":
-            old()
+            config.state['Old Signatures']    = 0
         elif arg == "old_prefix":
-            old_prefix()
+            config.state['Reserved Prefix']   = "_"
+        elif arg == "keep_inc_path":
+            config.state['Keep Include Path'] = 1
+        elif arg == "use_quotes":
+            config.state['Use Quotes']        = 1
+        elif arg == "debug":
+            config.state['Debug']             = 1
         elif arg[:2] == "h=":
-            headersuffix(arg[2:])
+            config.state['HH Suffix']         = arg[2:]
         elif arg[:2] == "s=":
-            stubsuffix(arg[2:])
+            config.state['SK Suffix']         = arg[2:]
+        elif arg[:2] == "d=":
+            config.state['DYNSK Suffix']      = arg[2:]
         else:
-            print "Argument \"" + str(arg) + "\" is unknown to the " +\
-                  "C++ backend\n"
-            print "omniidl -bcxx -u for usage"
-            sys.exit(1)
-
+            util.fatalError("Argument \"" + str(arg) + "\" is unknown")
 
 def run(tree, args):
     """Entrypoint to the C++ backend"""
 
-    filename     = os.path.basename(tree.file())
-    basename,ext = os.path.splitext(filename)
-    config.setBasename(basename)
-
-    # build the list of include files
-    walker = config.WalkTreeForIncludes()
-    tree.accept(walker)
-
-    environments = id.WalkTree()
-    tree.accept(environments)
-    
-
-    # set the default behaviour
-    config.setTypecodeFlag(0)
-    config.setTieFlag(0)
-    config.setFlatTieFlag(0)
-    config.setFragmentFlag(0)
-    config.setSpliceModulesFlag(0)
-    config.setExampleFlag(0)
-    config.setBOAFlag(0)
-    config.setOldFlag(0)
+    dirname, filename = os.path.split(tree.file())
+    basename,ext      = os.path.splitext(filename)
+    config.state['Basename']  = basename
+    config.state['Directory'] = dirname
 
     process_args(args)
-       
-    header.run(tree)
-    
-    skel.run(tree)
 
-    # if we're generating code for Typecodes and Any then
-    # we need to create the DynSK.cc file
-    if config.TypecodeFlag():
-        dynskel.run(tree)
+    try:
+        # build the list of include files
+        walker = config.WalkTreeForIncludes()
+        tree.accept(walker)
+        
+        environments = id.WalkTree()
+        tree.accept(environments)
 
-    if config.ExampleFlag():
-        impl.run(tree)
+        header.run(tree)
+        
+        skel.run(tree)
+        
+        # if we're generating code for Typecodes and Any then
+        # we need to create the DynSK.cc file
+        if config.state['Typecode']:
+            dynskel.run(tree)
+
+        if config.state['Example Code']:
+            impl.run(tree)
+
+    except AttributeError, e:
+        name = e[0]
+        unsupported_visitors = map(lambda x:"visit" + x,
+                                   AST_unsupported_nodes[:])
+        if name in unsupported_visitors:
+            util.unsupportedIDL()
+            
+        util.fatalError("An AttributeError exception was caught")
+    except SystemExit:
+        # fatalError function throws SystemExit exception
+        pass
+    except:
+        util.fatalError("An internal exception was caught")

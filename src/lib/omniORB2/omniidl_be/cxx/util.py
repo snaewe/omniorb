@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.7  2000/06/26 16:23:11  djs
+# Added new backend arguments.
+# Better error handling when encountering unsupported IDL (eg valuetypes)
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.12.2.6  2000/05/31 18:02:17  djs
 # Better output indenting (and preprocessor directives now correctly output at
 # the beginning of lines)
@@ -100,15 +105,26 @@
 from omniidl import idlutil, idltype
 from omniidl_be.cxx import config
 
-import sys, re, string
+import sys, re, string, traceback
 
 # -----------------------------------------------------------------
 # Fatal error handling function
 def fatalError(explanation):
-    if config.DEBUG():
+    if config.state['Debug']:
         # don't exit the program in debug mode...
-        print "[" + explanation + "]"
-        raise RuntimeError("Fatal Error occurred, halting.")
+        print "omniidl: fatalError occurred, in debug mode."
+        for line in string.split(explanation, "\n"):
+            print ">> " + line
+        print "Configuration state:"
+        print "-------------------------"
+        config.state.dump()
+        print "Stack:"
+        print "-------------------------"
+        traceback.print_stack()
+        print "Exception:"
+        print "-------------------------"
+        traceback.print_exc()
+        sys.exit(-1)
         return
     
     lines = string.split(explanation, "\n")
@@ -117,10 +133,27 @@ def fatalError(explanation):
 
     for line in lines:
         sys.stderr.write("omniidl: " + line + "\n")
-    
 
+    sys.stderr.write("""\
+
+For more information (mailing list archives, bug reports etc) please visit
+the webpage:
+  http://www.uk.research.att.com/omniORB/omniORB.html
+""")
     sys.exit(-1)
-        
+
+# Called whenever an unsupported IDL construct is found in the input
+# (necessary because the front end supports all the new CORBA 2.3
+# constructs whereas the ORB and correspondingly this backend does not)
+def unsupportedIDL():
+    e = """\
+Unsupported IDL construct encountered in input.
+
+omniORB does not currently support:
+  IDL types longlong, longdouble, wchar, wstring, fixed, valuetype
+"""
+    fatalError(e)
+    
 
 # ------------------------------------------------------------------
 # Generic output utilities

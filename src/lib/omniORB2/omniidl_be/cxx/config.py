@@ -1,258 +1,100 @@
-# -*- python -*-
-#                           Package   : omniidl
-# config.py                 Created on: 1999/11/2
-#			    Author    : David Scott (djs)
-#
-#    Copyright (C) 1999 AT&T Laboratories Cambridge
-#
-#  This file is part of omniidl.
-#
-#  omniidl is free software; you can redistribute it and/or modify it
-#  under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#  General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-#  02111-1307, USA.
-#
-# Description:
-#   
-#   Global config info for the C++ backend
 
-# $Id$
-# $Log$
-# Revision 1.12.2.6  2000/06/12 13:21:42  djs
-# Changed attribution of generated code from "omniidl3" to
-# "omniidl (C++ backend")
-#
-# Revision 1.12.2.5  2000/05/04 14:34:51  djs
-# Added new flag splice-modules which causes all continuations to be output
-# as one lump. Default is now to output them in pieces following the IDL.
-#
-# Revision 1.12.2.4  2000/04/26 18:22:12  djs
-# Rewrote type mapping code (now in types.py)
-# Rewrote identifier handling code (now in id.py)
-#
-# Revision 1.12.2.3  2000/03/13 15:27:05  djs
-# Turned off emulating old, broken behaviour.
-#
-# Revision 1.12.2.2  2000/03/09 15:21:42  djs
-# Better handling of internal compiler exceptions (eg attempts to use
-# wide string types)
-#
-# Revision 1.12.2.1  2000/02/18 23:01:20  djs
-# Updated example implementation code generating module
-#
-# Revision 1.12  2000/01/13 15:56:30  djs
-# Factored out private identifier prefix rather than hard coding it all through
-# the code.
-#
-# Revision 1.11  2000/01/13 14:16:20  djs
-# Properly clears state between processing separate IDL input files
-#
-# Revision 1.10  2000/01/13 11:45:47  djs
-# Added option to customise C++ reserved word name escaping
-#
-# Revision 1.9  2000/01/13 10:52:04  djs
-# Rewritten argument handling
-# Added options to specify the header and stubs file prefix, mirroring omniidl3
-#
-# Revision 1.8  2000/01/12 19:54:47  djs
-# Added option to generate old CORBA 2.1 signatures for skeletons
-#
-# Revision 1.7  2000/01/12 17:48:28  djs
-# Added option to create BOA compatible skeletons (same as -BBOA in omniidl3)
-#
-# Revision 1.6  2000/01/11 11:35:36  djs
-# Added support for fragment generation (-F) mode
-#
-# Revision 1.5  1999/12/24 18:20:12  djs
-# Builds list of IDL files #included by walking the AST and examining the
-# file() of each Decl node.
-#
-# Revision 1.4  1999/12/01 17:04:21  djs
-# Added global config options for Typecodes and Anys, and forms of tie templates
-#
-# Revision 1.3  1999/11/12 17:17:45  djs
-# Creates output files rather than using stdout
-# Utility functions useful for skeleton generation added
-#
-# Revision 1.2  1999/11/10 20:19:30  djs
-# Option to emulate scope bug in old backend
-# Array struct element fix
-# Union sequence element fix
-#
-# Revision 1.1  1999/11/03 17:33:41  djs
-# Brought more of the old tmp_omniidl code into the new tree
-#
+import string
 
 from omniidl import idlvisitor
 import config
-self = config
 
-# Location where configuration data pertinent to the current run of the
-# compiler is stored
-#
-# similar in purpose to idl_global()-> data and o2be::global data in the
-# omniidl2 c++ compiler
+# Stores the global configuration of the C++ backend and can dump it to
+# stdout (for bug reporting)
+class ConfigurationState:
 
-self._programName   = "omniidl (C++ backend)"    # programs own name
-self._libVersion    = "omniORB_3_0" # library version
-self._hdrsuffix     = ".hh"         # suffix for header files
-self._skelsuffix    = "SK.cc"       # suffix for stub files
-self._dynskelsuffix = "DynSK.cc"    # suffix for the dynamic stuff
-self._implsuffix    = "_i.cc"
+    def __init__(self):
+        self._config = {
+            # Name of this program
+            'Program Name':          'omniidl (C++ backend)',
+            # Useful data from CVS
+            'CVS ID':                '$Id$',
+            # Relevant omniORB C++ library version
+            'Library Version':       'omniORB_3_0',
+            # Suffix of generated header file
+            'HH Suffix':             '.hh',
+            # Suffix of generated Skeleton file
+            'SK Suffix':             'SK.cc',
+            # Suffix of generated Dynamic code
+            'DYNSK Suffix':          'DynSK.cc',
+            # Suffix of example interface implementation code
+            'IMPL Suffix':           '_i.cc',
+            
+            # Are we in "fragment" mode?
+            'Fragment':              0,
+            # In fragment mode, suffix of definitions file
+            '_DEFS Fragment':        '_defs',
+            # In fragment mode, suffix of file containing operators (eg <<)
+            '_OPERS Fragment':       '_operators',
+            # In fragment mode, suffix of file containing POA code
+            '_POA Fragment':         '_poa',
 
-self._defs_fragment  = "_defs"      # header definitions fragment suffix
-self._opers_fragment = "_operators" # header operators fragment suffix
-self._poa_fragment   = "_poa"       # header POA fragment suffix
+            # Private prefix for internal names
+            'Private Prefix':        '_0RL',
+            # Prefix used to avoid clashes with C++ keywords
+            'Reserved Prefix':       '_cxx_',
+            # Base name of file being processed
+            'Basename':              None,
+            # Directory name of file being processed
+            'Directory':             None,
+            # Do we generate code for TypeCodes and Any?
+            'Typecode':              0,
+            # Do we splice reopened modules together into one large chunk?
+            # (not guaranteed to always work)
+            'Splice Modules':        0,
+            # Do we generate example code implementing all of the interfaces
+            # found in the input IDL?
+            'Example Code':          0,
+            # Do we generate normal (non-flattened) tie templates?
+            'Normal Tie':            0,
+            # Do we generate flattened tie templates?
+            'Flattened Tie':         0,
+            # Do we generate BOA compatible skeleton classes?
+            'BOA Skeletons':         0,
+            # Do we generate old CORBA 2.1 signatures for skeletons?
+            'Old Signatures':        0,
+            # Do we preserve the #include'd IDL path name in the generated
+            # header (eg #include <A/B.idl> -> #include <A/B.hh>?
+            'Keep Include Path':     0,
+            # Do we #include files using double-quotes rather than
+            # angled brackets (the default)
+            'Use Quotes':            0,
+            # Are we in DEBUG mode?
+            'Debug':                 0
+                       
+            }
 
+    def __getitem__(self, key):
+        if self._config.has_key(key):
+            return self._config[key]
+        util.fatalError("Configuration key not found (" + key + ")")
 
-self._name_prefix   = "_0RL"        # private name prefix
+    def __setitem__(self, key, value):
+        if self._config.has_key(key):
+            self._config[key] = value
+            return
+        util.fatalError("Configuration key not found (" + key + ")")
 
-self._res_prefix    = "_cxx_"       # prefix to map IDL identifiers which
-                                    # are C++ reserved words
+    def dump(self):
+        # find the longest key string
+        max = 0
+        for key in self._config.keys():
+            if len(key) > max: max = len(key)
+        # display the table
+        for key in self._config.keys():
+            print string.ljust(key, max), ":  ", repr(self._config[key])
 
-# name of the program itself
-def program_Name():
-    return self._programName
-    
-# version of the library
-def omniORB_Library_Version():
-    return self._libVersion
-    
-# base name of the file being processed
-self._basename = ""
-def setBasename(b):
-    self._basename = b
-def basename():
-    return self._basename
+# Create state-holding singleton object
+if not(hasattr(config, "state")):
+    config.state = ConfigurationState()
 
-def reservedPrefix():
-    return self._res_prefix
-def setReservedPrefix(prefix):
-    self._res_prefix = prefix
-
-# generate code for TypeCodes and Any
-self._typecode = 0
-def setTypecodeFlag(flag):
-    self._typecode = flag
-def TypecodeFlag():
-    return self._typecode
-
-# do we splice reopened modules together into one chunk?
-self._splice = 0
-def setSpliceModulesFlag(flag):
-    self._splice = flag
-def SpliceModulesFlag():
-    return self._splice
-
-# generate example implementation code
-self._examplecode = 0
-def setExampleFlag(flag):
-    self._examplecode = flag
-def ExampleFlag():
-    return self._examplecode
-
-# generate code for 'tie' implementational skeletons
-self._tie = 0
-def setTieFlag(flag):
-    self._tie = flag
-def TieFlag():
-    return self._tie
-
-# generate code for flattened 'tie' implementational skeletons
-self._flat = 0
-def setFlatTieFlag(flag):
-    self._flat = flag
-def FlatTieFlag():
-    return self._flat
-
-# generate fragments
-self._fragment = 0
-def setFragmentFlag(flag):
-    self._fragment = flag
-def FragmentFlag():
-    return self._fragment
-
-# generate boa compatible skeletons
-self._BOA = 0
-def setBOAFlag(flag):
-    self._BOA = flag
-def BOAFlag():
-    return self._BOA
-
-# generate old CORBA 2.1 signatures for skeletons
-self._old = 0
-def setOldFlag(flag):
-    self._old = flag
-def OldFlag():
-    return self._old
-    
-# suffix added to basename to get header filename
-def sethdrsuffix(hh):
-    self._hdrsuffix = hh
-    
-def hdrsuffix():
-    return self._hdrsuffix
-
-    
-# suffix added to basename to get the filename of the skeleton cc file
-def setskelsuffix(sk):
-    self._skelsuffix = sk
-    
-def skelsuffix():
-    return self._skelsuffix
-    
-# suffix added to basename to get the filename of the dynamic skeleton cc file
-def dynskelsuffix():
-    return self._dynskelsuffix
-
-# suffix to be added to basename to get the filename of the defs fragment file
-def defs_fragment_suffix():
-    return self._defs_fragment
-
-# suffix to be added to basename to get the filename of the operators
-# fragment file
-def opers_fragment_suffix():
-    return self._opers_fragment
-
-# suffix to be added to basename to get the filename of the operators
-# fragment file
-def poa_fragment_suffix():
-    return self._poa_fragment
-
-def implsuffix():
-    return self._implsuffix
-
-# prefix to be added to avoid occasional name clashes
-def privatePrefix():
-    return self._name_prefix
-    
 # list of all files #included in the IDL
 includes = []
-def include_file_names():
-    # EITHER modify the FE/BE interface to fetch this information from the
-    # idl_global structure
-    # OR rebuild it by traversing the AST in python
-    return config.includes
-
-# completely emulate the old backend, bugs and all
-def EMULATE_BUGS():
-    return 0
-
-# in DEBUG mode, we prefer to throw nasty internal exceptions because then
-# we get to examine the traceback. Otherwise just print a general error mesg
-def DEBUG():
-    return 0
-
 
 # Traverses the AST compiling the list of files #included by the main
 # IDL file. Note that types constructed within other types must necessarily

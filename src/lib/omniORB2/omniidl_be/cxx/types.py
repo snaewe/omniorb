@@ -37,6 +37,14 @@ INOUT  = 1
 OUT    = 2
 RET    = 3
 
+# we don't support these yet
+unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longlong,
+                        idltype.tk_ulonglong, idltype.tk_longdouble,
+                        idltype.tk_wchar, idltype.tk_wstring,
+                        idltype.tk_fixed, idltype.tk_value,
+                        idltype.tk_value_box, idltype.tk_native,
+                        idltype.tk_abstract_interface]
+
 class Type:
     """Wrapper around an IDL type providing useful extra functionality"""
     def __init__(self, type):
@@ -164,6 +172,9 @@ class Type:
         if kind == idltype.tk_void:
             return (0, 0, 0)
 
+        if kind in unsupported_typecodes:
+            util.unsupportedIDL()
+
         util.fatalError("Unknown type encountered (kind = " + str(kind) + ")")
         return
 
@@ -283,14 +294,16 @@ class Type:
 
         base = self.__base_type(environment)
 
+        old_sig = config.state['Old Signatures']
+
         # this is very superfluous:
         if not(self.array()):
-            if d_type.any() and self.typedef() and not(config.OldFlag()):
+            if d_type.any() and self.typedef() and not(old_sig):
                 if direction == OUT:
                     return d_type.__base_type_OUT(environment)
 
 
-            if d_type.typecode() and not(config.OldFlag()):
+            if d_type.typecode() and not(old_sig):
                 if direction == OUT:
                     return d_type.__base_type_OUT(environment)
                 elif direction == INOUT and use_out:
@@ -319,13 +332,13 @@ class Type:
         if not(self.array()):
 
             if direction == OUT and not(use_out):
-                if d_type.string() and not(config.OldFlag()):
+                if d_type.string() and not(old_sig):
                     return self.__base_type_OUT(environment)
-                if d_type.objref() and not(config.OldFlag()):
+                if d_type.objref() and not(old_sig):
                     return self.__base_type_OUT(environment)
-                if d_type.typecode() and not(config.OldFlag()):
+                if d_type.typecode() and not(old_sig):
                     return self.__base_type_OUT(environment)
-                if d_type.any() and not(config.OldFlag()):
+                if d_type.any() and not(old_sig):
                     return self.__base_type_OUT(environment)
                 
             if direction == OUT:
@@ -335,9 +348,9 @@ class Type:
                     return self.__base_type_OUT(environment)
                 if d_type.objref():
                     return self.__base_type_OUT(environment)
-                if d_type.any() and (not(config.OldFlag()) or use_out):
+                if d_type.any() and (not(old_sig) or use_out):
                     return self.__base_type_OUT(environment)
-                if d_type.variable() and (not(config.OldFlag()) or use_out):
+                if d_type.variable() and (not(old_sig) or use_out):
                     return self.__base_type_OUT(environment)
 
             if direction == INOUT:

@@ -52,7 +52,7 @@ def mapID(identifier):
        Returns the identifier with an escape if it is a C++ keyword"""
     for i in reservedWords:
         if i == identifier:
-            return config.reservedPrefix() + identifier
+            return config.state['Reserved Prefix'] + identifier
     return identifier
 
 class Name:
