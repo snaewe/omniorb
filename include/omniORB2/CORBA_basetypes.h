@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.8  1998/08/11 16:34:47  sll
+ Changed Float and Double representation on VMS.
+
  Revision 1.7  1998/03/02 14:05:02  ewc
  Patch to fix IDL unions containing structs which contain floats or doubles
  (was broken on OpenVMS).
@@ -77,72 +80,31 @@ typedef unsigned int              _CORBA_ULong;
 
 #ifndef NO_FLOAT
 
-#if defined(__VMS) && !__IEEE_FLOAT
+#if defined(__VMS)
 
-// VMS does not use IEEE floating point unless __IEEE_FLOAT is defined
+// VMS now always uses proxies for float.
 #define USING_PROXY_FLOAT
-
-#include <cvtdef.h>
-extern "C" unsigned int cvt$convert_float(...);
 
 class _CORBA_Float {
   _CORBA_Long pd_f;
-  inline void cvt_(float f) {
-    int status=
-    cvt$convert_float(&f,CVT$K_VAX_F,&pd_f,CVT$K_IEEE_S,CVT$M_ROUND_TO_NEAREST);
-    assert(status &1);
-  }
-  inline float cvt_() const {
-    float f;
-    int status=
-    cvt$convert_float(&pd_f,CVT$K_IEEE_S,&f,CVT$K_VAX_F,CVT$M_ROUND_TO_NEAREST);
-    assert(status & 1);
-    return f;
-  }
+  void cvt_(float f);
+  float cvt_() const;
 public:
   // using compiler generated copy constructor and copy assignment
-  _CORBA_Float() : pd_f(0) {
-  }
-  _CORBA_Float(float f) {
-    cvt_(f);
-  }
-  operator float() const {
-    return cvt_();
-  }
+  _CORBA_Float();
+  _CORBA_Float(float f);
+  operator float() const;
 };
 
 class _CORBA_Double {
   _CORBA_Long pd_d[2];
-#if __D_FLOAT
-    enum {NativeFmt = CVT$K_VAX_D};
-#elif __G_FLOAT
-    enum {NativeFmt = CVT$K_VAX_G};
-#else
-#error "Illegal floating point format defined (must use IEEE, D or G)."
-#endif  // D vs G float
-  inline void cvt_(double d) {
-    int status=
-    cvt$convert_float(&d,NativeFmt,&pd_d,CVT$K_IEEE_T,CVT$M_ROUND_TO_NEAREST);
-    assert(status &1);
-  }
-  inline float cvt_() const {
-    double d;
-    int status=
-    cvt$convert_float(&pd_d,CVT$K_IEEE_T,&d,NativeFmt,CVT$M_ROUND_TO_NEAREST);
-    assert(status & 1);
-    return d;
-  }
+  void cvt_(double d);
+  double cvt_() const;
 public:
   // using compiler generated copy constructor and copy assignment
-  _CORBA_Double() {
-    memset(&pd_d, 0, sizeof(pd_d));
-  }
-  _CORBA_Double(double d) {
-    cvt_(d);
-  }
-  operator double() const {
-    return cvt_();
-  }
+  _CORBA_Double();
+  _CORBA_Double(double d);
+  operator double() const;
 };
 
 #else
