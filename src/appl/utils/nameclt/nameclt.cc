@@ -29,7 +29,7 @@
 static int advanced = 0;
 static const char* command;
 
-static void StringToCosNamingName(char* arg, CosNaming::Name& name);
+static void StringToCosNamingName(const char* arg, CosNaming::Name& name);
 
 static void
 usage(const char* progname)
@@ -617,8 +617,7 @@ main(int argc, char **argv)
 
 
 //
-// StringToCosNamingName() turns a string into a CosNaming::Name.  The string
-// argument is modified by this function, so take a copy first if necessary.
+// StringToCosNamingName() turns a string into a CosNaming::Name.
 // Name components are separated by '/', the id from the kind by '.'.  A '\'
 // quotes the next character.  An extra '/' at the beginning or end is ignored.
 // An empty string denotes a name with no components - use "//" if you want a
@@ -626,31 +625,32 @@ main(int argc, char **argv)
 //
 
 static void
-StringToCosNamingName(char* arg, CosNaming::Name& name)
+StringToCosNamingName(const char* arg, CosNaming::Name& name)
 {
   int n = 0;
-  int len = strlen(arg);
-  char* id = arg;
+  char* str = CORBA::string_dup(arg);
+  int len = strlen(str);
+  char* id = str;
   char* kind = "";
 
   for (int i = 0; i < len; i++) {
-    if (arg[i] == '\\') {
-      memmove(&arg[i], &arg[i+1], len-i);
+    if (str[i] == '\\') {
+      memmove(&str[i], &str[i+1], len-i);
       len--;
 
-    } else if (arg[i] == '.') {
-      arg[i] = '\0';
-      kind = &arg[i+1];
+    } else if (str[i] == '.') {
+      str[i] = '\0';
+      kind = &str[i+1];
 
-    } else if (arg[i] == '/') {
-      arg[i] = '\0';
+    } else if (str[i] == '/') {
+      str[i] = '\0';
       if (i != 0) {
 	name.length(n+1);
 	name[n].id   = (const char*) id;
 	name[n].kind = (const char*) kind;
 	n++;
       }
-      id = &arg[i+1];
+      id = &str[i+1];
       kind = "";
     }
   }
@@ -661,4 +661,6 @@ StringToCosNamingName(char* arg, CosNaming::Name& name)
     name[n].kind = (const char*) kind;
     n++;
   }
+
+  CORBA::string_free(str);
 }
