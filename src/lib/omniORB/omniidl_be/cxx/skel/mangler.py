@@ -30,6 +30,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/12/13 10:50:07  djs
+# Treats the two call descriptors associated with an attribute separately,
+# since it can happen that one needs to be generated but not the other.
+#
 # Revision 1.6  1999/12/10 18:27:05  djs
 # Fixed bug to do with marshalling arrays of things, mirrored in the old
 # compiler
@@ -52,10 +56,7 @@
 
 # Functions intended for external use:
 #
-#   generate_descriptors : Operation -> String descriptor
-#                          Attribute -> (String read descriptor,
-#                                        String write descriptor)
-#
+#   generate_descriptor : Signature -> String descriptor
 #   operation_descriptor_name : Operation -> String descriptor
 #   attribute_read_descriptor_name : Attribute -> String descriptor
 #   attribute_write_descriptor_name : Attribute -> String descriptor
@@ -396,37 +397,22 @@ def initialise_call_descriptor_table():
     self.call_descriptor_table["_cCORBA_mObject_i_cstring"] = STD_PROXY_CALL_DESC_PREFIX + "_cCORBA_mobject_i_cstring"
     
 
-def generate_descriptors(node, scopedName):
-    assert isinstance(node, idlast.Operation) or \
-           isinstance(node, idlast.Attribute)
+def generate_descriptor(scopedName, signature):
     if not(self.base_initialised):
         idname = produce_idname(scopedName)
         initialise_base(idname)
     if not(self.call_descriptor_table):
         initialise_call_descriptor_table()
-
+        
     def add_to_table(signature, cdt = self.call_descriptor_table, self = self):
         if not(cdt.has_key(signature)):
             class_name = generate_unique_name(self.CALL_DESC_PREFIX)
             cdt[signature] = class_name
 
             return class_name
-        
 
-    if isinstance(node, idlast.Operation):
-        sig = produce_operation_signature(node)
+    return add_to_table(signature)
 
-        class_name = add_to_table(sig)
-        return class_name
-
-    if isinstance(node, idlast.Attribute):
-        read_sig = produce_read_attribute_signature(node)
-        read_name = add_to_table(read_sig)
-
-        write_sig = produce_write_attribute_signature(node)
-        write_name = add_to_table(write_sig)
-
-        return (read_name, write_name)
 
 def operation_descriptor_name(operation):
     assert isinstance(operation, idlast.Operation)

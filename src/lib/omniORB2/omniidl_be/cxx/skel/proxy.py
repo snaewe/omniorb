@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/12/13 10:50:07  djs
+# Treats the two call descriptors associated with an attribute separately,
+# since it can happen that one needs to be generated but not the other.
+#
 # Revision 1.6  1999/12/09 20:40:58  djs
 # Bugfixes and integration with dynskel/ code
 #
@@ -203,7 +207,7 @@ def operation(operation, seed):
         descriptor = mangler.operation_descriptor_name(operation)
         need_proxy = 0
     except KeyError:
-        mangler.generate_descriptors(operation, seed)
+        mangler.generate_descriptor(seed, signature)
         descriptor = mangler.operation_descriptor_name(operation)
         need_proxy = 1
 
@@ -556,15 +560,26 @@ def attribute(attribute, seed):
 
     read_signature = mangler.produce_read_attribute_signature(attribute)
     write_signature = mangler.produce_write_attribute_signature(attribute)
-    try:
-        # see if we already have proxies generated
-        mangler.attribute_read_descriptor_name(attribute)
-        need_proxies = 0
-    except KeyError:
-        mangler.generate_descriptors(attribute, seed)
-        need_proxies = 1
+    need_read_proxy = 1
+    need_write_proxy = 1
 
-    if not(need_proxies):
+    # Consider each proxy separately, since it is possible to
+    # have operations which have the same signature as one proxy,
+    # but not the other.
+    try:
+        # check for a read proxy
+        mangler.attribute_read_descriptor_name(attribute)
+        need_read_proxy = 0
+    except KeyError:
+        mangler.generate_descriptor(seed, read_signature)
+    try:
+        # check for a write proxy
+        mangler.attribute_write_descriptor_name(attribute)
+        need_write_proxy = 0
+    except KeyError:
+        mangler.generate_descriptor(seed, write_signature)
+        
+    if not(need_read_proxy or need_write_proxy):
         return
     
     read_desc = mangler.attribute_read_descriptor_name(attribute)
@@ -626,64 +641,66 @@ pd_result <<= giop_client;"""
 
     # -------------------------------------------------------------
 
-    # write the read class template
-    ctor_args = "LocalCallFn lcfn, const char* op, " +\
-                "size_t oplen, _CORBA_Boolean oneway"
-    inherits_list = "omniCallDescriptor(lcfn, op, oplen, oneway)"
-    unmarshal_decl = "virtual void unmarshalReturnedValues(GIOP_C&);"
-    result_mem_fn = "inline " + return_type + " result() { return pd_result; }"
-    result_mem_data = return_type + " pd_result;"
-    stream.out(proxy_class_template,
-               signature = read_signature,
-               call_descriptor = read_desc,
-               ctor_args = ctor_args,
-               inherits_list = inherits_list,
-               marshal_arguments_decl = "",
-               user_exceptions_decl = "",
-               unmarshal_arguments_decl = unmarshal_decl,
-               result_member_function = result_mem_fn,
-               member_data = "",
-               result_member_data = result_mem_data)
+    if need_read_proxy:
+        # write the read class template
+        ctor_args = "LocalCallFn lcfn, const char* op, " +\
+                    "size_t oplen, _CORBA_Boolean oneway"
+        inherits_list = "omniCallDescriptor(lcfn, op, oplen, oneway)"
+        unmarshal_decl = "virtual void unmarshalReturnedValues(GIOP_C&);"
+        result_mem_fn = "inline " + return_type + " result() { return pd_result; }"
+        result_mem_data = return_type + " pd_result;"
+        stream.out(proxy_class_template,
+                   signature = read_signature,
+                   call_descriptor = read_desc,
+                   ctor_args = ctor_args,
+                   inherits_list = inherits_list,
+                   marshal_arguments_decl = "",
+                   user_exceptions_decl = "",
+                   unmarshal_arguments_decl = unmarshal_decl,
+                   result_member_function = result_mem_fn,
+                   member_data = "",
+                   result_member_data = result_mem_data)
+
+        # -------------------------------------------------------------
+    
+        # write the read unmarshalReturned function
+        stream.out(unmarshal_template,
+                   call_descriptor = read_desc,
+                   pre_decls = "",
+                   unmarshal_block = unmarshal_ret,
+                   post_assign = "")
 
     # -------------------------------------------------------------
 
-    # write the read unmarshalReturned function
-    stream.out(unmarshal_template,
-               call_descriptor = read_desc,
-               pre_decls = "",
-               unmarshal_block = unmarshal_ret,
-               post_assign = "")
+    if need_write_proxy:
+        # write the write class template
+        ctor_args = ctor_args + ", " + fully_scoped_in_type + " a_0"
+        inherits_list = inherits_list + ",\n" + "arg_0(a_0)"
+        marshal_decl = "virtual CORBA::ULong alignedSize(CORBA::ULong);\n" +\
+                       "virtual void marshalArguments(GIOP_C&);"
+        member_data = fully_scoped_in_type + " arg_0;"
+        stream.out(proxy_class_template,
+                   signature = write_signature,
+                   call_descriptor = write_desc,
+                   ctor_args = ctor_args,
+                   inherits_list = inherits_list,
+                   marshal_arguments_decl = marshal_decl,
+                   user_exceptions_decl = "",
+                   unmarshal_arguments_decl = "",
+                   result_member_function = "",
+                   member_data = member_data,
+                   result_member_data = "") 
+        
+        # -------------------------------------------------------------
+        
+        # write the write alignment template
+        stream.out(alignment_template,
+                   call_descriptor = write_desc,
+                   size_calculation = size)
 
-    # -------------------------------------------------------------
-
-    # write the write class template
-    ctor_args = ctor_args + ", " + fully_scoped_in_type + " a_0"
-    inherits_list = inherits_list + ",\n" + "arg_0(a_0)"
-    marshal_decl = "virtual CORBA::ULong alignedSize(CORBA::ULong);\n" +\
-                   "virtual void marshalArguments(GIOP_C&);"
-    member_data = fully_scoped_in_type + " arg_0;"
-    stream.out(proxy_class_template,
-               signature = write_signature,
-               call_descriptor = write_desc,
-               ctor_args = ctor_args,
-               inherits_list = inherits_list,
-               marshal_arguments_decl = marshal_decl,
-               user_exceptions_decl = "",
-               unmarshal_arguments_decl = "",
-               result_member_function = "",
-               member_data = member_data,
-               result_member_data = "") 
-
-    # -------------------------------------------------------------
-
-    # write the write alignment template
-    stream.out(alignment_template,
-               call_descriptor = write_desc,
-               size_calculation = size)
-
-    # -------------------------------------------------------------
-
-    # write the write marshal template
-    stream.out(marshal_template,
-               call_descriptor = write_desc,
-               marshal_block = str(marshal_arg))
+        # -------------------------------------------------------------
+        
+        # write the write marshal template
+        stream.out(marshal_template,
+                   call_descriptor = write_desc,
+                   marshal_block = str(marshal_arg))
