@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/11/01 10:05:00  dpg1
+// New file attribute to AST.
+//
 // Revision 1.1  1999/10/27 14:06:00  dpg1
 // *** empty log message ***
 //
@@ -578,6 +581,8 @@ void parseLineDirective(char* s) {
     }
     delete [] currentFile;
     currentFile = file;
+    if (mainFile)
+      AST::tree()->setFile(file);
   }
   yylineno = line;
 }

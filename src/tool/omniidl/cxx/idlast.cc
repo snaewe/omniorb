@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4  1999/11/01 10:05:00  dpg1
+// New file attribute to AST.
+//
 // Revision 1.3  1999/10/29 15:42:43  dpg1
 // DeclaredType() now takes extra DeclRepoId* argument.
 // Code to detect recursive structs and unions.
@@ -55,7 +58,7 @@ AST   AST::tree_;
 Decl* Decl::mostRecent_;
 
 // AST
-AST::AST() : declarations_(0) {}
+AST::AST() : declarations_(0), file_(0) {}
 AST::~AST() { if (declarations_) delete declarations_; }
 
 _CORBA_Boolean
@@ -67,6 +70,8 @@ process(FILE* f, const char* name)
   yyin        = f;
   currentFile = idl_strdup(name);
   Prefix::newFile();
+
+  tree_.setFile(name);
 
   int yr = yyparse();
   if (yr) IdlError(currentFile, yylineno, "Syntax error");
@@ -81,6 +86,17 @@ clear()
   if (declarations_) delete declarations_;
   Scope::clear();
   declarations_ = 0;
+}
+
+void
+AST::
+setFile(const char* file)
+{
+  if (file_) {
+    if (!strcmp(file_, file)) return;
+    delete [] file_;
+  }
+  file_ = idl_strdup(file);
 }
 
 void
