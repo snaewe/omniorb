@@ -16,9 +16,7 @@ static char sccsid[] = "@(#) rfc931.c 1.10 95/01/02 16:11:34";
 /* System libraries. */
 
 #include <stdio.h>
-#include <syslog.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <setjmp.h>
 #include <signal.h>

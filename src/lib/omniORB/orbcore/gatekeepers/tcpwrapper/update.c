@@ -20,7 +20,6 @@ static char sccsid[] = "@(#) update.c 1.1 94/12/28 17:42:56";
 /* System libraries */
 
 #include <stdio.h>
-#include <syslog.h>
 #include <string.h>
 
 /* Local stuff. */
