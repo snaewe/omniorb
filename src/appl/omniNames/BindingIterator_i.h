@@ -44,6 +44,8 @@ public:
     b = new CosNaming::Binding;
     if (ret)
       *b = (*bl)[0];
+    else
+      b->binding_type = CosNaming::nobject;
     delete bl;
     return ret;
   }
