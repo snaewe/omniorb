@@ -28,6 +28,12 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 17:31:06  dgrisby
+  Changes (mainly from omni4_0_develop) to compile on gcc 3.4.
+
+  Revision 1.1.2.11  2003/05/22 13:41:39  dgrisby
+  HPUX patches.
+
   Revision 1.1.4.1  2003/03/23 21:04:02  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -92,9 +98,9 @@ template <class T>
 inline void
 _CORBA_Unbounded_Sequence<T>::operator>>= (cdrStream& s) const
 {
-  ::operator>>=(_CORBA_ULong(pd_len), s);
-  for( int i = 0; i < (int)pd_len; i++ )
-    pd_buf[i] >>= s;
+  ::operator>>=(_CORBA_ULong(this->pd_len), s);
+  for( int i = 0; i < (int)this->pd_len; i++ )
+    this->pd_buf[i] >>= s;
 }
 
 
@@ -109,9 +115,9 @@ _CORBA_Unbounded_Sequence<T>::operator<<= (cdrStream& s)
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for( _CORBA_ULong i = 0; i < l; i++ )
-    pd_buf[i] <<= s;
+    this->pd_buf[i] <<= s;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -119,9 +125,9 @@ template <class T,int max>
 inline void
 _CORBA_Bounded_Sequence<T,max>::operator>>= (cdrStream& s) const
 {
-  ::operator>>=(_CORBA_ULong(pd_len), s);
-  for( int i = 0; i < (int)pd_len; i++ )
-    pd_buf[i] >>= s;
+  ::operator>>=(_CORBA_ULong(this->pd_len), s);
+  for( int i = 0; i < (int)this->pd_len; i++ )
+    this->pd_buf[i] >>= s;
 }
 
 
@@ -136,9 +142,9 @@ _CORBA_Bounded_Sequence<T,max>::operator<<= (cdrStream& s)
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for( _CORBA_ULong i = 0; i < l; i++ )
-    pd_buf[i] <<= s;
+    this->pd_buf[i] <<= s;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -273,7 +279,7 @@ _CORBA_Sequence_Char::operator>>= (cdrStream& s) const
   _CORBA_ULong l = Base_T_seq::length();
   l >>= s;
   for( _CORBA_ULong i = 0; i < l; i++ )
-    s.marshalChar(pd_buf[i]);
+    s.marshalChar(this->pd_buf[i]);
 
 }
 
@@ -284,13 +290,13 @@ _CORBA_Sequence_Char::operator<<= (cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for( _CORBA_ULong i = 0; i < l; i++ )
-    pd_buf[i] = s.unmarshalChar();
+    this->pd_buf[i] = s.unmarshalChar();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -302,10 +308,10 @@ _CORBA_Sequence_Boolean::operator>>= (cdrStream& s) const
   l >>= s;
   if (l==0) return;
 # if !defined(HAVE_BOOL) || (SIZEOF_BOOL == 1)
-  s.put_octet_array((_CORBA_Octet*)pd_buf,l);
+  s.put_octet_array((_CORBA_Octet*)this->pd_buf,l);
 # else
   for ( _CORBA_ULong i = 0; i < l; i++ )
-    s.marshalBoolean(pd_buf[i]);
+    s.marshalBoolean(this->pd_buf[i]);
 # endif
 }
 
@@ -316,17 +322,17 @@ _CORBA_Sequence_Boolean::operator<<= (cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   if (l==0) return;
 # if !defined(HAVE_BOOL) || (SIZEOF_BOOL == 1)
-  s.get_octet_array((_CORBA_Octet*)pd_buf,l);
+  s.get_octet_array((_CORBA_Octet*)this->pd_buf,l);
 # else
   for ( _CORBA_ULong i = 0; i < l; i++ )
-    pd_buf[i] = s.unmarshalBoolean();
+    this->pd_buf[i] = s.unmarshalBoolean();
 # endif
 }
 
@@ -338,7 +344,7 @@ _CORBA_Sequence_Octet::operator>>= (cdrStream& s) const
   _CORBA_ULong l = Base_T_seq::length();
   l >>= s;
   if (l==0) return;
-  s.put_octet_array(pd_buf,l);
+  s.put_octet_array(this->pd_buf,l);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -348,13 +354,13 @@ _CORBA_Sequence_Octet::operator<<= (cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   if (l==0) return;
-  s.get_octet_array(pd_buf,l);
+  s.get_octet_array(this->pd_buf,l);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -365,7 +371,7 @@ _CORBA_Sequence_WChar::operator>>= (cdrStream& s) const
   _CORBA_ULong l = Base_T_seq::length();
   l >>= s;
   for( _CORBA_ULong i = 0; i < l; i++ )
-    s.marshalWChar(pd_buf[i]);
+    s.marshalWChar(this->pd_buf[i]);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -375,13 +381,13 @@ _CORBA_Sequence_WChar::operator<<= (cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for( _CORBA_ULong i = 0; i < l; i++ )
-    pd_buf[i] = s.unmarshalWChar();
+    this->pd_buf[i] = s.unmarshalWChar();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -389,10 +395,10 @@ template <class T,class T_slice,class Telm,int dimension>
 inline void
 _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (cdrStream& s) const
 {
-  pd_len >>= s;
-  for (_CORBA_ULong i=0; i<pd_len; i++) {
+  this->pd_len >>= s;
+  for (_CORBA_ULong i=0; i<this->pd_len; i++) {
     for (_CORBA_ULong j=0; j<dimension; j++) {
-      *((Telm*)(pd_buf[i]) + j) >>= s;
+      *((Telm*)(this->pd_buf[i]) + j) >>= s;
     }
   }
   return;
@@ -406,14 +412,14 @@ _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (cdrStrea
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for (_CORBA_ULong i=0; i<l; i++) {
     for (_CORBA_ULong j=0; j<dimension; j++) {
-      *((Telm*)(pd_buf[i]) + j) <<= s;
+      *((Telm*)(this->pd_buf[i]) + j) <<= s;
     }
   }
   return;
@@ -424,10 +430,10 @@ template <class T,class T_slice,class Telm,int dimension,int max>
 inline void
 _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator>>= (cdrStream& s) const
 {
-  pd_len >>= s;
-  for (_CORBA_ULong i=0; i<pd_len; i++) {
+  this->pd_len >>= s;
+  for (_CORBA_ULong i=0; i<this->pd_len; i++) {
     for (_CORBA_ULong j=0; j<dimension; j++) {
-      *((Telm*)(pd_buf[i]) + j) >>= s;
+      *((Telm*)(this->pd_buf[i]) + j) >>= s;
     }
   }
   return;
@@ -445,10 +451,10 @@ _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator<<= (cdrStr
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for (_CORBA_ULong i=0; i<l; i++) {
     for (_CORBA_ULong j=0; j<dimension; j++) {
-      *((Telm*)(pd_buf[i]) + j) <<= s;
+      *((Telm*)(this->pd_buf[i]) + j) <<= s;
     }
   }
   return;
@@ -459,10 +465,10 @@ template<class T, class T_slice, int dimension>
 inline void
 _CORBA_Sequence_Array_Char<T,T_slice,dimension>::operator>>=(cdrStream& s) const
 {
-  pd_len >>= s;
-  for (_CORBA_ULong i=0; i<pd_len; i++) {
+  this->pd_len >>= s;
+  for (_CORBA_ULong i=0; i<this->pd_len; i++) {
     for (_CORBA_ULong j=0; j<dimension; j++) {
-      s.marshalChar(*((_CORBA_Char*)(pd_buf[i]) + j));
+      s.marshalChar(*((_CORBA_Char*)(this->pd_buf[i]) + j));
     }
   }
 }
@@ -474,14 +480,14 @@ _CORBA_Sequence_Array_Char<T,T_slice,dimension>::operator<<=(cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for (_CORBA_ULong i=0; i<l; i++) {
     for (_CORBA_ULong j=0; j<dimension; j++) {
-      *((_CORBA_Char*)(pd_buf[i]) + j) =  s.unmarshalChar();
+      *((_CORBA_Char*)(this->pd_buf[i]) + j) =  s.unmarshalChar();
     }
   }
 }
@@ -491,9 +497,9 @@ template<class T, class T_slice, int dimension>
 inline void
 _CORBA_Sequence_Array_Boolean<T,T_slice,dimension>::operator>>=(cdrStream& s) const
 {
-  pd_len >>= s;
-  if (pd_len==0) return;
-  s.put_octet_array((_CORBA_Octet*)pd_buf,(int)pd_len*dimension);
+  this->pd_len >>= s;
+  if (this->pd_len==0) return;
+  s.put_octet_array((_CORBA_Octet*)this->pd_buf,(int)this->pd_len*dimension);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -503,22 +509,22 @@ _CORBA_Sequence_Array_Boolean<T,T_slice,dimension>::operator<<=(cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   if (l==0) return;
-  s.get_octet_array((_CORBA_Octet*)pd_buf,(int)l*dimension);
+  s.get_octet_array((_CORBA_Octet*)this->pd_buf,(int)l*dimension);
 }
 //////////////////////////////////////////////////////////////////////
 template<class T, class T_slice, int dimension>
 inline void
 _CORBA_Sequence_Array_Octet<T,T_slice,dimension>::operator>>=(cdrStream& s) const
 {
-  pd_len >>= s;
-  if (pd_len==0) return;
-  s.put_octet_array((_CORBA_Octet*)pd_buf,(int)pd_len*dimension);
+  this->pd_len >>= s;
+  if (this->pd_len==0) return;
+  s.put_octet_array((_CORBA_Octet*)this->pd_buf,(int)this->pd_len*dimension);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -528,13 +534,13 @@ _CORBA_Sequence_Array_Octet<T,T_slice,dimension>::operator<<=(cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   if (l==0) return;
-  s.get_octet_array((_CORBA_Octet*)pd_buf,(int)l*dimension);
+  s.get_octet_array((_CORBA_Octet*)this->pd_buf,(int)l*dimension);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -542,10 +548,10 @@ template<class T, class T_slice, int dimension>
 inline void
 _CORBA_Sequence_Array_WChar<T,T_slice,dimension>::operator>>=(cdrStream& s) const
 {
-  pd_len >>= s;
-  for (_CORBA_ULong i=0; i<pd_len; i++) {
+  this->pd_len >>= s;
+  for (_CORBA_ULong i=0; i<this->pd_len; i++) {
     for (_CORBA_ULong j=0; j<dimension; j++) {
-      s.marshalWChar(*((_CORBA_WChar*)(pd_buf[i]) + j));
+      s.marshalWChar(*((_CORBA_WChar*)(this->pd_buf[i]) + j));
     }
   }
 }
@@ -557,14 +563,14 @@ _CORBA_Sequence_Array_WChar<T,T_slice,dimension>::operator<<=(cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for (_CORBA_ULong i=0; i<l; i++) {
     for (_CORBA_ULong j=0; j<dimension; j++) {
-      *((_CORBA_WChar*)(pd_buf[i]) + j) =  s.unmarshalWChar();
+      *((_CORBA_WChar*)(this->pd_buf[i]) + j) =  s.unmarshalWChar();
     }
   }
 }
@@ -704,8 +710,8 @@ template <class T, class ElemT,class T_Helper>
 inline void
 _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>::operator>>= (cdrStream& s) const
 {
-  ::operator>>=(_CORBA_ULong(pd_len), s);
-  for( int i = 0; i < (int)pd_len; i++ )
+  ::operator>>=(_CORBA_ULong(this->pd_len), s);
+  for( int i = 0; i < (int)this->pd_len; i++ )
     T_Helper::marshalObjRef(pd_data[i],s);
 }
 
@@ -717,11 +723,11 @@ _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>::operator<<= (cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l) || (this->pd_bounded && l > this->pd_max)) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
+  this->length(l);
   for( _CORBA_ULong i = 0; i < l; i++ )
     operator[](i) = T_Helper::unmarshalObjRef(s);
 }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2005/01/06 17:31:06  dgrisby
+  Changes (mainly from omni4_0_develop) to compile on gcc 3.4.
+
   Revision 1.1.2.4  2004/10/13 17:58:19  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -559,23 +562,8 @@ public:
 
 
   // omniORB2 extensions
-  inline void operator>>= (cdrStream &s) const {
-    ::operator>>=(_CORBA_ULong(pd_len), s);
-    for (int i = 0; i < (int)pd_len; i++)
-      T::_NP_marshal(pd_data[i], s);
-  }
-
-  inline void operator<<= (cdrStream &s) {
-    _CORBA_ULong l;
-    l <<= s;
-    if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
-      _CORBA_marshal_sequence_range_check_error(s);
-      // never reach here
-    }
-    length(l);
-    for( _CORBA_ULong i = 0; i < l; i++ )
-      operator[](i) = T::_NP_unmarshal(s);
-  }
+  inline void operator>>= (cdrStream &s) const;
+  inline void operator<<= (cdrStream &s);
 
   // omniORB extensions
   inline T** NP_data() const  { return pd_data; }

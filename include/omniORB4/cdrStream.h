@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2005/01/06 17:31:07  dgrisby
+  Changes (mainly from omni4_0_develop) to compile on gcc 3.4.
+
   Revision 1.1.4.6  2004/07/23 10:29:56  dgrisby
   Completely new, much simpler Any implementation.
 
@@ -151,6 +154,30 @@
 #else
 #error "Swap64 has already been defined"
 #endif
+#endif
+
+// Technically, we have to declare friend functions outside of the
+// class to put them into the global scope (this is pretty esoteric:
+// friend functions are not in class scope but if they are first
+// declared inside the class they aren't in global scope either...or
+// something like that...)  It is too bad we have to have operators in
+// global scope but some compilers don't handle Koenig lookup
+// correctly.
+
+class cdrStream;
+inline void operator>>= (_CORBA_Short      a, cdrStream& s);
+inline void operator<<= (_CORBA_Short&     a, cdrStream& s);
+inline void operator>>= (_CORBA_UShort     a, cdrStream& s);
+inline void operator<<= (_CORBA_UShort&    a, cdrStream& s);
+inline void operator>>= (_CORBA_Long       a, cdrStream& s);
+inline void operator<<= (_CORBA_Long&      a, cdrStream& s);
+inline void operator>>= (_CORBA_ULong      a, cdrStream& s);
+inline void operator<<= (_CORBA_ULong&     a, cdrStream& s);
+#ifdef HAS_LongLong
+inline void operator>>= (_CORBA_LongLong   a, cdrStream& s);
+inline void operator<<= (_CORBA_LongLong&  a, cdrStream& s);
+inline void operator>>= (_CORBA_ULongLong  a, cdrStream& s);
+inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s);
 #endif
 
 class cdrStreamAdapter;

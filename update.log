@@ -1,3 +1,15 @@
+Thu Jan  6 17:27:37 GMT 2005 dgrisby
+====================================
+
+- Changes (mainly from omni4_0_develop) to compile on gcc 3.4.
+
+include/omniORB4/cdrStream.h
+include/omniORB4/omniInternal.h
+include/omniORB4/seqTemplatedefns.h
+include/omniORB4/valueTemplatedecls.h
+include/omniORB4/valueTemplatedefns.h  -- new
+
+
 Thu Jan  6 16:34:16 GMT 2005 dgrisby
 ====================================
 

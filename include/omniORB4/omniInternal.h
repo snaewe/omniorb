@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.4  2005/01/06 17:31:06  dgrisby
+  Changes (mainly from omni4_0_develop) to compile on gcc 3.4.
+
   Revision 1.5.2.3  2004/07/04 23:53:35  dgrisby
   More ValueType TypeCode and Any support.
 
@@ -452,6 +455,7 @@ _CORBA_MODULE_END
 #include <omniORB4/codeSets.h>
 #include <omniORB4/cdrStream.h>
 #include <omniORB4/seqTemplatedefns.h>
+#include <omniORB4/valueTemplatedefns.h>
 #include <omniORB4/omniObjRef.h>
 #include <omniORB4/omniIOR.h>
 #include <omniORB4/proxyFactory.h>
