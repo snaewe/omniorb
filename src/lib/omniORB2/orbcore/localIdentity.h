@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.1.2.3  2000/06/02 16:09:59  dpg1
+  If an object is deactivated while its POA is in the HOLDING state,
+  clients which were held now receive a TRANSIENT exception when the POA
+  becomes active again.
+
   Revision 1.1.2.2  1999/10/27 17:32:12  djr
   omni::internalLock and objref_rc_lock are now pointers.
 
@@ -167,6 +172,9 @@ public:
     *pd_prevInOAObjList = 0;
     pd_prevInOAObjList = new_head;
     *new_head = this;
+  }
+  inline CORBA::Boolean deactivated() {
+    return pd_adapter && !pd_prevInOAObjList;
   }
   // Locking for these methods is the responsiblility of
   // the object adapter which owns this list.

@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2000/06/02 16:09:59  dpg1
+  If an object is deactivated while its POA is in the HOLDING state,
+  clients which were held now receive a TRANSIENT exception when the POA
+  becomes active again.
+
   Revision 1.1.2.7  2000/04/27 10:51:44  dpg1
   Interoperable Naming Service
 
@@ -260,13 +265,15 @@ private:
   int adapter_name_is_valid(const char* name);
   // Return true if <name> is a valid name for an adapter.
 
-  void synchronise_request();
-  // Must hold <omni::internalLock> on entry.  If the POA is
-  // in the DISCARDING or INACTIVE state, <omni::internalLock>
-  // is released, and a suitable exception is thrown.  If the
-  // state is HOLDING, blocks until the state changes.  If it
-  // is (or becomes) ACTIVE, just returns -- and the mutex is
-  // still held on exit.
+  void synchronise_request(omniLocalIdentity* lid);
+  // Must hold <omni::internalLock> on entry.  If the POA is in the
+  // DISCARDING or INACTIVE state, <omni::internalLock> is released,
+  // and a suitable exception is thrown.  If the state is HOLDING,
+  // blocks until the state changes.  If it is (or becomes) ACTIVE,
+  // and the object is still active, just returns -- and the mutex is
+  // still held on exit. If the object has been deactivated while the
+  // POA is in the HOLDING state, releases <omni::internalLock> and
+  // throws CORBA::TRANSIENT.
 
   void deactivate_objects(omniLocalIdentity* idle_objs);
   // Deactivate all objects in the given list.  Does not etherealise

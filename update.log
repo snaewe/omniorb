@@ -1,3 +1,15 @@
+Fri Jun  2 17:07:20 BST 2000 dpg1
+=================================
+
+- If an object is deactivated while its POA is in the HOLDING state,
+  clients which were held now receive a TRANSIENT exception when the
+  POA becomes active again.
+
+src/lib/omniORB2/orbcore/localIdentity.h
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poaimpl.h
+
+
 Fri Jun  2 15:13:29 BST 2000 dpg1
 =================================
 

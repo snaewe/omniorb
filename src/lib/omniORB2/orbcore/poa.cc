@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.19  2000/06/02 16:09:59  dpg1
+  If an object is deactivated while its POA is in the HOLDING state,
+  clients which were held now receive a TRANSIENT exception when the POA
+  becomes active again.
+
   Revision 1.1.2.18  2000/05/05 18:59:36  dpg1
   Back out last change, since it doesn't work.
 
@@ -1289,7 +1294,7 @@ omniOrbPOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
   enterAdapter();
 
   if( pd_rq_state != (int) PortableServer::POAManager::ACTIVE )
-    synchronise_request();
+    synchronise_request(id);
 
   startRequest();
 
@@ -1353,7 +1358,7 @@ omniOrbPOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
   enterAdapter();
 
   if( pd_rq_state != (int) PortableServer::POAManager::ACTIVE )
-    synchronise_request();
+    synchronise_request(id);
 
   startRequest();
 
@@ -2128,7 +2133,7 @@ omniOrbPOA::adapter_name_is_valid(const char* name)
 
 
 void
-omniOrbPOA::synchronise_request()
+omniOrbPOA::synchronise_request(omniLocalIdentity* lid)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
@@ -2173,6 +2178,21 @@ omniOrbPOA::synchronise_request()
     // very appropriate looking at the description of
     // CORBA::OBJ_ADAPTER.
     OMNIORB_THROW(OBJ_ADAPTER,0, CORBA::COMPLETED_NO);
+  }
+
+  // Check to see if the object has been deactivated while we've been
+  // holding. If so, throw a TRANSIENT exception.
+  CORBA::Boolean deactivated;
+  pd_lock.lock();
+  deactivated = lid->deactivated();
+  pd_lock.unlock();
+
+  if (deactivated) {
+    // We have to do startRequest() here, since the identity
+    // will do endInvocation() when we pass through there.
+    startRequest();
+    omni::internalLock->unlock();
+    OMNIORB_THROW(TRANSIENT,0, CORBA::COMPLETED_NO);
   }
 }
 
