@@ -1,4 +1,12 @@
 
+Wed Dec 15 14:47:18 GMT 1999 djr
+================================
+
+- Fixed bug in omniidl3 - scoping incorrect for attribute write arg.
+
+src/tool/omniidl2/omniORB2_be/o2be_attribute.cc
+
+
 Fri Dec 10 12:31:04 GMT 1999 djr
 ================================
 
