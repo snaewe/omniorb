@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.6  2004/07/31 23:46:27  dgrisby
+# Correct constness of exception Any insertion operator.
+#
 # Revision 1.8.2.5  2004/07/23 10:29:59  dgrisby
 # Completely new, much simpler Any implementation.
 #
@@ -1251,7 +1254,7 @@ extern CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
 
 any_exception = """\
 void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-void operator<<=(CORBA::Any& _a, @fqname@* _sp);
+void operator<<=(CORBA::Any& _a, const @fqname@* _sp);
 CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
 """
 
