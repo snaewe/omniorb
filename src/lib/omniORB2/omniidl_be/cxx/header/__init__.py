@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.1  2000/08/21 11:35:14  djs
+# Lots of tidying
+#
 # Revision 1.15  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -93,13 +96,7 @@
 # Brought more of the old tmp_omniidl code into the new tree
 #
 
-# -----------------------------
-# Configuration data
-from omniidl_be.cxx import config
-
-# -----------------------------
-# Output generation functions
-import omniidl_be.cxx.header.defs
+# output generation
 import omniidl_be.cxx.header.opers
 import omniidl_be.cxx.header.poa
 import omniidl_be.cxx.header.tie
@@ -109,13 +106,9 @@ import omniidl_be.cxx.header.tcstring
 
 from omniidl_be.cxx.header import template
 
-# -----------------------------
-# Utility functions
-from omniidl_be.cxx import util, id
+from omniidl_be.cxx import config, output, ast, id
 
-# -----------------------------
-# System functions
-import re, sys, os.path
+import re, sys, os.path, string
 
 
 def header(stream, filename):
@@ -133,6 +126,7 @@ def defs_fragment(stream, tree):
     header(stream, filename)
 
     # generate the header definitions
+    import omniidl_be
     forward = omniidl_be.cxx.header.forward.__init__(stream)
     tree.accept(forward)
     
@@ -140,6 +134,7 @@ def defs_fragment(stream, tree):
     tcstring = omniidl_be.cxx.header.tcstring.__init__(stream)
     tree.accept(tcstring)
 
+    import omniidl_be.cxx.header.defs
     defs = omniidl_be.cxx.header.defs.__init__(stream)
     tree.accept(defs)
 
@@ -175,12 +170,22 @@ def monolithic(stream, tree):
     guard = id.Name([config.state['Basename']]).guard()
 
     header(stream, guard)
+
+    # Add in any direct C++ from toplevel pragma if present
+    cxx_direct_include = []
+    directive = "hh"
+    for pragma in tree.pragmas():
+        # ignore all pragmas but those in the main file
+        if pragma.file() != tree.file(): continue
+        
+        if pragma.text()[0:len(directive)] == directive:
+            cxx_direct_include.append(pragma.text()[len(directive)+1:])
     
-    includes = util.StringStream()
+    includes = output.StringStream()
     # produce #includes for all files included by the IDL
-    for include in config.includes:
+    for include in ast.includes():
         # skip the main file
-        if tree.file() == include:
+        if ast.mainFile() == include:
             continue
         
         # the old C++ BE makes orb.idl a special case
@@ -221,6 +226,7 @@ def monolithic(stream, tree):
         tree.accept(tcstring)
 
     def main_defs(stream = stream, tree = tree):
+        import omniidl_be.cxx.header.defs
         defs = omniidl_be.cxx.header.defs.__init__(stream)
         tree.accept(defs)
 
@@ -249,7 +255,8 @@ def monolithic(stream, tree):
 
     # other stuff
     stream.out(template.main,
-               includes = str(includes),
+               cxx_direct_include = string.join(cxx_direct_include, "\n"),
+               includes = includes,
                forward_declarations = forward_dec,
                string_tcParser_declarations = string_tcparser,
                defs = main_defs,
@@ -266,27 +273,27 @@ def run(tree):
         defs_filename = config.state['Basename']         +\
                         config.state['_DEFS Fragment']   +\
                         config.state['HH Suffix']
-        defs_stream = util.Stream(open(defs_filename, "w"), 2)
+        defs_stream = output.Stream(output.createFile(defs_filename), 2)
         defs_fragment(defs_stream, tree)
 
         # build the opers file
         opers_filename = config.state['Basename']        +\
                          config.state['_OPERS Fragment'] +\
                          config.state['HH Suffix']
-        opers_stream = util.Stream(open(opers_filename, "w"), 2)
+        opers_stream = output.Stream(output.createFile(opers_filename), 2)
         opers_fragment(opers_stream, tree)
 
         # build the poa file
         poa_filename = config.state['Basename']          +\
                        config.state['_POA Fragment']     +\
                        config.state['HH Suffix']
-        poa_stream = util.Stream(open(poa_filename, "w"), 2)
+        poa_stream = output.Stream(output.createFile(poa_filename), 2)
         poa_fragment(poa_stream, tree)
     else:
         # build the full header file
         header_filename = config.state['Basename']       +\
                           config.state['HH Suffix']
-        stream = util.Stream(open(header_filename, "w"), 2)
+        stream = output.Stream(output.createFile(header_filename), 2)
         # generate one big chunk of header
         monolithic(stream, tree)
 

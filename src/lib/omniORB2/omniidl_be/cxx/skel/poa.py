@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.10.2.1  2000/08/21 11:35:34  djs
+# Lots of tidying
+#
 # Revision 1.10  2000/07/13 15:25:59  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -68,7 +71,7 @@
 # similar to o2be_root::produce_poa_skel in the old C++ BE
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, id
+from omniidl_be.cxx import ast, cxx, id
 from omniidl_be.cxx.skel import template
 
 import poa

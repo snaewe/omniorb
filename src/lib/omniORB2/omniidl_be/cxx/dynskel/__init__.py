@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9.2.1  2000/08/21 11:35:06  djs
+# Lots of tidying
+#
 # Revision 1.9  2000/07/13 15:26:01  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -88,7 +91,7 @@ from omniidl_be.cxx import config
 
 # -----------------------------
 # Utility functions
-from omniidl_be.cxx import tyutil, util
+from omniidl_be.cxx import ast, cxx, output, util
 
 #import omniidl_be.cxx.dynskel.tcstring
 import omniidl_be.cxx.dynskel.typecode
@@ -120,6 +123,6 @@ def run(tree):
     header_filename = config.state['Basename'] +\
                       config.state['DYNSK Suffix']
     
-    stream = util.Stream(open(header_filename, "w"), 2)
+    stream = output.Stream(output.createFile(header_filename), 2)
 
     generate(stream, tree)

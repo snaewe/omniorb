@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.2  2000/08/21 11:35:18  djs
+# Lots of tidying
+#
 # Revision 1.18.2.1  2000/08/02 10:52:02  dpg1
 # New omni3_1_develop branch, merged from omni3_develop.
 #
@@ -124,9 +127,8 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, id,  config, util
-from omniidl_be.cxx.header import tie
-from omniidl_be.cxx.header import template
+from omniidl_be.cxx import id,  config, ast
+from omniidl_be.cxx.header import tie, template
 
 import poa
 
@@ -206,7 +208,7 @@ def visitInterface(node):
 
     # deal with inheritance
     inherits = []
-    for i in map(tyutil.remove_ast_typedefs, node.inherits()):
+    for i in map(ast.remove_ast_typedefs, node.inherits()):
         name = id.Name(i.scopedName())
         i_POA_name = name.unambiguous(environment)
         

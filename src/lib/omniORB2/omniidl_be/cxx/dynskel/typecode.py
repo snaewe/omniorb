@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.2  2000/08/21 11:35:08  djs
+# Lots of tidying
+#
 # Revision 1.17.2.1  2000/08/04 17:10:29  dpg1
 # Long long support
 #
@@ -117,7 +120,7 @@
 import string, re
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, config, types, id
+from omniidl_be.cxx import cxx, ast, output, util, config, types, id
 from omniidl_be.cxx.dynskel import tcstring, template
 
 import typecode
@@ -177,7 +180,6 @@ def finishingNode():
 def recursive(node):
     return node in self.__currentNodes
 def recursive_Depth(node):
-    assert recursive(node)
     outer = self.__currentNodes[:]
     depth = 1
 
@@ -391,7 +393,7 @@ def visitModule(node):
 # builds an instance of CORBA::PR_structMember containing pointers
 # to all the TypeCodes of the structure members
 def buildMembersStructure(node):
-    struct = util.StringStream()
+    struct = output.StringStream()
     mangled_name = mangleName(config.state['Private Prefix'] + \
                               "_structmember_", node.scopedName())
     if alreadyDefined(mangled_name):
@@ -437,7 +439,7 @@ def visitStruct(node):
     # the key here is to redirect the bottom half to a buffer
     # just for now
     oldbottomhalf = self.bottomhalf
-    self.bottomhalf = util.StringStream()
+    self.bottomhalf = output.StringStream()
 
     insideModule = self.__immediatelyInsideModule
     self.__immediatelyInsideModule = 0
@@ -521,7 +523,7 @@ def visitUnion(node):
     # the key here is to redirect the bottom half to a buffer
     # just for now
     oldbottomhalf = self.bottomhalf
-    self.bottomhalf = util.StringStream()
+    self.bottomhalf = output.StringStream()
 
     
     # need to build a static array of node members in a similar fashion
@@ -562,16 +564,11 @@ def visitUnion(node):
         
         typecode = mkTypeCode(caseType, decl, node)
         case_name = id.Name(decl.scopedName()).simple()
-        #case_name = tyutil.mapID(tyutil.name(decl.scopedName()))
 
-        #env = name.Environment()
         for l in c.labels():
             if l.default():
                 label = "0"
                 hasDefault = numlabels
-            # FIXME: same problem happens in defs/header and skel/main
-            elif switchType.char() and l.value() == '\0':
-                label = "0000"
             else:
                 label = switchType.literal(l.value())
             array.append( "{\"" + case_name + "\", " + typecode + ", " + label + "}")
@@ -782,7 +779,7 @@ def visitException(node):
     # the key here is to redirect the bottom half to a buffer
     # just for now
     oldbottomhalf = self.bottomhalf
-    self.bottomhalf = util.StringStream()
+    self.bottomhalf = output.StringStream()
 
     # create the static typecodes for constructed types by setting
     # the override flag and recursing

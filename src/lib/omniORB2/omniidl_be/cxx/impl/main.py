@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4.2.1  2000/08/21 11:35:23  djs
+# Lots of tidying
+#
 # Revision 1.4  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -56,7 +59,7 @@
 import string
 
 from omniidl import idlast, idlvisitor
-from omniidl_be.cxx import tyutil, util, id, types
+from omniidl_be.cxx import ast, cxx, util, id, types
 from omniidl_be.cxx.impl import template
 
 import main
@@ -87,17 +90,17 @@ def impl_simplename(name):
 # Main code entrypoint
 def run(tree):
     # first thing is to build the interface implementations
-    impl = util.StringStream()
+    impl = output.StringStream()
     bii = BuildInterfaceImplementations(impl)
     tree.accept(bii)
 
     # for each interface we implement we require:
     # 1. heap allocation
-    allocate = util.StringStream()
+    allocate = output.StringStream()
     # 2. POA activation
-    activate = util.StringStream()
+    activate = output.StringStream()
     # 3. reference generation, stringification and output
-    reference = util.StringStream()
+    reference = output.StringStream()
 
     for i in bii.allInterfaces():
         name = id.Name(i.scopedName())
@@ -181,9 +184,9 @@ class BuildInterfaceImplementations(idlvisitor.AstVisitor):
         # we need to consider all callables, including inherited ones
         # since this implementation class is not inheriting from anywhere
         # other than the IDL skeleton
-        allInterfaces = [node] + tyutil.allInherits(node)
+        allInterfaces = [node] + ast.allInherits(node)
         allCallables = util.fold( map(lambda x:x.callables(), allInterfaces),
-                                  [], util.append )
+                                  [], lambda x, y: x + y )
 
 
         # declarations[] contains a list of in-class decl signatures

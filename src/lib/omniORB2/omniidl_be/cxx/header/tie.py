@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.14.2.2  2000/08/21 11:35:19  djs
+# Lots of tidying
+#
 # Revision 1.14.2.1  2000/08/02 10:52:02  dpg1
 # New omni3_1_develop branch, merged from omni3_develop.
 #
@@ -110,7 +113,7 @@
 import string
 
 from omniidl import idlast, idltype, idlutil, idlvisitor
-from omniidl_be.cxx import tyutil, id, config, util, types
+from omniidl_be.cxx import id, config, types, output, ast
 from omniidl_be.cxx.header import template
 
 import tie
@@ -129,12 +132,12 @@ def write_template(name, inherits, node, stream,
     # build methods which bind the interface operations and attributes
     # note that this includes inherited callables since tie
     # templates are outside the normal inheritance structure
-    where = util.StringStream()
+    where = output.StringStream()
 
     # defined_so_far contains keys corresponding to method names which
     # have been defined already (and which should not be included twice)
     def buildCallables(interface, where, continuation, defined_so_far = {}):
-        interface = tyutil.remove_ast_typedefs(interface)
+        interface = ast.remove_ast_typedefs(interface)
         
         callables = interface.callables()
         operations = filter(lambda x:isinstance(x, idlast.Operation),

@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.1  2000/08/21 11:35:17  djs
+# Lots of tidying
+#
 # Revision 1.7  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -61,7 +64,7 @@
   for the C++ backend"""
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, config, id
+from omniidl_be.cxx import config, id
 from omniidl_be.cxx.header import template
 
 import marshal

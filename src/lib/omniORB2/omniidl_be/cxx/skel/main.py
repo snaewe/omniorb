@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.2  2000/08/21 11:35:32  djs
+# Lots of tidying
+#
 # Revision 1.30.2.1  2000/08/02 10:52:02  dpg1
 # New omni3_1_develop branch, merged from omni3_develop.
 #
@@ -179,9 +182,8 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, id, config, skutil, types
-from omniidl_be.cxx.skel import mangler, dispatch, proxy
-from omniidl_be.cxx.skel import template
+from omniidl_be.cxx import cxx, ast, output, id, config, skutil, types, iface, call
+from omniidl_be.cxx.skel import mangler, template
 
 import main
 self = main
@@ -217,7 +219,6 @@ def visitModule(node):
 def visitInterface(node):
     ident = node.identifier()
 
-    cxx_ident = id.mapID(ident)
     outer_environment = id.lookup(node)
     environment = outer_environment.enter(ident)
 
@@ -230,53 +231,51 @@ def visitInterface(node):
 
     self.__insideInterface = insideInterface
 
-    # we need to generate several useful classes for object
-    # references
-    node_name = id.Name(node.scopedName())
-    objref_name = node_name.prefix("_objref_")
-    sk_name     = node_name.prefix("_sk_")
-    impl_name   = node_name.prefix("_impl_")
-    
-    # build the helper class methods
-    stream.out(template.interface_Helper,
-               name = node_name.fullyQualify())
+    # Call descriptor names are of the form:
+    #  TAG _ PREFIX _ BASE
+    # Tag represents the type of thing {call descriptor, local callback...}
+    # Prefix is derived from the first encountered scopedname[1]
+    # Base is a counter to uniquify the identifier
+    #
+    # [1] Since the names are guaranteed unique, the prefix makes the
+    #     names used by two different modules disjoint too. Not sure why
+    #     as they are not externally visible?
+    operations = filter(lambda x:isinstance(x, idlast.Operation),
+                        node.callables())
+    attributes = filter(lambda x:isinstance(x, idlast.Attribute),
+                        node.callables())
+    if operations != []:
+        scopedName = node.scopedName() + [operations[0].identifier()]
+        mangler.initialise_base(scopedName)
+    if attributes != []:
+        scopedName = node.scopedName() + [attributes[0].identifiers()[0]]
+        mangler.initialise_base(scopedName)
+
+    I = iface.Interface(node)
+    I_Helper = iface.instance("I_Helper")(I)
+    I_Helper.cc(stream)
+
 
     # the class itself
+    node_name = id.Name(node.scopedName())
+    objref_name = node_name.prefix("_objref_")
     stream.out(template.interface_class,
                name = node_name.fullyQualify(),
                objref_name = objref_name.unambiguous(environment),
                repoID = node.repoId())
 
-    # comment copied from src/tool/omniidl2/omniORB2_be/o2be_interface.cc:
-
-    # MSVC {4.2,5.0} cannot deal with a call to a virtual member
-    # of a base class using the member function's fully/partially
-    # scoped name. Have to use the alias for the base class in the
-    # global scope to refer to the virtual member function instead.
-    #
-    # We scan all the base interfaces to see if any of them has to
-    # be referred to by their fully/partially qualified names. If
-    # that is necessary, we generate a typedef to define an alias for
-    # this base interface. This alias is used in the stub generated below
-    #
-    # FIXME: is this a solution to the OMNI_BASE_CTOR stuff below?
-    #
-    def flatName(name):
-        return string.join(name.fullName(), "_")
-    def needFlatName(name, environment = environment):
-        # does the name have scope :: qualifiers
-        return len(name.relName(environment)) > 1
-    
-    for i in tyutil.allInherits(node):
+    # Output flattened aliases to inherited classes, to workaround an
+    # MSVC bug.
+    for i in ast.allInherits(node):
         inherits_name = id.Name(i.scopedName())
-        if needFlatName(inherits_name):
+        if inherits_name.needFlatName(environment):
             guard_name = inherits_name.guard()
-            flat_fqname = string.join(i.scopedName(), "_")
+            flat_fqname = inherits_name.flatName()
             inherits_impl_name = inherits_name.prefix("_impl_")
             inherits_objref_name = inherits_name.prefix("_objref_")
 
-            impl_flat_fqname = flatName(inherits_impl_name)
-            objref_flat_fqname = flatName(inherits_objref_name)
+            impl_flat_fqname = inherits_impl_name.flatName()
+            objref_flat_fqname = inherits_objref_name.flatName()
             
             stream.out(template.interface_ALIAS,
                        guard_name = guard_name,
@@ -286,358 +285,20 @@ def visitInterface(node):
                        impl_flat_fqname = impl_flat_fqname,
                        objref_fqname = inherits_objref_name.fullyQualify(),
                        objref_flat_fqname = objref_flat_fqname)
-          
 
+    _objref_I = iface.instance("_objref_I")(I)
+    _objref_I.cc(stream)
+ 
+    _pof_I = iface.instance("_pof_I")(I)
+    _pof_I.cc(stream)
 
-    # gather information for possible interface inheritance
-    # (needs to use the transitive closure of inheritance)
-    all_inherits = tyutil.allInherits(node)
-    inherits_str = ""
-    inherited_repoIDs = ""
-    for i in all_inherits:
-        inherits_fqname = id.Name(i.scopedName()).fullyQualify()
-        inherited_repoIDs = inherited_repoIDs + "\
-if( !strcmp(id, " + inherits_fqname + "::_PD_repoId) )\n\
-  return (" + inherits_fqname + "_ptr) this;\n"
+    _impl_I = iface.instance("_impl_I")(I)
+    _impl_I.cc(stream)
 
-    for i in node.inherits():
-        inherits_name = id.Name(i.scopedName())
-        inherits_objref_name = inherits_name.prefix("_objref_")
-
-        inherits_objref_str = inherits_objref_name.unambiguous(environment)
-        if needFlatName(inherits_name):
-            inherits_objref_str = flatName(inherits_objref_name)
-            
-        this_inherits_str = inherits_objref_str + "(mdri, p, id, lid),\n"
-
-        # The powerpc-aix OMNIORB_BASE_CTOR workaround still works here
-        # (in precendence to the flattened base name) but lacking a
-        # powerpc-aix test machine I can't properly test it
-        if inherits_objref_name.relName(environment) != i.scopedName():
-            prefix = []
-            for x in inherits_objref_name.fullName():
-                if x == "_objref_" + inherits_objref_name.relName(environment)[0]:
-                    break
-                prefix.append(x)
-            inherits_scope_prefix = string.join(prefix, "::") + "::"
-            this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix +\
-                                ")" + this_inherits_str
-            
-        inherits_str = inherits_str + this_inherits_str
-        
-
-    # generate the _objref_ methods
-    stream.out(template.interface_objref,
-               name = node_name.fullyQualify(),
-               fq_objref_name = objref_name.fullyQualify(),
-               objref_name = objref_name.unambiguous(environment),
-               inherits_str = inherits_str,
-               inherited_repoIDs = inherited_repoIDs)
-
-    # deal with callables (attributes and interfaces)
-    callables = node.callables()
-    attributes = filter(lambda x:isinstance(x, idlast.Attribute), callables)
-    operations = filter(lambda x:isinstance(x, idlast.Operation), callables)
-
-    # every callable has an associated call descriptor proxy.
-    Proxy = proxy.__init__(environment, stream)
-
-    # ------------------------------------
-    # Operations
-    for operation in operations:
-        ident = operation.identifier()
-        cxx_ident = id.mapID(ident)
-        
-        seed = node.scopedName() + [ident]
-        mangler.initialise_base(seed)
-
-        # try the all new proxy code!
-        Proxy.operation(operation)
-        descriptor = mangler.operation_descriptor_name(operation)
-
-        parameters = operation.parameters()
-        cxx_parameters = map(lambda x:id.mapID(x.identifier()), parameters)
-        
-        parameter_argmapping = []
-        parameters_ID = []
-
-        returnType = types.Type(operation.returnType())
-        result_type = returnType.op(types.RET)
-        has_return_value = not(returnType.void())
-
-        # compute the argument mapping for the operation parameters
-        for parameter in parameters:
-            parameters_ID.append(id.mapID(parameter.identifier()))
-            
-            paramType = types.Type(parameter.paramType())
-            d_paramType = paramType.deref()
-            paramType_name = paramType.base()
-            parameter_argmapping.append(paramType.op(
-                types.direction(parameter), outer_environment, use_out = 1))
-
-        # deal with possible "context"s
-        if operation.contexts() != []:
-            # pinch the unique name first (!)
-            context_descriptor = mangler.generate_unique_name(
-                mangler.CTX_DESC_PREFIX)
-            contexts = util.StringStream()
-            for context in operation.contexts():
-                contexts.out("\"" + context + "\",")
-            contexts.out("0")
-            stream.out(template.interface_context_array,
-                       context_descriptor = context_descriptor,
-                       contexts = str(contexts))
-
-        # static call back function
-        local_call_descriptor = mangler.generate_unique_name(
-            mangler.LCALL_DESC_PREFIX)
-
-        impl_args = map(lambda x: "tcd->arg_" + str(x),
-                        range(0, len(parameters)))
-
-        if operation.contexts() != []:
-            impl_args.append("cd->context_info()->context")
-
-        result_string = ""
-        if has_return_value:
-            result_string = "tcd->pd_result = "
-
-        # If we have no return value and no arguments at all then we don't
-        # need to fetch the call descriptor. This suppresses a warning in gcc
-        # about an unused variable.
-        get_cd = ""
-        if has_return_value or (impl_args != []):
-            get_cd = descriptor + "* tcd = (" + descriptor + "*) cd;"
-        stream.out(template.interface_callback,
-                   local_call_descriptor = local_call_descriptor,
-                   get_call_descriptor = get_cd,
-                   impl_name = impl_name.unambiguous(environment),
-                   impl_fqname = impl_name.fullyQualify(),
-                   name = node_name.fullyQualify(),
-                   cxx_operation_name = cxx_ident,
-                   operation_arguments = string.join(impl_args, ", "),
-                   result = result_string)
-
-        # objref::operation name
-        objref_args = util.zip(parameter_argmapping, parameters_ID)
-        objref_args = map(lambda (x,y): x + " " + y, objref_args)
-        call_desc_args = [local_call_descriptor, "\"" + ident + "\"",
-                          str(len(ident) + 1)]
-        if operation.oneway():
-            call_desc_args.append("1/*oneway*/")
-        else:
-            call_desc_args.append("0")
-
-        call_desc_args = call_desc_args + parameters_ID
-
-        return_string = ""
-        if has_return_value:
-            return_string = "return _call_desc.result();"
-
-        context = util.StringStream()
-        if operation.contexts() != []:
-            objref_args.append("CORBA::Context_ptr _ctxt")
-            context.out("""\
-omniCallDescriptor::ContextInfo _ctxt_info(_ctxt, @context_descriptor@, @n@);
-_call_desc.set_context_info(&_ctxt_info);""",
-                        context_descriptor = context_descriptor,
-                        n = str(len(operation.contexts())))
-
-
-        stream.out(template.interface_operation,
-                   result_type = result_type,
-                   objref_fqname = objref_name.fullyQualify(),
-                   operation_name = cxx_ident,
-                   arguments = string.join(objref_args, ", "),
-                   call_descriptor = descriptor,
-                   call_desc_args = string.join(call_desc_args, ", "),
-                   context = str(context),
-                   return_string = return_string)
-                   
-    # ------------------------------------
-    # Attributes
-    for attribute in attributes:
-        seed = node.scopedName() + [attribute.identifiers()[0]]
-        mangler.initialise_base(seed)
-        
-        Proxy.attribute(attribute)
-
-        read = mangler.attribute_read_descriptor_name(attribute)
-        write = mangler.attribute_write_descriptor_name(attribute)
-
-        attrType = types.Type(attribute.attrType())
-        in_type = attrType.op(types.IN)
-        scoped_in_type = attrType.op(types.IN, outer_environment)
-        return_type = attrType.op(types.RET)
-
-        if attrType.array():
-            in_type = in_type + "_slice*"
-            scoped_in_type = scoped_in_type + "_slice*"
-            
-
-        for ident in attribute.identifiers():
-            attrib_name = ident
-            cxx_attrib_name = id.mapID(attrib_name)
-
-            get_attrib_name = "_get_" + attrib_name
-            # its possible that the base hasn't been initialised yet
-            
-            local_call_descriptor = mangler.generate_unique_name(
-                mangler.LCALL_DESC_PREFIX)
-
-            # We always have a result argument so always need the call
-            # descriptor (see operations above)
-            get_cd = read + "* tcd = (" + read + "*) cd;"
-
-            # generate the callback
-            stream.out(template.interface_callback,
-                       local_call_descriptor = local_call_descriptor,
-                       get_call_descriptor = get_cd,
-                       impl_fqname = impl_name.fullyQualify(),
-                       name = node_name.fullyQualify(),
-                       result = "tcd->pd_result = ",
-                       cxx_operation_name = cxx_attrib_name,
-                       operation_arguments = "")
-            # generate the objref_method
-            call_desc_args = local_call_descriptor + ", \"" +\
-                             get_attrib_name + "\", " +\
-                             str(len(get_attrib_name) + 1) + ", 0"
-            stream.out(template.interface_operation,
-                       result_type = return_type,
-                       objref_fqname = objref_name.fullyQualify(),
-                       operation_name = cxx_attrib_name,
-                       arguments = "",
-                       call_descriptor = read,
-                       call_desc_args = call_desc_args,
-                       context = "",
-                       return_string = "return _call_desc.result();")
-
-            if not(attribute.readonly()):
-                # make another one of these
-                local_call_descriptor = mangler.generate_unique_name(
-                    mangler.LCALL_DESC_PREFIX)
-                set_attrib_name = "_set_" + attrib_name
-
-                # again we always need the call descriptor
-                get_cd = write + "* tcd = (" + write + "*) cd;"
-                
-                # generate the callback
-                stream.out(template.interface_callback,
-                           local_call_descriptor = local_call_descriptor,
-                           get_call_descriptor = get_cd,
-                           impl_fqname = impl_name.fullyQualify(),
-                           name = node_name.fullyQualify(),
-                           result = "",
-                           cxx_operation_name = cxx_attrib_name,
-                           operation_arguments = "tcd->arg_0")
-
-                # generate the objref_method
-                call_desc_args = local_call_descriptor + ", \"" + \
-                                 set_attrib_name + "\", " + \
-                                 str(len(set_attrib_name) + 1) + ", 0, arg_0"
-
-                stream.out(template.interface_operation,
-                           result_type = "void",
-                           objref_fqname = objref_name.fullyQualify(),
-                           operation_name = cxx_attrib_name,
-                           arguments = scoped_in_type + " arg_0",
-                           call_descriptor = write,
-                           call_desc_args = call_desc_args,
-                           context = "",
-                           return_string = "")
-
-    # _pof_ class
-    pof_name = node_name.prefix("_pof_")
-
-    # build the inheritance list
-    inherits_repoIDs = util.StringStream()
-    for i in all_inherits:
-        ancestor = id.Name(i.scopedName()).fullyQualify()
-        inherits_repoIDs.out(template.interface_pof_repoID,
-                             inherited = ancestor)
-    stream.out(template.interface_pof,
-               pof_name = pof_name.fullyQualify(),
-               objref_fqname = objref_name.fullyQualify(),
-               name = node_name.fullyQualify(),
-               uname = pof_name.simple(),
-               Other_repoIDs = str(inherits_repoIDs),
-               idname = mangler.produce_idname(node_name.fullName()))
-
-    # _impl_ class (contains the callable dispatch code)
-
-    # dispatch operations and attributes from this class
-    def this_dispatch(stream = stream, node = node,
-                      environment = environment):
-        dispatcher = dispatch.__init__(environment, stream)
-        for callable in node.callables():
-            # This isn't quite as neat as it could be
-            if isinstance(callable, idlast.Operation):
-                identifiers = [callable.identifier()]
-            else:
-                identifiers = callable.identifiers()
-
-            # separate case for each callable thing
-            for ident in identifiers:
-                id_name = id.mapID(ident)
-                if isinstance(callable, idlast.Operation):
-                    dispatcher.operation(callable)
-
-                elif isinstance(callable, idlast.Attribute):
-                    dispatcher.attribute_read(callable, ident)
-
-                    if not(callable.readonly()):
-                        dispatcher.attribute_write(callable, ident)
-        return
-    
-    # dispatch operations and attributes inherited from base classes
-    def inherited_dispatch(stream = stream, node = node,
-                           environment = environment,
-                           needFlatName = needFlatName,
-                           flatName = flatName):
-        for i in node.inherits():
-            inherited_name = id.Name(i.scopedName()).prefix("_impl_")
-            impl_inherits = inherited_name.simple()
-            # The MSVC workaround might be needed here again
-            if needFlatName(inherited_name):
-                impl_inherits = flatName(inherited_name)
-            #relName = inherited_name.relName(environment)
-            ## does this name have scope :: qualifiers?
-            #if len(relName) > 1:
-            #    impl_inherits = string.join(inherited_name.fullName(), "_")
-          
-            stream.out(template.interface_impl_inherit_dispatch,
-                       impl_inherited_name = impl_inherits)
-
-    def Other_repoIDs(stream = stream, all_inherits = all_inherits,
-                      environment = environment,
-                      needFlatName = needFlatName,
-                      flatName = flatName):
-        for i in all_inherits:
-            inherited_name = id.Name(i.scopedName())
-            inherited_str = inherited_name.unambiguous(environment)
-            impl_inherited_name = inherited_name.prefix("_impl_")
-            impl_str = impl_inherited_name.unambiguous(environment)
-            if needFlatName(inherited_name):
-                inherited_str = flatName(inherited_name)
-                impl_str = flatName(impl_inherited_name)
-            stream.out(template.interface_impl_repoID,
-                       inherited_name = inherited_str,
-                       impl_inherited_name = impl_str)
-
-
-    # Output the _impl_ class
-    stream.out(template.interface_impl,
-               impl_fqname = impl_name.fullyQualify(),
-               uname = node_name.simple(),
-               this_dispatch = this_dispatch,
-               inherited_dispatch = inherited_dispatch,
-               impl_name = impl_name.unambiguous(environment),
-               Other_repoIDs = Other_repoIDs,
-               name = node_name.fullyQualify())
-               
     
     # BOA compatible skeletons
     if config.state['BOA Skeletons']:
+        sk_name = node_name.prefix("_sk_")
         stream.out(template.interface_sk,
                    sk_fqname = sk_name.fullyQualify(),
                    sk_name = sk_name.unambiguous(environment))
@@ -658,10 +319,10 @@ def visitTypedef(node):
         scopedName = id.Name(d.scopedName())
         
         decl_dims = d.sizes()
-        decl_dims_str = tyutil.dimsToString(decl_dims)
+        decl_dims_str = cxx.dimsToString(decl_dims)
         decl_first_dim_str = ""
         if decl_dims != []:
-            decl_first_dim_str = tyutil.dimsToString([decl_dims[0]])
+            decl_first_dim_str = cxx.dimsToString([decl_dims[0]])
         
         full_dims = decl_dims + aliasType.dims()
         is_array = full_dims != []
@@ -671,14 +332,17 @@ def visitTypedef(node):
 
         if is_global_scope and is_array_declarator:
             # build _dup and _copy loops
-            dup_loop = util.StringStream()
-            copy_loop = util.StringStream()
-            index = util.start_loop(dup_loop, full_dims)
+            dup_loop = output.StringStream()
+            loop = cxx.For(dup_loop, full_dims)
+            index = loop.index()
             dup_loop.out("_data" + index + " = _s" + index + ";")
-            util.finish_loop(dup_loop, full_dims)
-            index = util.start_loop(copy_loop, full_dims)
+            loop.end()
+
+            copy_loop = output.StringStream()
+            loop = cxx.For(copy_loop, full_dims)
+            index = loop.index()
             copy_loop.out("_to" + index + " = _from" + index + ";")
-            util.finish_loop(copy_loop, full_dims)
+            loop.end()
 
             stream.out(template.typedef_global_array_declarator,
                        fq_derived = fq_derived,
@@ -775,12 +439,13 @@ def visitUnion(node):
 
     switchType = types.Type(node.switchType())
 
-    exhaustive = tyutil.exhaustiveMatch(switchType,
-                                        tyutil.allCases(node))
-    defaultCase = tyutil.getDefaultCaseAndMark(node)
+    exhaustive = ast.exhaustiveMatch(switchType, ast.allCaseLabelValues(node))
+    defaultCase = ast.defaultCase(node)
+    ast.markDefaultCase(node)
+
     defaultMember = ""
     if defaultCase:
-        defaultLabel = tyutil.getDefaultLabel(defaultCase)
+        defaultLabel = ast.defaultLabel(defaultCase)
         default_scopedName = id.Name(defaultCase.declarator().scopedName())
         defaultMember = default_scopedName.simple()
         
@@ -819,11 +484,6 @@ def visitUnion(node):
                 # default case was already taken care of
                 if not(l.default()):
                     discrim_value = switchType.literal(l.value(), environment)
-                    # FIXME: stupid special case. An explicit discriminator
-                    # value of \0 -> 0000 whereas an implicit one (valueString)
-                    # \0 -> '\000'
-                    if switchType.char() and l.value() == '\0':
-                        discrim_value = "0000"
                     
                     stream.out("case " + str(discrim_value) + ":\n")
                     stream.inc_indent()
@@ -875,8 +535,8 @@ def visitUnion(node):
     # and can be sorted out later)
 
     # marshal/ unmarshal individual cases
-    marshal_cases = util.StringStream()
-    unmarshal_cases = util.StringStream()
+    marshal_cases = output.StringStream()
+    unmarshal_cases = output.StringStream()
     for c in node.cases():
         caseType = types.Type(c.caseType())
         decl = c.declarator()
@@ -886,13 +546,7 @@ def visitUnion(node):
         
         for l in c.labels():
             value = l.value()
-            # FIXME: stupid special case. An explicit discriminator
-            # value of \0 -> 0000 whereas an implicit one (valueString)
-            # \0 -> '\000'
             discrim_value = switchType.literal(value, environment)
-            if switchType.char() and value == '\0':
-                        discrim_value = "0000"
-
             if l.default():
                 unmarshal_cases.out("default:")
             else:
@@ -1023,10 +677,10 @@ def visitException(node):
     scoped_name = scopedName.fullyQualify()
 
     # build the default ctor, copy ctor, assignment operator
-    copy_ctor_body = util.StringStream()
-    default_ctor_body = util.StringStream()
+    copy_ctor_body = output.StringStream()
+    default_ctor_body = output.StringStream()
     default_ctor_args = []
-    assign_op_body = util.StringStream()
+    assign_op_body = output.StringStream()
     has_default_ctor = 0
 
     for m in node.members():
@@ -1066,10 +720,14 @@ def visitException(node):
             index = ""
 
             if is_array:
-                index = util.block_begin_loop(copy_ctor_body, full_dims)
-                index = util.block_begin_loop(default_ctor_body, full_dims)
-                index = util.block_begin_loop(assign_op_body, full_dims)
-                
+                blocks = [cxx.Block(copy_ctor_body),
+                          cxx.Block(default_ctor_body),
+                          cxx.Block(assign_op_body)]
+                loops = [cxx.For(copy_ctor_body, full_dims),
+                         cxx.For(default_ctor_body, full_dims),
+                         cxx.For(assign_op_body, full_dims)]
+                index = loops[0].index() # all the same
+
             copy_ctor_body.out("""\
 @member_name@@index@ = _s.@member_name@@index@;""", member_name = decl_name,
                                index = index)
@@ -1093,13 +751,11 @@ def visitException(node):
                                index = index)
             
             if is_array:
-                util.block_end_loop(copy_ctor_body, full_dims)
-                util.block_end_loop(default_ctor_body, full_dims)
-                util.block_end_loop(assign_op_body, full_dims)
-        
+                for loop in loops: loop.end()
+                for block in blocks: block.end()
           
         
-    default_ctor = util.StringStream()
+    default_ctor = output.StringStream()
     if has_default_ctor:
         default_ctor.out(template.exception_default_ctor,
                          scoped_name = scoped_name,
@@ -1121,11 +777,11 @@ def visitException(node):
 
     # deal with alignment, marshalling and demarshalling
     needs_marshalling = node.members() != []
-    aligned_size = util.StringStream()
-    mem_marshal = util.StringStream()
-    net_marshal = util.StringStream()
-    mem_unmarshal = util.StringStream()
-    net_unmarshal = util.StringStream()
+    aligned_size = output.StringStream()
+    mem_marshal = output.StringStream()
+    net_marshal = output.StringStream()
+    mem_unmarshal = output.StringStream()
+    net_unmarshal = output.StringStream()
     
     for m in node.members():
         memberType = types.Type(m.memberType())

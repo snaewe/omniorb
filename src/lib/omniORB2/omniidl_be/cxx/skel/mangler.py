@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.16.2.1  2000/08/21 11:35:33  djs
+# Lots of tidying
+#
 # Revision 1.16  2000/07/13 15:25:59  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -96,19 +99,29 @@
 # Code for call descriptors and proxies
 #
 
-# Functions intended for external use:
+# Functions which produce a signature string from a callable:
 #
-#   generate_descriptor : Signature -> String descriptor
-#   operation_descriptor_name : Operation -> String descriptor
-#   attribute_read_descriptor_name : Attribute -> String descriptor
-#   attribute_write_descriptor_name : Attribute -> String descriptor
+# produce_operation_signature       :                                 
+# produce_read_attribute_signature  : callable -> signature string    
+# produce_write_attribute_signature :                                 '
 
+# Every signature has a unique "call descriptor" object which serves
+# to encapsulate the calling and returning arguments. Note that two
+# interfaces with an identical method can share the call descriptors.
+
+# Every Interface::Method has a unique "local callback function" which
+# calls the local _impl_ method in the case of colocated calls. These
+# are never shared.
+
+# call_descriptor(signature) : call descriptor class name string
+# context_descriptor(signature) : context descriptor for signature
+# local_callback_fn(interface, signature) : callback function name
 
 
 import re, string
 
 from omniidl import idlast, idltype
-from omniidl_be.cxx import util, skutil, config, types
+from omniidl_be.cxx import util, skutil, config, types, id
 
 import mangler
 self = mangler
@@ -138,13 +151,6 @@ EXCEPTION_SEPARATOR     =    "_e"
 # -------------------------
 # Actual code goes here
 
-def produce_idname(scopedName):
-    # better safe than sorry with mutable data
-    scopedName = scopedName[:]
-    # s/_/__/g
-    scopedName = map(lambda x: re.sub(r"_", "__", x), scopedName)
-    # join with SCOPE_SEPARATOR
-    return string.join(scopedName, SCOPE_SEPARATOR)
 
 # Basic types are flattened into these strings within canonical name
 name_map = {
@@ -211,7 +217,7 @@ def canonTypeName(type, decl = None, useScopedName = 0):
         # find the last typedef in the chain
         while types.Type(type.type().decl().alias().aliasType()).typedef():
             type = types.Type(type.type().decl().alias().aliasType())
-        scopedName = produce_idname(type.type().scopedName())
+        scopedName = id.Name(type.type().scopedName()).guard()
         return canon_name + CANNON_NAME_SEPARATOR + scopedName
 
     # _arrays_ of sequences seem to get handled differently
@@ -256,7 +262,7 @@ def canonTypeName(type, decl = None, useScopedName = 0):
                 bound = str(type.type().bound())
             return bound + "string"
         if isinstance(type.type(), idltype.Declared):
-            return produce_idname(type.type().scopedName())
+            return id.Name(type.type().scopedName()).guard()
         if isinstance(type.type(), idltype.WString):
             util.fatalError("Wide-strings are not supported")
 
@@ -272,11 +278,9 @@ def produce_canonical_name_for_type(type):
     return canonTypeName(type, None)
 
 
+def produce_signature(returnType, parameters, raises):
 
-def produce_operation_signature(operation):
-    assert isinstance(operation, idlast.Operation)
-
-    returnType = types.Type(operation.returnType())
+    returnType = types.Type(returnType)
     d_returnType = returnType.deref()
 
     # return type
@@ -286,7 +290,7 @@ def produce_operation_signature(operation):
         sig = canonTypeName(returnType, useScopedName = 1)
         
     # parameter list
-    for param in operation.parameters():
+    for param in parameters:
         if param.is_in() and param.is_out():
             sig = sig + INOUT_SEPARATOR
         elif param.is_in():
@@ -298,11 +302,11 @@ def produce_operation_signature(operation):
                                   useScopedName = 1)
 
     # exception list
-    raises = skutil.sort_exceptions(operation.raises())
+    raises = skutil.sort_exceptions(raises)
 
     def exception_signature(exception):
         cname = CANNON_NAME_SEPARATOR +\
-                produce_idname(exception.scopedName())
+                id.Name(exception.scopedName()).guard()
         return EXCEPTION_SEPARATOR + cname
     
     raises_sigs = map(exception_signature, raises)
@@ -311,6 +315,13 @@ def produce_operation_signature(operation):
     sig = sig + raises_str
     return sig
             
+
+def produce_operation_signature(operation):
+    assert isinstance(operation, idlast.Operation)
+    return produce_signature(operation.returnType(),
+                             operation.parameters(),
+                             operation.raises())
+
 
 def produce_read_attribute_signature(attribute):
     assert isinstance(attribute, idlast.Attribute)
@@ -335,17 +346,61 @@ def __init__():
     self.base_high = 0
     self.base_counter = 0
 
-    prefix = STD_PROXY_CALL_DESC_PREFIX 
-    pre = { "void": prefix + "void_call",
+    # Some call descriptors are already available in the runtime libraries
+
+    prefix = STD_PROXY_CALL_DESC_PREFIX
+    self.system_descriptors = \
+          { "void":                      prefix + "void_call",
             "_cCORBA_mObject_i_cstring": prefix + "_cCORBA_mObject_i_cstring" }
-    self.call_descriptor_table = pre
+
+    # Proxy call descriptor table keyed by signature
+    self.call_descriptors = system_descriptors.copy()
+    # make sure we dont redefine these either
+
+    # Local callback function table keyed by interface and then signature
+    self.callbacks = {}
+
+def call_descriptor(signature):
+    if self.system_descriptors.has_key(signature):
+        return self.system_descriptors[signature]
+    
+    if not(self.call_descriptors.has_key(signature)):
+        self.call_descriptors[signature] = generate_unique_name("")
+
+    return CALL_DESC_PREFIX + self.call_descriptors[signature]
+
+def context_descriptor(signature):
+    if not(self.call_descriptors.has_key(signature)):
+        self.call_descriptors[signature] = generate_unique_name("")
+
+    return CTX_DESC_PREFIX + self.call_descriptors[signature]
+
+def local_callback_fn(interface, operation_name, signature):
+    assert isinstance(interface, idlast.Interface)
+
+    if not(self.callbacks.has_key(interface)):
+        self.callbacks[interface] = {}
+
+    iface_table = self.callbacks[interface]
+    key = signature + "/" + operation_name
+    if iface_table.has_key(key):
+        # we've got this exact function already
+        return iface_table[key]
+ 
+    # generate a new function name
+    function = generate_unique_name(LCALL_DESC_PREFIX)
+    iface_table[key] = function
+    return function
 
 
 
+######################################################################
+# Hashing functions use a Knuth-style string -> int hash             #
+# (This is just used _once_ to get a pseudo-random string. Why?)
 def initialise_base(scopedName):
     if self.base_initialised:
         return
-    string_seed = produce_idname(scopedName)
+    string_seed = id.Name(scopedName).guard()
     
     self.base_initialised = 1
 
@@ -374,11 +429,12 @@ def initialise_base(scopedName):
         self.base_low  = self.base_low ^ (ord(char))
 
 
-def generate_unique_name(prefix):
-    # the effect of all the messing around with nibbles is the following
-    # note that we don't care about possible differences across archs
-    # since this is not really external.
+def generate_new_descriptor(signature):
+    descriptor = generate_unique_name("")
+    self.available_descriptors[signature] = descriptor
+    return descriptor
 
+def generate_unique_name(prefix):
     # takes an int and returns the int in hex, without leading 0x and
     # with 0 padding
     def hex_word(x):
@@ -407,38 +463,5 @@ def generate_unique_name(prefix):
     
 
 
-def generate_descriptor(signature):
-    assert(self.base_initialised)
-
-    if not(self.call_descriptor_table):
-        initialise_call_descriptor_table()
-        
-    def add_to_table(signature, cdt = self.call_descriptor_table, self = self):
-        if not(cdt.has_key(signature)):
-            class_name = generate_unique_name(self.CALL_DESC_PREFIX)
-            cdt[signature] = class_name
-            return class_name
-
-    return add_to_table(signature)
-
-
-def operation_descriptor_name(operation):
-    assert isinstance(operation, idlast.Operation)
-    sig = produce_operation_signature(operation)
-
-    return self.call_descriptor_table[sig]
-
-def attribute_read_descriptor_name(attribute):
-    assert isinstance(attribute, idlast.Attribute)
-    sig = produce_read_attribute_signature(attribute)
-
-    return self.call_descriptor_table[sig]
-
-
-def attribute_write_descriptor_name(attribute):
-    assert isinstance(attribute, idlast.Attribute)
-    sig = produce_write_attribute_signature(attribute)
-
-    return self.call_descriptor_table[sig] 
         
     
