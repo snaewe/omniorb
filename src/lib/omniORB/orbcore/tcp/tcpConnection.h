@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/06/18 20:28:31  sll
+  Remove garbage after #endif
+
   Revision 1.1.2.2  2001/06/13 20:13:49  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -222,4 +225,4 @@ class tcpConnection : public giopConnection {
 
 OMNI_NAMESPACE_END(omni)
 
-#endif __TCPCONNECTION_H__
+#endif //__TCPCONNECTION_H__

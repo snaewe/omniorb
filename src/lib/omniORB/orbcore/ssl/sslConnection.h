@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/18 20:28:31  sll
+  Remove garbage after #endif
+
   Revision 1.1.2.1  2001/06/11 18:11:06  sll
   *** empty log message ***
 
@@ -77,4 +80,4 @@ class sslConnection : public giopConnection {
 
 OMNI_NAMESPACE_END(omni)
 
-#endif __SSLCONNECTION_H__
+#endif //__SSLCONNECTION_H__
