@@ -32,14 +32,17 @@
 
 /*
  $Log$
+ Revision 1.16  1998/04/07 20:07:06  sll
+ Added the use of namespace.
+
  Revision 1.15  1998/03/25 14:24:12  sll
  Added #define EGCS_WORKAROUND for gcc compiler. This activate a
  workaround for a bug in post-1.0 egcs snapshots. Can be removed if
  the bug is fixed in future version.
 
- Revision 1.14  1998/01/20 16:45:57  sll
- Added support for OpenVMS.
-
+ * Revision 1.14  1998/01/20  16:45:57  sll
+ * Added support for OpenVMS.
+ *
  Revision 1.13  1997/12/09 20:40:21  sll
  Various platform specific updates.
 
@@ -81,6 +84,11 @@
 #     define SIZEOF_INT  4
 #     define SIZEOF_PTR  8
 #  endif
+#  if __DECCXX_VER >= 60000000
+#     define HAS_Cplusplus_Bool
+#     define HAS_Cplusplus_Namespace
+#     define HAS_Std_Namespace
+#  endif
 
 #elif defined(__SUNPRO_CC) 
 // SUN C++ compiler
@@ -91,6 +99,11 @@
 #elif defined(_MSC_VER)
 //  Microsoft Visual C++ compiler
 #define NEED_DUMMY_RETURN
+#if _MSC_VER >= 1000
+#define HAS_Cplusplus_Bool
+#define HAS_Cplusplus_Namespace
+#define HAS_Std_Namespace
+#endif
 #endif
 
 #if defined(__hpux__)
@@ -137,14 +150,6 @@
 
 #ifndef SIZEOF_PTR
 #define SIZEOF_PTR  4
-#endif
-
-#ifndef _CORBA_MODULE
-#define _CORBA_MODULE class
-#endif
-
-#ifndef _CORBA_MODULE_PUBLIC
-#define _CORBA_MODULE_PUBLIC public:
 #endif
 
 #if defined(__arm__) && defined(__atmos__)
@@ -198,30 +203,58 @@ strdup (char* str)
 #endif
 
 
-// Define macro for NT DLL import/export:
-// Note that if an application is being compiled (using MSVC++ on NT or '95) 
-// to use the static library, the macro _WINSTATIC should be defined.
+#if defined(_MSC_VER)
 
-#if defined(__WIN32__) && defined(_MSC_VER)
+// _OMNIORB2_DLL is defined when the omniORB2 dll is compiled.
+// _WINSTATIC    is defined when an application is compiled to use the
+//               static library.
+//
+// To package stubs into dlls:
+//   1. Make sure that the cpp macro USE_stub_in_nt_dll is defined before
+//      the stub header (.hh) is included.
+//   2. Define the cpp macro _OMNIORB2_STUB_DLL when the stub _SK.cc is
+//      compiled.
+//   3. A .def file has to be created to export the symbols in the dll.
+//      The .def file can be generated automatically based on the output
+//      of dumpbin. For an example, look at how the omniORB2 dll is created.
+//
+// To use stubs that has been packaged into dlls:
+//   1. Make sure that the cpp macro USE_stub_in_nt_dll is defined before
+//      the stub header (.hh) is included.
+//
+// Use _OMNIORB_NTDLL_IMPORT to ensure that MSVC++ use the correct linkage
+// for constants and variables exported by a DLL.
 
-#if defined(_OMNIORB2_DLL) && defined(_WINSTATIC)
-#error "Both _OMNIORB2_DLL and _WINSTATIC are defined."
-#elif defined(_OMNIORB2_DLL)
-#define _OMNIORB2_NTDLL_ __declspec(dllexport) 
-#pragma warning(disable: 4251)
-// Disable this warning, as myPrincipalID is defined by a template, which
-// can't be exported using __declspec
-#elif !defined(_WINSTATIC)
-#define _OMNIORB2_NTDLL_ __declspec(dllimport)
-#pragma warning(disable: 4251)
-// Disable this warning, as myPrincipalID is defined by a template, which
-// can't be imported using __declspec
-#elif defined(_WINSTATIC)
-#define _OMNIORB2_NTDLL_
-#endif 
- // _OMNIORB2_DLL && _WINSTATIC
+#  if defined(_OMNIORB2_DLL) && defined(_WINSTATIC)
 
-#ifdef _DEBUG
+#    error "Both _OMNIORB2_DLL and _WINSTATIC are defined."
+
+#  elif defined(_OMNIORB2_DLL)
+
+#    define _OMNIORB_NTDLL_IMPORT
+
+#  elif defined(_WINSTATIC)
+
+#    define _OMNIORB_NTDLL_IMPORT
+
+#  elif defined(_OMNIORB2_STUB_DLL)
+
+#    define _OMNIORB_NTDLL_IMPORT
+
+#  else
+
+#    define _OMNIORB_NTDLL_IMPORT __declspec(dllimport)
+
+#  endif
+
+#else
+
+   // For non-MSVC++ compiler, this macro expands to nothing.
+#  define _OMNIORB_NTDLL_IMPORT
+
+#endif
+
+#if defined(_MSC_VAR) && defined(_DEBUG)
 // The type name instantiated from the sequence templates could exceeds the
 // 255 char limit of the debug symbol names. It is harmless except that one
 // cannot read their values with the debugger. Disable the warning about
@@ -229,10 +262,89 @@ strdup (char* str)
 #pragma warning(disable: 4786)
 #endif
 
+#ifdef HAS_Cplusplus_Namespace
+
+#ifndef _CORBA_MODULE
+#define _CORBA_MODULE namespace
 #else
-#define _OMNIORB2_NTDLL_
+#error "Name conflict: _CORBA_MODULE is already defined."
 #endif
-   // __WIN32__ && _MSC_VER
+
+#ifndef _CORBA_MODULE_BEG
+#define _CORBA_MODULE_BEG {
+#else
+#error "Name conflict: _CORBA_MODULE_BEG is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_END
+#define _CORBA_MODULE_END }
+#else
+#error "Name conflict: _CORBA_MODULE_END is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_OP
+#define _CORBA_MODULE_OP
+#else
+#error "Name conflict: _CORBA_MODULE_OP is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_FN
+#define _CORBA_MODULE_FN
+#else
+#error "Name conflict: _CORBA_MODULE_FN is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_VAR
+#define _CORBA_MODULE_VAR extern _LC_attr
+#else
+#error "Name conflict: _CORBA_MODULE_VAR is already defined."
+#endif
+
+#else
+
+#ifndef _CORBA_MODULE
+#define _CORBA_MODULE class
+#else
+#error "Name conflict: _CORBA_MODULE is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_BEG
+#define _CORBA_MODULE_BEG { public:
+#else
+#error "Name conflict: _CORBA_MODULE_BEG is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_END
+#define _CORBA_MODULE_END };
+#else
+#error "Name conflict: _CORBA_MODULE_END is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_OP
+#define _CORBA_MODULE_OP friend
+#else
+#error "Name conflict: _CORBA_MODULE_OP is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_FN
+#define _CORBA_MODULE_FN static
+#else
+#error "Name conflict: _CORBA_MODULE_FN is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_VAR
+#define _CORBA_MODULE_VAR static _LC_attr
+#else
+#error "Name conflict: _CORBA_MODULE_VAR is already defined."
+#endif
+
+// Deprecated. Old stubs still need this. Should be removed.
+#ifndef _CORBA_MODULE_PUBLIC
+#define _CORBA_MODULE_PUBLIC public:
+#endif
+
+
+#endif // HAS_Cplusplus_Namespace
  
 // This implementation *DOES NOT* support the Dynamic Invocation Interface
 // and the Dynamic Skeleton Interface. Hence some of the psuedo objects are
@@ -241,5 +353,11 @@ strdup (char* str)
 // macro. Uncomment the following line to make these declarations visible.
 
 //#define SUPPORT_DII
+
+#ifndef USE_omniORB_logStream
+// New stubs use omniORB::logStream. Old stubs still need cerr. Include
+// the necessary iostream header if that is the case.
+#include <iostream.h>
+#endif
 
 #endif // __CORBA_SYSDEP_H__
