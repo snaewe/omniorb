@@ -17,27 +17,25 @@
 
 \begin{center}
 
+\vfill
+
 { \Huge
-The omniORB2 User's Guide
+The omniORB2 version 2.4\\[4mm]
+User's Guide
 }
 
 \vfill
 
 { \Large
 Sai-Lai Lo\\
-{\normalsize ({\it email: sll@orl.co.uk})}\\
+{\normalsize ({\it email: slo@orl.co.uk})}\\
 Olivetti \& Oracle Research Laboratory\\
 }
 
-\vfill
-
-
-{\it Note: this document is very incomplete at the moment!
-More chapters will be added to document the ORB's APIs and its internals.}
 
 \vfill
 \vfill
-13 Mar, 1997
+11 Jan, 1998
 \vfill
 
 \end{center}
@@ -47,6 +45,8 @@ More chapters will be added to document the ORB's APIs and its internals.}
 \pagestyle{headings}
 
 \pagenumbering{arabic}
+
+\mainmatter
 
 %\input{intro.tex}
 \chapter{Introduction}
@@ -81,7 +81,7 @@ connecting the two address spaces are created on demand and cached when
 there are more concurrent calls in progress. Each channel is served by a
 dedicated thread. This arrangement provides maximal concurrency and
 eliminates any thread switching in either of the address spaces to process
-a call. Furthermore, to maximize the throughput in processing large call
+a call. Furthermore, to maximise the throughput in processing large call
 arguments, large data elements are sent as soon as they are processed while
 the other arguments are being marshalled.
 
@@ -115,7 +115,7 @@ The following is a list of the missing features.
 
 \begin{itemize}
 
-\item The Typcode and the Any type is not supported. Support for these
+\item The Typecode and the Any type is not supported. Support for these
 types will be added shortly.
 \item The BOA only support the persistent server activation policy. Other
 dynamic activation and deactivation policies are not supported.
@@ -136,7 +136,7 @@ the case, there is no extra setup you have to do other than those described
 in the ODE documentation.}
 
 If you are running omniORB2 at other sites, you (or your system
-administrator) should install omniOB2 by following the instructions in the
+administrator) should install omniORB2 by following the instructions in the
 installation notes. 
 
 \begin{itemize}
@@ -169,10 +169,55 @@ On Win32 platforms, the stringified IOR can be placed in the system registry,
 in the (string) value {\tt NAMESERVICE}, under the key 
 {\tt HKEY\_LOCAL\_MACHINE$\backslash$SOFTWARE$\backslash$ORL$\backslash$omniORB$\backslash$2.0}.
 
+\section{Platform specific variables}
 
+To compile omniORB2 programs correctly, several C++ preprocessor defines
+{\bf must} be specified to identify the target platform.
+
+\begin{flushleft}
+\begin{tabular}{|l|l|}
+\hline
+Platform & CPP defines \\
+\hline
+Sun Solaris 2.5  & \verb|__sparc__  __sunos__  __OSVERSION__=5| \\
+\hline
+Digital Unix 3.2 & \verb|__alpha__  __osf1__   __OSVERSION__=3| \\
+\hline
+HPUX 10.x & \verb|__hppa__  __hpux__   __OSVERSION__=10| \\
+\hline
+IBM AIX 4.x & \verb|__aix__  __powerpc__   __OSVERSION__=4| \\
+\hline
+Linux 2.0 (x86)  & \verb|__x86__    __linux__  __OSVERSION__=2| \\
+\hline
+Linux 2.0 (alpha)  & \verb|__alpha__    __linux__  __OSVERSION__=2| \\
+\hline
+Windows/NT 3.5   & \verb|__x86__    __NT__     __OSVERSION__=3  __WIN32__| \\
+\hline
+Windows/NT 4.0   & \verb|__x86__    __NT__     __OSVERSION__=4  __WIN32__| \\
+\hline
+Windows/95   & \verb|__x86__ __WIN32__| \\
+\hline
+OpenVMS 6.x (alpha) & \verb|__alpha__    __vms     __OSVERSION__=6 | \\
+\hline
+OpenVMS 6.x (vax)   & \verb|__vax__    __vms     __OSVERSION__=6 | \\
+\hline
+ATMos 4.0        & \verb|__arm__    __atmos__  __OSVERSION__=4| \\
+\hline
+NextStep 3.x & \verb|__m68k__  __nextstep__   __OSVERSION__=3| \\
+\hline
+\end{tabular}
+\end{flushleft}
+
+In a single source multi-target environment, you can put the preprocessor
+defines as the command-line arguments for the compiler. Alternately, you could
+create a sitedef.h file in the same directory as {\tt
+omniORB2/CORBA.h}. Write into the file the appropriate set of preprocessor
+defines and add {\tt \#include <omniORB2/sitedef.h>} at the beginning of {\tt
+omniORB2/CORBA\_sysdep.h}.
 
 %\input{basic.tex}
 \chapter{The Basics}
+\label{ch_basic}
 
 In this chapter, we go through three examples to illustrate the practical
 steps to use omniORB2. By going through the source code of each example,
@@ -203,7 +248,7 @@ specification.};
 
 The source code of this example is included in the last section of this
 chapter. A makefile written to be used under the OMNI Development
-Environment (ODE)~\cite{tjr96b} is alsoincluded.
+Environment (ODE)~\cite{tjr96b} is also included.
 
 \section{Specifying the Echo interface in IDL}
 
@@ -385,7 +430,7 @@ can be used. Here is an example of its usage:
 \begin{verbatim}
 
 Echo_ptr A;
-...            // initialized A to a valid object reference 
+...            // initialised A to a valid object reference 
 Echo_ptr B = A;
 CORBA::Boolean true_result = A->_is_equivalent(B); 
 // Note: the above call is guaranteed to be TRUE
@@ -486,7 +531,7 @@ is omniORB2 specific.}  The functions are:
 implementation class provides the implementation of the {\tt echoString}
 operation. Notice that its signature is the same as the {\tt echoString}
 function that can be invoked via the {\tt Echo\_ptr} object reference.
-{\bf The signature of this function is specified by the CORBA specfication}.
+{\bf The signature of this function is specified by the CORBA specification}.
 
 \item[\_this] this function returns an object reference for the target
 object. The returned value must be deallocated via {\tt CORBA::release}.
@@ -634,7 +679,7 @@ types are also covered in chapter 16.}.
 
 Under the C++ mapping, T\_var types are provided for all the non-basic data
 types.  It is obvious that one should use automatic variables whenever
-possible both to avoid memory leak and to maximize performance. However,
+possible both to avoid memory leak and to maximise performance. However,
 when one has to allocate data items on the heap, it is a good practice to
 use the T\_var types to manage the heap storage.
 
@@ -1555,6 +1600,14 @@ $(eg3_clt): eg3_clt.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
 \end{verbatim}
 }
 
+\chapter{IDL to C++ Language Mapping}
+
+Now that you are familiar with the basics, it is important to
+familiar yourselves with the IDL to C++ language. The mapping is described
+in detail in~\cite{corba2-spec}. If you have not done so, you should obtain
+a copy of the document and use that as the programming guide to
+omniORB2.
+
 %\input{api.tex}
 
 \chapter{The omniORB2 API}
@@ -1568,14 +1621,15 @@ make it easier to identify omniORB2 dependent code, this API is defined
 under the name space ``omniORB''\footnote{omniORB is a class name if the
 C++ compiler does not support the namespace keyword.}.
 
-\section{ORB and BOA initialization options}
+\section{ORB and BOA initialisation options}
 
 {\tt CORBA::ORB\_init} accepts the following command-line arguments:
 
 \begin{description}
 
-\item[-ORBid ``omniORB2''] The identifier supplied must be ``omniORB2''.
-\item[-ORBtraceLevel $<$level$>$] This option is described in section~\ref{rttrace}.
+\item[\tt -ORBid ``omniORB2''] The identifier supplied must be ``omniORB2''.
+\item[\tt -ORBtraceLevel <level>] See section~\ref{rttrace}.
+\item[\tt -ORBserverName <string>] See section~\ref{sec_servername}.
 
 \end{description}
 
@@ -1583,13 +1637,20 @@ C++ compiler does not support the namespace keyword.}.
 
 \begin{description}
 
-\item[-BOAid ``omniORB2\_BOA''] The identifier supplied must be ``omniORB2\_BOA''.
-\item[-BOAiiop\_port $<$port number$>$] This option tells the BOA which
+\item[\tt -BOAid ``omniORB2\_BOA''] The identifier supplied must be ``omniORB2\_BOA''.
+\item[\tt -BOAiiop\_port <port number>] This option tells the BOA which
 TCP/IP port to use to accept IIOP calls. If this option is not specified,
 the BOA will use an arbitrary port assigned by the operating system.
 
-
 \end{description}
+
+By default, the BOA can work out the IP address of the host machine. This
+address is recorded in the object references of the local objects.
+However, when the host has multiple network interfaces and multiple IP
+addresses, it may be desirable for the application to control what address
+the BOA should use. This can be done by defining the environment variable
+{\tt OMNIORB\_USEHOSTNAME\_VAR} to contain the preferred host name or IP
+address in dot-numeric form.
 
 
 As defined in the CORBA specification, any command-line arguments
@@ -1620,13 +1681,13 @@ At the moment, the following trace levels are defined:
 \item[level 2] the above plus configuration information
 \item[level 5] the above plus notifications when server threads are created
 or communication endpoints are shutdown
-\item[level 10] the above plus execution traces
+\item[level 10-20] the above plus execution traces
 
 \end{description}
 
 The variable can be changed by assignment inside your applications. It can
 also be changed by specifying the command-line option: {\tt -ORBtraceLevel
-$<$level$>$}. For instance:
+<level>}. For instance:
 
 {\small
 \begin{verbatim}
@@ -1636,6 +1697,25 @@ $ eg2_impl -ORBtraceLevel 5
 
 %$
 
+\section{Server Name}
+\label{sec_servername}
+
+Applications can optionally specified a name to identify the server
+process. At the moment, this name is only used by the host-based access
+control module. See section~\ref{sec_accept} for details.
+
+The name is stored in the variable {\tt omniORB::serverName}.
+
+{\small
+\begin{verbatim}
+CORBA::String_var omniORB::serverName;
+\end{verbatim}
+}
+
+The variable can be changed by assignment inside your applications. It can
+also be changed by specifying the command-line option: {\tt -ORBserverName
+<string>}.
+ 
 \section{Object Keys}
 
 OmniORB2 uses a data type {\tt omniORB::objectKey} to uniquely
@@ -1701,6 +1781,33 @@ omniORB::octetSequenceToKey}. If the supplied sequence is not an {\tt
 objectKey}, {\tt omniORB::octetSequenceToKey} raises a {\tt CORBA::MARSHAL}
 exception.
 
+
+\section{GIOP Message Size}
+
+omniORB2 sets a limit on the GIOP message size that can be sent or
+received. The value can be obtained by calling:
+
+{\small
+\begin{verbatim}
+size_t omniORB::MaxMessageSize();
+\end{verbatim}
+}
+
+and can be changed by:
+
+{\small
+\begin{verbatim}
+void omniORB::MaxMessageSize(size_t newvalue);
+\end{verbatim}
+}
+
+The exact value is somewhat arbitrary. The reason such a limit exists is to
+provide some way to protect the server side from resource exhaustion. Think
+about the case when the server receives a rogue GIOP(IIOP) request message
+that contains a sequence length field set to 2**31. With a reasonable
+message size limit, the server can reject this rogue message straight away.
+
+
 \section{Trapping omniORB2 Internal Errors}
 
 {\small
@@ -1724,20 +1831,1568 @@ and the line number) where the exception is raised. You are strongly
 encourage to file a bug report and point out the location.
 
 
+\chapter{The Basic Object Adaptor (BOA)}
 
-%\chapter{Mapping for Interfaces}
+This chapter describes the BOA implementation in omniORB2. The CORBA
+specification defines the Basic Object Adaptor as the entity that mediates
+between object implementations and the ORB. Unfortunately, the BOA
+specification is incomplete and does not address the multi-threading issues
+appropriately. The end result is that different ORB vendors implement
+different extensions to their BOAs. Worse, the implementation of the operations
+defined in the specification are different in different ORBs. Recently, a new
+Object Adaptor specification (the Portable Object Adaptor- POA) has been
+adopted and will replace the BOA as the standard Object Adaptor in
+CORBA. The new specification recognises the compatibility problems of BOA
+and recommends that all BOAs should be considered propriety extensions.
+OmniORB2 will support POA in future releases. Until then, you have to
+use the BOA to attach object implementations to the ORB. 
 
-%\centerline{\it [Empty]}
+The rest of this chapter describes the interface of the BOA in detail. It
+is important to recognise that the interface described below is omniORB2
+specific and hence the code using this interface is unlikely to be portable
+to other ORBs.
 
-%\chapter{Multi-Threading}
+Unless it is stated otherwise, the term ``object'' will be used below to
+refer to object implementations. This should not be confused with ``object
+references'' which are handles held by clients.
 
-%\chapter{Exceptions}
+\section{BOA Initialisation}
 
-%\chapter{IDL to C++ Language Mapping}
+It takes two steps to put the BOA into service. The BOA has to be
+initialised using {\tt BOA\_init} and activated using {\tt
+impl\_is\_ready}.
 
-%\chapter{Object Activation}
 
-%\chapter{Dynamic Interfaces}
+\noindent {\tt BOA\_init} is a member of the {\tt CORBA::ORB} class. Its signature is:
+
+{\small
+\begin{verbatim}
+BOA_ptr BOA_init(int & argc,
+                 char ** argv,
+                 const char * boa_identifier);
+\end{verbatim}
+}
+
+\noindent Typically, it is used in the startup code as follows:
+
+{\small
+\begin{verbatim}
+CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");   // line 1
+CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA"); // line 2
+\end{verbatim}
+}
+
+The {\tt argv} parameters may contain BOA options. These options will be
+removed from the {\tt argv} list when {\tt BOA\_init} returns. Other
+parameters in {\tt argv} will remain. The supported options are:
+
+\begin{description}
+
+\item[-BOAiiop\_port {\tt <port number (0-65535)>}] Use the port number to receive
+IIOP requests. This option can be specified multiple times in the command
+line and the BOA would be initialised to listen on all of the ports.
+
+\item[-BOAid {\tt <id (string)>}] If this option is used the id must be
+``omniORB2\_BOA''. 
+
+\end{description}
+
+If the third argument of {\tt BOA\_init} is non-nil, it must be the string
+constant ``omniORB2\_BOA''. If the argument is nil, -BOAid must be present
+in {\tt argv}.
+
+If there is any problem in the initialisation process, a {\tt
+CORBA::INITIALIZE} exception would be raised.
+
+To register an object with the BOA, the method
+{\tt \_obj\_is\_ready} should be called with the return value of {\tt
+BOA\_init} as the argument.
+
+{\tt BOA\_init} is thread-safe. It can be called multiple times and the
+same {\tt BOA\_ptr} will be returned. However, only the {\tt argv} in the
+first call will be scanned, the argument is ignored in subsequent calls.
+
+{\tt BOA\_init} returns a pseudo object of type {\tt
+CORBA::BOA\_ptr}. Similar to {\tt CORBA::Object\_ptr}, the pointer can be
+managed using {\tt CORBA::BOA\_var}, {\tt BOA::\_duplicate} and {\tt
+CORBA::release}. The pointer can be tested using {\tt CORBA::is\_nil} which
+returns true if the pointer is equivalent to the return value of {\tt
+BOA::\_nil}. 
+
+After {\tt BOA\_init} is called, objects can be registered. However,
+incoming IIOP requests would not be despatched until {\tt impl\_is\_ready}
+is called.
+
+{\small
+\begin{verbatim}
+class BOA {
+public:
+   impl_is_ready(CORBA::ImplementationDef_ptr p = 0,
+                 CORBA::Boolean NonBlocking = 0);
+};
+\end{verbatim}
+}
+
+One of the common pitfall in using the BOA is to forget to call
+impl\_is\_ready. Until this call returns, there is no thread listening on
+the port from which IIOP requests are received. The remote client may hang
+because of this.
+
+When {\tt impl\_is\_ready} is called with no argument. The calling thread
+would be blocked indefinitely in the function until {\tt impl\_shutdown}
+(see below) is called. The thread that is calling {\tt impl\_is\_ready}
+is not used by the BOA to perform its internal functions. The BOA has its
+own set of threads to process incoming requests and general
+housekeeping. Therefore, it is not necessary to have a thread blocked in
+the call if it can be put into use elsewhere. For example, the main thread
+may call {\tt impl\_is\_ready} once in non-blocking mode (see below) and
+then enter the event loop to handle the GUI frontend.
+
+If non-blocking behaviour is needed, the {\tt NonBlocking} argument should be
+set to 1. For instance, if you creates a callback object, you might call
+impl\_is\_ready in non-blocking mode to tell the BOA to start receiving
+IIOP requests before sending the callback object to the remote object. The
+first argument {\tt ImplementationDef\_ptr} is ignored by the BOA. Just set
+the argument to nil.
+
+{\tt impl\_is\_ready} is thread safe and can be called multiple
+times. Multiple threads can be blocked in {\tt impl\_is\_ready}.
+
+\section{Object Registration}
+
+Once the BOA is initialised, objects can be registered. The
+purpose of object registration is to let the BOA know of the existence of
+the object and to dispatch requests for the object as upcalls into the
+object. 
+
+To register an object, the {\tt \_obj\_is\_ready} function should be
+called. {\tt \_obj\_is\_ready} is a member function of the implementation
+skeleton class. The function should be called only once for each object.
+The call should be made only after the object is fully initialised.
+
+The member function {\tt obj\_is\_ready} of the BOA may also be used to
+register an object. However, this function has been superseded by {\tt
+\_obj\_is\_ready} and should not be used in new application code.
+
+\section{Object Disposal}
+
+Once an object is registered, it is under the
+management of the BOA. To remove the object from the BOA and to delete it
+(when it is safe to do so), the {\tt \_dispose} function should be called.
+{\tt \_dispose} is a member function of the implementation skeleton class.
+The function should be called only once for each object.
+
+Notice the asymmetry in object instantiation and destruction. To instantiate
+an object, the application code has to call the {\bf new}
+operator. To remove the object, the application should never
+call the delete operator on the object directly.
+
+At the time the {\tt \_dispose} call is made, there may be other threads
+invoking on the object, the BOA ensures that all these calls are completed
+before removing the object from its internal tables and calling the
+{\bf delete} operator.
+
+Internally, the BOA keeps a reference count on each object. Initially, the
+reference count is 0. After a call to {\tt \_obj\_is\_ready}, the reference
+count is 1. The BOA increases the reference count by 1 before
+an upcall into the object is made. The count is decreased by 1 when the
+upcall returns.  {\tt \_dispose} decreases the reference count by 1, if
+the reference count is 0, the delete operator is called. If the count is
+non-zero, the object is marked as disposed. The object will be deleted when
+the reference count eventually goes to zero.
+
+The reference count is also increased by 1 for each object reference held
+in the same address space. Hence, the {\bf delete} operator will not be
+called when there are outstanding object references in the same address
+space. To ensure that an object is deleted, all its object references in
+the same address space should be released using {\tt CORBA::release}.
+
+Unlike colocated object references, references held by clients in other
+address spaces would not prevent the deletion of objects. If these clients
+invoke on the object after it is disposed, the system exception INV\_OBJREF
+would be raised. The difference in semantics is an undesirable side-effect
+of the current BOA implementation. In future, colocated references will
+have the same semantics as remote references, i.e. their presence will not
+delay the deletion of the objects.
+
+Instead of {\tt \_dispose}, it may be useful to have a method to deactivate
+the object but not deleting it. This feature is not supported in the
+current BOA implementation.
+
+\section{BOA Shutdown}
+
+The BOA can be withdrawn from service using member functions {\tt
+impl\_shutdown} and {\tt destroy}.
+
+{\small
+\begin{verbatim}
+class BOA {
+public:
+   void impl_shutdown();
+   void destroy();
+};
+\end{verbatim}
+}
+
+{\tt impl\_shutdown} and {\tt destroy} are the inverse of {\tt
+impl\_is\_ready} and {\tt BOA\_init} respectively.
+
+{\tt impl\_shutdown} deactivates the BOA. When the call returns, all the
+internal threads and network connections will be shutdown. Any thread
+blocking in {\tt impl\_is\_ready} would be unblocked. After the call, no
+request from other address spaces will be processed. In other words, the
+BOA will be in the same state as it was in before {\tt impl\_is\_ready} was
+called. For example, a remote client may hang if it tries to connect to the
+server after {\tt impl\_shutdown} was called because no thread is listening
+on the IIOP port. 
+
+{\tt impl\_shutdown} does not wait for incoming requests to complete before
+it closes the network connections. The remote clients will see the network
+connections shutdown and the replies may not  reach them even if the
+upcalls have been completed. Therefore, if the application is to define an
+operation in an IDL interface to shutdown the BOA,  the operation should be
+defined as an oneway operation.
+
+{\tt impl\_shutdown} is thread-safe and can be called multiple times. The
+call is silently ignored if the BOA has already been shutdown. After {\tt
+impl\_shutdown} is called, the BOA can be reactivated by another call to
+{\tt impl\_is\_ready}.
+
+It should be noted that {\tt impl\_shutdown} does not affect outgoing
+network connections. That is, clients in the same address space will
+still be able to make calls to objects in other address spaces.
+
+While remote requests are not delivered after {\tt impl\_shutdown} is
+called, the current implementation does not stop colocated clients from
+calling the objects. In future, colocated clients will exhibit the same
+behaviour as remote clients.
+
+{\tt destroy} permanently removed the BOA. This function will call {\tt
+impl\_shutdown} implicitly if it has not been called. When this call
+returns, the IIOP port(s) held by the BOA will be freed. Remote clients
+will see their requests refused by the operating system when they try to
+open a connection to the IIOP port(s). 
+
+After {\tt destroy} is called, the BOA should not be used. If there is any
+objects still registered with the BOA, the objects should not be invoked
+afterwards. The objects are not disposed. Invoking on the objects after
+{\tt destroy} would result in undefined behaviour. Initialisation of
+another BOA using {\tt BOA\_init} is not supported. The behaviour of {\tt
+BOA\_init} after this call is undefined.
+
+\section{Unsupported functions}
+
+The following member functions are not implemented. Calling these functions
+do not have any effect.
+
+\begin{itemize}
+\item {\tt Object\_ptr create(...)}
+\item {\tt ReferenceData* get\_id(Object\_ptr)}
+\item {\tt Principal\_ptr get\_principal(Object\_ptr,Environment\_ptr)}
+\item {\tt void change\_implementation(Object\_ptr, ImplementationDef\_ptr)}
+\item {\tt void deactivate\_impl(ImplementationDef\_ptr)}
+\item {\tt void deactivate\_obj(Object\_ptr)}
+\end{itemize}
+
+
+\chapter{Interface Type Checking}
+\label{ch_intf}
+
+This chapter describes the mechanism used by omniORB2 to ensure type safety
+when object references are exchanged across the network. This mechanism is
+handled completely within the ORB. There is no programming interface
+visible at the application level. However, for the sake of diagnosing the
+problem when there is a type violation, it is useful to understand the
+underlying mechanism in order to interpret the error conditions reported by
+the ORB.
+
+\section{Introduction}
+
+In GIOP/IIOP, an object reference is encoded as an Interoperable Object
+Reference (IOR) when it is sent across a network connection. The IOR
+contains a Repository ID (REPOID) and one or more communication profiles. The
+communication profiles describe where and how the object can be
+contacted. The REPOID is a string which uniquely identifies the
+IDL interface of the object. 
+
+Unless the {\bf ID} pragma is specified in the IDL, the ORB generates the
+REPOID string in the so-called OMG IDL Format\footnote{For further details
+of the repository ID formats, see section 6.6 in the CORBA
+specification.}. For instance, the REPOID for the {\tt Echo} interface used
+in the examples of chapter~\ref{ch_basic} is {\tt IOR:Echo:1.0}.
+
+When interface inheritance is used in the IDL, the ORB always sends the
+REPOID of the most derived interface. For example:
+
+{\small
+\begin{verbatim}
+// IDL
+   interface A {
+     ...
+   };
+   interface B : A {
+     ...
+   };
+   interface C {
+      void op(in A arg);
+   };
+
+// C++
+   C_ptr server;
+   B_ptr objB;
+   A_ptr objA = objB;
+   server->op(objA);      // Send B as A
+\end{verbatim}
+}
+
+In the example, the operation C::op accepts an object reference of type
+A. The real type of the reference passed to C::op is B, which inherits from
+A. In this case, the REPOID of B, and not that of A, is sent across the
+network.
+
+The GIOP/IIOP specification allows an ORB to send a null string in the
+REPOID field of an IOR. It is up to the receiving end to work out the real
+type of the object. OmniORB2 never sends out null strings as
+REPOID. However, it may receive null REPOID from other ORBs. In that case,
+it will use the mechanism described below to ensure type safety.
+
+\section{Basic Interface Type Checking}
+\label{sec_intf}
+
+The ORB is provided with the interface information by the stubs via the
+proxyObjectFactory class. For an interface A, the stub of A contains a
+A\_proxyObjectFactory class. This class is derived from the
+proxyObjectFactory class. The proxyObjectFactory is an abstract class which
+contains 3 virtual functions.
+
+{\small
+\begin{verbatim}
+
+class proxyObjectFactory {
+public:
+
+  virtual const char *irRepoId() const = 0;
+
+  virtual _CORBA_Boolean  is_a(const char *base_repoId) const = 0;
+       
+  virtual CORBA::Object_ptr newProxyObject(Rope *r,
+                                           CORBA::Octet *key,
+                                           size_t keysize,
+                                           IOP::TaggedProfileList
+                                           *profiles,
+                                           CORBA::Boolean release) = 0;
+
+};
+
+\end{verbatim}
+}
+
+\begin{itemize}
+\item {\tt irRepoId} returns the REPOID of the interface.
+\item {\tt is\_a} returns true(1) if the argument is the REPOID of the
+interface itself or it is that of its base interfaces.
+\item {\tt newProxyObject} returns an object reference based on the
+information supplied in the arguments.
+\end{itemize}
+
+A single instance of every *\_proxyObjectFactory is instantiated at runtime.
+The instances are entered into a list inside the ORB. The list constitutes
+all the interface information known to the ORB.
+
+When the ORB receives an IOR from the network, it unmarshals and
+extracts the REPOID from the IOR. At this point, the ORB has two pieces of
+information in hand:
+
+\begin{enumerate}
+\item The REPOID of the object reference received from the network.
+\item The REPOID the ORB is expecting. This comes from the unmarshal
+      function that tells the ORB to receive the object reference.
+\end{enumerate}
+
+Using the REPOID received, the ORB searches its proxyObjectFactory list for
+an exact match. If there is an exact match, all is well because the runtime
+can use the {\tt is\_a} method of the proxyFactory to check if the expected
+REPOID is the same as the received REPOID or if it is that of its base
+interfaces. If the answer is positive, the IOR passes the type checking
+test and the ORB can proceed to create an object reference in its own
+address space to represent the IOR.
+
+However, the ORB may fail to find a match in its proxyObjectFactory
+list. This means that the ORB has no local knowledge of the REPOID.
+There are three possible causes:
+
+\begin{enumerate}
+\item The remote end is another ORB and it sends a null string as the REPOID.
+\item The ORB is expecting an object reference of interface A. The remote
+      end sends the REPOID of B which is an interface that inherits from A.
+      The stubs of A is linked into the executable but the stubs of B is
+      not.
+\item The remote end has sent a duff IOR.
+\end{enumerate}
+
+To handle this situation, the ORB must find out the type information
+dynamically. This is explained in the next section.
+
+\section{Interface Inheritance}
+
+When the ORB receives an IOR of interface type B when it expects the type to
+be A, it must find out if B inherits from A. When the ORB has no local
+knowledge of the type B, it must work out the type of B dynamically.
+
+The CORBA specification defines an Interface Repository (IR) from which IDL
+interfaces can be queried dynamically. In the above situation, the ORB
+could contact the IR to find out the type of B. However, this approach
+assumes that an IR is always available and contains the up-to-date
+information of all the interfaces used in the domain. This assumption may
+not be valid in many applications.
+
+An alternative is to use the {\tt \_is\_a} operation to
+work out the actual type of an object. This approach is simpler
+and more robust than the previous one because no 3rd party is involved. 
+
+{\small
+\begin{verbatim}
+class Object{
+    CORBA::Boolean _is_a(const char* type_id);
+};
+\end{verbatim}
+}
+
+The {\tt \_is\_a} operation is part of the {\tt CORBA::Object} interface
+and must be implemented by every object. The input argument is a
+REPOID. The function returns true(1) if the object is really an instance of
+that type, including if that type is a base type of the most derived type
+of that object.
+
+In the situation above, the ORB would invoke the {\tt \_is\_a}
+operation on the object and ask if the object is of type A {\bf before}
+it processes any application invocation on the object.
+
+Notice that the {\tt \_is\_a} call is {\bf not} performed when the IOR is
+unmarshalled. It is performed just prior to the first application
+invocation on the object. This leads to some interesting failure mode if
+B reports that it is not an A. Consider the following example:
+
+{\small
+\begin{verbatim}
+
+\\ IDL
+   interface A { ... };
+   interface B : A { ... };
+   interface D { ... };
+   interface C {
+     A      op1();
+     Object op2();
+   };
+
+\\ C++
+
+   C_ptr objC;
+   A_ptr objA;
+   CORBA::Object_ptr objR;
+
+   objA =  objC->op1();              // line 1
+   (void) objA->_non_existent();     // line 2
+
+   objR =  objC->op2();              // line 3
+   objA =  A::_narrow(objR);         // line 4
+
+\end{verbatim}
+}
+
+\noindent If the stubs of A,B,C,D are linked into the executable and:
+
+\begin{description}
+\item[Case 1] {\tt C::op1} and {\tt C::op2} returns a B. Line 1-4 complete successful. The
+remote object is only contacted at line 2.
+\item[Case 2] {\tt C::op1} and {\tt C::op2} returns a D. This condition only occurs if the
+runtime of the remote end is buggy. The ORB raises a CORBA::Marshal
+exception at line 1 because it knows it has received an interface of the
+wrong type.
+\end{description}
+
+\noindent If only the stub of A is linked into the executable and:
+
+\begin{description}
+\item[Case 1] C::op1 and C::op2 returns a B. Line 1-4 completes successful. When
+line 2 and 4 is executed, the object is contacted to ask if it is a A.
+\item[Case 2] C::op1 and C::op2 returns a D. This condition only occurs if the
+runtime of the remote end is buggy. Line 1 completes and no exception is
+raised. At line 2, the object is contacted to ask if it is a A. If the
+answer is no, a CORBA::INV\_OBJREF exception is raised. The application will
+also see a CORBA::INV\_OBJREF at line 4.
+\end{description}
+
+
+\chapter{Connection Management}
+\label{ch_conn}
+
+
+This chapter describes how omniORB2 manages network connections.
+
+\section{Background}
+
+In CORBA, the ORB is the ``middleware'' that allows a client to invoke an
+operation on an object without regard to its implementation or location. In
+order to invoke an operation on an object, a client needs to ``bind'' to
+the object by acquiring its object reference. Such a reference may be
+obtained as the result of an operation on another object (such as a naming
+service) or by conversion from a stringified representation previously
+generated by the same ORB. If the object is in a different address space,
+the binding process involves the ORB building a proxy object in the
+client's address space. The ORB arranges for invocations on the proxy
+object to be transparently mapped to equivalent invocations on the
+implementation object.
+
+For the sake of interoperability, CORBA mandates that all ORBs should
+support IIOP as the means to communicate remote invocations over a TCP/IP
+connection. IIOP is asymmetric with respect to the roles of the parties at
+the two ends of a connection. At one end is the client which can only
+initiate remote invocations. At the other end is the server which can only
+receive remote invocations.
+
+Notice that in CORBA, as in most distributed systems, remote bindings are
+established implicitly without application intervention. This provides the
+illusion that all objects are local, a property known as ``location
+transparency''. CORBA does not specify when such bindings should be
+established or how they should be multiplexed over the underlying network
+connections. Instead, ORBs are free to implement implicit binding by a
+variety of means. 
+
+The rest of this chapter describes how omniORB2 manages network
+connections and the programming interface to fine tune the management
+policy. 
+
+\section{The Model}
+
+OmniORB2 is designed from the ground up to be fully multi-threaded. The
+objective is to maximise the degree of concurrency and at the same time
+eliminate any unnecessary thread overhead. Another objective is to minimise
+the interference by the activities of other threads on the progress of a
+remote invocation. In other words, thread ``cross-talk'' should be
+minimised within the ORB. To achieve these objectives, the degree of
+multiplexing at every level is kept to a minimum.
+
+On the client side of a connection, the thread that invokes on a proxy
+object drives the IIOP protocol directly and blocks on the connection to
+receive the reply. On the server side, a dedicated thread blocks on the
+connection. When it receives a request, it performs the up-call to the
+object and sends the reply when the upcall returns. There
+is no thread switching along the call chain.
+
+With this design, there is at most one call in-flight at any time in a
+connection. If there is only one connection, concurrent invocations to the
+same remote address space would have to be serialised. To eliminate this
+limitation, omniORB2 implements a dynamic policy- multiple connections to
+the same remote address space are created on demand and cached when there
+are concurrent invocations in progress.
+
+To be more precise, a network connection to another address space is only
+established when a remote invocation is about to be made. Therefore, there
+may be one or more object references in one address space that refers to
+objects in a different address space but unless the application invokes on
+these objects, no network connection is made.
+
+It is wasteful to leave a connection opened when it has been left unused
+for a considerable time. Too many idle connections could block out new
+connections to a server when it runs out of spare communication
+channels. For example, most unix platforms has a limit on the number of
+file handles a process can open. 64 is the usual default limit. The
+value can be increased to a maximum of a thousand or more by changing the
+``ulimit'' in the shell.
+
+\section{Idle Connection Shutdown}
+\label{sec_shut}
+
+Inside the ORB, two separate threads are dedicated to scan for idle
+connections. One thread is responsible for outgoing connections and the
+other looks after incoming connections. The thread for incoming connections
+is only created when the BOA is initialised because only then will there be
+any incoming connections.
+
+The threads scan all opened connections once every ``scan period''. If a
+connection is found to be idle for two consecutive periods, it will be
+closed. The threads use mark-and-swipe to detect if a connection is idle.
+When a connection is checked, a status flag attached to the connection is
+set. Every remote invocation using that connection would clear the flag. So
+if a connection's status flag is found to be set in two consecutive scans,
+the connection has been idled during the  scan period.
+
+The scan period for incoming and outgoing connections can be individually
+controlled by the following API:
+
+{\small
+\begin{verbatim}
+
+class omniORB {
+
+public:
+
+  enum idleConnType { idleIncoming, idleOutgoing };
+
+  static void idleConnectionScanPeriod(idleConnType direction,
+                                       CORBA::ULong sec);
+
+  static CORBA::ULong idleConnectionScanPeriod(idleConnType direction);
+
+};
+
+\end{verbatim}
+}
+
+The current value of the scan period (in seconds) is returned by the
+read-only {\tt idleConnectionScanPeriod}. The scan period can be changed by
+the write-only {\tt idleConnectionScanPeriod}. The default value (30
+seconds) is compiled into the ORB runtime. The scan can be disabled
+completely by setting the scan period to 0. The scan period can be changed
+at any time. The write function is non-thread safe. Concurrent calls to
+this function could results in undefined behaviour.
+
+\section{Interoperability Considerations}
+
+The IIOP specification allows both the client and the server to shutdown a
+connection unilaterally. When one end is about to shutdown a connection,
+it should send a closeConnection message to the other end. It should also make
+sure that the message will reach the other end before it proceeds to
+shutdown the connection. 
+
+The client should distinguish between an orderly and an abnormal connection
+shutdown. When a client receives a closeConnection message before the
+connection is closed, the condition is an orderly shutdown. If the message
+is not received, the condition is an abnormal shutdown. In an abnormal
+shutdown, the ORB should raise a {\tt COMM\_FAILURE} exception whereas in
+an orderly shutdown, the ORB should {\bf not} raise an exception and should
+try to re-establish a new connection transparently.
+
+OmniORB2 implements this semantics completely. However, it is known that
+some ORBs are not (yet) able to distinguish between an orderly and an
+abnormal shutdown. Usually this is manifested as the client in these ORBs
+seeing a {\tt COMM\_FAILURE} occasionally when connected to an omniORB2
+server. The workaround is either to catch the exception in the application
+code and retries or to turn off the idle connection shutdown inside the
+omniORB2 server.
+
+
+\section{Connection Acceptance}
+\label{sec_accept}
+
+OmniORB2 provides the hook to implement a connection acceptance
+policy. Inside the ORB runtime, a thread is dedicated to receive new
+connections. When the thread is given the handle of a new connection by
+the operating system, it calls the policy module to decide if the
+connection can be accepted. If the answer is yes, the ORB will start
+serving requests coming in from that connection. Otherwise, the connection
+is shutdown immediately.
+
+There can be a number of policy module implementations. The basic one is a
+dummy module which just accepts every connection. 
+
+In addition, a host-based access control module is available on unix
+platforms. The module uses the IP address of the client to decide if the
+connection can be accepted. The module is implemented using {\em
+tcp\_wrappers 7.6}. The access control policy can be defined as rules in
+two access control files: {\tt hosts.allow} and {\tt hosts.deny}. The
+syntax of the rules is described in the manual page {\tt hosts\_access(5)}
+which can be found in appendix A. The syntax defines a simple access
+control language that is based on client (host name/address, user name),
+and server (process name, host name/address) patterns. When searching for a
+match on the server process name, the ORB uses the value of {\tt
+omniORB::serverName}. {\tt ORB\_init} uses the argument {\tt argv[0]} to
+set the default value of this variable. This can be overridden by the
+application by passing the option: {\tt -ORBserverName <string>} to {\tt
+ORB\_init}.
+
+The default location of the access control files is {\tt /etc}. This can be
+overridden by the extra options in {\tt omniORB.cfg}. For instance:
+
+{\small
+\begin{verbatim}
+# omniORB configuration file - extra options
+#
+
+GATEKEEPER_ALLOWFILE   /project/omni/var/hosts.allow
+
+GATEKEEPER_DENYFILE    /project/omni/var/hosts.deny
+
+\end{verbatim}
+}
+
+As each policy module is implemented as a separate library, the choice of
+policy module is determined at program linkage time.
+
+For instance, if the host-based access control module is in use:
+
+{\small
+\begin{verbatim}
+% eg1 -ORBtraceLevel 2
+omniORB2 gateKeeper is tcpwrapGK 1.0 - based on tcp_wrappers_7.6 
+I said,"Hello!". The Object said,"Hello!"
+\end{verbatim}
+}
+
+Whereas if the dummy module is in use:
+
+{\small
+\begin{verbatim}
+% eg1 -ORBtraceLevel 2
+omniORB2 gateKeeper is not installed. All incoming are accepted.
+I said,"Hello!". The Object said,"Hello!"
+\end{verbatim}
+}
+
+
+\chapter{Proxy Objects}
+
+When a client acquires a reference to an object in another address space,
+omniORB2 creates a local representation of the object and returns a pointer
+to this object as its object reference. The local representation is known
+as the proxy object. 
+
+The proxy object maps each IDL operation into a method to deliver
+invocations to the remote object. The method implements argument
+marshalling using the ORB runtime. When the ORB runtime detects an error
+condition, it may raise a system exception. These exceptions will normally be
+propagated by the proxy object to the application code. However, there may
+be applications that prefer to have the system exceptions trapped in the
+proxy object. For these applications, it is possible to install exception
+handlers for individual proxy object or all proxy objects. The API to do
+this will be explained in this chapter.
+
+
+As described in section~\ref{sec_intf}, proxy objects are created by
+instances of the proxyObjectFactory class. For each IDL interface A, the
+stubs of A contains a derived class of proxyObjectFactory
+(A\_proxyObjectFactory). This derived class is responsible for creating
+proxy objects for A. This process is completely transparent to the
+application. However, there may be applications that require greater
+control on the creation of proxy objects or even want to change the
+behavior of the proxy objects. To cater for this requirement, applications
+can override the default proxyObjectFactories and install their own
+versions of proxyObjectFactories. The way to do this will be explained in
+this chapter.
+
+
+\section{System Exception Handlers}
+
+By default, all system exceptions, with the exception of CORBA::TRANSIENT,
+are propagated by the proxy objects to the application code. Some
+applications may prefer to trap these exceptions within the proxy objects so
+that the application logic does not have to deal with the error
+condition. For example, when a CORBA::COMM\_FAILURE is received, an
+application may just want to retry the invocation until it finally
+succeeds. This approach is useful for objects that are persistent and their
+operations are idempotent.
+
+OmniORB2 provides a set of functions to install exception handlers. Once
+they are installed, proxy objects will call these handlers when the target
+system exceptions are raised by the ORB runtime. Exception handlers can be
+installed for CORBA::TRANSIENT, CORBA::COMM\_FAILURE and
+CORBA::SystemException. The last handler covers all system exceptions other
+than the two covered by the first two handlers. An exception handler can be
+installed for individual proxy object or it can be installed for all proxy
+objects in the address space.
+
+
+\subsection{CORBA::TRANSIENT handlers}
+
+When a CORBA::TRANSIENT exception is raised by the ORB runtime, the default
+behaviour of the proxy objects is to retry indefinitely until the operation
+succeeds. Successive retries will be delayed progressively by multiples of
+{\tt omniORB::defaultTransientRetryDelayIncrement}. The delay will be
+limited to a maximum specified by {\tt
+omniORB::defaultTransientRetryDelayMaximum}. The unit of both values are in
+seconds.
+
+The ORB runtime will raised CORBA::TRANSIENT under the following
+conditions:
+
+\begin{enumerate}
+
+\item When a {\bf cached} network connection is broken while an invocation
+is in progress. The ORB will try to open a new connection at the next
+invocation. 
+
+\item When the proxy object has been redirected by a location forward
+message by the remote object to a new location and the object at the new
+location cannot be contacted. In addition to the CORBA::TRANSIENT
+exception, the proxy object also resets its internal state so that the next
+invocation will be directed at the original location of the remote object.
+
+\item When the remote object reports CORBA::TRANSIENT. 
+
+\end{enumerate}
+
+Applications can override the default behaviour by installing their own
+exception handler. The API to do so is summarised below:
+
+{\small
+\begin{verbatim}
+
+class omniORB {
+
+public:
+  
+typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
+                                                CORBA::ULong n_retries,
+                                                const CORBA::TRANSIENT& ex);
+
+static void installTransientExceptionHandler(void* cookie,
+                                             transientExceptionHandler_t fn);
+
+static void installTransientExceptionHandler(CORBA::Object_ptr obj,
+                                             void* cookie,
+                                             transientExceptionHandler_t fn);
+  
+static CORBA::ULong defaultTransientRetryDelayIncrement;
+static CORBA::ULong defaultTransientRetryDelayMaximum;
+
+}
+
+\end{verbatim}
+}
+
+The overloaded functions {\tt installTransientExceptionHandler}
+can be used to install the exception handlers for CORBA::TRANSIENT.
+
+Two overloaded forms are available. The first form install an
+exception handler for all object references except for those which
+have an exception handler installed by the second form, which takes
+an addition argument to identify the target object reference.
+The argument {\tt cookie} is an opaque pointer which will be passed
+on by the ORB when it calls the exception handler.
+
+An exception handler will be called by proxy objects with three
+arguments. The {\tt cookie} is the opaque pointer registered by
+{\tt installTransientExceptionHandler}. The argument {\tt n\_retries} is
+the number of times the proxy has called this handler for the same
+invocation. The argument {\tt ex} is the value of the exception caught.
+The exception handler is expected to do whatever is appropriate and returns
+a boolean value. If the return value is TRUE(1), the proxy object would
+retry the operation again. If the return value is FALSE(0), the
+CORBA::TRANSIENT exception would be propagated into the application code.
+
+The following sample code installs a simple exception handler for all
+objects and for a specific object:
+
+{\small
+\begin{verbatim}
+
+CORBA::Boolean my_transient_handler1 (void* cookie,
+                                      CORBA::ULong retries,
+                                      const CORBA::TRANSIENT& ex)
+{
+   cerr << ''transient handler 1 called.'' << endl;
+   return 1;           // retry immediately.
+}
+ 
+CORBA::Boolean my_transient_handler2 (void* cookie,
+                                      CORBA::ULong retries,
+                                      const CORBA::TRANSIENT& ex)
+{
+   cerr << ''transient handler 2 called.'' << endl;
+   return 1;           // retry immediately.
+}
+
+
+static Echo_ptr myobj;
+
+void installhandlers()
+{
+   omniORB::installTransientExceptionHandler(0,my_transient_handler1);
+   // All proxy objects will call my_transient_handler1 from now on.
+
+   omniORB::installTransientExceptionHandler(myobj,0,my_transient_handler2);
+   // The proxy object of myobj will call my_transient_handler2 from now on.
+}
+
+
+\end{verbatim}
+}
+
+
+\subsection{CORBA::COMM\_FAILURE}
+
+When the ORB runtime fails to establish a network connection to the remote
+object and none of the conditions listed above for raising a
+CORBA::TRANSIENT is applicable, it raises a CORBA::COMM\_FAILURE exception.
+
+The default behaviour of the proxy objects is to propagate this exception
+to the application.
+
+Applications can override the default behaviour by installing their own
+exception handlers. The API to do so is summarised below:
+
+{\small
+\begin{verbatim}
+
+class omniORB {
+
+public:
+
+typedef CORBA::Boolean (*commFailureExceptionHandler_t)(void* cookie,
+                                                CORBA::ULong n_retries,
+                                                const CORBA::COMM_FAILURE& ex);
+
+static void installCommFailureExceptionHandler(void* cookie,
+                                             commFailureExceptionHandler_t fn);
+
+static void installCommFailureExceptionHandler(CORBA::Object_ptr obj,
+                                             void* cookie,
+                                             commFailureExceptionHandler_t
+                                             fn);
+}
+\end{verbatim}
+}
+
+
+The functions are equivalent to their counterparts for CORBA::TRANSIENT. 
+
+
+
+\subsection{CORBA::SystemException}
+
+
+To report an error condition, the ORB runtime may raise other
+SystemExceptions. If the exception is neither CORBA::TRANISENT nor
+CORBA::COMM\_FAILURE, the default behaviour of the proxy objects is to
+propagate this exception to the application.
+
+Application can override the default behaviour by installing their own
+exception handlers. The API to do so is summarised below:
+
+
+{\small
+\begin{verbatim}
+
+class omniORB {
+
+public:
+
+typedef CORBA::Boolean (*systemExceptionHandler_t)(void* cookie,
+                                            CORBA::ULong n_retries,
+                                            const CORBA::SystemException& ex);
+
+static void installSystemExceptionHandler(void* cookie,
+                                          systemExceptionHandler_t fn);
+
+static void installSystemExceptionHandler(CORBA::Object_ptr obj,
+                                          void* cookie,
+                                          systemExceptionHandler_t fn);
+}
+\end{verbatim}
+}
+
+The functions are equivalent to their counterparts for CORBA::TRANSIENT. 
+
+
+\section{Proxy Object Factories}
+
+This section describes how an application can control the creation or
+change the behaviour of proxy objects.
+
+
+\subsection{Background}
+
+For each interface A, its stub contains a proxy factory class- {\tt
+A\_proxyObjectFactory}. This class is derived from {\tt proxyObjectFactory}
+and implements three virtual functions:
+
+{\small
+\begin{verbatim}
+
+class A_proxyObjectFactory : public virtual proxyObjectFactory {
+public:
+
+  virtual const char *irRepoId() const;
+
+  virtual _CORBA_Boolean  is_a(const char *base_repoId) const;
+       
+  virtual CORBA::Object_ptr newProxyObject(Rope *r,
+                                           CORBA::Octet *key,
+                                           size_t keysize,
+                                           IOP::TaggedProfileList
+                                           *profiles,
+                                           CORBA::Boolean release);
+
+};
+
+\end{verbatim}
+}
+
+As described in chapter~\ref{ch_intf}, the functions allow the ORB runtime
+to perform type checking. The function {\tt newProxyObject} creates a proxy
+object for A based on its input arguments. The return value is a pointer to
+the class {\tt \_proxy\_A} which is automatically re-casted into a {\tt
+CORBA::Object\_ptr}.  {\tt \_proxy\_A} implements the proxy object for A:
+
+{\small
+\begin{verbatim}
+class _proxy_A :  public virtual A {
+public:
+
+  _proxy_A (Rope *r,
+            CORBA::Octet *key,
+            size_t keysize,IOP::TaggedProfileList *profiles,
+            CORBA::Boolean release);
+  virtual ~_proxy_A();
+
+  // plus other internal functions.
+
+};
+\end{verbatim}
+}
+
+The stub of A guarantees that exactly {\bf one} instance of
+{\tt A\_proxyObjectFactory} is instantiated when an application is
+executed. The constructor of {\tt A\_proxyObjectFactory}, via its
+base class {\tt proxyObjectFactory} links the instance into the ORB's
+proxy factory list. 
+
+Newly instantiated proxy object factories are always entered at the front
+of the ORB's proxy factory list. Moreover, when the ORB searches for a
+match on the type, it always stops at the first match. In other words, when
+additional instances of {\tt A\_proxyObjectFactory} or derived classes of
+it are created, the last instantiation will override earlier instantiations
+to be the proxy factory selected to create proxy objects of A. This
+property can be used by an application to install its
+own proxy object factories.
+
+\subsection{An Example}
+
+Using the {\tt Echo} example in chapter~\ref{ch_basic} as the basis, one
+can tell the ORB to use a modified proxy object class to create proxy
+objects. The steps involved are as follows:
+
+\subsubsection{Define a new proxy class}
+
+We define a new proxy class to cache the result of the last
+invocation of {\tt echoString}.
+
+{\small
+\begin{verbatim}
+class _new_proxy_Echo : public virtual _proxy_Echo {
+public:
+  _new_proxy_Echo (Rope *r,
+                  CORBA::Octet *key,
+                  size_t keysize,IOP::TaggedProfileList *profiles,
+                  CORBA::Boolean release) 
+         : _proxy_Echo(r,key,keysize,profiles,release) {}
+   virtual ~_new_proxy_echo() {}
+
+
+   virtual char* echoString(const char* mesg) {
+     //
+     // Only calls the remote object if the argument is different from the
+     // last invocation.
+
+     omni_mutex_lock sync(lock);
+     if ((char*)last_arg) {
+       if (strcmp(mesg,(char*)last_arg) == 0) {
+          return CORBA::string_dup(last_result);
+       }
+     }
+     char* res = _proxy_Echo::echoString(mesg);
+     last_arg = mesg;
+     last_result = (const char*) res;
+     return res;
+   }
+
+private:
+  omni_mutex        lock;
+  CORBA::String_var last_arg;
+  CORBA::String_var last_result;
+};
+\end{verbatim}
+}
+
+\subsubsection{Define a new proxy factory class}
+
+Next, we define a new proxy factory class to instantiate {\tt
+\_new\_proxy\_Echo} as proxy objects for {\tt Echo}.
+
+{\small
+\begin{verbatim}
+class _new_Echo_proxyObjectFactory : public virtual Echo_proxyObjectFactory
+{
+public:
+   _new_Echo_proxyObjectFactory () {}
+   virtual ~_new_Echo_proxyObjectFactory() {}
+
+   // Only have to override newProxyObject
+   virtual CORBA::Object_ptr newProxyObject(Rope *r,
+                                            CORBA::Octet *key,
+                                            size_t keysize,
+                                            IOP::TaggedProfileList *profiles,
+                                            CORBA::Boolean release) {
+      _new_proxy_Echo *p = new _new_proxy_Echo(r,key,keysize,profiles,release);
+      return p;
+   }
+};
+\end{verbatim}
+}
+
+Finally, we have to instantiate a single instance of the new proxy factory
+in the application code.
+
+{\small
+\begin{verbatim}
+int main(int argc, char** argv)
+{
+   // Other initialisation steps
+
+   _new_Echo_proxyObjectFactory* f =  new _new_Echo_proxyObjectFactory;
+
+   // Use the new operator to instantiate the proxy factory and never
+   // call the delete operator on this instance.
+
+   // From this point onwards, _new_proxy_Echo will be used to create
+   // proxy objects for Echo.
+
+}
+\end{verbatim}
+}
+
+\subsection{Further Considerations}
+
+Notice that the ORB may call {\tt newProxyObject} multiple times to create
+proxy objects for the same remote object. In other words, the ORB does not
+guarantee that only one proxy object is created for each remote
+object. For applications that require this guarantee, it is necessary to
+check within {\tt newProxyObject} whether a proxy object has already been
+created for the current request. If the argument {\tt Rope* r} points to
+the same structure and the content of the sequence {\tt CORBA::Octet* key} is
+the same, then an existing proxy object can be returned to satisfy the
+current request. Do not forget to call {\tt CORBA::duplicate()} before
+returning the object reference.
+
+{\tt newProxyObject} may be called concurrently by different threads within
+the ORB. Needless to say, the function must be thread-safe.
+
+\appendix
+\chapter{hosts\_access(5)}
+
+\subsection*{DESCRIPTION}
+
+This manual page describes a simple access control language that is
+based on client (host name/address, user name), and server (process
+name, host name/address) patterns.  Examples are given at the end. The
+impatient reader is encouraged to skip to the EXAMPLES section for a
+quick introduction.
+
+An extended version of the access control language is described in the
+hosts\_options(5) document. The extensions are turned on at
+program build time by building with -DPROCESS\_OPTIONS.
+
+In the following text, {\em daemon} is the the process name of a
+network daemon process, and {\em client} is the name and/or address of
+a host requesting service. Network daemon process names are specified
+in the inetd configuration file.
+
+\subsection*{ACCESS CONTROL FILES}
+
+The access control software consults two files. The search stops
+at the first match:
+
+\begin{itemize}
+\item Access will be granted when a (daemon,client) pair matches an entry in
+the {\tt /etc/hosts.allow} file.
+
+\item Otherwise, access will be denied when a (daemon,client) pair matches an
+entry in the {\tt /etc/hosts.deny} file.
+
+\item Otherwise, access will be granted.
+
+\end{itemize}
+
+A non-existing access control file is treated as if it were an empty
+file. Thus, access control can be turned off by providing no access
+control files.
+
+\subsection*{ACCESS CONTROL RULES}
+
+Each access control file consists of zero or more lines of text.  These
+lines are processed in order of appearance. The search terminates when a
+match is found.
+
+\begin{itemize}
+
+\item A newline character is ignored when it is preceded by a backslash
+character. This permits you to break up long lines so that they are
+easier to edit.
+
+\item Blank lines or lines that begin with a {\tt \#} character are ignored.
+This permits you to insert comments and whitespace so that the tables
+are easier to read.
+
+\item All other lines should satisfy the following format, things between []
+being optional: {\tt daemon\_list : client\_list [ : shell\_command ] }
+
+\end{itemize}
+
+{\tt daemon\_list} is a list of one or more daemon process names
+(argv[0] values) or wildcards (see below).  
+
+{\tt client\_list} is a list
+of one or more host names, host addresses, patterns or wildcards (see
+below) that will be matched against the client host name or address.
+
+The more complex forms {\tt daemon@host} and {\tt user@host} are
+explained in the sections on server endpoint patterns and on client
+username lookups, respectively.
+
+List elements should be separated by blanks and/or commas.  
+
+With the exception of NIS (YP) netgroup lookups, all access control
+checks are case insensitive.
+
+\subsection*{PATTERNS}
+
+The access control language implements the following patterns:
+
+\begin{itemize}
+
+\item A string that begins with a {\tt .} character. A host name is matched if
+the last components of its name match the specified pattern.  For
+example, the pattern {\tt .tue.nl} matches the host name
+{\tt wzv.win.tue.nl}.
+
+\item A string that ends with a {\tt .} character. A host address is matched if
+its first numeric fields match the given string.  For example, the
+pattern {\tt 131.155.} matches the address of (almost) every host on the
+Eindhoven University network ({\tt 131.155.x.x}).
+
+\item A string that begins with an {\tt \@} character is treated as an NIS
+(formerly YP) netgroup name. A host name is matched if it is a host
+member of the specified netgroup. Netgroup matches are not supported
+for daemon process names or for client user names.
+
+\item An expression of the form {\tt n.n.n.n/m.m.m.m} is interpreted as a
+``net/mask'' pair. A host address is matched if ``net'' is equal to the
+bitwise AND of the address and the ``mask''. For example, the net/mask
+pattern {\tt 131.155.72.0/255.255.254.0} matches every address in the
+range {\tt 131.155.72.0} through {\tt 131.155.73.255}.
+
+\end{itemize}
+
+\subsection*{WILDCARDS}
+
+The access control language supports explicit wildcards:
+
+\begin{description}
+\item[\tt ALL] The universal wildcard, always matches.
+\item[\tt LOCAL] Matches any host whose name does not contain a dot character.
+\item[\tt UNKNOWN] 
+Matches any user whose name is unknown, and matches any host whose name
+or address are unknown.  This pattern should be used with care:
+host names may be unavailable due to temporary name server problems. A
+network address will be unavailable when the software cannot figure out
+what type of network it is talking to.
+\item[\tt KNOWN]
+Matches any user whose name is known, and matches any host whose name
+and address are known. This pattern should be used with care:
+host names may be unavailable due to temporary name server problems.  A
+network address will be unavailable when the software cannot figure out
+what type of network it is talking to.
+\item[\tt PARANOID]
+Matches any host whose name does not match its address.  When tcpd is
+built with -DPARANOID (default mode), it drops requests from such
+clients even before looking at the access control tables.  Build
+without -DPARANOID when you want more control over such requests.
+
+\end{description}
+
+\subsection*{OPERATORS}
+
+\begin{description}
+
+\item[\tt EXCEPT]
+Intended use is of the form: {\tt list\_1 EXCEPT list\_2}; this construct
+matches anything that matches {\tt list\_1} unless it matches
+{\tt list\_2}.  The {\tt EXCEPT} operator can be used in {\tt daemon\_lists} and in
+{\tt client\_lists}. The {\tt EXCEPT} operator can be nested: if the control
+language would permit the use of parentheses, {\tt a EXCEPT b EXCEPT c}
+would parse as {\tt (a EXCEPT (b EXCEPT c))}.
+
+\end{description}
+
+\subsection*{SHELL COMMANDS}
+
+If the first-matched access control rule contains a shell command, that
+command is subjected to {\tt \%<letter>} substitutions (see next section).
+The result is executed by a /bin/sh child process with standard
+input, output and error connected to /dev/null.  Specify an {\tt \&}
+at the end of the command if you do not want to wait until it has
+completed.
+
+Shell commands should not rely on the PATH setting of the inetd.
+Instead, they should use absolute path names, or they should begin with
+an explicit PATH=whatever statement.
+
+The hosts\_options(5) document describes an alternative language
+that uses the shell command field in a different and incompatible way.
+
+\subsection*{\% EXPANSIONS}
+
+The following expansions are available within shell commands:
+
+\begin{itemize}
+
+\item[\tt \%a (\%A)] The client (server) host address.
+\item[\tt \%c] Client information: user@host, user@address, a host name, or just an
+address, depending on how much information is available.
+\item[\tt \%d] The daemon process name (argv[0] value).
+\item[\tt \%h (\%H)]
+The client (server) host name or address, if the host name is
+unavailable.
+\item[\tt \%n (\%N)] The client (server) host name (or "unknown" or "paranoid").
+\item[\tt \%p] The daemon process id.
+\item[\tt \%s]  Server information: daemon@host, daemon@address, or just a daemon name,
+depending on how much information is available.
+\item [\tt \%u] The client user name (or "unknown").
+\item [\tt \%\%] Expands to a single {\tt \%} character.
+
+\end{itemize}
+
+Characters in \% expansions that may confuse the shell are replaced by
+underscores.
+
+\subsection*{SERVER ENDPOINT PATTERNS}
+
+In order to distinguish clients by the network address that they
+connect to, use patterns of the form:
+
+{\tt process\_name@host\_pattern : client\_list ... }
+
+Patterns like these can be used when the machine has different internet
+addresses with different internet hostnames.  Service providers can use
+this facility to offer FTP, GOPHER or WWW archives with internet names
+that may even belong to different organisations. See also the ``twist''
+option in the hosts\_options(5) document. Some systems (Solaris,
+FreeBSD) can have more than one internet address on one physical
+interface; with other systems you may have to resort to SLIP or PPP
+pseudo interfaces that live in a dedicated network address space.
+.sp
+The {\tt host\_pattern} obeys the same syntax rules as host names and
+addresses in {\tt client\_list} context. Usually, server endpoint information
+is available only with connection-oriented services.
+
+
+\subsection*{CLIENT USERNAME LOOKUP}
+
+When the client host supports the RFC 931 protocol or one of its
+descendants (TAP, IDENT, RFC 1413) the wrapper programs can retrieve
+additional information about the owner of a connection. Client username
+information, when available, is logged together with the client host
+name, and can be used to match patterns like:
+
+{\tt daemon\_list : ... user\_pattern@host\_pattern ...}
+
+The daemon wrappers can be configured at compile time to perform
+rule-driven username lookups (default) or to always interrogate the
+client host.  In the case of rule-driven username lookups, the above
+rule would cause username lookup only when both the {\tt daemon\_list}
+and the {\tt host\_pattern} match. 
+
+A user pattern has the same syntax as a daemon process pattern, so the
+same wildcards apply (netgroup membership is not supported).  One
+should not get carried away with username lookups, though.
+
+\begin{itemize}
+
+\item The client username information cannot be trusted when it is needed
+most, i.e. when the client system has been compromised.  In general,
+ALL and (UN)KNOWN are the only user name patterns that make sense.
+
+\item Username lookups are possible only with TCP-based services, and only
+when the client host runs a suitable daemon; in all other cases the
+result is ``unknown''.
+
+\item A well-known UNIX kernel bug may cause loss of service when username
+lookups are blocked by a firewall. The wrapper README document
+describes a procedure to find out if your kernel has this bug.
+
+\item Username lookups may cause noticeable delays for non-UNIX users.  The
+default timeout for username lookups is 10 seconds: too short to cope
+with slow networks, but long enough to irritate PC users.
+
+\end{itemize}
+
+Selective username lookups can alleviate the last problem. For example,
+a rule like:
+
+{\tt daemon\_list : @pcnetgroup ALL@ALL }
+
+would match members of the pc netgroup without doing username lookups,
+but would perform username lookups with all other systems.
+
+\subsection*{DETECTING ADDRESS SPOOFING ATTACKS}
+
+A flaw in the sequence number generator of many TCP/IP implementations
+allows intruders to easily impersonate trusted hosts and to break in
+via, for example, the remote shell service.  The IDENT (RFC931 etc.)
+service can be used to detect such and other host address spoofing
+attacks.
+
+Before accepting a client request, the wrappers can use the IDENT
+service to find out that the client did not send the request at all.
+When the client host provides IDENT service, a negative IDENT lookup
+result (the client matches {\tt UNKNOWN@host}) is strong evidence of a host
+spoofing attack.
+
+A positive IDENT lookup result (the client matches {\tt KNOWN@host}) is
+less trustworthy. It is possible for an intruder to spoof both the
+client connection and the IDENT lookup, although doing so is much
+harder than spoofing just a client connection. It may also be that
+the client's IDENT server is lying.
+
+Note: IDENT lookups don't work with UDP services. 
+
+\subsection*{EXAMPLES}
+
+The language is flexible enough that different types of access control
+policy can be expressed with a minimum of fuss. Although the language
+uses two access control tables, the most common policies can be
+implemented with one of the tables being trivial or even empty.
+
+When reading the examples below it is important to realise that the
+allow table is scanned before the deny table, that the search
+terminates when a match is found, and that access is granted when no
+match is found at all.
+
+The examples use host and domain names. They can be improved by
+including address and/or network/netmask information, to reduce the
+impact of temporary name server lookup failures.
+
+\subsection*{MOSTLY CLOSED}
+
+In this case, access is denied by default. Only explicitly authorised
+hosts are permitted access. 
+
+The default policy (no access) is implemented with a trivial deny
+file:
+
+{\small
+\begin{verbatim}
+/etc/hosts.deny:
+    ALL: ALL
+\end{verbatim}
+}
+
+This denies all service to  all  hosts,  unless  they  are
+permitted access by entries in the allow file.
+
+The  explicitly  authorised  hosts are listed in the allow file.
+For example:
+
+{\small
+\begin{verbatim}
+/etc/hosts.allow:
+   ALL: LOCAL @some_netgroup
+   ALL: .foobar.edu EXCEPT terminalserver.foobar.edu
+\end{verbatim}
+}
+
+The first rule permits access from hosts in the local domain (no .
+in the host name) and from members of the {\tt some\_netgroup}
+netgroup.  The second rule permits access from all hosts in the
+{\tt foobar.edu} domain (notice the leading dot), with the exception of
+{\tt terminalserver.foobar.edu}.
+
+\subsection*{MOSTLY OPEN}
+
+Here, access is granted by default; only explicitly specified hosts are
+refused service. 
+
+The default policy (access granted) makes the allow file redundant so
+that it can be omitted.  The explicitly non-authorised hosts are listed
+in the deny file. For example:
+
+{\small
+\begin{verbatim}
+/etc/hosts.deny:
+   ALL: some.host.name, .some.domain
+   ALL EXCEPT in.fingerd: other.host.name, .other.domain
+\end{verbatim}
+}
+
+The first rule denies some hosts and domains all services; the second
+rule still permits finger requests from other hosts and domains.
+
+
+\subsection*{BOOBY TRAPS}
+
+The next example permits tftp requests from hosts in the local domain
+(notice the leading dot).  Requests from any other hosts are denied.
+Instead of the requested file, a finger probe is sent to the offending
+host. The result is mailed to the superuser.
+
+{\small
+\begin{verbatim}
+
+/etc/hosts.allow:
+   in.tftpd: LOCAL, .my.domain
+
+/etc/hosts.deny:
+   in.tftpd: ALL: (/some/where/safe\_finger -l @%h | \
+       /usr/ucb/mail -s %d-%h root) &
+\end{verbatim}
+}
+
+The {\tt safe\_finger} command comes with the tcpd wrapper and should be
+installed in a suitable place. It limits possible damage from data sent
+by the remote finger server.  It gives better protection than the
+standard finger command.
+
+The expansion of the \%h (client host) and \%d (service name) sequences
+is described in the section on shell commands.
+
+Warning: do not booby-trap your finger daemon, unless you are prepared
+for infinite finger loops.
+
+On network firewall systems this trick can be carried even further.
+The typical network firewall only provides a limited set of services to
+the outer world. All other services can be "bugged" just like the above
+tftp example. The result is an excellent early-warning system.
+
+\subsection*{DIAGNOSTICS}
+
+An error is reported when a syntax error is found in a host access
+control rule; when the length of an access control rule exceeds the
+capacity of an internal buffer; when an access control rule is not
+terminated by a newline character; when the result of %<letter>
+expansion would overflow an internal buffer; when a system call fails
+that shouldn\'t.  All problems are reported via the syslog daemon.
+
+
+\subsection*{FILES}
+
+\noindent {\tt /etc/hosts.allow}, (daemon,client) pairs that are granted access.
+
+\noindent {\tt /etc/hosts.deny}, (daemon,client) pairs that are denied access.
+
+\subsection*{SEE ALSO}
+
+\noindent tcpd(8) tcp/ip daemon wrapper program.
+
+\noindent tcpdchk(8), tcpdmatch(8), test programs.
+
+\subsection*{BUGS}
+
+If a name server lookup times out, the host name will not be available
+to the access control software, even though the host is registered.
+
+Domain name server lookups are case insensitive; NIS (formerly YP)
+netgroup lookups are case sensitive.
+
+\subsection*{AUTHOR}
+
+Wietse Venema (wietse@wzv.win.tue.nl)\\
+Department of Mathematics and Computing Science\\
+Eindhoven University of Technology\\
+Den Dolech 2, P.O. Box 513,\\
+5600 MB Eindhoven, The Netherlands\\
+
+\backmatter
 
 \begin{thebibliography}{tjr96}
 
