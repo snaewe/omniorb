@@ -1,15 +1,15 @@
-diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/CORBA_sysdep.h omniORB3_20000524_vms/include/omniORB3/CORBA_sysdep.h
-*** omniORB3_20000524/include/omniORB3/CORBA_sysdep.h	Thu Mar 23 11:27:48 2000
---- omniORB3_20000524_vms/include/omniORB3/CORBA_sysdep.h	Thu May 11 11:48:08 2000
+*** include/omniORB3/CORBA_sysdep.h	Tue Jun 27 16:23:24 2000
+--- cxx56include/omniORB3/CORBA_sysdep.h	Thu Jun 29 12:34:15 2000
 ***************
-*** 240,244 ****
---- 240,267 ----
-//    Extra macros from the Compaq C++ 5.x patch (in <top>/patches/) to be
-//    added here  
+*** 242,247 ****
+--- 242,270 ----
+  #     define OMNI_PREMATURE_INSTANTIATION
+  //    Extra macros from the Compaq C++ 5.x patch (in <top>/patches/) to be
+  //    added here
 + #define OMNI_OPERATOR_REFPTR(T)\
 +   typedef T*& _1RTP_##T;\
 +   inline operator _1RTP_##T()
-+
++ 
 + //  This platform can't handle:
 + //
 + //  template <class T>
@@ -29,14 +29,13 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/CORBA_s
 + //  variable length constructed type var uses a pointer, so the forward
 + //  declaration is okay.
 + 
-#     ifndef OMNI_OPERATOR_REFPTR
-#       error "Patch for Compaq C++ 5.x has not been applied."
-#     endif
-diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/CORBA.h omniORB3_20000524_vms/include/omniORB3/CORBA.h
-*** omniORB3_20000524/include/omniORB3/CORBA.h	Fri Mar 03 09:29:16 2000
---- omniORB3_20000524_vms/include/omniORB3/CORBA.h	Thu May 18 17:50:36 2000
+  #     ifndef OMNI_OPERATOR_REFPTR
+  #       error "Patch for Compaq C++ 5.x has not been applied."
+  #     endif
+*** include/omniORB3/CORBA.h	Tue Jun 27 16:15:07 2000
+--- cxx56include/omniORB3/CORBA.h	Thu Jun 29 12:51:16 2000
 ***************
-*** 708,714 ****
+*** 717,723 ****
       }
       inline Any_OUT_arg& operator=(Any* p) { _data = p; return *this; }
   
@@ -44,7 +43,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/CORBA.h
       Any*& ptr() { return _data; }
   
       Any*& _data;
---- 708,714 ----
+--- 717,723 ----
       }
       inline Any_OUT_arg& operator=(Any* p) { _data = p; return *this; }
   
@@ -53,23 +52,24 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/CORBA.h
   
       Any*& _data;
 ***************
-*** 2301,2306 ****
+*** 2310,2316 ****
   	_data = s._data; return *this;
         }
         inline ObjectIdList_out& operator=(T* s) { _data = s; return *this; }
 !       inline operator T*&() { return _data; }
         inline T*& ptr() { return _data; }
         inline T* operator->() { return _data; }
---- 2301,2306 ----
+        inline _CORBA_String_element operator [] (_CORBA_ULong i) {
+--- 2310,2316 ----
   	_data = s._data; return *this;
         }
         inline ObjectIdList_out& operator=(T* s) { _data = s; return *this; }
 !       OMNI_OPERATOR_REFPTR(T) { return _data; }
         inline T*& ptr() { return _data; }
         inline T* operator->() { return _data; }
-diff --recursive --new-file --context omniORB_3.0.0/src/lib/omniORB2/dynamic/pseudo.h omniORB_3.0.0_cxx5.6/src/lib/omniORB2/dynamic/pseudo.h
-*** omniORB_3.0.0/src/lib/omniORB2/dynamic/pseudo.h	Wed Sep 22 10:26:38 1999
---- omniORB_3.0.0_cxx5.6/src/lib/omniORB2/dynamic/pseudo.h	Thu May 11 18:32:36 2000
+        inline _CORBA_String_element operator [] (_CORBA_ULong i) {
+*** src/lib/omniORB2/dynamic/pseudo.h	Wed Sep 22 14:26:36 1999
+--- cxx56src/lib/omniORB2/dynamic/pseudo.h	Thu Jun 29 14:06:23 2000
 ***************
 *** 145,151 ****
 --- 145,155 ----
@@ -84,11 +84,10 @@ diff --recursive --new-file --context omniORB_3.0.0/src/lib/omniORB2/dynamic/pse
   
   private:
     void free_entries();
-diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/stringtypes.h omniORB3_20000524_vms/include/omniORB3/stringtypes.h
-*** omniORB3_20000524/include/omniORB3/stringtypes.h	Tue Nov 23 05:48:08 1999
---- omniORB3_20000524_vms/include/omniORB3/stringtypes.h	Mon Mar 13 15:05:42 2000
+*** include/omniORB3/stringtypes.h	Tue Jun 27 16:15:08 2000
+--- cxx56include/omniORB3/stringtypes.h	Thu Jun 29 12:46:41 2000
 ***************
-*** 450,456 ****
+*** 488,494 ****
     }
     inline ~_CORBA_String_inout() {}
   
@@ -96,7 +95,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/stringt
   
     char*& _data;
   
---- 450,456 ----
+--- 488,494 ----
     }
     inline ~_CORBA_String_inout() {}
   
@@ -105,28 +104,27 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/stringt
     char*& _data;
   
 ***************
-*** 479,486 ****
+*** 517,524 ****
     inline _CORBA_String_out& operator=(const char* p) {
-      _data = _CORBA_String_var::string_dup(p); return *this;
+      _data = ((p) ? _CORBA_String_var::string_dup(p) : 0); return *this;
     }
 ! 
 !   operator char*& () { return _data; }
     char*& ptr()       { return _data; }
   
     char*& _data;
---- 479,485 ----
+--- 517,523 ----
     inline _CORBA_String_out& operator=(const char* p) {
-      _data = _CORBA_String_var::string_dup(p); return *this;
+      _data = ((p) ? _CORBA_String_var::string_dup(p) : 0); return *this;
     }
 !   OMNI_OPERATOR_REFPTR(char) { return _data; }
     char*& ptr()       { return _data; }
   
     char*& _data;
-diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/poa.h omniORB3_20000524_vms/include/omniORB3/poa.h
-*** omniORB3_20000524/include/omniORB3/poa.h	Tue Nov 23 05:48:08 1999
---- omniORB3_20000524_vms/include/omniORB3/poa.h	Mon Mar 13 15:05:42 2000
+*** include/omniORB3/poa.h	Tue Jun 27 16:15:08 2000
+--- cxx56include/omniORB3/poa.h	Thu Jun 29 12:46:41 2000
 ***************
-*** 255,261 ****
+*** 260,266 ****
       inline ObjectId_out(const ObjectId_out& s) : _data(s._data) { }
       inline ObjectId_out& operator=(const ObjectId_out& s) { _data = s._data; return *this; }
       inline ObjectId_out& operator=(_T* s) { _data = s; return *this; }
@@ -134,7 +132,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/poa.h o
       inline _T*& ptr() { return _data; }
       inline _T* operator->() { return _data; }
       inline CORBA::Octet& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
---- 255,261 ----
+--- 260,266 ----
       inline ObjectId_out(const ObjectId_out& s) : _data(s._data) { }
       inline ObjectId_out& operator=(const ObjectId_out& s) { _data = s._data; return *this; }
       inline ObjectId_out& operator=(_T* s) { _data = s; return *this; }
@@ -142,11 +140,10 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/poa.h o
       inline _T*& ptr() { return _data; }
       inline _T* operator->() { return _data; }
       inline CORBA::Octet& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
-diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templatedecls.h omniORB3_20000524_vms/include/omniORB3/templatedecls.h
-*** omniORB3_20000524/include/omniORB3/templatedecls.h	Fri Sep 24 05:51:58 1999
---- omniORB3_20000524_vms/include/omniORB3/templatedecls.h	Mon Mar 13 15:05:42 2000
+*** include/omniORB3/templatedecls.h	Tue Jun 27 16:15:09 2000
+--- cxx56include/omniORB3/templatedecls.h	Thu Jun 29 12:46:42 2000
 ***************
-*** 558,564 ****
+*** 682,688 ****
     }
     inline ~_CORBA_ObjRef_INOUT_arg() {}
   
@@ -154,7 +151,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templat
   
     T*& _data;
   
---- 558,564 ----
+--- 682,688 ----
     }
     inline ~_CORBA_ObjRef_INOUT_arg() {}
   
@@ -163,24 +160,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templat
     T*& _data;
   
 ***************
-*** 603,609 ****
-      _data = ((T*)p);
-      return * this;
-    }
-!   inline operator T*&()  { return _data; }
-    inline T*& ptr()       { return _data; }
-    inline T* operator->() const { return _data; }
-  
---- 603,609 ----
-      _data = ((T*)p);
-      return * this;
-    }
-!   OMNI_OPERATOR_REFPTR(T)  { return _data; }
-    inline T*& ptr()       { return _data; }
-    inline T* operator->() const { return _data; }
-  
-***************
-*** 687,693 ****
+*** 840,846 ****
     inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
     inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
     inline T_out& operator=(T* p) { _data = p; return *this; }
@@ -188,7 +168,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templat
     inline T*& ptr() { return _data; }
     inline T*& operator->() { return _data; }
   
---- 687,693 ----
+--- 840,846 ----
     inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
     inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
     inline T_out& operator=(T* p) { _data = p; return *this; }
@@ -197,7 +177,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templat
     inline T*& operator->() { return _data; }
   
 ***************
-*** 790,796 ****
+*** 943,949 ****
     inline _CORBA_ConstrType_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
     inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
     inline T_out& operator=(T* p) { _data = p; return *this; }
@@ -205,7 +185,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templat
     inline T*& ptr() { return _data; }
     inline T*& operator->() { return _data; }
   
---- 790,796 ----
+--- 943,949 ----
     inline _CORBA_ConstrType_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
     inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
     inline T_out& operator=(T* p) { _data = p; return *this; }
@@ -214,7 +194,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templat
     inline T*& operator->() { return _data; }
   
 ***************
-*** 891,897 ****
+*** 1044,1050 ****
     inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
     inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
     inline T_out& operator=(T* p) { _data = p; return *this; }
@@ -222,7 +202,7 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templat
     inline T*& ptr() { return _data; }
     inline T& operator[] (_CORBA_ULong index) {
       return _data[index];
---- 891,897 ----
+--- 1044,1050 ----
     inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
     inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
     inline T_out& operator=(T* p) { _data = p; return *this; }
@@ -230,11 +210,10 @@ diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templat
     inline T*& ptr() { return _data; }
     inline T& operator[] (_CORBA_ULong index) {
       return _data[index];
-diff --recursive --new-file --context omniORB3_20000524/src/lib/omniORB2/omniidl_be/cxx/header/template.py omniORB3_20000524_vms/src/lib/omniORB2/omniidl_be/cxx/header/template.py
-*** omniORB3_20000524/src/lib/omniORB2/omniidl_be/cxx/header/template.py	Thu May 18 11:57:34 2000
---- omniORB3_20000524_vms/src/lib/omniORB2/omniidl_be/cxx/header/template.py	Wed May 24 18:28:00 2000
+*** src/lib/omniORB2/omniidl_be/cxx/header/template.py	Mon Jun 26 16:24:00 2000
+--- cxx56src/lib/omniORB2/omniidl_be/cxx/header/template.py	Thu Jun 29 14:18:30 2000
 ***************
-*** 600,606 ****
+*** 622,628 ****
       _data = s;
       return *this;
     }
@@ -242,7 +221,7 @@ diff --recursive --new-file --context omniORB3_20000524/src/lib/omniORB2/omniidl
     inline T*& ptr()       { return _data; }
     inline T* operator->() { return _data; }
   
---- 600,606 ----
+--- 622,628 ----
       _data = s;
       return *this;
     }
@@ -251,8 +230,8 @@ diff --recursive --new-file --context omniORB3_20000524/src/lib/omniORB2/omniidl
     inline T* operator->() { return _data; }
   
 ***************
-*** 634,639 ****
---- 634,660 ----
+*** 656,661 ****
+--- 656,682 ----
   };
   
   typedef @name@::_var_type @name@_var;
@@ -280,11 +259,10 @@ diff --recursive --new-file --context omniORB3_20000524/src/lib/omniORB2/omniidl
   
   typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
   """
-diff --recursive --new-file --context omniORB3_20000524/src/lib/omniORB2/omniidl_be/cxx/header/defs.py omniORB3_20000524_vms/src/lib/omniORB2/omniidl_be/cxx/header/defs.py
-*** omniORB3_20000524/src/lib/omniORB2/omniidl_be/cxx/header/defs.py	Thu May 18 11:57:34 2000
---- omniORB3_20000524_vms/src/lib/omniORB2/omniidl_be/cxx/header/defs.py	Wed May 24 18:38:44 2000
+*** src/lib/omniORB2/omniidl_be/cxx/header/defs.py	Tue Jun 27 16:15:10 2000
+--- cxx56src/lib/omniORB2/omniidl_be/cxx/header/defs.py	Thu Jun 29 14:18:31 2000
 ***************
-*** 848,859 ****
+*** 886,897 ****
                                  dims = tyutil.dimsToString(decl_dims))
               
       # Output the structure itself
@@ -297,7 +275,7 @@ diff --recursive --new-file --context omniORB3_20000524/src/lib/omniORB2/omniidl
       self.__insideClass = insideClass
   
       # TypeCode and Any
---- 848,865 ----
+--- 886,903 ----
                                  dims = tyutil.dimsToString(decl_dims))
               
       # Output the structure itself
