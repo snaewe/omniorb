@@ -10,9 +10,8 @@ COS_INTERFACES = $(TIMEBASE_INT) $(COS_EVT_INT) $(COS_NFY_INT) $(COS_LCB_INT)
 
 DIR_IDLFLAGS  += -Wbuse_quotes
 
-# omniidl + omniidl2 do not support long long and, hence,
-# we need to pass the -DNOLONGLONG flag to generate correct stubs.
-DIR_IDLFLAGS  += -DNOLONGLONG
+# omniORB now properly supports long long, so we don't need to turn it off...
+#DIR_IDLFLAGS  += -DNOLONGLONG
 
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS) -D_COS_LIBRARY
 
