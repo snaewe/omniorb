@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.15  2001/08/06 15:51:28  sll
+  In errorOnSend, make sure that the retry flag returns by notifyCommFailure
+  is not overwritten if the send failed on TRANSIENT_ConnectFailed.
+
   Revision 1.1.4.14  2001/08/03 17:41:21  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -1063,7 +1067,6 @@ giopStream::errorOnSend(int rc, const char* filename, CORBA::ULong lineno) {
   }
   else if (rc == TRANSIENT_ConnectFailed) {
     pd_strand->state(giopStrand::DYING);
-    retry = 0;
     minor = rc;
   }
   else {
