@@ -1,3 +1,10 @@
+Wed Aug 12 16:28:43 BST 1998 dpg1
+=================================
+
+- Added better error checking to LifeCycle code
+
+include/omniORB2/omniLC.h
+
 Tue Aug 11 20:03:37 BST 1998 sll
 ================================
 
