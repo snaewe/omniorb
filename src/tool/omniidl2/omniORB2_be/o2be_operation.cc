@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.26  1999/02/10 13:52:19  djr
+  Replaced uses of an interface foo with foo_Helper, so that the stubs
+  will compile even if the interface is not defined anywhere in the
+  translation unit.
+
   Revision 1.25  1999/01/07 14:12:43  djr
   New implementation of proxy calls to reduce the code size overhead.
 
@@ -635,13 +640,19 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 	    case tObjref:
 	      {
 		IND(s);
-		declareVarType(s, a->field_type(), o2be_global::root(), 0, 0);
+		AST_Decl* ft = a->field_type();
+		while( ft->node_type() == AST_Decl::NT_typedef )
+		  ft = o2be_typedef::narrow_from_decl(ft)->base_type();
+		declareVarType(s, ft, o2be_global::root(), 0, 0);
 		s << " " << _argname << ";\n";
-		produceUnMarshalCode(s, a->field_type(),
-				     o2be_global::root(),
+		produceUnMarshalCode(s, ft, o2be_global::root(),
 				     "giop_client", _argname,
 				     ntype, mapping);
-		IND(s); s << "CORBA::release(" << argname << ");\n";
+		// Must use the helper class here, not CORBA::release, as
+		// if it is a forward declared interface we might not yet
+		// know that it is derived from CORBA::Object.
+		IND(s); s << o2be_interface::narrow_from_decl(ft)->fqname()
+			  << "_Helper::release(" << argname << ");\n";
 		IND(s); s << argname << " = " << _argname << ";\n";
 		break;
 	      }
@@ -3221,7 +3232,7 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
       {
 	IND(s); s << argname << " = "
 		  << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "::unmarshalObjRef(" << netstream << ");\n";
+		  << "_Helper::unmarshalObjRef(" << netstream << ");\n";
       }
       break;
 
@@ -3493,7 +3504,7 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 	      }
 	      s << " = "
 		<< o2be_interface::narrow_from_decl(tdecl)->fqname()
-		<< "::unmarshalObjRef(" << netstream << ");\n";
+		<< "_Helper::unmarshalObjRef(" << netstream << ");\n";
  	    }
 	    break;
 
@@ -3600,7 +3611,7 @@ o2be_operation::produceMarshalCode(std::fstream &s, AST_Decl *decl,
     case tObjref:
       {
 	IND(s); s << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "::marshalObjRef(" << argname << ","
+		  << "_Helper::marshalObjRef(" << argname << ","
 		  << netstream << ");\n";
       }
       break;
@@ -3829,7 +3840,7 @@ o2be_operation::produceMarshalCode(std::fstream &s, AST_Decl *decl,
 		tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 	      }
 	      IND(s); s << o2be_interface::narrow_from_decl(tdecl)->fqname()
-			<< "::marshalObjRef(";
+			<< "_Helper::marshalObjRef(";
 	      if (!mapping.is_arrayslice) {
 		s << argname;
 	      }
@@ -3955,7 +3966,7 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
       {
 	IND(s); s << sizevar << " = "
 		  << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "::NP_alignedSize("
+		  << "_Helper::NP_alignedSize("
 		  << argname << "," << sizevar << ");\n";
       }
       break;
@@ -4153,7 +4164,7 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 	      }
 	      IND(s); s << sizevar << " = "
 			<< o2be_interface::narrow_from_decl(tdecl)->fqname()
-			<< "::NP_alignedSize(";
+			<< "_Helper::NP_alignedSize(";
 	      if (!mapping.is_arrayslice) {
 		s << argname;
 	      }
