@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/07/13 15:15:04  sll
+  Replaced giopEndpoint::Accept with giopEndpoint::AcceptAndMonitor.
+  giopConnection is now reference counted.
+  Added setSelectable, clearSelectable and Peek to giopConnection.
+
   Revision 1.1.4.2  2001/06/20 18:35:18  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -48,7 +53,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class giopConnection;
 class giopEndpoint;
-
+class giopServer;
 
 
 class giopAddress {
@@ -144,9 +149,16 @@ public:
   // Return TRUE(1) if the binding has been established successfully,
   // otherwise returns FALSE(0).
 
-  virtual giopConnection* Accept() = 0;
-  // Accept a new connection. Returns 0 if no connection can be
-  // accepted.
+  typedef void (*notifyReadable_t)(void* cookie,giopConnection* conn);
+  // callback function type. Used as call argument to AcceptAndMonitor.
+
+  virtual giopConnection* AcceptAndMonitor(notifyReadable_t func,
+					   void* cookie) = 0;
+  // Accept a new connection. Returns 0 if no connection can be accepted.
+  // In addition, for all the connections of this endpoint that has been
+  // marked, monitors their status.  If data have arrived at a connection,
+  // call the callback function <func> with the <cookie> and the pointer to
+  // the connection as the arguments.
 
   virtual void Poke() = 0;
   // Call to unblock any thread blocking in accept().
@@ -179,10 +191,68 @@ public:
   virtual const char* myaddress() = 0;
   virtual const char* peeraddress() = 0;
 
-  giopConnection() {}
+
+  virtual void setSelectable(_CORBA_Boolean now = 0,
+			     _CORBA_Boolean data_in_buffer = 0) = 0;
+  // Indicates that this connection should be watched by a select()
+  // so that any new data arriving on the connection will be noted.
+  // If now == 1, immediately make this connection part of the select
+  // set.
+  // If data_in_buffer == 1, treat this connection as if there are
+  // data available from the connection already.
+
+
+  virtual void clearSelectable() = 0;
+  // Indicates that this connection need not be watched any more.
+
+  virtual void Peek(giopEndpoint::notifyReadable_t func,void* cookie) = 0;
+  // Do nothing and returns immediately if the connection has not been
+  // set to be watched by a previous setSelectable().
+  // Otherwise, monitor the connection's status for a short time.
+  // If data have arrived at the connection, call the callback function
+  // <func> with the <cookie> and the pointer to the connection as the
+  // arguments. This function is similar to giopEndpoint::AcceptAndMonitor
+  // except that it only monitor one connection.
+
+  giopConnection() : pd_refcount(1), pd_dying(0), 
+		     pd_has_dedicated_thread(0), 
+		     pd_dedicated_thread_in_upcall(0),
+                     pd_n_workers(0),
+                     pd_has_hit_n_workers_limit(0) {}
+
+  int decrRefCount(_CORBA_Boolean forced=0);
+  // Thread Safety preconditions:
+  //    Caller must hold omniTransportLock unless forced == 1.
+
+
+  void incrRefCount();
+  // Thread Safety preconditions:
+  //    Caller must hold omniTransportLock.
+
+  friend class giopServer;
+
+protected:
   virtual ~giopConnection() {}
 
 private:
+
+  int            pd_refcount;
+
+  _CORBA_Boolean pd_dying;
+  // Initialised to 0. Read and write by giopServer exclusively.
+
+  _CORBA_Boolean pd_has_dedicated_thread;
+  // Initialised to 0. Read and write by giopServer exclusively.
+
+  _CORBA_Boolean pd_dedicated_thread_in_upcall;
+  // Initialised to 0. Read and write by giopServer exclusively.
+
+  int            pd_n_workers;
+  // Initialised to 0. Read and write by giopServer exclusively.
+
+  _CORBA_Boolean pd_has_hit_n_workers_limit;
+  // Initialised to 0. Read and write by giopServer exclusively.
+
   giopConnection(const giopConnection&);
   giopConnection& operator=(const giopConnection&);
 };
