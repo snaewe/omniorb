@@ -1,3 +1,10 @@
+
+Tue Nov 18 19:21:56 GMT 1997 tjr
+================================
+
+mk/beforedir.mk	- use cmp >dev/null instead of cmp -s - works better on NT
+
+
 Tue Nov 18 15:35:06 GMT 1997 sll
 ================================
 
