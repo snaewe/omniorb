@@ -44,7 +44,7 @@ anyExample_i::testOp(const CORBA::Any& a) {
 #endif
 
   CORBA::Long l;
-  char* str;
+  const char* str;
 
   testStruct* tp;
 

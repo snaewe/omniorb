@@ -40,11 +40,11 @@ static void hello(CORBA::Object_ptr obj)
     return;
   }
 
-  CORBA::String_var ret;
-  req->return_value() >>= ret.out();
+  const char* ret;
+  req->return_value() >>= ret;
 
   cout << "I said, \"" << (char*)arg << "\"."
-       << " The Object said, \"" << (char*)ret <<"\"" << endl;
+       << " The Object said, \"" << ret <<"\"" << endl;
 }
 
 
@@ -66,11 +66,11 @@ static void hello_deferred(CORBA::Object_ptr obj)
     return;
   }
 
-  CORBA::String_var ret;
-  req->return_value() >>= ret.out();
+  const char* ret;
+  req->return_value() >>= ret;
 
   cout << "I said, \"" << (char*)arg << "\"."
-       << " The Object said, \"" << (char*)ret <<"\"" << endl;
+       << " The Object said, \"" << ret <<"\"" << endl;
 }
 
 
