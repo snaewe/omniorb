@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.2  1999/09/24 10:27:30  djr
+  Improvements to ORB and BOA options.
+
   Revision 1.29.6.1  1999/09/22 14:26:45  djr
   Major rewrite of orbcore to support POA.
 
@@ -702,9 +705,10 @@ move_args(int& argc,char **argv,int idx,int nargs)
     }
 }
 
+
 static
 CORBA::Boolean
-parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
+parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 {
   CORBA::Boolean orbId_match = 0;
 
@@ -717,8 +721,10 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
     }
     return 0;
   }
-  if( omniORB::trace(1) && !strcmp(orb_identifier, OLD_ORB_ID) )
-    omniORB::logs(1, "WARNING -- using ORBid omniORB2 with omniORB3.");
+  if( orb_identifier && omniORB::trace(1) &&
+      !strcmp(orb_identifier, OLD_ORB_ID) )
+    omniORB::logs(1, "WARNING -- using ORBid " OLD_ORB_ID
+		  " (should be " MY_ORB_ID ").");
 
   if (argc > 0) {
     // Using argv[0] as the serverName implicitly assumes that the
@@ -762,6 +768,9 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	    }
 	    return 0;
 	  }
+	if( !strcmp(argv[idx + 1], OLD_ORB_ID) )
+	  omniORB::logs(1, "WARNING -- using ORBid " OLD_ORB_ID
+			" (should be " MY_ORB_ID ").");
 	orbId_match = 1;
 	move_args(argc,argv,idx,2);
 	continue;
@@ -1079,7 +1088,9 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBscanOutgoingPeriod <n seconds>\n"
 	  "    -ORBscanIncomingPeriod <n seconds>\n"
-	  "    -ORBlcdMode <0|1>\n";
+	  "    -ORBlcdMode\n"
+	  "    -ORBpoa_iiop_port <port no.>\n"
+	  "    -ORBpoa_iiop_name_port <hostname[:port no.]>\n";
 	move_args(argc,argv,idx,1);
 	continue;
       }
@@ -1113,6 +1124,49 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 
 	move_args(argc, argv, idx, 2);
 	continue;
+      }
+
+
+      // -ORBpoa_iiop_name_port <hostname[:port number]>
+      if( strcmp(argv[idx], "-ORBpoa_iiop_name_port") == 0 ) {
+        if( (idx+1) >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed -- missing "
+			"-ORBpoa_iiop_name_port parameter.");
+          return 0;
+        }
+
+        // Copy the hostname part of the argument (including :port).
+        char hostname[255+1];
+        strncpy(hostname, argv[idx+1], 255);
+	hostname[255] = '\0';
+
+        // Find the :port part of the argument.  If the port is
+	// not specified, we default to 0 which lets the OS pick
+	// a number.
+        int port = 0;
+        char* port_str = strchr(hostname, ':');
+        if( port_str != 0 ) {
+	  // if the port-number is not specified, fall back to port=0
+	  if( port_str[1] == '\0' )  port = 0;
+	  else if( sscanf(port_str+1, "%u", &port) != 1 ||
+		   (port < 0 || port >= 65536) ) {
+	    if ( omniORB::trace(1) ) {
+	      omniORB::logger l;
+	      l << "CORBA::ORB_init failed -- invalid -ORBpoa_iiop_name_port\n"
+		" parameter.  Port number out of range: " << port << ".\n";
+	    }
+	    return 0;
+	  }
+
+	  // null terminate and isolate hostname argument
+	  *port_str = 0;
+        }
+
+	omniObjAdapter::options.
+	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
+
+        move_args(argc, argv, idx, 2);
+        continue;
       }
 
 

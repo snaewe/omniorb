@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // corbaBoa.cc                Created on: 23/7/99
 //                            Author    : David Riddoch (djr)
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.2  1999/09/24 10:27:30  djr
+  Improvements to ORB and BOA options.
+
   Revision 1.13.6.1  1999/09/22 14:26:44  djr
   Major rewrite of orbcore to support POA.
 
@@ -906,7 +909,8 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
     return 0;
   }
   if( omniORB::trace(1) && !strcmp(orb_identifier, OLD_BOA_ID) )
-    omniORB::logs(1, "WARNING -- using BOAid omniORB2_BOA with omniORB3.");
+    omniORB::logs(1, "WARNING -- using BOAid " OLD_BOA_ID
+		  " (should be " MY_BOA_ID ").");
 
   int idx = 1;
   while (argc > idx)
@@ -935,6 +939,9 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 	    }
 	    return 0;
 	  }
+	if( !strcmp(argv[idx + 1], OLD_BOA_ID) )
+	  omniORB::logs(1, "WARNING -- using BOAid " OLD_BOA_ID
+			" (should be " MY_BOA_ID ").");
 	orbId_match = 1;
 	move_args(argc,argv,idx,2);
 	continue;
@@ -1016,12 +1023,13 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 
       // -BOAhelp
       if (strcmp(argv[idx],"-BOAhelp") == 0) {
-	omniORB::log << "Valid -BOA<options> are:\n"
-		     << "    -BOAid omniORB2_BOA\n"
-		     << "    -BOAiiop_port <port no.>[,<port no>]*\n"
-		     << "    -BOAiiop_name_port <hostname[:port no.]>\n"
-		     << "    -BOAno_bootstrap_agent\n";
-	omniORB::log.flush();
+	omniORB::logger l;
+	l <<
+	  "Valid -BOA<options> are:\n"
+	  "    -BOAid omniORB3_BOA\n"
+	  "    -BOAiiop_port <port no.>[,<port no>]*\n"
+	  "    -BOAiiop_name_port <hostname[:port no.]>\n"
+	  "    -BOAno_bootstrap_agent\n";
 	move_args(argc,argv,idx,1);
 	continue;
       }
