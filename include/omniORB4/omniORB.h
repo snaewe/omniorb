@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.13  2001/08/16 16:11:48  sll
+  Removed duplicate offerBidirectionalGIOP.
+
   Revision 1.2.2.12  2001/08/08 15:57:11  sll
   New options unixTransportDirectory & unixTransportPermission.
 
@@ -735,17 +738,6 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_VAR _core_attr CORBA::UShort unixTransportPermission;
   // Default is 0777.               		                        //
 
-
-  ////////////////////////////////////////////////////////////////////////
-  // offerBiDirectionalGIOP   	                                        //
-  //   Applies to the server side. Set to TRUE to indicates that the    //
-  //   ORB may choose to accept a clients offer to use bidirectional    //
-  //   GIOP calls on a connection. Set to FALSE means the ORB should    //
-  //   never accept any bidirectional offer and should stick to normal  //
-  //   GIOP.   	       	       	       	       	       	       	        //
-  //   	       	       	       	       	       	       	       	        //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean offerBiDirectionalGIOP;
-  // false by default.				                        //
 
   ////////////////////////////////////////////////////////////////////////
   // diiThrowsSysExceptions                                             //
