@@ -128,7 +128,7 @@ AST_Constant *AST_Interface::fe_add_constant(AST_Constant *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
@@ -171,7 +171,7 @@ AST_Exception *AST_Interface::fe_add_exception(AST_Exception *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
@@ -214,7 +214,7 @@ AST_Attribute *AST_Interface::fe_add_attribute(AST_Attribute *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
@@ -257,7 +257,7 @@ AST_Operation *AST_Interface::fe_add_operation(AST_Operation *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
@@ -300,7 +300,7 @@ AST_Structure *AST_Interface::fe_add_structure(AST_Structure *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
@@ -343,7 +343,7 @@ AST_Enum *AST_Interface::fe_add_enum(AST_Enum *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
@@ -386,7 +386,7 @@ AST_Union *AST_Interface::fe_add_union(AST_Union *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
@@ -432,7 +432,7 @@ AST_EnumVal *AST_Interface::fe_add_enum_val(AST_EnumVal *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
@@ -475,7 +475,7 @@ AST_Typedef *AST_Interface::fe_add_typedef(AST_Typedef *t)
   /*
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_for_add(t, I_FALSE)) != NULL) {
+  if ((d = lookup_for_add(t, I_FALSE, I_TRUE)) != NULL) {
     if (!can_be_redefined(d)) {
       idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
       return NULL;
