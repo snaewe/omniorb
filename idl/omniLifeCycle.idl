@@ -30,9 +30,15 @@
 // This MUST NOT be compiled with omniidl -l
 
 /* $Log$
-/* Revision 1.1  1997/09/20 17:08:55  dpg1
-/* Initial revision
+/* Revision 1.1.6.1  1999/09/15 20:11:38  sll
+/* Added pre-processor guards.
 /*
+# Revision 1.1  1997/09/20  17:08:55  dpg1
+# Initial revision
+#
+# Revision 1.1  1997/09/20  17:08:55  dpg1
+# Initial revision
+#
  */
 
 
