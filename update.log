@@ -1,3 +1,11 @@
+Mon Mar 13 12:27:00 GMT 2000 djs
+================================
+
+- Added simple perl script to reformat omniidl's C++ output.
+  (to make it easier to perform visual inspection)
+
+src/lib/omniORB2/omniidl_be/cxx/tools/pretty
+
 Fri Mar 10 16:43:09 GMT 2000 dpg1
 =================================
 
