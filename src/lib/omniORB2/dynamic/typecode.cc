@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.7  2000/02/17 14:43:57  djr
+ * Another fix for TypeCode_union when discriminator tc contains an alias.
+ *
  * Revision 1.33.6.6  2000/02/15 13:43:42  djr
  * Fixed bug in create_union_tc() -- problem if discriminator was an alias.
  *
@@ -4976,7 +4979,9 @@ size_t
 TypeCode_union_helper::labelAlignedSize(size_t initoffset,
 					CORBA::TypeCode_ptr tc)
 {
-  switch( tc->kind() ) {
+  CORBA::TypeCode_var aetc = TypeCode_base::aliasExpand(ToTcBase(tc));
+
+  switch( ToTcBase(aetc)->NP_kind() ) {
   case CORBA::tk_char:
   case CORBA::tk_octet:
   case CORBA::tk_boolean:
@@ -5009,9 +5014,10 @@ TypeCode_union_helper::has_implicit_default(TypeCode_base* tc)
   if( tc->NP_default_index() >= 0 )  return 0;
 
   TypeCode_base* dtc = tc->NP_discriminator_type();
+  CORBA::TypeCode_var aedtc = TypeCode_base::aliasExpand(dtc);
   CORBA::ULong npossible = 0;
 
-  switch( dtc->NP_kind() ) {
+  switch( ToTcBase(aedtc)->NP_kind() ) {
 
   case CORBA::tk_short:
   case CORBA::tk_ushort:
@@ -5029,7 +5035,7 @@ TypeCode_union_helper::has_implicit_default(TypeCode_base* tc)
     npossible = 256;
     break;
   case CORBA::tk_enum:
-    npossible = dtc->member_count();
+    npossible = ToTcBase(aedtc)->NP_member_count();
     break;
   default:
     throw CORBA::DynAny::InvalidValue();
