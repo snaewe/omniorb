@@ -11,10 +11,9 @@
 #ifndef __NAMING_IDL__
 #define __NAMING_IDL__
 
-#pragma prefix "omg.org"
-
-
 module CosNaming {
+
+#pragma prefix "omg.org"
 
 	typedef string Istring;
 
