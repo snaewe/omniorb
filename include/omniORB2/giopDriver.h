@@ -29,9 +29,13 @@
 
 /*
   $Log$
-  Revision 1.5  1997/05/06 16:08:20  sll
-  Public release.
+  Revision 1.6  1997/08/21 22:20:50  sll
+  New system exception TRANSACTION_REQUIRED, TRANSACTION_ROLLEDBACK,
+  INVALID_TRANSACTION and WRONG_TRANSACION.
 
+ * Revision 1.5  1997/05/06  16:08:20  sll
+ * Public release.
+ *
   */
 
 #ifndef __GIOPDRIVER_H__
@@ -100,10 +104,14 @@ public:
     static const _SysExceptRepoID BAD_CONTEXT;
     static const _SysExceptRepoID OBJ_ADAPTER;
     static const _SysExceptRepoID DATA_CONVERSION;
+    static const _SysExceptRepoID TRANSACTION_REQUIRED;
+    static const _SysExceptRepoID TRANSACTION_ROLLEDBACK;
+    static const _SysExceptRepoID INVALID_TRANSACTION;
+    static const _SysExceptRepoID WRONG_TRANSACTION;
     static const _CORBA_ULong maxIDLen;
     static const _CORBA_Char *version;
     static const _CORBA_ULong versionLen;
-#define omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen 39
+#define omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen 46
   };
   static size_t max_giop_message_size;
 };
