@@ -1,3 +1,10 @@
+Tue Jul 31 18:31:54 BST 2001 sll
+================================
+
+- Make codeset shared library build on win32
+
+src/lib/omniORB/codesets/dir.mk
+
 Tue Jul 31 16:56:57 BST 2001 sll
 ================================
 
