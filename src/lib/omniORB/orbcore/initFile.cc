@@ -29,8 +29,9 @@
 
 /*
   $Log$
-  Revision 1.10  1997/05/09 13:34:09  ewc
-  Fixed Win32 <CR> problem.
+  Revision 1.11  1997/05/12 13:24:20  ewc
+  Changed initFile so that semantics with regard to not finding configuration
+  information are the same as the UNIX versions.
 
 // Revision 1.9  1997/05/06  15:21:25  sll
 // Public release.
@@ -128,8 +129,9 @@ void initFile::initialize()
 
 	  if(numVals == 0) 
 	    {
-	      // No values found:
-	      noValsFound();
+	      if (omniORB::traceLevel >= 2)
+		noValsFound();
+	      return;
 	    }
 	  
 	  use_registry = 1;
@@ -447,8 +449,11 @@ void initFile::noValsFound()
   if (omniORB::traceLevel > 0) {
     cerr << "Configuration error: No values found in registry key " 
 	 << INIT_REGKEY << endl;
+    cerr << "Either set the environment variable OMNIORB_CONFIG to point"
+         << "\nto the omniORB configuration file, or enter the IOR for the"
+         << "\nnaming service in to the registry in the (string) value"
+         << "\nNAMESERVICE , under the registry entry " << INIT_REGKEY << endl;
   }
-  throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 }
 
 
