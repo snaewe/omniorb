@@ -4,7 +4,11 @@ DIR_CPPFLAGS = -DDEBUG
 
 ifdef Win32Platform
 MYSRCS += gnuwin32.c
+ifdef MinGW32Build
+LIBS = -ladvapi32
+else
 LIBS = advapi32.lib
+endif
 DIR_CPPFLAGS += -DWIN32
 endif
 

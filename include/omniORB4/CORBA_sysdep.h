@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.25  2004/07/01 19:08:11  dgrisby
+ Support Windows build with mingw. Thanks Wolfgang Glas.
+
  Revision 1.2.2.24  2003/05/09 13:29:59  dgrisby
  No inline friends in VC.NET 2003.
 
@@ -243,6 +246,14 @@
 #    define _OMNIORB_NTDLL_IMPORT
 #  else
 #    define _OMNIORB_NTDLL_IMPORT  __declspec(dllimport)
+#  endif
+
+#elif defined(__MINGW32__)
+
+#  ifdef _WINSTATIC
+#    define _OMNIORB_NTDLL_IMPORT
+#  else
+#    define _OMNIORB_NTDLL_IMPORT  __attribute__((dllimport))
 #  endif
 
 #else

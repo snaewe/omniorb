@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2004/07/01 19:08:11  dgrisby
+  Support Windows build with mingw. Thanks Wolfgang Glas.
+
   Revision 1.1.2.13  2004/04/30 14:58:49  dgrisby
   Use correct socklen arg type on Solaris. Thanks Mike Heley.
 
@@ -157,6 +160,13 @@
       (__GNUG__ >= 3)
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Cplusplus_Bool
+#  endif
+
+// Since gcc 3.3 old IOstream's are considered deprecated.
+#  if (__GNUG__ > 3 || (__GNUG__ == 3 && __GNUC_MINOR__ >= 3))
+#     define HAS_Cplusplus_Namespace
+#     define HAS_Std_Namespace
+#     define HAVE_STD
 #  endif
 
 // GCC claims to support long long on all platforms
@@ -454,6 +464,12 @@
 #  undef HAVE_STRNCASECMP
 #  undef HAVE_UNAME
 #  undef HAVE_GETHOSTNAME
+
+#ifdef __MINGW32__
+#  define HAVE_STRCASECMP
+#  define HAVE_STRNCASECMP
+#  define HAVE_VPRINTF
+#endif
 
 #elif defined(__vxWorks__)
 #  undef HAVE_GETTIMEOFDAY

@@ -384,6 +384,8 @@ with Visual C++ 5.
      Edit <top>\config\config.mk to select one of the following:
 
      platform = x86_nt_4.0
+     platform = x86_nt_4.0_vs_7
+     platform = x86_nt_4.0_mingw
      platform = x86_nt_3.5
      platform = x86_win95
 
@@ -406,6 +408,10 @@ with Visual C++ 5.
      otherwise, set PYTHON to the location of your Python executable.
      Note that you must use a Unix-style Cygwin path.
 
+     If you are using the mingw compiler, you must patch the
+     omnipython distribution using the patch in the patches/
+     directory.
+
 
   D. Building and installing
      --------------------------
@@ -416,6 +422,12 @@ with Visual C++ 5.
                <top>\bin\x86_win32\
         2. The libraries will be installed into
                <top>\lib\x86_win32\
+
+     If you are using mingw to build omniORB, before you build the
+     main distribution, you must build the omkdepend tool first by
+     going to the directory <top>\src\tool\omkdepend and typing 'make
+     export'.
+
 
 
 Running omniNames as an NT service
