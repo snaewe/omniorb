@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/02/10 18:03:04  djr
+  tcParser::calculateItemSize and tcParser::alignedSize optimised.
+
   Revision 1.1.2.1  1999/09/24 09:51:42  djr
   Moved from omniORB2 + some new files.
 
@@ -362,7 +365,7 @@ public:
   // Return true if reading <len> bytes from the stream would go
   // beyond the end of the current message.
 
-  inline int RdMessageCurrentAlignment() const {
+  inline int rdCurrentAlignment() const {
     return current_inb_alignment();
   }
 
@@ -374,7 +377,7 @@ public:
   // Return the number of bytes in the outgoing message that have not
   // been written.
 
-  inline int WrMessageCurrentAlignment() const {
+  inline int wrCurrentAlignment() const {
     return current_outb_alignment();
   }
 
@@ -898,7 +901,7 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= 
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
     _CORBA_ULong padding = 0;
-    if (s.WrMessageCurrentAlignment() != (int)omni::ALIGN_8)
+    if (s.wrCurrentAlignment() != (int)omni::ALIGN_8)
       padding >>= s;
   }
   s.put_char_array((_CORBA_Char*)BaseT::NP_data(),(int)l*elmSize);
@@ -919,7 +922,7 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= 
   BaseT::length(l);
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
-    if (s.RdMessageCurrentAlignment() != (int)omni::ALIGN_8)
+    if (s.rdCurrentAlignment() != (int)omni::ALIGN_8)
       s.skip(sizeof(_CORBA_ULong));
   }
   s.get_char_array((_CORBA_Char*)BaseT::NP_data(),(int)l*elmSize);
@@ -1022,7 +1025,7 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
     _CORBA_ULong padding = 0;
-    if (s.WrMessageCurrentAlignment() != (int)omni::ALIGN_8)
+    if (s.wrCurrentAlignment() != (int)omni::ALIGN_8)
       padding >>= s;
   }
   s.put_char_array((_CORBA_Char*)BaseT::NP_data(),(int)l*elmSize);
@@ -1044,7 +1047,7 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<
   BaseT::length(l);
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
-    if (s.RdMessageCurrentAlignment() != (int)omni::ALIGN_8)
+    if (s.rdCurrentAlignment() != (int)omni::ALIGN_8)
       s.skip(sizeof(_CORBA_ULong));
   }
   s.get_char_array((_CORBA_Char*)BaseT::NP_data(),(int)l*elmSize);
@@ -1217,7 +1220,7 @@ _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSiz
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
     _CORBA_ULong padding = 0;
-    if (s.WrMessageCurrentAlignment() != (int)omni::ALIGN_8)
+    if (s.wrCurrentAlignment() != (int)omni::ALIGN_8)
       padding >>= s;
   }
   s.put_char_array((_CORBA_Char*)BaseT::NP_data(),(int)l*dimension*elmSize);
@@ -1238,7 +1241,7 @@ _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSiz
   BaseT::length(l);
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
-    if (s.RdMessageCurrentAlignment() != (int)omni::ALIGN_8)
+    if (s.rdCurrentAlignment() != (int)omni::ALIGN_8)
       s.skip(sizeof(_CORBA_ULong));
   }
   s.get_char_array((_CORBA_Char*)BaseT::NP_data(),(int)l*dimension*elmSize);
@@ -1345,7 +1348,7 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
     _CORBA_ULong padding = 0;
-    if (s.WrMessageCurrentAlignment() != (int)omni::ALIGN_8)
+    if (s.wrCurrentAlignment() != (int)omni::ALIGN_8)
       padding >>= s;
   }
   s.put_char_array((_CORBA_Char*)BaseT::NP_data(),(int)l*dimension*elmSize);
@@ -1367,7 +1370,7 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
   BaseT::length(l);
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
-    if (s.RdMessageCurrentAlignment() != (int)omni::ALIGN_8)
+    if (s.rdCurrentAlignment() != (int)omni::ALIGN_8)
       s.skip(sizeof(_CORBA_ULong));
   }
   s.get_char_array((_CORBA_Char*)BaseT::NP_data(),(int)l*dimension*elmSize);

@@ -1,4 +1,20 @@
 
+Thu Feb 10 17:58:14 GMT 2000 djr
+================================
+
+- Optimised tcParser::calculateItemSize to use TypeCode alignment info.
+  tcParser::alignedSize now uses the size of the buffer for its
+  calculation if the incoming alignment happens to be 8.
+
+src/lib/omniORB2/dynamic/tcParser.cc
+src/lib/omniORB2/dynamic/tcParser.h
+
+- Renamed NetBufferedStream::Rd/WrMessageCurrentAlignment() to
+  rd/wrCurrentAlignment() to match MemBufferedStream.
+
+include/omniORB3/bufferedStream.h
+
+
 Thu Feb 10 14:06:05 GMT 2000 djr
 ================================
 
