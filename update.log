@@ -1,3 +1,16 @@
+Mon Jun  9 17:52:27 BST 2003 dgrisby
+====================================
+
+- Remove obsolete man pages.
+
+man/man1/obuildtree.1
+man/man1/ols.1
+man/man1/omake.1
+man/man1/opriv.1
+man/man1/oshadow.1
+man/man5/hosts_access.5
+
+
 Mon Jun  9 17:13:57 BST 2003 dgrisby
 ====================================
 
