@@ -70,6 +70,23 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 // Main include file for IDL compiler. Includes the rest of the
 // files defining the different units of the compiler
 
+#if defined(__DECCXX)
+// DEC C++ compiler
+#if __DECCXX_VER >= 60000000
+#define HAS_Cplusplus_Namespace
+#define HAS_Std_Namespace
+#endif
+
+#elif defined(_MSC_VER)
+//  Microsoft Visual C++ compiler
+#if _MSC_VER >= 1000
+#define HAS_Cplusplus_Namespace
+#define HAS_Std_Namespace
+#pragma once
+#endif
+
+#endif
+
 #include	<intlmacros.hh>		// Define macros for intl'ion
 
 #include	<stdlib.h>		// POSIX standard defns
@@ -79,7 +96,16 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #endif
 #include	<ctype.h>		// External functions
 
-#include	<iostream.h>		// Standard IO library
+#ifdef HAS_Std_Namespace
+#include <iostream>
+#include <fstream>
+#else
+#include <iostream.h>
+#include <fstream.h>
+#ifndef std
+#define std
+#endif
+#endif
 
 #include	<sys/types.h>		// POSIX standard types
 
