@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.25  1998/08/15 15:07:08  sll
+ *** empty log message ***
+
  Revision 1.24  1998/08/15 14:22:04  sll
  Remove inline member implementations in _nil_TypeCode and IRObject.
 
@@ -2376,7 +2379,7 @@ typedef _CORBA_Double  Double;
   _CORBA_MODULE_FN void release(NamedValue_ptr);
   _CORBA_MODULE_FN void release(NVList_ptr);
   _CORBA_MODULE_FN void release(Request_ptr);
-  _CORBA_MODULE_FN void inline release(TypeCode_ptr o) {
+  _CORBA_MODULE_FN inline void release(TypeCode_ptr o) {
     if (!CORBA::is_nil(o)) delete o;
   }
   _CORBA_MODULE_FN void release(DynAny_ptr d);
