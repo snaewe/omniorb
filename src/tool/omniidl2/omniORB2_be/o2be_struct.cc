@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.16  1999/07/02 19:15:04  sll
+  Typedef of a typedef of a struct now translates to a C++ typedef of a
+  typedef .
+
   Revision 1.15  1999/06/22 14:56:09  sll
   Correct type casting in any extraction operator
 
@@ -829,11 +833,12 @@ o2be_structure::produce_binary_operators_in_dynskel(std::fstream &s)
 void
 o2be_structure::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
-  IND(s); s << "typedef " << unambiguous_name(tdef)
+  char* tname = o2be_name::narrow_and_produce_unambiguous_name(tdef->base_type(),tdef);
+  IND(s); s << "typedef " << tname
 	    << " " << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << unambiguous_name(tdef)
+  IND(s); s << "typedef " << tname
 	    << "_var " << tdef->uqname() << "_var;\n";
-  IND(s); s << "typedef " << unambiguous_name(tdef)
+  IND(s); s << "typedef " << tname
 	    << "_out " << tdef->uqname() << "_out;\n";
 }
 
