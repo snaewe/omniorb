@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.2  1999/12/08 20:04:52  dpg1
+ long long is broken in gcc with Sparc, and maybe other platforms, so
+ limit it to x86.
+
  Revision 1.1  1999/10/27 14:06:01  dpg1
  *** empty log message ***
 
@@ -173,8 +177,10 @@
 #     define HAS_Cplusplus_Bool
 #  endif
 
+#if defined(__x86__)
 #  define HAS_LongLong
 #  define HAS_LongDouble
+#endif
 
 #elif defined(__DECCXX)
 // DEC C++ compiler
