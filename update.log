@@ -1,3 +1,30 @@
+Tue Jan 18 14:54:30 GMT 2000 dme
+================================
+
+- new DIR_IDLFLAGS, DIR_STUBS_CPPFLAGS make it possible to compile
+  interfaces and stubs that depend on idl from import trees without
+  generating headers and stubs for those imported idls locally.  This is
+  useful when the import tree supplies the headers and stubs itself,
+  usually as part of some library.
+
+- Win32 now uses filename-translating wrappers for omniidl[2].exe, allowing
+  fearless use of "-I" etc.
+- fixed strncpy()-related bug in all Win32 wrappers
+
+mk/afterdir.mk
+mk/beforedir.mk
+mk/win32.mk
+
+src/tool/win32/bccwrapper.c
+src/tool/win32/clwrapper.c
+src/tool/win32/dir.mk
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/tlibwrapper.c
+src/tool/win32/tlinkwrapper.c
+src/tool/win32/oidl2wrapper.c
+src/tool/win32/oidlwrapper.c
+
 
 Fri Jan  7 14:47:08 GMT 2000 djr
 ================================

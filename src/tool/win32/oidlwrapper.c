@@ -1,31 +1,40 @@
 /*
- * clwrapper.c - wrapper around Visual C++'s "CL" program to perform
+ * oidlwrapper.c - wrapper round omniidl to perform
  * file name translation (from unix-like to dos-like names).
  *
  * Both GNUWIN32 and OpenNT file names are supported - the first argument
  * to this program specifies which.
  *
- * Compile this program with "cl clwrapper.c advapi32.lib".
+ * Compile this program with "cl oidlwrapper.c advapi32.lib".
  */
 
 #include <windows.h>
 #include <stdio.h>
 #include <process.h>
 #include <string.h>
+#include <assert.h>
 
+#define WRAPPEREXE "oidlwrapper.exe"
+#define UNWRAPPED  "omniidl"
 #define MAX_MOUNTS 256
 
 void GetGnuwin32Mounts(void);
 void GetOpenNTMounts(void);
+void TranslatePathVar(char *var);
 char *TranslateFileName(char *in, int offset);
 char *EscapeDoubleQuotes(char *in);
 int gnuwin32 = 0;
 int opennt = 0;
+char *dos[MAX_MOUNTS];
+char *unix[MAX_MOUNTS];
+int nmounts;
 
 int main(int argc, char **argv)
 {
   int rc;
   int i;
+  char *newprog;
+  char *tprog;
 
   if (argc > 1 && strcmp(argv[1], "-gnuwin32") == 0) {
     GetGnuwin32Mounts();
@@ -40,25 +49,37 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  TranslatePathVar("PYTHONPATH");
+  printf ("PYTHONPATH=%s\n", getenv("PYTHONPATH"));
+
+  /* Make sure we use the omniidl next to this wrapper rather than
+     a random one on PATH */
+  tprog = TranslateFileName(argv[0], 0);
+  newprog = UNWRAPPED; /* lookup on PATH by default */
+
+  assert (sizeof(WRAPPEREXE) > sizeof(UNWRAPPED));
+
+  if (strlen(tprog) > strlen(WRAPPEREXE)) {
+      char *tail = tprog + strlen(tprog) - strlen(WRAPPEREXE);
+      if (stricmp (tail, WRAPPEREXE) == 0) {
+	  strcpy (tail, UNWRAPPED);
+	  newprog = tprog;
+      }
+  }
+
   argv++;
   argc--;
 
-  argv[0] = "cl";
+  argv[0] = newprog;
 
-  printf("cl");
+  printf(newprog);
 
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
       switch (argv[i][1]) {
 
-      case 'I':
+      case 'I': case 'C':
 	argv[i] = TranslateFileName(argv[i],2);
-	break;
-
-      case 'F':
-	if (argv[i][2] == 'o') {
-	  argv[i] = TranslateFileName(argv[i],3);
-	}
 	break;
 
       default:
@@ -69,19 +90,8 @@ int main(int argc, char **argv)
     } else {
 
       /* just a file argument */
+      argv[i] = TranslateFileName(argv[i],0);
 
-      int len = strlen(argv[i]);
-
-      if ((len >= 4) && (strcmp(&argv[i][len - 3], ".cc") == 0)) {
-	char *tmp = malloc(len + 4);
-	sprintf(tmp, "-Tp%s", argv[i]);
-	argv[i] = TranslateFileName(tmp,3);
-
-      } else {
-
-	argv[i] = TranslateFileName(argv[i],0);
-
-      }
     }
 
     if (strchr(argv[i], '"')) {
@@ -121,10 +131,81 @@ char *EscapeDoubleQuotes(char *in)
   return out;
 }
 
+/*  
+ *  Convert the mixed UNIX/DOS path in environment variable "var" to
+ *  all-DOS conventions.
+ *
+ *  For example, under OpenNT, if PYTHONPATH is
+ *
+ *      //c/foo/bar:c:\some\where;//h/bar/baz:c:\another\dir
+ *
+ *  then TranslatePathVar("PYTHONPATH") updates PYTHONPATH to
+ *
+ *      c:\foo\bar;c:\some\where;h:\bar\baz;c:\another\dir;
+ *
+ *  This allows makefiles to add components to paths unix-wise
+ *  regardless of the conventions used by the previous value.
+ */
+typedef struct pathcomp {
+    struct pathcomp	*next;
+    char		*comp;
+} PathComp;
 
-char *dos[MAX_MOUNTS];
-char *unix[MAX_MOUNTS];
-int nmounts;
+#define NEW(TY)		((TY *) malloc (sizeof(TY)))
+
+void TranslatePathVar (char *var)
+{
+    char	*oldpath = getenv (var);
+    char 	*l, *r, *rhs;
+    PathComp	*newpath = 0;
+    PathComp	**npp = &newpath;
+    PathComp	*c;
+    int		pathlen = strlen (var) + 1; /* "var=" */
+    char	*newvar;
+    char	*nvp;
+    char	tmp;
+
+    if (!oldpath || !strlen (oldpath))
+	return;
+
+    /* Parse the "oldpath" into its components, translating to DOS. */
+    rhs = oldpath + strlen(oldpath);
+    for (l = oldpath; l < rhs; l = r + 1) {
+	/* Skip "r" past single drive letters. */
+	char *sep = l;
+	while ((r = strpbrk (sep, ":;")) && *r == ':' && r == l + 1)
+	    sep = r + 1;
+	if (!r)
+	    r = l + strlen (l);
+
+	assert (oldpath <= l && l < rhs);
+	assert (oldpath <= r && r <= rhs);
+
+	/* "l" and "r" now point to the start and end of a path component.
+	   Append its translation to the "newpath" list. */
+	c = NEW (PathComp);
+	c->next = 0;
+	tmp = *r; *r = 0;
+	c->comp = TranslateFileName (l, 0);
+	*r = tmp;
+	pathlen += strlen (c->comp) + 1; /* "comp;" */
+	*npp = c;
+	npp = &c->next;
+    }
+
+    /* Build the new environment variable "var=comp1;comp2;..;compn;". */
+    newvar = malloc (pathlen + 1); /* allow for NUL */
+    strcpy (newvar, var);
+    strcat (newvar, "=");
+    nvp = newvar;
+    while (newpath) {
+	nvp += strlen (nvp);
+	strcpy (nvp, newpath->comp);
+	strcat (nvp, ";");
+	newpath = newpath->next;
+    }
+    _putenv (newvar);
+}
 
 char *TranslateFileName(char *in, int offset)
 {
@@ -134,7 +215,7 @@ char *TranslateFileName(char *in, int offset)
   for (i = 0; i < nmounts; i++) {
     if (strncmp(unix[i], &in[offset], strlen(unix[i])) == 0) {
       out = malloc(strlen(in) - strlen(unix[i]) + strlen(dos[i]) + 1);
-      strncpy(out, in, offset);
+      strncpy(out, in, offset); /* NB. does NOT nul-terminate "out" */
       strcpy(out + offset, dos[i]);
       strcat(out, &in[offset + strlen(unix[i])]);
       break;
