@@ -30,7 +30,7 @@
 
 #define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB3/CORBA.h>
-#include <bootstrap_i.h>
+#include <initRefs.h>
 #include <exception.h>
 
 
@@ -45,7 +45,7 @@ Object::_get_interface()
   // if that fails to provide an answer should we try to go direct
   // to the repository.
 
-  CORBA::Object_var o(omniInitialReferences::get("InterfaceRepository"));
+  CORBA::Object_var o(omniInitialReferences::resolve("InterfaceRepository"));
   CORBA::Repository_ptr repository = CORBA::Repository::_narrow(o);
 
   if( CORBA::is_nil(repository) )
