@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/23 16:02:58  sll
+  Implement getInterfaceAddress().
+
   Revision 1.1.2.1  2001/08/06 15:47:45  sll
   Added support to use the unix domain socket as the local transport.
 
@@ -49,6 +52,7 @@ class unixTransportImpl : public giopTransportImpl {
   giopAddress*   toAddress(const char* param);
   CORBA::Boolean isValid(const char* param);
   CORBA::Boolean addToIOR(const char* param);
+  const omnivector<const char*>* getInterfaceAddress();
 
  private:
   unixTransportImpl(const unixTransportImpl&);

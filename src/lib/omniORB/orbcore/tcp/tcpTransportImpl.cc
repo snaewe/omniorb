@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/08/23 16:02:58  sll
+  Implement getInterfaceAddress().
+
   Revision 1.1.2.4  2001/07/31 16:16:16  sll
   New transport interface to support the monitoring of active connections.
 
@@ -53,6 +56,13 @@
 #include <tcp/tcpAddress.h>
 #include <tcp/tcpEndpoint.h>
 #include <tcp/tcpTransportImpl.h>
+#include <orbParameters.h>
+
+#if defined(UnixArchitecture)
+#include <sys/ioctl.h>
+#include <net/if.h>
+#endif
+
 #include <omniORB4/linkHacks.h>
 
 OMNI_FORCE_LINK(tcpAddress);
@@ -70,6 +80,13 @@ tcpTransportImpl::tcpTransportImpl() : giopTransportImpl("giop:tcp") {
 
 /////////////////////////////////////////////////////////////////////////
 tcpTransportImpl::~tcpTransportImpl() {
+  omnivector<const char*>::iterator i = ifAddresses.begin();
+  omnivector<const char*>::iterator last = ifAddresses.end();
+  while ( i != last ) {
+    char* p = (char*)(*i);
+    CORBA::string_free(p);
+    i++;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -154,7 +171,114 @@ tcpTransportImpl::addToIOR(const char* param) {
   return 0;
 }
 
+/////////////////////////////////////////////////////////////////////////
+#if   defined(UnixArchitecture)
+static void unix_get_ifinfo(omnivector<const char*>& ifaddrs);
+#elif defined(NTArchitecture)
+static void win32_get_ifinfo(omnivector<const char*>& ifaddrs);
+#endif
 
+/////////////////////////////////////////////////////////////////////////
+void
+tcpTransportImpl::initialise() {
+  if (!ifAddresses.empty()) return;
+
+#if   defined(UnixArchitecture)
+  unix_get_ifinfo(ifAddresses);
+#elif defined(NTArchitecture)
+  win32_get_ifinfo(ifAddresses);
+#endif
+
+}
+
+/////////////////////////////////////////////////////////////////////////
+const omnivector<const char*>*
+tcpTransportImpl::getInterfaceAddress() {
+  return &ifAddresses;
+}
+
+/////////////////////////////////////////////////////////////////////////
 const tcpTransportImpl _the_tcpTransportImpl;
+
+
+/////////////////////////////////////////////////////////////////////////
+#if   defined(UnixArchitecture)
+
+static 
+void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
+
+  SocketHandle_t sock;
+
+  sock = socket(INETSOCKET,SOCK_STREAM,0);
+
+  int lastlen = 0;
+  int len = 100 * sizeof(struct ifreq);
+  struct ifconf ifc;         
+  // struct ifconf and ifreq are defined in net/if.h
+
+  while ( 1 ) {
+    // There is no way to know for sure the buffer is big enough to get
+    // the info for all the interfaces. We work around this by calling
+    // the ioctl 2 times and increases the buffer size in the 2nd call.
+    // If both calls return the info with the same size, we know we have
+    // got all the interfaces.
+    char* buf = (char*) malloc(len);
+    ifc.ifc_len = len;
+    ifc.ifc_buf = buf;
+    if ( ioctl(sock, SIOCGIFCONF, &ifc) < 0 ) {
+      if ( errno != EINVAL || lastlen != 0 ) {
+	if ( omniORB::trace(1) ) {
+	  omniORB::logger log;
+	  log << "Warning: ioctl SIOCGICONF failed. Unable to obtain the list of all interface addresses.\n";
+	  return;
+	}
+      }
+    }
+    else {
+      if ( ifc.ifc_len == lastlen )
+	break; // Success, len has not changed.
+      lastlen = ifc.ifc_len;
+    }
+    len += 10 * sizeof(struct ifreq);
+    free(buf);
+  }
+  close(sock);
+
+  int total = ifc.ifc_len / sizeof(struct ifreq);
+  struct ifreq* ifr = ifc.ifc_req;
+  for (int i = 0; i < total; i++) {
+
+    if ( ifr[i].ifr_addr.sa_family == AF_INET ) {
+      struct sockaddr_in* iaddr = (struct sockaddr_in*)&ifr[i].ifr_addr;
+      CORBA::String_var s;
+      s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+      ifaddrs.push_back(s._retn());
+    }
+  }
+  free(ifc.ifc_buf);
+
+  if ( orbParameters::dumpConfiguration || omniORB::trace(20) ) {
+    omniORB::logger log;
+    omnivector<const char*>::iterator i = ifaddrs.begin();
+    omnivector<const char*>::iterator last = ifaddrs.end();
+    log << "My addresses are: \n";
+    while ( i != last ) {
+      log << "omniORB: " << (const char*)(*i) << "\n";
+      i++;
+    }
+  }
+}
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////
+#if defined(NTArchitecture)
+
+static
+void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
+
+}
+
+#endif
 
 OMNI_NAMESPACE_END(omni)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/08/23 16:02:58  sll
+  Implement getInterfaceAddress().
+
   Revision 1.1.2.5  2001/08/03 17:41:25  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -169,6 +172,12 @@ sslTransportImpl::addToIOR(const char* param) {
     return 1;
   }
   return 0;
+}
+
+/////////////////////////////////////////////////////////////////////////
+const omnivector<const char*>* 
+sslTransportImpl::getInterfaceAddress() {
+  return giopTransportImpl::getInterfaceAddress("giop:tcp");
 }
 
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/23 16:02:58  sll
+  Implement getInterfaceAddress().
+
   Revision 1.1.2.2  2001/07/31 16:16:15  sll
   New transport interface to support the monitoring of active connections.
 
@@ -52,6 +55,8 @@ class tcpTransportImpl : public giopTransportImpl {
   giopAddress*   toAddress(const char* param);
   CORBA::Boolean isValid(const char* param);
   CORBA::Boolean addToIOR(const char* param);
+  const omnivector<const char*>* getInterfaceAddress();
+  void initialise();
 
   static CORBA::Boolean parseAddress(const char* param,
 				     IIOP::Address& address);
@@ -59,6 +64,8 @@ class tcpTransportImpl : public giopTransportImpl {
   // return 0 if the string is not in the valid format.
 
  private:
+  omnivector<const char*> ifAddresses;
+
   tcpTransportImpl(const tcpTransportImpl&);
   tcpTransportImpl& operator=(const tcpTransportImpl&);
 };
