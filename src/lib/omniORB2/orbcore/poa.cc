@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.24  2000/12/05 12:10:30  dpg1
+  Fix bug with ServantLocator postinvoke() when operation name is >32
+  characters.
+
   Revision 1.1.2.23  2000/11/13 12:03:24  djr
   ServantLocator::preinvoke() and ServantActivator::incarnate() did not
   pass SystemExceptions on to the client.
@@ -2538,15 +2542,21 @@ omniOrbPOA::dispatch_to_sl(GIOP_S& giop_s, const CORBA::Octet* key,
   omniLocalIdentity the_id(key, keysize);
   the_id.setServant((PortableServer::Servant) servant, this);
 
+  // If the operation string stored in the GIOP_S is longer than the
+  // GIOP_S's internal buffer, it will be deleted at the end of the
+  // dispatch() call. We must therefore make a copy of it here, to
+  // pass to postinvoke().
+  CORBA::String_var operation(giop_s.operation());
+
   omni::internalLock->lock();
   try {
     the_id.dispatch(giop_s);
   }
   catch(...) {
-    call_postinvoke(sl, oid, giop_s.operation(), cookie, servant);
+    call_postinvoke(sl, oid, operation, cookie, servant);
     throw;
   }
-  call_postinvoke(sl, oid, giop_s.operation(), cookie, servant);
+  call_postinvoke(sl, oid, operation, cookie, servant);
 }
 
 

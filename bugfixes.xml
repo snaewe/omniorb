@@ -8,6 +8,17 @@
 
 <buglist version="3.0.2">
 
+<bug id="11" date="Tue Dec  5 11:57:03 GMT 2000" user="dpg1">
+
+  <summary>Invalid string in postinvoke() with long operation names</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-12/0029.html"/>
+  <text>
+  If the operation name is longer than 32 characters, postinvoke()
+  would be called with an invalid operation name string.
+  </text>
+</bug>
+
 <bug id="10" date="Mon Nov 27 18:48:52 GMT 2000" user="jnw/dpg1">
 
   <summary>Bug with multiply-recursive TypeCode</summary>

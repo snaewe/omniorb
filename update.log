@@ -1,3 +1,16 @@
+Tue Dec  5 11:57:03 GMT 2000 dpg1
+=================================
+
+- Fix bug with ServantLocator postinvoke() when operation name is >32
+  characters.
+
+src/lib/omniORB2/orbcore/poa.cc
+
+- Typo in Solaris gcc makerule: -posix4 instead of -lposix4.
+
+src/lib/omnithread/sharedlib/dir.mk
+
+
 Mon Dec  4 13:44:48 GMT 2000 dpg1
 =================================
 
