@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.5  2004/07/23 10:29:59  dgrisby
+# Completely new, much simpler Any implementation.
+#
 # Revision 1.8.2.4  2004/07/04 23:53:39  dgrisby
 # More ValueType TypeCode and Any support.
 #
@@ -273,14 +276,6 @@ main_include = """\
 #define __@guardname@_EXTERNAL_GUARD__
 #include @filename@
 #endif"""
-
-##
-## tcParser_unionHelper forward declaration
-##
-tcParser_unionHelper = """\
-// Declare helper class for union type @fqname@
-class @private_prefix@_tcParser_unionhelper_@guard_name@;
-"""
 
 ##
 ## Modules
@@ -952,8 +947,6 @@ public:
   void operator>>= (cdrStream&) const;
   void operator<<= (cdrStream&);
 
-  @tcParser_unionHelper@
-
 private:
   @discrimtype@ _pd__d;
   CORBA::Boolean _pd__default;
@@ -1256,6 +1249,12 @@ extern CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
 extern CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
 """
 
+any_exception = """\
+void operator<<=(CORBA::Any& _a, const @fqname@& _s);
+void operator<<=(CORBA::Any& _a, @fqname@* _sp);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
+"""
+
 any_union = """\
 void operator<<=(CORBA::Any& _a, const @fqname@& _s);
 void operator<<=(CORBA::Any& _a, @fqname@* _sp);
@@ -1280,18 +1279,9 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s);
 """
 
 any_sequence = """\
-extern void operator <<= (CORBA::Any& _a, const @fqname@& _s);
-inline void operator <<= (CORBA::Any& _a, @fqname@* _sp) {
-  _a <<= *_sp;
-  delete _sp;
-}
-extern _CORBA_Boolean operator >>= (const CORBA::Any& _a, @fqname@*& _sp);
-extern _CORBA_Boolean operator >>= (const CORBA::Any& _a, const @fqname@*& _sp);
-"""
-
-any_exception = """\
 void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-void operator<<=(CORBA::Any& _a, const @fqname@* _sp);
+void operator<<=(CORBA::Any& _a, @fqname@* _sp);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
 CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
 """
 

@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.4.2.2  2004/07/23 10:29:57  dgrisby
+ Completely new, much simpler Any implementation.
+
  Revision 1.4.2.1  2003/03/23 21:03:59  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -154,7 +157,7 @@ private:  \
 };
 
 
-// This macro applies it's argument to the name of each
+// This macro applies its argument to the name of each
 // of the system exceptions.  It is expected that the
 // argument <doit> will be another macro.
 

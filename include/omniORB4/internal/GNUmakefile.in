@@ -6,7 +6,7 @@ INSTALL=@INSTALL@
 
 INSTALLDIR = $(INSTALLINCDIR)/omniORB4/internal
 
-HEADERS = GIOP_C.h GIOP_S.h SocketCollection.h anonObject.h anyP.h	\
+HEADERS = GIOP_C.h GIOP_S.h SocketCollection.h anonObject.h       	\
           codeSetUtil.h context.h corbaBoa.h corbaOrb.h			\
           deferredRequest.h dynAnyImpl.h dynamicImplementation.h	\
           dynamicLib.h excepthandler.h exceptiondefs.h giopBiDir.h	\

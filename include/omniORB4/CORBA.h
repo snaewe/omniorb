@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.6  2004/07/23 10:29:56  dgrisby
+ Completely new, much simpler Any implementation.
+
  Revision 1.5.2.5  2004/04/02 13:26:25  dgrisby
  Start refactoring TypeCode to support value TypeCodes, start of
  abstract interfaces support.
@@ -329,6 +332,7 @@
 class omniOrbBoaServant;
 class _omni_ValueFactoryManager;
 struct _omni_ValueIds;
+class cdrAnyMemoryStream;
 
 _CORBA_MODULE CORBA
 

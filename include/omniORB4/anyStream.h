@@ -28,8 +28,8 @@
 //    cdrMemoryStream extension used by Anys.
 //
 
-#ifndef __ANYSTREAM_H__
-#define __ANYSTREAM_H__
+#ifndef __OMNI_ANYSTREAM_H__
+#define __OMNI_ANYSTREAM_H__
 
 #include <omniORB4/omniTypedefs.hh>
 
@@ -43,15 +43,15 @@
 #  define _dyn_attr _OMNIORB_NTDLL_IMPORT
 #endif
 
-OMNI_NAMESPACE_BEGIN(omni)
-
 class cdrAnyMemoryStream : public cdrMemoryStream {
 public:
   cdrAnyMemoryStream();
 
-  cdrAnyMemoryStream(const cdrAnyMemoryStream& s);
+  cdrAnyMemoryStream(const cdrAnyMemoryStream& s, CORBA::Boolean read_only=0);
 
-  ~cdrAnyMemoryStream();
+  cdrAnyMemoryStream(void* databuffer, CORBA::Boolean release);
+
+  virtual ~cdrAnyMemoryStream();
 
   cdrAnyMemoryStream& operator=(const cdrMemoryStream&);
 
@@ -83,9 +83,6 @@ private:
   omniTypedefs::ValueBaseSeq_var pd_values;
 };
 
-
-OMNI_NAMESPACE_END(omni)
-
 #undef _dyn_attr
 
-#endif // __ANYSTREAM_H__
+#endif // __OMNI_ANYSTREAM_H__

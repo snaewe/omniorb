@@ -1,3 +1,48 @@
+Fri Jul 23 11:14:43 BST 2004 dgrisby
+====================================
+
+- Completely new, much simpler Any implementation.
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_Any.h
+include/omniORB4/CORBA_Any_vartypes.h
+include/omniORB4/CORBA_Context.h
+include/omniORB4/CORBA_NamedValue.h
+include/omniORB4/GNUmakefile.in
+include/omniORB4/anyStream.h                   -- new
+include/omniORB4/cdrStream.h
+include/omniORB4/minorCode.h
+include/omniORB4/poa.h
+include/omniORB4/poa_enums_defs.h              -- new
+include/omniORB4/poa_enums_operators.h         -- new
+include/omniORB4/tcDescriptor.h                -- deleted
+include/omniORB4/userexception.h
+include/omniORB4/internal/GNUmakefile.in
+include/omniORB4/internal/anyP.h       	       -- deleted
+include/omniORB4/internal/anyStream.h  	       -- deleted
+include/omniORB4/internal/dynAnyImpl.h
+include/omniORB4/internal/tcParser.h
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/anyP.cc                -- deleted
+src/lib/omniORB/dynamic/anyStream.cc
+src/lib/omniORB/dynamic/corbaidldynstub.cc
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/dynException.cc
+src/lib/omniORB/dynamic/irdynstub.cc
+src/lib/omniORB/dynamic/poastub.cc
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/unknownUserExn.cc
+src/lib/omniORB/dynamic/valueType.cc
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/forward.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+
 Mon Jul  5 01:04:09 BST 2004 dgrisby
 ====================================
 

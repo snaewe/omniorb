@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2004/07/23 10:29:56  dgrisby
+  Completely new, much simpler Any implementation.
+
   Revision 1.1.4.1  2003/03/23 21:04:24  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -136,7 +139,7 @@ public:
 
   OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds, _dyn_attr)
 
-    static inline _CORBA_Boolean PR_is_valid(NVList_ptr p ) {
+  static inline _CORBA_Boolean PR_is_valid(NVList_ptr p ) {
     return ((p) ? (p->pd_magic == PR_magic) : 1);
   }
 

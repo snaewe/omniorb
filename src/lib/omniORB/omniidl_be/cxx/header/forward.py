@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.10.2.4  2004/07/23 10:29:59  dgrisby
+# Completely new, much simpler Any implementation.
+#
 # Revision 1.10.2.3  2003/11/06 11:56:56  dgrisby
 # Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 #
@@ -134,17 +137,6 @@ def visitUnion(node):
     for n in node.cases():
         if n.constrType():
             n.caseType().decl().accept(self)
-
-    # Typecode and Any
-    if config.state['Typecode']:
-        name = id.Name(node.scopedName())
-        fqname = name.fullyQualify()
-        guard_name = name.guard()
-
-        stream.out(template.tcParser_unionHelper,
-                   fqname = fqname, guard_name = guard_name,
-                   private_prefix = config.state['Private Prefix'])
-
             
 def visitUnionForward(node):
     pass

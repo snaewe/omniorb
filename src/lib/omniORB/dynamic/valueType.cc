@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2004/07/23 10:29:58  dgrisby
+  Completely new, much simpler Any implementation.
+
   Revision 1.1.2.3  2004/07/04 23:53:37  dgrisby
   More ValueType TypeCode and Any support.
 
@@ -42,8 +45,8 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/valueType.h>
+#include <omniORB4/anyStream.h>
 #include <valueTrackerImpl.h>
-#include <anyStream.h>
 
 //
 // Tag constants
@@ -478,11 +481,12 @@ unmarshalHeaderAndBody(cdrStream&           stream,
     }
     result = _omni_ValueFactoryManager::create_for_unmarshal(targetId,
 							     targetHash);
-
   }
 
   // After all that, did we manage to create a value?
   if (!result) {
+    // *** HERE: if we're unmarshalling a value inside an Any, create
+    // *** an UnknownValue.
     OMNIORB_THROW(MARSHAL, MARSHAL_NoValueFactory,
 		  (CORBA::CompletionStatus)stream.completion());
   }

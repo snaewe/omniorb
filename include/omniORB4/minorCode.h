@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2004/07/23 10:29:56  dgrisby
+  Completely new, much simpler Any implementation.
+
   Revision 1.1.6.2  2003/05/20 16:53:12  dgrisby
   Valuetype marshalling support.
 
@@ -211,6 +214,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_113 OMNIORBMinorCode(113)
 #define OMNIORBMinorCode_114 OMNIORBMinorCode(114)
 #define OMNIORBMinorCode_115 OMNIORBMinorCode(115)
+#define OMNIORBMinorCode_116 OMNIORBMinorCode(116)
 
 #define COMMA ,
 #define DeclareValue(name,value) name = value
@@ -377,7 +381,8 @@ code( BAD_TYPECODE_TypeCodeIsNil     	, OMNIORBMinorCode_71 ) sep \
 code( BAD_TYPECODE_InvalidOperation  	, OMNIORBMinorCode_89 ) sep \
 code( BAD_TYPECODE_UnknownKind          , OMNIORBMinorCode_94 ) sep \
 code( BAD_TYPECODE_UnresolvedRecursiveTC, OMNIORBMinorCode_105 ) sep \
-code( BAD_TYPECODE_InvalidIndirection   , OMNIORBMinorCode_108 )
+code( BAD_TYPECODE_InvalidIndirection   , OMNIORBMinorCode_108 ) sep \
+code( BAD_TYPECODE_NotEquivalent        , OMNIORBMinorCode_116 )
 
 enum BAD_TYPECODE_minor {
   DECLARE_BAD_TYPECODE_minors(DeclareValue,COMMA)  

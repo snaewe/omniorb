@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2004/07/23 10:29:57  dgrisby
+  Completely new, much simpler Any implementation.
+
   Revision 1.4.2.2  2004/02/16 10:10:28  dgrisby
   More valuetype, including value boxes. C++ mapping updates.
 
@@ -109,6 +112,8 @@
 #ifndef __OMNIOBJREF_H__
 #include <omniORB4/omniObjRef.h>
 #endif
+#include <omniORB4/minorCode.h>
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -344,56 +349,8 @@ _CORBA_MODULE_BEG
     REQUEST_PROCESSING_POLICY_ID _init_in_decl_( = 22 );
 
 
-  enum ThreadPolicyValue {
-    ORB_CTRL_MODEL,  // default
-    SINGLE_THREAD_MODEL,
-    MAIN_THREAD_MODEL
-  };
+#include <omniORB4/poa_enums_defs.h>
 
-_CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ThreadPolicyValue;
-
-  enum LifespanPolicyValue {
-    TRANSIENT,  // default
-    PERSISTENT
-  };
-
-  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_LifespanPolicyValue;
-
-  enum IdUniquenessPolicyValue {
-    UNIQUE_ID,  // default
-    MULTIPLE_ID
-  };
-
-  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_IdUniquenessPolicyValue;
-
-  enum IdAssignmentPolicyValue {
-    USER_ID,
-    SYSTEM_ID  // default
-  };
-
-  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_IdAssignmentPolicyValue;
-
-  enum ImplicitActivationPolicyValue {
-    IMPLICIT_ACTIVATION,
-    NO_IMPLICIT_ACTIVATION  // default (but not root poa)
-  };
-
-  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ImplicitActivationPolicyValue;
-
-  enum ServantRetentionPolicyValue {
-    RETAIN,  // default
-    NON_RETAIN
-  };
-
-  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ServantRetentionPolicyValue;
-
-  enum RequestProcessingPolicyValue {
-    USE_ACTIVE_OBJECT_MAP_ONLY,  // default
-    USE_DEFAULT_SERVANT,
-    USE_SERVANT_MANAGER
-  };
-
-  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_RequestProcessingPolicyValue;
 
   OMNIORB_DECLARE_POLICY_OBJECT(ThreadPolicy, THREAD_POLICY_ID)
   OMNIORB_DECLARE_POLICY_OBJECT(LifespanPolicy, LIFESPAN_POLICY_ID)
@@ -510,6 +467,8 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ThreadPolicyValue;
       virtual const char* _NP_repoId(int*) const;
       virtual void _NP_marshal(cdrStream&) const;
     };
+    static _dyn_attr const CORBA::TypeCode_ptr _tc_InvalidPolicy;
+
 
     // POA creation and destruction
 
@@ -821,6 +780,8 @@ _CORBA_MODULE_END  // PortableServer
 
 
 #include <omniORB4/poa_operators.h>
+#include <omniORB4/poa_enums_operators.h>
+
 #include <omniORB4/poa_poa.h>
 // This brings in the skeletons for:
 //  AdapterActivator

@@ -29,23 +29,39 @@
 //
 
 #include <omniORB4/CORBA.h>
-#include <anyStream.h>
+#include <omniORB4/anyStream.h>
 
 OMNI_USING_NAMESPACE(omni)
 
 cdrAnyMemoryStream::cdrAnyMemoryStream() : cdrMemoryStream() {}
 
-cdrAnyMemoryStream::cdrAnyMemoryStream(const cdrAnyMemoryStream& s)
-  : cdrMemoryStream(s, 1)
+cdrAnyMemoryStream::cdrAnyMemoryStream(const cdrAnyMemoryStream& s,
+				       CORBA::Boolean read_only)
+  : cdrMemoryStream(s, read_only)
 {
   cdrAnyMemoryStream* ns = OMNI_CONST_CAST(cdrAnyMemoryStream*, &s);
 
   omniTypedefs::ValueBaseSeq* seq = ns->pd_values.operator->();
 
   if (seq) {
-    pd_values = new omniTypedefs::ValueBaseSeq(seq->length(), seq->length(),
-					       seq->NP_data());
+    if (read_only) {
+      // Use same sequence buffer
+      pd_values = new omniTypedefs::ValueBaseSeq(seq->length(),
+						 seq->length(),
+						 seq->NP_data());
+    }
+    else {
+      // Copy sequence
+      pd_values = new omniTypedefs::ValueBaseSeq(*seq);
+    }
   }
+}
+
+cdrAnyMemoryStream::cdrAnyMemoryStream(void* d, CORBA::Boolean release)
+  : cdrMemoryStream(d)
+{
+  if (release)
+    pd_readonly_and_external_buffer = 0;
 }
 
 cdrAnyMemoryStream& 

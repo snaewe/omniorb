@@ -7,7 +7,6 @@ ORB_SRCS = \
            valueType.cc \
            abstractBase.cc \
            any.cc \
-           anyP.cc \
            anyStream.cc \
            constants.cc \
            context.cc \

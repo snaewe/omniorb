@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.3  2004/07/23 10:29:57  dgrisby
+ Completely new, much simpler Any implementation.
+
  Revision 1.1.4.2  2004/07/04 23:53:35  dgrisby
  More ValueType TypeCode and Any support.
 
@@ -79,7 +82,7 @@
 #define __DYNANYIMPL_H__
 
 #include <typecode.h>
-#include <anyStream.h>
+#include <omniORB4/anyStream.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 

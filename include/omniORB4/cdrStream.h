@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2004/07/23 10:29:56  dgrisby
+  Completely new, much simpler Any implementation.
+
   Revision 1.1.4.5  2004/07/04 23:53:35  dgrisby
   More ValueType TypeCode and Any support.
 
@@ -1084,7 +1087,7 @@ class cdrMemoryStream : public cdrStream {
 public:
   cdrMemoryStream(_CORBA_ULong initialBufsize = 0,
 		  _CORBA_Boolean clearMemory = 0);
-  ~cdrMemoryStream();
+  virtual ~cdrMemoryStream();
 
   void rewindInputPtr();
   // Rewind the input pointer to the beginning of the buffer
@@ -1192,7 +1195,7 @@ public:
     pd_tcs_w = tcs_w;
   }
 
-  ~cdrCountingStream() {}
+  virtual ~cdrCountingStream() {}
 
   size_t total() { return pd_total; }
 

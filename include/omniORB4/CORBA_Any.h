@@ -1,8 +1,9 @@
 // -*- Mode: C++; -*-
 //                            Package   : omniORB
 // CORBA_Any.h                Created on: 2001/08/17
-//                            Author    : Duncan Grisby (dpg1)
+//                            Author    : Duncan Grisby (dgrisby)
 //
+//    Copyright (C) 2004 Apasphere Ltd.
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2004/07/23 10:29:56  dgrisby
+  Completely new, much simpler Any implementation.
+
   Revision 1.1.4.2  2004/02/16 10:10:28  dgrisby
   More valuetype, including value boxes. C++ mapping updates.
 
@@ -68,26 +72,9 @@ public:
 
   Any(const Any& a);
 
-  Any(TypeCode_ptr tc, void* value, Boolean release = 0);
-
   // Marshalling operators
   void operator>>= (cdrStream& s) const;
   void operator<<= (cdrStream& s);
-
-  void* NP_pd() { return pd_ptr; }
-  void* NP_pd() const { return pd_ptr; }
-
-  // omniORB data-only marshalling functions
-  void NP_marshalDataOnly(cdrStream& s) const;
-  void NP_unmarshalDataOnly(cdrStream& s);
-
-
-  // omniORB internal stub support routines
-  void PR_packFrom(TypeCode_ptr newtc, void* tcdesc);
-  Boolean PR_unpackTo(TypeCode_ptr tc, void* tcdesc) const;
-
-  void *PR_getCachedData() const;
-  void PR_setCachedData(void *data, void(*destructor)(void *));
 
   // OMG Insertion operators
   Any& operator=(const Any& a);
@@ -107,10 +94,12 @@ public:
   void operator<<=(LongDouble l);
 #endif
 #endif
-  void operator<<=(const Any& a);   // copying
-  void operator<<=(Any* a);         // non-copying
-  void operator<<=(TypeCode_ptr tc);
-  void operator<<=(Object_ptr obj);
+  void operator<<=(const Any& a);     // copying
+  void operator<<=(Any* a);           // non-copying
+  void operator<<=(TypeCode_ptr tc);  // copying
+  void operator<<=(TypeCode_ptr* tc); // non-copying
+  void operator<<=(Object_ptr obj);   // copying
+  void operator<<=(Object_ptr* obj);  // non-copying
   void operator<<=(const char* s);	
   void operator<<=(const WChar* s);
 
@@ -185,13 +174,10 @@ public:
 #endif
   Boolean operator>>=(const Any*& a) const;
   Boolean operator>>=(Any*& a) const;  // deprecated
-  Boolean operator>>=(Any& a) const;  // pre CORBA-2.3, obsoluted do not use.
+  Boolean operator>>=(Any& a) const;  // pre CORBA-2.3, obsolete; do not use.
   Boolean operator>>=(TypeCode_ptr& tc) const;
   Boolean operator>>=(Object_ptr& obj) const;
   Boolean operator>>=(const char*& s) const;
-#ifndef _NO_ANY_STRING_EXTRACTION_
-  Boolean operator>>=(char*& s) const; // deprecated
-#endif
   Boolean operator>>=(const WChar*& s) const;
 
   struct to_boolean {
@@ -249,9 +235,7 @@ public:
   Boolean operator>>=(to_char c) const;
   Boolean operator>>=(to_wchar wc) const;
   Boolean operator>>=(to_octet o) const;
-#ifndef _NO_ANY_STRING_EXTRACTION_
   Boolean operator>>=(to_string s) const;
-#endif
   Boolean operator>>=(to_wstring s) const;
   Boolean operator>>=(to_fixed f) const;
   Boolean operator>>=(to_object o) const;
@@ -259,17 +243,90 @@ public:
   Boolean operator>>=(to_value v) const;
   Boolean operator>>=(const CORBA::SystemException*& e) const;
 
-  void replace(TypeCode_ptr TCp, void* value, Boolean release = 0);
-
   TypeCode_ptr type() const;
   void type(TypeCode_ptr);
 
+
+  //
+  // Deprecated non-typesafe functions. Do not use.
+  //
+
+  Any(TypeCode_ptr tc, void* value, Boolean release = 0);
+  void replace(TypeCode_ptr TCp, void* value, Boolean release = 0);
   const void* value() const;
+
+
+  //
+  // omniORB data-only marshalling functions
+  //
+
+  void NP_marshalDataOnly(cdrStream& s) const;
+  void NP_unmarshalDataOnly(cdrStream& s);
+
+  //
+  // omniORB internal stub support routines
+  //
+
+  // Functions provided by the stubs
+  typedef void(*pr_marshal_fn)   (cdrStream&, void*);
+  typedef void(*pr_unmarshal_fn) (cdrStream&, void*&);
+  typedef void(*pr_destructor_fn)(void*);
+  
+  inline Boolean PR_equivalent(TypeCode_ptr tc);
+  // True if the given TypeCode is equivalent to the Any's TypeCode.
+
+  void PR_insert(TypeCode_ptr newtc, pr_marshal_fn marshal, void* data);
+  // Insert data into the Any's buffer. Used for simple types.
+
+  void PR_insert(TypeCode_ptr newtc, pr_marshal_fn marshal,
+		 pr_destructor_fn destructor, void* data);
+  // Set data pointer, to be possibly marshalled later. Deallocates
+  // memory buffer and/or data pointer if necessary.
+
+  Boolean PR_extract(TypeCode_ptr     tc,
+		     pr_unmarshal_fn  unmarshal,
+		     void*            data) const;
+  // Extract a simple type from the Any's memory buffer. data is a
+  // pointer to the place in memory to unmarshal to.
+
+  Boolean PR_extract(TypeCode_ptr     tc,
+		     pr_unmarshal_fn  unmarshal,
+		     pr_marshal_fn    marshal,
+		     pr_destructor_fn destructor,
+		     void*&           data) const;
+  // Extract data from the Any if the TypeCode matches. If the data is
+  // already in unmarshalled form, just sets the data pointer to point
+  // to the existing data. Otherwise, unmarshals the value from the
+  // memory buffer and caches it in the Any for future extractions.
+  //
+  // Function is marked const to satisfy standard extraction
+  // interfaces, but it can actually modify the Any.
+
+
+  cdrAnyMemoryStream& PR_streamToRead() const;
+  // Pack Any into a memory stream if necessary, and return it.
+
+  cdrAnyMemoryStream& PR_streamToWrite();
+  // Clear the contents and allocate a memory stream for writing into.
+
+
+  void PR_clearData();
+  // Clear the contents ready to insert a different value.
 
 private:
   void operator<<=(unsigned char);
   Boolean operator>>=(unsigned char&) const;
-  // Not implemented
+  // Not implemented.
 
-  void *pd_ptr;
+  TypeCode_member pd_tc;
+
+  // The Any contents can be stored in marshalled form, or as a
+  // pointer to the unmarshalled data, or both. When stored as a
+  // pointer to the data, the pd_marshal and pd_destructor members are
+  // set. Once one of the pointers has been set, it is never unset
+  // until the Any is cleared or destroyed.
+  cdrAnyMemoryStream* pd_mbuf;
+  void*               pd_data;
+  pr_marshal_fn       pd_marshal;
+  pr_destructor_fn    pd_destructor;
 };

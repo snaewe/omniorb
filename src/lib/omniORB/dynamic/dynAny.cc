@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.13.2.3  2004/07/23 10:29:58  dgrisby
+   Completely new, much simpler Any implementation.
+
    Revision 1.13.2.2  2004/07/04 23:53:36  dgrisby
    More ValueType TypeCode and Any support.
 
@@ -145,7 +148,6 @@
 
 #include <dynAnyImpl.h>
 #include <tcParser.h>
-#include <anyP.h>
 #include <exceptiondefs.h>
 #include <initialiser.h>
 #include <initRefs.h>
@@ -259,8 +261,7 @@ DynAnyImplBase::from_any(const CORBA::Any& value)
   CORBA::TypeCode_var value_tc = value.type();
   if( !value_tc->equivalent(tc()) )  throw DynamicAny::DynAny::TypeMismatch();
 
-  cdrAnyMemoryStream buf(((AnyP*)value.NP_pd())->theMemoryStream());
-
+  cdrAnyMemoryStream buf(value.PR_streamToRead(), 1);
   if( !copy_from(buf) )  throw DynamicAny::DynAny::InvalidValue();
 }
 
@@ -269,7 +270,7 @@ DynAnyImplBase::to_any()
 {
   CHECK_NOT_DESTROYED;
   CORBA::Any* a = new CORBA::Any(tc(), 0);
-  cdrAnyMemoryStream& buf = ((AnyP*)a->NP_pd())->getWRableMemoryStream();
+  cdrAnyMemoryStream& buf = a->PR_streamToWrite();
 
   // <buf> should already be rewound.
 
@@ -2325,11 +2326,11 @@ DynAnyConstrBase::component_to_any(unsigned i, CORBA::Any& a)
   a.replace(nthComponentTC(i), 0);
 
   if( i < pd_n_in_buf ) {
-    AnyP* anyp = (AnyP*)a.NP_pd();
     if( pd_read_index != (int)i )  seekTo(i);
     try {
-      tcParser::copyStreamToStream(anyp->getTC(), pd_buf,
-				   anyp->getWRableMemoryStream());
+      CORBA::TypeCode_var tc = a.type();
+      tcParser::copyStreamToStream(tc, pd_buf,
+				   a.PR_streamToWrite());
     }
     catch(CORBA::MARSHAL&) {
       throw omniORB::fatalException(__FILE__,__LINE__,
@@ -2339,7 +2340,7 @@ DynAnyConstrBase::component_to_any(unsigned i, CORBA::Any& a)
     return 1;
   }
   else if( i >= pd_first_in_comp ) {
-    cdrAnyMemoryStream& buf = ((AnyP*)a.NP_pd())->getWRableMemoryStream();
+    cdrAnyMemoryStream& buf = a.PR_streamToWrite();
     return pd_components[i]->copy_to(buf);
   }
   else
@@ -2354,10 +2355,10 @@ DynAnyConstrBase::component_from_any(unsigned i, const CORBA::Any& a)
   if( !tc->equivalent(nthComponentTC(i)) )  return 0;
 
   if( canAppendComponent(i) ) {
-    AnyP* anyp = (AnyP*)a.NP_pd();
     try {
-      cdrAnyMemoryStream src(anyp->theMemoryStream());
-      tcParser::copyStreamToMemStream_flush(anyp->getTC(), src, pd_buf);
+      CORBA::TypeCode_var tc = a.type();
+      cdrAnyMemoryStream src(a.PR_streamToRead(), 1);
+      tcParser::copyStreamToMemStream_flush(tc, src, pd_buf);
     }
     catch(CORBA::MARSHAL&) {
       // <pd_buf> may have been partly written to, so we can't
@@ -2373,7 +2374,7 @@ DynAnyConstrBase::component_from_any(unsigned i, const CORBA::Any& a)
 
   if( i < pd_first_in_comp )  createComponent(i);
 
-  cdrAnyMemoryStream buf(((AnyP*)a.NP_pd())->theMemoryStream());
+  cdrAnyMemoryStream buf(a.PR_streamToRead(), 1);
   return pd_components[i]->copy_from(buf);
 }
 
