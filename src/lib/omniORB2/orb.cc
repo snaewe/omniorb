@@ -11,9 +11,13 @@
  
 /*
   $Log$
-  Revision 1.7  1997/04/21 10:24:00  ewc
-  Minor cosmetic change.
+  Revision 1.8  1997/04/22 17:31:45  sll
+  - Use getRopeAndKey instead of _rope() and objkey().
+  - Added -ORBstrictIIOP command line option.
 
+// Revision 1.7  1997/04/21  10:24:00  ewc
+// Minor cosmetic change.
+//
 // Revision 1.6  1997/03/10  12:10:20  sll
 // - Support for ORB and BOA initialisation arguments.
 // -  Add runtime configurable trace messages.
@@ -397,13 +401,16 @@ else
 IOP::TaggedProfileList *
 omni::objectToIopProfiles(omniObject *obj)
 {
+  omniRopeAndKey rak;
+  obj->getRopeAndKey(rak);
+
   if (obj->is_proxy()) {
     IOP::TaggedProfileList * p = new IOP::TaggedProfileList(1);
     if (!p)
       throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
     try {
-      obj->pd_rope->iopProfile((CORBA::Char *)obj->objkey(),
-			       obj->objkeysize(),
+      obj->pd_rope->iopProfile((CORBA::Char *)rak.key(),
+			       rak.keysize(),
 			       ((IOP::TaggedProfileList &) *p)[0]);
     }	
     catch (...) {
@@ -421,8 +428,8 @@ omni::objectToIopProfiles(omniObject *obj)
       Rope *r;
       while ((r = next())) {
 	p->length(p->length()+1);
-	r->iopProfile((CORBA::Char *)obj->objkey(),
-		      obj->objkeysize(),
+	r->iopProfile((CORBA::Char *)rak.key(),
+		      rak.keysize(),
 		      ((IOP::TaggedProfileList &)*p)[p->length()-1]);
       }
     }
@@ -721,6 +728,29 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	move_args(argc,argv,idx,2);
 	continue;
       }
+
+      // -ORBstrictIIOP
+      if (strcmp(argv[idx],"-ORBstrictIIOP") == 0) {
+	if((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "CORBA::ORB_init failed: missing -ORBstrictIIOP parameter (0 or 1)."
+		 << endl;
+	  }
+	  return 0;
+	}
+	unsigned int v;
+	if (sscanf(argv[idx+1],"%u",&v) != 1) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "CORBA::ORB_init failed: invalid -ORBstrictIIOP parameter."
+		 << endl;
+	  }
+	  return 0;
+	}
+	omniORB::strictIIOP = ((v)?1:0);
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
       
       // Reach here only if the argument in this form: -ORBxxxxx
       // is not recognised.
