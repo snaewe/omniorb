@@ -1,3 +1,18 @@
+Sun Oct 22 01:29:46 BST 2000 djs
+================================
+
+- Bug deleting non-existent exception holder
+
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+
+- Bug in setting the AMI queue length (should be -1 for unbounded)
+
+include/omniORB3/omniORB.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/omniAMI.cc
+src/lib/omniORB2/orbcore/omniORB.cc
+
+
 Tue Oct 10 16:03:03 BST 2000 djs
 ================================
 

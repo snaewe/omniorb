@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.3.2.2  2000/10/22 00:33:53  djs
+  Fixed bug deleting non-existent exception holder valuetype
+  Accidentally set the AMI queue length to 0, rather than -1 (zero length
+  vs unbounded)
+
   Revision 1.3.2.1  2000/09/27 17:13:08  djs
   Struct member renaming
   Added command line options
@@ -91,7 +96,7 @@ CORBA::Boolean           strictIIOP = 1;
 char*                    serverName = 0;
 CORBA::Boolean           tcAliasExpand = 0;
 unsigned int             maxTcpConnectionPerServer = 5;
-unsigned int             AMIMaxQueueSize = 0;
+int                      AMIMaxQueueSize = -1;
 unsigned int             AMIMaxWorkerThreads = 5;
 unsigned int             AMIWorkerTimeout = 30;
 CORBA::Boolean           diiThrowsSysExceptions = 0;
@@ -115,7 +120,7 @@ CORBA::String_var	 omniORB::serverName((const char*) "unknown");
 #endif
 CORBA::Boolean           omniORB::tcAliasExpand = 0;
 unsigned int             omniORB::maxTcpConnectionPerServer = 5;
-unsigned int             omniORB::AMIMaxQueueSize = 0;
+int                      omniORB::AMIMaxQueueSize = -1;
 unsigned int             omniORB::AMIMaxWorkerThreads = 5;
 unsigned int             omniORB::AMIWorkerTimeout = 30;
 CORBA::Boolean           omniORB::diiThrowsSysExceptions = 0;

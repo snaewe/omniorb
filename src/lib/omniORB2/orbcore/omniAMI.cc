@@ -29,6 +29,11 @@
 
 /* 
   $Log$
+  Revision 1.1.2.8  2000/10/22 00:33:52  djs
+  Fixed bug deleting non-existent exception holder valuetype
+  Accidentally set the AMI queue length to 0, rather than -1 (zero length
+  vs unbounded)
+
   Revision 1.1.2.7  2000/10/10 15:07:13  djs
   Improved comments & tracing
   Moved code from header file to here
@@ -236,13 +241,13 @@ void AMI::shutdown(){
 
   // stop anyone else adding things to the queue
   shutting_down = 1;
-
+  AMITRACE("AMI", "Waking all worker threads");
   // wake them all up
   for (unsigned int i = 0; i < nWorkers; i++){
     omniAMICall *empty = NULL;
     queue->enqueue(empty);
   }
-
+  AMITRACE("AMI", "Waiting for workers to complete");
   // wait for them to complete
   while (nWorkers > 0) shutdown_cond.wait();
   

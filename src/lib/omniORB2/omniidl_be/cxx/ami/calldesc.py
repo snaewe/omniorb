@@ -29,6 +29,11 @@
 #
 # $Id$
 # $Log$
+# Revision 1.1.2.8  2000/10/22 00:33:51  djs
+# Fixed bug deleting non-existent exception holder valuetype
+# Accidentally set the AMI queue length to 0, rather than -1 (zero length
+# vs unbounded)
+#
 # Revision 1.1.2.7  2000/10/10 15:07:34  djs
 # Bug in storing the invocation target
 #
@@ -111,7 +116,7 @@ public:
     @delete_sent_arguments@
   }
   virtual void delete_replies(){
-    _pd_holder->_remove_ref();
+    if (_pd_holder) _pd_holder->_remove_ref();
     @delete_replies@
   }
   
