@@ -2,7 +2,7 @@
 #define _QUEUE_H
 
 #include <omnithread.h>
-#include <iostream>
+
 // Queue implementation is a doubly-linked list of Elements supporting
 // the following interface:
 //
