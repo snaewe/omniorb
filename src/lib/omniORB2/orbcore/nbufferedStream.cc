@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.6  1997/05/06 15:24:40  sll
-  Public release.
+  Revision 1.7  1997/12/09 18:34:12  sll
+  Updated to support the new rope and strand interface.
 
+// Revision 1.6  1997/05/06  15:24:40  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -102,46 +105,54 @@ NetBufferedStream::~NetBufferedStream() {
 }
 
 void
-
-NetBufferedStream::get_char_array(CORBA::Char *b,int size) {
+NetBufferedStream::get_char_array(CORBA::Char *b,int size,
+				  CORBA::Boolean startMTU) {
   Strand::sbuf s;
   if (!size) return;
   if (size >= DIRECT_RCV_CUTOFF) {
     ensure_rdlocked();
-    giveback_received();
+    giveback_received(startMTU);
     if (RdMessageSize()) {
       if (size > (int)RdMessageUnRead()) {
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
       }
     }
-
     s.buffer = (void *)b;
     s.size   = size;
-    pd_strand->receive_and_copy(s);
+    pd_strand->receive_and_copy(s,startMTU);
     pd_read += size;
     int newalignment = current_inb_alignment() + size;
     newalignment = newalignment &((int)omni::max_alignment - 1);
     rewind_inb_mkr((newalignment)?newalignment:(int)omni::max_alignment);
   }
   else {
-    char * p = (char *)align_and_get_bytes(omni::ALIGN_1,size);
+    char * p = (char *)align_and_get_bytes(omni::ALIGN_1,size,startMTU);
     memcpy((void *)b,p,size);
   }
   return;
 }
 
 void
-
-NetBufferedStream::put_char_array(const CORBA::Char *b,int size) {
+NetBufferedStream::put_char_array(const CORBA::Char *b,int size,
+				  CORBA::Boolean startMTU,
+				  CORBA::Boolean at_most_once) {
   Strand::sbuf s;
   if (!size) return;
   if (size >= DIRECT_SND_CUTOFF) {
     ensure_wrlocked();
-    giveback_reserved();
+    if (startMTU) {
+      giveback_reserved(1,1);
+    }
+    else {
+      giveback_reserved();
+    }
     if (WrMessageSize()) {
       if (size > (int)WrMessageSpaceLeft()) {
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
       }
+    }
+    if (startMTU) {
+      pd_strand->reserve_and_startMTU(0,1,omni::ALIGN_1,0,at_most_once);
     }
     s.buffer = (void *) b;
     s.size = size;
@@ -152,7 +163,7 @@ NetBufferedStream::put_char_array(const CORBA::Char *b,int size) {
     rewind_outb_mkr((newalignment)?newalignment:(int)omni::max_alignment);
   }
   else {
-    void *p = align_and_put_bytes(omni::ALIGN_1,size);
+    void *p = align_and_put_bytes(omni::ALIGN_1,size,startMTU,at_most_once);
     memcpy(p,(void *)b,size);
   }
   return;
@@ -160,16 +171,16 @@ NetBufferedStream::put_char_array(const CORBA::Char *b,int size) {
 
 
 void
-
-NetBufferedStream::flush() {
-  giveback_reserved(1);
+NetBufferedStream::flush(CORBA::Boolean endMTU) {
+  giveback_reserved(1,endMTU);
   return;
 }
 
 
 void
-
-NetBufferedStream::reserve(size_t minimum) {
+NetBufferedStream::reserve(size_t minimum,
+			   CORBA::Boolean startMTU,
+			   CORBA::Boolean at_most_once) {
   Strand::sbuf b;
 
   ensure_wrlocked();
@@ -194,7 +205,13 @@ NetBufferedStream::reserve(size_t minimum) {
 		   pd_strand->max_reserve_buffer_size());
     }
 
-  b = pd_strand->reserve(bufsize,0,current_outb_alignment());
+  if (startMTU) {
+    b = pd_strand->reserve_and_startMTU(bufsize,0,current_outb_alignment(),
+					0, at_most_once);
+  }
+  else {
+    b = pd_strand->reserve(bufsize,0,current_outb_alignment());
+  }
   pd_outb_mkr = b.buffer;
   pd_outb_end = (void *) ((omni::ptr_arith_t)pd_outb_mkr + b.size);
   pd_written += b.size;
@@ -212,23 +229,27 @@ NetBufferedStream::reserve(size_t minimum) {
 }
 
 void
-
-NetBufferedStream::giveback_reserved(CORBA::Boolean transmit) {
+NetBufferedStream::giveback_reserved(CORBA::Boolean transmit,
+				     CORBA::Boolean endMTU) {
   // Tell the strand we have finished with the previous buffer with
   // so much to spare
   ensure_wrlocked();
   int oldalignment = current_outb_alignment();
 
   pd_strand->giveback_reserved((omni::ptr_arith_t)pd_outb_end - 
-			       (omni::ptr_arith_t)pd_outb_mkr, transmit);
+			       (omni::ptr_arith_t)pd_outb_mkr,transmit,endMTU);
   pd_written = WrMessageAlreadyWritten();
-  rewind_outb_mkr(oldalignment);
+  if (endMTU) {
+    rewind_outb_mkr((int)omni::max_alignment);
+  }
+  else {
+    rewind_outb_mkr(oldalignment);
+  }
   return;
 }
 
 void
-
-NetBufferedStream::receive(size_t minimum) {
+NetBufferedStream::receive(size_t minimum,CORBA::Boolean startMTU) {
   Strand::sbuf b;
 
   ensure_rdlocked();
@@ -263,7 +284,7 @@ NetBufferedStream::receive(size_t minimum) {
 #endif
     }
 
-  b = pd_strand->receive(bufsize,0,current_inb_alignment());
+  b = pd_strand->receive(bufsize,0,current_inb_alignment(),startMTU);
   pd_inb_mkr = b.buffer;
   pd_inb_end = (void *) ((omni::ptr_arith_t)pd_inb_mkr + b.size);
   pd_read += b.size;
@@ -281,8 +302,7 @@ NetBufferedStream::receive(size_t minimum) {
 }
 
 void
-
-NetBufferedStream::giveback_received() {
+NetBufferedStream::giveback_received(CORBA::Boolean startMTU) {
   // Return any leftovers.
 
   ensure_rdlocked();
@@ -291,33 +311,34 @@ NetBufferedStream::giveback_received() {
   pd_strand->giveback_received((omni::ptr_arith_t)pd_inb_end -
 			       (omni::ptr_arith_t)pd_inb_mkr);
   pd_read = RdMessageAlreadyRead();
-  rewind_inb_mkr(oldalignment);
+  if (startMTU) {
+    rewind_inb_mkr((int)omni::max_alignment);
+  }
+  else {
+    rewind_inb_mkr(oldalignment);
+  }
   return;
 }
 
 void
-
 NetBufferedStream::rewind_inb_mkr(int oldalignment) {
   pd_inb_end = pd_inb_mkr = (void *) ((omni::ptr_arith_t) oldalignment);
   return;
 }
 
 void
-
 NetBufferedStream::rewind_outb_mkr(int oldalignment) {
   pd_outb_end = pd_outb_mkr = (void *)((omni::ptr_arith_t) oldalignment);
   return;
 }
 
 int
-
 NetBufferedStream::current_outb_alignment() const {
   int align = (omni::ptr_arith_t)pd_outb_mkr & ((int)omni::max_alignment - 1);
   return ((align) ? align : (int)omni::max_alignment);
 }
 
 int
-
 NetBufferedStream::current_inb_alignment() const {
   int align = (omni::ptr_arith_t)pd_inb_mkr & ((int)omni::max_alignment - 1);
   return ((align) ? align : (int)omni::max_alignment);
@@ -325,7 +346,6 @@ NetBufferedStream::current_inb_alignment() const {
 
 
 void
-
 NetBufferedStream::ensure_rdlocked() {
   if (!pd_RdLock)
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -334,7 +354,6 @@ NetBufferedStream::ensure_rdlocked() {
 }
 
 void
-
 NetBufferedStream::ensure_wrlocked() {
   if (!pd_WrLock)
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -345,7 +364,6 @@ NetBufferedStream::ensure_wrlocked() {
 
 
 void
-
 NetBufferedStream::RdLock() {
   if (!pd_RdLock) {
     Strand_Sync::RdLock();
@@ -356,7 +374,6 @@ NetBufferedStream::RdLock() {
 }
 
 void
-
 NetBufferedStream::RdUnlock() {
   if (pd_RdLock) {
     giveback_received();
@@ -367,7 +384,6 @@ NetBufferedStream::RdUnlock() {
 }
 
 void
-
 NetBufferedStream::WrLock() {
   if (!pd_WrLock) {
     Strand_Sync::WrLock();
@@ -378,7 +394,6 @@ NetBufferedStream::WrLock() {
 }
 
 void
-
 NetBufferedStream::WrUnlock() {
   if (pd_WrLock) {
     giveback_reserved();
@@ -389,58 +404,60 @@ NetBufferedStream::WrUnlock() {
 }
 
 void
-
-NetBufferedStream::skip(CORBA::ULong size)
+NetBufferedStream::skip(CORBA::ULong size,CORBA::Boolean startMTU)
 {
   ensure_rdlocked();
 
-  // Check that we do not skip beyond the current message boundary
-  size_t m = RdMessageUnRead();
-  if (m && m < size)
-    // Error, try to skip more bytes than the message size limit
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  
-  while (size)
-    {
-      size_t nbytes = size;
-      if (nbytes > pd_strand->max_receive_buffer_size())
-	nbytes = pd_strand->max_receive_buffer_size();
-      (void) align_and_get_bytes(omni::ALIGN_1,nbytes);
-      size -= nbytes;
-    }
+  if (!startMTU) {
+    // Check that we do not skip beyond the current message boundary
+    size_t m = RdMessageUnRead();
+    if (m && m < size)
+      // Error, try to skip more bytes than the message size limit
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  }
+
+  giveback_received();
+  // We know that giveback_received() calls pd_strand->giveback_received() as
+  // well as reset our internal pointers. It is therefore save to call
+  // the skip function of the strand instread of using align_and_get_bytes
+  // to skip through the bytes.
+  pd_strand->skip(size,startMTU);
+  // Don't forget to update the internal pointers to the same alignment as it
+  // would be after skipping through <size> bytes. Also make sure that <size>
+  // bytes is added the value returned by RdMessageAlreadyRead().
+  int newalignment = current_inb_alignment() + size;
+  newalignment = newalignment & ((int)omni::max_alignment - 1);
+  rewind_inb_mkr((newalignment)? newalignment : (int)omni::max_alignment);
+  pd_read += size;
+
   return;
 }
 
 size_t
-
 NetBufferedStream::WrMessageAlreadyWritten() const
 {
   return (pd_written - ((omni::ptr_arith_t)pd_outb_end - (omni::ptr_arith_t)pd_outb_mkr));
 }
 
 size_t
-
 NetBufferedStream::WrMessageSpaceLeft() const
 {
   return ((WrMessageSize())?(WrMessageSize()-WrMessageAlreadyWritten()) : 0);
 }
 
 size_t
-
 NetBufferedStream::RdMessageAlreadyRead() const
 {
   return (pd_read - ((omni::ptr_arith_t)pd_inb_end - (omni::ptr_arith_t)pd_inb_mkr));
 }
 
 size_t
-
 NetBufferedStream::RdMessageUnRead() const
 {
   return ((RdMessageSize()) ? (RdMessageSize() - RdMessageAlreadyRead()) : 0);
 }
 
 void
-
 NetBufferedStream::WrMessageSize(size_t msgsize)
 {
   giveback_reserved();
@@ -450,7 +467,6 @@ NetBufferedStream::WrMessageSize(size_t msgsize)
 }
 
 void
-
 NetBufferedStream::RdMessageSize(size_t msgsize,CORBA::Boolean byteorder)
 {
   giveback_received();
