@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2000/05/24 17:11:18  dpg1
+  Comments clarified.
+
   Revision 1.1.2.7  2000/03/07 18:07:32  djr
   Fixed user-exceptions when can't catch by base class.
 
@@ -180,12 +183,13 @@ _CORBA_MODULE_BEG
   // be well behaved. Any messages that have garbage at the end will   //
   // be rejected.                                                      //
   //                                                                   //
-  // The default value of this flag is zero and the ORB would silently //
-  // skip the unread part. The problem with this behaviour is that the //
-  // header message size may actually be garbage, caused by a bug      //
-  // in the sender's code. The receiving thread may forever block on   //
-  // the strand as it tries to read more data from it. In this case the//
-  // sender won't send anymore as it thinks it has marshalled in all   //
+  // The default value of this flag is true, so invalid messages are   //
+  // rejected. If you set it to zero, the ORB will silently skip the   //
+  // unread part. The problem with this behaviour is that the header   //
+  // message size may actually be garbage, caused by a bug in the      //
+  // sender's code. The receiving thread may forever block on the      //
+  // strand as it tries to read more data from it. In this case the    //
+  // sender won't send any more as it thinks it has marshalled in all  //
   // the data.							       //
   _CORBA_MODULE_VAR _core_attr CORBA::Boolean   strictIIOP;            //
   //                                                                   //
