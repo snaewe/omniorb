@@ -1,3 +1,63 @@
+Thu Jun 22 11:22:01 BST 2000 dpg1
+=================================
+
+- Transport code now throws omniConnectionBroken exception rather than
+  CORBA::COMM_FAILURE when things go wrong. This allows the invocation
+  code to distinguish between transport problems and COMM_FAILURES
+  propagated from the server side.
+
+- exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
+src/lib/omniORB2/exception.h       -- deleted
+src/lib/omniORB2/exceptiondefs.h   -- new
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/orbcore/exceptn.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/remoteIdentity.cc
+src/lib/omniORB2/orbcore/strand.cc
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+- #includes changed to reflect the renaming of exception.h
+
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/contextList.cc
+src/lib/omniORB2/dynamic/dynAny.cc
+src/lib/omniORB2/dynamic/dynException.cc
+src/lib/omniORB2/dynamic/dynamicImplementation.cc
+src/lib/omniORB2/dynamic/environment.cc
+src/lib/omniORB2/dynamic/exceptionList.cc
+src/lib/omniORB2/dynamic/ir.cc
+src/lib/omniORB2/dynamic/namedValue.cc
+src/lib/omniORB2/dynamic/nvList.cc
+src/lib/omniORB2/dynamic/serverRequest.cc
+src/lib/omniORB2/dynamic/typecode.h
+src/lib/omniORB2/orbcore/callDescriptor.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/corbaString.cc
+src/lib/omniORB2/orbcore/dynamicLib.cc
+src/lib/omniORB2/orbcore/exception.cc
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/initRefs.cc
+src/lib/omniORB2/orbcore/ior.cc
+src/lib/omniORB2/orbcore/localIdentity.cc
+src/lib/omniORB2/orbcore/mbufferedStream.cc
+src/lib/omniORB2/orbcore/nbufferedStream.cc
+src/lib/omniORB2/orbcore/objectAdapter.cc
+src/lib/omniORB2/orbcore/omniInternal.cc
+src/lib/omniORB2/orbcore/omniORB.cc
+src/lib/omniORB2/orbcore/omniObjRef.cc
+src/lib/omniORB2/orbcore/omniServant.cc
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poamanager.cc
+src/lib/omniORB2/orbcore/portableserver.cc
+src/lib/omniORB2/orbcore/relStream.cc
+src/lib/omniORB2/orbcore/tcpSocket.cc
+src/lib/omniORB2/orbcore/uri.cc
+
 
 Thu Jun 22 09:59:43 BST 2000 djr
 ================================
