@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.8.2.9  2002/01/15 16:38:13  dpg1
+  On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
   Revision 1.8.2.8  2002/01/09 11:39:23  dpg1
   New omniORB::setLogFunction() function.
 
@@ -403,7 +407,7 @@ omniORB::logf(const char* fmt ...)
     char* obuf = oinline;
     int   obufsize = INLINE_BUF_SIZE * 4;
     int   nchars;
-#ifdef HAS_snprintf
+#ifdef HAVE_SNPRINTF
     while (1) {
       nchars = vsnprintf(obuf, obufsize, buf, args);
       if (nchars > -1 && nchars < obufsize)

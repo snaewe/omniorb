@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.4  2002/01/15 16:38:14  dpg1
+// On the road to autoconf. Dependencies refactored, configure.ac
+// written. No makefiles yet.
+//
 // Revision 1.4.2.3  2001/06/08 17:12:24  dpg1
 // Merge all the bug fixes from omni3_develop.
 //
@@ -56,11 +60,11 @@
 
 // As usual, Windows manages to be different...
 #ifdef __WIN32__
-#define DLL_EXPORT _declspec(dllexport)
-#define strcasecmp(X,Y) stricmp(X,Y)
+#  define DLL_EXPORT _declspec(dllexport)
+#  define strcasecmp(X,Y) stricmp(X,Y)
 #else
-#define DLL_EXPORT
-#include <strings.h>
+#  define DLL_EXPORT
+#  include <strings.h>
 #endif
 
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.19.2.6  2002/01/15 16:38:13  dpg1
+  On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
   Revision 1.19.2.5  2001/06/13 20:13:15  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -100,8 +104,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#if defined(_HAS_NOT_GOT_strcasecmp) || defined(_HAS_NOT_GOT_strncasecmp)
-#include <ctype.h>  //  for toupper and tolower.
+#if !defined(HAVE_STRCASECMP) || !defined(HAVE_STRNCASECMP)
+#  include <ctype.h>  //  for toupper and tolower.
 #endif
 
 #include "libcWrapper.h"
@@ -384,7 +388,7 @@ int LibcWrapper::isipaddr(const char* hname)
 OMNI_NAMESPACE_END(omni)
 
 
-#ifdef _HAS_NOT_GOT_strcasecmp
+#ifndef HAVE_STRCASECMP
 int
 strcasecmp(const char *s1, const char *s2)
 {
@@ -398,7 +402,7 @@ strcasecmp(const char *s1, const char *s2)
 #endif
 
 
-#ifdef _HAS_NOT_GOT_strncasecmp
+#ifndef HAVE_STRNCASECMP
 int
 strncasecmp(const char *s1, const char *s2, size_t n)
 {

@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.3  2002/01/15 16:38:14  dpg1
+// On the road to autoconf. Dependencies refactored, configure.ac
+// written. No makefiles yet.
+//
 // Revision 1.4.2.2  2000/10/27 16:31:09  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -50,23 +54,26 @@
 #include <math.h>
 #include <idlutil.h>
 
-#if defined(__linux__)
+#ifdef HAVE_NAN_H
+#  include <nan.h>
+#endif
+
+#if defined(HAVE_ISINF) && defined(HAVE_ISINFF) && (defined(HAVE_ISINFL) || !defined(HAS_LongDouble))
+
+inline IDL_Boolean IdlFPOverflow(IDL_Double f) {
+  return isinf(f) || isnan(f);
+}
 
 inline IDL_Boolean IdlFPOverflow(IDL_Float f) {
   return isinff(f) || isnanf(f);
 }
-inline IDL_Boolean IdlFPOverflow(IDL_Double f) {
-  return isinf(f) || isnan(f);
-}
-#ifdef HAS_LongDouble
+#  ifdef HAS_LongDouble
 inline IDL_Boolean IdlFPOverflow(IDL_LongDouble f) {
   return isinfl(f) || isnanl(f);
 }
-#endif
+#  endif
 
-#elif defined(__sunos__)
-
-#include <nan.h>
+#elif defined(HAVE_ISNANORINF)
 
 inline IDL_Boolean IdlFPOverflow(IDL_Float f) {
   double d = f;

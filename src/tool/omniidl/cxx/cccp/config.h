@@ -1,3 +1,5 @@
+#ifdef OMNI_CONFIG_TRADITIONAL
+
 #if defined(__linux__)
 #include "config-linux.h"
 
@@ -38,6 +40,11 @@
 #error "You must create a cccp config file for your platform"
 
 #endif
+
+#else // autoconf config
+#  include <omniconfig.h>
+#endif
+
 
 #define BITS_PER_UNIT SIZEOF_UNSIGNED_CHAR
 #define BITS_PER_WORD SIZEOF_INT

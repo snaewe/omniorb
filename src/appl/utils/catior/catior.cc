@@ -26,11 +26,12 @@
 
 #include <iostream.h>
 #include <stdlib.h>
-#ifndef __WIN32__
-#include <unistd.h>
-#endif
 
 #include <omniORB4/CORBA.h>
+
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
@@ -58,15 +59,18 @@ static void usage(char* progname)
 }
 
 
-#if defined(__WIN32__) || defined(__VMS) && __VMS_VER < 60200000
+#ifdef HAVE_GETOPT
+
+extern char* optarg;
+extern int optind;
+
+#else
 
 // WIN32 doesn't have an implementation of getopt() -
 // supply a getopt() for this program:
 
 char* optarg;
 int optind = 1;
-
-
 
 int
 getopt(int num_args, char* const* args, const char* optstring)
@@ -119,7 +123,7 @@ getopt(int num_args, char* const* args, const char* optstring)
   return '?';
 }
 
-#endif
+#endif  // !HAVE_GETOPT
 
 
 #define POA_NAME_SEP            '\xff'
@@ -265,12 +269,6 @@ print_tagged_components(IOP::MultipleComponentProfile& components)
     } while (q);
   }
 }
-
-#if !defined(__WIN32__)
-extern char* optarg;
-extern int optind;
-#endif
-
 
 static
 void

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2002/01/15 16:38:14  dpg1
+  On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
   Revision 1.1.2.4  2001/11/28 20:33:43  dpg1
   Minor Unix transport bugs.
 
@@ -67,7 +71,7 @@ unixConnection::Send(void* buf, size_t sz,
 
 #ifdef __VMS
   // OpenVMS socket library cannot handle more than 64K buffer.
-  // Does OpenVMS has unix socket???
+  // Does OpenVMS have unix socket???
   if (sz > 65535) sz = 65536-8;
 #endif
 

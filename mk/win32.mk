@@ -123,6 +123,7 @@ endef
 
 define VeryCleanRule
 $(RM) *.d
+$(RM) *.pyc
 $(RM) $(CORBA_STUB_FILES)
 endef
 

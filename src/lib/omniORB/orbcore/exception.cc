@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.10.2.8  2002/01/15 16:38:13  dpg1
+  On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
   Revision 1.10.2.7  2001/09/20 15:10:47  sll
   Default Transient Handler now checks for the minor code
   TRANSIENT_FailedOnForwarded and do a retry.
@@ -309,7 +313,7 @@ static int exHandlersTableSize = 103;
 
 
 #ifdef EXHANDLER_HASH
-#undef EXHANDLER_HASH
+#  undef EXHANDLER_HASH
 #endif
 
 #define EXHANDLER_HASH(p) ((omni::ptr_arith_t) p % exHandlersTableSize)

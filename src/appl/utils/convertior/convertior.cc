@@ -26,11 +26,12 @@
 
 #include <iostream.h>
 #include <stdlib.h>
-#ifndef __WIN32__
-#include <unistd.h>
-#endif
 
 #include <omniORB4/CORBA.h>
+
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
@@ -56,8 +57,11 @@ static void usage(char* progname)
 }
 
 
+#ifdef HAVE_GETOPT
+extern char* optarg;
+extern int optind;
 
-#if defined(__WIN32__) || defined(__VMS) && __VMS_VER < 60200000
+#else
 
 // WIN32 doesn't have an implementation of getopt() - 
 // supply a getopt() for this program:
@@ -120,11 +124,6 @@ getopt(int num_args, char* const* args, const char* optstring)
 
 #endif
 
-
-#if !defined(__WIN32__)
-extern char* optarg;
-extern int optind;
-#endif
 
 
 int main(int argc, char* argv[])

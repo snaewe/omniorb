@@ -31,8 +31,8 @@
 #include <iostream.h>
 #include <fcntl.h>
 #if defined(__VMS) && __VMS_VER < 70000000
-#include <omniVMS/unlink.hxx>
-#include <omniVms/utsname.hxx>
+#  include <omniVMS/unlink.hxx>
+#  include <omniVms/utsname.hxx>
 #endif
 #include <NamingContext_i.h>
 #include <ObjectBinding.h>
@@ -41,48 +41,38 @@
 #include <iomanip.h>
 
 #ifdef __WIN32__
-
-#include <io.h>
-#include <winbase.h>
-
-#define stat(x,y) _stat(x,y)
-#define unlink(x) _unlink(x)
-
+#  include <io.h>
+#  include <winbase.h>
+#  define stat(x,y) _stat(x,y)
+#  define unlink(x) _unlink(x)
 #else
-
-#include <unistd.h>
-#include <sys/utsname.h>
-
+#  include <unistd.h>
+#  include <sys/utsname.h>
 #endif
 
 #if defined(__nextstep__)
-#include <libc.h>
-#include <sys/param.h>
-#endif
-
-#if defined(__nextstep__)
-#include <sys/param.h>
+#  include <libc.h>
+#  include <sys/param.h>
 #endif
 
 #ifndef O_SYNC
-#ifdef  O_FSYNC              // FreeBSD 3.2 does not have O_SYNC???
-#define O_SYNC O_FSYNC
-#endif
+#  ifdef  O_FSYNC              // FreeBSD 3.2 does not have O_SYNC???
+#    define O_SYNC O_FSYNC
+#  endif
 #endif
 
 #if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
-#define USE_STREAM_OPEN
-#define OPEN(name,mode,perm) open(name,mode,perm)
+#  define USE_STREAM_OPEN
+#  define OPEN(name,mode,perm) open(name,mode,perm)
 #elif defined(__KCC)
-#define USE_STREAM_OPEN
-#define OPEN(name,mode,perm) open(name,mode)
+#  define USE_STREAM_OPEN
+#  define OPEN(name,mode,perm) open(name,mode)
 #elif defined(__GNUG__) && __GNUG__ >= 3
-#define USE_STREAM_OPEN
-#define OPEN(name,mode,perm) open(name,mode)
+#  define USE_STREAM_OPEN
+#  define OPEN(name,mode,perm) open(name,mode)
 #endif
 
-#ifdef _NO_STRDUP
-
+#ifndef HAVE_STRDUP
 
 // we have no strdup
 static char *
@@ -95,7 +85,7 @@ strdup (char* str)
     strcpy (newstr, str);
   return newstr;
 }
-#endif  // _NO_STRDUP
+#endif  // not HAVE_STRDUP
 
 
 static
@@ -178,7 +168,7 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
     logdir[strlen(logdir)-1] = '\0';		// strip trailing '/'
   }
 
-#ifndef _USE_GETHOSTNAME
+#ifdef HAVE_UNAME
   struct utsname un;
   if (uname(&un) < 0) {
     cerr << ts.t() << "Error: cannot get the name of this host." << endl;
@@ -189,15 +179,16 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
   char* logname = new char[strlen(logdir) + strlen("/omninames-")
 			   + strlen(un.nodename) + 1];
   sprintf(logname, "%s/omninames-%s", logdir, un.nodename);
-#else
+
+#elif HAVE_GETHOSTNAME
 
   // Apparently on some AIX versions, MAXHOSTNAMELEN is too small (32) to
   // reflect the true size a hostname can be. Check and fix the value.
 #ifndef MAXHOSTNAMELEN
-#define MAXHOSTNAMELEN 256
+#  define MAXHOSTNAMELEN 256
 #elif   MAXHOSTNAMELEN < 64
-#undef  MAXHOSTNAMELEN
-#define MAXHOSTNAMELEN 256
+#  undef  MAXHOSTNAMELEN
+#  define MAXHOSTNAMELEN 256
 #endif
 
   char hostname[MAXHOSTNAMELEN+1];
@@ -210,7 +201,8 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
   char* logname = new char[strlen(logdir) + strlen("/omninames-")
 			   + strlen(hostname) + 1];
   sprintf(logname, "%s/omninames-%s", logdir, hostname);
-#endif // _USE_GETHOSTNAME
+
+#endif // HAVE_UNAME
 #elif defined(__WIN32__)
 
   // Get host name:
@@ -228,7 +220,8 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
   sprintf(logname, "%s\\omninames-%s", logdir, machineName);
   
   delete[] machineName;
-#else
+
+#else // VMS
   char last(
     logdir[strlen(logdir)-1]
   );

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2002/01/15 16:38:14  dpg1
+  On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
   Revision 1.1.2.6  2001/11/28 20:33:43  dpg1
   Minor Unix transport bugs.
 
@@ -69,9 +73,9 @@
 OMNI_EXPORT_LINK_FORCE_SYMBOL(unixEndpoint);
 
 #ifndef AF_LOCAL
-#ifdef  AF_UNIX
-#define AF_LOCAL AF_UNIX
-#endif
+#  ifdef  AF_UNIX
+#    define AF_LOCAL AF_UNIX
+#  endif
 #endif
 
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/01/15 16:38:11  dpg1
+  On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
   Revision 1.1.2.5  2001/12/03 13:39:54  dpg1
   Explicit socket shutdown flag for Windows.
 
@@ -53,6 +57,8 @@
 
 ////////////////////////////////////////////////////////////////////////
 //  Platform feature selection
+
+#define SOCKNAME_SIZE_T OMNI_SOCKNAME_SIZE_T
 
 #define USE_NONBLOCKING_CONNECT
 
@@ -88,20 +94,19 @@
 //
 #if defined(__WIN32__)
 
-#include <sys/types.h>
-#include <libcWrapper.h>
+#  include <sys/types.h>
+#  include <libcWrapper.h>
 
-#define RC_INADDR_NONE     INADDR_NONE
-#define RC_INVALID_SOCKET  INVALID_SOCKET
-#define RC_SOCKET_ERROR    SOCKET_ERROR
-#define INETSOCKET         PF_INET
-#define CLOSESOCKET(sock)  closesocket(sock)
-#define SHUTDOWNSOCKET(sock) ::shutdown(sock,2)
-#define ERRNO              ::WSAGetLastError()
-#define EINPROGRESS        WSAEWOULDBLOCK
-#define RC_EINTR           WSAEINTR
-#define SOCKNAME_SIZE_T    int
-#define NEED_SOCKET_SHUTDOWN_FLAG 1
+#  define RC_INADDR_NONE     INADDR_NONE
+#  define RC_INVALID_SOCKET  INVALID_SOCKET
+#  define RC_SOCKET_ERROR    SOCKET_ERROR
+#  define INETSOCKET         PF_INET
+#  define CLOSESOCKET(sock)  closesocket(sock)
+#  define SHUTDOWNSOCKET(sock) ::shutdown(sock,2)
+#  define ERRNO              ::WSAGetLastError()
+#  define EINPROGRESS        WSAEWOULDBLOCK
+#  define RC_EINTR           WSAEINTR
+#  define NEED_SOCKET_SHUTDOWN_FLAG 1
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -116,67 +121,62 @@ OMNI_NAMESPACE_END(omni)
 ////////////////////////////////////////////////////////////////////////
 //             unix
 //
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <libcWrapper.h>
+#  include <sys/time.h>
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+#  include <arpa/inet.h>
+#  include <unistd.h>
+#  include <sys/types.h>
+#  include <errno.h>
+#  include <libcWrapper.h>
 
-#if defined(USE_POLL)
-#include <poll.h>
-#endif
+#  if defined(USE_POLL)
+#    include <poll.h>
+#  endif
 
-#if !defined(__VMS)
-#include <fcntl.h>
-#endif
+#  if !defined(__VMS)
+#    include <fcntl.h>
+#  endif
 
-#if defined (__uw7__)
-#ifdef shutdown
-#undef shutdown
-#endif
-#endif
+#  if defined (__uw7__)
+#    ifdef shutdown
+#      undef shutdown
+#    endif
+#  endif
 
-#if defined(__VMS) && defined(USE_tcpSocketVaxRoutines)
-#include "tcpSocketVaxRoutines.h"
-#undef accept
-#undef recv
-#undef send
-#define accept(a,b,c) tcpSocketVaxAccept(a,b,c)
-#define recv(a,b,c,d) tcpSocketVaxRecv(a,b,c,d)
-#define send(a,b,c,d) tcpSocketVaxSend(a,b,c,d)
-#endif
+#  if defined(__VMS) && defined(USE_tcpSocketVaxRoutines)
+#    include "tcpSocketVaxRoutines.h"
+#    undef accept
+#    undef recv
+#    undef send
+#    define accept(a,b,c) tcpSocketVaxAccept(a,b,c)
+#    define recv(a,b,c,d) tcpSocketVaxRecv(a,b,c,d)
+#    define send(a,b,c,d) tcpSocketVaxSend(a,b,c,d)
+#  endif
 
-#ifdef __rtems__
+#  ifdef __rtems__
 extern "C" int select (int,fd_set*,fd_set*,fd_set*,struct timeval *);
-#endif
+#  endif
 
-#define RC_INADDR_NONE     ((CORBA::ULong)-1)
-#define RC_INVALID_SOCKET  (-1)
-#define RC_SOCKET_ERROR    (-1)
-#define INETSOCKET         AF_INET
-#define CLOSESOCKET(sock)   close(sock)
-#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
-#define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
-#elif defined(__osf1__) && defined(__alpha__)
-#define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
-#else
-  // XXX none of the above, calling shutdown() may not have the
-  // desired effect.
-#define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
-#endif
-#define ERRNO              errno
-#define RC_EINTR           EINTR
+#  define RC_INADDR_NONE     ((CORBA::ULong)-1)
+#  define RC_INVALID_SOCKET  (-1)
+#  define RC_SOCKET_ERROR    (-1)
+#  define INETSOCKET         AF_INET
+#  define CLOSESOCKET(sock)   close(sock)
 
-#if (defined(__GLIBC__) && __GLIBC__ >= 2) || (defined(__freebsd__) && __OSVERSION__ >= 4)
-#  define SOCKNAME_SIZE_T  socklen_t
-#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__) || ( defined(__sunos__) && defined(_XPG4_2) )
-#  define SOCKNAME_SIZE_T  size_t
-#else
-#  define SOCKNAME_SIZE_T  int
-# endif
+#  if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#    define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
+#  elif defined(__osf1__) && defined(__alpha__)
+#    define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
+#  else
+     // XXX none of the above, calling shutdown() may not have the
+     // desired effect.
+#    define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
+#  endif
+
+#  define ERRNO              errno
+#  define RC_EINTR           EINTR
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 

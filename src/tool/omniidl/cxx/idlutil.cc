@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.6  2002/01/15 16:38:14  dpg1
+// On the road to autoconf. Dependencies refactored, configure.ac
+// written. No makefiles yet.
+//
 // Revision 1.5.2.5  2001/06/21 11:17:15  sll
 // Added darwin port.
 //
@@ -112,7 +116,7 @@ IDL_WChar* idl_wstrcat(IDL_WChar* a, const IDL_WChar* b)
   return r;
 }
 
-#ifdef NO_STRCASECMP
+#ifndef HAVE_STRCASECMP
 #include <ctype.h>
 
 int strcasecmp(const char* s1, const char* s2)
@@ -152,22 +156,6 @@ idl_strtoul(const char* text, int base)
   return ull;
 }
 
-#  elif defined(__osf1__)
-
-IdlIntLiteral
-idl_strtoul(const char* text, int base)
-{
-  return strtoul(text, 0, base);
-}
-
-#  elif defined(__freebsd__) || defined (__darwin__)
-
-IdlIntLiteral
-idl_strtoul(const char* text, int base)
-{
-  return strtouq(text, 0, base);
-}
-
 #  elif defined(__hpux__)
 
 IdlIntLiteral
@@ -190,12 +178,36 @@ idl_strtoul(const char* text, int base)
   return ull;
 }
 
-#  else
+#  elif defined(HAVE_STRTOUL) && SIZEOF_LONG == 8
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  return strtoul(text, 0, base);
+}
+
+#  elif defined(HAVE_STRTOUQ)
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  return strtouq(text, 0, base);
+}
+
+#  elif defined(HAVE_STRTOULL)
 
 IdlIntLiteral
 idl_strtoul(const char* text, int base)
 {
   return strtoull(text, 0, base);
+}
+
+#  else
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  return strtoul(text, 0, base);
 }
 
 #  endif

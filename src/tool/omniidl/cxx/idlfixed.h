@@ -27,6 +27,10 @@
 //   Implementation of fixed point type
 
 // $Log$
+// Revision 1.1.2.2  2002/01/15 16:38:14  dpg1
+// On the road to autoconf. Dependencies refactored, configure.ac
+// written. No makefiles yet.
+//
 // Revision 1.1.2.1  2001/03/13 10:32:12  dpg1
 // Fixed point support.
 //
@@ -38,7 +42,7 @@
 
 
 #ifndef OMNI_FIXED_DIGITS
-#define OMNI_FIXED_DIGITS 31
+#  define OMNI_FIXED_DIGITS 31
 #endif
 
 

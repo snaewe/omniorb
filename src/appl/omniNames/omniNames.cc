@@ -33,15 +33,15 @@
 #include <NamingContext_i.h>
 
 #ifdef __WIN32__
-#include <io.h>
+#  include <io.h>
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #ifndef O_SYNC
-#ifdef  O_FSYNC              // FreeBSD 3.2 does not have O_SYNC???
-#define O_SYNC O_FSYNC
-#endif
+#  ifdef  O_FSYNC              // FreeBSD 3.2 does not have O_SYNC???
+#    define O_SYNC O_FSYNC
+#  endif
 #endif
 
 // Minimum idle period before we take a checkpoint (15 mins)

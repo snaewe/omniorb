@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.33.2.34  2002/01/15 16:38:12  dpg1
+  On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
   Revision 1.33.2.33  2002/01/09 11:35:22  dpg1
   Remove separate omniAsyncInvoker library to save library overhead.
 
@@ -311,9 +315,9 @@
 #include <orbParameters.h>
 #include <omniIdentity.h>
 
-#ifdef _HAS_SIGNAL
-#include <signal.h>
-#include <errno.h>
+#ifdef HAS_SIGNAL_H
+#  include <signal.h>
+#  include <errno.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -1448,25 +1452,16 @@ public:
 
   void attach() {
 
-#if defined(_HAS_SIGNAL) && !defined(__CIAO__)
-#ifndef _USE_MACH_SIGNAL
-#  ifndef __SINIX__
+#if !defined(__CIAO__)
+# if defined(HAS_SIGACTION)
+
     struct sigaction act;
     sigemptyset(&act.sa_mask);
+#  ifdef HAVE_SIG_IGN
     act.sa_handler = SIG_IGN;
-    act.sa_flags = 0;
-    if (sigaction(SIGPIPE,&act,0) < 0) {
-      if( omniORB::trace(1) ) {
-	omniORB::logger l;
-	l << "WARNING -- ORB_init() cannot install the\n"
-	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
-      }
-    }
 #  else
-    // SINUX
-    struct sigaction act;
-    sigemptyset(&act.sa_mask);
     act.sa_handler = (void (*)())0;
+#  endif
     act.sa_flags = 0;
     if (sigaction(SIGPIPE,&act,0) < 0) {
       if( omniORB::trace(1) ) {
@@ -1475,8 +1470,7 @@ public:
 	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
       }
     }
-#  endif
-#else
+# elif defined(HAS_SIGVEC)
     struct sigvec act;
     act.sv_mask = 0;
     act.sv_handler = SIG_IGN;
@@ -1488,8 +1482,8 @@ public:
 	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
       }
     }
-#endif
-#endif // _HAS_SIGNAL
+# endif // HAVE_SIGACTION
+#endif // __CIAO__
 
     orbAsyncInvoker = new ORBAsyncInvoker(orbParameters::maxServerThreadPoolSize);
     invoker_shutting_down = 0;

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2002/01/15 16:38:14  dpg1
+  On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
   Revision 1.1.2.3  2001/08/23 10:11:15  sll
   Use AF_UNIX if AF_LOCAL is not defined.
 
@@ -53,9 +57,9 @@
 OMNI_EXPORT_LINK_FORCE_SYMBOL(unixAddress);
 
 #ifndef AF_LOCAL
-#ifdef  AF_UNIX
-#define AF_LOCAL AF_UNIX
-#endif
+#  ifdef  AF_UNIX
+#    define AF_LOCAL AF_UNIX
+#  endif
 #endif
 
 OMNI_NAMESPACE_BEGIN(omni)
