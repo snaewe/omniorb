@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/19 20:09:40  djs
+# Added trivial POA interface code
+#
 # Revision 1.1  1999/11/12 17:18:58  djs
 # Struct skeleton code added
 #
@@ -43,10 +46,21 @@ import poa
 
 self = poa
 
+def __init__(stream):
+    poa.stream = stream
+    return poa
+
 # ------------------------------------
 # environment handling functions
 
 self.__environment = name.Environment()
+
+self.__nested = 0
+
+def POA_prefix():
+    if not(self.__nested):
+        return "POA_"
+    return ""
 
 def enter(scope):
     self.__environment = self.__environment.enterScope(scope)
@@ -67,7 +81,14 @@ def visitModule(node):
     name = tyutil.mapID(node.identifier())
     enter(name)
     scope = currentScope()
-    
+
+    for n in node.definitions():
+        nested = self.__nested
+        self.__nested = 1
+        
+        n.accept(self)
+
+        self.__nested = nested
 
     leave()
 
@@ -76,6 +97,11 @@ def visitInterface(node):
     enter(name)
     scope = currentScope()
     
+    stream.out("""\
+@POA_prefix@@name@::~@POA_prefix@@name@() {}""",
+               POA_prefix = POA_prefix(),
+               name = name)
+        
 
     leave()
 
