@@ -58,8 +58,7 @@ ORB_SRCS = \
             cs-16bit.cc \
             cs-8859-1.cc \
             cs-UTF-8.cc \
-            cs-UTF-16.cc \
-            cs-UCS-4.cc
+            cs-UTF-16.cc
 
 NOT_DONE =  \
             firewallProxy.cc \

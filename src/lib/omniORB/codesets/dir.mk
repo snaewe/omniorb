@@ -1,15 +1,16 @@
 # dir.mk for omniORB codesets.
 
 ORB_SRCS = \
-            cs-8859-2.cc \
-            cs-8859-3.cc \
-            cs-8859-4.cc \
-            cs-8859-5.cc \
-            cs-8859-6.cc \
-            cs-8859-7.cc \
-            cs-8859-8.cc \
-            cs-8859-9.cc \
-            cs-8859-10.cc
+            cs-8859-2.cc  \
+            cs-8859-3.cc  \
+            cs-8859-4.cc  \
+            cs-8859-5.cc  \
+            cs-8859-6.cc  \
+            cs-8859-7.cc  \
+            cs-8859-8.cc  \
+            cs-8859-9.cc  \
+            cs-8859-10.cc \
+            cs-UCS-4.cc
 
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
