@@ -23,6 +23,8 @@ if test -z $dir; then
     done`
 fi
 
+(cd $dir; dir=`pwd`)
+
 omnipython=$dir/omnipython
 omniidl=$dir/omniidl.py
 
