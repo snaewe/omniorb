@@ -1,3 +1,13 @@
+Thu Sep 21 15:13:09 BST 2000 sll
+================================
+
+- Added workaround to the unwind exception bug in Sun C++ 5.0 or the later
+  Forte WS C++ 6.0. It seems to work, at least it has no side effect if it
+  doesn't.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
 Thu Sep 21 12:06:06 BST 2000 dpg1
 =================================
 

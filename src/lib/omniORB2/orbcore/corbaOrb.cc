@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.25  2000/09/21 14:22:48  sll
+  Workaround for Sun C++ 5.0 or Forte WS 6.0 compiler bug.
+
   Revision 1.29.6.24  2000/08/30 15:18:44  dpg1
   New environment variable OMNIORB_PRINCIPAL.
 
@@ -299,6 +302,18 @@ CORBA::ORB::_nil()
 const char*
 CORBA::ORB::_PD_repoId = "IDL:omg.org/CORBA/ORB:1.0";
 
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+
+#include <exception.h>
+static void omni_abort()
+{
+  abort();
+}
+
+#endif
+#endif
+
 
 CORBA::ORB_ptr
 CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
@@ -358,6 +373,18 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
   catch (...) {
     OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
+
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+  // Sun C++ 5.0 or Forte C++ 6.0 generated code will segv occasionally
+  // when concurrent threads throw an exception. The stack trace points
+  // to a problem in the exception unwinding. The workaround seems to be
+  // to install explicitly an uncaught exception handler, which is what
+  // we do here.
+  set_terminate(omni_abort);
+#endif
+#endif
+
 
   the_orb = new omniOrbORB(0);
   the_orb->_NP_incrRefCount();

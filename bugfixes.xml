@@ -8,6 +8,20 @@
 
 <buglist>
 
+<bug id="13" date="Tue Sep 21 15:13:05 BST 2000" user="sll">
+
+  <summary>Workaround for the Sun C++ 5.0 or Forte WS 6.0 exception
+  unwinding bug</summary>
+  <reported>Sai-Lai Lo</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-08/0241.html"/>
+  <text>
+   Sun C++ 5.0 or Forte C++ 6.0 generated code will segv occasionally
+   when concurrent threads throw an exception. The stack trace points
+   to a problem in the exception unwinding. The workaround seems to be
+   to install explicitly an uncaught exception handler.
+  </text>
+</bug>
+
 <bug id="12" date="Tue Sep 19 14:50:05 BST 2000" user="djs">
 
   <summary>C++ backend reversed order of includes in .hh file</summary>
