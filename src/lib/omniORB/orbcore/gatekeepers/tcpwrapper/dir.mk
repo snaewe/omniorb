@@ -39,7 +39,8 @@ OBJS = hosts_access.o options.o shell_cmd.o rfc931.o eval.o \
 CXXOBJS = gatekeeper.o
 
 DIR_CPPFLAGS += -I. $(patsubst %,-I%,$(VPATH)) \
-                -I../.. $(patsubst %,-I%/../..,$(VPATH))
+                -I../.. $(patsubst %,-I%/../..,$(VPATH)) \
+                -I../../.. $(patsubst %,-I%/../../..,$(VPATH))
 
 lib = $(patsubst %,$(LibPattern),tcpwrapGK)
 

@@ -2,7 +2,8 @@
 #   Make variables common to all platforms                                  #
 #############################################################################
 
-DIR_CPPFLAGS = -I../.. $(patsubst %,-I%/../..,$(VPATH))
+DIR_CPPFLAGS = -I../../.. $(patsubst %,-I%/../../..,$(VPATH)) \
+               -I../.. $(patsubst %,-I%/../..,$(VPATH))
 DIR_CPPFLAGS += $(CORBA_CPPFLAGS)
 
 CXXSRCS = gatekeeper.cc
@@ -39,7 +40,7 @@ CXXDEBUGFLAGS =
 CXXOPTIONS = $(MSVC_CXXDEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_CXXLINKDEBUGOPTIONS)
 
-DIR_CPPFLAGS += -I./.. -I./../.. 
+DIR_CPPFLAGS += -I./.. -I./../../../.. -I./../../..
 SUBDIRS =
 
 vpath %.cc ..

@@ -74,8 +74,9 @@ OBJS = hosts_access.o options.o shell_cmd.o rfc931.o eval.o \
 
 CXXOBJS = gatekeeper.o
 
-DIR_CPPFLAGS += -I.. $(patsubst %,-I%/.,$(VPATH)) \
-                -I../../.. $(patsubst %,-I%/../..,$(VPATH))
+DIR_CPPFLAGS += -I.. $(patsubst %,-I%,$(VPATH)) \
+                -I../../.. $(patsubst %,-I%/../..,$(VPATH)) \
+                -I../../../.. $(patsubst %,-I%/../../..,$(VPATH))
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
