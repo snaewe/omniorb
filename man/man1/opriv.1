@@ -1,4 +1,4 @@
-.TH opriv 1 "25.08.95" "Olivetti Research Ltd"
+.TH opriv 1 "22.10.96" "Olivetti Research Ltd"
 .SH NAME
 opriv \- utility for dealing with "private" files in an OMNI shadow tree
 .SH SYNOPSIS
@@ -22,8 +22,8 @@ opriv \- utility for dealing with "private" files in an OMNI shadow tree
 
 .SH DESCRIPTION
 
-This command helps you make private copies of files in a shadow tree, track
-differences between your private files and those in the master source tree, and
+This command helps you make private copies of files in your own tree, track
+differences between your private files and those in a "master" source tree, and
 eventually perform a check-in of your private files into the master source
 tree.
 
@@ -33,7 +33,10 @@ are:
 .TP 5
 \fBopriv make\fP \fIfiles ...\fP
 This declares the given files as "private".  A local, writable copy is made of
-any files which are links to the master source tree.
+any files which exist in the master source directory.  It this is the first
+file in the directory to be declared private, then the path of the master
+source directory will be prompted for.  All private files in a given directory
+must share the same master source directory.
 
 .TP
 \fBopriv find\fP \fI[directory]\fP
@@ -68,14 +71,14 @@ find\fP).
 
 .TP
 \fBopriv revert\fP \fIfiles ...\fP
-This reverts from a private file back to having a link to the corresponding
+This removes a private file so that it no longer will override the equivalent
 file in the master source tree.  This is usually used after having performed a
 check-in.  If no arguments are given then it operates on all private files in
 the tree starting at the current directory (i.e. the files which would be
 returned by \fBopriv find\fP).
 
 .SH SEE ALSO
-.BR omkskeleton (1)
+.BR oshadow (1)
 .BR lndir (1)
 
 .SH FILES
