@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.21.6.8  2000/03/07 18:07:34  djr
+  Fixed user-exceptions when can't catch by base class.
+
   Revision 1.21.6.7  1999/10/27 17:32:11  djr
   omni::internalLock and objref_rc_lock are now pointers.
 
@@ -615,7 +618,8 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 #undef CATCH_AND_MAYBE_MARSHAL
 
   catch(omniORB::StubUserException& ex) {
-    MaybeMarshalUserException(&ex.ex());
+    MaybeMarshalUserException(ex.ex());
+    delete ex.ex();  // ?? Possible memory leak?
   }
 
 #else

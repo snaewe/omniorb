@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2000/03/07 18:07:32  djr
+  Fixed user-exceptions when can't catch by base class.
+
   Revision 1.1.2.6  2000/03/03 14:29:17  djr
   Improvement to BOA skeletons (less generated code).
 
@@ -832,15 +835,20 @@ private:
     // CORBA::UserException down.  It is needed because
     // gcc 2.7 cannot catch exceptions by base class.
 
-    inline StubUserException(CORBA::UserException* e) : pd_e(e) {}
-    inline ~StubUserException() { delete pd_e; }
+    inline StubUserException(CORBA::Exception* e) : pd_e(e) {}
 
-    inline CORBA::UserException& ex() { return *pd_e; }
+    // inline StubUserException(const StubUserException& e);
+    // inline ~StubUserException() {}
+    // The defaults will do.
+
+
+    inline CORBA::Exception* ex() { return pd_e; }
 
   private:
     StubUserException();
-    StubUserException(const StubUserException&);
     StubUserException& operator=(const StubUserException&);
+
+    CORBA::Exception* pd_e;
   };
 #endif
 
