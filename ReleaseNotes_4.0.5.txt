@@ -11,6 +11,7 @@ New features since omniORB 4.0.4
 
  - Bug fixes.
  - New makedeffile.py script to help build Windows DLLs.
+ - Instructions on packaging stubs into DLLs (chapter 12 in the manual).
  - OpenVMS is supported again.
 
 

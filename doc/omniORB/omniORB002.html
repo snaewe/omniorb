@@ -50,7 +50,7 @@ interface Echo {
 };
 </PRE>
 If you are new to IDL, you can learn about its syntax in Chapter 3 of
-the CORBA 2.6 specification&nbsp;[<A HREF="omniORB012.html#corba26-spec"><CITE>OMG01</CITE></A>]. For the moment, you
+the CORBA 2.6 specification&nbsp;[<A HREF="omniORB013.html#corba26-spec"><CITE>OMG01</CITE></A>]. For the moment, you
 only need to know that the interface consists of a single operation,
 <TT>echoString()</TT>, which takes a string as an input argument and returns
 a copy of the same string.<BR>
@@ -125,7 +125,7 @@ or 4.x, even under the BOA compatibility mode.
 <A NAME="toc8"></A>
 <H2><A NAME="htoc13">2.5</A>&nbsp;&nbsp;A Quick Tour of the C++ stubs</H2>
 The C++ stubs conform to the mapping defined in the CORBA
-specification&nbsp;[<A HREF="omniORB012.html#cxxmapping"><CITE>OMG00a</CITE></A>]. It is important to understand the
+specification&nbsp;[<A HREF="omniORB013.html#cxxmapping"><CITE>OMG03</CITE></A>]. It is important to understand the
 mapping before you start writing any serious CORBA applications.
 Before going any further, it is worth knowing what the mapping looks
 like.<BR>
@@ -531,7 +531,7 @@ type for a POA.<BR>
 A POA's behaviour is governed by its <I>policies</I>. The Root POA has
 suitable policies for many simple servers, and closely matches the
 `policies' used by omniORB 2's BOA. See Chapter 11 of the CORBA 2.6
-specification[<A HREF="omniORB012.html#corba26-spec"><CITE>OMG01</CITE></A>] for details of all the POA policies
+specification[<A HREF="omniORB013.html#corba26-spec"><CITE>OMG01</CITE></A>] for details of all the POA policies
 which are available.</DL>
 
 <H3><A NAME="htoc20">2.8.3</A>&nbsp;&nbsp;Object initialisation</H3>
@@ -724,14 +724,14 @@ references in a <I>naming service</I> and bind them to fixed path
 names. Clients can bind to the object implementations at run time by
 asking the naming service to resolve the path names to the object
 references. CORBA defines a standard naming service, which is a
-component of the Common Object Services (COS)&nbsp;[<A HREF="omniORB012.html#corbaservices"><CITE>OMG98</CITE></A>],
+component of the Common Object Services (COS)&nbsp;[<A HREF="omniORB013.html#corbaservices"><CITE>OMG98</CITE></A>],
 that can be used for this purpose. The next section describes an
 example of how to use the COS Naming Service.<BR>
 <BR>
 <A NAME="toc13"></A>
 <H2><A NAME="htoc29">2.10</A>&nbsp;&nbsp;Example 3 --- Using the Naming Service</H2>
 In this example, the object implementation uses the Naming
-Service&nbsp;[<A HREF="omniORB012.html#corbaservices"><CITE>OMG98</CITE></A>] to pass on the object reference to the
+Service&nbsp;[<A HREF="omniORB013.html#corbaservices"><CITE>OMG98</CITE></A>] to pass on the object reference to the
 client. This method is far more practical than using stringified
 object references. The full listing of the object implementation
 (<TT>eg3_impl.cc</TT>) and the client (<TT>eg3_clt.cc</TT>) can be found
@@ -787,7 +787,7 @@ line. If this file is not present, the internal list will be empty and
 <H3><A NAME="htoc31">2.10.2</A>&nbsp;&nbsp;The Naming Service Interface</H3>
 It is beyond the scope of this chapter to describe in detail the
 Naming Service interface. You should consult the CORBA services
-specification&nbsp;[<A HREF="omniORB012.html#corbaservices"><CITE>OMG98</CITE></A>] (chapter 3). The code listed in
+specification&nbsp;[<A HREF="omniORB013.html#corbaservices"><CITE>OMG98</CITE></A>] (chapter 3). The code listed in
 <TT>eg3_impl.cc</TT> and <TT>eg3_clt.cc</TT> are good examples of how the
 service can be used. Please spend time to study the examples
 carefully.<BR>
@@ -1655,7 +1655,7 @@ can be activated on demand with an adapter activator.
 with id and kind fields which contain `.' and `/' characters. See
 chapter&nbsp;<A HREF="omniORB006.html#chap:ins">663Interoperable Naming Servicechapter.6</A> of this manual, and chapter 3 of the CORBA
 services specification, as updated for the Interoperable Naming
-Service&nbsp;[<A HREF="omniORB012.html#inschapters"><CITE>OMG00b</CITE></A>].
+Service&nbsp;[<A HREF="omniORB013.html#inschapters"><CITE>OMG00</CITE></A>].
 </DL>
 <HR>
 <A HREF="omniORB001.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>

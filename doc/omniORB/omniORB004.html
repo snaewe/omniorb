@@ -154,11 +154,12 @@ the logging function so it is turned off by default.<BR>
 <BR>
 
 <H3><A NAME="htoc51">4.2.1</A>&nbsp;&nbsp;Tracing API</H3>
-The three tracing parameters can be modified at runtime by assigning
-to the following variables
+The four tracing parameters can be modified at runtime by assigning to
+the following variables
 <PRE>
 namespace omniORB {
   CORBA::ULong   traceLevel;
+  CORBA::Boolean traceExceptions;
   CORBA::Boolean traceInvocations;
   CORBA::Boolean traceThreadId;
 };

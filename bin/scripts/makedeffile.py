@@ -37,7 +37,7 @@
 #
 # If you are using this script so you can put omniORB stubs in a DLL,
 # you also need to set some defines to correctly import symbols into
-# the application. See the omniORB manual for details.
+# the application. See chapter 12 of the omniORB manual for details.
 
 
 # The way this script works is to process the output of dumpbin.

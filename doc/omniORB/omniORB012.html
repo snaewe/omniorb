@@ -6,53 +6,178 @@
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <META name="GENERATOR" content="hevea 1.06">
 <TITLE>
- References
+ Packaging stubs into DLLs
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB011.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
 <A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB013.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>References</H1><DL COMPACT=compact><DT><A NAME="rfc2396"><FONT COLOR=purple>[BLFIM98]</FONT></A><DD>
-T. Berners-Lee, R. Fielding, U.C. Irvine, and L. Masinter.
-<EM>Uniform Resource Identifiers (URI): Generic Syntax</EM>.
-RFC 2396, August 1998.<BR>
+<H1><A NAME="htoc124">Chapter&nbsp;12</A>&nbsp;&nbsp;Packaging stubs into DLLs</H1>
+<A NAME="chap:dlls"></A>
+omniORB's stubs can be packaged into shared libraries or DLLs. On Unix
+platforms this is mostly painless, but on Windows things are slightly
+more tricky.<BR>
 <BR>
-<DT><A NAME="henning1999"><FONT COLOR=purple>[HV99]</FONT></A><DD>
-Michi Henning and Steve Vinoski.
-<EM>Advanced CORBA Programming with C++</EM>.
-Addison-Wesley professional computing series, 1999.<BR>
+<A NAME="toc54"></A>
+<H2><A NAME="htoc125">12.1</A>&nbsp;&nbsp;Dynamic loading and unloading</H2>
+As long as your platform supports running static initialisers and
+destructors as libraries are loaded and unloaded, you can package
+stubs into shared libraries / DLLs, and load them dynamically at
+runtime.<BR>
 <BR>
-<DT><A NAME="corbaservices"><FONT COLOR=purple>[OMG98]</FONT></A><DD>
-Object Management Group.
-<EM>CORBAServices: Common Object Services Specification</EM>, December
- 1998.<BR>
+There is one minor problem with this, which is that normally nil
+object references are heap allocated, and only deallocated when the
+ORB is destroyed. That means that if you unload a stub library from
+which nil references have been obtained (just by creating an object
+reference _var for example), there is a risk of a segmentation fault
+when the ORB is destroyed. To avoid that problem, define the
+<TT>OMNI_UNLOADABLE_STUBS</TT> C pre-processor symbol while you are
+compiling the stub files. Unfortunately, with that define set, there
+is a risk that object reference _vars at global scope will segfault
+as they are unloaded. You must not create _vars at global scope if
+you are using <TT>OMNI_UNLOADABLE_STUBS</TT>.<BR>
 <BR>
-<DT><A NAME="cxxmapping"><FONT COLOR=purple>[OMG00a]</FONT></A><DD>
-Object Management Group.
-<EM>C++ Language Mapping</EM>, 2.0 edition, 2000.
-From <A HREF="http://www.omg.org/cgi-bin/doc?ptc/00-01-02"><TT>http://www.omg.org/cgi-bin/doc?ptc/00-01-02</TT></A>.<BR>
+<A NAME="toc55"></A>
+<H2><A NAME="htoc126">12.2</A>&nbsp;&nbsp;Windows DLLs</H2>
+On Unix platforms, the linker figures out how to link the symbols
+exported by a library in to the running program. On Windows,
+unfortunately, you have to tell the linker where symbols are coming
+from. This causes all manner of difficulties.<BR>
 <BR>
-<DT><A NAME="inschapters"><FONT COLOR=purple>[OMG00b]</FONT></A><DD>
-Object Management Group.
-<EM>Interoperable Naming Service revised chapters</EM>, August 2000.
-From <A HREF="http://cgi.omg.org/cgi-bin/doc?ptc/00-08-07"><TT>http://cgi.omg.org/cgi-bin/doc?ptc/00-08-07</TT></A>.<BR>
+
+<H3><A NAME="htoc127">12.2.1</A>&nbsp;&nbsp;Exporting symbols</H3>
+To (statically) link with a DLL file in Windows, you link with a LIB
+file which references the symbols exported from the DLL. To build the
+LIB and DLL files, the correct symbols must be exported. One way to do
+that is to decorate the source code with magic tags that tell the
+compiler to export the symbols. The alternative is to provide a DEF
+file that lists all the symbols to be exported. omniORB uses a DEF
+file.<BR>
 <BR>
-<DT><A NAME="corba26-spec"><FONT COLOR=purple>[OMG01]</FONT></A><DD>
-Object Management Group.
-<EM>The Common Object Request Broker: Architecture and
- Specification</EM>, 2.6 edition, December 2001.
-From <A HREF="http://www.omg.org/cgi-bin/doc?formal/01-12-01"><TT>http://www.omg.org/cgi-bin/doc?formal/01-12-01</TT></A>.<BR>
+The question is, how do you create the DEF file? The answer is to use
+a Python script named <TT>makedeffile.py</TT> that lives in the
+<TT>bin\scripts</TT> directory in the omniORB distribution.
+<TT>makedeffile.py</TT> runs the dumpbin program that comes with
+Visual C++, and processes its output to extract the necessary symbols.
+Although it is designed for exporting the symbols from omniORB stub
+files, it can actually be used for arbitrary C++ code. To use it to
+create a DLL from a single source file, use the following steps:
+<OL type=1><LI>
+Compile the source:<BR>
 <BR>
-<DT><A NAME="tjr96a"><FONT COLOR=purple>[Ric96]</FONT></A><DD>
-Tristan Richardson.
-<EM>The OMNI Thread Abstraction</EM>.
-AT&amp;T Laboratories Cambridge, October 1996.</DL>
+<TT>cl -c -O2 -MD -GX -Fofoo.o -Tpfoo.cc</TT><BR>
+<BR>
+<LI>Build a static library (It probably won't work on its own due to
+ the -MD switch to cl, but we just need it to get the symbols
+ out):<BR>
+<BR>
+<TT>lib -out:foo_static.lib foo.o</TT><BR>
+<BR>
+<LI>Use the script to build a .def file:<BR>
+<BR>
+<TT>makedeffile.py foo_static.lib foo 1.0 foo.def</TT><BR>
+<BR>
+<LI>Build the .dll and .lib with the def file.<BR>
+<BR>
+<TT>link -out:foo.dll -dll -def:foo.def -implib:foo.lib foo.o</TT>
+</OL>
+Of course, you can link together many separate C++ files, rather than
+just the one shown here.<BR>
+<BR>
+
+<H3><A NAME="htoc128">12.2.2</A>&nbsp;&nbsp;Importing constant symbols</H3>
+As if exporting the symbols from a DLL was not complicated enough, any
+constant values exported by a DLL have to be explicitly
+<EM>imported</EM> into the code using them. omniORB's stub files declare
+a number of such constants. This time, the constant declarations in
+the generated header files are decorated in a way that tells the
+compiler what to do. When the stub headers are #included, the correct
+pre-processor defines must be set. If things are not set correctly,
+the code all links without problems, but then mysteriously blows up at
+run time.<BR>
+<BR>
+Depending on how complex your situation is, there are a range of
+solutions. Starting with the simplest, here are some scenarios you may
+find yourself in:
+<OL type=1><LI>All stub code, and all code that uses it is wrapped up in a
+ single DLL.<BR>
+<BR>
+Do nothing special.<BR>
+<BR>
+<LI>All stub code is in a single DLL. Code using it is in another
+ DLL, or not in a DLL at all.<BR>
+<BR>
+<TT>#define USE_stub_in_nt_dll</TT> before <TT>#include</TT> of
+ the stub headers.<BR>
+<BR>
+<LI>The stubs for each IDL file are in separate DLLs, one DLL per
+ IDL file.<BR>
+<BR>
+In this case, if the IDL files <TT>#include</TT> each other, when
+ the stub files are compiled, import declarations are needed so
+ that references between the separate DLLs work. To do this,
+ first compile the IDL files with the <TT>-Wbdll_stubs</TT>
+ flag:<BR>
+<BR>
+<TT>omniidl -bcxx -Wbdll_stubs example.idl</TT><BR>
+<BR>
+Then define the <TT>INCLUDED_stub_in_nt_dll</TT> pre-processor
+ symbol when compiling the stub files. As above, define
+ <TT>USE_stub_in_nt_dll</TT> when including the stub headers
+ into application code.<BR>
+<BR>
+<LI>Stubs and application code are packaged into multiple DLLs, but
+ DLLs contain the stubs for more than one IDL file.<BR>
+<BR>
+This situation is handled by `annotating' the IDL files to
+ indicate which DLLs they will be compiled into. The annotation
+ takes the form of some <TT>#ifdefs</TT> to be inserted in the
+ stub headers. For example,
+<PRE>
+// one.idl
+
+#pragma hh #ifndef COMPILING_FIRST_DLL
+#pragma hh # ifndef USE_stub_in_nt_dll
+#pragma hh #   define USE_stub_in_nt_dll
+#pragma hh # endif
+#pragma hh #endif
+
+#include &lt;two.idl&gt;
+
+module ModuleOne {
+  ...
+};
 
 
+// two.idl
+
+#pragma hh #ifndef COMPILING_SECOND_DLL
+#pragma hh # ifndef USE_stub_in_nt_dll
+#pragma hh #   define USE_stub_in_nt_dll
+#pragma hh # endif
+#pragma hh #endif
+
+#include &lt;three.idl&gt;
+...
+</PRE>
+ Here, <TT>one.idl</TT> is packaged into <TT>first.dll</TT> and
+ <TT>two.idl</TT> is in <TT>second.dll</TT>. When compiling
+ <TT>first.dll</TT>, the <TT>COMPILING_FIRST_DLL</TT> define is
+ set, meaning definitions from <TT>one.idl</TT> (and any other
+ files in that DLL) are not imported. Any other module that
+ includes the stub header for <TT>one.idl</TT> does not define
+ <TT>COMPILING_FIRST_DLL</TT>, and thus imports the necessary
+ symbols from the DLL.<BR>
+<BR>
+Rather than explicitly listing all the pre-processor code, it
+ can be cleaner to use a C++ header file for each DLL. See the
+ COS services IDL files in <TT>idl/COS</TT> for an example.</OL>
 <HR>
 <A HREF="omniORB011.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
 <A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB013.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>
