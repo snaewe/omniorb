@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.11  1998/01/27 16:11:06  ewc
+  Added suppoert for type any.
+
   Revision 1.10  1997/12/23 19:37:57  sll
   Removed const T* conversion operator in _CORBA_Array_Var as it is causing
   conversion ambiguity.
@@ -357,13 +360,13 @@ public:
   inline _CORBA_Array_Var<T_Helper,T> &operator= (T* p);
   inline _CORBA_Array_Var<T_Helper,T> &operator= (const _CORBA_Array_Var<T_Helper,T>& p);
   inline T& operator[] (_CORBA_ULong index) { return *(pd_data + index); }
-  inline const T& operator[] (_CORBA_ULong index) const { return *(pd_data + index);  }
+  inline const T& operator[] (_CORBA_ULong index) const { return *( (const T*) (pd_data + index));  }
   inline operator T* () const { return pd_data; }
   // Define the const T* operator() causes conversion operator ambiguity with 
   // some compilers. Should be alright to leave this operator out. If not,
   // reinstate it and #ifdef it with the right compiler specific macro.
   //
-  //  inline operator const T* () const { return pd_data; }
+  //  inline operator const T* () const { return (const T*) pd_data; }
 
   friend class _CORBA_Array_OUT_arg<T, _CORBA_Array_Var<T_Helper,T> >;
 
@@ -392,10 +395,11 @@ public:
   inline ~_CORBA_Array_Forany() {
     // does not delete the storage of the underlying array
   }
+  inline _CORBA_Array_Forany<T_Helper,T> &operator= (T* p);
   inline T& operator[] (_CORBA_ULong index) { return *(pd_data + index); }
-  inline const T& operator[] (_CORBA_ULong index) const { return *(pd_data + index); }
+  inline const T& operator[] (_CORBA_ULong index) const { return *( (const T*) (pd_data + index)); }
   inline operator T* () const { return pd_data; }
-  inline operator const T* () const { return pd_data; }
+  inline operator const T* () const { return (const T*) pd_data; }
 private:
   T* pd_data;
 };
@@ -885,6 +889,16 @@ _CORBA_Array_Forany<T_Helper,T>::_CORBA_Array_Forany (T* p,_CORBA_Boolean nocopy
       pd_data = 0;
     }
   }
+}
+
+
+template <class T_Helper,class T>
+inline 
+_CORBA_Array_Forany<T_Helper,T>&
+_CORBA_Array_Forany<T_Helper,T>::operator= (T* p) 
+{
+  pd_data = p;
+  return *this;
 }
 
 template <class T_Helper,class T>
