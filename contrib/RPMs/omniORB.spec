@@ -251,7 +251,7 @@ fi
 
 
 %changelog
-* Mon Jul 26 2004 Duncan Grisbt <duncan@grisby.org> 4.0.4-1
+* Mon Jul 26 2004 Duncan Grisby <duncan@grisby.org> 4.0.4-1
 - Bump version number; integrate SuSE changes. Don't automatically
   start omniNames upon RPM install.
 
