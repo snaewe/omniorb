@@ -24,7 +24,7 @@ include $(THIS_IMPORT_TREE)/mk/unix.mk
 # C preprocessor macro definitions for this architecture
 #
 
-IMPORT_CPPFLAGS = -D__aix__ -D__powerpc__ -D__OSVERSION__=4
+IMPORT_CPPFLAGS += -D__aix__ -D__powerpc__ -D__OSVERSION__=4
 
 #
 # Standard programs
@@ -36,7 +36,7 @@ MKDIRHIER	= /usr/bin/X11/mkdirhier
 INSTALL         = cp -p 
 
 
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus
+CXXMAKEDEPEND += -D__cplusplus
 
 # Update these variables to point to the location of your egcs installation.
 CXX             = /usr/local/bin/g++
@@ -48,7 +48,7 @@ CXXDEBUGFLAGS   =
  
 CXXLINKOPTIONS	+= -mthreads
 
-CMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND +=  -D__GNUC__
 
 # Name all static libraries with -ar.a suffix.
 LibPattern = lib%-ar.a
@@ -87,7 +87,7 @@ CorbaImplementation = OMNIORB
 ThreadSystem = Posix
 
 OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=8
-OMNITHREAD_CPPFLAGS = -I$(TOP)/include -D_REENTRANT -D_THREAD_SAFE
+OMNITHREAD_CPPFLAGS = -D_REENTRANT -D_THREAD_SAFE
 OMNITHREAD_LIB = -lomnithread2 -lpthreads
 OMNITHREAD_STATIC_LIB = -lomnithread-ar -lpthreads-ar
 
@@ -100,77 +100,50 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 
-
-# MakeCXXSharedLibrary- Build shared library
-#     Expect shell varables:
-#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
-#       libname = shared library name (e.g. libfoo.so)
+##########################################################################
 #
-# ExportSharedLibrary- export sharedlibrary
-#     Expect shell varables:
-#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
-#       libname = shared library name (e.g. libfoo.so)
-#      
+# Shared library support stuff
+#
+# Default setup. Work for most platforms. For those exceptions, override
+# the rules in their platform files.
+#
 SHAREDLIB_SUFFIX   = a
 
-SharedLibraryFullName = $(shell fn() {\
-                                  echo lib$$1$$2$$3.$(SHAREDLIB_SUFFIX).$$4; \
-                                 }; \
-                                fn $(subst ., ,$(SharedLibraryNameSpec)))
-
-SharedLibrarySoName = $(shell fn() {\
-                                 echo lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3; \
-                              }; \
-                              fn $(subst ., ,$(SharedLibraryNameSpec)))
-
-SharedLibraryName = $(shell fn() {\
-                                echo lib$$1$$2$$3.$(SHAREDLIB_SUFFIX); \
-                            }; \
-                            fn $(subst ., ,$(SharedLibraryNameSpec)))
-
-ifeq ($(notdir $(CXX)),xlC_r)
-
-ELF_SHARED_LIBRARY = 1
-SHAREDLIB_CPPFLAGS =
-
-define MakeCXXSharedLibrary
-(set -x; \
- $(RM) $@; \
- $(MAKECPPSHAREDLIB) \
-    -o $$soname $(IMPORT_LIBRARY_FLAGS) \
-    $(filter-out $(LibSuffixPattern),$^) $$extralibs \
-         -p 40; \
-         ar cq $@ $$soname; \
-         $(RM) $$soname; \
-       )
-endef
-
-endif
+SharedLibraryFullNameTemplate = lib$$1$$2$$3.$(SHAREDLIB_SUFFIX).$$4
+SharedLibrarySoNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3
+SharedLibraryLibNameTemplate = lib$$1$$2$$3.$(SHAREDLIB_SUFFIX)
 
 ifeq ($(notdir $(CXX)),g++)
 
-ELF_SHARED_LIBRARY = 1
+BuildSharedLibrary = 1       # Enable
 SHAREDLIB_CPPFLAGS =
 
 define MakeCXXSharedLibrary
-(set -x; \
+ $(ParseNameSpec); \
+ soname=$(SharedLibrarySoNameTemplate); \
+ set -x; \
  $(RM) $@; \
-   $(CXXLINK) -shared -mthreads \
+ $(CXXLINK) -shared -mthreads \
      -o $$soname $(IMPORT_LIBRARY_FLAGS) \
     $(filter-out $(LibSuffixPattern),$^) $$extralibs ; \
-         ar cq $@ $$soname; \
-         $(RM) $$soname; \
-       )
+ ar cq $@ $$soname; \
+ $(RM) $$soname;
 endef
 
 endif
 
 
+# ExportSharedLibrary- export sharedlibrary
+#  Expect shell variable:
+#  namespec = <library name> <major ver. no.> <minor ver. no.> <micro ver. no>
+#  e.g. namespec = "COS 3 0 0" --> shared library libCOS300.a
+#
 define ExportSharedLibrary
 $(ExportLibrary); \
-(set -x; \
-   cd $(EXPORT_TREE)/$(LIBDIR); \
-    $(RM) $$libname; \
-    ln -s $^ $$libname; \
-  )
+$(ParseNameSpec); \
+ libname=$(SharedLibraryLibNameTemplate); \
+ set -x; \
+ cd $(EXPORT_TREE)/$(LIBDIR); \
+ $(RM) $$libname; \
+ ln -s $(<F) $$libname;
 endef

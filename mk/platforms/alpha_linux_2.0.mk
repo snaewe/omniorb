@@ -30,7 +30,7 @@ AR = ar cq
 CPP = /usr/bin/cpp
 
 CXX = g++
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = -O2
 
 CXXLINK		= $(CXX)
@@ -47,7 +47,7 @@ EgcsMajorVersion = 1
 EgcsMinorVersion = 1
 
 CC           = gcc
-CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND  += -D__GNUC__
 CDEBUGFLAGS  = -O2
 
 CLINK        = $(CC)

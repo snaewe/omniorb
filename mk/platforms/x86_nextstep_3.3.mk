@@ -35,7 +35,7 @@ MKDIRHIER = mkdirs
 CPP = /lib/cpp
 
 CXX = g++
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = 
 CXXOPTIONS    =  -Wall -Wno-unused
 
@@ -43,7 +43,7 @@ CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 
 CC           = gcc
-CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND  += -D__GNUC__
 CDEBUGFLAGS  = -O
 
 CLINK        = $(CC)

@@ -54,14 +54,14 @@ AR = ar cq
 RANLIB = true
 
 MKDIRHIER = mkdirhier
-INSTALL   = $(TOP)/bin/scripts/install-sh -c
+INSTALL   = $(BASE_OMNI_TREE)/bin/scripts/install-sh -c
 
 CPP = 'CC -E'
 
 # The cc/CC version 7.2 (mips)
 #
 CXX = CC
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__SGI_CC -D__cplusplus
+CXXMAKEDEPEND += -D__SGI_CC -D__cplusplus
 CXXDEBUGFLAGS = -O2 -OPT:Olimit=0
 CXXWOFFOPTIONS =  -woff 3303,1110,1182
 CXXOPTIONS     =  $(ABIFLAG) -float -ansi -LANG:exceptions=ON $(CXXWOFFOPTIONS)
@@ -71,7 +71,6 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 CC                = cc
 COPTIONS          = $(ABIFLAG)
 CLINKOPTIONS      = $(COPTIONS)
-CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend
 CLINK             = $(CC)
 
 #
@@ -136,51 +135,27 @@ OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 
 
-# Default location of the omniORB configuration file [falls back to this if
-# the environment variable OMNIORB_CONFIG is not set] :
-
-OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
-
-# Default directory for the omniNames log files.
-OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
-
-# MakeCXXSharedLibrary- Build shared library
-#     Expect shell varables:
-#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
-#       libname = shared library name (e.g. libfoo.so)
 #
-# ExportSharedLibrary- export sharedlibrary
-#     Expect shell varables:
-#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
-#       libname = shared library name (e.g. libfoo.so)
-#      
-
+# Shared Library support.     
+#
+# Platform specific customerisation.
+# everything else is default from unix.mk
+#
 ifeq ($(notdir $(CXX)),CC)
 
-ELF_SHARED_LIBRARY = 1
+BuildSharedLibrary = 1       # Enable
 
 SHAREDLIB_CPPFLAGS = -KPIC
 
 define MakeCXXSharedLibrary
-(set -x; \
+ $(ParseNameSpec); \
+ soname=$(SharedLibrarySoNameTemplate); \
+ libname=$(SharedLibraryLibNameTemplate); \
+ set -x; \
  $(RM) $@; \
-   $(LINK.cc) -KPIC -shared -Wl,-h,$$libname \
-           -Wl,-set_version,$$soname \
-           -o $@ $(IMPORT_LIBRARY_FLAGS) \
-           $(filter-out $(LibSuffixPattern),$^) \
-           $$extralibs $(LDLIBS); \
-)
-endef
-
-define ExportSharedLibrary
-$(ExportLibrary); \
-(set -x; \
-   cd $(EXPORT_TREE)/$(LIBDIR); \
-   $(RM) $$soname; \
-   ln -s $^ $$soname; \
-    $(RM) $$libname; \
-    ln -s $$soname $$libname; \
-  )
+ $(LINK.cc) -KPIC -shared -Wl,-h,$$libname -Wl,-set_version,$$soname -o $@ \
+ $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) \
+ $$extralibs $(LDLIBS); \
 endef
 
 endif

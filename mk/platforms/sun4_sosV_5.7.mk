@@ -41,7 +41,7 @@ IMPORT_CPPFLAGS += -D__sparc__ -D__sunos__ -D__OSVERSION__=5
 AR = ar cq
 
 MKDIRHIER = mkdirhier
-INSTALL           = $(TOP)/bin/scripts/install-sh -c 
+INSTALL           = $(BASE_OMNI_TREE)/bin/scripts/install-sh -c 
 
 CPP = /usr/ccs/lib/cpp
 
@@ -49,7 +49,7 @@ CPP = /usr/ccs/lib/cpp
 # To use SunPro compilers, uncomment the following lines:
 #
 CXX = CC
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__SUNPRO_CC -D__cplusplus
+CXXMAKEDEPEND += -D__SUNPRO_CC -D__cplusplus
 CXXDEBUGFLAGS = -O2 -g # Remove -g may cause problem with exception handling
                        # This is a problem with Sun C++ 5.0, see README.SunC++5
 CXXMTFLAG     = -mt
@@ -61,7 +61,6 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 # record the pathname of the shared libraries in the executable.
 
 #CC                = cc
-#CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend
 #CDEBUGFLAGS       = -O
 #COPTIONS	  =
 #CLINK             = $(CC)
@@ -73,7 +72,7 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 #CPP = gcc
 #
 #CXX = g++
-#CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+#CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 #CXXDEBUGFLAGS = 
 #CXXOPTIONS    =  -fhandle-exceptions -Wall -Wno-unused
 #CXXMTFLAG     =
@@ -86,7 +85,7 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 # record the pathname of the shared libraries in the executable.
 
 CC                = gcc
-CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND       += -D__GNUC__
 CDEBUGFLAGS       = -O
 COPTIONS	  = -fpcc-struct-return
 
@@ -139,57 +138,29 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 
-# MakeCXXSharedLibrary- Build shared library
-#     Expect shell varables:
-#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
-#       libname = shared library name (e.g. libfoo.so)
 #
-# ExportSharedLibrary- export sharedlibrary
-#     Expect shell varables:
-#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
-#       libname = shared library name (e.g. libfoo.so)
-#      
-ELF_SHARED_LIBRARY = 1
-
+# Shared Library support.     
+#
+# Platform specific customerisation.
+# everything else is default from unix.mk
+#
 ifeq ($(notdir $(CXX)),CC)
 
-ELF_SHARED_LIBRARY = 1
+BuildSharedLibrary = 1       # Enable
 
 SHAREDLIB_CPPFLAGS = -KPIC
 
-define MakeCXXSharedLibrary
-(set -x; \
- $(RM) $@; \
- $(CXX) -G -o $@ -h $$soname $(IMPORT_LIBRARY_FLAGS) \
-         $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
-)
-endef
+SharedLibraryPlatformLinkFlagsTemplate = -G -h $$soname
 
 endif
 
 ifeq ($(notdir $(CXX)),g++)
 
-ELF_SHARED_LIBRARY = 1
+BuildSharedLibrary = 1       # Enable
 
 SHAREDLIB_CPPFLAGS = -fPIC
 
-define MakeCXXSharedLibrary
-(set -x; \
- $(RM) $@; \
- $(CXX) -shared -Wl,-h,$$soname -o $@ $(IMPORT_LIBRARY_FLAGS) \
-    $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
-)
-endef
+SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-h,$$soname
 
 endif
 
-define ExportSharedLibrary
-$(ExportLibrary); \
-(set -x; \
-   cd $(EXPORT_TREE)/$(LIBDIR); \
-   $(RM) $$soname; \
-   ln -s $^ $$soname; \
-    $(RM) $$libname; \
-    ln -s $$soname $$libname; \
-  )
-endef
