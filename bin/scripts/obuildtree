@@ -99,8 +99,15 @@ interactive() {
   myread dest $platform
 
   if [ -e "$dest" ]; then
+    echo
     echo "Error: \"$dest\" already exists."
-    exit 1
+    echo
+    echo "Remove it ?"
+    myread rmexistingdest n
+    if [ "$rmexistingdest" != "y" ]; then
+      exit 1
+    fi
+    rm -rf $dest
   fi
 
 
@@ -186,7 +193,7 @@ interactive() {
 
   if [ "$hassourcetree" = "y" ]; then
     echo
-    echo "Enter the source trees"
+    echo "Enter the source trees (relative to $current/$dest)"
     myread source $firstimport/src
 
     sources=$source
@@ -325,6 +332,15 @@ if [ -e "$dest" ]; then
 fi
 
 
+###########################################################################
+#
+# Create the destination directory and its config directory
+#
+
+set -e
+
+mkdir -p $dest/config
+
 
 ###########################################################################
 #
@@ -352,29 +368,20 @@ for i in $imports; do
 done
 echo
 if [ "$sources" != "" ]; then
-  echo "Source trees are:"
-  for s in $sources; do
-    if [ -d $s ]; then
-      echo $s
-    else
-      echo "$s - DOESN'T EXIST"
-    fi
-  done
+  (cd $dest
+    echo "Source trees are:"
+    for s in $sources; do
+      if [ -d $s ]; then
+	echo $s
+      else
+	echo "$s - DOESN'T EXIST"
+      fi
+    done
+  )
 else
   echo "No source trees"
 fi
 echo
-
-
-
-###########################################################################
-#
-# Create the destination directory and its config directory
-#
-
-set -e
-
-mkdir -p $dest/config
 
 
 ###########################################################################
