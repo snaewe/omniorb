@@ -1,3 +1,10 @@
+Mon Jun 11 19:14:31 BST 2001 sll
+================================
+
+- Specified OPEN_SSL_ROOT in lab internal platform file
+
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+
 Mon Jun 11 18:59:39 BST 2001 sll
 ================================
 
@@ -28,9 +35,9 @@ Mon Jun 11 18:58:12 BST 2001 sll
 
 - Various minor fixes to bugs uncovered while adding another transport
 
-              Modified                src/lib/omniORB/orbcore/giopServer.cc
-            * Modified                include/omniORB4/minorCode.h
-              Modified                src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/giopServer.cc
+include/omniORB4/minorCode.h
+src/lib/omniORB/orbcore/objectAdapter.cc
 
 
 Mon Jun 11 18:54:26 BST 2001 sll
