@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.11.2.6  2000/06/12 13:22:14  djs
+# Stopped generation of BOA ties #include'd from other files
+#
 # Revision 1.11.2.5  2000/06/05 13:03:58  djs
 # Removed union member name clash (x & pd_x, pd__default, pd__d)
 # Removed name clash when a sequence is called "pd_seq"
@@ -215,6 +218,7 @@ class BOATieTemplates(idlvisitor.AstVisitor):
         for d in node.declarations(): d.accept(self)
 
     def visitModule(self, node):
+        if not(node.mainFile()): return
 
         name = id.Name(node.scopedName())
         
