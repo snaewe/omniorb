@@ -13,9 +13,13 @@
 
 /*
  $Log$
- Revision 1.6  1997/02/19 11:12:37  ewc
- Added support for Windows NT / MSVC++ 4.2
+ Revision 1.7  1997/03/09 14:42:50  sll
+ String_var and Object_var can now be passed directly as arguments
+ to operations that have string and Object as INOUT and OUT parameters.
 
+ * Revision 1.6  1997/02/19  11:12:37  ewc
+ * Added support for Windows NT / MSVC++ 4.2
+ *
  Revision 1.5  1997/01/30 20:18:23  sll
  Added new member functions in Object_Helper.
 
@@ -36,6 +40,8 @@
 
 #ifndef __CORBA_H__
 #define __CORBA_H__
+
+#include <omniORB2/omniInternal.h>
 
 #include <omniORB2/omniORB.h>
 
@@ -71,20 +77,22 @@ typedef _CORBA_Double  Double;
 
 
   class String_member;
+  class String_INOUT_arg;
+  class String_OUT_arg;
 
   class String_var {
   public:
     typedef char* ptr_t;
 
-    String_var() {
+    inline String_var() {
       _data = 0;
     }
 
-    String_var(char *p) {
+    inline String_var(char *p) {
       _data = p;
     }
 
-    String_var(const char* p) {
+    inline String_var(const char* p) {
       if (p) {
 	_data = string_alloc((ULong)(strlen(p)+1));
 	strcpy(_data,p);
@@ -93,7 +101,7 @@ typedef _CORBA_Double  Double;
 	_data = 0;
     }
 
-    String_var(const String_var &s) {
+    inline String_var(const String_var &s) {
       if ((const char *)s) {
 	_data = string_alloc((ULong)(strlen(s)+1));
 	strcpy(_data,s);
@@ -105,12 +113,12 @@ typedef _CORBA_Double  Double;
 
     String_var(const String_member &s);
 
-    ~String_var() {
+    inline ~String_var() {
       if (_data)
 	string_free(_data);
     }
 
-    String_var &operator= (char *p) {
+    inline String_var &operator= (char *p) {
       if (_data) {
 	string_free(_data);
 	_data = 0;
@@ -119,7 +127,7 @@ typedef _CORBA_Double  Double;
       return *this;
     }
 
-    String_var &operator= (const char *p) {
+    inline String_var &operator= (const char *p) {
       if (_data) {
 	string_free(_data);
 	_data = 0;
@@ -131,7 +139,7 @@ typedef _CORBA_Double  Double;
       return *this;
     }
 
-    String_var &operator= (const String_var &s) {
+    inline String_var &operator= (const String_var &s) {
       if (_data) {
 	string_free(_data);
 	_data = 0;
@@ -145,38 +153,34 @@ typedef _CORBA_Double  Double;
 
     String_var &operator= (const String_member &s);
 
-    operator ptr_t& () { return (ptr_t&) _data; }
-#ifdef __SUNPRO_CC
-    operator char* () {
-      return _data;
-    }
-#endif
-    operator const char* () const {
-      return _data;
-    }
+    inline operator char* () const { return _data; }
+    inline operator const char* () const { return _data; }
 
     char &operator[] (ULong index);
 
     char operator[] (ULong index) const;
 
+    friend class String_INOUT_arg;
+    friend class String_OUT_arg;
+
   private:
     char* _data;
   };
 
-
+  // omniORB2 private class
   class String_member
   {
   public:
     typedef char* ptr_t;
-    String_member() {
+    inline String_member() {
       _ptr = 0;
     }
 
-    ~String_member() {
+    inline ~String_member() {
       if (_ptr) string_free(_ptr);
     }
 
-    String_member(const String_member &s) {
+    inline String_member(const String_member &s) {
       if (_ptr) {
 	string_free(_ptr);
 	_ptr = 0;
@@ -187,7 +191,7 @@ typedef _CORBA_Double  Double;
       }
     }
 
-    String_member& operator= (char *s) {
+    inline String_member& operator= (char *s) {
       if (_ptr) {
 	string_free(_ptr);
 	_ptr = 0;
@@ -196,7 +200,7 @@ typedef _CORBA_Double  Double;
       return *this;
     }
 
-    String_member& operator= (const char *s) {
+    inline String_member& operator= (const char *s) {
       if (_ptr) {
 	string_free(_ptr);
 	_ptr = 0;
@@ -209,7 +213,7 @@ typedef _CORBA_Double  Double;
     }
     
 
-    String_member& operator= (const String_member & s) {
+    inline String_member& operator= (const String_member & s) {
       if (_ptr) {
 	string_free(_ptr);
 	_ptr = 0;
@@ -223,16 +227,8 @@ typedef _CORBA_Double  Double;
 
     String_member& operator= (const String_var & s);
 
-#ifndef _MSC_VER
-    operator char* () const {
-      return _ptr;
-    }
-#endif
-
-    operator const char* () const {
-      return (const char*) _ptr;
-    }
-    operator ptr_t& () { return _ptr; }
+    inline operator char* () { return _ptr; }
+    inline operator const char*() const { return _ptr; }
 
     char* _ptr;
 
@@ -244,6 +240,33 @@ typedef _CORBA_Double  Double;
     size_t NP_alignedSize(size_t initialoffset) const;
   };
 
+  // omniORB2 private class
+  class String_INOUT_arg {
+  public:
+    inline String_INOUT_arg(char*& p) : _data(p) {}
+    inline String_INOUT_arg(String_var& p) : _data(p._data) {}
+    inline String_INOUT_arg(String_member& p) : _data(p._ptr) {}
+    inline ~String_INOUT_arg() {}
+
+    char*& _data;
+
+  private:
+    String_INOUT_arg();
+  };
+
+  // omniORB2 private class
+  class String_OUT_arg {
+  public:
+    inline String_OUT_arg(char*& p) : _data(p) { }
+    inline String_OUT_arg(String_var& p) : _data(p._data) { p = (char*)0; }
+    inline String_OUT_arg(String_member& p) : _data(p._ptr) { p = (char*)0; }
+    inline ~String_OUT_arg() {}
+
+    char*& _data;
+
+  private:
+    String_OUT_arg();
+  };
 
   //////////////////////////////////////////////////////////////////////
   //    Interface repository types                                    //
@@ -346,6 +369,7 @@ typedef _CORBA_Double  Double;
     MemBufferedStream pd_typecode;
   };
 
+  class Any_OUT_arg;
 
   class Any_var {
   public:
@@ -357,6 +381,19 @@ typedef _CORBA_Double  Double;
     Any_var &operator=(Any *a);
     Any_var &operator=(const Any_var &a);
     Any *operator->();
+    
+    friend class Any_OUT_arg;
+  };
+
+  class Any_OUT_arg {
+  public:
+    Any_OUT_arg(char*& p);
+    Any_OUT_arg(Any_var& p);
+    ~Any_OUT_arg();
+    char*& _data;
+
+  private:
+    Any_OUT_arg();
   };
 
 ////////////////////////////////////////////////////////////////////////
@@ -760,7 +797,7 @@ typedef _CORBA_Double  Double;
 
     // omniORB2 specifics
     void NP_release();
-    _CORBA_Boolean NP_is_nil();
+    _CORBA_Boolean NP_is_nil() const;
     void PR_setobj(omniObject *obj);
     omniObject *PR_getobj();
     static size_t NP_alignedSize(Object_ptr obj,size_t initialoffset);
@@ -821,13 +858,19 @@ typedef _CORBA_Double  Double;
     void deactivate_obj(Object_ptr) ;
 
     void dispose(Object_ptr) ;
-    // see omniORB::disposeObject()
+    // see omni::disposeObject()
 
-    void impl_is_ready(ImplementationDef_ptr=0);
+    void impl_is_ready(ImplementationDef_ptr=0,Boolean NonBlocking=0);
+    // The argument <NonBlocking> is omniORB2 specific
+
     void obj_is_ready(Object_ptr, ImplementationDef_ptr p=0);
 
     static BOA_ptr _duplicate(BOA_ptr p);
     static BOA_ptr _nil();
+
+    static BOA_ptr getBOA();
+    // omniORB2 specific. Must be called after BOA_init is called.
+    // Otherwise a CORBA::OBJ_ADAPTOR exception is raised.
 
     BOA();
     ~BOA();
@@ -875,6 +918,9 @@ typedef _CORBA_Double  Double;
     typedef String_var ObjectId_var;
 
     typedef _CORBA_Unbounded_Sequence<String_member > ObjectIdList;
+
+    class ObjectIdList_OUT_arg;
+
     class ObjectIdList_var {
     public:
       typedef ObjectIdList* ptr_t;
@@ -918,19 +964,36 @@ typedef _CORBA_Double  Double;
 	return *this;
       }
       inline ObjectIdList* operator->() { return pd_data; }
+
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+      inline operator ObjectIdList& () const { return *pd_data; }
+#else
+      inline operator const ObjectIdList& () const { return *pd_data; }
       inline operator ObjectIdList& () { return *pd_data; }
-#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
-      inline operator const ptr_t () const { return pd_data; }
 #endif
-      inline operator ptr_t& () { return pd_data; }
+
+      friend class ObjectIdList_OUT_arg;
+
     private:
       ObjectIdList* pd_data;
+    };
+
+    // omniORB2 private class
+    class ObjectIdList_OUT_arg {
+    public:
+      inline ObjectIdList_OUT_arg(ObjectIdList*& p) : _data(p) {}
+      inline ObjectIdList_OUT_arg(ObjectIdList_var& p) : _data(p.pd_data) {
+	p = (ObjectIdList*)0;
+      }
+      ObjectIdList*& _data;
+    private:
+      ObjectIdList_OUT_arg();
     };
 
     class InvalidName : public UserException {
     public:
 
-      InvalidName() { }
+      inline InvalidName() { }
       InvalidName(const InvalidName &);
 
       InvalidName & operator=(const InvalidName &);
@@ -978,7 +1041,7 @@ typedef _CORBA_Double  Double;
   static void release(Principal_ptr);
   static inline void release(Object_ptr o) 
   { 
-    // see also omniORBA::objectRelease()
+    // see also omni::objectRelease()
     if (!CORBA::is_nil(o))
       o->NP_release(); 
     return;
@@ -989,27 +1052,34 @@ typedef _CORBA_Double  Double;
   static void release(NVList_ptr);
   static void release(Request_ptr);
 
+  // omniORB2 private function.
+  static Object_ptr UnMarshalObjRef(const char *repoId, NetBufferedStream &s); 
 
-  // omniORB2 extensions - marshalling routines for pseudo objects
-
-  static Object_ptr UnMarshalObjRef(const char *repoId,
-				    NetBufferedStream &s);
+  // omniORB2 private function.
   static void MarshalObjRef(Object_ptr obj,
 			    const char *repoId,
 			    size_t repoIdSize,
 			    NetBufferedStream &s);
+
+  // omniORB2 private function
   static size_t AlignedObjRef(Object_ptr obj,
 			      const char *repoId,
 			      size_t repoIdSize,
 			      size_t initialoffset);
+
+  // omniORB2 private function
   static Object_ptr UnMarshalObjRef(const char *repoId,
 				    MemBufferedStream &s);
+
+  // omniORB2 private function
   static void MarshalObjRef(Object_ptr obj,
 			    const char *repoId,
 			    size_t repoIdSize,
 			    MemBufferedStream &s);
 
   class Object_member;
+  class Object_INOUT_arg;
+  class Object_OUT_arg;
 
   class Object_var {
   public:
@@ -1042,15 +1112,18 @@ typedef _CORBA_Double  Double;
     }
     Object_var& operator= (const Object_member& p);
     inline Object_ptr operator->() { return pd_objref; }
-    inline operator Object_ptr& () { return pd_objref; }
-#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
-    inline operator const Object_ptr () const { return pd_objref; }
-#endif
+
+    inline operator Object_ptr() { return pd_objref; }
+
     friend class Object_member;
+    friend class Object_INOUT_arg;
+    friend class Object_OUT_arg;
+
 private:
     Object_ptr pd_objref;
   };
-
+  
+  // omniORB2 private class
   class Object_member {
   public:
     inline Object_member() { _ptr = CORBA::Object::_nil(); }
@@ -1107,14 +1180,44 @@ private:
       CORBA::release(_ptr);
       _ptr = _result;
     }
-#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
-    inline operator const Object_ptr () const { return _ptr; }
-#endif
-    inline operator Object_ptr& () { return _ptr; }
+
+    inline operator Object_ptr () { return _ptr; }
     Object_ptr _ptr;
   };
 
+  // omniORB2 private class
+  class Object_INOUT_arg {
+  public:
+    inline Object_INOUT_arg(Object_ptr& p) : _data(p) {}
+    inline Object_INOUT_arg(Object_var& p) : _data(p.pd_objref) {}
+    inline Object_INOUT_arg(Object_member& p) : _data(p._ptr) {}
+    inline ~Object_INOUT_arg() {}
+
+    Object_ptr& _data;
+
+  private:
+    Object_INOUT_arg();
+  };
+
+  // omniORB2 private class
+  class Object_OUT_arg {
+  public:
+    inline Object_OUT_arg(Object_ptr& p) : _data(p) { }
+    inline Object_OUT_arg(Object_var& p) : _data(p.pd_objref) { 
+      p = CORBA::Object::_nil(); 
+    }
+    inline Object_OUT_arg(Object_member& p) : _data(p._ptr) { 
+      p = CORBA::Object::_nil();
+    }
+    inline ~Object_OUT_arg() {}
+
+    Object_ptr& _data;
+
+  private:
+    Object_OUT_arg();
+  };
 };
+
 
 #include <omniORB2/templates.h>
 #include <omniORB2/proxyFactory.h>
