@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  1999/10/18 17:28:17  djr
+ Fixes for building MSVC dlls.
+
  Revision 1.1.2.3  1999/10/18 11:27:36  djr
  Centralised list of system exceptions.
 
@@ -952,7 +955,7 @@ _CORBA_MODULE_BEG
   ////////////////////////// WrongTransaction //////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(WrongTransaction)
+  OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(WrongTransaction, _dyn_attr)
 
 
   //////////////////////////////////////////////////////////////////////
@@ -985,7 +988,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static _core_attr const _CORBA_ULong PR_magic;
+    static _dyn_attr const _CORBA_ULong PR_magic;
 
   private:
     CORBA::Exception* pd_exception;
@@ -1042,7 +1045,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static _core_attr const _CORBA_ULong PR_magic;
+    static _dyn_attr const _CORBA_ULong PR_magic;
 
   protected:
     NamedValue() { pd_magic = PR_magic; }
@@ -1086,13 +1089,13 @@ _CORBA_MODULE_BEG
 
     // OMG Interface:
 
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds, _dyn_attr)
 
     static inline _CORBA_Boolean PR_is_valid(NVList_ptr p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static _core_attr const _CORBA_ULong PR_magic;
+    static _dyn_attr const _CORBA_ULong PR_magic;
 
   protected:
     NVList() { pd_magic = PR_magic; }
@@ -1152,7 +1155,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static _core_attr const _CORBA_ULong PR_magic;
+    static _dyn_attr const _CORBA_ULong PR_magic;
 
   protected:
     Context() { pd_magic = PR_magic; }
@@ -1197,13 +1200,13 @@ _CORBA_MODULE_BEG
 
     // OMG Interface:
 
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds, _dyn_attr)
 
     static inline _CORBA_Boolean PR_is_valid(ContextList_ptr p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static _core_attr const _CORBA_ULong PR_magic;
+    static _dyn_attr const _CORBA_ULong PR_magic;
 
   protected:
     ContextList() { pd_magic = PR_magic; }
@@ -1282,13 +1285,13 @@ _CORBA_MODULE_BEG
 
     // OMG Interface:
 
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds, _dyn_attr)
 
     static inline _CORBA_Boolean PR_is_valid(ExceptionList_ptr p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static _core_attr const _CORBA_ULong PR_magic;
+    static _dyn_attr const _CORBA_ULong PR_magic;
 
   protected:
     ExceptionList() { pd_magic = PR_magic; }
@@ -1558,8 +1561,8 @@ _CORBA_MODULE_BEG
 
     // OMG Interface:
 
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds)
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(BadKind)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds, _dyn_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(BadKind, _dyn_attr)
 
     static void marshalTypeCode(TypeCode_ptr obj,NetBufferedStream& s);
     static TypeCode_ptr unmarshalTypeCode(NetBufferedStream& s);
@@ -1643,7 +1646,7 @@ _CORBA_MODULE_BEG
     static inline _CORBA_Boolean PR_is_valid(TypeCode_ptr p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
-    static _core_attr const CORBA::ULong PR_magic;
+    static _dyn_attr const CORBA::ULong PR_magic;
 
   protected:
     // These operators are placed here to avoid them being used externally
@@ -1714,10 +1717,10 @@ _CORBA_MODULE_BEG
   class DynAny {
   public:
 
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Invalid)
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InvalidValue)
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(TypeMismatch)
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InvalidSeq)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Invalid, _dyn_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InvalidValue, _dyn_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(TypeMismatch, _dyn_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InvalidSeq, _dyn_attr)
 
     typedef _CORBA_Unbounded_Sequence__Octet OctetSeq;
 
@@ -1776,7 +1779,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static _core_attr const _CORBA_ULong PR_magic;
+    static _dyn_attr const _CORBA_ULong PR_magic;
   protected:
     DynAny();
 
@@ -1999,7 +2002,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static _core_attr const _CORBA_ULong PR_magic;
+    static _dyn_attr const _CORBA_ULong PR_magic;
 
   protected:
     Request() { pd_magic = PR_magic; }
@@ -2196,8 +2199,8 @@ _CORBA_MODULE_BEG
     typedef _CORBA_Pseudo_Unbounded_Sequence<Request,Request_member>
       RequestSeq;
 
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InvalidName)
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InconsistentTypeCode)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InvalidName, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InconsistentTypeCode, _dyn_attr)
 
     ///////////////////////
     // ORB::ObjectIdList //

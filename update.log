@@ -1,4 +1,18 @@
 
+Mon Oct 18 18:24:41 BST 1999 djr
+================================
+
+- Work-around for MSVC scoping bug in omniidl3.
+
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+- Fixes for MSVC dll building.
+
+include/omniORB3/CORBA.h
+include/omniORB3/poa.h
+include/omniORB3/userexception.h
+
+
 Mon Oct 18 12:00:56 BST 1999 djr
 ================================
 

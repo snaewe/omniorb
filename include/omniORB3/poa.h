@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  1999/10/18 17:28:18  djr
+  Fixes for building MSVC dlls.
+
   Revision 1.1.2.3  1999/10/16 13:22:51  djr
   Changes to support compiling on MSVC.
 
@@ -377,7 +380,7 @@ _CORBA_MODULE_BEG
 
   class POAManager : public CORBA::Object {
   public:
-    OMNIORB_DECLARE_USER_EXCEPTION(AdapterInactive)
+    OMNIORB_DECLARE_USER_EXCEPTION(AdapterInactive, _core_attr)
 
     virtual void activate() = 0;
     virtual void hold_requests(CORBA::Boolean wait_for_completion) = 0;
@@ -423,16 +426,16 @@ _CORBA_MODULE_BEG
   public:
     // Exceptions
 
-    OMNIORB_DECLARE_USER_EXCEPTION(AdapterAlreadyExists)
-    OMNIORB_DECLARE_USER_EXCEPTION(AdapterInactive)
-    OMNIORB_DECLARE_USER_EXCEPTION(AdapterNonExistent)
-    OMNIORB_DECLARE_USER_EXCEPTION(NoServant)
-    OMNIORB_DECLARE_USER_EXCEPTION(ObjectAlreadyActive)
-    OMNIORB_DECLARE_USER_EXCEPTION(ObjectNotActive)
-    OMNIORB_DECLARE_USER_EXCEPTION(ServantAlreadyActive)
-    OMNIORB_DECLARE_USER_EXCEPTION(ServantNotActive)
-    OMNIORB_DECLARE_USER_EXCEPTION(WrongAdapter)
-    OMNIORB_DECLARE_USER_EXCEPTION(WrongPolicy)
+    OMNIORB_DECLARE_USER_EXCEPTION(AdapterAlreadyExists, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(AdapterInactive, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(AdapterNonExistent, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(NoServant, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(ObjectAlreadyActive, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(ObjectNotActive, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(ServantAlreadyActive, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(ServantNotActive, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(WrongAdapter, _core_attr)
+    OMNIORB_DECLARE_USER_EXCEPTION(WrongPolicy, _core_attr)
 
     class InvalidPolicy : public CORBA::UserException {
     public:
@@ -572,7 +575,7 @@ _CORBA_MODULE_BEG
 #if 0
   class Current : public CORBA::Current {
   public:
-    OMNIORB_DECLARE_USER_EXCEPTION(NoContext)
+    OMNIORB_DECLARE_USER_EXCEPTION(NoContext, _core_attr)
 
     virtual POA_ptr get_POA() = 0;
     virtual ObjectId* get_object_id() = 0;
