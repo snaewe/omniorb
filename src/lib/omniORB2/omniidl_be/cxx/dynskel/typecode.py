@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  2000/01/13 18:16:35  djs
+# A little formatting
+#
 # Revision 1.10  2000/01/13 15:56:35  djs
 # Factored out private identifier prefix rather than hard coding it all through
 # the code.
@@ -141,28 +144,6 @@ def __init__(stream):
     
     return self
 
-# It appears that the old compiler will map names in repository IDs
-# to avoid supposed clashes with C++ keywords, but this is totally
-# broken
-# eg mapRepoID("IDL:Module/If/Then") -> "IDL:Module/_cxx_If/_cxx_Then"
-def mapRepoID(id):
-    return tyutil.mapRepoID(id)
-    # extract the naming part of the ID
-    regex = re.compile(r"(IDL:)*(.+):(.+)")
-    match = regex.match(id)
-    first_bit = match.group(1)
-    if not(first_bit):
-        first_bit = ""
-    the_name = match.group(2)
-    ver = match.group(3)
-    # extract the name 
-    elements = re.split(r"/", the_name)
-    mapped_elements = []
-    for element in elements:
-        mapped_elements.append(tyutil.mapID(element))
-    # put it all back together again
-    return first_bit + string.join(mapped_elements, "/") + ":" + ver
-
 # Places TypeCode symbol in appropriate namespace with a non-static const
 # declaration (performs MSVC workaround)
 def external_linkage(decl, mangled_name = ""):
@@ -217,7 +198,6 @@ namespace @scope@ {
 }
 #else
 const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
-
 #endif
 """, scope = flatscope, tc_name = tc_name, mangled_name = mangled_name,
                tc_unscoped_name = tc_unscoped_name)
@@ -290,7 +270,7 @@ def mkTypeCode(type, declarator = None, node = None):
             return prefix + "Object_tc()"
         repoID = type.decl().repoId()
         if config.EMULATE_BUGS():
-            repoID = mapRepoID(repoID)
+            repoID = tyutil.mapRepoID(repoID)
         iname = tyutil.mapID(tyutil.name(scopedName))
         return prefix + "interface_tc(\"" + repoID + "\", " +\
                    "\"" + iname + "\")"
@@ -363,7 +343,18 @@ def numMembers(node):
 
     return num
             
-def visitStruct_structMember(node):
+
+def visitStruct(node):
+    if not(node.mainFile()) and not(self.__override):
+        return
+
+    # the key here is to redirect the bottom half to a buffer
+    # just for now
+    oldbottomhalf = self.bottomhalf
+    self.bottomhalf = util.StringStream()
+
+    insideModule = self.__immediatelyInsideModule
+    self.__immediatelyInsideModule = 0
 
     # create the static typecodes for constructed types by setting
     # the override flag and recursing
@@ -381,45 +372,31 @@ def visitStruct_structMember(node):
 
     scopedName = node.scopedName()
     mangled_name = mangleName(config.privatePrefix() + "_tc_", scopedName)
-    if alreadyDefined(mangled_name):
-        # private static name already declared, don't do it again
-        return
+    if not(alreadyDefined(mangled_name)):
+        # only define the name once
 
-    defineName(mangled_name)
-
-    structmember_mangled_name = mangleName(config.privatePrefix() + \
-                                           "_structmember_", scopedName)
-    assert alreadyDefined(structmember_mangled_name), \
-           "The name \"" + structmember_mangled_name + "\" should be defined by now"
+        defineName(mangled_name)
     
-    num = numMembers(node)
-    repoID = node.repoId()
-    if config.EMULATE_BUGS():
-        repoID = mapRepoID(repoID)
-    struct_name = tyutil.mapID(tyutil.name(scopedName))
+        structmember_mangled_name = mangleName(config.privatePrefix() + \
+                                               "_structmember_", scopedName)
+        assert alreadyDefined(structmember_mangled_name), \
+               "The name \"" + structmember_mangled_name + \
+               "\" should be defined by now"
+    
+        num = numMembers(node)
+        repoID = node.repoId()
+        if config.EMULATE_BUGS():
+            repoID = tyutil.mapRepoID(repoID)
+        struct_name = tyutil.mapID(tyutil.name(scopedName))
 
-    tophalf.out("""\
+        tophalf.out("""\
 static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repoID@", "@name@", @structmember_mangled_name@, @n@);""",
-                mangled_name = mangled_name,
-                structmember_mangled_name = structmember_mangled_name,
-                name = struct_name, n = str(num),
-                repoID = repoID)    
-
-    return
+                    mangled_name = mangled_name,
+                    structmember_mangled_name = structmember_mangled_name,
+                    name = struct_name, n = str(num),
+                    repoID = repoID)   
 
 
-def visitStruct(node):
-    if not(node.mainFile()) and not(self.__override):
-        return
-
-    # the key here is to redirect the bottom half to a buffer
-    # just for now
-    oldbottomhalf = self.bottomhalf
-    self.bottomhalf = util.StringStream()
-
-    insideModule = self.__immediatelyInsideModule
-    self.__immediatelyInsideModule = 0
-    visitStruct_structMember(node)
     self.__immediatelyInsideModule = insideModule
 
     external_linkage(node)
@@ -494,7 +471,7 @@ def visitUnion(node):
     discrim_tc = mkTypeCode(switchType)
     repoID = node.repoId()
     if config.EMULATE_BUGS():
-        repoID = mapRepoID(repoID)
+        repoID = tyutil.mapRepoID(repoID)
 
     union_name = tyutil.mapID(tyutil.name(scopedName))
     unionmember_mangled_name = mangleName(config.privatePrefix() + \
@@ -543,7 +520,7 @@ def visitEnum(node):
     
     repoID = node.repoId()
     if config.EMULATE_BUGS():
-        repoID = mapRepoID(repoID)
+        repoID = tyutil.mapRepoID(repoID)
 
     tc_name = name.prefixName(scopedName, "_tc_")
     enummember_mangled_name = mangleName(config.privatePrefix() + \
@@ -587,7 +564,7 @@ def visitInterface(node):
     
     repoID = node.repoId()
     if config.EMULATE_BUGS():
-        repoID = mapRepoID(repoID)
+        repoID = tyutil.mapRepoID(repoID)
     iname = tyutil.mapID(tyutil.name(node.scopedName()))
     typecode = "CORBA::TypeCode::PR_interface_tc(\"" + repoID + "\", \"" +\
                iname + "\")"
@@ -634,7 +611,7 @@ def visitDeclarator(declarator):
     
     repoID = declarator.repoId()
     if config.EMULATE_BUGS():
-        repoID = mapRepoID(repoID)
+        repoID = tyutil.mapRepoID(repoID)
     typecode = mkTypeCode(aliasType, declarator)
         
     scopedName = declarator.scopedName()
@@ -713,7 +690,7 @@ def visitException(node):
 
     repoID = node.repoId()
     if config.EMULATE_BUGS():
-        repoID = mapRepoID(repoID)
+        repoID = tyutil.mapRepoID(repoID)
     ex_name = tyutil.mapID(tyutil.name(scopedName))
     structmember_mangled_name = mangleName(config.privatePrefix() + \
                                            "_structmember_", scopedName)
