@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6  1999/12/28 17:44:01  dpg1
+// Stupid string allocation bug.
+//
 // Revision 1.5  1999/11/19 16:03:40  dpg1
 // Flex scanner now accepts \r as whitespace.
 //
@@ -457,7 +460,7 @@ _CORBA_UShort escapeToWChar(char* s) {
 
 char* escapedStringToString(char* s) {
   int   len = strlen(s);
-  char* ret = new char[len];
+  char* ret = new char[len+1];
   char  tmp[8];
 
   int from, to, i;
@@ -511,7 +514,7 @@ char* escapedStringToString(char* s) {
 
 _CORBA_UShort* escapedStringToWString(char* s) {
   int            len = strlen(s);
-  _CORBA_UShort* ret = new _CORBA_UShort[len];
+  _CORBA_UShort* ret = new _CORBA_UShort[len+1];
   char           tmp[8];
 
   int from, to, i;
@@ -570,7 +573,7 @@ _CORBA_UShort* escapedStringToWString(char* s) {
 }
 
 void parseLineDirective(char* s) {
-  char* file    = new char[strlen(s)];
+  char* file    = new char[strlen(s) + 1];
   long int line = 0, mode = 0;
   int cnt       = sscanf(s, "# %ld \"%[^\"]\" %ld", &line, file, &mode);
 
