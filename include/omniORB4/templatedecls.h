@@ -1018,12 +1018,16 @@ public:
   inline const T& operator[] (_CORBA_ULong index) const {
     return *((const T*) (pd_data + index));
   }
+#if 0
+  // Remove T* operator. Array _var type can no longer be used as IN
+  // arguments.
   inline operator T* () const { return pd_data; }
   // Define the const T* operator() causes conversion operator ambiguity with 
   // some compilers. Should be alright to leave this operator out. If not,
   // reinstate it and #ifdef it with the right compiler specific macro.
   //
   //  inline operator const T* () const { return (const T*) pd_data; }
+#endif
 
   const T* in() const { return (const T*)pd_data; }
   T*       inout()    { return pd_data; }
