@@ -1,3 +1,20 @@
+Mon Feb 18 18:55:18 GMT 2002 dpg1
+=================================
+
+- Yet another autoconf update.
+
+external_merge/GNUmakefile.in
+external_merge/configure
+external_merge/configure.ac
+external_merge/idl/GNUmakefile.in		-- new
+external_merge/idl/COS/GNUmakefile.in		-- new
+external_merge/include/GNUmakefile.in
+external_merge/include/omnithread/GNUmakefile.in
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/tool/omniidl/python/scripts/omniidl.in
+
+
 Mon Feb 18 17:24:15 GMT 2002 dpg1
 =================================
 

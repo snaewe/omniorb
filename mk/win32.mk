@@ -453,8 +453,8 @@ omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
 lib_depend := $(omnidynamic_dll_name)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
-OMNIORB_IDL_ONLY = \
-  $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/oidlwrapper.exe $(XLN) -bcxx -Wbh=.hh -Wbs=SK.cc
+OMNIIDL = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/oidlwrapper.exe $(XLN)
+OMNIORB_IDL_ONLY = $(OMNIIDL) -bcxx -Wbh=.hh -Wbs=SK.cc
 OMNIORB_IDL_ANY_FLAGS = -Wba
 OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB4__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)

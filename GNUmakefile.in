@@ -12,6 +12,6 @@ all::
 
 install::
 	@$(MakeSubdirs)
-	@(subdirs="include"; $(MakeSubdirs))
+	@(subdirs="include idl"; $(MakeSubdirs))
 
 include $(TOP)/mk/afterauto.mk

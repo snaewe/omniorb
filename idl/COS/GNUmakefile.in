@@ -1,0 +1,40 @@
+TOP=../..
+CURRENT=idl/COS
+BASE_OMNI_TREE=@top_srcdir@
+VPATH=@srcdir@
+
+INSTALLDIR = $(prefix)/idl/omniORB/COS
+
+FILES = AttNotifyChannelAdmin.idl CosCollection.idl			\
+        CosCompoundLifeCycle.idl CosConcurrencyControl.idl		\
+        CosContainment.idl CosEventChannelAdmin.idl CosEventComm.idl	\
+        CosExternalization.idl CosExternalizationContainment.idl	\
+        CosExternalizationReference.idl CosGraphs.idl			\
+        CosLicensingManager.idl CosLifeCycle.idl			\
+        CosLifeCycleContainment.idl CosLifeCycleReference.idl		\
+        CosNaming.idl CosNotification.idl CosNotifyChannelAdmin.idl	\
+        CosNotifyComm.idl CosNotifyFilter.idl CosObjectIdentity.idl	\
+        CosPersistenceDDO.idl CosPersistenceDS_CLI.idl			\
+        CosPersistencePDS.idl CosPersistencePDS_DA.idl			\
+        CosPersistencePID.idl CosPersistencePO.idl			\
+        CosPersistencePOM.idl CosPropertyService.idl CosQuery.idl	\
+        CosQueryCollection.idl CosReference.idl CosRelationships.idl	\
+        CosStream.idl CosTSPortability.idl CosTime.idl			\
+        CosTimerEvent.idl CosTrading.idl CosTradingDynamic.idl		\
+        CosTradingRepos.idl CosTransactions.idl				\
+        CosTypedEventChannelAdmin.idl CosTypedEventComm.idl		\
+        CosTypedNotifyChannelAdmin.idl CosTypedNotifyComm.idl		\
+        DCE_CIOPSecurity.idl LifeCycleService.idl Lname-library.idl	\
+        NRService.idl RDITestTypes.idl SECIOP.idl SSLIOP.idl		\
+        Security.idl SecurityAdmin.idl SecurityLevel1.idl		\
+        SecurityLevel2.idl SecurityReplaceable.idl TimeBase.idl
+
+include $(TOP)/mk/beforeauto.mk
+
+install:: $(FILES)
+	@(dir="$(INSTALLDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done )
+
+include $(TOP)/mk/afterauto.mk

@@ -7185,7 +7185,9 @@ ac_config_files="$ac_config_files src/tool/omniidl/python/scripts/omniidl"
 
 ac_config_files="$ac_config_files src/appl/GNUmakefile src/appl/omniMapper/GNUmakefile src/appl/omniNames/GNUmakefile src/appl/utils/catior/GNUmakefile src/appl/utils/convertior/GNUmakefile src/appl/utils/GNUmakefile src/appl/utils/genior/GNUmakefile src/appl/utils/nameclt/GNUmakefile src/GNUmakefile src/examples/anyExample/GNUmakefile src/examples/boa/GNUmakefile src/examples/call_back/GNUmakefile src/examples/dii/GNUmakefile src/examples/GNUmakefile src/examples/dsi/GNUmakefile src/examples/echo/GNUmakefile src/examples/partcl/GNUmakefile src/examples/poa/GNUmakefile src/examples/poa/implicit_activation/GNUmakefile src/examples/poa/persistent_objref/GNUmakefile src/examples/poa/servant_manager/GNUmakefile src/examples/poa/threading/GNUmakefile src/examples/ssl_echo/GNUmakefile src/examples/thread/GNUmakefile src/lib/GNUmakefile src/lib/omniORB/codesets/GNUmakefile src/lib/omniORB/GNUmakefile src/lib/omniORB/dynamic/GNUmakefile src/lib/omniORB/omniidl_be/cxx/GNUmakefile src/lib/omniORB/omniidl_be/cxx/dynskel/GNUmakefile src/lib/omniORB/omniidl_be/cxx/header/GNUmakefile src/lib/omniORB/omniidl_be/cxx/impl/GNUmakefile src/lib/omniORB/omniidl_be/cxx/skel/GNUmakefile src/lib/omniORB/omniidl_be/GNUmakefile src/lib/omniORB/orbcore/GNUmakefile src/lib/omniORB/orbcore/ssl/GNUmakefile src/lib/omnithread/GNUmakefile src/services/GNUmakefile src/services/mklib/GNUmakefile src/services/mklib/mkBOAlib/GNUmakefile src/tool/GNUmakefile src/tool/omkdepend/GNUmakefile src/tool/omniidl/cxx/cccp/GNUmakefile src/tool/omniidl/cxx/GNUmakefile src/tool/omniidl/GNUmakefile src/tool/omniidl/python/GNUmakefile src/tool/omniidl/python/omniidl_be/GNUmakefile src/tool/omniidl/python/omniidl/GNUmakefile src/tool/omniidl/python/scripts/GNUmakefile"
 
-ac_config_files="$ac_config_files include/GNUmakefile include/omniORB4/GNUmakefile include/omniORB4/internal/GNUmakefile"
+ac_config_files="$ac_config_files include/GNUmakefile include/omnithread/GNUmakefile include/omniORB4/GNUmakefile include/omniORB4/internal/GNUmakefile"
+
+ac_config_files="$ac_config_files idl/GNUmakefile idl/COS/GNUmakefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -7266,7 +7268,7 @@ DEFS=-DHAVE_CONFIG_H
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
 ac_clean_files="$ac_clean_files $CONFIG_STATUS"
-{ echo "$as_me:7269: creating $CONFIG_STATUS" >&5
+{ echo "$as_me:7271: creating $CONFIG_STATUS" >&5
 echo "$as_me: creating $CONFIG_STATUS" >&6;}
 cat >$CONFIG_STATUS <<_ACEOF
 #! $SHELL
@@ -7439,7 +7441,7 @@ cat >>$CONFIG_STATUS <<\EOF
     echo "$ac_cs_version"; exit 0 ;;
   --he | --h)
     # Conflict between --help and --header
-    { { echo "$as_me:7442: error: ambiguous option: $1
+    { { echo "$as_me:7444: error: ambiguous option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: ambiguous option: $1
 Try \`$0 --help' for more information." >&2;}
@@ -7458,7 +7460,7 @@ Try \`$0 --help' for more information." >&2;}
     ac_need_defaults=false;;
 
   # This is an error.
-  -*) { { echo "$as_me:7461: error: unrecognized option: $1
+  -*) { { echo "$as_me:7463: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&2;}
@@ -7547,10 +7549,13 @@ do
   "src/tool/omniidl/python/omniidl/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES src/tool/omniidl/python/omniidl/GNUmakefile" ;;
   "src/tool/omniidl/python/scripts/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES src/tool/omniidl/python/scripts/GNUmakefile" ;;
   "include/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/GNUmakefile" ;;
+  "include/omnithread/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/omnithread/GNUmakefile" ;;
   "include/omniORB4/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/omniORB4/GNUmakefile" ;;
   "include/omniORB4/internal/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/omniORB4/internal/GNUmakefile" ;;
+  "idl/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES idl/GNUmakefile" ;;
+  "idl/COS/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES idl/COS/GNUmakefile" ;;
   "include/omniconfig.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/omniconfig.h" ;;
-  *) { { echo "$as_me:7553: error: invalid argument: $ac_config_target" >&5
+  *) { { echo "$as_me:7558: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
   esac
@@ -7788,7 +7793,7 @@ done; }
   esac
 
   if test x"$ac_file" != x-; then
-    { echo "$as_me:7791: creating $ac_file" >&5
+    { echo "$as_me:7796: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
     rm -f "$ac_file"
   fi
@@ -7806,7 +7811,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:7809: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:7814: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -7819,7 +7824,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:7822: error: cannot find input file: $f" >&5
+           { { echo "$as_me:7827: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -7880,7 +7885,7 @@ for ac_file in : $CONFIG_HEADERS; do test "x$ac_file" = x: && continue
   * )   ac_file_in=$ac_file.in ;;
   esac
 
-  test x"$ac_file" != x- && { echo "$as_me:7883: creating $ac_file" >&5
+  test x"$ac_file" != x- && { echo "$as_me:7888: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
 
   # First look for the input files in the build tree, otherwise in the
@@ -7891,7 +7896,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:7894: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:7899: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -7904,7 +7909,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:7907: error: cannot find input file: $f" >&5
+           { { echo "$as_me:7912: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -8021,7 +8026,7 @@ cat >>$CONFIG_STATUS <<\EOF
   rm -f $tmp/in
   if test x"$ac_file" != x-; then
     if cmp -s $ac_file $tmp/config.h 2>/dev/null; then
-      { echo "$as_me:8024: $ac_file is unchanged" >&5
+      { echo "$as_me:8029: $ac_file is unchanged" >&5
 echo "$as_me: $ac_file is unchanged" >&6;}
     else
       ac_dir=`$as_expr X"$ac_file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \

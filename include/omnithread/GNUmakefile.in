@@ -10,9 +10,8 @@ HEADERS = mach.h nt.h posix.h pthread_nt.h solaris.h
 include $(TOP)/mk/beforeauto.mk
 
 install:: $(HEADERS)
-	@(for i in $^; do \
-            file="$$i"; \
-            dir="$(INSTALLDIR)"; \
+	@(dir="$(INSTALLDIR)"; \
+          for file in $^; do \
             $(ExportFileToDir) \
           done )
 

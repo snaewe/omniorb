@@ -226,7 +226,11 @@ AC_CONFIG_FILES(src/appl/GNUmakefile
                )
 
 AC_CONFIG_FILES(include/GNUmakefile
+                include/omnithread/GNUmakefile
                 include/omniORB4/GNUmakefile
                 include/omniORB4/internal/GNUmakefile)
+
+AC_CONFIG_FILES(idl/GNUmakefile
+                idl/COS/GNUmakefile)
 
 AC_OUTPUT

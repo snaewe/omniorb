@@ -1,17 +1,18 @@
 TOP=..
-CURRENT=include
+CURRENT=idl
 BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
 
-INSTALLDIR = $(INSTALLINCDIR)
+INSTALLDIR = $(prefix)/idl/omniORB
 
-HEADERS = omnithread.h omniconfig.h
+FILES = Naming.idl bootstrap.idl corbaidl.idl echo.idl ir.idl orb.idl \
+        poa.idl poa_include.idl
 
-SUBDIRS = omnithread omniORB4
+SUBDIRS = COS
 
 include $(TOP)/mk/beforeauto.mk
 
-install:: $(HEADERS)
+install:: $(FILES)
 	@(dir="$(INSTALLDIR)"; \
           for file in $^; do \
             $(ExportFileToDir) \
