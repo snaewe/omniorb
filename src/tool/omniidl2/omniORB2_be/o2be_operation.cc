@@ -11,10 +11,13 @@
 
 /*
   $Log$
-  Revision 1.8  1997/04/23 14:31:16  sll
-  - added support for LOCATION_FORWARD message
-  - added code to assert object existent when first do a remote call.
+  Revision 1.9  1997/04/29 12:30:39  sll
+  Removed name ambiguity.
 
+// Revision 1.8  1997/04/23  14:31:16  sll
+// - added support for LOCATION_FORWARD message
+// - added code to assert object existent when first do a remote call.
+//
 // Revision 1.7  1997/03/10  16:43:05  sll
 // - New member function produce_mapping_with_indirection. This function produce
 //   the mapping for an operation that uses the adaptation classes for passing
@@ -1479,7 +1482,7 @@ o2be_operation::produce_mapping_with_indirection(fstream& s,
 	if (!i.is_done()) {
 	  s << ",\n";
 	  IND(s);
-	  for (unsigned int i=0; i < indent_pos; i++) 
+	  for (unsigned int j=0; j < indent_pos; j++) 
 	    s << " ";
 	}
       }
