@@ -11,12 +11,18 @@
  
 /*
   $Log$
-  Revision 1.3  1997/01/13 14:52:54  sll
-  It is now valid to call createObjRef() with the argument <targetRepoId> == 0.
-  The semantics of such a call is to return a proxyObject if there is
-  a proxyObjectFactory for the given interface. Otherwise, an AnonymousObject
-  instance is returned.
+  Revision 1.4  1997/03/10 12:46:41  sll
+  - Changed to use the static member variables in the omniObject class etc.
+    Previously they were static local variables.
+  - Minor changes to accomodate the creation of a public API for omniORB2.
+  - Minor bug fix to disposeObject.
 
+// Revision 1.3  1997/01/13  14:52:54  sll
+// It is now valid to call createObjRef() with the argument <targetRepoId> == 0.
+// The semantics of such a call is to return a proxyObject if there is
+// a proxyObjectFactory for the given interface. Otherwise, an AnonymousObject
+// instance is returned.
+//
 // Revision 1.2  1997/01/08  18:18:06  ewc
 // Added work-around for MSVC++ 4.2 exception problem.
 //
@@ -76,15 +82,9 @@
 //    main() is called. The ctor of proxyObjectFactory links the instance
 //    to the chain headed by the local variable proxyStubs in this module.
 
-
-static omni_mutex          objectTableLock;
-static omniObject    *proxyObjectTable;
-static omniObject   **localObjectTable;
-static proxyObjectFactory *proxyStubs;
-
 proxyObjectFactory::proxyObjectFactory()
 {
-  pd_next = proxyStubs;
+  pd_next = proxyObjectFactory::proxyStubs;
   proxyStubs = this;
   return;
 }
@@ -95,7 +95,7 @@ proxyObjectFactory::~proxyObjectFactory()
 
 proxyObjectFactory_iterator::proxyObjectFactory_iterator()
 {
-  pd_f = proxyStubs;
+  pd_f = proxyObjectFactory::proxyStubs;
 }
 
 proxyObjectFactory *
@@ -111,7 +111,7 @@ proxyObjectFactory_iterator::operator() ()
 // class for a give interface repository ID is found.
 // Of course, one can only use such an object as a CORBA::Object_ptr and
 // passes it around as the type "Object" in IDL operations and attributes.
-// See also the comments in omniORB::createObjRef().
+// See also the comments in omni::createObjRef().
 class AnonymousObject : public virtual omniObject,
 			public virtual CORBA::Object 
 {
@@ -125,12 +125,12 @@ public:
     omniObject(repoId,r,key,keysize,profiles,release) 
   {
     this->PR_setobj(this);
-    omniORB::objectIsReady(this);
+    omni::objectIsReady(this);
   }
   virtual ~AnonymousObject() {}
   
 protected:
-  virtual void *_widenFromTheMostDerivedIntf(const char *repoId) throw ();
+  virtual void *_widenFromTheMostDerivedIntf(const char *repoId);
 
 private:
   AnonymousObject();
@@ -139,7 +139,7 @@ private:
 };
 
 void *
-AnonymousObject::_widenFromTheMostDerivedIntf(const char *repoId) throw ()
+AnonymousObject::_widenFromTheMostDerivedIntf(const char *repoId)
 {
   if (!repoId)
     return (void *)((CORBA::Object_ptr)this);
@@ -148,27 +148,27 @@ AnonymousObject::_widenFromTheMostDerivedIntf(const char *repoId) throw ()
 }
 
 void
-omniORB::objectIsReady(omniObject *obj)
+omni::objectIsReady(omniObject *obj)
 {
-  objectTableLock.lock();
+  omniObject::objectTableLock.lock();
   if (obj->getRefCount() != 0) {
-    objectTableLock.unlock();
+    omniObject::objectTableLock.unlock();
     throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
   }
     
   if (obj->is_proxy())
     {
-      obj->pd_next = proxyObjectTable;
-      proxyObjectTable = obj;
+      obj->pd_next = omniObject::proxyObjectTable;
+      omniObject::proxyObjectTable = obj;
     }
   else
     {
-      omniObject **p = &localObjectTable[obj->pd_objkey.native.hash()];
+      omniObject **p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
       omniObject **pp = p;
       while (*p) {
 	if ((*p)->pd_objkey.native == obj->pd_objkey.native) {
 	  obj->pd_next = 0;
-	  objectTableLock.unlock();
+	  omniObject::objectTableLock.unlock();
 	  throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
 	}
 	p = &((*p)->pd_next);
@@ -177,36 +177,36 @@ omniORB::objectIsReady(omniObject *obj)
       *pp = obj;
     }
   obj->setRefCount(obj->getRefCount()+1);
-  objectTableLock.unlock();
+  omniObject::objectTableLock.unlock();
   return;
 }
 
 
 void
-omniORB::objectDuplicate(omniObject *obj)
+omni::objectDuplicate(omniObject *obj)
 {
-  objectTableLock.lock();
+  omniObject::objectTableLock.lock();
   if (obj->getRefCount() <= 0) {
-    objectTableLock.unlock();
+    omniObject::objectTableLock.unlock();
     throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
   }
   obj->setRefCount(obj->getRefCount()+1);
-  objectTableLock.unlock();
+  omniObject::objectTableLock.unlock();
   return;
 }
 
 void
-omniORB::objectRelease(omniObject *obj)
+omni::objectRelease(omniObject *obj)
 {
-  objectTableLock.lock();
+  omniObject::objectTableLock.lock();
   if (obj->getRefCount() <= 0) {
-    objectTableLock.unlock();
+    omniObject::objectTableLock.unlock();
     throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
   }
   obj->setRefCount(obj->getRefCount()-1);
   if (obj->getRefCount() == 0) {
     if (obj->is_proxy()) {
-      omniObject **p = &proxyObjectTable;
+      omniObject **p = &omniObject::proxyObjectTable;
       while (*p) {
 	if (*p == obj) {
 	  *p = obj->pd_next;
@@ -217,7 +217,7 @@ omniORB::objectRelease(omniObject *obj)
       delete obj;
     }
     else {
-      omniObject **p = &localObjectTable[obj->pd_objkey.native.hash()];
+      omniObject **p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
       while (*p) {
 	if (*p == obj) {
 	  *p = obj->pd_next;
@@ -229,16 +229,23 @@ omniORB::objectRelease(omniObject *obj)
 	delete obj;   // call dtor if BOA->disposed() has been called.
     }
   }
-  objectTableLock.unlock();
+  omniObject::objectTableLock.unlock();
   return;
 }
 
 void
-omniORB::disposeObject(omniObject *obj)
+omni::disposeObject(omniObject *obj)
 {
   if (obj->is_proxy())
     return;
-  objectTableLock.lock();
+  omniObject::objectTableLock.lock();
+  if (obj->getRefCount() <= 0) {
+    omniObject::objectTableLock.unlock();
+    throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+  }
+  else
+    obj->setRefCount(obj->getRefCount()-1);
+
   if (obj->getRefCount() == 0) {
     // object has already been removed from the object table
     delete obj;
@@ -246,32 +253,32 @@ omniORB::disposeObject(omniObject *obj)
   else {
     obj->pd_disposed = 1;
   }
-  objectTableLock.unlock();
+  omniObject::objectTableLock.unlock();
   return;
 }
 
 
 omniObject *
-omniORB::locateObject(omniObjectKey &k)
+omni::locateObject(omniObjectKey &k)
 {
-  objectTableLock.lock();
-  omniObject **p = &localObjectTable[k.hash()];
+  omniObject::objectTableLock.lock();
+  omniObject **p = &omniObject::localObjectTable[omniORB::hash(k)];
   while (*p) {
     if ((*p)->pd_objkey.native == k) {
       (*p)->setRefCount((*p)->getRefCount()+1);
-      objectTableLock.unlock();
+      omniObject::objectTableLock.unlock();
       return *p;
     }
     p = &((*p)->pd_next);
   }
-  objectTableLock.unlock();
+  omniObject::objectTableLock.unlock();
   throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
   return 0;  // MS VC++ 4.0 needs this.
 }
 
 
 omniObject *
-omniORB::createObjRef(const char *mostDerivedRepoId,
+omni::createObjRef(const char *mostDerivedRepoId,
 		      const char *targetRepoId,
 		      IOP::TaggedProfileList *profiles,
 		      CORBA::Boolean release)
@@ -319,7 +326,7 @@ omniORB::createObjRef(const char *mostDerivedRepoId,
   }
   size_t ksize = 0;
 
-  Rope *r = omniORB::iopProfilesToRope(profiles,objkey,ksize);
+  Rope *r = omni::iopProfilesToRope(profiles,objkey,ksize);
 
   try {
     if (r) {
@@ -368,7 +375,7 @@ omniORB::createObjRef(const char *mostDerivedRepoId,
     }
     else {
       // A local object
-      omniObject *objptr = omniORB::locateObject(*((omniObjectKey *)objkey));
+      omniObject *objptr = omni::locateObject(*((omniObjectKey *)objkey));
       delete [] objkey;
       if (release)
 	delete profiles;
@@ -382,7 +389,7 @@ omniORB::createObjRef(const char *mostDerivedRepoId,
 }
 
 char *
-omniORB::objectToString(const omniObject *obj)
+omni::objectToString(const omniObject *obj)
 {
   if (!obj) {
     IOP::TaggedProfileList p;
@@ -396,7 +403,7 @@ omniORB::objectToString(const omniObject *obj)
 }
 
 omniObject *
-omniORB::stringToObject(const char *str)
+omni::stringToObject(const char *str)
 {
   char *repoId;
   IOP::TaggedProfileList *profiles;
@@ -410,7 +417,7 @@ omniORB::stringToObject(const char *str)
   }
 
   try {
-    return omniORB::createObjRef(repoId,0,profiles,1);
+    return omni::createObjRef(repoId,0,profiles,1);
   }
   catch (...) {
     delete [] repoId;	
@@ -420,7 +427,7 @@ omniORB::stringToObject(const char *str)
 }
 
 void *
-omniObject::_widenFromTheMostDerivedIntf(const char *repoId) throw()
+omniObject::_widenFromTheMostDerivedIntf(const char *repoId)
 {
   return 0;
 }
@@ -428,11 +435,11 @@ omniObject::_widenFromTheMostDerivedIntf(const char *repoId) throw()
 void
 objectRef_init()
 {
-  proxyObjectTable = 0;
-  localObjectTable = new omniObject * [omniObjectKey::hash_table_size];
+  omniObject::proxyObjectTable = 0;
+  omniObject::localObjectTable = new omniObject * [omniORB::hash_table_size];
   unsigned int i;
-  for (i=0; i<omniObjectKey::hash_table_size; i++)
-    localObjectTable[i] = 0;
+  for (i=0; i<omniORB::hash_table_size; i++)
+    omniObject::localObjectTable[i] = 0;
 }
 
 
@@ -474,7 +481,7 @@ CORBA::UnMarshalObjRef(const char *repoId,
       throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
     *profiles <<= s;
 
-    omniObject *objptr = omniORB::createObjRef((const char *)id,repoId,profiles,1);
+    omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
     profiles = 0;
     delete [] id;
     id = 0;
@@ -515,14 +522,14 @@ CORBA::AlignedObjRef(CORBA::Object_ptr obj,
 		     size_t repoIdSize,
 		     size_t initialoffset)
 {
-  omniORB::ptr_arith_t msgsize = omniORB::align_to((omniORB::ptr_arith_t)
+  omni::ptr_arith_t msgsize = omni::align_to((omni::ptr_arith_t)
                                                    initialoffset,
-						   omniORB::ALIGN_4);
+						   omni::ALIGN_4);
   if (CORBA::is_nil(obj)) {
     return (size_t) (msgsize + 3 * sizeof(CORBA::ULong));
   }
   else {
-    msgsize += (omniORB::ptr_arith_t)(sizeof(CORBA::ULong)+repoIdSize);
+    msgsize += (omni::ptr_arith_t)(sizeof(CORBA::ULong)+repoIdSize);
     IOP::TaggedProfileList *pl = obj->PR_getobj()->iopProfiles();
     return pl->NP_alignedSize((size_t)msgsize);
   }
@@ -566,7 +573,7 @@ CORBA::UnMarshalObjRef(const char *repoId,
       throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
     *profiles <<= s;
 
-    omniObject *objptr = omniORB::createObjRef((const char *)id,repoId,profiles,1);
+    omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
     profiles = 0;
     delete [] id;
     id = 0;
