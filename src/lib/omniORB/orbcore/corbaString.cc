@@ -29,12 +29,15 @@
 
 /*
   $Log$
-  Revision 1.6  1998/01/21 12:13:04  sll
-  Now accepts null pointer as marshalling argument. Substituted with a
-  proper nil string.  Print a warning if traceLevel > 1.
-  Now unmarshal zero size string. Substituted with a proper nil string.
-  Print a warning if traceLevel > 1.
+  Revision 1.7  1998/01/27 15:33:11  ewc
+  Added support for type any
 
+// Revision 1.6  1998/01/21  12:13:04  sll
+// Now accepts null pointer as marshalling argument. Substituted with a
+// proper nil string.  Print a warning if traceLevel > 1.
+// Now unmarshal zero size string. Substituted with a proper nil string.
+// Print a warning if traceLevel > 1.
+//
 // Revision 1.5  1997/12/18  17:32:40  sll
 // *** empty log message ***
 //
@@ -209,7 +212,7 @@ CORBA::String_member::operator<<= (MemBufferedStream &s)
     }
     _len = 1;
   }
-  else if (s.unRead() < _len)
+  else if (s.overrun(_len))
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   if (_ptr) {
     CORBA::string_free(_ptr);

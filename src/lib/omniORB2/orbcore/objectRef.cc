@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.14  1998/01/27 15:35:55  ewc
+  Added support for type any
+
   Revision 1.13  1997/12/10 13:23:41  sll
   Removed dependency on omniLC.h.
 
@@ -760,7 +763,7 @@ CORBA::UnMarshalObjRef(const char *repoId,
       break;
 
     default:
-      if (idlen > s.unRead()) {
+      if (s.overrun(idlen)) {
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
       }
       id = new CORBA::Char[idlen];
