@@ -365,13 +365,13 @@ _CORBA_MODULE_PUBLIC
   public:
 
     _sk_NamingContext() {}
-    _sk_NamingContext(const omniORB::objectKey& k) { NP_objkey(k); }
+    _sk_NamingContext(const omniORB::objectKey& k);
     virtual ~_sk_NamingContext() {}
     NamingContext_ptr _this() { return NamingContext::_duplicate(this); }
     void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }
     CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }
     void _dispose() { _boa()->dispose(this); }
-    omniORB::objectKey _key() { return (*(omniORB::objectKey*)objkey()); }
+    omniORB::objectKey _key();
     virtual void bind ( const CosNaming_Name & n, CORBA::Object_ptr  obj ) = 0;
     virtual void rebind ( const CosNaming_Name & n, CORBA::Object_ptr  obj ) = 0;
     virtual void bind_context ( const CosNaming_Name & n, CosNaming_NamingContext_ptr  nc ) = 0;
@@ -608,13 +608,13 @@ class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFac
   public:
 
     _sk_BindingIterator() {}
-    _sk_BindingIterator(const omniORB::objectKey& k) { NP_objkey(k); }
+    _sk_BindingIterator(const omniORB::objectKey& k);
     virtual ~_sk_BindingIterator() {}
     BindingIterator_ptr _this() { return BindingIterator::_duplicate(this); }
     void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }
     CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }
     void _dispose() { _boa()->dispose(this); }
-    omniORB::objectKey _key() { return (*(omniORB::objectKey*)objkey()); }
+    omniORB::objectKey _key();
     virtual CORBA::Boolean  next_one ( CosNaming_Binding *& b ) = 0;
     virtual CORBA::Boolean  ___next_one ( CosNaming_Binding *& b ) {
       return next_one ( b );
