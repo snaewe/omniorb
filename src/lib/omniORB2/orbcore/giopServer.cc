@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.18  1999/08/14 16:38:17  sll
+  Added support for python binding.
+  Changed locate object code as locateObject no longer throws an exception.
+
   Revision 1.17  1999/06/26 18:06:16  sll
   In InitialiseReply, if the GIOP request has response expected set to false,
   raise terminateProcessing exception. Previous a fatalException is raised.
@@ -555,71 +559,78 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     // In future, we have to partially decode the object key to
     // determine which object manager it belongs to.
     // For the moment, there is only one object manager- the rootObjectManager.
-    if (!obj) {
-      obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
-    }
-    else {
+    if (obj)
       omni::objectDuplicate(obj);
-    }
 
-    if (!obj->dispatch(*this,(const char *)pd_operation,pd_response_expected))
-	{
-	  if (!obj->omniObject::dispatch(*this,(const char*)pd_operation,
-					pd_response_expected))
-	    {
-	      RequestReceived(1);
-	      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-	    }
+    if (!obj)
+      obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
+
+    if (!obj)
+      obj = omni::locatePyObject(omniObjectManager::root(),pd_objkey);
+
+    if (obj) {
+      if (!obj->dispatch(*this,
+			 (const char *)pd_operation,
+			 pd_response_expected)) {
+
+	// Try built-in operations...
+	if (!obj->omniObject::dispatch(*this,
+				       (const char*)pd_operation,
+				       pd_response_expected)) {
+	  // No luck
+	  RequestReceived(1);
+	  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
 	}
-    
-  }
-  catch (const CORBA::OBJECT_NOT_EXIST &ex) {
-
-    if (!obj && pd_response_expected && MapKeyToObjectFunction) {
-      // Cannot find the object in the object table. If the application
-      // has registered a loader, do an upcall to locate the object.
-      // If the returned value is not a nil object reference, send a
-      // LOCATION_FORWARD message to the client to instruct it to retry
-      // with the new object reference.
-      //
-      // Limitation: if this invocation is oneway, one cannot reply with
-      //             a LOCATION_FORWARD message, in that case, just
-      //             treat this as a normal OBJECT_NOT_EXIST and let
-      //             the code below to deal with it.
-      //
-      CORBA::Object_var newDestination= MapKeyToObjectFunction(pd_objkey);
-      if (!CORBA::is_nil(newDestination)) {
-	// Note that we have completed the object request
-	RequestReceived(1); 
-	
-	// Build and send the location forward message...
-	size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-	msgsize = CORBA::Object::NP_alignedSize(newDestination, msgsize);
-	InitialiseReply(GIOP::LOCATION_FORWARD,(CORBA::ULong)msgsize);
-	CORBA::Object::marshalObjRef(newDestination, *this);
-	
-	// All done...
-	ReplyCompleted(); return;
       }
     }
+    else { // !obj
 
-    if (!obj) {
-      RequestReceived(1);
-      if (!pd_response_expected) {
-	// This is a one way invocation, we choose to return a MessageError
-	// Message instead of returning a Reply with System Exception
-	// message because the other-end says do not send me a reply!
-	SendMsgErrorMessage();
-	ReplyCompleted();
+      if (pd_response_expected && MapKeyToObjectFunction) {
+	// Cannot find the object in the object table. If the application
+	// has registered a loader, do an upcall to locate the object.
+	// If the returned value is not a nil object reference, send a
+	// LOCATION_FORWARD message to the client to instruct it to retry
+	// with the new object reference.
+	//
+	// Limitation: if this invocation is oneway, one cannot reply with
+	//             a LOCATION_FORWARD message, in that case, just
+	//             treat this as a normal OBJECT_NOT_EXIST and let
+	//             the code below to deal with it.
+	//
+	CORBA::Object_var newDestination= MapKeyToObjectFunction(pd_objkey);
+	if (!CORBA::is_nil(newDestination)) {
+	  // Note that we have completed the object request
+	  RequestReceived(1); 
+	
+	  // Build and send the location forward message...
+	  size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
+	  msgsize = CORBA::Object::NP_alignedSize(newDestination, msgsize);
+	  InitialiseReply(GIOP::LOCATION_FORWARD,(CORBA::ULong)msgsize);
+	  CORBA::Object::marshalObjRef(newDestination, *this);
+	
+	  // All done...
+	  ReplyCompleted();
+	}
       }
       else {
-	MarshallSystemException(this,SysExceptRepoID::OBJECT_NOT_EXIST,ex);
+	RequestReceived(1);
+	if (!pd_response_expected) {
+	  // This is a one way invocation, we choose to return a MessageError
+	  // Message instead of returning a Reply with System Exception
+	  // message because the other-end says do not send me a reply!
+	  SendMsgErrorMessage();
+	  ReplyCompleted();
+	}
+	else {
+	  CORBA::OBJECT_NOT_EXIST ex(0,CORBA::COMPLETED_NO);
+	  MarshallSystemException(this,SysExceptRepoID::OBJECT_NOT_EXIST,ex);
+	}
       }
     }
-    else {
-      omni::objectRelease(obj); obj = 0;
-      CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (OBJECT_NOT_EXIST,ex);
-    }      
+  }
+  catch (const CORBA::OBJECT_NOT_EXIST &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
+    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (OBJECT_NOT_EXIST,ex);
   }
   catch (const CORBA::UNKNOWN &ex) {
     if (obj) omni::objectRelease(obj); obj = 0;
@@ -800,21 +811,22 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
   omniObject *obj = 0;
   GIOP::LocateStatusType status;
 
-  try {
-    // In future, we have to partially decode the object key to
-    // determine which object manager it belongs to.
-    // For the moment, there is only one object manager- rootObjectManager.
-    obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
+  if ((obj = omni::locateObject(omniObjectManager::root(),pd_objkey))) {
     omni::objectRelease(obj);
     status = GIOP::OBJECT_HERE;
   }
-  catch (const CORBA::OBJECT_NOT_EXIST&) {
-    if (MapKeyToObjectFunction) {
-      // Cannot find the object in the object table. If the application
-      // has registered a loader, do an upcall to locate the object.
-      // If the return value is not a nil object reference, reply with
-      // OBJECT_FORWARD and the new object reference.
-      status = GIOP::UNKNOWN_OBJECT;
+  else if ((obj = omni::locatePyObject(omniObjectManager::root(),pd_objkey))) {
+    omni::objectRelease(obj);
+    status = GIOP::OBJECT_HERE;
+  }
+  else if (MapKeyToObjectFunction) {
+    // Cannot find the object in the object tables. If the application
+    // has registered a loader, do an upcall to locate the object.  If
+    // the return value is not a nil object reference, reply with
+    // OBJECT_FORWARD and the new object reference.
+    status = GIOP::UNKNOWN_OBJECT;
+
+    try {
       CORBA::Object_var newDestination = MapKeyToObjectFunction(pd_objkey);
       if (!CORBA::is_nil(newDestination)) {
 	status = GIOP::OBJECT_FORWARD;
@@ -837,11 +849,10 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
 	WrUnlock();
       }
     }
-    else {
-      status = GIOP::UNKNOWN_OBJECT;
+    catch (...) {
     }
   }
-  catch(...) {
+  else {
     status = GIOP::UNKNOWN_OBJECT;
   }
 
