@@ -8,6 +8,14 @@
 
 <buglist version="3.0.5">
 
-<nobugs/>
+<bug id="1" date="Thu Jul  4 15:29:59 BST 2002" user="dgrisby">
+  <summary>Incorrect use of MessageError messages with oneways</summary>
+  <reported>Chris Newbold</reported>
+  <text>
+  If a oneway method threw an exception, omniORB would turn it into a
+  MessageError message. This is wrong, and can confuse clients doing a
+  oneway followed by a twoway call.
+  </text>
+</bug>
 
 </buglist>
