@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.7  2002/09/03 09:32:57  dgrisby
+# C++ back-end bails out if asked to compile more than one file.
+#
 # Revision 1.20.2.6  2002/03/11 12:23:45  dpg1
 # -Wbe option for example code suffix.
 #
@@ -233,8 +236,17 @@ def process_args(args):
         else:
             util.fatalError("Argument \"" + str(arg) + "\" is unknown")
 
+run_before = 0
+
 def run(tree, args):
     """Entrypoint to the C++ backend"""
+
+    global run_before
+
+    if run_before:
+        util.fatalError("Sorry, the C++ backend cannot process more "
+                        "than one IDL file at a time.")
+    run_before = 1
 
     dirname, filename = os.path.split(tree.file())
     basename,ext      = os.path.splitext(filename)
