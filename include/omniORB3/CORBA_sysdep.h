@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.13  2000/07/07 10:18:33  sll
+ Fixed unbalanced #if #endif.
+
  Revision 1.1.2.12  2000/07/05 11:13:56  dpg1
  Untested support for AIX with xlC 5.
 
@@ -329,7 +332,7 @@
 #    define HAS_Std_Namespace
 #  endif
 
-#if defined(__hpux__)
+#elif defined(__hpux__)
 // Recent versions of HP aCC (A01.18 and A.03.13) have an identifying macro.
 // In the future, we should be able to remove the gcc test.
 // In case this is an older compiler aCC, test if this is gcc, if not assume 

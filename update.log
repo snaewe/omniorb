@@ -1,3 +1,11 @@
+Fri Jul  7 11:15:21 BST 2000 sll
+================================
+
+- Fixed breakage caused by previous AIX xlC 5 checkin
+
+include/omniORB3/CORBA_sysdep.h
+
+
 Thu Jul  6 17:20:28 BST 2000 sll
 ================================
 
