@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13  2000/01/13 17:02:05  djs
+# Added support for operation contexts.
+#
 # Revision 1.12  2000/01/13 15:56:44  djs
 # Factored out private identifier prefix rather than hard coding it all through
 # the code.
@@ -93,6 +96,7 @@ self = mangler
 
 CALL_DESC_PREFIX            = config.privatePrefix() + "_cd_"
 LCALL_DESC_PREFIX           = config.privatePrefix() + "_lcfn_"
+CTX_DESC_PREFIX             = config.privatePrefix() + "_ctx_"
 STD_PROXY_CALL_DESC_PREFIX  = "omniStdCallDesc::"
 
 # -------------------------
