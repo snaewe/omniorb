@@ -94,12 +94,6 @@ ifneq ($(wildcard $(THIS_IMPORT_TREE)/mk/beforedir.mk),)
 include $(THIS_IMPORT_TREE)/mk/beforedir.mk
 endif
 
-ifndef EmbeddedSystem
-OMNIORB_IDL_FPATH = $(TOP)/$(BINDIR)/$(OMNIORB_IDL)
-else
-OMNIORB_IDL_FPATH = $(TOP)/$(HOSTBINDIR)/$(OMNIORB_IDL)
-endif
-
 include dir.mk
 
 THIS_IMPORT_TREE := $(TOP)

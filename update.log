@@ -1,3 +1,48 @@
+Wed Aug  9 16:15:40 BST 2000 sll
+================================
+
+- Make rules overhaul. Remove the need to keep 2 copies of the same rules for
+  ODE and the external distribution. The definitive version is in the external
+  distribution (external_merge/mk). ODE specific customerisations are added on top
+  in mk.
+
+
+external_merge/config/config.mk
+external_merge/mk/afterdir.mk
+external_merge/mk/beforedir.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/sun4_sosV_5.5.mk
+external_merge/src/services/mklib/mkBOAlib/sharedlib/GNUmakefile  REMOVED
+external_merge/src/services/mklib/sharedlib/GNUmakefile           REMOVED
+
+mk/afterdir.mk
+mk/beforedir.mk
+mk/unix.mk
+mk/win32.mk
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/mips_irix_6.5_n32.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/x86_nt_4.0.mk
+
+src/appl/omniMapper/dir.mk
+src/appl/omniNames/dir.mk
+src/appl/utils/catior/dir.mk
+src/appl/utils/convertior/dir.mk
+src/appl/utils/genior/dir.mk
+src/appl/utils/nameclt/dir.mk
+src/lib/omniORB2/dir.mk
+
+src/services/dir.mk
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+
 Tue Aug  8 16:13:12 BST 2000 sll
 ================================
 

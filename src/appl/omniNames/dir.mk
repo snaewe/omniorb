@@ -41,5 +41,5 @@ export:: $(omniNames)
 
 OBJS = $(CXXSRCS:.cc=.o)
 
-$(omniNames): $(OBJS) $(CORBA_LIB_DEPEND)
+$(omniNames): $(OBJS) $(CORBA_LIB_NODYN_DEPEND)
 	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))

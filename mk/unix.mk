@@ -22,7 +22,11 @@ INSTEXEFLAGS	= -m 0755
 CP		= cp
 MV		= mv -f
 CPP		= /lib/cpp
+OMKDEPEND	= $(BASE_OMNI_TREE)/$(BINDIR)/omkdepend
+RMDIRHIER	= rm -rf
 
+CXXMAKEDEPEND   = $(OMKDEPEND)
+CMAKEDEPEND     = $(OMKDEPEND)
 
 #
 # Replacements for implicit rules
@@ -40,10 +44,8 @@ CPP		= /lib/cpp
 #
 
 define CleanRule
-$(RM) *.o *.a *.class
+$(RM) *.o *.a 
 endef
-
-# XXX VeryCleanRule should delete Java stubs too.
 
 define VeryCleanRule
 $(RM) *.d
@@ -54,7 +56,8 @@ endef
 #
 # Patterns for various file types
 #
-
+LibNoDebugPattern = lib%.a
+LibDebugPattern = lib%.a
 LibPattern = lib%.a
 LibSuffixPattern = %.a
 LibSearchPattern = -l%
@@ -144,10 +147,12 @@ omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
 lib_depend := $(patsubst %,$(LibPattern),omniDynamic3)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
-OMNIORB_IDL_ONLY = omniidl -bcxx
+
+OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/omniidl -bcxx
 OMNIORB_IDL_ANY_FLAGS = -Wba
 OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB3__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
+OMNIORB_IDL_OUTPUTDIR_PATTERN = -C%
 
 OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
 		$(patsubst %,$(LibSearchPattern),omniDynamic3)
@@ -236,23 +241,80 @@ define TclScriptExecutable
 endef
 
 
+##########################################################################
+#
 # Shared library support stuff
 #
 # Default setup. Work for most platforms. For those exceptions, override
 # the rules in their platform files.
 #
 SHAREDLIB_SUFFIX = so
-SharedLibraryFullName = $(shell fn() {\
-                                  echo lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4; \
-                                 }; \
-                                fn $(subst ., ,$(SharedLibraryNameSpec)))
 
-SharedLibrarySoName = $(shell fn() {\
-                                 echo lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3; \
-                              }; \
-                              fn $(subst ., ,$(SharedLibraryNameSpec)))
+SharedLibraryFullNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
+SharedLibrarySoNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3
+SharedLibraryLibNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX)
 
-SharedLibraryName = $(shell fn() {\
-                                echo lib$$1$$2.$(SHAREDLIB_SUFFIX); \
-                            }; \
-                            fn $(subst ., ,$(SharedLibraryNameSpec)))
+SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-soname,$$soname
+
+define SharedLibraryFullName
+fn() { \
+echo $(SharedLibraryFullNameTemplate); \
+}; fn
+endef
+
+# MakeCXXSharedLibrary- Build shared library
+#  Expect shell variable:
+#  namespec = <library name> <major ver. no.> <minor ver. no.> <micro ver. no>
+#  extralibs = <libraries to add to the link line>
+#
+#  e.g. namespec="COS 3 0 0" --> shared library libCOS3.so.0.0
+#       extralibs="$(OMNIORB_LIB)"
+#
+define MakeCXXSharedLibrary
+fn() { \
+ soname=$(SharedLibrarySoNameTemplate); \
+ set -x; \
+ $(RM) $@; \
+ $(CXX) $(SharedLibraryPlatformLinkFlagsTemplate) -o $@ \
+ $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
+}; \
+fn $$namespec;
+endef
+
+# ExportSharedLibrary- export sharedlibrary
+#  Expect shell variable:
+#  namespec = <library name> <major ver. no.> <minor ver. no.> <micro ver. no>
+#  e.g. namespec = "COS 3 0 0" --> shared library libCOS3.so.0.0
+#
+define ExportSharedLibrary
+$(ExportLibrary); \
+fn() { \
+ soname=$(SharedLibrarySoNameTemplate); \
+ libname=$(SharedLibraryLibNameTemplate); \
+ set -x; \
+ cd $(EXPORT_TREE)/$(LIBDIR); \
+ $(RM) $$soname; \
+ ln -s $^ $$soname; \
+ $(RM) $$libname; \
+ ln -s $$soname $$libname; \
+}; \
+fn $$namespec;
+endef
+
+define CleanSharedLibrary
+( set -x; \
+$(RM) $${dir:-.}/*.$(SHAREDLIB_SUFFIX).* )
+endef
+
+
+# Pattern rules to build  objects files for static and shared library.
+# The convention is to build the static library in the subdirectoy "static" and
+# the shared library in the subdirectory "shared".
+# The pattern rules below ensured that the right compiler flags are used
+# to compile the source for the library.
+
+static/%.o: %.cc
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+shared/%.o: %.cc
+	$(CXX) -c $(SHAREDLIB_CPPFLAGS) $(CXXFLAGS)  -o $@ $<

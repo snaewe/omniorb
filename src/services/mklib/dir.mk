@@ -2,9 +2,9 @@ include cosinterfaces.mk
 include libdefs.mk
 
 # Look for .idl files in <top>/idl plus ../idl
-vpath %.idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../idl)
+vpath %.idl ../idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../idl)
 
-DIR_IDLFLAGS += -I. $(patsubst %,-I%/../idl,$(VPATH)) \
+DIR_IDLFLAGS += -I. -I../idl $(patsubst %,-I%/../idl,$(VPATH)) \
                    $(patsubst %,-I%/idl,$(IMPORT_TREES))
 
 COS_SKLIB_NAME    = COS
@@ -63,11 +63,6 @@ clean::
 	$(RM) static/*.o
 	$(RM) $(sk) $(dynsk)
 
-veryclean::
-	$(RM) static/*.o
-	$(RM) $(sk) $(dysk)
-
-
 ##############################################################################
 # Build Shared library
 ##############################################################################
@@ -105,10 +100,6 @@ export:: $(dynskshared)
 clean::
 	$(RM) shared/*.o
 	(dir=shared; $(CleanSharedLibrary))
-
-veryclean::
-	$(RM) shared/*.o
-	@(dir=shared; $(CleanSharedLibrary))
 
 endif
 
@@ -150,10 +141,6 @@ clean::
 	$(RM) debug/*.o
 	$(RM) $(skdbug) $(dynskdbug)
 
-veryclean::
-	$(RM) debug/*.o
-	$(RM) $(skdbug) $(dyskdbug)
-
 #####################################################
 #      DLL debug libraries
 #####################################################
@@ -190,10 +177,6 @@ clean::
 	$(RM) shareddebug/*.o
 	@(dir=shareddebug; $(CleanSharedLibrary))
 
-veryclean::
-	$(RM) shareddebug/*.o
-	@(dir=shareddebug; $(CleanSharedLibrary))
-
 endif
 
 ##############################################################################
@@ -202,13 +185,8 @@ endif
 SUBDIRS = mkBOAlib
 
 all::
-	@(subdirs="$(SUBDIRS)"; target="export"; $(MakeSubdirs))
+	@$(MakeSubdirs)
 
 export::
-	@(subdirs="$(SUBDIRS)"; target="export"; $(MakeSubdirs))
+	@$(MakeSubdirs)
 
-clean::
-	@(subdirs="$(SUBDIRS)"; target="clean"; $(MakeSubdirs))
-
-veryclean::
-	@(subdirs="$(SUBDIRS)"; target="veryclean"; $(MakeSubdirs))

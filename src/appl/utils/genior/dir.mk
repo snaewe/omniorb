@@ -10,7 +10,7 @@ all:: $(GENIOR)
 clean::
 	$(RM) $(GENIOR)
 
-$(GENIOR): genior.o $(CORBA_LIB_DEPEND)
+$(GENIOR): genior.o $(CORBA_LIB_NODYN_DEPEND)
 	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))
 
 export:: $(GENIOR)

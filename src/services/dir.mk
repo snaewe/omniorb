@@ -1,13 +1,8 @@
 SUBDIRS = mklib
 
 all::
-	@(subdirs="$(SUBDIRS)"; target="export"; $(MakeSubdirs))
+	@$(MakeSubdirs)
 
 export::
-	@(subdirs="$(SUBDIRS)"; target="export"; $(MakeSubdirs))
+	@$(MakeSubdirs)
 
-clean::
-	@(subdirs="$(SUBDIRS)"; target="clean"; $(MakeSubdirs))
-
-veryclean::
-	@(subdirs="$(SUBDIRS)"; target="veryclean"; $(MakeSubdirs))

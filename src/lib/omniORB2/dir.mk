@@ -101,7 +101,7 @@ omniORB3/omniLifeCycle.hh : omniLifeCycle.idl
 ciao:: $(STUBHEADERS)
 	@$(MakeSubdirs)
 
-lastveryclean::
+veryclean::
 	$(RM) $(STUBHEADERS) omniORB3/*SK.cc
 
 

@@ -5,9 +5,9 @@ include ../libdefs.mk
 DIR_IDLFLAGS += -WbBOA
 
 # Look for .idl files in <top>/idl plus ../../idl
-vpath %.idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../../idl)
+vpath %.idl ../../idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../../idl)
 
-DIR_IDLFLAGS += -I. $(patsubst %,-I%/../../idl,$(VPATH)) \
+DIR_IDLFLAGS += -I. -I../../idl $(patsubst %,-I%/../../idl,$(VPATH)) \
                    $(patsubst %,-I%/idl,$(IMPORT_TREES))
 
 
@@ -55,11 +55,6 @@ clean::
 	$(RM) static/*.o
 	$(RM) $(sk)
 
-veryclean::
-	$(RM) static/*.o
-	$(RM) $(sk)
-
-
 ##############################################################################
 # Build Shared library
 ##############################################################################
@@ -86,10 +81,6 @@ export:: $(skshared)
 clean::
 	$(RM) shared/*.o
 	(dir=shared; $(CleanSharedLibrary))
-
-veryclean::
-	$(RM) shared/*.o
-	@(dir=shared; $(CleanSharedLibrary))
 
 endif
 
@@ -124,10 +115,6 @@ clean::
 	$(RM) debug/*.o
 	$(RM) $(skdbug)
 
-veryclean::
-	$(RM) debug/*.o
-	$(RM) $(skdbug)
-
 #####################################################
 #      DLL debug libraries
 #####################################################
@@ -150,10 +137,6 @@ export:: $(skshareddbug)
          $(ExportSharedLibrary))
 
 clean::
-	$(RM) shareddebug/*.o
-	@(dir=shareddebug; $(CleanSharedLibrary))
-
-veryclean::
 	$(RM) shareddebug/*.o
 	@(dir=shareddebug; $(CleanSharedLibrary))
 
