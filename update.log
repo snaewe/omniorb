@@ -1,4 +1,12 @@
 
+Sat Jan 22 16:04:14 GMT 2000 djr
+================================
+
+- Added -ORBtraceInvocations to the -ORBhelp summary.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
 Thu Jan 20 11:42:59 GMT 2000 djr
 ================================
 
