@@ -1,3 +1,11 @@
+Wed Apr  9 14:35:01 BST 2003 dgrisby
+====================================
+
+- Support building omniidl against a Python source tree. Thanks Mark Hammond.
+
+src/tool/omniidl/cxx/dir.mk
+
+
 Wed Apr  9 11:24:46 BST 2003 dgrisby
 ====================================
 

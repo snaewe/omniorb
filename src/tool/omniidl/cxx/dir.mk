@@ -246,14 +246,18 @@ ifdef Win32Platform
 
 DIR_CPPFLAGS += -DMSDOS -DOMNIIDL_EXECUTABLE
 
+# A Python Windows source tree has PC/pyconfig.h and PCbuild/*.lib
+# We specify all directories for both a source and binary tree -
+# the others just wont be used.
 PYPREFIX1 := "$(shell $(PYTHON) -c 'import sys,string; sys.stdout.write(string.lower(sys.prefix))')"
 PYPREFIX  := $(subst program files,progra~1,$(subst \,/,$(PYPREFIX1)))
 PYVERSION := $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.version[:3])')
 PYINCDIR  := $(PYPREFIX)/include
-PYLIBDIR  := $(PYPREFIX)/libs $(PYPREFIX)/lib/x86_win32
+PYLIBDIR  := $(PYPREFIX)/libs $(PYPREFIX)/lib/x86_win32 $(PYPREFIX)/PCbuild
 PYLIB     := python$(subst .,,$(PYVERSION)).lib
 
-DIR_CPPFLAGS += -I$(PYINCDIR) -I$(PYINCDIR)/python$(PYVERSION) \
+DIR_CPPFLAGS += -I$(PYINCDIR) -I$(PYPREFIX)/PC \
+                -I$(PYINCDIR)/python$(PYVERSION) \
                 -DPYTHON_INCLUDE="<Python.h>"
 
 CXXLINKOPTIONS += $(patsubst %,-libpath:%,$(PYLIBDIR))
