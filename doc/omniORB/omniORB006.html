@@ -6,7 +6,7 @@
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <META name="GENERATOR" content="hevea 1.06">
 <TITLE>
- The IDL compiler
+ Interoperable Naming Service
 </TITLE>
 </HEAD>
 <BODY >
@@ -15,313 +15,283 @@
 <A HREF="omniORB007.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1><A NAME="htoc63">Chapter&nbsp;5</A>&nbsp;&nbsp;The IDL compiler</H1>
-<A NAME="chap:omniidl"></A>
-omniORB's IDL compiler is called omniidl. It consists of a generic
-front-end parser written in C++, and a number of back-ends written in
-Python. omniidl is very strict about IDL validity, so you may find
-that it reports errors in IDL which compiles fine with other IDL
-compilers.<BR>
+<H1><A NAME="htoc74">Chapter&nbsp;6</A>&nbsp;&nbsp;Interoperable Naming Service</H1>
+<A NAME="chap:ins"></A>
+omniORB 4.0 supports the Interoperable Naming Service (INS). The
+following is a summary of its facilities.<BR>
 <BR>
-The general form of an omniidl command line is:
-<BLOCKQUOTE> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file 1</I>&gt;<TT> </TT>&lt;<I>file 2</I>&gt;<TT> </TT>...</BLOCKQUOTE>
-<A NAME="toc26"></A>
-<H2><A NAME="htoc64">5.1</A>&nbsp;&nbsp;Common options</H2>
-The following options are common to all back-ends:<BR>
-<TABLE border=0 cellspacing=0 cellpadding=0>
-<TR><TD ALIGN=left NOWRAP></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-b</TT><I>back-end</I></TD>
-<TD ALIGN=left NOWRAP>Run the specified back-end. For the C++ ORB, use <TT>-bcxx</TT>.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-D</TT><I>name</I>[<TT>=</TT><I>value</I>]</TD>
-<TD ALIGN=left NOWRAP>Define <I>name</I> for the preprocessor.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-U</TT><I>name</I></TD>
-<TD ALIGN=left NOWRAP>Undefine <I>name</I> for the preprocessor.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-I</TT><I>dir</I></TD>
-<TD ALIGN=left NOWRAP>Include <I>dir</I> in the preprocessor search path.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-E</TT></TD>
-<TD ALIGN=left NOWRAP>Only run the preprocessor, sending its output to stdout.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Y</TT><I>cmd</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>cmd</I> as the preprocessor, rather than the normal C
- preprocessor.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-N</TT></TD>
-<TD ALIGN=left NOWRAP>Do not run the preprocessor.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-T</TT></TD>
-<TD ALIGN=left NOWRAP>Use a temporary file, not a pipe, for preprocessor output.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wp</TT><I>arg</I>[,<I>arg</I>...]</TD>
-<TD ALIGN=left NOWRAP>Send arguments to the preprocessor.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wb</TT><I>arg</I>[,<I>arg</I>...]</TD>
-<TD ALIGN=left NOWRAP>Send arguments to the back-end.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-nf</TT></TD>
-<TD ALIGN=left NOWRAP>Do not warn about unresolved forward declarations.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-k</TT></TD>
-<TD ALIGN=left NOWRAP>Keep comments after declarations, to be used by some back-ends.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-K</TT></TD>
-<TD ALIGN=left NOWRAP>Keep comments before declarations, to be used by some back-ends.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-C</TT><I>dir</I></TD>
-<TD ALIGN=left NOWRAP>Change directory to <I>dir</I> before writing output files.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-d</TT></TD>
-<TD ALIGN=left NOWRAP>Dump the parsed IDL then exit, without running a back-end.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-p</TT><I>dir</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>dir</I> as a path to find omniidl back-ends.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-V</TT></TD>
-<TD ALIGN=left NOWRAP>Print version information then exit.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-u</TT></TD>
-<TD ALIGN=left NOWRAP>Print usage information.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-v</TT></TD>
-<TD ALIGN=left NOWRAP>Verbose: trace compilation stages.</TD>
-</TR></TABLE><BR>
-Most of these options are self explanatory, but some are not
-so obvious.<BR>
+<A NAME="toc29"></A>
+<H2><A NAME="htoc75">6.1</A>&nbsp;&nbsp;Object URIs</H2>
+As well as accepting IOR-format strings, <TT>ORB::string_to_object()</TT>
+also supports two Uniform Resource Identifier (URI)&nbsp;[<A HREF="omniORB012.html#rfc2396"><CITE>BLFIM98</CITE></A>]
+formats, which can be used to specify objects in a convenient
+human-readable form. IOR-format strings are now also considered URIs.<BR>
 <BR>
 
-<H3><A NAME="htoc65">5.1.1</A>&nbsp;&nbsp;Preprocessor interactions</H3>
-IDL is processed by the C preprocessor before omniidl parses it.
-Unlike the old IDL compiler, which used different C preprocessors on
-different platforms, omniidl always uses the GNU C preprocessor (which
-it builds with the name omnicpp). The <TT>-D</TT>, <TT>-U</TT>, and
-<TT>-I</TT> options are just sent to the preprocessor. Note that the
-current directory is not on the include search path by default---use
-`<TT>-I.</TT>' for that. The <TT>-Y</TT> option can be used to
-specify a different preprocessor to omnicpp. Beware that line
-directives inserted by other preprocessors are likely to confuse
-omniidl.<BR>
-<BR>
-
-<H4>Windows 9x</H4>
-The output from the C preprocessor is normally fed to the omniidl
-parser through a pipe. On some Windows 98 machines (but not all!) the
-pipe does not work, and the preprocessor output is echoed to the
-screen. When this happens, the omniidl parser sees an empty file, and
-produces useless stub files with strange long names. To avoid the
-problem, use the `<TT>-T</TT>' option to create a temporary file
-between the two stages.<BR>
-<BR>
-
-<H3><A NAME="htoc66">5.1.2</A>&nbsp;&nbsp;Forward-declared interfaces</H3>
-If you have an IDL file like:
-<PRE>
-interface I;
-interface J {
-  attribute I the_I;
-};
-</PRE>
-then omniidl will normally issue a warning:
-<PRE>
-  test.idl:1: Warning: Forward declared interface `I' was never
-  fully defined
-</PRE>
-It is illegal to declare such IDL in isolation, but it
-<EM>is</EM> valid to define interface <TT>I</TT> in a separate file. If
-you have a lot of IDL with this sort of construct, you will drown
-under the warning messages. Use the <TT>-nf</TT> option to suppress
-them.<BR>
-<BR>
-
-<H3><A NAME="htoc67">5.1.3</A>&nbsp;&nbsp;Comments</H3>
-By default, omniidl discards comments in the input IDL. However, with
-the <TT>-k</TT> and <TT>-K</TT> options, it preserves the comments
-for use by the back-ends. The C++ back-end ignores this information,
-but it is relatively easy to write new back-ends which <EM>do</EM> make
-use of comments.<BR>
-<BR>
-The two different options relate to how comments are attached to
-declarations within the IDL. Given IDL like:
-<PRE>
-interface I {
-  void op1();
-  // A comment
-  void op2();
-};
-</PRE>
-the <TT>-k</TT> flag will attach the comment to <TT>op1()</TT>;
-the <TT>-K</TT> flag will attach it to <TT>op2()</TT>.<BR>
-<BR>
-<A NAME="toc27"></A>
-<H2><A NAME="htoc68">5.2</A>&nbsp;&nbsp;C++ back-end options</H2>
-When you specify the C++ back-end (with <TT>-bcxx</TT>), the
-following <TT>-Wb</TT> options are available. Note that the
-<TT>-Wb</TT> options must be specified <EM>after</EM> the
-<TT>-bcxx</TT> option, so omniidl knows which back-end to give the
-arguments to.<BR>
-<TABLE border=0 cellspacing=0 cellpadding=0>
-<TR><TD ALIGN=left NOWRAP></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbh=</TT><I>suffix</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated header files. Default
- `<TT>.hh</TT>'.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbs=</TT><I>suffix</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated stub files. Default
- `<TT>SK.cc</TT>.'</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbd=</TT><I>suffix</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated dynamic files. Default
- `<TT>DynSK.cc</TT>.'</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wba</TT></TD>
-<TD ALIGN=left NOWRAP>Generate stubs for TypeCode and Any.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbinline</TT></TD>
-<TD ALIGN=left NOWRAP>Output stubs for <TT>#include</TT>d IDL files in line with the
- main file.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbtp</TT></TD>
-<TD ALIGN=left NOWRAP>Generate `tie' implementation skeletons.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbtf</TT></TD>
-<TD ALIGN=left NOWRAP>Generate flattened `tie' implementation skeletons.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbsplice-modules</TT></TD>
-<TD ALIGN=left NOWRAP>Splice together multiply-opened modules into one.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbexample</TT></TD>
-<TD ALIGN=left NOWRAP>Generate example implementation code.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-WbF</TT></TD>
-<TD ALIGN=left NOWRAP>Generate code fragments (for experts only).</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-WbBOA</TT></TD>
-<TD ALIGN=left NOWRAP>Generate BOA compatible skeletons.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbold</TT></TD>
-<TD ALIGN=left NOWRAP>Generate old CORBA 2.1 signatures for skeletons.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbold_prefix</TT></TD>
-<TD ALIGN=left NOWRAP>Map C++ reserved words with prefix `<TT>_</TT>' rather than
- `<TT>_cxx_</TT>'.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbkeep_inc_path</TT></TD>
-<TD ALIGN=left NOWRAP>Preserve IDL `<TT>#include</TT>' paths in generated
- 	`<TT>#include</TT>' directives.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbuse_quotes</TT></TD>
-<TD ALIGN=left NOWRAP>Use quotes in `<TT>#include</TT>' directives 
- (e.g. <TT>"foo"</TT> rather than <TT>&lt;foo&gt;</TT>.)</TD>
-</TR></TABLE><BR>
-Again, most of these are self-explanatory.<BR>
-<BR>
-
-<H3><A NAME="htoc69">5.2.1</A>&nbsp;&nbsp;Stub / skeleton files</H3>
-By default, omniidl separates the normal stub and skeleton file (the
-<TT>SK.cc</TT> file) from the `dynamic' stubs (the <TT>DynSK.cc</TT>
-file), so applications that do not need support for Any and TypeCode
-for a particular IDL file do not waste space with unnecessary
-definitions. New in omniORB 4.0, it is possible to output both the
-normal stubs <EM>and</EM> the dynamic stubs to a single file, by simply
-specifying the same extension for both files. This command places
-both the normal stubs and the dynamic stubs in <TT>aSK.cc</TT>:
+<H3><A NAME="htoc76">6.1.1</A>&nbsp;&nbsp;corbaloc</H3>
+<TT>corbaloc</TT> URIs allow you to specify object references which
+can be contacted by IIOP, or found through
+<TT>ORB::resolve_initial_references()</TT>. To specify an IIOP object
+reference, you use a URI of the form:
 <BLOCKQUOTE>
-<TT>omniidl -bcxx -Wba -Wbd=SK.cc a.idl</TT>
+<TT>corbaloc:iiop:</TT>&lt;<I>host</I>&gt;<TT>:</TT>&lt;<I>port</I>&gt;<TT>/</TT>&lt;<I>object key</I>&gt;
+</BLOCKQUOTE>
+for example:
+<BLOCKQUOTE>
+<TT>corbaloc:iiop:myhost.example.com:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+which specifies an object with key `MyObjectKey' within a
+process running on myhost.example.com listening on port 1234. Object
+keys containing non-ASCII characters can use the standard URI %
+escapes:
+<BLOCKQUOTE>
+<TT>corbaloc:iiop:myhost.example.com:1234/My</TT><TT>%</TT><TT>efObjectKey</TT>
+</BLOCKQUOTE>
+denotes an object key with the value 239 (hex ef) in the
+third octet.<BR>
+<BR>
+The protocol name `<TT>iiop</TT>' can be abbreviated to the empty
+string, so the original URI can be written:
+<BLOCKQUOTE>
+<TT>corbaloc::myhost.example.com:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+The IANA has assigned port number 2809<SUP><A NAME="text13" HREF="#note13"><FONT SIZE=2>1</FONT></A></SUP> for use by <TT>corbaloc</TT>, so if
+the server is listening on that port, you can leave the port number
+out. The following two URIs refer to the same object:
+<BLOCKQUOTE>
+<TT>corbaloc::myhost.example.com:2809/MyObjectKey</TT><BR>
+<TT>corbaloc::myhost.example.com/MyObjectKey</TT>
+</BLOCKQUOTE>
+You can specify an object which is available at more than
+one location by separating the locations with commas:
+<BLOCKQUOTE>
+<TT>corbaloc::myhost.example.com,:localhost:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+Note that you must restate the protocol for each address,
+hence the `<TT>:</TT>' before `<TT>localhost</TT>'. It could
+equally have been written `<TT>iiop:localhost</TT>'.<BR>
+<BR>
+You can also specify an IIOP version number:
+<BLOCKQUOTE>
+<TT>corbaloc::1.2@myhost.example.com/MyObjectKey</TT>
+</BLOCKQUOTE>
+Specifying IIOP versions above 1.0 is slightly risky since higher
+versions make use of various information stored in IORs that is not
+present in a corbaloc URI. It is generally best to contact initial
+corbaloc objects with IIOP 1.0, and rely on higher versions for all
+other object references.<BR>
+<BR>
+Alternatively, to use <TT>resolve_initial_references()</TT>, you
+use a URI of the form:
+<BLOCKQUOTE>
+<TT>corbaloc:rir:/NameService</TT>
 </BLOCKQUOTE>
 
-<H3><A NAME="htoc70">5.2.2</A>&nbsp;&nbsp;Module splicing</H3>
-On C++ compilers without namespace support, IDL modules map to C++
-classes, and so cannot be reopened. For some IDL, it is possible to
-`splice' reopened modules on to the first occurrence of the module, so
-all module definitions are in a single class. It is possible in this
-sort of situation:
+<H3><A NAME="htoc77">6.1.2</A>&nbsp;&nbsp;corbaname</H3>
+<A NAME="sec:corbaname"></A>
+<TT>corbaname</TT> URIs cause <TT>string_to_object()</TT> to look-up a
+name in a CORBA Naming service. They are an extension of the
+<TT>corbaloc</TT> syntax:
+<BLOCKQUOTE>
+<TT>corbaname:</TT>&lt;<I>corbaloc location</I>&gt;<TT>/</TT>&lt;<I>object key</I>&gt;<TT>#</TT>&lt;<I>stringified name</I>&gt;
+</BLOCKQUOTE>
+for example:
+<BLOCKQUOTE>
+<TT>corbaname::myhost/NameService#project/example/echo.obj</TT><BR>
+<TT>corbaname:rir:/NameService#project/example/echo.obj</TT>
+</BLOCKQUOTE>
+Note that the object found with the
+<TT>corbaloc</TT>-style portion must be of type
+<TT>CosNaming::NamingContext</TT>, or something derived from it. If the
+object key (or <TT>rir</TT> name) is `<TT>NameService</TT>', it
+can be left out:
+<BLOCKQUOTE>
+<TT>corbaname::myhost#project/example/echo.obj</TT><BR>
+<TT>corbaname:rir:#project/example/echo.obj</TT>
+</BLOCKQUOTE>
+The stringified name portion can also be left out, in which
+case the URI denotes the <TT>CosNaming::NamingContext</TT> which would
+have been used for a look-up:
+<BLOCKQUOTE>
+<TT>corbaname::myhost.example.com</TT><BR>
+<TT>corbaname:rir:</TT>
+</BLOCKQUOTE>
+The first of these examples is the easiest way of specifying
+the location of a naming service.<BR>
+<BR>
+<A NAME="toc30"></A>
+<H2><A NAME="htoc78">6.2</A>&nbsp;&nbsp;Configuring resolve_initial_references</H2>
+<A NAME="sec:insargs"></A>
+The INS specified two standard command line arguments which provide a
+portable way of configuring <TT>ORB::resolve_initial_references()</TT>:<BR>
+<BR>
+
+<H3><A NAME="htoc79">6.2.1</A>&nbsp;&nbsp;ORBInitRef</H3>
+<TT>-ORBInitRef</TT> takes an argument of the form
+&lt;<I>ObjectId</I>&gt;<TT>=</TT>&lt;<I>ObjectURI</I>&gt;. So, for example,
+with command line arguments of:
+<BLOCKQUOTE>
+<TT>-ORBInitRef NameService=corbaname::myhost.example.com</TT>
+</BLOCKQUOTE>
+<TT>resolve_initial_references("NameService")</TT> will
+return a reference to the object with key `NameService' available on
+myhost.example.com, port 2809. Since IOR-format strings are considered
+URIs, you can also say things like:
+<BLOCKQUOTE>
+<TT>-ORBInitRef NameService=IOR:00ff...</TT>
+</BLOCKQUOTE>
+
+<H3><A NAME="htoc80">6.2.2</A>&nbsp;&nbsp;ORBDefaultInitRef</H3>
+<TT>-ORBDefaultInitRef</TT> provides a prefix string which is used to
+resolve otherwise unknown names. When
+<TT>resolve_initial_references()</TT> is unable to resolve a name which
+has been specifically configured (with <TT>-ORBInitRef</TT>), it
+constructs a string consisting of the default prefix, a `<TT>/</TT>'
+character, and the name requested. The string is then fed to
+<TT>string_to_object()</TT>. So, for example, with a command line of:
+<BLOCKQUOTE>
+<TT>-ORBDefaultInitRef corbaloc::myhost.example.com</TT>
+</BLOCKQUOTE>
+a call to <TT>resolve_initial_references("MyService")</TT>
+will return the object reference denoted by
+`<TT>corbaloc::myhost.example.com/MyService</TT>'.<BR>
+<BR>
+Similarly, a <TT>corbaname</TT> prefix can be used to cause
+look-ups in the naming service. Note, however, that since a
+`<TT>/</TT>' character is always added to the prefix, it is
+impossible to specify a look-up in the root context of the naming
+service---you have to use a sub-context, like:
+<BLOCKQUOTE>
+<TT>-ORBDefaultInitRef corbaname::myhost.example.com#services</TT>
+</BLOCKQUOTE>
+<A NAME="toc31"></A>
+<H2><A NAME="htoc81">6.3</A>&nbsp;&nbsp;omniNames</H2>
+
+<H3><A NAME="htoc82">6.3.1</A>&nbsp;&nbsp;NamingContextExt</H3>
+omniNames supports the extended <TT>CosNaming::NamingContextExt</TT>
+interface:
 <PRE>
-module M1 {
-  interface I {};
-};
-module M2 {
-  interface J {
-    attribute M1::I ok;
-  };
-};
-module M1 {
-  interface K {
-    attribute I still_ok;
+module CosNaming {
+  interface NamingContextExt : NamingContext {
+    typedef string StringName;
+    typedef string Address;
+    typedef string URLString;
+
+    StringName  to_string(in Name n)        raises(InvalidName);
+    Name        to_name  (in StringName sn) raises(InvalidName);
+
+    exception InvalidAddress {};
+
+    URLString   to_url(in Address addr, in StringName sn)
+      raises(InvalidAddress, InvalidName);
+
+    Object      resolve_str(in StringName n)
+      raises(NotFound, CannotProceed, InvalidName, AlreadyBound);
   };
 };
 </PRE>
-but not if there are cross-module dependencies:
+<TT>to_string()</TT> and <TT>to_name()</TT> convert from <TT>CosNaming::Name</TT>
+sequences to flattened strings and vice-versa. Note that calling
+these operations involves remote calls to the naming service, so they
+are not particularly efficient. You can use the omniORB specific local
+<TT>omniURI::nameToString()</TT> and <TT>omniURI::stringToName()</TT>
+functions instead.<BR>
+<BR>
+A <TT>CosNaming::Name</TT> is stringified by separating name components
+with `<TT>/</TT>' characters. The <TT>kind</TT> and <TT>id</TT> fields of
+each component are separated by `<TT>.</TT>' characters. If the
+<TT>kind</TT> field is empty, the representation has no trailing
+`<TT>.</TT>'; if the <TT>id</TT> is empty, the representation starts
+with a `<TT>.</TT>' character; if both <TT>id</TT> and <TT>kind</TT>
+are empty, the representation is just a `<TT>.</TT>'. The backslash
+`<TT>\</TT>' is used to escape the meaning of
+`<TT>/</TT>', `<TT>.</TT>' and `<TT>\</TT>' itself.<BR>
+<BR>
+<TT>to_url()</TT> takes a <TT>corbaloc</TT> style address and key string
+(but without the <TT>corbaloc:</TT> part), and a stringified name,
+and returns a <TT>corbaname</TT> URI (incorrectly called a URL)
+string, having properly escaped any invalid characters. The
+specification does not make it clear whether or not the address string
+should also be escaped by the operation; omniORB does not escape
+it. For this reason, it is best to avoid calling <TT>to_url()</TT> if the
+address part contains escapable characters. omniORB provides the
+equivalent local function <TT>omniURI::addrAndNameToURI()</TT>.<BR>
+<BR>
+<TT>resolve_str()</TT> is equivalent to calling <TT>to_name()</TT> followed by
+the inherited <TT>resolve()</TT> operation. There are no string-based
+equivalents of the various bind operations.<BR>
+<BR>
+
+<H3><A NAME="htoc83">6.3.2</A>&nbsp;&nbsp;Use with corbaname</H3>
+To make it easy to use omniNames with <TT>corbaname</TT> URIs, it
+starts with the default port of 2809, and an object key of
+`<TT>NameService</TT>' for the root naming context.<BR>
+<BR>
+<A NAME="toc32"></A>
+<H2><A NAME="htoc84">6.4</A>&nbsp;&nbsp;omniMapper</H2>
+
+omniMapper is a simple daemon which listens on port 2809 (or any other
+port), and redirects IIOP requests for configured object keys to
+associated persistent IORs. It can be used to make a naming service
+(even an old non-INS aware version of omniNames or other ORB's naming
+service) appear on port 2809 with the object key
+`<TT>NameService</TT>'. The same goes for any other service you may
+wish to specify, such as an interface repository. omniMapper is
+started with a command line of:
+<BLOCKQUOTE>
+<TT>omniMapper [-port </TT>&lt;<I>port</I>&gt;<TT>] [-config </TT>&lt;<I>config file</I>&gt;<TT>] [-v]</TT>
+</BLOCKQUOTE>
+The <TT>-port</TT> option allows you to choose a port other
+than 2809 to listen on. The <TT>-config</TT> option specifies a
+location for the configuration file. The default name is
+<TT>/etc/omniMapper.cfg</TT>, or
+<CODE>C:\omniMapper.cfg</CODE>
+on Windows. omniMapper does not normally print anything; the
+<TT>-v</TT> option makes it verbose so it prints configuration
+information and a record of the redirections it makes, to standard
+output.<BR>
+<BR>
+The configuration file is very simple. Each line contains a string to
+be used as an object key, some white space, and an IOR (or any valid
+URI) that it will redirect that object key to. Comments should be
+prefixed with a `<TT>#</TT>' character. For example:
+<BLOCKQUOTE>
 <PRE>
-module M1 {
-  interface I {};
-};
-module M2 {
-  interface J {
-    attribute M1::I ok;
-  };
-};
-module M1 {
-  interface K {
-    attribute M2::J oh_dear;
-  };
-};
-</PRE>
-In both of these cases, the <TT>-Wbsplice-modules</TT>
-option causes omniidl to put all of the definitions for module
-<TT>M1</TT> into a single C++ class. For the first case, this will work
-fine. For the second case, class <TT>M1::K</TT> will contain a reference
-to <TT>M2::J</TT>, which has not yet been defined; the C++ compiler will
-complain.<BR>
-<BR>
-
-<H3><A NAME="htoc71">5.2.3</A>&nbsp;&nbsp;Flattened tie classes</H3>
-Another problem with mapping IDL modules to C++ classes arises with
-tie templates. The C++ mapping says that for the interface
-<TT>M::I</TT>, the C++ tie template class should be named
-<TT>POA_M::I_tie</TT>. However, since template classes cannot be
-declared inside other classes, this naming scheme cannot be used with
-compilers without namespace support.<BR>
-<BR>
-The standard solution is to produce `flattened' tie class names, using
-the <TT>-Wbtf</TT> command line argument. With that flag, the
-template class is declared at global scope with the name
-<TT>POA_M_I_tie</TT>. i.e. all occurrences of `<TT>::</TT>' are
-replaced by `<TT>_</TT>'.<BR>
-<BR>
-
-<H3><A NAME="htoc72">5.2.4</A>&nbsp;&nbsp;Generating example implementations</H3>
-If you use the <TT>-Wbexample</TT> flag, omniidl will generate an
-example implementation file as well as the stubs and skeletons. For
-IDL file <TT>foo.idl</TT>, the example code is written to
-<TT>foo_i.cc</TT>. The example file contains class and method
-declarations for the operations of all interfaces in the IDL file,
-along with a <TT>main()</TT> function which creates an instance of each
-object. You still have to fill in the operation implementations, of
-course.<BR>
-<BR>
-<A NAME="toc28"></A>
-<H2><A NAME="htoc73">5.3</A>&nbsp;&nbsp;Examples</H2>
-Generate the C++ headers and stubs for a file <TT>a.idl</TT>:
+# Example omniMapper.cfg
+NameService         IOR:000f...
+InterfaceRepository IOR:0100...
+</PRE></BLOCKQUOTE>
+omniMapper can either be run on a single machine, in much the same way
+as omniNames, or it can be run on <EM>every</EM> machine, with a common
+configuration file. That way, each machine's omniORB configuration
+file could contain the line:
 <BLOCKQUOTE>
-<TT>omniidl -bcxx a.idl</TT>
-</BLOCKQUOTE>
-Generate with Any support:
-<BLOCKQUOTE>
-<TT>omniidl -bcxx -Wba a.idl</TT>
-</BLOCKQUOTE>
-As above, but also generate Python stubs (assuming omniORBpy
-is installed):
-<BLOCKQUOTE>
-<TT>omniidl -bcxx -Wba -bpython a.idl</TT>
-</BLOCKQUOTE>
-Just check the IDL files for validity, generating no output:
-<BLOCKQUOTE>
-<TT>omniidl a.idl b.idl</TT>
-</BLOCKQUOTE>
+<PRE>
+ORBDefaultInitRef corbaloc::localhost
+</PRE></BLOCKQUOTE>
+<A NAME="toc33"></A>
+<H2><A NAME="htoc85">6.5</A>&nbsp;&nbsp;Creating objects with simple object keys</H2>
+In normal use, omniORB creates object keys containing various
+information including POA names and various non-ASCII characters.
+Since object keys are supposed to be opaque, this is not usually a
+problem. The INS breaks this opacity and requires servers to create
+objects with human-friendly keys.<BR>
+<BR>
+If you wish to make your objects available with human-friendly URIs,
+there are two options. The first is to use omniMapper as described
+above, in conjunction with a <TT>PERSISTENT</TT> POA. The second is to
+create objects with the required keys yourself. You do this with a
+special POA with the name `<TT>omniINSPOA</TT>', acquired from
+<TT>resolve_initial_references()</TT>. This POA has the <TT>USER_ID</TT>
+and <TT>PERSISTENT</TT> policies, and the special property that the
+object keys it creates contain only the object ids given to the POA,
+and no other data. It is a normal POA in all other respects, so you
+can activate/deactivate it, create children, and so on, in the usual
+way.<BR>
+<BR>
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note13" HREF="#text13"><FONT SIZE=5>1</FONT></A><DD>Not 2089 as
+printed in [<A HREF="omniORB012.html#inschapters"><CITE>OMG00b</CITE></A>]!
+</DL>
 <HR>
 <A HREF="omniORB005.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
 <A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>

@@ -6,7 +6,7 @@
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <META name="GENERATOR" content="hevea 1.06">
 <TITLE>
- Code set conversion
+ Interceptors
 </TITLE>
 </HEAD>
 <BODY >
@@ -15,94 +15,130 @@
 <A HREF="omniORB011.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1><A NAME="htoc106">Chapter&nbsp;9</A>&nbsp;&nbsp;Code set conversion</H1>
-<A NAME="chap:codesets"></A>
-omniORB 4.0 supports full code set negotiation, used to select and
-translate between different character code sets, for the transmission
-of chars, strings, wchars and wstrings. The support is mostly
-transparent to application code, but there are a number of options
-that can be selected. This chapter covers the options, and also gives
-some pointers about how to implement your own code sets, in case the
-ones that come with omniORB are not sufficient.<BR>
+<H1><A NAME="htoc110">Chapter&nbsp;10</A>&nbsp;&nbsp;Interceptors</H1>
+<A NAME="chap:interceptors"></A>
+omniORB 4.0 supports interceptors that allow the application to insert
+processing in various points along the call chain, and in various
+other locations. It does not support the standard Portable
+Interceptors API.<BR>
 <BR>
-<A NAME="toc45"></A>
-<H2><A NAME="htoc107">9.1</A>&nbsp;&nbsp;Native code sets</H2>
-For the ORB to know how to handle strings and wstrings given to it by
-the application, it must know what code set they are represented
-with, so it can properly translate them if need be. The defaults are
-ISO 8859-1 (Latin 1) for char and string, and UTF-16 for wchar and
-wstring. Different code sets can be chosen at initialisation time with
-the <TT>nativeCharCodeSet</TT> and <TT>nativeWCharCodeSet</TT>
-parameters. The supported code sets are printed out at initialisation
-time if the ORB traceLevel is 15 or greater.<BR>
+The interceptor interfaces are defined in a single header,
+<TT>include/omniORB4/omniInterceptors.h</TT>. Each interception point
+consists of a singleton object with <TT>add()</TT> and <TT>remove()</TT> methods,
+and the definition of an `interceptor info' class. For example:
+<PRE>
+class omniInterceptors {
+  ...
+  class clientSendRequest_T {
+  public:
+
+    class info_T {
+    public:
+      giopStream&amp;              giopstream;
+      const omniIOR&amp;           ior;
+      const char*              opname;
+      CORBA::Boolean           oneway;
+      CORBA::Boolean           response_expected;
+      IOP::ServiceContextList  service_contexts;
+
+      info_T(giopStream&amp; s, const omniIOR&amp; i, const char* op,
+      CORBA::Boolean ow, CORBA::Boolean re) :
+ giopstream(s),ior(i),opname(op),oneway(ow),response_expected(re),
+ service_contexts(5) {}
+
+    private:
+      info_T();
+      info_T(const info_T&amp;);
+      info_T&amp; operator=(const info_T&amp;);
+    };
+
+    typedef CORBA::Boolean (*interceptFunc)(info_T&amp; info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+  };
+  ...
+};
+</PRE>
+You can see that the interceptors themselves are functions
+which take the <TT>info_T</TT> object as their argument and return
+boolean. Interceptors are called in the order they are registered;
+normally, all interceptor functions return true, meaning that
+processing should continue with subsequent interceptors. If an
+interceptor returns false, later interceptors are not called. You
+should only do that if you really know what you are doing.<BR>
 <BR>
-For most applications, the defaults are fine. Some applications may
-need to set the native char code set to UTF-8, allowing the full
-Unicode range to be supported in strings.<BR>
+Notice that the <TT>info_T</TT> contains references to several omniORB
+internal data types. The definitions of these can be found in other
+header files within <TT>include/omniORB4</TT> and
+<TT>include/omniORB4/internal</TT>.<BR>
 <BR>
-Note that the default for wchar is always UTF-16, even on Unix
-platforms where wchar is a 32-bit type. Select the UCS-4 code set to
-select characters outside the first plane without having to use UTF-16
-surrogates<SUP><A NAME="text16" HREF="#note16"><FONT SIZE=2>1</FONT></A></SUP>.<BR>
+<A NAME="toc48"></A>
+<H2><A NAME="htoc111">10.1</A>&nbsp;&nbsp;Interceptor registration</H2>
+All the interceptor singletons are registered within another singleton
+object of class <TT>omniInterceptors</TT>. You retrieve a pointer to
+that singleton with the <TT>omniORB::getInterceptors()</TT> function.
+The code to register an interceptor looks, for example, like:
+<PRE>
+omniInterceptors* interceptors = omniORB::getInterceptors();
+interceptors-&gt;clientSendRequest.add(myInterceptorFunc);
+</PRE>
+<A NAME="toc49"></A>
+<H2><A NAME="htoc112">10.2</A>&nbsp;&nbsp;Available interceptors</H2>
+The following interceptors are available:
+<DL COMPACT=compact><DT><B>encodeIOR</B><DD><BR>
+Called when encoding an IOR to represent an object reference. This
+interception point allows the application to insert extra profile
+components into IORs. Note that you must understand and adhere to the
+rules about data stored in IORs, otherwise the IORs created may be
+invalid. omniORB itself uses this interceptor to insert various items,
+so you can see an example of its use in the
+<TT>insertSupportedComponents()</TT> function defined in
+<TT>src/lib/omniORB/orbcore/ior.cc</TT>.<BR>
 <BR>
-<A NAME="toc46"></A>
-<H2><A NAME="htoc108">9.2</A>&nbsp;&nbsp;Code set library</H2>
-To save space in the main ORB core library, most of the code set
-implementations are in a separate library named omniCodeSets4. To use
-the extra code sets, you must link your application with that
-library. On most platforms, if you are using dynamic linking,
-specifying the omniCodeSets4 library in the link command is sufficient
-to have it initialised, and for the code sets to be available. With
-static linking, or platforms with less intelligent dynamic linkers,
-you must force the linker to initialise the library. You do that by
-including the <TT>omniORB4/optionalFeatures.h</TT> header. By default,
-that header enables several optional features. Look at the file
-contents to see how to turn off particular features.<BR>
+<DT><B>decodeIOR</B><DD><BR>
+Called when decoding an IOR. The application can use this to get out
+whatever information they put into IORs with encodeIOR. Again, see
+<TT>extractSupportedComponents()</TT> in
+<TT>src/lib/omniORB/orbcore/ior.cc</TT> for an example.<BR>
 <BR>
-<A NAME="toc47"></A>
-<H2><A NAME="htoc109">9.3</A>&nbsp;&nbsp;Implementing new code sets</H2>
-It is quite easy to implement new code sets, if you need support for
-code sets (or marshalling formats) that do not come with the omniORB
-distribution. There are extensive comments in the headers and ORB code
-that explain how to implement a code set; this section just serves to
-point you in the right direction.<BR>
+<DT><B>clientSendRequest</B><DD><BR>
+Called just before a request header is sent over the network. The
+application can use it to insert service contexts in the header. See
+<TT>setCodeSetServiceContext()</TT> in
+<TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example of its use.<BR>
 <BR>
-The main definitions for the code set support are in
-<TT>include/omniORB4/codeSets.h</TT>. That defines a set of base classes
-use to implement code sets, plus some derived classes that use look-up
-tables to convert simple 8-bit and 16-bit code sets to Unicode.<BR>
+<DT><B>clientReceiveReply</B><DD><BR>
+Called as the client receives a reply, just after unmarshalling the
+reply header. *** NOT IMPLEMENTED YET!<BR>
 <BR>
-When sending or receiving string data, there are a total of four code
-sets in action: a native char code set, and transmission char code
-set, a native wchar code set, and a transmission wchar code set. The
-native code sets are as described above; the transmission code sets
-are the ones selected to communicate with a remote machine. They are
-responsible for understanding the GIOP marshalling formats, as well as
-the code sets themselves. Each of the four code sets has an object
-associated with it which contains methods for converting data.<BR>
+<DT><B>clientReceiveException</B><DD><BR>
+Called as the client receives an exception, just after unmarshalling
+the exception reply header. *** NOT IMPLEMENTED YET!<BR>
 <BR>
-There are two ways in which a string/wstring can be transmitted or
-received. If the transmission code set in action knows how to deal
-directly with the native code set (the trivial case being that they
-are the same code set, but more complex cases are possible too), the
-transmission code set object can directly marshal or unmarshal the
-data into or out of the application buffer. If the transmission code
-set does not know how to handle the native code set, it converts the
-string/wstring into UTF-16, and passes that to the native code set
-object (or vice-versa). All code set implementations must therefore
-know how to convert to and from UTF-16.<BR>
+<DT><B>serverReceiveRequest</B><DD><BR>
+Called when the server receives a request, just after unmarshalling
+the request header. See the <TT>getCodeSetServiceContext()</TT> function in
+<TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example.<BR>
 <BR>
-With this explanation, the classes in <TT>codeSets.h</TT> should be easy
-to understand. The next place to look is in the various existing code
-set implementations, which are files of the form <TT>cs-*.cc</TT> in the
-<TT>src/lib/omniORB/orbcore</TT> and <TT>src/lib/omniORB/codesets</TT>.
-Note how all the 8-bit code sets (the ISO 8859-* family) consist
-entirely of data and no code, since they are driven by look-up tables.<BR>
+<DT><B>serverSendReply</B><DD><BR>
+Called just before the server marshals a reply header. *** NOT
+IMPLEMENTED YET!<BR>
 <BR>
-<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note16" HREF="#text16"><FONT SIZE=5>1</FONT></A><DD>If you have no idea what this means, don't
-worry---you're better off not knowing unless you <EM>really</EM> have
-to.
-</DL>
+<DT><B>serverSendException</B><DD><BR>
+Called just before the server marshals an exception reply header. ***
+NOT IMPLEMENTED YET!<BR>
+<BR>
+<DT><B>createIdentity</B><DD><BR>
+Called when the ORB is about to create an `identity' object to
+represent a CORBA object. It allows application code to provide its
+own identity implementations. It is very unlikely that an application
+will need to do this.<BR>
+<BR>
+<DT><B>createORBServer</B><DD><BR>
+Used internally by the ORB to register different kinds of server. At
+present, only a GIOP server is registered. It is very unlikely that
+application code will need to do this.</DL>
 <HR>
 <A HREF="omniORB009.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
 <A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
