@@ -9,7 +9,7 @@ endif
 
 CXXSRCS = omniMapper.cc
 
-CXXDEBUGFLAGS = -g
+#CXXDEBUGFLAGS = -g
 
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS) \
                -DCONFIG_FILE_ENV_VAR=$(CONFIG_FILE_ENV_VAR) \
