@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.24  1998/08/22 12:52:13  sll
+ Added sysconfig for Irix + SGI C++ compiler.
+
  Revision 1.23  1998/08/19 16:03:43  sll
  Updated section for DEC C++ and MSVC++ to remove NO_Koenig_Lookup because
  this is no longer necessary with the new way of generating binary
@@ -144,6 +147,10 @@
 #elif defined(__BCPLUSPLUS__)
 #define HAS_Cplusplus_Namespace
 
+#elif defined(__SGI_CC)
+// SGI  compiler
+#define NEED_DUMMY_RETURN
+
 #endif
 
 #if defined(__hpux__)
@@ -242,6 +249,10 @@ strdup (char* str)
 #elif defined(__SINIX__)
 #define _OMNIORB_HOST_BYTE_ORDER_ 0
 #define _HAS_SIGNAL 1
+#elif defined(__irix__)
+#define _OMNIORB_HOST_BYTE_ORDER_ 0
+#define _HAS_SIGNAL 1
+#define _USE_GETHOSTNAME 1
 #else
 #error "The byte order of this platform is unknown"
 #endif
