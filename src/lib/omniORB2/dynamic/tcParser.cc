@@ -139,17 +139,22 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 			     eat[0].simple.alignment);
 	    }
 	    else if( eat.has_only_simple() ) {
-	      // Calculate the size of the elements, and copy the first ...
-	      CORBA::ULong elemsize = 0;
+	      // Copy the first element ...
+	      CORBA::ULong start = 0;
 	      for( unsigned j = 0; j < eat.entries(); j++ ) {
-		elemsize = omni::align_to(elemsize, eat[j].simple.alignment);
-		elemsize += eat[j].simple.size;
+		start = omni::align_to(start, eat[j].simple.alignment);
+		start += eat[j].simple.size;
 		obuf.copy_from(ibuf, eat[j].simple.size,
 			       eat[j].simple.alignment);
 	      }
+	      // Calculate the size of subsequent elements ...
+	      CORBA::ULong end = start;
+	      for( unsigned k = 0; k < eat.entries(); k++ ) {
+		end = omni::align_to(end, eat[k].simple.alignment);
+		end += eat[k].simple.size;
+	      }
 	      // ... then copy the rest as a block.
-	      obuf.copy_from(ibuf, (length - 1) * elemsize,
-			     eat[0].simple.alignment);
+	      obuf.copy_from(ibuf, (length - 1) * (end - start));
 	    }
 	    else {
 	      // We can't do better than copying element by element.
@@ -370,6 +375,7 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	  { CORBA::Any d; d <<= buf; break; }
 
 	case CORBA::tk_Principal:
+	case CORBA::tk_string:
 	  {
 	    CORBA::ULong len;
 	    len <<= buf;
@@ -382,14 +388,6 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 
 	case CORBA::tk_TypeCode:
 	  { CORBA::TypeCode_member d; d <<= buf; break; }
-
-	case CORBA::tk_string:
-	  {
-	    CORBA::ULong len;
-	    len <<= buf;
-	    buf.skip(len);
-	    break;
-	  }
 
 	case CORBA::tk_union:
 	  {
@@ -421,17 +419,22 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	      buf.skip(eat[0].simple.size + (length - 1) * size_aligned);
 	    }
 	    else if( eat.has_only_simple() ) {
-	      // Calculate the size of the elements, and skip the first ...
-	      CORBA::ULong elemsize = 0;
+	      // Skip the first element ...
+	      CORBA::ULong start = 0;
 	      for( unsigned j = 0; j < eat.entries(); j++ ) {
-		elemsize = omni::align_to(elemsize, eat[j].simple.alignment);
-		elemsize += eat[j].simple.size;
+		start = omni::align_to(start, eat[j].simple.alignment);
+		start += eat[j].simple.size;
 		buf.get_char_array(&dummy, 0, eat[j].simple.alignment);
 		buf.skip(eat[j].simple.size);
 	      }
+	      // Calculate the size of subsequent elements ...
+	      CORBA::ULong end = start;
+	      for( unsigned k = 0; k < eat.entries(); k++ ) {
+		end = omni::align_to(end, eat[k].simple.alignment);
+		end += eat[k].simple.size;
+	      }
 	      // ... then skip the rest as a block.
-	      buf.get_char_array(&dummy, 0, eat[0].simple.alignment);
-	      buf.skip((length - 1) * elemsize);
+	      buf.skip((length - 1) * (end - start));
 	    }
 	    else {
 	      // We can't do better than skipping element by element.
