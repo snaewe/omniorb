@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2003/02/03 16:53:14  dgrisby
+  Force type in constructor argument to help confused compilers.
+
   Revision 1.1.2.13  2002/09/08 21:12:39  dgrisby
   Properly handle IORs with no usable profiles.
 
@@ -175,7 +178,7 @@ omniIOR::omniIOR(const char* repoId,
   if (naddrs > 1) {
     for (CORBA::ULong index = 1; index < naddrs; index++) {
 
-      cdrEncapsulationStream s(CORBA::ULong(0),1);
+      cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
       s.marshalRawString(addrs[index].host);
       addrs[index].port >>= s;
       IOP::TaggedComponent& c = omniIOR::newIIOPtaggedComponent(iiop.components);

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2003/02/03 16:53:14  dgrisby
+  Force type in constructor argument to help confused compilers.
+
   Revision 1.1.2.14  2002/11/26 14:51:50  dgrisby
   Implement missing interceptors.
 
@@ -536,7 +539,7 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
   info.giopstream.TCS_W(tcs_w);
   
   if (sendcontext) {
-    cdrEncapsulationStream s(CORBA::ULong(0),1);
+    cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
     tcs_c->id() >>= s;
     if (tcs_w) {
       tcs_w->id() >>= s;

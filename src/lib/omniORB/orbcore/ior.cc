@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.23  2003/02/03 16:53:14  dgrisby
+  Force type in constructor argument to help confused compilers.
+
   Revision 1.10.2.22  2003/01/14 14:18:12  dgrisby
   Don't overwrite component data when decoding multi component profile.
 
@@ -766,7 +769,7 @@ omniIOR::dump_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent& c) {
 void
 omniIOR::add_TAG_OMNIORB_BIDIR(const char* sendfrom,omniIOR& ior) {
 
-  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
   s.marshalRawString(sendfrom);
 
   IOP::MultipleComponentProfile body;
@@ -1020,7 +1023,7 @@ omniIOR::add_IIOP_ADDRESS(const IIOP::Address& address) {
 void
 omniIOR::add_TAG_CODE_SETS(const CONV_FRAME::CodeSetComponentInfo& info) {
 
-  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
   info >>= s;
 
   CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
@@ -1031,7 +1034,7 @@ omniIOR::add_TAG_CODE_SETS(const CONV_FRAME::CodeSetComponentInfo& info) {
 void
 omniIOR::add_TAG_ALTERNATE_IIOP_ADDRESS(const IIOP::Address& address) {
 
-  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
   s.marshalRawString(address.host);
   address.port >>= s;
 
@@ -1062,7 +1065,7 @@ omniIOR::add_TAG_SSL_SEC_TRANS(const IIOP::Address& address,
     return;
   }
 
-  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
   supports >>= s;
   requires >>= s;
   address.port >>= s;
@@ -1093,7 +1096,7 @@ omniIOR::add_TAG_OMNIORB_UNIX_TRANS(const char* filename) {
     my_address.host = (const char*) self;
   }
 
-  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
 
   s.marshalRawString(self);
   s.marshalRawString(filename);

@@ -235,7 +235,7 @@ toIOR(const char* iorstr,IOP::IOR& ior)
 static
 char* toString(IOP::IOR& ior)
 {
-  cdrMemoryStream buf(CORBA::ULong(0),1);
+  cdrMemoryStream buf(CORBA::ULong(0),CORBA::Boolean(1));
   buf.marshalBoolean(omni::myByteOrder);
   buf.marshalRawString(ior.type_id);
   ior.profiles >>= buf;

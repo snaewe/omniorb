@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2003/02/03 16:53:14  dgrisby
+  Force type in constructor argument to help confused compilers.
+
   Revision 1.1.2.14  2002/11/26 14:51:50  dgrisby
   Implement missing interceptors.
 
@@ -707,7 +710,7 @@ setBiDirServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
     }
   }
   if (l.length()) {
-    cdrEncapsulationStream e(CORBA::ULong(0),1);
+    cdrEncapsulationStream e(CORBA::ULong(0),CORBA::Boolean(1));
     l >>= e;
 
     CORBA::Octet* data;

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.29  2003/02/03 16:53:15  dgrisby
+  Force type in constructor argument to help confused compilers.
+
   Revision 1.2.2.28  2002/10/14 20:07:13  dgrisby
   Per objref / per thread timeouts.
 
@@ -849,7 +852,7 @@ omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
 char*
 omniObjRef::_toString(omniObjRef* objref)
 {
-  cdrMemoryStream buf(CORBA::ULong(0),1);
+  cdrMemoryStream buf(CORBA::ULong(0),CORBA::Boolean(1));
   buf.marshalOctet(omni::myByteOrder);
   _marshal(objref,buf);
 
