@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14  1999/01/07 18:38:34  djr
+  New configuration variable omniORB::diiThrowsSysExceptions.
+
   Revision 1.13  1998/08/26 21:50:22  sll
   Added omniORB::maxTcpConnectionPerServer to customise the maximum no. of
   outgoing connections per server.
@@ -66,10 +69,15 @@
 #define __OMNIORB_H__
 
 #ifdef _LC_attr
-#error "A local CPP macro _LC_attr has already been defined."
+# error "A local CPP macro _LC_attr has already been defined."
 #else
-#define _LC_attr _OMNIORB_NTDLL_IMPORT
+# ifdef _OMNIORB2_LIBRARY
+#  define _LC_attr
+# else
+#  define _LC_attr _OMNIORB_NTDLL_IMPORT
+# endif
 #endif
+
 
 _CORBA_MODULE omniORB
 
@@ -87,7 +95,7 @@ _CORBA_MODULE_BEG
 #ifndef HAS_Cplusplus_Namespace                                         //
   static CORBA::String_var serverName;		                        //
 #else                                                                   //
-  _CORBA_MODULE_VAR char* serverName;                            //
+  _CORBA_MODULE_VAR char* serverName;                                   //
 #endif                                                                  //
   ////////////////////////////////////////////////////////////////////////
 
@@ -100,7 +108,7 @@ _CORBA_MODULE_BEG
   //               communication socket shutdown                       //
   //     level 10 - the above plus execution trace messages            //
   //     ...                                                           //
-  _CORBA_MODULE_VAR CORBA::ULong   traceLevel;                  //
+  _CORBA_MODULE_VAR CORBA::ULong   traceLevel;                         //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtraceLevel <n>, or by direct assignment to this   //
@@ -111,7 +119,7 @@ _CORBA_MODULE_BEG
   // strictIIOP flag                                                   //
   //   Enable vigorous check on incoming IIOP messages                 //
   //                                                                   //
-  // In some (sloppy) IIOP implementation, the message size value in   //
+  // In some (sloppy) IIOP implementations, the message size value in  //
   // the header can be larger than the actual body size, i.e. there is //
   // garbage at the end. As the spec does not say the message size     //
   // must match the body size exactly, this is not a clear violation   //
@@ -123,12 +131,12 @@ _CORBA_MODULE_BEG
   //                                                                   //
   // The default value of this flag is zero and the ORB would silently //
   // skip the unread part. The problem with this behaviour is that the //
-  // header message size may actually be garbage value, caused by a bug//
-  // in the sender's code. Th receiving thread may forever block on    //
+  // header message size may actually be garbage, caused by a bug      //
+  // in the sender's code. The receiving thread may forever block on   //
   // the strand as it tries to read more data from it. In this case the//
   // sender won't send anymore as it thinks it has marshalled in all   //
   // the data.							       //
-  _CORBA_MODULE_VAR CORBA::Boolean   strictIIOP;                //
+  _CORBA_MODULE_VAR CORBA::Boolean   strictIIOP;                       //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBstrictIIOP <0|1>, or by direct assignment to this //
@@ -136,7 +144,7 @@ _CORBA_MODULE_BEG
   ///////////////////////////////////////////////////////////////////////
 
   ///////////////////////////////////////////////////////////////////////
-  //  tcAliasExpand flag is used to indicate whether TypeCodes        //
+  //  tcAliasExpand flag is used to indicate whether TypeCodes         //
   //              associated with anys should have aliases removed.This//
   //              functionality is included because some ORBs will not //
   //              recognise an Any containing a TypeCode containing    //
@@ -153,8 +161,8 @@ _CORBA_MODULE_BEG
   //              non - type-safe methods of inserting into an Any is  //
   //              used (i.e. when the replace() member function or     //
   //              non - type-safe Any constructor is used. )           //
-  ///////////////////////////////////////////////////////////////////////
-  _CORBA_MODULE_VAR CORBA::Boolean tcAliasExpand;               //
+  //                                                                   //
+  _CORBA_MODULE_VAR CORBA::Boolean tcAliasExpand;                      //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtcAliasExpand <0|1>, or by direct assignment to   //
   //     this variable.                                                //
@@ -171,40 +179,40 @@ _CORBA_MODULE_BEG
   typedef omniObjectKey objectKey;                                      //
   //                                                                    //
   //  size of the hash table used by hash().                            //
-  _CORBA_MODULE_VAR const unsigned int hash_table_size;          //
+  _CORBA_MODULE_VAR const unsigned int hash_table_size;                 //
   //                                                                    //
   //  hash()                                                            //
   //    return the hash value of this key. The return value             //
   //    is between 0 - (hash_table_size - 1);                           //
-  _CORBA_MODULE_FN int hash(objectKey& k);                          //
+  _CORBA_MODULE_FN int hash(objectKey& k);                              //
   //                                                                    //
   // generateNewKey()                                                   //
   //   generate a new key. The key is guaranteed to be temporally       //
   //   unique. On OSs that provide unique process IDs, e.g. unices,     //
   //   the key is guaranteed to be unique among all keys ever generated //
   //   on the same machine.                                             //
-  _CORBA_MODULE_FN void generateNewKey(objectKey &k);               //
+  _CORBA_MODULE_FN void generateNewKey(objectKey &k);                   //
   //                                                                    //
   // Return a fixed key value that always hash to 0.                    //
-  _CORBA_MODULE_FN objectKey nullkey();                             //
+  _CORBA_MODULE_FN objectKey nullkey();                                 //
   //                                                                    //
   // Return non-zero if the keys are the same                           //
-  _CORBA_MODULE_OP int operator==(const objectKey &k1,              //
+  _CORBA_MODULE_OP int operator==(const objectKey &k1,                  //
                                       const objectKey &k2);             //
   //                                                                    //
   // Return non-zero if the keys are different                          //
-  _CORBA_MODULE_OP int operator!=(const objectKey &k1,              //
+  _CORBA_MODULE_OP int operator!=(const objectKey &k1,                  //
                                       const objectKey &k2);             //
   //                                                                    //
   //                                                                    //
   typedef _CORBA_Unbounded_Sequence_Octet seqOctets;                    //
   // Convert a key to a sequence of octets.                             //
-  _CORBA_MODULE_FN seqOctets* keyToOctetSequence(const objectKey &k1);//
+  _CORBA_MODULE_FN seqOctets* keyToOctetSequence(const objectKey &k1);  //
   //                                                                    //
   // Convert a sequence of octets back to an object key.                //
   // This function may throw a CORBA::MARSHAL exception if the sequence //
   // is not an object key.                                              //
-  _CORBA_MODULE_FN objectKey octetSequenceToKey(const seqOctets& seq);//
+  _CORBA_MODULE_FN objectKey octetSequenceToKey(const seqOctets& seq);  //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -213,7 +221,7 @@ _CORBA_MODULE_BEG
   // returns the ORB-wide limit on the size of GIOP message (excluding  //
   // the header).                                                       //
   //                                                                    //
-  _CORBA_MODULE_FN size_t MaxMessageSize();                         //
+  _CORBA_MODULE_FN size_t MaxMessageSize();                             //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -222,7 +230,7 @@ _CORBA_MODULE_BEG
   // Set the ORB-wide limit on the size of GIOP message (excluding      //
   // the header).                                                       //
   //                                                                    //
-  _CORBA_MODULE_FN void MaxMessageSize(size_t newvalue);            //
+  _CORBA_MODULE_FN void MaxMessageSize(size_t newvalue);                //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -243,7 +251,8 @@ _CORBA_MODULE_BEG
   //                                                                    //
   // CORBA::ULong idleConnectionScanPeriod()                            //
   //   Returns the current scan period                                  //
-  _CORBA_MODULE_FN CORBA::ULong idleConnectionScanPeriod(idleConnType direction);//
+  _CORBA_MODULE_FN CORBA::ULong idleConnectionScanPeriod(               //
+					 idleConnType direction);       //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -280,18 +289,19 @@ _CORBA_MODULE_BEG
   // on by the ORB when it calls the exception handler.			//
   //									//
   typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,	//
-			 		      CORBA::ULong n_retries, 	//
-                                              const CORBA::TRANSIENT& ex);
+					CORBA::ULong n_retries, 	//
+					const CORBA::TRANSIENT& ex);    //
   //								       	//
-  _CORBA_MODULE_FN void installTransientExceptionHandler(void* cookie, //
-					       transientExceptionHandler_t fn);
+  _CORBA_MODULE_FN void installTransientExceptionHandler(void* cookie,  //
+				 transientExceptionHandler_t fn);       //
   //									//
-  _CORBA_MODULE_FN void installTransientExceptionHandler(CORBA::Object_ptr obj,//
-					       void* cookie,            //
-        				       transientExceptionHandler_t fn);
+  _CORBA_MODULE_FN void installTransientExceptionHandler(               //
+				 CORBA::Object_ptr obj,                 //
+				 void* cookie,                          //
+				 transientExceptionHandler_t fn);       //
   //									//
-  _CORBA_MODULE_VAR CORBA::ULong defaultTransientRetryDelayIncrement;//
-  _CORBA_MODULE_VAR CORBA::ULong defaultTransientRetryDelayMaximum;//
+  _CORBA_MODULE_VAR CORBA::ULong defaultTransientRetryDelayIncrement;   //
+  _CORBA_MODULE_VAR CORBA::ULong defaultTransientRetryDelayMaximum;     //
   ////////////////////////////////////////////////////////////////////////
 
 
@@ -310,15 +320,16 @@ _CORBA_MODULE_BEG
   // above for details.							//
   //									//
   typedef CORBA::Boolean (*commFailureExceptionHandler_t)(void* cookie,	//
-						CORBA::ULong n_retries, //
-						const CORBA::COMM_FAILURE& ex);
+					CORBA::ULong n_retries,         //
+					const CORBA::COMM_FAILURE& ex); //
   //									//
   _CORBA_MODULE_FN void installCommFailureExceptionHandler(void* cookie,//
-						 commFailureExceptionHandler_t fn);
+				 commFailureExceptionHandler_t fn);     //
   //									//
-  _CORBA_MODULE_FN void installCommFailureExceptionHandler(CORBA::Object_ptr obj,//
-						 void* cookie,		//
-						 commFailureExceptionHandler_t fn);
+  _CORBA_MODULE_FN void installCommFailureExceptionHandler(             //
+				   CORBA::Object_ptr obj,               //
+				   void* cookie,		        //
+				   commFailureExceptionHandler_t fn);   //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -342,15 +353,16 @@ _CORBA_MODULE_BEG
   // neither CORBA::TRANSIENT nor CORBA::COMM_FAILURE.			//
   //									//
   typedef CORBA::Boolean (*systemExceptionHandler_t)(void* cookie,	//
-					   CORBA::ULong n_retries, 	//
-					   const CORBA::SystemException& ex);
+				   CORBA::ULong n_retries, 	        //
+				   const CORBA::SystemException& ex);   //
   //									//
   _CORBA_MODULE_FN void installSystemExceptionHandler(void* cookie,	//
-					    systemExceptionHandler_t fn);
+				    systemExceptionHandler_t fn);       //
   //									//
-  _CORBA_MODULE_FN void installSystemExceptionHandler(CORBA::Object_ptr obj,//
-					    void* cookie,		//
-					    systemExceptionHandler_t fn);
+  _CORBA_MODULE_FN void installSystemExceptionHandler(                  //
+				    CORBA::Object_ptr obj,              //
+				    void* cookie,		        //
+				    systemExceptionHandler_t fn);       //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -388,7 +400,7 @@ _CORBA_MODULE_BEG
                                        const objectKey& key);           //
                                                                         //
     static void set(mapKeyToObject_t NewKeyToObject);                   //
-  };
+  };                                                                    //
   ////////////////////////////////////////////////////////////////////////
 
 
@@ -442,7 +454,7 @@ _CORBA_MODULE_BEG
   // runtime. This function is not thread-safe and *SHOULD NOT* be used //
   // when the BOA::impl_is_ready() has been called.                     //
   // If the argument <p> is nil, the call will be siliently ignored.    //
-  //
+  //                                                                    //
     static void setGiopServerThreadWrapper(giopServerThreadWrapper* p);	//
     static giopServerThreadWrapper* getGiopServerThreadWrapper();       //
   };									//
@@ -486,6 +498,23 @@ _CORBA_MODULE_BEG
   // the outstanding ones return. (The default value is 5.)    	       	//
   //   	       	       	       	       	       	       	       	       	//
   _CORBA_MODULE_VAR  unsigned int maxTcpConnectionPerServer;            //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // diiThrowsSysExceptions                                             //
+  //  If the value of this variable is TRUE then the Dynamic            //
+  // Invacation Interface functions (Request::invoke, send_oneway,      //
+  // send_deferred, get_response, poll_response) will throw system      //
+  // exceptions as appropriate. Otherwise the exception will be stored  //
+  // in the Environment pseudo object associated with the Request.      //
+  //  By default system exceptions are passed through the Environment   //
+  // object.                                                            //
+  //   	       	       	       	       	       	       	       	       	//
+  _CORBA_MODULE_VAR CORBA::Boolean diiThrowsSysExceptions;              //
+  //                                                                    //
+  //     This value can be changed at runtime either by command-line    //
+  //     option: -ORBdiiThrowsSysExceptions <0|1>, or by direct         //
+  //     assignment to this variable.                                   //
   ////////////////////////////////////////////////////////////////////////
 
 
@@ -534,6 +563,8 @@ private:
 
 _CORBA_MODULE_END
 
+
 #undef _LC_attr
+
 
 #endif // __OMNIORB_H__
