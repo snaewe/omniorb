@@ -114,6 +114,10 @@ public:
   // with pd_tc, replace pd_tc with the value of tc.
   // Otherwise raises the BAD_TYPECODE exception
 
+  void setTC_and_reset(CORBA::TypeCode_ptr tc);
+  // Clears the current MemBufferedStream and replaces the typecode in use
+  // NEVER use this if the MemBuffered Stream is read-only...
+
   static void skip(MemBufferedStream&, CORBA::TypeCode_ptr tc);
   static void skip(NetBufferedStream&, CORBA::TypeCode_ptr tc);
   // Read and discard a value of type <tc> from the stream.
