@@ -29,7 +29,15 @@
 
 #include <windows.h>
 
-extern "C" DWORD omni_thread_wrapper(LPVOID ptr);
+#ifndef __BCPLUSPLUS__
+#define OMNI_THREAD_WRAPPER \
+    unsigned __stdcall omni_thread_wrapper(LPVOID ptr);
+#else
+#define OMNI_THREAD_WRAPPER \
+    void _USERENTRY omni_thread_wrapper(void *ptr);
+#endif
+
+extern "C" OMNI_THREAD_WRAPPER;
 
 #define OMNI_MUTEX_IMPLEMENTATION			\
     CRITICAL_SECTION crit;
@@ -52,6 +60,6 @@ extern "C" DWORD omni_thread_wrapper(LPVOID ptr);
     BOOL cond_waiting;					\
     static int nt_priority(priority_t);			\
     friend class omni_condition;			\
-    friend DWORD omni_thread_wrapper(LPVOID ptr);
+    friend OMNI_THREAD_WRAPPER;
 
 #endif
