@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.36  1999/06/22 14:54:27  sll
+  Changed stub code for any insertion and extraction. No longer keep a
+  reference to objref member class in the tcdescriptor.
+
   Revision 1.35  1999/06/18 20:44:57  sll
   Updated to support new sequence object reference template.
 
@@ -2849,8 +2853,10 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   INC_INDENT_LEVEL();
   IND(s); s << objref_fqname() << " _p = " << fqname()
 	    << "::_narrow(_ptr);\n";
-  IND(s); s << "*((" << fieldMemberType_fqname(o2be_global::root())
-	    << "*)_desc->opq_objref) = _p;\n";
+  IND(s); s << fqname() << "_ptr* pp = (" << fqname() 
+	    << "_ptr*)_desc->opq_objref;\n";
+  IND(s); s << "if (_desc->opq_release && !CORBA::is_nil(*pp)) CORBA::release(*pp);\n";
+  IND(s); s << "*pp = _p;\n";
   IND(s); s << "CORBA::release(_ptr);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
@@ -2860,9 +2866,9 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
 	    << "(tcObjrefDesc *_desc)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "return (CORBA::Object_ptr)"
-	    << "((" << fieldMemberType_fqname(o2be_global::root())
-	    << "*)_desc->opq_objref)->_ptr;\n";
+  IND(s); s << "return (CORBA::Object_ptr) *"
+	    << "((" << fqname()
+	    << "_ptr*)_desc->opq_objref);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -2871,7 +2877,8 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
 	    << fieldMemberType_fqname(o2be_global::root()) << "& _data)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "_desc.p_objref.opq_objref = (void*) &_data;\n";
+  IND(s); s << "_desc.p_objref.opq_objref = (void*) &_data._ptr;\n";
+  IND(s); s << "_desc.p_objref.opq_release = _data.pd_rel;\n";
   IND(s); s << "_desc.p_objref.setObjectPtr = _0RL_tcParser_setObjectPtr_"
 	    << _idname() << ";\n";
   IND(s); s << "_desc.p_objref.getObjectPtr = _0RL_tcParser_getObjectPtr_"
@@ -2888,10 +2895,9 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   INC_INDENT_LEVEL();
   IND(s); s << "tcDescriptor tcd;\n";
   IND(s); s << fieldMemberType_fqname(o2be_global::root())
-	    << " tmp(_s);\n";
+	    << " tmp(_s,0);\n";
   o2be_buildDesc::call_buildDesc(s, this, "tcd", "tmp");
   IND(s); s << "_a.PR_packFrom(" << fqtcname() << ", &tcd);\n";
-  IND(s); s << "tmp._ptr = 0;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -3403,10 +3409,10 @@ o2be_interface::inout_adptarg_name(AST_Decl* used_in)
 				    strlen(fqname())+strlen("_Helper")+1];
     strcpy(pd_inout_adptarg_name,ADPT_INOUT_CLASS_TEMPLATE);
     strcat(pd_inout_adptarg_name,"<");
+    strcat(pd_inout_adptarg_name,fqname());
     strcat(pd_inout_adptarg_name,",");
     strcat(pd_inout_adptarg_name,fqname());
     strcat(pd_inout_adptarg_name,"_Helper");
-    strcat(pd_inout_adptarg_name,fqname());
     strcat(pd_inout_adptarg_name," >");
   }
 
