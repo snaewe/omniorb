@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.6  2001/05/31 16:18:13  dpg1
+ inline string matching functions, re-ordered string matching in
+ _ptrToInterface/_ptrToObjRef
+
  Revision 1.2.2.5  2001/04/18 18:18:07  sll
  Big checkin with the brand new internal APIs.
 
@@ -493,7 +497,7 @@ omniObjAdapter::matchMyEndpoints(const char* addr)
 {
   for ( omnivector<const char*>::iterator i = oa_endpoints.begin();
 	i != oa_endpoints.end(); i++) {
-    if (strcmp((*i),addr) == 0) return 1;
+    if (omni::ptrStrMatch((*i),addr)) return 1;
   }
   return 0;
 }

@@ -558,7 +558,7 @@ RequestImpl::unmarshalUserException(cdrStream& s, const char* repoId)
   for( CORBA::ULong i = 0; i < exListLen; i++ ){
     CORBA::TypeCode_ptr exType = pd_exceptions->item(i);
 
-    if( !strcmp(repoId, exType->id()) ){
+    if( omni::strMatch(repoId, exType->id()) ){
       // Unmarshal the exception into an Any.
       CORBA::Any* newAny = new CORBA::Any(exType, 0);
       try {

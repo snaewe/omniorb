@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.16.2.6  2001/05/31 16:18:12  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.16.2.5  2001/05/29 17:03:51  dpg1
   In process identity.
 
@@ -561,10 +565,10 @@ omniOrbBOA::_ptrToObjRef(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
 
-  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
-    return (CORBA::Object_ptr) this;
-  if( !strcmp(repoId, CORBA::BOA::_PD_repoId) )
+  if( omni::ptrStrMatch(repoId, CORBA::BOA::_PD_repoId) )
     return (CORBA::BOA_ptr) this;
+  if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
 
   return 0;
 }

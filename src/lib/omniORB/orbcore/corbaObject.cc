@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.20.2.5  2001/05/31 16:18:12  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.20.2.4  2001/04/18 18:18:10  sll
   Big checkin with the brand new internal APIs.
 
@@ -134,8 +138,8 @@ CORBA::Object::_is_a(const char* repoId)
   if( _NP_is_pseudo() )  return _ptrToObjRef(repoId) ? 1 : 0;
 
   if( _NP_is_nil() ) {
-    if( strcmp(repoId, "") == 0 )  return 1;
-    else                           return 0;
+    if( omni::strMatch(repoId, "") )  return 1;
+    else                              return 0;
   }
   else {
     return pd_obj->_real_is_a(repoId);
@@ -244,7 +248,7 @@ CORBA::Object::_ptrToObjRef(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
 
-  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
+  if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
     return (CORBA::Object_ptr) this;
 
   return 0;

@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.3.2.3  2001/05/31 16:18:15  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.3.2.2  2000/09/27 17:35:49  sll
   Updated include/omniORB3 to include/omniORB4
 
@@ -156,10 +160,10 @@ CORBA::Policy::_ptrToObjRef(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
 
-  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
-    return (CORBA::Object_ptr) this;
-  if( !strcmp(repoId, CORBA::Policy::_PD_repoId) )
+  if( omni::ptrStrMatch(repoId, CORBA::Policy::_PD_repoId) )
     return (CORBA::Policy_ptr) this;
+  if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
 
   return 0;
 }

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2001/05/31 16:18:14  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.2.2.5  2001/05/29 17:03:52  dpg1
   In process identity.
 
@@ -104,7 +108,7 @@ omniServant::_ptrToInterface(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
 
-  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
+  if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
     return (void*) 1;
 
   return 0;
@@ -143,27 +147,27 @@ omniServant::_dispatch(omniCallHandle& handle)
 {
   const char* op = handle.operation_name();
 
-  if( strcmp(op, "_is_a") == 0 ) {
+  if( omni::strMatch(op, "_is_a") ) {
     omni_is_a_CallDesc call_desc("_is_a",sizeof("_is_a"),0,1);
     handle.upcall(this,call_desc);
     return 1;
   }
 
-  if( strcmp(op, "_non_existent") == 0 ) {
+  if( omni::strMatch(op, "_non_existent") ) {
     omni_non_existent_CallDesc call_desc("_non_existent",
 					 sizeof("_non_existent"),1);
     handle.upcall(this,call_desc);
     return 1;
   }
 
-  if( strcmp(op, "_interface") == 0 ) {
+  if( omni::strMatch(op, "_interface") ) {
     omni_interface_CallDesc call_desc("_interface",
 				      sizeof("_interface"),1);
     handle.upcall(this,call_desc);
     return 1;
   }
 
-  if( strcmp(op, "_implementation") == 0 ) {
+  if( omni::strMatch(op, "_implementation") ) {
     omniORB::logs(2,
      "WARNING -- received GIOP request \'_implementation\'.\n"
      " This operation is not supported.  CORBA::NO_IMPLEMENT was raised.");

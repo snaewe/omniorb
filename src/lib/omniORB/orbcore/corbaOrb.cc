@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.33.2.12  2001/05/31 16:18:12  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.33.2.11  2001/05/09 20:03:14  sll
   ORB::shutdown() now works as expected.
   Moved calling detach() on all the initializers from shutdown() to destroy()
@@ -606,10 +610,10 @@ omniOrbORB::_ptrToObjRef(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
 
-  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
-    return (CORBA::Object_ptr) this;
-  if( !strcmp(repoId, CORBA::ORB::_PD_repoId) )
+  if( omni::ptrStrMatch(repoId, CORBA::ORB::_PD_repoId) )
     return (CORBA::ORB_ptr) this;
+  if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
 
   return 0;
 }

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/05/31 16:18:12  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.1.4.5  2001/05/29 17:03:50  dpg1
   In process identity.
 
@@ -252,7 +256,7 @@ GIOP_S::handleRequest() {
       int i, repoid_size;  \
       const char* repoid = ex._NP_repoId(&repoid_size); \
       for( i = 0; i < pd_n_user_excns; i++ ) \
-	if( !strcmp(pd_user_excns[i], repoid) ) { \
+	if( omni::strMatch(pd_user_excns[i], repoid) ) { \
 	  impl()->sendUserException(this,ex); \
 	  break; \
 	} \

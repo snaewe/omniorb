@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2001/05/31 16:18:15  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.2.2.4  2001/04/18 18:18:05  sll
   Big checkin with the brand new internal APIs.
 
@@ -305,10 +309,10 @@ omniOrbPOAManager::_ptrToObjRef(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
 
-  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
-    return (CORBA::Object_ptr) this;
-  if( !strcmp(repoId, PortableServer::POAManager::_PD_repoId) )
+  if( omni::ptrStrMatch(repoId, PortableServer::POAManager::_PD_repoId) )
     return (PortableServer::POAManager_ptr) this;
+  if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
 
   return 0;
 }

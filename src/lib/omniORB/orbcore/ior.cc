@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.10.2.10  2001/05/31 16:18:13  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.10.2.9  2001/05/09 16:59:08  sll
   Added unmarshalObjectKey() to allow quick extraction of the object key.
 
@@ -588,7 +592,7 @@ omniIOR::unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c ,
   i    = addresses.begin();
   last = addresses.end();
   for (; i != last; i++) {
-    if (strcmp((*i)->type(),"giop:tcp") == 0) {
+    if (omni::strMatch((*i)->type(),"giop:tcp")) {
       tcpaddr = (*i)->address();
       break;
     }

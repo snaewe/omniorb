@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.11  2001/05/31 16:18:13  dpg1
+  inline string matching functions, re-ordered string matching in
+  _ptrToInterface/_ptrToObjRef
+
   Revision 1.2.2.10  2001/05/29 17:03:52  dpg1
   In process identity.
 
@@ -738,7 +742,7 @@ omni::createObjRef(const char* targetRepoId,
   proxyObjectFactory* pof = proxyObjectFactory::lookup(ior->repositoryID());
 
   if( pof && !pof->is_a(targetRepoId) &&
-      strcmp(targetRepoId, CORBA::Object::_PD_repoId) ) {
+      !omni::ptrStrMatch(targetRepoId, CORBA::Object::_PD_repoId) ) {
 
     // We know that <mostDerivedRepoId> is not derived from
     // <targetRepoId>. 
@@ -774,7 +778,7 @@ omni::createObjRef(const char* targetRepoId,
     // create an object reference while another thread is shutting
     // down the ORB.
 
-    if( strcmp(targetRepoId, CORBA::Object::_PD_repoId) )
+    if( !omni::ptrStrMatch(targetRepoId, CORBA::Object::_PD_repoId) )
       target_intf_not_confirmed = 1;
   }
 
@@ -821,7 +825,7 @@ omni::createObjRef(const char* mostDerivedRepoId,
 
     while( objref ) {
 
-      if( !strcmp(mostDerivedRepoId, objref->_mostDerivedRepoId()) &&
+      if( omni::ptrStrMatch(mostDerivedRepoId, objref->_mostDerivedRepoId()) &&
 	  objref->_ptrToObjRef(targetRepoId) ) {
 
 	omniORB::logs(15, "createObjRef -- reusing reference from local"

@@ -76,7 +76,7 @@ PortableServer::DynamicImplementation::_is_a(const char* logical_type_id)
     return 0;
   }
 
-  return !strcmp(repoId, logical_type_id);
+  return omni::ptrStrMatch(repoId, logical_type_id);
 #endif
 }
 
@@ -90,10 +90,10 @@ PortableServer::DynamicImplementation::_dispatch(omniCallHandle& handle)
   const char* op = iop_s.operation_name();
 
   // We do not want to handle standard object operations ...
-  if( !strcmp(op, "_is_a"          ) ||
-      !strcmp(op, "_non_existent"  ) ||
-      !strcmp(op, "_interface"     ) ||
-      !strcmp(op, "_implementation") )
+  if( omni::strMatch(op, "_is_a"          ) ||
+      omni::strMatch(op, "_non_existent"  ) ||
+      omni::strMatch(op, "_interface"     ) ||
+      omni::strMatch(op, "_implementation") )
     return 0;
 
   omniServerRequest sreq(iop_s);
