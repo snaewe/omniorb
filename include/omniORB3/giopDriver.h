@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.3.2.1  2000/08/21 11:33:30  djs
+  New stuff for AMI
+
   Revision 1.3  2000/07/13 15:26:05  dpg1
   Merge from omni3_develop for 3.0 release.
 
@@ -133,6 +136,7 @@ public:
     static _core_attr const _SysExceptRepoID BAD_CONTEXT;
     static _core_attr const _SysExceptRepoID OBJ_ADAPTER;
     static _core_attr const _SysExceptRepoID DATA_CONVERSION;
+    static _core_attr const _SysExceptRepoID TIMEOUT;
     static _core_attr const _SysExceptRepoID TRANSACTION_REQUIRED;
     static _core_attr const _SysExceptRepoID TRANSACTION_ROLLEDBACK;
     static _core_attr const _SysExceptRepoID INVALID_TRANSACTION;

@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.3.2.1  2000/08/21 11:33:31  djs
+ New stuff for AMI
+
  Revision 1.3  2000/07/13 15:26:04  dpg1
  Merge from omni3_develop for 3.0 release.
 
@@ -172,6 +175,7 @@ doit (INTF_REPOS) \
 doit (BAD_CONTEXT) \
 doit (OBJ_ADAPTER) \
 doit (DATA_CONVERSION) \
+doit (TIMEOUT) \
 doit (TRANSACTION_REQUIRED) \
 doit (TRANSACTION_ROLLEDBACK) \
 doit (INVALID_TRANSACTION) \
