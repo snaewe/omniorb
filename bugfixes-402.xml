@@ -8,6 +8,16 @@
 
 <buglist version="4.0.2">
 
+<bug id="2" date="Mon Oct 20 17:03:00 BST 2003" user="dgrisby">
+  <summary>Race condition in connection cleanup</summary>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2003-October/024372.html"/>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2003-September/024205.html"/>
+  <text>
+  A race conditon meant that sometimes connections were not properly
+  closed, leading to problems shutting down, and a resource leak.
+  </text>
+</bug>
+
 <bug id="1" date="Thu Aug 21 15:53:14 BST 2003" user="dgrisby">
   <summary>Registry reading broken on Windows</summary>
   <reported>Paul Keeley</reported>

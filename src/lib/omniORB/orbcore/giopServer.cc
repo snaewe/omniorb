@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.27  2003/10/20 16:11:12  dgrisby
+  Race condition in connection closure.
+
   Revision 1.22.2.26  2003/07/16 14:22:38  dgrisby
   Speed up oneway handling a little. More tracing for split messages.
 
@@ -937,6 +940,12 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 	  return 1;
 	}
       }
+      if (conn->pd_n_workers == 1 && conn->pd_dying) {
+	// Connection is dying. Go round again so this thread spots
+	// the condition.
+	omniORB::logs(25, "Last worker sees connection is dying.");
+	return 1;
+      }
       w->remove();
       delete w;
       conn->pd_n_workers--;
@@ -1001,6 +1010,13 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
     // Worker is no longer needed.
     {
       omni_tracedmutex_lock sync(pd_lock);
+
+      if (conn->pd_n_workers == 1 && conn->pd_dying) {
+	// Connection is dying. Go round again so this thread spots
+	// the condition.
+	omniORB::logs(25, "Last worker sees connection is dying.");
+	return 1;
+      }
       w->remove();
       delete w;
       conn->pd_n_workers--;

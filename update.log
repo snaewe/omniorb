@@ -1,3 +1,12 @@
+Mon Oct 20 17:10:12 BST 2003 dgrisby
+====================================
+
+- Race condition in connection closure.
+
+bugfixes-402.xml
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Fri Oct 17 16:22:05 BST 2003 dgrisby
 ====================================
 
