@@ -1,3 +1,12 @@
+
+Wed Oct 27 16:10:16 BST 1999 djr
+================================
+
+- Changed reference to omniDynamic2 to omniDynamic3.
+
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+
+
 Tue Oct 26 20:34:57 BST 1999 sll
 ================================
 
@@ -7,6 +16,7 @@ Tue Oct 26 20:34:57 BST 1999 sll
 src/lib/omniORB2/dynamic/dynAny.h
 src/lib/omniORB2/dynamic/dynAny.cc
 src/lib/omniORB2/dynamic/typecode.cc
+
 
 Thu Oct 21 12:00:31 BST 1999 djr
 ================================

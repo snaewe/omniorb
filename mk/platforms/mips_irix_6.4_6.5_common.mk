@@ -106,7 +106,7 @@ CorbaImplementation = OMNIORB
 # variable was original set in unix.mk
 
 OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
-		$(patsubst %,$(LibSearchPattern),omniDynamic2) \
+		$(patsubst %,$(LibSearchPattern),omniDynamic3) \
 	        $($(omniORBGatekeeperImplementation)_LIB) \
                 $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
