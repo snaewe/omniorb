@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/17 15:00:47  dpg1
+  Fixes for pre-historic compilers.
+
   Revision 1.1.2.1  2001/07/31 16:04:06  sll
   Added ORB::create_policy() and associated types and operators.
 
@@ -48,7 +51,7 @@ OMNI_USING_NAMESPACE(omni)
 //////////////////////////////////////////////////////////////////////
 
 #define CASE_CPFN_POA(id,policy) \
-  case PortableServer::id: \
+  case id: \
     { \
       try { \
 	PortableServer::policy##Value v; \
@@ -66,7 +69,7 @@ OMNI_USING_NAMESPACE(omni)
 
 
 #define CASE_CPFN_BIDIR(id,policy) \
-  case BiDirPolicy::id: \
+  case id: \
     { \
       try { \
 	CORBA::UShort v; \
@@ -90,21 +93,21 @@ ORB::create_policy(CORBA::PolicyType t, const CORBA::Any& value) {
 
   switch (t) {
 
-    // POA policies
-    CASE_CPFN_POA(THREAD_POLICY_ID,ThreadPolicy)
-    CASE_CPFN_POA(LIFESPAN_POLICY_ID,LifespanPolicy)
-    CASE_CPFN_POA(ID_UNIQUENESS_POLICY_ID,IdUniquenessPolicy)
-    CASE_CPFN_POA(ID_ASSIGNMENT_POLICY_ID,IdAssignmentPolicy)
-    CASE_CPFN_POA(IMPLICIT_ACTIVATION_POLICY_ID,ImplicitActivationPolicy)
-    CASE_CPFN_POA(SERVANT_RETENTION_POLICY_ID,ServantRetentionPolicy)
-    CASE_CPFN_POA(REQUEST_PROCESSING_POLICY_ID,RequestProcessingPolicy)
+  // POA policies
+  CASE_CPFN_POA(/*THREAD_POLICY_ID*/              16, ThreadPolicy)
+  CASE_CPFN_POA(/*LIFESPAN_POLICY_ID*/            17, LifespanPolicy)
+  CASE_CPFN_POA(/*ID_UNIQUENESS_POLICY_ID*/       18, IdUniquenessPolicy)
+  CASE_CPFN_POA(/*ID_ASSIGNMENT_POLICY_ID*/       19, IdAssignmentPolicy)
+  CASE_CPFN_POA(/*IMPLICIT_ACTIVATION_POLICY_ID*/ 20, ImplicitActivationPolicy)
+  CASE_CPFN_POA(/*SERVANT_RETENTION_POLICY_ID*/   21, ServantRetentionPolicy)
+  CASE_CPFN_POA(/*REQUEST_PROCESSING_POLICY_ID*/  22, RequestProcessingPolicy)
 
-    // Bidirectional policy
-    CASE_CPFN_BIDIR(BIDIRECTIONAL_POLICY_TYPE,BidirectionalPolicy)
+  // Bidirectional policy
+  CASE_CPFN_BIDIR(/*BIDIRECTIONAL_POLICY_TYPE*/   37, BidirectionalPolicy)
 
-    // Anything else we do not know
-    default:
-      throw CORBA::PolicyError(CORBA::BAD_POLICY);
+  // Anything else we do not know
+  default:
+    throw CORBA::PolicyError(CORBA::BAD_POLICY);
   }
 }
 

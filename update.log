@@ -1,3 +1,15 @@
+Fri Aug 17 15:50:51 BST 2001 dpg1
+=================================
+
+- Fixes for pre-historic compilers.
+
+include/omniORB4/BiDirPolicy.h
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/include/giopServer.h
+src/lib/omniORB/include/poaimpl.h
+src/lib/omniORB/orbcore/poa.cc
+
+
 Fri Aug 17 14:14:10 BST 2001 dpg1
 =================================
 

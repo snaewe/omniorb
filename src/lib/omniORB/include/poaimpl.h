@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2001/08/17 15:00:48  dpg1
+  Fixes for pre-historic compilers.
+
   Revision 1.1.4.7  2001/08/15 10:26:09  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -488,10 +491,13 @@ private:
   Policies                             pd_policy;
   // Immutable.
 
+public:
+  // For some reason, some compilers require this struct to be public
   struct MainThreadSync {
     omni_tracedmutex*     mu;
     omni_tracedcondition* cond;
   };
+private:
   union {
     omni_rmutex*                       pd_call_lock;
     // This recursive lock is used to enforce the single threaded

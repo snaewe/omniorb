@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/17 15:00:47  dpg1
+  Fixes for pre-historic compilers.
+
   Revision 1.1.2.2  2001/08/16 09:54:44  sll
   Hardwired the policy number instead of using the constant in the
   declaration of BidirectionalPolicy because the latter does not work for
@@ -49,9 +52,13 @@ _CORBA_MODULE_BEG
 
 typedef CORBA::UShort BidirectionalPolicyValue;
 
+_CORBA_MODULE_VARINT
 const BidirectionalPolicyValue NORMAL             _init_in_decl_( = 0 );
+
+_CORBA_MODULE_VARINT
 const BidirectionalPolicyValue BOTH               _init_in_decl_( = 1 );
 
+_CORBA_MODULE_VARINT
 const CORBA::PolicyType BIDIRECTIONAL_POLICY_TYPE _init_in_decl_( = 37 );
 
 OMNIORB_DECLARE_POLICY_OBJECT(BidirectionalPolicy, 37)
