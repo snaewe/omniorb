@@ -94,7 +94,8 @@ static void func(void* arg)
     while (1) {
 	PRINTMSG(cout << name << ": entering 1st compute-bound loop\n");
 
-	for (int i = 0; i < loop_iterations; i++)
+        int i;
+	for (i = 0; i < loop_iterations; i++)
 	    ;
 
 	PRINTMSG(cout << name << ": left compute-bound loop; yielding\n");
