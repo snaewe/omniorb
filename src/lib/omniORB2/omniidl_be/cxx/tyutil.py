@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13  1999/12/01 17:04:47  djs
+# Added utility function useful for Typecode declarations
+#
 # Revision 1.12  1999/11/29 19:26:59  djs
 # Code tidied and moved around. Some redundant code eliminated.
 #
@@ -896,6 +899,15 @@ def const_init_in_def(type):
            isOctet(type)
 
 
+# ------------------------------------------------------------------
+
+def const_qualifier(insideModule, insideClass):
+    if not(insideModule) and not(insideClass):
+        return "_CORBA_GLOBAL_VAR"
+    elif insideClass:
+        return "static"
+    else:
+        return "_CORBA_MODULE_VAR"
 
 # ------------------------------------------------------------------
 
