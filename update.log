@@ -1,3 +1,18 @@
+Fri Mar 24 22:26:00 GMT 2000 djs
+================================
+
+- Major restructuring of omniIDL C++ backend DynSK.cc generating code:
+  Control flow is more recursive and obvious
+  Common blocks have been factored out
+  Distinguishes between forward declarations and extern declarations
+  Outputs prototypes at most once; same with function blocks
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/bdesc.py (removed)
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/dir.mk
+
+
 Fri Mar 24 17:32:02 GMT 2000 dpg1
 =================================
 

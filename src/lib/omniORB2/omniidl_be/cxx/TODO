@@ -1,0 +1,88 @@
+Combined list of things to-do and things to think about
+-------------------------------------------------------
+
+(in no particular order)
+
+* Sort out where output is conditional on the host system. Most system
+  specific stuff is output on all platforms within #ifdefs. Some appears
+  not to be (look for o2be_global::mflag in original source)
+
+* Fix handling of floats. Mainly aesthetic problem caused by lack of python
+  float type. Floats in source appear with extra digits when output. Not
+  an error, just a difference. (Worth verifying)
+
+* Eventually rewrite handling of scopednames in class Name. Would fully 
+  qualifying names be better (less risk of accidental collision)? Or use
+  implementation of innermost->outermost scope searching to find the smallest
+  guaranteed-to-mean-the-right-thing identifier? (existing system uses an
+  approximation to this that falls back to fully scoping when not absolutely
+  necessary. I think.)
+
+  Thinking of name handling, what does happen when you eg 
+    IDL:   interface Foo {
+           }
+           interface _impl_Foo {
+           }
+  Will this be meaningful in the C++ mapping?
+
+* Maybe remove all fancy output formatting to improve speed? Output can always
+  be feed through a special purpose lint tool instead.
+
+* Sort out functions declared as extern even though they are complete with
+  chunks of code. (typedefs to arrays) Does this have a sensible/ useful meaning?
+
+* Sort out argument passing conventions (pointer, reference etc etc)
+  examine tables in old BE and look for exceptions etc
+  Is there enough common code to be factored out?
+
+* Slight assymmetry in call desc unmarshalling code (positions where temp
+  variables are declared seems to vary)
+
+* Unify string marshalling/ unmarshalling- why is it sometimes done through
+  a String_member and sometimes done at the char level?
+
+* Surely a return value is semantically identical to an out argument value?
+  Why does it become a special case?
+  Could we perform an IDL -> IDL transform on them?
+  Or unify handling in the backend?
+  Or have I missed something obvious? :)
+
+* Perhaps we could simplify handling of anonymous sequences etc by introducing
+  (internal) typedefs?
+
+* Would it be possible/ easier to remove need to consider declarators when
+  looking at an object's type? (Maybe this is a just personal dislike of 
+  C/ C++ / IDL declarator syntax) Shouldn't a type be a simple structure
+    t = Sequence of (Array of (Array of (Alias of (Struct foo))))
+  and be independent of it's actual _name(s)_. Perhaps make functions
+    marshal : fn Type -> Function block
+  and store a hashtable of functions available to promote reuse? Or could
+  expand each inline for speed?
+
+  Perhaps create a type class with appropriate constructors (taking types and
+  optional declarators) which contains the marshalling, unmarshalling and
+  alignment code?
+
+  Another awkwardness example:
+  in the DynSK.cc generation code we build functions based on types. Anon
+  arrays inside (eg) a struct produce the same fns as typedef'd ones do. 
+  However I can only get its type (through the alias()) if its a typedef.
+
+* When do typedefs get dereferenced and when are they not? It seems like everything
+  is a special case in the current system- is that necessary?
+
+* The DynSK.cc file seems to have multiple _identical_ extern function declarations
+  - this was more difficult to copy exactly than it would have been to reimplement
+  from scratch. It also outputs function blocks with #ifdef #define #endif guards
+  and uses that as an excuse to output the same block of code multiple times.
+  
+  From profiling, output is expensive so it makes sense to minimise it. Would help
+  make a better design and make both the code and the output easier to read
+
+* Module continuations may not be properly testsed
+
+* Operation contexts- are these meant to be supported? *8)
+
+* Everything new in mapping that the old compiler doesn't support including
+  * declaring Enums as a discriminator inside a union switch ()
+  * multiple union caselabels for a single case
