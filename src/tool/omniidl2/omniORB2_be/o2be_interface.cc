@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.39  1999/08/04 10:17:39  sll
+  Added missing operator for non-copy Any insertion.
+
   Revision 1.38  1999/07/02 19:15:28  sll
   No longer inlined virtual destructors.
 
@@ -2820,7 +2823,8 @@ o2be_interface::produce_binary_operators_in_hdr(std::fstream& s)
     // any insertion and extraction operators
     IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname()
 	      << " _s);\n";
-
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+	      << "* _s);\n";
     IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 	      << objref_fqname() 
 	      << "& _s);\n\n";
@@ -2929,6 +2933,14 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
 	    << " tmp(_s,0);\n";
   o2be_buildDesc::call_buildDesc(s, this, "tcd", "tmp");
   IND(s); s << "_a.PR_packFrom(" << fqtcname() << ", &tcd);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+	      << "* _sp) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_a <<= *_sp;\n";
+  IND(s); s << "CORBA::release(*_sp);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
