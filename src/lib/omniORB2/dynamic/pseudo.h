@@ -112,7 +112,7 @@ public:
   virtual CORBA::NVList_ptr NP_duplicate();
 
 private:
-  typedef _CORBA_Pseudo_Unbounded_Sequence<CORBA::NamedValue_ptr> NVSeq;
+  typedef _CORBA_PseudoValue_Sequence<CORBA::NamedValue_ptr> NVSeq;
   NVSeq pd_list;
 };
 
@@ -124,17 +124,10 @@ class EnvironmentImpl : public CORBA::Environment,
 			public PseudoObjBase
 {
 public:
-  EnvironmentImpl() : pd_exception(0) {}
+  EnvironmentImpl();
   virtual ~EnvironmentImpl();
 
-  virtual void exception(CORBA::Exception*);
-  virtual CORBA::Exception* exception() const;
-  virtual void clear();
-  virtual CORBA::Boolean NP_is_nil() const;
   virtual CORBA::Environment_ptr NP_duplicate();
-
-private:
-  CORBA::Exception* pd_exception;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -161,7 +154,7 @@ public:
 private:
   void free_entries();
 
-  typedef _CORBA_Pseudo_Unbounded_Sequence<char*> ContextSeq;
+  typedef _CORBA_PseudoValue_Sequence<char*> ContextSeq;
   ContextSeq pd_list;
 };
 
@@ -187,7 +180,7 @@ public:
 private:
   void free_entries();
 
-  typedef _CORBA_Pseudo_Unbounded_Sequence<CORBA::TypeCode_ptr> ExceptionSeq;
+  typedef _CORBA_PseudoValue_Sequence<CORBA::TypeCode_ptr> ExceptionSeq;
   ExceptionSeq pd_list;
 };
 
