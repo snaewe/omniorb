@@ -16,6 +16,8 @@
 
 #include <strstream.h>
 
+#include <iostream.h>
+
 #include "omniParTcl.h"
 #include "scriptQueue.h"
 
