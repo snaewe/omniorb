@@ -28,9 +28,12 @@
 
 
 /* $Log$
-/* Revision 1.2  1998/04/07 19:30:45  sll
-/* Moved inline functions to this module.
+/* Revision 1.3  1998/04/08 16:07:32  sll
+/* Minor change to help some compiler to find the right TypeCode ctor.
 /*
+ * Revision 1.2  1998/04/07 19:30:45  sll
+ * Moved inline functions to this module.
+ *
 // Revision 1.1  1998/01/27  15:43:47  ewc
 // Initial revision
 //
@@ -46,7 +49,7 @@
 
 CORBA::Any::Any() : pd_data(0)
 { 
-  pd_tc = new TypeCode(tk_null); 
+  pd_tc = new TypeCode(tk_null,0); 
 }
 
 CORBA::Any::~Any()

@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.7  1998/04/08 16:07:50  sll
+ * Minor change to help some compiler to find the right TypeCode ctor.
+ *
  * Revision 1.6  1998/04/08 14:07:26  sll
  * Added workaround in CORBA::TypeCode::_nil() for a bug in DEC Cxx v5.5.
  *
@@ -853,7 +856,7 @@ CORBA::TypeCode::PR_equal(CORBA::TypeCode_ptr TCp, CORBA::Boolean expand) const
 	{
 	  myBuf.skip(1); TCpBuf.skip(1);
 
-	  CORBA::TypeCode a(CORBA::tk_null),b(CORBA::tk_null);
+	  CORBA::TypeCode a(CORBA::tk_null,0),b(CORBA::tk_null,0);
 	  a <<= myBuf;
 	  b <<= TCpBuf;
 
@@ -902,7 +905,7 @@ CORBA::TypeCode::PR_equal(CORBA::TypeCode_ptr TCp, CORBA::Boolean expand) const
 	  myBuf.skip(myLen);
 	  TCpBuf.skip(TCpLen);
 
-	  CORBA::TypeCode contentA(CORBA::tk_null), contentB(CORBA::tk_null);
+	  CORBA::TypeCode contentA(CORBA::tk_null,0), contentB(CORBA::tk_null,0);
 
 	  CORBA::Long def = 0;
 
@@ -963,7 +966,7 @@ CORBA::TypeCode::PR_equal(CORBA::TypeCode_ptr TCp, CORBA::Boolean expand) const
 		    myBuf.skip(myLen);
 		    TCpBuf.skip(TCpLen);
 		    
-		    CORBA::TypeCode a(CORBA::tk_null),b(CORBA::tk_null);
+		    CORBA::TypeCode a(CORBA::tk_null,0),b(CORBA::tk_null,0);
 		    a <<= myBuf;
 		    b <<= TCpBuf;
 		    if (!a.NP_expandEqual(&b,expand)) return 0;
@@ -1057,7 +1060,7 @@ CORBA::TypeCode::PR_equal(CORBA::TypeCode_ptr TCp, CORBA::Boolean expand) const
 		    myBuf.skip(myLen);
 		    TCpBuf.skip(TCpLen);
 
-		    CORBA::TypeCode a(CORBA::tk_null),b(CORBA::tk_null);
+		    CORBA::TypeCode a(CORBA::tk_null,0),b(CORBA::tk_null,0);
 		    a <<= myBuf;
 		    b <<= TCpBuf;
 		    if (!a.NP_expandEqual(&b,expand)) return 0;    
@@ -1164,7 +1167,7 @@ CORBA::TypeCode::member_count() const
       
       if (pd_tck == CORBA::tk_union)
 	{
-	  CORBA::TypeCode tmpTC(CORBA::tk_null);
+	  CORBA::TypeCode tmpTC(CORBA::tk_null,0);
 	  tmpTC <<= tmpBuf;
 	  tmpBuf.skip(4,omni::ALIGN_4);
 	}
@@ -1213,7 +1216,7 @@ CORBA::TypeCode::member_name(CORBA::ULong index) const
 
       if (pd_tck == CORBA::tk_union)
 	{
-	  CORBA::TypeCode unExpandedTC(CORBA::tk_null);
+	  CORBA::TypeCode unExpandedTC(CORBA::tk_null,0);
 	  unExpandedTC <<= tmpBuf;
 	  discrimTCp = unExpandedTC.NP_aliasExpand();
 
@@ -1250,7 +1253,7 @@ CORBA::TypeCode::member_name(CORBA::ULong index) const
 
 	  if (pd_tck != CORBA::tk_enum)
 	    {
-	      CORBA::TypeCode tmpTC(CORBA::tk_null);
+	      CORBA::TypeCode tmpTC(CORBA::tk_null,0);
 	      tmpTC <<= tmpBuf;
 	    }
 	}
@@ -1293,7 +1296,7 @@ CORBA::TypeCode::member_type(CORBA::ULong index) const
 
       if (pd_tck == CORBA::tk_union)
 	{
-	  CORBA::TypeCode unExpandedTC(CORBA::tk_null);
+	  CORBA::TypeCode unExpandedTC(CORBA::tk_null,0);
 	  unExpandedTC <<= tmpBuf;
 	  discrimTCp = unExpandedTC.NP_aliasExpand();
 	  
@@ -1309,7 +1312,7 @@ CORBA::TypeCode::member_type(CORBA::ULong index) const
 	throw CORBA::BAD_TYPECODE(0,CORBA::COMPLETED_NO);
       else if (index >= count) throw CORBA::TypeCode::Bounds();
 
-      CORBA::TypeCode_ptr rcTC = new CORBA::TypeCode(CORBA::tk_null);
+      CORBA::TypeCode_ptr rcTC = new CORBA::TypeCode(CORBA::tk_null,0);
 
       for(CORBA::ULong i=0; i <= index; i++)
 	{
@@ -1328,7 +1331,7 @@ CORBA::TypeCode::member_type(CORBA::ULong index) const
 
 	  tmpBuf.skip(_len);
 
-	  rcTC = new CORBA::TypeCode(CORBA::tk_null);      
+	  rcTC = new CORBA::TypeCode(CORBA::tk_null,0);      
 	  try
 	    {
 	      *rcTC <<= tmpBuf;
@@ -1372,7 +1375,7 @@ CORBA::TypeCode::member_label(CORBA::ULong index) const
 	throw CORBA::BAD_TYPECODE(0,CORBA::COMPLETED_NO);
       tmpBuf.skip(_len);
       
-      CORBA::TypeCode unExpandedTC(CORBA::tk_null);
+      CORBA::TypeCode unExpandedTC(CORBA::tk_null,0);
 
       unExpandedTC <<= tmpBuf;
       CORBA::TypeCode_var discrimTCp = unExpandedTC.NP_aliasExpand();
@@ -1420,7 +1423,7 @@ CORBA::TypeCode::member_label(CORBA::ULong index) const
 		throw CORBA::BAD_TYPECODE(0,CORBA::COMPLETED_NO);
 	      else tmpBuf.skip(_len);
 	      
-	      CORBA::TypeCode tmpTC(CORBA::tk_null);
+	      CORBA::TypeCode tmpTC(CORBA::tk_null,0);
 	      tmpTC <<= tmpBuf;
 	    }
 
@@ -1459,7 +1462,7 @@ CORBA::TypeCode::discriminator_type() const
 	throw CORBA::BAD_TYPECODE(0,CORBA::COMPLETED_NO);
       tmpBuf.skip(_len);
 
-      CORBA::TypeCode_ptr TCp = new CORBA::TypeCode(CORBA::tk_null);
+      CORBA::TypeCode_ptr TCp = new CORBA::TypeCode(CORBA::tk_null,0);
       
       try
 	{
@@ -1504,7 +1507,7 @@ CORBA::TypeCode::default_index() const
       tmpBuf.skip(_len);
 
 
-      CORBA::TypeCode a(CORBA::tk_null);
+      CORBA::TypeCode a(CORBA::tk_null,0);
       a <<= tmpBuf;
 
       CORBA::Long def;
@@ -1537,7 +1540,7 @@ CORBA::TypeCode::length() const
       MemBufferedStream tmpBuf(pd_param,1);
       tmpBuf.skip(1);
 
-      CORBA::TypeCode tmpTC(CORBA::tk_null);
+      CORBA::TypeCode tmpTC(CORBA::tk_null,0);
       CORBA::ULong len;
 
       tmpTC <<= tmpBuf;
@@ -1579,7 +1582,7 @@ CORBA::TypeCode::content_type() const
 	  tmpBuf.skip(idLen,omni::ALIGN_4);
 	}
 
-      CORBA::TypeCode_ptr contentTC = new CORBA::TypeCode(CORBA::tk_null);
+      CORBA::TypeCode_ptr contentTC = new CORBA::TypeCode(CORBA::tk_null,0);
       try
 	{
 	  *contentTC <<= tmpBuf;
@@ -2041,7 +2044,7 @@ CORBA::TypeCode_member::operator>>=(NetBufferedStream& s) const
 void
 CORBA::TypeCode_member::operator<<=(NetBufferedStream& s)
 {
-  TypeCode_ptr _result = new TypeCode(tk_null);
+  TypeCode_ptr _result = new TypeCode(tk_null,0);
   *_result <<= s;
   CORBA::release(_ptr);
   _ptr = _result;
@@ -2056,7 +2059,7 @@ CORBA::TypeCode_member::operator>>=(MemBufferedStream& s) const
 void
 CORBA::TypeCode_member::operator<<=(MemBufferedStream& s)
 {
-  TypeCode_ptr _result = new TypeCode(tk_null);
+  TypeCode_ptr _result = new TypeCode(tk_null,0);
   *_result <<= s;
   CORBA::release(_ptr);
   _ptr = _result;
@@ -2294,20 +2297,20 @@ _nil_IDLType::type ()
 
 
 
-static CORBA::TypeCode _01RL__tc_null__(CORBA::tk_null);
-static CORBA::TypeCode _01RL__tc_void__(CORBA::tk_void);
-static CORBA::TypeCode _01RL__tc_short__(CORBA::tk_short);
-static CORBA::TypeCode _01RL__tc_long__(CORBA::tk_long);
-static CORBA::TypeCode _01RL__tc_ushort__(CORBA::tk_ushort);
-static CORBA::TypeCode _01RL__tc_ulong__(CORBA::tk_ulong);
-static CORBA::TypeCode _01RL__tc_float__(CORBA::tk_float);
-static CORBA::TypeCode _01RL__tc_double__(CORBA::tk_double);
-static CORBA::TypeCode _01RL__tc_boolean__(CORBA::tk_boolean);
-static CORBA::TypeCode _01RL__tc_char__(CORBA::tk_char);
-static CORBA::TypeCode _01RL__tc_octet__(CORBA::tk_octet);
-static CORBA::TypeCode _01RL__tc_any__(CORBA::tk_any);
-static CORBA::TypeCode _01RL__tc_TypeCode__(CORBA::tk_TypeCode);
-static CORBA::TypeCode _01RL__tc_Principal__(CORBA::tk_Principal);
+static CORBA::TypeCode _01RL__tc_null__(CORBA::tk_null,0);
+static CORBA::TypeCode _01RL__tc_void__(CORBA::tk_void,0);
+static CORBA::TypeCode _01RL__tc_short__(CORBA::tk_short,0);
+static CORBA::TypeCode _01RL__tc_long__(CORBA::tk_long,0);
+static CORBA::TypeCode _01RL__tc_ushort__(CORBA::tk_ushort,0);
+static CORBA::TypeCode _01RL__tc_ulong__(CORBA::tk_ulong,0);
+static CORBA::TypeCode _01RL__tc_float__(CORBA::tk_float,0);
+static CORBA::TypeCode _01RL__tc_double__(CORBA::tk_double,0);
+static CORBA::TypeCode _01RL__tc_boolean__(CORBA::tk_boolean,0);
+static CORBA::TypeCode _01RL__tc_char__(CORBA::tk_char,0);
+static CORBA::TypeCode _01RL__tc_octet__(CORBA::tk_octet,0);
+static CORBA::TypeCode _01RL__tc_any__(CORBA::tk_any,0);
+static CORBA::TypeCode _01RL__tc_TypeCode__(CORBA::tk_TypeCode,0);
+static CORBA::TypeCode _01RL__tc_Principal__(CORBA::tk_Principal,0);
 static CORBA::TypeCode _01RL__tc_Object__("IDL:CORBA/Object:1.0","Object");
 static CORBA::TypeCode _01RL__tc_string__(CORBA::tk_string,0);
 				   
