@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.9  2000/08/30 10:14:39  dpg1
+# BOA constructor with object key failed to set the key in the servant.
+#
 # Revision 1.1.2.8  2000/07/24 16:32:19  djs
 # Fixed typo in previous BOA skeleton bugfix.
 # Suppressed compiler warning (from gcc -Wall) when encountering a call with
@@ -338,7 +341,7 @@ if( !strcmp(id, @inherited_name@::_PD_repoId) )
 """
 
 interface_sk = """\
-@sk_fqname@::@sk_name@(const omniOrbBoaKey& k): omniOrbBoaServant(k) {}
+@sk_fqname@::@sk_name@(const omniOrbBoaKey& k) { pd_key = k; }
 
 @sk_fqname@::~@sk_name@() {}
 """

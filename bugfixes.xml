@@ -8,6 +8,16 @@
 
 <buglist>
 
+<bug id="6" date="Wed Aug 30 10:43:34 BST 2000" user="dpg1">
+
+  <summary>BOA constructor with object key broken</summary>
+  <reported>Paul Nader</reported>
+  <text>
+  The fix to <a href="bug300.html#bug8">bug 8</a> in omniORB 3.0.0 did
+  not actually work.
+  </text>
+</bug>
+
 <bug id="5" date="Fri Aug 25 14:25:20 BST 2000" user="dpg1">
 
   <summary>omniidl loses all but the first comment with -K</summary>
@@ -20,7 +30,6 @@
   </text>
 </bug>
 
-
 <bug id="4" date="Wed Aug 23 16:44:36 BST 2000" user="djs">
 
   <summary>MSVC5/6 marshalling multidimensional arrays of basic types</summary>
@@ -30,7 +39,6 @@
         (not when using an out type)
   </text>
 </bug>
-
 
 <bug id="3" date="Tue Aug 22 15:48:11 BST 2000" user="sll">
 
