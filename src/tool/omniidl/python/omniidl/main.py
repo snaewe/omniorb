@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.3  2000/02/17 11:18:05  dpg1
+# Multiple -p flags now preserve the order, rather than reversing it.
+#
 # Revision 1.15.2.2  2000/02/16 16:23:52  dpg1
 # Support things for Python neophytes.
 #
@@ -153,6 +156,8 @@ def parseArgs(args):
     global no_preprocessor, backend, backend_args, dump_only, cd_to
     global verbose, quiet, print_usage
 
+    paths = []
+
     try:
         opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:C:dVuhvqp:")
     except getopt.error, e:
@@ -226,7 +231,9 @@ def parseArgs(args):
             quiet = 1
 
         elif o == "-p":
-            sys.path.insert(0, a)
+            paths.append(a)
+
+    sys.path = paths + sys.path
 
     return files
 
