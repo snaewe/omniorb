@@ -1,3 +1,12 @@
+Fri Feb 20 14:46:05 GMT 1998 ewc
+================================
+
+- Patched to compile with aCC on HPUX
+
+include/omniORB2/CORBA.h
+src/lib/omniORB2/typecode.cc
+
+
 Thu Feb 19 12:15:15 GMT 1998 ewc
 ================================
 
