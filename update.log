@@ -1,3 +1,32 @@
+Mon Sep  3 17:46:21 BST 2001 sll
+================================
+
+
+- The ORB parameter clientCallTimeOutPeriod is now active. Client side call
+  timeout can be set  by this value.
+
+  On timeout, the TRANSIENT exception will be raised and the minor code
+  is TRANSIENT_CallTimedout.
+
+
+include/omniORB4/callDescriptor.h
+src/lib/omniORB/include/giopStream.h
+src/lib/omniORB/include/inProcessIdentity.h
+src/lib/omniORB/include/localIdentity.h
+src/lib/omniORB/include/omniIdentity.h
+src/lib/omniORB/include/remoteIdentity.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/inProcessIdentity.cc
+src/lib/omniORB/orbcore/localIdentity.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+
+
 Mon Sep  3 14:23:18 BST 2001 sll
 ================================
 
