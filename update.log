@@ -1,4 +1,20 @@
 
+Mon Oct 18 12:00:56 BST 1999 djr
+================================
+
+- New macro OMNIORB_FOR_EACH_SYS_EXCEPTION, which allows another macro
+  to be expanded for each system exception.  This centralises the list
+  of system exceptions.
+
+include/omniORB3/userexception.h
+include/omniORB3/CORBA.h
+src/lib/omniORB2/exception.h
+src/lib/omniORB2/orbcore/exceptn.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/dynamic/dynException.cc
+
+
 Sat Oct 16 14:18:56 BST 1999 djr
 ================================
 

@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  1999/10/18 11:27:37  djr
+ Centralised list of system exceptions.
+
  Revision 1.1.2.3  1999/10/04 17:08:30  djr
  Some more fixes/MSVC work-arounds.
 
@@ -121,6 +124,44 @@ private:  \
   virtual void _NP_marshal(NetBufferedStream&) const;  \
   virtual void _NP_marshal(MemBufferedStream&) const;  \
 };
+
+
+// This macro applies it's argument to the name of each
+// of the system exceptions.  It is expected that the
+// argument <doit> will be another macro.
+
+#define OMNIORB_FOR_EACH_SYS_EXCEPTION(doit) \
+ \
+doit (UNKNOWN) \
+doit (BAD_PARAM) \
+doit (NO_MEMORY) \
+doit (IMP_LIMIT) \
+doit (COMM_FAILURE) \
+doit (INV_OBJREF) \
+doit (OBJECT_NOT_EXIST) \
+doit (NO_PERMISSION) \
+doit (INTERNAL) \
+doit (MARSHAL) \
+doit (INITIALIZE) \
+doit (NO_IMPLEMENT) \
+doit (BAD_TYPECODE) \
+doit (BAD_OPERATION) \
+doit (NO_RESOURCES) \
+doit (NO_RESPONSE) \
+doit (PERSIST_STORE) \
+doit (BAD_INV_ORDER) \
+doit (TRANSIENT) \
+doit (FREE_MEM) \
+doit (INV_IDENT) \
+doit (INV_FLAG) \
+doit (INTF_REPOS) \
+doit (BAD_CONTEXT) \
+doit (OBJ_ADAPTER) \
+doit (DATA_CONVERSION) \
+doit (TRANSACTION_REQUIRED) \
+doit (TRANSACTION_ROLLEDBACK) \
+doit (INVALID_TRANSACTION) \
+doit (WRONG_TRANSACTION) \
 
 
 #endif // __OMNIORB_USEREXCEPTION_H__

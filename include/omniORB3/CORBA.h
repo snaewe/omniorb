@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  1999/10/18 11:27:36  djr
+ Centralised list of system exceptions.
+
  Revision 1.1.2.2  1999/10/16 13:22:51  djr
  Changes to support compiling on MSVC.
 
@@ -850,7 +853,7 @@ _CORBA_MODULE_BEG
     virtual void _NP_marshal(MemBufferedStream&) const;
   };
 
-#define  STD_EXCEPTION(name) \
+#define OMNIORB_DECLARE_SYS_EXCEPTION(name) \
   class name : public SystemException { \
   public: \
     inline name(ULong minor = 0, CompletionStatus completed = COMPLETED_NO) \
@@ -871,40 +874,11 @@ _CORBA_MODULE_BEG
   private: \
     virtual Exception* _NP_duplicate() const; \
     virtual const char* _NP_typeId() const; \
-  }
+  };
 
-  STD_EXCEPTION (UNKNOWN);
-  STD_EXCEPTION (BAD_PARAM);
-  STD_EXCEPTION (NO_MEMORY);
-  STD_EXCEPTION (IMP_LIMIT);
-  STD_EXCEPTION (COMM_FAILURE);
-  STD_EXCEPTION (INV_OBJREF);
-  STD_EXCEPTION (OBJECT_NOT_EXIST);
-  STD_EXCEPTION (NO_PERMISSION);
-  STD_EXCEPTION (INTERNAL);
-  STD_EXCEPTION (MARSHAL);
-  STD_EXCEPTION (INITIALIZE);
-  STD_EXCEPTION (NO_IMPLEMENT);
-  STD_EXCEPTION (BAD_TYPECODE);
-  STD_EXCEPTION (BAD_OPERATION);
-  STD_EXCEPTION (NO_RESOURCES);
-  STD_EXCEPTION (NO_RESPONSE);
-  STD_EXCEPTION (PERSIST_STORE);
-  STD_EXCEPTION (BAD_INV_ORDER);
-  STD_EXCEPTION (TRANSIENT);
-  STD_EXCEPTION (FREE_MEM);
-  STD_EXCEPTION (INV_IDENT);
-  STD_EXCEPTION (INV_FLAG);
-  STD_EXCEPTION (INTF_REPOS);
-  STD_EXCEPTION (BAD_CONTEXT);
-  STD_EXCEPTION (OBJ_ADAPTER);
-  STD_EXCEPTION (DATA_CONVERSION);
-  STD_EXCEPTION (TRANSACTION_REQUIRED);
-  STD_EXCEPTION (TRANSACTION_ROLLEDBACK);
-  STD_EXCEPTION (INVALID_TRANSACTION);
-  STD_EXCEPTION (WRONG_TRANSACTION);
+  OMNIORB_FOR_EACH_SYS_EXCEPTION(OMNIORB_DECLARE_SYS_EXCEPTION)
 
-#undef STD_EXCEPTION
+#undef OMNIORB_DECLARE_SYS_EXCEPTION
 
 
   //////////////////////////////////////////////////////////////////////
@@ -2578,12 +2552,6 @@ _CORBA_MODULE_END
 #include <omniORB3/templatedefns.h>
 #include <omniORB3/corba_operators.h>
 #include <omniORB3/poa.h>
-
-// Undef MACROs defined in <omniORB3/userexception.h>
-#undef OMNIORB_DECLARE_USER_EXCEPTION1
-#undef OMNIORB_DECLARE_USER_EXCEPTION
-#undef OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA
-#undef OMNIORB_UNDEF_MACROS
 
 
 //?? These really want to be renamed and put elsewhere.
