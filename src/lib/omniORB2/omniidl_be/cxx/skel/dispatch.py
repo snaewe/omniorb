@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  1999/12/25 21:47:18  djs
+# Better TypeCode support
+#
 # Revision 1.8  1999/12/14 11:53:22  djs
 # Support for CORBA::TypeCode and CORBA::Any
 # Exception member bugfix
@@ -105,13 +108,18 @@ def argument_instance(type):
         return mapping
 
     # all object references and typecodes are _var types
-    if (tyutil.isObjRef(deref_type) or \
-        tyutil.isTypeCode(deref_type)) and not(is_array):
+    if (tyutil.isObjRef(deref_type) and not(is_array)):
         name = environment.principalID(deref_type, fully_scope = 0)
         mapping = [name + "_var", name + "_var", name + "_var"]
 
         return mapping
-        
+
+                
+    if (tyutil.isTypeCode(deref_type) and not(is_array)):
+        name = "CORBA::TypeCode"
+        mapping = [name + "_var", name + "_var", name + "_var"]
+        return mapping
+
     # typedefs aren't dereferenced
     if tyutil.isTypedef(type):
         name = environment.principalID(type, fully_scope = 0)

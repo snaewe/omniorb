@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.19  1999/12/25 21:44:58  djs
+# Better TypeCode support
+#
 # Revision 1.18  1999/12/16 16:08:54  djs
 # Added allInherits function to return a list of all the interfaces an
 # interface inherits from (ie under the transitive closure of the inherits
@@ -233,7 +236,7 @@ ttsMap = {
     #
     idltype.tk_void:       "void",
     idltype.tk_any:        "CORBA::Any",
-    idltype.tk_TypeCode:   "CORBA::TypeCode"
+    #idltype.tk_TypeCode:   "CORBA::TypeCode"
     
     }
 
@@ -466,6 +469,13 @@ def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
         else:
             pass
             # same as the other kind
+
+    # typedefs to Anys are a little strange
+    if isTypedef(type) and isAny(deref_type):
+        return [ param_type + "*",
+                 "const " + param_type + "&",
+                 "CORBA::Any_OUT_arg",
+                 param_type + "&" ]
             
     if isinstance(deref_type, idltype.String):
         return [ "char *",
@@ -520,11 +530,13 @@ def makeConstructorArgumentType(type, environment):
     isVariable = tyutil.isVariableType(type)
     derefType = tyutil.deref(type)
     derefTypeName = environment.principalID(derefType)
-    
+
+    if isTypeCode(derefType):
+        return "CORBA::TypeCode_ptr"
+    if isStruct(derefType) or isUnion(derefType) or isAny(derefType):
+        return "const " + typeName + "&"
     if isinstance(derefType, idltype.Base) or isEnum(derefType):
         return typeName
-    if isStruct(derefType) or isUnion(derefType):
-        return "const " + typeName + "&"
     if isObjRef(derefType):
         return derefTypeName + "_ptr"
     if isSequence(type, 0):
@@ -635,9 +647,15 @@ def sequenceTemplate(sequence, environment):
     assert isinstance(sequence, idltype.Sequence)
 
     seqType = sequence.seqType()
-    seqTypeID = environment.principalID(seqType)
     derefSeqType = deref(seqType)
+    seqTypeID = environment.principalID(seqType)
     derefSeqTypeID = environment.principalID(derefSeqType)
+    if tyutil.isTypeCode(derefSeqType):
+        derefSeqTypeID = "CORBA::TypeCode_member"
+        seqTypeID = "CORBA::TypeCode_member"
+#        #if tyutil.isTypeCode(seqType):
+
+
     seq_dims = typeDims(seqType)
     is_array = seq_dims != []
     dimension = reduce(lambda x,y: x * y, seq_dims, 1)

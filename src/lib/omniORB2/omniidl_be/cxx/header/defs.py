@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17  1999/12/25 21:47:18  djs
+# Better TypeCode support
+#
 # Revision 1.16  1999/12/24 18:14:29  djs
 # Fixed handling of #include'd .idl files
 #
@@ -642,7 +645,16 @@ typedef char* @name@;
 typedef CORBA::String_var @name@_var;
 """,
                            name = derivedName)
-
+            elif tyutil.isTypeCode(derefType):
+                stream.out("""\
+typedef CORBA::TypeCode_ptr @name@_ptr;
+typedef CORBA::TypeCode_var @name@_var;""",
+                           name = derivedName)
+            elif tyutil.isAny(derefType):
+                stream.out("""\
+typedef CORBA::Any @name@;
+typedef CORBA::Any_var @name@_var;""",
+                           name = derivedName)
             # Non-array of basic type
             elif isinstance(derefType, idltype.Base):
 
@@ -725,6 +737,10 @@ typedef @base@ @name@;""",
                 elif tyutil.isSequence(seqType) and \
                      not(is_array):
                     element_ptr = element
+                elif tyutil.isTypeCode(seqDerefType):
+                    element_ptr = "CORBA::TypeCode_member"
+                    element = element_ptr
+                    element_IN = element_ptr
                 else:
                     element_ptr = environment.principalID(seqType)
                     
@@ -936,6 +952,9 @@ typedef @base@ @name@;""",
             elif tyutil.isObjRef(derefType) and \
                  not(is_array):
                 typestring = objRefTemplate
+            elif tyutil.isTypeCode(derefType) and \
+                 not(is_array):
+                typestring = "CORBA::TypeCode_member"
             elif tyutil.isSequence(aliasType) and \
                  not(is_array):
                 typestring = sequenceTemplate
@@ -1209,6 +1228,8 @@ def visitException(node):
 
             if tyutil.isObjRef(derefType):
                 type = tyutil.objRefTemplate(derefType, "Member", environment)
+            elif tyutil.isTypeCode(derefType):
+                type = "CORBA::TypeCode_member"                
             elif tyutil.isTypedef(memberType):
                 type = environment.principalID(memberType)
             elif tyutil.isSequence(derefType):
@@ -1593,14 +1614,16 @@ public:
                            discrimvalue = discrimvalue,
                            loop = str(loop))
             elif derefType.kind() == idltype.tk_any:
+                # note type != CORBA::Any when its an alias...
                 stream.out("""\
-  const CORBA::Any &@name@ () const { return pd_@name@; }
-  CORBA::Any &@name@ () { return pd_@name@; }
-  void @name@ (const CORBA::Any& _value) {
+  const @type@ &@name@ () const { return pd_@name@; }
+  @type@ &@name@ () { return pd_@name@; }
+  void @name@ (const @type@& _value) {
     pd__d = @discrimvalue@;
     pd__default = @isDefault@;
     pd_@name@ = _value;
   }""",
+                           type = type_str,
                            name = member,
                            isDefault = str(c.isDefault),
                            discrimvalue = discrimvalue)
@@ -1793,7 +1816,7 @@ private:
             else:
                 type_str = tyutil.objRefTemplate(derefType, "Member",
                                                  environment)
-        elif tyutil.isTypeCode(derefType):
+        elif tyutil.isTypeCode(derefType) and not(is_array):
             type_str = "CORBA::TypeCode_member"
         elif tyutil.isSequence(caseType) and anonymous_array:
             # the typedef _name_seq is not defined in this case

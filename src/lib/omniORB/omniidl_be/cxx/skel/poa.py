@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/12/25 21:47:19  djs
+# Better TypeCode support
+#
 # Revision 1.3  1999/11/23 18:48:26  djs
 # Bugfixes, more interface operations and attributes code
 #
@@ -98,6 +101,8 @@ def visitModule(node):
     leave()
 
 def visitInterface(node):
+    if not(node.mainFile()):
+        return
     name = tyutil.mapID(node.identifier())
     environment = self.__environment
     fqname = environment.nameToString(node.scopedName())

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13  1999/12/25 21:47:18  djs
+# Better TypeCode support
+#
 # Revision 1.12  1999/12/24 18:18:32  djs
 # #include bug fixed
 #
@@ -1222,16 +1225,31 @@ void @scoped_name@::_NP_marshal(MemBufferedStream& _s) const {
                 tmp = skutil.unmarshal_string_via_temporary(decl_name, "_n")
                 mem_unmarshal.out(tmp)
                 net_unmarshal.out(tmp)
+            # TypeCodes seem to be another exception (inside Exceptions)
+            elif tyutil.isTypeCode(memberType):
+                skutil.unmarshall_struct_union(mem_unmarshal, environment,
+                                               memberType, d, decl_name, 0,
+                                               "_n")
+                skutil.unmarshall_struct_union(net_unmarshal, environment,
+                                               memberType, d, decl_name, 0,
+                                               "_n")
+                
             else:
                 skutil.unmarshall(mem_unmarshal, environment,
                                   memberType, d, decl_name, 0, "_n")
                 skutil.unmarshall(net_unmarshal, environment,
                                   memberType, d, decl_name, 1, "_n")
 
-            skutil.marshall(mem_marshal, environment,
-                            memberType, d, decl_name, "_n")
-            skutil.marshall(net_marshal, environment,
-                            memberType, d, decl_name, "_n")
+            if tyutil.isTypeCode(memberType):
+                skutil.marshall_struct_union(mem_marshal, environment,
+                                             memberType, d, decl_name, "_n")
+                skutil.marshall_struct_union(net_marshal, environment,
+                                             memberType, d, decl_name, "_n")
+            else:
+                skutil.marshall(mem_marshal, environment,
+                                memberType, d, decl_name, "_n")
+                skutil.marshall(net_marshal, environment,
+                                memberType, d, decl_name, "_n")
 
             aligned_size.out(skutil.sizeCalculation(environment, memberType,
                                                     d, "_msgsize", decl_name,

@@ -14,8 +14,8 @@
 # -------------------------------------------------------
 
 # Location of the trusted old compiler binary
-$old_compiler = "/mnt/scratch/djs/cvs/build/i586_linux_2.0_glibc/".
-    "omni/src/tool/omniidl2/omniidl3";
+$old_compiler = "/home/djs/src/omni/cvs/build/i586_linux_2.0_glibc/".
+    "tool/omniidl2/omniidl3";
 $old_args = "";
 
 # Location of the untrusted new compiler binary

@@ -1,5 +1,5 @@
 #!/bin/sh
 
 cd new
-/home/djs/src/omni/cvs/bin/scripts/omniidl -bcxx -Wbtf ../$1.idl
+/home/djs/src/omni/cvs/bin/scripts/omniidl -bcxx -Wba ../$1.idl
 cd ..
