@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.39.6.13  1999/11/22 10:50:44  djr
+  Fixed bug in omniidl3.  typedef of Object was broken.
+
   Revision 1.39.6.12  1999/10/29 13:18:21  djr
   Changes to ensure mutexes are constructed when accessed.
 
@@ -376,7 +379,7 @@ objectkeytype(o2be_interface* p) {
 }
 
 
-void 
+void
 o2be_interface::produce_hdr(std::fstream& s)
 {
   produce_helper_hdr(s);
@@ -661,7 +664,7 @@ o2be_interface::produce_hdr(std::fstream& s)
 }
 
 
-void 
+void
 o2be_interface::produce_helper_hdr(std::fstream& s)
 {
   //////////////////////////////////////////////////////////////////////
@@ -712,7 +715,7 @@ o2be_interface::produce_helper_hdr(std::fstream& s)
 }
 
 
-void 
+void
 o2be_interface::produce_poa_hdr(std::fstream& s)
 {
   StringBuf pskel;
@@ -1059,7 +1062,7 @@ o2be_interface::produce_skel(std::fstream &s)
       if( strcmp(intf_name, intf->uqname()) != 0 ) {
 	s << "#ifndef __" << intf->_idname() << "__ALIAS__\n";
 	s << "#define __" << intf->_idname() << "__ALIAS__\n";
-	IND(s); s << "typedef " << intf->fqname() << " " 
+	IND(s); s << "typedef " << intf->fqname() << " "
 		  << intf->_fqname() << ";\n";
 	IND(s); s << "typedef " << intf->server_fqname() << " "
 		  << intf->_scopename() << intf->server_uqname() << ";\n";
@@ -1134,7 +1137,7 @@ o2be_interface::produce_skel(std::fstream &s)
 	    // The interface has the same name as this interface,
 	    // Another bug in MSVC {5.0?} causes the wrong dispatch
 	    // function to be called.
-	    // The workaround is to first cast the this pointer to the 
+	    // The workaround is to first cast the this pointer to the
 	    // base class.
 	    intf_name = new char[strlen("((*)this)->") +
 				strlen(intf->_scopename())*2+
@@ -1214,7 +1217,7 @@ o2be_interface::produce_skel(std::fstream &s)
 }
 
 
-void 
+void
 o2be_interface::produce_poa_skel(std::fstream& s)
 {
   StringBuf pskel;
@@ -1295,7 +1298,7 @@ o2be_interface::produce_dynskel(std::fstream &s)
       if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
 	{
 	  scopename = o2be_name::narrow_and_produce__fqname(inscope);
-	  IND(s); s << "namespace " << scopename << " = " 
+	  IND(s); s << "namespace " << scopename << " = "
 		    << o2be_name::narrow_and_produce_fqname(inscope)
 		    << ";\n";
 	}
@@ -1307,14 +1310,14 @@ o2be_interface::produce_dynskel(std::fstream &s)
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n";
       s << "#else\n";
-      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = "
 		<< "CORBA::TypeCode::PR_interface_tc(\""
 		<< repositoryID() << "\", \"" << uqname() << "\");\n\n";
       s << "#endif\n\n";
     }
   else
     {
-      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = "
 		<< "CORBA::TypeCode::PR_interface_tc(\""
 		<< repositoryID() << "\", \"" << uqname() << "\");\n\n";
     }
@@ -1432,10 +1435,10 @@ o2be_interface::produce_binary_operators_in_hdr(std::fstream& s)
     // any insertion and extraction operators
     IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname()
 	      << " _s);\n";
-    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname()
 	      << "* _s);\n";
-    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-	      << objref_fqname() 
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	      << objref_fqname()
 	      << "& _s);\n\n";
   }
 }
@@ -1488,7 +1491,7 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   INC_INDENT_LEVEL();
   IND(s); s << objref_fqname() << " _p = " << fqname()
 	    << "::_narrow(_ptr);\n";
-  IND(s); s << fqname() << "_ptr* pp = (" << fqname() 
+  IND(s); s << fqname() << "_ptr* pp = (" << fqname()
 	    << "_ptr*)_desc->opq_objref;\n";
   IND(s); s << "if (_desc->opq_release && !CORBA::is_nil(*pp)) CORBA::release(*pp);\n";
   IND(s); s << "*pp = _p;\n";
@@ -1543,7 +1546,7 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+  IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname()
 	      << "* _sp) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "_a <<= *_sp;\n";
@@ -1608,20 +1611,20 @@ o2be_interface::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   const char* uan = unambiguous_name(tdef);
 
   IND(s); s << "typedef " << uan << " " << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << unambiguous_objref_name(tdef) 
+  IND(s); s << "typedef " << unambiguous_objref_name(tdef)
 	    << " " << tdef->uqname() << "_ptr;\n";
   IND(s); s << "typedef " << uan << "Ref " << tdef->uqname() << "Ref;\n";
-  IND(s); s << "typedef " << unambiguous_server_name(tdef)
-	    << " " IMPL_CLASS_PREFIX << tdef->uqname() << ";\n";
-  if( strcmp(uqname(), "CORBA::Object") ) {
+  if( !strcmp(uqname(), "CORBA::Object") ) {
+    IND(s); s << "typedef CORBA::Object_Helper "
+	      << tdef->uqname() << HELPER_CLASS_POSTFIX ";\n";
+  }
+  else {
+    IND(s); s << "typedef " << unambiguous_server_name(tdef)
+	      << " " IMPL_CLASS_PREFIX << tdef->uqname() << ";\n";
     IND(s); s << "typedef " << uan << HELPER_CLASS_POSTFIX " "
 	      << tdef->uqname() << HELPER_CLASS_POSTFIX ";\n";
     IND(s); s << "typedef " << unambiguous_proxy_name(tdef)
 	      << " " << PROXY_CLASS_PREFIX << tdef->uqname() << ";\n";
-  }
-  else {
-    IND(s); s << "typedef CORBA::Object_Helper " 
-	      << tdef->uqname() << HELPER_CLASS_POSTFIX ";\n";
   }
   IND(s); s << "typedef " << uan << "_var " << tdef->uqname() << "_var;\n";
   IND(s); s << "typedef " << uan << "_out " << tdef->uqname() << "_out;\n\n\n";

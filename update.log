@@ -1,4 +1,12 @@
 
+Mon Nov 22 10:48:48 GMT 1999 djr
+================================
+
+- Fixed bug in omniidl3.  typedef of Object generated incorrect code.
+
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Fri Nov 12 17:02:06 GMT 1999 djr
 ================================
 
