@@ -31,22 +31,19 @@ public:
   inline void push(const CORBA::Any & data);
   inline void disconnect_push_consumer();
   inline void offer_change(const _EventTypeSeq& added,
-                           const _EventTypeSeq& removed);
+                           const _EventTypeSeq& deled);
 protected:
   CORBA::ULong num_push;
 };
 
-inline 
-void PushConsumer_i::push(const CORBA::Any & data)
+inline void PushConsumer_i::push(const CORBA::Any & data)
 { cout << "PushConsumer: push() called " << ++num_push << " times" << endl; }
 
-inline 
-void PushConsumer_i::disconnect_push_consumer()
+inline void PushConsumer_i::disconnect_push_consumer()
 { cout << "PushConsumer: disconnected" << endl; }
 
-inline 
-void PushConsumer_i::offer_change(const _EventTypeSeq& added,
-				  const _EventTypeSeq& removed)
+inline void PushConsumer_i::offer_change(const _EventTypeSeq& added,
+				         const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -56,8 +53,8 @@ void PushConsumer_i::offer_change(const _EventTypeSeq& added,
         type = added[indx];
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -73,16 +70,14 @@ public:
 
   inline void disconnect_pull_consumer();
   inline void offer_change(const _EventTypeSeq& added,
-			   const _EventTypeSeq& removed);
+			   const _EventTypeSeq& deled);
 };
 
-inline
-void PullConsumer_i::disconnect_pull_consumer()
+inline void PullConsumer_i::disconnect_pull_consumer()
 { cout << "PullConsumer: disconnected" << endl; }
 
-inline
-void PullConsumer_i::offer_change(const _EventTypeSeq& added,
-                                  const _EventTypeSeq& removed)
+inline void PullConsumer_i::offer_change(const _EventTypeSeq& added,
+                                         const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -92,8 +87,8 @@ void PullConsumer_i::offer_change(const _EventTypeSeq& added,
         type = added[indx];
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -111,13 +106,12 @@ public:
   inline CORBA::Any* try_pull(CORBA::Boolean& has_event);
   inline void        disconnect_pull_supplier();
   inline void        subscription_change(const _EventTypeSeq& added,
-                                  	 const _EventTypeSeq& removed);
+                                  	 const _EventTypeSeq& deled);
 protected:
   CORBA::ULong event_value;
 };
 
-inline
-CORBA::Any* PullSupplier_i::pull()
+inline CORBA::Any* PullSupplier_i::pull()
 { 
   CORBA::Any *any = new CORBA::Any();
   *any <<= ++event_value;
@@ -125,8 +119,7 @@ CORBA::Any* PullSupplier_i::pull()
   return any;
 }
 
-inline
-CORBA::Any* PullSupplier_i::try_pull(CORBA::Boolean& has_event)
+inline CORBA::Any* PullSupplier_i::try_pull(CORBA::Boolean& has_event)
 {
   CORBA::Any *any = new CORBA::Any();
   *any <<= ++event_value;
@@ -135,13 +128,11 @@ CORBA::Any* PullSupplier_i::try_pull(CORBA::Boolean& has_event)
   return any;
 }
 
-inline
-void PullSupplier_i::disconnect_pull_supplier()
+inline void PullSupplier_i::disconnect_pull_supplier()
 { cout << "PullSupplier: disconnected" << endl; }
 
-inline 
-void PullSupplier_i::subscription_change(const _EventTypeSeq& added,
-					 const _EventTypeSeq& removed)
+inline void PullSupplier_i::subscription_change(const _EventTypeSeq& added,
+					        const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -151,8 +142,8 @@ void PullSupplier_i::subscription_change(const _EventTypeSeq& added,
         type = added[indx];
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }					
@@ -168,16 +159,14 @@ public:
 
   inline void disconnect_push_supplier();
   inline void subscription_change(const _EventTypeSeq& added,
-                                  const _EventTypeSeq& removed);
+                                  const _EventTypeSeq& deled);
 };
 
-inline
-void PushSupplier_i::disconnect_push_supplier()
+inline void PushSupplier_i::disconnect_push_supplier()
 { cout << "PushSupplier: disconnected" << endl; }
 
-inline 
-void PushSupplier_i::subscription_change(const _EventTypeSeq& added,
-					 const _EventTypeSeq& removed)
+inline void PushSupplier_i::subscription_change(const _EventTypeSeq& added,
+					 	const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -187,8 +176,8 @@ void PushSupplier_i::subscription_change(const _EventTypeSeq& added,
         type = added[indx];
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -207,25 +196,22 @@ public:
   inline void push_structured_event(const _StructuredEvent& event);
   inline void disconnect_structured_push_consumer();
   inline void offer_change(const _EventTypeSeq& added,
-                           const _EventTypeSeq& removed);
+                           const _EventTypeSeq& deled);
 protected:
   CORBA::ULong num_push;
 };
 
-inline
-void StructuredPushConsumer_i::push_structured_event(
+inline void StructuredPushConsumer_i::push_structured_event(
 				const _StructuredEvent& event)
 { cout << "StructuredPushConsumer: push() called " << 
 	   ++num_push << " times" << endl; 
 }
 
-inline 
-void StructuredPushConsumer_i::disconnect_structured_push_consumer()
+inline void StructuredPushConsumer_i::disconnect_structured_push_consumer()
 { cout << "StructuredPushConsumer: disconnected" << endl; }
 
-inline
-void StructuredPushConsumer_i::offer_change(const _EventTypeSeq& added,
-					    const _EventTypeSeq& removed)
+inline void StructuredPushConsumer_i::offer_change(const _EventTypeSeq& added,
+					    	   const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -235,8 +221,8 @@ void StructuredPushConsumer_i::offer_change(const _EventTypeSeq& added,
         type = added[indx];
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -251,15 +237,14 @@ public:
   StructuredPullConsumer_i() {;}
   inline void disconnect_structured_pull_consumer();
   inline void offer_change(const _EventTypeSeq& added,
-			   const _EventTypeSeq& removed);
+			   const _EventTypeSeq& deled);
 };
 
 inline void StructuredPullConsumer_i::disconnect_structured_pull_consumer()
 { cout << "StructuredPullConsumer: disconnected" << endl; }
 
-inline void StructuredPullConsumer_i::offer_change(
-				const _EventTypeSeq& added,
-				const _EventTypeSeq& removed)
+inline void StructuredPullConsumer_i::offer_change(const _EventTypeSeq& added,
+						   const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -269,8 +254,8 @@ inline void StructuredPullConsumer_i::offer_change(
         type = added[indx];
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -288,20 +273,18 @@ public:
   inline _StructuredEvent* try_pull_structured_event(CORBA::Boolean& has_event);
   inline void              disconnect_structured_pull_supplier();
   inline void              subscription_change(const _EventTypeSeq& added,
-					       const _EventTypeSeq& removed);
+					       const _EventTypeSeq& deled);
 protected:
   CORBA::ULong num_events;
   _EventType   event_type;
 };
 
-inline 
-StructuredPullSupplier_i::StructuredPullSupplier_i() : num_events(0)
+inline StructuredPullSupplier_i::StructuredPullSupplier_i() : num_events(0)
 { event_type.domain_name = CORBA::string_dup("DummyDomain");
   event_type.type_name   = CORBA::string_dup("DummyType");
 }
 
-inline 
-_StructuredEvent* StructuredPullSupplier_i::pull_structured_event()
+inline _StructuredEvent* StructuredPullSupplier_i::pull_structured_event()
 {
   _StructuredEvent* event = new _StructuredEvent();
   event->header.fixed_header.event_type.domain_name = event_type.domain_name;
@@ -313,8 +296,7 @@ _StructuredEvent* StructuredPullSupplier_i::pull_structured_event()
   return event;
 }
 
-inline 
-_StructuredEvent* StructuredPullSupplier_i::try_pull_structured_event(
+inline _StructuredEvent* StructuredPullSupplier_i::try_pull_structured_event(
 					CORBA::Boolean& has_event)
 {
   _StructuredEvent* event = new _StructuredEvent();
@@ -328,14 +310,12 @@ _StructuredEvent* StructuredPullSupplier_i::try_pull_structured_event(
   return event;
 }
 
-inline
-void StructuredPullSupplier_i::disconnect_structured_pull_supplier()
+inline void StructuredPullSupplier_i::disconnect_structured_pull_supplier()
 { cout << " StructuredPullSupplier: disconnected" << endl; }
 
-inline
-void StructuredPullSupplier_i::subscription_change(
-				const _EventTypeSeq& added,
-				const _EventTypeSeq& removed)
+inline void StructuredPullSupplier_i::subscription_change(
+					const _EventTypeSeq& added,
+					const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -345,8 +325,8 @@ void StructuredPullSupplier_i::subscription_change(
         type = added[indx]; 
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -361,17 +341,15 @@ public:
   StructuredPushSupplier_i()	{;}
   inline void disconnect_structured_push_supplier();
   inline void subscription_change(const _EventTypeSeq& added,
-				  const _EventTypeSeq& removed);
+				  const _EventTypeSeq& deled);
 };
 
-inline
-void StructuredPushSupplier_i::disconnect_structured_push_supplier()
+inline void StructuredPushSupplier_i::disconnect_structured_push_supplier()
 { cout << "StructuredPushSupplier: disconnected" << endl; }
 
-inline 
-void StructuredPushSupplier_i::subscription_change(
+inline void StructuredPushSupplier_i::subscription_change(
 					const _EventTypeSeq& added,
-					const _EventTypeSeq& removed)
+					const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -381,8 +359,8 @@ void StructuredPushSupplier_i::subscription_change(
         type = added[indx]; 
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -401,7 +379,7 @@ public:
   inline void push_structured_events(const _EventBatch& events);
   inline void disconnect_sequence_push_consumer();
   inline void offer_change(const _EventTypeSeq& added,
-			   const _EventTypeSeq& removed);
+			   const _EventTypeSeq& deled);
 protected:
   CORBA::ULong num_batches;
   CORBA::ULong num_events;
@@ -416,13 +394,11 @@ inline void SequencePushConsumer_i::push_structured_events(
 	  num_events << " events so far" << endl;
 }
 
-inline
-void SequencePushConsumer_i::disconnect_sequence_push_consumer()
+inline void SequencePushConsumer_i::disconnect_sequence_push_consumer()
 { cout << "SequencePushConsumer: disconnected" << endl; }
 
-inline 
-void SequencePushConsumer_i::offer_change(const _EventTypeSeq& added,
-					  const _EventTypeSeq& removed)
+inline void SequencePushConsumer_i::offer_change(const _EventTypeSeq& added,
+					  	 const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -432,8 +408,8 @@ void SequencePushConsumer_i::offer_change(const _EventTypeSeq& added,
         type = added[indx];
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl; 
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -449,16 +425,14 @@ public:
 
   inline void disconnect_sequence_pull_consumer();
   inline void offer_change(const _EventTypeSeq& added,
-			   const _EventTypeSeq& removed);
+			   const _EventTypeSeq& deled);
 };
 
-inline
-void SequencePullConsumer_i::disconnect_sequence_pull_consumer()
+inline void SequencePullConsumer_i::disconnect_sequence_pull_consumer()
 { cout << "SequencePullConsumer: disconnected" << endl; }
 
-inline 
-void SequencePullConsumer_i::offer_change(const _EventTypeSeq& added,
-					  const _EventTypeSeq& removed)
+inline void SequencePullConsumer_i::offer_change(const _EventTypeSeq& added,
+					  	 const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -468,8 +442,8 @@ void SequencePullConsumer_i::offer_change(const _EventTypeSeq& added,
         type = added[indx];
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -488,20 +462,18 @@ public:
 						 CORBA::Boolean& has_event);
   inline void         disconnect_sequence_pull_supplier();
   inline void         subscription_change(const _EventTypeSeq& added,
-					  const _EventTypeSeq& removed);
+					  const _EventTypeSeq& deled);
 protected:
   CORBA::ULong num_events;
   _EventType   event_type;
 };
 
-inline 
-SequencePullSupplier_i::SequencePullSupplier_i() : num_events(0)
+inline SequencePullSupplier_i::SequencePullSupplier_i() : num_events(0)
 { event_type.domain_name = CORBA::string_dup("DummyDomain");
   event_type.type_name   = CORBA::string_dup("DummyType");
 }
 
-inline 
-_EventBatch* SequencePullSupplier_i::pull_structured_events(
+inline _EventBatch* SequencePullSupplier_i::pull_structured_events(
 					CORBA::ULong max_number)
 {
   _EventBatch*     batch = new _EventBatch;
@@ -517,8 +489,7 @@ _EventBatch* SequencePullSupplier_i::pull_structured_events(
   return batch;
 }
 
-inline 
-_EventBatch* SequencePullSupplier_i::try_pull_structured_events(
+inline _EventBatch* SequencePullSupplier_i::try_pull_structured_events(
 					CORBA::ULong max_number,
 					CORBA::Boolean& has_event)
 {
@@ -536,14 +507,12 @@ _EventBatch* SequencePullSupplier_i::try_pull_structured_events(
   return batch;
 }
 
-inline
-void SequencePullSupplier_i::disconnect_sequence_pull_supplier()
+inline void SequencePullSupplier_i::disconnect_sequence_pull_supplier()
 { cout << "SequencePullSupplier: disconnected" << endl; }
 
-inline
-void SequencePullSupplier_i::subscription_change(
+inline void SequencePullSupplier_i::subscription_change(
 					const _EventTypeSeq& added,
-					const _EventTypeSeq& removed)
+					const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -553,8 +522,8 @@ void SequencePullSupplier_i::subscription_change(
         type = added[indx]; 
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
@@ -570,17 +539,15 @@ public:
 
   inline void disconnect_sequence_push_supplier();
   inline void subscription_change(const _EventTypeSeq& added,
-				  const _EventTypeSeq& removed);
+				  const _EventTypeSeq& deled);
 };
 
-inline
-void SequencePushSupplier_i::disconnect_sequence_push_supplier()
+inline void SequencePushSupplier_i::disconnect_sequence_push_supplier()
 { cout << "SequencePushSupplier: disconnected" << endl; }
 
-inline
-void SequencePushSupplier_i::subscription_change(
+inline void SequencePushSupplier_i::subscription_change(
 				const _EventTypeSeq& added,
-				const _EventTypeSeq& removed)
+				const _EventTypeSeq& deled)
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -590,8 +557,8 @@ void SequencePushSupplier_i::subscription_change(
         type = added[indx]; 
         cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
   }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
+  for (indx = 0; indx < deled.length(); indx++) {
+        type = deled[indx];
         cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
   }
 }
