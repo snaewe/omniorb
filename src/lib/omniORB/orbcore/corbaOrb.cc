@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.29  2001/09/20 14:18:12  dpg1
+  Make hooked initialiser suitable for ORB restart.
+
   Revision 1.33.2.28  2001/09/20 13:26:13  dpg1
   Allow ORB_init() after orb->destroy().
 
@@ -1138,53 +1141,37 @@ OMNI_NAMESPACE_BEGIN(omni)
 //            Hooked initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
+static omnivector<omniInitialiser*>*& the_hooked_list()
+{
+  static omnivector<omniInitialiser*>* the_list = 0;
+  if (!the_list) the_list = new omnivector<omniInitialiser*>;
+  return the_list;
+}
+
 class omni_hooked_initialiser : public omniInitialiser {
-
 public:
-
-  struct initHolder {
-    initHolder(omniInitialiser* i) : init(i), next(0) {}
-
-    omniInitialiser* init;
-    initHolder*      next;
-
-    static initHolder*& head() {
-      static initHolder* head_ = 0;
-      return head_;
-    }
-
-    static initHolder*& tail() {
-      static initHolder* tail_ = 0;
-      return tail_;
-    }
-  };
-
-
-public:
-  omni_hooked_initialiser() {}
-
   void attach() {
-    for (initHolder* ih = initHolder::head(); ih; ih = ih->next) {
-      ih->init->attach();
+    omnivector<omniInitialiser*>::iterator i    = the_hooked_list()->begin();
+    omnivector<omniInitialiser*>::iterator last = the_hooked_list()->end();
+
+    for (; i != last; i++) {
+      (*i)->attach();
     }
   }
 
   void detach() {
-    initHolder *ih, *nih;
-    for (ih = initHolder::head(); ih; ih = nih) {
-      ih->init->detach();
-      nih = ih->next;
-      delete ih;
+    omnivector<omniInitialiser*>::iterator i    = the_hooked_list()->begin();
+    omnivector<omniInitialiser*>::iterator last = the_hooked_list()->end();
+
+    for (; i != last; i++) {
+      (*i)->detach();
     }
   }
 
-  static void install(omniInitialiser* init) {
-    initHolder* ih = new initHolder(init);
-    if (initHolder::tail())
-      initHolder::tail()->next = ih;
-    else
-      initHolder::head() = ih;
-    initHolder::tail() = ih;
+  virtual ~omni_hooked_initialiser() {
+    omnivector<omniInitialiser*>*& the_list = the_hooked_list();
+    delete the_list;
+    the_list = 0;
   }
 };
 
@@ -1194,8 +1181,9 @@ omniInitialiser& omni_hooked_initialiser_ = hinitialiser;
 void
 omniInitialiser::
 install(omniInitialiser* init) {
-  omni_hooked_initialiser::install(init);
+  the_hooked_list()->push_back(init);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////
 //             Configuration options                                      //
