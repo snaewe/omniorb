@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/09/27 17:02:24  sll
+ Consolidate all string allocation functions into the _CORBA_String_helper
+ class. Updated to use the new cdrStream abstraction.
+
  Revision 1.2.2.1  2000/07/17 10:35:37  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -71,6 +75,36 @@ class _CORBA_String_member;
 class _CORBA_String_element;
 class _CORBA_String_inout;
 class _CORBA_String_out;
+class cdrStream;
+
+
+class _CORBA_String_helper {
+public:
+
+static _core_attr const char*const  empty_string;
+// Used to initialise empty strings, since some compilers will allocate
+// a separate instance for each "" in code.
+
+static inline char* alloc(int len) { return new char[len + 1]; }
+// Allocate a string -- as CORBA::string_alloc(), except that
+// we don't initialise to empty string.
+//  <len> does not include nul terminator.
+
+static inline void free(char* s) { 
+  if (s && s != empty_string) delete[] s; 
+}
+// As CORBA::string_free().
+
+static inline char* dup(const char* s) { 
+  char* r = alloc(strlen(s));
+  strcpy(r, s);
+  return r;
+}
+// As CORBA::string_dup().
+
+static void marshal(const char*,cdrStream&);
+static char* unmarshal(cdrStream&);
+};
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////////// String_var /////////////////////////////
@@ -80,27 +114,21 @@ class _CORBA_String_var {
 public:
   // Note: default constructor of String_var initialises its managed pointer
   //       to 0. This differs from String_member, which initialises its
-  //       internal pointer to omni::empty_string. 
+  //       internal pointer to _CORBA_String_helper::empty_string
 
 
   typedef char* ptr_t;
-
-  static inline char* string_dup(const char* p) {
-    char* r = omni::allocString(strlen(p));
-    strcpy(r, p);
-    return r;
-  }
 
   inline _CORBA_String_var()        { _data = 0; }
   inline _CORBA_String_var(char *p) { _data = p; }
 
   inline _CORBA_String_var(const char* p) {
-    if( p ) _data = string_dup(p);
+    if( p ) _data = _CORBA_String_helper::dup(p);
     else    _data = 0;
   }
 
   inline _CORBA_String_var(const _CORBA_String_var& s) {
-    if( (const char *)s )  _data = string_dup(s);
+    if( (const char *)s )  _data = _CORBA_String_helper::dup(s);
     else                   _data = 0;
   }
 
@@ -109,26 +137,26 @@ public:
   inline _CORBA_String_var(const _CORBA_String_element& s);
 
   inline ~_CORBA_String_var() {
-    omni::freeString(_data);
+    _CORBA_String_helper::free(_data);
   }
 
   inline _CORBA_String_var& operator=(char* p) {
-    omni::freeString(_data);
+    _CORBA_String_helper::free(_data);
     _data = p;
     return *this;
   }
 
   inline _CORBA_String_var& operator=(const char* p) {
-    omni::freeString(_data);
+    _CORBA_String_helper::free(_data);
     _data = 0;
-    if (p)  _data = string_dup(p);
+    if (p)  _data = _CORBA_String_helper::dup(p);
     return *this;
   }
 
   inline _CORBA_String_var& operator=(const _CORBA_String_var& s) {
-    omni::freeString(_data);
+    _CORBA_String_helper::free(_data);
     _data = 0;
-    if( (const char*)s )  _data = string_dup(s);
+    if( (const char*)s )  _data = _CORBA_String_helper::dup(s);
     return *this;
   }
 
@@ -161,7 +189,7 @@ public:
   inline char*& inout()         { return _data; }
   inline char*& out() {
     if( _data ){
-      omni::freeString(_data);
+      _CORBA_String_helper::free(_data);
       _data = 0;
     }
     return _data;
@@ -188,46 +216,46 @@ public:
   typedef char* ptr_t;
 
   inline _CORBA_String_member()
-    : _ptr((char*) omni::empty_string) {}
+    : _ptr((char*) _CORBA_String_helper::empty_string) {}
 
   inline _CORBA_String_member(const _CORBA_String_member& s) 
-           : _ptr((char*)omni::empty_string) {
-    if (s._ptr && s._ptr != omni::empty_string)
-      _ptr = _CORBA_String_var::string_dup(s._ptr);
+           : _ptr((char*)_CORBA_String_helper::empty_string) {
+    if (s._ptr && s._ptr != _CORBA_String_helper::empty_string)
+      _ptr = _CORBA_String_helper::dup(s._ptr);
   }
 
   inline ~_CORBA_String_member() {
-    omni::freeString(_ptr);
+    _CORBA_String_helper::free(_ptr);
   }
 
   inline _CORBA_String_member& operator=(char* s) {
-    omni::freeString(_ptr);
+    _CORBA_String_helper::free(_ptr);
     _ptr = s;
     return *this;
   }
 
   inline _CORBA_String_member& operator= (const char* s) {
-    omni::freeString(_ptr);
+    _CORBA_String_helper::free(_ptr);
     if (s)
-      _ptr = _CORBA_String_var::string_dup(s);
+      _ptr = _CORBA_String_helper::dup(s);
     else
       _ptr = 0;
     return *this;
   }
 
   inline _CORBA_String_member& operator=(const _CORBA_String_member& s) {
-    omni::freeString(_ptr);
-    if (s._ptr && s._ptr != omni::empty_string)
-      _ptr = _CORBA_String_var::string_dup(s._ptr);
+    _CORBA_String_helper::free(_ptr);
+    if (s._ptr && s._ptr != _CORBA_String_helper::empty_string)
+      _ptr = _CORBA_String_helper::dup(s._ptr);
     else
       _ptr = s._ptr;
     return *this;
   }
 
   inline _CORBA_String_member& operator=(const _CORBA_String_var& s) {
-    omni::freeString(_ptr);
+    _CORBA_String_helper::free(_ptr);
     if( (const char*)s ) {
-      _ptr = _CORBA_String_var::string_dup((const char*)s);
+      _ptr = _CORBA_String_helper::dup((const char*)s);
     }
     else {
       _ptr = (char*) 0;
@@ -261,7 +289,7 @@ public:
   inline const char* in() const { return _ptr; }
   inline char*& inout()         { return _ptr; }
   inline char*& out() {
-    omni::freeString(_ptr);
+    _CORBA_String_helper::free(_ptr);
     _ptr = 0;
     return _ptr;
   }
@@ -273,11 +301,8 @@ public:
     return tmp;
   }
 
-  void operator >>= (NetBufferedStream& s) const;
-  void operator <<= (NetBufferedStream& s);
-  void operator >>= (MemBufferedStream& s) const;
-  void operator <<= (MemBufferedStream& s);
-  size_t _NP_alignedSize(size_t initialoffset) const;
+  void operator >>= (cdrStream& s) const { _CORBA_String_helper::marshal(_ptr,s); }
+  void operator <<= (cdrStream& s);
 
   inline char*& _NP_ref() {return _ptr;}
 
@@ -305,16 +330,16 @@ public:
 
   inline _CORBA_String_element& operator=(char* s) {
     if (pd_rel) 
-      omni::freeString(pd_data);
+      _CORBA_String_helper::free(pd_data);
     pd_data = s;
     return *this;
   }
 
   inline _CORBA_String_element& operator= (const char* s) {
     if (pd_rel) {
-      omni::freeString(pd_data);
+      _CORBA_String_helper::free(pd_data);
       if (s)
-	pd_data = _CORBA_String_var::string_dup(s);
+	pd_data = _CORBA_String_helper::dup(s);
       else
 	pd_data = 0;
     } else {
@@ -325,9 +350,9 @@ public:
 
   inline _CORBA_String_element& operator=(const _CORBA_String_element& s) {
     if (pd_rel) {
-      omni::freeString(pd_data);
-      if (s.pd_data && s.pd_data != omni::empty_string)
-	pd_data = _CORBA_String_var::string_dup(s.pd_data);
+      _CORBA_String_helper::free(pd_data);
+      if (s.pd_data && s.pd_data != _CORBA_String_helper::empty_string)
+	pd_data = _CORBA_String_helper::dup(s.pd_data);
       else
 	pd_data = (char*)s.pd_data;
     } else
@@ -337,9 +362,9 @@ public:
 
   inline _CORBA_String_element& operator=(const _CORBA_String_var& s) {
     if (pd_rel) {
-      omni::freeString(pd_data);
+      _CORBA_String_helper::free(pd_data);
       if( (const char*)s )
-	pd_data = _CORBA_String_var::string_dup((const char*)s);
+	pd_data = _CORBA_String_helper::dup((const char*)s);
       else
 	pd_data = 0;
     } else
@@ -349,9 +374,9 @@ public:
 
   inline _CORBA_String_element& operator=(const _CORBA_String_member& s) {
     if (pd_rel) {
-      omni::freeString(pd_data);
-      if( (const char*)s && (const char*) s != omni::empty_string)
-	pd_data = _CORBA_String_var::string_dup((const char*)s);
+      _CORBA_String_helper::free(pd_data);
+      if( (const char*)s && (const char*) s != _CORBA_String_helper::empty_string)
+	pd_data = _CORBA_String_helper::dup((const char*)s);
       else
 	pd_data = (char*)(const char*)s;
     } else
@@ -384,7 +409,7 @@ public:
   inline char*& inout()         { return pd_data; }
   inline char*& out() {
     if (pd_rel) {
-      omni::freeString(pd_data);
+      _CORBA_String_helper::free(pd_data);
       pd_data = 0;
     }
     else {
@@ -399,7 +424,7 @@ public:
       pd_data = 0;
     }
     else {
-      tmp = (((char*)pd_data) ? _CORBA_String_var::string_dup(pd_data) : 0);
+      tmp = (((char*)pd_data) ? _CORBA_String_helper::dup(pd_data) : 0);
       pd_data = 0;
     }
     return tmp;
@@ -423,7 +448,7 @@ public:
 inline _CORBA_String_var::_CORBA_String_var(const _CORBA_String_member& s)
 {
   if ((const char*)s) {
-    _data = _CORBA_String_var::string_dup(s);
+    _data = _CORBA_String_helper::dup(s);
   }
   else
     _data = 0;
@@ -432,7 +457,7 @@ inline _CORBA_String_var::_CORBA_String_var(const _CORBA_String_member& s)
 inline _CORBA_String_var::_CORBA_String_var(const _CORBA_String_element& s)
 {
   if ((const char*)s) {
-    _data = _CORBA_String_var::string_dup(s);
+    _data = _CORBA_String_helper::dup(s);
   }
   else
     _data = 0;
@@ -441,9 +466,9 @@ inline _CORBA_String_var::_CORBA_String_var(const _CORBA_String_element& s)
 inline _CORBA_String_var&
 _CORBA_String_var::operator= (const _CORBA_String_member& s)
 {
-  omni::freeString(_data);
+  _CORBA_String_helper::free(_data);
   if ((const char*)s) 
-    _data = _CORBA_String_var::string_dup(s);
+    _data = _CORBA_String_helper::dup(s);
   else
     _data = 0;
   return *this;
@@ -452,9 +477,9 @@ _CORBA_String_var::operator= (const _CORBA_String_member& s)
 inline _CORBA_String_var&
 _CORBA_String_var::operator= (const _CORBA_String_element& s)
 {
-  omni::freeString(_data);
+  _CORBA_String_helper::free(_data);
   if ((const char*)s)
-    _data = _CORBA_String_var::string_dup(s);
+    _data = _CORBA_String_helper::dup(s);
   else
     _data = 0;
   return *this;
@@ -462,9 +487,9 @@ _CORBA_String_var::operator= (const _CORBA_String_element& s)
 
 inline _CORBA_String_member& 
 _CORBA_String_member::operator=(const _CORBA_String_element& s) {
-  omni::freeString(_ptr);
+  _CORBA_String_helper::free(_ptr);
   if( (const char*)s )
-    _ptr = _CORBA_String_var::string_dup((const char*)s);
+    _ptr = _CORBA_String_helper::dup((const char*)s);
   else
     _ptr = 0;
   return *this;
@@ -489,7 +514,7 @@ public:
   // and cannot be trapped by the compiler.
     if (!p._NP_release() && (p._NP_ref())) {
       p._NP_ref() = ((p._NP_ref()) ?
-		     _CORBA_String_var::string_dup(p._NP_ref()) : 0);
+		     _CORBA_String_helper::dup(p._NP_ref()) : 0);
     }
   }
   inline ~_CORBA_String_inout() {}
@@ -521,7 +546,7 @@ public:
     _data = p; return *this;
   }
   inline _CORBA_String_out& operator=(const char* p) {
-    _data = ((p) ? _CORBA_String_var::string_dup(p) : 0); return *this;
+    _data = ((p) ? _CORBA_String_helper::dup(p) : 0); return *this;
   }
 
   operator char*& () { return _data; }
@@ -556,7 +581,7 @@ public:
 
     // If we've shrunk we need to clear the entries at the top.
     for( _CORBA_ULong i = len; i < pd_len; i++ ) 
-      operator[](i) = (char*) omni::empty_string;
+      operator[](i) = (char*) _CORBA_String_helper::empty_string;
 
     if (len) {
       // Allocate buffer on-demand. Either pd_data == 0 
@@ -577,27 +602,35 @@ public:
     return ElemT(pd_data[i],pd_rel);
   }
 
+#if SIZEOF_PTR == SIZEOF_LONG
+  typedef long ptr_arith_t;
+#elif SIZEOF_PTR == SIZEOF_INT
+  typedef int ptr_arith_t;
+#else
+#error "No suitable type to do pointer arithmetic"
+#endif
+
   static inline char** allocbuf(_CORBA_ULong nelems) {
     if (!nelems) return 0;
     char** b = new char*[nelems+2];
-    omni::ptr_arith_t l = nelems;
-    b[0] = (char*) ((omni::ptr_arith_t) 0x53515354U);
+    ptr_arith_t l = nelems;
+    b[0] = (char*) ((ptr_arith_t) 0x53515354U);
     b[1] = (char*) l;
     for (_CORBA_ULong index = 2; index < (nelems+2); index++)
-      b[index] = (char*)omni::empty_string;
+      b[index] = (char*)_CORBA_String_helper::empty_string;
     return b+2;
   }
 
   static inline void freebuf(char** buf) {
     if (!buf) return;
     char** b = buf-2;
-    if ((omni::ptr_arith_t)b[0] != ((omni::ptr_arith_t) 0x53515354U)) {
+    if ((ptr_arith_t)b[0] != ((ptr_arith_t) 0x53515354U)) {
       _CORBA_bad_param_freebuf();
       return;
     }
-    omni::ptr_arith_t l = (omni::ptr_arith_t) b[1];
+    ptr_arith_t l = (ptr_arith_t) b[1];
     for (_CORBA_ULong i = 0; i < (_CORBA_ULong) l; i++) {
-      omni::freeString(buf[i]);
+      _CORBA_String_helper::free(buf[i]);
     }
     b[0] = (char*) 0;
     delete [] b;
@@ -653,11 +686,8 @@ public:
   }
 
   // omniORB2 extensions
-  size_t _NP_alignedSize(size_t initialoffset) const;
-  void operator >>= (NetBufferedStream& s) const;
-  void operator <<= (NetBufferedStream& s);
-  void operator >>= (MemBufferedStream& s) const;
-  void operator <<= (MemBufferedStream& s);
+  void operator >>= (cdrStream& s) const;
+  void operator <<= (cdrStream& s);
 
 protected:
   inline _CORBA_Sequence__String()
@@ -731,7 +761,7 @@ private:
       }
       else {
 	newdata[i] = ((pd_data[i]) ? 
-		      _CORBA_String_var::string_dup(pd_data[i]) : 0);
+		      _CORBA_String_helper::dup(pd_data[i]) : 0);
       }
     }
     if (pd_rel) {
