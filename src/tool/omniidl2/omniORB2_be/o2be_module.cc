@@ -26,6 +26,9 @@
 
 /* 
    $Log$
+   Revision 1.7  1998/04/09 19:15:21  sll
+   Added extra newlines to make the stub more readable.
+
    Revision 1.6  1998/04/07 18:48:29  sll
    Stub code modified to accommodate the use of namespace to represent module.
    Use std::fstream instead of fstream.
@@ -57,6 +60,7 @@ o2be_module::produce_hdr(std::fstream &s)
 
   if (defined_in() != 0)
     {
+      s << "\n";
       IND(s); s << "_CORBA_MODULE " << uqname() << "\n\n";
       IND(s); s << "_CORBA_MODULE_BEG\n\n";
       INC_INDENT_LEVEL();
@@ -110,7 +114,7 @@ o2be_module::produce_hdr(std::fstream &s)
   if (defined_in() != 0)
     {
       DEC_INDENT_LEVEL();
-
+      s << "\n";
       IND(s); s << "_CORBA_MODULE_END\n\n";
     }
 
