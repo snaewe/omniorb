@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.05">
+<TITLE>
+ C++ language mapping
+</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORB002.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB004.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<HR>
+
+<H1>Chapter&nbsp;3&nbsp;&nbsp; C++ language mapping</H1>
+Now that you are familiar with the basics, it is important to
+familiarise yourself with the standard IDL to C++ language mapping.
+The mapping is described in detail in&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99a</CITE></A>]. If you have
+not done so, you should obtain a copy of the document and use that as
+the programming guide to omniORB.<BR>
+<BR>
+The specification is not an easy read. The alternative is to use one
+of the books on CORBA programming that has begun to appear. For
+instance, Henning and Vinoski's `Advanced CORBA Programming with
+C++'&nbsp;[<A HREF="omniORB014.html#henning1999"><CITE>HV99</CITE></A>] includes many example code bits to illustrate
+how to use the CORBA 2.3 C++ mapping.<BR>
+<BR>
+<A NAME="toc16"></A>
+<H2>3.1&nbsp;&nbsp; Incompatibilities with pre-2.8.0 releases</H2>Before 2.8.0, omniORB implemented the CORBA 2.0 C++ mapping. From
+2.8.0 onwards, the mapping has been updated to CORBA 2.3.
+Unfortunately, to comply with the CORBA 2.3 specification, it has been
+necessary to change the semantics of a few APIs in a way that is
+incompatible with older omniORB releases. The incompatible changes
+are limited to:<BR>
+<BR>
+<OL type=1>
+<LI>
+ the extraction of string, object reference and typecode from an Any. 
+
+<LI> the DII interface now defaults to reporting a system exception
+by raising a C++ exception, instead of returning the exception as an
+environment value.
+</OL>The changes are minor and require minimal changes to the application
+source code. <B>However, it is not possible to detect the old
+usage at compile time. In particular, unmodified code that uses the
+affected Any extraction operators would most certainly cause runtime
+errors to occur.</B><BR>
+<BR>
+To smooth the transition from the old usage to the new, an omniORB
+configuration variable
+<TT>omniORB::omniORB_27_CompatibleAnyExtraction</TT> can be set to
+revert the any extraction operators to the old semantics. More
+information can be found in chapter&nbsp;<A HREF="omniORB009.html#ch_any">9</A>.<BR>
+<BR>
+<HR>
+<A HREF="omniORB002.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB004.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

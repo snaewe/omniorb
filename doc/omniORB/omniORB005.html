@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.05">
+<TITLE>
+ The IDL compiler
+</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORB004.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB006.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<HR>
+
+<H1>Chapter&nbsp;5&nbsp;&nbsp; The IDL compiler</H1>
+<A NAME="chap:omniidl"></A>omniORB 3 has a brand new IDL compiler, named omniidl. It consists of
+a generic front-end parser written in C++, and a number of back-ends
+written in Python. omniidl is very strict about IDL validity, so you
+may find that it reports errors in IDL which compiles fine with
+earlier versions of omniORB, and with other ORBs.<BR>
+<BR>
+The general form of an omniidl command line is:<BR>
+<BR>
+<BLOCKQUOTE> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file 1</I>&gt;<TT> </TT>&lt;<I>file 2</I>&gt;<TT> </TT>...</BLOCKQUOTE><A NAME="toc22"></A>
+<H2>5.1&nbsp;&nbsp; Common options</H2>The following options are common to all back-ends:<BR>
+<BR>
+<TABLE CELLSPACING=2 CELLPADDING=0>
+<TR><TD ALIGN=left NOWRAP></TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-D</TT><I>name</I>[<TT>=</TT><I>value</I>]</TD>
+<TD ALIGN=left NOWRAP>Define <I>name</I> for the preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-U</TT><I>name</I></TD>
+<TD ALIGN=left NOWRAP>Undefine <I>name</I> for the preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-I</TT><I>dir</I></TD>
+<TD ALIGN=left NOWRAP>Include <I>dir</I> in the preprocessor search path.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-E</TT></TD>
+<TD ALIGN=left NOWRAP>Only run the preprocessor, sending its output to stdout.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Y</TT><I>cmd</I></TD>
+<TD ALIGN=left NOWRAP>Use <I>cmd</I> as the preprocessor, rather than the normal C
+ preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-N</TT></TD>
+<TD ALIGN=left NOWRAP>Do not run the preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wp</TT><I>arg</I>[,<I>arg</I>...]</TD>
+<TD ALIGN=left NOWRAP>Send arguments to the preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-b</TT><I>back-end</I></TD>
+<TD ALIGN=left NOWRAP>Run the specified back-end. For the C++ ORB, use <TT>-bcxx</TT>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wb</TT><I>arg</I>[,<I>arg</I>...]</TD>
+<TD ALIGN=left NOWRAP>Send arguments to the back-end.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-nf</TT></TD>
+<TD ALIGN=left NOWRAP>Do not warn about unresolved forward declarations.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-k</TT></TD>
+<TD ALIGN=left NOWRAP>Keep comments as strings to be used by some back-ends.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-C</TT><I>dir</I></TD>
+<TD ALIGN=left NOWRAP>Change directory to <I>dir</I> before writing output files.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-d</TT></TD>
+<TD ALIGN=left NOWRAP>Dump the parsed IDL then exit, without running a back-end.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-p</TT><I>dir</I></TD>
+<TD ALIGN=left NOWRAP>Use <I>dir</I> as a path to find omniidl back-ends.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-V</TT></TD>
+<TD ALIGN=left NOWRAP>Print version information then exit.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-u</TT></TD>
+<TD ALIGN=left NOWRAP>Print usage information.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-v</TT></TD>
+<TD ALIGN=left NOWRAP>Verbose: trace compilation stages.</TD>
+</TR></TABLE><BR>
+Most of these options are self explanatory, but some are not
+so obvious.<BR>
+<BR>
+
+<H3>5.1.1&nbsp;&nbsp; Preprocessor interactions</H3>IDL is processed by the C preprocessor before omniidl parses it.
+Unlike the old IDL compiler, which used different C preprocessors on
+different platforms, omniidl always uses the GNU C preprocessor (which
+it builds with the name omnicpp). The <TT>-D</TT>, <TT>-U</TT>, and
+<TT>-I</TT> options are just sent to the preprocessor. Note that the
+current directory is not on the include search path by default---use
+`<TT>-I.</TT>' for that. The <TT>-Y</TT> option can be used to
+specify a different preprocessor to omnicpp. Beware that line
+directives inserted by other preprocessors are likely to confuse
+omniidl.<BR>
+<BR>
+
+<H3>5.1.2&nbsp;&nbsp; Forward-declared interfaces</H3>If you have an IDL file like:<BR>
+<BR>
+<PRE>
+interface I;
+interface J {
+  attribute I the_I;
+};
+</PRE>then omniidl will normally issue a warning:<BR>
+<BR>
+<PRE>
+  test.idl:1: Warning: Forward declared interface `::I' was never
+  fully defined
+</PRE>It is illegal to declare such IDL in isolation, but it
+<EM>is</EM> valid to define interface <TT>I</TT> in a separate file. If
+you have a lot of IDL with this sort of construct, you will drown
+under the warning messages. Use the <TT>-nf</TT> option to suppress
+them.<BR>
+<BR>
+<A NAME="toc23"></A>
+<H2>5.2&nbsp;&nbsp; C++ back-end options</H2>When you specify the C++ back-end (with <TT>-bcxx</TT>), the
+following <TT>-Wb</TT> options are available. Note that the
+<TT>-Wb</TT> options must be specified <EM>after</EM> the
+<TT>-bcxx</TT> option, so omniidl knows which back-end to give the
+arguments to.<BR>
+<BR>
+<TABLE CELLSPACING=2 CELLPADDING=0>
+<TR><TD ALIGN=left NOWRAP></TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbh=</TT><I>suffix</I></TD>
+<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated header files. Default
+ `<TT>.hh</TT>'.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbs=</TT><I>suffix</I></TD>
+<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated stub files. Default
+ `<TT>SK.cc</TT>.'</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wba</TT></TD>
+<TD ALIGN=left NOWRAP>Generate stubs for TypeCode and Any.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbtp</TT></TD>
+<TD ALIGN=left NOWRAP>Generate `tie' implementation skeletons.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbtf</TT></TD>
+<TD ALIGN=left NOWRAP>Generate flattened `tie' implementation skeletons.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbsplice-modules</TT></TD>
+<TD ALIGN=left NOWRAP>Splice together multiply-opened modules into one.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbexample</TT></TD>
+<TD ALIGN=left NOWRAP>Generate example implementation code.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-WbF</TT></TD>
+<TD ALIGN=left NOWRAP>Generate code fragments (for experts only).</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-WbBOA</TT></TD>
+<TD ALIGN=left NOWRAP>Generate BOA compatible skeletons.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbold</TT></TD>
+<TD ALIGN=left NOWRAP>Generate old CORBA 2.1 signatures for skeletons.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbold_prefix</TT></TD>
+<TD ALIGN=left NOWRAP>Map C++ reserved words with prefix `<TT>_</TT>' rather than
+ `<TT>_cxx_</TT>'.</TD>
+</TR></TABLE><BR>
+Again, most of these are self-explanatory.<BR>
+<BR>
+
+<H3>5.2.1&nbsp;&nbsp; Module splicing</H3>On C++ compilers without namespace support, IDL modules map to C++
+classes, and so cannot be reopened. For some IDL, it is possible to
+`splice' reopened modules on to the first occurrence of the module, so
+all module definitions are in a single class. It is possible in this
+sort of situation:<BR>
+<BR>
+<PRE>
+module M1 {
+  interface I {};
+};
+module M2 {
+  interface J {
+    attribute M1::I ok;
+  };
+};
+module M1 {
+  interface K {
+    attribute I still_ok;
+  };
+};
+</PRE>but not if there are cross-module dependencies:<BR>
+<BR>
+<PRE>
+module M1 {
+  interface I {};
+};
+module M2 {
+  interface J {
+    attribute M1::I ok;
+  };
+};
+module M1 {
+  interface K {
+    attribute M2::J oh_dear;
+  };
+};
+</PRE>In both of these cases, the <TT>-Wbsplice-modules</TT>
+option causes omniidl to put all of the definitions for module
+<TT>M1</TT> into a single C++ class. For the first case, this will work
+fine. For the second case, class <TT>M1::K</TT> will contain a reference
+to <TT>M2::J</TT>, which has not yet been defined; the C++ compiler will
+complain.<BR>
+<BR>
+<A NAME="toc24"></A>
+<H2>5.3&nbsp;&nbsp; Examples</H2>Compile the C++ headers and stubs for a file <TT>a.idl</TT>:<BR>
+<BR>
+<BLOCKQUOTE>
+<TT>omniidl -bcxx a.idl</TT>
+</BLOCKQUOTE>Compile with Any support:<BR>
+<BR>
+<BLOCKQUOTE>
+<TT>omniidl -bcxx -Wba a.idl</TT>
+</BLOCKQUOTE>Compile two files with Any support:<BR>
+<BR>
+<BLOCKQUOTE>
+<TT>omniidl -bcxx -Wba a.idl b.idl</TT>
+</BLOCKQUOTE>As above, but also generate Python stubs for the files
+(assuming omniORBpy is installed):<BR>
+<BR>
+<BLOCKQUOTE>
+<TT>omniidl -bcxx -Wba -bpython a.idl b.idl</TT>
+</BLOCKQUOTE>Just check the IDL files for validity, generating no output:<BR>
+<BR>
+<BLOCKQUOTE>
+<TT>omniidl a.idl b.idl</TT>
+</BLOCKQUOTE><HR>
+<A HREF="omniORB004.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB006.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

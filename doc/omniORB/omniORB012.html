@@ -1,0 +1,228 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.05">
+<TITLE>
+ The Dynamic Skeleton Interface
+</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORB011.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB013.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<HR>
+
+<H1>Chapter&nbsp;12&nbsp;&nbsp; The Dynamic Skeleton Interface</H1>
+<A NAME="chap:dsi"></A>
+The Dynamic Skeleton Interface (or DSI) allows applications to provide
+implementations of the operations on CORBA objects without static
+knowledge of the object's interface. It is the server-side equivalent
+of the Dynamic Invocation Interface.<BR>
+<BR>
+This chapter presents the Dynamic Skeleton Interface and explains how
+to use it. A toy example use of the DSI can be found in the omniORB
+distribution in the <TT>src/examples/dsi</TT> directory. For further
+information refer to the Dynamic Skeleton Interface and C++ Mapping
+sections of the CORBA 2.3 specification.<BR>
+<BR>
+The DSI interface has changed in CORBA 2.3. omniORB 3 uses the new
+mapping, but since the mapping depends on
+<TT>PortableServer::Current</TT>, which is not yet implemented, not all
+facilities are available. This chapter describes an approach to
+building DSI servers which works with omniORB 3.<BR>
+<BR>
+<A NAME="toc62"></A>
+<H2>12.1&nbsp;&nbsp; Overview</H2>When an ORB receives an invocation request, the information includes
+the object reference and the name of the operation. Typically this
+information is used by the ORB to select a servant object and call
+into the implementation of the operation (which knows how to unmarshal
+the parameters etc.). The Dynamic Skeleton Interface however makes
+this information directly available to the application---so that it
+can implement the operation (or pass it on to another server) without
+static knowledge of the interface. In fact it is not even necessary
+for the server to always implement the same interface on any
+particular object!<BR>
+<BR>
+To provide an implementation for one or more objects an application
+must sub-class <TT>PortableServer::DynamicImplementation</TT> and
+override the method <TT>invoke()</TT>. An instance of this class is
+registered with a POA and is assigned an object reference (see below).
+When the ORB receives a request for that object the <TT>invoke()</TT> method
+is called and will be passed a <TT>CORBA::ServerRequest</TT> object
+which provides:<BR>
+<BR>
+<UL>
+<LI>
+ the operation name
+
+<LI> context strings
+
+<LI> access to the parameters
+
+<LI> a way to set the returned values
+
+<LI> a way to throw user-defined exceptions.
+</UL><A NAME="toc63"></A>
+<H2>12.2&nbsp;&nbsp; DSI Types</H2>
+<H3>12.2.1&nbsp;&nbsp; PortableServer::DynamicImplementation</H3>This class must be sub-classed by the application to provide an
+implementation for DSI objects. The method <TT>invoke()</TT> will be called
+for each operation invocation.<BR>
+<BR>
+<PRE>
+namespace PortableServer {
+  ...
+
+  class DynamicImplementation : public virtual ServantBase {
+  public:
+    virtual ~DynamicImplementation();
+
+    CORBA::Object_ptr _this();
+    // Must only be called from within invoke(). Caller must release
+    // the reference returned.
+
+    virtual void invoke(CORBA::ServerRequest_ptr request) = 0;
+    virtual char* _primary_interface(const ObjectId&amp; oid, POA_ptr poa) = 0;
+
+    virtual CORBA::Boolean _is_a(const char* logical_type_id);
+    // The default implementation uses _primary_interface(),
+    // but may be overridden by subclasses.
+  };
+  ...
+};
+</PRE>
+<H3>12.2.2&nbsp;&nbsp; ServerRequest</H3>A <TT>ServerRequest</TT> object provides the interface between a dynamic
+implementation and the ORB.<BR>
+<BR>
+<PRE>
+namespace CORBA {
+  ...
+
+  class ServerRequest {
+  public:
+    virtual const char* operation() = 0;
+    virtual void        arguments(NVList_ptr&amp; parameters) = 0;
+    virtual Context_ptr ctx() = 0;
+    virtual void        set_result(const Any&amp; value) = 0;
+    virtual void        set_exception(const Any&amp; value) = 0;
+
+  protected:
+    inline ServerRequest() {}
+    virtual ~ServerRequest();
+  };
+  ...
+};
+</PRE><A NAME="toc64"></A>
+<H2>12.3&nbsp;&nbsp; Creating Dynamic Implementations</H2>The application must override the <TT>invoke()</TT> method of
+<TT>DynamicImplementation</TT> to provide an implementation for DSI
+objects. This method must behave as follows:<BR>
+<BR>
+<UL>
+<LI>
+ It may be called concurrently by multiple threads of execution,
+and so must be thread-safe.<BR>
+<BR>
+
+<LI> It may not throw any exceptions. Both user-defined and system
+exceptions are passed in a value of type Any via a call to
+<TT>ServerRequest::set_exception()</TT>.<BR>
+<BR>
+
+<LI> The operations on the <TT>ServerRequest</TT> object must be
+carried out in the correct order, as described below.
+</UL>
+<H3>12.3.1&nbsp;&nbsp; Operations on the ServerRequest</H3><TT>operation()</TT> will return the name of the operation, and may be
+called at any time. For attribute access the operation name is the IDL
+name of the attribute, prefixed by <TT>_get_</TT> or
+<TT>_set_</TT>. If the operation name is not recognised a
+<TT>CORBA::BAD_OPERATION</TT> exception should be passed back
+through <TT>set_exception()</TT>. This will allow the ORB to then see if it
+is one of the standard object operations.<BR>
+<BR>
+Firstly <TT>arguments()</TT> must be called passing a
+<TT>CORBA::NVList</TT><A NAME="text26" HREF="#note26"><SUP><FONT SIZE=2>1</FONT></SUP></A> which must be initialised to contain
+the type and mode of the parameters. The ORB consumes this value and
+will release it when the operation is complete. At this point any
+<EM>in</EM>/<EM>inout</EM> arguments will be unmarshalled, and when this
+operation returns, their values will be in the <TT>NVList</TT>. The
+application may set the value of <EM>inout</EM>/<EM>out</EM> arguments by
+modifying this parameter list.<BR>
+<BR>
+If the operation has user-context information, then <TT>ctx()</TT> must be
+called after <TT>arguments()</TT> to retrieve it.<BR>
+<BR>
+<TT>set_result()</TT> must then be called exactly once if the operation has
+a non-void return value (unless an exception is thrown). The value
+passed should be an Any allocated with <TT>new</TT>, and will be freed
+by the ORB.<BR>
+<BR>
+At any point in the above sequence <TT>set_exception()</TT> may be called
+to set a user-defined exception or a system exception. If this happens
+then no further operations should be invoked on the
+<TT>ServerRequest</TT> object, and the <TT>invoke()</TT> method should return.<BR>
+<BR>
+Within the <TT>invoke()</TT> method <TT>_this()</TT> may be called to obtain the
+object reference. This method may not be used at any other time.<BR>
+<BR>
+<A NAME="toc65"></A>
+<H2>12.4&nbsp;&nbsp; Registering Dynamic Objects</H2>To use a <TT>DynamicImplementation</TT> servant, a CORBA object must be
+created and associated with it, just as for any other servant. Dynamic
+servants can also be created on demand by Servant Managers, just like
+static servants.<BR>
+<BR>
+<A NAME="toc66"></A>
+<H2>12.5&nbsp;&nbsp; Example</H2>This implementation of <TT>DynamicImplementation::invoke()</TT> is taken
+from an example which can be found in the omniORB distribution. The
+<TT>echoString()</TT> operation is declared in IDL as:<BR>
+<BR>
+<PRE>
+string echoString(in string mesg);
+</PRE>Here is the Dynamic Implementation Routine:<BR>
+<BR>
+<PRE>
+void
+MyDynImpl::invoke(CORBA::ServerRequest_ptr request)
+{
+  try {
+    if( strcmp(request-&gt;operation(), "echoString") )
+      throw CORBA::BAD_OPERATION(0, CORBA::COMPLETED_NO);
+
+    CORBA::NVList_ptr args;
+    orb-&gt;create_list(0, args);
+    CORBA::Any a;
+    a.replace(CORBA::_tc_string, 0);
+    args-&gt;add_value("", a, CORBA::ARG_IN);
+
+    request-&gt;arguments(args);
+
+    const char* mesg;
+    *(args-&gt;item(0)-&gt;value()) &gt;&gt;= mesg;
+
+    CORBA::Any* result = new CORBA::Any();
+    *result &lt;&lt;= CORBA::Any::from_string(mesg, 0);
+    request-&gt;set_result(*result);
+  }
+  catch(CORBA::SystemException&amp; ex){
+    CORBA::Any a;
+    a &lt;&lt;= ex;
+    request-&gt;set_exception(a);
+  }
+  catch(...){
+    cout &lt;&lt; "echo_dsiimpl: MyDynImpl::invoke - caught an unknown exception."
+  &lt;&lt; endl;
+    CORBA::Any a;
+    a &lt;&lt;= CORBA::UNKNOWN(0, CORBA::COMPLETED_NO);
+    request-&gt;set_exception(a);
+  }
+}
+</PRE><HR WIDTH="50%" SIZE=1><DL>
+<DT><A NAME="note26" HREF="#text26"><FONT SIZE=5>1</FONT></A><DD> obtained by calling
+<TT>CORBA::ORB::create_list()</TT>
+</DL>
+<HR>
+<A HREF="omniORB011.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB013.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>
