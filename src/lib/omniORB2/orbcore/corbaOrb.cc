@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14  1998/04/18 10:09:52  sll
+  Make the definition of omniORB::serverName consistent with omniORB.h
+
   Revision 1.13  1998/04/08 16:06:25  sll
   Added support for Reliant UNIX 5.43.
 
@@ -92,7 +95,11 @@ CORBA::Boolean           tcAliasExpand = 0;
 #else
 CORBA::ULong                    omniORB::traceLevel = 1;
 CORBA::Boolean                  omniORB::strictIIOP = 0;
+#if defined(HAS_Cplusplus_Namespace)
+char*                           omniORB::serverName = 0;
+#else
 CORBA::String_var		omniORB::serverName = (const char*)"unknown";
+#endif
 CORBA::Boolean                  omniORB::tcAliasExpand = 0; 
 #endif
 
