@@ -213,7 +213,8 @@ a) omniNames built in this release *CANNOT* read the data file of the version
    omniNames and tell it to use the old data file, it will certainly crash.
 
    Possible migration path:
-     At, we are running the old and the new omniNames in parallel.
+     At AT&T Laboratories Cambridge, we are running the old and the new 
+     omniNames in parallel.
      The new instance is setup to run on a different port. Also the
      new tree is built to read by default a different configuration file:
      (/project/omni/var/omniORB_NEW.cfg instead of 

@@ -11,7 +11,7 @@ Starting with the 2.8.0 release, shareable images can be created and used for
 the Alpha platform.  Shareable images are currently not supported for the VAX
 platform.
 
-To simplify linking, seperate omniORB floating point libraries are no longer
+To simplify linking, separate omniORB floating point libraries are no longer
 required.
 
 There are additional configuration parameters in [.config]config.mms.
@@ -138,7 +138,7 @@ Notes
 If you are running OpenVMS version 6.1, please ensure that you have
 installed the latest ECOs for the DEC C RTL and C++ Class Library.
 
-This release of omniORB2 is incompatable with the backport library supplied with
+This release of omniORB2 is incompatible with the backport library supplied with
 DEC C++ version 5.6 (however, see "Using tcpSocketVaxRoutines.cc on OpenVMS
 6.x", below).  Therefore, if your operating system is below 7.0 and you use DEC
 C++ version 5.6 or above, be sure that the logical name DECC$CRTLMAP is not
@@ -171,7 +171,7 @@ ability of the O/S to perform I/Os that block only the thread of execution
 Alpha
 -----
 
-For OpenVMS Alpha platforms, the best way to acheive this behavior is to use
+For OpenVMS Alpha platforms, the best way to achieve this behavior is to use
 link with /Thread=upcalls.  This requires at least 7.1 of OpenVMS.  Ideally, you
 should upgrade (if necessary) to 7.1 or 7.2 and use /Thread=upcalls.  If for
 some reason you cannot upgrade the O/S you can use the tcpSocketVaxRoutines.cc
