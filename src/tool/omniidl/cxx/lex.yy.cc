@@ -404,7 +404,7 @@ static yyconst short int yy_accept[449] =
 static yyconst int yy_ec[256] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
-        4,    4,    1,    1,    1,    1,    1,    1,    1,    1,
+        4,    4,    4,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    2,    1,    5,    6,    1,    1,    1,    7,    1,
         1,    8,    9,    1,    9,   10,   11,   12,   13,   13,
@@ -801,8 +801,8 @@ char *yytext;
 
 // $Id$
 // $Log$
-// Revision 1.4  1999/11/17 17:16:59  dpg1
-// Changes to remove static initialisation of objects.
+// Revision 1.5  1999/11/19 16:03:39  dpg1
+// Flex scanner now accepts \r as whitespace.
 //
 // Revision 1.4  1999/11/05 10:36:42  dpg1
 // Sorted out isatty() problems.

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5  1999/11/19 16:03:40  dpg1
+// Flex scanner now accepts \r as whitespace.
+//
 // Revision 1.4  1999/11/05 10:36:42  dpg1
 // Sorted out isatty() problems.
 //
@@ -81,7 +84,7 @@ int fixed(char* s);
 %s known_pragma
 %x unknown_pragma
 
-WS          [ \t\v\n\f]
+WS          [ \t\v\n\f\r]
 SPACE       [ \t]
 
 ASCIILETTER [a-zA-Z]
