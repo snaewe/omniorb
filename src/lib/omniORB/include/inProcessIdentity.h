@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  2001/08/22 13:31:31  dpg1
+ Christof's fixes for gcc 3.0.1.
+
  Revision 1.1.2.2  2001/08/15 10:26:09  dpg1
  New object table behaviour, correct POA semantics.
 
@@ -90,7 +93,8 @@ public:
 
   static inline omniInProcessIdentity* downcast(omniIdentity* id)
   {
-    return (omniInProcessIdentity*)(id->classCompare()(id, thisClassCompare));
+    return (omniInProcessIdentity*)(id->classCompare()
+				    (id, (void*)thisClassCompare));
   }
 
 private:

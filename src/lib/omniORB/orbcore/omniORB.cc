@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.10  2001/08/22 13:31:31  dpg1
+  Christof's fixes for gcc 3.0.1.
+
   Revision 1.2.2.9  2001/08/17 17:12:40  sll
   Modularise ORB configuration parameters.
 
@@ -77,6 +80,7 @@
 
 */
 
+#include <stdlib.h>
 #include <omniORB4/CORBA.h>
 #include <orbParameters.h>
 

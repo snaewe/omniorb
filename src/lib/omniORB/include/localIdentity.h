@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/08/22 13:31:31  dpg1
+  Christof's fixes for gcc 3.0.1.
+
   Revision 1.1.4.4  2001/08/15 10:26:09  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -147,7 +150,8 @@ public:
 
   static inline omniLocalIdentity* downcast(omniIdentity* id)
   {
-    return (omniLocalIdentity*)(id->classCompare()(id, thisClassCompare));
+    return (omniLocalIdentity*)(id->classCompare()
+				(id, (void*)thisClassCompare));
   }
 
 protected:
