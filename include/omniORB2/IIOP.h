@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.9  1999/06/18 20:35:53  sll
+  Replaced _LC_attr with _core_attr
+
   Revision 1.8  1999/01/07 18:20:05  djr
   Replaced _OMNIORB_NTDLL_IMPORT with _LC_attr.
 
@@ -62,8 +65,8 @@ public:
   };
 
   // Current IIOP Protocol version
-  static _LC_attr const _CORBA_Char current_major;
-  static _LC_attr const _CORBA_Char current_minor;
+  static _core_attr const _CORBA_Char current_major;
+  static _core_attr const _CORBA_Char current_minor;
 
   struct ProfileBody {
     Version                 iiop_version;
