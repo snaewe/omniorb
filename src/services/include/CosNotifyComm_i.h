@@ -476,9 +476,9 @@ class SequencePullSupplier_i :
 public:
   inline SequencePullSupplier_i();
 
-  inline CosN_EventBatch* pull_structured_events(CORBA::ULong max_number
+  inline CosN_EventBatch* pull_structured_events(CORBA::Long max_number
 					         WRAPPED_DECLARG );
-  inline CosN_EventBatch* try_pull_structured_events(CORBA::ULong max_number,
+  inline CosN_EventBatch* try_pull_structured_events(CORBA::Long max_number,
 						     CORBA::Boolean& has_event
 						     WRAPPED_DECLARG );
   inline void disconnect_sequence_pull_supplier( WRAPPED_DECLARG_VOID );
@@ -496,7 +496,7 @@ inline SequencePullSupplier_i::SequencePullSupplier_i() : num_events(0)
 }
 
 inline CosN_EventBatch* SequencePullSupplier_i::pull_structured_events(
-				CORBA::ULong max_number WRAPPED_IMPLARG )
+				CORBA::Long max_number WRAPPED_IMPLARG )
 {
   CosN_EventBatch*     batch = new CosN_EventBatch;
   CosN_StructuredEvent event;
@@ -512,7 +512,7 @@ inline CosN_EventBatch* SequencePullSupplier_i::pull_structured_events(
 }
 
 inline CosN_EventBatch* SequencePullSupplier_i::try_pull_structured_events(
-				CORBA::ULong max_number,
+				CORBA::Long max_number,
 				CORBA::Boolean& has_event WRAPPED_IMPLARG )
 {
   CosN_EventBatch*     batch = new CosN_EventBatch;

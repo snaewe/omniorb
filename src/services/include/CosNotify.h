@@ -10,6 +10,7 @@
 #ifndef _COS_NOTIFY_SHORTHANDS_H_
 #define _COS_NOTIFY_SHORTHANDS_H_
 
+#include "TimeBase.hh"
 #include "CosNotification.hh"
 #include "CosNotifyComm.hh"
 #include "CosNotifyChannelAdmin.hh"
@@ -106,6 +107,8 @@ typedef CosNA::ObtainInfoMode			CosNA_ObtainInfoMode;
 #define CosNA_PUSH_ANY				CosNA::PUSH_ANY
 #define CosNA_PUSH_SEQUENCE			CosNA::PUSH_SEQUENCE
 #define CosNA_PUSH_STRUCTURED			CosNA::PUSH_STRUCTURED
+#define CosNA_PUSH_TYPED     			CosNA::PUSH_TYPED
+#define CosNA_PULL_TYPED     			CosNA::PULL_TYPED
 typedef CosNA::ProxyConsumer			CosNA_ProxyConsumer;
 typedef CosNA::ProxyConsumer_ptr		CosNA_ProxyConsumer_ptr;
 typedef CosNA::ProxyConsumer_var		CosNA_ProxyConsumer_var;
