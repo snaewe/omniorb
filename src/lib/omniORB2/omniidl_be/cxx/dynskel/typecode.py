@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.5  2000/05/04 14:35:12  djs
+# Added new flag splice-modules which causes all continuations to be output
+# as one lump. Default is now to output them in pieces following the IDL.
+#
 # Revision 1.14.2.4  2000/04/26 18:22:20  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -359,6 +363,8 @@ def visitModule(node):
     self.__immediatelyInsideModule = 1
     for n in node.definitions():
         n.accept(self)
+
+    # Treat a reopened module as if it had been defined all at once
     for c in node.continuations():
         slash_scopedName = string.join(c.scopedName(), '/')
         self.__completedModules[slash_scopedName] = 1

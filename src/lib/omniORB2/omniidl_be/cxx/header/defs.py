@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.7  2000/05/04 14:35:02  djs
+# Added new flag splice-modules which causes all continuations to be output
+# as one lump. Default is now to output them in pieces following the IDL.
+#
 # Revision 1.31.2.6  2000/04/26 18:22:28  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -205,8 +209,9 @@ def visitModule(node):
     if not(node.mainFile()):
         return
 
-    # In case of continuations, don't output the definitions
-    # more than once (by marking the module as done)
+    # Ensure we only output the definitions once.
+    # In particular, when the splice-modules flag is set and this is
+    # a reopened module, the node will be marked as completed already.
     if self.__completedModules.has_key(node):
         return
     self.__completedModules[node] = 1
@@ -225,11 +230,11 @@ def visitModule(node):
     for n in node.definitions():
         n.accept(self)
 
-    # deal with continuations
-    for c in node.continuations():
-        self.__completedModules[node] = 1
-        for n in c.definitions():
-            n.accept(self)
+    # deal with continuations (only if the splice-modules flag is set)
+    if config.SpliceModulesFlag():
+        for c in node.continuations():
+            for n in c.definitions():
+                n.accept(self)
 
     # pop self.__insideModule
     self.__insideModule = insideModule

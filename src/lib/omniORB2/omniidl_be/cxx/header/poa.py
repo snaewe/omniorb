@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.4  2000/05/04 14:35:04  djs
+# Added new flag splice-modules which causes all continuations to be output
+# as one lump. Default is now to output them in pieces following the IDL.
+#
 # Revision 1.15.2.3  2000/04/26 18:22:30  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -143,10 +147,16 @@ def visitModule(node):
     self.__nested = 1
     for n in node.definitions():
         n.accept(self)
-    for c in node.continuations():
-        self.__completedModules[node] = 1
-        for n in c.definitions():
-            n.accept(self)
+
+    # Splice the continuations together if splice-modules flag is set
+    # (This might be unnecessary as there (seems to be) no relationship
+    #  between things in the POA module- they all point back into the main
+    #  module?)
+    if config.SpliceModulesFlag():
+        for c in node.continuations():
+            #self.__completedModules[node] = 1
+            for n in c.definitions():
+                n.accept(self)
 
     self.__nested = nested
 
