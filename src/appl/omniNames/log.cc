@@ -741,7 +741,7 @@ omniNameslog::checkpoint(void)
   }
 #endif
 
-#if USE_STREAM_OPEN
+#ifdef USE_STREAM_OPEN
   logf.OPEN(active,ios::out|ios::app,0666);
   if (!logf) {
     cerr << ts.t() << "Error: cannot open log file '" << active
