@@ -193,6 +193,8 @@ extern char* yytext;
 %type <idlist>	scoped_name
 %type <slval>	opt_context at_least_one_string_literal
 %type <slval>	string_literals
+%type <sval>   at_least_one_non_comma_separated_string_literal
+%type <slval>   non_comma_separated_string_literals
 
 %type <nlval>	at_least_one_scoped_name scoped_names inheritance_spec
 %type <nlval>	opt_raises
@@ -842,7 +844,7 @@ literal
 	{
 	  $$ = idl_global->gen()->create_expr($1);
 	}
-	| STRING_LITERAL
+	| at_least_one_non_comma_separated_string_literal
 	{
 	  $$ = idl_global->gen()->create_expr($1);
 	}
@@ -1276,7 +1278,26 @@ union_type :
         }
 	'('
 	{
+	  UTL_Scope		*s = idl_global->scopes()->top_non_null();
+	  UTL_ScopedName	*n = new UTL_ScopedName($3, NULL);
+	  AST_Union		*u = NULL;
+	  UTL_StrList		*p = idl_global->pragmas();
+
 	  idl_global->set_parse_state(IDL_GlobalData::PS_SwitchOpenParSeen);
+
+	  /*
+	   * Create a node representing a union. Add it to its enclosing
+	   * scope
+	   */
+	  if (s != NULL) {
+	    u = idl_global->gen()->create_union(n, p);
+	    (void) s->fe_add_union(u);
+	  }
+	  /*
+	   * Push the scope of the union on the scopes stack
+	   */
+	  idl_global->scopes()->push(u);
+
         }
 	switch_type_spec
 	{
@@ -1285,29 +1306,20 @@ union_type :
 	')'
 	{
 	  UTL_Scope		*s = idl_global->scopes()->top_non_null();
-	  UTL_ScopedName	*n = new UTL_ScopedName($3, NULL);
-	  AST_Union		*u = NULL;
-	  AST_Decl		*v = NULL;
-	  UTL_StrList		*p = idl_global->pragmas();
 
 	  idl_global->set_parse_state(IDL_GlobalData::PS_SwitchCloseParSeen);
-	  /*
-	   * Create a node representing a union. Add it to its enclosing
-	   * scope
-	   */
+
 	  if ($9 != NULL && s != NULL) {
  	    AST_ConcreteType    *tp = AST_ConcreteType::narrow_from_decl($9);
             if (tp == NULL) {
               idl_global->err()->not_a_type($9);
             } else {
-	      u = idl_global->gen()->create_union(tp, n, p);
-	      (void) s->fe_add_union(u);
+	      // Recover the union node
+	      AST_Union *u = AST_Union::narrow_from_scope(s);
+	      // Now set the discriminator type
+	      u->disc_type(tp);
  	    }
 	  }
-	  /*
-	   * Push the scope of the union on the scopes stack
-	   */
-	  idl_global->scopes()->push(u);
 	}
 	'{'
 	{
@@ -2246,6 +2258,55 @@ string_literals
 	  $$ = NULL;
 	}
 	;
+
+at_least_one_non_comma_separated_string_literal :
+        STRING_LITERAL non_comma_separated_string_literals
+        {
+	  UTL_StrList* sl = new UTL_StrList($1, $2);
+          int total = 3;
+	  {
+            UTL_StrlistActiveIterator iter(sl);
+            UTL_String* p = iter.item();
+            while (p != NULL) {
+              total += strlen(p->get_string());
+              iter.next();
+              p = iter.item();
+	      if (p != NULL) total += 2;
+	    }
+	  }
+          char* val = new char[total];
+	  val[0] = '\0';
+	  {
+            UTL_StrlistActiveIterator iter(sl);
+            UTL_String* p = iter.item();
+            while (p != NULL) {
+              strcat(val,p->get_string());
+              iter.next();
+              p = iter.item();
+	      if (p != NULL) strcat(val,"\"\"");
+	    }
+	  }
+          $$ = new String(val);
+	}
+	;
+
+
+non_comma_separated_string_literals 
+        : non_comma_separated_string_literals 
+          STRING_LITERAL
+          {
+  	    if ($1 == NULL)
+	      $$ = new UTL_StrList($2, NULL);
+	    else {
+	      $1->nconc(new UTL_StrList($2, NULL));
+	      $$ = $1;
+	    }
+          }
+          | /* EMPTY */
+          {
+             $$ = NULL;
+          }
+          ;
 
 pragma_version : PRAGMA_VERSION
  	{
