@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2001/04/18 17:50:43  sll
+  Big checkin with the brand new internal APIs.
+  Scoped where appropriate with the omni namespace.
+
   Revision 1.2.2.4  2000/11/09 12:27:50  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -79,9 +83,12 @@
 #include <omniORB4/omniObjRef.h>
 #endif
 
+OMNI_NAMESPACE_BEGIN(omni)
 
-class GIOP_S;
+class IOP_S;
 class omniOrbPOA;
+
+OMNI_NAMESPACE_END(omni)
 
 
 _CORBA_MODULE PortableServer
@@ -593,13 +600,21 @@ _CORBA_MODULE_BEG
   //////////////////////////////////////////////////////////////////////
   /////////////////////////////// Current //////////////////////////////
   //////////////////////////////////////////////////////////////////////
-#if 0
+  class Current;
+  typedef class Current* Current_ptr;
+  typedef Current_ptr CurrentRef;
+
   class Current : public CORBA::Current {
   public:
+    typedef Current*                      _ptr_type;
+    typedef _CORBA_PseudoObj_Var<Current> _var_type;
+
     OMNIORB_DECLARE_USER_EXCEPTION(NoContext, _core_attr)
 
     virtual POA_ptr get_POA() = 0;
     virtual ObjectId* get_object_id() = 0;
+    virtual CORBA::Object_ptr get_reference() = 0;
+    virtual Servant get_servant() = 0;
 
     // CORBA Object members
     static Current_ptr _duplicate(Current_ptr);
@@ -610,14 +625,17 @@ _CORBA_MODULE_BEG
     static _core_attr const char* _PD_repoId;
 
   protected:
-    inline Current() {}
+    Current();
     virtual ~Current();
 
   private:
     Current(const Current&);
     Current& operator=(const Current&);
   };
-#endif
+
+  typedef Current::_var_type                            Current_var;
+  typedef _CORBA_PseudoObj_Member<Current, Current_var> Current_member;
+
   //////////////////////////////////////////////////////////////////////
   ///////////////////////////// ServantBase ////////////////////////////
   //////////////////////////////////////////////////////////////////////
@@ -742,7 +760,7 @@ _CORBA_MODULE_BEG
     // but may be overridden by subclasses.
 
     // omniORB internal.
-    virtual _CORBA_Boolean _dispatch(GIOP_S&);
+    virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
     // DJR - NB. probably should not pass the standard object
     // ops up to the invoke routine...
 

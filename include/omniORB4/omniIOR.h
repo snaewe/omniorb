@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/04/18 17:50:44  sll
+  Big checkin with the brand new internal APIs.
+  Scoped where appropriate with the omni namespace.
+
   Revision 1.1.2.3  2000/11/15 17:06:49  sll
   Added tcs_c and tcs_w in omniIOR to record what code set convertor to use
   for this IOR.
@@ -46,38 +50,118 @@
 #ifndef __OMNIIOR_H__
 #define __OMNIIOR_H__
 
-class ropeFactoryType;
+#include <omniORB4/giopEndpoint.h>
+
+class _OMNI_NS(Rope);
 
 class omniIOR {
 public:
 
-  _CORBA_String_member               repositoryID;
-  IOP::TaggedProfileList_var 	     iopProfiles;
+  ///////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
+  // Accessor functions for the 2 components of the IOR
+  const char* repositoryID() const {
+    return pd_repositoryID;
+  }
 
-  _CORBA_Boolean                     decoded;
+  const IOP::TaggedProfileList& iopProfiles() const {
+    return pd_iopProfiles;
+  }
 
+  // index into pd_iopProfiles which has been chosen and decoded
+  _CORBA_ULong addr_selected_profile_index() const {
+    return pd_addr_selected_profile_index;
+  }
+  void addr_selected_profile_index(_CORBA_ULong index) {
+    pd_addr_selected_profile_index = index;
+  }
+
+  // set and get functions for addr_mode.
+  // The value of addr_mode determines what AddressingDisposition mode
+  // the ORB will use to invoke on the object. The mode is only relevant
+  // for GIOP 1.2 upwards.
+  GIOP::AddressingDisposition addr_mode() const {
+    return pd_addr_mode;
+  }
+  
+  void addr_mode(GIOP::AddressingDisposition m) {
+    pd_addr_mode = m;
+  }
+
+
+  ///////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
+  // Information encoded in the taggedprofilelist may be decoded
+  // into the more accessible forms and stored in an IORInfo.
   //
-  ropeFactoryType*                   selectedRopeFactoryType;
+  class IORInfo;
+  IORInfo* getIORInfo() const;
+    
+  // Within IORInfo, additional decoded info can be deposited using
+  // the IORExtraInfo class. Typically this is used by decodeIOR interceptors
+  // to insert extra info into the IOR for later retreival.
+  // 
+  class IORExtraInfo {
+  public:
+    IORExtraInfo(const IOP::ComponentId cid) : compid(cid) {}
+    virtual ~IORExtraInfo() {}
+    IOP::ComponentId compid;
+  };
+  // For each unique ComponentId (e.g., TAG_GROUP) one can add
+  // an IORExtraInfo element to the extra_info list.
+  // Each extrainfo element should be constructed by deriving from
+  // this class so that extra members can be held.
 
-  // The following are decoded from the IIOP Decoded
-  IIOP::ProfileBody                  iiop;
+  typedef _CORBA_PseudoValue_Sequence<IORExtraInfo*> IORExtraInfoList;
 
-  GIOP::AddressingDisposition        addr_mode;
-  _CORBA_ULong                       addr_selected_profile_index;
-  _CORBA_ULong                       orb_type;
-  omniCodeSet::TCS_C*                tcs_c;
-  omniCodeSet::TCS_W*                tcs_w;
+  class IORInfo {
+  public:
 
-  // Extra info decoded from tag_components_ are storied as
-  // opaque data accessible by the relevant modules.
-  struct opaque {
-    void* data;
-    void (*destructor)(void*);
+    // GIOP version. 
+    const GIOP::Version& version() const {
+      return pd_version;
+    }
+
+    void version(const GIOP::Version& ver) {
+      pd_version = ver;
+    }
+
+    // List of address to use
+    _OMNI_NS(giopAddressList)& addresses() {
+      return pd_addresses;
+    }
+
+    // ORB ID
+    _CORBA_ULong orbType() const { return pd_orb_type; }
+    void orbType(_CORBA_ULong t) { pd_orb_type = t; }
+
+    // Transmission code set for char and string
+    omniCodeSet::TCS_C* TCS_C() const { return pd_tcs_c; }
+    void TCS_C(omniCodeSet::TCS_C* tcs_c) { pd_tcs_c = tcs_c; }
+
+    // Transmission code set for wchar and wstring
+    omniCodeSet::TCS_W* TCS_W() const { return pd_tcs_w; }
+    void TCS_W(omniCodeSet::TCS_W* tcs_w) { pd_tcs_w = tcs_w; }
+
+    // Extra info list
+    IORExtraInfoList& extraInfo() { return pd_extra_info; }
+
+    IORInfo();
+    ~IORInfo();
+
+  private:
+    GIOP::Version                      pd_version;
+    _OMNI_NS(giopAddressList)          pd_addresses;
+    _CORBA_ULong                       pd_orb_type;
+    omniCodeSet::TCS_C*                pd_tcs_c;
+    omniCodeSet::TCS_W*                pd_tcs_w;
+    IORExtraInfoList                   pd_extra_info;
   };
 
-  typedef _CORBA_PseudoValue_Sequence<opaque> opaque_sequence;
-  opaque_sequence*                            opaque_data;
+public:
 
+  ///////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
   omniIOR(char* repoId, IOP::TaggedProfileList* iop);
   // Both repoId and iop are consumed by the object.
 
@@ -85,18 +169,19 @@ public:
 	  _CORBA_ULong selected_profile_index);
   // Both repoId and iop are consumed by the object.
 
-  omniIOR(const char* repoId, omniIdentity* id);
+  omniIOR(const char* repoId, omniLocalIdentity* id);
   // create an IOR for this local object
   //
   // ** Caller holds lock on internalLock.
 
   omniIOR(const char* repoId, 
 	  const _CORBA_Unbounded_Sequence_Octet& key,
-	  const IIOP::Address* addrs, _CORBA_ULong naddrs);
+	  const IIOP::Address* addrs, _CORBA_ULong naddrs,
+	  GIOP::Version ver, _CORBA_Boolean call_interceptors);
 
   ~omniIOR();
 
-  void marshalIORAddressingInfo(cdrStream& s);
+  void marshalIORAddressingInfo(cdrStream& s) const;
 
   // Synchronisation and reference counting:
   //
@@ -115,14 +200,6 @@ public:
 
   static _core_attr omni_tracedmutex* lock;
 
-private:
-  int pd_refCount;
-  // Protected by <omni::internalLock>
-
-  omniIOR();
-  omniIOR(const omniIOR&);
-  omniIOR& operator=(const omniIOR&);
-
 
 public:
   // ORB internal functions.
@@ -133,21 +210,61 @@ public:
   void releaseNoLock();
   // Must hold <omniIOR::lock>. Otherwise same semantics as release().
 
-  void clearDecodedMembers();
-  // Reduce the memory foot print by clearing out all the decoded members.
-  // On return, the only valid fields are:
-  //    repositoryID, iopProfiles and decoded.
-  // 
+  ///////////////////////////////////////////////////////////////////
+  // Create a new taggedcomponent slot in the IIOP profile.
+  // The caller can write to the tagged component immediately after this
+  // call.
+  // Use this call only in the encodeIOR interceptors.
+  static IOP::TaggedComponent& newIIOPtaggedComponent(IOP::MultipleComponentProfile&);
 
+  void decodeIOPprofile(const IIOP::ProfileBody&);
+  // Decode the information in the argument into IORInfo accessible via
+  // getIORInfo().
 
   // Handlers for each of the tagged component used by the ORB
-  static void  add_TAG_ORB_TYPE(IOP::TaggedComponent&, const omniIOR*);
-  static void  unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent&, omniIOR*);
+  static void  unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent&, omniIOR&);
   static char* dump_TAG_ORB_TYPE(const IOP::TaggedComponent&);
 
-  static void  add_TAG_CODE_SETS(IOP::TaggedComponent&, const omniIOR*);
-  static void  unmarshal_TAG_CODE_SETS(const IOP::TaggedComponent&, omniIOR*);
+  ////
+  static void  unmarshal_TAG_CODE_SETS(const IOP::TaggedComponent&, omniIOR&);
   static char* dump_TAG_CODE_SETS(const IOP::TaggedComponent&);
+  static void  add_TAG_CODE_SETS(const CONV_FRAME::CodeSetComponentInfo&);
+
+  ////
+  static void  unmarshal_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent&,
+                                                   omniIOR&);
+  static char* dump_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent&);
+  static void  add_TAG_ALTERNATE_IIOP_ADDRESS(const IIOP::Address&);
+
+  ////
+  static void  unmarshal_TAG_GROUP(const IOP::TaggedComponent&, omniIOR&);
+  static char* dump_TAG_GROUP(const IOP::TaggedComponent&);
+
+  ////
+  static void  unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent&, 
+					   omniIOR&);
+  static char* dump_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent&);
+  static void  add_TAG_SSL_SEC_TRANS(_CORBA_UShort port,
+				     _CORBA_UShort supports,
+				     _CORBA_UShort requires);
+
+  ///
+  static void  add_IIOP_ADDRESS(const IIOP::Address&);
+  // Add this address to the IIOP profile.
+
+private:
+
+  _CORBA_String_member               pd_repositoryID;
+  IOP::TaggedProfileList_var 	     pd_iopProfiles;
+  _CORBA_Long                        pd_addr_selected_profile_index;
+  GIOP::AddressingDisposition        pd_addr_mode;
+  IORInfo*                           pd_iorInfo;
+  int                                pd_refCount;
+  // Protected by <omni::internalLock>
+
+  omniIOR();
+  omniIOR(const omniIOR&);
+  omniIOR& operator=(const omniIOR&);
 
 };
 
@@ -169,5 +286,6 @@ public:
 private:
   omniIOR* pd_ior;
 };
+
 
 #endif // __OMNIIOR_H__

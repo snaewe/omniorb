@@ -1,3 +1,25 @@
+Wed Apr 18 18:41:35 BST 2001 sll
+================================
+
+- Big checkin with the brand new internal APIs.
+- Scoped where appropriate with the omni namespace.
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/callDescriptor.h
+include/omniORB4/cdrStream.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniInterceptors.h
+include/omniORB4/omniInternal.h
+include/omniORB4/omniORB.h
+include/omniORB4/omniObjRef.h
+include/omniORB4/omniServant.h
+include/omniORB4/omniURI.h
+include/omniORB4/poa.h
+include/omniORB4/poa_defs.h
+include/omniORB4/proxyFactory.h
+include/omniORB4/tcDescriptor.h
+
 Wed Apr 18 18:16:26 BST 2001 sll
 ================================
 

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2001/04/18 17:50:43  sll
+  Big checkin with the brand new internal APIs.
+  Scoped where appropriate with the omni namespace.
+
   Revision 1.2.2.2  2000/09/27 16:57:14  sll
   Replaced marshalling operators for MemBufferedStream and NetBufferedStream
   with just one type for cdrStream.
@@ -183,9 +187,9 @@ private:
 };
 
 
-class _pof_AdapterActivator : public proxyObjectFactory {
+class _pof_AdapterActivator : public _OMNI_NS(proxyObjectFactory) {
 public:
-  inline _pof_AdapterActivator() : proxyObjectFactory(AdapterActivator::_PD_repoId) {}
+  inline _pof_AdapterActivator() : _OMNI_NS(proxyObjectFactory)(AdapterActivator::_PD_repoId) {}
   virtual ~_pof_AdapterActivator();
 
   virtual omniObjRef* newObjRef(omniIOR* ior,
@@ -203,7 +207,7 @@ public:
   virtual CORBA::Boolean unknown_adapter(POA_ptr parent, const char* name) = 0;
 
 protected:
-  virtual _CORBA_Boolean _dispatch(GIOP_S&);
+  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
 
 private:
   virtual void* _ptrToInterface(const char*);
@@ -289,9 +293,9 @@ private:
 };
 
 
-class _pof_ServantManager : public proxyObjectFactory {
+class _pof_ServantManager : public _OMNI_NS(proxyObjectFactory) {
 public:
-  inline _pof_ServantManager() : proxyObjectFactory(ServantManager::_PD_repoId) {}
+  inline _pof_ServantManager() : _OMNI_NS(proxyObjectFactory)(ServantManager::_PD_repoId) {}
   virtual ~_pof_ServantManager();
 
   virtual omniObjRef* newObjRef(omniIOR*,
@@ -308,7 +312,7 @@ public:
 
 
 protected:
-  virtual _CORBA_Boolean _dispatch(GIOP_S&);
+  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
 
 private:
   virtual void* _ptrToInterface(const char*);
@@ -396,9 +400,9 @@ private:
 };
 
 
-class _pof_ServantActivator : public proxyObjectFactory {
+class _pof_ServantActivator : public _OMNI_NS(proxyObjectFactory) {
 public:
-  inline _pof_ServantActivator() : proxyObjectFactory(ServantActivator::_PD_repoId) {}
+  inline _pof_ServantActivator() : _OMNI_NS(proxyObjectFactory)(ServantActivator::_PD_repoId) {}
   virtual ~_pof_ServantActivator();
 
   virtual omniObjRef* newObjRef(omniIOR*,
@@ -417,7 +421,7 @@ public:
   virtual void etherealize(const ObjectId& oid, POA_ptr adapter, Servant serv, CORBA::Boolean cleanup_in_progress, CORBA::Boolean remaining_activations) = 0;
 
 protected:
-  virtual _CORBA_Boolean _dispatch(GIOP_S&);
+  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
 
 private:
   virtual void* _ptrToInterface(const char*);
@@ -507,9 +511,9 @@ private:
 };
 
 
-class _pof_ServantLocator : public proxyObjectFactory {
+class _pof_ServantLocator : public _OMNI_NS(proxyObjectFactory) {
 public:
-  inline _pof_ServantLocator() : proxyObjectFactory(ServantLocator::_PD_repoId) {}
+  inline _pof_ServantLocator() : _OMNI_NS(proxyObjectFactory)(ServantLocator::_PD_repoId) {}
   virtual ~_pof_ServantLocator();
 
   virtual omniObjRef* newObjRef(omniIOR*,
@@ -528,7 +532,7 @@ public:
   virtual void postinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, ServantLocator::Cookie the_cookie, Servant the_servant) = 0;
 
 protected:
-  virtual _CORBA_Boolean _dispatch(GIOP_S&);
+  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
 
 private:
   virtual void* _ptrToInterface(const char*);

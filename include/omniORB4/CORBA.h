@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.13  2001/04/18 17:50:45  sll
+ Big checkin with the brand new internal APIs.
+ Scoped where appropriate with the omni namespace.
+
  Revision 1.2.2.12  2001/04/09 15:18:46  dpg1
  Tweak fixed point to make life easier for omniORBpy.
 
@@ -275,15 +279,12 @@
 
 #include <omniORB4/omniInternal.h>
 
-
 // Forward declarations.
 class omniOrbBoaServant;
-
 
 _CORBA_MODULE CORBA
 
 _CORBA_MODULE_BEG
-
 
   // gcc can't cope with a typedef of void, so this will have to do.
   typedef void* Status;
@@ -2356,6 +2357,39 @@ _CORBA_MODULE_BEG
   typedef _CORBA_Pseudo_Unbounded_Sequence<Policy, Policy_member> PolicyList;
   typedef PolicyList* PolicyList_var;  //??
 
+  //////////////////////////////////////////////////////////////////////
+  ///////////////////////////// Current         ////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  class Current;
+  typedef class Current* Current_ptr;
+  typedef Current_ptr CurrentRef;
+
+  class Current : public Object {
+  public:
+
+    typedef Current*                      _ptr_type;
+    typedef _CORBA_PseudoObj_Var<Current> _var_type;
+
+    static Current_ptr _duplicate(Current_ptr);
+    static Current_ptr _narrow(Object_ptr);
+    static Current_ptr _nil();
+
+    // omniORB internal.
+    static _core_attr const char* _PD_repoId;
+
+  protected:
+    Current(int nil);
+    virtual ~Current();
+
+  private:
+    Current(const Current&);
+    Current& operator=(const Current&);
+  };
+
+  typedef Current::_var_type                            Current_var;
+  typedef _CORBA_PseudoObj_Member<Current, Current_var> Current_member;
+
 
   //////////////////////////////////////////////////////////////////////
   ///////////////////////////// Domain Manager  ////////////////////////
@@ -2418,7 +2452,8 @@ _CORBA_MODULE_BEG
     virtual void impl_shutdown() = 0;
     virtual void destroy() = 0;
 
-    virtual void obj_is_ready(omniOrbBoaServant*, ImplementationDef_ptr p=0)=0;
+    virtual void obj_is_ready(omniOrbBoaServant*, 
+			      ImplementationDef_ptr p=0)=0;
     virtual void obj_is_ready(Object_ptr, ImplementationDef_ptr p=0)=0;
     virtual void dispose(Object_ptr) = 0;
 
@@ -2924,21 +2959,13 @@ _CORBA_MODULE_BEG
 
 _CORBA_MODULE_END
 
-
-#include <omniORB4/omniORB.h>
-#include <omniORB4/proxyFactory.h>
-#include <omniORB4/templatedefns.h>
-#include <omniORB4/corba_operators.h>
-#include <omniORB4/poa.h>
-#include <omniORB4/fixed.h>
-
-
 //?? These really want to be renamed and put elsewhere.
 extern CORBA::Boolean
 _omni_callTransientExceptionHandler(omniObjRef* obj, CORBA::ULong retries,
 				    const CORBA::TRANSIENT& ex);
 extern CORBA::Boolean
-_omni_callCommFailureExceptionHandler(omniObjRef* obj, CORBA::ULong retries,
+_omni_callCommFailureExceptionHandler(omniObjRef* obj,
+				      CORBA::ULong retries,
 				      const CORBA::COMM_FAILURE& ex);
 extern CORBA::Boolean
 _omni_callSystemExceptionHandler(omniObjRef* obj, CORBA::ULong retries,
@@ -2946,6 +2973,14 @@ _omni_callSystemExceptionHandler(omniObjRef* obj, CORBA::ULong retries,
 
 
 extern void _omni_set_NameService(CORBA::Object_ptr);
+
+#include <omniORB4/omniORB.h>
+#include <omniORB4/proxyFactory.h>
+
+#include <omniORB4/templatedefns.h>
+#include <omniORB4/corba_operators.h>
+#include <omniORB4/poa.h>
+#include <omniORB4/fixed.h>
 
 #include <omniORB4/corbaidl_operators.hh>
 

@@ -57,6 +57,7 @@
 
 #include <omniORB4/CORBA.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 // Forward declarations
 union tcDescriptor;
@@ -480,5 +481,6 @@ _0RL_buildDesc_cTypeCode(tcDescriptor& desc, const CORBA::TypeCode_member& data)
   desc.p_TypeCode = (CORBA::TypeCode_member*) &data;
 }
 
+OMNI_NAMESPACE_END(omni)
 
 #endif  // __TCDESCRIPTOR_H__

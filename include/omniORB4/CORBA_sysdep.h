@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.7  2001/04/18 17:50:45  sll
+ Big checkin with the brand new internal APIs.
+ Scoped where appropriate with the omni namespace.
+
  Revision 1.2.2.6  2000/11/15 19:16:30  sll
  Added provision to override default mapping of CORBA::WChar to C++ wchar_t.
 
@@ -629,6 +633,30 @@
 #error "Name conflict: _CORBA_GLOBAL_VARINT is already defined."
 #endif
 
+#ifndef OMNI_NAMESPACE_BEGIN
+#define OMNI_NAMESPACE_BEGIN(name) namespace name {
+#else
+#error "Name conflict: OMNI_NAME_SPACE_BEGIN is already defined."
+#endif
+
+#ifndef OMNI_NAMESPACE_END
+#define OMNI_NAMESPACE_END(name) }
+#else
+#error "Name conflict: OMNI_NAME_SPACE_END is already defined."
+#endif
+
+#ifndef OMNI_USING_NAMESPACE
+#define OMNI_USING_NAMESPACE(name) using namespace name;
+#else
+#error "Name conflict: OMNI_USING_NAMESPACE is already defined."
+#endif
+
+#ifndef _OMNI_NS
+#define _OMNI_NS(x) omni::x
+#else
+#error "Name conflict: _OMNI_NS is already defined."
+#endif
+
 // Integral and enumeration constants are declared in the stub headers as:
 //    e.g.  class A {
 //              static const CORBA::Long AA _init_in_cldecl_( = 4 );
@@ -733,6 +761,30 @@
 #define _CORBA_GLOBAL_VARINT extern _core_attr
 #else
 #error "Name conflict: _CORBA_GLOBAL_VARINT is already defined."
+#endif
+
+#ifndef OMNI_NAMESPACE_BEGIN
+#define OMNI_NAMESPACE_BEGIN(name)
+#else
+#error "Name conflict: OMNI_NAME_SPACE_BEGIN is already defined."
+#endif
+
+#ifndef OMNI_NAMESPACE_END
+#define OMNI_NAMESPACE_END(name)
+#else
+#error "Name conflict: OMNI_NAME_SPACE_END is already defined."
+#endif
+
+#ifndef OMNI_USING_NAMESPACE
+#define OMNI_USING_NAMESPACE(name)
+#else
+#error "Name conflict: OMNI_USING_NAMESPACE is already defined."
+#endif
+
+#ifndef _OMNI_NS
+#define _OMNI_NS(x) x
+#else
+#error "Name conflict: _OMNI_NS is already defined."
 #endif
 
 #ifndef _init_in_decl_

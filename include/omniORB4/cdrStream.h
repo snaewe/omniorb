@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2001/04/18 17:50:44  sll
+  Big checkin with the brand new internal APIs.
+  Scoped where appropriate with the omni namespace.
+
   Revision 1.1.2.8  2001/01/09 17:16:59  dpg1
   New cdrStreamAdapter class to allow omniORBpy to intercept buffer
   management.
@@ -115,7 +119,7 @@ public:
    omni::ptr_arith_t p1 =omni::align_to((omni::ptr_arith_t)s.pd_outb_mkr,align);\
    omni::ptr_arith_t p2 = p1 + sizeof(type);\
    if( (void*)p2 > s.pd_outb_end ) {\
-     if (s.reserveOutputSpace(align,sizeof(type)))\
+     if (s.reserveOutputSpaceForPrimitiveType(align,sizeof(type)))\
        goto again;\
      else {\
        s.pd_outb_mkr = (void*) p2;\
@@ -408,43 +412,13 @@ public:
   // inserted to the output stream. The initial alignment of the data starts
   // at <align>. Return FALSE(0) otherwise.
 
-  inline
-  void copy_to(cdrStream& s, size_t size,
-	       omni::alignment_t align=omni::ALIGN_1)
-  // copy <size> bytes from this stream to the given stream. Both streams
-  // are first moved on to the appropriate alignment.
-  //
-  // This function should be used only if the data block
-  // consists of homogeneous elements of the same alignment as specified
-  // in <align>. Otherwise, the data copied may end up with the wrong
-  // alignment.
-  {
-    if (!checkInputOverrun(1,size,align) ||
-	!s.checkOutputOverrun(1,size,align)) 
-      {
-	_CORBA_marshal_error();
-	// Do not reach here
-      }
-    if (align != omni::ALIGN_1) {
-      alignInput(align);
-      s.alignOutput(align);
-    }
-    while(size) {
-      size_t transfersz = size;
-      if (transfersz > maxFetchInputData(omni::ALIGN_1))
-	transfersz = maxFetchInputData(omni::ALIGN_1);
-      if (transfersz > s.maxReserveOutputSpace(omni::ALIGN_1))
-	transfersz = s.maxReserveOutputSpace(omni::ALIGN_1);
-      if (!transfersz) _CORBA_marshal_error();
-      fetchInputData(omni::ALIGN_1,transfersz);
-      if (s.reserveOutputSpace(omni::ALIGN_1,transfersz)) {
-	memcpy(s.pd_outb_mkr,pd_inb_mkr,transfersz);
-      }
-      s.pd_outb_mkr = (void*)((omni::ptr_arith_t)s.pd_outb_mkr + transfersz);
-      pd_inb_mkr = (void*)((omni::ptr_arith_t)pd_inb_mkr + transfersz);
-      size -= transfersz;
-    }
-  }
+  virtual void copy_to(cdrStream&,int size, 
+		       omni::alignment_t align=omni::ALIGN_1);
+  // From this stream, copy <size> bytes to the argument stream.
+  // The initial alignment starts at <align>.
+  // Derived classes may provided more efficent implementation than the 
+  // default.
+
 
   inline
   void alignInput(omni::alignment_t align)
@@ -468,7 +442,7 @@ public:
       omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_outb_mkr,
 					    align);
       if ((void*)p1 > pd_outb_end) {
-	if (reserveOutputSpace(align,0))
+	if (reserveOutputSpaceForPrimitiveType(align,0))
 	  goto again;
       }
       pd_outb_mkr = (void*)p1;
@@ -505,15 +479,11 @@ protected:
   virtual void fetchInputData(omni::alignment_t align,
 			      size_t required)     = 0;
   // Fetch at least <required> bytes into the input buffer.
+  // <required> must be no more than 8 bytes && align == required!!
   // The data block should start at alignment <align>. 
   // If the space available is less than specified, raise a
   // MARSHAL system exception.
 
-  virtual size_t maxFetchInputData(omni::alignment_t align) const = 0;
-  // Return the maximum size that can be asked with fetchInputData().
-  // The data block should start at alignment <align>.
-  // This value is valid until the next fetchInputData().
-  
   //  Output buffer pointers, the region (*p) that can be written
   //  into is pd_outb_mkr <= p < pd_outb_end.
   //  pd_outb_end and pd_outb_mkr are initialised by reserveOutputSpace().
@@ -522,10 +492,12 @@ protected:
   void* pd_outb_end;
   void* pd_outb_mkr;
 
-  virtual _CORBA_Boolean reserveOutputSpace(omni::alignment_t align,
-					    size_t required) = 0;
+  virtual 
+  _CORBA_Boolean reserveOutputSpaceForPrimitiveType(omni::alignment_t align,
+						    size_t required) = 0;
   // Allocate at least <required> bytes in the output buffer.
   // The data block should start at alignment <align>.
+  // <required> must be no more than 8 bytes && align == required!!
   // Returns TRUE(1) if at least <required> bytes with the starting
   // alignment as specified has been allocated.
   // Returns FALSE(0) if the required space cannot be allocated.
@@ -535,9 +507,14 @@ protected:
   // quietly, it should raise a MARSHAL system exception instead of 
   // returning FALSE.
 
-  virtual size_t maxReserveOutputSpace(omni::alignment_t align) const = 0;
-  // Return the maximum size that can be asked with reserveOutputSpace().
-  // The data block should start at alignment <align>.
+  virtual _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t align,
+						 size_t required) = 0;
+  // Same as reserverOutputSpaceForPrimitiveType, except the following:
+  // 1. The required size can be any size.
+  // 2. The implementation of this function can throw CORBA::BAD_PARAM
+  //    if the nature of the stream makes it impossible to fullfil this
+  //    request. The caller should fall back to use put_octet_array or
+  //    other means instead.
 
   omniCodeSet::TCS_C* pd_tcs_c;
   // Transmission code set convertor for char and string
@@ -656,6 +633,16 @@ public:
   }
 #endif
 
+public:
+  /////////////////////////////////////////////////////////////////////
+  virtual _CORBA_ULong completion();
+  // If an error occurs when a value is marshalled or unmarshalled, a
+  // system exception will be raised. The "completed" member of the
+  // exception must be taken from the return value of this function.
+  // Note: the return value is really of type CORBA::CompletionStatus.
+  // Since this declaration must appear before the CORBA declaration,
+  // we have to live with returning a _CORBA_ULong.
+
 private:
   cdrStream(const cdrStream&);
   cdrStream& operator=(const cdrStream&);
@@ -727,12 +714,18 @@ public:
   _CORBA_Boolean checkOutputOverrun(_CORBA_ULong itemSize,
 				    _CORBA_ULong nItems,
 				    omni::alignment_t align=omni::ALIGN_1);
+  void copy_to(cdrStream&,int size, 
+	       omni::alignment_t align=omni::ALIGN_1);
   void fetchInputData(omni::alignment_t,size_t);
-  size_t maxFetchInputData(omni::alignment_t) const;
-  _CORBA_Boolean reserveOutputSpace(omni::alignment_t,size_t);
-  size_t maxReserveOutputSpace(omni::alignment_t) const;
+
+  _CORBA_Boolean reserveOutputSpaceForPrimitiveType(omni::alignment_t,size_t);
+  _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t,size_t);
+
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;
+
+private:
+  _CORBA_Boolean reserveOutputSpace(omni::alignment_t,size_t);
 };
 
 class cdrEncapsulationStream : public cdrMemoryStream {
@@ -770,13 +763,17 @@ public:
   void put_octet_array(const _CORBA_Octet* b, int size,
 		       omni::alignment_t align=omni::ALIGN_1);
 
-  _CORBA_Boolean reserveOutputSpace(omni::alignment_t align,size_t required);
-
-  size_t maxReserveOutputSpace(omni::alignment_t) const;
+  _CORBA_Boolean reserveOutputSpaceForPrimitiveType(omni::alignment_t align,
+						    size_t required);
+  _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t align,
+					 size_t required);
 
   _CORBA_Boolean checkOutputOverrun(_CORBA_ULong itemSize,
 				    _CORBA_ULong nItems,
 				    omni::alignment_t align=omni::ALIGN_1);
+
+  void copy_to(cdrStream&,int size, 
+	       omni::alignment_t align=omni::ALIGN_1);
 
   void get_octet_array(_CORBA_Octet* b,int size,
 		       omni::alignment_t align=omni::ALIGN_1);
@@ -788,8 +785,6 @@ public:
 
   void fetchInputData(omni::alignment_t,size_t);
 
-  size_t maxFetchInputData(omni::alignment_t) const;
-
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;
 
@@ -799,7 +794,6 @@ private:
   cdrCountingStream(const cdrCountingStream&);
   cdrCountingStream& operator=(const cdrCountingStream&);
 };
-
 
 
 // In some circumstances, for example in omniORBpy, it is necessary to
@@ -839,9 +833,10 @@ protected:
 				    _CORBA_ULong nItems,
 				    omni::alignment_t align=omni::ALIGN_1);
   void fetchInputData(omni::alignment_t align,size_t required);
-  size_t maxFetchInputData(omni::alignment_t align) const;
-  _CORBA_Boolean reserveOutputSpace(omni::alignment_t align, size_t required);
-  size_t maxReserveOutputSpace(omni::alignment_t align) const;
+  _CORBA_Boolean reserveOutputSpaceForPrimitiveType(omni::alignment_t align,
+						    size_t required);
+  _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t align,
+					 size_t required);
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;
 
@@ -863,7 +858,5 @@ private:
     pd_actual.pd_outb_mkr = pd_outb_mkr;
   }
 };
-
-
 
 #endif /* __CDRSTREAM_H__ */
