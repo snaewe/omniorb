@@ -1,3 +1,18 @@
+Mon Jul 26 23:55:25 BST 2004 dgrisby
+====================================
+
+- Support valuetypes in Anys.
+
+include/omniORB4/valueType.h
+include/omniORB4/internal/unknownValue.h  -- new
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/unknownValue.cc   -- new
+src/lib/omniORB/dynamic/valueBase.cc
+src/lib/omniORB/dynamic/valueType.cc
+src/lib/omniORB/omniidl_be/cxx/value.py
+
+
 Fri Jul 23 11:14:43 BST 2004 dgrisby
 ====================================
 

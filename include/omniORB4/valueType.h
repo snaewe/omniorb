@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2004/07/26 22:56:38  dgrisby
+  Support valuetypes in Anys.
+
   Revision 1.1.2.2  2004/07/04 23:53:35  dgrisby
   More ValueType TypeCode and Any support.
 
@@ -40,6 +43,7 @@
 #ifndef __OMNI_VALUETYPE_H__
 #define __OMNI_VALUETYPE_H__
 
+#include <omniORB4/CORBA.h>
 #include <omniORB4/valueFactoryManager.h>
 
 
@@ -64,9 +68,15 @@ public:
   // has type given by <repoId>.
 
   static CORBA::ValueBase* unmarshal(const char* repoId, CORBA::ULong hashval,
+				     CORBA::TypeCode_ptr tc,
 				     cdrStream& stream);
   // Unmarshal a value, in a context where the IDL specifies the value
   // has type given by <repoId>, with hash <hashval>.
+  //
+  // If the TypeCode is present, it is the TypeCode of a value inside
+  // an Any. When this function is called by static stubs, the
+  // TypeCode pointer is zero, not nil, for efficiency and cleanliness
+  // in the stubs.
 
 
   static inline CORBA::ULong hash_id(const char* id)

@@ -5,6 +5,7 @@ ORB_SRCS = \
            valueFactory.cc \
            valueTracker.cc \
            valueType.cc \
+           unknownValue.cc \
            abstractBase.cc \
            any.cc \
            anyStream.cc \

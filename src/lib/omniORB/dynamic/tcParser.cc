@@ -36,6 +36,7 @@
 #include <tcParser.h>
 #include <typecode.h>
 #include <codeSetUtil.h>
+#include <omniORB4/valueType.h>
 
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -257,6 +258,16 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	    f >>= obuf;
 	    break;
 	  }
+	  
+	case CORBA::tk_value:
+	case CORBA::tk_value_box:
+	  {
+	    CORBA::ULong hash = omniValueType::hash_id(tc->id());
+	    CORBA::ValueBase* v = omniValueType::unmarshal(tc->id(), hash,
+							   tc, ibuf);
+	    omniValueType::marshal(v, tc->id(), obuf);
+	    CORBA::remove_ref(v);
+	  }
 
 	default:
 	  OMNIORB_ASSERT(0);
@@ -463,6 +474,16 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	break;
       }
 
+    case CORBA::tk_value:
+    case CORBA::tk_value_box:
+      {
+	CORBA::ULong hash = omniValueType::hash_id(tc->id());
+	CORBA::ValueBase* v = omniValueType::unmarshal(tc->id(), hash,
+						       tc, ibuf);
+	omniValueType::marshal(v, tc->id(), obuf);
+	CORBA::remove_ref(v);
+      }
+
     default:
       OMNIORB_ASSERT(0);
     }
@@ -613,6 +634,15 @@ void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 	    f.PR_setLimits(tc->NP_fixed_digits(), tc->NP_fixed_scale());
 	    f <<= buf;
 	    break;
+	  }
+
+	case CORBA::tk_value:
+	case CORBA::tk_value_box:
+	  {
+	    CORBA::ULong hash = omniValueType::hash_id(tc->id());
+	    CORBA::ValueBase* v = omniValueType::unmarshal(tc->id(), hash,
+							   tc, buf);
+	    CORBA::remove_ref(v);
 	  }
 
 	default:

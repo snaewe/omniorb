@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2004/07/26 22:56:39  dgrisby
+  Support valuetypes in Anys.
+
   Revision 1.1.2.3  2004/07/04 23:53:37  dgrisby
   More ValueType TypeCode and Any support.
 
@@ -74,7 +77,7 @@ CORBA::ValueBase::_NP_marshal(CORBA::ValueBase* v, cdrStream& s)
 CORBA::ValueBase*
 CORBA::ValueBase::_NP_unmarshal(cdrStream& s)
 {
-  return omniValueType::unmarshal(_PD_repoId, 0, s);
+  return omniValueType::unmarshal(_PD_repoId, 0, 0, s);
 }
 
 CORBA::ValueBase::ValueBase() : _pd_magic(_PR_magic) {}

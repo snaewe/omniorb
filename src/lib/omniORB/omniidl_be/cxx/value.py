@@ -218,7 +218,7 @@ void
 @fqname@::_NP_unmarshal(cdrStream& _0s)
 {
   CORBA::ValueBase* _b = omniValueType::unmarshal(@fqname@::_PD_repoId,
-						  @idhash@U, _0s);
+						  @idhash@U, 0, _0s);
   @fqname@* _d = @fqname@::_downcast(_b);
   if (_b && !_d) {
     CORBA::remove_ref(_b);
@@ -1749,7 +1749,7 @@ void
 @fqname@::_NP_unmarshal(cdrStream& _0s)
 {
   CORBA::ValueBase* _b = omniValueType::unmarshal(@fqname@::_PD_repoId,
-						  @idhash@U, _0s);
+						  @idhash@U, 0, _0s);
   @fqname@* _d = @fqname@::_downcast(_b);
   if (_b && !_d) {
     CORBA::remove_ref(_b);
