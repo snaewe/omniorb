@@ -11,12 +11,15 @@
 
 /*
   $Log$
-  Revision 1.4  1997/04/23 13:29:45  sll
-  - If a port number is provided, set socket option SO_REUSEADDR.
-  - Added code to avoid receiving data into the internal buffer that
-    might later found to be misaligned. The code is turned on by UNdefining
-    the macro DO_NOT_AVOID_MISALIGNMENT.
+  Revision 1.5  1997/04/29 16:26:24  ewc
+  Fixed bugs in NT setsockopt()
 
+// Revision 1.4  1997/04/23  13:29:45  sll
+// - If a port number is provided, set socket option SO_REUSEADDR.
+// - Added code to avoid receiving data into the internal buffer that
+//   might later found to be misaligned. The code is turned on by UNdefining
+//   the macro DO_NOT_AVOID_MISALIGNMENT.
+//
 // Revision 1.3  1997/03/26  18:24:56  ewc
 //  Added support for new -ORBtraceLevel option.
 //
@@ -581,9 +584,9 @@ tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketEndpoint *me)
   if (me->port()) {
     int valtrue = 1;
     if (setsockopt(pd_socket,SOL_SOCKET,
-		   SO_REUSEADDR,(char*)&valtrue,sizeof(int)) < 0)
+		   SO_REUSEADDR,(char*)&valtrue,sizeof(int)) == SOCKET_ERROR)
       {
-	close(pd_socket);
+	closesocket(pd_socket);
 	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
       }
   }
