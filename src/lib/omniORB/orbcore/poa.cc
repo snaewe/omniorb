@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.27  2002/01/16 11:31:59  dpg1
+  Race condition in use of registerNilCorbaObject/registerTrackedObject.
+  (Reported by Teemu Torma).
+
   Revision 1.2.2.26  2002/01/15 16:38:13  dpg1
   On the road to autoconf. Dependencies refactored, configure.ac
   written. No makefiles yet.
@@ -319,8 +323,10 @@ PortableServer::POA::_nil()
   static omniOrbPOA* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbPOA();
-    registerNilCorbaObject(_the_nil_ptr);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new omniOrbPOA();
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

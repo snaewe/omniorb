@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.2.2.11  2002/01/16 11:32:00  dpg1
+  Race condition in use of registerNilCorbaObject/registerTrackedObject.
+  (Reported by Teemu Torma).
+
   Revision 1.2.2.10  2001/11/08 16:33:53  dpg1
   Local servant POA shortcut policy.
 
@@ -204,8 +208,10 @@ PortableServer::AdapterActivator::_nil()
   static _objref_AdapterActivator* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new _objref_AdapterActivator();
-    registerNilCorbaObject(_the_nil_ptr);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new _objref_AdapterActivator();
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -385,8 +391,10 @@ PortableServer::ServantManager::_nil()
   static _objref_ServantManager* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantManager();
-    registerNilCorbaObject(_the_nil_ptr);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new _objref_ServantManager();
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -528,8 +536,10 @@ PortableServer::ServantActivator::_nil()
   static _objref_ServantActivator* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantActivator();
-    registerNilCorbaObject(_the_nil_ptr);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new _objref_ServantActivator();
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -793,8 +803,10 @@ PortableServer::ServantLocator::_nil()
   static _objref_ServantLocator* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantLocator();
-    registerNilCorbaObject(_the_nil_ptr);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new _objref_ServantLocator();
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

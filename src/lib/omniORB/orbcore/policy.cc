@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.3.2.5  2002/01/16 11:32:00  dpg1
+  Race condition in use of registerNilCorbaObject/registerTrackedObject.
+  (Reported by Teemu Torma).
+
   Revision 1.3.2.4  2001/09/19 17:26:52  dpg1
   Full clean-up after orb->destroy().
 
@@ -139,8 +143,10 @@ CORBA::Policy::_nil()
   static Policy* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new Policy;
-    registerNilCorbaObject(_the_nil_ptr);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new Policy;
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

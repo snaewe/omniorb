@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2002/01/16 11:32:00  dpg1
+  Race condition in use of registerNilCorbaObject/registerTrackedObject.
+  (Reported by Teemu Torma).
+
   Revision 1.2.2.8  2001/11/13 14:11:46  dpg1
   Tweaks for CORBA 2.5 compliance.
 
@@ -138,8 +142,10 @@ PortableServer::POAManager::_nil()
   static omniOrbPOAManager* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbPOAManager(1 /* is nil */);
-    registerNilCorbaObject(_the_nil_ptr);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new omniOrbPOAManager(1 /* is nil */);
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

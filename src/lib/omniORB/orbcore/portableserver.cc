@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.2.2.11  2002/01/16 11:32:00  dpg1
+  Race condition in use of registerNilCorbaObject/registerTrackedObject.
+  (Reported by Teemu Torma).
+
   Revision 1.2.2.10  2001/10/19 11:05:25  dpg1
   ObjectId to/from wstring
 
@@ -186,8 +190,10 @@ PortableServer::name::_nil()  \
   static name* _the_nil_ptr = 0;  \
   if( !_the_nil_ptr ) {  \
     omni::nilRefLock().lock();  \
-    if( !_the_nil_ptr )  _the_nil_ptr = new name;  \
-    registerNilCorbaObject(_the_nil_ptr); \
+    if( !_the_nil_ptr ) { \
+      _the_nil_ptr = new name;  \
+      registerNilCorbaObject(_the_nil_ptr); \
+    } \
     omni::nilRefLock().unlock();  \
   }  \
   return _the_nil_ptr;  \

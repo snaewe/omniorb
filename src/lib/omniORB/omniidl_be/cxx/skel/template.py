@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.23  2002/01/16 11:31:58  dpg1
+# Race condition in use of registerNilCorbaObject/registerTrackedObject.
+# (Reported by Teemu Torma).
+#
 # Revision 1.3.2.22  2001/11/27 14:35:09  dpg1
 # Context, DII fixes.
 #
@@ -242,8 +246,10 @@ interface_class = """\
   static @objref_name@* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new @objref_name@;
-    registerNilCorbaObject(_the_nil_ptr);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new @objref_name@;
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
