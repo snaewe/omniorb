@@ -1,3 +1,24 @@
+Mon Dec 20 18:06:02 GMT 2004 dgrisby
+====================================
+
+- Minor documentation fixes.
+
+sample.cfg
+doc/tex/omniORB.tex
+
+- Properly set principal length.
+
+include/omniORB4/internal/GIOP_S.h
+
+- Remove entry for obsolete WRONG_TRANSACTION exception.
+
+src/lib/omniORB/orbcore/minorCode.cc
+
+- Avoid race condition on connection disconnection.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Thu Nov  4 14:41:39 GMT 2004 dgrisby
 ====================================
 
