@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.4  2000/01/10 11:01:57  djs
+# Forgot to keep track of names already defined causing a scoping problem.
+#
 # Revision 1.3  2000/01/07 20:31:29  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -91,7 +94,6 @@ def POA_prefix(nested):
 # Control arrives here
 #
 def visitAST(node):
-    #print "yup"
     for n in node.declarations():
         n.accept(self)
 
@@ -171,6 +173,9 @@ def template(env, node, nested = self.__nested):
                 param_id = tyutil.mapID(parameter.identifier())
                 signature.append(param_type_name + " " + param_id)
                 call.append(param_id)
+
+                #print "env = " + str(env)
+                #print "name " + param_type_name
 
             if has_return_value:
                 return_str = "return "
@@ -306,5 +311,6 @@ def visitException(node):
     pass
 def visitTypedef(node):
     for d in node.declarators():
-        add(tyutil.name(d.scopedName()))
+        add(d.identifier())
+        #add(tyutil.name(d.scopedName()))
     pass

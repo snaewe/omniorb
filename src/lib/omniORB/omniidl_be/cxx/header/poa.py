@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  2000/01/10 11:01:56  djs
+# Forgot to keep track of names already defined causing a scoping problem.
+#
 # Revision 1.6  2000/01/07 20:31:29  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -76,6 +79,7 @@ self.__nested = 0
 self.__environment = name.Environment()
 
 def addName(name):
+    #print "add " + name + " to " + str(self.__environment)
     try:
         self.__environment.add(name)
     except KeyError:
@@ -177,20 +181,24 @@ public:
 #    leave()
 
 def visitTypedef(node):
-    return
-    scope = currentScope()
-    
-    aliasType = node.aliasType()
-    derefType = tyutil.deref(aliasType)
-    base = tyutil.principalID(aliasType, scope)
     for d in node.declarators():
-        name = tyutil.mapID(d.identifier())
-        if tyutil.isObjRef(derefType):
-            stream.out("""\
-typedef @POA_prefix@@base@ @POA_prefix@@name@;""",
-                       POA_prefix = POA_prefix(),
-                       base = base,
-                       name = name)    
+        addName(d.identifier())
+
+
+    return
+    #scope = currentScope()
+    # 
+    #aliasType = node.aliasType()
+    #derefType = tyutil.deref(aliasType)
+    #base = tyutil.principalID(aliasType, scope)
+    #for d in node.declarators():
+    #    name = tyutil.mapID(d.identifier())
+    #    if tyutil.isObjRef(derefType):
+    #        stream.out("""\
+#typedef @POA_prefix@@base@ @POA_prefix@@name@;""",
+    #                   POA_prefix = POA_prefix(),
+    #                   base = base,
+    #                   name = name)    
     
 
 def visitEnum(node):
