@@ -118,8 +118,8 @@ AST_PredefinedType::dump( std:: ostream &o)
  * Data accessors
  */
 
-const AST_PredefinedType::PredefinedType
-AST_PredefinedType::pt()
+AST_PredefinedType::PredefinedType
+AST_PredefinedType::pt() const
 {
   return pd_pt;
 }
