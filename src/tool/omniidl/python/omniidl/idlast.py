@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/11/01 20:19:55  dpg1
+# Support for union switch types declared inside the switch statement.
+#
 # Revision 1.4  1999/11/01 16:39:01  dpg1
 # Small fixes and cosmetic changes.
 #
@@ -355,12 +358,13 @@ class UnionCase (Decl):
 class Union (Decl, DeclRepoId):
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
-                 switchType, recursive):
+                 switchType, constrType, recursive):
 
         Decl.__init__(self, file, line, mainFile, pragmas)
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__switchType = switchType
+        self.__constrType = constrType
         self.__recursive  = recursive
         #print line, "Union init:", identifier
 
@@ -370,6 +374,9 @@ class Union (Decl, DeclRepoId):
     def accept(self, visitor): visitor.visitUnion(self)
 
     def switchType(self): return self.__switchType
+
+    # True if the switch type is declared inside the switch!
+    def constrType(self): return self.__constrType
     def cases(self):      return self.__cases
 
     # True if the union is recursive

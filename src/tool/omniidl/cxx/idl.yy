@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/11/01 20:19:57  dpg1
+// Support for union switch types declared inside the switch statement.
+//
 // Revision 1.2  1999/10/29 15:41:31  dpg1
 // DeclaredType() now takes extra DeclRepoId* argument.
 //
@@ -277,7 +280,7 @@ ValueAbs* valueabs_hack = 0;
 %type <member_val> 		    member
 %type <union_val> 		    union_type
 %type <union_val> 		    union_header
-%type <type_val> 		    switch_type_spec
+%type <type_spec_val> 		    switch_type_spec
 %type <union_case_val> 		    switch_body
 %type <union_case_val> 		    case_plus
 %type <union_case_val> 		    case
@@ -1031,13 +1034,14 @@ member:
 
 union_type:
     union_header SWITCH '(' switch_type_spec ')' '{' switch_body '}' {
-      $1->finishConstruction($4, $7);
+      $1->finishConstruction($4->type(), $4->constr(), $7);
+      delete $4;
       $$ = $1;
     }
   | union_header error {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in union declaration");
-      $1->finishConstruction(0, 0);
+      $1->finishConstruction(0, 0, 0);
       $$ = $1;
     }
     ;
@@ -1049,12 +1053,13 @@ union_header:
     ;
 
 switch_type_spec:
-    integer_type { $$ = $1; }
-  | char_type    { $$ = $1; }
-  | boolean_type { $$ = $1; }
-  | enum_type    { $$ = $1->thisType(); }
+    integer_type { $$ = new TypeSpec($1, 0); }
+  | char_type    { $$ = new TypeSpec($1, 0); }
+  | boolean_type { $$ = new TypeSpec($1, 0); }
+  | enum_type    { $$ = new TypeSpec($1->thisType(), 1); }
   | scoped_name {
-      $$ = IdlType::scopedNameToType(currentFile, yylineno, $1);
+      $$ = new TypeSpec(IdlType::scopedNameToType(currentFile, yylineno, $1),
+			0);
     }
     ;
 

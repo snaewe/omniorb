@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4  1999/11/01 20:19:56  dpg1
+// Support for union switch types declared inside the switch statement.
+//
 // Revision 1.3  1999/10/29 15:43:15  dpg1
 // Code to detect recursive structs and unions.
 //
@@ -321,7 +324,11 @@ DumpVisitor::
 visitUnion(Union* u)
 {
   printf("union %s switch (", u->identifier());
-  u->switchType()->accept(*this);
+
+  if (u->constrType())
+    ((DeclaredType*)u->switchType())->decl()->accept(*this);
+  else
+    u->switchType()->accept(*this);
   printf(") { // RepoId = %s%s\n", u->repoId(),
 	 u->recursive() ? " recursive" : "");
   ++indent_;

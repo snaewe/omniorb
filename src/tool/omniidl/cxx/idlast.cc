@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6  1999/11/01 20:19:57  dpg1
+// Support for union switch types declared inside the switch statement.
+//
 // Revision 1.5  1999/11/01 16:38:40  dpg1
 // Missed an update when adding recursive union detection.
 //
@@ -934,6 +937,7 @@ Union(const char* file, int line, _CORBA_Boolean mainFile,
   : Decl(D_UNION, file, line, mainFile),
     DeclRepoId(identifier),
     switchType_(0),
+    constrType_(0),
     cases_(0),
     recursive_(0),
     finished_(0)
@@ -996,11 +1000,13 @@ Union::
 
 void
 Union::
-finishConstruction(IdlType* switchType, UnionCase* cases)
+finishConstruction(IdlType* switchType, _CORBA_Boolean constrType,
+		   UnionCase* cases)
 {
   if (!switchType) return;
 
   switchType_ = switchType;
+  constrType_ = constrType;
   cases_      = cases;
   finished_   = 1;
 

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5  1999/11/01 20:19:56  dpg1
+// Support for union switch types declared inside the switch statement.
+//
 // Revision 1.4  1999/11/01 10:05:01  dpg1
 // New file attribute to AST.
 //
@@ -642,6 +645,7 @@ public:
 
   // Queries
   IdlType*       switchType() const { return switchType_; }
+  _CORBA_Boolean constrType() const { return constrType_; }
   UnionCase*     cases()      const { return cases_; }
   IdlType*       thisType()   const { return thisType_; }
   _CORBA_Boolean recursive()  const { return recursive_; }
@@ -649,11 +653,13 @@ public:
 
   void accept(AstVisitor& visitor) { visitor.visitUnion(this); }
 
-  void finishConstruction(IdlType* switchType, UnionCase* cases);
+  void finishConstruction(IdlType* switchType, _CORBA_Boolean constrType,
+			  UnionCase* cases);
   void setRecursive() { recursive_ = 1; }
 
 private:
   IdlType*       switchType_;
+  _CORBA_Boolean constrType_;
   UnionCase*     cases_;
   IdlType*       thisType_;
   _CORBA_Boolean recursive_;
