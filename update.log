@@ -1,3 +1,46 @@
+Wed Jun 13 20:11:20 BST 2001 sll
+================================
+
+- Minor updates to make the ORB compiles with MSVC++.
+
+external_merge/mk/win32.mk
+include/omniAsyncInvoker.h
+include/omniORB4/cdrStream.h
+include/omniORB4/codeSets.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniTransport.h
+src/lib/omniAsyncInvoker/dir.mk
+src/lib/omniAsyncInvoker/invoker.cc
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/serverRequest.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/include/giopRope.h
+src/lib/omniORB/include/giopServer.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/include/libcWrapper.h
+src/lib/omniORB/include/localIdentity.h
+src/lib/omniORB/include/omniIdentity.h
+src/lib/omniORB/orbcore/cdrStreamAdapter.cc
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/corbaFixed.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Wed Jun 13 18:22:22 BST 2001 sll
 ================================
 
