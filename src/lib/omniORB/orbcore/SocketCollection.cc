@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.26  2005/03/10 11:28:29  dgrisby
+  Race condition between setSelectable / clearSelectable.
+
   Revision 1.1.2.25  2004/10/17 20:14:32  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -312,7 +315,7 @@ SocketCollection::~SocketCollection()
 /////////////////////////////////////////////////////////////////////////
 void
 SocketCollection::setSelectable(SocketHandle_t sock, 
-				CORBA::Boolean now,
+				int            now,
 				CORBA::Boolean data_in_buffer,
 				CORBA::Boolean hold_lock) {
 
@@ -321,9 +324,7 @@ SocketCollection::setSelectable(SocketHandle_t sock,
     return;
 #endif
 
-  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_fdset_lock, hold_lock);
-
-  if (!hold_lock) pd_fdset_lock.lock();
+  omni_optional_lock l(pd_fdset_lock, hold_lock, hold_lock);
 
   if (data_in_buffer && !FD_ISSET(sock,&pd_fdset_dib)) {
     pd_n_fdset_dib++;
@@ -331,6 +332,9 @@ SocketCollection::setSelectable(SocketHandle_t sock,
   }
 
   if (!FD_ISSET(sock,&pd_fdset_1)) {
+    if (now == 2) {
+      return;
+    }
     pd_n_fdset_1++;
     FD_SET(sock,&pd_fdset_1);
   }
@@ -353,7 +357,6 @@ SocketCollection::setSelectable(SocketHandle_t sock,
       pd_select_cond.signal();
     }
   }
-  if (!hold_lock) pd_fdset_lock.unlock();
 }
 
 /////////////////////////////////////////////////////////////////////////

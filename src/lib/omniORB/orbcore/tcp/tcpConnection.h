@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2005/03/10 11:28:28  dgrisby
+  Race condition between setSelectable / clearSelectable.
+
   Revision 1.1.2.8  2004/04/08 10:02:22  dgrisby
   In thread pool mode, close connections that will not be selectable.
 
@@ -83,7 +86,7 @@ public:
 
   const char* peeraddress();
 
-  void setSelectable(CORBA::Boolean now = 0,CORBA::Boolean data_in_buffer = 0);
+  void setSelectable(int now = 0,CORBA::Boolean data_in_buffer = 0);
 
   void clearSelectable();
 

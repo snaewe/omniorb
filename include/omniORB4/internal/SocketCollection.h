@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.22  2005/03/10 11:28:30  dgrisby
+  Race condition between setSelectable / clearSelectable.
+
   Revision 1.1.2.21  2004/10/18 11:47:02  dgrisby
   accept() error handling didn't work on MacOS X.
 
@@ -306,13 +309,15 @@ protected:
   // pd_fdset_lock.
 
 public:
-  void setSelectable(SocketHandle_t sock, CORBA::Boolean now,
+  void setSelectable(SocketHandle_t sock, int now,
 		     CORBA::Boolean data_in_buffer,
 		     CORBA::Boolean hold_lock=0);
   // Indicates that this socket should be watched by a select()
   // so that any new data arriving on the connection will be noted.
   // If now == 1, immediately make this socket part of the select
-  // set.
+  // set (if the platforms allows it).
+  // If now == 2, immediately make this connection part of the select
+  // set, but only if it is already marked selectable.
   // If data_in_buffer == 1, treat this socket as if there are
   // data available from the connection already.
   // If hold_lock == 1, pd_fdset_lock is already held.

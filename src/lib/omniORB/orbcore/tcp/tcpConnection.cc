@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2005/03/10 11:28:28  dgrisby
+  Race condition between setSelectable / clearSelectable.
+
   Revision 1.1.2.16  2005/02/23 12:27:31  dgrisby
   Another race in setSelectable with connection shutdown. Thanks Peter
   Klotz.
@@ -370,7 +373,7 @@ tcpConnection::~tcpConnection() {
 
 /////////////////////////////////////////////////////////////////////////
 void
-tcpConnection::setSelectable(CORBA::Boolean now,
+tcpConnection::setSelectable(int now,
 			     CORBA::Boolean data_in_buffer) {
 
   pd_belong_to->setSelectable(pd_socket,now,data_in_buffer);

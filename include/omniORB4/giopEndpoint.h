@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2005/03/10 11:28:30  dgrisby
+  Race condition between setSelectable / clearSelectable.
+
   Revision 1.1.4.9  2004/04/08 10:02:18  dgrisby
   In thread pool mode, close connections that will not be selectable.
 
@@ -96,12 +99,14 @@ public:
   virtual const char* peeraddress() = 0;
 
 
-  virtual void setSelectable(_CORBA_Boolean now = 0,
+  virtual void setSelectable(int now = 0,
 			     _CORBA_Boolean data_in_buffer = 0) = 0;
   // Indicates that this connection should be watched by a select()
   // so that any new data arriving on the connection will be noted.
   // If now == 1, immediately make this connection part of the select
-  // set.
+  // set (if the platforms allows it).
+  // If now == 2, immediately make this connection part of the select
+  // set, but only if it is already marked selectable.
   // If data_in_buffer == 1, treat this connection as if there are
   // data available from the connection already.
 

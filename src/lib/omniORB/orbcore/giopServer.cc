@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.36  2005/03/10 11:28:29  dgrisby
+  Race condition between setSelectable / clearSelectable.
+
   Revision 1.22.2.35  2005/02/23 12:27:31  dgrisby
   Another race in setSelectable with connection shutdown. Thanks Peter
   Klotz.
@@ -1043,9 +1046,9 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       }
     }
 
-    // Connection is selectable now
+    // If connection is selectable, it's selectable now
     if (!conn->pd_dying)
-    conn->setSelectable(1);
+      conn->setSelectable(2);
 
     // Worker is no longer needed.
     CORBA::Boolean dying = 0;
@@ -1514,7 +1517,7 @@ OMNI_NAMESPACE_END(omni)
 //        - setSelectable
 //
 //     notifyWkDone()
-//        - setSelectable(1) if n worker == 1.
+//        - setSelectable(2) if n worker == 1.
 //
 
 ////////////////////////////////////////////////////////////////////////////

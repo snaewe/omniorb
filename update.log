@@ -1,3 +1,20 @@
+Thu Mar 10 11:20:41 GMT 2005 dgrisby
+====================================
+
+- Race condition between setSelectable / clearSelectable.
+
+include/omniORB4/giopEndpoint.h
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.h
+
+
 Thu Mar  3 12:55:09 GMT 2005 dgrisby
 ====================================
 
