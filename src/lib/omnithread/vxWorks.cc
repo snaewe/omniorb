@@ -6,6 +6,9 @@
 // Notes:		 Munching strategy is imperative
 //////////////////////////////////////////////////////////////////////////////
 // $Log$
+// Revision 1.1.2.3  2004/04/30 15:01:25  dgrisby
+// Fix to dummy thread on vxWorks. Thanks Gary Block.
+//
 // Revision 1.1.2.2  2003/11/05 15:42:39  dgrisby
 // vxWorks omnithread fixes from Jochen Gern.
 //
@@ -584,18 +587,22 @@ void omni_thread::common_constructor(void* arg, priority_t pri, int det)
 //
 omni_thread::~omni_thread(void)
 {
-	DBG_TRACE(cout<<"omni_thread::~omni_thread for thread "<<id()<<endl);
+      DBG_TRACE(cout<<"omni_thread::~omni_thread for thread "<<id()<<endl);
 
     if (_values) {
         for (key_t i=0; i < _value_alloc; i++) {
-	    if (_values[i]) {
-	        delete _values[i];
-	    }
+          if (_values[i]) {
+              delete _values[i];
+          }
         }
-	delete [] _values;
+      delete [] _values;
     }
 
-	delete running_cond;
+    // glblock -- added this to prevent problem with unitialized running_cond
+    if(running_cond)
+      {
+        delete running_cond;
+      }
 }
 
 
@@ -926,22 +933,30 @@ class omni_thread_dummy : public omni_thread {
 public:
   inline omni_thread_dummy() : omni_thread()
   {
+    // glblock -- added this to prevent problem with unitialized
+    // running_cond the dummy thread never uses this and we dont want
+    // the destructor to delete it.  vxWorks compiler seems to not set
+    // unitialized vars to NULL.
+    running_cond = NULL;
+
     _dummy = 1;
     _state = STATE_RUNNING;
 
-	// Adjust data members of this instance
-	tid = taskIdSelf();
-
-	// Set the thread values so it can be recongnised as a omni_thread
-	// Set the id last can possibly prevent race condition
-	taskTcb(tid)->spare2 = (int)this;
-	taskTcb(tid)->spare1 = OMNI_THREAD_ID;
-   }
+    // Adjust data members of this instance
+    tid = taskIdSelf();
+    DBG_TRACE(cout<<"created dummy "<<(void*)tid<<endl);
+    // Set the thread values so it can be recongnised as a omni_thread
+    // Set the id last can possibly prevent race condition
+    taskTcb(tid)->spare2 = (int)this;
+    taskTcb(tid)->spare1 = OMNI_THREAD_ID;
+  }
   inline ~omni_thread_dummy()
   {
-	taskTcb(taskIdSelf())->spare1 = 0;
+    DBG_TRACE(cout<<"omni thread dummy destructor " <<endl);
+    taskTcb(taskIdSelf())->spare1 = 0;
   }
 };
+
 
 omni_thread*
 omni_thread::create_dummy()
