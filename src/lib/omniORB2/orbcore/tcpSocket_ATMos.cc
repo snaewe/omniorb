@@ -31,9 +31,13 @@
 
 /*
   $Log$
-  Revision 1.8  1997/05/06 15:28:48  sll
-  Public release.
+  Revision 1.9  1997/08/21 22:02:02  sll
+  - minor cleanup to get rid of purify's warnings.
+  - updated to match up with the new dtor of IIOP::ProfileBody.
 
+// Revision 1.8  1997/05/06  15:28:48  sll
+// Public release.
+//
   */
 
 /*********************************************************************/
@@ -182,7 +186,9 @@ else
    pd_tx_begin  = pd_tx_end = pd_tx_reserved_end = pd_tx_buffer;
    pd_rx_buffer = (void *) new char[tcpSocketStrand::buffer_size];
    pd_rx_begin = pd_rx_end = pd_rx_received_end = pd_rx_buffer;
-   return;
+  // Get rid of purify warning?
+  memset(pd_tx_buffer, 0, tcpSocketStrand::buffer_size);
+  return;
 }
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketRope *r,
@@ -195,6 +201,8 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketRope *r,
   pd_tx_begin  = pd_tx_end = pd_tx_reserved_end = pd_tx_buffer;
   pd_rx_buffer = (void *) new char[tcpSocketStrand::buffer_size];
   pd_rx_begin = pd_rx_end = pd_rx_received_end = pd_rx_buffer;
+  // Get rid of purify warning?
+  memset(pd_tx_buffer, 0, tcpSocketStrand::buffer_size);
   return;
 }
 
@@ -899,11 +907,15 @@ tcpSocketRope::iopProfile(const _CORBA_Octet *objkey,const size_t objkeysize,
   b.iiop_version.major = IIOP::current_major;
   b.iiop_version.minor = IIOP::current_minor;
   if (is_passive()) {
-    b.host = pd_endpoint.me->host();
+    CORBA::Long l = strlen((char*)pd_endpoint.me->host()) + 1;
+    b.host = new CORBA::Char [l];
+    memcpy((void*)b.host,(void*)pd_endpoint.me->host(),l);
     b.port = pd_endpoint.me->port();
   }
   else {
-    b.host = pd_endpoint.remote->host();
+    CORBA::Long l = strlen((char*)pd_endpoint.remote->host()) + 1;
+    b.host = new CORBA::Char [l];
+    memcpy((void*)b.host,(void*)pd_endpoint.remote->host(),l);
     b.port = pd_endpoint.remote->port();
   }
   b.object_key.length((CORBA::ULong)objkeysize);
