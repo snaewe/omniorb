@@ -1,5 +1,5 @@
-ifdef UnixArchitecture
-SUBDIRS += omniNames
+ifndef ATMosArchitecture 
+SUBDIRS = omniNames utils
 endif
 
 all::
