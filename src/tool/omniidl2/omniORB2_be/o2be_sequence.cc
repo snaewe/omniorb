@@ -10,9 +10,15 @@
 
 /*
   $Log$
-  Revision 1.3  1997/02/17 18:13:43  ewc
-  Added support for Windows NT.
+  Revision 1.4  1997/03/10 16:44:33  sll
+  - Generate T_var types using the new template _CORBA_Sequence_Var.
+  - New member function out_adptarg_name() to return the name of the
+    adaptation class. This class is used for passing variable length
+    arrays as OUT arguments.
 
+// Revision 1.3  1997/02/17  18:13:43  ewc
+// Added support for Windows NT.
+//
 // Revision 1.2  1997/01/13  15:25:34  sll
 // New member function produce_typedef_hdr(). Called when a typedef
 // declaration is encountered.
@@ -119,6 +125,7 @@
 #define SEQUENCE_TEMPLATE_BOUNDED                  "_CORBA_Bounded_Sequence"
 #define SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT "_CORBA_Unbounded_Sequence_w_FixSizeElement"
 #define SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT "_CORBA_Bounded_Sequence_w_FixSizeElement"
+#define SEQUENCE_TEMPLATE_ADPT_CLASS "_CORBA_Sequence_OUT_arg"
 
 static size_t astExpr2val(AST_Expression *v);
 
@@ -236,6 +243,8 @@ o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
     default:
     break;
   }
+
+  pd_seq_baseclass_name = baseclassname;
 
   if (s_max)
     {
@@ -547,14 +556,29 @@ o2be_sequence::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 {
 #ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
   IND(s); s << "typedef " << seq_template_name() << " " << tdef->uqname() << ";\n";
-  IND(s); s << "typedef _CORBA_ConstrType_Variable_Var<"
-	    << tdef->uqname() << "> " 
+  IND(s); s << "typedef _CORBA_Sequence_Var<"
+	    << tdef->uqname() << ", " << seq_member_name() <<  " > " 
 	    << tdef->uqname() << "_var;\n\n";
 #else
   IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
   IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n\n";
 #endif
 }
+
+const char*
+o2be_sequence::out_adptarg_name(o2be_typedef* tdef) const
+{
+  char* p = new char[strlen(SEQUENCE_TEMPLATE_ADPT_CLASS)+strlen("<, >")+
+		     strlen(tdef->fqname())*2+strlen("_var")+1];
+  strcpy(p,SEQUENCE_TEMPLATE_ADPT_CLASS);
+  strcat(p,"<");
+  strcat(p,tdef->fqname());
+  strcat(p,",");
+  strcat(p,tdef->fqname());
+  strcat(p,"_var >");
+  return p;
+}
+
 
 char *
 o2be_sequence::internal_produce_seqname(AST_Decl *d,enum seqnametype stype)
