@@ -160,6 +160,17 @@ DsiObject::dispatch(GIOP_S& s,const char *op, CORBA::Boolean response_expected)
   return 1;
 }
 
+
+void*
+DsiObject::_widenFromTheMostDerivedIntf(const char* type_id,
+					_CORBA_Boolean is_cxx_type_id)
+{
+  if( is_cxx_type_id )  return 0;
+  if( !type_id )  return (CORBA::Object_ptr) this;
+  if( strcmp(type_id, NP_IRRepositoryId()) )  return 0;
+  return (DsiObject_ptr) this;
+}
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////// DynamicImplementation ///////////////////////
 //////////////////////////////////////////////////////////////////////
