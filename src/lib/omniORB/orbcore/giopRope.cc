@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.24  2003/06/02 09:28:22  dgrisby
+  Segfault in log message when throwing an exception in an interceptor.
+
   Revision 1.1.4.23  2003/02/17 01:20:00  dgrisby
   Avoid deadlock with bidir connection shutdown.
 
@@ -411,9 +414,18 @@ giopRope::releaseClient(IOP_C* iop_c) {
     s->state(giopStrand::DYING);
     if (omniORB::trace(30)) {
       omniORB::logger l;
-      l << "Unexpected error encountered in talking to the server "
-	<< s->connection->peeraddress()
-	<< " , the connection is closed immediately.\n";
+
+      if (s->connection) {
+	l << "Unexpected error encountered in talking to the server "
+	  << s->connection->peeraddress()
+	  << " . The connection is closed immediately.\n";
+      }
+      else {
+	OMNIORB_ASSERT(s->address);
+	l << "Unexpected error encountered before talking to the server "
+	  << s->address->address()
+	  << " . No connection was opened.\n";
+      }
     }
   }
 

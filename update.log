@@ -1,3 +1,11 @@
+Wed May 28 16:48:06 BST 2003 dgrisby
+====================================
+
+- Segfault in log message when throwing an exception in an interceptor.
+
+src/lib/omniORB/orbcore/giopRope.cc
+
+
 Wed May 28 10:57:22 BST 2003 dgrisby
 ====================================
 
