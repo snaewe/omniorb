@@ -47,7 +47,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omniNilDynAny : public virtual DynamicAny::DynAny {
 public:
-  omniNilDynAny() : DynamicAny::DynAny(1) {}
+  omniNilDynAny() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
   virtual CORBA::TypeCode_ptr type() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -381,7 +381,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omniNilDynFixed : public DynamicAny::DynFixed, public omniNilDynAny {
 public:
-  omniNilDynFixed() : DynamicAny::DynAny(1) {}
+  omniNilDynFixed() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
   virtual char* get_value() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -428,7 +428,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omniNilDynEnum : public DynamicAny::DynEnum, public omniNilDynAny {
 public:
-  omniNilDynEnum() : DynamicAny::DynAny(1) {}
+  omniNilDynEnum() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
   virtual char* get_as_string() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -481,7 +481,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omniNilDynStruct : public DynamicAny::DynStruct, public omniNilDynAny {
 public:
-  omniNilDynStruct() : DynamicAny::DynAny(1) {}
+  omniNilDynStruct() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
   virtual char*  current_member_name() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -542,7 +542,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omniNilDynUnion : public DynamicAny::DynUnion, public omniNilDynAny {
 public:
-  omniNilDynUnion() : DynamicAny::DynAny(1) {}
+  omniNilDynUnion() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
   virtual DynamicAny::DynAny_ptr get_discriminator() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -618,7 +618,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omniNilDynSequence : public DynamicAny::DynSequence, public omniNilDynAny {
 public:
-  omniNilDynSequence() : DynamicAny::DynAny(1) {}
+  omniNilDynSequence() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
   virtual CORBA::ULong get_length() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -678,7 +678,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omniNilDynArray : public DynamicAny::DynArray, public omniNilDynAny {
 public:
-  omniNilDynArray() : DynamicAny::DynAny(1) {}
+  omniNilDynArray() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
   virtual DynamicAny::AnySeq* get_elements() {
     _CORBA_invoked_nil_pseudo_ref();

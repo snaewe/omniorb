@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  2001/10/17 18:51:51  dpg1
+ Fix inevitable Windows problems.
+
  Revision 1.1.2.1  2001/10/17 16:44:05  dpg1
  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -115,8 +118,8 @@ class DynAnyImplBase : public virtual DynamicAny::DynAny
 {
 public:
   DynAnyImplBase(TypeCode_base* tc, int nodetype, CORBA::Boolean is_root)
-    : DynamicAny::DynAny(0), pd_tc(tc), pd_refcount(1),
-      pd_is_root(is_root), pd_destroyed(0)
+    : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(0),
+      pd_tc(tc), pd_refcount(1), pd_is_root(is_root), pd_destroyed(0)
   {}
   // <tc> is consumed.
 
@@ -651,8 +654,10 @@ protected:
   // and the component is of the type expected.
   //  Must hold DynAnyImplBase::lock.
 
+public:
   enum SeqLocation { SEQ_HERE, SEQ_COMPONENT };
 
+protected:
   virtual SeqLocation prepareSequenceWrite(CORBA::TCKind kind,
 					   CORBA::ULong len) = 0;
   // Used by insert_..._seq functions. Check if a sequence with the
@@ -1266,7 +1271,8 @@ inline DynUnionImpl* ToDynUnionImpl(DynamicAny::DynAny_ptr p)
 class DynAnyFactoryImpl : public DynamicAny::DynAnyFactory
 {
 public:
-  DynAnyFactoryImpl() : DynamicAny::DynAnyFactory(0), pd_refCount(1) {}
+  DynAnyFactoryImpl() :
+    OMNIORB_BASE_CTOR(DynamicAny::)DynAnyFactory(0), pd_refCount(1) {}
 
   virtual ~DynAnyFactoryImpl();
 

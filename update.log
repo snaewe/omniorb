@@ -1,3 +1,13 @@
+Wed Oct 17 19:47:21 BST 2001 dpg1
+=================================
+
+- Fix inevitable Windows problems.
+
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/dynAnyNil.cc
+src/lib/omniORB/include/dynAnyImpl.h
+
+
 Wed Oct 17 17:18:14 BST 2001 dpg1
 =================================
 
