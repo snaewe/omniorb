@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.8  1998/08/19 15:51:01  sll
+  o2be_name::VarToken is now replaced by a better name
+  o2be_name::variable_qualifier.
+
   Revision 1.7  1998/08/13 22:36:24  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available
@@ -78,7 +82,7 @@ o2be_constant::produce_hdr(std::fstream &s)
     intfconst = 1;
   }
 
-  IND(s); s << VarToken(*this);
+  IND(s); s << variable_qualifier();
   AST_Expression::ExprType etype = et();
   switch (etype) {
   case AST_Expression::EV_short:
@@ -190,14 +194,14 @@ o2be_constant::produce_skel(std::fstream &s)
     IND(s); s << (initializer?initializer:"") 
 	      << typestr << " " << fqname() << " = " << quote;
     constant_value()->dump(s);
-    s << quote << (initializer?" )":"") << ";\n";
+    s << quote << (initializer?"; )":";") << "\n";
   }
   else {
     if (initializer) {
       IND(s); s << (initializer?initializer:"") 
 		<< typestr << " " << fqname() << " = " << quote;
       constant_value()->dump(s);
-      s << quote << " );\n";
+      s << quote << "; )\n";
     }
     else {
       s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
@@ -226,7 +230,7 @@ o2be_constant::produce_skel(std::fstream &s)
       IND(s); s << (initializer?initializer:"") 
 		<< typestr << " " << fqname() << " = " << quote;
       constant_value()->dump(s);
-      s << quote << (initializer?" )":"") << ";\n";
+      s << quote << (initializer?"; )":";") << "\n";
       s << "#endif\n";
     }
   }
