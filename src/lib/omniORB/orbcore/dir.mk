@@ -181,6 +181,8 @@ ifndef OMNIORB2_IDL_FPATH
 OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
 endif
 
+ifndef BuildWin32DebugLibraries
+
 Naming.hh NamingSK.cc:	Naming.idl
 	-if [ "$^" != Naming.idl ]; then $(CP) $^ . ; fi
 	$(OMNIORB2_IDL_FPATH) Naming.idl
@@ -188,6 +190,8 @@ Naming.hh NamingSK.cc:	Naming.idl
 omniLifeCycle.hh omniLifeCycleSK.cc: omniLifeCycle.idl
 	-if [ "$^" != omniLifeCycle.idl ]; then $(CP) $^ . ; fi
 	$(OMNIORB2_IDL_FPATH) omniLifeCycle.idl
+
+endif
 
 clean::
 	$(RM) $(lib) NamingSK.cc omniLifeCycleSK.cc
