@@ -201,6 +201,9 @@ RequestImpl::env()
 CORBA::ExceptionList_ptr
 RequestImpl::exceptions()
 {
+  if( CORBA::is_nil(pd_exceptions) )
+    pd_exceptions = new ExceptionListImpl();
+
   return pd_exceptions;
 }
 
@@ -208,6 +211,9 @@ RequestImpl::exceptions()
 CORBA::ContextList_ptr
 RequestImpl::contexts()
 {
+  if( CORBA::is_nil(pd_contexts) )
+    pd_contexts = new ContextListImpl();
+
   return pd_contexts;
 }
 
