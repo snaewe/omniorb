@@ -1,3 +1,12 @@
+Thu Mar  3 12:55:09 GMT 2005 dgrisby
+====================================
+
+- Minor log output clean-up. Thanks Peter Klotz.
+
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Thu Mar  3 12:44:46 GMT 2005 dgrisby
 ====================================
 

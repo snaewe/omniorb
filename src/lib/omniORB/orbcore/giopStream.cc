@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.29  2005/03/03 12:55:55  dgrisby
+  Minor log output clean-up. Thanks Peter Klotz.
+
   Revision 1.1.4.28  2004/07/23 13:25:44  dgrisby
   New traceExceptions option.
 
@@ -1203,7 +1206,7 @@ static void dumpbuf(unsigned char* buf, size_t sz)
 
   const size_t dumplimit = 128;
   if (!omniORB::trace(40) && sz > dumplimit) {
-    l << dumplimit << "bytes out of " << sz << "\n";
+    l << dumplimit << " bytes out of " << sz << "\n";
     sz = dumplimit;
   }
   else {
