@@ -28,6 +28,7 @@
 //
 
 #include <omniORB2/CORBA.h>
+#include <omniORB2/tcDescriptor.h>
 
 
 CORBA::
@@ -37,6 +38,8 @@ UnknownUserException::UnknownUserException(Any* ex)
   if( !ex )
     throw omniORB::fatalException(__FILE__,__LINE__,
        "CORBA::UnknownUserException::UnknownUserException(Any*)");
+  pd_insertToAnyFn    = insertToAnyFn; 
+  pd_insertToAnyFnNCP = insertToAnyFnNCP;
 }
 
 
@@ -78,13 +81,180 @@ const char*
 CORBA::
 UnknownUserException::_NP_mostDerivedTypeId() const
 {
-  return "Exception/UnknownUserException";
+  return "IDL:omg.org/CORBA/UnknownUserException:1.0";
 }
 
 
 CORBA::UnknownUserException*
 CORBA::
+UnknownUserException::_downcast(Exception* e)
+{
+  return (UnknownUserException*)_NP_is_a(e, "IDL:omg.org/CORBA/UnknownUserException:1.0");
+}
+
+const CORBA::UnknownUserException*
+CORBA::
+UnknownUserException::_downcast(const Exception* e)
+{
+  return (const UnknownUserException*)_NP_is_a(e, "IDL:omg.org/CORBA/UnknownUserException:1.0");
+}
+
+CORBA::UnknownUserException*
+CORBA::
 UnknownUserException::_narrow(Exception* e)
 {
-  return (UnknownUserException*)_NP_is_a(e, "Exception/UnknownUserException");
+  return _downcast(e);
 }
+
+
+static 
+CORBA::PR_structMember mUnknownUserException[] = {
+  {"exception", CORBA::TypeCode::PR_any_tc()}
+};
+
+static
+const CORBA::TypeCode_ptr 
+_tc_UnknownUserException = CORBA::TypeCode::PR_exception_tc(
+	      "IDL:omg.org/CORBA/UnknownUserException:1.0", 
+	      "UnknownUserException", 
+	      mUnknownUserException, 1);
+
+
+static
+CORBA::Boolean
+getMemberDesc_UnknownUserException(tcStructDesc *_desc,
+				   CORBA::ULong _index,
+				   tcDescriptor &_newdesc)
+{
+  switch( _index ) {
+  case 0:
+    _0RL_buildDesc_cany(_newdesc, 
+			((CORBA::UnknownUserException*)_desc->opq_struct)->exception());
+    return 1;
+  default:
+    return 0;
+  };
+}
+
+static
+CORBA::ULong
+getMemberCount_UnknownUserException(tcStructDesc *_desc)
+{
+  return 1;
+}
+
+static
+void 
+buildDesc_mUnknownUserException(tcDescriptor &_desc,
+				const CORBA::UnknownUserException& _data)
+{
+  _desc.p_struct.getMemberDesc = getMemberDesc_UnknownUserException;
+  _desc.p_struct.getMemberCount = getMemberCount_UnknownUserException;
+  _desc.p_struct.opq_struct = (void *)&_data;
+}
+
+
+static
+void
+delete_UnknownUserException(void* _data) {
+  CORBA::UnknownUserException* _0RL_t = (CORBA::UnknownUserException*) _data;
+  delete _0RL_t;
+}
+
+static
+void
+insertUnknownUserExceptionToAny(CORBA::Any& a,
+				const CORBA::UnknownUserException&  s)
+{
+  tcDescriptor _0RL_tcdesc;
+  buildDesc_mUnknownUserException(_0RL_tcdesc, s);
+  a.PR_packFrom(_tc_UnknownUserException, &_0RL_tcdesc);
+}
+
+static
+void
+insertUnknownUserExceptionToAny(CORBA::Any& a,
+				const CORBA::UnknownUserException*  s)
+{
+  tcDescriptor _0RL_tcdesc;
+  buildDesc_mUnknownUserException(_0RL_tcdesc, *s);
+  a.PR_packFrom(_tc_UnknownUserException, &_0RL_tcdesc);
+  delete (CORBA::UnknownUserException*)s;
+}
+
+static
+CORBA::Boolean
+extractUnknownUserExceptionFromAny(const CORBA::Any& a,
+				   CORBA::UnknownUserException*& s,
+				   CORBA::Boolean cacheOnly)
+{
+  if (cacheOnly) {
+    s = (CORBA::UnknownUserException *) a.PR_getCachedData();
+    if (s) {
+      CORBA::TypeCode_var a_tc = a.type();
+      if (a_tc->equivalent(_tc_UnknownUserException))
+	return 1;
+    }
+  }
+  else {
+    tcDescriptor _0RL_tcdesc;
+    buildDesc_mUnknownUserException(_0RL_tcdesc,*s);
+    if (a.PR_unpackTo(_tc_UnknownUserException, &_0RL_tcdesc)) {
+      ((CORBA::Any *)&a)->PR_setCachedData(s,delete_UnknownUserException);
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
+void operator<<=(CORBA::Any& _a, const CORBA::UnknownUserException& _s) {
+  insertUnknownUserExceptionToAny(_a,_s);
+}
+
+void operator<<=(CORBA::Any& _a, const CORBA::UnknownUserException* _sp) {
+  insertUnknownUserExceptionToAny(_a,_sp);
+}
+
+CORBA::Boolean operator>>=(const CORBA::Any& _a, CORBA::UnknownUserException*& _sp) {
+  CORBA::UnknownUserException* s = 0;
+  if (extractUnknownUserExceptionFromAny(_a,s,1)) {
+    _sp = s;
+    return 1;
+  }
+  else {
+    if (s == 0) {
+      s = new CORBA::UnknownUserException(new CORBA::Any());
+      if (extractUnknownUserExceptionFromAny(_a,s,0)) {
+	_sp = s;
+	return 1;
+      }
+      else {
+	delete s;
+      }
+    }
+  }
+  _sp = 0;
+  return 0;
+}
+
+static
+void
+UnknownUserException_insertToAny(CORBA::Any& a,const CORBA::Exception& e)
+{
+  const CORBA::UnknownUserException & ex = (const CORBA::UnknownUserException &) e;
+  insertUnknownUserExceptionToAny(a,ex);
+}
+
+static
+void
+UnknownUserException_insertToAnyNCP(CORBA::Any& a,const CORBA::Exception* e)
+{
+  const CORBA::UnknownUserException * ex = (const CORBA::UnknownUserException *) e;
+  insertUnknownUserExceptionToAny(a,ex);
+}
+
+CORBA::Exception::insertExceptionToAny CORBA::UnknownUserException::insertToAnyFn = UnknownUserException_insertToAny;
+
+CORBA::Exception::insertExceptionToAnyNCP CORBA::UnknownUserException::insertToAnyFnNCP = UnknownUserException_insertToAnyNCP;
+
