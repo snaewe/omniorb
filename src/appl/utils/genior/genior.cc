@@ -32,7 +32,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifndef __NT__
+#ifndef __WIN32__
 #include <unistd.h>
 #endif
 
@@ -53,9 +53,9 @@ static void usage(char* progname)
 
 
 
-#ifdef __NT__
+#ifdef __WIN32__
 
-// NT doesn't have an implementation of getopt() - 
+// WIN32 doesn't have an implementation of getopt() - 
 // supply a getopt() for this program:
 
 char* optarg;
@@ -117,6 +117,47 @@ getopt(int num_args, char* const* args, const char* optstring)
 
 
 
+static
+void
+profileToEncapStream(IIOP::ProfileBody &p,
+			   _CORBA_Unbounded_Sequence_Octet &s)
+{
+  CORBA::ULong hlen = strlen((const char *)p.host) + 1;
+  CORBA::ULong klen = p.object_key.length();
+  {
+    // calculate the total size of the encapsulated stream
+    CORBA::ULong total = 8 + hlen;        // first 4 bytes + aligned host
+    total = ((total + 1) & ~(1)) + 2;     // aligned port value
+    total = ((total + 3) & ~(3)) + 4 +	// aligned object key
+      klen;
+    
+    s.length(total);
+  }
+
+
+  s[0] = omni::myByteOrder;
+  s[1] = IIOP::current_major;
+  s[2] = IIOP::current_minor;
+  s[3] = 0;
+  {
+    CORBA::ULong &l = (CORBA::ULong &) s[4];
+    l = hlen;
+  }
+  memcpy((void *)&(s[8]),(void *)p.host,hlen);
+  CORBA::ULong idx = ((8 + hlen) + 1) & ~(1);
+  {
+    CORBA::UShort &l = (CORBA::UShort &) s[idx];
+    l = p.port;
+  }
+  idx = ((idx + 2) + 3) & ~(3);
+  {
+    CORBA::ULong &l = (CORBA::ULong &) s [idx];
+    l = klen;
+  }
+  idx += 4;
+  memcpy((void *)&s[idx],(void *)&p.object_key[0],klen);
+  return;
+}
 
 
 int main(int argc, char* argv[])
@@ -130,7 +171,7 @@ int main(int argc, char* argv[])
 
   // Get options:
 
-#ifndef __NT__
+#ifndef __WIN32__
   extern char* optarg;
   extern int optind;
 #endif
@@ -311,13 +352,12 @@ CORBA::Char* genRef(char* IRTypeId, char* hostname, int port, char* objKey,
   IOP::TaggedProfile p;
   p.tag = IOP::TAG_INTERNET_IOP;
   
-  IIOP::profileToEncapStream(profb,p.profile_data);
+  profileToEncapStream(profb,p.profile_data);
 
 
-  int intfname_len = 8+strlen(IRTypeId)+1;
+  int intfname_len = strlen(IRTypeId)+1;
   CORBA::Char* intfname = new CORBA::Char[intfname_len];
-  sprintf((char*) intfname,"IDL:%s:%d.%d",IRTypeId,(int) IIOP::current_major, (int)
-	  IIOP::current_minor);
+  sprintf((char*) intfname,"%s",IRTypeId);
   intfname[intfname_len-1]='\0';
 
   IOP::TaggedProfileList* pList = new IOP::TaggedProfileList;
