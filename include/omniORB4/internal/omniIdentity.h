@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/09/03 16:52:05  sll
+  New signature for locateRequest. Now accept a calldescriptor argument.
+
   Revision 1.1.4.3  2001/08/15 10:26:09  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -89,7 +92,7 @@ public:
   // default zero objref.
   //  Must hold <omni::internalLock>.
 
-  virtual void locateRequest() = 0;
+  virtual void locateRequest(omniCallDescriptor&) = 0;
   // If this returns normally, then the object exists.
   // Throws OBJECT_NOT_EXIST, or omniORB::LOCATION_FORWARD
   // otherwise.

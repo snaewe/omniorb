@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/09/03 16:52:05  sll
+  New signature for locateRequest. Now accept a calldescriptor argument.
+
   Revision 1.2.2.7  2001/08/15 10:26:12  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -218,7 +221,7 @@ omniLocalIdentity::loseRef(omniObjRef*)
 }
 
 void
-omniLocalIdentity::locateRequest() {
+omniLocalIdentity::locateRequest(omniCallDescriptor&) {
   // Its a local object, and we know its here.
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   omni::internalLock->unlock();

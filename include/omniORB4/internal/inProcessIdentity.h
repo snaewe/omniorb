@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  2001/09/03 16:52:04  sll
+ New signature for locateRequest. Now accept a calldescriptor argument.
+
  Revision 1.1.2.3  2001/08/22 13:31:31  dpg1
  Christof's fixes for gcc 3.0.1.
 
@@ -79,7 +82,7 @@ public:
   virtual omniIdentity::equivalent_fn get_real_is_equivalent() const;
   // Overrides omniIdentity.
 
-  virtual void locateRequest();
+  virtual void locateRequest(omniCallDescriptor&);
   // If this returns normally, then the object exists.
   // Throws OBJECT_NOT_EXIST, or omniORB::LOCATION_FORWARD
   // otherwise.
