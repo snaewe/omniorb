@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2001/09/07 11:27:14  sll
+  Residual changes needed for the changeover to use orbParameters.
+
   Revision 1.1.2.6  2001/07/31 16:16:24  sll
   New transport interface to support the monitoring of active connections.
 
@@ -56,6 +59,7 @@
 #include <stdio.h>
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <orbParameters.h>
 #include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
 #include <ssl/sslConnection.h>
@@ -180,14 +184,14 @@ sslAddress::Connect(unsigned long deadline_secs,
 	return 0;
       }
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      if (t.tv_sec > giopStrand::scanPeriod) {
-	t.tv_sec = giopStrand::scanPeriod;
+      if (t.tv_sec > orbParameters::scanGranularity) {
+	t.tv_sec = orbParameters::scanGranularity;
       }
 #endif
     }
     else {
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      t.tv_sec = giopStrand::scanPeriod;
+      t.tv_sec = orbParameters::scanGranularity;
       t.tv_usec = 0;
 #else
       t.tv_sec = t.tv_usec = 0;

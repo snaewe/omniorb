@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2001/09/07 11:27:15  sll
+  Residual changes needed for the changeover to use orbParameters.
+
   Revision 1.1.2.8  2001/08/24 15:56:44  sll
   Fixed code which made the wrong assumption about the semantics of
   do { ...; continue; } while(0)
@@ -65,6 +68,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <orbParameters.h>
 #include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
 #include <ssl/sslConnection.h>
@@ -194,14 +198,14 @@ sslConnection::Recv(void* buf, size_t sz,
 	return 0;
       }
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      if (t.tv_sec > giopStrand::scanPeriod) {
-	t.tv_sec = giopStrand::scanPeriod;
+      if (t.tv_sec > orbParameters::scanGranularity) {
+	t.tv_sec = orbParameters::scanGranularity;
       }
 #endif
     }
     else {
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      t.tv_sec = giopStrand::scanPeriod;
+      t.tv_sec = orbParameters::scanGranularity;
       t.tv_usec = 0;
 #else
       t.tv_sec = t.tv_usec = 0;
