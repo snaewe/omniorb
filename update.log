@@ -1,3 +1,12 @@
+Mon Sep 20 11:32:34 BST 1999 sll
+================================
+
+- MS VC++ 5.0 does not pick up the const char* conversion operator of a
+  StringBuf automagically when passed to an iostream. Have to do an explicit
+  casting.
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
 
 Wed Sep 15 19:04:14 BST 1999 djr
 ================================
