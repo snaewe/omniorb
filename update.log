@@ -1,3 +1,28 @@
+Sun Oct 17 23:25:49 BST 2004 dgrisby
+====================================
+
+- Handle errors in accept() properly. Thanks Kamaldeep Singh Khanuja
+  and Jeremy Van Grinsven.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+
+- Correct debug flags for MSVC 7.
+
+mk/platforms/x86_nt_4.0_vs_7.mk
+
+- WChar TypeCode unmarshalling was missing. Thanks Luke Deller.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+- Stubs for typedef to sequence of forward-declared struct / union
+  were broken. Thanks Jeremy Van Grinsven.
+
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+
+
 Sun Oct 17 22:43:44 BST 2004 dgrisby
 ====================================
 
