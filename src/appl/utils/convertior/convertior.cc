@@ -26,6 +26,9 @@
 
 #include <iostream.h>
 #include <stdlib.h>
+#if defined(UnixArchitecture)
+#include <unistd.h>
+#endif
 
 #include <omniORB2/CORBA.h>
 
