@@ -70,12 +70,14 @@ else
   else
     cwd=`pwd`
     for source in $sources; do
-      cd $source
-      if [ -f "$1" ]; then
-        echo $source/$1
-        break
+      if [ -d "$source" ]; then
+        cd $source
+        if [ -f "$1" ]; then
+          echo $source/$1
+          break
+        fi
+        cd $cwd
       fi
-      cd $cwd
     done
   fi
 fi
