@@ -3,7 +3,6 @@
 // See the LifeCycle tutorial for explanation.
 
 #include <iostream.h>
-#include <omniORB2/omniLifeCycle.h>
 
 #include "echolag.hh"
 
