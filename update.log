@@ -1,3 +1,13 @@
+Wed Feb 23 12:08:52 GMT 2000 dpg1
+=================================
+
+- Add support for NextStep x86
+
+external_merge/config/config.mk
+external_merge/mk/platforms/x86_nextstep_3.3.mk  -- new
+include/omniORB2/CORBA_sysdep.h
+src/lib/omnithread/mach.cc
+
 
 Tue Feb 22 18:44:21 GMT 2000 djr
 ================================

@@ -226,6 +226,7 @@ omni_semaphore::trywait(void)
     return 0;
 
   value--;
+  return 1;
 }
 
 
@@ -271,7 +272,7 @@ omni_thread::init_t::init_t(void)
 
   error = thread_info(thread_self(), THREAD_SCHED_INFO, (thread_info_t)&info, &info_count);
   if (error != KERN_SUCCESS) {
-    cerr << "omni_thread::init: error determining thread_info" << endl;
+    DB(cerr << "omni_thread::init: error determining thread_info" << endl);
     ::exit(1);
   }
   else {
@@ -288,7 +289,7 @@ omni_thread::init_t::init_t(void)
   omni_thread* t = new omni_thread;
 
   if (t->_state != STATE_NEW) {
-    cerr << "omni_thread::init: problem creating initial thread object\n";
+    DB(cerr << "omni_thread::init: problem creating initial thread object\n");
     ::exit(1);
   }
 
@@ -539,7 +540,7 @@ void omni_thread::exit(void* return_value)
       me->mutex.lock();
 
       if (me->_state != STATE_RUNNING)
-	cerr << "omni_thread::exit: thread not in \"running\" state\n";
+	DB(cerr << "omni_thread::exit: thread not in \"running\" state\n");
 
       me->_state = STATE_TERMINATED;
 

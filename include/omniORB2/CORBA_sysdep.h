@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.39.2.3  2000/02/23 12:10:25  dpg1
+ Added support for NextStep x86.
+
  Revision 1.39.2.2  1999/09/22 18:59:40  sll
  Added powerpc linux support.
 
@@ -333,6 +336,11 @@
 # define _OMNIORB_HOST_BYTE_ORDER_ 1
 # if !defined(__WIN32__)
 #  define _HAS_SIGNAL 1
+# endif
+# if defined(__nextstep__)
+#  define _USE_MACH_SIGNAL 1
+#  define _NO_STRDUP 1
+#  define _USE_GETHOSTNAME 1
 # endif
 #elif defined(__linux__) && defined(__powerpc__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
