@@ -28,6 +28,11 @@
 
 /*
  $Log$
+ Revision 1.1.2.7  2000/04/27 10:50:49  dpg1
+ Interoperable Naming Service
+
+ Include initRefs.h instead of bootstrap_i.h.
+
  Revision 1.1.2.6  2000/03/03 09:44:04  djr
  Fix to prevent tracedmutex assertion failure.
 
@@ -58,7 +63,7 @@
 #include <localIdentity.h>
 #include <ropeFactory.h>
 #include <scavenger.h>
-#include <bootstrap_i.h>
+#include <initRefs.h>
 #include <poaimpl.h>
 #include <corbaBoa.h>
 #include <exception.h>

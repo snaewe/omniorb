@@ -32,7 +32,7 @@
 #include <dynamicImplementation.h>
 #include <dynException.h>
 #include <omniORB3/callDescriptor.h>
-#include <bootstrap_i.h>
+#include <initRefs.h>
 #include <dynamicLib.h>
 #include <exception.h>
 
