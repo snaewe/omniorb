@@ -1,3 +1,22 @@
+Tue Jul 11 16:14:24 BST 2000 dpg1
+=================================
+
+- Win32 makefile updates
+
+external_merge/mk/win32.mk
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+
+- Change #include from <echo.hh> to <becho.hh>
+
+src/examples/boa/eg2_clt.cc
+
+
 Tue Jul 11 13:46:58 BST 2000 sll
 ================================
 
