@@ -11,10 +11,14 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/13 15:42:16  sll
-  New member function produce_typdef_hdr(). It is called when a typedef
-  declaration is encountered.
+  Revision 1.3  1997/01/23 17:11:51  sll
+  The marshalling operators for enum types declared in the global scope
+  are now declared as inline.
 
+// Revision 1.2  1997/01/13  15:42:16  sll
+// New member function produce_typdef_hdr(). It is called when a typedef
+// declaration is encountered.
+//
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -51,14 +55,14 @@ o2be_enum::produce_hdr(fstream &s)
   s << " };\n\n";
 
   IND(s); s << (!(defined_in()==idl_global->root())?"friend ":"")
-	    << "void operator>>= (" << uqname() << " _e,NetBufferedStream &s) {\n";
+	    << "inline void operator>>= (" << uqname() << " _e,NetBufferedStream &s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
   IND(s); s << (!(defined_in()==idl_global->root())?"friend ":"")
-	    << "void operator<<= (" << uqname() << " &_e,NetBufferedStream &s) {\n";
+	    << "inline void operator<<= (" << uqname() << " &_e,NetBufferedStream &s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong __e;\n";
   IND(s); s << "__e <<= s;\n";
@@ -85,14 +89,14 @@ o2be_enum::produce_hdr(fstream &s)
   IND(s); s << "}\n\n";
 
   IND(s); s << (!(defined_in()==idl_global->root())?"friend ":"")
-	    << "void operator>>= (" << uqname() << " _e,MemBufferedStream &s) {\n";
+	    << "inline void operator>>= (" << uqname() << " _e,MemBufferedStream &s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
   IND(s); s << (!(defined_in()==idl_global->root())?"friend ":"")
-	    << "void operator<<= (" << uqname() << " &_e,MemBufferedStream &s) {\n";
+	    << "inline void operator<<= (" << uqname() << " &_e,MemBufferedStream &s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong __e;\n";
   IND(s); s << "__e <<= s;\n";
