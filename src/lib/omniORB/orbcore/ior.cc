@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.22  2003/01/14 14:18:12  dgrisby
+  Don't overwrite component data when decoding multi component profile.
+
   Revision 1.10.2.21  2002/08/16 16:00:50  dgrisby
   Bugs accessing uninitialised String_vars with [].
 
@@ -417,14 +420,15 @@ IIOP::unmarshalMultiComponentProfile(const IOP::TaggedProfile& profile,
 			   profile.profile_data.length(),
 			   1);
 
-  CORBA::ULong total;
-  total <<= s;
-  if (total) {
-    if (!s.checkInputOverrun(1,total))
+  CORBA::ULong newitems;
+  newitems <<= s;
+  if (newitems) {
+    if (!s.checkInputOverrun(1,newitems))
       OMNIORB_THROW(MARSHAL,MARSHAL_InvalidIOR,CORBA::COMPLETED_NO);
 
-    body.length(total);
-    for (CORBA::ULong index = 0; index<total; index++) {
+    CORBA::ULong oldlen = body.length();
+    body.length(oldlen + newitems);
+    for (CORBA::ULong index = oldlen; index < oldlen+newitems; index++) {
       body[index] <<= s;
     }
   }
