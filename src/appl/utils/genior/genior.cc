@@ -30,13 +30,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #ifndef __WIN32__
 #include <unistd.h>
 #endif
 
 #include <omniORB3/CORBA.h>
+#include <ctype.h>
 
 
 static CORBA::Char*

@@ -1,3 +1,18 @@
+Fri Jun 30 15:05:25 BST 2000 dpg1
+=================================
+
+- Minor fixes for FreeBSD
+
+external_merge/config/config.mk
+external_merge/mk/platforms/x86_freebsd_3.2.mk
+include/omniORB3/CORBA_sysdep.h
+src/appl/utils/genior/genior.cc
+src/lib/omniORB2/orbcore/initRefs.cc
+src/lib/omniORB2/orbcore/uri.cc
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/percent_m.c
+src/tool/omniidl/cxx/dir.mk
+
+
 Fri Jun 30 12:21:32 BST 2000 sll
 ================================
 

@@ -250,16 +250,16 @@ lib = $(soname).$(IDLMODULE_MINOR)
 all:: $(lib)
 
 $(lib): $(OBJS) $(PYOBJS)
-       (set -x; \
+	(set -x; \
        $(RM) $@; \
-       $(CXXLINK) $(CXXLINKOPTIONS) -shared -o $@ -Wl,-soname,$(soname) $(IMPOR
-T_LIBRARY_FLAGS) \
-        $(filter-out $(LibSuffixPattern),$^) $(LIBS)\
+       $(CXXLINK) $(CXXLINKOPTIONS) -shared -o $@ -Wl,-soname,$(soname) \
+       $(IMPORT_LIBRARY_FLAGS) \
+       $(filter-out $(LibSuffixPattern),$^) $(LIBS)\
        )
 
 export:: $(lib)
-       @$(ExportLibrary)
-       @(set -x; \
+	@$(ExportLibrary)
+	@(set -x; \
           cd $(EXPORT_TREE)/$(LIBDIR); \
           $(RM) $(soname); \
           ln -s $(lib) $(soname); \
@@ -268,7 +268,7 @@ export:: $(lib)
          )
 
 clean::
-       $(RM) $(lib)
+	$(RM) $(lib)
 
 endif
 

@@ -30,6 +30,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.6  2000/06/30 14:12:07  dpg1
+// Minor fixes for FreeBSD.
+//
 // Revision 1.1.2.5  2000/06/27 15:40:58  sll
 // Workaround for Cygnus gcc's inability to recognise _CORBA_Octet*& and
 // CORBA::Octet*& are the same type.
@@ -51,7 +54,6 @@
 //
 
 #include <stdlib.h>
-#include <ctype.h>
 #include <omniORB3/CORBA.h>
 #include <omniORB3/Naming.hh>
 #include <initialiser.h>
@@ -60,6 +62,7 @@
 #include <exceptiondefs.h>
 #include <omniORB3/omniURI.h>
 #include <initRefs.h>
+#include <ctype.h>
 
 #define MAX_STRING_TO_OBJECT_CYCLES 10
 

@@ -14,7 +14,7 @@ static char sccsid[] = "@(#) percent_m.c 1.1 94/12/28 17:42:37";
 
 extern int errno;
 #if !(defined(__GLIBC__) && __GLIBC__ >=2)
-#if !defined(SYS_ERRLIST_DEFINED) || !defined(__freebsd__)
+#if !defined(SYS_ERRLIST_DEFINED) && !defined(__freebsd__)
 extern char *sys_errlist[];
 extern int sys_nerr;
 #endif

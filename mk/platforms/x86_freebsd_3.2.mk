@@ -84,3 +84,7 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 #CORBA_LIB	+= -lomniORB3 -lomniDynamic2 -ltcpwrapGK -lomnithread
 #CORBA_LIB	+= -Wl,-Bdynamic
 #OMNITHREAD_LIB = 
+#CORBA_LIB_NODYN	= -Wl,-Bstatic
+#CORBA_LIB_NODYN	+= -lomniORB3 -ltcpwrapGK -lomnithread
+#CORBA_LIB_NODYN	+= -Wl,-Bdynamic
+#OMNITHREAD_LIB_NODYN = -lomnithread
