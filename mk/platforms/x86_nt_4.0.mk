@@ -38,3 +38,18 @@ IMPORT_CPPFLAGS += -D__x86__ -D__NT__ -D__OSVERSION__=4
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = C:\\temp
 
+
+# Add the location of the Open SSL library
+
+# To build the SSL transport, OPEN_SSL_ROOT must be defined and points to
+# the top level directory of the openssl library. The default is to disable
+# the build.
+#
+#OPEN_SSL_ROOT = /D/openssl
+#
+
+OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include
+OPEN_SSL_LIB = $(patsubst %,$(LibPathPattern),$(OPEN_SSL_ROOT)/lib) \
+               ssleay32.lib libeay32.lib
+OMNIORB_SSL_LIB += $(OPEN_SSL_LIB)
+OMNIORB_SSL_CPPFLAGS += $(OPEN_SSL_CPPFLAGS)
