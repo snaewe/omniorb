@@ -1,7 +1,9 @@
-This directory contains patches to the source to work around bugs in some
-old compilers.
+This directory contains patches to the source to work around bugs in
+some old compilers, and to support platforms for which the patches are
+too obtrusive to be included in the main distribution.
 
 The patches are:
 
   dec_CXX_5.6.patch  - patch to apply to work around bugs in Dec C++ 5.6.
   aix_xlC_5.0.patch  - patch to work around problems with VisualAge C++ 5.0.
+  BS2000.patch       - patch to support Fujitsu Siemens BS2000

@@ -1,0 +1,1520 @@
+diff -ruP o/README.BS2000 n/README.BS2000
+--- o/README.BS2000	Thu Jan  1 01:00:00 1970
++++ n/README.BS2000	Fri Nov 30 19:13:51 2001
+@@ -0,0 +1,86 @@
++         omniORB3 for Fujitsu Siemens BS2000 mainframes
++         ==============================================
++
++We use BS2000 OSD V4.0, Posix V4.0 and C++ V3.0C.  This environment is
++Unix-like enough for the README.unix to mostly apply.  We compile Unix-style
++within the Posix-subsystem, but the resulting libraries can also be used,
++along with the Posix-libraries, from native BS2000.
++
++We work on SR2000 MIPS-Processor machines, but this should also work on /390
++and the future Sparc machines.  We use the tool ASSTRAN which turns the /390 
++assembler code into MIPS-code to avoid emulation. We believe this is not a 
++standard product, try to get it from your support if needed (MIPS machine).
++
++System threads are scheduled for 2002. Until then omniORB is only single
++threaded and hence omniNames doesn't work. We use Gnu pth 1.3.7 with a couple
++of yields in the meanwhile.
++
++We have validated this port against the exhaustive COST (http://cost.omg.org)
++test suite.
++
++EBCDIC Considerations
++---------------------
++
++Read README.EBCDIC
++
++  - The sources to be compiled, have to be on an ASCII filesystem in Posix.
++
++  - Set environment variable IO_CONVERSION=YES
++
++  - We use the Siemens-supplied but undocumented compiler-option which
++    reads strings and chars as ASCII: -K literal_encoding_ascii_full
++
++Configuration
++=============
++
++Set enivonment variables
++------------------------
++
++The variables BLSLIB00 and BLSLIB01 also need to be set to
++'$TSOS.SRULNK.ASSTRAN.017' and '$TSOS.SRULNK.CRTE-BASYS.ASSRTS' respectively.
++These libraries are needed to compile and link on BS2000.  On /S390 use the
++SYSLNK alternatives.
++
++Set variables in the make file for BS2000
++-----------------------------------------
++
++The make filed is named mips_bs2000_4.0.mk.  Variables which have been set but
++may need to be modified:
++
++- the path to the GNU pth library 
++PTHREAD_LIB = /corba/pth
++
++- You can leave the "c_names_unlimited,no_llm_case_lower" out of the compiler
++options, when you do not need interaction with "C" or "SPL" software.
++
++On /390 leave out "risc_4000".
++
++- It is important to always run the GNU configure (e.g. for pth) on an EBCDIC
++partition, because of a bug in built-in cat.  You should also replace the
++libtool script with an empty one, which just passes control to the compiler or
++static linker.
++
++Troubleshooting
++---------------
++
++When compiling large files the compile might timeout. To get around this you
++need to extend the CPU timeout limit using the following options:
++
++STLGP <login>,<group>,<password>,RESOURCE=*PAR(CPU-LIMIT=36000)
++
++Also the memory preconized by the C++-compiler's installation guide is not
++sufficient for compiling some large files.  The BS2000 administrator must
++/modify-user-attributes address-space-limit to something bigger for you.  512
++Mb is largely enough.
++
++CREDITS
++=======
++
++  Peter Grobarcik <Peter.Grobarcik@start.de>
++  Allan Holland <Allan.Holland@traventec.com>
++  Colin Grealy <Colin.Grealy@traventec.com>
++  Coleman Corrigan <Coleman.Corrigan@traventec.com>
++
++Daniel Pfeiffer <Daniel.Pfeiffer@start.de>
++Start Amadeus GmbH (Lufthansa Group)
++http://www.startamadeus.de/
+diff -ruP o/README.EBCDIC n/README.EBCDIC
+--- o/README.EBCDIC	Thu Jan  1 01:00:00 1970
++++ n/README.EBCDIC	Fri Nov 30 19:13:51 2001
+@@ -0,0 +1,57 @@
++How do you spell "trouble"?  E - B - C - D - I - C
++==================================================
++
++  Professor:  "The American government went to IBM to come up with a data
++  encryption standard and they came up with...?"
++  Student:  "EBCDIC!"
++
++With the BS2000 port omniORB has been modified to also work on an EBCDIC
++machine.  The following considerations apply:
++
++IDL files
++---------
++
++We have not yet managed to port flex to generate EBCDIC-tables.  The standard
++lex cannot read the omniidl source.  So we do not have omniidl on an EBCDIC
++machine.  The platform makefile sees to that it not be built.
++
++The workaround is to first build omniORB on an ASCII-machine and to copy all
++omniidl generated files (*SK.cc and *.hh) to the same locations in the build
++directory on the EBCDIC machine.
++
++omniORB
++-------
++
++At least on BS2000 everything built under POSIX can also run in native mode.
++Therefor all string and character literals are read by the compiler as EBCDIC.
++While this is fine for name lookup or log messages which go to the system, it
++won't do for GIOP constants or IDL identifiers.
++
++The solution is threefold:
++
++- Some files in orbcore and dynamic contain only literals to be considered as
++  ASCII.  We put these in a make variable ASCII_SOURCES and compile these
++  specially with a compiler option to read these as ASCII.  We've moved some
++  constants to ASCII files to enable this.
++
++- Two files are rather mixed.  We compile these twice under different names
++  with different defines.  They contain:
++
++	#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
++	#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
++
++  These _do_nothing_, i.e. see all code, on an ASCII machine.
++
++- In a few spots we need to convert just the odd literal or a variable string.
++  For these we introduced five macros which can convert one way or the other.
++  Since constant strings cannot be modified inplace we have strdup variants
++  where the result must be freed afterwards.  The macros are:
++
++	ENSURE_ASCII
++	ENSURE_LOCAL_ENCODING
++
++	ENSURE_ASCII_DUP
++	ENSURE_LOCAL_ENCODING_DUP
++	FREE_ENCODING_DUP
++
++  All five _do_nothing_ on an ASCII machine.
+diff -ruP o/config/config.mk n/config/config.mk
+--- o/config/config.mk	Thu Nov 22 15:35:34 2001
++++ n/config/config.mk	Tue Dec  4 16:26:45 2001
+@@ -28,7 +28,8 @@
+ #  hppa_hpux_11.00           HPUX 11.00, aC++ B3910B A.01.04
+ #  m68k_nextstep_3.3         NextStep 3.3, gcc-2.7.2
+ #  x86_nextstep_3.3          NextStep 3.3, x86
+-#  mips_sinux_5.43           Reliant UNIX from Siemens-Nixdorf (SNI)
++#  mips_sinux_5.43           Reliant UNIX from Fujitsu Siemens (ex-SNI)
++#  mips_bs2000_4.0           BS2000 from Fujitsu Siemens
+ #  mips_irix_6.2_n32         SGI Irix 6.2 - 32bit mode
+ #  mips_irix_6.3_n32         SGI Irix 6.3 - 32bit mode
+ #  mips_irix_6.4_n32         SGI Irix 6.4 - 32bit mode
+@@ -69,6 +70,7 @@
+ #platform = m68k_nextstep_3.3
+ #platform = x86_nextstep_3.3
+ #platform = mips_sinux_5.43
++#platform = mips_bs2000_4.0
+ #platform = mips_irix_6.2_n32
+ #platform = mips_irix_6.3_n32
+ #platform = mips_irix_6.4_n32
+diff -ruP o/include/omniORB3/CORBA_sysdep.h n/include/omniORB3/CORBA_sysdep.h
+--- o/include/omniORB3/CORBA_sysdep.h	Fri Jun 15 16:38:07 2001
++++ n/include/omniORB3/CORBA_sysdep.h	Fri Nov 30 19:13:51 2001
+@@ -420,6 +420,9 @@
+ 
+ #endif
+ 
++#elif defined(__SNI_HOST_BS2000_POSIX)
++#define HAS_Cplusplus_Namespace
++#define HAS_Cplusplus_Bool
+ #endif
+ 
+ 
+@@ -510,6 +513,14 @@
+ #elif defined(__SINIX__)
+ # define _OMNIORB_HOST_BYTE_ORDER_ 0
+ # define _HAS_SIGNAL 1
++# define OMNI_REQUIRES_FQ_BASE_CTOR
++# define HAS_Cplusplus_Namespace
++# define HAS_Cplusplus_Bool
++#elif defined(__SNI_HOST_BS2000_POSIX)
++# define _OMNIORB_HOST_BYTE_ORDER_ 0
++# define _HAS_SIGNAL 1
++# define MIPSPRO_WORKAROUND 
++# define OMNI_REQUIRES_FQ_BASE_CTOR
+ #elif defined(__irix__)
+ # define _OMNIORB_HOST_BYTE_ORDER_ 0
+ # define _HAS_SIGNAL 1
+diff -ruP o/include/omniORB3/chr_encoding.h n/include/omniORB3/chr_encoding.h
+--- o/include/omniORB3/chr_encoding.h	Thu Jan  1 01:00:00 1970
++++ n/include/omniORB3/chr_encoding.h	Fri Nov 30 19:13:51 2001
+@@ -0,0 +1,28 @@
++#ifndef CHR_ENCODING_H
++#define CHR_ENCODING_H
++
++#if defined(__SNI_HOST_BS2000_POSIX) || defined(__SNI_HOST_BS2000)
++
++#   include <stdlib.h>
++#   include <string.h>
++#   include <ascii_ebcdic.h>
++#   include <ctype.h>
++#   define ENSURE_ASCII(literal)		_e2a( (char*)(literal) )
++#   define ENSURE_LOCAL_ENCODING(literal)	_a2e( (char*)(literal) )
++#   define ENSURE_ASCII_DUP(literal)		_e2a_dup( (char*)(literal) )
++#   define ENSURE_LOCAL_ENCODING_DUP(literal)	_a2e_dup( (char*)(literal) )
++#   define FREE_ENCODING_DUP(identifier)		free(identifier)
++
++#else
++
++/*
++ *  Empty implementation: LOCAL_ENCODING == ASCII
++ */
++#   define ENSURE_ASCII(literal)		( (char*)(literal) )
++#   define ENSURE_LOCAL_ENCODING(literal)	( (char*)(literal) )
++#   define ENSURE_ASCII_DUP(literal)		( (char*)(literal) )
++#   define ENSURE_LOCAL_ENCODING_DUP(literal)	( (char*)(literal) )
++#   define FREE_ENCODING_DUP(identifier)		(identifier)
++
++#endif
++#endif
+diff -ruP o/include/omnithread.h n/include/omnithread.h
+--- o/include/omnithread.h	Thu Jun 21 16:02:19 2001
++++ n/include/omnithread.h	Fri Nov 30 19:13:51 2001
+@@ -150,6 +150,9 @@
+ #elif defined(__freebsd__)
+ #include <omnithread/posix.h>
+ 
++#elif defined(__SNI_HOST_BS2000_POSIX)
++#include <omnithread/posix.h>
++
+ #elif defined(__rtems__)
+ #include <omnithread/posix.h>
+ #include <sched.h>
+diff -ruP o/mk/afterdir.mk n/mk/afterdir.mk
+--- o/mk/afterdir.mk	Fri Aug 18 16:09:35 2000
++++ n/mk/afterdir.mk	Fri Nov 30 19:13:51 2001
+@@ -63,6 +63,7 @@
+ # compiled.  The sort is just to remove duplicates.
+ #
+ 
++# We need ASCIIFLAG on BS2000
+ $(sort $(CORBA_STUB_OBJS))::
+ 	@( echo; echo cd $(CORBA_STUB_DIR); \
+ 	   cd $(CORBA_STUB_DIR); \
+@@ -72,7 +73,8 @@
+ 	   fi; \
+ 	   $(MAKE) 'TOP=..' 'CURRENT=stub' \
+                  'CXXSRCS=$(notdir $(CORBA_STUB_SRCS))' \
+-	         'CXXDEBUGFLAGS=$(CXXDEBUGFLAGS)' 'CXXOPTIONS=$(CXXOPTIONS)' \
++		 'CXXDEBUGFLAGS=$(CXXDEBUGFLAGS)' \
++		 'CXXOPTIONS=$(CXXOPTIONS) $(ASCIIFLAG)' \
+ 		 'DIR_CPPFLAGS=$$(CORBA_CPPFLAGS) $(DIR_STUBS_CPPFLAGS)' \
+                  -f ../config/config.mk \
+ 		 $(notdir $@); \
+@@ -163,8 +165,10 @@
+ # The depend.phony rule which actually runs omkdepend.
+ #
+ 
++# We need FIXCAT on BS2000
+ depend.phony:
+-	@if [ -f cdepend.tmp ]; then \
++	@$(FIXCAT) \
++	 if [ -f cdepend.tmp ]; then \
+ 	   echo $(CMAKEDEPEND) $(MDFLAGS) $(CPPFLAGS) `cat cdepend.tmp`; \
+ 	   $(CMAKEDEPEND) $(MDFLAGS) $(CPPFLAGS) `cat cdepend.tmp`; \
+ 	   rm -f cdepend.tmp; \
+diff -ruP o/mk/platforms/mips_bs2000_4.0.mk n/mk/platforms/mips_bs2000_4.0.mk
+--- o/mk/platforms/mips_bs2000_4.0.mk	Thu Jan  1 01:00:00 1970
++++ n/mk/platforms/mips_bs2000_4.0.mk	Fri Nov 30 19:13:52 2001
+@@ -0,0 +1,139 @@
++#
++# mips_bs2000_4.0.mk - make variables and rules specific to BS2000 4.0
++#
++
++BS2000 = 1
++
++#
++# Include general unix things
++#
++
++include $(THIS_IMPORT_TREE)/mk/unix.mk
++
++#
++# C preprocessor macro definitions for this architecture
++#
++
++IMPORT_CPPFLAGS += -I. -DNON_ASCII_PLATTFORM -I$(PTHREAD_LIB)
++#-DYYDEBUG
++
++#
++# Override defaults
++#
++
++MKDIRHIER = mkdir -p
++INSTALL = install-sh -c
++
++#
++# Standard programs
++#
++
++AR = ar -q
++RANLIB = :
++
++ifeq ($(DEBUG),1)
++CXXDEBUGFLAGS = -g -DDEBUG
++endif
++minusK = -K risc_4000,enum_long,workspace_stack,llm_keep,llm_case_lower,c_names_unlimited -N cif,,cross_reference -F I -F i -F O2 -F loopunroll,64
++
++CPP = CC
++CXX = CC
++CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus
++
++CXXLINK		= $(CXX)
++CXXOPTIONS  = -X w $(minusK)
++CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) \
++		  $($(IMPORT_LIBRARY_DIRS)) -N binder
++
++
++CC           = cc
++CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
++
++CLINK        = $(CC)
++COPTIONS  = -DNeedVarargsPrototypes=1 $(minusK)
++CLINKOPTIONS = $(CDEBUGFLAGS) $(COPTIONS) \
++		  $($(IMPORT_LIBRARY_DIRS)) -N binder
++
++# The shell-builtin cat is buggy inside ``
++FIXCAT = alias cat='IO_CONVERSION=YES cat';
++
++#
++# Socket library
++#
++
++SOCKET_LIB = -lnsl
++THREAD_LIB = -lpthread
++
++
++#
++# CORBA stuff
++#
++
++CorbaImplementation = OMNIORB
++
++#
++# OMNI thread stuff
++#
++
++ThreadSystem = Posix
++OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep
++OMNITHREAD_CPPFLAGS = -DUsePthread
++OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) -L$(PTHREAD_LIB) -lpthread -lsocket -lBLSLIB
++
++PTHREAD_LIB = /corba/pth
++
++
++lib_depend := $(patsubst %,$(LibPattern),omnithread)
++OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
++
++# Default location of the omniORB configuration file [falls back to this if
++# the environment variable OMNIORB_CONFIG is not set] :
++
++OMNIORB_CONFIG_DEFAULT_LOCATION = /BS2/I.ASW.CFG.OMNIORB3
++
++# Default directory for the omniNames log files.
++OMNINAMES_LOG_DEFAULT_LOCATION = /corba/omninames
++
++#
++# Implicit rule replacement for selective ASCII/EBCDIC
++#
++
++ASCIIFLAG = -DCOMPILE_ASCII -K literal_encoding_ascii_full
++
++%.o: %.cc
++	$(CXX) -c $(CXXFLAGS) $(if $(filter $(ASCII_SOURCES),$<),$(ASCIIFLAG)) -o $@ $<
++
++
++#
++# inject rules into dir.mk so as to keep them BS2000 clean when possible
++#
++
++ifneq (,$(findstring src/services/mklib,$(CURRENT)))
++# can't make these on BS2000
++mkshared::
++	>mkshared
++endif
++
++# We've got an omniidl, but it's not nice code :-(  Ask us for it!
++ifdef EBCDICHACK
++PYTHON = /usr/local/corbaconf/Python-1.5.2/python
++else
++PYTHON = 0
++ifeq ($(CURRENT),src/tool)
++UnixPlatform =
++SUBDIRS = omkdepend
++else
++ifeq ($(CURRENT),src/lib/omniORB2)
++EmbeddedSystem = 1
++endif
++endif
++endif
++
++ifeq ($(CURRENT),src/tool/omkdepend)
++IMPORT_CPPFLAGS = -I$(TOP)/include
++COPTIONS  = -DNeedVarargsPrototypes=1 -O -K workspace_stack,llm_keep,llm_case_lower,c_names_unlimited
++endif
++
++
++clean::
++	rm -f *.o.ii *.C
+diff -ruP o/src/lib/omniORB2/dynamic/dir.mk n/src/lib/omniORB2/dynamic/dir.mk
+--- o/src/lib/omniORB2/dynamic/dir.mk	Fri Aug 18 16:09:15 2000
++++ n/src/lib/omniORB2/dynamic/dir.mk	Fri Nov 30 19:13:52 2001
+@@ -17,6 +17,17 @@
+            bootstrapdynstub.cc Namingdynstub.cc \
+ 	   orbMultiRequest.cc constants.cc dynamicLib.cc
+ 
++ifdef BS2000
++ASCII_SOURCES = dynamicImplementation.cc dynException.cc typecode.cc \
++	unknownUserExn.cc irstub.cc irdynstub.cc corbaidlstub.cc \
++	corbaidldynstub.cc bootstrapdynstub.cc Namingdynstub.cc
++
++# can't link two object files of same name (-> ../orbcore/constants.o)
++DYN_SRCS := $(subst constants.cc,constants1.cc,$(DYN_SRCS))
++constants1.cc: constants.cc
++	ln -s $< $@
++endif
++
+ DYN_OBJS =  $(DYN_SRCS:.cc=.o)
+ 
+ 
+diff -ruP o/src/lib/omniORB2/orbcore/constants.cc n/src/lib/omniORB2/orbcore/constants.cc
+--- o/src/lib/omniORB2/orbcore/constants.cc	Wed Feb 21 15:12:14 2001
++++ n/src/lib/omniORB2/orbcore/constants.cc	Fri Nov 30 19:13:52 2001
+@@ -85,6 +85,7 @@
+ */
+ 
+ #include <omniORB3/CORBA.h>
++#include <corbaBoa.h>
+ 
+ #ifdef HAS_pch
+ #pragma hdrstop
+@@ -303,3 +304,21 @@
+ 
+ const CORBA::ULong CORBA::Exception::PR_magic       = 0x45584354U; // EXCT
+ const CORBA::ULong CORBA::Object::_PR_magic         = 0x434F424AU; // COBJ
++
++// All ascii literal constants are here - this file will be compiled with a 
++// special option which will translate the literals into ascii on BS2000
++
++const char* CORBA::BOA::_PD_repoId = "IDL:omg.org/CORBA/BOA:1.0";
++
++const char* ascii_const_InterfaceRepository = "InterfaceRepository";
++const char* ascii_const_lookup_id           = "lookup_id";
++
++const char* CORBA::Object::_PD_repoId = "IDL:omg.org/CORBA/Object:1.0";
++
++const char* CORBA::ORB::_PD_repoId = "IDL:omg.org/CORBA/ORB:1.0";
++
++const char* ascii_const_INIT            = "INIT";
++const char* ascii_const__is_a           = "_is_a";
++const char* ascii_const__non_existent   = "_non_existent";
++const char* ascii_const__interface      = "_interface";
++const char* ascii_const__implementation = "_implementation";
+diff -ruP o/src/lib/omniORB2/orbcore/corbaBoa.cc n/src/lib/omniORB2/orbcore/corbaBoa.cc
+--- o/src/lib/omniORB2/orbcore/corbaBoa.cc	Fri Jun 15 16:38:10 2001
++++ n/src/lib/omniORB2/orbcore/corbaBoa.cc	Fri Nov 30 19:13:52 2001
+@@ -98,6 +98,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++#include <omniORB3/chr_encoding.h>
+ 
+ #define MY_BOA_ID                      "omniORB3_BOA"
+ #define OLD_BOA_ID                     "omniORB2_BOA"
+@@ -193,7 +194,7 @@
+ }
+ 
+ 
+-const char* CORBA::BOA::_PD_repoId = "IDL:omg.org/CORBA/BOA:1.0";
++// CORBA::BOA::_PD_repoId went to constants.cc - all ascii constants are there
+ 
+ //////////////////////////////////////////////////////////////////////
+ ///////////////////////////// omniOrbBOA /////////////////////////////
+@@ -623,8 +624,10 @@
+ 
+   if( omniORB::traceInvocations ) {
+     omniORB::logger l;
+-    l << "Dispatching remote call \'" << giop_s.operation() << "\' to: "
++    char *operation = ENSURE_LOCAL_ENCODING_DUP(giop_s.operation());
++    l << "Dispatching remote call \'" << operation << "\' to: "
+       << id << '\n';
++    FREE_ENCODING_DUP(operation);
+   }
+ 
+   if( !id->servant()->_dispatch(giop_s) ) {
+@@ -672,8 +675,10 @@
+ 
+   if( omniORB::traceInvocations ) {
+     omniORB::logger l;
+-    l << "Dispatching local call \'" << call_desc.op() << "\' to "
++      char * operation= ENSURE_LOCAL_ENCODING_DUP(call_desc.op());
++      l << "Dispatching local call \'" << operation << "\' to: "
+       << id << '\n';
++      FREE_ENCODING_DUP(operation);
+   }
+ 
+   call_desc.doLocalCall(id->servant());
+@@ -908,6 +913,8 @@
+   return objref->_ptrToObjRef(repoId);
+ }
+ 
++extern const char* ascii_const_InterfaceRepository;
++extern const char* ascii_const_lookup_id;
+ 
+ omniObjRef*
+ omniOrbBoaServant::_do_get_interface()
+@@ -929,7 +936,7 @@
+ 
+   // Make a call to the interface repository.
+   omniStdCallDesc::_cCORBA_mObject_i_cstring
+-    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, 0, repoId);
++    call_desc(omniDynamicLib::ops->lookup_id_lcfn, ascii_const_lookup_id, 10, 0, repoId);
+   repository->_PR_getobj()->_invoke(call_desc);
+ 
+   return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
+diff -ruP o/src/lib/omniORB2/orbcore/corbaObject.cc n/src/lib/omniORB2/orbcore/corbaObject.cc
+--- o/src/lib/omniORB2/orbcore/corbaObject.cc	Wed Feb 21 15:12:14 2001
++++ n/src/lib/omniORB2/orbcore/corbaObject.cc	Fri Nov 30 19:13:52 2001
+@@ -315,8 +315,7 @@
+ }
+ 
+ 
+-const char*
+-CORBA::Object::_PD_repoId = "IDL:omg.org/CORBA/Object:1.0";
++// went to constants.cc - all ascii string constants went there
+ 
+ 
+ // We put this here rather than in anonObject.cc to ensure that
+diff -ruP o/src/lib/omniORB2/orbcore/corbaOrb.cc n/src/lib/omniORB2/orbcore/corbaOrb.cc
+--- o/src/lib/omniORB2/orbcore/corbaOrb.cc	Fri Jun 15 16:38:10 2001
++++ n/src/lib/omniORB2/orbcore/corbaOrb.cc	Fri Nov 30 19:13:52 2001
+@@ -221,6 +221,7 @@
+ #endif
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <omniORB3/chr_encoding.h>
+ 
+ 
+ #define MY_ORB_ID           "omniORB3"
+@@ -305,8 +306,7 @@
+ }
+ 
+ 
+-const char*
+-CORBA::ORB::_PD_repoId = "IDL:omg.org/CORBA/ORB:1.0";
++// _PD_repoId went to constants.cc - all ascii literal constants went there
+ 
+ #if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+ #if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+@@ -1338,7 +1338,7 @@
+     }
+     else {
+       l = strlen("nobody")+1;
+-      p = (CORBA::Octet *) "nobody";
++      p = (CORBA::Octet *) ENSURE_ASCII("nobody");
+     }
+     omni::myPrincipalID.length(l);
+     unsigned int i;
+@@ -1349,7 +1349,7 @@
+ 
+ #if defined(_HAS_SIGNAL) && !defined(__CIAO__)
+ #ifndef _USE_MACH_SIGNAL
+-#  ifndef __SINIX__
++#  if !defined(__SINIX__) && !defined(__SNI_HOST_BS2000_POSIX) 
+     struct sigaction act;
+     sigemptyset(&act.sa_mask);
+     act.sa_handler = SIG_IGN;
+@@ -1363,17 +1363,19 @@
+     }
+ #  else
+     // SINUX
+-    struct sigaction act;
++#    ifdef __SNI_HOST_BS2000_POSIX
++    struct std::sigaction act;
+     sigemptyset(&act.sa_mask);
+     act.sa_handler = (void (*)())0;
+     act.sa_flags = 0;
+-    if (sigaction(SIGPIPE,&act,0) < 0) {
++    if (std::sigaction(SIGPIPE,&act,0) < 0) {
+       if( omniORB::trace(1) ) {
+ 	omniORB::logger l;
+ 	l << "WARNING -- ORB_init() cannot install the\n"
+ 	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
+       }
+     }
++#    endif
+ #  endif
+ #else
+     struct sigvec act;
+diff -ruP o/src/lib/omniORB2/orbcore/dir.mk n/src/lib/omniORB2/orbcore/dir.mk
+--- o/src/lib/omniORB2/orbcore/dir.mk	Fri Aug 18 16:09:13 2000
++++ n/src/lib/omniORB2/orbcore/dir.mk	Fri Nov 30 19:13:52 2001
+@@ -25,6 +25,16 @@
+             policy.cc dynamicLib.cc \
+             $(NETLIBSRCS) $(LOG_SRCS) bootstrapstub.cc Namingstub.cc
+ 
++ifdef BS2000
++# need to compile these twice with different defines & options
++%_ascii.cc: %.cc
++	ln $< $@
++ORB_SRCS += poa_ascii.cc exceptn_ascii.cc
++
++ASCII_SOURCES = poa_ascii.cc poamanager.cc poastubs.cc constants.cc \
++		exceptn_ascii.cc policy.cc bootstrapstub.cc Namingstub.cc
++endif
++
+ ORB_OBJS =  $(ORB_SRCS:.cc=.o)
+ 
+ LOG_SRCS = logIOstream.cc
+diff -ruP o/src/lib/omniORB2/orbcore/exceptn.cc n/src/lib/omniORB2/orbcore/exceptn.cc
+--- o/src/lib/omniORB2/orbcore/exceptn.cc	Fri Jun 15 16:38:10 2001
++++ n/src/lib/omniORB2/orbcore/exceptn.cc	Mon Dec  3 12:12:06 2001
+@@ -37,6 +37,7 @@
+ #include <string.h>
+ #include <stdlib.h>
+ 
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
+ 
+ _init_in_def_( const CORBA::ULong CORBA::OMGVMCID = 1330446336; )
+ 
+@@ -209,9 +210,14 @@
+ //////////////////////////// omniExHelper ////////////////////////////
+ //////////////////////////////////////////////////////////////////////
+ 
++#endif	// ASCII
+ #ifndef OMNIORB_NO_EXCEPTION_LOGGING
++#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
+ 
+-static const char* strip(const char* fn)
++#if !defined(NON_ASCII_PLATTFORM)
++static
++#endif
++const char* strip(const char* fn)
+ {
+   const char* p = fn + strlen(fn);
+ 
+@@ -222,6 +228,11 @@
+   return p;
+ }
+ 
++#endif	// maybe !ASCII
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
++#if defined(NON_ASCII_PLATTFORM)
++extern const char* strip(const char* fn);
++#endif
+ 
+ #define STD_EXCEPTION(name) \
+   void omniExHelper::name(const char* file, int line, \
+@@ -251,4 +262,5 @@
+ #undef STD_EXCEPTION
+ 
+ 
++#endif	// ASCII
+ #endif  // ifndef OMNIORB_NO_EXCEPTION_LOGGING
+diff -ruP o/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc n/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc
+--- o/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc	Tue Jul  4 17:23:45 2000
++++ n/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc	Fri Nov 30 19:13:52 2001
+@@ -104,7 +104,7 @@
+     // This is suppose to be compatible with the upcoming POSIX standard.
+     // FreeBSD 4.0 uses it too.
+     socklen_t clientAddrSize;
+-#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
++#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__) || defined(__SNI_HOST_BS2000_POSIX)
+     size_t clientAddrSize;
+ # else
+     int clientAddrSize;
+diff -ruP o/src/lib/omniORB2/orbcore/giopServer.cc n/src/lib/omniORB2/orbcore/giopServer.cc
+--- o/src/lib/omniORB2/orbcore/giopServer.cc	Wed Feb 21 15:12:13 2001
++++ n/src/lib/omniORB2/orbcore/giopServer.cc	Fri Nov 30 19:13:52 2001
+@@ -512,6 +512,8 @@
+     } \
+   } while (0)
+ 
++extern const char* ascii_const_INIT;
++
+ void
+ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
+ {
+@@ -619,7 +621,7 @@
+ 
+     // Or is it the bootstrap agent?
+ 
+-    if( pd_key.size() == 4 && !memcmp(pd_key.key(), "INIT", 4) &&
++    if( pd_key.size() == 4 && !memcmp(pd_key.key(), ascii_const_INIT, 4) &&
+ 	omniInitialReferences::invoke_bootstrap_agentImpl(*this) )
+       return;
+ 
+@@ -824,7 +826,7 @@
+ 	// status == GIOP::UNKNOWN_OBJECT
+       }
+     }
+-    else if( pd_key.size() == 4 && !memcmp(pd_key.key(), "INIT", 4) &&
++    else if( pd_key.size() == 4 && !memcmp(pd_key.key(), ascii_const_INIT, 4) &&
+ 	     omniInitialReferences::is_bootstrap_agentImpl_initialised() )
+       status = GIOP::OBJECT_HERE;
+   }
+diff -ruP o/src/lib/omniORB2/orbcore/initRefs.cc n/src/lib/omniORB2/orbcore/initRefs.cc
+--- o/src/lib/omniORB2/orbcore/initRefs.cc	Wed Feb 21 15:12:13 2001
++++ n/src/lib/omniORB2/orbcore/initRefs.cc	Fri Nov 30 19:13:52 2001
+@@ -110,6 +110,8 @@
+ #include <poaimpl.h>
+ #include <omniORB3/omniURI.h>
+ 
++#include <omniORB3/chr_encoding.h>
++
+ static CORBA_InitialReferences_i*  the_bootagentImpl = 0;
+ static omni_tracedmutex ba_lock;
+ 
+@@ -523,7 +525,9 @@
+ 	l << "Trying to resolve initial reference `" << id << "'\n";
+ 	l << " with boot agent: " << (const char*)ior << "\n";
+       }
+-      result = the_bootagent->get(id);
++      char *ascii_id = ENSURE_ASCII_DUP(id);
++      result = the_bootagent->get(ascii_id);
++      FREE_ENCODING_DUP(ascii_id);
+ 
+       if (CORBA::is_nil(result))
+ 	result = 0;
+@@ -713,7 +717,12 @@
+ 
+     tcpSocketEndpoint addr((CORBA::Char*) host, port);
+     CORBA::Char objkey[4];
+-    objkey[0] = 'I'; objkey[1] = 'N'; objkey[2] = 'I'; objkey[3] = 'T';
++    // We need to ensure that ASCII goes to the network
++    extern const char* ascii_const_INIT;
++    objkey[0] = ascii_const_INIT[0]; 
++    objkey[1] = ascii_const_INIT[1]; 
++    objkey[2] = ascii_const_INIT[2]; 
++    objkey[3] = ascii_const_INIT[3];
+     IOP::TaggedProfileList p;
+     p.length(1);
+ 
+@@ -731,6 +740,10 @@
+     }
+   }
+   catch (...) {
++  }
++  if (omniORB::trace(2000)) {
++      omniORB::logger l;
++      l << "Bootstrap initialised!\n";
+   }
+ }
+ 
+diff -ruP o/src/lib/omniORB2/orbcore/omniInternal.cc n/src/lib/omniORB2/orbcore/omniInternal.cc
+--- o/src/lib/omniORB2/orbcore/omniInternal.cc	Fri Jun 15 16:38:10 2001
++++ n/src/lib/omniORB2/orbcore/omniInternal.cc	Fri Nov 30 19:13:52 2001
+@@ -113,6 +113,7 @@
+ #include <initialiser.h>
+ #include <exceptiondefs.h>
+ 
++#include <omniORB3/chr_encoding.h>
+ 
+ #if defined(HAS_Cplusplus_Namespace)
+ using omniORB::operator==;
+@@ -388,8 +389,11 @@
+ 
+   internalLock->unlock();
+ 
+-  if( !lid && omniORB::trace(15) )
+-    omniORB::logf("ObjRef(%s) -- deleted.", objref->_mostDerivedRepoId());
++  if( !lid && omniORB::trace(15) ) {
++    char* local_encoded_string = ENSURE_LOCAL_ENCODING_DUP(objref->_mostDerivedRepoId());
++    omniORB::logf("ObjRef(%s) -- deleted.", local_encoded_string );
++    FREE_ENCODING_DUP(local_encoded_string);
++  }
+ 
+   // Destroy the reference.
+   delete objref;
+@@ -649,9 +653,15 @@
+ 
+   if( omniORB::trace(10) ) {
+     omniORB::logger l;
++    char* localEncodedTargetRepoId 
++      = ENSURE_LOCAL_ENCODING_DUP(targetRepoId);
++    char* localEncodedMostDerivedRepoId
++      = ENSURE_LOCAL_ENCODING_DUP(mostDerivedRepoId);
+     l << "Creating ref to remote: " << id << "\n"
+-      " target id      : " << targetRepoId << "\n"
+-      " most derived id: " << mostDerivedRepoId << "\n";
++      " target id      : " << localEncodedTargetRepoId << "\n"
++      " most derived id: " << localEncodedMostDerivedRepoId << "\n";
++    FREE_ENCODING_DUP(localEncodedTargetRepoId);
++    FREE_ENCODING_DUP(localEncodedMostDerivedRepoId);
+   }
+ 
+   // Now create the object reference itself.
+@@ -755,9 +765,15 @@
+ 
+   if( omniORB::trace(10) ) {
+     omniORB::logger l;
+-    l << "Creating ref to local: " << local_id << "\n"
+-      " target id      : " << targetRepoId << "\n"
+-      " most derived id: " << mostDerivedRepoId << "\n";
++    char* localEncodedTargetRepoId 
++      = ENSURE_LOCAL_ENCODING_DUP(targetRepoId);
++    char* localEncodedMostDerivedRepoId
++      = ENSURE_LOCAL_ENCODING_DUP(mostDerivedRepoId);
++    l << "Creating ref to remote: " << local_id << "\n"
++      " target id      : " << localEncodedTargetRepoId << "\n"
++      " most derived id: " << localEncodedMostDerivedRepoId << "\n";
++    FREE_ENCODING_DUP(localEncodedTargetRepoId);
++    FREE_ENCODING_DUP(localEncodedMostDerivedRepoId);
+   }
+ 
+   if( servant && !servant->_ptrToInterface(targetRepoId) )
+diff -ruP o/src/lib/omniORB2/orbcore/omniObjRef.cc n/src/lib/omniORB2/orbcore/omniObjRef.cc
+--- o/src/lib/omniORB2/orbcore/omniObjRef.cc	Fri Jun 15 16:38:10 2001
++++ n/src/lib/omniORB2/orbcore/omniObjRef.cc	Fri Nov 30 19:13:52 2001
+@@ -72,6 +72,7 @@
+ #include <excepthandler.h>
+ #include <exceptiondefs.h>
+ 
++#include <omniORB3/chr_encoding.h>
+ 
+ CORBA::Boolean
+ omniObjRef::_compatibleServant(omniServant* svnt)
+@@ -213,12 +214,17 @@
+ 
+     if( !_remote_is_a(pd_intfRepoId) ) {
+       if( omniORB::traceLevel > 1 ) {
++        char* localEncodedMostDerivedRepoId =
++	  ENSURE_LOCAL_ENCODING_DUP(pd_mostDerivedRepoId);
++        char* localEncodedIntfRepoId = ENSURE_LOCAL_ENCODING_DUP(pd_intfRepoId);
+ 	omniORB::log <<
+ 	  "omniORB: The object with the IR repository ID: " <<
+-	  pd_mostDerivedRepoId << "\n"
+-	  " returns FALSE to the query _is_a(\"" << pd_intfRepoId << "\").\n"
++          localEncodedMostDerivedRepoId <<  "\n"
++	  " returns FALSE to the query _is_a(\"" << localEncodedIntfRepoId << "\").\n"
+ 	  " A CORBA::INV_OBJREF is raised.\n";
+ 	omniORB::log.flush();
++        FREE_ENCODING_DUP(localEncodedMostDerivedRepoId);
++        FREE_ENCODING_DUP(localEncodedIntfRepoId);
+       }
+       OMNIORB_THROW(INV_OBJREF,0,CORBA::COMPLETED_NO);
+     }
+@@ -300,6 +306,7 @@
+   tcd->result = servant->_is_a(tcd->a_1);
+ }
+ 
++extern const char* ascii_const__is_a;
+ 
+ CORBA::Boolean
+ omniObjRef::_remote_is_a(const char* a_repoId)
+@@ -307,7 +314,7 @@
+   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+ 
+   omniObjRef_is_a_CallDesc call_desc(omniObjRef_is_a_lcfn,
+-				     "_is_a", sizeof("_is_a"), a_repoId);
++				     ascii_const__is_a, strlen(ascii_const__is_a)+1, a_repoId);
+ 
+   _invoke(call_desc, 0);
+   return call_desc.result;
+@@ -341,6 +348,7 @@
+   ((omniObjRef_non_existent_CallDesc*) cd)->result = servant->_non_existent();
+ }
+ 
++extern const char *ascii_const__non_existent;
+ 
+ CORBA::Boolean
+ omniObjRef::_remote_non_existent()
+@@ -348,8 +356,8 @@
+   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+ 
+   omniObjRef_non_existent_CallDesc call_desc(omniObjRef_non_existent_lcfn,
+-					     "_non_existent",
+-					     sizeof("_non_existent"));
++					     ascii_const__non_existent, 
++					     strlen(ascii_const__non_existent)+1);
+ 
+   _invoke(call_desc, 0);
+   return call_desc.result;
+diff -ruP o/src/lib/omniORB2/orbcore/omniServant.cc n/src/lib/omniORB2/orbcore/omniServant.cc
+--- o/src/lib/omniORB2/orbcore/omniServant.cc	Wed Feb 21 15:12:12 2001
++++ n/src/lib/omniORB2/orbcore/omniServant.cc	Fri Nov 30 19:13:52 2001
+@@ -120,11 +120,15 @@
+   return 0;
+ }
+ 
++extern const char* ascii_const__is_a;
++extern const char* ascii_const__non_existent;
++extern const char* ascii_const__interface;
++extern const char* ascii_const__implementation;
+ 
+ _CORBA_Boolean
+ omniServant::_dispatch(GIOP_S& giop_s)
+ {
+-  if( strcmp(giop_s.operation(), "_is_a") == 0 ) {
++  if( strcmp(giop_s.operation(), ascii_const__is_a) == 0 ) {
+     CORBA::String_member id;
+     id <<= giop_s;
+     giop_s.RequestReceived();
+@@ -139,7 +143,7 @@
+     return 1;
+   }
+ 
+-  if( strcmp(giop_s.operation(), "_non_existent") == 0 ) {
++  if( strcmp(giop_s.operation(), ascii_const__non_existent) == 0 ) {
+     giop_s.RequestReceived();
+     CORBA::Boolean result = this->_non_existent();
+     if( giop_s.response_expected() ) {
+@@ -152,7 +156,7 @@
+     return 1;
+   }
+ 
+-  if( strcmp(giop_s.operation(), "_interface") == 0 ) {
++  if( strcmp(giop_s.operation(), ascii_const__interface) == 0 ) {
+     giop_s.RequestReceived();
+     CORBA::Object_var result;
+     omniObjRef* intf = this->_do_get_interface();
+@@ -168,7 +172,7 @@
+     return 1;
+   }
+ 
+-  if( strcmp(giop_s.operation(), "_implementation") == 0 ) {
++  if( strcmp(giop_s.operation(), ascii_const__implementation) == 0 ) {
+     omniORB::logs(2,
+      "WARNING -- received GIOP request \'_implementation\'.\n"
+      " This operation is not supported.  CORBA::NO_IMPLEMENT was raised.");
+diff -ruP o/src/lib/omniORB2/orbcore/poa.cc n/src/lib/omniORB2/orbcore/poa.cc
+--- o/src/lib/omniORB2/orbcore/poa.cc	Wed Feb 21 15:12:12 2001
++++ n/src/lib/omniORB2/orbcore/poa.cc	Mon Dec  3 15:22:02 2001
+@@ -151,11 +151,16 @@
+ #endif
+ 
+ 
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
+ #define POA_NAME_SEP            '\xff'
+ #define POA_NAME_SEP_STR        "\xff"
+ #define TRANSIENT_SUFFIX_SEP    '\xfe'
+ #define TRANSIENT_SUFFIX_SIZE   8
+ 
++#endif	// ASCII
++#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
++#include <omniORB3/chr_encoding.h>
++
+ #define DOWNCAST(s)  ((PortableServer::Servant) (s)->_downcast())
+ 
+ #define SYS_ASSIGNED_ID_SIZE    4
+@@ -233,10 +238,14 @@
+   return _the_nil_ptr;
+ }
+ 
++#endif	// maybe !ASCII
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
+ 
+ const char*
+ PortableServer::POA::_PD_repoId = "IDL:omg.org/PortableServer/POA" PS_VERSION;
+ 
++#endif	// ASCII
++#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
+ 
+ PortableServer::POA_ptr
+ PortableServer::POA::_the_root_poa()
+@@ -266,6 +275,9 @@
+ 
+ #undef DEFINE_CPFN
+ 
++#endif	// maybe !ASCII
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
++
+ //////////////////////////////////////////////////////////////////////
+ /////////////////////////// POA Exceptions ///////////////////////////
+ //////////////////////////////////////////////////////////////////////
+@@ -301,6 +313,8 @@
+ OMNIORB_DEFINE_USER_EX_COMMON_FNS(PortableServer::POA, InvalidPolicy,
+ 	       "IDL:omg.org/PortableServer/InvalidPolicy" PS_VERSION)
+ 
++#endif	// ASCII
++#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
+ 
+ PortableServer::POA::InvalidPolicy::InvalidPolicy(const PortableServer::POA::InvalidPolicy& _s) : CORBA::UserException(_s)
+ {
+@@ -375,7 +389,10 @@
+ 					const CORBA::PolicyList& pin);
+ 
+ 
+-static omni_tracedmutex     poa_lock;
++#ifndef NON_ASCII_PLATTFORM
++static
++#endif
++omni_tracedmutex     poa_lock;
+ 
+ static omni_tracedmutex     servant_activator_lock;
+ // Used to serealise invocations on ServantActivator's.  It
+@@ -386,7 +403,10 @@
+ // Used to signal between threads when using an AdapterActivator
+ // to create a child POA.
+ 
+-static omniOrbPOA* theRootPOA = 0;
++#ifndef NON_ASCII_PLATTFORM
++static
++#endif
++omniOrbPOA* theRootPOA = 0;
+ static omniOrbPOA* theINSPOA  = 0;
+ // Protected by <poa_lock>.
+ 
+@@ -1327,8 +1347,10 @@
+ 
+   if( omniORB::traceInvocations ) {
+     omniORB::logger l;
+-    l << "Dispatching remote call \'" << giop_s.operation() << "\' to: "
++    char* operation = ENSURE_LOCAL_ENCODING_DUP(giop_s.operation());
++    l << "Dispatching remote call \'" << operation << "\' to: "
+       << id << '\n';
++    FREE_ENCODING_DUP(operation);
+   }
+ 
+   if( !id->servant()->_dispatch(giop_s) ) {
+@@ -1391,8 +1413,10 @@
+ 
+   if( omniORB::traceInvocations ) {
+     omniORB::logger l;
+-    l << "Dispatching local call \'" << call_desc.op() << "\' to "
++    char* operation = ENSURE_LOCAL_ENCODING_DUP(call_desc.op());
++    l << "Dispatching local call \'" << operation << "\' to "
+       << id << '\n';
++    FREE_ENCODING_DUP(operation);
+   }
+ 
+   call_desc.doLocalCall(id->servant());
+@@ -1464,6 +1488,14 @@
+ 
+   id->die();
+ }
++#endif	// maybe !ASCII
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
++#ifdef NON_ASCII_PLATTFORM
++
++extern omni_tracedmutex     poa_lock;
++extern omniOrbPOA* theRootPOA = 0;
++
++#endif
+ 
+ //////////////////////
+ // omniORB Internal //
+@@ -1547,6 +1579,8 @@
+   else                             pd_call_lock = &pd_lock;
+ }
+ 
++#endif	// ASCII
++#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
+ 
+ omniOrbPOA::omniOrbPOA()  // nil constructor
+   : OMNIORB_BASE_CTOR(PortableServer::)POA(1),
+@@ -1909,6 +1943,8 @@
+   if( rp )  CORBA::release(rp);
+ }
+ 
++#endif	// maybe !ASCII
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
+ 
+ omniOrbPOA*
+ omniOrbPOA::getAdapter(const _CORBA_Octet* key, int keysize)
+@@ -1969,6 +2005,9 @@
+   return poa;
+ }
+ 
++#endif	// ASCII
++#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
++
+ //////////////////////////////////////////////////////////////////////
+ ////////////////////////// Internal helpers //////////////////////////
+ //////////////////////////////////////////////////////////////////////
+@@ -2139,6 +2178,8 @@
+   pd_children.length(count - 1);
+ }
+ 
++#endif	// maybe !ASCII
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
+ 
+ int
+ omniOrbPOA::adapter_name_is_valid(const char* name)
+@@ -2158,6 +2199,8 @@
+   return 1;
+ }
+ 
++#endif	// ASCII
++#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
+ 
+ void
+ omniOrbPOA::synchronise_request(omniLocalIdentity* lid)
+@@ -2865,6 +2908,8 @@
+   }
+ }
+ 
++#endif	// maybe !ASCII
++#if !defined(NON_ASCII_PLATTFORM) || defined(COMPILE_ASCII)
+ 
+ static void
+ generateUniqueId(CORBA::Octet* k)
+@@ -2948,6 +2993,8 @@
+   lo++;
+ }
+ 
++#endif	// ASCII
++#if !defined(NON_ASCII_PLATTFORM) || !defined(COMPILE_ASCII)
+ 
+ static void
+ destroyer_thread_fn(void* args)
+@@ -2965,3 +3012,4 @@
+ 
+   poa->do_destroy(etherealise);
+ }
++#endif	// maybe !ASCII
+diff -ruP o/src/lib/omniORB2/orbcore/poamanager.cc n/src/lib/omniORB2/orbcore/poamanager.cc
+--- o/src/lib/omniORB2/orbcore/poamanager.cc	Wed Feb 21 15:12:12 2001
++++ n/src/lib/omniORB2/orbcore/poamanager.cc	Fri Nov 30 19:13:52 2001
+@@ -66,6 +66,8 @@
+ #pragma hdrstop
+ #endif
+ 
++#include <omniORB3/chr_encoding.h>
++
+ #include <poamanager.h>
+ #include <poaimpl.h>
+ #include <exceptiondefs.h>
+@@ -363,7 +365,7 @@
+ 
+   if( i == len )
+     throw omniORB::fatalException(__FILE__, __LINE__,
+-				  "lose_poa(...) for POA I didn't own!");
++	ENSURE_LOCAL_ENCODING("lose_poa(...) for POA I didn't own!"));
+ 
+   for( ; i < len - 1; i++ )
+     pd_poas[i] = pd_poas[i + 1];
+diff -ruP o/src/lib/omniORB2/orbcore/remoteIdentity.cc n/src/lib/omniORB2/orbcore/remoteIdentity.cc
+--- o/src/lib/omniORB2/orbcore/remoteIdentity.cc	Wed Feb 21 15:12:11 2001
++++ n/src/lib/omniORB2/orbcore/remoteIdentity.cc	Fri Nov 30 19:13:52 2001
+@@ -65,6 +65,8 @@
+ #include <dynamicLib.h>
+ #include <exceptiondefs.h>
+ 
++#include <omniORB3/chr_encoding.h>
++
+ 
+ //////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////
+@@ -102,7 +104,9 @@
+ 
+   if( omniORB::traceInvocations ) {
+     omniORB::logger l;
+-    l << "Invoke '" << call_desc.op() << "' on remote: " << this << '\n';
++    char* call_desc_str = ENSURE_LOCAL_ENCODING_DUP(call_desc.op());
++    l << "Invoke '" << call_desc_str << "' on remote: " << this << '\n';
++    FREE_ENCODING_DUP(call_desc_str);
+   }
+ 
+   CORBA::Boolean reuse = 0; //?? move this up into transport
+diff -ruP o/src/lib/omniORB2/orbcore/scavenger.cc n/src/lib/omniORB2/orbcore/scavenger.cc
+--- o/src/lib/omniORB2/orbcore/scavenger.cc	Thu Jun 21 16:02:18 2001
++++ n/src/lib/omniORB2/orbcore/scavenger.cc	Fri Nov 30 19:16:29 2001
+@@ -378,6 +378,10 @@
+     }
+ 
+     omni_thread::get_time(&abs_sec,&abs_nsec,ScanPeriod);
++#ifdef __SNI_HOST_BS2000_POSIX
++    LOGMESSAGE(3000,"","yielding.");
++    yield();
++#endif
+   }
+ 
+   LOGMESSAGE(15,"","exit.");
+diff -ruP o/src/lib/omniORB2/orbcore/tcpSocket.cc n/src/lib/omniORB2/orbcore/tcpSocket.cc
+--- o/src/lib/omniORB2/orbcore/tcpSocket.cc	Wed Feb 21 15:12:10 2001
++++ n/src/lib/omniORB2/orbcore/tcpSocket.cc	Fri Nov 30 19:13:52 2001
+@@ -94,7 +94,7 @@
+ #include <tcpSocket.h>
+ #include <gatekeeper.h>
+ #include <exceptiondefs.h>
+-
++#include <omniORB3/chr_encoding.h>
+ 
+ #ifndef Swap16
+ #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
+@@ -269,6 +269,7 @@
+     objkey = new CORBA::Octet[objkeysize];
+     memcpy((void *)objkey,(void *)&(profile.profile_data[begin]),objkeysize);
+   }
++  ENSURE_LOCAL_ENCODING(host);
+   addr = new tcpSocketEndpoint(host,port);
+   return 1;
+ }
+@@ -306,6 +307,7 @@
+     l = hlen;
+   }
+   memcpy((void *)&(profile.profile_data[8]),(void *)tcpaddr->host(),hlen);
++  ENSURE_ASCII(&(profile.profile_data[8]));
+   CORBA::ULong idx = ((8 + hlen) + 1) & ~(1);
+   {
+     CORBA::UShort &l = (CORBA::UShort &) profile.profile_data[idx];
+diff -ruP o/src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc n/src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+--- o/src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc	Wed Feb 21 15:12:10 2001
++++ n/src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc	Fri Nov 30 19:13:52 2001
+@@ -219,6 +219,8 @@
+ #pragma hdrstop
+ #endif
+ 
++#include <omniORB3/chr_encoding.h>
++
+ #include <ropeFactory.h>
+ #include <tcpSocket.h>
+ #include <exceptiondefs.h>
+@@ -653,14 +655,11 @@
+     // This is suppose to be compatible with the upcoming POSIX standard.
+     // FreeBSD 4.0 uses it too.
+     socklen_t l;
+-# elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
++# elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__) || defined(__SNI_HOST_BS2000_POSIX)
+     size_t l;
+ # else
+     int l;
+ # endif
+-
+-
+-
+     l = sizeof(struct sockaddr_in);
+     if (getsockname(pd_rendezvous,
+ 		    (struct sockaddr *)&myaddr,&l) == RC_SOCKET_ERROR) {
+@@ -946,16 +945,23 @@
+ 
+ 
+ static inline char printable_char(char c) {
++#ifndef __SNI_HOST_BS2000_POSIX
+   return (c < 32 || c > 126) ? '.' : c;
++#else
++  return (isalnum(c) == 0) ? '.' : c;
++#endif
+ }
+ 
+-
+ static void dumpbuf(unsigned char* buf, size_t sz)
+ {
+   static omni_mutex lock;
+   omni_mutex_lock sync(lock);
+   unsigned i;
++#ifndef __SNI_HOST_BS2000_POSIX
+   char row[80];
++#else
++  char row[170];
++#endif
+ 
+   // Do complete rows of 16 octets.
+   while( sz >= 16u ) {
+@@ -968,24 +974,48 @@
+     fprintf(stderr, "%s", row);
+     char* p = row;
+     for( i = 0u; i < 16u; i++ )  *p++ = printable_char(*buf++);
++#ifdef __SNI_HOST_BS2000_POSIX
++    // Print the chars in ASCII
++    buf -= 16u;
++    *p++ = 'a';
++    *p++ = ':';
++    char* tmp = " " ;
++    for( i = 0u; i < 16u; i++ ){
++      *tmp = *buf++;
++      _a2e(tmp);
++      *p++ = printable_char(*tmp);
++    }
++#endif
+     *p++ = '\0';
+     fprintf(stderr,"%s\n", row);
+     sz -= 16u;
+   }
+ 
+   if( sz ) {
++    int j=0;
+     // The final part-row.
+     for( i = 0u; i < sz; i++ )
+       fprintf(stderr, (i & 1u) ? "%02x ":"%02x", (int) buf[i]);
+-    for( ; i < 16u; i++ )
++    for( j=i; i < 16u; i++ )
+       fprintf(stderr, (i & 1u) ? "   ":"  ");
+     for( i = 0u; i < sz; i++ )
+       fprintf(stderr, "%c", printable_char(buf[i]));
++#ifdef __SNI_HOST_BS2000_POSIX
++    for( i=sz; i < 16u; i++ )
++      fprintf(stderr, " ");
++    fprintf(stderr, "a:");
++    // Print the chars in ASCII
++    char* tmp = " " ;
++    for( i = 0u; i < sz; i++ ) {
++      *tmp = buf[i];
++      _a2e(tmp);
++      fprintf(stderr, "%c", printable_char(*tmp));
++    }
++#endif
+     fprintf(stderr,"\n");
+   }
+ }
+ 
+-
+ size_t
+ tcpSocketStrand::ll_recv(void* buf, size_t sz)
+ {
+@@ -1410,7 +1440,7 @@
+       // This is suppose to be compatible with the upcoming POSIX standard.
+       // FreeBSD 4.0 uses it too.
+       socklen_t l;
+-#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
++#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__) || defined(__SNI_HOST_BS2000_POSIX)
+       size_t l;
+ #else
+       int l;
+@@ -1458,6 +1488,11 @@
+ 
+       try {
+ 	newthr = new tcpSocketWorker(newSt,pd_factory);
++#ifdef __SNI_HOST_BS2000_POSIX
++        // let the new thread run ... remember the GNU pth is cooperative!
++        yield();
++        PTRACE("Rendezvouser","I am after yield.");
++#endif
+       }
+       catch(...) {
+ 	newthr = 0;
+@@ -1570,7 +1605,7 @@
+     // This is suppose to be compatible with the upcoming POSIX standard.
+     // FreeBSD 4.0 uses it too.
+     socklen_t l;
+-#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
++#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__) || defined(__SNI_HOST_BS2000_POSIX)
+     size_t l;
+ #else
+     int l;
+diff -ruP o/src/lib/omnithread/posix.cc n/src/lib/omnithread/posix.cc
+--- o/src/lib/omnithread/posix.cc	Thu Jun 21 16:02:18 2001
++++ n/src/lib/omnithread/posix.cc	Fri Nov 30 19:13:52 2001
+@@ -297,11 +297,15 @@
+ 
+ #endif
+ 
++#ifdef UsePthread
++    THROW_ERRORS(pthread_key_create(&self_key, 0));
++#else
+ #if (PthreadDraftVersion == 4)
+-    THROW_ERRORS(pthread_keycreate(&self_key, NULL));
++    THROW_ERRORS(pthread_keycreate(&self_key, 0));
+ #else
+     THROW_ERRORS(pthread_key_create(&self_key, NULL));
+ #endif
++#endif /* UsePthread */
+ 
+ #ifdef PthreadSupportThreadPriority
+ 
+@@ -442,7 +446,7 @@
+ {
+     common_constructor(arg, pri, 1);
+     fn_void = fn;
+-    fn_ret = NULL;
++    fn_ret = 0;
+ }
+ 
+ // construct an undetached thread running a given function.
+@@ -450,7 +454,7 @@
+ omni_thread::omni_thread(void* (*fn)(void*), void* arg, priority_t pri)
+ {
+     common_constructor(arg, pri, 0);
+-    fn_void = NULL;
++    fn_void = 0;
+     fn_ret = fn;
+ }
+ 
+@@ -459,8 +463,8 @@
+ omni_thread::omni_thread(void* arg, priority_t pri)
+ {
+     common_constructor(arg, pri, 1);
+-    fn_void = NULL;
+-    fn_ret = NULL;
++    fn_void = 0;
++    fn_ret = 0;
+ }
+ 
+ // common part of all constructors.
+@@ -555,11 +559,15 @@
+ 
+     if (detached) {
+ 
++#if (_POSIX_THREAD_IS_GNU_PTH == 0x103207)
++	THROW_ERRORS(pthread_detach(posix_thread));
++#else
+ #if (PthreadDraftVersion <= 6)
+ 	THROW_ERRORS(pthread_detach(&posix_thread));
+ #else
+ 	THROW_ERRORS(pthread_detach(posix_thread));
+ #endif
++#endif /* _POSIX_THREAD_IS_GNU_PTH == 0x103207 */
+     }
+ }
+ 
+@@ -734,6 +742,9 @@
+ {
+     omni_thread* me;
+ 
++#if (_POSIX_THREAD_IS_GNU_PTH == 0x103207 )
++    me = (omni_thread *)pthread_getspecific(self_key);
++#else
+ #if (PthreadDraftVersion <= 6)
+ 
+     THROW_ERRORS(pthread_getspecific(self_key, (void**)&me));
+@@ -743,6 +754,7 @@
+     me = (omni_thread *)pthread_getspecific(self_key);
+ 
+ #endif
++#endif
+ 
+     if (!me) {
+       // This thread is not created by omni_thread::start because it
+@@ -757,6 +769,9 @@
+ void
+ omni_thread::yield(void)
+ {
++#if (_POSIX_THREAD_IS_GNU_PTH == 0x103207 )
++    pthread_yield_np();
++#else
+ #if (PthreadDraftVersion == 6)
+ 
+     pthread_yield(NULL);
+@@ -770,6 +785,7 @@
+     THROW_ERRORS(sched_yield());
+ 
+ #endif
++#endif /* _POSIX_THREAD_IS_GNU_PTH */
+ }
+ 
+ 
+@@ -797,7 +813,7 @@
+     if (pthread_delay_np(&rqts) != 0)
+ 	throw omni_thread_fatal(errno);
+ 
+-#elif defined(__linux__) || defined(__aix__)
++#elif defined(__linux__) || defined(__aix__) || defined(__SNI_HOST_BS2000_POSIX)
+ 
+     if (secs > 2000) {
+       while ((secs = ::sleep(secs))) ;
+@@ -838,7 +854,7 @@
+ 
+ #else
+ 
+-#if defined(__linux__) || defined(__aix__) || defined(__SCO_VERSION__) || defined(__darwin__)
++#if defined(__linux__) || defined(__aix__) || defined(__SCO_VERSION__) || defined(__darwin__) || defined(__SNI_HOST_BS2000_POSIX)
+ 
+     struct timeval tv;
+     gettimeofday(&tv, NULL); 
+diff -ruP o/src/tool/omkdepend/main.c n/src/tool/omkdepend/main.c
+--- o/src/tool/omkdepend/main.c	Fri Aug 18 16:09:10 2000
++++ n/src/tool/omkdepend/main.c	Fri Nov 30 19:13:52 2001
+@@ -403,8 +403,14 @@
+ 		freefile(filecontent);
+ 		recursive_pr_include(ip, ip->i_file, base_name(*fp));
+ 		inc_clean();
+-		if (printed)
++		if (printed) {
++#if defined(__SNI_HOST_BS2000_POSIX)
++			unsigned char buf[] = { 0xA, 0x0 };
++			fwrite(buf, strlen(buf), 1, stdout);
++#else
+ 			printf("\n");
++#endif
++                }
+ 	}
+ 	exit(0);
+ }
+@@ -435,6 +441,9 @@
+ 	content->f_end = content->f_base + st.st_size;
+ 	*content->f_end = '\0';
+ 	content->f_line = 0;
++#if defined(__SNI_HOST_BS2000_POSIX)
++        _a2e_n(content->f_base,content->f_len);
++#endif
+ 	return(content);
+ }
+ 
+diff -ruP o/src/tool/omkdepend/pr.c n/src/tool/omkdepend/pr.c
+--- o/src/tool/omkdepend/pr.c	Fri Aug 18 16:09:10 2000
++++ n/src/tool/omkdepend/pr.c	Fri Nov 30 19:13:52 2001
+@@ -26,6 +26,10 @@
+ 
+ */
+ 
++#if defined(__SNI_HOST_BS2000_POSIX)
++#include <ascii_ebcdic.h>
++#endif
++
+ #include "def.h"
+ 
+ extern struct	inclist	inclist[ MAXFILES ],
+@@ -117,6 +121,9 @@
+ 	else {
+ 		sprintf(buf, " \\\n %s", transfile);
+ 	}
++#if defined(__SNI_HOST_BS2000_POSIX)
++	_e2a(buf);
++#endif
+ 	fwrite(buf, strlen(buf), 1, stdout);
+ 
+ 	/*

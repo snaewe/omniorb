@@ -38,12 +38,15 @@ README.SGI   - contains further information on using omniORB3 on the
 
 README.egcs  - contains information on building omniORB3 with egcs-1.0.
 
-README.ETSKernel  - contains important information on building and using
-                    omniORB3 with Phar Lap's ETS kernel.
+README.ETSKernel - contains important information on building and using
+                   omniORB3 with Phar Lap's ETS kernel.
 
-README.SunC++5 - contains warnings on using omniORB3 with Sun C++ v5
+README.SunC++5   - contains warnings on using omniORB3 with Sun C++ v5
 
-PORTING      - contains instructions on porting omniORB3.
+README.bs2000    - contains information on building omniORB 3 for
+                   Fujitsu Siemens BS2000.
+
+PORTING          - contains instructions on porting omniORB3.
 
 CHANGES_280      - contains details of changes from 2.7.1 to 2.8.0.
 

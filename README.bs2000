@@ -1,0 +1,7 @@
+         omniORB3 for Fujitsu Siemens BS2000 mainframes
+         ==============================================
+
+Thanks to Start Amadeus GmbH and Traventec, omniORB 3 has been ported
+to Fujitsu Siemens BS2000. The changes are rather intrusive to the
+source, so they are distributed as a patch. Apply the patch in
+patches/BS2000.patch, then read the README.BS2000 file.

@@ -1,3 +1,14 @@
+Wed Jan  9 11:19:26 GMT 2002 dpg1
+=================================
+
+- Add BS2000 patch.
+
+external_merge/README.FIRST
+external_merge/README.bs2000            -- new
+external_merge/patches/BS2000.patch     -- new
+external_merge/patches/README
+
+
 Tue Dec 11 16:49:16 GMT 2001 dpg1
 =================================
 
