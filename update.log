@@ -1,3 +1,15 @@
+Thu Nov 21 14:23:27 GMT 2002 dgrisby
+====================================
+
+- More unique guard name (thanks Daniel Bell).
+
+include/omniORB4/omniutilities.h
+
+- Only return iterator if necessary (thanks Kendall Bailey).
+
+src/appl/omniNames/NamingContext_i.cc
+
+
 Tue Nov 12 16:39:14 GMT 2002 dgrisby
 ====================================
 

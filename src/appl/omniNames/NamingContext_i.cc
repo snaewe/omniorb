@@ -463,6 +463,14 @@ NamingContext_i::list(CORBA::ULong how_many, CosNaming::BindingList_out bl,
 
   lock.readerOut();
 
+  if( all->length() <= how_many ) {
+    // don't need an iterator.  All results can go back as a
+    // result of this call
+    bi = CosNaming::BindingIterator::_nil();
+    bl = all;
+    return;
+  }
+
   BindingIterator_i* bii = new BindingIterator_i(the_poa, all);
 
   bi = bii->_this();
