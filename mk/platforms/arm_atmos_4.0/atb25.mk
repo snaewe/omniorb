@@ -1,5 +1,5 @@
 #
-# arm_atmos_4.0/atb.mk
+# arm_atmos_4.0/atb25.mk
 #
 
 ATMOS_HARDWARE = atb25
