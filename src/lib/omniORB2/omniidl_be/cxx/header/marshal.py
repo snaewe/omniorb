@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4.2.3  2001/04/25 16:55:10  dpg1
+# Properly handle files #included at non-file scope.
+#
 # Revision 1.4.2.2  2000/04/26 18:22:30  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -73,7 +76,8 @@ def __init__(stream):
 #
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if config.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
     for n in node.definitions():
@@ -95,9 +99,6 @@ def visitEnum(node):
     pass
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-    
     # interfaces act as containers for other declarations
     # output their operators here
     for d in node.declarations():

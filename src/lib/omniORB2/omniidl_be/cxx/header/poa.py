@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.11  2001/04/25 16:55:11  dpg1
+# Properly handle files #included at non-file scope.
+#
 # Revision 1.15.2.10  2001/01/29 10:49:42  djs
 # Bug generating C++ names in the following IDL:
 #   interface I{}; module M{ interface I: ::I{}; };
@@ -147,14 +150,10 @@ def POA_prefix():
 def visitAST(node):
     self.__completedModules = {}
     for n in node.declarations():
-        n.accept(self)
+        if config.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
-    # again, check what happens with reopened modules spanning
-    # multiple files
-    if not(node.mainFile()):
-        return
-
     if self.__completedModules.has_key(node):
         return
     self.__completedModules[node] = 1
@@ -190,9 +189,6 @@ def visitModule(node):
     return
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-
     iname = id.mapID(node.identifier())
     environment = id.lookup(node)
     scopedName = id.Name(node.scopedName())

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.15  2001/04/25 16:55:11  dpg1
+# Properly handle files #included at non-file scope.
+#
 # Revision 1.27.2.14  2001/04/03 18:29:47  djs
 # A previous fix of referring to an interface's ancestors by a flat typedef
 # rather than a scoped name fell over when the interface was inherited from
@@ -213,7 +216,7 @@ def __init__(stream):
 def visitAST(node):
     for n in node.declarations():
         # Not sure what should happen when modules are reopened
-        if n.mainFile():
+        if config.shouldGenerateCodeForDecl(n):
             n.accept(self)
 
 def visitModule(node):

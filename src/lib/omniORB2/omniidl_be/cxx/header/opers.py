@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.5  2001/04/25 16:55:10  dpg1
+# Properly handle files #included at non-file scope.
+#
 # Revision 1.7.2.4  2000/06/26 16:23:59  djs
 # Better handling of #include'd files (via new commandline options)
 # Refactoring of configuration state mechanism.
@@ -90,21 +93,16 @@ def __init__(stream):
 #
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if config.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
     # again, check what happens with reopened modules spanning
     # multiple files
-    if not(node.mainFile()):
-        return
-    
     for n in node.definitions():
         n.accept(self)
 
 def visitStruct(node):
-    if not(node.mainFile()):
-        return
-    
     for n in node.members():
         n.accept(self)
 
@@ -116,9 +114,6 @@ def visitStruct(node):
                    fqname = fqname)
 
 def visitUnion(node):
-    if not(node.mainFile()):
-        return
-
     # deal with constructed switch type
     if node.constrType():
         node.switchType().decl().accept(self)
@@ -137,16 +132,10 @@ def visitUnion(node):
 
 
 def visitMember(node):
-    if not(node.mainFile()):
-        return
-    
     if node.constrType():
         node.memberType().decl().accept(self)
 
 def visitEnum(node):
-    if not(node.mainFile()):
-        return
-
     cxx_fqname = id.Name(node.scopedName()).fullyQualify()
     
     # build the cases
@@ -166,9 +155,6 @@ def visitEnum(node):
                    name = cxx_fqname)
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-    
     # interfaces act as containers for other declarations
     # output their operators here
     for d in node.declarations():
@@ -184,9 +170,6 @@ def visitInterface(node):
         
 
 def visitTypedef(node):
-    if not(node.mainFile()):
-        return
-    
     aliasType = types.Type(node.aliasType())
 
     if node.constrType():
@@ -221,9 +204,6 @@ def visitConst(node):
 def visitDeclarator(node):
     pass
 def visitException(node):
-    if not(node.mainFile()):
-        return
-
     for m in node.members():
         if m.constrType():
             m.memberType().decl().accept(self)

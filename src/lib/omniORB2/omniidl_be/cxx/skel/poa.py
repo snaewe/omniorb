@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.4  2001/04/25 16:55:12  dpg1
+# Properly handle files #included at non-file scope.
+#
 # Revision 1.7.2.3  2000/06/26 16:24:18  djs
 # Refactoring of configuration state mechanism.
 #
@@ -65,7 +68,7 @@
 # similar to o2be_root::produce_poa_skel in the old C++ BE
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, id
+from omniidl_be.cxx import tyutil, util, id, config
 from omniidl_be.cxx.skel import template
 
 import poa
@@ -88,7 +91,8 @@ def POA_prefix():
 
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if config.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
     name = id.mapID(node.identifier())
@@ -103,8 +107,6 @@ def visitModule(node):
 
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
     name = id.mapID(node.identifier())
     fqname = id.Name(node.scopedName()).fullyQualify()
     stream.out(template.interface_POA,
