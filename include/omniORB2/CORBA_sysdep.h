@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.29  1999/01/07 18:17:51  djr
+ Enable namespaces on egcs 1.1.1
+ MSVC and VMS platforms do not have strcasecmp and strncasecmp.
+
  Revision 1.28  1999/01/05 12:31:14  sll
  Correct typo in #error messages.
 
@@ -115,6 +119,14 @@
 // the bug is fixed.
 #define EGCS_WORKAROUND
 
+// Minor version number 91 is for egcs version 1.*  Some older
+// versions of 1.* may not support namespaces properly - this is
+// only tested for egcs 1.1.1
+#  if __GNUC_MINOR__ >= 91
+#     define HAS_Cplusplus_Namespace
+#     define HAS_Cplusplus_Bool
+#  endif
+
 #elif defined(__DECCXX)
 // DEC C++ compiler
 
@@ -130,7 +142,7 @@
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
 #     define HAS_pch
-// Uncomment the following lines to enable the use of namespace with cxx v 5.6
+// Uncomment the following lines to enable the use of namespace with cxx v5.6
 // Notice that the source code may have to be patched to compile.
 //#  elif __DECCXX_VER >= 50600000
 //#     define HAS_Cplusplus_Namespace
@@ -173,6 +185,8 @@
 #define HAS_Cplusplus_Namespace
 #define HAS_Std_Namespace
 #endif
+#define _HAS_NOT_GOT_strcasecmp
+#define _HAS_NOT_GOT_strncasecmp
 
 #elif defined(__BCPLUSPLUS__)
 #define HAS_Cplusplus_Namespace
@@ -199,7 +213,7 @@
 
 #if defined(arm)
 // We don't have support for float.
-#   define NO_FLOAT
+#  define NO_FLOAT
 #endif
 
 #ifndef __cplusplus
@@ -230,78 +244,81 @@
 #endif
 
 #if defined(__arm__) && defined(__atmos__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 1
+# define _OMNIORB_HOST_BYTE_ORDER_ 1
 #elif defined(__alpha__) && !defined(__VMS)
-#define _OMNIORB_HOST_BYTE_ORDER_ 1
-#if !defined(__WIN32__)
-#define _HAS_SIGNAL 1
-#endif
+# define _OMNIORB_HOST_BYTE_ORDER_ 1
+# if !defined(__WIN32__)
+#  define _HAS_SIGNAL 1
+# endif
 #elif defined(__sunos__) && defined(__sparc__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 0
-#define _HAS_SIGNAL 1
-#if __OSVERSION__ == 5
-#define NEED_GETHOSTNAME_PROTOTYPE
-#endif
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
+# define _HAS_SIGNAL 1
+# if __OSVERSION__ == 5
+#  define NEED_GETHOSTNAME_PROTOTYPE
+# endif
 #elif defined(__x86__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 1
-#if !defined(__WIN32__)
-#define _HAS_SIGNAL 1
-#endif
+# define _OMNIORB_HOST_BYTE_ORDER_ 1
+# if !defined(__WIN32__)
+#  define _HAS_SIGNAL 1
+# endif
 #elif defined(__aix__) && defined(__powerpc__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 0
-#define _HAS_SIGNAL 1
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
+# define _HAS_SIGNAL 1
 #elif defined(__hpux__) && defined(__hppa__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 0
-#define _HAS_SIGNAL 1
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
+# define _HAS_SIGNAL 1
 #elif defined(__m68k__) && defined(__nextstep__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 0
-#define _HAS_SIGNAL 1
-#define _USE_MACH_SIGNAL 1
-#define _NO_STRDUP 1
-#define _USE_GETHOSTNAME 1
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
+# define _HAS_SIGNAL 1
+# define _USE_MACH_SIGNAL 1
+# define _NO_STRDUP 1
+# define _USE_GETHOSTNAME 1
 #elif defined(__VMS)
-#define _OMNIORB_HOST_BYTE_ORDER_ 1
-#if __VMS_VER >= 70000000
-#define _HAS_SIGNAL 1
-#else
-#include <string.h>
-#include <stdlib.h>
+# define _OMNIORB_HOST_BYTE_ORDER_ 1
+# if __VMS_VER >= 70000000
+#  define _HAS_SIGNAL 1
+# else
+#  include <string.h>
+#  include <stdlib.h>
 // Pre 7.x VMS does not have strdup.
-inline static char *
+inline static char*
 strdup (char* str)
 {
-  char *newstr;
+  char* newstr;
 
-  newstr = (char *) malloc (strlen (str) + 1);
-  if (newstr)
-    strcpy (newstr, str);
-    return newstr;
+  newstr = (char*) malloc(strlen(str) + 1);
+  if( newstr )  strcpy(newstr, str);
+  return newstr;
 }
-#endif
+#  define _HAS_NOT_GOT_strcasecmp
+#  define _HAS_NOT_GOT_strncasecmp
+# endif
 #elif defined(__SINIX__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 0
-#define _HAS_SIGNAL 1
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
+# define _HAS_SIGNAL 1
 #elif defined(__irix__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 0
-#define _HAS_SIGNAL 1
-#define _USE_GETHOSTNAME 1
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
+# define _HAS_SIGNAL 1
+# define _USE_GETHOSTNAME 1
 #else
-#error "The byte order of this platform is unknown"
+# error "The byte order of this platform is unknown"
 #endif
 
 
 #if defined(_MSC_VER)
 
-// _OMNIORB2_DLL is defined when the omniORB2 dll is compiled.
-// _WINSTATIC    is defined when an application is compiled to use the
-//               static library.
+//
+// _OMNIORB2_LIBRARY         is defined when the omniORB2 library is compiled.
+// _OMNIORB2_DYNAMIC_LIBRARY is defined when the dynamic library is compiled.
+//  These are defined on the command line when compiling the libraries.
+//
+// _WINSTATIC                is defined when an application is compiled to
+//                           use the static library.
 //
 // To package stubs into dlls:
-//   1. Make sure that the cpp macro USE_stub_in_nt_dll is defined before
-//      the stub header (.hh) is included.
-//   2. Define the cpp macro _OMNIORB2_STUB_DLL when the stub _SK.cc is
+//   1. Define the cpp macro _OMNIORB2_STUB_DLL when the stub _SK.cc is
 //      compiled.
-//   3. A .def file has to be created to export the symbols in the dll.
+//   2. A .def file has to be created to export the symbols in the dll.
 //      The .def file can be generated automatically based on the output
 //      of dumpbin. For an example, look at how the omniORB2 dll is created.
 //
@@ -311,32 +328,17 @@ strdup (char* str)
 //
 // Use _OMNIORB_NTDLL_IMPORT to ensure that MSVC++ use the correct linkage
 // for constants and variables exported by a DLL.
+//
 
-#  if defined(_OMNIORB2_DLL) && defined(_WINSTATIC)
-
-#    error "Both _OMNIORB2_DLL and _WINSTATIC are defined."
-
-#  elif defined(_OMNIORB2_DLL)
-
+#  ifdef _WINSTATIC
 #    define _OMNIORB_NTDLL_IMPORT
-
-#  elif defined(_WINSTATIC)
-
-#    define _OMNIORB_NTDLL_IMPORT
-
-#  elif defined(_OMNIORB2_STUB_DLL)
-
-#    define _OMNIORB_NTDLL_IMPORT
-
 #  else
-
-#    define _OMNIORB_NTDLL_IMPORT __declspec(dllimport)
-
+#    define _OMNIORB_NTDLL_IMPORT  __declspec(dllimport)
 #  endif
 
 #else
 
-   // For non-MSVC++ compiler, this macro expands to nothing.
+// For non-MSVC++ compiler, this macro expands to nothing.
 #  define _OMNIORB_NTDLL_IMPORT
 
 #endif
@@ -411,7 +413,7 @@ strdup (char* str)
 #error "Name conflict: _CORBA_GLOBAL_VARINT is already defined."
 #endif
 
-// Integral and enumuration constants are declared in the stub headers as:
+// Integral and enumeration constants are declared in the stub headers as:
 //    e.g.  class A {
 //              static const CORBA::Long AA _init_in_cldecl_( = 4 );
 //          };
@@ -548,19 +550,12 @@ strdup (char* str)
 
 
 #endif // HAS_Cplusplus_Namespace
- 
-// This implementation *DOES NOT* support the Dynamic Invocation Interface
-// and the Dynamic Skeleton Interface. Hence some of the psuedo objects are
-// not or only partially implemented. The declaration of the unimplemented
-// classes and member functions are excluded by absence of the following
-// macro. Uncomment the following line to make these declarations visible.
-
-//#define SUPPORT_DII
 
 #ifndef USE_omniORB_logStream
 // New stubs use omniORB::logStream. Old stubs still need cerr. Include
 // the necessary iostream header if that is the case.
 #include <iostream.h>
 #endif
+
 
 #endif // __CORBA_SYSDEP_H__
