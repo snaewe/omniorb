@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.37  1999/06/26 17:53:40  sll
+ Use namespace if compiler is SGI MIPSpro 7.2.1 or HP aCC.
+ Added support for Irix 6.5 in 64bit mode.
+
  Revision 1.36  1999/06/18 21:12:16  sll
  Updated copyright notice.
 
@@ -224,18 +228,42 @@
 // SGI  compiler
 #define NEED_DUMMY_RETURN
 
+#if _COMPILER_VERSION >= 721
+#define HAS_Cplusplus_Namespace
+#endif
+
+#if  _MIPS_SZINT == 64
+#     define SIZEOF_INT 8
+#endif
+ 
+#if _MIPS_SZLONG == 64
+#     define SIZEOF_LONG 8
+#endif
+ 
+#if _MIPS_SZPTR == 64
+#     define SIZEOF_PTR 8
+#endif
+
 #endif
 
 #if defined(__hpux__)
-// HP aCC does not define a macro to identify itself.
-// Test if this is gcc, if not assume it is aCC.
-#if !defined(__GNUG__)
+// Recent versions of HP aCC (A01.18 and A.03.13) have an identifying macro.
+// In the future, we should be able to remove the gcc test.
+// In case this is an older compiler aCC, test if this is gcc, if not assume 
+// it is aCC.
+#if defined(__HP_aCC) || !defined(__GNUG__)
 #define NEED_DUMMY_RETURN
+#define HAS_Cplusplus_Namespace
+#define HAS_Cplusplus_Bool
 #endif
 
+#if __OSVERSION__ < 11
 // Do we really need to include this here?   -SLL
+//  - not for HPUX 11.0
+//    need someone to check this for HPUX 10.20
 #include <stdio.h>
 #undef __ptr
+#endif
 
 #endif
 
