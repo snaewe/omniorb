@@ -10,9 +10,14 @@
 
 /*
  $Log$
- Revision 1.3  1997/03/09 13:00:28  sll
- Minor cleanup.
+ Revision 1.4  1997/04/23 14:07:04  sll
+ Moved all sequence templates into this file. The marshalling template
+ functions are defined after the classes NetBufferedStream and
+ MemBufferedStream are defined.
 
+ * Revision 1.3  1997/03/09  13:00:28  sll
+ * Minor cleanup.
+ *
  Revision 1.2  1997/01/24 19:26:38  sll
  Moved the implementations of the inline members of _CORBA_Sequence<T> back
  into its class definition. This is to work around a bug in Sunpro C++ 4.0
@@ -158,6 +163,7 @@ public:
   inline void operator<<= (NetBufferedStream &s);
   inline void operator>>= (MemBufferedStream &s) const;
   inline void operator<<= (MemBufferedStream &s);
+
 private:
   _CORBA_ULong    pd_max;
   _CORBA_ULong    pd_len;
@@ -222,93 +228,55 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 };
 
+template <class T,int max>
+class _CORBA_Bounded_Sequence : public _CORBA_Sequence<T> {
+public:
+  inline _CORBA_Bounded_Sequence() : _CORBA_Sequence<T>(max) {}
+  inline _CORBA_Bounded_Sequence(_CORBA_ULong length,
+				 T           *value,
+				 _CORBA_Boolean release = 0)
+            : _CORBA_Sequence<T>(max,length,value,release) {}
+  inline _CORBA_Bounded_Sequence(const _CORBA_Bounded_Sequence<T,max>& s)
+            : _CORBA_Sequence<T>(s) {}
+  inline ~_CORBA_Bounded_Sequence() {}
+  inline _CORBA_Bounded_Sequence<T,max> &operator= (const _CORBA_Bounded_Sequence<T,max> &s);
+  inline _CORBA_ULong length() const { return _CORBA_Sequence<T>::length(); }
+  inline void length(_CORBA_ULong len);
+  inline size_t NP_alignedSize(size_t initialoffset) const;
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+};
 
-template <class T>
-inline
-size_t
-_CORBA_Unbounded_Sequence<T>::NP_alignedSize(size_t initialoffset) const 
+template <class T,int max,int elmSize, int elmAlignment>
+class _CORBA_Bounded_Sequence_w_FixSizeElement 
+  : public _CORBA_Sequence<T> 
 {
-  size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-  for (unsigned long i=0; i < length(); i++) {
-    alignedsize = NP_data()[i].NP_alignedSize(alignedsize);
-  }
-  return alignedsize;
-}
-
-template <class T>
-inline 
-void 
-_CORBA_Unbounded_Sequence<T>::operator>>= (NetBufferedStream &s) const
-{
-  _CORBA_Sequence<T>::operator>>=(s);
-}
-
-template <class T>
-inline
-void
-_CORBA_Unbounded_Sequence<T>::operator<<= (NetBufferedStream &s)
-{
-  _CORBA_Sequence<T>::operator<<=(s);
-}
-
-template <class T>
-inline
-void 
-_CORBA_Unbounded_Sequence<T>::operator>>= (MemBufferedStream &s) const
-{
-  _CORBA_Sequence<T>::operator>>=(s);
-}
-
-template <class T>
-inline
-void 
-_CORBA_Unbounded_Sequence<T>::operator<<= (MemBufferedStream &s)
-{
-  _CORBA_Sequence<T>::operator<<=(s);
-}
-
-template <class T,int elmSize,int elmAlignment>
-inline
-size_t
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::NP_alignedSize(size_t initialoffset) const 
-{
-  size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-  alignedsize = ((alignedsize+(elmAlignment-1)) & ~(elmAlignment-1));
-  alignedsize += length() * elmSize;
-  return alignedsize;
-}
-
-template <class T,int elmSize,int elmAlignment>
-inline
-void
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= (NetBufferedStream &s) const
-{
-  _CORBA_Sequence<T>::operator>>=(s);
-}
-
-template <class T,int elmSize,int elmAlignment>
-inline
-void
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= (NetBufferedStream &s)
-{
-  _CORBA_Sequence<T>::operator<<=(s);
-}
-
-template <class T,int elmSize,int elmAlignment>
-inline
-void
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= (MemBufferedStream &s) const
-{
-  _CORBA_Sequence<T>::operator>>=(s);
-}
-
-template <class T,int elmSize,int elmAlignment>
-inline
-void
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= (MemBufferedStream &s)
-{
-  _CORBA_Sequence<T>::operator<<=(s);
-}
+public:
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement() {}
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement(_CORBA_ULong length,
+					   T           *value,
+					   _CORBA_Boolean release = 0)
+    : _CORBA_Sequence<T>(max,length,value,release) {}
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement(const 
+      _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>& s) 
+    : _CORBA_Sequence<T>(s) {}
+  inline ~_CORBA_Bounded_Sequence_w_FixSizeElement() {}
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment> &
+      operator= 
+        (const 
+          _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>&
+            s);
+  inline _CORBA_ULong length() const;
+  inline void length(_CORBA_ULong len);
+  // omniORB2 extensions
+  inline size_t NP_alignedSize(size_t initialoffset) const;
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+};
 
 typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Octet,1,1> _CORBA_Unbounded_Sequence_Octet;
 
