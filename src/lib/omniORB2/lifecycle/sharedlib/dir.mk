@@ -160,6 +160,7 @@ LC_OBJS = omniLifeCycle.o reDirect.o omniLifeCycleSK.o omniLifeCycleDynSK.o
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -I./.. -I./../..
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
+DIR_CPPFLAGS += -D_OMNIORB2_LC_LIBRARY
 
 CXXSRCS = $(LC_SRCS)
 
@@ -519,7 +520,7 @@ $(lclib): $(LC_OBJS)
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
            ../../orbcore/sharedlib/$(lib) ../../dynamic/sharedlib/$(dynlib) \
-           -ldce -lcma; \
+           $(HPTHREADLIBS); \
         )
 
 clean::
@@ -623,6 +624,45 @@ $(lclib): $(LC_OBJS)
            -o $@ $(IMPORT_LIBRARY_FLAGS) $^ $(LDLIBS); \
         )
 
+
+clean::
+	$(RM) $(lclib)
+
+export:: $(lclib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(lcsoname); \
+          ln -s $(lclib) $(lcsoname); \
+          $(RM) $(lclibname); \
+          ln -s $(lcsoname) $(lclibname); \
+         )
+
+endif
+endif
+
+
+#############################################################################
+#   Make rules for FreeBSD 3.x egcs                                         #
+#############################################################################
+
+ifdef FreeBSD
+ifdef EgcsMajorVersion
+
+DIR_CPPFLAGS += -fPIC
+
+lclibname = libomniLC.so
+lcsoname  = $(lclibname).$(lc_minor_version)
+lclib = $(lcsoname).$(lc_micro_version)
+
+all:: $(lclib)
+
+$(lclib): $(LC_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-soname,$(lcsoname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^); \
+       )
 
 clean::
 	$(RM) $(lclib)
