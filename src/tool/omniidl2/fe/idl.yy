@@ -76,9 +76,12 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include <stdio.h>
 
-#if (defined(apollo) || defined(hpux)) && defined(__cplusplus)
+#ifdef __cplusplus
+#ifndef __EXTERN_C__
+#define __EXTERN_C__
+#endif
 extern	"C" int yywrap();
-#endif	// (defined(apollo) || defined(hpux)) && defined(__cplusplus)
+#endif
 
 %}
 
@@ -173,6 +176,7 @@ extern	"C" int yywrap();
 %type <dcval>	template_type_spec sequence_type_spec string_type_spec
 %type <dcval>	struct_type enum_type switch_type_spec union_type
 %type <dcval>	array_declarator op_type_spec seq_head wstring_type_spec
+%type <dcval>   param_type_spec
 
 %type <idlist>	scoped_name
 %type <slval>	opt_context at_least_one_string_literal
@@ -186,6 +190,8 @@ extern	"C" int yywrap();
 %type <llval>	at_least_one_case_label case_labels
 
 %type <dlval>	at_least_one_declarator declarators
+
+%type <dlval>   at_least_one_simple_declarator simple_declarators
 
 %type <ihval>	interface_header
 
@@ -938,6 +944,25 @@ constructed_type_spec
 	| enum_type
 	;
 
+param_type_spec
+	: base_type_spec
+	{
+	  $$ = idl_global->scopes()->bottom()->lookup_primitive_type($1);
+	}
+	| string_type_spec
+	| scoped_name
+	{
+	  UTL_Scope	*s = idl_global->scopes()->top_non_null();
+	  AST_Decl	*d = NULL;
+
+	  if (s != NULL)
+	    d = s->lookup_by_name($1, I_TRUE);
+	  if (d == NULL)
+	    idl_global->err()->lookup_error($1);
+	  $$ = d;
+	}
+	;
+
 at_least_one_declarator :
 	declarator declarators
 	{
@@ -971,6 +996,37 @@ declarator
 	: simple_declarator
 	| complex_declarator
 	;
+
+at_least_one_simple_declarator 
+	: simple_declarator simple_declarators
+	{
+	   $$ = new UTL_DeclList($1, $2);
+	}
+	;
+
+simple_declarators 
+	: simple_declarators
+	  ','
+	{
+	  idl_global->set_parse_state(IDL_GlobalData::PS_DeclsCommaSeen);
+	}
+	  simple_declarator
+        {
+	  idl_global->set_parse_state(IDL_GlobalData::PS_DeclsDeclSeen);
+
+	  if ($1 == NULL)
+	    $$ = new UTL_DeclList($4, NULL);
+	  else {
+	    $1->nconc(new UTL_DeclList($4, NULL));
+	    $$ = $1;
+	  }
+	}
+	| /* EMPTY */
+	{
+	   $$ = NULL;
+	}
+	;
+
 
 simple_declarator :
 	id
@@ -1830,11 +1886,11 @@ attribute:
 	{
 	  idl_global->set_parse_state(IDL_GlobalData::PS_AttrSeen);
         }
-	simple_type_spec
+	param_type_spec
 	{
 	  idl_global->set_parse_state(IDL_GlobalData::PS_AttrTypeSeen);
         }
-	at_least_one_declarator
+	at_least_one_simple_declarator
 	{
 	  UTL_Scope		*s = idl_global->scopes()->top_non_null();
 	  UTL_DecllistActiveIterator *l = NULL;
@@ -2009,7 +2065,7 @@ opt_op_attribute
 	;
 
 op_type_spec
-	: simple_type_spec
+	: param_type_spec
 	| VOID
 	{
 	  $$ =
@@ -2055,11 +2111,11 @@ parameter :
 	{
 	  idl_global->set_parse_state(IDL_GlobalData::PS_OpParDirSeen);
         }
-	simple_type_spec
+	param_type_spec
 	{
 	  idl_global->set_parse_state(IDL_GlobalData::PS_OpParTypeSeen);
         }
-	declarator
+	simple_declarator
 	{
 	  UTL_Scope		*s = idl_global->scopes()->top_non_null();
 	  AST_Argument		*a = NULL;
