@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.14.6.2  1999/12/02 17:33:00  djs
+  Spelling mistake in generated comment fixed
+
   Revision 1.14.6.1  1999/09/24 10:05:31  djr
   Updated for omniORB3.
 
@@ -215,7 +218,7 @@ o2be_typedef::produce_dynskel(std::fstream &s)
 
     s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
     IND(s); s << "// MSVC++ does not give the constant external"
-	      " linkage othewise.\n";
+	      " linkage otherwise.\n";
     AST_Decl* inscope = ScopeAsDecl(defined_in());
     char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
     if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
