@@ -1,3 +1,44 @@
+Tue Jan 20 10:10:21 GMT 1998 sll
+================================
+
+- merged updates from external contributor
+- AIX build changes
+- OpenVMS port
+
+src/appl/omniNames/dir.mk
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/sharedlib/dir.mk
+
+src/lib/omnithread/posix.cc
+src/lib/omniORB2/initFile.cc
+src/lib/omniORB2/libcWrapper.cc
+src/lib/omniORB2/objectKey.cc
+src/lib/omniORB2/tcpSocketMTfactory.cc
+
+include/omniORB2/CORBA_basetypes.h
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/omniInternal.h
+include/omnithread.h
+
+src/tool/omniidl2/driver/drv_fork.cc
+src/tool/omniidl2/driver/drv_main.cc
+src/tool/omniidl2/driver/drv_preproc.cc
+src/tool/omniidl2/fe/fe_extern.cc
+src/tool/omniidl2/fe/idl.ll
+src/tool/omniidl2/fe/lex.yy.cc
+src/tool/omniidl2/fe/y.tab.cc
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/util/utl_identifier.cc
+src/tool/omniidl2/util/utl_scope.cc
+
+src/appl/omniNames/log.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/appl/utils/genior/genior.cc
+
+
 Mon Jan 19 12:30:44 GMT 1998 sll
 ================================
 
