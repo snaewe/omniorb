@@ -11,10 +11,15 @@
 
 /*
   $Log$
-  Revision 1.3  1997/02/17 18:15:36  ewc
-  Fixed bug where empty union private data member was generated for
-  fixed-size unions.
+  Revision 1.4  1997/03/10 16:45:40  sll
+  New member function out_adptarg_name() to return the name of the
+  adaptation class. This class is used for passing variable length
+  union as OUT arguments.
 
+// Revision 1.3  1997/02/17  18:15:36  ewc
+// Fixed bug where empty union private data member was generated for
+// fixed-size unions.
+//
 // Revision 1.2  1997/01/13  15:19:51  sll
 // New member function produce_typedef_hdr(). Called when a typedef declaration
 // is encountered.
@@ -96,6 +101,8 @@
 #include "idl_extern.hh"
 #include "o2be.h"
 
+#define ADPT_CLASS_TEMPLATE  "_CORBA_ConstrType_Variable_OUT_arg"
+
 static void
 produce_disc_value(fstream &s,AST_ConcreteType *t,AST_Expression *exp);
 
@@ -131,6 +138,16 @@ o2be_union::o2be_union(AST_ConcreteType *dt,
   pd_nodefault = I_TRUE;
   pd_hdr_produced_in_field = I_FALSE;
   pd_skel_produced_in_field = I_FALSE;
+
+  pd_out_adptarg_name = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
+				 strlen(fqname())+
+				 strlen(fqname())+strlen("_var")+1];
+  strcpy(pd_out_adptarg_name,ADPT_CLASS_TEMPLATE);
+  strcat(pd_out_adptarg_name,"<");
+  strcat(pd_out_adptarg_name,fqname());
+  strcat(pd_out_adptarg_name,",");
+  strcat(pd_out_adptarg_name,fqname());
+  strcat(pd_out_adptarg_name,"_var>");  
 }
 
 AST_UnionBranch *
