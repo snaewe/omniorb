@@ -1,3 +1,29 @@
+Wed May 31 19:00:00 BST 2000 djs
+================================
+
+- C++ back-end now indents output more correctly (including pre-processor 
+  directives)
+
+src/lib/omniORB2/omniidl_be/cxx/skutil.py
+src/lib/omniORB2/omniidl_be/cxx/util.py
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+src/lib/omniORB2/omniidl_be/cxx/skel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/proxy.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB2/omniidl_be/cxx/impl/__init__.py
+
+- calling an IDL exception "e" resulted in a name clash
+
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+
 Wed May 31 16:06:02 BST 2000 dpg1
 =================================
 
