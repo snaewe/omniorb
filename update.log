@@ -1,3 +1,42 @@
+Tue Dec  5 17:36:59 GMT 2000 dpg1
+=================================
+
+- New cdrStream functions to marshal and unmarshal raw strings.
+
+include/omniORB4/cdrStream.h
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+
+- Check for input over-run in string and wstring unmarshalling.
+
+src/lib/omniORB/codesets/cs-UCS-4.cc
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+- Remove dead repoId checking code.
+
+src/lib/omniORB/omniidl_be/cxx/ast.py
+
+- omniidl case sensitivity updates from omni3_develop.
+
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/idlconfig.cc
+src/tool/omniidl/cxx/idlconfig.h
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/python/omniidl/main.py
+
+
 Wed Nov 22 14:31:58 GMT 2000 dpg1
 =================================
 
