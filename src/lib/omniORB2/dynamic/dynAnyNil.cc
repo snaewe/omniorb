@@ -203,7 +203,7 @@ CORBA::DynAny::_nil()
 /////////////////////////// omniNilDynEnum ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynEnum : public CORBA::DynEnum, omniNilDynAny {
+class omniNilDynEnum : public CORBA::DynEnum, private omniNilDynAny {
 public:
   virtual char* value_as_string() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -238,7 +238,7 @@ CORBA::DynEnum::_nil()
 ////////////////////////// omniNilDynStruct //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynStruct : public CORBA::DynStruct, omniNilDynAny {
+class omniNilDynStruct : public CORBA::DynStruct, private omniNilDynAny {
 public:
   virtual char*  current_member_name() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -274,7 +274,7 @@ CORBA::DynStruct::_nil()
 /////////////////////////// omniNilDynUnion //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynUnion : public CORBA::DynUnion, omniNilDynAny {
+class omniNilDynUnion : public CORBA::DynUnion, private omniNilDynAny {
 public:
   virtual CORBA::Boolean set_as_default() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -325,7 +325,7 @@ CORBA::DynUnion::_nil()
 ///////////////////////// omniNilDynSequence /////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynSequence : public CORBA::DynSequence, omniNilDynAny {
+class omniNilDynSequence : public CORBA::DynSequence, private omniNilDynAny {
 public:
   virtual CORBA::ULong length() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -360,7 +360,7 @@ CORBA::DynSequence::_nil()
 /////////////////////////// omniNilDynArray //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynArray : public CORBA::DynArray, omniNilDynAny {
+class omniNilDynArray : public CORBA::DynArray, private omniNilDynAny {
 public:
   virtual CORBA::AnySeq* get_elements() {
     _CORBA_invoked_nil_pseudo_ref();
