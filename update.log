@@ -1,3 +1,11 @@
+Mon Aug  7 10:54:22 BST 2000 dpg1
+=================================
+
+- Minor long long mistakes
+
+include/omniORB3/CORBA.h
+
+
 Fri Aug  4 18:02:51 BST 2000 dpg1
 =================================
 
