@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.18  2003/07/25 16:04:57  dgrisby
+  vxWorks patches.
+
   Revision 1.1.2.17  2003/06/18 10:42:30  dgrisby
   AIX interface lookup fix.
 
@@ -384,7 +387,7 @@ void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs) {
   entryLength = ifc.ifc_len;
 
   for (entryLength = ifc.ifc_len; entryLength > 0;) {
-    offset = sizeof (ifr->ifr_name) + ifr->ifr_addr.sa_len;
+    offset = sizeof (ifr->ifr_name) + sizeof (ifr->ifr_addr);
     bcopy ((caddr_t)ifr, ifreqBuf, offset);
 
     if (ioctl (s, SIOCGIFFLAGS, (int)ifreqBuf) < 0) {

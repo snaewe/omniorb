@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.21  2003/07/25 16:04:57  dgrisby
+  vxWorks patches.
+
   Revision 1.1.2.20  2003/05/04 11:22:14  dgrisby
   Set the poked flag in the right place.
 
@@ -372,7 +375,7 @@ tcpEndpoint::notifyReadable(SocketHandle_t fd) {
     // vxWorks "forgets" socket options
     static const int valtrue = 1;
     if(setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
-		  (const char*)&valtrue, sizeof(valtrue)) == ERROR) {
+		  (char*)&valtrue, sizeof(valtrue)) == ERROR) {
       return 0;
     }
 #endif

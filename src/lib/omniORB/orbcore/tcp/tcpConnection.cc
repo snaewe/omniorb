@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2003/07/25 16:04:57  dgrisby
+  vxWorks patches.
+
   Revision 1.1.2.12  2003/04/15 10:40:47  dgrisby
   Timeouts ignored in some cases when scan granularity set to zero.
 
@@ -80,6 +83,10 @@
 #include <tcp/tcpConnection.h>
 #include <stdio.h>
 #include <omniORB4/linkHacks.h>
+
+#if defined(__vxWorks__)
+#include "selectLib.h"
+#endif
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpConnection);
 

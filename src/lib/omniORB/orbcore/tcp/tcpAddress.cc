@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2003/07/25 16:04:57  dgrisby
+  vxWorks patches.
+
   Revision 1.1.2.14  2003/01/14 12:20:34  dgrisby
   Verify that a connect really has connected.
 
@@ -84,6 +87,10 @@
 #include <tcp/tcpAddress.h>
 #include <stdio.h>
 #include <omniORB4/linkHacks.h>
+
+#if defined(__vxWorks__)
+#include "selectLib.h"
+#endif
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpAddress);
 
