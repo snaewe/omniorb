@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5  1999/11/02 10:01:47  dpg1
+// Minor fixes.
+//
 // Revision 1.4  1999/11/01 20:19:56  dpg1
 // Support for union switch types declared inside the switch statement.
 //
@@ -360,13 +363,13 @@ visitConst(Const* c)
   default:
     assert(0);
   }
-  result_ = PyObject_CallMethod(idlast_, "Const", "siiNsNsNN",
+  result_ = PyObject_CallMethod(idlast_, "Const", "siiNsNsNiN",
 				c->file(), c->line(), (int)c->mainFile(),
 				pragmasToList(c->pragmas()),
 				c->identifier(),
 				scopedNameToList(c->scopedName()),
 				c->repoId(),
-				pytype, pyv);
+				pytype, (int)c->constKind(), pyv);
   ASSERT_RESULT;
   registerPyDecl(c->scopedName(), result_);
 }

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/11/02 10:01:46  dpg1
+# Minor fixes.
+#
 # Revision 1.5  1999/11/01 20:19:55  dpg1
 # Support for union switch types declared inside the switch statement.
 #
@@ -183,12 +186,13 @@ class Forward (Decl, DeclRepoId):
 class Const (Decl, DeclRepoId):
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
-                 constType, value):
+                 constType, constKind, value):
 
         Decl.__init__(self, file, line, mainFile, pragmas)
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__constType = constType
+        self.__constKind = constKind
         self.__value     = value
         #print line, "Const init:", constType, identifier, value
 
@@ -196,6 +200,9 @@ class Const (Decl, DeclRepoId):
 
     # IdlType object
     def constType(self):  return self.__constType
+
+    # Kind of const with aliases stripped
+    def constKind(self):  return self.__constKind
 
     # Value is either a number or an Enumerator object
     def value(self):      return self.__value

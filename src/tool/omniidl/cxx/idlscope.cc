@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/11/02 10:01:46  dpg1
+// Minor fixes.
+//
 // Revision 1.2  1999/10/29 10:01:50  dpg1
 // Global scope initialisation changed.
 //
@@ -318,8 +321,11 @@ setInherited(InheritSpec* inherited, const char* file, int line)
 
       switch (e->kind()) {
       case Entry::E_CALLABLE:
-      case Entry::E_INHERITED:
 	addInherited(e->identifier(), e->scope(), e->decl(), e, file, line);
+	break;
+      case Entry::E_INHERITED:
+	addInherited(e->identifier(), e->scope(), e->decl(), e->inh_from(),
+		     file, line);
 	break;
       default:
 	break;
@@ -658,13 +664,17 @@ addUse(const ScopedName* sn, const char* file, int line)
   const char*  id    = sn->scopeList()->identifier();
   const Entry* clash = iFind(id);
 
-  if (clash && strcmp(id, clash->identifier())) {
-    const char* ssn = sn->toString();
-    IdlError(file, line, "Use of `%s' clashes with identifier `%s'",
-	     ssn, clash->identifier());
-    IdlErrorCont(clash->file(), clash->line(), "(`%s' declared here)",
-		 clash->identifier());
-    delete [] ssn;
+  if (clash) {
+    if (strcmp(id, clash->identifier())) {
+      const char* ssn = sn->toString();
+      IdlError(file, line, "Use of `%s' clashes with identifier `%s'",
+	       ssn, clash->identifier());
+      IdlErrorCont(clash->file(), clash->line(), "(`%s' declared here)",
+		   clash->identifier());
+      delete [] ssn;
+    }
+    // Else the identifier is being used in the same scope that it was
+    // declared, so don't mark it as used.
   }
   else {
     Entry* ue = new Entry(this, Entry::E_USE, id, 0, 0, 0, 0, file, line);
@@ -948,21 +958,23 @@ addInherited(const char* id, Scope* scope, Decl* decl,
       }
     case Entry::E_INHERITED:
       {
-	IdlError(file, line, "In definition of `%s': clash between "
-		 "inherited identifiers `%s' and `%s'",
-		 identifier(), id, clash->identifier());
-	const char* inhfrom =
-	  inh_from->container()->scopedName()->toString();
-	IdlErrorCont(inh_from->file(), inh_from->line(),
-		     "(%s `%s' declared in %s here)",
-		     decl->kindAsString(), id, inhfrom);
-	delete [] inhfrom;
-	inhfrom = clash->inh_from()->container()->scopedName()->toString();
-	IdlErrorCont(clash->inh_from()->file(), clash->inh_from()->line(),
-		     "(%s `%s' declared in %s here)",
-		     clash->decl()->kindAsString(),
-		     clash->identifier(), inhfrom);
-	delete [] inhfrom;
+	if (inh_from != clash->inh_from()) {
+	  IdlError(file, line, "In definition of `%s': clash between "
+		   "inherited identifiers `%s' and `%s'",
+		   identifier(), id, clash->identifier());
+	  const char* inhfrom =
+	    inh_from->container()->scopedName()->toString();
+	  IdlErrorCont(inh_from->file(), inh_from->line(),
+		       "(%s `%s' declared in %s here)",
+		       decl->kindAsString(), id, inhfrom);
+	  delete [] inhfrom;
+	  inhfrom = clash->inh_from()->container()->scopedName()->toString();
+	  IdlErrorCont(clash->inh_from()->file(), clash->inh_from()->line(),
+		       "(%s `%s' declared in %s here)",
+		       clash->decl()->kindAsString(),
+		       clash->identifier(), inhfrom);
+	  delete [] inhfrom;
+	}
 	break;
       }
     case Entry::E_PARENT:
