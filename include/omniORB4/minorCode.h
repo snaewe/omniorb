@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/08/03 17:49:33  sll
+  New minor code and lookup table for translating a minor code to its memonic
+  names.
+
   Revision 1.1.4.5  2001/07/31 16:38:43  sll
   Added GIOP BiDir related error code.
 
@@ -74,138 +78,356 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_14 OMNIORBMinorCode(14)
 #define OMNIORBMinorCode_15 OMNIORBMinorCode(15)
 #define OMNIORBMinorCode_16 OMNIORBMinorCode(16)
+#define OMNIORBMinorCode_17 OMNIORBMinorCode(17)
+#define OMNIORBMinorCode_18 OMNIORBMinorCode(18)
+#define OMNIORBMinorCode_19 OMNIORBMinorCode(19)
+#define OMNIORBMinorCode_20 OMNIORBMinorCode(20)
+#define OMNIORBMinorCode_21 OMNIORBMinorCode(21)
+#define OMNIORBMinorCode_22 OMNIORBMinorCode(22)
+#define OMNIORBMinorCode_23 OMNIORBMinorCode(23)
+#define OMNIORBMinorCode_24 OMNIORBMinorCode(24)
+#define OMNIORBMinorCode_25 OMNIORBMinorCode(25)
+#define OMNIORBMinorCode_26 OMNIORBMinorCode(26)
+#define OMNIORBMinorCode_27 OMNIORBMinorCode(27)
+#define OMNIORBMinorCode_28 OMNIORBMinorCode(28)
+#define OMNIORBMinorCode_29 OMNIORBMinorCode(29)
+#define OMNIORBMinorCode_30 OMNIORBMinorCode(30)
+#define OMNIORBMinorCode_31 OMNIORBMinorCode(31)
+#define OMNIORBMinorCode_32 OMNIORBMinorCode(32)
+#define OMNIORBMinorCode_33 OMNIORBMinorCode(33)
+#define OMNIORBMinorCode_34 OMNIORBMinorCode(34)
+#define OMNIORBMinorCode_35 OMNIORBMinorCode(35)
+#define OMNIORBMinorCode_36 OMNIORBMinorCode(36)
+#define OMNIORBMinorCode_37 OMNIORBMinorCode(37)
+#define OMNIORBMinorCode_38 OMNIORBMinorCode(38)
+#define OMNIORBMinorCode_39 OMNIORBMinorCode(39)
+#define OMNIORBMinorCode_40 OMNIORBMinorCode(40)
+#define OMNIORBMinorCode_41 OMNIORBMinorCode(41)
+#define OMNIORBMinorCode_42 OMNIORBMinorCode(42)
+#define OMNIORBMinorCode_43 OMNIORBMinorCode(43)
+#define OMNIORBMinorCode_44 OMNIORBMinorCode(44)
+#define OMNIORBMinorCode_45 OMNIORBMinorCode(45)
+#define OMNIORBMinorCode_46 OMNIORBMinorCode(46)
+#define OMNIORBMinorCode_47 OMNIORBMinorCode(47)
+#define OMNIORBMinorCode_48 OMNIORBMinorCode(48)
+#define OMNIORBMinorCode_49 OMNIORBMinorCode(49)
+#define OMNIORBMinorCode_50 OMNIORBMinorCode(50)
+#define OMNIORBMinorCode_51 OMNIORBMinorCode(51)
+#define OMNIORBMinorCode_52 OMNIORBMinorCode(52)
+#define OMNIORBMinorCode_53 OMNIORBMinorCode(53)
+#define OMNIORBMinorCode_54 OMNIORBMinorCode(54)
+#define OMNIORBMinorCode_55 OMNIORBMinorCode(55)
+#define OMNIORBMinorCode_56 OMNIORBMinorCode(56)
+#define OMNIORBMinorCode_57 OMNIORBMinorCode(57)
+#define OMNIORBMinorCode_58 OMNIORBMinorCode(58)
+#define OMNIORBMinorCode_59 OMNIORBMinorCode(59)
+#define OMNIORBMinorCode_60 OMNIORBMinorCode(60)
 
- 
+#define COMMA ,
+#define DeclareValue(name,value) name = value
+
 // Taken from CORBA Spec. 2.4 Table 4-3.
 
+//  UNKNOWN
+#define DECLARE_UNKNOWN_minors(code,sep) \
+\
+code( UNKNOWN_UserException,   OMGMinorCode(1) ) sep \
+code( UNKNOWN_SystemException, OMGMinorCode(2) )
+
 enum UNKNOWN_minor {
-  UNKNOWN_UserException                   = OMGMinorCode(1),
-  UNKNOWN_SystemException                 = OMGMinorCode(2)
+  DECLARE_UNKNOWN_minors(DeclareValue,COMMA)
 };
+
+// BAD_PARAM
+// XXX TODO Give the minor code a more descriptive names.
+#define DECLARE_BAD_PARAM_minors(code,sep) \
+\
+code( BAD_PARAM_1                    , OMGMinorCode(1) ) sep \
+code( BAD_PARAM_2                    , OMGMinorCode(2) ) sep \
+code( BAD_PARAM_3                    , OMGMinorCode(3) ) sep \
+code( BAD_PARAM_4                    , OMGMinorCode(4) ) sep \
+code( BAD_PARAM_5                    , OMGMinorCode(5) ) sep \
+code( BAD_PARAM_6                    , OMGMinorCode(6) ) sep \
+code( BAD_PARAM_BadSchemeName        , OMGMinorCode(7) ) sep \
+code( BAD_PARAM_BadAddress           , OMGMinorCode(8) ) sep \
+code( BAD_PARAM_BadSchemeSpecificPart, OMGMinorCode(9) ) sep \
+code( BAD_PARAM_BadURIOther          , OMGMinorCode(10) ) sep \
+code( BAD_PARAM_11                   , OMGMinorCode(11) ) sep \
+code( BAD_PARAM_12                   , OMGMinorCode(12) ) sep \
+code( BAD_PARAM_13                   , OMGMinorCode(13) ) sep \
+code( BAD_PARAM_InvalidObjectId      , OMGMinorCode(14) ) sep \
+code( BAD_PARAM_15                   , OMGMinorCode(15) ) sep \
+code( BAD_PARAM_16                   , OMGMinorCode(16) ) sep \
+code( BAD_PARAM_17                   , OMGMinorCode(17) ) sep \
+code( BAD_PARAM_18                   , OMGMinorCode(18) ) sep \
+code( BAD_PARAM_19                   , OMGMinorCode(19) ) sep \
+code( BAD_PARAM_20                   , OMGMinorCode(20) ) sep \
+code( BAD_PARAM_21                   , OMGMinorCode(21) ) sep \
+code( BAD_PARAM_22                   , OMGMinorCode(22) ) sep \
+code( BAD_PARAM_WCharTCSNotKnown     , OMGMinorCode(23) ) sep \
+code( BAD_PARAM_24                   , OMGMinorCode(24) ) sep \
+code( BAD_PARAM_25                   , OMGMinorCode(25) ) sep \
+code( BAD_PARAM_IndexOutOfRange      , OMNIORBMinorCode_21 ) sep \
+code( BAD_PARAM_InvalidUnionDiscValue, OMNIORBMinorCode_27 ) sep \
+code( BAD_PARAM_InvalidInitialSize   , OMNIORBMinorCode_29 ) sep \
+code( BAD_PARAM_InvalidServant       , OMNIORBMinorCode_35 ) sep \
+code( BAD_PARAM_IsPseudoObject       , OMNIORBMinorCode_37 ) sep \
+code( BAD_PARAM_InvalidObjectRef     , OMNIORBMinorCode_43 ) sep \
+code( BAD_PARAM_WCharOutOfRange      , OMNIORBMinorCode_46 ) sep \
+code( BAD_PARAM_InternalInvariant    , OMNIORBMinorCode_49 ) sep \
+code( BAD_PARAM_NullStringUnexpected , OMNIORBMinorCode_57 ) sep \
+code( BAD_PARAM_InvalidPOAName       , OMNIORBMinorCode_59 ) sep \
+code( BAD_PARAM_LocalObjectExpected  , OMNIORBMinorCode_60 )
 
 enum BAD_PARAM_minor {
-  // XXX TODO Give the minor code a more descriptive names.
-  BAD_PARAM_1                             = OMGMinorCode(1),
-  BAD_PARAM_2                             = OMGMinorCode(2),
-  BAD_PARAM_3                             = OMGMinorCode(3),
-  BAD_PARAM_4                             = OMGMinorCode(4),
-  BAD_PARAM_5                             = OMGMinorCode(5),
-  BAD_PARAM_6                             = OMGMinorCode(6),
-  BAD_PARAM_BadSchemeName                 = OMGMinorCode(7),
-  BAD_PARAM_BadAddress                    = OMGMinorCode(8),
-  BAD_PARAM_BadSchemeSpecificPart         = OMGMinorCode(9),
-  BAD_PARAM_BadURIOther                   = OMGMinorCode(10),
-  BAD_PARAM_11                            = OMGMinorCode(11),
-  BAD_PARAM_12                            = OMGMinorCode(12),
-  BAD_PARAM_13                            = OMGMinorCode(13),
-  BAD_PARAM_14                            = OMGMinorCode(14),
-  BAD_PARAM_15                            = OMGMinorCode(15),
-  BAD_PARAM_16                            = OMGMinorCode(16),
-  BAD_PARAM_17                            = OMGMinorCode(17),
-  BAD_PARAM_18                            = OMGMinorCode(18),
-  BAD_PARAM_19                            = OMGMinorCode(19),
-  BAD_PARAM_20                            = OMGMinorCode(20),
-  BAD_PARAM_21                            = OMGMinorCode(21),
-  BAD_PARAM_22                            = OMGMinorCode(22),
-  BAD_PARAM_23                            = OMGMinorCode(23),
-  BAD_PARAM_24                            = OMGMinorCode(24),
-  BAD_PARAM_25                            = OMGMinorCode(25)
+  DECLARE_BAD_PARAM_minors(DeclareValue,COMMA)
 };
+
+// IMP_LIMIT
+#define DECLARE_IMP_LIMIT_minors(code,sep) \
+\
+code( IMP_LIMIT_NoUsableProfile      , OMGMinorCode(1) )
 
 enum IMP_LIMIT_minor {
-  IMP_LIMIT_NoUsableProfile               = OMGMinorCode(1)
+  DECLARE_IMP_LIMIT_minors(DeclareValue,COMMA)
 };
 
+// INV_OBJREF
+#define DECLARE_INV_OBJREF_minors(code,sep) \
+\
+code( INV_OBJREF_WCharNotSupported   , OMGMinorCode(1) ) sep \
+code( INV_OBJREF_TryToInvokePseudoRemotely  , OMNIORBMinorCode_23 ) sep \
+code( INV_OBJREF_InvokeOnNilObjRef  , OMNIORBMinorCode_48 ) sep \
+code( INV_OBJREF_CorruptedObjRef    , OMNIORBMinorCode_54 ) sep \
+code( INV_OBJREF_InterfaceMisMatch  , OMNIORBMinorCode_55 )
+
+
+ 
 enum INV_OBJREF_minor {
-  INV_OBJREF_WCharNotSupported            = OMGMinorCode(1)
+  DECLARE_INV_OBJREF_minors(DeclareValue,COMMA)
 };
+
+// MARSHAL
+#define DECLARE_MARSHAL_minors(code,sep) \
+\
+code( MARSHAL_NoValueFactory                  , OMGMinorCode(1) ) sep \
+code( MARSHAL_ServerRequestWrongOrder         , OMGMinorCode(2) ) sep \
+code( MARSHAL_ServerRequestNVList             , OMGMinorCode(3) ) sep \
+code( MARSHAL_LocalObject                     , OMGMinorCode(4) ) sep \
+code( MARSHAL_InvalidVariableLenComponentSize , OMNIORBMinorCode_9 ) sep \
+code( MARSHAL_PassEndOfMessage                , OMNIORBMinorCode_10 ) sep \
+code( MARSHAL_MessageSizeExceedLimitOnClient  , OMNIORBMinorCode_11 ) sep \
+code( MARSHAL_MessageSizeExceedLimitOnServer  , OMNIORBMinorCode_12 ) sep \
+code( MARSHAL_SequenceIsTooLong               , OMNIORBMinorCode_18 ) sep \
+code( MARSHAL_StringIsTooLong                 , OMNIORBMinorCode_19 ) sep \
+code( MARSHAL_WStringIsTooLong                , OMNIORBMinorCode_20 ) sep \
+code( MARSHAL_StringNotEndWithNull            , OMNIORBMinorCode_22 ) sep \
+code( MARSHAL_InvalidEnumValue                , OMNIORBMinorCode_26 ) sep \
+code( MARSHAL_AttemptToWriteToReadOnlyBuf     , OMNIORBMinorCode_28 ) sep \
+code( MARSHAL_InvalidFixedValue               , OMNIORBMinorCode_42 ) sep \
+code( MARSHAL_InvalidWCharSize                , OMNIORBMinorCode_47 ) sep \
+code( MARSHAL_InvalidIOR                      , OMNIORBMinorCode_52 )
+
+
 
 enum MARSHAL_minor {
-  MARSHAL_NoValueFactory                  = OMGMinorCode(1),
-  MARSHAL_ServerRequestWrongOrder         = OMGMinorCode(2),
-  MARSHAL_ServerRequestNVList             = OMGMinorCode(3),
-  MARSHAL_LocalObject                     = OMGMinorCode(4),
-  MARSHAL_InvalidVariableLenComponentSize = OMNIORBMinorCode_9,
-  MARSHAL_PassEndOfMessage                = OMNIORBMinorCode_10,
-  MARSHAL_MessageSizeExceedLimitOnClient  = OMNIORBMinorCode_11,
-  MARSHAL_MessageSizeExceedLimitOnServer  = OMNIORBMinorCode_12
+  DECLARE_MARSHAL_minors(DeclareValue,COMMA)
 };
+
+// BAD_TYPECODE
+#define DECLARE_BAD_TYPECODE_minors(code,sep) \
+\
+code( BAD_TYPECODE_InComplete        , OMGMinorCode(1) ) sep \
+code( BAD_TYPECODE_IllegitimateMember, OMGMinorCode(2) )
 
 enum BAD_TYPECODE_minor {
-  BAD_TYPECODE_InComplete                 = OMGMinorCode(1),
-  BAD_TYPECODE_IllegitimateMember         = OMGMinorCode(2)
+  DECLARE_BAD_TYPECODE_minors(DeclareValue,COMMA)  
 };
 
+// BAD_OPERATION
+#define DECLARE_BAD_OPERATION_minors(code,sep) \
+\
+code( BAD_OPERATION_UnRecognisedOperationName, OMNIORBMinorCode_38 )
+
+
+enum BAD_OPERATION_minor {
+  DECLARE_BAD_OPERATION_minors(DeclareValue,COMMA)  
+};
+
+// NO_RESOURCES
+#define DECLARE_NO_RESOURCES_minors(code,sep) \
+\
+code ( NO_RESOURCES_CodeSetNotSupported, OMNIORBMinorCode_25 ) sep \
+code ( NO_RESOURCES_InitialRefNotFound,  OMNIORBMinorCode_51 )
+
+
+enum NO_RESOURCES_minor {
+  DECLARE_NO_RESOURCES_minors(DeclareValue,COMMA)  
+};
+
+// COMM_FAILURE
+#define DECLARE_COMM_FAILURE_minors(code,sep) \
+\
+code( COMM_FAILURE_MarshalArguments   , OMNIORBMinorCode_3 ) sep \
+code( COMM_FAILURE_UnMarshalArguments , OMNIORBMinorCode_4 ) sep \
+code( COMM_FAILURE_MarshalResults     , OMNIORBMinorCode_5 ) sep \
+code( COMM_FAILURE_UnMarshalResults   , OMNIORBMinorCode_6 ) sep \
+code( COMM_FAILURE_WaitingForReply    , OMNIORBMinorCode_7 )
 
 enum COMM_FAILURE_minor {
-  COMM_FAILURE_MarshalArguments           = OMNIORBMinorCode_3,
-  COMM_FAILURE_UnMarshalArguments         = OMNIORBMinorCode_4,
-  COMM_FAILURE_MarshalResults             = OMNIORBMinorCode_5,
-  COMM_FAILURE_UnMarshalResults           = OMNIORBMinorCode_6,
-  COMM_FAILURE_WaitingForReply            = OMNIORBMinorCode_7
+  DECLARE_COMM_FAILURE_minors(DeclareValue,COMMA)  
 };
+
+// NO_IMPLEMENT
+#define DECLARE_NO_IMPLEMENT_minors(code,sep) \
+\
+code( NO_IMPLEMENT_NoValueImpl        , OMGMinorCode(1) ) sep \
+code( NO_IMPLEMENT_IncompatibleVersion, OMGMinorCode(2) ) sep \
+code( NO_IMPLEMENT_NoUsableProfile    , OMGMinorCode(3) ) sep \
+code( NO_IMPLEMENT_DIIOnLocalObject   , OMGMinorCode(4) ) sep \
+code( NO_IMPLEMENT_Unsupported        , OMNIORBMinorCode_36 )
+
+enum NO_IMPLEMENT_minor {
+  DECLARE_NO_IMPLEMENT_minors(DeclareValue,COMMA)  
+};
+
+// NO_IMPLEMENT
+#define DECLARE_BAD_INV_ORDER_minors(code,sep) \
+\
+code( BAD_INV_ORDER_1                 , OMGMinorCode(1) ) sep \
+code( BAD_INV_ORDER_2                 , OMGMinorCode(2) ) sep \
+code( BAD_INV_ORDER_WouldDeadLock     , OMGMinorCode(3) ) sep \
+code( BAD_INV_ORDER_ORBHasShutdown    , OMGMinorCode(4) ) sep \
+code( BAD_INV_ORDER_5                 , OMGMinorCode(5) ) sep \
+code( BAD_INV_ORDER_6                 , OMGMinorCode(6) ) sep \
+code( BAD_INV_ORDER_7                 , OMGMinorCode(7) ) sep \
+code( BAD_INV_ORDER_8                 , OMGMinorCode(8) ) sep \
+code( BAD_INV_ORDER_9                 , OMGMinorCode(9) ) sep \
+code( BAD_INV_ORDER_10                , OMGMinorCode(10) ) sep \
+code( BAD_INV_ORDER_11                , OMGMinorCode(11) ) sep \
+code( BAD_INV_ORDER_12                , OMGMinorCode(12) ) sep \
+code( BAD_INV_ORDER_13                , OMGMinorCode(13) ) sep \
+code( BAD_INV_ORDER_CodeSetNotKnownYet, OMNIORBMinorCode_24 )
+
+enum BAD_INV_ORDER_minor {
+  DECLARE_BAD_INV_ORDER_minors(DeclareValue,COMMA)  
+};
+
+// TRANSIENT
+#define DECLARE_TRANSIENT_minors(code,sep) \
+\
+code( TRANSIENT_POANoResource         , OMGMinorCode(1) ) sep \
+code( TRANSIENT_NoUsableProfile       , OMGMinorCode(2) ) sep \
+code( TRANSIENT_FailedOnForwarded     , OMNIORBMinorCode_1 ) sep \
+code( TRANSIENT_ConnectFailed         , OMNIORBMinorCode_2 ) sep \
+code( TRANSIENT_CallTimedout          , OMNIORBMinorCode_8 ) sep \
+code( TRANSIENT_BiDirConnIsGone       , OMNIORBMinorCode_14 ) sep \
+code( TRANSIENT_BiDirConnUsedWithNoPOA, OMNIORBMinorCode_16 ) sep \
+code( TRANSIENT_ConnectionClosed      , OMNIORBMinorCode_17 )
+
+enum TRANSIENT_minor {
+  DECLARE_TRANSIENT_minors(DeclareValue,COMMA)  
+};
+
+// INTF_REPOS
+#define DECLARE_INTF_REPOS_minors(code,sep) \
+\
+code( INTF_REPOS_NotAvailable         , OMNIORBMinorCode_39 )
+
+enum INTF_REPOS_minor {
+  DECLARE_INTF_REPOS_minors(DeclareValue,COMMA)  
+};
+
+// OBJ_ADAPTER
+#define DECLARE_OBJ_ADAPTER_minors(code,sep) \
+\
+code( OBJ_ADAPTER_POAUnknownAdapter   , OMGMinorCode(1) ) sep \
+code( OBJ_ADAPTER_NoServant           , OMGMinorCode(2) ) sep \
+code( OBJ_ADAPTER_NoDefaultServant    , OMGMinorCode(3) ) sep \
+code( OBJ_ADAPTER_NoServantManager    , OMGMinorCode(4) ) sep \
+code( OBJ_ADAPTER_WrongIncarnatePolicy, OMGMinorCode(5) ) sep \
+code( OBJ_ADAPTER_BiDirNotAllowed     , OMNIORBMinorCode_15 ) sep \
+code( OBJ_ADAPTER_BOANotInitialised   , OMNIORBMinorCode_33 ) sep \
+code( OBJ_ADAPTER_POANotInitialised   , OMNIORBMinorCode_53 ) 
+
+
+enum OBJ_ADAPTER_minor {
+  DECLARE_OBJ_ADAPTER_minors(DeclareValue,COMMA)  
+};
+
+
+// DATA_CONVERSION
+#define DECLARE_DATA_CONVERSION_minors(code,sep) \
+\
+code( DATA_CONVERSION_CannotMapChar   , OMGMinorCode(1) ) sep \
+code( DATA_CONVERSION_RangeError      , OMNIORBMinorCode_40 ) sep \
+code( DATA_CONVERSION_BadInput        , OMNIORBMinorCode_41 )
+
+
+
+enum DATA_CONVERSION_minor {
+  DECLARE_DATA_CONVERSION_minors(DeclareValue,COMMA)  
+};
+
+
+// OBJECT_NOT_EXIST
+#define DECLARE_OBJECT_NOT_EXIST_minors(code,sep) \
+\
+code( OBJECT_NOT_EXIST_NoMatch        , OMGMinorCode(1) ) sep \
+code( OBJECT_NOT_EXIST_IncarnateFailed, OMGMinorCode(2) ) sep \
+code( OBJECT_NOT_EXIST_BOANotInitialised, OMNIORBMinorCode_34 ) sep \
+code( OBJECT_NOT_EXIST_POANotInitialised, OMNIORBMinorCode_58 )
+
+
+enum OBJECT_NOT_EXIST_minor {
+  DECLARE_OBJECT_NOT_EXIST_minors(DeclareValue,COMMA)  
+};
+
+// INITIALIZE
+#define DECLARE_INITIALIZE_minors(code,sep) \
+\
+code( INITIALIZE_TransportError       , OMNIORBMinorCode_13 ) sep \
+code( INITIALIZE_InvalidORBInitArgs   , OMNIORBMinorCode_30 ) sep \
+code( INITIALIZE_FailedBOAInit        , OMNIORBMinorCode_31 ) sep \
+code( INITIALIZE_FailedPOAInit        , OMNIORBMinorCode_32 ) sep \
+code( INITIALIZE_FailedORBInit        , OMNIORBMinorCode_44 ) sep \
+code( INITIALIZE_FailedLoadLibrary    , OMNIORBMinorCode_45 ) sep \
+code( INITIALIZE_ConfigFileError      , OMNIORBMinorCode_50 ) sep \
+code( INITIALIZE_NotOmniThread        , OMNIORBMinorCode_56 )
+
+
+
+enum INITIALIZE_minor {
+  DECLARE_INITIALIZE_minors(DeclareValue,COMMA)  
+};
+
 
 inline CORBA::Boolean is_COMM_FAILURE_minor(CORBA::ULong w) {
   return (w >= COMM_FAILURE_MarshalResults &&
 	  w <= COMM_FAILURE_WaitingForReply);
 }
 
-enum NO_IMPLEMENT_minor {
-  NO_IMPLEMENT_NoValueImpl                = OMGMinorCode(1),
-  NO_IMPLEMENT_IncompatibleVersion        = OMGMinorCode(2),
-  NO_IMPLEMENT_NoUsableProfile            = OMGMinorCode(3),
-  NO_IMPLEMENT_DIIOnLocalObject           = OMGMinorCode(4)
-};
 
-enum BAD_INV_ORDER_minor {
-  BAD_INV_ORDER_1                         = OMGMinorCode(1),
-  BAD_INV_ORDER_2                         = OMGMinorCode(2),
-  BAD_INV_ORDER_WouldDeadLock             = OMGMinorCode(3),
-  BAD_INV_ORDER_ORBHasShutdown            = OMGMinorCode(4),
-  BAD_INV_ORDER_5                         = OMGMinorCode(5),
-  BAD_INV_ORDER_6                         = OMGMinorCode(6),
-  BAD_INV_ORDER_7                         = OMGMinorCode(7),
-  BAD_INV_ORDER_8                         = OMGMinorCode(8),
-  BAD_INV_ORDER_9                         = OMGMinorCode(9),
-  BAD_INV_ORDER_10                        = OMGMinorCode(10),
-  BAD_INV_ORDER_11                        = OMGMinorCode(11),
-  BAD_INV_ORDER_12                        = OMGMinorCode(12),
-  BAD_INV_ORDER_13                        = OMGMinorCode(13)
-};
-
-enum TRANSIENT_minor {
-  TRANSIENT_POANoResource                 = OMGMinorCode(1),
-  TRANSIENT_NoUsableProfile               = OMGMinorCode(2),
-  TRANSIENT_FailedOnForwarded             = OMNIORBMinorCode_1,
-  TRANSIENT_ConnectFailed                 = OMNIORBMinorCode_2,
-  TRANSIENT_CallTimedout                  = OMNIORBMinorCode_8,
-  TRANSIENT_BiDirConnIsGone               = OMNIORBMinorCode_14,
-  TRANSIENT_BiDirConnUsedWithNoPOA        = OMNIORBMinorCode_16
-};
-
-enum OBJ_ADAPTER_minor {
-  OBJ_ADAPTER_POAUnknownAdapter           = OMGMinorCode(1),
-  OBJ_ADAPTER_NoServant                   = OMGMinorCode(2),
-  OBJ_ADAPTER_NoDefaultServant            = OMGMinorCode(3),
-  OBJ_ADAPTER_NoServantManager            = OMGMinorCode(4),
-  OBJ_ADAPTER_WrongIncarnatePolicy        = OMGMinorCode(5),
-  OBJ_ADAPTER_BiDirNotAllowed             = OMNIORBMinorCode_15
+struct minorCodeLookup {
+  CORBA::ULong value;
+  const char*  name;
 };
 
 
-enum DATA_CONVERSION_minor {
-  DATA_CONVERSION_CannotMapChar           = OMGMinorCode(1)
-};
+#define DeclareMinorCodeLookup(name) \
+extern _core_attr minorCodeLookup name##_LookupTable[];
 
-enum OBJECT_NOT_EXIST_minor {
-  OBJECT_NOT_EXIST_NoMatch                = OMGMinorCode(1),
-  OBJECT_NOT_EXIST_IncarnateFailed        = OMGMinorCode(2)
-};
+OMNIORB_FOR_EACH_SYS_EXCEPTION(DeclareMinorCodeLookup)
 
-enum INITIALISE_minor {
-  TRANSPORT_ERROR                         = OMNIORBMinorCode_13
-};
+extern const char* minorCode2String(const minorCodeLookup table[],
+				    CORBA::ULong code);
+// Return the string representation of the code in the table. Return 0 if 
+// the code does not have an entry in the lookup table
+
+#undef DeclareValue
+#undef DeclareMinorCodeLookup
 
 OMNI_NAMESPACE_END(omni)
+
 
 #endif // __MINORCODE__
