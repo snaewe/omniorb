@@ -1,3 +1,28 @@
+Wed Nov  1 12:43:00 GMT 2000 dpg1
+=================================
+
+- omniidl updated to CORBA 2.4 specification. Note new StructForward
+  and UnionForward classes in idlast.
+
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idldump.h
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idltype.cc
+src/tool/omniidl/cxx/idltype.h
+src/tool/omniidl/cxx/idlvisitor.h
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/cxx/y.tab.h
+src/tool/omniidl/python/omniidl/idlast.py
+src/tool/omniidl/python/omniidl/idltype.py
+src/tool/omniidl/python/omniidl/idlvisitor.py
+src/tool/omniidl/python/omniidl_be/dump.py
+
+
 Fri Oct 27 17:28:50 BST 2000 dpg1
 =================================
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.3  2000/11/01 12:45:59  dpg1
+# Update to CORBA 2.4 specification.
+#
 # Revision 1.15.2.2  2000/10/10 10:18:54  dpg1
 # Update omniidl front-end from omni3_develop.
 #
@@ -494,6 +497,27 @@ Functions:
     def recursive(self):  return self.__recursive
 
 
+class StructForward (Decl, DeclRepoId):
+    """Struct forward declaration (Decl, DeclRepoId)
+
+Functions:
+
+  fullDecl() -- full definition of the struct."""
+
+    def __init__(self, file, line, mainFile, pragmas, comments,
+                 identifier, scopedName, repoId):
+
+        Decl.__init__(self, file, line, mainFile, pragmas, comments)
+        DeclRepoId.__init__(self, identifier, scopedName, repoId)
+
+        self._fullDecl = None
+        self._more     = []
+
+    def accept(self, visitor): visitor.visitStructForward(self)
+
+    def fullDecl(self): return self._fullDecl
+
+
 class Exception (Decl, DeclRepoId):
     """Exception declaration (Decl, DeclRepoId)
 
@@ -604,6 +628,27 @@ Functions:
     def constrType(self): return self.__constrType
     def cases(self):      return self.__cases
     def recursive(self):  return self.__recursive
+
+
+class UnionForward (Decl, DeclRepoId):
+    """Union forward declaration (Decl, DeclRepoId)
+
+Functions:
+
+  fullDecl() -- full definition of the union."""
+
+    def __init__(self, file, line, mainFile, pragmas, comments,
+                 identifier, scopedName, repoId):
+
+        Decl.__init__(self, file, line, mainFile, pragmas, comments)
+        DeclRepoId.__init__(self, identifier, scopedName, repoId)
+
+        self._fullDecl = None
+        self._more     = []
+
+    def accept(self, visitor): visitor.visitUnionForward(self)
+
+    def fullDecl(self): return self._fullDecl
 
 
 class Enumerator (Decl, DeclRepoId):
@@ -977,31 +1022,37 @@ def registerDecl(scopedName, decl):
 
         rdecl = declMap[sname]
 
-        if (isinstance(decl, Interface) and isinstance(rdecl, Forward)) or \
-           ((isinstance(decl, ValueAbs) or isinstance(decl, Value)) and \
-            isinstance(rdecl, ValueForward)):
+        isi = isinstance
+
+        if (isi(decl, Interface) and isi(rdecl, Forward))       or \
+           (isi(decl, ValueAbs)  and isi(rdecl, ValueForward))  or \
+           (isi(decl, Value)     and isi(rdecl, ValueForward))  or \
+           (isi(decl, Struct)    and isi(rdecl, StructForward)) or \
+           (isi(decl, Union)     and isi(rdecl, UnionForward)):
 
             # resolving a forward declaration
             rdecl._fullDecl = decl
             for f in rdecl._more: f._fullDecl = decl
             declMap[sname] = decl
 
-        elif (isinstance(decl, Forward) and isinstance(rdecl, Forward)) or \
-             (isinstance(decl, ValueForward) and \
-              isinstance(rdecl, ValueForward)):
+        elif (isi(decl, Forward)       and isi(rdecl, Forward))       or \
+             (isi(decl, ValueForward)  and isi(rdecl, ValueForward))  or \
+             (isi(decl, StructForward) and isi(rdecl, StructForward)) or \
+             (isi(decl, UnionForward)  and isi(rdecl, UnionForward)):
             
             # repeat forward declaration
             rdecl._more.append(decl)
 
-        elif (isinstance(decl, Forward) and isinstance(rdecl, Interface)) or \
-             (isinstance(decl, ValueForward) and \
-              (isinstance(rdecl, ValueAbs) or isinstance(rdecl, Value))):
+        elif (isi(decl, Forward)       and isi(rdecl, Interface)) or \
+             (isi(decl, ValueForward)  and isi(rdecl, ValueAbs))  or \
+             (isi(decl, ValueForward)  and isi(rdecl, Value))     or \
+             (isi(decl, StructForward) and isi(rdecl, Struct))    or \
+             (isi(decl, UnionForward)  and isi(rdecl, Union)):
 
             # forward declaration of full declaration
             decl._fullDecl = rdecl
 
-        elif isinstance(decl, Module) and \
-             isinstance(rdecl, Module):
+        elif (isi(decl, Module) and isi(rdecl, Module)):
             # continued module
             rdecl._continuations.append(decl)
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.2  2000/11/01 12:46:00  dpg1
+# Update to CORBA 2.4 specification.
+#
 # Revision 1.5.2.1  2000/07/17 10:36:07  sll
 # Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 #
@@ -70,10 +73,12 @@ Functions:
   visitTypedef(node)
   visitMember(node)
   visitStruct(node)
+  visitStructForward(node)
   visitException(node)
   visitCaseLabel(node)
   visitUnionCase(node)
   visitUnion(node)
+  visitUnionForward(node)
   visitEnumerator(node)
   visitEnum(node)
   visitAttribute(node)
@@ -87,31 +92,33 @@ Functions:
   visitValueAbs(node)
   visitValue(node)"""
 
-    def visitAST(self, node):          return
-    def visitModule(self, node):       return
-    def visitInterface(self, node):    return
-    def visitForward(self, node):      return
-    def visitConst(self, node):        return
-    def visitDeclarator(self, node):   return
-    def visitTypedef(self, node):      return
-    def visitMember(self, node):       return
-    def visitStruct(self, node):       return
-    def visitException(self, node):    return
-    def visitCaseLabel(self, node):    return
-    def visitUnionCase(self, node):    return
-    def visitUnion(self, node):        return
-    def visitEnumerator(self, node):   return
-    def visitEnum(self, node):         return
-    def visitAttribute(self, node):    return
-    def visitParameter(self, node):    return
-    def visitOperation(self, node):    return
-    def visitNative(self, node):       return
-    def visitStateMember(self, node):  return
-    def visitFactory(self, node):      return
-    def visitValueForward(self, node): return
-    def visitValueBox(self, node):     return
-    def visitValueAbs(self, node):     return
-    def visitValue(self, node):        return
+    def visitAST(self, node):           return
+    def visitModule(self, node):        return
+    def visitInterface(self, node):     return
+    def visitForward(self, node):       return
+    def visitConst(self, node):         return
+    def visitDeclarator(self, node):    return
+    def visitTypedef(self, node):       return
+    def visitMember(self, node):        return
+    def visitStruct(self, node):        return
+    def visitStructForward(self, node): return
+    def visitException(self, node):     return
+    def visitCaseLabel(self, node):     return
+    def visitUnionCase(self, node):     return
+    def visitUnion(self, node):         return
+    def visitUnionForward(self, node):  return
+    def visitEnumerator(self, node):    return
+    def visitEnum(self, node):          return
+    def visitAttribute(self, node):     return
+    def visitParameter(self, node):     return
+    def visitOperation(self, node):     return
+    def visitNative(self, node):        return
+    def visitStateMember(self, node):   return
+    def visitFactory(self, node):       return
+    def visitValueForward(self, node):  return
+    def visitValueBox(self, node):      return
+    def visitValueAbs(self, node):      return
+    def visitValue(self, node):         return
 
 
 class TypeVisitor:

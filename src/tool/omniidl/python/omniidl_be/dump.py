@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.3  2000/11/01 12:46:00  dpg1
+# Update to CORBA 2.4 specification.
+#
 # Revision 1.8.2.2  2000/10/10 10:18:54  dpg1
 # Update omniidl front-end from omni3_develop.
 #
@@ -177,6 +180,11 @@ struct @id@ {""",
         self.st.out("""\
 };""")
 
+    def visitStructForward(self, node):
+        self.st.out("""\
+struct @id@;""", id = node.identifier())
+
+
     def visitException(self, node):
         self.st.out("""\
 exception @id@ {""",
@@ -259,6 +267,10 @@ union @id@ switch (@stype@) {""",
 
         self.st.out("};")
 
+
+    def visitUnionForward(self, node):
+        self.st.out("""\
+union @id@;""", id = node.identifier())
 
     def visitEnum(self, node):
         enuml = []

@@ -82,6 +82,11 @@ tk_value              = 29
 tk_value_box          = 30
 tk_native             = 31
 tk_abstract_interface = 32
+tk_local_interface    = 33
+
+# Non-standard kinds for forward-declared structs and unions
+ot_structforward      = 100
+ot_unionforward       = 101
 
 
 class Error:
@@ -103,10 +108,12 @@ Function:
   unalias()       -- Return an equivalent Type object with aliases stripped
   accept(visitor) -- visitor pattern accept. See idlvisitor.py."""
 
-    def __init__(self, kind):
+    def __init__(self, kind, local):
         self.__kind  = kind
+        self.__local = local
 
     def kind(self):            return self.__kind
+    def local(self):           return self.__local
 
     def unalias(self):
         type = self
@@ -126,27 +133,15 @@ class Base (Type):
 No non-inherited functions."""
 
     def __init__(self, kind):
-        if kind != tk_null       and \
-           kind != tk_void       and \
-           kind != tk_short      and \
-           kind != tk_long       and \
-           kind != tk_ushort     and \
-           kind != tk_ulong      and \
-           kind != tk_float      and \
-           kind != tk_double     and \
-           kind != tk_boolean    and \
-           kind != tk_char       and \
-           kind != tk_octet      and \
-           kind != tk_any        and \
-           kind != tk_TypeCode   and \
-           kind != tk_Principal  and \
-           kind != tk_longlong   and \
-           kind != tk_ulonglong  and \
-           kind != tk_longdouble and \
-           kind != tk_wchar:
+        if kind not in [tk_null, tk_void, tk_short, tk_long, tk_ushort,
+                        tk_ulong, tk_float, tk_double, tk_boolean,
+                        tk_char, tk_octet, tk_any, tk_TypeCode,
+                        tk_Principal, tk_longlong, tk_ulonglong,
+                        tk_longdouble, tk_wchar]:
+            
             raise Error("Attempt to create Base type with invalid kind.")
 
-        Type.__init__(self, kind)
+        Type.__init__(self, kind, 0)
 
     def accept(self, visitor): visitor.visitBaseType(self)
 
@@ -166,7 +161,7 @@ Function:
   bound() -- bound of bounded string. 0 for unbounded."""
 
     def __init__(self, bound):
-        Type.__init__(self, tk_string)
+        Type.__init__(self, tk_string, 0)
         self.__bound = bound
 
     def accept(self, visitor): visitor.visitStringType(self)
@@ -180,7 +175,7 @@ Function:
   bound() -- bound of bounded wstring. 0 for unbounded."""
 
     def __init__(self, bound):
-        Type.__init__(self, tk_string)
+        Type.__init__(self, tk_wstring, 0)
         self.__bound = bound
 
     def accept(self, visitor): visitor.visitWStringType(self)
@@ -191,7 +186,7 @@ Function:
 #
 #   typedef sequence <...> ...
 #
-# or inside a struct or union
+# or inside a struct, union, or valuetype
 
 class Sequence (Type):
     """Class for sequence types (Type)
@@ -201,8 +196,8 @@ Functions:
   seqType() -- Type this is a sequence of.
   bound()   -- bound of bounded sequence. 0 for unbounded."""
 
-    def __init__(self, seqType, bound):
-        Type.__init__(self, tk_sequence)
+    def __init__(self, seqType, bound, local):
+        Type.__init__(self, tk_sequence, local)
         self.__seqType = seqType
         self.__bound   = bound
 
@@ -222,7 +217,7 @@ Functions:
   scale()  -- scale."""
 
     def __init__(self, digits, scale):
-        Type.__init__(self, tk_fixed)
+        Type.__init__(self, tk_fixed, 0)
         self.__digits = digits
         self.__scale  = scale
 
@@ -243,21 +238,16 @@ Functions:
   scopedName() -- Fully scoped name of the type as a list of strings.
   name()       -- Simple name of the type."""
 
-    def __init__(self, decl, scopedName, kind):
-        if kind != tk_objref             and \
-           kind != tk_struct             and \
-           kind != tk_union              and \
-           kind != tk_enum               and \
-           kind != tk_array              and \
-           kind != tk_alias              and \
-           kind != tk_except             and \
-           kind != tk_value              and \
-           kind != tk_value_box          and \
-           kind != tk_native             and \
-           kind != tk_abstract_interface:
+    def __init__(self, decl, scopedName, kind, local):
+        if kind not in [tk_objref, tk_struct, tk_union, tk_enum,
+                        tk_array, tk_alias, tk_except, tk_value,
+                        tk_value_box, tk_native, tk_abstract_interface,
+                        tk_local_interface, ot_structforward,
+                        ot_unionforward]:
+
             raise Error("Attempt to create Declared type with invalid kind.")
 
-        Type.__init__(self, kind)
+        Type.__init__(self, kind, local)
         self.__decl       = decl
         self.__scopedName = scopedName
 
@@ -329,11 +319,11 @@ def wstringType(bound):
         wstringTypeMap[bound] = wst
         return wst
 
-def sequenceType(type_spec, bound):
+def sequenceType(type_spec, bound, local):
     try:
         return sequenceTypeMap[(type_spec,bound)]
     except KeyError:
-        st = Sequence(type_spec, bound)
+        st = Sequence(type_spec, bound, local)
         sequenceTypeMap[(type_spec,bound)] = st
         return st
 
@@ -345,12 +335,12 @@ def fixedType(digits, scale):
         fixedTypeMap[(digits,scale)] = ft
         return ft
 
-def declaredType(decl, scopedName, kind):
+def declaredType(decl, scopedName, kind, local):
     sname = idlutil.slashName(scopedName)
     try:
         return declaredTypeMap[sname]
     except KeyError:
-        dt = Declared(decl, scopedName, kind)
+        dt = Declared(decl, scopedName, kind, local)
         declaredTypeMap[sname] = dt
         return dt
 

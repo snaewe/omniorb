@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3.2.3  2000/11/01 12:45:56  dpg1
+// Update to CORBA 2.4 specification.
+//
 // Revision 1.3.2.2  2000/10/10 10:18:50  dpg1
 // Update omniidl front-end from omni3_develop.
 //
@@ -58,10 +61,12 @@ public:
   void visitTypedef          (Typedef*);
   void visitMember           (Member*);
   void visitStruct           (Struct*);
+  void visitStructForward    (StructForward*);
   void visitException        (Exception*);
   void visitCaseLabel        (CaseLabel*);
   void visitUnionCase        (UnionCase*);
   void visitUnion            (Union*);
+  void visitUnionForward     (UnionForward*);
   void visitEnumerator       (Enumerator*);
   void visitEnum             (Enum*);
   void visitAttribute        (Attribute*);

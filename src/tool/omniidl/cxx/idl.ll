@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.9.2.4  2000/11/01 12:45:55  dpg1
+// Update to CORBA 2.4 specification.
+//
 // Revision 1.9.2.3  2000/10/27 16:31:07  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -167,6 +170,7 @@ float           return FLOAT;
 in              return IN;
 inout           return INOUT;
 interface       return INTERFACE;
+local           return LOCAL;
 long            return LONG;
 module          return MODULE;
 native          return NATIVE;

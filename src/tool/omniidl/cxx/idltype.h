@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.3  2000/11/01 12:45:57  dpg1
+// Update to CORBA 2.4 specification.
+//
 // Revision 1.5.2.2  2000/10/27 16:31:10  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -101,14 +104,27 @@ public:
     tk_value              = 29,
     tk_value_box          = 30,
     tk_native             = 31,
-    tk_abstract_interface = 32
+    tk_abstract_interface = 32,
+    tk_local_interface    = 33,
+
+    // omniidl-specific kinds
+    ot_structforward      = 100,
+    ot_unionforward       = 101
   };
 
-  IdlType(Kind k) : kind_(k) { }
+  IdlType(Kind k) : kind_(k), local_(0) { }
   virtual ~IdlType() {};
 
   Kind        kind()         const { return kind_; }
   const char* kindAsString() const;
+
+  IDL_Boolean local()        const { return local_; }
+  void        setLocal()           { local_ = 1; }
+  // True if this is a "local" type which must not be transmitted
+  // across the network.
+
+  IdlType*    unalias();
+  // Return an equivalent IdlType object with aliases stripped.
 
   virtual IDL_Boolean shouldDelete() = 0;
 
@@ -117,11 +133,11 @@ public:
   // Find a type given a name. Marks the name used in current scope
   static IdlType* scopedNameToType(const char* file, int line,
 				   const ScopedName* sn);
-
   static void init();
 
 private:
-  Kind kind_;
+  Kind        kind_;
+  IDL_Boolean local_;
   static IDL_Boolean initialised_;
 };
 
@@ -208,11 +224,13 @@ private:
 // or inside a struct or union
 //
 
-// *** Element freeing
 class SequenceType : public IdlType {
 public:
   SequenceType(IdlType* seqType, IDL_ULong bound) :
-    IdlType(tk_sequence), seqType_(seqType), bound_(bound) { }
+    IdlType(tk_sequence), seqType_(seqType), bound_(bound)
+  {
+    if (seqType && seqType->local()) setLocal();
+  }
 
   virtual ~SequenceType() {}
 
@@ -265,10 +283,11 @@ public:
 
   virtual ~DeclaredType() {}
 
-  Decl*       decl()       { return decl_; }
-  DeclRepoId* declRepoId() { return declRepoId_; }
+  Decl*       decl()         { return decl_; }
+  DeclRepoId* declRepoId()   { return declRepoId_; }
 
   IDL_Boolean shouldDelete() { return 0; }
+
   void accept(TypeVisitor& visitor) { visitor.visitDeclaredType(this); }
 
   static DeclaredType* corbaObjectType;

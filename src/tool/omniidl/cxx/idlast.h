@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.10.2.4  2000/11/01 12:45:56  dpg1
+// Update to CORBA 2.4 specification.
+//
 // Revision 1.10.2.3  2000/10/27 16:31:08  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -204,10 +207,11 @@ public:
   // Declaration kinds
   enum Kind {
     D_MODULE, D_INTERFACE, D_FORWARD, D_CONST, D_DECLARATOR,
-    D_TYPEDEF, D_MEMBER, D_STRUCT, D_EXCEPTION, D_CASELABEL,
-    D_UNIONCASE, D_UNION, D_ENUMERATOR, D_ENUM, D_ATTRIBUTE,
-    D_PARAMETER, D_OPERATION, D_NATIVE, D_STATEMEMBER,
-    D_FACTORY, D_VALUEFORWARD, D_VALUEBOX, D_VALUEABS, D_VALUE
+    D_TYPEDEF, D_MEMBER, D_STRUCT, D_STRUCTFORWARD, D_EXCEPTION,
+    D_CASELABEL, D_UNIONCASE, D_UNION, D_UNIONFORWARD,
+    D_ENUMERATOR, D_ENUM, D_ATTRIBUTE, D_PARAMETER, D_OPERATION,
+    D_NATIVE, D_STATEMEMBER, D_FACTORY, D_VALUEFORWARD, D_VALUEBOX,
+    D_VALUEABS, D_VALUE
   };
 
   Decl(Kind kind, const char* file, int line, IDL_Boolean mainFile);
@@ -370,7 +374,7 @@ class Interface : public Decl, public DeclRepoId {
 public:
   Interface(const char* file, int line, IDL_Boolean mainFile,
 	    const char* identifier, IDL_Boolean abstract,
-	    InheritSpec* inherits);
+	    IDL_Boolean local, InheritSpec* inherits);
 
   virtual ~Interface();
 
@@ -378,6 +382,7 @@ public:
 
   // Queries
   IDL_Boolean    abstract() const { return abstract_; }
+  IDL_Boolean    local()    const { return local_;    }
   InheritSpec*   inherits() const { return inherits_; }
   Decl*          contents() const { return contents_; }
   Scope*         scope()    const { return scope_;    }
@@ -389,6 +394,7 @@ public:
 
 private:
   IDL_Boolean    abstract_;
+  IDL_Boolean    local_;
   InheritSpec*   inherits_;
   Decl*          contents_;
   Scope*         scope_;
@@ -400,7 +406,7 @@ private:
 class Forward : public Decl, public DeclRepoId {
 public:
   Forward(const char* file, int line, IDL_Boolean mainFile,
-	  const char* identifier, IDL_Boolean abstract);
+	  const char* identifier, IDL_Boolean abstract, IDL_Boolean local);
 
   virtual ~Forward();
 
@@ -408,6 +414,7 @@ public:
 
   // Query interface
   IDL_Boolean    abstract()   const { return abstract_; }
+  IDL_Boolean    local()      const { return local_;    }
   Interface*     definition() const;
   IDL_Boolean    isFirst()    const { return !firstForward_; }
   IdlType*       thisType()   const { return thisType_; }
@@ -418,6 +425,7 @@ public:
 
 private:
   IDL_Boolean    abstract_;
+  IDL_Boolean    local_;
   Interface*     definition_;
   Forward*       firstForward_;
   IdlType*       thisType_;
@@ -636,6 +644,30 @@ private:
   IDL_Boolean    finished_;
 };
 
+// Forward-declared struct
+class StructForward : public Decl, public DeclRepoId {
+public:
+  StructForward(const char* file, int line, IDL_Boolean mainFile,
+		const char* identifier);
+  virtual ~StructForward();
+
+  const char* kindAsString()  const { return "forward struct"; }
+
+  // Queries
+  Struct*        definition() const;
+  IDL_Boolean    isFirst()    const { return !firstForward_; }
+  IdlType*       thisType()   const { return thisType_; }
+
+  void accept(AstVisitor& visitor) { visitor.visitStructForward(this); }
+
+  void setDefinition(Struct* defn);
+
+private:
+  Struct*        definition_;
+  StructForward* firstForward_;
+  IdlType*       thisType_;
+};
+
 
 // Exception
 class Exception : public Decl, public DeclRepoId {
@@ -648,6 +680,7 @@ public:
 
   // Queries
   Member*        members()  const { return members_; }
+  IDL_Boolean    local()    const { return local_; }
 
   void accept(AstVisitor& visitor) { visitor.visitException(this); }
 
@@ -655,6 +688,7 @@ public:
 
 private:
   Member*        members_;
+  IDL_Boolean    local_;
 };
 
 
@@ -781,6 +815,29 @@ private:
   IDL_Boolean    finished_;
 };
 
+class UnionForward : public Decl, public DeclRepoId {
+public:
+  UnionForward(const char* file, int line, IDL_Boolean mainFile,
+	       const char* identifier);
+  virtual ~UnionForward();
+
+  const char* kindAsString() const { return "forward union"; }
+
+  // Queries
+  Union*      definition() const;
+  IDL_Boolean isFirst()    const { return !firstForward_; }
+  IdlType*    thisType()   const { return thisType_; }
+
+  void accept(AstVisitor& visitor) { visitor.visitUnionForward(this); }
+
+  void setDefinition(Union* defn);
+
+private:
+  Union*        definition_;
+  UnionForward* firstForward_;
+  IdlType*      thisType_;
+};
+
 
 // Enumerator
 class Enum;
@@ -844,7 +901,6 @@ public:
   IDL_Boolean    readonly()    const { return readonly_; }
   IdlType*       attrType()    const { return attrType_; }
   Declarator*    declarators() const { return declarators_; }
-				// All declarators must be simple
 
   void accept(AstVisitor& visitor) { visitor.visitAttribute(this); }
 

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.4  2000/11/01 12:45:55  dpg1
+// Update to CORBA 2.4 specification.
+//
 // Revision 1.11.2.3  2000/10/27 16:31:07  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -195,6 +198,7 @@ ValueAbs* valueabs_hack = 0;
 %token IN
 %token INOUT
 %token INTERFACE
+%token LOCAL
 %token LONG
 %token MODULE
 %token NATIVE
@@ -268,7 +272,7 @@ ValueAbs* valueabs_hack = 0;
 %type <scopedname_val>              scoped_name
 %type <value_base_val>              value
 %type <value_forward_val>           value_forward_dcl
-%type <boolean_val>                 abstract_opt
+%type <int_val>                     abstract_local_opt
 %type <value_box_val>               value_box_dcl
 %type <value_abs_val>               value_abs_dcl
 %type <value_val>                   value_dcl
@@ -379,6 +383,7 @@ ValueAbs* valueabs_hack = 0;
 %type <type_val> 		    fixed_pt_type
 %type <type_val> 		    fixed_pt_const_type
 %type <type_val> 		    value_base_type
+%type <decl_val>                    constr_forward_decl
 %type <string_val> 		    unknown_pragma_body_plus
 
 %%
@@ -464,21 +469,23 @@ interface_dcl:
     ;
 
 forward_dcl:
-    abstract_opt INTERFACE IDENTIFIER {
-      $$ = new Forward(currentFile, yylineno, mainFile, $3, $1);
+    abstract_local_opt INTERFACE IDENTIFIER {
+      $$ = new Forward(currentFile, yylineno, mainFile, $3, $1==1, $1==2);
     }
     ;
 
 interface_header:
-    abstract_opt INTERFACE IDENTIFIER pragmas_opt
+    abstract_local_opt INTERFACE IDENTIFIER pragmas_opt
         interface_inheritance_spec_opt {
-      $$ = new Interface(currentFile, yylineno, mainFile, $3, $1, $5);
+      $$ = new Interface(currentFile, yylineno, mainFile,
+			 $3, $1==1, $1==2, $5);
     }
     ;
 
-abstract_opt:
+abstract_local_opt:
     /* empty */ { $$ = 0; }
   | ABSTRACT    { $$ = 1; }
+  | LOCAL       { $$ = 2; }
     ;
 
 interface_body:
@@ -518,6 +525,10 @@ interface_inheritance_spec:
 interface_inheritance_list:
     interface_name pragmas_opt {
       $$ = new InheritSpec($1, currentFile, yylineno);
+      if (!$$->interface()) {
+	delete $$;
+	$$ = 0;
+      }
     }
   | interface_inheritance_list ',' pragmas_opt interface_name pragmas_opt {
       if ($1) {
@@ -661,6 +672,10 @@ truncatable_opt:
 value_inheritance_list:
     value_name {
       $$ = new ValueInheritSpec($1, currentFile, yylineno);
+      if (!$$->value()) {
+	delete $$;
+	$$ = 0;
+      }
     }
   | value_inheritance_list ',' value_name {
       if ($1) {
@@ -911,6 +926,7 @@ type_dcl:
   | NATIVE IDENTIFIER {
       $$ = new Native(currentFile, yylineno, mainFile, $2);
     }
+  | constr_forward_decl      { $$ = $1; }
     ;
 
 type_declarator:
@@ -1418,6 +1434,15 @@ fixed_pt_const_type:
 
 value_base_type:
     VALUEBASE { $$ = new DeclaredType(IdlType::tk_value, 0, 0); }
+    ;
+
+constr_forward_decl:
+    STRUCT IDENTIFIER {
+      $$ = new StructForward(currentFile, yylineno, mainFile, $2);
+    }
+  | UNION IDENTIFIER {
+      $$ = new UnionForward(currentFile, yylineno, mainFile, $2);
+    }
     ;
 
 pragma:

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.4  2000/11/01 12:45:56  dpg1
+// Update to CORBA 2.4 specification.
+//
 // Revision 1.16.2.3  2000/10/27 16:31:08  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -129,6 +132,56 @@ AST*     AST::tree_           = 0;
 Decl*    Decl::mostRecent_    = 0;
 Comment* Comment::mostRecent_ = 0;
 Comment* Comment::saved_      = 0;
+
+
+// Static error message functions
+static void
+checkNotForward(const char* file, int line, IdlType* t)
+{
+  if (t->kind() == IdlType::ot_structforward) {
+    StructForward* f = (StructForward*)((DeclaredType*)t)->decl();
+
+    if (!f->definition()) {
+      char* ssn = f->scopedName()->toString();
+      IdlError(file, line,
+	       "Cannot use forward-declared struct `%s' before it is "
+	       "fully defined", ssn);
+      IdlErrorCont(f->file(), f->line(),
+		   "(`%s' forward-declared here)", f->identifier());
+      delete [] ssn;
+    }
+  }
+  else if (t->kind() == IdlType::ot_unionforward) {
+    UnionForward* f = (UnionForward*)((DeclaredType*)t)->decl();
+
+    if (!f->definition()) {
+      char* ssn = f->scopedName()->toString();
+      IdlError(file, line,
+	       "Cannot use forward-declared union `%s' before it is "
+	       "fully defined", ssn);
+      IdlErrorCont(f->file(), f->line(),
+		   "(`%s' forward-declared here)", f->identifier());
+      delete [] ssn;
+    }
+  }
+}
+
+static
+void
+checkValidType(const char* file, int line, IdlType* t)
+{
+  t = t->unalias();
+  checkNotForward(file, line, t);
+
+  if (t->kind() == IdlType::tk_sequence) {
+
+    while (t->kind() == IdlType::tk_sequence)
+      t = ((SequenceType*)t)->seqType()->unalias();
+
+    checkNotForward(file, line, t);
+  }
+}
+
 
 // Pragma
 void
@@ -422,16 +475,13 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
     if (se->kind() == Scope::Entry::E_DECL) {
 
       decl_      = se->decl();
-      IdlType* t = se->idltype();
+      IdlType* t = se->idltype()->unalias();
 
-      while (t && t->kind() == IdlType::tk_alias) {
-	if (((Declarator*)((DeclaredType*)t)->decl())->sizes()) break;
-	t = ((Declarator*)((DeclaredType*)t)->decl())->alias()->aliasType();
-      }
       if (!t) return;
 
       if (t->kind() == IdlType::tk_objref ||
-	  t->kind() == IdlType::tk_abstract_interface) {
+	  t->kind() == IdlType::tk_abstract_interface ||
+	  t->kind() == IdlType::tk_local_interface) {
 
 	Decl* d = ((DeclaredType*)t)->decl();
 
@@ -509,12 +559,13 @@ append(InheritSpec* is, const char* file, int line)
 
 Interface::
 Interface(const char* file, int line, IDL_Boolean mainFile,
-	  const char* identifier, IDL_Boolean abstract,
+	  const char* identifier, IDL_Boolean abstract, IDL_Boolean local,
 	  InheritSpec* inherits)
 
   : Decl(D_INTERFACE, file, line, mainFile),
     DeclRepoId(identifier),
     abstract_(abstract),
+    local_(local),
     inherits_(inherits),
     contents_(0)
 {
@@ -552,6 +603,20 @@ Interface(const char* file, int line, IDL_Boolean mainFile,
       IdlErrorCont(f->file(), f->line(),
 		   "(`%s' forward declared as abstract here)");
     }
+    if (local && !f->local()) {
+      IdlError(file, line,
+	       "Declaration of local interface `%s' conflicts with "
+	       "forward declaration as unconstrained", identifier);
+      IdlErrorCont(f->file(), f->line(),
+		   "(`%s' forward declared as unconstrained here)");
+    }
+    else if (!local && f->local()) {
+      IdlError(file, line,
+	       "Declaration of unconstrained interface `%s' conflicts with "
+	       "forward declaration as local", identifier);
+      IdlErrorCont(f->file(), f->line(),
+		   "(`%s' forward declared as local here)");
+    }
     if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
 
     f->setDefinition(this);
@@ -575,9 +640,26 @@ Interface(const char* file, int line, IDL_Boolean mainFile,
       }
     }
   }
-  else
+  else if (local_) {
+    thisType_ = new DeclaredType(IdlType::tk_local_interface, this, this);
+    thisType_->setLocal();
+  }
+  else {
     thisType_ = new DeclaredType(IdlType::tk_objref, this, this);
 
+    // Check that all inherited interfaces are unconstrained
+    for (InheritSpec* inh = inherits; inh; inh = inh->next()) {
+      if (inh->interface() && inh->interface()->local()) {
+	char* ssn = inh->scope()->scopedName()->toString();
+	IdlError(file, line,
+		 "In declaration of unconstrained interface `%s', inherited "
+		 "interface `%s' is local", identifier, ssn);
+	IdlErrorCont(inh->interface()->file(), inh->interface()->line(),
+		     "(%s declared here)", ssn);
+	delete [] ssn;
+      }
+    }
+  }
   scope_->setInherited(inherits, file, line);
   Scope::current()->addDecl(identifier, scope_, this, thisType_, file, line);
   Scope::startScope(scope_);
@@ -600,17 +682,86 @@ finishConstruction(Decl* decls)
   Prefix::endScope();
   Scope::endScope();
   mostRecent_ = this;
+
+  if (!local_) {
+    for (Decl* d = decls; d; d = d->next()) {
+
+      if (d->kind() == D_ATTRIBUTE) {
+	Attribute* a = (Attribute*)d;
+
+	if (a->attrType() && a->attrType()->local()) {
+	  DeclaredType* dt = (DeclaredType*)a->attrType();
+	  assert(dt->declRepoId());
+	  char* ssn = dt->declRepoId()->scopedName()->toString();
+
+	  IdlError(a->file(), a->line(),
+		   "In unconstrained interface `%s', attribute `%s' has "
+		   "local type `%s'",
+		   identifier(), a->declarators()->identifier(), ssn);
+	  IdlErrorCont(dt->decl()->file(), dt->decl()->line(),
+		       "(%s declared here)", ssn);
+	  delete [] ssn;
+	}
+      }
+      else if (d->kind() == D_OPERATION) {
+	Operation* o = (Operation*)d;
+
+	if (o->returnType() && o->returnType()->local()) {
+	  DeclaredType* dt = (DeclaredType*)o->returnType();
+	  assert(dt->declRepoId());
+	  char* ssn = dt->declRepoId()->scopedName()->toString();
+
+	  IdlError(o->file(), o->line(),
+		   "In unconstrained interface `%s', operation `%s' has "
+		   "local return type `%s'",
+		   identifier(), o->identifier(), ssn);
+	  IdlErrorCont(dt->decl()->file(), dt->decl()->line(),
+		       "(%s declared here)", ssn);
+	  delete [] ssn;
+	}
+	for (Parameter* p = o->parameters(); p; p = (Parameter*)p->next()) {
+	  if (p->paramType() && p->paramType()->local()) {
+	    DeclaredType* dt = (DeclaredType*)p->paramType();
+	    assert(dt->declRepoId());
+	    char* ssn = dt->declRepoId()->scopedName()->toString();
+
+	    IdlError(p->file(), p->line(),
+		     "In unconstrained interface `%s', operation `%s' has "
+		     "parameter `%s' with local type `%s'",
+		     identifier(), o->identifier(), p->identifier(), ssn);
+	    IdlErrorCont(dt->decl()->file(), dt->decl()->line(),
+			 "(%s declared here)", ssn);
+	    delete [] ssn;
+	  }
+	}
+	for (RaisesSpec* r = o->raises(); r; r = r->next()) {
+	  if (r->exception() && r->exception()->local()) {
+	    char* ssn = r->exception()->scopedName()->toString();
+
+	    IdlError(o->file(), o->line(),
+		     "In unconstrained interface `%s', operation `%s' raises "
+		     "local exception `%s'", identifier(),
+		     o->identifier(), ssn);
+	    IdlErrorCont(r->exception()->file(), r->exception()->line(),
+			 "(%s declared here)", ssn);
+	    delete [] ssn;
+	  }
+	}
+      }
+    }
+  }
 }
 
 
 // Forward
 Forward::
 Forward(const char* file, int line, IDL_Boolean mainFile,
-	const char* identifier, IDL_Boolean abstract)
+	const char* identifier, IDL_Boolean abstract, IDL_Boolean local)
 
   : Decl(D_FORWARD, file, line, mainFile),
     DeclRepoId(identifier),
     abstract_(abstract),
+    local_(local),
     definition_(0),
     firstForward_(0),
     thisType_(0)
@@ -634,7 +785,6 @@ Forward(const char* file, int line, IDL_Boolean mainFile,
 	IdlErrorCont(i->file(), i->line(),
 		     "(`%s' fully declared here with prefix `%s')",
 		     i->identifier(), i->prefix());
-	reg = 0;
       }
       if (abstract && !i->abstract()) {
 	IdlError(file, line,
@@ -652,6 +802,22 @@ Forward(const char* file, int line, IDL_Boolean mainFile,
 	IdlErrorCont(i->file(), i->line(),
 		     "(`%s' declared as abstract here)");
       }
+      if (local && !i->local()) {
+	IdlError(file, line,
+		 "Forward declaration of local interface `%s' conflicts "
+		 "with earlier full declaration as unconstrained",
+		 identifier);
+	IdlErrorCont(i->file(), i->line(),
+		     "(`%s' declared as unconstrained here)");
+      }
+      else if (!local && i->local()) {
+	IdlError(file, line,
+		 "Forward declaration of unconstrained interface `%s' "
+		 "conflicts with earlier full declaration as local",
+		 identifier);
+	IdlErrorCont(i->file(), i->line(),
+		     "(`%s' declared as abstract here)");
+      }
       reg = 0;
     }
     else if (se->decl()->kind() == D_FORWARD) {
@@ -659,7 +825,6 @@ Forward(const char* file, int line, IDL_Boolean mainFile,
       firstForward_ = f;
 
       if (strcmp(f->prefix(), prefix())) {
-
 	IdlError(file, line,
 		 "In forward declaration of interface `%s', repository "
 		 "id prefix `%s' differs from that of earlier declaration",
@@ -685,16 +850,37 @@ Forward(const char* file, int line, IDL_Boolean mainFile,
 	IdlErrorCont(f->file(), f->line(),
 		     "(`%s' forward declared as abstract here)");
       }
-      if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
+      if (local && !f->local()) {
+	IdlError(file, line,
+		 "Forward declaration of local interface `%s' conflicts "
+		 "with earlier forward declaration as unconstrained",
+		 identifier);
+	IdlErrorCont(f->file(), f->line(),
+		     "(`%s' forward declared as unconstrained here)");
+      }
+      else if (!local && f->local()) {
+	IdlError(file, line,
+		 "Forward declaration of unconstrained interface `%s' "
+		 "conflicts  with earlier forward declaration as local",
+		 identifier);
+	IdlErrorCont(f->file(), f->line(),
+		     "(`%s' forward declared as local here)");
+      }
+      //***?      if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
       reg = 0;
     }
   }
   if (reg) {
-    if (abstract)
+    if (abstract) {
       thisType_ = new DeclaredType(IdlType::tk_abstract_interface, this, this);
-    else
+    }
+    else if (local) {
+      thisType_ = new DeclaredType(IdlType::tk_local_interface, this, this);
+      thisType_->setLocal();
+    }
+    else {
       thisType_ = new DeclaredType(IdlType::tk_objref, this, this);
-
+    }
     Scope::current()->addDecl(identifier, 0, this, thisType_, file, line);
   }
 }
@@ -738,12 +924,8 @@ Const(const char* file, int line, IDL_Boolean mainFile,
 
   if (!constType || !expr) return; // Ignore nulls due to earlier errors
 
-  IdlType* t = constType;
+  IdlType* t = constType->unalias();
 
-  while (t && t->kind() == IdlType::tk_alias) {
-    if (((Declarator*)((DeclaredType*)t)->decl())->sizes()) break;
-    t = ((Declarator*)((DeclaredType*)t)->decl())->alias()->aliasType();
-  }
   if (!t) { // Broken alias due to earlier error
     constKind_ = IdlType::tk_null;
     delete expr;
@@ -878,6 +1060,8 @@ setAlias(Typedef* td)
 {
   alias_    = td;
   thisType_ = new DeclaredType(IdlType::tk_alias, this, this);
+  if (td->aliasType() && td->aliasType()->local()) thisType_->setLocal();
+  if (sizes_) checkValidType(file(), line(), td->aliasType());
 }
 
 void
@@ -932,37 +1116,85 @@ Member(const char* file, int line, IDL_Boolean mainFile,
     delType_ = 0;
     return;
   }
-  if (memberType->kind() == IdlType::tk_struct) {
-    Struct* s = (Struct*)((DeclaredType*)memberType)->decl();
+  checkNotForward(file, line, memberType);
+
+  IdlType* bareType = memberType->unalias();
+
+  if (bareType->kind() == IdlType::tk_struct) {
+    Struct* s = (Struct*)((DeclaredType*)bareType)->decl();
     if (!s->finished()) {
       IdlError(file, line,
 	       "Cannot create an instance of struct `%s' inside "
 	       "its own definition", s->identifier());
     }
   }
-  else if (memberType->kind() == IdlType::tk_union) {
-    Union* u = (Union*)((DeclaredType*)memberType)->decl();
+  else if (bareType->kind() == IdlType::tk_union) {
+    Union* u = (Union*)((DeclaredType*)bareType)->decl();
     if (!u->finished()) {
       IdlError(file, line,
 	       "Cannot create an instance of union `%s' inside "
 	       "its own definition", u->identifier());
     }
   }
-  else if (memberType->kind() == IdlType::tk_sequence) {
+  else if (bareType->kind() == IdlType::tk_sequence) {
     // Look for recursive sequence
-    IdlType* t = memberType;
+    IdlType* t = bareType;
     while (t->kind() == IdlType::tk_sequence)
-      t = ((SequenceType*)t)->seqType();
+      t = ((SequenceType*)t)->seqType()->unalias();
 
     if (t->kind() == IdlType::tk_struct) {
       Struct* s = (Struct*)((DeclaredType*)t)->decl();
-      if (!s->finished())
+      if (!s->finished()) {
 	s->setRecursive();
+	IdlWarning(file, line,
+		   "Anonymous sequences for recursive structures "
+		   "are deprecated in CORBA 2.4. Use a forward "
+		   "declaration instead.");
+      }
     }
     else if (t->kind() == IdlType::tk_union) {
       Union* u = (Union*)((DeclaredType*)t)->decl();
-      if (!u->finished())
+      if (!u->finished()) {
 	u->setRecursive();
+	IdlWarning(file, line,
+		   "Anonymous sequences for recursive unions "
+		   "are deprecated in CORBA 2.4. Use a forward "
+		   "declaration instead.");
+      }
+    }
+    else if (t->kind() == IdlType::ot_structforward) {
+      StructForward* f = (StructForward*)((DeclaredType*)t)->decl();
+      Struct* s = f->definition();
+      if (s) {
+	if (!s->finished())
+	  s->setRecursive();
+      }
+      else {
+	char* ssn = f->scopedName()->toString();
+	IdlError(file, line,
+		 "Cannot use sequence of forward-declared struct `%s' "
+		 "before it is fully defined", ssn);
+	IdlErrorCont(f->file(), f->line(),
+		     "(`%s' forward-declared here)", f->identifier());
+	delete [] ssn;
+      }
+    }
+    else if (t->kind() == IdlType::ot_unionforward) {
+      UnionForward* f = (UnionForward*)((DeclaredType*)t)->decl();
+      Union* u = f->definition();
+      if (u) {
+	if (!u->finished())
+	  u->setRecursive();
+      }
+      else {
+	char* ssn = f->scopedName()->toString();
+	IdlError(file, line,
+		 "Cannot use sequence of forward-declared union `%s' "
+		 "before it is fully defined", ssn);
+	IdlErrorCont(f->file(), f->line(),
+		     "(`%s' forward-declared here)", f->identifier());
+	delete [] ssn;
+      }
     }
   }
   for (Declarator* d = declarators; d; d = (Declarator*)d->next()) {
@@ -989,6 +1221,36 @@ Struct(const char* file, int line, IDL_Boolean mainFile,
     recursive_(0),
     finished_(0)
 {
+  // Look for forward struct
+  Scope::Entry* se = Scope::current()->find(identifier);
+
+  if (se &&
+      se->kind() == Scope::Entry::E_DECL &&
+      se->decl()->kind() == Decl::D_STRUCTFORWARD) {
+
+    StructForward* f = (StructForward*)se->decl();
+
+    if (strcmp(f->file(), file)) {
+      IdlError(file, line,
+	       "Struct `%s' defined in different source file to "
+	       "its forward declaration", identifier);
+      IdlErrorCont(f->file(), f->line(),
+		   "(`%s' forward declared here)", identifier);
+    }
+    if (strcmp(f->prefix(), prefix())) {
+      IdlError(file, line,
+	       "In declaration of struct `%s', repository id "
+	       "prefix `%s' differs from that of forward declaration",
+	       identifier, prefix());
+
+      IdlErrorCont(f->file(), f->line(),
+		   "(`%s' forward declared here with prefix `%s')",
+		   f->identifier(), f->prefix());
+    }
+    if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
+    f->setDefinition(this);
+    Scope::current()->remEntry(se);
+  }
   Scope* s  = Scope::current()->newStructScope(identifier, file, line);
   thisType_ = new DeclaredType(IdlType::tk_struct, this, this);
   Scope::current()->addDecl(identifier, s, this, thisType_, file, line);
@@ -1007,12 +1269,111 @@ void
 Struct::
 finishConstruction(Member* members)
 {
+  // Is this a local type?
+  for (Member* m = members; m; m = (Member*)m->next()) {
+    if (m->memberType() && m->memberType()->local()) {
+      thisType()->setLocal();
+      break;
+    }
+  }
   members_ = members;
   Prefix::endScope();
   Scope::endScope();
   finished_ = 1;
   mostRecent_ = this;
 }
+
+// StructForward
+StructForward::
+StructForward(const char* file, int line, IDL_Boolean mainFile,
+	      const char* identifier)
+  : Decl(D_STRUCTFORWARD, file, line, mainFile),
+    DeclRepoId(identifier),
+    definition_(0),
+    firstForward_(0),
+    thisType_(0)
+{
+  Scope::Entry* se  = Scope::current()->find(identifier);
+  IDL_Boolean   reg = 1;
+
+  if (se && se->kind() == Scope::Entry::E_DECL) {
+
+    if (se->decl()->kind() == D_STRUCT) {
+      Struct* s = (Struct*)se->decl();
+      definition_ = s;
+
+      if (strcmp(s->file(), file)) {
+	IdlError(file, line,
+		 "Struct `%s' forward declared in different source file to "
+		 "its definition", identifier);
+	IdlErrorCont(s->file(), s->line(),
+		     "(`%s' defined here)", identifier);
+      }
+      if (strcmp(s->prefix(), prefix())) {
+	IdlError(file, line,
+		 "In forward declaration of struct `%s', repository "
+		 "id prefix `%s' differs from that of earlier declaration",
+		 identifier, prefix());
+
+	IdlErrorCont(s->file(), s->line(),
+		     "(`%s' fully declared here with prefix `%s')",
+		     s->identifier(), s->prefix());
+      }
+      reg = 0;
+    }
+    else if (se->decl()->kind() == D_STRUCTFORWARD) {
+      StructForward* s = (StructForward*)se->decl();
+      firstForward_ = s;
+
+      if (strcmp(s->file(), file)) {
+	IdlError(file, line,
+		 "Struct `%s' forward declared in more than one "
+		 "source file", identifier);
+	IdlErrorCont(s->file(), s->line(),
+		     "(`%s' also forward declared here)", identifier);
+      }
+      if (strcmp(s->prefix(), prefix())) {
+	IdlError(file, line,
+		 "In forward declaration of struct `%s', repository "
+		 "id prefix `%s' differs from that of earlier declaration",
+		 identifier, prefix());
+
+	IdlErrorCont(s->file(), s->line(),
+		     "(`%s' forward declared here with prefix `%s')",
+		     s->identifier(), s->prefix());
+      }
+      reg = 0;
+    }
+  }
+  if (reg) {
+    thisType_ = new DeclaredType(IdlType::ot_structforward, this, this);
+    Scope::current()->addDecl(identifier, 0, this, thisType_, file, line);
+  }
+}
+
+StructForward::
+~StructForward()
+{
+  delete thisType_;
+}
+
+Struct*
+StructForward::
+definition() const
+{
+  if (firstForward_)
+    return firstForward_->definition();
+  else
+    return definition_;
+}
+
+void
+StructForward::
+setDefinition(Struct* defn)
+{
+  definition_ = defn;
+}
+
 
 
 // Exception
@@ -1022,7 +1383,8 @@ Exception(const char* file, int line, IDL_Boolean mainFile,
 
   : Decl(D_EXCEPTION, file, line, mainFile),
     DeclRepoId(identifier),
-    members_(0)
+    members_(0),
+    local_(0)
 {
   Scope* s = Scope::current()->newExceptionScope(identifier, file, line);
   Scope::current()->addDecl(identifier, s, this, 0, file, line);
@@ -1040,6 +1402,13 @@ void
 Exception::
 finishConstruction(Member* members)
 {
+  // Is this a local exception?
+  for (Member* m = members; m; m = (Member*)m->next()) {
+    if (m->memberType() && m->memberType()->local()) {
+      local_ = 1;
+      break;
+    }
+  }
   members_ = members;
   Prefix::endScope();
   Scope::endScope();
@@ -1133,37 +1502,85 @@ UnionCase(const char* file, int line, IDL_Boolean mainFile,
     delType_ = 0;
     return;
   }
-  if (caseType->kind() == IdlType::tk_struct) {
-    Struct* s = (Struct*)((DeclaredType*)caseType)->decl();
+  checkNotForward(file, line, caseType);
+
+  IdlType* bareType = caseType->unalias();
+
+  if (bareType->kind() == IdlType::tk_struct) {
+    Struct* s = (Struct*)((DeclaredType*)bareType)->decl();
     if (!s->finished()) {
       IdlError(file, line,
 	       "Cannot create an instance of struct `%s' inside "
 	       "its own definition", s->identifier());
     }
   }
-  else if (caseType->kind() == IdlType::tk_union) {
-    Union* u = (Union*)((DeclaredType*)caseType)->decl();
+  else if (bareType->kind() == IdlType::tk_union) {
+    Union* u = (Union*)((DeclaredType*)bareType)->decl();
     if (!u->finished()) {
       IdlError(file, line,
 	       "Cannot create an instance of union `%s' inside "
 	       "its own definition", u->identifier());
     }
   }
-  else if (caseType->kind() == IdlType::tk_sequence) {
+  else if (bareType->kind() == IdlType::tk_sequence) {
     // Look for recursive sequence
-    IdlType* t = caseType;
+    IdlType* t = bareType;
     while (t->kind() == IdlType::tk_sequence)
-      t = ((SequenceType*)t)->seqType();
+      t = ((SequenceType*)t)->seqType()->unalias();
 
     if (t->kind() == IdlType::tk_struct) {
       Struct* s = (Struct*)((DeclaredType*)t)->decl();
-      if (!s->finished())
+      if (!s->finished()) {
 	s->setRecursive();
+	IdlWarning(file, line,
+		   "Anonymous sequences for recursive structures "
+		   "are deprecated in CORBA 2.4. Use a forward "
+		   "declaration instead.");
+      }
     }
     else if (t->kind() == IdlType::tk_union) {
       Union* u = (Union*)((DeclaredType*)t)->decl();
-      if (!u->finished())
+      if (!u->finished()) {
 	u->setRecursive();
+	IdlWarning(file, line,
+		   "Anonymous sequences for recursive unions "
+		   "are deprecated in CORBA 2.4. Use a forward "
+		   "declaration instead.");
+      }
+    }
+    else if (t->kind() == IdlType::ot_structforward) {
+      StructForward* f = (StructForward*)((DeclaredType*)t)->decl();
+      Struct* s = f->definition();
+      if (s) {
+	if (!s->finished())
+	  s->setRecursive();
+      }
+      else {
+	char* ssn = f->scopedName()->toString();
+	IdlError(file, line,
+		 "Cannot use sequence of forward-declared struct `%s' "
+		 "before it is fully defined", ssn);
+	IdlErrorCont(f->file(), f->line(),
+		     "(`%s' forward-declared here)", f->identifier());
+	delete [] ssn;
+      }
+    }
+    else if (t->kind() == IdlType::ot_unionforward) {
+      UnionForward* f = (UnionForward*)((DeclaredType*)t)->decl();
+      Union* u = f->definition();
+      if (u) {
+	if (!u->finished())
+	  u->setRecursive();
+      }
+      else {
+	char* ssn = f->scopedName()->toString();
+	IdlError(file, line,
+		 "Cannot use sequence of forward-declared union `%s' "
+		 "before it is fully defined", ssn);
+	IdlErrorCont(f->file(), f->line(),
+		     "(`%s' forward-declared here)", f->identifier());
+	delete [] ssn;
+      }
     }
   }
   Scope::current()->addInstance(declarator->identifier(), declarator,
@@ -1201,6 +1618,36 @@ Union(const char* file, int line, IDL_Boolean mainFile,
     recursive_(0),
     finished_(0)
 {
+  // Look for forward union
+  Scope::Entry* se = Scope::current()->find(identifier);
+
+  if (se &&
+      se->kind() == Scope::Entry::E_DECL &&
+      se->decl()->kind() == Decl::D_UNIONFORWARD) {
+
+    UnionForward* f = (UnionForward*)se->decl();
+
+    if (strcmp(f->file(), file)) {
+      IdlError(file, line,
+	       "Union `%s' defined in different source file to "
+	       "its forward declaration", identifier);
+      IdlErrorCont(f->file(), f->line(),
+		   "(`%s' forward declared here)", identifier);
+    }
+    if (strcmp(f->prefix(), prefix())) {
+      IdlError(file, line,
+	       "In declaration of union `%s', repository id "
+	       "prefix `%s' differs from that of forward declaration",
+	       identifier, prefix());
+
+      IdlErrorCont(f->file(), f->line(),
+		   "(`%s' forward declared here with prefix `%s')",
+		   f->identifier(), f->prefix());
+    }
+    if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
+    f->setDefinition(this);
+    Scope::current()->remEntry(se);
+  }
   Scope* s  = Scope::current()->newUnionScope(identifier, file, line);
   thisType_ = new DeclaredType(IdlType::tk_union, this, this);
   Scope::current()->addDecl(identifier, s, this, thisType_, file, line);
@@ -1269,17 +1716,22 @@ finishConstruction(IdlType* switchType, IDL_Boolean constrType,
   cases_      = cases;
   finished_   = 1;
 
-  IdlType* t  = switchType;
-
-  while (t && t->kind() == IdlType::tk_alias)
-    t = ((Declarator*)((DeclaredType*)t)->decl())->alias()->aliasType();
+  // Local type?
+  UnionCase* c;
+  for (c = cases; c; c = (UnionCase*)c->next()) {
+    if (c->caseType() && c->caseType()->local()) {
+      thisType_->setLocal();
+      break;
+    }
+  }
+  IdlType* t  = switchType->unalias();
 
   if (!t) { // Broken alias due to earlier error
     Prefix::endScope();
     Scope::endScope();
     return;
   }
-  UnionCase     *c, *d;
+  UnionCase     *d;
   CaseLabel     *l, *m, *defLabel = 0;
   IdlType::Kind k     = t->kind();
   int           clash = 0;
@@ -1334,6 +1786,98 @@ finishConstruction(IdlType* switchType, IDL_Boolean constrType,
   Prefix::endScope();
   Scope::endScope();
   mostRecent_ = this;
+}
+
+// UnionForward
+
+UnionForward::
+UnionForward(const char* file, int line, IDL_Boolean mainFile,
+	     const char* identifier)
+  : Decl(D_UNIONFORWARD, file, line, mainFile),
+    DeclRepoId(identifier),
+    definition_(0),
+    firstForward_(0),
+    thisType_(0)
+{
+  Scope::Entry* se  = Scope::current()->find(identifier);
+  IDL_Boolean   reg = 1;
+
+  if (se && se->kind() == Scope::Entry::E_DECL) {
+
+    if (se->decl()->kind() == D_UNION) {
+      Union* u = (Union*)se->decl();
+      definition_ = u;
+
+      if (strcmp(u->file(), file)) {
+	IdlError(file, line,
+		 "Union `%s' forward declared in different source file to "
+		 "its definition", identifier);
+	IdlErrorCont(u->file(), u->line(),
+		     "(`%s' defined here)", identifier);
+      }
+      if (strcmp(u->prefix(), prefix())) {
+	IdlError(file, line,
+		 "In forward declaration of union `%s', repository "
+		 "id prefix `%s' differs from that of earlier declaration",
+		 identifier, prefix());
+
+	IdlErrorCont(u->file(), u->line(),
+		     "(`%s' fully declared here with prefix `%s')",
+		     u->identifier(), u->prefix());
+      }
+      reg = 0;
+    }
+    else if (se->decl()->kind() == D_UNIONFORWARD) {
+      UnionForward* u = (UnionForward*)se->decl();
+      firstForward_ = u;
+
+      if (strcmp(u->file(), file)) {
+	IdlError(file, line,
+		 "Union `%s' forward declared in more than one "
+		 "source file", identifier);
+	IdlErrorCont(u->file(), u->line(),
+		     "(`%s' also forward declared here)", identifier);
+      }
+      if (strcmp(u->prefix(), prefix())) {
+	IdlError(file, line,
+		 "In forward declaration of union `%s', repository "
+		 "id prefix `%s' differs from that of earlier declaration",
+		 identifier, prefix());
+
+	IdlErrorCont(u->file(), u->line(),
+		     "(`%s' forward declared here with prefix `%s')",
+		     u->identifier(), u->prefix());
+      }
+      reg = 0;
+    }
+  }
+  if (reg) {
+    thisType_ = new DeclaredType(IdlType::ot_unionforward, this, this);
+    Scope::current()->addDecl(identifier, 0, this, thisType_, file, line);
+  }
+}
+
+UnionForward::
+~UnionForward()
+{
+  delete thisType_;
+}
+
+Union*
+UnionForward::
+definition() const
+{
+  if (firstForward_)
+    return firstForward_->definition();
+  else
+    return definition_;
+}
+
+void
+UnionForward::
+setDefinition(Union* defn)
+{
+  definition_ = defn;
 }
 
 
@@ -1404,8 +1948,12 @@ Attribute(const char* file, int line, IDL_Boolean mainFile,
     attrType_(attrType),
     declarators_(declarators)
 {
-  if (attrType) delType_ = attrType->shouldDelete();
-  else          delType_ = 0;
+  if (attrType) {
+    delType_ = attrType->shouldDelete();
+    checkValidType(file, line, attrType);
+  }
+  else
+    delType_ = 0;
 
   for (Declarator* d = declarators; d; d = (Declarator*)d->next()) {
     assert(!d->sizes()); // Enforced by grammar
@@ -1432,8 +1980,12 @@ Parameter(const char* file, int line, IDL_Boolean mainFile,
     direction_(direction),
     paramType_(paramType)
 {
-  if (paramType) delType_ = paramType->shouldDelete();
-  else           delType_ = 0;
+  if (paramType) {
+    delType_ = paramType->shouldDelete();
+    checkValidType(file, line, paramType);
+  }
+  else
+    delType_ = 0;
 
   if (identifier[0] == '_')
     identifier_ = idl_strdup(identifier+1);
@@ -1529,8 +2081,12 @@ Operation(const char* file, int line, IDL_Boolean mainFile,
     raises_(0),
     contexts_(0)
 {
-  if (returnType) delType_ = returnType->shouldDelete();
-  else            delType_ = 0;
+  if (returnType) {
+    delType_ = returnType->shouldDelete();
+    checkValidType(file, line, returnType);
+  }
+  else
+    delType_ = 0;
 
   Scope* s = Scope::current()->newOperationScope(file, line);
   Scope::current()->addCallable(identifier, s, this, file, line);
@@ -1623,8 +2179,31 @@ StateMember(const char* file, int line, IDL_Boolean mainFile,
     constrType_(constrType),
     declarators_(declarators)
 {
-  if (memberType) delType_ = memberType->shouldDelete();
-  else            delType_ = 0;
+  if (memberType) {
+    delType_ = memberType->shouldDelete();
+    checkValidType(file, line, memberType);
+
+    if (memberType->local()) {
+      if (memberType->kind() != IdlType::tk_sequence) {
+	DeclaredType* dt = (DeclaredType*)memberType;
+	assert(dt->declRepoId());
+	char* ssn = dt->declRepoId()->scopedName()->toString();
+
+	IdlError(file, line, "State member `%s' has local type `%s'",
+		 declarators->identifier(), ssn);
+	IdlErrorCont(dt->decl()->file(), dt->decl()->line(),
+		     "(%s declared here)", ssn);
+	delete [] ssn;
+      }
+      else {
+	IdlError(file, line, "State member `%s' has local type",
+		 declarators->identifier());
+      }
+    }
+  }
+  else {
+    delType_ = 0;
+  }
 
   // *** Is this right?  Should StateMembers be Callables?
   for (Declarator* d = declarators; d; d = (Declarator*)d->next())
@@ -1827,6 +2406,7 @@ ValueBox(const char* file, int line, IDL_Boolean mainFile,
     boxedType_(boxedType),
     constrType_(constrType)
 {
+  checkValidType(file, line, boxedType);
   thisType_ = new DeclaredType(IdlType::tk_value_box, this, this);
   Scope::current()->addDecl(identifier, 0, this, thisType_, file, line);
 }
@@ -1848,12 +2428,8 @@ ValueInheritSpec(ScopedName* sn, const char* file, int line)
     if (se->kind() == Scope::Entry::E_DECL) {
 
       decl_      = se->decl();
-      IdlType* t = se->idltype();
+      IdlType* t = se->idltype()->unalias();
 
-      while (t && t->kind() == IdlType::tk_alias) {
-	if (((Declarator*)((DeclaredType*)t)->decl())->sizes()) break;
-	t = ((Declarator*)((DeclaredType*)t)->decl())->alias()->aliasType();
-      }
       if (!t) return;
 
       if (t->kind() == IdlType::tk_value) {

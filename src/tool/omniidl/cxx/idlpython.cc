@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.17.2.4  2000/11/01 12:45:56  dpg1
+// Update to CORBA 2.4 specification.
+//
 // Revision 1.17.2.3  2000/10/27 16:31:09  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -196,10 +199,12 @@ public:
   void visitTypedef          (Typedef*);
   void visitMember           (Member*);
   void visitStruct           (Struct*);
+  void visitStructForward    (StructForward*);
   void visitException        (Exception*);
   void visitCaseLabel        (CaseLabel*);
   void visitUnionCase        (UnionCase*);
   void visitUnion            (Union*);
+  void visitUnionForward     (UnionForward*);
   void visitEnumerator       (Enumerator*);
   void visitEnum             (Enum*);
   void visitAttribute        (Attribute*);
@@ -663,6 +668,23 @@ visitStruct(Struct* s)
 
 void
 PythonVisitor::
+visitStructForward(StructForward* f)
+{
+  result_ = PyObject_CallMethod(idlast_, (char*)"StructForward",
+				(char*)"siiNNsNs",
+				f->file(), f->line(), (int)f->mainFile(),
+				pragmasToList(f->pragmas()),
+				commentsToList(f->comments()),
+				f->identifier(),
+				scopedNameToList(f->scopedName()),
+				f->repoId());
+  ASSERT_RESULT;
+  registerPyDecl(f->scopedName(), result_);
+}
+
+
+void
+PythonVisitor::
 visitException(Exception* e)
 {
   Member* m;
@@ -800,6 +822,22 @@ visitUnion(Union* u)
 				    (char*)"N", pycases);
   ASSERT_PYOBJ(r); Py_DECREF(r);
   result_ = pyunion;
+}
+
+void
+PythonVisitor::
+visitUnionForward(UnionForward* f)
+{
+  result_ = PyObject_CallMethod(idlast_, (char*)"UnionForward",
+				(char*)"siiNNsNs",
+				f->file(), f->line(), (int)f->mainFile(),
+				pragmasToList(f->pragmas()),
+				commentsToList(f->comments()),
+				f->identifier(),
+				scopedNameToList(f->scopedName()),
+				f->repoId());
+  ASSERT_RESULT;
+  registerPyDecl(f->scopedName(), result_);
 }
 
 void
@@ -1206,8 +1244,8 @@ PythonVisitor::
 visitSequenceType(SequenceType* t)
 {
   t->seqType()->accept(*this);
-  result_ = PyObject_CallMethod(idltype_, (char*)"sequenceType", (char*)"Ni",
-				result_, t->bound());
+  result_ = PyObject_CallMethod(idltype_, (char*)"sequenceType", (char*)"Nii",
+				result_, t->bound(), (int)t->local());
   ASSERT_RESULT;
 }
 
@@ -1226,10 +1264,10 @@ visitDeclaredType(DeclaredType* t)
 {
   if (t->decl()) {
     result_ =
-      PyObject_CallMethod(idltype_, (char*)"declaredType", (char*)"NNi",
+      PyObject_CallMethod(idltype_, (char*)"declaredType", (char*)"NNii",
 			  findPyDecl(t->declRepoId()->scopedName()),
 			  scopedNameToList(t->declRepoId()->scopedName()),
-			  (int)t->kind());
+			  (int)t->kind(), (int)t->local());
   }
   else {
     if (t->kind() == IdlType::tk_objref) {
@@ -1240,8 +1278,8 @@ visitDeclaredType(DeclaredType* t)
 					     (char*)"O", pysn);
 
       result_          = PyObject_CallMethod(idltype_, (char*)"declaredType",
-					     (char*)"NNi", pydecl, pysn,
-					     (int)t->kind());
+					     (char*)"NNii", pydecl, pysn,
+					     (int)t->kind(), (int)t->local());
     }
     else abort();
   }
