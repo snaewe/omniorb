@@ -28,7 +28,6 @@
 //   the Interface Repository stubs have been compiled in.
 //
 
-#define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB2/CORBA.h>
 #include <bootstrap_i.h>
 
