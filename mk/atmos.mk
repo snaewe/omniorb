@@ -226,13 +226,17 @@ define ExportATMosInterfaces
  echo echo "Package core >> $$systemfile"; \
  echo "Package core" >> $$systemfile; \
  importtrees="$(IMPORT_TREES)"; \
+ revimporttrees=""; \
  for importtree in $$importtrees; do \
    if [ -f "$$importtree/$(BINDIR)/all_interfaces" ]; then \
      echo echo "Path $$importtree/$(BINDIR) >> $$systemfile"; \
      echo "Path $$importtree/$(BINDIR)" >> $$systemfile; \
-     echo "cat $$importtree/$(BINDIR)/all_interfaces >> $$systemfile"; \
-     cat $$importtree/$(BINDIR)/all_interfaces >> $$systemfile; \
+     revimporttrees="$$importtree $$revimporttrees"; \
    fi; \
+ done; \
+ for importtree in $$revimporttrees; do \
+   echo "cat $$importtree/$(BINDIR)/all_interfaces >> $$systemfile"; \
+   cat $$importtree/$(BINDIR)/all_interfaces >> $$systemfile; \
  done; \
  (set -x; cd $(EXPORT_TREE)/$(BINDIR); aconfig); \
 )
