@@ -25,6 +25,10 @@
 
 /*
   $Log$
+  Revision 1.4  1998/08/13 22:42:42  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.3  1997/12/09 19:55:39  sll
   *** empty log message ***
 
@@ -36,6 +40,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 o2be_field::o2be_field(AST_Type *ft, UTL_ScopedName *n, UTL_StrList *p)
 	: AST_Field(ft, n, p),

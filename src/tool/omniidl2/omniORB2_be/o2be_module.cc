@@ -26,6 +26,10 @@
 
 /* 
    $Log$
+   Revision 1.9  1998/08/13 22:38:08  sll
+   Added pragma hdrstop to control pre-compile header if the compiler feature
+   is available.
+
    Revision 1.8  1998/05/20 18:23:50  sll
    New option (-t) enable the generation of tie implementation template.
 
@@ -47,6 +51,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 o2be_module::o2be_module(UTL_ScopedName *n, UTL_StrList *p)
                  : AST_Decl(AST_Decl::NT_module, n, p),

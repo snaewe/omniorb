@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.10  1998/08/13 22:39:01  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.9  1998/04/07 18:49:01  sll
   Use std::fstream instead of fstream.
 
@@ -47,6 +51,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 static char *internal_produce_scope_name(UTL_ScopedName *n,char *separator);
 static char *internal_check_name_for_reserved_words(char *p);

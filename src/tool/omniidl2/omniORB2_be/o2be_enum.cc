@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.8  1998/08/13 22:42:06  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.7  1998/04/07 18:45:26  sll
   Use std::fstream instead of fstream.
   Stub code contains workaround code for MSVC++ to initialise typecode const
@@ -48,6 +52,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 o2be_enum::o2be_enum(UTL_ScopedName *n, UTL_StrList *p)
        : AST_Enum(n, p),

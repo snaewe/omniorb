@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.9  1998/08/13 22:46:47  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.8  1998/04/07 18:53:00  sll
   Stub code modified to accommodate the use of namespace to represent module.
   Use std::fstream instead of fstream.
@@ -55,6 +59,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #define OBJREF_MEMBER_TEMPLATE_NAME "_CORBA_ObjRef_Member"
 #define STRING_MEMBER_NAME          "CORBA::String_member"

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.8  1998/08/13 22:46:14  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.7  1998/04/07 18:52:31  sll
   Use std::fstream instead of fstream.
   Stub code modified to accommodate the use of namespace to represent module.
@@ -116,6 +120,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #define ADPT_CLASS_TEMPLATE  "_CORBA_ConstrType_Variable_OUT_arg"
 

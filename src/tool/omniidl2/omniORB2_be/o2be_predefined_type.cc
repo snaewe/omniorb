@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.7  1998/08/13 22:44:20  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.6  1998/04/07 18:49:55  sll
   Use std::fstream instead of fstream.
 
@@ -44,6 +48,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 o2be_predefined_type::o2be_predefined_type(AST_PredefinedType::PredefinedType t,
 				       UTL_ScopedName *sn, UTL_StrList *p)

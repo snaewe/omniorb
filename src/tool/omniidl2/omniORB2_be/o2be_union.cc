@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.15  1998/08/13 22:47:28  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.14  1998/08/10 15:34:12  sll
   Now include octet as a valid discriminant type.
 
@@ -133,6 +137,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #define ADPT_CLASS_TEMPLATE  "_CORBA_ConstrType_Variable_OUT_arg"
 

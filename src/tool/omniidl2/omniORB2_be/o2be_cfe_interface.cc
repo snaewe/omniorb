@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.17  1998/08/13 22:41:24  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.16  1998/08/10 15:33:52  sll
   Now catch all internal exceptions and print an error message instead
   of causing a core dump.
@@ -68,6 +72,16 @@
 //
   */
 
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
+#include <drv_private.hh>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -76,10 +90,6 @@
 #include <unistd.h>
 #endif
 
-#include <idl.hh>
-#include <idl_extern.hh>
-#include <drv_private.hh>
-#include <o2be.h>
 
 
 #if defined(__WIN32__) || defined(__VMS) && __VMS_VER < 60200000

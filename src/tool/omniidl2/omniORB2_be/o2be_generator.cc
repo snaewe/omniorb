@@ -26,6 +26,10 @@
 
 /*
   $Log$
+  Revision 1.3  1998/08/13 22:37:38  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.2  1997/05/06 13:56:54  sll
   Public release.
 
@@ -34,6 +38,10 @@
 #include  "idl.hh"
 #include  "idl_extern.hh"
 #include  "o2be.h"
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 AST_Root  *
 o2be_generator::create_root(UTL_ScopedName *n,UTL_StrList *p)

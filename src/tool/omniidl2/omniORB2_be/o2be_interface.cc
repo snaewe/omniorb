@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.22  1998/08/13 22:43:16  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.21  1998/07/08 13:42:16  dpg1
   Fixed bug with interface inheritance in LifeCycle code generation.
 
@@ -76,6 +80,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #define PROXY_CLASS_PREFIX        "_proxy_"
 #define SERVER_CLASS_PREFIX       "_sk_"

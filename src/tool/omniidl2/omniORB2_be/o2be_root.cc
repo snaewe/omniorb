@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.14  1998/08/13 22:39:34  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.13  1998/08/10 15:33:07  sll
   Now catch all errors instead of letting o2be_fatal_exception to cause
   core dump.
@@ -68,6 +72,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #ifdef __WIN32__
 #include <stdio.h>
