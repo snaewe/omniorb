@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2002/09/08 21:58:55  dgrisby
+  Support for MSVC 7. (Untested.)
+
   Revision 1.1.2.12  2002/03/11 12:21:07  dpg1
   ETS things.
 
@@ -77,6 +80,7 @@
 #include <initialiser.h>
 #include <orbOptions.h>
 #include <orbParameters.h>
+#include <SocketCollection.h>
 #include <stdio.h>
 
 //

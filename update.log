@@ -1,3 +1,14 @@
+Sun Sep  8 22:54:47 BST 2002 dgrisby
+====================================
+
+- Support for MSVC 7. (Untested.)
+
+include/omniORB4/internal/SocketCollection.h
+include/omnithread/posix.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopEndpoint.cc
+
+
 Sun Sep  8 22:04:49 BST 2002 dgrisby
 ====================================
 

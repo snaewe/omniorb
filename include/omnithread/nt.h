@@ -27,7 +27,18 @@
 #ifndef __omnithread_nt_h_
 #define __omnithread_nt_h_
 
+#ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+#  define OMNI_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
+
 #include <windows.h>
+
+#ifdef OMNI_DEFINED_WIN32_LEAN_AND_MEAN
+#  undef WIN32_LEAN_AND_MEAN
+#  undef OMNI_DEFINED_WIN32_LEAN_AND_MEAN
+#endif
+
 
 #ifndef __BCPLUSPLUS__
 #define OMNI_THREAD_WRAPPER \

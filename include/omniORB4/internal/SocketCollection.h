@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2002/09/08 21:58:49  dgrisby
+  Support for MSVC 7. (Untested.)
+
   Revision 1.1.2.12  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -118,6 +121,12 @@
 //             win32 API
 //
 #if defined(__WIN32__)
+
+#  if !defined(__ETS_KERNEL__)
+#    include <winsock2.h>
+#  else
+#    include <winsock.h>
+#  endif
 
 #  include <sys/types.h>
 #  include <libcWrapper.h>

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.40  2002/09/08 21:58:54  dgrisby
+  Support for MSVC 7. (Untested.)
+
   Revision 1.33.2.39  2002/03/18 15:13:07  dpg1
   Fix bug with old-style ORBInitRef in config file; look for
   -ORBtraceLevel arg before anything else; update Windows registry
@@ -334,6 +337,7 @@
 #include <orbOptions.h>
 #include <orbParameters.h>
 #include <omniIdentity.h>
+#include <SocketCollection.h>
 
 #ifdef HAVE_SIGNAL_H
 #  include <signal.h>
