@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.5  2000/01/27 11:11:24  djr
+ Correction.
+
  Revision 1.1.2.4  2000/01/27 10:55:44  djr
  Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
  fqname for base class constructor for some compilers.
@@ -642,8 +645,7 @@ strdup (char* str)
 #endif // HAS_Cplusplus_Namespace
 
 
-//??#ifdef OMNI_REQUIRES_FQ_BASE_CTOR
-#if 1
+#ifdef OMNI_REQUIRES_FQ_BASE_CTOR
 # define OMNIORB_BASE_CTOR(a)   a
 #else
 # define OMNIORB_BASE_CTOR(a)
