@@ -292,7 +292,8 @@ $(lib): $(ORB_OBJS)
          if expr "$$arg" : "-L" >/dev/null; then \
                rpath="$$rpath$${rpath+:}`expr $$arg : '-L\(.*\)'"; \
          fi; \
-         done; \set -x; \
+         done; \
+         set -x; \
          $(RM) $@; \
          ld -shared -soname $(soname) -set_version $(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
          -expect_unresolved denyFile__10gateKeeper \
