@@ -153,7 +153,7 @@ $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) $(CXXOPTIONS) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
-         $(filter-out $(LibSuffixPattern),$^) -lpthread -posix4; \
+         $(filter-out $(LibSuffixPattern),$^) -lpthread -lposix4; \
        )
 
 all:: $(lib)
