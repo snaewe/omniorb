@@ -30,6 +30,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.2  2000/05/24 17:18:11  dpg1
+// Rename IIOP::DEFAULT_PORT IIOP::DEFAULT_CORBALOC_PORT
+//
 // Revision 1.1.2.1  2000/04/27 10:52:29  dpg1
 // Interoperable Naming Service
 //
@@ -463,11 +466,11 @@ corbalocURIHandler::IiopObjAddr::IiopObjAddr(const char*& c)
       port_ = l;
     }
     else {
-      port_ = IIOP::DEFAULT_PORT;
+      port_ = IIOP::DEFAULT_CORBALOC_PORT;
     }
   }
   else {
-    port_ = IIOP::DEFAULT_PORT;
+    port_ = IIOP::DEFAULT_CORBALOC_PORT;
   }
 }
 
