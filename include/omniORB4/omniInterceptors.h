@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/15 17:05:39  sll
+  Added interceptors along the giop request processing path.
+
   Revision 1.1.2.1  2000/09/27 16:54:08  sll
   *** empty log message ***
 
@@ -84,12 +87,204 @@ class omniInterceptors {
     void visit(omniIOR*);  // ORB internal function
   };
 
+
   //////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////
-  encodeIOR_T encodeIOR;
-  decodeIOR_T decodeIOR;
+  class clientSendRequest_T {
+  public:
+
+    class info_T {
+    public:
+      giopStream&              giopstream;
+      omniIOR&                 ior;
+      const char*              opname;
+      CORBA::Boolean           oneway;
+      CORBA::Boolean           response_expected;
+      IOP::ServiceContextList  service_contexts;
+
+      info_T(giopStream& s, omniIOR& i, const char* op,
+	     CORBA::Boolean ow, CORBA::Boolean re) :
+	giopstream(s),ior(i),opname(op),oneway(ow),response_expected(re),
+	service_contexts(5) {}
+
+    private:
+      info_T();
+      info_T(const info_T&);
+      info_T& operator=(const info_T&);
+    };
+
+    typedef void (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+
+    clientSendRequest_T();
+    ~clientSendRequest_T();
+
+  private:
+    omniInterceptorP* pd_ilist;
+
+  public:
+    void visit(info_T&);  // ORB internal function
+  };
 
 
+  //////////////////////////////////////////////////////////////////
+  class clientReceiveReply_T {
+  public:
+
+    class info_T {
+    public:
+      
+      info_T();
+    private:
+      info_T(const info_T&);
+      info_T& operator=(const info_T&);
+    };
+
+    typedef void (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+
+    clientReceiveReply_T();
+    ~clientReceiveReply_T();
+
+  private:
+    omniInterceptorP* pd_ilist;
+
+  public:
+    void visit(info_T&);  // ORB internal function
+  };
+
+  //////////////////////////////////////////////////////////////////
+  class clientReceiveException_T {
+  public:
+
+    class info_T {
+    public:
+      
+      info_T();
+    private:
+      info_T(const info_T&);
+      info_T& operator=(const info_T&);
+    };
+
+    typedef void (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+
+    clientReceiveException_T();
+    ~clientReceiveException_T();
+
+  private:
+    omniInterceptorP* pd_ilist;
+
+  public:
+    void visit(info_T&);  // ORB internal function
+  };
+
+  //////////////////////////////////////////////////////////////////
+  class serverReceiveRequest_T {
+  public:
+
+    class info_T {
+    public:
+      giopStream&               giopstream;
+      giopStream::requestInfo&  requestinfo;
+
+      info_T(giopStream& s, giopStream::requestInfo& r) : 
+	giopstream(s), requestinfo(r) {}
+
+    private:
+      info_T();
+      info_T(const info_T&);
+      info_T& operator=(const info_T&);
+    };
+
+    typedef void (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+
+    serverReceiveRequest_T();
+    ~serverReceiveRequest_T();
+
+  private:
+    omniInterceptorP* pd_ilist;
+
+  public:
+    void visit(info_T&);  // ORB internal function
+  };
+
+
+  //////////////////////////////////////////////////////////////////
+  class serverSendReply_T {
+  public:
+
+    class info_T {
+    public:
+      
+      info_T();
+    private:
+      info_T(const info_T&);
+      info_T& operator=(const info_T&);
+    };
+
+    typedef void (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+
+    serverSendReply_T();
+    ~serverSendReply_T();
+
+  private:
+    omniInterceptorP* pd_ilist;
+
+  public:
+    void visit(info_T&);  // ORB internal function
+  };
+
+  //////////////////////////////////////////////////////////////////
+  class serverSendException_T {
+  public:
+
+    class info_T {
+    public:
+      
+      info_T();
+    private:
+      info_T(const info_T&);
+      info_T& operator=(const info_T&);
+    };
+
+    typedef void (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+
+    serverSendException_T();
+    ~serverSendException_T();
+
+  private:
+    omniInterceptorP* pd_ilist;
+
+  public:
+    void visit(info_T&);  // ORB internal function
+  };
+
+
+  //////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+  encodeIOR_T                encodeIOR;
+  decodeIOR_T                decodeIOR;
+  clientSendRequest_T        clientSendRequest;
+  clientReceiveReply_T       clientReceiveReply;
+  clientReceiveException_T   clientReceiveException;
+  serverReceiveRequest_T     serverReceiveRequest;
+  serverSendReply_T          serverSendReply;
+  serverSendException_T      serverSendException;
 
   //////////////////////////////////////////////////////////////////
   friend class omni_interceptor_initialiser;
