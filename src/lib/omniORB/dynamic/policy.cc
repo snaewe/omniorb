@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.4  2001/11/08 16:33:50  dpg1
+  Local servant POA shortcut policy.
+
   Revision 1.1.2.3  2001/08/22 13:29:47  dpg1
   Re-entrant Any marshalling.
 
@@ -89,6 +92,23 @@ OMNI_USING_NAMESPACE(omni)
       break; \
     }
 
+#define CASE_CPFN_OMNI(id,policy) \
+  case id: \
+    { \
+      try { \
+	omniPolicy::policy##Value v; \
+        if (!(value >>= v)) throw CORBA::PolicyError(CORBA::BAD_POLICY_TYPE); \
+	return new omniPolicy::policy(v); \
+      } \
+      catch(CORBA::PolicyError& ex) { \
+	throw; \
+      } \
+      catch(...) { \
+	throw CORBA::PolicyError(CORBA::BAD_POLICY_TYPE); \
+      } \
+      break; \
+    }
+
 
 CORBA::Policy_ptr
 CORBA::
@@ -107,6 +127,9 @@ ORB::create_policy(CORBA::PolicyType t, const CORBA::Any& value) {
 
   // Bidirectional policy
   CASE_CPFN_BIDIR(/*BIDIRECTIONAL_POLICY_TYPE*/   37, BidirectionalPolicy)
+
+  // omniORB specific policies
+  CASE_CPFN_OMNI(/*LOCAL_SHORTCUT_POLICY_TYPE*/0x41545401, LocalShortcutPolicy)
 
   // Anything else we do not know
   default:

@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.7  2001/11/08 16:33:51  dpg1
+// Local servant POA shortcut policy.
+//
 // Revision 1.1.2.6  2001/10/17 16:44:06  dpg1
 // Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 //
@@ -1165,6 +1168,7 @@ CORBA::Fixed::operator<<=(cdrStream& s)
   // Read the data
   s.get_octet_array(buffer, digits_to_read / 2 + 1);
 
+
   CORBA::Octet d;
 
   // Sign indicator
@@ -1215,9 +1219,9 @@ CORBA::Fixed::operator<<=(cdrStream& s)
   }
   OMNIORB_ASSERT(vi == pd_digits);
 
-  // Strip off leading zeros
+  // Strip off leading zeros. Remember to stop if there are no digits left!
   --vi;
-  while (pd_val[vi] == 0) --vi;
+  while (vi >= 0 && pd_val[vi] == 0) --vi;
 
   pd_digits = vi + 1;
 

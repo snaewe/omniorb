@@ -93,6 +93,7 @@ ORB_SRCS =  \
             transportRules.cc \
 	    rmutex.cc \
 	    uri.cc \
+            omniPolicy.cc \
             $(GIOP_SRCS) \
             $(CODESET_SRCS) \
             $(BUILTIN_STUB_SRCS) \

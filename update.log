@@ -1,3 +1,32 @@
+Thu Nov  8 16:29:17 GMT 2001 dpg1
+=================================
+
+- Local servant POA shortcut policy.
+
+include/omniORB4/CORBA.h
+include/omniORB4/omniObjRef.h
+include/omniORB4/omniPolicy.h  -- new
+include/omniORB4/poa_defs.h
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/include/localIdentity.h
+src/lib/omniORB/include/poaimpl.h
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+src/lib/omniORB/omniidl_be/cxx/config.py
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/omniPolicy.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poastubs.cc
+
+- Minor tweaks.
+
+src/lib/omniORB/orbcore/corbaFixed.cc
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/tool/omniidl/cxx/idlast.cc
+
+
 Wed Nov  7 15:42:12 GMT 2001 dpg1
 =================================
 

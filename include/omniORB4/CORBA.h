@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.21  2001/11/08 16:33:49  dpg1
+ Local servant POA shortcut policy.
+
  Revision 1.2.2.20  2001/10/17 16:43:59  dpg1
  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -434,6 +437,7 @@ extern void _omni_set_NameService(CORBA::Object_ptr);
 #include <omniORB4/poa.h>
 #include <omniORB4/fixed.h>
 #include <omniORB4/BiDirPolicy.h>
+#include <omniORB4/omniPolicy.h>
 #include <omniORB4/dynAny.h>
 
 #include <omniORB4/minorCode.h>

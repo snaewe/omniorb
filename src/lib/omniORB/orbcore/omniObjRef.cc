@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.25  2001/11/08 16:33:52  dpg1
+  Local servant POA shortcut policy.
+
   Revision 1.2.2.24  2001/10/17 16:33:28  dpg1
   New downcast mechanism for cdrStreams.
 
@@ -810,43 +813,41 @@ omniObjRef::_unMarshal(const char* repoId, cdrStream& s)
     // This is a nil object reference
     return 0;
   }
-  else {
-    // It is possible that we reach here with the id string = '\0'.
-    // That is alright because the actual type of the object will be
-    // verified using _is_a() at the first invocation on the object.
-    //
-    // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
-    // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
-    // 
-    omniIOR* ior = new omniIOR(id._retn(),profiles._retn());
+  // It is possible that we reach here with the id string = '\0'.
+  // That is alright because the actual type of the object will be
+  // verified using _is_a() at the first invocation on the object.
+  //
+  // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
+  // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
+  // 
+  omniIOR* ior = new omniIOR(id._retn(),profiles._retn());
 
-    // Provide interim BiDir GIOP support. Check the stream where this IOR
-    // comes from. If it is a giopStream and this is the server side of
-    // a bidirectional stream, add the component tag TAG_OMNIORB_BIDIR to the
-    // ior's IOP profile list. The component will be decoded in createObjRef.
-    //
-    // In the next revision to bidir giop, as documented in OMG doc. 2001-06-04 
-    // and if it ever gets adopted in a future GIOP version, the tag component
-    // TAG_BI_DIR_GIOP will be embedded in the IOR and this step will be
-    // redundent.
-    giopStream* gs = giopStream::downcast(&s);
-    if (gs) {
-      giopStrand& g = (giopStrand&)*gs;
-      if (g.biDir && !g.isClient()) {
-	// Check the POA policy to see if the servant's POA is willing
-	// to use bidirectional on its callback objects.
-	omniCurrent* current = omniCurrent::get();
-	omniCallDescriptor* desc = ((current)? current->callDescriptor() : 0);
-	if (desc && desc->poa() && desc->poa()->acceptBiDirectional()) {
-	  const char* sendfrom = g.connection->peeraddress();
-	  omniIOR::add_TAG_OMNIORB_BIDIR(sendfrom,*ior);
-	}
+  // Provide interim BiDir GIOP support. Check the stream where this IOR
+  // comes from. If it is a giopStream and this is the server side of
+  // a bidirectional stream, add the component tag TAG_OMNIORB_BIDIR to the
+  // ior's IOP profile list. The component will be decoded in createObjRef.
+  //
+  // In the next revision to bidir giop, as documented in OMG doc. 2001-06-04 
+  // and if it ever gets adopted in a future GIOP version, the tag component
+  // TAG_BI_DIR_GIOP will be embedded in the IOR and this step will be
+  // redundent.
+  giopStream* gs = giopStream::downcast(&s);
+  if (gs) {
+    giopStrand& g = (giopStrand&)*gs;
+    if (g.biDir && !g.isClient()) {
+      // Check the POA policy to see if the servant's POA is willing
+      // to use bidirectional on its callback objects.
+      omniCurrent* current = omniCurrent::get();
+      omniCallDescriptor* desc = ((current)? current->callDescriptor() : 0);
+      if (desc && desc->poa() && desc->poa()->acceptBiDirectional()) {
+	const char* sendfrom = g.connection->peeraddress();
+	omniIOR::add_TAG_OMNIORB_BIDIR(sendfrom,*ior);
       }
     }
-
-    omniObjRef* objref = omni::createObjRef(repoId,ior,0);
-    return objref;
   }
+
+  omniObjRef* objref = omni::createObjRef(repoId,ior,0);
+  return objref;
 }
 
 omniObjRef*
@@ -869,7 +870,7 @@ omniObjRef::_fromString(const char* str)
 
   for (int i=0; i<(int)s; i++) {
     int j = i*2;
-    CORBA::Octet v;
+    CORBA::Octet v=0;
     
     if (p[j] >= '0' && p[j] <= '9') {
       v = ((p[j] - '0') << 4);
@@ -1012,6 +1013,12 @@ omniObjRef::_setIdentity(omniIdentity* id)
     pd_id = id;
     if (pd_id) pd_id->gainRef(this);
   }
+}
+
+void
+omniObjRef::_enableShortcut(omniServant*, const _CORBA_Boolean*)
+{
+  // Default does nothing
 }
 
 OMNI_NAMESPACE_BEGIN(omni)

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/11/08 16:33:50  dpg1
+  Local servant POA shortcut policy.
+
   Revision 1.2.2.6  2001/10/17 16:44:01  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -384,6 +387,7 @@ public:
 
 };
 
+class _impl_ServantActivator;
 
 class _objref_ServantActivator :
   public virtual _objref_ServantManager
@@ -392,11 +396,15 @@ public:
   Servant incarnate(const ObjectId& oid, POA_ptr adapter);
   void etherealize(const ObjectId& oid, POA_ptr adapter, Servant serv, CORBA::Boolean cleanup_in_progress, CORBA::Boolean remaining_activations);
 
-  inline _objref_ServantActivator() { _PR_setobj(0); }  // nil
+  inline _objref_ServantActivator() : _shortcut(0) { _PR_setobj(0); }  // nil
   _objref_ServantActivator(omniIOR*, omniIdentity*);
 
 protected:
   virtual ~_objref_ServantActivator();
+
+  virtual void _enableShortcut(omniServant*, const _CORBA_Boolean*);
+  _impl_ServantActivator* _shortcut;
+  const _CORBA_Boolean* _invalid;
 
 private:
   virtual void* _ptrToObjRef(const char*);
@@ -494,6 +502,7 @@ public:
   typedef void* Cookie;
 };
 
+class _impl_ServantLocator;
 
 class _objref_ServantLocator :
   public virtual _objref_ServantManager
@@ -502,11 +511,15 @@ public:
   Servant preinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, ServantLocator::Cookie& the_cookie);
   void postinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, ServantLocator::Cookie the_cookie, Servant the_servant);
 
-  inline _objref_ServantLocator() { _PR_setobj(0); }  // nil
+  inline _objref_ServantLocator() : _shortcut(0) { _PR_setobj(0); }  // nil
   _objref_ServantLocator(omniIOR*, omniIdentity*);
 
 protected:
   virtual ~_objref_ServantLocator();
+
+  virtual void _enableShortcut(omniServant*, const _CORBA_Boolean*);
+  _impl_ServantLocator* _shortcut;
+  const _CORBA_Boolean* _invalid;
 
 private:
   virtual void* _ptrToObjRef(const char*);

@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.10  2001/11/08 16:33:53  dpg1
+  Local servant POA shortcut policy.
+
   Revision 1.2.2.9  2001/11/07 15:45:53  dpg1
   Faster _ptrToInterface/_ptrToObjRef in common cases.
 
@@ -542,7 +545,8 @@ PortableServer::_objref_ServantActivator::~_objref_ServantActivator() {}
 PortableServer::_objref_ServantActivator::_objref_ServantActivator(omniIOR* ior,
          omniIdentity* id)
  : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id),
-   omniObjRef(PortableServer::ServantActivator::_PD_repoId, ior, id, 1)
+   omniObjRef(PortableServer::ServantActivator::_PD_repoId, ior, id, 1),
+   _shortcut(0)
 {
   _PR_setobj(this);
 }
@@ -566,6 +570,17 @@ PortableServer::_objref_ServantActivator::_ptrToObjRef(const char* id)
     return (CORBA::Object_ptr) this;
 
   return 0;
+}
+
+void
+PortableServer::_objref_ServantActivator::_enableShortcut(omniServant* _svt, const _CORBA_Boolean* _inv)
+{
+  if (_svt)
+    _shortcut = (_impl_ServantActivator*)_svt->_ptrToInterface(::PortableServer::ServantActivator::_PD_repoId);
+  else
+    _shortcut = 0;
+  _invalid  = _inv;
+  
 }
 
 
@@ -600,6 +615,16 @@ _0RL_lcfn_3c165f58b5a16b59_30000000(omniCallDescriptor* cd, omniServant* svnt)
 
 PortableServer::Servant PortableServer::_objref_ServantActivator::incarnate(const PortableServer::ObjectId& oid, PortableServer::POA_ptr adapter)
 {
+  _impl_ServantActivator* _s = _shortcut;
+  if (_s) {
+    if (!*_invalid) {
+      return _s->incarnate(oid, adapter);
+    }
+    else {
+      _enableShortcut(0,0);
+      // drop through to normal invoke
+    }
+  }
   _0RL_cd_3c165f58b5a16b59_20000000 _call_desc(_0RL_lcfn_3c165f58b5a16b59_30000000, "incarnate", 10, 0, oid, adapter);
 
   _invoke(_call_desc);
@@ -641,6 +666,16 @@ _0RL_lcfn_3c165f58b5a16b59_50000000(omniCallDescriptor* cd, omniServant* svnt)
 
 void PortableServer::_objref_ServantActivator::etherealize(const PortableServer::ObjectId& oid, PortableServer::POA_ptr adapter, PortableServer::Servant serv, CORBA::Boolean cleanup_in_progress, CORBA::Boolean remaining_activations)
 {
+  _impl_ServantActivator* _s = _shortcut;
+  if (_s) {
+    if (!*_invalid) {
+      _s->etherealize(oid, adapter, serv, cleanup_in_progress, remaining_activations); return;
+    }
+    else {
+      _enableShortcut(0,0);
+      // drop through to normal invoke
+    }
+  }
   _0RL_cd_3c165f58b5a16b59_40000000 _call_desc(_0RL_lcfn_3c165f58b5a16b59_50000000, "etherealize", 12, 0, oid, adapter, serv, cleanup_in_progress, remaining_activations);
 
   _invoke(_call_desc);
@@ -775,7 +810,8 @@ PortableServer::_objref_ServantLocator::~_objref_ServantLocator() {}
 PortableServer::_objref_ServantLocator::_objref_ServantLocator(omniIOR* ior,
          omniIdentity* id)
  : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id),
-   omniObjRef(PortableServer::ServantLocator::_PD_repoId, ior, id, 1)
+   omniObjRef(PortableServer::ServantLocator::_PD_repoId, ior, id, 1),
+   _shortcut(0)
 {
   _PR_setobj(this);
 }
@@ -801,6 +837,16 @@ PortableServer::_objref_ServantLocator::_ptrToObjRef(const char* id)
   return 0;
 }
 
+void
+PortableServer::_objref_ServantLocator::_enableShortcut(omniServant* _svt, const _CORBA_Boolean* _inv)
+{
+  if (_svt)
+    _shortcut = (_impl_ServantLocator*)_svt->_ptrToInterface(::PortableServer::ServantLocator::_PD_repoId);
+  else
+    _shortcut = 0;
+  _invalid  = _inv;
+  
+}
 
 // Proxy call descriptor class. Mangled signature:
 //  _cshort_i_cPortableServer_mObjectId_i_cPortableServer_mPOA_i_cstring_o_cshort_e_cPortableServer_mForwardRequest
@@ -837,6 +883,16 @@ _0RL_lcfn_3c165f58b5a16b59_70000000(omniCallDescriptor* cd, omniServant* svnt)
 
 PortableServer::Servant PortableServer::_objref_ServantLocator::preinvoke(const PortableServer::ObjectId& oid, PortableServer::POA_ptr adapter, const char* operation, PortableServer::ServantLocator::Cookie& the_cookie)
 {
+  _impl_ServantLocator* _s = _shortcut;
+  if (_s) {
+    if (!*_invalid) {
+      return _s->preinvoke(oid, adapter, operation, the_cookie);
+    }
+    else {
+      _enableShortcut(0,0);
+      // drop through to normal invoke
+    }
+  }
   _0RL_cd_3c165f58b5a16b59_60000000 _call_desc(_0RL_lcfn_3c165f58b5a16b59_70000000, "preinvoke", 10, 0, oid, adapter, operation, the_cookie);
 
   _invoke(_call_desc);
@@ -878,6 +934,16 @@ _0RL_lcfn_3c165f58b5a16b59_90000000(omniCallDescriptor* cd, omniServant* svnt)
 
 void PortableServer::_objref_ServantLocator::postinvoke(const PortableServer::ObjectId& oid, PortableServer::POA_ptr adapter, const char* operation, PortableServer::ServantLocator::Cookie the_cookie, PortableServer::Servant the_servant)
 {
+  _impl_ServantLocator* _s = _shortcut;
+  if (_s) {
+    if (!*_invalid) {
+      _s->postinvoke(oid, adapter, operation, the_cookie, the_servant); return;
+    }
+    else {
+      _enableShortcut(0,0);
+      // drop through to normal invoke
+    }
+  }
   _0RL_cd_3c165f58b5a16b59_80000000 _call_desc(_0RL_lcfn_3c165f58b5a16b59_90000000, "postinvoke", 11, 0, oid, adapter, operation, the_cookie, the_servant);
 
   _invoke(_call_desc);
