@@ -129,8 +129,19 @@ main(int argc, char **argv)
   } else {
     try {
       initServ = orb->resolve_initial_references("NameService");
-    } catch(CORBA::ORB::InvalidName& ex) {
+    }
+    catch(CORBA::ORB::InvalidName& ex) {
       cerr << "Service required is invalid [does not exist]." << endl;
+      exit(1);
+    }
+    catch(CORBA::NO_RESOURCES& ex) {
+      cerr << "Cannot resolve the root context." << endl;
+      cerr << "Have you set up the configuration file properly?" << endl;
+      exit(1);
+    }
+    catch(...) {
+      cerr << "Unexpected error encountered while resolving the root context."
+	   << endl;
       exit(1);
     }
   }
