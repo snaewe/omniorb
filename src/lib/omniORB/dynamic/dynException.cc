@@ -63,6 +63,9 @@ CORBA::scope::name::_NP_mostDerivedTypeId() const \
 }
 
 
+USER_EXCEPTION (ContextList,Bounds)
+USER_EXCEPTION (ExceptionList,Bounds)
+USER_EXCEPTION (NVList,Bounds)
 USER_EXCEPTION (TypeCode,Bounds)
 USER_EXCEPTION (TypeCode,BadKind)
 USER_EXCEPTION (DynAny,Invalid)
@@ -70,4 +73,6 @@ USER_EXCEPTION (DynAny,InvalidValue)
 USER_EXCEPTION (DynAny,TypeMismatch)
 USER_EXCEPTION (DynAny,InvalidSeq)
 USER_EXCEPTION (ORB,InconsistentTypeCode)
+
+
 #undef USER_EXCEPTION
