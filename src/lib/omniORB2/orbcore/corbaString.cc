@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14.2.2  2000/02/09 14:44:30  djr
+  Set release flag in string member when unmarshalling strings.
+
   Revision 1.14.2.1  2000/01/31 11:05:59  djr
   Fixed bug in unmarshalling of String_member.
 
@@ -93,7 +96,7 @@ char*
 CORBA::string_alloc(CORBA::ULong len)
 {
   // We initialise the string to zero length to help prevent errors
-  // if this string is copied before it is initialied. This is easy
+  // if this string is copied before it is initialised.  This is easy
   // to do when assigning the returned value to a CORBA::String_var.
   char* s = ALLOC_BYTES(len + 1);
   if( s )  *s = '\0';
@@ -171,6 +174,7 @@ _CORBA_String_member::operator <<= (NetBufferedStream& s)
   else  *p = '\0';
 
   _ptr = p;
+  pd_rel = 1;
 }
 
 
@@ -212,6 +216,7 @@ _CORBA_String_member::operator <<= (MemBufferedStream& s)
   }
 
   _ptr = p;
+  pd_rel = 1;
 }
 
 
@@ -245,6 +250,7 @@ _CORBA_Sequence__String::NP_alignedSize(size_t size) const
 
   return size;
 }
+
 
 template<class buf_t>
 inline void marshal_ss(char** buf,

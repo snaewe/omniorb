@@ -14,6 +14,7 @@ Wed Feb  9 14:16:51 GMT 2000 djr
   much as we no longer use statically allocated empty strings!).
 
 include/omniORB2/stringtypes.h
+src/lib/omniORB2/orbcore/corbaString.cc
 
 
 Mon Jan 31 10:53:23 GMT 2000 djr
