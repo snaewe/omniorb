@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.18  1998/10/16 11:26:21  sll
+  Previously, if a fixed size union branch is followed by an array of union
+  branch, the data member of the fixed size branch is not defined in the
+  generated stub. This is now fixed.
+
   Revision 1.17  1998/10/14 14:13:28  sll
   Do not put fixed-size struct inside the anonymous union data member in a
   union.
@@ -526,7 +531,6 @@ o2be_union::produce_hdr(std::fstream &s)
 		ntype != o2be_operation::tAny &&
 		ntype != o2be_operation::tTypeCode)
 	      {
-		has_fix_member = I_TRUE;
 		if (ntype == o2be_operation::tArrayFixed) 
 		  {
 		    // Array of fixed size union is a special case, the data
@@ -543,12 +547,17 @@ o2be_union::produce_hdr(std::fstream &s)
 		    while (dd->node_type() == AST_Decl::NT_typedef) {
 		      dd = o2be_typedef::narrow_from_decl(dd)->base_type();
 		    }
-		    if (dd->node_type() == AST_Decl::NT_union) {
-		      // The element is a union. Do not define the data member
+		    if (dd->node_type() == AST_Decl::NT_union ||
+			dd->node_type() == AST_Decl::NT_struct) {
+		      // The element is a union or a struct. 
+		      // Do not define the data member
 		      // in the anonymous union.
-		      has_fix_member = I_FALSE;
 		    }
+		    else
+		      has_fix_member = I_TRUE;
 		  }
+		else
+		  has_fix_member = I_TRUE;
 	      }
 
 	    switch (ntype)
