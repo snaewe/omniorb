@@ -95,7 +95,7 @@ repoId_unknown_t = """\
 """
 raise_t = """\
 // Method exception raising function:
-void @fqname@::raise_@op@(){
+void @fqname@::@op@(){
   // In the local case, we don't bother marshalling the exception
   if (!local_exception_object){
     _NP_unmarshal_sequence_to_exception();
@@ -104,16 +104,23 @@ void @fqname@::raise_@op@(){
 }
 """
 
+def callable_raise_name(callable):
+    op_name = callable.operation_name()
+    if op_name[0] != "_": op_name = "_" + op_name
+    op_name = "raise" + op_name
+
+    return op_name
+
+
 class ExceptionHolder(iface.Class):
     def __init__(self, interface):
         iface.Class.__init__(self, interface)
 
-        self._name = ami.unique_name(self._name, "ExceptionHolder",
-                                     self._environment)
+        self._name = id.Name(interface._node.ExceptionHolder.scopedName())
 
         voidType = types.Type(idltype.Base(idltype.tk_void))
         for callable in self.interface().callables():
-            method = cxx.Method(self, "raise_" + callable.method_name(),
+            method = cxx.Method(self, callable_raise_name(callable),
                                 voidType, [], [])
             self._methods.append(method)
             self._callables[method] = callable
@@ -121,7 +128,7 @@ class ExceptionHolder(iface.Class):
     def hh(self, stream):
         methods = map(lambda x:x.hh(), self._methods)
         stream.out(class_t, name = self.name().simple(),
-                   methods = string.join(methods, ",\n"))
+                   methods = string.join(methods, "\n"))
 
     def cc(self, stream):
 
@@ -140,6 +147,6 @@ class ExceptionHolder(iface.Class):
 
         # build the individual raise methods
         for callable in self.interface().callables():
-            stream.out(raise_t, op = callable.method_name(),
+            stream.out(raise_t, op = callable_raise_name(callable),
                        fqname = self.name().fullyQualify())
             

@@ -31,7 +31,7 @@ import string
 
 from omniidl import idlvisitor, idlast, idltype
 from omniidl_be.cxx import header, id, types, output, cxx, ast, iface
-from omniidl_be.cxx.ami import ami
+from omniidl_be.cxx.ami import ami, exholder
 import poller
 
 # Poller valuetype interface #########################################
@@ -104,7 +104,7 @@ operation_t = """\
 void @op@(@args@) 
 {
   if (!is_ready(timeout)) throw CORBA::TIMEOUT();
-  if (exholder != NULL) exholder->raise_@op@();
+  if (exholder != NULL) exholder->@op@();
   {
     @return_arguments@
   }
@@ -125,9 +125,8 @@ class Poller(iface.Class):
     def __init__(self, interface):
         iface.Class.__init__(self, interface)
 
-        self._ehname = ami.unique_name(self._name, "ExceptionHolder",
-                                       self._environment)
-        self._name = ami.unique_name(self._name, "Poller", self._environment)
+        self._ehname = id.Name(interface._node.ExceptionHolder.scopedName())
+        self._name = id.Name(interface._node.Poller.scopedName())
 
     def hh(self, stream):
 
@@ -180,7 +179,7 @@ class PollerOpSpecific(iface.Class):
         iface.Class.__init__(self, interface)
         self._callable = callable
 
-        self._poller = ami.unique_name(self._name, "Poller", self._environment)
+        self._poller = id.Name(interface._node.Poller.scopedName())
         self._name = self._poller.suffix("_" + callable.operation_name())
 
     def hh(self, stream):
@@ -196,34 +195,35 @@ class PollerOpSpecific(iface.Class):
         
         rType = types.Type(self._callable.returnType())
         if not(rType.void()):
-            arg_storage.out(rType._var(self._environment) + " ami_return_val;")
-            copy.out(rType.copy("this->ami_return_val", "ami_return_val",
-                                self._environment))
-            args.append(rType.op(types.OUT, self._environment) +\
+            arg_storage.out(rType._var() + " ami_return_val;")
+            copy.out(ami.copy_to_OUT(rType, "this->ami_return_val",
+                                     "ami_return_val"))
+            args.append(rType.op(types.OUT) +\
                         " ami_return_val")
 
         for parameter in self._callable.parameters():
             if parameter.is_out():
                 pType = types.Type(parameter.paramType())
                 id = parameter.identifier()
-                arg_storage.out(pType._var(self._environment) + id + ";")
-                copy.out(pType.copy("this->" + id, id))
-                args.append(pType.op(types.OUT, self._environment) + " " +\
+                arg_storage.out(pType._var() + " " +  id + ";")
+                copy.out(ami.copy_to_OUT(pType, "this->" + id, id))
+                args.append(pType.op(types.OUT) + " " +\
                             parameter.identifier())
 
         # the specific operation
         methods.out(operation_t,
-                    op = self._callable.method_name(),
+                    op = exholder.callable_raise_name(self._callable),
                     args = string.join(args, ", "),
                     return_arguments = copy)
         
         # the operation name
-        methods.out(operation_name_t, op_name = self._callable.method_name())
+        methods.out(operation_name_t,
+                    op_name = self._callable.operation_name())
         
         stream.out(specific_t,
                    name = self.name().simple(),
-                   target_ptr = self.interface().name().simple() + "_ptr",
-                   inherits = self._poller.simple(),
+                   target_ptr = self.interface().name().fullyQualify()+ "_ptr",
+                   inherits = self._poller.fullyQualify(),
                    arg_storage = arg_storage,
                    methods = methods)
 
@@ -286,12 +286,10 @@ void @op@_excep(const struct @exceptionholder@ &excep_holder){
 class Poller_internal_servant(iface.Class):
     def __init__(self, interface):
         iface.Class.__init__(self, interface)
-        
-        self._rhname = ami.unique_name(self._name, "Handler",
-                                       self._environment)
-        self._ehname = ami.unique_name(self._name, "ExceptionHolder",
-                                       self._environment)
-        self._name = ami.unique_name(self._name, "Poller", self._environment)
+
+        self._rhname = id.Name(self._node.ReplyHandler.scopedName())
+        self._ehname = id.Name(self._node.ExceptionHolder.scopedName())
+        self._name = id.Name(self._node.Poller.scopedName())
 
     def hh(self, stream):
         return

@@ -61,24 +61,18 @@ class IHandler(iface.Interface):
         meh_type = idltype.Declared(base_exception_holder, meh_name,
                                     idltype.tk_struct)
         # Define the type specific one (as a struct)
-        holder_name = ami.unique_name(self.name(), "ExceptionHolder",
-                                      self._environment)
-        holder_repoID = ami.unique_name_repoId(holder_name.simple(),
-                                               base_exception_holder.repoId())
-        tseh = ami.register_type_specific_exceptionholder(holder_name,
-                                                          holder_repoID)
+        holder_name = id.Name(self._node.ExceptionHolder.scopedName())
+
+        tseh = idlast.findDecl(holder_name.fullName())
         tseh_type = idltype.Declared(tseh, holder_name.fullName(),
                                      idltype.tk_struct)
-        environment.addName(holder_name.fullName(), allow_already_exists = 1)
 
         # this node inherits from Messaging::ReplyHandler
         self._inherits = [ idlast.findDecl(["Messaging", "ReplyHandler"]) ]
 
-        # Set and register our name
-        self._node_name = ami.unique_name(self.name(), "Handler",
-                                          self._environment)
-        environment.addName(self._node_name.fullName(),
-                            allow_already_exists = 1)
+        # Set our name
+        self._node_name = id.Name(self._node.ReplyHandler.scopedName())
+
 
         # The replyhandler has two callables per original IDL interface
         # callable. One for exceptional and one for normal replies.
@@ -95,12 +89,12 @@ class IHandler(iface.Interface):
             voidType = idltype.Base(idltype.tk_void)
             
             if returnType.kind() != idltype.tk_void:
-                new_params.append(ami.new_inherits_from(
+                new_params.append(ami.decl(
                     idlast.Parameter, node, [0, returnType, "ami_return_val"]))
 
             # (changing all the parameters to -out-)
             for parameter in out_params:
-                new_params.append(ami.new_inherits_from(
+                new_params.append(ami.decl(
                     idlast.Parameter, node, [0, parameter.paramType(),
                                              parameter.identifier()]))
             operation = c.operation_name()
@@ -110,8 +104,7 @@ class IHandler(iface.Interface):
                               voidType, new_params, 0, [], []))
 
             # exceptional reply
-            param = ami.new_inherits_from(idlast.Parameter, node,
-                                          [0, tseh_type, "_eh"])
+            param = ami.decl(idlast.Parameter, node, [0, tseh_type, "_eh"])
             operation = operation + "_excep"
             exceptional_callables.append(
                 call.Callable(self, operation, id.mapID(operation),

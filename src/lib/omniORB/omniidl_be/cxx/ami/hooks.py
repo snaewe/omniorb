@@ -37,12 +37,12 @@ self = hooks
 def Interface_defs(node):
     assert isinstance(node, idlast.Interface)
 
+    if not(node.mainFile()): return
+
     stream = header.defs.stream
     environment = id.lookup(node)
     node_name = id.Name(node.scopedName())
-    ami_name = ami.unique_name(node_name, "Handler", environment)
-
-    ami.register_type_specific_replyhandler(node)
+    ami_name = id.Name(node.ReplyHandler.scopedName())
 
     # forward declare the replyHandler and the interface itself
     # (they get referenced in the new sendc_ objref methods)
@@ -53,19 +53,14 @@ typedef _objref_@replyhandler@* @replyhandler@_ptr;
 class @interface@;
 class _objref_@interface@;
 typedef _objref_@interface@* @interface@_ptr;
-""", replyhandler = ami_name.simple(), interface = node_name.simple())
-    environment.addName(ami_name.fullName())
+class @I_Helper@;
+""", replyhandler = ami_name.simple(), interface = node_name.simple(),
+               I_Helper = node_name.suffix("_Helper").simple())
     
     # This uses the Type Specific ExceptionHolder and the Type Specific
     # Poller valuetype. Better define them :)
     interface = iface.Interface(node)
     
-    ExceptionHolder = exholder.ExceptionHolder(interface)
-    ExceptionHolder.hh(stream)
-
-    Poller = poller.Poller(interface)
-    Poller.hh(stream)
-
     # Make the normal interface definitions, with the new _objref_ code
     old_objref_I = iface.instance("_objref_I")
     iface.register_class("_objref_I", objref._objref_I)
@@ -79,6 +74,14 @@ typedef _objref_@interface@* @interface@_ptr;
 
     stream.out(header.template.interface_type,
                name = ami_name.simple(), Other_IDL = "")
+
+    ExceptionHolder = exholder.ExceptionHolder(interface)
+    ExceptionHolder.hh(stream)
+
+    Poller = poller.Poller(interface)
+    Poller.hh(stream)
+
+
     
     _objref = rhandler._objref_IHandler(handler)
     _objref.hh(stream)
@@ -100,12 +103,14 @@ def Interface_opers(node):
     assert isinstance(node, idlast.Interface)
     self.opers_visitInterface(node)
 
+    if not(node.mainFile()): return
+
     environment = id.lookup(node)
 
     node_name = id.Name(node.scopedName())
-    ami_name = ami.unique_name(node_name, "Handler", environment)
+    ami_name = id.Name(node.ReplyHandler.scopedName())
     # New IDL has different name => different repoId
-    new_repoId = ami.unique_name_repoId(ami_name.simple(), node.repoId())
+    new_repoId = node.ReplyHandler.repoId()
     idLen = len(new_repoId) + 1
 
     header.opers.stream.out(header.template.interface_marshal_forward,
@@ -118,10 +123,12 @@ def Interface_poa(node):
     assert isinstance(node, idlast.Interface)
     self.poa_visitInterface(node)
 
+    if not(node.mainFile()): return
+
     environment = id.lookup(node)
 
     node_name = id.Name(node.scopedName())
-    ami_name = ami.unique_name(node_name, "Handler", environment)
+    ami_name = id.Name(node.ReplyHandler.scopedName())
 
     poa_name = ami_name.simple()
     if ami_name.scope() == []:
@@ -131,12 +138,13 @@ def Interface_poa(node):
                 POA_name = poa_name,
                 impl_scopedID = ami_name.prefix("_impl_").fullyQualify(),
                 inherits = "public virtual POA_Messaging::ReplyHandler",
-                 scopedID = ami_name.simple())
+                scopedID = ami_name.fullyQualify())
 
 
 
 def Implementation(node):
     assert isinstance(node, idlast.Interface)
+    if not(node.mainFile()): return
 
     environment = id.lookup(node)
 
@@ -163,7 +171,7 @@ def Implementation(node):
     _Helper.cc(stream)
 
     objref_name = handler.name().prefix("_objref_")
-    repoId = ami.unique_name_repoId(handler.name().simple(), node.repoId())
+    repoId = node.ReplyHandler.repoId()
     stream.out(skel.template.interface_class,
                name = handler.name().fullyQualify(),
                objref_name = objref_name.unambiguous(environment),
@@ -199,11 +207,13 @@ def Implementation_poa(node):
     assert isinstance(node, idlast.Interface)
     self.skel_poa_visitInterface(node)
 
+    if not(node.mainFile()): return
+
     stream = skel.poa.stream
 
     environment = id.lookup(node)
     node_name = id.Name(node.scopedName())
-    ami_name = ami.unique_name(node_name, "Handler", environment)
+    ami_name = id.Name(node.ReplyHandler.scopedName())
 
     prefix = ""
     if len(ami_name.fullName()) == 1: prefix = "POA_"

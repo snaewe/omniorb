@@ -43,10 +43,7 @@ class _objref_I(iface._objref_I):
         iface._objref_I.__init__(self, I)
 
         # The name of the type-specific ReplyHandler
-        self.ami_name = ami.unique_name(self.interface().name(), "Handler",
-                                        self.environment())
-
-        ami.register_type_specific_replyhandler(self.interface()._node)
+        self.ami_name = id.Name(I._node.ReplyHandler.scopedName())
 
         self.extra_callables = self.build_extra_callables()
 
@@ -68,13 +65,22 @@ class _objref_I(iface._objref_I):
                                       0, tsrh_type, "ami_handler")
         
         for callable in self.interface().callables():
-            in_params = [ tsrh_param ] +\
-                        filter(lambda x:x.is_in(), callable.parameters())
+            # all -in- and -inout- params are involved, but with a direction
+            # of -in-
+            in_params = [ tsrh_param ]
+            for param in callable.parameters():
+                if not(param.is_in()): continue
+                new_param = ami.decl(idlast.Parameter, param, [ 0,
+                                     param.paramType(), param.identifier() ])
+                in_params.append(new_param)
+            
             operation_name = "sendc_" + callable.operation_name()
             method_name = id.mapID(operation_name)
-            extra.append(call.Callable(self.interface(), operation_name,
-                                       method_name, voidType,
-                                       in_params, 0, [], callable.contexts()))
+            c = call.Callable(self.interface(), operation_name,
+                              method_name, voidType,
+                              in_params, 0, [], callable.contexts())
+            c.original = callable
+            extra.append(c)
 
         return extra
 
@@ -93,40 +99,40 @@ class _objref_I(iface._objref_I):
         self._methods = old_methods
 
     def cc(self, stream):
-
-        # The call descriptor is used by the sendc_ method
+        iface._objref_I.cc(self, stream)
+        
+        # Generate all the sendc_ methods
         handler = rhandler.IHandler(self.interface()._node)
-        for callable in self.interface().callables():
-            name = callable.operation_name()
+        for callable in self.extra_callables:
+            name = callable.original.operation_name()
             reply_callable = handler.callable_by_name(name)
             exc_callable = handler.callable_by_name(name + "_excep")
 
             cd = calldesc._AMI_Call_Descriptor(self.interface(), handler,
-                                               callable, reply_callable,
+                                               callable.original,
+                                               reply_callable,
                                                exc_callable)
             cd.cc(stream)
-            
-        # Have to generate the sendc_ method
-        voidType = types.Type(idltype.Base(idltype.tk_void))
-        for extra in self.extra_callables:
-            (arg_types, arg_names) = ([], [])
 
-            arg_types.append(handler.name().simple() + "_ptr")
-            arg_names.append("ami_handler")
-                            
+            method = iface._objref_Method(callable, self)
+
+            arg_names = []
             for parameter in callable.parameters():
+                ident = id.mapID(parameter.identifier())
                 pType = types.Type(parameter.paramType())
-                if parameter.is_in():
-                    arg_types.append(pType.op(types.IN, self.environment()))
-                    arg_names.append(parameter.identifier())
-                    
+                # If we're using C++ pointers we must perform conversions
+                # by hand (otherwise we can use _var, _ptr conversion ops)
+                got  = pType.op_is_pointer(types.direction(parameter))
+                need = pType._ptr_is_pointer()
+                op = ""
+                if got and not(need): op = "*"
+                if need and not(got): op = "&"
 
-            method = cxx.Method(self, extra.method_name(), voidType,
-                                arg_types, arg_names)
+                arg_names.append(op + ident)
+                
             body = output.StringStream()
-            body.out(sendc_cc_t, name = "temp",
+            body.out(sendc_cc_t, name = cd.descriptor,
                      args = string.join(arg_names, ", "))
             method.cc(stream, body)
-                                
-
-        iface._objref_I.cc(self, stream)
+            
+        return
