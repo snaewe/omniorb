@@ -421,8 +421,8 @@ protected:
 
     virtual ~omni_thread(void);
 	// destructor cannot be called by user (except via a derived class).
-	// Use exit() or cancel() instead. This also means a thread object must
-	// be allocated with new - it cannot be statically or automatically
+	// Use exit() instead. This also means a thread object must be
+	// allocated with new - it cannot be statically or automatically
 	// allocated. The destructor of a class that inherits from omni_thread
 	// shouldn't be public either (otherwise the thread object can be
 	// destroyed while the underlying thread is still running).
