@@ -28,7 +28,17 @@ VERSION = 1.2.0
 #
 
 override VPATH := $(patsubst %,%/..,$(VPATH))
+
+ifndef BuildWin32DebugLibraries
+
 vpath %.cc ..
+
+else
+
+vpath %.cc ../..
+
+endif
+
 
 ifeq ($(ThreadSystem),Solaris)
 CXXSRCS = solaris.cc
@@ -45,22 +55,61 @@ endif
 ifeq ($(ThreadSystem),NT)
 CXXSRCS = nt.cc
 OBJS = nt.o
-DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)  -D"_X86_" -D "_OMNITHREAD_DLL"
-DIR_CPPFLAGS +=  -D"NDEBUG"  -D"_WINDOWS"
-CXXOPTIONS += -MD -W3 -GX -O2
-CXXLINKOPTIONS += -DLL -IMPLIB:"omnithread_rt.lib"
+DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS) -D "_OMNITHREAD_DLL"
+ifdef BuildDebugBinary
+lib = $(patsubst %,$(LibDebugPattern),omnithread)
+else
+lib = $(patsubst %,$(LibPattern),omnithread)
 endif
-
-
-
+endif
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
 micro_version = $(word 3,$(subst ., ,$(VERSION)))
 
-ifeq ($(notdir $(CXX)),CC)
+#############################################################################
+#   Make variables for Win32 platforms                                      #
+#############################################################################
 
-#CXXDEBUGFLAGS = -g
+ifdef Win32Platform
+
+ifndef BuildWin32DebugLibraries
+
+implib = $(patsubst %,$(DLLPattern),omnithread)
+staticlib = ../$(patsubst %,$(LibPattern),omnithread)
+CXXOPTIONS  = $(MSVC_CXXNODEBUGFLAGS)
+CXXLINKOPTIONS = $(MSVC_CXXLINKNODEBUGOPTIONS)
+
+SUBDIRS = debug
+
+else
+
+# Building the debug version of the library in the debug subdirectory.
+# Notice that this dir.mk is recursively used in the debug directory to build
+# this library. The BuildWin32DebugLibraries make variable is set to 1 in
+# the dir.mk generated in the debug directory.
+#
+implib = $(patsubst %,$(DLLDebugPattern),omnithread)
+staticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omnithread)
+CXXDEBUGFLAGS =
+CXXOPTIONS = $(MSVC_CXXDEBUGFLAGS)
+CXXLINKOPTIONS = $(MSVC_CXXLINKDEBUGOPTIONS)
+
+SUBDIRS =
+
+endif
+
+lib = $(patsubst %.lib,%.dll,$(implib))
+libname = $(patsubst %.dll,%,$(lib))
+
+endif
+
+#############################################################################
+#   Make rules for to Solaris 2.x                                           #
+#############################################################################
+
+ifdef SunOS
+ifeq ($(notdir $(CXX)),CC)
 
 DIR_CPPFLAGS += -Kpic
 
@@ -92,10 +141,14 @@ export:: $(lib)
          )
 
 endif
+endif
 
+#############################################################################
+#   Make rules for to Digital Unix                                          #
+#############################################################################
+
+ifdef OSF1
 ifeq ($(notdir $(CXX)),cxx)
-
-#CXXDEBUGFLAGS = 
 
 libname = libomnithread.so
 soname  = $(libname).$(minor_version)
@@ -129,23 +182,27 @@ export:: $(lib)
          )
 
 endif
+endif
 
-ifeq ($(notdir $(CXX)),g++)
+#############################################################################
+#   Make rules for to IBM AIX                                               #
+#############################################################################
 
-ifdef BuildSharedLib
-
-DIR_CPPFLAGS += -fpic
+ifdef AIX
 
 libname = libomnithread.so
 soname  = $(libname).$(minor_version)
 lib = $(soname).$(micro_version)
 
+ifeq ($(notdir $(CXX)),xlC_r)
+
 $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
-        $(CXX) -shared -o $@ -h $(soname) $(IMPORT_LIBRARY_FLAGS) \
-         $(patsubst %,-R %,$(IMPORT_LIBRARY_DIRS)) \
-         $(filter-out $(LibSuffixPattern),$^) -lpthread -lposix4; \
+        /usr/lpp/xlC/bin/makeC++SharedLib \
+             -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) \
+         -lC -lpthreads -lc_r -lc -p 40; \
        )
 
 all:: $(lib)
@@ -162,41 +219,98 @@ export:: $(lib)
           $(RM) $(libname); \
           ln -s $(soname) $(libname); \
          )
-
 endif
 
-endif
+ifeq ($(notdir $(CXX)),g++)
 
-
-ifdef Win32Platform
-
-SharedLibPattern = %_rt.dll
-define SharedLibrary
-( set -x; \
- $(RM) $@; \
- $(CXXLINK) -out:$@ $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $^ $$libs; \
-)
-endef
-
-lib = $(patsubst %,$(SharedLibPattern),omnithread)
+$(lib): $(OBJS)
+	(set -x; \
+         $(RM) $@; \
+         $(CXXLINK) -shared -mthreads \
+              -o $@ $(IMPORT_LIBRARY_FLAGS) \
+          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) ; \
+         -lpthreads; \
+       )
 
 all:: $(lib)
 
-$(lib): $(OBJS)
-	@$(SharedLibrary)
-
 clean::
 	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+endif
+
+
+endif
+
+#############################################################################
+#   Make rules for to Win32 platforms                                       #
+#############################################################################
+
+ifdef Win32Platform
+
+ifndef BuildWin32DebugLibraries
+# Prepare a debug directory for building the debug version of the library.
+# Essentially, we create a debug directory in the current directory, create
+# a dir.mk and optionally a GNUmakefile in that directory and then calling
+# omake (GNU make) in that directory.
+# The confusing bit is that this dir.mk is recursively used in the debug 
+# directory to build this library. The BuildWin32DebugLibraries make variable,
+# which is set to 1 in the dir.mk generated in the debug directory,
+# is used to identify this case.
+#
+all:: mkdebugdir
+
+mkdebugdir:
+	@(if [ ! -f debug/dir.mk ]; then \
+            file=dir.mk; dirs='. $(VPATH:/..=)'; $(FindFileInDirs); \
+            case "$$fullfile" in /*) ;; *) fullfile=../$$fullfile;; esac; \
+            dir=debug; $(CreateDir); \
+            echo 'BuildWin32DebugLibraries = 1' > debug/dir.mk; \
+            echo 'override VPATH := $$(VPATH:/debug=)' >> debug/dir.mk; \
+            echo include $$fullfile >> debug/dir.mk; \
+            if [ -f GNUmakefile ]; then \
+               echo 'TOP=../../../../..' > debug/GNUmakefile; \
+               echo 'CURRENT=src/lib/omnithread/sharedlib/debug' >> debug/GNUmakefile; \
+               echo 'include $$(TOP)/config/config.mk' >> debug/GNUmakefile; \
+            fi \
+          fi \
+         )
+
+export:: mkdebugdir
+
+endif
+
+all:: $(lib)
+
+all::
+	@$(MakeSubdirs)
+
+$(lib): $(OBJS)
+	($(RM) $@; \
+         $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) -IMPLIB:$(implib) $(IMPORT_LIBRARY_FLAGS) $(OBJS) $$libs; \
+        )
+
+clean::
+	$(RM) *.lib *.def *.dll *.exp
 
 # NT treats DLLs more like executables -- the .dll file needs to go in the
 # bin/x86... directory so that it's on your PATH:
 export:: $(lib)
 	@$(ExportExecutable)
 
-clean::
-	$(RM) omnithread_rt.exp
-
-export:: omnithread_rt.lib
+export:: $(implib)
 	@$(ExportLibrary)
+
+export::
+	@$(MakeSubdirs)
 
 endif
