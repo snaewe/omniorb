@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/09/27 17:07:25  sll
+ Updated to use the new cdrStream abstraction.
+
  Revision 1.2.2.1  2000/07/17 10:35:33  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -156,21 +159,10 @@ public:
 
   inline T_member& operator= (const T_element& p);
 
-  inline size_t _NP_alignedSize(size_t initialoffset) const {
-    return CORBA::Object::_NP_alignedSize(_ptr,initialoffset);
-  }
-  inline void operator>>= (NetBufferedStream& s) const {
+  inline void operator>>= (cdrStream& s) const {
     CORBA::Object::_marshalObjRef(_ptr,s);
   }
-  inline void operator<<= (NetBufferedStream& s) {
-    Object_ptr _result = CORBA::Object::_unmarshalObjRef(s);
-    CORBA::release(_ptr);
-    _ptr = _result;
-  }
-  inline void operator>>= (MemBufferedStream& s) const {
-    CORBA::Object::_marshalObjRef(_ptr,s);
-  }
-  inline void operator<<= (MemBufferedStream& s) {
+  inline void operator<<= (cdrStream& s) {
     Object_ptr _result = CORBA::Object::_unmarshalObjRef(s);
     CORBA::release(_ptr);
     _ptr = _result;
