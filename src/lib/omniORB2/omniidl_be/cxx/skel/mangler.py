@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/12/09 20:40:58  djs
+# Bugfixes and integration with dynskel/ code
+#
 # Revision 1.4  1999/12/01 16:59:01  djs
 # Fixed name generation for attributes with user exceptions.
 #
@@ -109,12 +112,97 @@ name_map = {
     idltype.tk_wchar:       "wchar",
     idltype.tk_boolean:     "boolean",
     idltype.tk_octet:       "octet",
-    idltype.tk_void:        "void"
+    idltype.tk_void:        "void",
     }
+
+# FIXME: Think of some way of better handling types. Merging
+# in information from declarators would be sensible.
+def canonTypeName(type, decl = None, useScopedName = 0):
+    assert isinstance(type, idltype.Type)
+    
+    type_dims = tyutil.typeDims(type)
+    decl_dims = []
+    if decl != None:
+        assert isinstance(decl, idlast.Declarator)
+        decl_dims = decl.sizes()
+
+    # flatten a list of dimensions into a string
+    def dims(d):
+        if d == []:
+            return ""
+        d_str = map(str, d)
+        d_str = map(lambda x:ARRAY_SEPARATOR + x, d_str)
+        return string.join(d_str, "")
+
+    full_dims = decl_dims + type_dims
+    is_array = full_dims != []
+    dims_string = dims(full_dims)
+
+    # The canonical type name always has the full dimensions
+    # prepended to it.
+    canon_name = dims_string
+
+    deref_type = tyutil.deref(type)
+
+    # sometimes we don't want to call a sequence a sequence
+    # (operation signatures)
+    if useScopedName and not(is_array) and \
+       tyutil.isTypedef(type) and tyutil.isSequence(deref_type):
+        # find the last typedef in the chain
+        while tyutil.isTypedef(type.decl().alias().aliasType()):
+            type = type.decl().alias().aliasType()
+        return canon_name + CANNON_NAME_SEPARATOR +\
+               string.join(type.scopedName(), SCOPE_SEPARATOR)
+
+    # _arrays_ of sequences seem to get handled differently
+    # to simple aliases to sequences
+    #if (tyutil.isSequence(deref_type) and is_array) or \
+    #   tyutil.isSequence(type):
+    if tyutil.isSequence(deref_type):
+        bound = deref_type.bound()
+        canon_name = canon_name + SEQ_SEPARATOR + str(bound)
+        seqType = deref_type.seqType()
+        # straight forward sequences of sequences use their
+        # flattened scoped name
+        if not(tyutil.isSequence(tyutil.derefKeepDims(seqType))):
+            return canon_name + canonTypeName(deref_type.seqType())
+        type = seqType
+        deref_type = tyutil.deref(type)
+        
+
+    # add in the name for the most dereferenced type
+    def typeName(type):
+        assert isinstance(type, idltype.Type)
+        deref_type = tyutil.deref(type)
+        # dereference the type, until just -before- it becomes a
+        # sequence. Since a sequence doesn't have a scopedName(),
+        # we use the scopedName() of the immediately preceeding
+        # typedef which is an instance of idltype.Declared
+        while tyutil.isTypedef(type) and \
+              not(tyutil.isSequence(type.decl().alias().aliasType())):
+            type = type.decl().alias().aliasType()
+
+        if name_map.has_key(type.kind()):
+            return name_map[type.kind()]
+        if tyutil.isString(type):
+            bound = ""
+            if type.bound() != 0:
+                bound = str(type.bound())
+            return bound + "string"
+        if isinstance(type, idltype.Declared):
+            return produce_idname(type.scopedName())
+        raise "Don't know how to generate a simple name for type: " +\
+              repr(type) + " (kind = " + repr(type.kind()) + ")"
+
+    canon_name = canon_name + CANNON_NAME_SEPARATOR + typeName(type)
+    return canon_name
 
 # Given a type, produce a flat unique canonical name
 def produce_canonical_name_for_type(type):
     assert isinstance(type, idltype.Type)
+
+    return canonTypeName(type, None)
+    print "[[[ " + canonTypeName(type, None) + " ]]]"
 
     full_dims = tyutil.typeDims(type)
     deref_type = tyutil.deref(type)
@@ -127,32 +215,48 @@ def produce_canonical_name_for_type(type):
         
     # -----
 
+    canon_name = dims + CANNON_NAME_SEPARATOR
+
+    if tyutil.isTypedef(type) and \
+       tyutil.isSequence(deref_type):
+        name = produce_idname(type.scopedName())
+        return canon_name + name
+
     if tyutil.isSequence(deref_type):
+        seqType = deref_type.seqType()
         bound = ""
         if deref_type.bound():
             bound = str(deref_type.bound())
-        return dims + CANNON_NAME_SEPARATOR + bound +\
-               string.join(map(tyutil.mapID, type.scopedName()),
-                           SCOPE_SEPARATOR)
-               #produce_canonical_name_for_type(deref_type.seqType())
+        canon_name = canon_name + bound
+        type = seqType
+        deref_type = tyutil.deref(type)
+#        return dims + CANNON_NAME_SEPARATOR + bound +\
+#               string.join(map(tyutil.mapID, type.scopedName()),\
+#                           SCOPE_SEPARATOR)
+#               produce_canonical_name_for_type(seqType)
 
-
-        
     if name_map.has_key(deref_type.kind()):
-        return dims + CANNON_NAME_SEPARATOR + name_map[deref_type.kind()]
+        return canon_name + name_map[deref_type.kind()]
 
     # return the canonical name (eg foo, bar, astruct etc)
     if tyutil.isString(deref_type):
         bound = ""
         if deref_type.bound():
             bound = str(deref_type.bound())
-        return dims + CANNON_NAME_SEPARATOR + bound + "string"
+        return canon_name + bound + "string"
 
-    if isinstance(deref_type, idltype.Declared):
-        name = string.join(map(tyutil.mapID, deref_type.scopedName()),
-                           SCOPE_SEPARATOR)
+    if tyutil.isTypedef(type):
+        name = produce_idname(type.scopedName())
+        return canon_name + name
+
+    if isinstance(type, idltype.Declared):
+        #name = string.join(map(tyutil.mapID, deref_type.scopedName()),
+        #                   SCOPE_SEPARATOR)
+        name = produce_idname(type.scopedName())
         #name = tyutil.name(tyutil.mapID(type.scopedName()))
-        return dims + CANNON_NAME_SEPARATOR + name
+        return canon_name + name
+    
+        
 
     raise "Don't know how to produce canonical name for type: " + \
           repr(type) + " (kind = " + repr(type.kind()) + ")"
@@ -167,7 +271,7 @@ def produce_operation_signature(operation):
     if tyutil.isVoid(returnType, 1):
         sig = "void"
     else:
-        sig = produce_canonical_name_for_type(returnType)
+        sig = canonTypeName(returnType, useScopedName = 1)
         
     # parameter list
     for param in operation.parameters():
@@ -178,7 +282,8 @@ def produce_operation_signature(operation):
         elif param.is_out():
             sig = sig + OUT_SEPARATOR
 
-        sig = sig + produce_canonical_name_for_type(param.paramType())
+        sig = sig + canonTypeName(param.paramType(),
+                                  useScopedName = 1)
         
     # exception list
     # sort the exceptions into lexicographical order
@@ -195,7 +300,7 @@ def produce_operation_signature(operation):
 
     def exception_signature(exception):
         cname = CANNON_NAME_SEPARATOR +\
-                string.join(exception.scopedName(), SCOPE_SEPARATOR)
+                produce_idname(exception.scopedName())
         return EXCEPTION_SEPARATOR + cname
     
     raises_sigs = map(exception_signature, raises)
@@ -208,13 +313,13 @@ def produce_operation_signature(operation):
 def produce_read_attribute_signature(attribute):
     assert isinstance(attribute, idlast.Attribute)
 
-    return produce_canonical_name_for_type(attribute.attrType())
+    return canonTypeName(attribute.attrType(), useScopedName = 1)
 
 def produce_write_attribute_signature(attribute):
     assert isinstance(attribute, idlast.Attribute)
 
     return "void" + IN_SEPARATOR +\
-           produce_canonical_name_for_type(attribute.attrType())
+           canonTypeName(attribute.attrType(), useScopedName = 1)
         
 
 # ----------------

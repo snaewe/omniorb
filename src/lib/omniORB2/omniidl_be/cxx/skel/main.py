@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  1999/12/09 20:40:57  djs
+# Bugfixes and integration with dynskel/ code
+#
 # Revision 1.8  1999/11/29 19:27:05  djs
 # Code tidied and moved around. Some redundant code eliminated.
 #
@@ -603,6 +606,9 @@ def visitTypedef(node):
     for d in node.declarators():
         decl_dims = d.sizes()
         decl_dims_str = tyutil.dimsToString(decl_dims)
+        decl_first_dim_str = ""
+        if decl_dims != []:
+            decl_first_dim_str = tyutil.dimsToString([decl_dims[0]])
         
         full_dims = decl_dims + alias_dims
         is_array = full_dims != []
@@ -614,7 +620,7 @@ def visitTypedef(node):
             
             stream.out("""\
 @fq_derived@_slice* @fq_derived@_alloc() {
-  return new @fq_derived@_slice@decl_dims_str@;
+  return new @fq_derived@_slice@decl_first_dim_str@;
 }
 
 @fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* _s)
@@ -622,7 +628,8 @@ def visitTypedef(node):
   if (!_s) return 0;
   @fq_derived@_slice* _data = @fq_derived@_alloc();
   if (_data) {
-  """, fq_derived = fq_derived, decl_dims_str = decl_dims_str)
+  """, fq_derived = fq_derived, decl_dims_str = decl_dims_str,
+                       decl_first_dim_str = decl_first_dim_str)
             index_str = ""
             i = 0
             stream.inc_indent()

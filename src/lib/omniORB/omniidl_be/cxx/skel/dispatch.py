@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/12/09 20:40:57  djs
+# Bugfixes and integration with dynskel/ code
+#
 # Revision 1.5  1999/12/01 16:58:32  djs
 # Added code to handle user exceptions being thrown
 #
@@ -217,6 +220,9 @@ def operation(operation):
         argument_dims = tyutil.typeDims(argument_type)
         is_array = argument_dims != []
         deref_argument_type = tyutil.deref(argument_type)
+        deref_dims_type = tyutil.derefKeepDims(argument_type)
+        deref_dims_name = environment.principalID(deref_dims_type,
+                                                  fully_scope = 0)
 
         argument_type_names = argument_instance(argument_type)
         # declare the argument
@@ -237,8 +243,12 @@ def operation(operation):
 
         marshal_name = argument_prefixed_name
         align_name = argument_prefixed_name
-        argument_slice_name = "((" + argument_type_name + "_slice*)" +\
-                              argument_prefixed_name + ")"
+        if is_array:
+            argument_slice_name = "((" + deref_dims_name + "_slice*)" +\
+                                  argument_prefixed_name + ")"
+        else:
+            argument_slice_name = "((" + argument_type_name + "_slice*)" +\
+                                  argument_prefixed_name + ")"
         argument_operator_name = "(" + argument_prefixed_name +\
                                  ".operator->())"
 
@@ -285,8 +295,15 @@ def operation(operation):
         return_is_variable = tyutil.isVariableType(return_type)
         result_mapping = argument_instance(return_type)[1]
         return_is_pointer = is_pointer(return_type) and not(return_is_array)
+        dims_return_type = tyutil.derefKeepDims(return_type)
         return_type_name = environment.principalID(return_type,
                                                    fully_scope = 0)
+
+        # something very strange happening with array typedefs
+        if return_is_array:
+            return_type = dims_return_type
+            return_type_name = environment.principalID(dims_return_type,
+                                                       fully_scope = 0)
         
         # exception- arrays of fixed types use the _var mapping
         if not(return_is_variable) and return_is_array:
