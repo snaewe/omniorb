@@ -28,8 +28,11 @@
 
 /*
   $Log$
-  Revision 1.36  1999/09/23 16:49:38  djr
+  Revision 1.37  1999/12/02 19:45:23  djr
   Update from omni2_8_develop
+
+  Revision 1.34.2.2  1999/09/23 16:45:43  djr
+  Fixed scoping bug in omniidl2.
 
   Revision 1.34.2.1  1999/09/20 10:31:42  sll
   MS VC++ 5.0 does not pick up the const char* conversion operator of a
@@ -2505,12 +2508,8 @@ o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
 	ptr_to_first_elm += argname;
 	{
 	  size_t ndim = 0;
-	  o2be_array::dim_iterator next(array);
-	  while( ndim++ < array->getNumOfDims() - 1 ) {
-	    ptr_to_first_elm += '[';
-	    ptr_to_first_elm += (int) next();
-	    ptr_to_first_elm += ']';
-	  }
+	  while( ndim++ < array->getNumOfDims() - 1 )
+	    ptr_to_first_elm += "[0]";
 	}
 	ptr_to_first_elm += ")";
 
@@ -2947,12 +2946,8 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 	ptr_to_first_elm += argname;
 	{
 	  size_t ndim = 0;
-	  o2be_array::dim_iterator next(array);
-	  while( ndim++ < array->getNumOfDims() - 1 ) {
-	    ptr_to_first_elm += '[';
-	    ptr_to_first_elm += (int) next();
-	    ptr_to_first_elm += ']';
-	  }
+	  while( ndim++ < array->getNumOfDims() - 1 )
+	    ptr_to_first_elm += "[0]";
 	}
 	ptr_to_first_elm += ")";
 
