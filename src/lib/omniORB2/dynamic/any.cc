@@ -29,20 +29,23 @@
 
 
 /* $Log$
-/* Revision 1.14  1999/06/25 13:47:19  sll
-/* Rename copyStringInAnyExtraction to omniORB_27_CompatibleAnyExtraction.
-/* operator<<=(Object_ptr) now marshal the real repository ID of the object.
-/* operator<<=(const char*) changed to use new format of string data in tcDescriptor.
-/* operator<<=(from_string)
-/* Removed operator>>=(Object_ptr&) const
-/* operator>>=(char*&)  Default to non-copy semantics. Override by
-/* omniORB_27_CompatibleAnyExtraction.
-/* operator>>=(const char*&) const
-/* operator>>=(tostring) const Default to non-copy semantics. Override by
-/* omniORB_27_CompatibleAnyExtraction.
-/* operator>>=(to_object) const Use _0RL_tcParser_objref_setObjectPtr in
-/* the redundent setObjectPtr.
+/* Revision 1.15  1999/06/28 17:38:19  sll
+/* Fixed bug in Any marshalling when tcAliasExpand is set to 1.
 /*
+ * Revision 1.14  1999/06/25 13:47:19  sll
+ * Rename copyStringInAnyExtraction to omniORB_27_CompatibleAnyExtraction.
+ * operator<<=(Object_ptr) now marshal the real repository ID of the object.
+ * operator<<=(const char*) changed to use new format of string data in tcDescriptor.
+ * operator<<=(from_string)
+ * Removed operator>>=(Object_ptr&) const
+ * operator>>=(char*&)  Default to non-copy semantics. Override by
+ * omniORB_27_CompatibleAnyExtraction.
+ * operator>>=(const char*&) const
+ * operator>>=(tostring) const Default to non-copy semantics. Override by
+ * omniORB_27_CompatibleAnyExtraction.
+ * operator>>=(to_object) const Use _0RL_tcParser_objref_setObjectPtr in
+ * the redundent setObjectPtr.
+ *
  * Revision 1.13  1999/06/18 20:59:48  sll
  * Updated to CORBA 2.3 mapping.
  * Semantics of extraction operator for string has changed.
@@ -211,7 +214,13 @@ size_t
 CORBA::Any::NP_alignedSize(size_t initialoffset) const
 {
   size_t _msgsize = initialoffset;
-  _msgsize = pdAnyP()->getTC_parser()->getTC()->NP_alignedSize(_msgsize);
+  if ( omniORB::tcAliasExpand ) {
+    CORBA::TypeCode_var tc =
+      TypeCode_base::aliasExpand(ToTcBase(pdAnyP()->getTC_parser()->getTC()));
+    _msgsize = tc->NP_alignedSize(_msgsize);
+  }
+  else 
+    _msgsize = pdAnyP()->getTC_parser()->getTC()->NP_alignedSize(_msgsize);
   return NP_alignedDataOnlySize(_msgsize);
 }
 
