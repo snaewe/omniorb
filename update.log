@@ -1,3 +1,13 @@
+Wed Oct 14 15:11:44 BST 1998 sll
+================================
+
+- omniidl2 bug fix
+
+  Do not put fixed size struct inside the anonymous union in the data
+  member of a union type.
+
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+
 
 Fri Oct  9 16:11:27 BST 1998 tjr
 ================================
