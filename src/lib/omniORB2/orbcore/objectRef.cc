@@ -29,6 +29,13 @@
  
 /*
   $Log$
+  Revision 1.20  1999/01/07 16:31:43  djr
+  Fixed memory leak in CORBA::UnMarshalObjRef().
+  New singleton ProxyObjectTableCleaner, which releases proxy objects
+  from the table when the program finishes. This allows programs such
+  as purify to detect the leak. Also a message is logged if the
+  traceLevel >= 15.
+
   Revision 1.19  1998/08/26 11:14:42  sll
   Minor updates to remove warnings when compiled with standard C++ compilers.
 
@@ -175,11 +182,11 @@ class AnonymousObject : public virtual omniObject,
 			public virtual CORBA::Object 
 {
 public:
-  AnonymousObject(const char *repoId,
-		  Rope *r,
-		  CORBA::Octet *key,
+  AnonymousObject(const char* repoId,
+		  Rope* r,
+		  CORBA::Octet* key,
 		  size_t keysize,
-		  IOP::TaggedProfileList *profiles,
+		  IOP::TaggedProfileList* profiles,
 		  CORBA::Boolean release) :
     omniObject(repoId,r,key,keysize,profiles,release) 
   {
@@ -194,7 +201,7 @@ public:
   virtual ~AnonymousObject() {}
   
 protected:
-  virtual void *_widenFromTheMostDerivedIntf(const char *repoId,
+  virtual void* _widenFromTheMostDerivedIntf(const char* repoId,
 					     CORBA::Boolean is_cxx_type_id);
 
 private:
@@ -203,8 +210,8 @@ private:
   AnonymousObject &operator=(const AnonymousObject&);
 };
 
-void *
-AnonymousObject::_widenFromTheMostDerivedIntf(const char *repoId,
+void*
+AnonymousObject::_widenFromTheMostDerivedIntf(const char* repoId,
 					      CORBA::Boolean is_cxx_type_id)
 {
   if (is_cxx_type_id)
@@ -215,8 +222,9 @@ AnonymousObject::_widenFromTheMostDerivedIntf(const char *repoId,
     return 0;
 }
 
+
 void
-omni::objectIsReady(omniObject *obj)
+omni::objectIsReady(omniObject* obj)
 {
   omniObject::objectTableLock.lock();
   if (obj->getRefCount() != 0) {
@@ -275,9 +283,12 @@ omni::objectRelease(omniObject *obj)
     // One would like to throw a CORBA::INV_OBJREF exception at this stage
     // but the CORBA spec. says release *must not* throw CORBA exceptions.
     // Therefore, just generate a warning message and returns.
-    if (omniORB::traceLevel > 0) {
-      omniORB::log << "Warning: try to release an object with reference count <= 0.\n"
-	   << "Has CORBA::release() been called more than once on an object reference?\n";
+    if( omniORB::traceLevel > 0 ) {
+      omniORB::log <<
+	"omniORB: WARNING - try to release an object with reference count"
+	" <= 0.\n"
+	"Has CORBA::release() been called more than once on an object"
+	" reference?\n";
       omniORB::log.flush();
     }
     return;
@@ -306,11 +317,11 @@ omni::objectRelease(omniObject *obj)
 	p = &((*p)->pd_next);
       }
       if (obj->pd_flags.disposed) {
-      omniObject::objectTableLock.unlock();
+	omniObject::objectTableLock.unlock();
 	delete obj;   // call dtor if BOA->disposed() has been called.
       }
       else {
-      omniObject::objectTableLock.unlock();
+	omniObject::objectTableLock.unlock();
       }
     }
   }
@@ -373,11 +384,11 @@ omni::locateObject(omniObjectManager*,omniObjectKey &k)
 }
 
 
-omniObject *
-omni::createObjRef(const char *mostDerivedRepoId,
-		      const char *targetRepoId,
-		      IOP::TaggedProfileList *profiles,
-		      CORBA::Boolean release)
+omniObject*
+omni::createObjRef(const char* mostDerivedRepoId,
+		   const char* targetRepoId,
+		   IOP::TaggedProfileList* profiles,
+		   CORBA::Boolean release)
 {
   CORBA::Octet *objkey = 0;
 
@@ -552,27 +563,27 @@ omni::createObjRef(const char *mostDerivedRepoId,
   }
 }
 
-char *
+char*
 omni::objectToString(const omniObject *obj)
 {
   if (!obj) {
     IOP::TaggedProfileList p;
-    return (char *) IOP::iorToEncapStr((const CORBA::Char *)"",&p);
+    return (char*) IOP::iorToEncapStr((const CORBA::Char*) "", &p);
   }
   else {
-    return (char *) IOP::iorToEncapStr((const CORBA::Char *)
-				       obj->NP_IRRepositoryId(),
-				       obj->iopProfiles());
+    return (char*) IOP::iorToEncapStr((const CORBA::Char*)
+				      obj->NP_IRRepositoryId(),
+				      obj->iopProfiles());
   }
 }
 
-omniObject *
-omni::stringToObject(const char *str)
+omniObject*
+omni::stringToObject(const char* str)
 {
-  char *repoId;
-  IOP::TaggedProfileList *profiles;
-  
-  IOP::EncapStrToIor((const CORBA::Char *)str,(CORBA::Char *&)repoId,profiles);
+  char* repoId;
+  IOP::TaggedProfileList* profiles;
+
+  IOP::EncapStrToIor((const CORBA::Char*)str, (CORBA::Char*&)repoId, profiles);
   if (*repoId == '\0' && profiles->length() == 0) {
     // nil object reference
     delete [] repoId;
@@ -592,12 +603,13 @@ omni::stringToObject(const char *str)
   }
 }
 
-void *
-omniObject::_widenFromTheMostDerivedIntf(const char *,CORBA::Boolean)
+
+void*
+omniObject::_widenFromTheMostDerivedIntf(const char*, CORBA::Boolean)
 {
-  
   return 0;
 }
+
 
 void
 omniObject::globalInit()
@@ -610,7 +622,7 @@ omniObject::globalInit()
   for (i=0; i<omniORB::hash_table_size; i++)
     omniObject::localObjectTable[i] = 0;
 
-  omniObject::wrappedObjectTable = (void **)
+  omniObject::wrappedObjectTable = (void**)
     (new void *[omniORB::hash_table_size]);
 
   for (i=0; i<omniORB::hash_table_size; i++)
@@ -619,12 +631,11 @@ omniObject::globalInit()
 
 
 CORBA::Object_ptr
-CORBA::UnMarshalObjRef(const char *repoId,
-		       NetBufferedStream &s)
+CORBA::UnMarshalObjRef(const char* repoId, NetBufferedStream& s)
 {
   CORBA::ULong idlen;
-  CORBA::Char  *id = 0;
-  IOP::TaggedProfileList *profiles = 0;
+  CORBA::Char* id = 0;
+  IOP::TaggedProfileList* profiles = 0;
 
   try {
     idlen <<= s;
@@ -659,28 +670,24 @@ CORBA::UnMarshalObjRef(const char *repoId,
       break;
 
     default:
-      if (idlen > s.RdMessageUnRead()) {
+      if (idlen > s.RdMessageUnRead())
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
       id = new CORBA::Char[idlen];
-      if (!id)
-	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
-      s.get_char_array(id,idlen);
-      if (id[idlen-1] != '\0') {
+      if( !id )  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+      s.get_char_array(id, idlen);
+      if( id[idlen - 1] != '\0' )
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
       break;
     }
-    
+
     profiles = new IOP::TaggedProfileList();
-    if (!profiles)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+    if( !profiles )  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
     *profiles <<= s;
 
     if (profiles->length() == 0 && idlen == 0) {
       // This is a nil object reference
       delete profiles;
-      profiles = 0;
+      delete[] id;
       return CORBA::Object::_nil();
     }
     else {
@@ -691,7 +698,8 @@ CORBA::UnMarshalObjRef(const char *repoId,
       // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
       // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
       // 
-      omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
+      omniObject* objptr = omni::createObjRef((const char*) id, repoId,
+					      profiles, 1);
       profiles = 0;
       delete [] id;
       id = 0;
@@ -699,15 +707,16 @@ CORBA::UnMarshalObjRef(const char *repoId,
     }
   }
   catch (...) {
-    if (id) delete [] id;
-    if (profiles) delete profiles;
+    if( id )        delete[] id;
+    if( profiles )  delete profiles;
     throw;
   }
 }
 
+
 void 
 CORBA::MarshalObjRef(CORBA::Object_ptr obj,
-		     const char *repoId,
+		     const char* repoId,
 		     size_t repoIdSize,
 		     NetBufferedStream &s)
 {
@@ -723,15 +732,14 @@ CORBA::MarshalObjRef(CORBA::Object_ptr obj,
   repoId = obj->PR_getobj()->NP_IRRepositoryId();
   repoIdSize = strlen(repoId)+1;
   ::operator>>= ((CORBA::ULong) repoIdSize,s);
-  s.put_char_array((CORBA::Char *)repoId,repoIdSize);
+  s.put_char_array((CORBA::Char*) repoId, repoIdSize);
   IOP::TaggedProfileList * pl = obj->PR_getobj()->iopProfiles();
   *pl >>= s;
-  return;
 }
 
 size_t
 CORBA::AlignedObjRef(CORBA::Object_ptr obj,
-		     const char *repoId,
+		     const char* repoId,
 		     size_t repoIdSize,
 		     size_t initialoffset)
 {
@@ -750,13 +758,13 @@ CORBA::AlignedObjRef(CORBA::Object_ptr obj,
   }
 }
 
+
 CORBA::Object_ptr
-CORBA::UnMarshalObjRef(const char *repoId,
-		       MemBufferedStream &s)
+CORBA::UnMarshalObjRef(const char* repoId, MemBufferedStream& s)
 {
   CORBA::ULong idlen;
-  CORBA::Char  *id = 0;
-  IOP::TaggedProfileList *profiles = 0;
+  CORBA::Char* id = 0;
+  IOP::TaggedProfileList* profiles = 0;
 
   try {
     idlen <<= s;
@@ -791,28 +799,24 @@ CORBA::UnMarshalObjRef(const char *repoId,
       break;
 
     default:
-      if (s.overrun(idlen)) {
+      if (idlen > s.RdMessageUnRead())
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
       id = new CORBA::Char[idlen];
-      if (!id)
-	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
-      s.get_char_array(id,idlen);
-      if (id[idlen-1] != '\0') {
+      if( !id )  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+      s.get_char_array(id, idlen);
+      if( id[idlen - 1] != '\0' )
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
       break;
     }
 
     profiles = new IOP::TaggedProfileList();
-    if (!profiles)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+    if( !profiles )  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
     *profiles <<= s;
 
     if (profiles->length() == 0 && idlen == 0) {
       // This is a nil object reference
       delete profiles;
-      profiles = 0;
+      delete[] id;
       return CORBA::Object::_nil();
     }
     else {
@@ -823,7 +827,8 @@ CORBA::UnMarshalObjRef(const char *repoId,
       // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
       // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
       // 
-      omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
+      omniObject* objptr = omni::createObjRef((const char*) id, repoId,
+					      profiles, 1);
       profiles = 0;
       delete [] id;
       id = 0;
@@ -831,15 +836,16 @@ CORBA::UnMarshalObjRef(const char *repoId,
     }
   }
   catch (...) {
-    if (id) delete [] id;
-    if (profiles) delete profiles;
+    if( id )        delete[] id;
+    if( profiles )  delete profiles;
     throw;
   }
 }
 
+
 void 
 CORBA::MarshalObjRef(CORBA::Object_ptr obj,
-		     const char *repoId,
+		     const char* repoId,
 		     size_t repoIdSize,
 		     MemBufferedStream &s)
 {
@@ -855,8 +861,57 @@ CORBA::MarshalObjRef(CORBA::Object_ptr obj,
   repoId = obj->PR_getobj()->NP_IRRepositoryId();
   repoIdSize = strlen(repoId)+1;
   ::operator>>= ((CORBA::ULong) repoIdSize,s);
-  s.put_char_array((CORBA::Char *)repoId,repoIdSize);
+  s.put_char_array((CORBA::Char*) repoId, repoIdSize);
   IOP::TaggedProfileList * pl = obj->PR_getobj()->iopProfiles();
   *pl >>= s;
-  return;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+// This singleton checks the proxy object table when the application
+// is closed, and detects if any object references have not been
+// properly released.
+
+class ProxyObjectTableCleaner {
+public: // some compilers get upset
+  ~ProxyObjectTableCleaner();
+  static ProxyObjectTableCleaner theInstance;
+};
+
+ProxyObjectTableCleaner ProxyObjectTableCleaner::theInstance;
+
+
+ProxyObjectTableCleaner::~ProxyObjectTableCleaner()
+{
+  if( omniObject::proxyObjectTable ) {
+
+    omniObject** p = &omniObject::proxyObjectTable;
+    while( *p ) {
+      // Print out a message giving the details of the dangling object
+      // references, and also remove them from the list so that they
+      // will be picked up by analysis tools such as purify.
+
+      // Any objects held in omniInitialReferences will also show up
+      // in this list.
+
+      if( omniORB::traceLevel >= 15 ) {
+	const char* repoId = (*p)->NP_IRRepositoryId();
+	CORBA::String_var obj_ref = (char*)
+	  IOP::iorToEncapStr((const CORBA::Char*) repoId, (*p)->iopProfiles());
+
+	omniORB::log <<
+	  "omniORB: WARNING - Proxy object not released.\n"
+	  "  IR ID   : " << repoId << "\n"
+	  "  RefCount: " << (*p)->getRefCount() << "\n"
+	  "  ObjRef  : " << obj_ref << "\n";
+	omniORB::log.flush();
+      }
+      omniObject** next = &((*p)->pd_next);
+      *p = 0;
+      p = next;
+    }
+
+  }
 }
