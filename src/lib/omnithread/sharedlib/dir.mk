@@ -164,7 +164,7 @@ $(lib): $(OBJS)
          done; \set -x; \
          $(RM) $@; \
          ld -shared -soname $(soname) -set_version $(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
-         $(filter-out $(LibSuffixPattern),$^) -lpthreads -lmach -lc_r  -lcxxstd -lcxx -lexc -lots -lc -rpath $$rpath; \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) -lcxxstd -lcxx -lexc -lots -lc -rpath $$rpath; \
         )
 
 all:: $(lib)
