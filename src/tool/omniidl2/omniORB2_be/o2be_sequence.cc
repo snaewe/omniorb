@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.18  1999/04/21 13:04:54  djr
+  sequence<string> now uses a pre-defined type.
+
   Revision 1.17  1999/03/11 16:26:09  djr
   Updated copyright notice
 
@@ -114,7 +117,7 @@
      operator char_boundedseq *() const;
      operator const char_boundedseq &() const;
      operator char_boundedseq &();
-     
+
   };
 
 
@@ -159,7 +162,7 @@
      operator char_unboundedseq &();
   };
 
-  */
+*/
 
 #include <idl.hh>
 #include <idl_extern.hh>
@@ -169,29 +172,81 @@
 #pragma hdrstop
 #endif
 
+#include <o2be_stringbuf.h>
 #include <stdio.h>
 
-#define SEQUENCE_TYPE_PREFIX "_IDL_SEQUENCE_"
-#define SEQUENCE_TEMPLATE_UNBOUNDED                "_CORBA_Unbounded_Sequence"
-#define SEQUENCE_TEMPLATE_BOUNDED                  "_CORBA_Bounded_Sequence"
-#define SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT "_CORBA_Unbounded_Sequence_w_FixSizeElement"
-#define SEQUENCE_TEMPLATE_UNBOUNDED__BOOLEAN "_CORBA_Unbounded_Sequence__Boolean"
-#define SEQUENCE_TEMPLATE_UNBOUNDED__OCTET "_CORBA_Unbounded_Sequence__Octet"
-#define SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT "_CORBA_Bounded_Sequence_w_FixSizeElement"
-#define SEQUENCE_TEMPLATE_BOUNDED__BOOLEAN "_CORBA_Bounded_Sequence__Boolean"
-#define SEQUENCE_TEMPLATE_BOUNDED__OCTET "_CORBA_Bounded_Sequence__Octet"
-#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY    "_CORBA_Unbounded_Sequence_Array"
-#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY      "_CORBA_Bounded_Sequence_Array"
-#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY_W_FIXSIZEELEMENT "_CORBA_Unbounded_Sequence_Array_w_FixSizeElement"
-#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__BOOLEAN "_CORBA_Unbounded_Sequence_Array__Boolean"
-#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__OCTET "_CORBA_Unbounded_Sequence_Array__Octet"
-#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY_W_FIXSIZEELEMENT "_CORBA_Bounded_Sequence_Array_w_FixSizeElement"
-#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY__BOOLEAN "_CORBA_Bounded_Sequence_Array__Boolean"
-#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY__OCTET "_CORBA_Bounded_Sequence_Array__Octet"
-#define SEQUENCE_TEMPLATE_ADPT_CLASS "_CORBA_Sequence_OUT_arg"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED \
+  "_CORBA_Unbounded_Sequence"
+
+#define SEQUENCE_TEMPLATE_BOUNDED \
+  "_CORBA_Bounded_Sequence"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT \
+  "_CORBA_Unbounded_Sequence_w_FixSizeElement"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED__BOOLEAN \
+  "_CORBA_Unbounded_Sequence__Boolean"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED__OCTET \
+  "_CORBA_Unbounded_Sequence__Octet"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED__STRING \
+  "_CORBA_Unbounded_Sequence__String"
+
+#define SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT \
+  "_CORBA_Bounded_Sequence_w_FixSizeElement"
+
+#define SEQUENCE_TEMPLATE_BOUNDED__BOOLEAN \
+  "_CORBA_Bounded_Sequence__Boolean"
+
+#define SEQUENCE_TEMPLATE_BOUNDED__OCTET \
+  "_CORBA_Bounded_Sequence__Octet"
+
+#define SEQUENCE_TEMPLATE_BOUNDED__STRING \
+  "_CORBA_Bounded_Sequence__String"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY \
+  "_CORBA_Unbounded_Sequence_Array"
+
+#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY \
+  "_CORBA_Bounded_Sequence_Array"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY_W_FIXSIZEELEMENT \
+  "_CORBA_Unbounded_Sequence_Array_w_FixSizeElement"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__BOOLEAN \
+  "_CORBA_Unbounded_Sequence_Array__Boolean"
+
+#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__OCTET \
+  "_CORBA_Unbounded_Sequence_Array__Octet"
+
+#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY_W_FIXSIZEELEMENT \
+  "_CORBA_Bounded_Sequence_Array_w_FixSizeElement"
+
+#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY__BOOLEAN \
+  "_CORBA_Bounded_Sequence_Array__Boolean"
+
+#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY__OCTET \
+  "_CORBA_Bounded_Sequence_Array__Octet"
+
+#define SEQUENCE_TEMPLATE_ADPT_CLASS \
+  "_CORBA_Sequence_OUT_arg"
+
+#define UB_SEQUENCE_STRING_VAR \
+  "_CORBA_Unbounded_Sequence__String_var"
+
+#define UB_SEQUENCE_STRING_OUT \
+  "_CORBA_Unbounded_Sequence__String_out"
+
+#define B_SEQUENCE_STRING_VAR \
+  "_CORBA_Bounded_Sequence__String_var"
+
+#define B_SEQUENCE_STRING_OUT \
+  "_CORBA_Bounded_Sequence__String_out"
 
 
-o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
+o2be_sequence::o2be_sequence(AST_Expression* v, AST_Type* t)
 	   : AST_Sequence(v, t),
     	     AST_Decl(AST_Decl::NT_sequence,
 		      new UTL_ScopedName(
@@ -211,6 +266,7 @@ o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
 {
   pd_have_produced_tcParser_buildDesc_code = I_FALSE;
   pd_have_calc_rec_seq_offset = I_FALSE;
+  pd_out_adptarg_name = 0;
 }
 
 
@@ -228,7 +284,7 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
   size_t alignment = 0;
   const char* baseclassname = seq_member_name(used_in);
   const char* elmclassname = 0; // non-zero if this is a sequence of array
-  switch (ntype) 
+  switch (ntype)
     {
     case o2be_operation::tBoolean:
 	if (s_max) {
@@ -268,6 +324,25 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 	return result;
 	break;
 
+    case o2be_operation::tString:
+	if (s_max) {
+	  // bounded sequence
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED__STRING) + 13;
+	  result = new char[namesize];
+	  sprintf(result,
+		  "%s<%d>",
+		  SEQUENCE_TEMPLATE_BOUNDED__STRING,
+		  (int) s_max);
+	}
+	else {
+	  // unbounded sequence
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED__STRING) + 1;
+	  result = new char[namesize];
+	  strcpy(result,SEQUENCE_TEMPLATE_UNBOUNDED__STRING);
+	}
+	return result;
+	break;
+
     case o2be_operation::tChar:
       elmsize = 1;
       alignment = 1;
@@ -293,7 +368,7 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
       break;
     case o2be_operation::tArrayFixed:
       {
-	AST_Decl *decl = base_type();
+	AST_Decl* decl = base_type();
 	while (decl->node_type() == AST_Decl::NT_typedef)
 	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 	dimension = o2be_array::narrow_from_decl(decl)->getNumOfElements();
@@ -309,7 +384,8 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 	  case o2be_operation::tBoolean:
 	    if (s_max) {
 	      // bounded sequence of array
-	      size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_ARRAY__BOOLEAN)
+	      size_t namesize =
+		strlen(SEQUENCE_TEMPLATE_BOUNDED_ARRAY__BOOLEAN)
 		+strlen(baseclassname)*2+32;
 	      result = new char[namesize];
 	      sprintf(result,
@@ -321,7 +397,8 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		      (int)s_max);
 	    }
 	    else {
-	      size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__BOOLEAN)
+	      size_t namesize =
+		strlen(SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__BOOLEAN)
 		+ strlen(baseclassname)*2+24;
 	      result = new char[namesize];
 	      sprintf(result,
@@ -392,7 +469,7 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
       }
     case o2be_operation::tArrayVariable:
       {
-	AST_Decl *decl = base_type();
+	AST_Decl* decl = base_type();
 	while (decl->node_type() == AST_Decl::NT_typedef)
 	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 	dimension = o2be_array::narrow_from_decl(decl)->getNumOfElements();
@@ -460,7 +537,7 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  SEQUENCE_TEMPLATE_BOUNDED,
 		  baseclassname,
 		  (int)s_max);
-	}      
+	}
       }
       else {
 	// bounded sequence of array
@@ -491,7 +568,7 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  elmclassname,
 		  (int)dimension,
 		  (int)s_max);
-	}      
+	}
       }
     }
   else
@@ -566,11 +643,11 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
   o2be_operation::argMapping mapping;
   o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(base_type(),
 					        o2be_operation::wIN,mapping);
-  switch (ntype) 
+  switch (ntype)
     {
     case o2be_operation::tObjref:
       {
-	AST_Decl *decl = base_type();
+	AST_Decl* decl = base_type();
 	while (decl->node_type() == AST_Decl::NT_typedef)
 	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 	baseclassname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(used_in);
@@ -588,7 +665,7 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
       }
     case o2be_operation::tSequence:
       {
-	AST_Decl *decl = base_type();
+	AST_Decl* decl = base_type();
 	while (decl->node_type() == AST_Decl::NT_typedef)
 	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 	baseclassname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(used_in);
@@ -603,7 +680,7 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
 size_t
 o2be_sequence::bound()
 {
-  AST_Expression::AST_ExprValue *v = max_size()->ev();
+  AST_Expression::AST_ExprValue* v = max_size()->ev();
 
   switch( v->et ) {
   case AST_Expression::EV_short:
@@ -622,7 +699,7 @@ o2be_sequence::bound()
 }
 
 size_t
-calc_recursive_sequence_offset(AST_Decl *node, AST_Decl *base_type,
+calc_recursive_sequence_offset(AST_Decl* node, AST_Decl* base_type,
 			       size_t offset = 0)
 {
   if (node == base_type)
@@ -646,37 +723,37 @@ o2be_sequence::recursive_sequence_offset()
 
 
 void
-o2be_sequence::produce_hdr(std::fstream &s)
+o2be_sequence::produce_hdr(std::fstream& s)
 {
 }
 
 
 void
-o2be_sequence::produce_skel(std::fstream &s)
-{  
-}
-
-
-void
-o2be_sequence::produce_dynskel(std::fstream &s)
-{  
-}
-
-
-void
-o2be_sequence::produce_binary_operators_in_hdr(std::fstream &s)
+o2be_sequence::produce_skel(std::fstream& s)
 {
 }
 
 
 void
-o2be_sequence::produce_binary_operators_in_dynskel(std::fstream &s)
+o2be_sequence::produce_dynskel(std::fstream& s)
 {
 }
 
 
-void 
-o2be_sequence::produce_typecode_skel(std::fstream &s)
+void
+o2be_sequence::produce_binary_operators_in_hdr(std::fstream& s)
+{
+}
+
+
+void
+o2be_sequence::produce_binary_operators_in_dynskel(std::fstream& s)
+{
+}
+
+
+void
+o2be_sequence::produce_typecode_skel(std::fstream& s)
 {
   // We are safe even if this is a recursive sequence, as there
   // is a guard in o2be_structure::produce_typecode_skel() (and
@@ -685,8 +762,8 @@ o2be_sequence::produce_typecode_skel(std::fstream &s)
 }
 
 
-void 
-o2be_sequence::produce_typecode_member(std::fstream &s)
+void
+o2be_sequence::produce_typecode_member(std::fstream& s)
 {
   AST_Decl* base = base_type();
   size_t s_rec_offset = recursive_sequence_offset();
@@ -749,28 +826,51 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   o2be_operation::argType ntype =
     o2be_operation::ast2ArgMapping(base_type(), o2be_operation::wIN, mapping);
 
-  IND(s); s << "typedef " << seq_template_name(tdef) 
+  IND(s); s << "typedef " << seq_template_name(tdef)
 	    << " " << tdef->uqname() << ";\n";
+
+  StringBuf var_type;
 
   switch( ntype ) {
   case o2be_operation::tArrayFixed:
   case o2be_operation::tArrayVariable:
-    IND(s); s << "typedef _CORBA_Sequence_Array_Var<"
-	      << tdef->uqname() << ", " << seq_member_name(tdef)
-	      <<  "_slice > " << tdef->uqname() << "_var;\n\n";
+    var_type += "_CORBA_Sequence_Array_Var<";
+    var_type += tdef->uqname();
+    var_type += ", ";
+    var_type += seq_member_name(tdef);
+    var_type += "_slice>";
     break;
+
+  case o2be_operation::tString:
+    {
+      if( bound() ) {
+	var_type += B_SEQUENCE_STRING_VAR;
+	var_type += '<';
+	var_type += (int) bound();
+	var_type += '>';
+      }
+      else {
+	var_type += UB_SEQUENCE_STRING_VAR;
+      }
+      break;
+    }
+
   default:
-    IND(s); s << "typedef _CORBA_Sequence_Var<"
-	      << tdef->uqname() << ", " << seq_member_name(tdef) <<  " > " 
-	      << tdef->uqname() << "_var;\n\n";
+    var_type += "_CORBA_Sequence_Var<";
+    var_type += tdef->uqname();
+    var_type += ", ";
+    var_type += seq_member_name(tdef);
+    var_type += " >";
     break;
   }
+
+  IND(s); s << "typedef " << var_type << ' ' << tdef->uqname() << "_var;\n\n";
 }
 
 
 void
-o2be_sequence::produce_typedef_binary_operators_in_hdr(std::fstream &s, 
-						       o2be_typedef *tdef)
+o2be_sequence::produce_typedef_binary_operators_in_hdr(std::fstream& s,
+						       o2be_typedef* tdef)
 {
   if( idl_global->compile_flags() & IDL_CF_ANY ) {
     // Generate the Any insertion and extraction operators.
@@ -832,9 +932,10 @@ o2be_sequence::produce_typedef_binary_operators_in_hdr(std::fstream &s,
   }
 }
 
+
 void
-o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream &s,
-							   o2be_typedef *tdef)
+o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
+							   o2be_typedef* tdef)
 {
   const char* canon_name = canonical_name();
   const char* seq_type_name = seq_template_name(o2be_global::root());
@@ -915,26 +1016,49 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream &s,
 
 
 const char*
-o2be_sequence::out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const
+o2be_sequence::out_adptarg_name(o2be_typedef* tdef, AST_Decl* used_in)
 {
-  const char* ubname;
+  if( pd_out_adptarg_name )  return pd_out_adptarg_name;
 
-  if (o2be_global::qflag()) {
-    ubname = tdef->fqname();
-  }
-  else {
-    ubname = tdef->unambiguous_name(used_in);
+  o2be_operation::argMapping mapping;
+  o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(base_type(),
+						 o2be_operation::wIN, mapping);
+
+  switch( ntype ) {
+  case o2be_operation::tString:
+    {
+      StringBuf p;
+      if( bound() ) {
+	p += B_SEQUENCE_STRING_OUT;
+	p += '<';
+	p += (int) bound();
+	p += '>';
+      }
+      else p += UB_SEQUENCE_STRING_OUT;
+      pd_out_adptarg_name = p.release();
+    }
+    break;
+
+  default:
+    {
+      const char* ubname;
+      if( o2be_global::qflag() )  ubname = tdef->fqname();
+      else                        ubname = tdef->unambiguous_name(used_in);
+
+      pd_out_adptarg_name = new char[strlen(SEQUENCE_TEMPLATE_ADPT_CLASS) +
+				    strlen("<, >") + strlen(ubname) * 2 +
+				    strlen("_var") + 1];
+      strcpy(pd_out_adptarg_name, SEQUENCE_TEMPLATE_ADPT_CLASS);
+      strcat(pd_out_adptarg_name, "<");
+      strcat(pd_out_adptarg_name, ubname);
+      strcat(pd_out_adptarg_name, ",");
+      strcat(pd_out_adptarg_name, ubname);
+      strcat(pd_out_adptarg_name, "_var >");
+    }
+    break;
   }
 
-  char* p = new char[strlen(SEQUENCE_TEMPLATE_ADPT_CLASS)+strlen("<, >")+
-		     strlen(ubname)*2+strlen("_var")+1];
-  strcpy(p,SEQUENCE_TEMPLATE_ADPT_CLASS);
-  strcat(p,"<");
-  strcat(p,ubname);
-  strcat(p,",");
-  strcat(p,ubname);
-  strcat(p,"_var >");
-  return p;
+  return pd_out_adptarg_name;
 }
 
 
@@ -949,11 +1073,11 @@ static o2be_string*           pd_string = NULL;
 
 static
 void
-set_pd_predefined_type(o2be_predefined_type *s)
+set_pd_predefined_type(o2be_predefined_type* s)
 {
   if (pd_sizeof_predefined_type <= s->pt())
     {
-      o2be_predefined_type **p = new (o2be_predefined_type* [s->pt()+1]);
+      o2be_predefined_type** p = new (o2be_predefined_type* [s->pt()+1]);
       int j;
       for (j=0; j<pd_sizeof_predefined_type; j++)
 	p[j] = pd_predefined_type[j];
@@ -971,7 +1095,7 @@ set_pd_predefined_type(o2be_predefined_type *s)
 }
 
 static
-o2be_predefined_type *
+o2be_predefined_type*
 get_pd_predefined_type(AST_PredefinedType::PredefinedType type)
 {
   if (pd_sizeof_predefined_type <= type)
@@ -982,7 +1106,7 @@ get_pd_predefined_type(AST_PredefinedType::PredefinedType type)
 
 static
 void
-set_pd_string(o2be_string *s)
+set_pd_string(o2be_string* s)
 {
   if (pd_string == NULL)
     {
@@ -991,14 +1115,14 @@ set_pd_string(o2be_string *s)
 }
 
 static
-o2be_string *
+o2be_string*
 get_pd_string()
 {
   return pd_string;
 }
 
 void
-o2be_sequence::produce_hdr_for_predefined_types(std::fstream &s)
+o2be_sequence::produce_hdr_for_predefined_types(std::fstream& s)
 {
   int j;
   for (j=0; j<pd_sizeof_predefined_type; j++)
@@ -1102,11 +1226,11 @@ o2be_sequence::produce_buildDesc_support(std::fstream& s)
 }
 
 
-AST_Sequence *
-o2be_sequence::attach_seq_to_base_type(AST_Sequence *se)
+AST_Sequence*
+o2be_sequence::attach_seq_to_base_type(AST_Sequence* se)
 {
-  AST_Decl *d = se->base_type();
-  o2be_sequence *os = o2be_sequence::narrow_from_decl(se);
+  AST_Decl* d = se->base_type();
+  o2be_sequence* os = o2be_sequence::narrow_from_decl(se);
   switch(d->node_type())
     {
     case AST_Decl::NT_pre_defined:
@@ -1116,7 +1240,7 @@ o2be_sequence::attach_seq_to_base_type(AST_Sequence *se)
         // produce_hdr_for_predefined_types() will use this pointer to
 	// invoke produce_seq_hdr_if_defined() for that pre-defined type.
 
-	o2be_predefined_type *s = o2be_predefined_type::narrow_from_decl(d);
+	o2be_predefined_type* s = o2be_predefined_type::narrow_from_decl(d);
 	set_pd_predefined_type(s);
 	get_pd_predefined_type(s->pt())->set_seq_decl(os);
       }
@@ -1128,7 +1252,7 @@ o2be_sequence::attach_seq_to_base_type(AST_Sequence *se)
         // produce_hdr_for_predefined_types() will use this pointer to
 	// invoke produce_seq_hdr_if_defined() for that pre-defined type.
 
-	o2be_string *s = o2be_string::narrow_from_decl(d);
+	o2be_string* s = o2be_string::narrow_from_decl(d);
 	set_pd_string(s);
 	get_pd_string()->set_seq_decl(os);
       }
@@ -1163,16 +1287,16 @@ o2be_sequence::attach_seq_to_base_type(AST_Sequence *se)
 
 
 void
-o2be_sequence_chain::set_seq_decl(o2be_sequence *d)
+o2be_sequence_chain::set_seq_decl(o2be_sequence* d)
 {
-  // pd_seq_decl chains together obe_sequence nodes that represents 
+  // pd_seq_decl chains together obe_sequence nodes that represents
   //      sequence<base_type>,
   //      sequence<sequence<base_type>>
   //      sequence<sequence<sequence<base_type>>> and so on.
   // The chain starts from the base type node.
   // A call to the member function produce_seq_hdr_if_defined() of the
   // base type node would produce declarations for the sequence types.
-  // 
+  //
   // Unfortunately, the front end can produce multiple o2be_sequence nodes
   // that represent the same sequence constructs, e.g multiple nodes for
   // sequence<base_type>. This function filters out the duplicates and maintains
@@ -1185,8 +1309,8 @@ o2be_sequence_chain::set_seq_decl(o2be_sequence *d)
       pd_seq_decl = d;
       if (node_type() == AST_Decl::NT_sequence)
 	{
-	  AST_Decl *decl = AST_Sequence::narrow_from_decl(this)->base_type();
-	  o2be_sequence *ns = o2be_sequence::narrow_from_decl(this);
+	  AST_Decl* decl = AST_Sequence::narrow_from_decl(this)->base_type();
+	  o2be_sequence* ns = o2be_sequence::narrow_from_decl(this);
 	  switch (decl->node_type())
 	    {
 	    case AST_Decl::NT_pre_defined:
@@ -1209,7 +1333,7 @@ o2be_sequence_chain::set_seq_decl(o2be_sequence *d)
 	      break;
 	    case AST_Decl::NT_sequence:
 	      {
-		o2be_sequence_chain *p = o2be_sequence::narrow_from_decl(decl);
+		o2be_sequence_chain* p = o2be_sequence::narrow_from_decl(decl);
 		p->pd_seq_decl = NULL;
 	      // pd_seq_decl will be reset to its original value by the recursive
 	      // call below. Setting it to NULL now would cause the recursion
@@ -1232,13 +1356,13 @@ o2be_sequence_chain::set_seq_decl(o2be_sequence *d)
     // At each level of the chain, pick the o2be_sequence node with
     // its member function in_main_file() returns FALSE over the one that
     // returns TRUE.
-    // Stub code would only be generated for those o2be_sequence 
+    // Stub code would only be generated for those o2be_sequence
     // nodes with in_main_file() returns TRUE. This would minimize the
     // generation of sequence typedefs defined in other idl files in
     // a subsequent call to produce_seq_hdr_if_defined()
     //
     int newlvl = 0;
-    o2be_sequence_chain *dd = d; 
+    o2be_sequence_chain* dd = d;
     while (dd != NULL)
       {
 	newlvl++;
@@ -1251,7 +1375,7 @@ o2be_sequence_chain::set_seq_decl(o2be_sequence *d)
 	oldlvl++;
 	dd = dd->pd_seq_decl;
       }
-    o2be_sequence_chain *ddd;
+    o2be_sequence_chain* ddd;
     if (newlvl > oldlvl) {
       dd = d;
       ddd = pd_seq_decl;
@@ -1273,7 +1397,7 @@ o2be_sequence_chain::set_seq_decl(o2be_sequence *d)
 }
 
 void
-o2be_sequence_chain::produce_seq_hdr_if_defined(std::fstream &s)
+o2be_sequence_chain::produce_seq_hdr_if_defined(std::fstream& s)
 {
   return;
 }
