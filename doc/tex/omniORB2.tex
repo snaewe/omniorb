@@ -35,23 +35,20 @@ Olivetti \& Oracle Research Laboratory\\
 
 \vfill
 \vfill
-30 Sept, 1998
+14th January, 1999
 \vfill
 
 \end{center}
 
 \pagebreak
 
-{\Large \bf \sf Changes and Additions, 30 Sept 1998}
+{\Large \bf \sf Changes and Additions, 14th January 1999}
 
 \begin{itemize}
-\item Chapter 1 - updates to features and setup information 
-\item Chapter 2 - new example on tie implementation templates
-\item Chapter 4 - updates to command-line options and a new section on
-initial object reference bootstrapping.
-\item Chapter 5 - new section on-demand object loading
-\item Chapter 7 - new runtime configuration variable {\tt omniORB::maxTcpConnectionPerServer}.
-\item New chapter - Dynamic Management of Any Values
+\item Chapter 1 - updates to features
+\item Chapter 4 - updates to command-line options
+\item New chapter - Dynamic Invocation Interface
+\item New chapter - Dynamic Skeleton Interface
 \end{itemize}
 
 
@@ -65,12 +62,16 @@ initial object reference bootstrapping.
 \mainmatter
 
 %\input{intro.tex}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 OmniORB2 is an Object Request Broker (ORB) that implements the 2.0
 specification of the Common Object Request Broker Architecture
 (CORBA)~\cite{corba2-spec}\footnote{The DynAny implmentation introduced in
-version 2.6.0 implements the facility in the 2.2 specification.}.
+version 2.6.0 implements the facility in the 2.2 specification. Other parts
+of the 2.2 specification are also implemented where they do not clash
+with the 2.0 specification.}.
 This user guide tells you how to use omniORB2 to develop CORBA applications.
 It assumes a basic understanding of CORBA. 
 
@@ -88,7 +89,8 @@ native protocol used by omniORB2 for the communication amongst its objects
 residing in different address spaces. Moreover, the IDL to C++ language
 mapping provided by omniORB2 conforms to the latest revision of the CORBA
 specification. Type Any and TypeCode are now supported (introduced in version
-2.5.0). DynAny is supported since 2.6.0.
+2.5.0). DynAny is supported since 2.6.0. The Dynamic Invocation Interface
+and Dynamic Skeleton Interface are supported since 2.7.0.
 
 \subsection{Multithreading}
 
@@ -141,19 +143,19 @@ The following is a list of the missing features.
 
 \item The BOA only support the persistent server activation policy. Other
 dynamic activation and deactivation policies are not supported.
-\item The Dynamic Invocation Interface is not supported.
-\item The Dynamic Skeleton Interface is not supported.
 \item OmniORB2 does not has its own Interface Repository.
 \end{itemize}
 
-\sloppy{These features may be implemented in the short to medium term. It is best
-to check out the latest status on the omniORB2 home page ({\tt http://intranet.cam-orl.co.uk/$\sim$omni/}).}
+\sloppy{These features may be implemented in the short to medium term. It is
+best to check out the latest status on the omniORB2 home page
+({\tt http://www.orl.co.uk/omniORB/omniORB.html}).}
 
 
 \section{Setting Up Your Environment}
 \label{setup}
 
-\sloppy{At ORL, you should use the OMNI Development Environment (ODE)~\cite{tjr96b}
+\sloppy{At ORL, you should use the OMNI Development Environment
+(ODE)~\cite{tjr96b}
 and the OMNI tree version 5.0 or above to compile your programs. If this is
 the case, there is no extra setup you have to do other than those described
 in the ODE documentation.}
@@ -267,7 +269,9 @@ defines and add {\tt \#include <omniORB2/sitedef.h>} at the beginning of {\tt
 omniORB2/CORBA\_sysdep.h}.
 
 %\input{basic.tex}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{The Basics}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{ch_basic}
 
 In this chapter, we go through three examples to illustrate the practical
@@ -1858,7 +1862,10 @@ $(eg3_clt): eg3_clt.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
 \end{verbatim}
 }
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{IDL to C++ Language Mapping}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Now that you are familiar with the basics, it is important to
 familiar yourselves with the IDL to C++ language. The mapping is described
@@ -1868,7 +1875,10 @@ omniORB2.
 
 %\input{api.tex}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{The omniORB2 API}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{omniorb2api}
 
 In this chapter, we introduce the omniORB2 API. The purpose
@@ -1894,6 +1904,9 @@ C++ compiler does not support the namespace keyword.}.
 \item[\tt -ORBgiopMaxMsgSize <size in bytes>] See section~\ref{giopmsg}.
 \item[\tt -ORBInitialHost <string>] See section~\ref{bootstrap}.
 \item[\tt -ORBInitialPort <1-65535>] See section~\ref{bootstrap}.
+\item[\tt -ORBdiiThrowsSysExceptions <0 or 1>] See section~\ref{dii_invoke}.
+\item[\tt -ORBinConScanPeriod <0-65535>] See section~\ref{sec_shut}.
+\item[\tt -ORBoutConScanPeriod <0-65535>] See section~\ref{sec_shut}.
 \end{description}
 
 {\tt BOA\_init} accepts the following command-line arguments:
@@ -2183,7 +2196,9 @@ and the line number) where the exception is raised. You are strongly
 encourage to file a bug report and point out the location.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{The Basic Object Adaptor (BOA)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This chapter describes the BOA implementation in omniORB2. The CORBA
 specification defines the Basic Object Adaptor as the entity that mediates
@@ -2448,6 +2463,7 @@ do not have any effect.
 
 
 \section{Loading Objects On Demand}
+\label{load_on_demand}
 
 Since 2.5.0, there is limited support for loading objects on demand. 
 An application can register a handler for loading objects dynamically. The
@@ -2487,8 +2503,11 @@ The application registers the handler with the ORB at runtime
 using omniORB::loader::set(). This function is not thread-safe.    
 Calling this function again will replace the old handler with      
 the new one.                                                       
-                                                                    
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Interface Type Checking}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{ch_intf}
 
 This chapter describes the mechanism used by omniORB2 to ensure type safety
@@ -2717,7 +2736,9 @@ also see a CORBA::INV\_OBJREF at line 4.
 \end{description}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Connection Management}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{ch_conn}
 
 
@@ -2838,11 +2859,15 @@ public:
 
 The current value of the scan period (in seconds) is returned by the
 read-only {\tt idleConnectionScanPeriod}. The scan period can be changed by
-the write-only {\tt idleConnectionScanPeriod}. The default value (30
-seconds) is compiled into the ORB runtime. The scan can be disabled
-completely by setting the scan period to 0. The scan period can be changed
-at any time. The write function is non-thread safe. Concurrent calls to
-this function could results in undefined behaviour.
+the write-only {\tt idleConnectionScanPeriod}. The scan period can be changed
+at any time but the write function is non-thread safe. Concurrent calls to this
+function could result in undefined behaviour.
+The scan periods may also be specified on the command-line by using the
+options {\tt -ORBinConScanPeriod} and {\tt -ORBoutConScanPeriod}. See
+section~\ref{omniorbapioptions}.
+
+The default value for both incoming and outgoing connections is 30 seconds.
+The scan can be disabled completely by setting the scan period to 0.
 
 \section{Interoperability Considerations}
 
@@ -2937,7 +2962,9 @@ I said,"Hello!". The Object said,"Hello!"
 }
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Proxy Objects}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 When a client acquires a reference to an object in another address space,
 omniORB2 creates a local representation of the object and returns a pointer
@@ -3370,7 +3397,10 @@ returning the object reference.
 the ORB. Needless to say, the function must be thread-safe.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Type Any and TypeCode}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\label{ch_any}
 
 The CORBA specification provides for a type that can hold the value of any 
 OMG IDL type. This type is known as type Any. The OMG also specifies a 
@@ -4247,7 +4277,9 @@ invokeOp(anyExample_ptr& tobj, const CORBA::Any& a)
 }
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Dynamic Management of Any Values}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In CORBA specification 2.2, a new facility- {\bf DynAny} is
 introduced. Previously, it is not possible to insert or extract constructed
@@ -4490,7 +4522,7 @@ The example struct is as follows:
 \end{verbatim}
 }
 
-To {\bf create} a DynAny from an any value, one uses the {\tt create\_dyn\_any}
+To {\bf create} a DynAny from an Any value, one uses the {\tt create\_dyn\_any}
 method:
 
 {\small
@@ -4680,8 +4712,8 @@ In the example, the DynAny object can be destroyed as follows:
 
 \subsection{Example: insert data values into an Any}
 
-Using the DynAny interface, one can create an any value from scratch.  In
-this example, we are going to create an any containing the value of the
+Using the DynAny interface, one can create an Any value from scratch.  In
+this example, we are going to create an Any containing the value of the
 {\tt exampleStruct1} type.
 
 Firstly, we have to create a DynAny to store the value using one of the
@@ -4761,7 +4793,7 @@ CORBA 2.2 specification does not define the behavior of this error
 condition. To ensure portability, it is best to avoid calling the insert
 operations when the current component pointer is known to be invalid.}.
 
-Sometimes, one may just want to modify one component in an any value. For
+Sometimes, one may just want to modify one component in an Any value. For
 instance, one may just want to change the value of the double member in
 {\tt exampleStruct1}. This can be done as follows:
 
@@ -4852,7 +4884,7 @@ In the previous example, the components are extracted using the get
 operations. Alternatively, the DynStruct interface provides an addition
 operation ({\tt get\_members()}) to return all the components in a single
 call. The returned value is a sequence of name value pair. The member name
-is given in the name field and its value is returned as an any value.
+is given in the name field and its value is returned as an Any value.
 For example, an alternative way to extract the components in the previous
 example is as follows:
 
@@ -4882,7 +4914,7 @@ example is as follows:
 Similarly, the DynStruct interface provides an addition operation ({\tt
 set\_members()}) to insert all the components in a single call. The
 following is an alternative way to insert the components of the type
-{\tt exampleStruct1} into an any value:
+{\tt exampleStruct1} into an Any value:
 
 {\small
 \begin{verbatim}
@@ -4930,7 +4962,7 @@ introduced in section~\ref{dynany}. The first sequence element can be
 accessed as the first DynAny component, the second sequence element as the
 second DynAny component and so on. 
 
-To extract component values from an any containing a sequence, the length
+To extract component values from an Any containing a sequence, the length
 of the sequence can be obtained using the get length operation in the
 DynSequence interface. Here is an example to extract the components of a
 sequence of long:
@@ -5238,7 +5270,7 @@ The following example shows the three ways of writing into a union:
     dv->member_name("l");
     dm = dv->member();
     dm->insert_long(10);
-    v = dv->to_any();          // transfer to an any
+    v = dv->to_any();          // transfer to an Any
     CORBA::release(dm);
     
     // Setting the discriminator value to select the union branch
@@ -5246,14 +5278,14 @@ The following example shows the three ways of writing into a union:
     di->insert_boolean(1);     // set discriminator to label TRUE
     dm = dv->member();
     dm->insert_long(20);
-    v = dv->to_any();          // transfer to an any
+    v = dv->to_any();          // transfer to an Any
     CORBA::release(dm);
     
     // Use set_as_default to select the default union branch
     dv->set_as_default(1);
     dm = dv->member();
     dm->insert_double(3.14);
-    v = dv->to_any();          // transfer to an any
+    v = dv->to_any();          // transfer to an Any
     CORBA::release(dm);
     
     dv->destroy();
@@ -5329,8 +5361,650 @@ of the current object.
 
 \end{description}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{The Dynamic Invocation Interface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The Dynamic Invocation Interface (or DII) allows applications to
+invoke operations on CORBA objects about which they have no static
+information. That is to say the application has not been linked with
+stub code which performs the remote operation invocation. Thus using
+the DII applications may invoke operations on \emph{any} CORBA object,
+possibly determining the object's interface dynamically by using an
+Interface Repository.
+% ?? Ref IR section?
+
+This chapter presents an overview of the Dynamic Invocation Interface.
+An toy example use of the DII can be found in the omniORB2 distribution in
+the {\tt <top>/src/examples/dii} directory.
+The DII makes extensive use of the type Any, so ensure that you have read
+chapter~\ref{ch_any}. For more information refer to the Dynamic Invocation
+Interface and C++ Mapping sections of the CORBA 2
+specification~\cite{corba2-spec}.
+
+
+\section{Overview}
+
+To invoke an operation on a CORBA object an application needs an object
+reference, the name of the operation and a list of the parameters. In
+addition the application must know whether the operation is one-way,
+what user-defined exceptions it may throw, any user-context
+strings which must be supplied, a 'context' to take these values from and the
+type of the returned value. This
+information is given by the IDL interface declaration, and so is normally
+made available to the application via the stub code. In the DII this
+information is encapsulated in the {\tt CORBA::Request} pseudo-object.
+
+To perform an operation invocation the application must obtain an instance of
+a {\tt Request} object, supply the information listed above and call one of
+the methods to actually make the invocation. If the invocation causes an
+exception to be thrown then this may be retrieved and inspected, or the
+return value on success.
+
+
+\section{Pseudo Objects}
+
+The DII defines a number of psuedo-object types, all defined in the CORBA
+namespace. These objects behave in many ways like CORBA objects. They
+should only be accessed by reference (through {\tt foo\_ptr} or
+{\tt foo\_var}), may not be
+instantiated directly and should be released by calling
+{\tt CORBA::release()}\footnote{if not managed by a {\tt \_var} type.}.
+A nil reference should only be represented by {\tt foo::\_nil()}.
+
+These pseudo objects, although defined in pseudo-IDL in the specification do
+not follow the normal mapping for CORBA objects. In particular the memory
+management rules are different - see the CORBA 2
+specification~\cite{corba2-spec} for more details.
+
+
+\subsection{Request}
+
+A {\tt Request} encapsulates a single operation invocation. It may \emph{not}
+be re-used - even for another call with the same arguments.
+
+{\small \begin{verbatim}
+class Request {
+public:
+  virtual Object_ptr        target() const;
+  virtual const char*       operation() const;
+  virtual NVList_ptr        arguments();
+  virtual NamedValue_ptr    result();
+  virtual Environment_ptr   env();
+  virtual ExceptionList_ptr exceptions();
+  virtual ContextList_ptr   contexts();
+  virtual Context_ptr       ctxt() const;
+  virtual void              ctx(Context_ptr);
+
+  virtual Any& add_in_arg();
+  virtual Any& add_in_arg(const char* name);
+  virtual Any& add_inout_arg();
+  virtual Any& add_inout_arg(const char* name);
+  virtual Any& add_out_arg();
+  virtual Any& add_out_arg(const char* name);
+
+  virtual void set_return_type(TypeCode_ptr tc);
+  virtual Any& return_value();
+
+  virtual Status  invoke();
+  virtual Status  send_oneway();
+  virtual Status  send_deferred();
+  virtual Status  get_response();
+  virtual Boolean poll_response();
+
+  static Request_ptr _duplicate(Request_ptr);
+  static Request_ptr _nil();
+};
+\end{verbatim}}
+
+
+\subsection{NamedValue}
+
+A pair consisting of a string and a value - encapsulated in an Any. The
+name is optional. This type is used to encapsulate parameters and returned
+values.
+
+{\small \begin{verbatim}
+class NamedValue {
+public:
+  virtual const char* name() const;
+  // Retains ownership of return value.
+
+  virtual Any* value() const;
+  // Retains ownership of return value.
+
+  virtual Flags flags() const;
+
+  static NamedValue_ptr _duplicate(NamedValue_ptr);
+  static NamedValue_ptr _nil();
+};
+\end{verbatim}}
+
+
+\subsection{NVList}
+
+A list of {\tt NamedValue} objects.
+
+{\small \begin{verbatim}
+class NVList {
+public:
+  virtual ULong count() const;
+  virtual NamedValue_ptr add(Flags);
+  virtual NamedValue_ptr add_item(const char*, Flags);
+  virtual NamedValue_ptr add_value(const char*, const Any&, Flags);
+  virtual NamedValue_ptr add_item_consume(char*,Flags);
+  virtual NamedValue_ptr add_value_consume(char*, Any*, Flags);
+  virtual NamedValue_ptr item(ULong index);
+  virtual Status remove (ULong);
+
+  static NVList_ptr _duplicate(NVList_ptr);
+  static NVList_ptr _nil();
+};
+\end{verbatim}}
+
+
+\subsection{Context}
+
+Represents a set of context strings. User contexts are not supported by
+the omniidl2 IDL compiler - and so cannot be used with statically defined
+operations. However they are supported in the DII.
+
+{\small \begin{verbatim}
+class Context {
+public:
+  virtual const char* context_name() const;
+  virtual CORBA::Context_ptr parent() const;
+  virtual CORBA::Status create_child(const char*, Context_out);
+  virtual CORBA::Status set_one_value(const char*, const CORBA::Any&);
+  virtual CORBA::Status set_values(CORBA::NVList_ptr);
+  virtual CORBA::Status delete_values(const char*);
+  virtual CORBA::Status get_values(const char* start_scope,
+                                   CORBA::Flags op_flags,
+                                   const char* pattern,
+                                   CORBA::NVList_out values);
+  // Throws BAD_CONTEXT if <start_scope> is not found.
+  // Returns a nil NVList in <values> if no matches are found.
+
+  static Context_ptr _duplicate(Context_ptr);
+  static Context_ptr _nil();
+};
+\end{verbatim}}
+
+
+\subsection{ContextList}
+
+A {\tt ContextList} is a list of strings, and is used to specify which
+strings from the 'context' should be sent with an operation.
+
+{\small \begin{verbatim}
+class ContextList {
+public:
+  virtual ULong count() const;
+  virtual void add(const char* ctxt);
+  virtual void add_consume(char* ctxt);
+  // consumes ctxt
+
+  virtual const char* item(ULong index);
+  // retains ownership of return value
+
+  virtual Status remove(ULong index);
+
+  static ContextList_ptr _duplicate(ContextList_ptr);
+  static ContextList_ptr _nil();
+};
+\end{verbatim}}
+
+
+\subsection{ExceptionList}
+
+{\tt ExceptionList}s contain a list of TypeCodes - and are used to specify
+which user-defined exceptions an operation may throw.
+
+{\small \begin{verbatim}
+class ExceptionList {
+public:
+  virtual ULong count() const;
+  virtual void add(TypeCode_ptr tc);
+  virtual void add_consume(TypeCode_ptr tc);
+  // Consumes <tc>.
+
+  virtual TypeCode_ptr item(ULong index);
+  // Retains ownership of return value.
+
+  virtual Status remove(ULong index);
+
+  static ExceptionList_ptr _duplicate(ExceptionList_ptr);
+  static ExceptionList_ptr _nil();
+};
+\end{verbatim}}
+
+
+\subsection{UnknownUserException}
+
+When a user-defined exception is thrown by an operation it is unmarshalled
+into a value of type Any. This is encapsulated in an
+{\tt UnknownUserException}. This type follows all the usual rules for
+user-defined exceptions - it is not a pseudo object, and its resources may
+be released by using {\tt delete}.
+
+{\small \begin{verbatim}
+class UnknownUserException : public UserException {
+public:
+  UnknownUserException(Any* ex);
+  // Consumes <ex> which MUST be a UserException.
+
+  virtual ~UnknownUserException();
+
+  Any& exception();
+
+  virtual void _raise();
+  static UnknownUserException* _narrow(Exception*);
+};
+\end{verbatim}}
+
+
+\subsection{Environment}
+
+An {\tt Environment} is used to hold an instance of a system exception or
+an {\tt UnknownUserException}.
+
+{\small \begin{verbatim}
+class Environment {
+  virtual void exception(Exception*);
+  virtual Exception* exception() const;
+  virtual void clear();
+
+  static Environment_ptr _duplicate(Environment_ptr);
+  static Environment_ptr _nil();
+};
+\end{verbatim}}
+
+
+\section{Creating Requests}
+
+{\tt CORBA::Object} defines three methods which may be used to create a
+{\tt Request} object which may be used to perform a single operation
+invocation on that object:
+
+{\small \begin{verbatim}
+class Object {
+  ...
+  Status _create_request(Context_ptr ctx,
+                         const char* operation,
+                         NVList_ptr arg_list,
+                         NamedValue_ptr result,
+                         Request_out request,
+                         Flags req_flags);
+
+  Status _create_request(Context_ptr ctx,
+                         const char* operation,
+                         NVList_ptr arg_list,
+                         NamedValue_ptr result,
+                         ExceptionList_ptr exceptions,
+                         ContextList_ptr ctxlist,
+                         Request_out request,
+                         Flags req_flags);
+
+  Request_ptr _request(const char* operation);
+  ...
+};
+\end{verbatim}}
+
+{\tt operation} is the name of the operation - which is the same as the name
+given in IDL. To access attributes the name should be prefixed by
+{\tt \_get\_} or {\tt \_set\_}.
+
+In the first two cases above the list of parameters may be supplied. If the
+parameters are not supplied in these cases, or {\tt \_request()} is used
+then the parameters (if any) may be specified using the {\tt add\_*\_arg()}
+methods on the {\tt Request}. You must use one method or the other - not
+a mixture of the two. For \emph{in}/\emph{inout} arguments the value must be
+initialised, for \emph{out} arguments only the type need be given.
+Similarly the type of the result may be specified by
+passing a {\tt NamedValue} which contains an Any which has been initialised
+to contain a value of that type, or it may be specified using the
+{\tt set\_return\_type()} method of {\tt Request}.
+
+When using {\tt \_create\_request()}, the management of any pseudo-object
+references passed in remains the responsibility of the application. That is,
+the values are not consumed - and must be released using
+{\tt CORBA::release()}. The CORBA specification is unclear about when these
+values may be released, so to be sure of portability do not release them
+until after the request has been released.
+Values which are not needed need not be supplied - so if no parameters are
+specified then it defaults to an empty parameter list. If no result type is
+specified then it defaults to void. A {\tt Context} need only be given if
+a non-empty {\tt ContextList} is specified. The {\tt req\_flags} argument
+is not used in the C++ mapping.
+
+
+\subsection{Examples}
+
+An operation might be specified in IDL as:
+
+{\small \begin{verbatim}
+short anOpn(in string a);
+\end{verbatim}}
+
+\noindent{}An operation invocation may be created as follows:
+
+{\small \begin{verbatim}
+CORBA::NVList_var args;
+CORBA::ORB::create_list(1, args);
+*(args->add(CORBA::ARG_IN)->value()) <<= (const char*) "Hello World!";
+
+CORBA::NamedValue_var result;
+CORBA::ORB::create_named_value(result);
+result->value()->replace(CORBA::_tc_short, 0);
+
+CORBA::Request_var req = obj->_create_request(CORBA::Context::_nil(),
+                                        "anOpn", args, result, 0);
+\end{verbatim}}
+
+\noindent{}or alternatively and much more concisely:
+
+{\small \begin{verbatim}
+CORBA::Request_var req = obj->_request("anOpn");
+req->add_in_arg() <<= (const char*) "Hello World!";
+req->set_return_type(CORBA::_tc_short);
+\end{verbatim}}
+
+
+\section{Invoking Operations}
+\label{dii_invoke}
+
+Once the {\tt Request} object has been properly constructed the operation
+may be invoked by calling {\tt invoke()} or {\tt send\_oneway()}. When this
+returns the operation has completed (in the case of {\tt invoke()}) or an
+exception has been thrown. If the
+operation generated a user-defined exception then it can be retrieved
+using {\tt env()} - otherwise this value is nil. If a system exception is
+generated then the behavior depends on the following runtime configuration
+variable:
+
+{\small \begin{verbatim}
+namespace omniORB {
+  ...
+  CORBA::Boolean diiThrowsSysExceptions;
+  ...
+};
+\end{verbatim}}
+By default this is false, and the
+exception will be passed via the {\tt env()} mechanism as described above.
+If it is true, then the exception will be thrown. This variable may also be
+set on the command line using the option {\tt -ORBdiiThrowsSysExceptions}.
+See section~\ref{omniorbapioptions} for more details.
+If no exception was generated then the return value may be retrieved from
+{\tt return\_value()}, and out/inout arguments inspected with
+{\tt arguments()}.
+
+
+\subsection{Deferred Requests}
+
+If {\tt send\_deferred()} is used then the invocation is performed
+asynchronously. A call to {\tt get\_response()} will then block until the
+reply is received (and the operation has therefore completed or thrown an
+exception), or {\tt poll\_response()} may be used, which returns true when
+the operation has completed.
+
+The runtime configuration variable {\tt omniORB::diiThrowsSysExceptions}
+applies here in the same way as above. If its value is true, then
+{\tt send\_deferred()}, {\tt get\_response()} or {\tt poll\_response()} may
+throw a system exception.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{The Dynamic Skeleton Interface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The Dynamic Skeleton Interface (or DSI) allows applications to provide
+implementations of the operations on CORBA objects without static
+knowledge of the object's interface. It is the server-side equivalent of the
+Dynamic Invocation Interface.
+
+This chapter presents the Dynamic Skeleton Interface and explains how to
+use it.
+An toy example use of the DSI can be found in the omniORB2 distribution in
+the {\tt <top>/src/examples/dsi} directory.
+For further information refer to the Dynamic Skeleton Interface
+and C++ Mapping sections of the CORBA 2 specification~\cite{corba2-spec}.
+
+
+\section{Overview}
+
+When an ORB receives an invocation request, the information includes
+the object reference and the name of the operation. Typically this information
+is used by the
+ORB to select an instance of an object and call into the implementation of
+the operation (which knows how to unmarshal the parameters etc.).
+The Dynamic Skeleton Interface however makes this
+information directly available to the application - so that it can
+implement the operation (or pass it on to another server) without static
+knowledge of the interface. In fact it is not even necessary for the server
+to always implement the same interface on any particular object!
+
+To provide an implementation for one or more objects an application must
+sub-class {\tt DynamicImplementation} and override the method {\tt invoke()}.
+An instance of this class is registered with the BOA and is assigned an
+object reference (see below). When the ORB receives a request for that
+object the {\tt invoke()} method is called and will be passed a
+{\tt ServerRequest} object which provides:
+\begin{itemize}
+\item the operation name
+\item context strings
+\item access to the parameters
+\item a way to set the returned values
+\item a way to throw user-defined exceptions.
+\end{itemize}
+
+
+\section{DSI Types}
+
+\subsection{DynamicImplementation}
+
+This class must be sub-classed by the application to provide an implementation
+for DSI objects. The method {\tt invoke()} will be called for each operation
+invocation.
+
+{\small \begin{verbatim}
+namespace CORBA {
+  ...
+  class BOA {
+    ...
+    class DynamicImplementation {
+    public:
+      DynamicImplementation();
+      virtual ~DynamicImplementation();
+
+      virtual void invoke(ServerRequest_ptr request,
+                          Environment& env) throw() = 0;
+
+    protected:
+      Object_ptr _this();
+      // Must only be called from within invoke(). Caller must release
+      // the reference returned.
+
+      BOA_ptr _boa();
+      // Must only be called from within invoke(). Caller must NOT
+      // release the reference returned.
+    };
+    ...
+  };
+  ...
+};
+\end{verbatim}}
+
+
+\subsection{ServerRequest}
+
+A {\tt ServerRequest} object provides the interface between a dynamic
+implementation and the ORB.
+
+{\small \begin{verbatim}
+namespace CORBA {
+  ...
+  class ServerRequest {
+  public:
+    virtual const char*      op_name();
+    virtual OperationDef_ptr op_def();
+    virtual Context_ptr      ctx();
+    virtual void             params(NVList_ptr parameters);
+    virtual void             result(Any* value);
+    virtual void             exception(Any* value);
+
+    static ServerRequest_ptr _duplicate(ServerRequest_ptr);
+    static ServerRequest_ptr _nil();
+  };
+  ...
+};
+\end{verbatim}}
+
+
+\section{Creating Dynamic Implementations}
+
+The application must override the {\tt invoke()} method of
+{\tt DynamicImplementation} to provide an implementation for DSI objects.
+This method must behave as follows:
+
+\begin{itemize}
+\item It may be called concurrently by multiple threads of execution, and
+so must be thread-safe.
+\item It may not throw any exceptions. User-defined exceptions are passed
+in a value of type Any and given to
+{\tt ServerRequest::exception()}, and system exceptions may be
+passed via the {\tt env} parameter. Since the methods provided by
+{\tt ServerRequest} may throw system exceptions, the application must catch
+any such exception, duplicate it and place the value in {\tt env}.
+\item The operations on the {\tt ServerRequest} object must be carried out
+in the correct order, as described below.
+\end{itemize}
+
+
+\subsection{Operations on the ServerRequest}
+
+{\tt op\_name()} will return the name of the operation, and may be called at
+any time. For attribute access the operation name is the IDL name of the
+attribute, prefixed by {\tt \_get\_} or {\tt \_set\_}. If the operation name
+is not recognised a {\tt CORBA::BAD\_OPERATION} exception should be passed
+back through {\tt env}. This will allow the ORB to then see if it is one of
+the standard object operations.
+
+Firstly {\tt params()} must be called passing a
+{\tt CORBA::NVList}\footnote{obtained by calling {\tt
+CORBA::ORB::create\_list()}}
+which must be initialised to contain the type and mode of the parameters.
+The ORB consumes this
+value and will release it when the operation is complete. At this point any
+\emph{in}/\emph{inout} arguments will be unmarshalled, and when this operation
+returns their values will be in the {\tt NVList}. The application may set
+the value of \emph{inout}/\emph{out} arguments by modifying this
+parameter list.
+
+If the operation has user-context information, then {\tt ctx()} must be
+called after {\tt params()} to retrieve it.
+
+{\tt result()} must then be called exactly once if the operation has a non-void
+return value (unless an exception is thrown). The value passed should be
+an Any allocated with {\tt new}, and will be freed by the ORB.
+
+At any point in the above sequence {\tt exception()} may be called to set
+a user-defined exception, or a system exception may be inserted into
+the {\tt env} parameter of the {\tt invoke()} method. If this happens then no
+further operations should be invoked on the {\tt ServerRequest} object, and
+the {\tt invoke()} method should return.
+
+Within the {\tt invoke()} method {\tt \_this()} and {\tt \_boa()} may be
+called to obtain the object reference and BOA reference respectively. These
+methods may not be used at any other time.
+
+
+\section{Registering Dynamic Objects}
+
+To use a {\tt DynamicImplementation} a CORBA object must be created and
+associated with the implementation. The way in which this is done is not
+defined by the CORBA 2.0 specification, so the following method is omniORB2
+specific:
+
+{\small \begin{verbatim}
+namespace CORBA {
+  ...
+  class BOA {
+    ...
+    Object_ptr create_dynamic_object(DynamicImplementation_ptr dir,
+                                     const char* intfRepoId);
+    ...
+  };
+  ...
+};
+\end{verbatim}}
+
+Ownership of the {\tt DynamicImplementation} object is taken over by the ORB,
+and it will be deleted when associated the object is destroyed.
+The returned object may then be entered into the object table with a call to
+{\tt BOA::obj\_is\_ready()} as usual, and will then start accepting operation
+invocations.
+
+For some applications it will not be possible to register all DSI objects
+in advance of invocations arriving. In this case DSI objects can be
+created on demand in the same way as normal objects - see
+section~\ref{load_on_demand}.
+
+
+\section{Example}
+
+This implementation of {\tt DynamicImplementation::invoke()} is taken from
+an example which can be found in the omniORB2 distribution. The operation
+``echoString'' is declared in IDL as:
+
+{\small \begin{verbatim}
+string echoString(in string mesg);
+\end{verbatim}}
+
+\noindent{}Here is the Dynamic Implementation Routine:
+
+{\small \begin{verbatim}
+void
+MyDynImpl::invoke(CORBA::ServerRequest_ptr request, CORBA::Environment& env)
+  throw()
+{
+  try {
+    if( strcmp(request->op_name(), "echoString") )
+      throw CORBA::BAD_OPERATION(0, CORBA::COMPLETED_NO);
+
+    CORBA::NVList_ptr args;
+    orb->create_list(0, args);
+    CORBA::Any a;
+    a.replace(CORBA::_tc_string, 0);
+    args->add_value("", a, CORBA::ARG_IN);
+
+    request->params(args);
+
+    CORBA::Any& input_any = *(args->item(0)->value());
+    CORBA::String_var input;
+    input_any >>= input.out();
+
+    CORBA::Any* result = new CORBA::Any();
+    *result <<= CORBA::Any::from_string(input._retn(), 0);
+    request->result(result);
+  }
+  catch(CORBA::SystemException& ex){
+    env.exception(CORBA::Exception::_duplicate(&ex));
+  }
+  catch(...){
+    cout << "echo_dsiimpl: MyDynImpl::invoke - caught an"
+        " unknown exception." << endl;
+    env.exception(new CORBA::UNKNOWN(0, CORBA::COMPLETED_NO));
+  }
+}
+\end{verbatim}}
+
+
+
 \appendix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{hosts\_access(5)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection*{DESCRIPTION}
 
