@@ -152,6 +152,8 @@ public:
   }
   const char* insert(const char* sig, const char* op_idname);
 
+  char* generate_unique_name(const char* prefix);//DH
+
 private:
   void initialise_base(const char* sig);
   char* generate_class_name(const char* sig);
@@ -230,6 +232,39 @@ CallDescTable::generate_class_name(const char* sig)
 }
 
 
+char*
+CallDescTable::generate_unique_name(const char* prefix)//DH
+{
+  if( !pd_base_initialised )
+    throw o2be_internal_error(__FILE__, __LINE__,
+			      "generate_unique_name called before"
+			      " initialisation");
+
+  static char chrmap[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'a', 'b', 'c', 'd', 'e', 'f'
+  };
+
+  char* result = new char[1 + strlen(prefix) + 16 + 1 + 8];
+
+  strcpy(result, prefix);
+  char* s = result + strlen(result);
+
+  for( unsigned i = 0 ; i < 8; i++ )
+    *s++ = chrmap[(pd_base_h >> i * 4) & 0xf];
+  for( unsigned j = 0 ; j < 8; j++ )
+    *s++ = chrmap[(pd_base_l >> j * 4) & 0xf];
+
+  *s++ = '_';
+  for( unsigned k = 0 ; k < 8; k++ )
+    *s++ = chrmap[(pd_index >> k * 4) & 0xf];
+  *s = '\0';
+
+  pd_index++;
+  return result;
+}
+
+
 static CallDescTable callDescTable;
 
 //////////////////////////////////////////////////////////////////////
@@ -285,4 +320,11 @@ const char*
 o2be_call_desc::write_descriptor_name(o2be_attribute& attr)
 {
   return callDescTable[attr.mangled_write_signature()];
+}
+
+
+char*
+o2be_call_desc::generate_unique_name(const char* prefix)//DH
+{
+  return callDescTable.generate_unique_name(prefix);
 }
