@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.13  1998/01/27 16:05:42  ewc
-  Added support necessary for TypeCode and Any
+  Revision 1.14  1998/03/09 14:33:21  ewc
+  Calls to NP_data() scoped to satisfy aC++ on HPUX
 
+ * Revision 1.13  1998/01/27  16:05:42  ewc
+ * Added support necessary for TypeCode and Any
+ *
   Revision 1.12  1997/12/23 19:39:43  sll
   For all unbounded sequence templates, the calls to length() are
   made easier for some compiler (HPUX aCC) by specifying the
@@ -720,7 +723,7 @@ _CORBA_Unbounded_Sequence<T>::NP_alignedSize(size_t initialoffset) const
 {
   size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
   for (unsigned long i=0; i < _CORBA_Sequence<T>::length(); i++) {
-    alignedsize = NP_data()[i].NP_alignedSize(alignedsize);
+    alignedsize = _CORBA_Sequence<T>::NP_data()[i].NP_alignedSize(alignedsize);
   }
   return alignedsize;
 }
@@ -764,7 +767,7 @@ _CORBA_Bounded_Sequence<T,max>::NP_alignedSize(size_t initialoffset) const
 {
   size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
   for (unsigned long i=0; i < length(); i++) {
-    alignedsize = NP_data()[i].NP_alignedSize(alignedsize);
+    alignedsize = _CORBA_Sequence<T>::NP_data()[i].NP_alignedSize(alignedsize);
   }
   return alignedsize;
 }
@@ -790,7 +793,7 @@ _CORBA_Bounded_Sequence<T,max>::operator<<= (NetBufferedStream &s)
   
   length(l);
   for (_CORBA_ULong i=0; i<l; i++) {
-    NP_data()[i] <<= s;
+    _CORBA_Sequence<T>::NP_data()[i] <<= s;
   }
   return;
 }
@@ -814,7 +817,7 @@ _CORBA_Bounded_Sequence<T,max>::operator<<= (MemBufferedStream &s)
   }
   length(l);
   for (_CORBA_ULong i=0; i<l; i++) {
-    NP_data()[i] <<= s;
+    _CORBA_Sequence<T>::NP_data()[i] <<= s;
   }
   return;
 }
@@ -845,7 +848,7 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= 
     if (s.WrMessageCurrentAlignment() != (int)omni::ALIGN_8)
       padding >>= s;
   }
-  s.put_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  s.put_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
 }
 
 template <class T,int elmSize,int elmAlignment>
@@ -865,28 +868,28 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= 
     if (s.RdMessageCurrentAlignment() != (int)omni::ALIGN_8)
       s.skip(sizeof(_CORBA_ULong));
   }
-  s.get_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  s.get_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
   if (s.RdMessageByteOrder() != omni::myByteOrder && elmAlignment != 1) {
     if (elmSize == 2) {
       for (_CORBA_ULong i=0; i<l; i++) {
-	_CORBA_UShort t = ((_CORBA_UShort*)NP_data())[i];
-	((_CORBA_UShort*)NP_data())[i] = Swap16(t);
+	_CORBA_UShort t = ((_CORBA_UShort*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_UShort*)_CORBA_Sequence<T>::NP_data())[i] = Swap16(t);
       }
     }
     else if (elmSize == 4) {
       for (_CORBA_ULong i=0; i<l; i++) {
-	_CORBA_ULong t = ((_CORBA_ULong*)NP_data())[i];
-	((_CORBA_ULong*)NP_data())[i] = Swap32(t);
+	_CORBA_ULong t = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i] = Swap32(t);
       }
     }
     else if (elmSize == 8) {
       l *= 2;
       for (_CORBA_ULong i=0; i<l; i+=2) {
-	_CORBA_ULong tl1 = ((_CORBA_ULong*)NP_data())[i+1];
+	_CORBA_ULong tl1 = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i+1];
 	_CORBA_ULong tl2 = Swap32(tl1);
-	tl1 = ((_CORBA_ULong*)NP_data())[i];
-	((_CORBA_ULong*)NP_data())[i] = tl2;
-	((_CORBA_ULong*)NP_data())[i+1] = Swap32(tl1);
+	tl1 = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i] = tl2;
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i+1] = Swap32(tl1);
       }
     }
   }
@@ -905,7 +908,7 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= 
     if (s.wrCurrentAlignment() != (int)omni::ALIGN_8)
       padding >>= s;
   }
-  s.put_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  s.put_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
 }
 
 template <class T,int elmSize,int elmAlignment>
@@ -925,28 +928,28 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= 
     if (s.rdCurrentAlignment() != (int)omni::ALIGN_8)
       s.skip(sizeof(_CORBA_ULong));
   }
-  s.get_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  s.get_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
   if (s.byteOrder() != omni::myByteOrder && elmAlignment != 1) {
     if (elmSize == 2) {
       for (_CORBA_ULong i=0; i<l; i++) {
-	_CORBA_UShort t = ((_CORBA_UShort*)NP_data())[i];
-	((_CORBA_UShort*)NP_data())[i] = Swap16(t);
+	_CORBA_UShort t = ((_CORBA_UShort*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_UShort*)_CORBA_Sequence<T>::NP_data())[i] = Swap16(t);
       }
     }
     else if (elmSize == 4) {
       for (_CORBA_ULong i=0; i<l; i++) {
-	_CORBA_ULong t = ((_CORBA_ULong*)NP_data())[i];
-	((_CORBA_ULong*)NP_data())[i] = Swap32(t);
+	_CORBA_ULong t = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i] = Swap32(t);
       }
     }
     else if (elmSize == 8) {
       l *= 2;
       for (_CORBA_ULong i=0; i<l; i+=2) {
-	_CORBA_ULong tl1 = ((_CORBA_ULong*)NP_data())[i+1];
+	_CORBA_ULong tl1 = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i+1];
 	_CORBA_ULong tl2 = Swap32(tl1);
-	tl1 = ((_CORBA_ULong*)NP_data())[i];
-	((_CORBA_ULong*)NP_data())[i] = tl2;
-	((_CORBA_ULong*)NP_data())[i+1] = Swap32(tl1);
+	tl1 = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i] = tl2;
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i+1] = Swap32(tl1);
       }
     }
   }
@@ -981,7 +984,7 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>
     if (s.WrMessageCurrentAlignment() != (int)omni::ALIGN_8)
       padding >>= s;
   }
-  s.put_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  s.put_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
 }
 
 template <class T,int max,int elmSize, int elmAlignment>
@@ -1002,28 +1005,28 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<
     if (s.RdMessageCurrentAlignment() != (int)omni::ALIGN_8)
       s.skip(sizeof(_CORBA_ULong));
   }
-  s.get_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  s.get_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
   if (s.RdMessageByteOrder() != omni::myByteOrder && elmAlignment != 1) {
     if (elmSize == 2) {
       for (_CORBA_ULong i=0; i<l; i++) {
-	_CORBA_UShort t = ((_CORBA_UShort*)NP_data())[i];
-	((_CORBA_UShort*)NP_data())[i] = Swap16(t);
+	_CORBA_UShort t = ((_CORBA_UShort*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_UShort*)_CORBA_Sequence<T>::NP_data())[i] = Swap16(t);
       }
     }
     else if (elmSize == 4) {
       for (_CORBA_ULong i=0; i<l; i++) {
-	_CORBA_ULong t = ((_CORBA_ULong*)NP_data())[i];
-	((_CORBA_ULong*)NP_data())[i] = Swap32(t);
+	_CORBA_ULong t = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i] = Swap32(t);
       }
     }
     else if (elmSize == 8) {
       l *= 2;
       for (_CORBA_ULong i=0; i<l; i+=2) {
-	_CORBA_ULong tl1 = ((_CORBA_ULong*)NP_data())[i+1];
+	_CORBA_ULong tl1 = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i+1];
 	_CORBA_ULong tl2 = Swap32(tl1);
-	tl1 = ((_CORBA_ULong*)NP_data())[i];
-	((_CORBA_ULong*)NP_data())[i] = tl2;
-	((_CORBA_ULong*)NP_data())[i+1] = Swap32(tl1);
+	tl1 = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i] = tl2;
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i+1] = Swap32(tl1);
       }
     }
   }
@@ -1042,7 +1045,7 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>
     if (s.wrCurrentAlignment() != (int)omni::ALIGN_8)
       padding >>= s;
   }
-  s.put_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  s.put_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
 }
 
 template <class T,int max,int elmSize, int elmAlignment>
@@ -1063,28 +1066,28 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<
     if (s.rdCurrentAlignment() != (int)omni::ALIGN_8)
       s.skip(sizeof(_CORBA_ULong));
   }
-  s.get_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  s.get_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
   if (s.byteOrder() != omni::myByteOrder && elmAlignment != 1) {
     if (elmSize == 2) {
       for (_CORBA_ULong i=0; i<l; i++) {
-	_CORBA_UShort t = ((_CORBA_UShort*)NP_data())[i];
-	((_CORBA_UShort*)NP_data())[i] = Swap16(t);
+	_CORBA_UShort t = ((_CORBA_UShort*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_UShort*)_CORBA_Sequence<T>::NP_data())[i] = Swap16(t);
       }
     }
     else if (elmSize == 4) {
       for (_CORBA_ULong i=0; i<l; i++) {
-	_CORBA_ULong t = ((_CORBA_ULong*)NP_data())[i];
-	((_CORBA_ULong*)NP_data())[i] = Swap32(t);
+	_CORBA_ULong t = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i] = Swap32(t);
       }
     }
     else if (elmSize == 8) {
       l *= 2;
       for (_CORBA_ULong i=0; i<l; i+=2) {
-	_CORBA_ULong tl1 = ((_CORBA_ULong*)NP_data())[i+1];
+	_CORBA_ULong tl1 = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i+1];
 	_CORBA_ULong tl2 = Swap32(tl1);
-	tl1 = ((_CORBA_ULong*)NP_data())[i];
-	((_CORBA_ULong*)NP_data())[i] = tl2;
-	((_CORBA_ULong*)NP_data())[i+1] = Swap32(tl1);
+	tl1 = ((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i];
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i] = tl2;
+	((_CORBA_ULong*)_CORBA_Sequence<T>::NP_data())[i+1] = Swap32(tl1);
       }
     }
   }
