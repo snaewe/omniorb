@@ -1,3 +1,12 @@
+Thu Sep 21 09:46:16 BST 2000 djs
+================================
+
+- C++ backend "unsupported IDL" error message now more completely lists 
+  the constructs it rejects.
+
+src/lib/omniORB2/omniidl_be/cxx/support.py
+
+
 Tue Sep 19 14:50:05 BST 2000 djs
 ================================
 
