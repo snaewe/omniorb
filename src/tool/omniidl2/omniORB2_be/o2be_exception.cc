@@ -25,6 +25,9 @@
 
 /*
   $Log$
+  Revision 1.19.6.3  1999/10/21 11:29:46  djr
+  Added _core_attr to declaration of _PD_repoId in exceptions & interfaces.
+
   Revision 1.19.6.2  1999/10/13 15:47:47  djr
   Bug in omniidl3 - seg fault with typedef of interface as member of exception.
 
@@ -322,7 +325,7 @@ o2be_exception::produce_hdr(std::fstream &s)
    "  static _core_attr insertExceptionToAny    insertToAnyFn;\n"
    "  static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;\n\n"
 
-   "  static const char* _PD_repoId;\n\n"
+   "  static _core_attr const char* _PD_repoId;\n\n"
 
    "private:\n"
    "  virtual CORBA::Exception* _NP_duplicate() const;\n"

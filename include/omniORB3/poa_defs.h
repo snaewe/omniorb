@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  1999/10/21 11:29:45  djr
+  Added _core_attr to declaration of _PD_repoId in exceptions & interfaces.
+
   Revision 1.1.2.3  1999/10/16 13:22:52  djr
   Changes to support compiling on MSVC.
 
@@ -79,7 +82,7 @@ public:
   static _core_attr insertExceptionToAny    insertToAnyFn;
   static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
 
-  static const char* _PD_repoId;
+  static _core_attr const char* _PD_repoId;
 
 private:
   virtual CORBA::Exception* _NP_duplicate() const;
@@ -152,7 +155,7 @@ public:
     return result;
   }
 
-  static const char* _PD_repoId;
+  static _core_attr const char* _PD_repoId;
 
   // Other IDL defined within this scope.
 
@@ -270,7 +273,7 @@ public:
     return result;
   }
 
-  static const char* _PD_repoId;
+  static _core_attr const char* _PD_repoId;
 
   // Other IDL defined within this scope.
 
@@ -386,7 +389,7 @@ public:
     return result;
   }
 
-  static const char* _PD_repoId;
+  static _core_attr const char* _PD_repoId;
 
   // Other IDL defined within this scope.
 
@@ -506,7 +509,7 @@ public:
     return result;
   }
 
-  static const char* _PD_repoId;
+  static _core_attr const char* _PD_repoId;
 
   // Other IDL defined within this scope.
 
