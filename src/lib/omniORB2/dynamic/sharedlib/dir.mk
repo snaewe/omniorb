@@ -143,7 +143,8 @@ DYN2_SRCS = bootstrapDynSK.cc NamingDynSK.cc \
 	    environment.cc context.cc deferredRequest.cc unknownUserExn.cc \
 	    request.cc serverRequest.cc dynamicImplementation.cc \
 	    pseudoBase.cc dynException.cc ir.cc \
-	    irstub.cc irdynstub.cc corbaidlstub.cc corbaidldynstub.cc
+	    irstub.cc irdynstub.cc corbaidlstub.cc corbaidldynstub.cc \
+	    orbMultiRequest.cc
 
 DYN2_OBJS = bootstrapDynSK.o NamingDynSK.o \
 	    any.o typecode.o anyP.o tcParser.o \
@@ -152,7 +153,8 @@ DYN2_OBJS = bootstrapDynSK.o NamingDynSK.o \
 	    environment.o context.o deferredRequest.o unknownUserExn.o \
 	    request.o serverRequest.o dynamicImplementation.o \
 	    pseudoBase.o dynException.o ir.o \
-	    irstub.o irdynstub.o corbaidlstub.o corbaidldynstub.o
+	    irstub.o irdynstub.o corbaidlstub.o corbaidldynstub.o \
+	    orbMultiRequest.o
 
 DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
