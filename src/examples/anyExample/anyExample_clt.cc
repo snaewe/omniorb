@@ -29,7 +29,6 @@ int
 main (int argc, char **argv) 
 {
   CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
-  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
   CORBA::Object_var obj;
   
   try {
@@ -111,6 +110,8 @@ main (int argc, char **argv)
     cerr << "Caught a system exception." << endl;
     return -1;
   }
+
+  orb->NP_destroy();
 	
   return 0;
 }

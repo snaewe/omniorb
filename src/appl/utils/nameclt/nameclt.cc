@@ -79,7 +79,6 @@ main(int argc, char **argv)
   // Initialize the ORB, the object adaptor and the echo object:
 
   CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
-  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
 
   const char* ior = (const char*)0;
   int n;
@@ -213,7 +212,7 @@ main(int argc, char **argv)
       }
 
       bi->destroy();
-      return 0;
+      goto done;
     }
 
 
@@ -238,7 +237,7 @@ main(int argc, char **argv)
 
       char* p = orb->object_to_string(context);
       cout << p << endl;
-      return 0;
+      goto done;
     }
 
 
@@ -273,7 +272,7 @@ main(int argc, char **argv)
       context->destroy();
 
       rootContext->unbind(name);
-      return 0;
+      goto done;
     }
 
 
@@ -304,7 +303,7 @@ main(int argc, char **argv)
       }
 
       rootContext->bind(name, obj);
-      return 0;
+      goto done;
     }
 
 
@@ -329,7 +328,7 @@ main(int argc, char **argv)
 	// Don't perform any safety checks for -advanced
 
 	rootContext->unbind(name);
-	return 0;
+	goto done;
       }
 
       //
@@ -378,7 +377,7 @@ main(int argc, char **argv)
 	  }
 
 	  context->unbind(b->binding_name);
-	  return 0;
+	  goto done;
 	}
 
       }
@@ -409,7 +408,7 @@ main(int argc, char **argv)
 
       char* p = orb->object_to_string(obj);
       cout << p << endl;
-      return 0;
+      goto done;
     }
 
 
@@ -458,7 +457,7 @@ main(int argc, char **argv)
       }
 
       rootContext->bind_context(name, context);
-      return 0;
+      goto done;
     }
 
 
@@ -489,7 +488,7 @@ main(int argc, char **argv)
       }
 
       rootContext->rebind(name, obj);
-      return 0;
+      goto done;
     }
 
 
@@ -528,7 +527,7 @@ main(int argc, char **argv)
       }
 
       rootContext->rebind_context(name, context);
-      return 0;
+      goto done;
     }
 
 
@@ -548,7 +547,7 @@ main(int argc, char **argv)
 
       char* p = orb->object_to_string(context);
       cout << p << endl;
-      return 0;
+      goto done;
     }
 
 
@@ -565,7 +564,7 @@ main(int argc, char **argv)
       }
 
       rootContext->destroy();
-      return 0;
+      goto done;
     }
 
     usage(argv[0]);
@@ -581,33 +580,33 @@ main(int argc, char **argv)
       cerr << "not object";
     }
     cerr << endl;
-    return 1;
+    goto error_return;
   }
 
   catch (CosNaming::NamingContext::InvalidName) {
     cerr << command << ": InvalidName exception" << endl;
-    return 1;
+    goto error_return;
   }
 
   catch (CosNaming::NamingContext::AlreadyBound) {
     cerr << command << ": AlreadyBound exception" << endl;
-    return 1;
+    goto error_return;
   }
 
   catch (CosNaming::NamingContext::NotEmpty) {
     cerr << command << ": NotEmpty exception" << endl;
-    return 1;
+    goto error_return;
   }
 
   catch (CosNaming::NamingContext::CannotProceed) {
     cerr << command << ": CannotProceed exception" << endl;
-    return 1;
+    goto error_return;
   }
   catch (CORBA::COMM_FAILURE) {
     cerr << command 
 	 << ": Cannot contact the Naming Service because of COMM_FAILURE."
 	 << endl;
-    return 1;
+    goto error_return;
   }
 
   catch (...) {
@@ -617,7 +616,13 @@ main(int argc, char **argv)
   cerr << command
        << ": Unexpected error encountered."
        << endl;
+ error_return:
+  orb->NP_destroy();
   return 1;
+
+ done:
+  orb->NP_destroy();
+  return 0;
 }
 
 
