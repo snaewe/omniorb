@@ -88,14 +88,14 @@ class omni_thread;
 #include <omnithread/nt.h>
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__BCPLUSPLUS__)
 
-// Using MSVC++ to compile. If compiling library as a DLL,
-// define _OMNITHREAD_DLL. If compiling as a statuc library, define
-// _WINSTATIC
-// If compiling an application that is to be statically linked to omnithread,
-// define _WINSTATIC (if the application is  to be dynamically linked, 
-// there is no need to define any of these macros).
+// Using MSVC++ or Borland C++ to compile. If compiling library as a
+// DLL, define _OMNITHREAD_DLL. If compiling as a static library,
+// define _WINSTATIC. If compiling an application that is to be
+// statically linked to omnithread, define _WINSTATIC (if the
+// application is to be dynamically linked, there is no need to define
+// any of these macros).
 
 #if defined (_OMNITHREAD_DLL) && defined(_WINSTATIC)
 #error "Both _OMNITHREAD_DLL and _WINSTATIC are defined."

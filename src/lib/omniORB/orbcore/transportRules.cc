@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2003/08/21 15:00:32  dgrisby
+  Patches for Borland compiler.
+
   Revision 1.1.2.7  2003/02/17 02:03:09  dgrisby
   vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 
@@ -318,7 +321,7 @@ public:
 					     CORBA::ULong& network,
 					     CORBA::ULong& netmask) {
     CORBA::String_var cp(address);
-    char* mask = strchr(cp,'/');
+    char* mask = strchr((char*)cp,'/');
     if (mask) {
       *mask = '\0';
       mask++;

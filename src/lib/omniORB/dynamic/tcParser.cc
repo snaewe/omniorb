@@ -639,28 +639,28 @@ tcParser::copyStreamToStream(const CORBA::TypeCode_ptr tc,
 			     cdrStream& src,
 			     cdrStream& dest) {
   if (src.unmarshal_byte_swap() == dest.marshal_byte_swap())
-    fastCopyUsingTC(ToTcBase_Checked(tc), src, dest);
+    fastCopyUsingTC(_OMNI_NS(ToTcBase_Checked)(tc), src, dest);
   else
-    copyUsingTC(ToTcBase_Checked(tc), src, dest);
+    copyUsingTC(_OMNI_NS(ToTcBase_Checked)(tc), src, dest);
 }
 
 void
 tcParser::copyTcDescriptorToStream(const CORBA::TypeCode_ptr tc,
 				   const tcDescriptor &src,
 				   cdrStream& dest) {
-  appendItem(ToTcBase_Checked(tc), src, dest);
+  appendItem(_OMNI_NS(ToTcBase_Checked)(tc), src, dest);
 }
 
 void
 tcParser::copyStreamToTcDescriptor(const CORBA::TypeCode_ptr tc,
 				   cdrStream& src,
 				   tcDescriptor& dest) {
-  fetchItem(ToTcBase_Checked(tc), src, dest);
+  fetchItem(_OMNI_NS(ToTcBase_Checked)(tc), src, dest);
 }
   
 void
 tcParser::skip(const CORBA::TypeCode_ptr tc, cdrStream &s) {
-  skipUsingTC(ToTcBase_Checked(tc), s);
+  skipUsingTC(_OMNI_NS(ToTcBase_Checked)(tc), s);
 }
 
 //////////////////////////////////////////////////////////////////////
