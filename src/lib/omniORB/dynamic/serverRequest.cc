@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.8.2.4  2000/10/09 16:24:59  sll
+ Progress internal state to SR_GOT_CTX and bypass SR_GOT_PARAMS in
+ arguments() when there is no context pending to be retrieved.
+
  Revision 1.8.2.3  2000/10/06 16:45:52  sll
  Updated to use the new giopStream interface.
 
@@ -112,10 +116,13 @@ omniServerRequest::arguments(CORBA::NVList_ptr& parameters)
   }
 
   // If there is no space left for context info...
-  if ( !s.checkInputOverrun(1,4) )
+  if ( !s.checkInputOverrun(1,4) ) {
     pd_giop_s.RequestReceived();
-
-  pd_state = SR_GOT_PARAMS;
+    pd_state = SR_GOT_CTX;
+  }
+  else {
+    pd_state = SR_GOT_PARAMS;
+  }
 }
 
 
@@ -149,8 +156,7 @@ omniServerRequest::set_result(const CORBA::Any& value)
     pd_state = SR_DSI_ERROR;
     OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
-  if( pd_state == SR_GOT_PARAMS && 
-      ((cdrStream&)pd_giop_s).checkInputOverrun(1,1) )
+  if( pd_state == SR_GOT_PARAMS )
     pd_giop_s.RequestReceived();
 
   pd_result = value;
