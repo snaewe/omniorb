@@ -13,6 +13,23 @@ src/lib/omniORB2/dynamic/corbaidldynstub.cc
 src/lib/omniORB2/dynamic/irstub.cc
 src/lib/omniORB2/dynamic/irdynstub.cc
 
+- Fixed compilation errors in Interface Repository code. Several
+  interfaces need to be forward-declared.
+
+idl/corbaidl.idl
+
+
+- Added guard to prevent the compiler trying to #include <corbaidl.hh>
+  from ir.hh. This doesn't work as it is in <omniORB2/corbaidl.hh>.
+
+include/omniORB2/CORBA.h
+
+
+- Added information about building CORBA binaries without code
+  for TypeCode, Any etc.
+
+doc/tex/ode.tex
+
 
 Fri Jan  8 11:26:43 GMT 1999 djr
 ================================
