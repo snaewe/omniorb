@@ -389,6 +389,8 @@ public:
 
     static omni_thread* self(void);
 	// returns the calling thread's omni_thread object.
+	// If the calling thread is not the main thread and
+	// is not created using this library, returns 0.
 
     static void yield(void);
 	// allows another thread to run.
