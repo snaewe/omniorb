@@ -1,3 +1,60 @@
+Tue Aug 25 16:18:24 BST 1998 sll
+================================
+
+- MSVC++ workaround in the stub code.
+
+   module A {
+      interface B {
+      };
+   };
+
+   module C {
+       interface B : A::B {
+       };
+   };
+
+   In C::_sk_B::dispatch, must call A::_sk_B::dispatch as
+     ((A__sk_B*)this)->A__sk_B::dispatch.
+   Otherwise, the invocation would just end up calling itself infinitely.
+   This previous workaround A__sk_B::dispatch does not deal with the case
+   when the interface name is the same (even though they are in different
+   modules).
+
+
+- Bug in LifeCycle support. The following causes a run-time error when
+  omniidl2 is invoked with the -l option:
+
+  // IDL:
+  interface foo {
+    ...
+  };
+  interface bar : foo {
+    ...
+  };
+
+
+  // C++:
+  class foo_i : public virtual _lc_sk_foo {
+    ...
+  };
+  class bar_i : public virtual _lc_sk_bar, public virtual foo_i {
+    ...
+  }
+
+  // Inside a factory:
+  bar_i *bi = // New object of class bar_i;
+  bi->_obj_is_ready(boa);
+
+  foo_i *fi = bi;
+
+  CORBA::Object_var obj = fi->_this();  // ERROR -- returns nil
+
+
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
+
+
 Sat Aug 22 13:42:09 BST 1998 sll
 ================================
 
