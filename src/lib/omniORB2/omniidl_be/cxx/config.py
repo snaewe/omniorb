@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  2000/01/13 11:45:47  djs
+# Added option to customise C++ reserved word name escaping
+#
 # Revision 1.9  2000/01/13 10:52:04  djs
 # Rewritten argument handling
 # Added options to specify the header and stubs file prefix, mirroring omniidl3
@@ -77,6 +80,7 @@ self._poa_fragment   = "_poa"
 
 self._name_prefix   = "_0RL"
 
+self._res_prefix    = "_cxx_"
 #
 # Location where configuration data pertinent to the current run of the
 # compiler is stored
@@ -98,6 +102,11 @@ def setBasename(b):
     self._basename = b
 def basename():
     return self._basename
+
+def reservedPrefix():
+    return self._res_prefix
+def setReservedPrefix(prefix):
+    self._res_prefix = prefix
 
 # generate code for TypeCodes and Any
 self._typecode = 0

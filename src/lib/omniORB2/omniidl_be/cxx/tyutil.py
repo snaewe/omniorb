@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.26  2000/01/13 11:45:47  djs
+# Added option to customise C++ reserved word name escaping
+#
 # Revision 1.25  2000/01/12 19:54:47  djs
 # Added option to generate old CORBA 2.1 signatures for skeletons
 #
@@ -235,7 +238,7 @@ reservedWords = [
 def mapID(identifier):
     for i in reservedWords:
         if i == identifier:
-            return "_cxx_" + identifier
+            return config.reservedPrefix() + identifier
     return identifier
 
 
