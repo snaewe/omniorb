@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.28.6.1  1999/09/24 10:05:23  djr
+  Updated for omniORB3.
+
   Revision 1.28  1999/08/15 13:58:01  sll
   Updated for DEC C++ v6.0.
 
@@ -130,7 +133,8 @@
 
 #if defined(__WIN32__) || defined(__VMS) && __VMS_VER < 60200000
 
-// Win32 and VMS don't have an implementation of getopt() - supply a getopt() for this program:
+// Win32 and VMS don't have an implementation of getopt() - supply
+// a getopt() for this program:
 
 char* optarg;
 int optind = 1;
@@ -265,28 +269,27 @@ usage()
 #else
        << GTDEVEL(" [flag]* file [file]*\n");
 #endif
-  std::cerr << GTDEVEL("Legal flags:\n");
-
-  std::cerr << GTDEVEL(" -Dname[=value]\t\tdefines name for preprocessor\n");
-  std::cerr << GTDEVEL(" -E\t\t\truns preprocessor only, prints on stdout\n");
-  std::cerr << GTDEVEL(" -Idir\t\t\tincludes dir in search path for preprocessor\n");
-  std::cerr << GTDEVEL(" -Uname\t\t\tundefines name for preprocessor\n");
-  std::cerr << GTDEVEL(" -V\t\t\tprints version info then exits\n");
-  std::cerr << GTDEVEL(" -Y <cpp location>\t\tdefines location of preprocessor\n");
-  std::cerr << GTDEVEL(" -a\t\t\tgenerates code required by type any\n");
-  std::cerr << GTDEVEL(" -c\t\t\tmap C++ reserved words with prefix _\n");
-  std::cerr << GTDEVEL(" -h suffix\t\tspecify suffix for the generated header file(s)\n");
-  std::cerr << GTDEVEL(" -l\t\t\tgenerates code required by LifeCycle service\n");
-  std::cerr << GTDEVEL(" -m\t\t\tallow modules to be reopened\n");
-  std::cerr << GTDEVEL(" -s suffix\t\tspecify suffix for the generated stub file(s)\n");
-  std::cerr << GTDEVEL(" -t\t\t\tgenerate 'tie' implementation skeleton\n");
-  std::cerr << GTDEVEL(" -u\t\t\tprints usage message and exits\n");
-
-  std::cerr << GTDEVEL(" -v\t\t\ttraces compilation stages\n");
-  std::cerr << GTDEVEL(" -w\t\t\tsuppresses IDL compiler warning messages\n");
-  std::cerr << GTDEVEL(" -F\t\t\tgenerates code fragments (for expert only)\n");
-
-  return;
+  std::cerr <<
+    GTDEVEL("Legal flags:\n")
+    GTDEVEL(" -Dname[=value]    defines name for preprocessor\n")
+    GTDEVEL(" -E                runs preprocessor only, prints on stdout\n")
+    GTDEVEL(" -Idir             includes dir in search path for preprocessor\n")
+    GTDEVEL(" -Uname            undefines name for preprocessor\n")
+    GTDEVEL(" -V                prints version info then exits\n")
+    GTDEVEL(" -Y <cpp location> defines location of preprocessor\n")
+    GTDEVEL(" -a                generates code for TypeCode and Any\n")
+    GTDEVEL(" -c                map C++ reserved words with prefix _\n")
+    GTDEVEL(" -h suffix         specify suffix for the generated header file(s)\n")
+    GTDEVEL(" -l                generates code required by LifeCycle service\n")
+    GTDEVEL(" -m                allow modules to be reopened\n")
+    GTDEVEL(" -s suffix         specify suffix for the generated stub file(s)\n")
+    GTDEVEL(" -tp               generate 'tie' implementation skeleton\n")
+    GTDEVEL(" -tf               generate flattened 'tie' implementation skeleton\n")
+    GTDEVEL(" -u                prints usage message and exits\n")
+    GTDEVEL(" -v                traces compilation stages\n")
+    GTDEVEL(" -w                suppresses IDL compiler warning messages\n")
+    GTDEVEL(" -F                generates code fragments (for expert only)\n")
+    GTDEVEL(" -b                generates BOA interface skeletons\n");
 }
 
 void
@@ -326,7 +329,7 @@ BE_parse_args(int argc, char **argv)
 #endif
 
   idl_global->set_prog_name(argv[0]);
-  while ((c = getopt(argc,argv,"D:EFI:U:VY:uvwh:s:lamtc")) != EOF)
+  while ((c = getopt(argc,argv,"D:EFI:U:VY:uvwh:s:lamt:cb")) != EOF)
     {
       switch (c) 
 	{
@@ -400,8 +403,20 @@ BE_parse_args(int argc, char **argv)
 	  break;
 
 	case 't':
-	  idl_global->set_compile_flags(idl_global->compile_flags() |
-					IDL_BE_GENERATE_TIE);
+	  if( !strcmp(optarg, "f") ) {
+	    idl_global->set_compile_flags(idl_global->compile_flags() |
+					  IDL_BE_GENERATE_FLAT_TIE);
+	  }
+	  else if( !strcmp(optarg, "p") ) {
+	    idl_global->set_compile_flags(idl_global->compile_flags() |
+					  IDL_BE_GENERATE_TIE);
+	  }
+	  else {
+	    usage();
+	    idl_global->set_compile_flags(idl_global->compile_flags() |
+					  IDL_CF_ONLY_USAGE);
+	    return;
+	  }
 	  break;
 
 	case 'c':
@@ -409,7 +424,13 @@ BE_parse_args(int argc, char **argv)
 					IDL_BE_2_1_COMPATIBLE);
 	  break;
 
+	case 'b':
+	  idl_global->set_compile_flags(idl_global->compile_flags() |
+					IDL_BE_GENERATE_BOA_SKEL);
+	  break;
+
 	case '?':
+	case ':':
 	  usage();
 	  idl_global->set_compile_flags(idl_global->compile_flags() |
 					IDL_CF_ONLY_USAGE);

@@ -27,9 +27,8 @@
 
 /*
   $Log$
-  Revision 1.23  1999/09/06 17:17:06  sll
-  Remove check for response_expected flag in server skeleton of read
-  operation.
+  Revision 1.23.6.1  1999/09/24 10:05:22  djr
+  Updated for omniORB3.
 
   Revision 1.22  1999/06/28 13:24:51  dpg1
   LifeCycle code updated for proxyCallWrapper support.
@@ -92,6 +91,9 @@
 #pragma hdrstop
 #endif
 
+#include <o2be_util.h>
+
+
 o2be_attribute::o2be_attribute(idl_bool ro, AST_Type *ft,
 			       UTL_ScopedName *n, UTL_StrList *p)
   : AST_Attribute(ro,ft,n,p),
@@ -105,8 +107,7 @@ o2be_attribute::o2be_attribute(idl_bool ro, AST_Type *ft,
 
 
 void
-o2be_attribute::produce_decl_rd(std::fstream& s,
-				idl_bool use_fully_qualified_names)
+o2be_attribute::produce_decl_rd(std::fstream& s, AST_Decl* used_in)
 {
   o2be_operation::argMapping mapping;
   o2be_operation::argType ntype =
@@ -119,7 +120,7 @@ o2be_attribute::produce_decl_rd(std::fstream& s,
     while( decl->node_type() == AST_Decl::NT_typedef )
       decl = o2be_typedef::narrow_from_decl(decl)->base_type();
     s << o2be_interface::narrow_from_decl(decl)
-      ->unambiguous_objref_name(this, use_fully_qualified_names);
+      ->unambiguous_objref_name(used_in);
     break;
   case o2be_operation::tString:
     s << "char*";
@@ -128,8 +129,7 @@ o2be_attribute::produce_decl_rd(std::fstream& s,
     s << "CORBA::TypeCode_ptr";
     break;
   default:
-    s << o2be_name::narrow_and_produce_unambiguous_name(decl, this,
-						use_fully_qualified_names);
+    s << o2be_name::narrow_and_produce_unambiguous_name(decl, used_in);
     break;
   }
 
@@ -140,8 +140,7 @@ o2be_attribute::produce_decl_rd(std::fstream& s,
 
 
 void
-o2be_attribute::produce_decl_wr(std::fstream& s,
-				idl_bool use_fully_qualified_names,
+o2be_attribute::produce_decl_wr(std::fstream& s, AST_Decl* used_in,
 				idl_bool for_call_desc)
 {
   o2be_operation::argMapping mapping;
@@ -156,7 +155,7 @@ o2be_attribute::produce_decl_wr(std::fstream& s,
     while( decl->node_type() == AST_Decl::NT_typedef )
       decl = o2be_typedef::narrow_from_decl(decl)->base_type();
     s << o2be_interface::narrow_from_decl(decl)
-      ->unambiguous_objref_name(this, use_fully_qualified_names);
+      ->unambiguous_objref_name(used_in);
     break;
   case o2be_operation::tString:
     s << "char*";
@@ -171,12 +170,10 @@ o2be_attribute::produce_decl_wr(std::fstream& s,
       mapping.is_arrayslice = I_TRUE;
       mapping.is_pointer = I_TRUE;
     }
-    s << o2be_name::narrow_and_produce_unambiguous_name(decl, this,
-						use_fully_qualified_names);
+    s << o2be_name::narrow_and_produce_unambiguous_name(decl, used_in);
     break;
   default:
-    s << o2be_name::narrow_and_produce_unambiguous_name(decl, this,
-						use_fully_qualified_names);
+    s << o2be_name::narrow_and_produce_unambiguous_name(decl, used_in);
     break;
   }
   if( mapping.is_arrayslice )  s << "_slice";
@@ -192,41 +189,35 @@ o2be_attribute::produce_read_proxy_call_desc(std::fstream& s,
   IND(s); s << "// Proxy call descriptor class. Mangled signature:\n";
   IND(s); s << "//  " << mangled_read_signature() << '\n';
   IND(s); s << "class " << class_name << '\n';
-  IND(s); s << "  : public " << "OmniProxyCallDesc" << '\n';
+  IND(s); s << "  : public " << "omniCallDescriptor" << '\n';
   IND(s); s << "{\n";
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
 
   // Constructor.
   IND(s); s << "inline " << class_name
-	    << "(const char* _op, size_t _op_len) :\n";
-  IND(s); s << "  OmniProxyCallDesc(_op, _op_len)  {}\n\n";
+	    << "(LocalCallFn lcfn, const char* op, size_t oplen) :\n";
+  IND(s); s << "  omniCallDescriptor(lcfn, op, oplen)  {}\n\n";
 
   // Declaration of methods to implement the call.
   IND(s); s << "virtual void unmarshalReturnedValues(GIOP_C&);\n";
 
   // Result accessor.
   IND(s); s << "inline ";
-  produce_decl_rd(s, I_TRUE);
-  s << " result() { return pd_result; }\n";
+  produce_decl_rd(s, o2be_global::root());
+  s << " result() { return pd_result; }\n\n";
 
-  s << "\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "private:\n";
-  INC_INDENT_LEVEL();
-
-  // Private data members - return value.
-  IND(s); produce_decl_rd(s, I_TRUE);
+  // Data members - return value.
+  IND(s); produce_decl_rd(s, o2be_global::root());
   s << " pd_result;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "};\n\n";
+  IND(s); s << "};\n\n\n";
 
 
   IND(s); s << "void " << class_name
 	      << "::unmarshalReturnedValues(GIOP_C& giop_client)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-
   {
     o2be_operation::argMapping mapping;
     o2be_operation::argType ntype =
@@ -254,7 +245,7 @@ o2be_attribute::produce_read_proxy_call_desc(std::fstream& s,
 					 mapping);
   }
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  IND(s); s << "}\n\n\n";
 }
 
 
@@ -265,33 +256,28 @@ o2be_attribute::produce_write_proxy_call_desc(std::fstream& s,
   IND(s); s << "// Proxy call descriptor class. Mangled signature:\n";
   IND(s); s << "//  " << mangled_write_signature() << '\n';
   IND(s); s << "class " << class_name << '\n';
-  IND(s); s << "  : public " << "OmniProxyCallDesc" << '\n';
+  IND(s); s << "  : public " << "omniCallDescriptor" << '\n';
   IND(s); s << "{\n";
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
 
   // Constructor.
   IND(s); s << "inline " << class_name
-	    << "(const char* _op, size_t _op_len, ";
-  produce_decl_wr(s, I_TRUE, I_TRUE);
+	    << "(LocalCallFn lcfn, const char* op, size_t oplen, ";
+  produce_decl_wr(s, o2be_global::root(), I_TRUE);
   s << " arg) :\n";
-  IND(s); s << "  OmniProxyCallDesc(_op, _op_len),\n";
+  IND(s); s << "  omniCallDescriptor(lcfn, op, oplen),\n";
   IND(s); s << "  _value(arg)  {}\n\n";
 
   // Declaration of methods to implement the call.
-  IND(s); s << "virtual CORBA::ULong alignedSize(CORBA::ULong size_in);\n";
-  IND(s); s << "virtual void marshalArguments(GIOP_C&);\n";
-
-  s << "\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "private:\n";
-  INC_INDENT_LEVEL();
+  IND(s); s << "virtual CORBA::ULong alignedSize(CORBA::ULong);\n";
+  IND(s); s << "virtual void marshalArguments(GIOP_C&);\n\n";
 
   // Private data members - argument.
-  IND(s); produce_decl_wr(s, I_TRUE, I_TRUE);
+  IND(s); produce_decl_wr(s, o2be_global::root(), I_TRUE);
   s << " _value;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "};\n\n";
+  IND(s); s << "};\n\n\n";
 
 
   IND(s); s << "CORBA::ULong " << class_name
@@ -308,7 +294,7 @@ o2be_attribute::produce_write_proxy_call_desc(std::fstream& s,
 					 "_value", ntype, mapping);
   IND(s); s << "return msgsize;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  IND(s); s << "}\n\n\n";
 
 
   IND(s); s << "void " << class_name
@@ -319,59 +305,93 @@ o2be_attribute::produce_write_proxy_call_desc(std::fstream& s,
 				     o2be_global::root(), "giop_client",
 				     "_value", ntype, mapping);
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  IND(s); s << "}\n\n\n";
 }
 
 
 void
 o2be_attribute::produce_proxy_rd_skel(std::fstream& s,
-				      o2be_interface& defined_in)
+				      o2be_interface& def_in)
 {
+  // Generate call descriptor.
   o2be_call_desc::produce_descriptor(s, *this);
   const char* call_desc_class = o2be_call_desc::read_descriptor_name(*this);
 
-  IND(s); produce_decl_rd(s, I_TRUE);
-  s << ' ' << defined_in.proxy_fqname() << "::" << uqname() << "()\n";
+  // Generate the local call call-back.
+  char* lcfn = o2be_call_desc::generate_unique_name("_0RL_lcfn_");
+  IND(s); s << "// Local call call-back function.\n";
+  IND(s); s << "static void\n";
+  IND(s); s << lcfn << "(omniCallDescriptor* cd, omniServant* svnt)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << call_desc_class << " _call_desc(\"_get_"
-	    << local_name()->get_string() << "\", "
+  IND(s); s << call_desc_class << "* tcd = (" << call_desc_class << "*) cd;\n";
+  IND(s); s << def_in.server_fqname() << "* impl = ("
+	    << def_in.server_fqname() << "*) svnt->_ptrToInterface("
+	    << def_in.fqname() << "::_PD_repoId);\n";
+  IND(s); s << "tcd->pd_result = impl->" << uqname() << "();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n\n";
+
+  // Generate the actual proxy method.
+  IND(s); produce_decl_rd(s, o2be_global::root());
+  s << ' ' << def_in.proxy_fqname() << "::" << uqname() << "()\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << call_desc_class << " _call_desc(" << lcfn
+	    << ", \"_get_" << local_name()->get_string() << "\", "
 	    << (strlen(local_name()->get_string()) + strlen("_get_") + 1)
 	    << ");\n\n";
-  IND(s); s << "OmniProxyCallWrapper::invoke(this, _call_desc);\n";
+  IND(s); s << "_invoke(_call_desc);\n";
   IND(s); s << "return _call_desc.result();\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  IND(s); s << "}\n\n\n";
 }
 
 
 void 
 o2be_attribute::produce_proxy_wr_skel(std::fstream& s,
-				      o2be_interface& defined_in)
+				      o2be_interface& def_in)
 {
+  // Generate call descriptor.
   o2be_call_desc::produce_descriptor(s, *this);
   const char* call_desc_class = o2be_call_desc::write_descriptor_name(*this);
 
-  IND(s); s << "void " << defined_in.proxy_fqname() << "::"
+  // Generate the local call call-back.
+  char* lcfn = o2be_call_desc::generate_unique_name("_0RL_lcfn_");
+  IND(s); s << "// Local call call-back function.\n";
+  IND(s); s << "static void\n";
+  IND(s); s << lcfn << "(omniCallDescriptor* cd, omniServant* svnt)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << call_desc_class << "* tcd = (" << call_desc_class << "*) cd;\n";
+  IND(s); s << def_in.server_fqname() << "* impl = ("
+	    << def_in.server_fqname() << "*) svnt->_ptrToInterface("
+	    << def_in.fqname() << "::_PD_repoId);\n";
+  IND(s); s << "impl->" << uqname() << "(tcd->_value);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n\n";
+
+  // Generate the actual proxy method.
+  IND(s); s << "void " << def_in.proxy_fqname() << "::"
 	    << uqname() << '(';
-  produce_decl_wr(s, I_TRUE, I_TRUE);
+  produce_decl_wr(s, o2be_interface::narrow_from_scope(defined_in()), I_TRUE);
   s << " _value)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << call_desc_class << " _call_desc(\"_set_"
-	    << local_name()->get_string() << "\", "
+  IND(s); s << call_desc_class << " _call_desc(" << lcfn
+	    << ", \"_set_" << local_name()->get_string() << "\", "
 	    << (strlen(local_name()->get_string()) + strlen("_set_") + 1)
 	    << ", _value);\n\n";
-  IND(s); s << "OmniProxyCallWrapper::invoke(this, _call_desc);\n";
+  IND(s); s << "_invoke(_call_desc);\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  IND(s); s << "}\n\n\n";
 }
 
 
 void
-o2be_attribute::produce_server_rd_skel(std::fstream& s,o2be_interface &defined_in)
+o2be_attribute::produce_server_rd_skel(std::fstream& s, AST_Decl* used_in)
 {
-  IND(s); s << "_0RL_s.RequestReceived();\n";
+  IND(s); s << "giop_s.RequestReceived();\n";
 
   {
     o2be_operation::argMapping mapping;
@@ -384,18 +404,22 @@ o2be_attribute::produce_server_rd_skel(std::fstream& s,o2be_interface &defined_i
       {
 	// declare a <type>_var variable to manage the pointer type
 	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this,1,mapping.is_arrayslice);
+	o2be_operation::declareVarType(s, field_type(), used_in, 1,
+				       mapping.is_arrayslice);
       }
     else 
       {
 	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this);
+	o2be_operation::declareVarType(s, field_type(), used_in);
       }
-    s << " _0RL_result = " << uqname() << "();\n";
+    s << " result = this->" << uqname() << "();\n";
   }
 
+  IND(s); s << "if( giop_s.response_expected() ) {\n";
+  INC_INDENT_LEVEL();
+
   // calculate reply message size
-  IND(s); s << "size_t _0RL_msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
+  IND(s); s << "size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
   {
     o2be_operation::argMapping mapping;
     o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
@@ -406,35 +430,38 @@ o2be_attribute::produce_server_rd_skel(std::fstream& s,o2be_interface &defined_i
       {
 	// These are declared as <type>_var variable 
 	if (ntype == o2be_operation::tString) {
-	  o2be_operation::produceSizeCalculation(s,field_type(),
-						 (AST_Decl*)&defined_in,
-						 "_0RL_s","_0RL_msgsize",
-						 "_0RL_result",ntype,mapping);
+	  o2be_operation::produceSizeCalculation(s, field_type(),
+						 used_in,
+						 "giop_s", "msgsize",
+						 "result", ntype,mapping);
 	}
 	else {
 	  // use operator->() to get to the pointer
-	  o2be_operation::produceSizeCalculation(s,field_type(),
-						 (AST_Decl*)&defined_in,
-						 "_0RL_s","_0RL_msgsize",
-						 "(_0RL_result.operator->())",
-						 ntype,mapping);
+	  o2be_operation::produceSizeCalculation(s, field_type(),
+						 used_in,
+						 "giop_s", "msgsize",
+						 "(result.operator->())",
+						 ntype, mapping);
 	}
       }
     else
       {
-	o2be_operation::produceSizeCalculation(s,field_type(),
-					       (AST_Decl*)&defined_in,
-					       "_0RL_s","_0RL_msgsize",
-					       "_0RL_result",ntype,mapping);
+	o2be_operation::produceSizeCalculation(s, field_type(),
+					       used_in,
+					       "giop_s", "msgsize",
+					       "result", ntype, mapping);
       }
   }
 
-  IND(s); s << "_0RL_s.InitialiseReply(GIOP::NO_EXCEPTION,(CORBA::ULong)_0RL_msgsize);\n";
+  IND(s); s << "giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) "
+	    "msgsize);\n";
 
   // marshall results
   {
     o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
+    o2be_operation::argType ntype =
+      o2be_operation::ast2ArgMapping(field_type(), o2be_operation::wResult,
+				     mapping);
     if ((ntype == o2be_operation::tObjref || 
 	 ntype == o2be_operation::tString ||
 	 ntype == o2be_operation::tTypeCode ||
@@ -443,44 +470,39 @@ o2be_attribute::produce_server_rd_skel(std::fstream& s,o2be_interface &defined_i
       {
 	// These are declared as <type>_var variable 
 	if (ntype == o2be_operation::tString) {
-	  o2be_operation::produceMarshalCode(s,field_type(),
-					     (AST_Decl*)&defined_in,
-					     "_0RL_s",
-					     "_0RL_result",ntype,mapping);
+	  o2be_operation::produceMarshalCode(s, field_type(),
+					     used_in,
+					     "giop_s", "result",
+					     ntype, mapping);
 	}
 	else {
 	  // use operator->() to get to the pointer
-	  o2be_operation::produceMarshalCode(s,field_type(),
-					     (AST_Decl*)&defined_in,
-					     "_0RL_s",
-					     "(_0RL_result.operator->())",
-					     ntype,mapping);
+	  o2be_operation::produceMarshalCode(s, field_type(),
+					     used_in,
+					     "giop_s",
+					     "(result.operator->())",
+					     ntype, mapping);
 	}
       }
     else
       {
-	o2be_operation::produceMarshalCode(s,field_type(),
-					   (AST_Decl*)&defined_in,
-					   "_0RL_s",
-					   "_0RL_result",ntype,mapping);
+	o2be_operation::produceMarshalCode(s, field_type(),
+					   used_in,
+					   "giop_s", "result",
+					   ntype, mapping);
       }
   }
 
-  IND(s); s << "_0RL_s.ReplyCompleted();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "giop_s.ReplyCompleted();\n";
   IND(s); s << "return 1;\n";
-  return;
 }
 
 
 void
-o2be_attribute::produce_server_wr_skel(std::fstream& s,o2be_interface &defined_in)
+o2be_attribute::produce_server_wr_skel(std::fstream& s, AST_Decl* used_in)
 {
-  IND(s); s << "if (!_0RL_response_expected) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-
   {
     // unmarshall arguments
     o2be_operation::argMapping mapping;
@@ -491,330 +513,33 @@ o2be_attribute::produce_server_wr_skel(std::fstream& s,o2be_interface &defined_i
       {
       // declare a <type>_var variable to manage the pointer type
 	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this,1);
+	o2be_operation::declareVarType(s, field_type(), used_in, 1);
       }
     else
       {
 	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this);
+	o2be_operation::declareVarType(s, field_type(), used_in);
       }
-    s << " " << "_value;\n";
-    o2be_operation::produceUnMarshalCode(s,field_type(),
-					 (AST_Decl*)&defined_in,
-					 "_0RL_s","_value",
-					 ntype,mapping);
+    s << " " << "value;\n";
+    o2be_operation::produceUnMarshalCode(s, field_type(),
+					 used_in,
+					 "giop_s", "value",
+					 ntype, mapping);
   }
 
-  IND(s); s << "_0RL_s.RequestReceived();\n";
+  IND(s); s << "giop_s.RequestReceived();\n";
+  IND(s); s << "this->" << uqname() << "(value);\n";
 
-  IND(s); s << uqname() << "(_value);\n";
-
-  IND(s); s << "size_t _0RL_msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
-
-  IND(s); s << "_0RL_s.InitialiseReply(GIOP::NO_EXCEPTION,(CORBA::ULong)_0RL_msgsize);\n";
-
-  IND(s); s << "_0RL_s.ReplyCompleted();\n";
-  IND(s); s << "return 1;\n";
-  return;
+  s << o2be_verbatim(
+   "if( giop_s.response_expected() ) {\n"
+   "  size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n"
+   "  giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);\n"
+   "}\n"
+   "giop_s.ReplyCompleted();\n"
+   "return 1;\n"
+  );
 }
 
-
-void
-o2be_attribute::produce_nil_rd_skel(std::fstream& s)
-{
-  IND(s); produce_decl_rd(s);
-  s << ' ' << uqname() << "() {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
-  s << "#ifdef NEED_DUMMY_RETURN\n";
-  IND(s); s << "// never reach here! Dummy return to keep some compilers happy.\n";
-  {
-    o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
-    if (ntype == o2be_operation::tObjref || 
-	ntype == o2be_operation::tString ||
-	ntype == o2be_operation::tTypeCode ||
-	(mapping.is_arrayslice) ||
-	(mapping.is_pointer))
-      {
-	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this,
-				       0,mapping.is_arrayslice);
-	s << 
-       ((ntype != o2be_operation::tObjref && ntype != o2be_operation::tString
-	 && ntype != o2be_operation::tTypeCode) ? " *" : "") 
-	  << " _0RL_result" << " = "
-	  << ((ntype == o2be_operation::tTypeCode) ? "CORBA::TypeCode::_nil()" : "0")
-	  << ";\n";
-      }
-    else
-      {
-	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this);
-	s << " _0RL_result";
-	switch (ntype)
-	  {
-	  case o2be_operation::tShort:
-	  case o2be_operation::tLong:
-	  case o2be_operation::tUShort:
-	  case o2be_operation::tULong:
-	  case o2be_operation::tFloat:
-	  case o2be_operation::tDouble:
-	  case o2be_operation::tBoolean:
-	  case o2be_operation::tChar:
-	  case o2be_operation::tOctet:
-	    s << " = 0;\n";
-	    break;
-	  case o2be_operation::tEnum:
-	    {
-	      s << " = ";
-	      AST_Decl *decl = field_type();
-	      while (decl->node_type() == AST_Decl::NT_typedef)
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
-					UTL_Scope::IK_decls);
-	      AST_Decl *eval = i.item();
-	      s << o2be_name::narrow_and_produce_unambiguous_name(eval,this) 
-		<< ";\n";
-	    }
-	    break;
-	  case o2be_operation::tStructFixed:
-	    s << ";\n";
-	    s << "memset((void *)&_0RL_result,0,sizeof(_0RL_result));\n";
-	    break;
-	  default:
-	    s << ";\n";
-	    break;
-	  }
-      }
-  }
-  IND(s); s << "return _0RL_result;\n";
-  s << "#endif\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-
-void
-o2be_attribute::produce_nil_wr_skel(std::fstream& s)
-{
-  IND(s); s << "void " << uqname() << '(';
-  produce_decl_wr(s);
-  s << " _value) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-
-void
-o2be_attribute::produce_lcproxy_rd_skel(std::fstream& s,
-					o2be_interface& defined_in)
-{
-  o2be_call_desc::produce_descriptor(s, *this);
-  const char* call_desc_class = o2be_call_desc::read_descriptor_name(*this);
-
-  IND(s); produce_decl_rd(s, I_TRUE);
-  s << ' ' << defined_in.lcproxy_fqname() << "::" << uqname() << "()\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << call_desc_class << " _call_desc(\"_get_"
-	    << local_name()->get_string() << "\", "
-	    << (strlen(local_name()->get_string()) + strlen("_get_") + 1)
-	    << ");\n\n";
-
-  IND(s); s << "if (!OmniLCProxyCallWrapper::invoke(this, _call_desc, "
-	    << "_get_wrap_" << defined_in._fqname() << "())) {\n";
-  INC_INDENT_LEVEL();
-  IND(s);
-  s << "return _get_wrap_" << defined_in._fqname() << "()->"
-    << uqname() << "();\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  IND(s); s << "return _call_desc.result();\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-}
-
-
-void 
-o2be_attribute::produce_lcproxy_wr_skel(std::fstream& s,
-					o2be_interface& defined_in)
-{
-  o2be_call_desc::produce_descriptor(s, *this);
-  const char* call_desc_class = o2be_call_desc::write_descriptor_name(*this);
-
-  IND(s); s << "void " << defined_in.lcproxy_fqname() << "::"
-	    << uqname() << '(';
-  produce_decl_wr(s, I_TRUE, I_TRUE);
-  s << " _value)\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << call_desc_class << " _call_desc(\"_set_"
-	    << local_name()->get_string() << "\", "
-	    << (strlen(local_name()->get_string()) + strlen("_set_") + 1)
-	    << ", _value);\n\n";
-  IND(s); s << "if (!OmniLCProxyCallWrapper::invoke(this, _call_desc, "
-	    << "_get_wrap_" << defined_in._fqname() << "())) {\n";
-  INC_INDENT_LEVEL();
-  IND(s);
-  s << "_get_wrap_" << defined_in._fqname() << "()->"
-    << uqname() << "(_value);\n";
-  IND(s); s << "return;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-}
-
-
-void
-o2be_attribute::produce_dead_rd_skel(std::fstream& s)
-{
-  IND(s); produce_decl_rd(s, I_TRUE);
-  s << ' ' << uqname() << "()\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);\n";
-  s << "#ifdef NEED_DUMMY_RETURN\n";
-  IND(s); s << "// never reach here! Dummy return to keep some compilers happy.\n";
-  {
-    o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
-    if (ntype == o2be_operation::tObjref || 
-	ntype == o2be_operation::tString ||
-	ntype == o2be_operation::tTypeCode ||
-	(mapping.is_arrayslice) ||
-	(mapping.is_pointer))
-      {
-	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this,
-				       0,mapping.is_arrayslice);
-
-	s << 
-	 ((ntype != o2be_operation::tObjref && ntype != o2be_operation::tString
-	   && ntype != o2be_operation::tTypeCode)?" *":"") 
-	  << " _0RL_result" << " = "
-	  << ((ntype == o2be_operation::tTypeCode) ? "CORBA::TypeCode::_nil()" : "0")
-	  << ";\n";
-      }
-    else
-      {
-	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this);
-	s << " _0RL_result";
-	switch (ntype)
-	  {
-	  case o2be_operation::tShort:
-	  case o2be_operation::tLong:
-	  case o2be_operation::tUShort:
-	  case o2be_operation::tULong:
-	  case o2be_operation::tFloat:
-	  case o2be_operation::tDouble:
-	  case o2be_operation::tBoolean:
-	  case o2be_operation::tChar:
-	  case o2be_operation::tOctet:
-	    s << " = 0;\n";
-	    break;
-	  case o2be_operation::tEnum:
-	    {
-	      s << " = ";
-	      AST_Decl *decl = field_type();
-	      while (decl->node_type() == AST_Decl::NT_typedef)
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
-					UTL_Scope::IK_decls);
-	      AST_Decl *eval = i.item();
-	      s << o2be_name::narrow_and_produce_unambiguous_name(eval,this) 
-		<< ";\n";
-	    }
-	    break;
-	  case o2be_operation::tStructFixed:
-	    s << ";\n";
-	    s << "memset((void *)&_0RL_result,0,sizeof(_0RL_result));\n";
-	    break;
-	  default:
-	    s << ";\n";
-	    break;
-	  }
-      }
-  }
-  IND(s); s << "return _0RL_result;\n";
-  s << "#endif\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-
-void
-o2be_attribute::produce_dead_wr_skel(std::fstream& s)
-{
-  IND(s); s << "void " << uqname() << '(';
-  produce_decl_wr(s, I_TRUE);
-  s << " _value) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-
-void
-o2be_attribute::produce_home_rd_skel(std::fstream& s,
-				     o2be_interface &defined_in)
-{
-  IND(s); produce_decl_rd(s, I_TRUE);
-  s << ' ' << uqname() << "() {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return _actual_" << defined_in._fqname() << "->"
-	    << uqname() << "();\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-
-void
-o2be_attribute::produce_home_wr_skel(std::fstream& s, o2be_interface &defined_in)
-{
-  IND(s); s << "void " << uqname() << '(';
-  produce_decl_wr(s, I_TRUE);
-  s << " _value) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "_actual_" << defined_in._fqname() << "->"
-	    << uqname() << "(_value);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-
-void
-o2be_attribute::produce_wrapproxy_rd_skel(std::fstream& s,
-					  o2be_interface &defined_in)
-{
-  IND(s); produce_decl_rd(s, I_TRUE);
-  s << ' ' << uqname() << "() {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return _actual_" << defined_in._fqname() << "->"
-	    << uqname() << "();\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-
-void
-o2be_attribute::produce_wrapproxy_wr_skel(std::fstream& s,
-					  o2be_interface &defined_in)
-{
-  IND(s); s << "void " << uqname() << '(';
-  produce_decl_wr(s, I_TRUE);
-  s << " _value) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "_actual_" << defined_in._fqname() << "->"
-	    << uqname() << "(_value);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
 
 void
 o2be_attribute::produce_decls_at_global_scope_in_hdr(std::fstream& s)
@@ -822,11 +547,13 @@ o2be_attribute::produce_decls_at_global_scope_in_hdr(std::fstream& s)
   o2be_operation::check_and_produce_unnamed_argument_tc_decl(s,field_type());
 }
 
+
 void
 o2be_attribute::produce_dynskel(std::fstream& s)
 {
   o2be_operation::check_and_produce_unnamed_argument_tc_value(s,field_type());
 }
+
 
 const char*
 o2be_attribute::mangled_read_signature()

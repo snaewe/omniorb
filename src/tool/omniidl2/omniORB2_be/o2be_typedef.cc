@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.14.6.1  1999/09/24 10:05:31  djr
+  Updated for omniORB3.
+
   Revision 1.14  1999/08/04 10:14:14  sll
   Emit the right field member type name for CORBA::Object. Previously a
   template instanceof ObjRef_member is emitted.
@@ -96,48 +99,15 @@ o2be_typedef::o2be_typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
 {
   pd_have_produced_typecode_skel = I_FALSE;
 
-  AST_Decl *decl = base_type();
-
-  while (decl->node_type() == AST_Decl::NT_typedef) {
-    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-  }
-
-  switch (decl->node_type())
-    {
-    case AST_Decl::NT_interface:
-      if (strcmp(o2be_name::narrow_and_produce_uqname(decl),"CORBA::Object") == 0) {
-	pd_fm_uqname = (char *)o2be_interface::narrow_from_decl(decl)->
-	                  fieldMemberType_uqname();
-      }
-      else {
-	pd_fm_uqname = new char[strlen(OBJREF_MEMBER_TEMPLATE_NAME)+
-			       strlen(uqname()) +
-			       strlen(uqname()) + strlen("_Helper") + 4];
-	strcpy(pd_fm_uqname,OBJREF_MEMBER_TEMPLATE_NAME);
-	strcat(pd_fm_uqname,"<");
-	strcat(pd_fm_uqname,uqname());
-	strcat(pd_fm_uqname,",");
-	strcat(pd_fm_uqname,uqname());
-	strcat(pd_fm_uqname,"_Helper");
-	strcat(pd_fm_uqname,">");
-      }
-      break;
-    case AST_Decl::NT_string:
-      pd_fm_uqname = new char[strlen(STRING_MEMBER_NAME)+1];
-      strcpy(pd_fm_uqname,STRING_MEMBER_NAME);
-      break;
-    default:
-      pd_fm_uqname = uqname();
-      break;
-    }
+  // Initialise it when it is needed...
+  pd_fm_uqname = 0;
 }
 
 
 void
-o2be_typedef::produce_hdr(std::fstream &s)
+o2be_typedef::produce_hdr(std::fstream& s)
 {
   AST_Decl *decl = base_type();
-  const char *tname = o2be_name::narrow_and_produce_fqname(decl);
 
   while (decl->node_type() == AST_Decl::NT_typedef) {
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
@@ -183,6 +153,24 @@ o2be_typedef::produce_hdr(std::fstream &s)
     default:
       throw o2be_internal_error(__FILE__,__LINE__,"Unexpected argument type");
     }
+}
+
+
+void
+o2be_typedef::produce_poa_hdr(std::fstream& s)
+{
+  AST_Decl *decl = base_type();
+
+  while( decl->node_type() == AST_Decl::NT_typedef )
+    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+  switch( decl->node_type() ) {
+  case AST_Decl::NT_interface:
+    o2be_interface::narrow_from_decl(decl)->produce_typedef_poa_hdr(s, this);
+    break;
+  default:
+    break;
+  }
 }
 
 
@@ -318,6 +306,34 @@ o2be_typedef::produce_typecode_skel(std::fstream &s)
   s << ");\n\n";
 }
 
+
+const char*
+o2be_typedef::fieldMemberType_uqname()
+{
+  if( !pd_fm_uqname ) {
+    AST_Decl* decl = base_type();
+    while( decl->node_type() == AST_Decl::NT_typedef )
+      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+    switch( decl->node_type() ) {
+    case AST_Decl::NT_interface:
+      pd_fm_uqname = (char*) o2be_interface::narrow_from_decl(decl)->
+	fieldMemberType_uqname();
+      break;
+    case AST_Decl::NT_string:
+      pd_fm_uqname = new char[strlen(STRING_MEMBER_NAME)+1];
+      strcpy(pd_fm_uqname,STRING_MEMBER_NAME);
+      break;
+    default:
+      pd_fm_uqname = uqname();
+      break;
+    }
+  }
+
+  return pd_fm_uqname;
+}
+
+
 const char*
 o2be_typedef::fieldMemberType_fqname(AST_Decl* used_in)
 {
@@ -331,46 +347,35 @@ o2be_typedef::fieldMemberType_fqname(AST_Decl* used_in)
     ubname = unambiguous_name(used_in);
   }
 
-  AST_Decl *decl = base_type();
-  while (decl->node_type() == AST_Decl::NT_typedef) {
+  AST_Decl* decl = base_type();
+  while( decl->node_type() == AST_Decl::NT_typedef )
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-  }
-  switch (decl->node_type())
+
+  switch( decl->node_type() ) {
+  case AST_Decl::NT_interface:
     {
-    case AST_Decl::NT_interface:
-      if (strcmp(o2be_name::narrow_and_produce_uqname(decl),"CORBA::Object") == 0) {
-	result = (char *)o2be_interface::narrow_from_decl(decl)->
-	                             fieldMemberType_fqname(used_in);
-      }
-      else {
-	result = new char[strlen(OBJREF_MEMBER_TEMPLATE_NAME)+
-			       strlen(ubname) +
-			       strlen(ubname) + strlen("_Helper") + 4];
-	strcpy(result,OBJREF_MEMBER_TEMPLATE_NAME);
-	strcat(result,"<");
-	strcat(result,ubname);
-	strcat(result,",");
-	strcat(result,ubname);
-	strcat(result,"_Helper");
-	strcat(result,">");
-      }
-      break;
-    case AST_Decl::NT_string:
-      result = new char[strlen(STRING_MEMBER_NAME)+1];
-      strcpy(result,STRING_MEMBER_NAME);
-      break;
-    case AST_Decl::NT_pre_defined:
-      if(o2be_predefined_type::narrow_from_decl(decl)->pt() == 
-	 AST_PredefinedType::PT_TypeCode)
-	{
-	  result = new char[strlen(TYPECODE_MEMBER_NAME)+1];
-	  strcpy(result,TYPECODE_MEMBER_NAME);
-	  break;
-	}      
-    default:
-      result = (char*) ubname;
-      break;
+      const char* tmp = o2be_interface::narrow_from_decl(decl)->
+	fieldMemberType_fqname(used_in);
+      result = new char[strlen(tmp) + 1];
+      strcpy(result, tmp);
     }
+    break;
+  case AST_Decl::NT_string:
+    result = new char[strlen(STRING_MEMBER_NAME)+1];
+    strcpy(result,STRING_MEMBER_NAME);
+    break;
+  case AST_Decl::NT_pre_defined:
+    if(o2be_predefined_type::narrow_from_decl(decl)->pt() == 
+       AST_PredefinedType::PT_TypeCode)
+      {
+	result = new char[strlen(TYPECODE_MEMBER_NAME)+1];
+	strcpy(result,TYPECODE_MEMBER_NAME);
+	break;
+      }      
+  default:
+    result = (char*) ubname;
+    break;
+  }
   return result;
 }
 

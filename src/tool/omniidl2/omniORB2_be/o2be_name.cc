@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.17.6.1  1999/09/24 10:05:26  djr
+  Updated for omniORB3.
+
   Revision 1.17  1999/06/18 20:47:00  sll
   Updated to replace _LC_attr with _core_attr and _dyn_attr.
 
@@ -80,8 +83,10 @@
 #pragma hdrstop
 #endif
 
+#include <o2be_util.h>
+
+
 static char* internal_produce_scope_name(UTL_ScopedName* n,char* separator);
-static char* internal_check_name_for_reserved_words(char* p);
 static char* internal_produce_repositoryID(AST_Decl* decl,o2be_name* n);
 static UTL_String* internal_search_pragma(AST_Decl* decl,char* p);
 
@@ -91,7 +96,7 @@ o2be_name::o2be_name(AST_Decl::NodeType t,UTL_ScopedName* n, UTL_StrList* up)
 {
   pd_scopename = internal_produce_scope_name(name(),"::");
   pd__scopename = internal_produce_scope_name(name(),"_");
-  pd_uqname = internal_check_name_for_reserved_words(local_name()
+  pd_uqname = check_name_for_reserved_words(local_name()
 						     ->get_string());
   char *p = new char [strlen(pd_scopename)+strlen(pd_uqname)+1];
   strcpy(p,pd_scopename);
@@ -473,9 +478,10 @@ internal_search_pragma(AST_Decl* decl,char* p)
 }
 
 
+#if 0
 static
 char*
-internal_produce_scope_name(UTL_ScopedName *n,char *separator)
+internal_produce_scope_name(UTL_ScopedName* n, char* separator)
 {
 #define DEFAULT_FQN_SIZE 128
   int  nsep = (separator == NULL) ? 0 : strlen(separator);
@@ -493,7 +499,7 @@ internal_produce_scope_name(UTL_ScopedName *n,char *separator)
   id = iter.item();
   while (!iter.is_done() && id != last)
     {
-      q = internal_check_name_for_reserved_words(id->get_string());
+      q = check_name_for_reserved_words(id->get_string());
       if (strlen(q) != 0)
 	{
 	  n_used += strlen(q) + nsep;
@@ -516,54 +522,33 @@ internal_produce_scope_name(UTL_ScopedName *n,char *separator)
     }
   return p;
 }
-
-
-// reserved words are the keywords of C++ minus the keywords of CORBA IDL.
-static char *reserved_words[] = {
-  "and", "and_eq", "asm", "auto", 
-  "bool", "bitand", "bitor", "break", 
-  "catch",  "class", "compl", "const_cast", "continue",
-  "delete", "do", "dynamic_cast",
-  "else", "explicit", "export", "extern",
-  "false", "for", "friend", 
-  "goto", "if", "inline", "int", 
-  "mutable", 
-  "namespace", "new", "not", "not_eq",
-  "operator", "or", "or_eq",
-  "private", "protected", "public",
-  "register", "reinterpret_cast", "return",
-  "signed", "sizeof", "static", "static_cast",
-  "template", "this", "throw", "true", "try", "typeid", "typename",
-  "using", 
-  "virtual", "volatile", "wchar_t", "while",
-  "xor", "xor_eq",
-  NULL
-};
-
-char*
-internal_check_name_for_reserved_words(char *keyw)
+#else
+static char*
+internal_produce_scope_name(UTL_ScopedName* n, char* separator)
 {
-  char **rp = reserved_words;
+  StringBuf result;
+  UTL_ScopedNameActiveIterator iter(n);
+  Identifier* last = n->last_component();
+  Identifier* id = iter.item();
 
-  while (*rp != NULL)
-    {
-      if (!strcmp(*rp,keyw))
-	{
-	  // This is a reserved word, prefix it by '_'
-	  char *str = new char[strlen(keyw)+6];
-	  if (idl_global->compile_flags() & IDL_BE_2_1_COMPATIBLE) {
-	    strcpy(str,"_");
-	  }
-	  else {
-	    strcpy(str,"_cxx_");
-	  }
-	  strcat(str,keyw);
-	  return str;
-	}
-      rp++;
+  while( !iter.is_done() && id != last ) {
+
+    char* q = o2be_name::check_name_for_reserved_words(id->get_string());
+
+    if( strlen(q) != 0 ) {
+      result += q;
+      result += separator;
+      if( q != id->get_string() )
+	delete[] q;
     }
-  return keyw;
+
+    iter.next();
+    id = iter.item();
+  }
+
+  return result.release();
 }
+#endif
 
 
 char*
@@ -1169,7 +1154,56 @@ o2be_name::produce_typecode_member(AST_Decl *decl, std::fstream& s)
       throw o2be_internal_error(__FILE__,__LINE__,
 				"Unrecognised argument type");
     }
-}  
+}
+
+
+// reserved words are the keywords of C++ minus the keywords of CORBA IDL.
+static char *reserved_words[] = {
+  "and", "and_eq", "asm", "auto", 
+  "bool", "bitand", "bitor", "break", 
+  "catch",  "class", "compl", "const_cast", "continue",
+  "delete", "do", "dynamic_cast",
+  "else", "explicit", "export", "extern",
+  "false", "for", "friend", 
+  "goto", "if", "inline", "int", 
+  "mutable", 
+  "namespace", "new", "not", "not_eq",
+  "operator", "or", "or_eq",
+  "private", "protected", "public",
+  "register", "reinterpret_cast", "return",
+  "signed", "sizeof", "static", "static_cast",
+  "template", "this", "throw", "true", "try", "typeid", "typename",
+  "using", 
+  "virtual", "volatile", "wchar_t", "while",
+  "xor", "xor_eq",
+  NULL
+};
+
+
+char*
+o2be_name::check_name_for_reserved_words(char* keyw)
+{
+  char** rp = reserved_words;
+
+  while (*rp != NULL)
+    {
+      if (!strcmp(*rp,keyw))
+	{
+	  // This is a reserved word, prefix it by '_'
+	  char *str = new char[strlen(keyw)+6];
+	  if (idl_global->compile_flags() & IDL_BE_2_1_COMPATIBLE) {
+	    strcpy(str,"_");
+	  }
+	  else {
+	    strcpy(str,"_cxx_");
+	  }
+	  strcat(str,keyw);
+	  return str;
+	}
+      rp++;
+    }
+  return keyw;
+}
 
 
 char const* o2be_name::variable_qualifier() {

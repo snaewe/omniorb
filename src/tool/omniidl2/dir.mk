@@ -41,7 +41,7 @@ all::
 export::
 	@(target=all; $(MakeSubdirs))
 
-prog = $(patsubst %,$(BinPattern),omniidl2)
+prog = $(patsubst %,$(BinPattern),omniidl3)
 
 all:: $(prog)
 

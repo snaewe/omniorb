@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.17.6.1  1999/09/24 10:05:30  djr
+  Updated for omniORB3.
+
   Revision 1.17  1999/08/09 12:28:10  sll
   Updated how _out name is generated
 
@@ -82,11 +85,12 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
-#include <o2be_stringbuf.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
+
+#include <o2be_util.h>
 
 o2be_structure::o2be_structure(UTL_ScopedName *n, UTL_StrList *p)
 	    : AST_Decl(AST_Decl::NT_struct, n, p),
@@ -240,7 +244,7 @@ o2be_structure::produce_hdr(std::fstream &s)
   }
 
   IND(s); s << "\n";
-  IND(s); s << "size_t NP_alignedSize(size_t initialoffset) const;\n";
+  IND(s); s << "size_t _NP_alignedSize(size_t initialoffset) const;\n";
   IND(s); s << "void operator>>= (NetBufferedStream &) const;\n";
   IND(s); s << "void operator<<= (NetBufferedStream &);\n";
   IND(s); s << "void operator>>= (MemBufferedStream &) const;\n";
@@ -278,7 +282,7 @@ o2be_structure::produce_skel(std::fstream &s)
   o2be_nested_typedef::produce_skel(s,this);
 
   IND(s); s << "size_t\n";
-  IND(s); s << fqname() << "::NP_alignedSize(size_t _initialoffset) const\n";
+  IND(s); s << fqname() << "::_NP_alignedSize(size_t _initialoffset) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong _msgsize = _initialoffset;\n";
@@ -735,9 +739,11 @@ o2be_structure::produce_binary_operators_in_dynskel(std::fstream &s)
 
 
 void
-o2be_structure::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
+o2be_structure::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
 {
-  char* tname = o2be_name::narrow_and_produce_unambiguous_name(tdef->base_type(),tdef);
+  char* tname = o2be_name::narrow_and_produce_unambiguous_name(
+					       tdef->base_type(), tdef);
+
   IND(s); s << "typedef " << tname
 	    << " " << tdef->uqname() << ";\n";
   IND(s); s << "typedef " << tname

@@ -25,8 +25,8 @@
 
 /*
   $Log$
-  Revision 1.19  1999/09/14 16:57:30  djr
-  Fixed bug - exception constructor does not duplicate object reference arg.
+  Revision 1.19.6.1  1999/09/24 10:05:24  djr
+  Updated for omniORB3.
 
   Revision 1.18  1999/07/19 09:49:32  djr
   Put back prefix Exception/UserException onto type id of exceptions.
@@ -94,7 +94,7 @@
 #pragma hdrstop
 #endif
 
-#define IRREPOID_POSTFIX          "_IntfRepoID"
+#include <o2be_util.h>
 
 
 o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
@@ -103,19 +103,15 @@ o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
     UTL_Scope(AST_Decl::NT_except),
     o2be_name(AST_Decl::NT_except,n,p)
 {
-  pd_repoid = new char[strlen(_fqname())+strlen(IRREPOID_POSTFIX)+1];
-  strcpy(pd_repoid,_fqname());
-  strcat(pd_repoid,IRREPOID_POSTFIX);
-  pd_repoidsize = strlen(repositoryID())+1;
+  pd_n_members = -1;
 }
 
 
 void
 o2be_exception::produce_hdr(std::fstream &s)
 {
-  s << "#define " << repoIdConstName() <<" \""<< repositoryID() << "\"\n\n";
   IND(s); s << "class " << uqname() << " : public CORBA::UserException {\n";
-  IND(s); s << "public:\n\n";
+  IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
 
   o2be_nested_typedef::produce_hdr(s,this);
@@ -133,7 +129,9 @@ o2be_exception::produce_hdr(std::fstream &s)
       while (tdecl->node_type() == AST_Decl::NT_typedef)
 	tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 
+      const char* field_name = o2be_field::narrow_from_decl(d)->uqname();
       IND(s);
+
       switch( tdecl->node_type() ) {
       case AST_Decl::NT_string:
 	{
@@ -142,18 +140,14 @@ o2be_exception::produce_hdr(std::fstream &s)
 	  else
 	    s << o2be_typedef::narrow_from_decl(decl)
 	      ->fieldMemberType_fqname(this);
-	  s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	  s <<" "<< field_name << ";\n";
 	  break;
 	}
       case AST_Decl::NT_interface:
 	{
-	  if (decl->node_type() == AST_Decl::NT_interface)
-	    s << o2be_interface::narrow_from_decl(decl)
-	      ->fieldMemberType_fqname(this);
-	  else
-	    s << o2be_typedef::narrow_from_decl(decl)
-	      ->fieldMemberType_fqname(this);
-	  s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	  s << o2be_interface::narrow_from_decl(tdecl)
+	    ->fieldMemberType_fqname(this)
+	    << " " << field_name << ";\n";
 	  break;
 	}
       case AST_Decl::NT_pre_defined:
@@ -167,7 +161,7 @@ o2be_exception::produce_hdr(std::fstream &s)
 	    {
 	      s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
 	    }		    
-	  s << " " << o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	  s << " " << field_name << ";\n";
 	  break;
 	}
       case AST_Decl::NT_array:
@@ -176,7 +170,7 @@ o2be_exception::produce_hdr(std::fstream &s)
 	    // Check if this is an anonymous array type, if so
 	    // generate the supporting typedef.
 	    if (decl->has_ancestor(this)) {
-	      char* fname = o2be_field::narrow_from_decl(d)->uqname();
+	      const char* fname = field_name;
 	      char * tmpname = new char [strlen(fname) + 2];
 	      strcpy(tmpname,"_");
 	      strcat(tmpname,fname);
@@ -186,7 +180,7 @@ o2be_exception::produce_hdr(std::fstream &s)
 	  }
 	  else {
 	    s << o2be_typedef::narrow_from_decl(decl)->unambiguous_name(this);
-	    s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	    s <<" "<< field_name << ";\n";
 	  }
 	  break;
 	}
@@ -195,30 +189,33 @@ o2be_exception::produce_hdr(std::fstream &s)
 	  if (decl->node_type() == AST_Decl::NT_sequence) {
 	    s << o2be_sequence::narrow_from_decl(decl)->seq_template_name(this)
 	      << " "
-	      << o2be_field::narrow_from_decl(d)->uqname()
+	      << field_name
 	      << ";\n";
 	  }
 	  else {
 	    s << o2be_typedef::narrow_from_decl(decl)->unambiguous_name(this);
-	    s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	    s <<" "<< field_name << ";\n";
 	  }
 	  break;
 	}
       default:
 	s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
-	  << " " << o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	  << " " << field_name << ";\n";
       }
     }
   }
 
-  IND(s); s << "\n";
-  IND(s); s << uqname() << "() {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "pd_insertToAnyFn    = insertToAnyFn;\n";
-  IND(s); s << "pd_insertToAnyFnNCP = insertToAnyFnNCP;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  IND(s); s << uqname() << "(const " << uqname() << " &);\n";
+  SimpleStringMap map;
+  map.insert("foo", uqname());
+
+  s << o2be_template(map,
+   "\n"
+   "inline foo() {\n"
+   "  pd_insertToAnyFn    = insertToAnyFn;\n"
+   "  pd_insertToAnyFnNCP = insertToAnyFnNCP;\n"
+   "}\n"
+   "foo(const foo&);\n"
+  );
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
     idl_bool first = I_TRUE;
@@ -285,60 +282,82 @@ o2be_exception::produce_hdr(std::fstream &s)
 	  << ((mapping.is_reference)  ? "&":"");
 	break;
       }
-      s << " _" << o2be_field::narrow_from_decl(d)->uqname();
+      s << " i_" << o2be_field::narrow_from_decl(d)->uqname();
       s << ((!i.is_done()) ? ", " : "");
     }
     if (!first) {
       s << ");\n";
     };
   }
-  IND(s); s << uqname() << " & operator=(const " << uqname() << " &);\n";
-  IND(s); s << "virtual ~" << uqname() << "();\n";
-  IND(s); s << "virtual void _raise();\n";
-  IND(s); s << "static " << uqname()
-	    << "* _downcast(CORBA::Exception* e);\n";
-  IND(s); s << "static const " << uqname()
-	    << "* _downcast(const CORBA::Exception* e);\n";
-  IND(s); s << "static " << uqname()
-	    << "* _narrow(CORBA::Exception* e);\n";
-  IND(s); s << "// NOTE: deprecated function from CORBA 2.2. Should use _downcast instead.\n";
-  IND(s); s << "size_t NP_alignedSize(size_t initialoffset) const;\n";
-  IND(s); s << "void operator>>= (NetBufferedStream &) const;\n";
-  IND(s); s << "void operator<<= (NetBufferedStream &);\n";
-  IND(s); s << "void operator>>= (MemBufferedStream &) const;\n";
-  IND(s); s << "void operator<<= (MemBufferedStream &);\n";
-  IND(s); s << "static _core_attr CORBA::Exception::insertExceptionToAny    insertToAnyFn;\n";
-  IND(s); s << "static _core_attr CORBA::Exception::insertExceptionToAnyNCP insertToAnyFnNCP;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "private:\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "virtual CORBA::Exception* _NP_duplicate() const;\n";
-  IND(s); s << "virtual const char* _NP_mostDerivedTypeId() const;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "};\n\n";
+  s << o2be_template(map,
+   "  foo& operator=(const foo&);\n"
+   "  virtual ~foo();\n"
+   "  virtual void _raise();\n"
+   "  static foo* _downcast(CORBA::Exception*);\n"
+   "  static const foo* _downcast(const CORBA::Exception*);\n"
+   "  static inline foo* _narrow(CORBA::Exception* e) {\n"
+   "    return _downcast(e);\n"
+   "  }\n\n"
+  );
+
+  if( n_members() )
+    s << o2be_verbatim(
+      "  size_t _NP_alignedSize(size_t) const;\n"
+      "  void operator>>=(NetBufferedStream&) const;\n"
+      "  void operator>>=(MemBufferedStream&) const;\n"
+      "  void operator<<=(NetBufferedStream&);\n"
+      "  void operator<<=(MemBufferedStream&);\n\n");
+  else
+    s << o2be_verbatim(
+      "  inline void operator>>=(NetBufferedStream&) const {}\n"
+      "  inline void operator>>=(MemBufferedStream&) const {}\n"
+      "  inline void operator<<=(NetBufferedStream&) {}\n"
+      "  inline void operator<<=(MemBufferedStream&) {}\n\n");
+
+  s << o2be_verbatim(
+   "  static _core_attr insertExceptionToAny    insertToAnyFn;\n"
+   "  static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;\n\n"
+
+   "  static const char* _PD_repoId;\n\n"
+
+   "private:\n"
+   "  virtual CORBA::Exception* _NP_duplicate() const;\n"
+   "  virtual const char* _NP_typeId() const;\n"
+   "  virtual const char* _NP_repoId(int*) const;\n"
+   "  virtual void _NP_marshal(NetBufferedStream&) const;\n"
+   "  virtual void _NP_marshal(MemBufferedStream&) const;\n"
+   "};\n\n\n"
+  );
+
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
     IND(s); s << variable_qualifier()
-	      << " _dyn_attr const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+	      << " _dyn_attr const CORBA::TypeCode_ptr "
+	      << tcname() << ";\n\n";
   }
 }
 
 
 void
-o2be_exception::produce_skel(std::fstream &s)
+o2be_exception::produce_skel(std::fstream& s)
 {
   o2be_nested_typedef::produce_skel(s,this);
 
-  IND(s); s << "CORBA::Exception::insertExceptionToAny "
-	    << fqname() << "::insertToAnyFn = 0;\n";
-  IND(s); s << "CORBA::Exception::insertExceptionToAnyNCP "
-	    << fqname() << "::insertToAnyFnNCP = 0;\n\n";
+  SimpleStringMap map;
+  map.insert("fqfoo", fqname());
+  map.insert("foo", uqname());
+  map.insert("_fqfoo", _fqname());
+  map.insert("repoid", repositoryID());
 
+  s << o2be_template(map,
+   "CORBA::Exception::insertExceptionToAny fqfoo::insertToAnyFn = 0;\n"
+   "CORBA::Exception::insertExceptionToAnyNCP fqfoo::insertToAnyFnNCP = 0;\n\n"
 
-  IND(s); s << fqname() << "::" << uqname()
-	    << "(const " << fqname() << " &_s) : CORBA::UserException(_s) \n";
-  IND(s); s << "{\n";
+   "fqfoo::foo(const fqfoo& _s) : CORBA::UserException(_s)\n"
+   "{\n"
+  );
   INC_INDENT_LEVEL();
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
@@ -573,11 +592,12 @@ o2be_exception::produce_skel(std::fstream &s)
     }
   }
 
-  IND(s); s << fqname() << " & " << fqname() 
-	    << "::operator=(const " << fqname() << "& _s)\n";
-  IND(s); s << "{\n";
+  s << o2be_template(map,
+   "fqfoo& fqfoo::operator=(const fqfoo& _s)\n"
+   "{\n"
+   "  ((CORBA::UserException*) this)->operator=(_s);\n"
+  );
   INC_INDENT_LEVEL();
-  IND(s); s << "((CORBA::UserException*)this)->operator=(_s);\n";
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
     while (!i.is_done())
@@ -648,79 +668,71 @@ o2be_exception::produce_skel(std::fstream &s)
 	  }
       }
   }
-  IND(s); s << "return *this;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  s << o2be_template(map,
+   "  return *this;\n"
+   "}\n\n"
 
-  IND(s); s << fqname() << "::~" << uqname() << "() {}\n\n";
+   "fqfoo::~foo() {}\n\n"
 
-  IND(s); s << "void " << fqname() << "::_raise() { throw *this; }\n\n";
+   "void fqfoo::_raise() { throw *this; }\n\n"
 
-  IND(s); s << fqname() << "* " << fqname() 
-	    << "::_downcast(CORBA::Exception* e) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return ("
-	    << fqname()
-	    << "*)_NP_is_a(e,\"Exception/UserException/"
-	    << _fqname()
-	    << "\");\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+   "fqfoo* fqfoo::_downcast(CORBA::Exception* e) {\n"
+   "  return (foo*) _NP_is_a(e, \"Exception/UserException/fqfoo\");\n"
+   "}\n\n"
 
-  IND(s); s << "const " << fqname() << "* "
-	    << fqname() << "::_downcast(const CORBA::Exception* e) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return (const "
-	    << fqname()
-	    << "*)_NP_is_a(e,\"Exception/UserException/"
-	    << _fqname()
-	    << "\");\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+   "const fqfoo* fqfoo::_downcast(const CORBA::Exception* e) {\n"
+   "  return (const foo*) _NP_is_a(e, \"Exception/UserException/fqfoo\");\n"
+   "}\n\n"
 
-  IND(s); s << fqname() << "* " << fqname() 
-	    << "::_narrow(CORBA::Exception* e) { return _downcast(e); }\n";
-  IND(s); s << "// NOTE: deprecated function from CORBA 2.2. Should use _downcast instead.\n\n";
-  IND(s); s << "CORBA::Exception* " << fqname() << "::_NP_duplicate() const {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return new "
-	    << fqname()
-	    << "(*this);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+   "const char* fqfoo::_PD_repoId = \"repoid\";\n\n"
 
-  IND(s); s << "const char* " << fqname() << "::_NP_mostDerivedTypeId() const {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return \"Exception/UserException/" << _fqname() << "\";\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
+   "CORBA::Exception* fqfoo::_NP_duplicate() const {\n"
+   "  return new foo(*this);\n"
+   "}\n\n"
 
-  IND(s); s << "size_t\n";
-  IND(s); s << fqname() << "::NP_alignedSize(size_t _initialoffset) const\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "size_t _msgsize = _initialoffset;\n";
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )  continue;
+   "const char* fqfoo::_NP_typeId() const {\n"
+   "  return \"Exception/UserException/fqfoo\";\n"
+   "}\n\n"
 
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     AST_Field::narrow_from_decl(d)->field_type(),
-		     o2be_operation::wIN,mapping);
+   "const char* fqfoo::_NP_repoId(int* _size) const {\n"
+   "  *_size = sizeof(\"repoid\");\n"
+   "  return \"repoid\";\n"
+   "}\n\n"
 
-	if (ntype == o2be_operation::tTypeCode) {
-	  ntype = o2be_operation::tTypeCodeMember;
-	  mapping.is_pointer = I_FALSE;
-	}	      
+   "void fqfoo::_NP_marshal(NetBufferedStream& _s) const {\n"
+   "  *this >>= _s;\n"
+   "}\n\n"
 
-	o2be_operation::produceSizeCalculation(
-                     s,
+   "void fqfoo::_NP_marshal(MemBufferedStream& _s) const {\n"
+   "  *this >>= _s;\n"
+   "}\n\n"
+  );
+
+  if( n_members() ) {
+    IND(s); s << "size_t\n";
+    IND(s); s << fqname() << "::_NP_alignedSize(size_t _msgsize) const\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    {
+      UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl* d = i.item();
+	  i.next();
+	  if( d->node_type() != AST_Decl::NT_field )  continue;
+
+	  o2be_operation::argMapping mapping;
+	  o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
+				 AST_Field::narrow_from_decl(d)->field_type(),
+				 o2be_operation::wIN,mapping);
+
+	  if (ntype == o2be_operation::tTypeCode) {
+	    ntype = o2be_operation::tTypeCodeMember;
+	    mapping.is_pointer = I_FALSE;
+	  }
+
+	  o2be_operation::produceSizeCalculation(s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     ScopeAsDecl(defined_in()),
 		     "",
@@ -728,35 +740,35 @@ o2be_exception::produce_skel(std::fstream &s)
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
 		     mapping);
-      }
-  }
-  IND(s); s << "return _msgsize;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+	}
+    }
+    IND(s); s << "return _msgsize;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
 
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator>>= (NetBufferedStream &_n) const\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )  continue;
+    IND(s); s << "void\n";
+    IND(s); s << fqname() << "::operator>>= (NetBufferedStream& _n) const\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    {
+      UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl* d = i.item();
+	  i.next();
+	  if( d->node_type() != AST_Decl::NT_field )  continue;
 
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
+	  o2be_operation::argMapping mapping;
+	  o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     o2be_operation::wIN,mapping);
 
-	if (ntype == o2be_operation::tTypeCode) {
-	  ntype = o2be_operation::tTypeCodeMember;
-	  mapping.is_pointer = I_FALSE;
-	}	      
+	  if (ntype == o2be_operation::tTypeCode) {
+	    ntype = o2be_operation::tTypeCodeMember;
+	    mapping.is_pointer = I_FALSE;
+	  }	      
 
-	o2be_operation::produceMarshalCode(
+	  o2be_operation::produceMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     ScopeAsDecl(defined_in()),
@@ -764,34 +776,34 @@ o2be_exception::produce_skel(std::fstream &s)
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
 		     mapping);
-      }
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
 
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator<<= (NetBufferedStream &_n)\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )  continue;
+    IND(s); s << "void\n";
+    IND(s); s << fqname() << "::operator<<= (NetBufferedStream& _n)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    {
+      UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  i.next();
+	  if( d->node_type() != AST_Decl::NT_field )  continue;
 
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
+	  o2be_operation::argMapping mapping;
+	  o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     o2be_operation::wIN,mapping);
 
-	if (ntype == o2be_operation::tTypeCode) {
-	  ntype = o2be_operation::tTypeCodeMember;
-	  mapping.is_pointer = I_FALSE;
-	}	      
+	  if (ntype == o2be_operation::tTypeCode) {
+	    ntype = o2be_operation::tTypeCodeMember;
+	    mapping.is_pointer = I_FALSE;
+	  }	      
 
-	o2be_operation::produceUnMarshalCode(
+	  o2be_operation::produceUnMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     ScopeAsDecl(defined_in()),
@@ -799,34 +811,34 @@ o2be_exception::produce_skel(std::fstream &s)
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
 		     mapping);
-      }
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
 
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator>>= (MemBufferedStream &_n) const\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )  continue;
+    IND(s); s << "void\n";
+    IND(s); s << fqname() << "::operator>>= (MemBufferedStream& _n) const\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    {
+      UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  i.next();
+	  if( d->node_type() != AST_Decl::NT_field )  continue;
 
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
+	  o2be_operation::argMapping mapping;
+	  o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     o2be_operation::wIN,mapping);
 
-	if (ntype == o2be_operation::tTypeCode) {
-	  ntype = o2be_operation::tTypeCodeMember;
-	  mapping.is_pointer = I_FALSE;
-	}	      
+	  if (ntype == o2be_operation::tTypeCode) {
+	    ntype = o2be_operation::tTypeCodeMember;
+	    mapping.is_pointer = I_FALSE;
+	  }	      
 
-	o2be_operation::produceMarshalCode(
+	  o2be_operation::produceMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     ScopeAsDecl(defined_in()),
@@ -834,34 +846,34 @@ o2be_exception::produce_skel(std::fstream &s)
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
 		     mapping);
-      }
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
 
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator<<= (MemBufferedStream &_n)\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )  continue;
+    IND(s); s << "void\n";
+    IND(s); s << fqname() << "::operator<<= (MemBufferedStream& _n)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    {
+      UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  i.next();
+	  if( d->node_type() != AST_Decl::NT_field )  continue;
 
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
+	  o2be_operation::argMapping mapping;
+	  o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     o2be_operation::wIN,mapping);
 
-	if (ntype == o2be_operation::tTypeCode) {
-	  ntype = o2be_operation::tTypeCodeMember;
-	  mapping.is_pointer = I_FALSE;
-	}	      
+	  if (ntype == o2be_operation::tTypeCode) {
+	    ntype = o2be_operation::tTypeCodeMember;
+	    mapping.is_pointer = I_FALSE;
+	  }	      
 
-	o2be_operation::produceUnMarshalCode(
+	  o2be_operation::produceUnMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
 		     ScopeAsDecl(defined_in()),
@@ -870,10 +882,11 @@ o2be_exception::produce_skel(std::fstream &s)
 		     ntype,
 		     mapping,
 		     I_TRUE);
-      }
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n\n";
   }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
 }
 
 
@@ -1215,6 +1228,23 @@ o2be_exception::produce_decls_at_global_scope_in_hdr(std::fstream& s)
       }
     }
   }
+}
+
+
+int
+o2be_exception::n_members()
+{
+  if( pd_n_members < 0 ) {
+    pd_n_members = 0;
+    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+    while( !i.is_done() ) {
+      if( i.item()->node_type() == AST_Decl::NT_field )
+	pd_n_members++;
+      i.next();
+    }
+  }
+
+  return pd_n_members;
 }
 
 

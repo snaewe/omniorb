@@ -28,9 +28,8 @@
 
 /*
   $Log$
-  Revision 1.34  1999/09/15 10:30:01  djr
-  produce_invoke() did not pass ctxt argument if operation had no
-  other arguments.
+  Revision 1.34.6.1  1999/09/24 10:05:27  djr
+  Updated for omniORB3.
 
   Revision 1.33  1999/08/20 11:39:10  djr
   Removed debug output (left in by mistake!).
@@ -123,7 +122,7 @@
 #pragma hdrstop
 #endif
 
-#include <o2be_stringbuf.h>
+#include <o2be_util.h>
 
 
 o2be_operation::o2be_operation(AST_Type* rt, AST_Operation::Flags fl,
@@ -144,13 +143,14 @@ o2be_operation::o2be_operation(AST_Type* rt, AST_Operation::Flags fl,
   }
 
   pd_mangled_signature = 0;
+  pd_id_sorted_exn_list = 0;
+  pd_n_exceptions = -1;
 }
 
 
 void
-o2be_operation::produce_decl(std::fstream &s, const char* prefix,
-			     const char* alias_prefix, idl_bool/* ignored */,
-			     idl_bool use_fully_qualified_names)
+o2be_operation::produce_decl(std::fstream& s, AST_Decl* used_in,
+			     const char* prefix, const char* alias_prefix)
 {
   // return type
   if (!return_is_void())
@@ -158,44 +158,142 @@ o2be_operation::produce_decl(std::fstream &s, const char* prefix,
       argMapping mapping;
       argType    ntype;
 
-      ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      ntype = ast2ArgMapping(return_type(), wResult, mapping);
 
       if (ntype == tObjref) {
 	AST_Decl* decl = return_type();
-	while (decl->node_type() == AST_Decl::NT_typedef) {
+	while (decl->node_type() == AST_Decl::NT_typedef)
 	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	}
 	s << o2be_interface::narrow_from_decl(decl)
-	  ->unambiguous_objref_name(this, use_fully_qualified_names);
+	  ->unambiguous_objref_name(used_in);
       }
       else if (ntype == tString) {
 	s << "char*";
       }
       else if (ntype == tTypeCode) {
 	AST_Decl* decl = return_type();
-	while (decl->node_type() == AST_Decl::NT_typedef) {
+	while (decl->node_type() == AST_Decl::NT_typedef)
 	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	}
-	s << o2be_name::narrow_and_produce_unambiguous_name(decl,
-						    this,
-						    use_fully_qualified_names);
+	s << o2be_name::narrow_and_produce_unambiguous_name(decl, used_in);
       }
       else {
 	s << o2be_name::narrow_and_produce_unambiguous_name(return_type(),
-						    this,
-						    use_fully_qualified_names);
+							    used_in);
       }
-      s << ((mapping.is_arrayslice) ? "_slice":"")
-	<< " "
-	<< ((mapping.is_pointer)    ? "*":"")
-	<< ((mapping.is_reference)  ? "&":"");
+      s << (mapping.is_arrayslice ? "_slice":"")
+	<< (mapping.is_pointer    ? "*":"")
+	<< (mapping.is_reference  ? "&":"")
+	<< " ";
     }
   else
-    {
-      s << "void";
-    }
+    s << "void ";
+
   // function name
-  s << " ";
+  if (prefix)
+    s << prefix << "::";
+  s << ((alias_prefix)? alias_prefix : "");
+  s << uqname() << "(";
+
+  // argument list
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while( !i.is_done() ) {
+      argMapping mapping;
+      argType    ntype;
+
+      o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+
+      switch( a->direction() ) {
+      case AST_Argument::dir_IN:
+        ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
+        break;
+      case AST_Argument::dir_OUT:
+        ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+        break;
+      case AST_Argument::dir_INOUT:
+        ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
+        break;
+      }
+      s << ((mapping.is_const) ? "const ":"");
+      if (ntype == tObjref) {
+        AST_Decl* decl = a->field_type();
+        while (decl->node_type() == AST_Decl::NT_typedef)
+          decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+        s << o2be_interface::narrow_from_decl(decl)
+          ->unambiguous_objref_name(used_in);
+      }
+      else if (ntype == tString) {
+        s << "char*";
+      }
+      else if (ntype == tTypeCode) {
+        AST_Decl *decl = a->field_type();
+        while (decl->node_type() == AST_Decl::NT_typedef)
+          decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+        s << o2be_name::narrow_and_produce_unambiguous_name(decl, used_in);
+      }
+      else {
+        s << o2be_name::narrow_and_produce_unambiguous_name(a->field_type(),
+							    used_in);
+      }
+      s << (mapping.is_arrayslice ? "_slice":"")
+        << (mapping.is_pointer    ? "*":"")
+        << (mapping.is_reference  ? "&":"")
+        << " " << a->uqname();
+      i.next();
+      s << ((!i.is_done()) ? ", " : (context()?", ":""));
+    }
+  }
+
+  if( context() )  s << "CORBA::Context_ptr _ctxt";
+
+  s << ")";
+}
+
+
+void
+o2be_operation::produce_client_decl(std::fstream& s, AST_Decl* used_in,
+			    const char* prefix, const char* alias_prefix)
+{
+  o2be_interface* intf = o2be_interface::narrow_from_scope(defined_in());
+  o2be_module* my_scope = o2be_module::narrow_from_scope(intf->defined_in());
+
+  // return type
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType    ntype;
+
+      ntype = ast2ArgMapping(return_type(), wResult, mapping);
+
+      if (ntype == tObjref) {
+	AST_Decl* decl = return_type();
+	while (decl->node_type() == AST_Decl::NT_typedef)
+	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	s << o2be_interface::narrow_from_decl(decl)
+	  ->unambiguous_objref_name(used_in);
+      }
+      else if (ntype == tString) {
+	s << "char*";
+      }
+      else if (ntype == tTypeCode) {
+	AST_Decl* decl = return_type();
+	while (decl->node_type() == AST_Decl::NT_typedef)
+	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	s << o2be_name::narrow_and_produce_unambiguous_name(decl, used_in);
+      }
+      else {
+	s << o2be_name::narrow_and_produce_unambiguous_name(return_type(),
+							    used_in);
+      }
+      s << (mapping.is_arrayslice ? "_slice":"")
+	<< (mapping.is_pointer    ? "*":"")
+	<< (mapping.is_reference  ? "&":"")
+	<< " ";
+    }
+  else
+    s << "void ";
+
+  // function name
   if (prefix)
     s << prefix << "::";
   s << ((alias_prefix)? alias_prefix : "");
@@ -204,72 +302,187 @@ o2be_operation::produce_decl(std::fstream &s, const char* prefix,
   // argument list
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	argMapping mapping;
-	argType    ntype;
+    while( !i.is_done() ) {
+      argMapping mapping;
+      argType    ntype;
+      idl_bool   outvar = I_FALSE;
+      idl_bool   inoutptr = I_FALSE;
 
-	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
-	switch(a->direction())
-	  {
-	  case AST_Argument::dir_IN:
-	    ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
-	    break;
-	  case AST_Argument::dir_OUT:
-	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-	    break;
-	  case AST_Argument::dir_INOUT:
-	    ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	    break;
-	  }
+      o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+
+      switch( a->direction() ) {
+      case AST_Argument::dir_IN:
+	ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
+	break;
+      case AST_Argument::dir_INOUT:
+	ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
+	switch(ntype) {
+	case tObjref:
+	case tString:
+	case tTypeCode:
+	  inoutptr = I_TRUE;
+	  break;
+	default:
+	  break;
+	}
+	break;
+      case AST_Argument::dir_OUT:
+	ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	switch(ntype) {
+	case tObjref:
+	case tStructVariable:
+	case tUnionVariable:
+	case tString:
+	case tSequence:
+	case tArrayVariable:
+	case tAny:
+	case tTypeCode:
+	  outvar = I_TRUE;
+	  break;
+	default:
+	  break;
+	}
+	break;
+      }
+
+      if( !outvar && !inoutptr ) {
 	s << ((mapping.is_const) ? "const ":"");
 	if (ntype == tObjref) {
 	  AST_Decl* decl = a->field_type();
-	  while (decl->node_type() == AST_Decl::NT_typedef) {
+	  while (decl->node_type() == AST_Decl::NT_typedef)
 	    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	  }
 	  s << o2be_interface::narrow_from_decl(decl)
-	    ->unambiguous_objref_name(this, use_fully_qualified_names);
+	    ->unambiguous_objref_name(my_scope);
 	}
 	else if (ntype == tString) {
 	  s << "char*";
 	}
 	else if (ntype == tTypeCode) {
 	  AST_Decl *decl = a->field_type();
-	  while (decl->node_type() == AST_Decl::NT_typedef) {
+	  while (decl->node_type() == AST_Decl::NT_typedef)
 	    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	  }
-	  s << o2be_name::narrow_and_produce_unambiguous_name(decl, this,
-					      use_fully_qualified_names);
+	  s << o2be_name::narrow_and_produce_unambiguous_name(decl, my_scope);
 	}
 	else {
 	  s << o2be_name::narrow_and_produce_unambiguous_name(a->field_type(),
-					      this, use_fully_qualified_names);
+							      my_scope);
 	}
-	s << ((mapping.is_arrayslice) ? "_slice":"")
-	  << " "
-	  << ((mapping.is_pointer)    ? "*":"")
-	  << ((mapping.is_reference)  ? "&":"");
-	s << " " << a->uqname();
-	i.next();
-	s << ((!i.is_done()) ? ", " : (context()?",":""));
+	s << (mapping.is_arrayslice ? "_slice":"")
+	  << (mapping.is_pointer    ? "*":"")
+	  << (mapping.is_reference  ? "&":"")
+	  << " " << a->uqname();
       }
-  }
-
-  // context
-  {
-    if (context()) 
-    {
-      s << "CORBA::Context_ptr ctxt";
+      else
+	{
+	  switch( ntype ) {
+	  case tObjref:
+	    {
+	      AST_Decl *decl = a->field_type();
+	      while (decl->node_type() == AST_Decl::NT_typedef) {
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	      }
+	      o2be_interface* intf = o2be_interface::narrow_from_decl(decl);
+	      if (a->direction() == AST_Argument::dir_INOUT) {
+		s << intf->inout_adptarg_name(my_scope);
+	      }
+	      else {
+		s << intf->out_adptarg_name(my_scope);
+	      }
+	      break;
+	    }
+	  case tString:
+	    {
+	      if (a->direction() == AST_Argument::dir_INOUT) {
+		s << "CORBA::String_INOUT_arg";
+	      }
+	      else {
+		s << "CORBA::String_out";
+	      }
+	      break;
+	    }
+	  case tAny:
+	    {
+	      if (a->direction() == AST_Argument::dir_OUT) {
+		s << "CORBA::Any_OUT_arg";
+	      }
+	      break;
+	    }
+	  case tTypeCode:
+	    {
+	      if (a->direction() == AST_Argument::dir_INOUT) {
+		s << "CORBA::TypeCode_INOUT_arg";
+	      }
+	      else {
+		s << "CORBA::TypeCode_OUT_arg";
+	      }
+	      break;
+	    }
+	  case tStructVariable:
+	    {
+	      AST_Decl *decl = a->field_type();
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	      o2be_structure* p = o2be_structure::narrow_from_decl(decl);
+	      if (a->direction() == AST_Argument::dir_OUT)
+		s << p->out_adptarg_name(my_scope);
+	      break;
+	    }
+	  case tUnionVariable:
+	    {
+	      AST_Decl *decl = a->field_type();
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	      o2be_union* p = o2be_union::narrow_from_decl(decl);
+	      if (a->direction() == AST_Argument::dir_OUT)
+		s << p->out_adptarg_name(my_scope);
+	      break;
+	    }
+	  case tSequence:
+	    {
+	      AST_Decl *decl = a->field_type();
+	      if (decl->node_type() != AST_Decl::NT_typedef)
+		throw o2be_internal_error(__FILE__,__LINE__,
+					  "Typedef expected");
+	      o2be_typedef* tp = o2be_typedef::narrow_from_decl(decl);
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	      o2be_sequence* p = o2be_sequence::narrow_from_decl(decl);
+	      if (a->direction() == AST_Argument::dir_OUT)
+		s << p->out_adptarg_name(tp, my_scope);
+	      break;
+	    }
+	  case tArrayVariable:
+	    {
+	      AST_Decl* decl = a->field_type();
+	      if (decl->node_type() != AST_Decl::NT_typedef)
+		throw o2be_internal_error(__FILE__,__LINE__,
+					  "Typedef expected");
+	      o2be_typedef* tp = o2be_typedef::narrow_from_decl(decl);
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	      o2be_array* p = o2be_array::narrow_from_decl(decl);
+	      if (a->direction() == AST_Argument::dir_OUT)
+		s << p->out_adptarg_name(tp, my_scope);
+	      break;
+	    }
+	  default:
+	    break;
+	  }
+	  s << " " << a->uqname();
+	}
+      i.next();
+      s << ((!i.is_done()) ? ", " : (context()?", ":""));
     }
   }
+
+  if( context() )  s << "CORBA::Context_ptr _ctxt";
 
   s << ")";
 }
 
 
 void
-o2be_operation::produce_invoke(std::fstream &s)
+o2be_operation::produce_invoke(std::fstream& s, const char* arg_prefix)
 {
   s << uqname() << '(';
 
@@ -278,12 +491,63 @@ o2be_operation::produce_invoke(std::fstream &s)
 
   while( !i.is_done() ) {
     o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
-    s << (first ? "":", ") << a->uqname();
+    if( !first )  s << ", ";
+    s << arg_prefix << a->uqname();
     first = 0;
     i.next();
   }
 
-  if( context() )   s << (first ? "ctxt" : ", ctxt");
+  if( context() )   s << (first ? "_ctxt" : ", _ctxt");
+  s << ')';
+}
+
+
+void
+o2be_operation::produce_invoke_using_vars(std::fstream& s,
+					  const char* arg_prefix)
+{
+  s << uqname() << '(';
+
+  UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+  int first = 1;
+
+  while( !i.is_done() ) {
+    o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+    if( !first )  s << ", ";
+    s << arg_prefix << a->uqname();
+
+    const char* t = "";
+    argMapping mapping;
+    argType ntype;
+
+    switch(a->direction()) {
+    case AST_Argument::dir_IN:
+      ntype = ast2ArgMapping(a->field_type(), wIN, mapping);
+      if( ntype == tObjref || ntype == tString || ntype == tTypeCode )
+	t = ".in()";
+      break;
+
+    case AST_Argument::dir_OUT:
+      ntype = ast2ArgMapping(a->field_type(), wOUT, mapping);
+      if( ntype == tObjref || ntype == tString || ntype == tTypeCode ||
+	  (mapping.is_arrayslice) ||
+	  (mapping.is_reference && mapping.is_pointer) )
+	t = ".out()";
+      break;
+
+    case AST_Argument::dir_INOUT:
+      ntype = ast2ArgMapping(a->field_type(), wINOUT, mapping);
+      if( ntype == tObjref || ntype == tString || ntype == tTypeCode )
+	t = ".inout()";
+      break;
+    }
+    s << t;
+
+    first = 0;
+    i.next();
+  }
+
+  if( context() )   s << (first ? "_ctxt" : ", _ctxt");
   s << ')';
 }
 
@@ -391,22 +655,9 @@ o2be_operation::produce_return_decl(std::fstream& s, AST_Decl* used_in,
 
 
 void
-o2be_operation::produce_proxy_call_desc(std::fstream& s,
-					const char* class_name)
+o2be_operation::produce_call_desc(std::fstream& s, const char* class_name)
 {
-  const char* call_desc_base_class;
-  if (!context()) {
-    if( flags() == AST_Operation::OP_oneway )
-      call_desc_base_class = "OmniOWProxyCallDesc";
-    else
-      call_desc_base_class = "OmniProxyCallDesc";
-  }
-  else {
-    if( flags() == AST_Operation::OP_oneway )
-      call_desc_base_class = "OmniOWProxyCallDescWithContext";
-    else
-      call_desc_base_class = "OmniProxyCallDescWithContext";
-  }
+  const char* call_desc_base_class = "omniCallDescriptor";
 
   IND(s); s << "// Proxy call descriptor class. Mangled signature:\n";
   IND(s); s << "//  " << mangled_signature() << '\n';
@@ -416,31 +667,35 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
 
-  unsigned num_arguments = 0;
-
   // Constructor.
-  IND(s); s << "inline " << class_name << "(const char* _op, size_t _op_len";
+  IND(s); s << "inline " << class_name << "(LocalCallFn lcfn, const char* op,"
+	    " size_t oplen, _CORBA_Boolean oneway";
   {
+    int arg_num = 0;
+    char arg_name[20];
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+
     while( !i.is_done() ) {
-      num_arguments++;
+      sprintf(arg_name, "%d", arg_num++);
       o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
       s << ", ";
-      produce_arg_decl(s, a, o2be_global::root(), a->uqname(), "_a_");
+      produce_arg_decl(s, a, o2be_global::root(), arg_name, "a_");
       i.next();
     }
   }
   s << ") :\n";
   INC_INDENT_LEVEL();
-  IND(s); s << call_desc_base_class << "(_op, _op_len";
-  if( no_user_exception() )  s << ")";
-  else                       s << ", 1)";
+  IND(s); s << call_desc_base_class << "(lcfn, op, oplen, oneway)";
   {
+    int arg_num = 0;
+    char arg_name[20];
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+
     while( !i.is_done() ) {
+      sprintf(arg_name, "%d", arg_num++);
       o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
       s << ",\n";
-      IND(s); s << "arg_" << a->uqname() << "(_a_" << a->uqname() << ")";
+      IND(s); s << "arg_" << arg_name << "(a_" << arg_name << ")";
       i.next();
     }
   }
@@ -458,26 +713,25 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
   if( !no_user_exception() ) {
     IND(s); s << "virtual void userException(GIOP_C&, const char*);\n";
   }
+  s << '\n';
 
   // Result accessor.
   if( !return_is_void() ) {
     IND(s); s << "inline ";
     produce_return_decl(s, o2be_global::root(), 0);
-    s << " result() { return pd_result; }\n";
+    s << " result() { return pd_result; }\n\n";
   }
 
-  s << "\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "private:\n";
-  INC_INDENT_LEVEL();
-
-  // Private data members - to store the arguments and return value.
+  // Data members - to store the arguments and return value.
   {
+    int arg_num = 0;
+    char arg_name[20];
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+
     while( !i.is_done() ) {
+      sprintf(arg_name, "%d", arg_num++);
       o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
-      IND(s);
-      produce_arg_decl(s, a, o2be_global::root(), a->uqname(), "arg_");
+      IND(s);  produce_arg_decl(s, a, o2be_global::root(), arg_name, "arg_");
       s << ";\n";
       i.next();
     }
@@ -488,7 +742,7 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
     s << ";\n";
   }
   DEC_INDENT_LEVEL();
-  IND(s); s << "};\n\n";
+  IND(s); s << "};\n\n\n";
 
   if( has_any_in_args() || has_any_inout_args() ) {
     // Method to calculate the size of the arguments.
@@ -498,40 +752,40 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
     IND(s); s << "{\n";
     INC_INDENT_LEVEL();
     {
+      int arg_num = 0;
+      char arg_name[20];
       UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+
       while( !i.is_done() ) {
 	argMapping mapping;
 	argType ntype;
 
+	sprintf(arg_name, "arg_%d", arg_num++);
 	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
-	char* argname = new char[1 + strlen(a->uqname()) + 4];
-	strcpy(argname, "arg_");
-	strcat(argname, a->uqname());
 
 	switch( a->direction() ) {
 	case AST_Argument::dir_IN:
 	  ntype = ast2ArgMapping(a->field_type(), wIN, mapping);
 	  produceSizeCalculation(s, a->field_type(), o2be_global::root(),
 				 "giop_client", "msgsize",
-				 argname, ntype, mapping);
+				 arg_name, ntype, mapping);
 	  break;
 	case AST_Argument::dir_INOUT:
 	  ntype = ast2ArgMapping(a->field_type(), wINOUT, mapping);
 	  produceSizeCalculation(s, a->field_type(), o2be_global::root(),
 				 "giop_client", "msgsize",
-				 argname, ntype, mapping);
+				 arg_name, ntype, mapping);
 	  break;
 	case AST_Argument::dir_OUT:
 	  break;
 	}
 
-	delete[] argname;
 	i.next();
       }
     }
     IND(s); s << "return msgsize;\n";
     DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
+    IND(s); s << "}\n\n\n";
 
     // Method to marshal the arguments onto the stream.
     IND(s); s << "void " << class_name
@@ -539,39 +793,39 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
     IND(s); s << "{\n";
     INC_INDENT_LEVEL();
     {
+      int arg_num = 0;
+      char arg_name[20];
       UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+
       while( !i.is_done() ) {
 	argMapping mapping;
 	argType ntype;
 
+	sprintf(arg_name, "arg_%d", arg_num++);
 	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
-	char* argname = new char[1 + strlen(a->uqname()) + 4];
-	strcpy(argname, "arg_");
-	strcat(argname, a->uqname());
 
 	switch( a->direction() ) {
 	case AST_Argument::dir_IN:
 	  ntype = ast2ArgMapping(a->field_type(), wIN, mapping);
 	  produceMarshalCode(s, a->field_type(),
 			     o2be_global::root(), "giop_client",
-			     argname, ntype, mapping);
+			     arg_name, ntype, mapping);
 	  break;
 	case AST_Argument::dir_INOUT:
 	  ntype = ast2ArgMapping(a->field_type(), wINOUT, mapping);
 	  produceMarshalCode(s, a->field_type(),
 			     o2be_global::root(), "giop_client",
-			     argname, ntype, mapping);
+			     arg_name, ntype, mapping);
 	  break;
 	case AST_Argument::dir_OUT:
 	  break;
 	}
 
-	delete[] argname;
 	i.next();
       }
     }
     DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
+    IND(s); s << "}\n\n\n";
   }
 
 
@@ -589,12 +843,15 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
     // if unmarshalling fails at any point we will recover the
     // memory.
     {
+      int arg_num = 0;
+      char arg_name[20];
       UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
 
       while( !i.is_done() ) {
 	argMapping mapping;
 	argType ntype;
 
+	sprintf(arg_name, "tmp_%d", arg_num++);
 	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
 	i.next();
 	if( a->direction() != AST_Argument::dir_OUT)  continue;
@@ -603,7 +860,7 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 	if( mapping.is_arrayslice ) {
 	  IND(s);
 	  declareVarType(s, a->field_type(), o2be_global::root(), 0, I_TRUE);
-	  s << "* _arg_" << a->uqname() << " = ";
+	  s << "* " << arg_name << " = ";
 	  AST_Decl* truetype = a->field_type();
 	  while( truetype->node_type() == AST_Decl::NT_typedef )
 	    truetype = o2be_typedef::narrow_from_decl(truetype)->base_type();
@@ -613,15 +870,16 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 	else if( mapping.is_reference && mapping.is_pointer ) {
 	  IND(s);
 	  declareVarType(s, a->field_type(), o2be_global::root());
-	  s << "* _arg_" << a->uqname() << " = new ";
+	  s << "* " << arg_name << " = new ";
 	  declareVarType(s, a->field_type(), o2be_global::root());
 	  s << ";\n";
 	}
 	else if( ntype == tObjref || ntype == tString || ntype == tTypeCode ) {
 	  IND(s);
 	  declareVarType(s, a->field_type(), o2be_global::root());
-	  s << " _arg_" << a->uqname() << " = ";
-	  //?? Shouldn't we be doing something similar for obj refs?
+	  s << " " << arg_name << " = ";
+	  //?? Why is this different from obj refs?  Why are we
+	  // initialising objrefs to 0 rather than _nil?
 	  if( ntype == tTypeCode )  s << "CORBA::TypeCode::_nil()";
 	  else                      s << "0";
 	  s << ";\n";
@@ -659,18 +917,18 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 
     // Unmarshal inout/out arguments.
     {
+      int arg_num = 0;
+      char argname[20];
+      char _argname[20];
       UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+
       while (!i.is_done()) {
 	argMapping mapping;
 	argType ntype;
 
+	sprintf(argname, "arg_%d", arg_num);
+	sprintf(_argname, "tmp_%d", arg_num++);
 	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
-	char* argname = new char[strlen(a->uqname()) + 5];
-	strcpy(argname, "arg_");
-	strcat(argname, a->uqname());
-	char* _argname = new char[strlen(argname) + 2];
-	strcpy(_argname, "_");
-	strcat(_argname, argname);
 
 	//?? I am not convinced that all memory & references will be
 	// properly cleaned up if we get exceptions at various points
@@ -761,19 +1019,21 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 	  break;
 	}
 
-	delete[] argname;
-	delete[] _argname;
 	i.next();
       }
     }
 
     // Hand over control of the allocated memory to the arguments.
     {
+      int arg_num = 0;
+      char arg_name[20];
       UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+
       while( !i.is_done() ) {
 	argMapping mapping;
 	argType ntype;
 
+	sprintf(arg_name, "%d", arg_num++);
 	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
 	i.next();
 	if( a->direction() != AST_Argument::dir_OUT ) continue;
@@ -782,14 +1042,13 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 	if( ntype == tObjref || ntype == tString ||
 	    ntype == tTypeCode  || (mapping.is_arrayslice) ||
 	    (mapping.is_reference && mapping.is_pointer) ) {
-	  IND(s); s << "arg_" << a->uqname() << " = _arg_"
-		    << a->uqname() << ";\n";
+	  IND(s); s << "arg_" << arg_name << " = tmp_" << arg_name << ";\n";
 	}
       }
     }
 
     DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
+    IND(s); s << "}\n\n\n";
   }
 
 
@@ -807,9 +1066,8 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
       while( !i.is_done() ) {
 	o2be_exception* ex = o2be_exception::narrow_from_decl(i.item());
 	IND(s); s << (first ? "if" : "else if")
-		  << "( strcmp(repoId, "
-		  << ex->repoIdConstName()
-		  << ") == 0 ) {\n";
+		  << "( strcmp(repoId, " << ex->fqname()
+		  << "::_PD_repoId) == 0 ) {\n";
 	INC_INDENT_LEVEL();
 	IND(s); s << ex->fqname() << " _ex;\n";
 	argType ntype = tStructVariable;
@@ -832,7 +1090,7 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
     IND(s); s << "}\n";
 
     DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
+    IND(s); s << "}\n\n\n";
   }
 }
 
@@ -841,34 +1099,79 @@ void
 o2be_operation::produce_proxy_skel(std::fstream& s, o2be_interface& def_in,
 				   const char* alias_prefix)
 {
+  ////////////////////////////
+  // Generate call descriptor.
+  ////////////////////////////
   o2be_call_desc::produce_descriptor(s, *this);
   const char* call_desc_class = o2be_call_desc::descriptor_name(*this);
 
+  ///////////////////////////////////////////////////
+  // Generate a list of the context strings expected.
+  ///////////////////////////////////////////////////
+  //?? We should reuse this if it comes up again.
   char* ctxt_un = 0;
   int   ctxt_len = 0;
   if (context()) {
     ctxt_un = o2be_call_desc::generate_unique_name("_0RL_ctx_");
-    IND(s); s << "static const char* " << ctxt_un << "[] = {\n";
+    IND(s); s << "static const char*const " << ctxt_un << "[] = {\n";
     ctxt_len = 0;
     UTL_StrlistActiveIterator iter(context());
 
     while (!iter.is_done()) {
       String* p = iter.item();
-      IND(s); s  << "\"" << p->get_string() << "\",\n";
+      IND(s); s << "  \"" << p->get_string() << "\",\n";
       ctxt_len++;
       iter.next();
     }
-    IND(s); s << " 0 };\n\n";
+    IND(s); s << "  0\n";
+    IND(s); s << "};\n\n";
   }
 
-  IND(s); produce_decl(s, def_in.proxy_fqname(), alias_prefix,
-		       I_FALSE, I_TRUE);
+  /////////////////////////////////////
+  // Generate the local call call-back.
+  /////////////////////////////////////
+  char* lcfn = o2be_call_desc::generate_unique_name("_0RL_lcfn_");
+  IND(s); s << "// Local call call-back function.\n";
+  IND(s); s << "static void\n";
+  IND(s); s << lcfn << "(omniCallDescriptor* cd, omniServant* svnt)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << call_desc_class << "* tcd = (" << call_desc_class << "*) cd;\n";
+  IND(s); s << def_in.server_fqname() << "* impl = ("
+	    << def_in.server_fqname() << "*) svnt->_ptrToInterface("
+	    << def_in.fqname() << "::_PD_repoId);\n";
+  IND(s);
+  if( !return_is_void() )  s << "tcd->pd_result = ";
+  s << "impl->" << uqname() << "(";
+  int arg_num = 0;
+  {
+    char arg_name[20];
+    o2be_iterator<o2be_argument, AST_Decl::NT_argument> i(this);
+
+    while( !i.is_done() ) {
+      sprintf(arg_name, "arg_%d", arg_num++);
+      s << (arg_num==1 ? "tcd->" : ", tcd->") << arg_name;
+      i.next();
+    }
+  }
+  if( context() )
+    s << (arg_num==0 ? "":", ") << "cd->context_info()->context";
+  s << ");\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n\n";
+
+  ////////////////////////////////////
+  // Generate the actual proxy method.
+  ////////////////////////////////////
+  IND(s); produce_client_decl(s, o2be_global::root(),
+			      def_in.proxy_fqname(), alias_prefix);
   s << "\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << call_desc_class << " _call_desc(\""
+  IND(s); s << call_desc_class << " _call_desc(" << lcfn << ", \""
 	    << local_name()->get_string() << "\", "
-	    << (strlen(local_name()->get_string()) + 1);
+	    << (strlen(local_name()->get_string()) + 1) << ", "
+	    << (flags() == AST_Operation::OP_oneway ? "1/*oneway*/":"0");
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
     while( !i.is_done() ) {
@@ -877,61 +1180,69 @@ o2be_operation::produce_proxy_skel(std::fstream& s, o2be_interface& def_in,
       i.next();
     }
   }
-  s << ");\n\n";
-
+  s << ");\n";
   if (context()) {
-    IND(s); s << "_call_desc.set_context(ctxt,"
-      <<                                 ctxt_un  << ","
-      <<                                 ctxt_len << ");\n\n";
+    IND(s); s << "omniCallDescriptor::ContextInfo _ctxt_info(_ctxt, "
+	      << ctxt_un << ", " << ctxt_len << ");\n";
+    IND(s); s << "_call_desc.set_context_info(&_ctxt_info);\n";
   }
-
-  if( flags() == AST_Operation::OP_oneway ) {
-    IND(s); s << "OmniProxyCallWrapper::one_way(this, _call_desc);\n";
-  } else {
-    IND(s); s << "OmniProxyCallWrapper::invoke(this, _call_desc);\n";
-  }
+  s << '\n';
+  IND(s); s << "_invoke(_call_desc);\n";
   if( !return_is_void() ) {
     IND(s); s << "return _call_desc.result();\n";
   }
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  IND(s); s << "}\n\n\n";
 }
 
 
 void
-o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
+o2be_operation::produce_server_skel(std::fstream& s, AST_Decl* defined_in)
 {
-  if (flags() == AST_Operation::OP_oneway) {
-    IND(s); s << "if (_0RL_response_expected) {\n";
+  // NB. It is legal for the client to ask for no response from a
+  // normal operation -- we should just dump the result of the upcall.
+  //  It is also legal to ask for a reply from a oneway call. Simply
+  // reply as if the call returned void.
+
+  if( !no_user_exception() ) {
+    // Tell the GIOP_S about any user-defined exceptions this may throw.
+    o2be_exception** ex_list = id_sorted_exn_list();
+    int ex_list_len = n_exceptions();
+
+    //?? We should share this list between any other ops
+    // which share it.  Either only within this interface
+    // (so we can localise it to this dispatch routine), or
+    // put at global scope and share between all ops in this
+    // translation unit.
+    IND(s); s << "static const char*const _user_exns[] = {\n";
     INC_INDENT_LEVEL();
-    IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
+    for( int i = 0; i < ex_list_len; i++ ) {
+      IND(s); s << "\"" << ex_list[i]->repositoryID() << "\"";
+      if( i < ex_list_len - 1 )  s << ",\n";
+      else                       s << '\n';
+    }
     DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
+    IND(s); s << "};\n";
+    IND(s); s << "giop_s.set_user_exceptions(_user_exns, "
+	      << n_exceptions() << ");\n";
   }
-  // Even if this is request reply, the caller may send a GIOP request
-  // message with no responds specified in the header. Therefore the
-  // stub code should not throw an exception.
-  // XXX In fact, this end should just dump the result from the upcall.
-  //     This is not done at the moment.
-#if 0
-  else {
-    IND(s); s << "if (!_0RL_response_expected) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-  }
-#endif
+
+  ///////////////////////
+  // unmarshall arguments
+  ///////////////////////
   {
-    // unmarshall arguments
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
     while (!i.is_done())
       {
 	argMapping mapping;
 	argType ntype;
 
-	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+	StringBuf aname;
+	aname += "arg_";
+	aname += a->uqname();
 	IND(s);
+
 	switch(a->direction())
 	  {
 	  case AST_Argument::dir_IN:
@@ -939,16 +1250,14 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 	      ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
 	      if (ntype == tObjref || ntype == tString || ntype == tTypeCode)
 		// declare a <type>_var variable to manage the pointer type
-		declareVarType(s,a->field_type(),this,1);
+		declareVarType(s, a->field_type(), defined_in, 1);
 	      else
-		declareVarType(s,a->field_type(),this);
-	      s << " " << a->uqname();
+		declareVarType(s, a->field_type(), defined_in);
+	      s << " " << aname.c_str();
 	      s << ";\n";
 
-	      produceUnMarshalCode(s,a->field_type(),
-				   (AST_Decl*)&def_in,
-				   "_0RL_s",a->uqname(),
-				   ntype,mapping);
+	      produceUnMarshalCode(s, a->field_type(), defined_in,
+				   "giop_s", aname, ntype, mapping);
 	      break;
 	    }
 	  case AST_Argument::dir_OUT:
@@ -959,11 +1268,12 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 		  (mapping.is_reference && mapping.is_pointer))
 		{
 		  // declare a <type>_var variable to manage the pointer type
-		  declareVarType(s,a->field_type(),this,1,mapping.is_arrayslice);
+		  declareVarType(s, a->field_type(), defined_in, 1,
+				 mapping.is_arrayslice);
 		}
 	      else
-		declareVarType(s,a->field_type(),this);
-	      s << " " << a->uqname();
+		declareVarType(s, a->field_type(), defined_in);
+	      s << " " << aname.c_str();
 	      s << ";\n";
 	      break;
 	    }
@@ -973,39 +1283,42 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 	      if (ntype == tObjref || ntype == tString || ntype == tTypeCode)
 		{
 		  // declare a <type>_var variable to manage the pointer type
-		  declareVarType(s,a->field_type(),this,1);
+		  declareVarType(s, a->field_type(), defined_in, 1);
 		}
 	      else
-		  declareVarType(s,a->field_type(),this);
-	      s << " " << a->uqname();
+		  declareVarType(s, a->field_type(), defined_in);
+	      s << " " << aname.c_str();
 	      s << ";\n";
-	      produceUnMarshalCode(s,a->field_type(),
-				   (AST_Decl*)&def_in,
-				   "_0RL_s",a->uqname(),
-				   ntype,mapping);
+
+	      produceUnMarshalCode(s, a->field_type(), defined_in,
+				   "giop_s", aname, ntype, mapping);
 	      break;
 	    }
 	  }
 	i.next();
       }
   }
+  ////////////////////
+  // unmarshal context
+  ////////////////////
   {
     if (context()) {
-      IND(s); s << "CORBA::Context_var ctxt;\n";
+      IND(s); s << "CORBA::Context_var _ctxt;\n";
 
       argMapping mapping;
       mapping.is_const = mapping.is_reference = mapping.is_arrayslice = 0;
       mapping.is_pointer = 1;
-      produceUnMarshalCode(s,this,
-			   (AST_Decl*)&def_in,
-			   "_0RL_s","ctxt",
-			   tContext,mapping);
+      produceUnMarshalCode(s, this, defined_in, "giop_s", "_ctxt",
+			   tContext, mapping);
     }
   }
-  IND(s); s << "_0RL_s.RequestReceived();\n";
+  IND(s); s << "giop_s.RequestReceived();\n";
 
-  IND(s);
+  ////////////////////////////////////////
+  // declare a variable to hold the result
+  ////////////////////////////////////////
   if (!return_is_void()) {
+    IND(s);
     argMapping mapping;
     argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
     if (ntype == tObjref || ntype == tString || ntype == tTypeCode ||
@@ -1013,82 +1326,63 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 	(mapping.is_pointer))
       {
 	// declare a <type>_var variable to manage the pointer type
-	declareVarType(s,return_type(),this,1,mapping.is_arrayslice);
+	declareVarType(s, return_type(), defined_in, 1, mapping.is_arrayslice);
       }
     else
       {
-	declareVarType(s,return_type(),this);
+	declareVarType(s, return_type(), defined_in);
       }
-    s << " _0RL_result";
-    s << ";\n";
+    s << " result;\n";
   }
 
-  if (!no_user_exception()) {
+  ////////////////////
+  // do the invocation
+  ////////////////////
+  if( !no_user_exception() ) {
+    s << "#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7\n";
     IND(s); s << "try {\n";
+    s << "#endif\n";
     INC_INDENT_LEVEL();
   }
-  IND(s);
   if (!return_is_void()) {
-    s << "_0RL_result = ";
-    if (has_variable_out_arg() || has_pointer_inout_arg()) {
-      // Use the indirection function in the base class
-      s << def_in.uqname() << "::";
-    }
-    produce_invoke(s);
+    IND(s); s << "result = this->";
+    produce_invoke_using_vars(s, "arg_");
     s << ";\n";
   }
   else {
-    if (has_variable_out_arg() || has_pointer_inout_arg()) {
-      // Use the indirection function in the base class
-      s << def_in.uqname() << "::";
-    }
-    produce_invoke(s);
+    IND(s); s << "this->";
+    produce_invoke_using_vars(s, "arg_");
     s << ";\n";
   }
 
-  if (flags() == AST_Operation::OP_oneway) {
-    IND(s); s << "_0RL_s.ReplyCompleted();\n";
-    IND(s); s << "return 1;\n";
-    return;
-  }
+  if( !no_user_exception() ) {
+    // gcc 2.7.2 cannot catch exceptions by base class.  Thus we
+    // have to catch each exception by most derived type here, and
+    // pass down to the GIOP_S using a GIOP_S::UserException.
 
-  if (!no_user_exception()) {
     DEC_INDENT_LEVEL();
+    s << "#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7\n";
     IND(s); s << "}\n";
-    // catch and marshal each user exception
+    // Catch each user exception, and pass down to next level
+    // using a GIOP_S::UserException.
     UTL_ExceptlistActiveIterator i(exceptions());
-    while (!i.is_done())
-      {
-	o2be_exception *excpt = o2be_exception::narrow_from_decl(i.item());
-	IND(s); s << "catch ( " << excpt->fqname() << " &_0RL_ex) {\n";
-	INC_INDENT_LEVEL();
-
-	argType ntype = tStructVariable;
-	argMapping mapping = {I_FALSE,I_TRUE,I_FALSE,I_FALSE};
-
-	IND(s); s << "size_t _0RL_msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
-
-	produceConstStringSizeCalculation(s,"_0RL_msgsize",excpt->repoIdConstLen());
-	produceSizeCalculation(s,i.item(),
-			       (AST_Decl*)&def_in,
-			       "_0RL_s","_0RL_msgsize","_0RL_ex",ntype,mapping);
-
-	IND(s); s << "_0RL_s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_0RL_msgsize);\n";
-	produceConstStringMarshalCode(s,"_0RL_s",excpt->repoIdConstName(),
-				      excpt->repoIdConstLen());
-	produceMarshalCode(s,i.item(),
-			   (AST_Decl*)&def_in,
-			   "_0RL_s","_0RL_ex",ntype,mapping);
-	IND(s); s << "_0RL_s.ReplyCompleted();\n";
-	IND(s); s << "return 1;\n";
-	DEC_INDENT_LEVEL();
-	IND(s); s << "}\n";
-	i.next();
-      }
+    while( !i.is_done() ) {
+      o2be_exception* e = o2be_exception::narrow_from_decl(i.item());
+      IND(s); s << "catch(" << e->fqname() << "& ex) {\n";
+      IND(s); s << "  throw GIOP_S::UserException(ex._NP_duplicate());\n";
+      IND(s); s << "}\n";
+      i.next();
+    }
+    s << "#endif\n";
   }
 
+  IND(s); s << "if( giop_s.response_expected() ) {\n";
+  INC_INDENT_LEVEL();
+
+  ///////////////////////////////
   // calculate reply message size
-  IND(s); s << "size_t _0RL_msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
+  ///////////////////////////////
+  IND(s); s << "size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
   if (!return_is_void())
     {
       argMapping mapping;
@@ -1098,36 +1392,38 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 	{
 	  // These are declared as <type>_var variable
 	  if (ntype == tString) {
-	    produceSizeCalculation(s,return_type(),
-				   (AST_Decl*)&def_in,
-				   "_0RL_s","_0RL_msgsize",
-				   "_0RL_result",ntype,mapping);
+	    produceSizeCalculation(s, return_type(), defined_in,
+				   "giop_s", "msgsize",
+				   "result", ntype, mapping);
 	  }
 	  else {
 	    // use operator->() to get to the pointer
-	    produceSizeCalculation(s,return_type(),
-				   (AST_Decl*)&def_in,
-				   "_0RL_s","_0RL_msgsize",
-				   "(_0RL_result.operator->())",ntype,mapping);
+	    produceSizeCalculation(s, return_type(), defined_in,
+				   "giop_s", "msgsize",
+				   "(result.operator->())",
+				   ntype, mapping);
 	  }
 	}
       else
 	{
-	  produceSizeCalculation(s,return_type(),
-				 (AST_Decl*)&def_in,
-				 "_0RL_s","_0RL_msgsize",
-				 "_0RL_result",ntype,mapping);
+	  produceSizeCalculation(s, return_type(), defined_in,
+				 "giop_s", "msgsize", "result",
+				 ntype, mapping);
 	}
 
     }
   {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
     while (!i.is_done())
       {
 	argMapping mapping;
 	argType ntype;
 
-	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+	StringBuf aname;
+	aname += "arg_";
+	aname += a->uqname();
+
 	switch(a->direction())
 	  {
 	  case AST_Argument::dir_OUT:
@@ -1140,41 +1436,36 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 		{
 		  // These are declared as <type>_var variable
 		  if (ntype == tString) {
-		    produceSizeCalculation(s,a->field_type(),
-					   (AST_Decl*)&def_in,
-					   "_0RL_s","_0RL_msgsize",
-					   a->uqname(),ntype,mapping);
+		    produceSizeCalculation(s, a->field_type(), defined_in,
+					   "giop_s", "msgsize",
+					   aname, ntype, mapping);
 		  }
 		  else {
 		    // use operator->() to get to the pointer
-		    char *_argname = new char[strlen(a->uqname())+
-					     strlen("(.operator->())")+1];
-		    strcpy(_argname,"(");
-		    strcat(_argname,a->uqname());
-		    strcat(_argname,".operator->())");
-		    produceSizeCalculation(s,a->field_type(),
-					   (AST_Decl*)&def_in,
-					   "_0RL_s","_0RL_msgsize",
-					   _argname,ntype,mapping);
-		    delete [] _argname;
+		    StringBuf argname;
+		    argname += '(';
+		    argname += aname;
+		    argname += ".operator->())";
+		    produceSizeCalculation(s, a->field_type(), defined_in,
+					   "giop_s", "msgsize",
+					   argname, ntype, mapping);
 		  }
 		}
 	      else
 		{
-		  produceSizeCalculation(s,a->field_type(),
-					 (AST_Decl*)&def_in,
-					 "_0RL_s","_0RL_msgsize",
-					 a->uqname(),ntype,mapping);
+		  produceSizeCalculation(s, a->field_type(),
+					 defined_in,
+					 "giop_s", "msgsize",
+					 aname, ntype, mapping);
 		}
 	      break;
 	    }
 	  case AST_Argument::dir_INOUT:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceSizeCalculation(s,a->field_type(),
-				     (AST_Decl*)&def_in,
-				     "_0RL_s","_0RL_msgsize",
-				     a->uqname(),ntype,mapping);
+	      produceSizeCalculation(s, a->field_type(), defined_in,
+				     "giop_s", "msgsize",
+				     aname, ntype, mapping);
 	      break;
 	    }
 	  case AST_Argument::dir_IN:
@@ -1184,9 +1475,12 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
       }
   }
 
-  IND(s); s << "_0RL_s.InitialiseReply(GIOP::NO_EXCEPTION,(CORBA::ULong)_0RL_msgsize);\n";
+  IND(s); s << "giop_s.InitialiseReply(GIOP::NO_EXCEPTION, "
+	    "(CORBA::ULong) msgsize);\n";
 
+  ///////////////////
   // marshall results
+  ///////////////////
   if (!return_is_void())
     {
       argMapping mapping;
@@ -1198,33 +1492,35 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 	  // These are declared as <type>_var variable
 	  if (ntype == tString)
 	    {
-	      produceMarshalCode(s,return_type(),
-				 (AST_Decl*)&def_in,
-				 "_0RL_s",
-				 "_0RL_result",ntype,mapping);
+	      produceMarshalCode(s, return_type(), defined_in,
+				 "giop_s", "result", ntype, mapping);
 	    }
 	  else
 	    {
 	      // use operator->() to get to the pointer
-	      produceMarshalCode(s,return_type(),(AST_Decl*)&def_in,
-				 "_0RL_s",
-				 "(_0RL_result.operator->())",ntype,mapping);
+	      produceMarshalCode(s, return_type(), defined_in,
+				 "giop_s", "(result.operator->())",
+				 ntype, mapping);
 	    }
 	}
       else
 	{
-	  produceMarshalCode(s,return_type(),(AST_Decl*)&def_in,
-			     "_0RL_s","_0RL_result",ntype,mapping);
+	  produceMarshalCode(s, return_type(), defined_in,
+			     "giop_s", "result", ntype, mapping);
 	}
     }
   {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
     while (!i.is_done())
       {
 	argMapping mapping;
 	argType ntype;
 
-	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+	StringBuf aname;
+	aname += "arg_";
+	aname += a->uqname();
+
 	switch(a->direction())
 	  {
 	  case AST_Argument::dir_OUT:
@@ -1237,40 +1533,34 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 		  // These are declared as <type>_var variable
 		  if (ntype == tString)
 		    {
-		      produceMarshalCode(s,a->field_type(),
-					 (AST_Decl*)&def_in,
-					 "_0RL_s",
-					 a->uqname(),ntype,mapping);
+		      produceMarshalCode(s, a->field_type(),
+					 defined_in, "giop_s",
+					 aname, ntype, mapping);
 		    }
 		  else
 		    {
 		      // use operator->() to get to the pointer
-		      char *_argname = new char[strlen(a->uqname())+
-					       strlen("(.operator->())")+1];
-		      strcpy(_argname,"(");
-		      strcat(_argname,a->uqname());
-		      strcat(_argname,".operator->())");
+		      StringBuf argname;
+		      argname += '(';
+		      argname += aname;
+		      argname += ".operator->())";
 		      produceMarshalCode(s,a->field_type(),
-					 (AST_Decl*)&def_in,
-					 "_0RL_s",
-					 _argname,ntype,mapping);
-		      delete [] _argname;
+					 defined_in, "giop_s",
+					 argname, ntype, mapping);
 		    }
 		}
 	      else
 		{
-		  produceMarshalCode(s,a->field_type(),
-				     (AST_Decl*)&def_in,
-				     "_0RL_s",a->uqname(),ntype,mapping);
+		  produceMarshalCode(s, a->field_type(), defined_in,
+				     "giop_s", aname, ntype, mapping);
 		}
 	      break;
 	    }
 	  case AST_Argument::dir_INOUT:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceMarshalCode(s,a->field_type(),
-				 (AST_Decl*)&def_in,
-				 "_0RL_s",a->uqname(),ntype,mapping);
+	      produceMarshalCode(s, a->field_type(), defined_in,
+				 "giop_s", aname, ntype, mapping);
 	      break;
 	    }
 	  case AST_Argument::dir_IN:
@@ -1280,599 +1570,12 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
       }
   }
 
-  IND(s); s << "_0RL_s.ReplyCompleted();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "giop_s.ReplyCompleted();\n";
   IND(s); s << "return 1;\n";
-  return;
 }
 
-void
-o2be_operation::produce_nil_skel(std::fstream &s,const char* alias_prefix)
-{
-  IND(s); produce_decl(s,0,alias_prefix);
-  s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
-  s << "#ifdef NEED_DUMMY_RETURN\n";
-  IND(s); s << "// never reach here! Dummy return to keep some compilers happy.\n";
-  if (!return_is_void())
-    {
-      argMapping mapping;
-      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
-      if (ntype == tObjref || ntype == tString || ntype == tTypeCode ||
-	  (mapping.is_arrayslice) ||
-	  (mapping.is_pointer))
-	{
-	  IND(s);
-	  declareVarType(s,return_type(),this,0,mapping.is_arrayslice);
-	  s <<
-	((ntype != tObjref && ntype != tString && ntype != tTypeCode)?" *":"")
-	    << " _0RL_result" << " = "
-	    << ((ntype == tTypeCode) ? "CORBA::TypeCode::_nil()" : "0")
-	    << ";\n";
-	}
-      else
-	{
-	  IND(s);
-	  declareVarType(s,return_type(),this);
-	  s << " _0RL_result";
-	  switch (ntype)
-	    {
-	    case tShort:
-	    case tLong:
-	    case tUShort:
-	    case tULong:
-	    case tFloat:
-	    case tDouble:
-	    case tBoolean:
-	    case tChar:
-	    case tOctet:
-	      s << " = 0;\n";
-	      break;
-	    case tEnum:
-	      {
-		s << " = ";
-		AST_Decl *decl = return_type();
-		while (decl->node_type() == AST_Decl::NT_typedef)
-		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-		UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
-					  UTL_Scope::IK_decls);
-		AST_Decl *eval = i.item();
-		s << o2be_name::narrow_and_produce_unambiguous_name(eval,this)
-		  << ";\n";
-	      }
-	      break;
-	    case tStructFixed:
-	      s << ";\n";
-	      s << "memset((void *)&_0RL_result,0,sizeof(_0RL_result));\n";
-	      break;
-	    default:
-	      s << ";\n";
-	      break;
-	    }
-	}
-      IND(s); s << "return _0RL_result;\n";
-    }
-  else
-    {
-      IND(s); s << "return;\n";
-    }
-  DEC_INDENT_LEVEL();
-  s << "#endif\n";
-  IND(s); s << "}\n";
-}
-
-
-void
-o2be_operation::produce_lcproxy_skel(std::fstream& s, o2be_interface& def_in,
-				     const char* alias_prefix)
-{
-  o2be_call_desc::produce_descriptor(s, *this);
-  const char* call_desc_class = o2be_call_desc::descriptor_name(*this);
-
-  char* ctxt_un = 0;
-  int   ctxt_len = 0;
-  if (context()) {
-    ctxt_un = o2be_call_desc::generate_unique_name("_0RL_ctx_");
-    IND(s); s << "static const char* " << ctxt_un << "[] = {\n";
-    ctxt_len = 0;
-    UTL_StrlistActiveIterator iter(context());
-
-    while (!iter.is_done()) {
-      String* p = iter.item();
-      IND(s); s  << "\"" << p->get_string() << "\",\n";
-      ctxt_len++;
-      iter.next();
-    }
-    IND(s); s << " 0 };\n\n";
-  }
-
-  IND(s); produce_decl(s, def_in.lcproxy_fqname(), alias_prefix,
-		       I_FALSE, I_TRUE);
-  s << "\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << call_desc_class << " _call_desc(\""
-	    << local_name()->get_string() << "\", "
-	    << (strlen(local_name()->get_string()) + 1);
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while( !i.is_done() ) {
-      o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
-      s << ", " << a->uqname();
-      i.next();
-    }
-  }
-  s << ");\n\n";
-
-  if (context()) {
-    IND(s); s << "_call_desc.set_context(ctxt,"
-      <<                                 ctxt_un  << ","
-      <<                                 ctxt_len << ");\n\n";
-  }
-
-  if (flags() == AST_Operation::OP_oneway) {
-    IND(s); s << "if (!OmniLCProxyCallWrapper::one_way(this, _call_desc, "
-	      << "_get_wrap_" << def_in._fqname() << "())) {\n";
-  }
-  else {
-    IND(s); s << "if (!OmniLCProxyCallWrapper::invoke(this, _call_desc, "
-	      << "_get_wrap_" << def_in._fqname() << "())) {\n";
-  }
-  INC_INDENT_LEVEL();
-  IND(s);
-  if (return_is_void()) {
-    s << "_get_wrap_" << def_in._fqname() << "()->";
-    produce_invoke(s);
-    s << ";\n";
-    IND(s); s << "return;\n";
-  }
-  else {
-    s << "return _get_wrap_" << def_in._fqname() << "()->";
-    produce_invoke(s);
-    s << ";\n";
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-
-  if( !return_is_void() ) {
-    IND(s); s << "return _call_desc.result();\n";
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-}
-
-
-void
-o2be_operation::produce_dead_skel(std::fstream& s, const char* alias_prefix)
-{
-  IND(s); produce_decl(s,0,alias_prefix,I_FALSE,I_TRUE);
-  s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);\n";
-  s << "#ifdef NEED_DUMMY_RETURN\n";
-  IND(s); s << "// never reach here! Dummy return to keep some compilers happy.\n";
-  if (!return_is_void())
-    {
-      argMapping mapping;
-      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
-      if (ntype == tObjref || ntype == tString || ntype == tTypeCode ||
-	  (mapping.is_arrayslice) ||
-	  (mapping.is_pointer))
-	{
-	  IND(s);
-	  declareVarType(s,return_type(),this,0,mapping.is_arrayslice);
-	  s <<
-	 ((ntype != tObjref && ntype != tString && ntype !=tTypeCode)?" *":"")
-	    << " _0RL_result = "
-	    << ((ntype == tTypeCode) ? "CORBA::TypeCode::_nil()" : "0")
-	    << ";\n";
-	}
-      else
-	{
-	  IND(s);
-	  declareVarType(s,return_type(),this);
-	  s << " _0RL_result";
-	  switch (ntype)
-	    {
-	    case tShort:
-	    case tLong:
-	    case tUShort:
-	    case tULong:
-	    case tFloat:
-	    case tDouble:
-	    case tBoolean:
-	    case tChar:
-	    case tOctet:
-	      s << " = 0;\n";
-	      break;
-	    case tEnum:
-	      {
-		s << " = ";
-		AST_Decl *decl = return_type();
-		while (decl->node_type() == AST_Decl::NT_typedef)
-		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-		UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
-					  UTL_Scope::IK_decls);
-		AST_Decl *eval = i.item();
-		s << o2be_name::narrow_and_produce_unambiguous_name(eval,this)
-		  << ";\n";
-	      }
-	      break;
-	    case tStructFixed:
-	      s << ";\n";
-	      s << "memset((void *)&_0RL_result,0,sizeof(_0RL_result));\n";
-	      break;
-	    default:
-	      s << ";\n";
-	      break;
-	    }
-	}
-      IND(s); s << "return _0RL_result;\n";
-    }
-  else
-    {
-      IND(s); s << "return;\n";
-    }
-  DEC_INDENT_LEVEL();
-  s << "#endif\n";
-  IND(s); s << "}\n";
-}
-
-void
-o2be_operation::produce_home_skel(std::fstream& s, o2be_interface &def_in,
-				  const char* alias_prefix)
-{
-  IND(s); produce_decl(s,0,alias_prefix,I_FALSE,I_TRUE);
-  s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s);
-  if (!return_is_void())
-    s << "return ";
-  s << "_actual_" << def_in._fqname() << "->";
-  produce_invoke(s);
-  s << ";\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-void
-o2be_operation::produce_wrapproxy_skel(std::fstream& s,
-				       o2be_interface &def_in,
-				       const char* alias_prefix)
-{
-  IND(s); produce_decl(s,0,alias_prefix,I_FALSE,I_TRUE);
-  s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s);
-  if (!return_is_void())
-    s << "return ";
-  s << "_actual_" << def_in._fqname() << "->";
-  produce_invoke(s);
-  s << ";\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
-
-void
-o2be_operation::produce_mapping_with_indirection(std::fstream& s,
-						 const char* alias_prefix)
-{
-  if (!has_variable_out_arg() && !has_pointer_inout_arg())
-    return;
-
-  unsigned int indent_pos = 0;
-
-  IND(s);
-  // return type
-  if (!return_is_void())
-    {
-      argMapping mapping;
-      argType    ntype;
-      const char* str;
-
-      ntype = ast2ArgMapping(return_type(),wResult,mapping);
-
-      if (ntype == tObjref) {
-	AST_Decl *decl = return_type();
-	while (decl->node_type() == AST_Decl::NT_typedef) {
-	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	}
-	str = o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this);
-	s << str;
-	indent_pos += strlen(str);
-      }
-      else if (ntype == tString) {
-	s << "char *";
-	indent_pos += 6;
-      }
-      else if (ntype == tTypeCode) {
-	s << "CORBA::TypeCode_ptr";
-	indent_pos += 19;
-      }
-      else {
-	str = o2be_name::narrow_and_produce_unambiguous_name(return_type(),this);
-	s << str;
-	indent_pos += strlen(str);
-      }
-      if (mapping.is_arrayslice) {
-	s << "_slice";
-	indent_pos += 6;
-
-      }
-      s << " ";
-      indent_pos += 1;
-      if (mapping.is_pointer) {
-	s << "*";
-	indent_pos += 1;
-      }
-      if (mapping.is_reference) {
-	s << "&";
-	indent_pos += 1;
-      }
-    }
-  else
-    {
-      s << "void";
-      indent_pos += 4;
-    }
-  // function namees
-  s << " " << uqname() << " ( ";
-  indent_pos += strlen(alias_prefix) + strlen(uqname()) + 4;
-
-  // argument list
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	argMapping mapping;
-	argType    ntype;
-	idl_bool   outvar;
-	idl_bool   inoutptr;
-
-	outvar = I_FALSE;
-	inoutptr = I_FALSE;
-	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
-	switch(a->direction())
-	  {
-	  case AST_Argument::dir_IN:
-	    ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
-	    break;
-	  case AST_Argument::dir_INOUT:
-	    ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	    switch(ntype) {
-	    case tObjref:
-	    case tString:
-	    case tTypeCode:
-	      inoutptr = I_TRUE;
-	      break;
-	    default:
-	      break;
-	    }
-	    break;
-	  case AST_Argument::dir_OUT:
-	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-	    switch(ntype) {
-	    case tObjref:
-	    case tStructVariable:
-	    case tUnionVariable:
-	    case tString:
-	    case tSequence:
-	    case tArrayVariable:
-	    case tAny:
-	    case tTypeCode:
-	      outvar = I_TRUE;
-	      break;
-	    default:
-	      break;
-	    }
-	    break;
-	  }
-
-	if (!outvar && !inoutptr)
-	  {
-	    s << ((mapping.is_const) ? "const ":"");
-	    if (ntype == tObjref) {
-	      AST_Decl *decl = a->field_type();
-	      while (decl->node_type() == AST_Decl::NT_typedef) {
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      }
-	      s << o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this);
-	    }
-	    else if (ntype == tString) {
-	      s << "char *";
-	    }
-	    else if (ntype == tTypeCode) {
-	      AST_Decl *decl = a->field_type();
-	      while (decl->node_type() == AST_Decl::NT_typedef) {
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      }
-	      s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
-	    }
-	    else {
-	      s << o2be_name::narrow_and_produce_unambiguous_name(a->field_type(),this);
-	    }
-	    s << ((mapping.is_arrayslice) ? "_slice":"")
-	      << " "
-	      << ((mapping.is_pointer)    ? "*":"")
-	      << ((mapping.is_reference)  ? "&":"");
-	    s << " " << a->uqname();
-	  }
-	else
-	  {
-	    switch (ntype) {
-	    case tObjref:
-	      {
-		AST_Decl *decl = a->field_type();
-		while (decl->node_type() == AST_Decl::NT_typedef) {
-		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-		}
-		o2be_interface* intf = o2be_interface::narrow_from_decl(decl);
-		if (a->direction() == AST_Argument::dir_INOUT) {
-		  s << intf->inout_adptarg_name(this) << " ";
-		}
-		else {
-		  s << intf->out_adptarg_name(this) << " ";
-		}
-		break;
-	      }
-	    case tString:
-	      {
-		if (a->direction() == AST_Argument::dir_INOUT) {
-		  s << "CORBA::String_INOUT_arg ";
-		}
-		else {
-		  s << "CORBA::String_OUT_arg ";
-		}
-		break;
-	      }
-	    case tAny:
-	      {
-		if (a->direction() == AST_Argument::dir_OUT) {
-		  s << "CORBA::Any_OUT_arg ";
-		}
-		break;
-	      }
-	    case tTypeCode:
-	      {
-		if (a->direction() == AST_Argument::dir_INOUT) {
-		  s << "CORBA::TypeCode_INOUT_arg ";
-		}
-		else {
-		  s << "CORBA::TypeCode_OUT_arg ";
-		}
-		break;
-	      }
-	    case tStructVariable:
-	      {
-		AST_Decl *decl = a->field_type();
-		while (decl->node_type() == AST_Decl::NT_typedef) {
-		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-		}
-		o2be_structure* p = o2be_structure::narrow_from_decl(decl);
-		if (a->direction() == AST_Argument::dir_OUT) {
-		  s << p->out_adptarg_name(this) << " ";
-		}
-		break;
-	      }
-	    case tUnionVariable:
-	      {
-		AST_Decl *decl = a->field_type();
-		while (decl->node_type() == AST_Decl::NT_typedef) {
-		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-		}
-		o2be_union* p = o2be_union::narrow_from_decl(decl);
-		if (a->direction() == AST_Argument::dir_OUT) {
-		  s << p->out_adptarg_name(this) << " ";
-		}
-		break;
-	      }
-	    case tSequence:
-	      {
-		AST_Decl *decl = a->field_type();
-		if (decl->node_type() != AST_Decl::NT_typedef) {
-		  throw o2be_internal_error(__FILE__,__LINE__,
-					    "Typedef expected");
-		}
-		o2be_typedef* tp = o2be_typedef::narrow_from_decl(decl);
-		while (decl->node_type() == AST_Decl::NT_typedef) {
-		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-		}
-		o2be_sequence* p = o2be_sequence::narrow_from_decl(decl);
-		if (a->direction() == AST_Argument::dir_OUT) {
-		  s << p->out_adptarg_name(tp,this) << " ";
-		}
-		break;
-	      }
-	    case tArrayVariable:
-	      {
-		AST_Decl *decl = a->field_type();
-		if (decl->node_type() != AST_Decl::NT_typedef) {
-		  throw o2be_internal_error(__FILE__,__LINE__,
-					    "Typedef expected");
-		}
-		o2be_typedef* tp = o2be_typedef::narrow_from_decl(decl);
-		while (decl->node_type() == AST_Decl::NT_typedef) {
-		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-		}
-		o2be_array* p = o2be_array::narrow_from_decl(decl);
-		if (a->direction() == AST_Argument::dir_OUT) {
-		  s << p->out_adptarg_name(tp,this) << " ";
-		}
-		break;
-	      }
-	    default:
-	      break;
-	    }
-	    s << " " << a->uqname();
-	  }
-	i.next();
-	if (!i.is_done() || context()) {
-	  s << ",\n";
-	  IND(s);
-	  for (unsigned int j=0; j < indent_pos; j++)
-	    s << " ";
-	}
-      }
-  }
-
-  {
-    if (context()) {
-      s << "CORBA::Context_ptr ctxt";
-    }
-  }
-
-  s << " )\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s);
-  if (!return_is_void()) {
-    s << "return ";
-  }
-  s << alias_prefix;
-  s << uqname() << " ( ";
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	argType ntype;
-	argMapping mapping;
-	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
-	s << a->uqname();
-	if (a->direction() == AST_Argument::dir_INOUT) {
-	  ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	  if (ntype == tObjref || ntype == tString || ntype == tTypeCode) {
-	    s << "._data";
-	  }
-	}
-	else if (a->direction() == AST_Argument::dir_OUT) {
-	  ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-	  switch(ntype) {
-	  case tObjref:
-	  case tStructVariable:
-	  case tUnionVariable:
-	  case tString:
-	  case tSequence:
-	  case tArrayVariable:
-	  case tAny:
-	  case tTypeCode:
-	    s << "._data";
-	  default:
-	    break;
-	  }
-	}
-	i.next();
-	s << ((!i.is_done()) ? ", " :(context()?", ":""));
-      }
-  }
-  if (context())
-    s << "ctxt)";
-  else
-    s << " )";
-
-  s << ";\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-}
 
 void
 o2be_operation::check_and_produce_unnamed_argument_tc_decl(std::fstream&s,
@@ -1902,6 +1605,7 @@ o2be_operation::check_and_produce_unnamed_argument_tc_decl(std::fstream&s,
   }
 }
 
+
 void
 o2be_operation::produce_decls_at_global_scope_in_hdr(std::fstream& s)
 {
@@ -1920,6 +1624,7 @@ o2be_operation::produce_decls_at_global_scope_in_hdr(std::fstream& s)
   }
 
 }
+
 
 void
 o2be_operation::check_and_produce_unnamed_argument_tc_value(std::fstream& s,
@@ -1951,6 +1656,7 @@ o2be_operation::check_and_produce_unnamed_argument_tc_value(std::fstream& s,
   }
 }
 
+
 void
 o2be_operation::produce_dynskel(std::fstream& s)
 {
@@ -1968,6 +1674,7 @@ o2be_operation::produce_dynskel(std::fstream& s)
       }
   }
 }
+
 
 idl_bool
 o2be_operation::has_variable_out_arg()
@@ -2115,9 +1822,58 @@ o2be_operation::mangled_signature()
 }
 
 
+static int compare_strings(const void* s1, const void* s2) {
+  return strcmp((const char*) s1, (const char*) s2);
+}
+
+
+o2be_exception**
+o2be_operation::id_sorted_exn_list()
+{
+  if( pd_id_sorted_exn_list )  return pd_id_sorted_exn_list;
+
+  pd_n_exceptions = 0;
+
+  // Count 'em.
+  {
+    UTL_ExceptlistActiveIterator i(exceptions());
+    while( !i.is_done() ) {
+      pd_n_exceptions++;
+      i.next();
+    }
+  }
+
+  // Grab 'em.
+  pd_id_sorted_exn_list = new o2be_exception*[pd_n_exceptions];
+  {
+    UTL_ExceptlistActiveIterator i(exceptions());
+    for( int j = 0; j < pd_n_exceptions; j++ ) {
+      pd_id_sorted_exn_list[j] = o2be_exception::narrow_from_decl(i.item());
+      i.next();
+    }
+  }
+
+  // Sort 'em.
+  qsort(pd_id_sorted_exn_list, pd_n_exceptions,
+	sizeof(o2be_exception*), compare_strings);
+
+  return pd_id_sorted_exn_list;
+}
+
+
+int
+o2be_operation::n_exceptions()
+{
+  if( pd_n_exceptions < 0 )  id_sorted_exn_list();
+
+  return pd_n_exceptions;
+}
+
+
 IMPL_NARROW_METHODS1(o2be_operation, AST_Operation)
 IMPL_NARROW_FROM_DECL(o2be_operation)
 IMPL_NARROW_FROM_SCOPE(o2be_operation)
+
 
 static
 const o2be_operation::argMapping
@@ -2239,6 +1995,7 @@ const o2be_operation::argMapping
   { I_FALSE, I_FALSE, I_FALSE, I_FALSE }, // tTypeCode
 };
 
+
 o2be_operation::argType
 o2be_operation::ast2ArgMapping(AST_Decl *decl,
 			       o2be_operation::argWhich dir,
@@ -2358,8 +2115,8 @@ o2be_operation::ast2ArgMapping(AST_Decl *decl,
 
 
 void
-o2be_operation::declareVarType(std::fstream& s,AST_Decl* decl,AST_Decl*
-			       used_in, idl_bool is_var,
+o2be_operation::declareVarType(std::fstream& s, AST_Decl* decl,
+			       AST_Decl* used_in, idl_bool is_var,
 			       idl_bool is_arrayslice)
 {
   AST_Decl *truetype = decl;
@@ -2467,9 +2224,10 @@ o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
 
     case tObjref:
       {
-	IND(s); s << argname << " = "
-		  << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "_Helper::unmarshalObjRef(" << netstream << ");\n";
+	IND(s);
+	s << argname << " = "
+	  << o2be_interface::narrow_from_decl(decl)->unambiguous_name(used_in)
+	  << "_Helper::unmarshalObjRef(" << netstream << ");\n";
       }
       break;
 
@@ -2791,7 +2549,7 @@ o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
 		tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 	      }
 	      s << " = "
-		<< o2be_interface::narrow_from_decl(tdecl)->fqname()
+		<< o2be_interface::narrow_from_decl(tdecl)->unambiguous_name(used_in)
 		<< "_Helper::unmarshalObjRef(" << netstream << ");\n";
  	    }
 	    break;
@@ -2824,6 +2582,7 @@ o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
       break;
     }
 }
+
 
 void
 o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
@@ -2905,9 +2664,10 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 
     case tObjref:
       {
-	IND(s); s << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "_Helper::marshalObjRef(" << argname << ","
-		  << netstream << ");\n";
+	IND(s);
+	s << o2be_interface::narrow_from_decl(decl)->unambiguous_name(used_in)
+	  << "_Helper::marshalObjRef(" << argname << ","
+	  << netstream << ");\n";
       }
       break;
 
@@ -3169,7 +2929,7 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 	      while (tdecl->node_type() == AST_Decl::NT_typedef) {
 		tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 	      }
-	      IND(s); s << o2be_interface::narrow_from_decl(tdecl)->fqname()
+	      IND(s); s << o2be_interface::narrow_from_decl(tdecl)->unambiguous_name(used_in)
 			<< "_Helper::marshalObjRef(";
 	      if (!mapping.is_arrayslice) {
 		s << argname;
@@ -3224,6 +2984,7 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
     }
 }
 
+
 void
 o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 				       AST_Decl* used_in,
@@ -3273,28 +3034,29 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
     case tTypeCodeMember:
       IND(s); s << sizevar << " = "
 		<< argname << ((mapping.is_pointer)?"->":".")
-		<< "NP_alignedSize(" << sizevar << ");\n";
+		<< "_NP_alignedSize(" << sizevar << ");\n";
       break;
 
     case tTypeCode:
       IND(s); s << sizevar << " = "
-		<< argname << "->NP_alignedSize(" << sizevar << ");\n";
+		<< argname << "->_NP_alignedSize(" << sizevar << ");\n";
       break;
 
     case tString:
       IND(s); s << sizevar << " = omni::align_to(" << sizevar
-		<< ", omni::ALIGN_4) + 4\n";
-      IND(s); s << "  + (((const char*) " << argname
+		<< ", omni::ALIGN_4) + 4;\n";
+      IND(s); s << sizevar << " += ((const char*) " << argname
 		  << ") ? strlen((const char*) " << argname
-		  << ") + 1 : 1);\n";
+		  << ") + 1 : 1;\n";
       break;
 
     case tObjref:
       {
-	IND(s); s << sizevar << " = "
-		  << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "_Helper::NP_alignedSize("
-		  << argname << "," << sizevar << ");\n";
+	IND(s);
+	s << sizevar << " = "
+	  << o2be_interface::narrow_from_decl(decl)->unambiguous_name(used_in)
+	  << "_Helper" "::NP_alignedSize("
+	  << argname << "," << sizevar << ");\n";
       }
       break;
 
@@ -3320,10 +3082,10 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 	  case tShort:
 	  case tUShort:
 	    IND(s); s << sizevar << " = omni::align_to(" << sizevar
-		      << ",omni::ALIGN_2);\n";
+		      << ", omni::ALIGN_2);\n";
 	    IND(s); s << sizevar << " += "
 		      << o2be_array::narrow_from_decl(decl)->getNumOfElements()
-		      << "*2;\n";
+		      << " * 2;\n";
 	    break;
 
 	  case tLong:
@@ -3331,18 +3093,18 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 	  case tEnum:
 	  case tFloat:
 	    IND(s); s << sizevar << " = omni::align_to(" << sizevar
-		      << ",omni::ALIGN_4);\n";
+		      << ", omni::ALIGN_4);\n";
 	    IND(s); s << sizevar << " += "
 		      << o2be_array::narrow_from_decl(decl)->getNumOfElements()
-		      << "*4;\n";
+		      << " * 4;\n";
 	    break;
 
 	  case tDouble:
 	    IND(s); s << sizevar << " = omni::align_to(" << sizevar
-		      << ",omni::ALIGN_8);\n";
+		      << ", omni::ALIGN_8);\n";
 	    IND(s); s << sizevar << " += "
 		      << o2be_array::narrow_from_decl(decl)->getNumOfElements()
-		      << "*8;\n";
+		      << " * 8;\n";
 	    break;
 
 	  case tStructFixed:
@@ -3377,7 +3139,7 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 		  s << "[_i" << ndim << "]";
 		  ndim++;
 		}
-	      s << ".NP_alignedSize(" << sizevar << ");\n";
+	      s << "._NP_alignedSize(" << sizevar << ");\n";
 	      ndim = 0;
 	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
 		{
@@ -3443,7 +3205,7 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 		  s << "[_i" << ndim << "]";
 		  ndim++;
 		}
-	      s << ".NP_alignedSize(" << sizevar << ");\n";
+	      s << "._NP_alignedSize(" << sizevar << ");\n";
 	      break;
 	    }
 	  case tString:
@@ -3490,7 +3252,7 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 		tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 	      }
 	      IND(s); s << sizevar << " = "
-			<< o2be_interface::narrow_from_decl(tdecl)->fqname()
+			<< o2be_interface::narrow_from_decl(tdecl)->unambiguous_name(used_in)
 			<< "_Helper::NP_alignedSize(";
 	      if (!mapping.is_arrayslice) {
 		s << argname;
@@ -3519,7 +3281,7 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 		  s << "[_i" << ndim << "]";
 		  ndim++;
 		}
-	      s << "._ptr)->NP_alignedSize(" << sizevar << "));\n";
+	      s << "._ptr)->_NP_alignedSize(" << sizevar << "));\n";
 	    }
 	    break;
 
@@ -3557,12 +3319,13 @@ o2be_operation::produceConstStringMarshalCode(std::fstream &s,
 	    << str << "," << len << ");\n";
 }
 
+
 void
 o2be_operation::produceConstStringSizeCalculation(std::fstream &s,
 				  const char *sizevar,
 				  size_t len)
 {
   IND(s); s << sizevar << " = omni::align_to("
-	    << sizevar << ",omni::ALIGN_4);\n";
+	    << sizevar << ", omni::ALIGN_4);\n";
   IND(s); s << sizevar << " += " << (4+len) << ";\n";
 }

@@ -72,17 +72,19 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 // This cannot be an enum since more than one value may be active at
 // a given time, hence bitflags are #define'd instead
      
-#define	IDL_CF_VERSION		(1 << 0)
-#define	IDL_CF_DUMP_AST		(1 << 1)
-#define	IDL_CF_ONLY_PREPROC	(1 << 2)
-#define	IDL_CF_ONLY_USAGE	(1 << 3)
-#define	IDL_CF_INFORMATIVE	(1 << 4)
-#define	IDL_CF_NOWARNINGS	(1 << 5)
-#define IDL_CF_LIFECYCLE        (1 << 6)  // ***
-#define IDL_CF_ANY              (1 << 7)
-#define IDL_CF_REOPENMODULE     (1 << 8)
-#define IDL_BE_GENERATE_TIE     (1 << 9)
-#define IDL_BE_GENERATE_FRAGMENT (1 << 10)
-#define IDL_BE_2_1_COMPATIBLE    (1 << 11)
+#define	IDL_CF_VERSION		  (1 << 0)
+#define	IDL_CF_DUMP_AST		  (1 << 1)
+#define	IDL_CF_ONLY_PREPROC	  (1 << 2)
+#define	IDL_CF_ONLY_USAGE	  (1 << 3)
+#define	IDL_CF_INFORMATIVE	  (1 << 4)
+#define	IDL_CF_NOWARNINGS	  (1 << 5)
+#define IDL_CF_LIFECYCLE          (1 << 6)
+#define IDL_CF_ANY                (1 << 7)
+#define IDL_CF_REOPENMODULE       (1 << 8)
+#define IDL_BE_GENERATE_TIE       (1 << 9)
+#define IDL_BE_GENERATE_FRAGMENT  (1 << 10)
+#define IDL_BE_2_1_COMPATIBLE     (1 << 11)
+#define IDL_BE_GENERATE_FLAT_TIE  (1 << 12)
+#define IDL_BE_GENERATE_BOA_SKEL  (1 << 13)
 
 #endif	// _IDL_DEFINES_IDL_DEFINES_HH

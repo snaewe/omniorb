@@ -22,8 +22,8 @@ CXXSRCS       = \
 		o2be_buildDesc.cc \
 		o2be_name_mangle.cc \
 		o2be_call_desc.cc \
-		o2be_stringbuf.cc \
-                o2be_nested_typedef.cc
+                o2be_nested_typedef.cc \
+		o2be_util.cc
 
 OBJS         = \
 		o2be_array.o \
@@ -49,10 +49,12 @@ OBJS         = \
 		o2be_buildDesc.o \
 		o2be_name_mangle.o \
 		o2be_call_desc.o \
-		o2be_stringbuf.o \
-                o2be_nested_typedef.o
+                o2be_nested_typedef.o \
+		o2be_util.o
 
 DIR_CPPFLAGS = -I. -I../include $(patsubst %,-I%/../include,$(VPATH))
+
+# CXXDEBUGFLAGS = -g
 
 ifdef Win32Platform
 CXXOPTIONS += -Zm200

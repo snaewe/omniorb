@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.19.6.1  1999/09/24 10:05:22  djr
+  Updated for omniORB3.
+
   Revision 1.19  1999/08/09 12:26:36  sll
   Updated how _out name is generated.
 
@@ -89,7 +92,12 @@
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
-#include <o2be_stringbuf.h>
+
+#include <o2be_util.h>
+
+
+#define ADPT_CLASS_TEMPLATE "_CORBA_Array_OUT_arg"
+
 
 o2be_array::o2be_array(UTL_ScopedName* n,
 		       unsigned long ndims,
@@ -426,7 +434,7 @@ o2be_array::produce_hdr (std::fstream &s, o2be_typedef* tdef)
 	    << tdef->uqname() << "_copyHelper,"
 	    << tdef->uqname() << "_slice> "
 	    << tdef->uqname() << "_var;\n";
-  IND(s); s << "typedef _CORBA_Array_OUT_arg<"
+  IND(s); s << "typedef " << ADPT_CLASS_TEMPLATE << '<'
 	    << tdef->uqname() << "_slice,"
 	    << tdef->uqname() << "_var > "
 	    << tdef->uqname()

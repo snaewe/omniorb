@@ -75,7 +75,7 @@
 #pragma hdrstop
 #endif
 
-#include <o2be_stringbuf.h>
+#include <o2be_util.h>
 
 
 #define SCOPE_SEPARATOR             "_m"
@@ -230,8 +230,6 @@ o2be_name_mangler::produce_operation_signature(o2be_operation& op)
 {
   StringBuf op_sig;
 
-  if( op.flags() == AST_Operation::OP_oneway )  op_sig += ONEWAY_SEPARATOR;
-
   if( op.return_is_void() )
     op_sig += "void";
   else
@@ -263,19 +261,47 @@ o2be_name_mangler::produce_operation_signature(o2be_operation& op)
     }
   }
 
-  {
-    //?? We really ought to sort the exceptions - so that
+  if( !op.no_user_exception() ) {
+    // We sort the exceptions, so that
     //  void op1() throws(a, b)
     //  void op2() throws(b, a)
     // are identical ...
 
-    UTL_ExceptlistActiveIterator i(op.exceptions());
+    int n_exceptions = 0;
+    { UTL_ExceptlistActiveIterator i(op.exceptions());
+      while( !i.is_done() ) { n_exceptions++; i.next(); }
+    }
 
-    while( !i.is_done() ) {
-      op_sig += EXCEPTION_SEPARATOR;
-      op_sig += o2be_name::narrow_and_produce_canonical_name(i.item());
+    const char** se = new const char*[n_exceptions];
+    { UTL_ExceptlistActiveIterator i(op.exceptions());
+      int n = 0;
+      while( !i.is_done() ) {
+	se[n++] = o2be_name::narrow_and_produce_canonical_name(i.item());
+	i.next();
+      }
+    }
 
-      i.next();
+    { // Now sort the exceptions.
+      int top = n_exceptions;
+      while( --top > 0 ) {
+	int maxi = 0;
+	for( int i = 1; i <= top; i++ )
+	  if( strcmp(se[i], se[maxi]) > 0 )
+	    maxi = i;
+	const char* tmp = se[maxi];
+	se[maxi] = se[top];
+	se[top] = tmp;
+      }
+    }
+
+    { // And add them into the signature.
+      UTL_ExceptlistActiveIterator i(op.exceptions());
+      int n = 0;
+      while( !i.is_done() ) {
+	op_sig += EXCEPTION_SEPARATOR;
+	op_sig += se[n++];
+	i.next();
+      }
     }
   }
 
