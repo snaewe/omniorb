@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.22.2.5  1999/10/27 18:17:36  sll
+  Fixed the ctor of tcpSocketWorker so that if thread create fails, the
+  exception raised by omnithread does not cause assertion failure in the
+  ORB.
+
   Revision 1.22.2.4  1999/09/27 13:31:44  djr
   Updated logging to always issue omniORB: prefix.
 
@@ -243,8 +248,8 @@ public:
   tcpSocketWorker(tcpSocketStrand* s, tcpSocketMTincomingFactory* f) : 
           omni_thread(s), pd_factory(f), pd_sync(s,0,0) 
     {
-      s->decrRefCount();
       start();
+      s->decrRefCount();
     }
   virtual ~tcpSocketWorker() { 
     omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
