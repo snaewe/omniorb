@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.22  1998/04/18 10:07:28  sll
+ Renamed __e with _0RL_e in operator<<=() of DefinitionKind.
+
  Revision 1.21  1998/04/08 13:56:47  sll
  Minor change to the ctor of _nil_TypeCode to help some compiler to find
  the right TypeCode ctor.
@@ -1036,9 +1039,9 @@ typedef _CORBA_Double  Double;
   }
 
   _CORBA_MODULE_OP inline void operator<<= (DefinitionKind &_e,NetBufferedStream &s) {
-    CORBA::ULong __e;
-    __e <<= s;
-    switch (__e) {
+    CORBA::ULong _0RL_e;
+    _0RL_e <<= s;
+    switch (_0RL_e) {
       case dk_none:
       case dk_all:
       case dk_Attribute:
@@ -1057,7 +1060,7 @@ typedef _CORBA_Double  Double;
       case dk_Sequence:
       case dk_Array:
       case dk_Repository:
-        _e = (DefinitionKind) __e;
+        _e = (DefinitionKind) _0RL_e;
         break;
       default:
         _CORBA_marshal_error();
@@ -1069,9 +1072,9 @@ typedef _CORBA_Double  Double;
   }
 
   _CORBA_MODULE_OP inline void operator<<= (DefinitionKind &_e,MemBufferedStream &s) {
-    CORBA::ULong __e;
-    __e <<= s;
-    switch (__e) {
+    CORBA::ULong _0RL_e;
+    _0RL_e <<= s;
+    switch (_0RL_e) {
       case dk_none:
       case dk_all:
       case dk_Attribute:
@@ -1090,7 +1093,7 @@ typedef _CORBA_Double  Double;
       case dk_Sequence:
       case dk_Array:
       case dk_Repository:
-        _e = (DefinitionKind) __e;
+        _e = (DefinitionKind) _0RL_e;
         break;
       default:
         _CORBA_marshal_error();
