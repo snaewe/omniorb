@@ -29,6 +29,12 @@
  
 /*
   $Log$
+  Revision 1.9  1997/12/09 17:48:37  sll
+  Updated to use the new rope and strand interface.
+  Adapted to coordinate with the incoming rope scavenger.
+  New function omniORB::MaxMessageSize(size_t).
+  Now unmarshal context properly.
+
   Revision 1.8  1997/08/21 21:56:00  sll
   Added system exception TRANSACTION_REQUIRED, TRANSACTION_ROLLEDBACK,
   INVALID_TRANSACTION, WRONG_TRANSACTION.
@@ -39,11 +45,15 @@
   */
 
 #include <omniORB2/CORBA.h>
+#include <ropeFactory.h>
+#include <objectManager.h>
+
+size_t  GIOP_Basetypes::max_giop_message_size = 2048 * 1024;
 
 static void 
 MarshallSystemException(GIOP_S *s,
 			const GIOP_Basetypes::_SysExceptRepoID &id,
-			CORBA::SystemException &ex);
+			const CORBA::SystemException &ex);
 
 
 GIOP_S::GIOP_S(Strand *s)
@@ -77,14 +87,13 @@ GIOP_S::~GIOP_S()
   }
 
   if (pd_state != GIOP_S::Idle) {
-    setStrandDying();
+    setStrandIsDying();
   }
   pd_state = GIOP_S::Zombie;
   return;
 }
 
 void
-
 GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
 {
   if (pd_state != GIOP_S::RequestIsBeingProcessed)
@@ -92,7 +101,7 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
       "GIOP_S::RequestReceived() entered with the wrong state.");				  
   if (skip_msg)
     {
-      skip(RdMessageUnRead());
+      skip(RdMessageUnRead(),1);
     }
   else
     {
@@ -119,21 +128,34 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
 	    cerr << "GIOP_S::RequestReceived: garbage left at the end of message." << endl;
 	  }
 	  if (!omniORB::strictIIOP) {
-	    skip(RdMessageUnRead());
+	    skip(RdMessageUnRead(),1);
 	  }
 	  else {
-	    setStrandDying();
+	    setStrandIsDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
 	  }
 	}
+      else {
+	skip(0,1);
+      }
     }
+
+  WrLock();
+  // Strictly speaking, we do not need to have exclusive write access to
+  // the strand so early. However, WrLock() has the side effect of resetting
+  // the heartbeat boolean of the strand and hence tell the strand scavenger
+  // to leave it. Therefore, we call WrLock() here and check if the strand
+  // has been killed asynchronously by the scavenger. If it is the case
+  // (as indicated by strandIsDying() == 1), we do not proceed any further.
+  if (strandIsDying()) {
+    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+  }
 
   pd_state = GIOP_S::WaitingForReply;
   return;
 }
 
 size_t 
-
 GIOP_S::ReplyHeaderSize()
 {
   // Compute the header size, this includes the GIOP Message header and
@@ -156,7 +178,6 @@ GIOP_S::ReplyHeaderSize()
 }
 
 void
-
 GIOP_S::InitialiseReply(const GIOP::ReplyStatusType status,
 		       const size_t  msgsize)
 {
@@ -168,7 +189,16 @@ GIOP_S::InitialiseReply(const GIOP::ReplyStatusType status,
   if (bodysize > MaxMessageSize())
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_YES);
 
-  WrLock();
+  // 
+  // WrLock();
+  //   Strictly speaking, we only need to have exclusive write access to
+  //   the strand from this point on. Hence it is appropriate to acquire the
+  //   write lock here. 
+  //   However, WrLock() also has the side effect of resetting the heartbeat
+  //   boolean of the strand and hence tell the strand scavenger to leave it.
+  //   For this purpose, we have to call WrLock before we do an upcall to the
+  //   implementation class to ensure that the invocation is not discrupted
+  //   by the scavenger killing the strand under our feet.
 
   pd_state = GIOP_S::ReplyIsBeingComposed;
 
@@ -177,7 +207,7 @@ GIOP_S::InitialiseReply(const GIOP::ReplyStatusType status,
 
   WrMessageSize(msgsize);
   put_char_array((CORBA::Char *)MessageHeader::Reply,
-		 sizeof(MessageHeader::Reply));
+		 sizeof(MessageHeader::Reply),1,1);
 
   operator>>= ((CORBA::ULong)bodysize,*this);
 
@@ -192,7 +222,6 @@ GIOP_S::InitialiseReply(const GIOP::ReplyStatusType status,
 }
 
 void
-
 GIOP_S::ReplyCompleted()
 {
   if (!pd_response_expected)
@@ -208,7 +237,7 @@ GIOP_S::ReplyCompleted()
     throw omniORB::fatalException(__FILE__,__LINE__,
 	  "GIOP_S::ReplyCompleted() entered with the wrong state.");
 
-  flush();
+  flush(1);
 
   if (WrMessageSpaceLeft())
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -229,7 +258,6 @@ GIOP_S::ReplyCompleted()
 }
 
 void
-
 GIOP_S::dispatcher(Strand *s)
 {
   GIOP_S gs(s);
@@ -240,7 +268,7 @@ GIOP_S::dispatcher(Strand *s)
 
   MessageHeader::HeaderType hdr;
   gs.get_char_array((CORBA::Char *)hdr,
-		    sizeof(MessageHeader::HeaderType));
+		    sizeof(MessageHeader::HeaderType),1);
 
   switch (hdr[7])
     {
@@ -255,7 +283,7 @@ GIOP_S::dispatcher(Strand *s)
 	  {
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
-	    gs.setStrandDying();
+	    gs.setStrandIsDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
@@ -273,7 +301,7 @@ GIOP_S::dispatcher(Strand *s)
 	  {
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
-	    gs.setStrandDying();
+	    gs.setStrandIsDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
@@ -291,7 +319,7 @@ GIOP_S::dispatcher(Strand *s)
 	  {
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
-	    gs.setStrandDying();
+	    gs.setStrandIsDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
@@ -309,7 +337,7 @@ GIOP_S::dispatcher(Strand *s)
 	  {
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
-	    gs.setStrandDying();
+	    gs.setStrandIsDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.HandleMessageError();
@@ -326,7 +354,7 @@ GIOP_S::dispatcher(Strand *s)
 	  {
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
-	    gs.setStrandDying();
+	    gs.setStrandIsDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.HandleCloseConnection();
@@ -337,7 +365,7 @@ GIOP_S::dispatcher(Strand *s)
       {
 	// Wrong header or invalid message type
 	gs.SendMsgErrorMessage();
-	gs.setStrandDying();
+	gs.setStrandIsDying();
 	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
       }
     }
@@ -345,8 +373,8 @@ GIOP_S::dispatcher(Strand *s)
 }
 
 #define CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION(exrepoid,exvar) do {\
-    if (pd_state == RequestIsBeingProcessed || \
-	pd_state == WaitingForReply) \
+    if (!strandIsDying() && (pd_state == RequestIsBeingProcessed || \
+	pd_state == WaitingForReply)) \
       { \
 	if (pd_state == RequestIsBeingProcessed) { \
            RequestReceived(1); \
@@ -377,7 +405,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     msgsize <<= *this;
     if (msgsize > MaxMessageSize()) {
       SendMsgErrorMessage();
-      setStrandDying();
+      setStrandIsDying();
       throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
     }
 
@@ -385,9 +413,15 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
   
     // XXX Do not support any service context yet, 
     // XXX For the moment, skips the service context
+    CORBA::ULong svcccount;
+    CORBA::ULong svcctag;
     CORBA::ULong svcctxtsize;
-    svcctxtsize <<= *this;
-    skip(svcctxtsize);
+    svcccount <<= *this;
+    while (svcccount-- > 0) {
+      svcctag <<= *this;
+      svcctxtsize <<= *this;
+      skip(svcctxtsize);
+    };
 
     pd_request_id <<= *this;
 
@@ -437,13 +471,13 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
       }
     get_char_array((CORBA::Octet *)pd_principal,octetlen);
   }
-  catch (CORBA::MARSHAL &ex) {
+  catch (const CORBA::MARSHAL &ex) {
     RequestReceived(1);
     SendMsgErrorMessage();
     pd_state = GIOP_S::Idle;
     return;
   }
-  catch (CORBA::NO_MEMORY &ex) {
+  catch (const CORBA::NO_MEMORY &ex) {
     RequestReceived(1);
     MarshallSystemException(this,SysExceptRepoID::NO_MEMORY,ex);
     return;
@@ -455,7 +489,10 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 
   omniObject *obj = 0;    
   try {
-    obj = omni::locateObject(pd_objkey);
+    // In future, we have to partially decode the object key to
+    // determine which object manager it belongs to.
+    // For the moment, there is only one object manager- the rootObjectManager.
+    obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
     if (!obj->dispatch(*this,(const char *)pd_operation,pd_response_expected))
 	{
 	  if (!obj->omniObject::dispatch(*this,(const char*)pd_operation,
@@ -465,8 +502,9 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 	      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
 	    }
 	}
+    
   }
-  catch (CORBA::OBJECT_NOT_EXIST &ex) {
+  catch (const CORBA::OBJECT_NOT_EXIST &ex) {
     if (!obj) {
       RequestReceived(1);
       if (!pd_response_expected) {
@@ -481,104 +519,132 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
       }
     }
     else {
+      omni::objectRelease(obj); obj = 0;
       CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (OBJECT_NOT_EXIST,ex);
     }      
   }
-  catch (CORBA::UNKNOWN &ex) {
+  catch (const CORBA::UNKNOWN &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN,ex);
   }
-  catch (CORBA::BAD_PARAM &ex) {
+  catch (const CORBA::BAD_PARAM &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_PARAM,ex);
   }
-  catch (CORBA::NO_MEMORY &ex) {
+  catch (const CORBA::NO_MEMORY &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_MEMORY,ex);
   }
-  catch (CORBA::IMP_LIMIT &ex) {
+  catch (const CORBA::IMP_LIMIT &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (IMP_LIMIT,ex);
   }
-  catch (CORBA::COMM_FAILURE &ex) {
-    setStrandDying();
+  catch (const CORBA::COMM_FAILURE &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (COMM_FAILURE,ex);
   }
-  catch (CORBA::INV_OBJREF &ex) {
+  catch (const CORBA::INV_OBJREF &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INV_OBJREF,ex);
   }
-  catch (CORBA::NO_PERMISSION &ex) {
+  catch (const CORBA::NO_PERMISSION &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_PERMISSION,ex);
   }
-  catch (CORBA::INTERNAL &ex) {
+  catch (const CORBA::INTERNAL &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INTERNAL,ex);
   }
-  catch (CORBA::MARSHAL &ex) {
+  catch (const CORBA::MARSHAL &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (MARSHAL,ex);
   }
-  catch (CORBA::INITIALIZE &ex) {
+  catch (const CORBA::INITIALIZE &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INITIALIZE,ex);
   }
-  catch (CORBA::NO_IMPLEMENT &ex) {
+  catch (const CORBA::NO_IMPLEMENT &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_IMPLEMENT,ex);
   }
-  catch (CORBA::BAD_TYPECODE &ex) {
+  catch (const CORBA::BAD_TYPECODE &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_TYPECODE,ex);
   }
-  catch (CORBA::BAD_OPERATION &ex) {
+  catch (const CORBA::BAD_OPERATION &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_OPERATION,ex);
   }
-  catch (CORBA::NO_RESOURCES &ex) {
+  catch (const CORBA::NO_RESOURCES &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_RESOURCES,ex);
   }
-  catch (CORBA::NO_RESPONSE &ex) {
+  catch (const CORBA::NO_RESPONSE &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_RESPONSE,ex);
   }
-  catch (CORBA::PERSIST_STORE &ex) {
+  catch (const CORBA::PERSIST_STORE &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (PERSIST_STORE,ex);
   }
-  catch (CORBA::BAD_INV_ORDER &ex) {
+  catch (const CORBA::BAD_INV_ORDER &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_INV_ORDER,ex);
   }
-  catch (CORBA::TRANSIENT &ex) {
+  catch (const CORBA::TRANSIENT &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (TRANSIENT,ex);
   }
-  catch (CORBA::FREE_MEM &ex) {
+  catch (const CORBA::FREE_MEM &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (FREE_MEM,ex);
   }
-  catch (CORBA::INV_IDENT &ex) {
+  catch (const CORBA::INV_IDENT &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INV_IDENT,ex);
   }
-  catch (CORBA::INV_FLAG &ex) {
+  catch (const CORBA::INV_FLAG &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INV_FLAG,ex);
   }
-  catch (CORBA::INTF_REPOS &ex) {
+  catch (const CORBA::INTF_REPOS &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INTF_REPOS,ex);
   }
-  catch (CORBA::BAD_CONTEXT &ex) {
+  catch (const CORBA::BAD_CONTEXT &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_CONTEXT,ex);
   }
-  catch (CORBA::OBJ_ADAPTER &ex) {
+  catch (const CORBA::OBJ_ADAPTER &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (OBJ_ADAPTER,ex);
   }
-  catch (CORBA::DATA_CONVERSION &ex) {
+  catch (const CORBA::DATA_CONVERSION &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (DATA_CONVERSION,ex);
   }
-  catch (CORBA::TRANSACTION_REQUIRED &ex) {
+  catch (const CORBA::TRANSACTION_REQUIRED &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (TRANSACTION_REQUIRED,ex);
   }
-  catch (CORBA::TRANSACTION_ROLLEDBACK &ex) {
+  catch (const CORBA::TRANSACTION_ROLLEDBACK &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (TRANSACTION_ROLLEDBACK,ex);
   }
-  catch (CORBA::INVALID_TRANSACTION &ex) {
+  catch (const CORBA::INVALID_TRANSACTION &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INVALID_TRANSACTION,ex);
   }
-  catch (CORBA::WRONG_TRANSACTION &ex) {
+  catch (const CORBA::WRONG_TRANSACTION &ex) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (WRONG_TRANSACTION,ex);
   }
   catch (...) {
+    if (obj) omni::objectRelease(obj); obj = 0;
     CORBA::UNKNOWN ex(0,CORBA::COMPLETED_MAYBE);
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN,ex);
   }
-  if (obj)
-    omni::objectRelease(obj);
-
+  if (obj) omni::objectRelease(obj);
   return;
 }
 #undef CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION
@@ -594,7 +660,7 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
     msgsize <<= *this;
     if (msgsize > MaxMessageSize()) {
       SendMsgErrorMessage();
-      setStrandDying();
+      setStrandIsDying();
       throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
     }
 
@@ -616,13 +682,13 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
     }
     RequestReceived();
   }
-  catch (CORBA::MARSHAL &ex) {
+  catch (const CORBA::MARSHAL &ex) {
     RequestReceived(1);
     SendMsgErrorMessage();
     pd_state = GIOP_S::Idle;
     return;
   }
-  catch (CORBA::NO_MEMORY &ex) {
+  catch (const CORBA::NO_MEMORY &ex) {
     RequestReceived(1);
     MarshallSystemException(this,SysExceptRepoID::NO_MEMORY,ex);
     return;
@@ -632,7 +698,10 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
   GIOP::LocateStatusType status;
 
   try {
-    obj = omni::locateObject(pd_objkey);
+    // In future, we have to partially decode the object key to
+    // determine which object manager it belongs to.
+    // For the moment, there is only one object manager- rootObjectManager.
+    obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
     omni::objectRelease(obj);
     status = GIOP::OBJECT_HERE;
     // XXX what if the object is relocated. We should do GIOP::OBJECT_FORWARD
@@ -648,12 +717,12 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
   size_t bodysize = 8;
   WrMessageSize(0);
   put_char_array((CORBA::Char *)MessageHeader::LocateReply,
-		 sizeof(MessageHeader::LocateReply));
+		 sizeof(MessageHeader::LocateReply),1,1);
   operator>>= ((CORBA::ULong)bodysize,*this);
   operator>>= (pd_request_id,*this);
   operator>>= ((CORBA::ULong)status,*this);
 
-  flush();
+  flush(1);
   pd_state = GIOP_S::Idle;
   WrUnlock();
 
@@ -661,7 +730,6 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
 }
 
 void
-
 GIOP_S::HandleCancelRequest(CORBA::Boolean byteorder)
 {
   // XXX Not supported yet!!!
@@ -673,7 +741,7 @@ GIOP_S::HandleCancelRequest(CORBA::Boolean byteorder)
   msgsize <<= *this;
   if (msgsize > MaxMessageSize()) {
     SendMsgErrorMessage();
-    setStrandDying();
+    setStrandIsDying();
     throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
   }
 
@@ -684,7 +752,6 @@ GIOP_S::HandleCancelRequest(CORBA::Boolean byteorder)
 }
 
 void
-
 GIOP_S::HandleMessageError()
 {
   // Hm... a previous message might have gone wrong
@@ -694,23 +761,21 @@ GIOP_S::HandleMessageError()
 }
 
 void
-
 GIOP_S::HandleCloseConnection()
 {
-  setStrandDying();
+  setStrandIsDying();
   throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
 }
 
 void
-
 GIOP_S::SendMsgErrorMessage()
 {
   WrLock();
   WrMessageSize(0);
   put_char_array((CORBA::Char *)MessageHeader::MessageError,
-		 sizeof(MessageHeader::MessageError));
+		 sizeof(MessageHeader::MessageError),1,0);
   operator>>= ((CORBA::ULong)0,*this);
-  flush();
+  flush(1);
   WrUnlock();
   return;
 }
@@ -719,7 +784,7 @@ static
 void 
 MarshallSystemException(GIOP_S *s,
 			const GIOP_Basetypes::_SysExceptRepoID &id,
-			CORBA::SystemException &ex)
+			const CORBA::SystemException &ex)
 {
 
   CORBA::ULong msgsize = GIOP_S::ReplyHeaderSize();
@@ -742,3 +807,16 @@ MarshallSystemException(GIOP_S *s,
   s->ReplyCompleted();
   return;
 }
+
+size_t
+omniORB::MaxMessageSize()
+{
+  return GIOP_Basetypes::max_giop_message_size;
+}
+
+void
+omniORB::MaxMessageSize(size_t newvalue)
+{
+  GIOP_Basetypes::max_giop_message_size = newvalue;
+}
+
