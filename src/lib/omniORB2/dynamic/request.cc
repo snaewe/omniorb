@@ -27,6 +27,10 @@
 //   Implementation of CORBA::Request.
 //
 
+
+//?? Could this be implemented using proxy call descs?
+
+
 #include <request.h>
 #include <deferredRequest.h>
 #include <context.h>
@@ -330,11 +334,21 @@ RequestImpl::invoke()
 	GIOP_C giop_client(ropeAndKey.rope());
 	reuse = giop_client.isReUsingExistingConnection();
 
+	ContextListImpl* context_list = 0;
+	if( !CORBA::is_nil(pd_contexts) )
+	  context_list = (ContextListImpl*)(CORBA::ContextList_ptr)pd_contexts;
+
 	// Calculate the size of the message.
 	CORBA::ULong message_size =
 	  GIOP_C::RequestHeaderSize(ropeAndKey.keysize(), operation_len);
 
 	message_size = calculateArgDataSize(message_size);
+	if( context_list )
+	  message_size =
+	    CORBA::Context::NP_alignedSize(pd_context,
+					   context_list->NP_list(),
+					   context_list->count(),
+					   message_size);
 
 	giop_client.InitialiseRequest(ropeAndKey.key(), ropeAndKey.keysize(),
 				      pd_operation, operation_len,
@@ -344,7 +358,11 @@ RequestImpl::invoke()
 	marshalArgs(giop_client);
 
 	// If context strings are supplied, marshal them.
-	if( !CORBA::is_nil(pd_contexts) )  marshalContext(giop_client);
+	if( context_list )
+	  CORBA::Context::marshalContext(pd_context,
+					 context_list->NP_list(),
+					 context_list->count(),
+					 giop_client);
 
 	// Wait for the reply.
 	switch( giop_client.ReceiveReply() ) {
@@ -474,7 +492,7 @@ RequestImpl::invoke()
     }
 #endif
   }
-  // Either throw system exceptions, or store in pd_environment
+  // Either throw system exceptions, or store in pd_environment.
   catch(CORBA::SystemException& ex){
     INVOKE_DONE();
     if( omniORB::diiThrowsSysExceptions ) {
@@ -510,25 +528,39 @@ RequestImpl::send_oneway()
       CORBA::Boolean reuse = 0;
 
       try{
-	// Get a GIOP driven strand
+	// Get a GIOP driven strand.
 	GIOP_C giop_client(ropeAndKey.rope());
 	reuse = giop_client.isReUsingExistingConnection();
 
-	// Calculate the size of the message
+	ContextListImpl* context_list = 0;
+	if( !CORBA::is_nil(pd_contexts) )
+	  context_list = (ContextListImpl*)(CORBA::ContextList_ptr)pd_contexts;
+
+	// Calculate the size of the message.
 	CORBA::ULong message_size =
 	  GIOP_C::RequestHeaderSize(ropeAndKey.keysize(), operation_len);
 
 	message_size = calculateArgDataSize(message_size);
+	if( context_list )
+	  message_size =
+	    CORBA::Context::NP_alignedSize(pd_context,
+					   context_list->NP_list(),
+					   context_list->count(),
+					   message_size);
 
 	giop_client.InitialiseRequest(ropeAndKey.key(), ropeAndKey.keysize(),
 				      pd_operation, operation_len,
 				      message_size, 1);
 
-	// Marshal the argumentgs to the operation
+	// Marshal the argumentgs to the operation.
 	marshalArgs(giop_client);
 
-	// If context strings are supplied, marshal them
-	if( !CORBA::is_nil(pd_contexts) )  marshalContext(giop_client);
+	// If context strings are supplied, marshal them.
+	if( context_list )
+	  CORBA::Context::marshalContext(pd_context,
+					 context_list->NP_list(),
+					 context_list->count(),
+					 giop_client);
 
 	// Wait for the reply.
 	switch( giop_client.ReceiveReply() ) {
@@ -576,7 +608,7 @@ RequestImpl::send_oneway()
     }
 #endif
   }
-  // Either throw system exceptions, or store in pd_environment
+  // Either throw system exceptions, or store in pd_environment.
   catch(CORBA::SystemException& ex){
     INVOKE_DONE();
     if( omniORB::diiThrowsSysExceptions ) {
@@ -694,31 +726,6 @@ RequestImpl::unmarshalArgs(GIOP_C& giop_client)
     CORBA::NamedValue_ptr arg = pd_arguments->item(i);
     if( arg->flags() & CORBA::ARG_OUT || arg->flags() & CORBA::ARG_INOUT )
       arg->value()->NP_unmarshalDataOnly(giop_client);
-  }
-}
-
-
-void
-RequestImpl::marshalContext(GIOP_C& giop_client)
-{
-  if( CORBA::is_nil(pd_context) )
-    throw CORBA::BAD_CONTEXT(0, CORBA::COMPLETED_NO);
-
-  CORBA::ULong count = pd_contexts->count();
-  (count * 2) >>= giop_client;
-
-  for( CORBA::ULong i = 0; i < count; i++ ){
-    const char* name = pd_contexts->item(i);
-    CORBA::ULong len = CORBA::ULong(strlen(name) + 1);
-    len >>= giop_client;
-    giop_client.put_char_array((CORBA::Char*)name, len);
-
-    const char* value =
-      ((ContextImpl*)(CORBA::Context_ptr) pd_context)->lookup_single(name);
-    if( !value )  value = "";
-    len = CORBA::ULong(strlen(value) + 1);
-    len >>= giop_client;
-    giop_client.put_char_array((CORBA::Char*)value, len);
   }
 }
 
