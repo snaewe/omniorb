@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.39.6.10  1999/10/18 17:27:01  djr
+  Work-around for MSVC scoping bug.
+
   Revision 1.39.6.9  1999/10/16 13:22:57  djr
   Changes to support compiling on MSVC.
 
@@ -913,8 +916,8 @@ o2be_interface::produce_skel(std::fstream &s)
   s << o2be_template(map,
    "fqproxy::~proxy() {}\n\n\n"
 
-   "fqproxy::proxy(const char* mdri, IOP::TaggedProfileList* p,\n"
-   "         omniIdentity* id, omniLocalIdentity* lid) :\n"
+   "fqproxy::proxy(const char* mdri,\n"
+   "  IOP::TaggedProfileList* p, omniIdentity* id, omniLocalIdentity* lid) :\n"
   );
   {
     AST_Interface** intftable = inherits();
@@ -922,7 +925,13 @@ o2be_interface::produce_skel(std::fstream &s)
     for( int i = 0; i < ni; i++ ) {
       o2be_interface* intf = o2be_interface::narrow_from_decl(intftable[i]);
       //?? Does this need to be unambiguous to make MSVC happy?
+#if 1
+      IND(s); s << "   "
+		<< intf->unambiguous_proxy_name(this)
+		<< "(mdri, p, id, lid),\n";
+#else
       IND(s); s << "   " << intf->proxy_fqname() << "(mdri, p, id, lid),\n";
+#endif
     }
   }
   s << o2be_template(map,
