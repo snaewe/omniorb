@@ -1,3 +1,11 @@
+Fri Feb 27 12:41:54 GMT 2004 dgrisby
+====================================
+
+- Fix race conditions in connection shutdown. Thanks Serguei Kolos.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Fri Feb 13 16:40:15 GMT 2004 dgrisby
 ====================================
 
