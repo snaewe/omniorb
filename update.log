@@ -1,3 +1,12 @@
+
+Thu Dec  2 19:01:41 GMT 1999 djr
+================================
+
+- Fixed bug in marshalling/unmarshalling of arrays.
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+
 Fri Nov  5 17:00:44 GMT 1999 dpg1
 =================================
 
@@ -25,6 +34,7 @@ Tue Oct 26 20:34:57 BST 1999 sll
 src/lib/omniORB2/dynamic/dynAny.h
 src/lib/omniORB2/dynamic/dynAny.cc
 src/lib/omniORB2/dynamic/typecode.cc
+
 
 Wed Oct 13 16:40:34 BST 1999 djr
 ================================
@@ -61,6 +71,7 @@ Mon Sep 27 17:55:00 BST 1999 sll
 
 external_merge/mk/platforms/powerpc_linux_2.2_glibc.mk
 
+
 Fri Sep 24 23:22:20 BST 1999 sll
 ================================
 
@@ -76,6 +87,7 @@ src/lib/omniORB2/orbcore/dir.mk
 src/lib/omniORB2/dynamic/dir.mk
 src/lib/omniORB2/lifecycle/dir.mk
 
+
 Fri Sep 24 15:44:15 BST 1999 sll
 ================================
 
@@ -86,6 +98,7 @@ src/lib/omniORB2/dir.mk
 src/lib/omniORB2/orbcore/dir.mk
 src/lib/omniORB2/dynamic/dir.mk
 src/lib/omniORB2/lifecycle/dir.mk
+
 
 Fri Sep 24 12:30:49 BST 1999 sll
 ================================
@@ -103,6 +116,7 @@ Thu Sep 23 20:52:03 BST 1999 sll
 - fixed bad signature for omni_thread::stacksize(unsigned long)
 
 include/omnithread.h
+
 
 Thu Sep 23 20:04:22 BST 1999 sll
 ===============================
@@ -152,6 +166,7 @@ Wed Sep 22 20:56:01 BST 1999 sll
 - typo.
 
 src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
 
 Wed Sep 22 19:50:20 BST 1999 sll
 ================================
@@ -210,6 +225,7 @@ Wed Sep 22 17:27:15 BST 1999 djr
 
 src/lib/omniORB2/dynamic/dynAny.h
 src/lib/omniORB2/dynamic/dynAny.cc
+
 
 Wed Sep 22 17:09:13 BST 1999 sll
 ================================
@@ -321,6 +337,7 @@ src/lib/omniORB2/orbcore/strand.cc
 src/lib/omniORB2/orbcore/tcpSocket.cc
 src/lib/omniORB2/orbcore/tcpSocket.h
 src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
 
 Tue Sep 21 18:02:39 BST 1999 sll
 ================================
