@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/09/27 17:50:28  sll
+ Updated to use the new cdrStream abstraction.
+ Added extra members for use in the upcalls on the server side.
+
  Revision 1.2.2.1  2000/07/17 10:35:50  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -50,35 +54,34 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 #include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// omniCallDescriptor /////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::ULong
-omniCallDescriptor::alignedSize(CORBA::ULong in)
+void
+omniCallDescriptor::initialiseCall(cdrStream&)
 {
-  return in;
+  // no-op
 }
 
-
 void
-omniCallDescriptor::marshalArguments(GIOP_C&)
+omniCallDescriptor::marshalArguments(cdrStream&)
 {
   // no-op
 }
 
 
 void
-omniCallDescriptor::unmarshalReturnedValues(GIOP_C&)
+omniCallDescriptor::unmarshalReturnedValues(cdrStream&)
 {
   // no-op
 }
@@ -105,48 +108,55 @@ omniCallDescriptor::userException(GIOP_C& giop_c, const char* repoId)
   OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
 }
 
+void
+omniCallDescriptor::unmarshalArguments(cdrStream&)
+{
+  // no-op
+}
+
+
+void
+omniCallDescriptor::marshalReturnedValues(cdrStream&)
+{
+  // no-op
+}
+
+
+
 //////////////////////////////////////////////////////////////////////
 ///////////// omniStdCallDesc::_cCORBA_mObject_i_cstring /////////////
 //////////////////////////////////////////////////////////////////////
 
 // NB. Copied from generated code.
 
-CORBA::ULong omniStdCallDesc::_cCORBA_mObject_i_cstring::alignedSize(CORBA::ULong msgsize)
+void omniStdCallDesc::_cCORBA_mObject_i_cstring::marshalArguments(cdrStream& s)
 {
-  msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4;
-  msgsize += ((const char*) arg_0) ? strlen((const char*) arg_0) + 1 : 1;
-  return msgsize;
+  _CORBA_String_helper::marshal(arg_0,s);
 }
 
 
-void omniStdCallDesc::_cCORBA_mObject_i_cstring::marshalArguments(GIOP_C& giop_client)
+void omniStdCallDesc::_cCORBA_mObject_i_cstring::unmarshalReturnedValues(cdrStream& s)
 {
-  {
-    CORBA::ULong _len = (((const char*) arg_0)? strlen((const char*) arg_0) + 1 : 1);
-    _len >>= giop_client;
-    if (_len > 1)
-      giop_client.put_char_array((const CORBA::Char *)((const char*) arg_0),_len);
-    else {
-      if ((const char*) arg_0 == 0 && omniORB::traceLevel > 1)
-        _CORBA_null_string_ptr(0);
-      CORBA::Char('\0') >>= giop_client;
-    }
-  }
+  pd_result = CORBA::Object::_unmarshalObjRef(s);
 }
 
 
-void omniStdCallDesc::_cCORBA_mObject_i_cstring::unmarshalReturnedValues(GIOP_C& giop_client)
+void omniStdCallDesc::_cCORBA_mObject_i_cstring::unmarshalArguments(cdrStream& s)
 {
-  pd_result = CORBA::Object_Helper::unmarshalObjRef(giop_client);
+  arg_0 = _CORBA_String_helper::unmarshal(s);
+}
+
+
+void omniStdCallDesc::_cCORBA_mObject_i_cstring::marshalReturnedValues(cdrStream& s)
+{
+  CORBA::Object::_marshalObjRef(pd_result,s);
 }
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////// omniLocalOnlyCallDescriptor ////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::ULong
-omniLocalOnlyCallDescriptor::alignedSize(CORBA::ULong)
+void omniLocalOnlyCallDescriptor::marshalArguments(cdrStream&)
 {
   OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
-  return 0;
 }
