@@ -28,6 +28,11 @@
  
 /*
   $Log$
+  Revision 1.10  1999/08/31 19:22:37  sll
+  Revert back to single inheritance. The bug that causes occasional thread
+  exit on startup has been identified. start_undetached() should be called
+  from the most derived type. Previously it was called in _Scavenger.
+
   Revision 1.9  1999/08/30 16:49:00  sll
   Scavenger threads now scan for idle connections and stuck remote calls.
   Another thread Ripper_t is used to do the actual shutdown.
@@ -74,7 +79,7 @@
 #include <objectManager.h>
 #include <scavenger.h>
 
-class _Scavenger {
+class _Scavenger : public omni_thread {
 public:
   _Scavenger() : pd_isdying(0), pd_cond(&pd_mutex)  {}
   void poke() { pd_cond.signal(); }
@@ -86,23 +91,10 @@ protected:
   CORBA::Boolean pd_isdying;
   omni_mutex     pd_mutex;
   omni_condition pd_cond;
-
-  // XXX The real scavenger classes multiple inherit this class
-  //     and the omni_thread class. An alternative would be
-  //     to use single inheritance with this class inherit
-  //     from omni_thread class.
-  //     Unfortunately, this *DOES NOT* work! At least with
-  //     gcc, in one out of 10 invocations, the overloaded virtual
-  //     function run_undetached() is not called! Instead the
-  //     default one in the omni_thread library is called. The
-  //     default returns immediately. The result is that the scavenger
-  //     thread never got a chance to start! Looks like this is a
-  //     compiler bug. Anyway, direct inheritance to omni_thread seems
-  //     to work.
 };
 
 
-class Ripper_t : public _Scavenger, public omni_thread {
+class Ripper_t : public _Scavenger {
   // Instance of this class do the dirty work of calling shutdown on the
   // strand. The call shutdown may actually block for considerable time.
   // We do not want the in or out scavenger thread to lose track of
@@ -125,7 +117,7 @@ private:
   Ripper_t();
 };
 
-class inScavenger_t : public _Scavenger, public omni_thread {
+class inScavenger_t : public _Scavenger {
 public:
   inScavenger_t () { start_undetached(); }
   virtual void* run_undetached(void *arg);
@@ -134,7 +126,7 @@ protected:
 };
 
 
-class outScavenger_t : public _Scavenger, public omni_thread {
+class outScavenger_t : public _Scavenger {
 public:
   outScavenger_t () { start_undetached(); }
   virtual void* run_undetached(void *arg);
