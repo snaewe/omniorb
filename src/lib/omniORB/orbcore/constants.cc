@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10  1998/08/05 18:05:05  sll
+  Version variable is changed to omniORB_2_6 (previously omniORB_2_5).
+
   Revision 1.9  1998/04/07 19:31:18  sll
   Updated to use namespace and bool type.
 
@@ -54,7 +57,7 @@
 #include <omniORB2/CORBA.h>
 
 // See the description of this variable in omniInternal.h
-const char* omniORB_2_5 = "omniORB version 2.5.x";
+const char* omniORB_2_6 = "omniORB version 2.6.x";
 
 const IOP::ProfileId       IOP::TAG_INTERNET_IOP = 0;
 const IOP::ProfileId       IOP::TAG_MULTIPLE_COMPONENTS = 1;
