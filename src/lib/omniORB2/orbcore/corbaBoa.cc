@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.7  1998/08/21 19:15:07  sll
+  Added new command line option: -BOAno_bootstrap_agent. If this option
+  is specified, do not initialise the special object that can respond to
+  incoming request for initial object references.
+
   Revision 1.6  1998/08/14 13:43:39  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -55,6 +60,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <bootstrap_i.h>
 #include <ropeFactory.h>
 #include <objectManager.h>
 #ifndef __atmos__
@@ -80,6 +86,7 @@ static omni_mutex         internalLock;
 static omni_condition     internalCond(&internalLock);
 static int                internalBlockingFlag = 0;
 static omniObjectManager* rootObjectManager = 0;
+static CORBA::Boolean     noBootStrapAgent = 0;
 
 omniObjectManager*
 omniObjectManager::root(CORBA::Boolean no_exception) throw (CORBA::OBJ_ADAPTER)
@@ -209,6 +216,9 @@ ORB::BOA_init(int &argc, char **argv, const char *boa_identifier)
       }
     }
     boa = new CORBA::BOA;
+    if (!noBootStrapAgent) {
+      	omniInitialReferences::singleton()->initialise_bootstrap_agentImpl();
+    }
   }
   catch (...) {
     if (rootObjectManager) {
@@ -537,7 +547,14 @@ parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
 	continue;
       }
 
-      // Reach here only if the argument in this form: -ORBxxxxx
+      // -BOAno_bootstrap_agent
+      if (strcmp(argv[idx],"-BOAno_bootstrap_agent") == 0) {
+	noBootStrapAgent = 1;
+	move_args(argc,argv,idx,1);
+	continue;
+      }
+
+      // Reach here only if the argument in this form: -BOAxxxxx
       // is not recognised.
       if (omniORB::traceLevel > 0) {
 	omniORB::log << "BOA_init failed: unknown BOA argument ("
