@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.6  2001/08/29 11:54:23  dpg1
+# Clean up const handling in IDL compiler.
+#
 # Revision 1.8.2.5  2001/03/13 10:32:16  dpg1
 # Fixed point support.
 #
@@ -137,10 +140,20 @@ module @id@ {""", id = node.identifier())
 
         if node.constKind() == idltype.tk_enum:
             value = "::" + idlutil.ccolonName(node.value().scopedName())
+
         elif node.constKind() == idltype.tk_string:
-            value = '"' + repr(node.value())[1:-1] + '"'
-        elif node.constKind() == idltype.tk_char:
-            value = "'" + repr(node.value())[1:-1] + "'"
+            value = '"' + idlutil.escapifyString(node.value()) + '"'
+
+        elif node.constKind() == idltype.tk_wstring:
+            value = 'L"' + idlutil.escapifyWString(node.value()) + '"'
+
+        elif node.constKind() == idltype.tk_wchar:
+            value = "L'" + idlutil.escapifyWString(node.value()) + "'"
+
+        elif node.constKind() in [idltype.tk_float, idltype.tk_double,
+                                  idltype.tk_longdouble]:
+            value = idlutil.reprFloat(node.value())
+
         elif node.constKind() == idltype.tk_fixed:
             value = node.value() + "d"
         else:

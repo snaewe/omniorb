@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6.2.5  2001/08/29 11:54:20  dpg1
+// Clean up const handling in IDL compiler.
+//
 // Revision 1.6.2.4  2001/03/13 10:32:11  dpg1
 // Fixed point support.
 //
@@ -71,20 +74,17 @@ rt IdlExpr::fn() { \
 
 // Error functions
 
-EXPR_ERR(IDL_Short,        evalAsShort,      "a short",               1)
-EXPR_ERR(IDL_Long,         evalAsLong,       "a long",                1)
-EXPR_ERR(IDL_UShort,       evalAsUShort,     "an unsigned short",     1)
-EXPR_ERR(IDL_ULong,        evalAsULong,      "an unsigned long",      1)
+EXPR_ERR(IdlLongVal, evalAsLongV, "an integer", IdlLongVal((IDL_ULong)1))
+#ifdef HAS_LongLong
+EXPR_ERR(IdlLongLongVal, evalAsLongLongV, "an integer",
+         IdlLongLongVal((IDL_ULongLong)1))
+#endif
+
 EXPR_ERR(IDL_Float,        evalAsFloat,      "a float",               1.0)
 EXPR_ERR(IDL_Double,       evalAsDouble,     "a double",              1.0)
 EXPR_ERR(IDL_Boolean,      evalAsBoolean,    "a boolean",             0)
 EXPR_ERR(IDL_Char,         evalAsChar,       "a character",           '!')
-EXPR_ERR(IDL_Octet,        evalAsOctet,      "an octet",              1)
 EXPR_ERR(const char*,      evalAsString,     "a string",              "!")
-#ifdef HAS_LongLong
-EXPR_ERR(IDL_LongLong,     evalAsLongLong,   "a long long",           1)
-EXPR_ERR(IDL_ULongLong,    evalAsULongLong,  "an unsigned long long", 1)
-#endif
 #ifdef HAS_LongDouble
 EXPR_ERR(IDL_LongDouble,   evalAsLongDouble, "a long double",         1.0)
 #endif
@@ -100,6 +100,91 @@ evalAsEnumerator(const Enum* target)
   return 0;
 }
 
+//
+// Conversions to IDL integer types
+
+IDL_Short IdlExpr::evalAsShort()
+{
+  IdlLongVal v = evalAsLongV();
+  if (v.negative) {
+    if (v.s < -0x8000)
+      IdlError(file(), line(), "Value too small for short");
+    return v.s;
+  }
+  else {
+    if (v.u > 0x7fff)
+      IdlError(file(), line(), "Value too large for short");
+    return v.u;
+  }
+}
+IDL_Long IdlExpr::evalAsLong()
+{
+  IdlLongVal v = evalAsLongV();
+  if (v.negative) {
+    return v.s;
+  }
+  else {
+    if (v.u > 0x7fffffff)
+      IdlError(file(), line(), "Value too large for long");
+    return v.u;
+  }
+}
+IDL_UShort IdlExpr::evalAsUShort()
+{
+  IdlLongVal v = evalAsLongV();
+
+  if (v.negative) {
+    IdlError(file(), line(), "Value too small for unsigned short");
+  }
+  else if (v.u > 0xffff) {
+    IdlError(file(), line(), "Value too large for unsigned short");
+  }
+  return v.u;
+}
+IDL_ULong IdlExpr::evalAsULong()
+{
+  IdlLongVal v = evalAsLongV();
+
+  if (v.negative) {
+    IdlError(file(), line(), "Value too small for unsigned long");
+  }
+  return v.u;
+}
+IDL_Octet IdlExpr::evalAsOctet()
+{
+  IdlLongVal v = evalAsLongV();
+
+  if (v.negative) {
+    IdlError(file(), line(), "Value too small for octet");
+  }
+  else if (v.u > 0xff) {
+    IdlError(file(), line(), "Value too large for octet");
+  }
+  return v.u;
+}
+#ifdef HAS_LongLong
+IDL_LongLong IdlExpr::evalAsLongLong()
+{
+  IdlLongLongVal v = evalAsLongLongV();
+  if (v.negative) {
+    return v.s;
+  }
+  else {
+    if (v.u > _CORBA_LONGLONG_CONST(0x7fffffffffffffff))
+      IdlError(file(), line(), "Value too large for long long");
+    return v.u;
+  }
+}
+IDL_ULongLong IdlExpr::evalAsULongLong()
+{
+  IdlLongLongVal v = evalAsLongLongV();
+
+  if (v.negative) {
+    IdlError(file(), line(), "Value too small for unsigned long long");
+  }
+  return v.u;
+}
+#endif
 
 // ScopedName handling
 IdlExpr*
@@ -133,51 +218,18 @@ const IDL_WChar* DummyExpr::evalAsWString() { return EMPTY_WSTRING; }
 
 // Literals
 
-// Integer literal
-IDL_Short IntegerExpr::evalAsShort() {
-  if (value_ > ((1 << 15) - 1)) {
-    IdlError(file(), line(), "Integer literal is too large for short");
-    return 1;
-  }
-  return value_;
-}
-IDL_Long IntegerExpr::evalAsLong() {
-  if (value_ > ((1ul << 31) - 1)) {
-    IdlError(file(), line(), "Integer literal is too large for long");
-    return 1;
-  }
-  return value_;
-}
-IDL_UShort IntegerExpr::evalAsUShort() {
-  if (value_ > ((1 << 16) - 1)) {
-    IdlError(file(), line(),
-	     "Integer literal is too large for unsigned short");
-    return 1;
-  }
-  return value_;
-}
-IDL_ULong IntegerExpr::evalAsULong() {
+IdlLongVal IntegerExpr::evalAsLongV() {
 #ifdef HAS_LongLong
   if (value_ > 0xffffffff) {
     IdlError(file(), line(), "Integer literal is too large for unsigned long");
-    return 1;
+    return IdlLongVal((IDL_ULong)1);
   }
 #endif
-  return value_;
-}
-IDL_Octet IntegerExpr::evalAsOctet() {
-  if (value_ > 255) {
-    IdlError(file(), line(), "Integer literal is too large for octet");
-    return 1;
-  }
-  return value_;
+  return IdlLongVal((IDL_ULong)value_);
 }
 #ifdef HAS_LongLong
-IDL_LongLong IntegerExpr::evalAsLongLong() {
-  return value_;
-}
-IDL_ULongLong IntegerExpr::evalAsULongLong() {
-  return value_;
+IdlLongLongVal IntegerExpr::evalAsLongLongV() {
+  return IdlLongLongVal((IDL_ULongLong)value_);
 }
 #endif
 
@@ -258,342 +310,90 @@ Enumerator* EnumExpr::evalAsEnumerator(const Enum* target) {
 
 // Constant
 
-IDL_Short ConstExpr::evalAsShort() {
-  IDL_Short   r;
-  IDL_Boolean p = 1;
-
+IdlLongVal ConstExpr::evalAsLongV() {
   switch (c_->constKind()) {
-  case IdlType::tk_short: r = c_->constAsShort(); break;
-  case IdlType::tk_long: {
-    IDL_Long z = c_->constAsLong();
-    r = z; p = ((z >= -0x8000) && (z <= 0x7fff));
-    break;
-  }
-  case IdlType::tk_ushort: {
-    IDL_UShort z = c_->constAsUShort();
-    r = z; p = (z <= 0x7fff);
-    break;
-  }
-  case IdlType::tk_ulong: {
-    IDL_ULong z = c_->constAsULong();
-    r = z; p = (z <= 0x7fff);
-    break;
-  }
-  case IdlType::tk_octet: r = c_->constAsOctet(); break;
+
+  case IdlType::tk_short:  return IdlLongVal(IDL_Long (c_->constAsShort()));
+  case IdlType::tk_long:   return IdlLongVal(IDL_Long (c_->constAsLong()));
+  case IdlType::tk_ushort: return IdlLongVal(IDL_ULong(c_->constAsUShort()));
+  case IdlType::tk_ulong:  return IdlLongVal(IDL_ULong(c_->constAsULong()));
+  case IdlType::tk_octet:  return IdlLongVal(IDL_ULong(c_->constAsOctet()));
+
 #ifdef HAS_LongLong
-  case IdlType::tk_longlong: {
-    IDL_LongLong z = c_->constAsLongLong();
-    r = z; p = ((z >= -0x8000) && (z <= 0x7fff));
-    break;
-  }
-  case IdlType::tk_ulonglong: {
-    IDL_ULongLong z = c_->constAsULongLong();
-    r = z; p = (z <= 0x7fff);
-    break;
-  }
+  case IdlType::tk_longlong:
+    {
+      IDL_LongLong v = c_->constAsLongLong();
+      if (v < -0x80000000 || v > 0xffffffff) goto precision_error;
+      if (v >= 0)
+	return IdlLongVal(IDL_ULong(v));
+      else
+	return IdlLongVal(IDL_Long(v));
+    }
+  case IdlType::tk_ulonglong:
+    {
+      IDL_ULongLong v = c_->constAsULongLong();
+      if (v > 0xffffffff) goto precision_error;
+      return IdlLongVal(IDL_ULong(v));
+    }
 #endif
   default:
-    r = 1; p = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(), "Cannot interpret constant `%s' as short", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
+    {
+      char* ssn = scopedName_->toString();
+      IdlError(file(), line(),
+	       "Cannot interpret constant `%s' as an integer", ssn);
+      IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
+      delete [] ssn;
+      return IdlLongVal((IDL_ULong)1);
+    }
   }
-  if (!p) {
-    r = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Value of constant `%s' exceeds precision of short", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  return r;
-}
-
-IDL_Long ConstExpr::evalAsLong() {
-  IDL_Long    r;
-  IDL_Boolean p = 1;
-
-  switch (c_->constKind()) {
-  case IdlType::tk_short:  r = c_->constAsShort(); break;
-  case IdlType::tk_long:   r = c_->constAsLong();  break;
-  case IdlType::tk_ushort: r = c_->constAsUShort(); break;
-  case IdlType::tk_ulong: {
-    IDL_ULong z = c_->constAsULong();
-    r = z; p = (z <= 0x7fffffff);
-    break;
-  }
-  case IdlType::tk_octet: r = c_->constAsOctet(); break;
-#ifdef HAS_LongLong
-  case IdlType::tk_longlong: {
-    IDL_LongLong z = c_->constAsLongLong();
-    r = z; p = ((z >= -0x80000000) && (z <= 0x7fffffff));
-    break;
-  }
-  case IdlType::tk_ulonglong: {
-    IDL_ULongLong z = c_->constAsULongLong();
-    r = z; p = (z <= 0x7fffffff);
-    break;
-  }
-#endif
-  default:
-    r = 1; p = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(), "Cannot interpret constant `%s' as long", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  if (!p) {
-    r = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Value of constant `%s' exceeds precision of long", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  return r;
-}
-
-IDL_UShort ConstExpr::evalAsUShort() {
-  IDL_UShort  r;
-  IDL_Boolean p = 1;
-
-  switch (c_->constKind()) {
-  case IdlType::tk_short: {
-    IDL_Short z = c_->constAsShort();
-    r = z; p = (z >= 0);
-    break;
-  }
-  case IdlType::tk_long: {
-    IDL_Long z = c_->constAsLong();
-    r = z; p = ((z >= 0) && (z <= 0xffff));
-    break;
-  }
-  case IdlType::tk_ushort: r = c_->constAsUShort(); break;
-  case IdlType::tk_ulong: {
-    IDL_ULong z = c_->constAsULong();
-    r = z; p = (z <= 0xffff);
-    break;
-  }
-  case IdlType::tk_octet: r = c_->constAsOctet(); break;
-#ifdef HAS_LongLong
-  case IdlType::tk_longlong: {
-    IDL_LongLong z = c_->constAsLongLong();
-    r = z; p = ((z >= 0) && (z <= 0xffff));
-    break;
-  }
-  case IdlType::tk_ulonglong: {
-    IDL_ULongLong z = c_->constAsULongLong();
-    r = z; p = (z <= 0xffff);
-    break;
-  }
-#endif
-  default:
-    r = 1; p = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Cannot interpret constant `%s' as unsigned short", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  if (!p) {
-    r = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Value of constant `%s' exceeds precision of unsigned short",
-	     ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  return r;
-}
-
-IDL_ULong ConstExpr::evalAsULong() {
-  IDL_ULong   r;
-  IDL_Boolean p = 1;
-
-  switch (c_->constKind()) {
-  case IdlType::tk_short: {
-    IDL_Short z = c_->constAsShort();
-    r = z; p = (z >= 0);
-    break;
-  }
-  case IdlType::tk_long: {
-    IDL_Long z = c_->constAsLong();
-    r = z; p = (z >= 0);
-    break;
-  }
-  case IdlType::tk_ushort: r = c_->constAsUShort(); break;
-  case IdlType::tk_ulong:  r = c_->constAsULong();  break;
-  case IdlType::tk_octet:  r = c_->constAsOctet(); break;
-#ifdef HAS_LongLong
-  case IdlType::tk_longlong: {
-    IDL_LongLong z = c_->constAsLongLong();
-    r = z; p = ((z >= 0) && (z <= 0xffffffff));
-    break;
-  }
-  case IdlType::tk_ulonglong: {
-    IDL_ULongLong z = c_->constAsULongLong();
-    r = z; p = (z <= 0xffffffff);
-    break;
-  }
-#endif
-  default:
-    r = 1; p = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Cannot interpret constant `%s' as unsigned long", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  if (!p) {
-    r = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Value of constant `%s' exceeds precision of unsigned long", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  return r;
-}
-
-IDL_Octet ConstExpr::evalAsOctet() {
-  IDL_Octet   r;
-  IDL_Boolean p = 1;
-
-  switch (c_->constKind()) {
-  case IdlType::tk_short: {
-    IDL_Short z = c_->constAsShort();
-    r = z; p = ((z >= 0) && (z < 0xff));
-    break;
-  }
-  case IdlType::tk_long: {
-    IDL_Long z = c_->constAsLong();
-    r = z; p = ((z >= 0) && (z <= 0xff));
-    break;
-  }
-  case IdlType::tk_ushort: {
-    IDL_UShort z = c_->constAsUShort();
-    r = z; p = (z <= 0xff);
-    break;
-  }
-  case IdlType::tk_ulong: {
-    IDL_ULong z = c_->constAsULong();
-    r = z; p = (z <= 0xff);
-    break;
-  }
-  case IdlType::tk_octet: r = c_->constAsOctet(); break;
-#ifdef HAS_LongLong
-  case IdlType::tk_longlong: {
-    IDL_LongLong z = c_->constAsLongLong();
-    r = z; p = ((z >= 0) && (z <= 0xff));
-    break;
-  }
-  case IdlType::tk_ulonglong: {
-    IDL_ULongLong z = c_->constAsULongLong();
-    r = z; p = (z <= 0xff);
-    break;
-  }
-#endif
-  default:
-    r = 1; p = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(), "Cannot interpret constant `%s' as octet", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  if (!p) {
-    r = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Value of constant `%s' exceeds precision of octet", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  return r;
+ precision_error:
+  char* ssn = scopedName_->toString();
+  IdlError(file(), line(),
+	   "Value of constant `%s' exceeds precision of target", ssn);
+  IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
+  delete [] ssn;
+  return IdlLongVal(IDL_ULong(1));
 }
 
 #ifdef HAS_LongLong
 
-IDL_LongLong ConstExpr::evalAsLongLong() {
-  IDL_LongLong r;
-  IDL_Boolean  p = 1;
-
+IdlLongLongVal ConstExpr::evalAsLongLongV() {
   switch (c_->constKind()) {
-  case IdlType::tk_short:  r = c_->constAsShort(); break;
-  case IdlType::tk_long:   r = c_->constAsLong();  break;
-  case IdlType::tk_ushort: r = c_->constAsUShort(); break;
-  case IdlType::tk_ulong:  r = c_->constAsULong(); break;
-  case IdlType::tk_octet:  r = c_->constAsOctet(); break;
-  case IdlType::tk_longlong: r = c_->constAsLongLong(); break;
-  case IdlType::tk_ulonglong: {
-    IDL_ULongLong z = c_->constAsULongLong();
-    r = z; p = (z <= _CORBA_LONGLONG_CONST(0x7fffffffffffffff));
-    break;
-  }
-  default:
-    r = 1; p = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Cannot interpret constant `%s' as long long", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  if (!p) {
-    r = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Value of constant `%s' exceeds precision of long long", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  return r;
-}
 
-IDL_ULongLong ConstExpr::evalAsULongLong() {
-  IDL_Short   r;
-  IDL_Boolean p = 1;
+  case IdlType::tk_short:
+    return IdlLongLongVal(IDL_LongLong(c_->constAsShort()));
 
-  switch (c_->constKind()) {
-  case IdlType::tk_short: {
-    IDL_Short z = c_->constAsShort();
-    r = z; p = (z >= 0);
-    break;
-  }
-  case IdlType::tk_long: {
-    IDL_Long z = c_->constAsLong();
-    r = z; p = (z >= 0);
-    break;
-  }
-  case IdlType::tk_ushort: r = c_->constAsUShort(); break;
-  case IdlType::tk_ulong:  r = c_->constAsULong();  break;
-  case IdlType::tk_octet:  r = c_->constAsOctet(); break;
-  case IdlType::tk_longlong: {
-    IDL_LongLong z = c_->constAsLongLong();
-    r = z; p = (z >= 0);
-    break;
-  }
-  case IdlType::tk_ulonglong: r = c_->constAsULongLong(); break;
+  case IdlType::tk_long:
+    return IdlLongLongVal(IDL_LongLong(c_->constAsLong()));
+
+  case IdlType::tk_ushort:
+    return IdlLongLongVal(IDL_ULongLong(c_->constAsUShort()));
+
+  case IdlType::tk_ulong:
+    return IdlLongLongVal(IDL_ULongLong(c_->constAsULong()));
+
+  case IdlType::tk_octet:
+    return IdlLongLongVal(IDL_ULongLong(c_->constAsOctet()));
+
+  case IdlType::tk_longlong:
+    return IdlLongLongVal(c_->constAsLongLong());
+
+  case IdlType::tk_ulonglong:
+    return IdlLongLongVal(c_->constAsULongLong());
+
   default:
-    r = 1; p = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Cannot interpret constant `%s' as unsigned long long", ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
+    {
+      char* ssn = scopedName_->toString();
+      IdlError(file(), line(),
+	       "Cannot interpret constant `%s' as an integer", ssn);
+      IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
+      delete [] ssn;
+      return IdlLongLongVal((IDL_ULongLong)1);
+    }
   }
-  if (!p) {
-    r = 1;
-    char* ssn = scopedName_->toString();
-    IdlError(file(), line(),
-	     "Value of constant `%s' exceeds precision of unsigned long long",
-	     ssn);
-    IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
-    delete [] ssn;
-  }
-  return r;
 }
 #endif // HAS_LongLong
+
 
 IDL_Float ConstExpr::evalAsFloat() {
   IDL_Float r;
@@ -739,172 +539,272 @@ Enumerator* ConstExpr::evalAsEnumerator(const Enum* target) {
 // Binary expressions
 
 // Or
-#define OR_EXPR_EVAL(ret, op) \
-ret OrExpr::op() { \
-  return a_->op() | b_->op(); \
+IdlLongVal OrExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  if (a.negative)
+    return IdlLongVal(IDL_Long(a.s | b.s));
+  else
+    return IdlLongVal(IDL_ULong(a.u | b.u));
 }
-OR_EXPR_EVAL(IDL_Short,     evalAsShort)
-OR_EXPR_EVAL(IDL_Long,      evalAsLong)
-OR_EXPR_EVAL(IDL_UShort,    evalAsUShort)
-OR_EXPR_EVAL(IDL_ULong,     evalAsULong)
-OR_EXPR_EVAL(IDL_Octet,     evalAsOctet)
 #ifdef HAS_LongLong
-OR_EXPR_EVAL(IDL_LongLong,  evalAsLongLong)
-OR_EXPR_EVAL(IDL_ULongLong, evalAsULongLong)
+IdlLongLongVal OrExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  if (a.negative)
+    return IdlLongLongVal(IDL_LongLong(a.s | b.s));
+  else
+    return IdlLongLongVal(IDL_ULongLong(a.u | b.u));
+}
 #endif
 
 // Xor
-#define XOR_EXPR_EVAL(ret, op) \
-ret XorExpr::op() { \
-  return a_->op() ^ b_->op(); \
+IdlLongVal XorExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  if (a.negative)
+    return IdlLongVal(IDL_Long(a.s ^ b.s));
+  else
+    return IdlLongVal(IDL_ULong(a.u ^ b.u));
 }
-XOR_EXPR_EVAL(IDL_Short,     evalAsShort)
-XOR_EXPR_EVAL(IDL_Long,      evalAsLong)
-XOR_EXPR_EVAL(IDL_UShort,    evalAsUShort)
-XOR_EXPR_EVAL(IDL_ULong,     evalAsULong)
-XOR_EXPR_EVAL(IDL_Octet,     evalAsOctet)
 #ifdef HAS_LongLong
-XOR_EXPR_EVAL(IDL_LongLong,  evalAsLongLong)
-XOR_EXPR_EVAL(IDL_ULongLong, evalAsULongLong)
+IdlLongLongVal XorExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  if (a.negative)
+    return IdlLongLongVal(IDL_LongLong(a.s ^ b.s));
+  else
+    return IdlLongLongVal(IDL_ULongLong(a.u ^ b.u));
+}
 #endif
 
 // And
-#define AND_EXPR_EVAL(ret, op) \
-ret AndExpr::op() { \
-  return a_->op() & b_->op(); \
+IdlLongVal AndExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  if (a.negative)
+    return IdlLongVal(IDL_Long(a.s & b.s));
+  else
+    return IdlLongVal(IDL_ULong(a.u & b.u));
 }
-AND_EXPR_EVAL(IDL_Short,     evalAsShort)
-AND_EXPR_EVAL(IDL_Long,      evalAsLong)
-AND_EXPR_EVAL(IDL_UShort,    evalAsUShort)
-AND_EXPR_EVAL(IDL_ULong,     evalAsULong)
-AND_EXPR_EVAL(IDL_Octet,     evalAsOctet)
 #ifdef HAS_LongLong
-AND_EXPR_EVAL(IDL_LongLong,  evalAsLongLong)
-AND_EXPR_EVAL(IDL_ULongLong, evalAsULongLong)
+IdlLongLongVal AndExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  if (a.negative)
+    return IdlLongLongVal(IDL_LongLong(a.s & b.s));
+  else
+    return IdlLongLongVal(IDL_ULongLong(a.u & b.u));
+}
 #endif
 
 // Right shift
-#define RSHIFT_EXPR_EVAL(ret, op) \
-ret RShiftExpr::op() { \
-  IDL_Long shift = b_->evalAsLong(); \
-  if (shift < 0 || shift >= 64) { \
-    IdlError(file(), line(), \
-	     "Right operand of shift operation must be >= 0 and < 64"); \
-    shift = 1; \
-  } \
-  return a_->op() >> shift; \
+IdlLongVal RShiftExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  // Assume two's complement, and treat b as unsigned. If it's
+  // actually signed and negative, its unsigned value will be much >
+  // 64.
+  if (b.u >= 64) {
+    IdlError(file(), line(),
+	     "Right operand of shift operation must be >= 0 and < 64");
+    return a;
+  }
+  if (a.negative)
+    return IdlLongVal(IDL_Long(a.s >> b.u));
+  else
+    return IdlLongVal(IDL_ULong(a.u >> b.u));
 }
-RSHIFT_EXPR_EVAL(IDL_Short,     evalAsShort)
-RSHIFT_EXPR_EVAL(IDL_Long,      evalAsLong)
-RSHIFT_EXPR_EVAL(IDL_UShort,    evalAsUShort)
-RSHIFT_EXPR_EVAL(IDL_ULong,     evalAsULong)
-RSHIFT_EXPR_EVAL(IDL_Octet,     evalAsOctet)
 #ifdef HAS_LongLong
-RSHIFT_EXPR_EVAL(IDL_LongLong,  evalAsLongLong)
-RSHIFT_EXPR_EVAL(IDL_ULongLong, evalAsULongLong)
+IdlLongLongVal RShiftExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  if (b.u >= 64) {
+    IdlError(file(), line(),
+	     "Right operand of shift operation must be >= 0 and < 64");
+    return a;
+  }
+  if (a.negative)
+    return IdlLongLongVal(IDL_LongLong(a.s >> b.u));
+  else
+    return IdlLongLongVal(IDL_ULongLong(a.u >> b.u));
+}
 #endif
 
 // Left shift
-#define LSHIFT_EXPR_EVAL(ret, op) \
-ret LShiftExpr::op() { \
-  IDL_Long shift = b_->evalAsLong(); \
-  if (shift < 0 || shift >= 64) { \
-    IdlError(file(), line(), \
-	     "Right operand of shift operation must be >= 0 and < 64"); \
-    shift = 1; \
-  } \
-  return a_->op() << shift; \
+IdlLongVal LShiftExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  if (b.u >= 64) {
+    IdlError(file(), line(),
+	     "Right operand of shift operation must be >= 0 and < 64");
+    return a;
+  }
+  if (a.negative)
+    return IdlLongVal(IDL_Long(a.s << b.u));
+  else
+    return IdlLongVal(IDL_ULong(a.u << b.u));
 }
-LSHIFT_EXPR_EVAL(IDL_Short,     evalAsShort)
-LSHIFT_EXPR_EVAL(IDL_Long,      evalAsLong)
-LSHIFT_EXPR_EVAL(IDL_UShort,    evalAsUShort)
-LSHIFT_EXPR_EVAL(IDL_ULong,     evalAsULong)
-LSHIFT_EXPR_EVAL(IDL_Octet,     evalAsOctet)
 #ifdef HAS_LongLong
-LSHIFT_EXPR_EVAL(IDL_LongLong,  evalAsLongLong)
-LSHIFT_EXPR_EVAL(IDL_ULongLong, evalAsULongLong)
+IdlLongLongVal LShiftExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  if (b.u >= 64) {
+    IdlError(file(), line(),
+	     "Right operand of shift operation must be >= 0 and < 64");
+    return a;
+  }
+  if (a.negative)
+    return IdlLongLongVal(IDL_LongLong(a.s << b.u));
+  else
+    return IdlLongLongVal(IDL_ULongLong(a.u << b.u));
+}
 #endif
 
 
 // %
-#define MOD_EXPR_EVAL_S(ret, op) \
-ret ModExpr::op() { \
-  ret a, b; \
-  a = a_->op(); b = b_->op(); \
-  if (b == 0) { \
-    IdlError(file(), line(), "Remainder of division by 0 is undefined"); \
-    return 1; \
-  } \
-  if (a < 0 || b < 0) { \
-    IdlWarning(file(), line(), "Result of %% operator involving negative " \
-	       "operands is platform dependent"); \
-  } \
-  return a % b; \
+IdlLongVal ModExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  if (b.u == 0) {
+    IdlError(file(), line(), "Remainder of division by 0 is undefined");
+    return a;
+  }
+  if (a.negative || b.negative)
+    IdlWarning(file(), line(), "Result of %% operator involving negative "
+	       "operands is implementation dependent");
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0: return IdlLongVal(IDL_ULong(a.u % b.u));
+  case 1: return IdlLongVal(-IDL_Long((-a.s) % b.u));
+  case 2: return IdlLongVal(IDL_ULong(a.u % IDL_ULong(-b.s)));
+  case 3: return IdlLongVal(-IDL_Long((-a.s) % (-b.s)));
+  }
+  return IdlLongVal(IDL_ULong(0)); // Never reach here
 }
-#define MOD_EXPR_EVAL_U(ret, op) \
-ret ModExpr::op() { \
-  ret a, b; \
-  a = a_->op(); b = b_->op(); \
-  if (b == 0) { \
-    IdlError(file(), line(), "Remainder of division by 0 is undefined"); \
-    return 1; \
-  } \
-  return a % b; \
-}
-MOD_EXPR_EVAL_S(IDL_Short,     evalAsShort)
-MOD_EXPR_EVAL_S(IDL_Long,      evalAsLong)
-MOD_EXPR_EVAL_U(IDL_UShort,    evalAsUShort)
-MOD_EXPR_EVAL_U(IDL_ULong,     evalAsULong)
-MOD_EXPR_EVAL_U(IDL_Octet,     evalAsOctet)
 #ifdef HAS_LongLong
-MOD_EXPR_EVAL_S(IDL_LongLong,  evalAsLongLong)
-MOD_EXPR_EVAL_U(IDL_ULongLong, evalAsULongLong)
+IdlLongLongVal ModExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  if (b.u == 0) {
+    IdlError(file(), line(), "Remainder of division by 0 is undefined");
+    return a;
+  }
+  if (a.negative || b.negative)
+    IdlWarning(file(), line(), "Result of %% operator involving negative "
+	       "operands is platform dependent");
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0: return IdlLongLongVal(IDL_ULongLong(a.u % b.u));
+  case 1: return IdlLongLongVal(IDL_LongLong (a.s % b.u));
+  case 2: return IdlLongLongVal(IDL_LongLong (a.u % b.s));
+  case 3: return IdlLongLongVal(IDL_LongLong (a.s % b.s));
+  }
+  return IdlLongLongVal(IDL_ULongLong(0)); // Never reach here
+}
 #endif
 
 
 // Add
-#define ADD_EXPR_EVAL_S(ret, op, str) \
-ret AddExpr::op() { \
-  ret a, b, r; \
-  a = a_->op(); b = b_->op(); \
-  r = a+b; \
-  if ((r^a) < 0 && (r^b) < 0) { \
-    IdlError(file(), line(), "Sub-expression overflows " str); \
-    r = 1; \
-  } \
-  return r; \
+IdlLongVal AddExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0:
+    {
+      IDL_ULong r = a.u + b.u;
+      if (r < a.u) goto overflow;
+      return IdlLongVal(r);
+    }
+  case 1:
+    {
+      if (IDL_ULong(-a.s) < b.u)
+	return IdlLongVal(b.u - IDL_ULong(-a.s));
+      else
+	return IdlLongVal(a.s + IDL_Long(b.u));
+    }
+  case 2:
+    {
+      if (IDL_ULong(-b.s) < a.u)
+	return IdlLongVal(a.u - IDL_ULong(-b.s));
+      else
+	return IdlLongVal(IDL_Long(a.u) + b.s);
+    }
+  case 3:
+    {
+      IDL_Long r = a.s + b.s;
+      if (r > a.s) goto overflow;
+      return IdlLongVal(r);
+    }
+  }
+ overflow:
+  IdlError(file(), line(), "Result of addition overflows");
+  return a;
 }
-#define ADD_EXPR_EVAL_U(ret, op, str) \
-ret AddExpr::op() { \
-  ret a, b, r; \
-  a = a_->op(); b = b_->op(); \
-  r = a+b; \
-  if (r < a) { \
-    IdlError(file(), line(), "Sub-expression overflows " str); \
-    r = 1; \
-  } \
-  return r; \
+
+#ifdef HAS_LongLong
+IdlLongLongVal AddExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0:
+    {
+      IDL_ULongLong r = a.u + b.u;
+      if (r < a.u) goto overflow;
+      return IdlLongLongVal(r);
+    }
+  case 1:
+    {
+      if (IDL_ULongLong(-a.s) < b.u)
+	return IdlLongLongVal(b.u - IDL_ULongLong(-a.s));
+      else
+	return IdlLongLongVal(a.s + IDL_LongLong(b.u));
+    }
+  case 2:
+    {
+      if (IDL_ULongLong(-b.s) < a.u)
+	return IdlLongLongVal(a.u - IDL_ULongLong(-b.s));
+      else
+	return IdlLongLongVal(IDL_LongLong(a.u) + b.s);
+    }
+  case 3:
+    {
+      IDL_LongLong r = a.s + b.s;
+      if (r > a.s) goto overflow;
+      return IdlLongLongVal(r);
+    }
+  }
+ overflow:
+  IdlError(file(), line(), "Result of addition overflows");
+  return a;
 }
+#endif
+
 #define ADD_EXPR_EVAL_F(ret, op, str) \
 ret AddExpr::op() { \
   ret a, b, r; \
   a = a_->op(); b = b_->op(); \
   r = a+b; \
   if (IdlFPOverflow(r)) { \
-    IdlError(file(), line(), "Sub-expression overflows " str); \
+    IdlError(file(), line(), "Result of addition overflows " str); \
     r = 1.0; \
   } \
   return r; \
 }
-ADD_EXPR_EVAL_S(IDL_Short,      evalAsShort,      "short")
-ADD_EXPR_EVAL_S(IDL_Long,       evalAsLong,       "long")
-ADD_EXPR_EVAL_U(IDL_UShort,     evalAsUShort,     "unsigned short")
-ADD_EXPR_EVAL_U(IDL_ULong,      evalAsULong,      "unsigned long")
-ADD_EXPR_EVAL_U(IDL_Octet,      evalAsOctet,      "octet")
-#ifdef HAS_LongLong
-ADD_EXPR_EVAL_S(IDL_LongLong,   evalAsLongLong,   "long long")
-ADD_EXPR_EVAL_U(IDL_ULongLong,  evalAsULongLong,  "unsigned long long")
-#endif
 ADD_EXPR_EVAL_F(IDL_Float,      evalAsFloat,      "float")
 ADD_EXPR_EVAL_F(IDL_Double,     evalAsDouble,     "double")
 #ifdef HAS_LongDouble
@@ -918,7 +818,7 @@ IDL_Fixed* AddExpr::evalAsFixed() {
     r = new IDL_Fixed(*a + *b);
   }
   catch (IDL_Fixed::Overflow&) {
-    IdlError(file(), line(), "Sub-expression overflows fixed digits");
+    IdlError(file(), line(), "Result of addition overflows fixed digits");
     r = new IDL_Fixed("1");
   }
   delete a; delete b;
@@ -926,28 +826,81 @@ IDL_Fixed* AddExpr::evalAsFixed() {
 }
 
 // Sub
-#define SUB_EXPR_EVAL_S(ret, op, str) \
-ret SubExpr::op() { \
-  ret a, b, r; \
-  a = a_->op(); b = b_->op(); \
-  r = a-b; \
-  if ((r^a) < 0 && (r^-b) < 0) { \
-    IdlError(file(), line(), "Sub-expression overflows " str); \
-    r = 1; \
-  } \
-  return r; \
+IdlLongVal SubExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0:
+    {
+      if (a.u >= b.u) return IdlLongVal(a.u - b.u);
+      IDL_ULong mr = b.u - a.u;
+      if (mr > 0x80000000) goto overflow;
+      return IdlLongVal(IDL_Long(-mr));
+    }
+  case 1:
+    {
+      IDL_ULong mr = IDL_ULong(-a.s) + b.s;
+      if (mr > 0x80000000) goto overflow;
+      return IdlLongVal(IDL_Long(-mr));
+    }
+  case 2:
+    {
+      IDL_ULong r = a.u + IDL_ULong(-b.s);
+      if (r < a.u) goto overflow;
+      return IdlLongVal(r);
+    }
+  case 3:
+    {
+      IDL_Long r = a.s - b.s;
+      if (r > a.s) goto overflow;
+      return IdlLongVal(r);
+    }
+  }
+ overflow:
+  IdlError(file(), line(), "Result of subtraction overflows");
+  return a;
 }
-#define SUB_EXPR_EVAL_U(ret, op, str) \
-ret SubExpr::op() { \
-  ret a, b, r; \
-  a = a_->op(); b = b_->op(); \
-  r = a-b; \
-  if (r > a) { \
-    IdlError(file(), line(), "Sub-expression overflows " str); \
-    r = 1; \
-  } \
-  return r; \
+
+#ifdef HAS_LongLong
+IdlLongLongVal SubExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0:
+    {
+      if (a.u >= b.u) return IdlLongLongVal(a.u - b.u);
+      IDL_ULongLong mr = b.u - a.u;
+      if (mr > _CORBA_LONGLONG_CONST(0x8000000000000000)) goto overflow;
+      return IdlLongLongVal(IDL_LongLong(-mr));
+    }
+  case 1:
+    {
+      IDL_ULongLong mr = IDL_ULongLong(-a.s) + b.s;
+      if (mr > _CORBA_LONGLONG_CONST(0x8000000000000000)) goto overflow;
+      return IdlLongLongVal(IDL_LongLong(-mr));
+    }
+  case 2:
+    {
+      IDL_ULongLong r = a.u + IDL_ULongLong(-b.s);
+      if (r < a.u) goto overflow;
+      return IdlLongLongVal(r);
+    }
+  case 3:
+    {
+      IDL_LongLong r = a.s - b.s;
+      if (r > a.s) goto overflow;
+      return IdlLongLongVal(r);
+    }
+  }
+ overflow:
+  IdlError(file(), line(), "Result of subtraction overflows");
+  return a;
 }
+#endif
+
+
 #define SUB_EXPR_EVAL_F(ret, op, str) \
 ret SubExpr::op() { \
   ret a, b, r; \
@@ -959,15 +912,6 @@ ret SubExpr::op() { \
   } \
   return r; \
 }
-SUB_EXPR_EVAL_S(IDL_Short,      evalAsShort,      "short")
-SUB_EXPR_EVAL_S(IDL_Long,       evalAsLong,       "long")
-SUB_EXPR_EVAL_U(IDL_UShort,     evalAsUShort,     "unsigned short")
-SUB_EXPR_EVAL_U(IDL_ULong,      evalAsULong,      "unsigned long")
-SUB_EXPR_EVAL_U(IDL_Octet,      evalAsOctet,      "octet")
-#ifdef HAS_LongLong
-SUB_EXPR_EVAL_S(IDL_LongLong,   evalAsLongLong,   "long long")
-SUB_EXPR_EVAL_U(IDL_ULongLong,  evalAsULongLong,  "unsigned long long")
-#endif
 SUB_EXPR_EVAL_F(IDL_Float,      evalAsFloat,      "float")
 SUB_EXPR_EVAL_F(IDL_Double,     evalAsDouble,     "double")
 #ifdef HAS_LongDouble
@@ -991,28 +935,80 @@ IDL_Fixed* SubExpr::evalAsFixed() {
 
 
 // Mult
-#define MULT_EXPR_EVAL_S(ret, op, str) \
-ret MultExpr::op() { \
-  ret a, b, r; \
-  a = a_->op(); b = b_->op(); \
-  r = a*b; \
-  if (b != 0 && (r/b) != a) { \
-    IdlError(file(), line(), "Sub-expression overflows " str); \
-    r = 1; \
-  } \
-  return r; \
+IdlLongVal MultExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0:
+    {
+      IDL_ULong r = a.u * b.u;
+      if (b.u != 0 && (r / b.u) != a.u) goto overflow;
+      return IdlLongVal(r);
+    }
+  case 1:
+    {
+      IDL_Long r = a.s * IDL_Long(b.u);
+      if (b.u != 0 && (r / IDL_Long(b.u)) != a.s) goto overflow;
+      return IdlLongVal(r);
+    }
+  case 2:
+    {
+      IDL_Long r = IDL_Long(a.u) * b.s;
+      if (b.s != 0 && (r / b.s) != IDL_Long(a.u)) goto overflow;
+      return IdlLongVal(r);
+    }
+  case 3:
+    {
+      IDL_ULong r = IDL_ULong(-a.s) * IDL_ULong(-b.s);
+      if (b.s != 0 && (r / IDL_ULong(-b.s)) != IDL_ULong(-a.s)) goto overflow;
+      return IdlLongVal(r);
+    }
+  }
+ overflow:
+  IdlError(file(), line(), "Result of multiplication overflows");
+  return a;
 }
-#define MULT_EXPR_EVAL_U(ret, op, str) \
-ret MultExpr::op() { \
-  ret a, b, r; \
-  a = a_->op(); b = b_->op(); \
-  r = a*b; \
-  if (b != 0 && (r/b) != a) { \
-    IdlError(file(), line(), "Sub-expression overflows " str); \
-    r = 1; \
-  } \
-  return r; \
+
+#ifdef HAS_LongLong
+IdlLongLongVal MultExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0:
+    {
+      IDL_ULongLong r = a.u * b.u;
+      if (b.u != 0 && (r / b.u) != a.u) goto overflow;
+      return IdlLongLongVal(r);
+    }
+  case 1:
+    {
+      IDL_LongLong r = a.s * IDL_LongLong(b.u);
+      if (b.u != 0 && (r / IDL_LongLong(b.u)) != a.s) goto overflow;
+      return IdlLongLongVal(r);
+    }
+  case 2:
+    {
+      IDL_LongLong r = IDL_LongLong(a.u) * b.s;
+      if (b.s != 0 && (r / b.s) != IDL_LongLong(a.u)) goto overflow;
+      return IdlLongLongVal(r);
+    }
+  case 3:
+    {
+      IDL_ULongLong r = IDL_ULongLong(-a.s) * IDL_ULongLong(-b.s);
+      if (b.s != 0 &&
+	  (r / IDL_ULongLong(-b.s)) != IDL_ULongLong(-a.s)) goto overflow;
+      return IdlLongLongVal(r);
+    }
+  }
+ overflow:
+  IdlError(file(), line(), "Result of multiplication overflows");
+  return a;
 }
+#endif
+
+
 #define MULT_EXPR_EVAL_F(ret, op, str) \
 ret MultExpr::op() { \
   ret a, b, r; \
@@ -1024,15 +1020,6 @@ ret MultExpr::op() { \
   } \
   return r; \
 }
-MULT_EXPR_EVAL_S(IDL_Short,      evalAsShort,      "short")
-MULT_EXPR_EVAL_S(IDL_Long,       evalAsLong,       "long")
-MULT_EXPR_EVAL_U(IDL_UShort,     evalAsUShort,     "unsigned short")
-MULT_EXPR_EVAL_U(IDL_ULong,      evalAsULong,      "unsigned long")
-MULT_EXPR_EVAL_U(IDL_Octet,      evalAsOctet,      "octet")
-#ifdef HAS_LongLong
-MULT_EXPR_EVAL_S(IDL_LongLong,   evalAsLongLong,   "long long")
-MULT_EXPR_EVAL_U(IDL_ULongLong,  evalAsULongLong,  "unsigned long long")
-#endif
 MULT_EXPR_EVAL_F(IDL_Float,      evalAsFloat,      "float")
 MULT_EXPR_EVAL_F(IDL_Double,     evalAsDouble,     "double")
 #ifdef HAS_LongDouble
@@ -1054,28 +1041,81 @@ IDL_Fixed* MultExpr::evalAsFixed() {
 }
 
 // Div
-#define DIV_EXPR_EVAL_S(ret, op) \
-ret DivExpr::op() { \
-  ret a, b, r; \
-  a = a_->op(); b = b_->op(); \
-  if (b == 0) { \
-    IdlError(file(), line(), "Divide by zero"); \
-    b = 1; \
-  } \
-  r = a/b; \
-  return r; \
+IdlLongVal DivExpr::evalAsLongV() {
+  IdlLongVal a = a_->evalAsLongV();
+  IdlLongVal b = b_->evalAsLongV();
+
+  if (b.u == 0) {
+    IdlError(file(), line(), "Divide by zero");
+    return a;
+  }
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0:
+    {
+      return IdlLongVal(a.u / b.u);
+    }
+  case 1:
+    {
+      IDL_ULong mr = IDL_ULong(-a.s) / b.u;
+      return IdlLongVal(IDL_Long(-mr));
+    }
+  case 2:
+    {
+      IDL_ULong mr = a.u / IDL_ULong(-b.s);
+      if (mr > 0x80000000) goto overflow;
+      return IdlLongVal(IDL_Long(-mr));
+    }
+  case 3:
+    {
+      IDL_ULong r = IDL_ULong(-a.s) / IDL_ULong(-b.s);
+      return IdlLongVal(r);
+    }
+  }
+ overflow:
+  IdlError(file(), line(), "Result of division overflows");
+  return a;
 }
-#define DIV_EXPR_EVAL_U(ret, op) \
-ret DivExpr::op() { \
-  ret a, b, r; \
-  a = a_->op(); b = b_->op(); \
-  if (b == 0) { \
-    IdlError(file(), line(), "Divide by zero"); \
-    b = 1; \
-  } \
-  r = a/b; \
-  return r; \
+
+#ifdef HAS_LongLong
+IdlLongLongVal DivExpr::evalAsLongLongV() {
+  IdlLongLongVal a = a_->evalAsLongLongV();
+  IdlLongLongVal b = b_->evalAsLongLongV();
+
+  if (b.u == 0) {
+    IdlError(file(), line(), "Divide by zero");
+    return a;
+  }
+
+  switch ((a.negative ? 1:0) + (b.negative ? 2:0)) {
+  case 0:
+    {
+      return IdlLongLongVal(a.u / b.u);
+    }
+  case 1:
+    {
+      IDL_ULongLong mr = IDL_ULongLong(-a.s) / b.u;
+      return IdlLongLongVal(IDL_LongLong(-mr));
+    }
+  case 2:
+    {
+      IDL_ULongLong mr = a.u / IDL_ULongLong(-b.s);
+      if (mr > _CORBA_LONGLONG_CONST(0x8000000000000000)) goto overflow;
+      return IdlLongLongVal(IDL_LongLong(-mr));
+    }
+  case 3:
+    {
+      IDL_ULongLong r = IDL_ULongLong(-a.s) / IDL_ULongLong(-b.s);
+      return IdlLongLongVal(r);
+    }
+  }
+ overflow:
+  IdlError(file(), line(), "Result of division overflows");
+  return a;
 }
+#endif
+
+
 #define DIV_EXPR_EVAL_F(ret, op, str) \
 ret DivExpr::op() { \
   ret a, b, r; \
@@ -1091,15 +1131,6 @@ ret DivExpr::op() { \
   } \
   return r; \
 }
-DIV_EXPR_EVAL_S(IDL_Short,      evalAsShort)
-DIV_EXPR_EVAL_S(IDL_Long,       evalAsLong)
-DIV_EXPR_EVAL_U(IDL_UShort,     evalAsUShort)
-DIV_EXPR_EVAL_U(IDL_ULong,      evalAsULong)
-DIV_EXPR_EVAL_U(IDL_Octet,      evalAsOctet)
-#ifdef HAS_LongLong
-DIV_EXPR_EVAL_S(IDL_LongLong,   evalAsLongLong)
-DIV_EXPR_EVAL_U(IDL_ULongLong,  evalAsULongLong)
-#endif
 DIV_EXPR_EVAL_F(IDL_Float,      evalAsFloat,      "float")
 DIV_EXPR_EVAL_F(IDL_Double,     evalAsDouble,     "double")
 #ifdef HAS_LongDouble
@@ -1126,31 +1157,49 @@ IDL_Fixed* DivExpr::evalAsFixed() {
 
 
 // Invert
-#define INVERT_EXPR_EVAL(ret, op) \
-ret InvertExpr::op() { \
-  return ~(e_->op()); \
+IdlLongVal InvertExpr::evalAsLongV() {
+  IdlLongVal e = e_->evalAsLongV();
+  return IdlLongVal(~e.u);
 }
-INVERT_EXPR_EVAL(IDL_Short,      evalAsShort)
-INVERT_EXPR_EVAL(IDL_Long,       evalAsLong)
-INVERT_EXPR_EVAL(IDL_UShort,     evalAsUShort)
-INVERT_EXPR_EVAL(IDL_ULong,      evalAsULong)
-INVERT_EXPR_EVAL(IDL_Octet,      evalAsOctet)
 #ifdef HAS_LongLong
-INVERT_EXPR_EVAL(IDL_LongLong,   evalAsLongLong)
-INVERT_EXPR_EVAL(IDL_ULongLong,  evalAsULongLong)
+IdlLongLongVal InvertExpr::evalAsLongLongV() {
+  IdlLongLongVal e = e_->evalAsLongLongV();
+  return IdlLongLongVal(~e.u);
+}
 #endif
 
 
 // Minus
+IdlLongVal MinusExpr::evalAsLongV() {
+  IdlLongVal e = e_->evalAsLongV();
+
+  if (e.negative)
+    return IdlLongVal(IDL_ULong(-e.s));
+  else {
+    if (e.u > 0x80000000)
+      IdlError(file(), line(), "Result of unary minus overflows");
+    return IdlLongVal(IDL_Long(-e.u));
+  }
+}
+
+#ifdef HAS_LongLong
+IdlLongLongVal MinusExpr::evalAsLongLongV() {
+  IdlLongLongVal e = e_->evalAsLongLongV();
+
+  if (e.negative)
+    return IdlLongLongVal(IDL_ULongLong(-e.s));
+  else {
+    if (e.u > _CORBA_LONGLONG_CONST(0x8000000000000000))
+      IdlError(file(), line(), "Result of unary minus overflows");
+    return IdlLongLongVal(IDL_LongLong(-e.u));
+  }
+}
+#endif
+
 #define MINUS_EXPR_EVAL(ret, op) \
 ret MinusExpr::op() { \
   return -(e_->op()); \
 }
-MINUS_EXPR_EVAL(IDL_Short,      evalAsShort)
-MINUS_EXPR_EVAL(IDL_Long,       evalAsLong)
-#ifdef HAS_LongLong
-MINUS_EXPR_EVAL(IDL_LongLong,   evalAsLongLong)
-#endif
 MINUS_EXPR_EVAL(IDL_Float,      evalAsFloat)
 MINUS_EXPR_EVAL(IDL_Double,     evalAsDouble)
 #ifdef HAS_LongDouble
@@ -1167,23 +1216,15 @@ IDL_Fixed* MinusExpr::evalAsFixed() {
 // Plus
 #define PLUS_EXPR_EVAL(ret, op) \
 ret PlusExpr::op() { \
-  return +(e_->op()); \
+  return e_->op(); \
 }
-PLUS_EXPR_EVAL(IDL_Short,      evalAsShort)
-PLUS_EXPR_EVAL(IDL_Long,       evalAsLong)
-PLUS_EXPR_EVAL(IDL_UShort,     evalAsUShort)
-PLUS_EXPR_EVAL(IDL_ULong,      evalAsULong)
-PLUS_EXPR_EVAL(IDL_Octet,      evalAsOctet)
+PLUS_EXPR_EVAL(IdlLongVal,     evalAsLongV)
 #ifdef HAS_LongLong
-PLUS_EXPR_EVAL(IDL_LongLong,   evalAsLongLong)
-PLUS_EXPR_EVAL(IDL_ULongLong,  evalAsULongLong)
+PLUS_EXPR_EVAL(IdlLongLongVal, evalAsLongLongV)
 #endif
 PLUS_EXPR_EVAL(IDL_Float,      evalAsFloat)
 PLUS_EXPR_EVAL(IDL_Double,     evalAsDouble)
 #ifdef HAS_LongDouble
 PLUS_EXPR_EVAL(IDL_LongDouble, evalAsLongDouble)
 #endif
-
-IDL_Fixed* PlusExpr::evalAsFixed() {
-  return e_->evalAsFixed();
-}
+PLUS_EXPR_EVAL(IDL_Fixed*,     evalAsFixed)

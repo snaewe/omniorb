@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.7  2001/08/29 11:54:20  dpg1
+// Clean up const handling in IDL compiler.
+//
 // Revision 1.11.2.6  2001/06/12 11:35:25  dpg1
 // Minor omniidl tweaks for valuetype.
 //
@@ -209,6 +212,52 @@ visitForward(Forward* f)
   printf("interface %s; // RepoId = %s", f->identifier(), f->repoId());
 }
 
+static void
+printdouble(IDL_Double d)
+{
+  // .17g guarantees an IEEE 754 double can be exactly reconstructed,
+  // but it prints integers without a trailing .0, so we must put it
+  // back on in that case.
+  char buffer[1024];
+  sprintf(buffer, "%.17g", d);
+  char* c = buffer;
+  if (*c == '-') ++c;
+  for (; *c; c++) {
+    if (!isdigit(*c))
+      break;
+  }
+  if (*c == '\0') {
+    *c++ = '.';
+    *c++ = '0';
+    *c++ = '\0';
+  }
+  printf("%s", buffer);
+}
+
+#ifdef HAS_LongDouble
+static void
+printlongdouble(IDL_LongDouble d)
+{
+  // Can't find a reference for how many digits it enough for long
+  // double. 40 is probably enough.
+  char buffer[1024];
+  sprintf(buffer, "%.40Lg", d);
+  char* c = buffer;
+  if (*c == '-') ++c;
+  for (; *c; c++) {
+    if (!isdigit(*c))
+      break;
+  }
+  if (*c == '\0') {
+    *c++ = '.';
+    *c++ = '0';
+    *c++ = '\0';
+  }
+  printf("%s", buffer);
+}
+#endif
+
+
 void
 DumpVisitor::
 visitConst(Const* c)
@@ -219,12 +268,12 @@ visitConst(Const* c)
   printf(" %s = ", c->identifier());
 
   switch(c->constKind()) {
-  case IdlType::tk_short:   printf("%hd", c->constAsShort());          break;
-  case IdlType::tk_long:    printf("%ld", c->constAsLong());           break;
-  case IdlType::tk_ushort:  printf("%hu", c->constAsUShort());         break;
-  case IdlType::tk_ulong:   printf("%lu", c->constAsULong());          break;
-  case IdlType::tk_float:   printf("%f",  (double)c->constAsFloat());  break;
-  case IdlType::tk_double:  printf("%f",  c->constAsDouble());         break;
+  case IdlType::tk_short:   printf("%hd",   c->constAsShort());         break;
+  case IdlType::tk_long:    printf("%ld",   c->constAsLong());          break;
+  case IdlType::tk_ushort:  printf("%hu",   c->constAsUShort());        break;
+  case IdlType::tk_ulong:   printf("%lu",   c->constAsULong());         break;
+  case IdlType::tk_float:   printdouble(c->constAsFloat());             break;
+  case IdlType::tk_double:  printdouble(c->constAsDouble());            break;
   case IdlType::tk_boolean:
     printf("%s", c->constAsBoolean() ? "TRUE" : "FALSE");
     break;
@@ -244,7 +293,7 @@ visitConst(Const* c)
   case IdlType::tk_ulonglong: printf("%Lu", c->constAsULongLong());    break;
 #endif
 #ifdef HAS_LongDouble
-  case IdlType::tk_longdouble:printf("%Lf", c->constAsLongDouble());   break;
+  case IdlType::tk_longdouble:printlongdouble(c->constAsLongDouble()));break;
 #endif
   case IdlType::tk_wchar:     printf("'\\u%hx'", c->constAsWChar());   break;
   case IdlType::tk_wstring:   printf("[cannot show wide string]");     break;

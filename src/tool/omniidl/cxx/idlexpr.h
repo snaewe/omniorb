@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.4  2001/08/29 11:54:20  dpg1
+// Clean up const handling in IDL compiler.
+//
 // Revision 1.4.2.3  2001/03/13 10:32:12  dpg1
 // Fixed point support.
 //
@@ -59,32 +62,70 @@ class Enum;
 class Const;
 
 
+struct IdlLongVal {
+  IdlLongVal(IDL_ULong a) : negative(0), u(a) {}
+  IdlLongVal(IDL_Long  a) : negative(0), s(a) { if (a<0) negative=1; }
+
+  IDL_Boolean negative;
+  union {
+    IDL_ULong u;
+    IDL_Long  s;
+  };
+};
+
+#ifdef HAS_LongLong
+struct IdlLongLongVal {
+  IdlLongLongVal(IDL_ULongLong a) : negative(0), u(a) {}
+  IdlLongLongVal(IDL_LongLong  a) : negative(0), s(a) { if (a<0) negative=1; }
+
+  IDL_Boolean negative;
+  union {
+    IDL_ULongLong u;
+    IDL_LongLong  s;
+  };
+};
+#endif
+
 class IdlExpr {
 public:
   IdlExpr(const char* file, int line) : file_(idl_strdup(file)), line_(line) {}
   virtual ~IdlExpr() { delete [] file_; }
 
-  virtual IDL_Short        evalAsShort();
-  virtual IDL_Long         evalAsLong();
-  virtual IDL_UShort       evalAsUShort();
-  virtual IDL_ULong        evalAsULong();
+  //
+  // Virtual functions overridded by derived expression types
+  //
+
+  virtual IdlLongVal       evalAsLongV();
+#ifdef HAS_LongLong
+  virtual IdlLongLongVal   evalAsLongLongV();
+#endif
   virtual IDL_Float        evalAsFloat();
   virtual IDL_Double       evalAsDouble();
   virtual IDL_Boolean      evalAsBoolean();
   virtual IDL_Char         evalAsChar();
-  virtual IDL_Octet        evalAsOctet();
   virtual const char*      evalAsString();
   virtual Enumerator*      evalAsEnumerator(const Enum* target);
-#ifdef HAS_LongLong
-  virtual IDL_LongLong     evalAsLongLong();
-  virtual IDL_ULongLong    evalAsULongLong();
-#endif
 #ifdef HAS_LongDouble
   virtual IDL_LongDouble   evalAsLongDouble();
 #endif
   virtual IDL_WChar        evalAsWChar();
   virtual const IDL_WChar* evalAsWString();
   virtual IDL_Fixed*       evalAsFixed();
+
+  //
+  // Functions to convert an integer represented as a signed/unsigned
+  // union to an IDL integer type
+  //
+
+  IDL_Short     evalAsShort();
+  IDL_Long      evalAsLong();
+  IDL_UShort    evalAsUShort();
+  IDL_ULong 	evalAsULong();
+  IDL_Octet 	evalAsOctet();
+#ifdef HAS_LongLong
+  IDL_LongLong  evalAsLongLong();
+  IDL_ULongLong evalAsULongLong();
+#endif
 
   inline const char* file() { return file_; }
   inline int         line() { return line_; }
@@ -105,27 +146,23 @@ public:
   DummyExpr(const char* file, int line) : IdlExpr(file, line) {}
   virtual ~DummyExpr() {}
 
-  IDL_Short        evalAsShort()                        { return 1; }
-  IDL_Long         evalAsLong()                         { return 1; }
-  IDL_UShort       evalAsUShort()                       { return 1; }
-  IDL_ULong        evalAsULong()                        { return 1; }
+  IdlLongVal       evalAsLongV()     { return IdlLongVal (IDL_ULong(1)); }
+#ifdef HAS_LongLong
+  IdlLongLongVal   evalAsLongLongV() { return IdlLongLongVal(IDL_ULongLong(1));}
+#endif
+
   IDL_Float        evalAsFloat()                        { return 1.0; }
   IDL_Double       evalAsDouble()                       { return 1.0; }
   IDL_Boolean      evalAsBoolean()                      { return 0; }
   IDL_Char         evalAsChar()                         { return '!'; }
-  IDL_Octet        evalAsOctet()                        { return 1; }
   const char*      evalAsString()                       { return "!"; }
   Enumerator*      evalAsEnumerator(const Enum* target) { return 0; }
-#ifdef HAS_LongLong
-  IDL_LongLong     evalAsLongLong()                     { return 1; }
-  IDL_ULongLong    evalAsULongLong()                    { return 1; }
-#endif
 #ifdef HAS_LongDouble
   IDL_LongDouble   evalAsLongDouble()                   { return 1.0; }
 #endif
   IDL_WChar        evalAsWChar()                        { return '!'; }
   const IDL_WChar* evalAsWString();
-  IDL_Fixed*       evalAsFixed()                 { return new IDL_Fixed("1"); }
+  IDL_Fixed*       evalAsFixed()    { return new IDL_Fixed("1"); }
 
   const char*      errText() { return "dummy"; }
 };
@@ -139,14 +176,9 @@ public:
     : IdlExpr(file, line), value_(v) { }
   ~IntegerExpr() {}
 
-  IDL_Short        evalAsShort();
-  IDL_Long         evalAsLong();
-  IDL_UShort       evalAsUShort();
-  IDL_ULong        evalAsULong();
-  IDL_Octet        evalAsOctet();
+  IdlLongVal       evalAsLongV();
 #ifdef HAS_LongLong
-  IDL_LongLong     evalAsLongLong();
-  IDL_ULongLong    evalAsULongLong();
+  IdlLongLongVal   evalAsLongLongV();
 #endif
   const char*      errText() { return "integer literal"; }
 private:
@@ -262,10 +294,10 @@ public:
     : IdlExpr(file, line), c_(c), scopedName_(sn) {}
   ~ConstExpr() {}
 
-  IDL_Short        evalAsShort();
-  IDL_Long         evalAsLong();
-  IDL_UShort       evalAsUShort();
-  IDL_ULong        evalAsULong();
+  IdlLongVal       evalAsLongV();
+#ifdef HAS_LongLong
+  IdlLongLongVal   evalAsLongLongV();
+#endif
   IDL_Float        evalAsFloat();
   IDL_Double       evalAsDouble();
   IDL_Boolean      evalAsBoolean();
@@ -273,10 +305,6 @@ public:
   IDL_Octet        evalAsOctet();
   const char*      evalAsString();
   Enumerator*      evalAsEnumerator(const Enum* target);
-#ifdef HAS_LongLong
-  IDL_LongLong     evalAsLongLong();
-  IDL_ULongLong    evalAsULongLong();
-#endif
 #ifdef HAS_LongDouble
   IDL_LongDouble   evalAsLongDouble();
 #endif
@@ -295,33 +323,13 @@ private:
 // Expressions
 
 #ifdef HAS_LongLong
-
-#define EXPR_S_INT_CONVERSION_FUNCTIONS \
-  IDL_Short        evalAsShort();    \
-  IDL_Long         evalAsLong();     \
-  IDL_LongLong     evalAsLongLong();
-
-#define EXPR_U_INT_CONVERSION_FUNCTIONS \
-  IDL_UShort       evalAsUShort();   \
-  IDL_ULong        evalAsULong();    \
-  IDL_Octet        evalAsOctet();    \
-  IDL_ULongLong    evalAsULongLong();
-
-#else
-#define EXPR_S_INT_CONVERSION_FUNCTIONS \
-  IDL_Short        evalAsShort();    \
-  IDL_Long         evalAsLong();
-
-#define EXPR_U_INT_CONVERSION_FUNCTIONS \
-  IDL_UShort       evalAsUShort();   \
-  IDL_ULong        evalAsULong();    \
-  IDL_Octet        evalAsOctet();
-
-#endif
-
 #define EXPR_INT_CONVERSION_FUNCTIONS \
-  EXPR_S_INT_CONVERSION_FUNCTIONS     \
-  EXPR_U_INT_CONVERSION_FUNCTIONS
+  IdlLongVal       evalAsLongV(); \
+  IdlLongLongVal   evalAsLongLongV();
+#else
+#define EXPR_INT_CONVERSION_FUNCTIONS \
+  IdlLongVal       evalAsLongV();
+#endif
 
 #ifdef HAS_LongDouble
 #define EXPR_FLOAT_CONVERSION_FUNCTIONS \
@@ -398,9 +406,7 @@ public:
   MinusExpr(const char* file, int line, IdlExpr* e)
     : IdlExpr(file, line), e_(e) { }
   ~MinusExpr() { delete e_; }
-  EXPR_S_INT_CONVERSION_FUNCTIONS
-  EXPR_FLOAT_CONVERSION_FUNCTIONS
-  EXPR_FIXED_CONVERSION_FUNCTIONS
+  EXPR_CONVERSION_FUNCTIONS
   const char* errText() { return "result of unary negate operator"; }
 private:
   IdlExpr* e_;

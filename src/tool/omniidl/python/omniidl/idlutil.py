@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.6  2001/08/29 11:54:22  dpg1
+# Clean up const handling in IDL compiler.
+#
 # Revision 1.5.2.5  2001/08/15 10:31:23  dpg1
 # Minor tweaks and fixes.
 #
@@ -56,12 +59,14 @@
 
 """Utility functions for IDL compilers
 
-escapifyString() -- return a string with non-printing characters escaped.
-slashName()      -- format a scoped name with '/' separating components.
-dotName()        -- format a scoped name with '.' separating components.
-ccolonName()     -- format a scoped name with '::' separating components.
-pruneScope()     -- remove common prefix from a scoped name.
-relativeScope()  -- give a minimal name for one scope relative to another."""
+escapifyString()  -- return a string with non-printing characters escaped.
+escapifyWString() -- return a wstring with non-printing characters escaped.
+reprFloat()       -- return a string represenation of an IDL float type.
+slashName()       -- format a scoped name with '/' separating components.
+dotName()         -- format a scoped name with '.' separating components.
+ccolonName()      -- format a scoped name with '::' separating components.
+pruneScope()      -- remove common prefix from a scoped name.
+relativeScope()   -- give a minimal name for one scope relative to another."""
 
 import string
 
@@ -146,6 +151,20 @@ escapes."""
         else:
             m[i] = "\\u%04x" % l[i]
     return string.join(m, "")
+
+
+def reprFloat(f):
+    """reprFloat(float) -> string
+
+Return the string representation of an IDL float type (float, double,
+long double), with enough precision to completely reconstuct the bit
+pattern."""
+    # *** Deal with long double
+
+    s = "%.17g" % f
+    if string.find(s, ".") == -1:
+        s = s + ".0"
+    return s
 
 
 def relativeScope(fromScope, destScope):

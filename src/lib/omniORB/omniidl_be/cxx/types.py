@@ -454,21 +454,24 @@ class Type:
         # careful with long ints to avoid "L" postfix
         if kind in [ idltype.tk_long, idltype.tk_ulong ]:
             s = str(value)
-            if s[-1] == 'L':
-                return s[0:-1]
+            if s[-1] == 'L':             s = s[0:-1]
+            if kind == idltype.tk_ulong: s = s + "U"
             return s
 
         if kind in [ idltype.tk_longlong, idltype.tk_ulonglong ]:
             s = str(value)
-            if s[-1] == 'L':
-                s = s[:-1]
+            if s[-1] == 'L':                 s = s[:-1]
+            if kind == idltype.tk_ulonglong: s = s + "U"
             return "_CORBA_LONGLONG_CONST(" + s + ")"
 
         if kind in [ idltype.tk_float ]:
-            return str(value) + "F"
+            return idlutil.reprFloat(value) + "F"
 
         if kind in [ idltype.tk_double ]:
-            return str(value)
+            return idlutil.reprFloat(value)
+
+        if kind in [ idltype.tk_longdouble ]:
+            return idlutil.reprFloat(value) + "L"
 
         # chars are single-quoted
         if kind in [ idltype.tk_char ]:
