@@ -7,6 +7,8 @@ ORB_SRCS = \
            constants.cc \
            context.cc \
            contextList.cc \
+           corbaidldynstub.cc \
+           corbaidlstub.cc \
            deferredRequest.cc \
            dynamicImplementation.cc \
            dynamicLib.cc \
@@ -15,6 +17,9 @@ ORB_SRCS = \
            dynException.cc \
 	   environment.cc \
            exceptionList.cc \
+           irstub.cc \
+           ir.cc \
+           irdynstub.cc \
 	   namedValue.cc \
            nvList.cc \
            Namingdynstub.cc \
@@ -26,12 +31,6 @@ ORB_SRCS = \
            typecode.cc \
            unknownUserExn.cc
 
-NOT_DONE = \
-           corbaidldynstub.cc \
-           corbaidlstub.cc \
-           irstub.cc \
-           ir.cc \
-           irdynstub.cc
 
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
