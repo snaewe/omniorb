@@ -2875,8 +2875,13 @@ public:
                   CORBA::Octet *key,
                   size_t keysize,IOP::TaggedProfileList *profiles,
                   CORBA::Boolean release) 
-         : _proxy_Echo(r,key,keysize,profiles,release) {}
-   virtual ~_new_proxy_echo() {}
+         : _proxy_Echo(r,key,keysize,profiles,release),
+           omniObject(Echo_IntfRepoID,r,key,keysize,profiles,release) 
+   {
+     // You have to look at the _proxy_Echo class and copy from its
+     // ctor all the explicit ctor calls to its base member.
+   }
+   virtual ~_new_proxy_Echo() {}
 
 
    virtual char* echoString(const char* mesg) {
