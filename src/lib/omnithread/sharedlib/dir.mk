@@ -362,7 +362,7 @@ $(lib): $(OBJS)
         $(RM) $@; \
          aCC -b -Wl,+h$(soname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
          $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
-         $(filter-out $(LibSuffixPattern),$^)  -ldce -lcma ; \
+         $(filter-out $(LibSuffixPattern),$^) $(HPTHREADLIBS) ; \
        )
 
 clean::
@@ -438,6 +438,44 @@ $(lib): $(OBJS)
         $(RM) $@; \
         $(LINK.cc) -KPIC -shared -Wl,-h,$(libname) -Wl,-set_version,$(soname) \
          -o $@ $(IMPORT_LIBRARY_FLAGS) $^; \
+       )
+
+all:: $(lib)
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
+endif
+
+#############################################################################
+#   Make rules for FreeBSD 3.x egcs                                         #
+#############################################################################
+
+ifdef FreeBSD
+ifdef EgcsMajorVersion
+
+DIR_CPPFLAGS += -fPIC
+
+libname = libomnithread.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+$(lib): $(OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) $(CXXOPTIONS) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^); \
        )
 
 all:: $(lib)
