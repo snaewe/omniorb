@@ -1183,19 +1183,19 @@ tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
 
   OMNIORB_ASSERT(alignTbl.entries() > 0);
 
-  for( i = 0; i < alignTbl.entries(); i++ ) {
+  for( at_i = 0; at_i < alignTbl.entries(); at_i++ ) {
 
-    switch( alignTbl[i].type ) {
+    switch( alignTbl[at_i].type ) {
     case TypeCode_alignTable::it_simple:
-      offset = omni::align_to(offset, alignTbl[i].simple.alignment) +
-	alignTbl[i].simple.size;
-      pd_mbuf.get_char_array(&dummy, 0, alignTbl[i].simple.alignment);
-      pd_mbuf.skip(alignTbl[i].simple.size);
+      offset = omni::align_to(offset, alignTbl[at_i].simple.alignment) +
+	alignTbl[at_i].simple.size;
+      pd_mbuf.get_char_array(&dummy, 0, alignTbl[at_i].simple.alignment);
+      pd_mbuf.skip(alignTbl[at_i].simple.size);
       break;
 
     case TypeCode_alignTable::it_nasty:
       {
-	tc = alignTbl[i].nasty.tc;
+	tc = alignTbl[at_i].nasty.tc;
 
 	switch( tc->NP_kind() ) {
 
@@ -1245,10 +1245,10 @@ tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
 							     discrimTC);
 
 	    // Skip the value, using the type for the selected member.
-	    CORBA::Long i =
+	    CORBA::Long index =
 	      ((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
 	    if( index >= 0 )
-	      offset = calculateItemSize(tc->NP_member_type(i), offset);
+	      offset = calculateItemSize(tc->NP_member_type(index), offset);
 	    else
 	      ; // Implicit default -- so no member.
 	    break;

@@ -1,4 +1,12 @@
 
+Mon Feb 14 09:41:44 GMT 2000 djr
+================================
+
+- Fixed typo.
+
+src/lib/omniORB2/dynamic/tcParser.cc
+
+
 Thu Feb 10 18:26:33 GMT 2000 djr
 ================================
 
