@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4.2.1  2001/02/23 16:50:44  sll
+ SLL work in progress.
+
  Revision 1.2.2.4  2000/11/03 19:00:26  sll
  Removed Suppress_Spurious_gcc_Warnings cpp macro.
 
@@ -54,10 +57,12 @@
 #ifndef __OMNIORB_CALLDESCRIPTOR_H__
 #define __OMNIORB_CALLDESCRIPTOR_H__
 
-
 class omniObjRef;
 class omniServant;
-class GIOP_C;
+
+OMNI_NAMESPACE_BEGIN(omni)
+class giopAddress;
+OMNI_NAMESPACE_END(omni)
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// omniCallDescriptor /////////////////////////
@@ -79,7 +84,8 @@ public:
       pd_assert_object_existent(omniORB::verifyObjectExistsAndType),
       pd_user_excns(user_excns),
       pd_n_user_excns(n_user_excns),
-      pd_is_upcall(is_upcall) {}
+      pd_is_upcall(is_upcall),
+      pd_first_address_used(0) {}
 
 #if defined(__GNUG__)
   // gcc is rather anal and insists on a class with virtual functions must
@@ -99,11 +105,11 @@ public:
   virtual void unmarshalReturnedValues(cdrStream&);
   // Defaults to no arguments and returns void.
 
-  virtual void userException(GIOP_C&, const char*);
+  virtual void userException(_OMNI_NS(IOP_C)& iop_client, const char*);
   // Defaults to no user exceptions, and thus throws
   // CORBA::MARSHAL.  Any version of this should in all
   // cases either throw a user exception or CORBA::MARSHAL.
-  // Must call giop_client.RequestCompleted().
+  // Must call iop_client.RequestCompleted().
 
   //////////////////////////////////////////////////
   // Methods to implement call on the server side //
@@ -128,6 +134,12 @@ public:
   inline int n_user_excns() { return pd_n_user_excns; }
   inline _CORBA_Boolean is_upcall() const { return pd_is_upcall; }
   inline _CORBA_Boolean haslocalCallFn() const { return (pd_localCall)?1:0; }
+  inline const _OMNI_NS(giopAddress)* firstAddressUsed() { 
+    return pd_first_address_used;
+  }
+  inline void firstAddressUsed(const _OMNI_NS(giopAddress)* a) { 
+    pd_first_address_used = a;
+  }
 
   /////////////////////
   // Context support //
@@ -155,15 +167,20 @@ private:
   omniCallDescriptor& operator = (const omniCallDescriptor&);
   // Not implemented.
 
-  LocalCallFn        pd_localCall;
-  _CORBA_Boolean     pd_is_oneway;
-  const char*        pd_op;
-  size_t             pd_oplen;
-  const ContextInfo* pd_ctxt;
-  _CORBA_Boolean     pd_assert_object_existent;
-  const char*const*  pd_user_excns;
-  int                pd_n_user_excns;
-  _CORBA_Boolean     pd_is_upcall;
+  LocalCallFn                  pd_localCall;
+  _CORBA_Boolean               pd_is_oneway;
+  const char*                  pd_op;
+  size_t                       pd_oplen;
+  const ContextInfo*           pd_ctxt;
+  _CORBA_Boolean               pd_assert_object_existent;
+  const char*const*            pd_user_excns;
+  int                          pd_n_user_excns;
+  _CORBA_Boolean               pd_is_upcall;
+
+  const _OMNI_NS(giopAddress)* pd_first_address_used;
+  // state holder for the giop transport in relation to this call. Not
+  // manipulated by this class other than the access functions.
+  // Initialised to 0 in ctor.
 };
 
 
@@ -234,7 +251,7 @@ public:
 ///////////////////// omniClientCallMarshaller    ////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniClientCallMarshaller : public giopMarshaller {
+class omniClientCallMarshaller : public _OMNI_NS(Marshaller) {
  public:
   omniClientCallMarshaller(omniCallDescriptor& desc) : pd_descriptor(desc) {}
 
@@ -248,7 +265,7 @@ class omniClientCallMarshaller : public giopMarshaller {
 //////////////////////////////////////////////////////////////////////
 ///////////////////// omniServerCallMarshaller    ////////////////////
 //////////////////////////////////////////////////////////////////////
-class omniServerCallMarshaller : public giopMarshaller {
+class omniServerCallMarshaller : public _OMNI_NS(Marshaller) {
  public:
   omniServerCallMarshaller(omniCallDescriptor& desc) : pd_descriptor(desc) {}
 
@@ -258,5 +275,6 @@ class omniServerCallMarshaller : public giopMarshaller {
   omniCallDescriptor& pd_descriptor;
 
 };
+
 
 #endif  // __OMNIORB_CALLDESCRIPTOR_H__

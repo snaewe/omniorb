@@ -1,4 +1,5 @@
 DIR_CPPFLAGS = -I../../.. $(patsubst %,-I%/../../..,$(VPATH)) \
+               -I../../../include $(patsubst %,-I%/../../../include,$(VPATH)) \
                -I../.. $(patsubst %,-I%/../..,$(VPATH))
 DIR_CPPFLAGS += $(CORBA_CPPFLAGS)
 

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4.2.1  2001/02/23 16:50:40  sll
+ SLL work in progress.
+
  Revision 1.2.2.4  2000/11/03 18:46:19  sll
  Moved string marshal functions into cdrStream.
 
@@ -71,6 +74,8 @@
 #include <exceptiondefs.h>
 #include <dynamicLib.h>
 
+OMNI_USING_NAMESPACE(omni)
+
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// omniCallDescriptor /////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -96,7 +101,7 @@ omniCallDescriptor::unmarshalReturnedValues(cdrStream&)
 
 
 void
-omniCallDescriptor::userException(GIOP_C& giop_c, const char* repoId)
+omniCallDescriptor::userException(IOP_C& iop_c, const char* repoId)
 {
   // Server side returns a user-defined exception, but we seem
   // to think the operation has none.  The IDL used on each side
@@ -112,7 +117,7 @@ omniCallDescriptor::userException(GIOP_C& giop_c, const char* repoId)
     omniORB::log.flush();
   }
 
-  giop_c.RequestCompleted(1);
+  iop_c.RequestCompleted(1);
   OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
 }
 

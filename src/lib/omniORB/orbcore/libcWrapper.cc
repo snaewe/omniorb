@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.2.2.1  2001/02/23 16:50:36  sll
+  SLL work in progress.
+
   Revision 1.19.2.2  2000/09/27 17:57:04  sll
   Changed include/omniORB3 to include/omniORB4
 
@@ -97,6 +100,7 @@
 
 #include "libcWrapper.h"
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 omni_mutex LibcWrapper::non_reentrant;
 
@@ -396,3 +400,5 @@ strncasecmp(const char *s1, const char *s2, size_t n)
   return (int)*s1 - *s2;
 }
 #endif
+
+OMNI_NAMESPACE_END(omni)

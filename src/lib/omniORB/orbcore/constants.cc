@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15.2.3.2.1  2001/02/23 16:50:39  sll
+  SLL work in progress.
+
   Revision 1.15.2.3  2000/11/03 19:10:24  sll
   Use OMNIORB_FOR_EACH_SYS_EXCEPTION to define repository IDs.
 
@@ -267,6 +270,8 @@ IOP::ServiceIDtoName(IOP::ServiceID v)
   return 0;
 }
 
+#if 0  // XXX GIOP_Basetypes is obsoluted.
+
 ///////////////////////////////////////////////////////////////////////////
 //               Repository IDs                                          //
 ///////////////////////////////////////////////////////////////////////////
@@ -294,6 +299,7 @@ const GIOP_Basetypes::_SysExceptRepoID \
 OMNIORB_FOR_EACH_SYS_EXCEPTION(OMNIORB_DEFINE_SYS_EXCEPTION_REPOID)
 
 #undef OMNIORB_DEFINE_SYS_EXCEPTION_REPOID
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // Each pseudo object type must be assigned a magic number.

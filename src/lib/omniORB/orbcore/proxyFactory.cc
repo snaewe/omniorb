@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3.2.1  2001/02/23 16:50:34  sll
+  SLL work in progress.
+
   Revision 1.2.2.3  2000/11/09 12:27:59  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -47,13 +50,9 @@
 */
 
 #include <omniORB4/CORBA.h>
-
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
-
 #include <omniORB4/proxyFactory.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 static proxyObjectFactory** ofl = 0;
 static int                  ofl_size = 0;
@@ -157,3 +156,5 @@ proxyObjectFactory::lookup(const char* repoId)
 
   return 0;
 }
+
+OMNI_NAMESPACE_END(omni)

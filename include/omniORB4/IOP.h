@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5.2.1  2001/02/23 16:50:44  sll
+  SLL work in progress.
+
   Revision 1.2.2.5  2000/11/15 17:00:55  sll
   Added marshalling operators for ServiceContext.
 
@@ -77,10 +80,9 @@
 #ifndef __OMNIORB_IOP_H__
 #define __OMNIORB_IOP_H__
 
-class omniIOR;
-
 class IOP {
 public:
+  
   typedef _CORBA_ULong ProfileId;
   static _core_attr const   ProfileId    TAG_INTERNET_IOP;
   static _core_attr const   ProfileId    TAG_MULTIPLE_COMPONENTS;
@@ -415,6 +417,5 @@ public:
   // is not recongised.
 
 };
-
 
 #endif // __OMNIORB_IOP_H__

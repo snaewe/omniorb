@@ -1112,4 +1112,5 @@ private:
   _CORBA_Boolean pd_nocopy;
 };
 
+
 #endif  // __TEMPLATEDECLS_H__

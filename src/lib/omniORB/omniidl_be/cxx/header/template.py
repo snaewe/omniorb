@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.5.2.1  2001/02/23 16:50:40  sll
+# SLL work in progress.
+#
 # Revision 1.5.2.5  2000/11/20 14:43:25  sll
 # Added support for wchar and wstring.
 #
@@ -345,9 +348,9 @@ private:
 """
 
 interface_pof = """\
-class _pof_@name@ : public proxyObjectFactory {
+class _pof_@name@ : public _OMNI_NS(proxyObjectFactory) {
 public:
-  inline _pof_@name@() : proxyObjectFactory(@name@::_PD_repoId) {}
+  inline _pof_@name@() : _OMNI_NS(proxyObjectFactory)(@name@::_PD_repoId) {}
   virtual ~_pof_@name@();
 
   virtual omniObjRef* newObjRef(omniIOR*,omniIdentity*, omniLocalIdentity*);
@@ -365,7 +368,7 @@ public:
   @operations@
   
 public:  // Really protected, workaround for xlC
-  virtual _CORBA_Boolean _dispatch(GIOP_S&);
+  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
 
 private:
   virtual void* _ptrToInterface(const char*);

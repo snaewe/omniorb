@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2.2.1  2001/02/23 16:50:36  sll
+  SLL work in progress.
+
   Revision 1.2.2.2  2000/09/27 17:57:05  sll
   Changed include/omniORB3 to include/omniORB4
 
@@ -64,12 +67,12 @@
 #include <localIdentity.h>
 #include <omniORB4/callDescriptor.h>
 #include <objectAdapter.h>
-#include <ropeFactory.h>
 #include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+OMNI_NAMESPACE_BEGIN(omni)
 
 class omniLocalIdentity_RefHolder {
 public:
@@ -95,9 +98,13 @@ private:
   omniLocalIdentity* pd_id;
 };
 
+OMNI_NAMESPACE_END(omni)
+
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+OMNI_USING_NAMESPACE(omni)
 
 void
 omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
@@ -137,7 +144,7 @@ omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
 
 
 void
-omniLocalIdentity::dispatch(GIOP_S& giop_s)
+omniLocalIdentity::dispatch(IOP_S& giop_s)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(pd_adapter && pd_servant);

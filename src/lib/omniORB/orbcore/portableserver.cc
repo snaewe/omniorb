@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.3.2.1  2001/02/23 16:50:34  sll
+  SLL work in progress.
+
   Revision 1.2.2.3  2000/11/09 12:27:58  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -84,6 +87,8 @@
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// Policy Interfaces /////////////////////////

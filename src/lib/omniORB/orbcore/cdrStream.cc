@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3.2.1  2001/02/23 16:50:40  sll
+  SLL work in progress.
+
   Revision 1.1.2.3  2000/11/20 11:59:43  dpg1
   API to configure code sets.
 
@@ -42,11 +45,26 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/omniInterceptors.h>
+#include <giopStream.h>
+#include <giopStrand.h>
+#include <GIOP_S.h>
 #include <initialiser.h>
 #include <giopStreamImpl.h>
 #include <exceptiondefs.h>
 #include <stdio.h>
 
+/////////////////////////////////////////////////////////////////////////////
+CORBA::ULong 
+cdrStream::completion() {
+  return CORBA::COMPLETED_NO;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+OMNI_USING_NAMESPACE(omni)
+
+/////////////////////////////////////////////////////////////////////////////
 omniCodeSet::NCS_C* cdrStream::ncs_c = 0;
 omniCodeSet::NCS_W* cdrStream::ncs_w = 0;
 
@@ -102,51 +120,51 @@ omniIOR::unmarshal_TAG_CODE_SETS(const IOP::TaggedComponent& c, omniIOR* ior)
   info <<= e;
 
   // Pick a char code set convertor
-  ior->tcs_c = 0;
+  ior->pd_tcs_c = 0;
   if (info.ForCharData.native_code_set) {
-    ior->tcs_c = omniCodeSet::getTCS_C(info.ForCharData.native_code_set,
-				       ior->iiop.version);
+    ior->pd_tcs_c = omniCodeSet::getTCS_C(info.ForCharData.native_code_set,
+					  ior->pd_iiop.version);
   }
-  if (!ior->tcs_c) {
+  if (!ior->pd_tcs_c) {
     CORBA::ULong total = info.ForCharData.conversion_code_sets.length();
     for (CORBA::ULong index=0; index < total; index++) {
-      ior->tcs_c = omniCodeSet::getTCS_C(
+      ior->pd_tcs_c = omniCodeSet::getTCS_C(
 		      info.ForCharData.conversion_code_sets[index],
-		      ior->iiop.version);
-      if (ior->tcs_c) break;
+		      ior->pd_iiop.version);
+      if (ior->pd_tcs_c) break;
     }
   }
-  if (!ior->tcs_c && (info.ForCharData.native_code_set ||
+  if (!ior->pd_tcs_c && (info.ForCharData.native_code_set ||
 		      info.ForCharData.conversion_code_sets.length())) {
     // The server has specified its native code set or at least one
     // conversion code set. But we cannot a TCS_C for any of these
     // code set. In this case, we use the fallback code set.
-    ior->tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_UTF_8,
-				       ior->iiop.version);
+    ior->pd_tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_UTF_8,
+					  ior->pd_iiop.version);
   }
 
   // Pick a wchar code set convertor
-  ior->tcs_w = 0;
+  ior->pd_tcs_w = 0;
   if (info.ForWcharData.native_code_set) {
-    ior->tcs_w = omniCodeSet::getTCS_W(info.ForWcharData.native_code_set,
-				       ior->iiop.version);
+    ior->pd_tcs_w = omniCodeSet::getTCS_W(info.ForWcharData.native_code_set,
+					  ior->pd_iiop.version);
   }
-  if (!ior->tcs_w) {
+  if (!ior->pd_tcs_w) {
     CORBA::ULong total = info.ForWcharData.conversion_code_sets.length();
     for (CORBA::ULong index=0; index < total; index++) {
-      ior->tcs_w = omniCodeSet::getTCS_W(
-		      info.ForWcharData.conversion_code_sets[index],
-		      ior->iiop.version);
-      if (ior->tcs_w) break;
+      ior->pd_tcs_w = omniCodeSet::getTCS_W(
+		       info.ForWcharData.conversion_code_sets[index],
+		       ior->pd_iiop.version);
+      if (ior->pd_tcs_w) break;
     }
   }
-  if (!ior->tcs_w && (info.ForWcharData.native_code_set ||
-		      info.ForWcharData.conversion_code_sets.length())) {
+  if (!ior->pd_tcs_w && (info.ForWcharData.native_code_set ||
+			 info.ForWcharData.conversion_code_sets.length())) {
     // The server has specified its native code set or at least one
     // conversion code set. But we cannot a TCS_W for any of these
     // code set. In this case, we use the fallback code set.
-    ior->tcs_w = omniCodeSet::getTCS_W(omniCodeSet::ID_UTF_16,
-				       ior->iiop.version);
+    ior->pd_tcs_w = omniCodeSet::getTCS_W(omniCodeSet::ID_UTF_16,
+					  ior->pd_iiop.version);
   }
 }
 
@@ -285,7 +303,7 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
   omniCodeSet::TCS_C* tcs_c;
   omniCodeSet::TCS_W* tcs_w;
   CORBA::Boolean sendcontext = 0;
-  giopStreamInfo* f = info.giopstream.streamInfo();
+  giopStrand& d = (giopStrand&)(info.giopstream);
   GIOP::Version ver = info.giopstream.version();
 
   if (ver.minor < 1) {
@@ -296,14 +314,14 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
     return;
   }
 
-  if (f->tcs_selected) {
+  if (d.tcs_selected) {
     // giopStream::acquireClient never gives out the same strand
     // to run 2 different GIOP versions.
-    OMNIORB_ASSERT(f->version.major == ver.major && 
-		   f->version.minor == ver.minor);
+    OMNIORB_ASSERT(d.version.major == ver.major && 
+		   d.version.minor == ver.minor);
 
-    tcs_c = f->tcs_c;
-    tcs_w = f->tcs_w;
+    tcs_c = d.tcs_c;
+    tcs_w = d.tcs_w;
     
     // Notice that we do not check the chosen convertors against the IOR
     // of the object. In fact, the IOR of the object may specify a set
@@ -313,14 +331,14 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
     // into the 2 IORs a different set of codesets.
   }
   else {
-    tcs_c = info.ior.tcs_c;
-    tcs_w = info.ior.tcs_w;
+    tcs_c = info.ior.TCS_C();
+    tcs_w = info.ior.TCS_W();
     if (tcs_c || tcs_w) {
       sendcontext = 1;
-      f->tcs_c = tcs_c;
-      f->tcs_w = tcs_w;
-      f->version = ver;
-      f->tcs_selected = 1;
+      d.tcs_c = tcs_c;
+      d.tcs_w = tcs_w;
+      d.version = ver;
+      d.tcs_selected = 1;
     }
     else {
       // The server has not supplied any code set information.
@@ -360,21 +378,21 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
 static
 void
 getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info) {
-  GIOP::Version ver = info.giopstream.version();
+  GIOP::Version ver = info.giop_s.version();
 
   if (ver.minor < 1) {
     // Code set service context is only defined from  GIOP 1.1 onwards
-    info.giopstream.TCS_C(omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver));
-    info.giopstream.TCS_W(0);
+    info.giop_s.TCS_C(omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver));
+    info.giop_s.TCS_W(0);
     return;
   }
 
-  giopStreamInfo* f = info.giopstream.streamInfo();
+  giopStrand& d = (giopStrand&)(info.giop_s);
 
-  omniCodeSet::TCS_C* tcs_c = f->tcs_c;
-  omniCodeSet::TCS_W* tcs_w = f->tcs_w;
+  omniCodeSet::TCS_C* tcs_c = d.tcs_c;
+  omniCodeSet::TCS_W* tcs_w = d.tcs_w;
 
-  IOP::ServiceContextList& svclist = info.requestinfo.service_contexts();
+  IOP::ServiceContextList& svclist = info.giop_s.receive_service_contexts();
   CORBA::ULong total = svclist.length();
   for (CORBA::ULong index = 0; index < total; index++) {
     if (svclist[index].context_id == IOP::CodeSets) {
@@ -392,10 +410,10 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
 	tcs_c =  omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
       }
       tcs_w = omniCodeSet::getTCS_W(tcs_wid,ver);
-      f->version = ver;
-      f->tcs_c = tcs_c;
-      f->tcs_w = tcs_w;
-      f->tcs_selected = 1;
+      d.version = ver;
+      d.tcs_c = tcs_c;
+      d.tcs_w = tcs_w;
+      d.tcs_selected = 1;
 
       if (omniORB::trace(25)) {
 	omniORB::logger log;
@@ -407,16 +425,16 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
     }
   }
 
-  if (!f->tcs_selected) {
+  if (!d.tcs_selected) {
     // In the absence of any codeset negotiation, we choose 
     // ISO-8859-1 as the transmission code set for char
-    f->version.major = ver.major; f->version.minor = ver.minor;
-    tcs_c = f->tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
-    tcs_w = f->tcs_w = 0;
-    f->tcs_selected = 1;
+    d.version.major = ver.major; d.version.minor = ver.minor;
+    tcs_c = d.tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
+    tcs_w = d.tcs_w = 0;
+    d.tcs_selected = 1;
   }
 
-  if (f->version.major != ver.major || f->version.minor != ver.minor) {
+  if (d.version.major != ver.major || d.version.minor != ver.minor) {
 
     // We are in murky water here. The strand has previously been used
     // for one GIOP version and now a request of another GIOP version
@@ -431,8 +449,8 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
     tcs_w = 0;
   }
 
-  info.giopstream.TCS_C(tcs_c);
-  info.giopstream.TCS_W(tcs_w);
+  info.giop_s.TCS_C(tcs_c);
+  info.giop_s.TCS_W(tcs_w);
 }
 
 
@@ -522,6 +540,7 @@ omniORB::anyWCharCodeSet()
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
+OMNI_NAMESPACE_BEGIN(omni)
 
 class omni_cdrStream_initialiser : public omniInitialiser {
 public:
@@ -559,3 +578,5 @@ public:
 static omni_cdrStream_initialiser initialiser;
 
 omniInitialiser& omni_cdrStream_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

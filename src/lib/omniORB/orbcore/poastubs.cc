@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.2.2.1  2001/02/23 16:50:34  sll
+  SLL work in progress.
+
   Revision 1.2.2.2  2000/09/27 18:03:40  sll
   Updated to use the new cdrStream abstraction.
   Updated to match the changes in the proxyFactory class.
@@ -57,12 +60,9 @@
 */
 
 #include <omniORB4/CORBA.h>
-
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
-
 #include <omniORB4/callDescriptor.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// ForwardRequest ///////////////////////////
@@ -280,7 +280,7 @@ PortableServer::_impl_AdapterActivator::~_impl_AdapterActivator() {}
 
 
 CORBA::Boolean
-PortableServer::_impl_AdapterActivator::_dispatch(GIOP_S& giop_s)
+PortableServer::_impl_AdapterActivator::_dispatch(IOP_S& giop_s)
 {
   return 0;
 }
@@ -413,7 +413,7 @@ PortableServer::_impl_ServantManager::~_impl_ServantManager() {}
 
 
 CORBA::Boolean
-PortableServer::_impl_ServantManager::_dispatch(GIOP_S& giop_s)
+PortableServer::_impl_ServantManager::_dispatch(IOP_S& giop_s)
 {
   return 0;
 }
@@ -629,7 +629,7 @@ PortableServer::_impl_ServantActivator::~_impl_ServantActivator() {}
 
 
 CORBA::Boolean
-PortableServer::_impl_ServantActivator::_dispatch(GIOP_S& giop_s)
+PortableServer::_impl_ServantActivator::_dispatch(IOP_S& giop_s)
 {
   return 0;
 }
@@ -851,7 +851,7 @@ PortableServer::_impl_ServantLocator::~_impl_ServantLocator() {}
 
 
 CORBA::Boolean
-PortableServer::_impl_ServantLocator::_dispatch(GIOP_S& giop_s)
+PortableServer::_impl_ServantLocator::_dispatch(IOP_S& giop_s)
 {
   return 0;
 }

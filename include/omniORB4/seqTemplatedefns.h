@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5.2.1  2001/02/23 16:50:41  sll
+  SLL work in progress.
+
   Revision 1.1.2.5  2000/11/20 18:56:39  sll
   Sequence templates were broken by the previous checkin. They are now fixed.
 
@@ -67,6 +70,7 @@
 #else
 #error "Swap32 has already been defined"
 #endif
+
 
 //////////////////////////////////////////////////////////////////////
 template <class T>
@@ -696,6 +700,7 @@ _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>::operator<<= (cdrStream& s)
   for( _CORBA_ULong i = 0; i < l; i++ )
     operator[](i) = T_Helper::unmarshalObjRef(s);
 }
+
 
 #undef Swap16
 #undef Swap32

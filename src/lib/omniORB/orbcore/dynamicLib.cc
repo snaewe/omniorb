@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2.2.1  2001/02/23 16:50:37  sll
+  SLL work in progress.
+
   Revision 1.2.2.2  2000/09/27 17:59:38  sll
   Updated to use the new cdrStream abstraction.
 
@@ -62,6 +65,7 @@
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 static void init();
 static void deinit();

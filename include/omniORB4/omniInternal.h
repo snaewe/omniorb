@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5.2.1  2001/02/23 16:50:43  sll
+  SLL work in progress.
+
   Revision 1.2.2.5  2000/11/15 17:03:38  sll
   Added include codeSets.h.
 
@@ -181,17 +184,14 @@
 #include <omniORB4/userexception.h>
 
 
-// Forward declarations.
-class Rope;
-class GIOP_S;
-class GIOP_C;
 class omniObjRef;
 class omniServant;
-class omniIdentity;
 class omniIOR;
 class omniLocalIdentity;
-class omniObjAdapter;
 
+OMNI_NAMESPACE_BEGIN(omni)
+
+class omniObjAdapter;
 
 //
 // omniORB_x_y
@@ -205,18 +205,16 @@ class omniObjAdapter;
 extern _core_attr const char* omniORB_4_0;
 extern _core_attr const _CORBA_ULong omniORB_TAG_ORB_TYPE; // ATT\x00
 
-
-
-#include <omniORB4/rope.h>
-
+OMNI_NAMESPACE_END(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////// omni ////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omni {
+_CORBA_MODULE omni
 
-public:
+_CORBA_MODULE_BEG
+
 
 #if SIZEOF_PTR == SIZEOF_LONG
   typedef long ptr_arith_t;
@@ -228,61 +226,62 @@ public:
 
   enum alignment_t { ALIGN_1 = 1, ALIGN_2 = 2, ALIGN_4 = 4, ALIGN_8 = 8 };
 
-  static _core_attr const _CORBA_Char                myByteOrder;
-  static _core_attr omni_tracedmutex*                internalLock;
-  static _core_attr omni_tracedmutex*                objref_rc_lock;
+  _CORBA_MODULE_VAR _core_attr const _CORBA_Char                myByteOrder;
+  _CORBA_MODULE_VAR _core_attr omni_tracedmutex*                internalLock;
+  _CORBA_MODULE_VAR _core_attr omni_tracedmutex*                objref_rc_lock;
 
-  static _core_attr omni_tracedmutex*                poRcLock;
+  _CORBA_MODULE_VAR _core_attr omni_tracedmutex*                poRcLock;
   // Psuedo-object ref count lock.
 
-  static _core_attr _CORBA_Unbounded_Sequence_Octet  myPrincipalID;
-  static _core_attr const alignment_t                max_alignment;
+  _CORBA_MODULE_VAR _core_attr _CORBA_Unbounded_Sequence_Octet  myPrincipalID;
+  _CORBA_MODULE_VAR _core_attr const alignment_t                max_alignment;
   // Maximum value of alignment_t
 
-  static _core_attr int                              remoteInvocationCount;
-  static _core_attr int                              localInvocationCount;
+  _CORBA_MODULE_VAR _core_attr int                       remoteInvocationCount;
+  _CORBA_MODULE_VAR _core_attr int                       localInvocationCount;
   // These are updated whilst internalLock is held.  However it is
   // suggested that they may be read without locking, since integer
   // reads are likely to be atomic.
 
-  static inline ptr_arith_t align_to(ptr_arith_t p, alignment_t align) {
+  _CORBA_MODULE_FN inline ptr_arith_t align_to(ptr_arith_t p, alignment_t align) {
     return (p + ((int) align - 1)) & ~((int) align - 1);
   }
 
-  static _CORBA_ULong hash(const _CORBA_Octet* key, int keysize);
+  _CORBA_MODULE_FN _CORBA_ULong hash(const _CORBA_Octet* key, int keysize);
   // Computes a hash of the object key.  The caller must ensure
   // that the returned value is bounded to the required range.
 
-  static omni_tracedmutex& nilRefLock();
+  _CORBA_MODULE_FN omni_tracedmutex& nilRefLock();
   // This is needed to ensure that the mutex is constructed by the
   // time it is first used.  This can occur at static initialisation
   // if a _var type is declared at global scope.
 
-  static void duplicateObjRef(omniObjRef*);
+  _CORBA_MODULE_FN void duplicateObjRef(omniObjRef*);
   // Thread safe.
 
-  static void releaseObjRef(omniObjRef*);
+  _CORBA_MODULE_FN void releaseObjRef(omniObjRef*);
   // Must not hold <internalLock>.
 
-  static omniServant* objRefToServant(omniObjRef* obj);
+  _CORBA_MODULE_FN omniServant* objRefToServant(omniObjRef* obj);
   // Returns the servant associated with the given reference in
   // the object table.  Returns 0 if this is not a reference to
   // a local object, or the object is not incarnated.  Does not
   // increment the reference count of the servant.
   //  Must hold <internalLock>.
 
-  static omniLocalIdentity* locateIdentity(const _CORBA_Octet* key,
-					   int keysize, _CORBA_ULong hash,
-					   _CORBA_Boolean create_dummy = 0);
+  _CORBA_MODULE_FN omniLocalIdentity* locateIdentity(const _CORBA_Octet* key,
+						     int keysize, 
+						     _CORBA_ULong hash,
+						     _CORBA_Boolean create_dummy = 0);
   // Searches the servant table for the given key.  Returns the identity
   // if found.  If not and <create_dummy> is true, it creates a dummy
   // identity and puts it in the table -- and returns that.  Does not
   // increment the ref count of the id if found.
   //  Must hold <internalLock>.
 
-  static omniLocalIdentity* activateObject(omniServant* servant,
-					   omniObjAdapter* adapter,
-					   omniObjKey& key);
+  _CORBA_MODULE_FN omniLocalIdentity* activateObject(omniServant* servant,
+						     omniObjAdapter* adapter,
+						     omniObjKey& key);
   // Insert the given servant into the object table.  Returns 0 if
   // an object has already been activated with the given key.  May
   // consume <key>.  On success, consumes <servant> and returns the
@@ -292,8 +291,8 @@ public:
   //  Must hold <internalLock>.
   //  This function does not throw any exceptions.
 
-  static omniLocalIdentity* deactivateObject(const _CORBA_Octet* key,
-					     int keysize);
+  _CORBA_MODULE_FN omniLocalIdentity* deactivateObject(const _CORBA_Octet* key,
+						       int keysize);
   // Deactivate the object with the given key.  Returns 0
   // if the given object was not active, otherwise returns
   // the identity.  The caller should decrement the reference
@@ -311,27 +310,27 @@ public:
   // nor the latter is a derived interface of the former, these
   // methods return 0.
 
-  static omniObjRef* createObjRef(const char* targetRepoId,
-				  omniIOR* ior,
-				  _CORBA_Boolean locked);
+  _CORBA_MODULE_FN omniObjRef* createObjRef(const char* targetRepoId,
+					    omniIOR* ior,
+					    _CORBA_Boolean locked);
   // Returns an object reference identified by <profiles>.  If the
   // object is not local, and a suitable outgoing rope could not
   // be instantiated, then 0 is returned.
   // <ior> is always consumed.
   //  <locked> =>> hold <internalLock>.
 
-  static omniObjRef* createObjRef(const char* mostDerivedRepoId,
-				  const char* targetRepoId,
-				  omniLocalIdentity* id);
+  _CORBA_MODULE_FN omniObjRef* createObjRef(const char* mostDerivedRepoId,
+					    const char* targetRepoId,
+					    omniLocalIdentity* id);
   // Return a reference to the given local object (which may or
   // may not have an entry in the local object table).  May
   // return an existing reference if a suitable one exists, or
   // may create a new one.
   //  Must hold <internalLock>.
 
-  static omniObjRef* createObjRef(const char* targetRepoId,
-				  omniLocalIdentity* id,
-				  omniIOR* ior);
+  _CORBA_MODULE_FN omniObjRef* createObjRef(const char* targetRepoId,
+					    omniLocalIdentity* id,
+					    omniIOR* ior);
   // Return a reference to the given local object (which may or
   // may not have an entry in the local object table).  May
   // return an existing reference if a suitable one exists, or
@@ -339,7 +338,7 @@ public:
   // <ior> must not be 0 and it is always consumed.
   //  Must hold <internalLock>.
 
-  static void revertToOriginalProfile(omniObjRef* objref);
+  _CORBA_MODULE_FN void revertToOriginalProfile(omniObjRef* objref);
   // Reset the implementation of the reference to that stored
   // in the IOP profile.  Throws INV_OBJREF if cannot instantiate
   // a suitable rope.  (This is unlikely to happen, since we
@@ -347,8 +346,9 @@ public:
   // someone may have been fiddling with the rope factories).
   //  Must not hold <internalLock>.
 
-  static void locationForward(omniObjRef* obj, omniObjRef* new_location,
-			      _CORBA_Boolean permanent);
+  _CORBA_MODULE_FN void locationForward(omniObjRef* obj,
+					omniObjRef* new_location,
+					_CORBA_Boolean permanent);
   // This function implements location forwarding.  The implementation
   // of <obj> is replaced by that in <new_location> (subject to the
   // usual type checks).  <new_location> is released before returning.
@@ -360,10 +360,11 @@ public:
 
   // stringToObject() and objectToString() now live in omniURI.h
 
-  static void assertFail(const char* file, int line, const char* exp);
-  static void ucheckFail(const char* file, int line, const char* exp);
+  _CORBA_MODULE_FN void assertFail(const char* file, int line, const char* exp);
+  _CORBA_MODULE_FN void ucheckFail(const char* file, int line, const char* exp);
 
-};
+_CORBA_MODULE_END
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -388,9 +389,8 @@ public:
 
 #include <omniORB4/codeSets.h>
 #include <omniORB4/cdrStream.h>
+#include <omniORB4/omniTransport.h>
 #include <omniORB4/seqTemplatedefns.h>
-#include <omniORB4/giopStream.h>
-#include <omniORB4/giopDriver.h>
 #include <omniORB4/omniObjRef.h>
 #include <omniORB4/omniIOR.h>
 #include <omniORB4/proxyFactory.h>

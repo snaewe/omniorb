@@ -31,7 +31,8 @@ CXXSRCS = gatekeeper.cc
 
 DIR_CPPFLAGS += -I. $(patsubst %,-I%,$(VPATH)) \
                 -I../.. $(patsubst %,-I%/../..,$(VPATH)) \
-                -I../../.. $(patsubst %,-I%/../../..,$(VPATH))
+                -I../../.. $(patsubst %,-I%/../../..,$(VPATH)) \
+                -I../../../include $(patsubst %,-I%/../../../include,$(VPATH))
 
 LIB_NAME     := tcpwrapGK
 LIB_VERSION  := $(OMNIORB_MAJOR_VERSION).$(OMNIORB_MINOR_VERSION)

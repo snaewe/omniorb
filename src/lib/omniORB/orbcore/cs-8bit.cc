@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6.2.1  2001/02/23 16:50:38  sll
+  SLL work in progress.
+
   Revision 1.1.2.6  2000/12/05 17:43:30  dpg1
   Check for input over-run in string and wstring unmarshalling.
 
@@ -55,6 +58,10 @@
 
 #include <omniORB4/CORBA.h>
 #include <codeSetUtil.h>
+
+OMNI_USING_NAMESPACE(omni)
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //
 // Native code set
@@ -320,3 +327,5 @@ const _CORBA_Char omniCodeSet::empty8BitTable[] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
+
+OMNI_NAMESPACE_END(omni)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4.2.1  2001/02/23 16:50:42  sll
+  SLL work in progress.
+
   Revision 1.2.2.4  2000/11/07 18:44:03  sll
   Renamed omniObjRef::_hash and _is_equivalent to __hash and __is_equivalent
   to avoid name clash with the member functions of CORBA::Object.
@@ -69,17 +72,18 @@
 #ifndef __OMNIOBJREF_H__
 #define __OMNIOBJREF_H__
 
+OMNI_NAMESPACE_BEGIN(omni)
 
-class omni;
 class omniInternal;
-class omniObjKey;
-class omniIdentity;
+
+OMNI_NAMESPACE_END(omni)
+
 class omniIOR;
+class omniCallDescriptor;
+class omniIdentity;
 class omniLocalIdentity;
 class omniRemoteIdentity;
-class omniCallDescriptor;
 class omniServant;
-
 
 class omniObjRef {
 public:
@@ -305,9 +309,24 @@ private:
   //////////////////////////////////////////////////
   // Private methods - for use by class omni only //
   //////////////////////////////////////////////////
-  friend class omni;
-  friend class omniInternal;
+  friend class _OMNI_NS(omniInternal);
   friend class omniPy;
+  friend void omni::duplicateObjRef(omniObjRef*);
+  friend void omni::releaseObjRef(omniObjRef*);
+  friend omniLocalIdentity* omni::activateObject(omniServant*,omniObjAdapter*,
+						 omniObjKey&);
+  friend omniLocalIdentity* omni::deactivateObject(const _CORBA_Octet* key,
+						   int keysize);
+  friend omniObjRef* omni::createObjRef(const char*,omniIOR*,_CORBA_Boolean);
+  friend omniObjRef* omni::createObjRef(const char*,const char*,
+					omniLocalIdentity*);
+  friend omniObjRef* omni::createObjRef(const char*,omniLocalIdentity*,
+					omniIOR*);
+  friend void omni::revertToOriginalProfile(omniObjRef*);
+  friend void omni::locationForward(omniObjRef*,
+				    omniObjRef*,
+				    _CORBA_Boolean);
+
 
   inline void _setIdentity(omniIdentity* id, omniLocalIdentity* lid) {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);

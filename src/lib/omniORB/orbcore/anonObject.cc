@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.2.2.1  2001/02/23 16:50:40  sll
+  SLL work in progress.
+
   Revision 1.2.2.2  2000/09/27 17:43:55  sll
   Updated to match the changes in the proxyFactory class.
 
@@ -55,6 +58,7 @@
 
 #include <anonObject.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// omniAnonObjRef ///////////////////////////

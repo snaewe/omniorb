@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8.2.1  2001/02/23 16:50:43  sll
+  SLL work in progress.
+
   Revision 1.1.2.8  2001/01/09 17:16:59  dpg1
   New cdrStreamAdapter class to allow omniORBpy to intercept buffer
   management.
@@ -505,6 +508,7 @@ protected:
   virtual void fetchInputData(omni::alignment_t align,
 			      size_t required)     = 0;
   // Fetch at least <required> bytes into the input buffer.
+  // <required> must be no more than 8 bytes && align == required!!
   // The data block should start at alignment <align>. 
   // If the space available is less than specified, raise a
   // MARSHAL system exception.
@@ -656,6 +660,16 @@ public:
   }
 #endif
 
+public:
+  /////////////////////////////////////////////////////////////////////
+  virtual _CORBA_ULong completion();
+  // If an error occurs when a value is marshalled or unmarshalled, a
+  // system exception will be raised. The "completed" member of the
+  // exception must be taken from the return value of this function.
+  // Note: the return value is really of type CORBA::CompletionStatus.
+  // Since this declaration must appear before the CORBA declaration,
+  // we have to live with returning a _CORBA_ULong.
+
 private:
   cdrStream(const cdrStream&);
   cdrStream& operator=(const cdrStream&);
@@ -801,7 +815,6 @@ private:
 };
 
 
-
 // In some circumstances, for example in omniORBpy, it is necessary to
 // perform some extra work around operations which manage a
 // cdrStream's buffers. cdrStreamAdapter provides a wrapper around a
@@ -863,7 +876,5 @@ private:
     pd_actual.pd_outb_mkr = pd_outb_mkr;
   }
 };
-
-
 
 #endif /* __CDRSTREAM_H__ */

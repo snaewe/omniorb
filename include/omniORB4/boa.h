@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2.2.1  2001/02/23 16:50:44  sll
+  SLL work in progress.
+
   Revision 1.2.2.2  2000/11/09 12:27:49  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -48,6 +51,7 @@
 #ifndef __OMNIORB_BOA_H__
 #define __OMNIORB_BOA_H__
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// omniOrbBoaServant /////////////////////////
@@ -91,5 +95,6 @@ protected:
   //  Immutable.
 };
 
+OMNI_NAMESPACE_END(omni)
 
 #endif  // __OMNIORB_BOA_H__

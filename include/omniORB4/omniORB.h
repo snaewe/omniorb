@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4.2.1  2001/02/23 16:50:43  sll
+  SLL work in progress.
+
   Revision 1.2.2.4  2000/11/20 11:59:43  dpg1
   API to configure code sets.
 
@@ -143,7 +146,9 @@ struct omniOrbBoaKey {
   _CORBA_ULong lo;
 };
 
+OMNI_NAMESPACE_BEGIN(omni)
 class omniInterceptors;
+OMNI_NAMESPACE_END(omni)
 
 _CORBA_MODULE omniORB
 
@@ -765,7 +770,7 @@ _CORBA_MODULE_BEG
   //   interception functions can be added.                             //
   //   Calling this function before ORB_init() will result in a system  //
   //   exception.
-  _CORBA_MODULE_FN omniInterceptors* getInterceptors();
+  _CORBA_MODULE_FN _OMNI_NS(omniInterceptors)* getInterceptors();
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////

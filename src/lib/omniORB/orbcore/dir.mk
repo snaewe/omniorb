@@ -1,73 +1,99 @@
 # dir.mk for omniORB.
 
-ORB_SRCS = \
-            anonObject.cc \
-            bootstrapstub.cc \
-            callDescriptor.cc \
-            cdrMemoryStream.cc \
-            cdrStream.cc \
-            cdrStreamAdapter.cc \
-            constants.cc \
-            corbaBoa.cc \
-            corbaObject.cc \
-            corbaOrb.cc \
-            corbaString.cc \
-            corbaWString.cc \
-            dynamicLib.cc \
-            exception.cc \
-            exceptn.cc \
-            giopClient.cc \
-            giopServer.cc \
+GIOP_SRCS = \
+            omniTransport.cc \
+	    cdrStream.cc \
+	    cdrMemoryStream.cc \
+            giopRope.cc \
+            giopStrand.cc \
             giopStream.cc \
-            giopStream10.cc \
-            giopStream11.cc \
-            giopStream12.cc \
-            initFile.cc \
-            initRefs.cc \
-            interceptors.cc \
-            ior.cc \
-            libcWrapper.cc \
-	    localIdentity.cc \
-            logIOstream.cc \
-            Namingstub.cc \
-	    objectAdapter.cc \
-            objectStub.cc \
-            omniInternal.cc \
-            omniIOR.cc \
-            omniObjRef.cc \
-            omniORB.cc \
-            omniServant.cc \
-	    poa.cc \
-            poamanager.cc \
+            giopServer.cc \
+            giopWorker.cc \
+            giopRendezvouser.cc \
+            GIOP_C.cc \
+            GIOP_S.cc \
+            giopStreamImpl.cc \
+            giopImpl10.cc \
+            giopImpl11.cc \
+            giopImpl12.cc \
+
+
+CODESET_SRCS = \
+	    codeSets.cc \
+	    cs-8bit.cc \
+	    cs-16bit.cc \
+	    cs-8859-1.cc \
+	    cs-UTF-8.cc \
+	    cs-UTF-16.cc \
+
+BUILTIN_STUB_SRCS = \
+	    bootstrapstub.cc \
+	    objectStub.cc \
 	    poastubs.cc \
-            policy.cc \
-            portableserver.cc \
+	    Namingstub.cc
+
+ORB_SRCS =  \
+	    anonObject.cc \
+	    callDescriptor.cc \
+	    constants.cc \
+	    corbaObject.cc \
+	    corbaBoa.cc \
+	    corbaOrb.cc \
+	    corbaString.cc \
+	    corbaWString.cc \
+	    current.cc \
+	    dynamicLib.cc \
+	    exception.cc \
+	    exceptn.cc \
+	    initFile.cc \
+	    initRefs.cc \
+	    interceptors.cc \
+	    ior.cc \
+	    libcWrapper.cc \
+	    localIdentity.cc \
+	    logIOstream.cc \
+	    objectAdapter.cc \
+	    omniInternal.cc \
+	    omniIOR.cc \
+	    omniObjRef.cc \
+	    omniORB.cc \
+	    omniServant.cc \
+	    poa.cc \
+	    poamanager.cc \
+	    policy.cc \
+	    portableserver.cc \
 	    proxyFactory.cc \
-            relStream.cc \
-            remoteIdentity.cc \
-            ropeFactory.cc \
-            scavenger.cc \
-            strand.cc \
+	    remoteIdentity.cc \
 	    taskqueue.cc \
-            tcpSocket.cc \
-            tcpSocketAux.cc \
-            tcpSocketMTfactory.cc \
-            tracedthread.cc \
-            uri.cc \
-            codeSets.cc \
-            cs-8bit.cc \
-            cs-16bit.cc \
-            cs-8859-1.cc \
-            cs-UTF-8.cc \
-            cs-UTF-16.cc
+	    tracedthread.cc \
+	    uri.cc \
+            $(GIOP_SRCS) \
+            $(CODESET_SRCS) \
+            $(BUILTIN_STUB_SRCS)
+
+OBSOLUTED_SRCS = \
+	    giopClient.cc \
+	    giopServer.cc \
+	    giopStream.cc \
+	    giopStream10.cc \
+	    giopStream11.cc \
+	    giopStream12.cc \
+	    relStream.cc \
+	    ropeFactory.cc \
+	    scavenger.cc \
+	    strand.cc \
+	    tcpSocket.cc \
+	    tcpSocketAux.cc \
+	    tcpSocketMTfactory.cc \
 
 NOT_DONE =  \
-            firewallProxy.cc \
-            openssl.cc \
-            sslMTFactory.cc \
-            sslMTFactory.h
+	    firewallProxy.cc \
+	    openssl.cc \
+	    sslMTFactory.cc \
+	    sslMTFactory.h
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
+DIR_CPPFLAGS += -I../include $(patsubst %,-I%/../include,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
 DIR_CPPFLAGS += -D_OMNIORB_LIBRARY
@@ -95,7 +121,7 @@ ifdef UnixPlatform
 endif
 
 ifdef Win32Platform
-  DIR_CPPFLAGS += -D "NTArchitecture" 
+  DIR_CPPFLAGS += -D "NTArchitecture"
   NoGateKeeper  = 1
   EXTRA_LIBS    = wsock32.lib advapi32.lib
   SHARED_ONLY_OBJS = msvcdllstub.o
@@ -169,5 +195,3 @@ export::
 	@$(MakeSubdirs)
 
 endif
-
-

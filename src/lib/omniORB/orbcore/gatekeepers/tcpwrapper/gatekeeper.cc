@@ -40,6 +40,8 @@ extern "C" {
   int allow_severity;
 }
 
+OMNI_NAMESPACE_BEGIN(omni)
+
 const char*
 gateKeeper::version()
 {
@@ -47,7 +49,7 @@ gateKeeper::version()
 }
 
 CORBA::Boolean
-gateKeeper::checkConnect(tcpSocketStrand *s) {
+gateKeeper::checkConnect(Strand *s) {
   // This code is stolen (heavily modified) from tcpd.c in
   // tcp_wrappers_7.6.  Hence:
   /************************************************************************
@@ -108,3 +110,5 @@ gateKeeper::checkConnect(tcpSocketStrand *s) {
 
 char *&gateKeeper::denyFile = hosts_deny_table;
 char *&gateKeeper::allowFile = hosts_allow_table;
+
+OMNI_NAMESPACE_END(omni)

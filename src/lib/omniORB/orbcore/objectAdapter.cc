@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4.2.1  2001/02/23 16:50:36  sll
+ SLL work in progress.
+
  Revision 1.2.2.4  2000/11/09 12:27:57  dpg1
  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -80,33 +83,26 @@
 
 #include <objectAdapter.h>
 #include <localIdentity.h>
-#include <ropeFactory.h>
-#include <scavenger.h>
 #include <initRefs.h>
 #include <poaimpl.h>
 #include <corbaBoa.h>
 #include <exceptiondefs.h>
+#include <giopServer.h>
+#include <giopRope.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 
-#ifndef __atmos__
-#include <tcpSocket.h>
-#define _tcpIncomingFactory tcpSocketMTincomingFactory
-#define _tcpIncomingRope    tcpSocketIncomingRope
-#define _tcpEndpoint        tcpSocketEndpoint
-#else
-#include <tcpATMos.h>
-#define _tcpIncomingFactory tcpATMosMTincomingFactory
-#define _tcpIncomingRope    tcpATMosIncomingRope
-#define _tcpEndpoint        tcpATMosEndpoint
-#endif
+static char                       initialised = 0;
+static int                        num_active_oas = 0;
+static _OMNI_NS(Rope)*            loopback = 0;
+static omni_tracedmutex           oa_lock;
 
+static _OMNI_NS(giopServer)*      oa_server = 0;
 
-static ropeFactoryList* incomingFactories = 0;
-static char             initialised = 0;
-static int              num_active_oas = 0;
-static Rope*            loopback = 0;
-static omni_tracedmutex oa_lock;
+static _OMNI_NS(giopEndpointList) oa_giop_endpoints;
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 omni_tracedmutex     omniObjAdapter::sd_detachedObjectLock;
 omni_tracedcondition omniObjAdapter::sd_detachedObjectSignal(
@@ -149,42 +145,48 @@ omniObjAdapter::initialise()
 
   if( initialised )  return;
 
-  omniORB::logs(10, "Initialising incoming rope factories.");
+  omniORB::logs(10, "Initialising incoming endpoints.");
 
   try {
-    if( !incomingFactories ) {
-      incomingFactories = new ropeFactoryList;
-      incomingFactories->insert(new _tcpIncomingFactory);
-    }
+    if (!oa_server)
+      oa_server = new giopServer();
 
-    ropeFactory_iterator iter(incomingFactories);
-    incomingRopeFactory* factory;
-
-    while( (factory = (incomingRopeFactory*) iter()) ) {
-      if( factory->getType()->is_protocol(_tcpEndpoint::protocol_name) ) {
-
-	if( options.incomingPorts.size() ) {
-	  for( ListenPortList::iterator i = options.incomingPorts.begin();
-	       i != options.incomingPorts.end(); i++ ) {
-
-	    _tcpEndpoint e(i->host, i->port);
-	    factory->instantiateIncoming(&e, 1);
-
+    if( options.endpoints.size() ) {
+      for( EndpointList::iterator i = options.endpoints.begin();
+	   i != options.endpoints.end(); i++ ) {
+      
+	giopEndpoint* e = giopEndpoint::str2Endpoint(*i);
+	if (!e) {
+	  // XXX In future, also add calls to other non-giop transports
+	  // to give them a chance to instantiate an endpoint.
+	  if (omniORB::trace(0)) {
+	    omniORB::logger log;
+	    log << "Error: Unable to create an endpoint of this description: "
+		<< (const char*)*i
+		<< "\n";
 	  }
+	  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
 	}
-	else {
-	  // Instantiate a rope.  Let the OS pick a port number.
-	  const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
-	  if( !hostname )  hostname = "";
-	  _tcpEndpoint e(hostname, 0);
-	  factory->instantiateIncoming(&e, 1);
-	}
-
+	oa_server->instantiate(e);
+	oa_giop_endpoints.push_back(e);
       }
+    }
+    else {
+      // instantiate a default tcp port.
+      const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
+      if( !hostname )  hostname = "";
+      CORBA::String_var estr = CORBA::string_alloc(strlen(hostname)+8);
+      sprintf(estr,"tcp/%s:0",hostname);
+      giopEndpoint* e = giopEndpoint::str2Endpoint(estr);
+      oa_server->instantiate(e);
+      oa_giop_endpoints.push_back(e);
     }
 
     if( !options.noBootstrapAgent )
       omniInitialReferences::initialise_bootstrap_agentImpl();
+  }
+  catch (const CORBA::INITIALIZE&) {
+    throw;
   }
   catch (...) {
     OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
@@ -203,20 +205,13 @@ omniObjAdapter::shutdown()
 
   OMNIORB_ASSERT(num_active_oas == 0);
 
-  omniORB::logs(10, "Shutting-down incoming rope factories.");
+  omniORB::logs(10, "Shutting-down all incoming endpoints.");
 
-  {
-    // Beware of a possible deadlock where the scavenger thread and this
-    // thread both try to grep the mutex in factory->anchor().  To prevent
-    // this from happening, put this block of code in a separate scope.
-    ropeFactory_iterator iter(incomingFactories);
-    incomingRopeFactory* factory;
+  oa_server->remove();
+  delete oa_server;
+  oa_server = 0;
 
-    while( (factory = (incomingRopeFactory*) iter()) )
-      factory->removeIncoming();
-  }
-
-  StrandScavenger::removeRopeFactories(incomingFactories);
+  oa_giop_endpoints.erase(oa_giop_endpoints.begin(),oa_giop_endpoints.end());
 
   if( loopback ) {
     loopback->decrRefCount();
@@ -237,19 +232,8 @@ omniObjAdapter::adapterActive()
   if( pd_isActive )  return;
 
   if( num_active_oas++ == 0 ) {
-    omniORB::logs(10, "Starting incoming rope factories.");
-    {
-      // Beware of a possible deadlock where the scavenger thread and this
-      // thread both try to grep the mutex in factory->anchor().  To prevent
-      // this from happening, put this block of code in a separate scope.
-      ropeFactory_iterator iter(incomingFactories);
-      incomingRopeFactory* factory;
-
-      while( (factory = (incomingRopeFactory*) iter()) )
-	factory->startIncoming();
-    }
-    //?? Hmmm.  What if done adapterActive, adapterInactive, adapterActive?
-    StrandScavenger::addRopeFactories(incomingFactories);
+    omniORB::logs(10, "Starting serving incoming endpoints.");
+    oa_server->start();
   }
 
   pd_isActive = 1;
@@ -264,13 +248,8 @@ omniObjAdapter::adapterInactive()
   if( !pd_isActive )  return;
 
   if( --num_active_oas == 0 ) {
-    omniORB::logs(10, "Stopping incoming rope factories.");
-
-    ropeFactory_iterator iter(incomingFactories);
-    incomingRopeFactory* factory;
-
-    while( (factory = (incomingRopeFactory*) iter()) )
-      factory->stopIncoming();
+    omniORB::logs(10, "Stopping serving incoming endpoints.");
+    oa_server->stop();
   }
 
   pd_isActive = 0;
@@ -348,17 +327,6 @@ omniObjAdapter::wait_for_detached_objects()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-ropeFactoryList*
-omniObjAdapter::incomingRopeFactories()
-{
-  if( !initialised )
-    throw omniORB::fatalException(__FILE__, __LINE__,
-	  "omniObjAdapter::incomingRopeFactories() -- not initialised!");
-
-  return incomingFactories;
-}
-
-
 Rope*
 omniObjAdapter::defaultLoopBack()
 {
@@ -368,58 +336,34 @@ omniObjAdapter::defaultLoopBack()
 
     // Until we have a fast in-memory loop back. We use a tcp loopback to
     // talk to ourself.
-    Endpoint_var myaddr;
+    for ( giopEndpointList::iterator i = oa_giop_endpoints.begin();
+	  i != oa_giop_endpoints.end(); i++) {
 
-    ropeFactoryType* f = ropeFactoryType::findType(IOP::TAG_INTERNET_IOP);
-
-    {
-      ropeFactory_iterator iter(incomingFactories);
-      incomingRopeFactory* factory;
-
-      while( (factory = (incomingRopeFactory*) iter()) ) {
-	if( factory->getType() == f ) {
-	  Rope_iterator riter(factory);
-	  _tcpIncomingRope* r = (_tcpIncomingRope*) riter();
-	  if( r ) {
-	    Endpoint* addr = 0;
-	    r->this_is(addr);
-	    myaddr = addr;
-	    break;
-	  }
-	}
+      if (strcmp((*i)->type(),"tcp") == 0) {
+	giopAddress* addr = giopAddress::str2Address((*i)->address());
+	omni_tracedmutex_lock sync(*omniTransportLock);
+	loopback = new giopRope(addr,1);
+	break;
       }
     }
-
-    if (!((Endpoint*)myaddr)) {
+    if (!loopback) {
       // This is tough!!! Haven't got a loop back!
       // May be the object adaptor has been destroyed!!!
       OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
-    }
-
-    tcpSocketEndpoint* taddr = tcpSocketEndpoint::castup(myaddr);
-    IIOP::Address addr = taddr->address();
-    
-    _CORBA_Unbounded_Sequence_Octet key;
-    key.length(1); key[0] = '\0';
-
-    omniIOR_var ior = new omniIOR("",key,&addr,1);
-
-    {
-      ropeFactory_iterator iter(globalOutgoingRopeFactories);
-      outgoingRopeFactory* factory;
-
-      while( (factory = (outgoingRopeFactory*) iter()) ) {
-	if ( factory->getType() == f ) {
-	  loopback = factory->findOrCreateOutgoing(ior);
-	  OMNIORB_ASSERT(loopback);
-	  break;
-	}
-      }
     }
   }
   return loopback;
 }
 
+CORBA::Boolean
+omniObjAdapter::matchMyEndpoints(const giopAddress* addr)
+{
+  for ( giopEndpointList::iterator i = oa_giop_endpoints.begin();
+	i != oa_giop_endpoints.end(); i++) {
+    if (strcmp((*i)->address(),addr->address())) return 1;
+  }
+  return 0;
+}
 
 omniObjAdapter::omniObjAdapter()
   : pd_nReqInThis(0),
@@ -436,3 +380,14 @@ omniObjAdapter::omniObjAdapter()
   // the ORB is initialised.  Thus omni::internalLock is not
   // initialised, and we have to use something else...
 }
+
+
+omniObjAdapter::
+Options::~Options() {
+  for( EndpointList::iterator i = options.endpoints.begin();
+       i != options.endpoints.end(); i++ ) {
+    CORBA::string_free(*i);
+  }
+}
+
+OMNI_NAMESPACE_END(omni)

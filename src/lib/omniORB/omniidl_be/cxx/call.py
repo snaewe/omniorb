@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.3.2.1  2001/02/23 16:50:41  sll
+# SLL work in progress.
+#
 # Revision 1.1.4.3  2000/11/07 18:27:31  sll
 # out_objrefcall now generates the correct unambiguous type name in its castings.
 #
@@ -396,7 +399,7 @@ class CallDescriptor:
         if self.__exceptions != []:
             base_ctor = base_ctor + ", _user_exns, "
             user_exceptions_decl = \
-            "void userException(GIOP_C&, const char*);\n" + \
+            "void userException(_OMNI_NS(IOP_C)&, const char*);\n" + \
             "static const char* const _user_exns[];\n"
         else:
             base_ctor = base_ctor + ", 0, "

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.32.2.3.2.1  2001/02/23 16:50:37  sll
+  SLL work in progress.
+
   Revision 1.32.2.3  2000/11/09 12:27:57  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -193,6 +196,7 @@
 #define INIT_MAX_CONFIG 10   
                      // Maximum number of entries in configuration 
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 initFile::initFile() : fData(0), fsize(0), currpos(0)
 {
@@ -699,3 +703,5 @@ public:
 static omni_initFile_initialiser initialiser;
 
 omniInitialiser& omni_initFile_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.8.2.1  2001/02/23 16:50:38  sll
+  SLL work in progress.
+
   Revision 1.33.2.8  2000/11/20 11:59:44  dpg1
   API to configure code sets.
 
@@ -229,6 +232,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 static const char* orb_ids[] = { "omniORB4",
 				 "omniORB3", 
@@ -259,21 +263,23 @@ extern "C" int sigaction(int, const struct sigaction *, struct sigaction *);
 ///////////////////////////////////////////////////////////////////////
 //          Per module initialisers.
 //
+OMNI_NAMESPACE_BEGIN(omni)
+
 extern omniInitialiser& omni_omniIOR_initialiser_;
 extern omniInitialiser& omni_uri_initialiser_;
 extern omniInitialiser& omni_corbaOrb_initialiser_;
-extern omniInitialiser& omni_giopStreamImpl_initialiser_;
-extern omniInitialiser& omni_ropeFactory_initialiser_;
 extern omniInitialiser& omni_omniInternal_initialiser_;
 extern omniInitialiser& omni_initFile_initialiser_;
 extern omniInitialiser& omni_initRefs_initialiser_;
-extern omniInitialiser& omni_strand_initialiser_;
-extern omniInitialiser& omni_scavenger_initialiser_;
 extern omniInitialiser& omni_hooked_initialiser_;
 extern omniInitialiser& omni_interceptor_initialiser_;
 extern omniInitialiser& omni_ior_initialiser_;
 extern omniInitialiser& omni_codeSet_initialiser_;
 extern omniInitialiser& omni_cdrStream_initialiser_;
+extern omniInitialiser& omni_giopStrand_initialiser_;
+extern omniInitialiser& omni_giopStreamImpl_initialiser_;
+
+OMNI_NAMESPACE_END(omni)
 
 static CORBA::Boolean
 parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
@@ -365,17 +371,15 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     // among the modules.
     omni_omniInternal_initialiser_.attach();
     omni_corbaOrb_initialiser_.attach();
-    omni_strand_initialiser_.attach();
-    omni_scavenger_initialiser_.attach();
-    omni_ropeFactory_initialiser_.attach();
-    omni_giopStreamImpl_initialiser_.attach();
     omni_interceptor_initialiser_.attach();
     omni_omniIOR_initialiser_.attach();
     omni_ior_initialiser_.attach();
     omni_codeSet_initialiser_.attach();
     omni_cdrStream_initialiser_.attach();
+    omni_giopStreamImpl_initialiser_.attach();
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
+    omni_giopStrand_initialiser_.attach();
     omni_hooked_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
@@ -629,17 +633,15 @@ omniOrbORB::actual_shutdown()
 
   // Call detach method of the initialisers in reverse order.
   omni_hooked_initialiser_.detach();
+  omni_giopStrand_initialiser_.detach();
   omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
   omni_codeSet_initialiser_.detach();
+  omni_giopStreamImpl_initialiser_.detach();
   omni_cdrStream_initialiser_.detach();
   omni_ior_initialiser_.detach();
   omni_omniIOR_initialiser_.attach();
   omni_interceptor_initialiser_.detach();
-  omni_giopStreamImpl_initialiser_.detach();
-  omni_ropeFactory_initialiser_.detach();
-  omni_scavenger_initialiser_.detach();
-  omni_strand_initialiser_.detach();
   omni_corbaOrb_initialiser_.detach();
   omni_omniInternal_initialiser_.detach();
   omni_uri_initialiser_.detach();
@@ -1186,9 +1188,9 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 
 	const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
 	if( !hostname )  hostname = "";
-	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
-
+	char* es = CORBA::string_alloc(strlen(hostname)+16);
+	sprintf(es,"tcp/%s:%u",hostname,port);
+	omniObjAdapter::options.endpoints.push_back(es);
 	move_args(argc, argv, idx, 2);
 	continue;
       }
@@ -1228,10 +1230,9 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  // null terminate and isolate hostname argument
 	  *port_str = 0;
         }
-
-	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
-
+	char* es = CORBA::string_alloc(strlen(hostname)+16);
+	sprintf(es,"tcp/%s:%u",hostname,port);
+	omniObjAdapter::options.endpoints.push_back(es);
         move_args(argc, argv, idx, 2);
         continue;
       }
@@ -1387,6 +1388,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
   return 1;
 }
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 /////////////////////////////////////////////////////////////////////////////
 //            Hooked initialiser                                           //
@@ -1557,3 +1559,5 @@ public:
 static omni_corbaOrb_initialiser initialiser;
 
 omniInitialiser& omni_corbaOrb_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

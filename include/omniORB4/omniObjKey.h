@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.2.2.1  2001/02/23 16:50:42  sll
+  SLL work in progress.
+
   Revision 1.2.2.2  2000/09/27 17:11:40  sll
   Removed reference to the obsoluted MemBufferedStream and NetBufferedStream.
 
@@ -47,7 +50,6 @@
 #define __OMNIOBJKEY_H__
 
 #include <string.h>
-
 
 // This is just big enough to fit a root poa key.
 #define INLINE_BUF_SIZE  14

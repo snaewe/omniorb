@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7.2.1  2001/02/23 16:50:38  sll
+  SLL work in progress.
+
   Revision 1.1.2.7  2000/12/05 17:43:31  dpg1
   Check for input over-run in string and wstring unmarshalling.
 
@@ -59,6 +62,7 @@
 #include <omniORB4/CORBA.h>
 #include <codeSetUtil.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 class NCS_C_UTF_8 : public omniCodeSet::NCS_C {
 public:
@@ -709,3 +713,5 @@ public:
 };
 
 static CS_UTF_8_init _CS_UTF_8_init;
+
+OMNI_NAMESPACE_END(omni)
