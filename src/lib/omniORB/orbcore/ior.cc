@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.10.2.3  2000/10/04 16:53:16  sll
+  Added default interceptor to encode and decode supported tag components.
+
   Revision 1.10.2.2  2000/09/27 18:20:32  sll
   Removed obsoluted IOP::iorToEncapStr and IOP::EncapStrToIor.
   Added new function IOP::IOR::unmarshaltype_id(), IIOP::encodeProfile(),
@@ -83,8 +86,10 @@
   */
 
 #include <omniORB4/CORBA.h>
-
+#include <omniORB4/omniInterceptors.h>
 #include <exceptiondefs.h>
+#include <initialiser.h>
+#include <stdio.h>
 
 void
 IOP::TaggedProfile::operator>>= (cdrStream &s) const {
@@ -225,7 +230,6 @@ IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
 
   {
     cdrEncapsulationStream s(bufsize,1);
-    omni::myByteOrder >>= s;
     body.version.major >>= s;
     body.version.minor >>= s;
     body.address.host >>= s;
@@ -314,57 +318,84 @@ IIOP::decodeMultiComponentProfile(const IOP::TaggedProfile& profile,
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 }
 
-
-#if 0
 //////////////////////////////////////////////////////////////////////////
-static void unmarshal_TAG_ORB_TYPE(cdrStream&,IOP::ComponentId,omniIOR*);
-static void unmarshal_TAG_generic(cdrStream&,IOP::ComponentId,omniIOR*);
+static
+void
+unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent& c , omniIOR* ior)
+{
+  OMNIORB_ASSERT(c.tag == IOP::TAG_ORB_TYPE);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+  ior->orb_type <<= e;
+}
+
+static
+char*
+dump_TAG_ORB_TYPE(const IOP::TaggedComponent& c)
+{
+  OMNIORB_ASSERT(c.tag == IOP::TAG_ORB_TYPE);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+  CORBA::ULong orb_type; 
+  orb_type <<= e;
+
+  CORBA::String_var outstr;
+  CORBA::ULong len = sizeof("TAG_ORB_TYPE") + 1;
+  if (orb_type == omniORB_TAG_ORB_TYPE) {
+    len += sizeof("omniORB");
+    outstr = CORBA::string_alloc(len);
+    strcpy(outstr,"TAG_ORB_TYPE omniORB");
+  }
+  else {
+    len += 16;
+    outstr = CORBA::string_alloc(len);
+    sprintf(outstr,"%s 0x%08lx","TAG_ORB_TYPE",orb_type);
+  }
+  return outstr._retn();
+}
 
 //////////////////////////////////////////////////////////////////////////
 // For the TAGs that the ORB will look at, add a handler to the following
-// table. Use unmarshal_TAG_generic just to store the encapsulated octet
-// stream in the omniIOR
+// table. 
 //
 static struct {
   IOP::ComponentId id;
-  void (*fn)(cdrStream&, IOP::ComponentId, omniIOR*);
+  void (*fn)(const IOP::TaggedComponent&,omniIOR*);
+  char* (*dump)(const IOP::TaggedComponent&);
 } componentUnmarshalHandlers[] = {
   // This table must be arranged in ascending order of IOP::ComponentId
-  { IOP::TAG_ORB_TYPE,  unmarshal_TAG_ORB_TYPE },
-  { IOP::TAG_CODE_SETS, 0 },
-  { IOP::TAG_POLICIES, 0 },
-  { IOP::TAG_ALTERNATE_IIOP_ADDRESS, unmarshal_TAG_generic },
-  { IOP::TAG_COMPLETE_OBJECT_KEY, 0 },
-  { IOP::TAG_ENDPOINT_ID_POSITION, 0 },
-  { IOP::TAG_LOCATION_POLICY, 0 },
-  { IOP::TAG_ASSOCIATION_OPTIONS, 0 },
-  { IOP::TAG_SEC_NAME, 0 },
-  { IOP::TAG_SPKM_1_SEC_MECH, 0 },
-  { IOP::TAG_SPKM_2_SEC_MECH, 0 },
-  { IOP::TAG_KERBEROSV5_SEC_MECH, 0 },
-  { IOP::TAG_CSI_ECMA_SECRET_SEC_MECH, 0 },
-  { IOP::TAG_CSI_ECMA_HYBRID_SEC_MECH, 0 },
-  { IOP::TAG_SSL_SEC_TRANS, unmarshal_TAG_generic },
-  { IOP::TAG_CSI_ECMA_PUBLIC_SEC_MECH, 0 },
-  { IOP::TAG_GENERIC_SEC_MECH, 0 },
-  { IOP::TAG_FIREWALL_TRANS, unmarshal_TAG_generic },
-  { IOP::TAG_SCCP_CONTACT_INFO, 0 },
-  { IOP::TAG_JAVA_CODEBASE, 0 },
-  { IOP::TAG_DCE_STRING_BINDING, 0 },
-  { IOP::TAG_DCE_BINDING_NAME, 0 },
-  { IOP::TAG_DCE_NO_PIPES, 0 },
-  { IOP::TAG_DCE_SEC_MECH, 0 },
-  { IOP::TAG_INET_SEC_TRANS, 0 },
-  { 0xffffffff, 0 }
+  { IOP::TAG_ORB_TYPE,  unmarshal_TAG_ORB_TYPE, dump_TAG_ORB_TYPE },
+  { IOP::TAG_CODE_SETS, 0, 0 },
+  { IOP::TAG_POLICIES, 0, 0 },
+  { IOP::TAG_ALTERNATE_IIOP_ADDRESS, 0, 0 },
+  { IOP::TAG_COMPLETE_OBJECT_KEY, 0, 0 },
+  { IOP::TAG_ENDPOINT_ID_POSITION, 0, 0 },
+  { IOP::TAG_LOCATION_POLICY, 0, 0 },
+  { IOP::TAG_ASSOCIATION_OPTIONS, 0, 0 },
+  { IOP::TAG_SEC_NAME, 0, 0 },
+  { IOP::TAG_SPKM_1_SEC_MECH, 0, 0 },
+  { IOP::TAG_SPKM_2_SEC_MECH, 0, 0 },
+  { IOP::TAG_KERBEROSV5_SEC_MECH, 0, 0 },
+  { IOP::TAG_CSI_ECMA_SECRET_SEC_MECH, 0, 0 },
+  { IOP::TAG_CSI_ECMA_HYBRID_SEC_MECH, 0, 0 },
+  { IOP::TAG_SSL_SEC_TRANS, 0, 0 },
+  { IOP::TAG_CSI_ECMA_PUBLIC_SEC_MECH, 0, 0 },
+  { IOP::TAG_GENERIC_SEC_MECH, 0, 0 },
+  { IOP::TAG_FIREWALL_TRANS, 0, 0 },
+  { IOP::TAG_SCCP_CONTACT_INFO, 0, 0 },
+  { IOP::TAG_JAVA_CODEBASE, 0, 0 },
+  { IOP::TAG_DCE_STRING_BINDING, 0, 0 },
+  { IOP::TAG_DCE_BINDING_NAME, 0, 0 },
+  { IOP::TAG_DCE_NO_PIPES, 0, 0 },
+  { IOP::TAG_DCE_SEC_MECH, 0, 0 },
+  { IOP::TAG_INET_SEC_TRANS, 0, 0 },
+  { 0xffffffff, 0, 0 }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//  Unmarshal IOP Tag components.
-static
-void 
-unmarshalIOPComponent(cdrStream& s,omniIOR* ior)
-{
-  static int tablesize = 0;
+static int tablesize = 0;
+
+char*
+IOP::dumpComponent(const IOP::TaggedComponent& c) {
 
   if (!tablesize) {
     while (componentUnmarshalHandlers[tablesize].id != 0xffffffff) tablesize++;
@@ -373,85 +404,151 @@ unmarshalIOPComponent(cdrStream& s,omniIOR* ior)
   int top = tablesize;
   int bottom = 0;
 
-  IOP::ComponentId v;
-  v <<= s;
-
   do {
-    int index = (top + bottom) >> 1;
-    IOP::ComponentId id = componentUnmarshalHandlers[index].id;
-    if (id == v) {
-      if (componentUnmarshalHandlers[index].fn) {
-	componentUnmarshalHandlers[index].fn(s,v,ior);
-	return;
+    int i = (top + bottom) >> 1;
+    IOP::ComponentId id = componentUnmarshalHandlers[i].id;
+    if (id == c.tag) {
+      if (componentUnmarshalHandlers[i].dump) {
+	return componentUnmarshalHandlers[i].dump(c);
       }
       break;
     }
-    else if (id > v) {
-      top = index;
+    else if (id > c.tag) {
+      top = i;
     }
     else {
-      bottom = index + 1;
+      bottom = i + 1;
     }
   } while (top != bottom);
+  
+  // Reach here if we don't know how to dump the content.
+  CORBA::ULong len = c.component_data.length() * 2 + 4;
+  const char* tagname = IOP::ComponentIDtoName(c.tag);
+  if (!tagname) {
+    len += sizeof("unknown tag()") + 10;
+  }
+  else {
+    len += strlen(tagname);
+  }
+  CORBA::String_var outstr;
+  char* p;
+  outstr = p = CORBA::string_alloc(len);
+  memset(p,0,len+1);
 
-  // Default is to skip this component quietly
-  {
-    CORBA::ULong len;
-    len <<= s;
-    s.skipInput(len);
+  if (tagname) {
+    strcpy(p,tagname);
+  }
+  else {
+    sprintf(p,"unknown tag(0x%08lx)",c.tag);
+  }
+  p += strlen(p);
+  *p++ = ' ';
+  *p++ = '0';
+  *p++ = 'x';
+
+  CORBA::Char* data = (CORBA::Char *) c.component_data.get_buffer();
+
+  for (CORBA::ULong i=0; i < c.component_data.length(); i++) {
+    int v = (data[i] & 0xf0);
+    v = v >> 4;
+    if (v < 10)
+      *p++ = '0' + v;
+    else
+      *p++ = 'a' + (v - 10);
+    v = ((data[i] & 0xf));
+    if (v < 10)
+      *p++ = '0' + v;
+    else
+      *p++ = 'a' + (v - 10);
+  }
+
+  return outstr._retn();
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Default interceptors                                         //
+/////////////////////////////////////////////////////////////////////////////
+static _CORBA_Unbounded_Sequence_Octet my_orb_type;
+
+static
+void insertSupportedComponents(omniIOR* ior)
+{
+  CORBA::ULong index = ior->iiop.components.length();
+  ior->iiop.components.length(index+1);
+
+  // Insert ORB TYPE
+  ior->iiop.components[index].tag = IOP::TAG_ORB_TYPE;
+  CORBA::ULong max, len;
+  max = my_orb_type.maximum();
+  len = my_orb_type.length();
+  ior->iiop.components[index].component_data.replace(max,len,
+						     my_orb_type.get_buffer(),
+						     0);
+}
+
+static
+void extractSupportedComponents(omniIOR* ior)
+{
+  if (!tablesize) {
+    while (componentUnmarshalHandlers[tablesize].id != 0xffffffff) tablesize++;
+  }
+
+  CORBA::ULong total = ior->iiop.components.length();
+  for (CORBA::ULong index = 0; index < total; index++) {
+
+    int top = tablesize;
+    int bottom = 0;
+
+    do {
+      int i = (top + bottom) >> 1;
+      IOP::ComponentId id = componentUnmarshalHandlers[i].id;
+      if (id == ior->iiop.components[index].tag) {
+	if (componentUnmarshalHandlers[i].fn) {
+	  componentUnmarshalHandlers[i].fn(ior->iiop.components[index],ior);
+	}
+	break;
+      }
+      else if (id > ior->iiop.components[index].tag) {
+	top = i;
+      }
+      else {
+	bottom = i + 1;
+      }
+    } while (top != bottom);
   }
 }
 
-//////////////////////////////////////////////////////////////////////////
-static
-void
-unmarshal_TAG_ORB_TYPE(cdrStream& s, IOP::ComponentId, omniIOR* ior)
-{
-  _CORBA_Unbounded_Sequence_Octet v;
-  v <<= s;
-
-  cdrEncapsulationStream e(v.get_buffer(),v.length(),1);
-  ior->orb_type <<= e;
-}
-
-//////////////////////////////////////////////////////////////////////////
-static
-void
-unmarshal_TAG_generic(cdrStream& s, IOP::ComponentId id, omniIOR* ior)
-{
-  CORBA::ULong index = ior->tag_components.length();
-  ior->tag_components.length(index+1);
-  ior->tag_components[index].tag = id;
-  ior->tag_components[index].component_data <<= s;
-}
-
-void
-tcpSocketFactoryType::insertOptionalIOPComponent(IOP::TaggedComponent& c)
-{
-  CORBA::ULong index = pd_optionalcomponents.length();
-  pd_optionalcomponents.length(index+1);
-  pd_optionalcomponents[index] = c;
-}
-
-const IOP::MultipleComponentProfile&
-tcpSocketFactoryType::getOptionalIOPComponents() const
-{
-  return pd_optionalcomponents;
-}
-
-void init() {
-  singleton->pd_optionalcomponents.length(1);
-
-  // Inside TAG_ORB_TYPE to identify omniORB
-  singleton->pd_optionalcomponents[0].tag = IOP::TAG_ORB_TYPE;
-  cdrEncapsulationStream s(8,1);
-  omniORB_TAG_ORB_TYPE >>= s;
-  _CORBA_Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
-  singleton->pd_optionalcomponents[0].component_data.replace(max,len,p,1);
-}
-
-#endif
 
 
 
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
 
+class omni_ior_initialiser : public omniInitialiser {
+public:
+  omni_ior_initialiser() {}
+
+  void attach() {
+    omniORB::getInterceptors()->encodeIOR.add(insertSupportedComponents);
+    omniORB::getInterceptors()->decodeIOR.add(extractSupportedComponents);
+
+    cdrEncapsulationStream s(8,1);
+    omniORB_TAG_ORB_TYPE >>= s;
+    _CORBA_Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+    my_orb_type.replace(max,len,p,1);
+
+  }
+
+  void detach() {
+    omniORB::getInterceptors()->encodeIOR.remove(insertSupportedComponents);
+    omniORB::getInterceptors()->decodeIOR.remove(extractSupportedComponents);
+    _CORBA_Unbounded_Sequence_Octet::freebuf(my_orb_type.get_buffer(1));
+  }
+
+};
+
+static omni_ior_initialiser initialiser;
+
+omniInitialiser& omni_ior_initialiser_ = initialiser;
