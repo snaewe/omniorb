@@ -115,6 +115,7 @@ static AST_Decl *
 iter_lookup_by_name_local(AST_Decl *d, UTL_ScopedName *e,
 			  idl_bool treat_as_ref)
 {
+  AST_Decl                      *dd = d;
   Identifier			*s;
   AST_Typedef			*td;
   UTL_IdListActiveIterator	*i;
@@ -133,7 +134,7 @@ iter_lookup_by_name_local(AST_Decl *d, UTL_ScopedName *e,
      * Next component in name was not found
      */
     if (d == NULL) {
-      return NULL;
+      goto done;
     }
     /*
      * If this is a typedef and we're not done, we should get the
@@ -142,23 +143,34 @@ iter_lookup_by_name_local(AST_Decl *d, UTL_ScopedName *e,
     if (!(i->is_done())) {
       while (d != NULL && d->node_type() == AST_Decl::NT_typedef) {
         td = AST_Typedef::narrow_from_decl(d);
-	if (td == NULL)
-	  return NULL;
+	if (td == NULL) {
+	  d = td;
+	  goto done;
+	}
 	d = td->base_type();
       }
       if (d == NULL)
-        return NULL;
+	goto done;
     }
     /*
      * Try to convert the AST_Decl to a UTL_Scope
      */
     sc = DeclAsScope(d);
     if (sc == NULL)
-      return NULL;
+      goto done;
     /*
      * Look up the next element
      */
     d = sc->lookup_by_name_local(s, treat_as_ref);
+  }
+ done:
+  if (d == NULL && dd->node_type() == AST_Decl::NT_interface) {
+    /*
+     * Special case for scope which is an interface. We have to look
+     * in the inherited interfaces as well..
+     */
+    d = DeclAsScope(dd)->look_in_inherited((UTL_ScopedName*)e->tail(), 
+					   treat_as_ref);
   }
   /*
    * OK, done with the loop
@@ -912,6 +924,15 @@ UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref,
    * Is name defined here?
    */
   d = lookup_by_name_local(e->head(), treat_as_ref);
+
+  if (d == NULL &&  scope_node_type() == AST_Decl::NT_interface) {
+    /*
+     * Special case for scope which is an interface. We have to look
+     * in the inherited interfaces as well..
+     */
+      d = look_in_inherited(e, treat_as_ref);
+  }
+
   if (d == NULL) {
     /*
      * OK, not found. Go down parent scope chain.
@@ -923,14 +944,6 @@ UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref,
 	d = NULL;
       else
 	d = t->lookup_by_name(e, treat_as_ref,1);
-    }
-    /*
-     * Special case for scope which is an interface. We have to look
-     * in the inherited interfaces as well..
-     */
-    if (d == NULL) {
-      if (pd_scope_node_type == AST_Decl::NT_interface)
-	d = look_in_inherited(e, treat_as_ref);
     }
     /*
      * If treat_as_ref is true and d is not NULL, add d to
