@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.21  1999/08/30 16:56:19  sll
+  New API members: omniORB::scanGranularity and omniORB::callTimeOutPeriod.
+
   Revision 1.20  1999/06/26 17:56:39  sll
   New configuration variables: abortOnInternalError, verifyObjectExistAndType.
 
@@ -245,9 +248,8 @@ _CORBA_MODULE_BEG
   enum idleConnType { idleIncoming, idleOutgoing };                     //
   // Idle connections shutdown. The ORB periodically scans all the      //
   // incoming and outgoing connections to detect if they are idle.      //
-  // If no operation has passed through a connection for two            //
-  // consecutive scan periods, the ORB would treat this connection as   //
-  // idle and shut it down.                                             //
+  // If no operation has passed through a connection for a scan period, //
+  // the ORB would treat this connection idle and shut it down.         //
   //                                                                    //
   // void idleConnectionScanPeriod() sets the scan period. The argument //
   // is in number of seconds. If the argument is zero, the scan for idle//
@@ -261,6 +263,51 @@ _CORBA_MODULE_BEG
   //   Returns the current scan period                                  //
   _CORBA_MODULE_FN CORBA::ULong idleConnectionScanPeriod(               //
 					 idleConnType direction);       //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  enum callTimeOutType { clientSide, serverSide };                      //
+  // Call timeout. The ORB periodically scans all the                   //
+  // incoming and outgoing connections to detect if they are stuck in   //
+  // a remote call. If the ORB detects that a call has taken too long   //
+  // to complete, it shut down the connection and considers this as     //
+  // a COMM_FAILURE.
+  //                                                                    //
+  // void callTimeOutPeriod() sets the per-call timeout period.         //
+  // The argument is in number of seconds. If the argument is zero,     //
+  // calls never timeout.                                               //
+  _CORBA_MODULE_FN void callTimeOutPeriod(callTimeOutType direction,    //
+					  CORBA::ULong sec);            //
+  // Note: This function is *non-thread safe*!!! The behaviour of       //
+  //       concurrent calls to this function is undefined.              //
+  //                                                                    //
+  // CORBA::ULong callTimeOutPeriod       ()                            //
+  //   Returns the current timeout value                                //
+  _CORBA_MODULE_FN CORBA::ULong callTimeOutPeriod(
+					     callTimeOutType direction);//
+  ////////////////////////////////////////////////////////////////////////
+
+
+  ////////////////////////////////////////////////////////////////////////
+  enum scanType { scanOutgoing, scanIncoming };                         //
+  //                                                                    //
+  // The granularity at which the ORB scan for idle connections or	//
+  // stuck remote calls can be changed by scanGranularity().            //
+  // This value determines the minimum value that      	       	        //
+  // idleConnectionScanPeriod() and callTimeOutPeriod() can             //
+  // be relistically implemented. The default value is 5 sec.           //
+  // Setting the value to zero disable scanning altogether. This means  //
+  // both scan for idle connections or stuck remote calls are disabled  //
+  // as well.                                                           //
+  //                                                                    //
+  _CORBA_MODULE_FN void scanGranularity(scanType direction,
+                                        CORBA::ULong sec);              //
+  // Note: This function is *non-thread safe*!!! The behaviour of       //
+  //       concurrent calls to this function is undefined.              //
+  //                                                                    //
+  // CORBA::ULong scanGranularity()                                     //
+  //   Returns the current timeout value                                //
+  _CORBA_MODULE_FN CORBA::ULong scanGranularity(scanType direction);    //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
