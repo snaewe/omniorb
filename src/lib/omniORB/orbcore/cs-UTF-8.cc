@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2004/05/25 13:48:24  dgrisby
+  Support UTF-8 in GIOP 1.1.
+
   Revision 1.1.2.13  2001/10/17 16:47:09  dpg1
   New minor codes
 
@@ -138,9 +141,9 @@ public:
 				     _CORBA_ULong&       length,
 				     char*&              s);
 
-  TCS_C_UTF_8()
+  TCS_C_UTF_8(GIOP::Version v)
     : omniCodeSet::TCS_C(omniCodeSet::ID_UTF_8, "UTF-8",
-			 omniCodeSet::CS_Other, omniCodeSetUtil::GIOP12)
+			 omniCodeSet::CS_Other, v)
   { }
 
   virtual ~TCS_C_UTF_8() {}
@@ -837,13 +840,15 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
 //
 
 static NCS_C_UTF_8 _NCS_C_UTF_8;
-static TCS_C_UTF_8 _TCS_C_UTF_8;
+static TCS_C_UTF_8 _TCS_C_UTF_8_11(omniCodeSetUtil::GIOP11);
+static TCS_C_UTF_8 _TCS_C_UTF_8_12(omniCodeSetUtil::GIOP12);
 
 class CS_UTF_8_init {
 public:
   CS_UTF_8_init() {
     omniCodeSet::registerNCS_C(&_NCS_C_UTF_8);
-    omniCodeSet::registerTCS_C(&_TCS_C_UTF_8);
+    omniCodeSet::registerTCS_C(&_TCS_C_UTF_8_11);
+    omniCodeSet::registerTCS_C(&_TCS_C_UTF_8_12);
   }
 };
 

@@ -1,3 +1,19 @@
+Tue May 25 14:51:40 BST 2004 dgrisby
+====================================
+
+- Minor tweak to spec file to make sure omniNames init script is executable.
+
+contrib/RPMs/omniORB.spec
+
+- Improved usage message.
+
+src/appl/omniMapper/omniMapper.cc
+
+- Support UTF-8 in GIOP 1.1.
+
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+
 Wed May  5 21:58:43 BST 2004 dgrisby
 ====================================
 
