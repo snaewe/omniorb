@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  1999/12/15 12:11:54  djs
+# Marshalling arrays of Anys fix
+#
 # Revision 1.9  1999/12/14 11:53:56  djs
 # Support for CORBA::TypeCode and CORBA::Any
 #
@@ -272,8 +275,10 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
                        where = from_where, typecast = typecast,
                        num = str(num_elements))
             return
+        if tyutil.isAny(deref_type):
+            pass
         # not sure how to handle other basic types
-        if isinstance(deref_type, idltype.Base):
+        elif isinstance(deref_type, idltype.Base):
             raise "Don't know how to marshall type: " + repr(deref_type) +\
               "(kind = " + str(deref_type.kind()) + ") array"
 
