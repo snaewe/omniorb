@@ -5,8 +5,10 @@ Wed Jun 28 16:38:31 BST 2000 sll
 - omkdepend no longer spit out dos drive pathnames
 
 external_merge/mk/beforedir.mk
+external_merge/bin/x86_win32/omkdepend.exe
 src/tool/omkdepend/gnuwin32.c
 src/tool/omniidl/cxx/dir.mk
+
 
 
 Wed Jun 28 14:53:27 BST 2000 dpg1
