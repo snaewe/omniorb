@@ -1,3 +1,23 @@
+Mon Sep 10 18:37:45 BST 2001 sll
+================================
+
+- Idle connection shutdown is now active. This applies to both the client
+  and server side. The controlling ORB parameter are inConScanPeriod and
+  outConScanPeriod.
+
+include/omniORB4/IOP_S.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+
 Fri Sep  7 12:24:42 BST 2001 sll
 ================================
 
