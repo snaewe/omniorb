@@ -16,9 +16,12 @@
 
 /*
  $Log$
- Revision 1.4  1997/06/03 10:59:49  tjr
- new omnithread interface using exceptions and lock class for mutex & sem.
+ Revision 1.5  1997/12/09 20:21:58  sll
+ Replaced macro __NT__ with __WIN32__
 
+// Revision 1.4  1997/06/03  10:59:49  tjr
+// new omnithread interface using exceptions and lock class for mutex & sem.
+//
 // Revision 1.3  1995/08/17  10:22:27  tjr
 // new thread stuff
 //
@@ -34,7 +37,7 @@
 #include <stdlib.h>
 #include <omnithread.h>
 
-#ifdef __NT__
+#ifdef __WIN32__
 static int last_rand = 0;
 #endif
 
@@ -44,7 +47,7 @@ static int random_l()
 {
     rand_mutex.lock();
     int i = rand();
-#ifdef __NT__
+#ifdef __WIN32__
     last_rand = i;
 #endif
     rand_mutex.unlock();
@@ -79,7 +82,7 @@ class philosopher : public omni_thread {
 	int id = *(int*)arg;
 	delete (int*)arg;
 
-#ifdef __NT__
+#ifdef __WIN32__
 	rand_mutex.lock();
 	srand(last_rand);
 	rand_mutex.unlock();
