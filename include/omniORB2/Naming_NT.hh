@@ -159,6 +159,7 @@ _CORBA_MODULE_PUBLIC
     static NamingContext_ptr unmarshalObjRef(MemBufferedStream &s);
   };
   typedef _CORBA_ObjRef_Var<NamingContext,NamingContext_Helper> NamingContext_var;
+  typedef NamingContext_Helper CosNaming_NamingContext_Helper;
 
 #endif
 #define CosNaming_NamingContext_IntfRepoID "IDL:CosNaming/NamingContext:1.0"
@@ -306,12 +307,12 @@ _CORBA_MODULE_PUBLIC
     virtual CosNaming_NamingContext_ptr  new_context (  ) = 0;
     virtual CosNaming_NamingContext_ptr  bind_new_context ( const CosNaming_Name & n ) = 0;
     virtual void destroy (  ) = 0;
-    virtual void ___list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) = 0;
+    virtual void _0RL__list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) = 0;
     void list ( CORBA::ULong  how_many,
-                   _CORBA_Sequence_OUT_arg<CosNaming_BindingList,CosNaming_BindingList_var >  bl,
-                   _CORBA_ObjRef_OUT_arg<CosNaming_BindingIterator,CosNaming_BindingIterator_var,_CORBA_ObjRef_Member<CosNaming_BindingIterator,CosNaming_BindingIterator_Helper>,CosNaming_BindingIterator_Helper >  bi )
+                      _CORBA_Sequence_OUT_arg<CosNaming_BindingList,CosNaming_BindingList_var >  bl,
+                      _CORBA_ObjRef_OUT_arg<CosNaming_BindingIterator,CosNaming_BindingIterator_var,_CORBA_ObjRef_Member<CosNaming_BindingIterator,CosNaming_BindingIterator_Helper>,CosNaming_BindingIterator_Helper >  bi )
     {
-      ___list ( how_many, bl._data, bi._data );
+      _0RL__list ( how_many, bl._data, bi._data );
     }
     static NamingContext_ptr _duplicate(NamingContext_ptr);
     static NamingContext_ptr _narrow(CORBA::Object_ptr);
@@ -353,7 +354,7 @@ _CORBA_MODULE_PUBLIC
       this->PR_setobj(this);
     }
     virtual ~NamingContext() {}
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId);
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id=0);
 
   private:
 
@@ -382,14 +383,14 @@ _CORBA_MODULE_PUBLIC
     virtual CosNaming_NamingContext_ptr  bind_new_context ( const CosNaming_Name & n ) = 0;
     virtual void destroy (  ) = 0;
     virtual void list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) = 0;
-    virtual void ___list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) {
+    virtual void _0RL__list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) {
       list ( how_many, bl, bi );
     }
     virtual CORBA::Boolean dispatch(GIOP_S &s,const char *op,CORBA::Boolean response);
 
   protected:
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
-      return NamingContext::_widenFromTheMostDerivedIntf(repoId);
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id) {
+      return NamingContext::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);
     }
   private:
     _sk_NamingContext (const _sk_NamingContext&);
@@ -413,14 +414,14 @@ _CORBA_MODULE_PUBLIC
     virtual CosNaming_NamingContext_ptr  new_context (  );
     virtual CosNaming_NamingContext_ptr  bind_new_context ( const CosNaming_Name & n );
     virtual void destroy (  );
-    virtual void ___list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi );
+    virtual void _0RL__list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi );
 
   protected:
 
     _proxy_NamingContext () {}
 
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
-      return NamingContext::_widenFromTheMostDerivedIntf(repoId);
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type) {
+      return NamingContext::_widenFromTheMostDerivedIntf(repoId,is_cxx_type);
     }
   private:
 
@@ -459,8 +460,8 @@ _CORBA_MODULE_PUBLIC
     CORBA::Object_ptr  resolve ( const CosNaming_Name & n ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
-      CORBA::Object_ptr _result= 0;
-      return _result;
+      CORBA::Object_ptr _0RL_result= 0;
+      return _0RL_result;
     }
 
     void unbind ( const CosNaming_Name & n ){
@@ -472,15 +473,15 @@ _CORBA_MODULE_PUBLIC
     CosNaming_NamingContext_ptr  new_context (  ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
-      CosNaming::NamingContext_ptr _result= 0;
-      return _result;
+      CosNaming_NamingContext_ptr _0RL_result= 0;
+      return _0RL_result;
     }
 
     CosNaming_NamingContext_ptr  bind_new_context ( const CosNaming_Name & n ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
-      CosNaming::NamingContext_ptr _result= 0;
-      return _result;
+      CosNaming_NamingContext_ptr _0RL_result= 0;
+      return _0RL_result;
     }
 
     void destroy (  ){
@@ -489,19 +490,19 @@ _CORBA_MODULE_PUBLIC
       return;
     }
 
-    void ___list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ){
+    void _0RL__list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
       return;
     }
 
   protected:
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
-      return NamingContext::_widenFromTheMostDerivedIntf(repoId);
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id) {
+      return NamingContext::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);
     }
   };
 
-class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFactory {
+  class NamingContext_proxyObjectFactory : public proxyObjectFactory {
   public:
     NamingContext_proxyObjectFactory () {}
     virtual ~NamingContext_proxyObjectFactory () {}
@@ -544,16 +545,16 @@ class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFac
   class BindingIterator : public virtual omniObject, public virtual CORBA::Object {
   public:
 
-    virtual CORBA::Boolean  ___next_one ( CosNaming_Binding *& b ) = 0;
+    virtual CORBA::Boolean  _0RL__next_one ( CosNaming_Binding *& b ) = 0;
     CORBA::Boolean  next_one ( _CORBA_ConstrType_Variable_OUT_arg<CosNaming_Binding,CosNaming_Binding_var>  b )
     {
-      return ___next_one ( b._data );
+      return _0RL__next_one ( b._data );
     }
-    virtual CORBA::Boolean  ___next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) = 0;
+    virtual CORBA::Boolean  _0RL__next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) = 0;
     CORBA::Boolean  next_n ( CORBA::ULong  how_many,
-                                _CORBA_Sequence_OUT_arg<CosNaming_BindingList,CosNaming_BindingList_var >  bl )
+                                   _CORBA_Sequence_OUT_arg<CosNaming_BindingList,CosNaming_BindingList_var >  bl )
     {
-      return ___next_n ( how_many, bl._data );
+      return _0RL__next_n ( how_many, bl._data );
     }
     virtual void destroy (  ) = 0;
     static BindingIterator_ptr _duplicate(BindingIterator_ptr);
@@ -596,7 +597,7 @@ class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFac
       this->PR_setobj(this);
     }
     virtual ~BindingIterator() {}
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId);
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id=0);
 
   private:
 
@@ -616,19 +617,19 @@ class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFac
     void _dispose() { _boa()->dispose(this); }
     omniORB::objectKey _key();
     virtual CORBA::Boolean  next_one ( CosNaming_Binding *& b ) = 0;
-    virtual CORBA::Boolean  ___next_one ( CosNaming_Binding *& b ) {
+    virtual CORBA::Boolean  _0RL__next_one ( CosNaming_Binding *& b ) {
       return next_one ( b );
     }
     virtual CORBA::Boolean  next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) = 0;
-    virtual CORBA::Boolean  ___next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) {
+    virtual CORBA::Boolean  _0RL__next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) {
       return next_n ( how_many, bl );
     }
     virtual void destroy (  ) = 0;
     virtual CORBA::Boolean dispatch(GIOP_S &s,const char *op,CORBA::Boolean response);
 
   protected:
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
-      return BindingIterator::_widenFromTheMostDerivedIntf(repoId);
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id) {
+      return BindingIterator::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);
     }
   private:
     _sk_BindingIterator (const _sk_BindingIterator&);
@@ -643,16 +644,16 @@ class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFac
         omni::objectIsReady(this);
     }
     virtual ~_proxy_BindingIterator() {}
-    virtual CORBA::Boolean  ___next_one ( CosNaming_Binding *& b );
-    virtual CORBA::Boolean  ___next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl );
+    virtual CORBA::Boolean  _0RL__next_one ( CosNaming_Binding *& b );
+    virtual CORBA::Boolean  _0RL__next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl );
     virtual void destroy (  );
 
   protected:
 
     _proxy_BindingIterator () {}
 
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
-      return BindingIterator::_widenFromTheMostDerivedIntf(repoId);
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type) {
+      return BindingIterator::_widenFromTheMostDerivedIntf(repoId,is_cxx_type);
     }
   private:
 
@@ -664,18 +665,18 @@ class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFac
   public:
     _nil_BindingIterator() { this->PR_setobj(0); }
     virtual ~_nil_BindingIterator() {}
-    CORBA::Boolean  ___next_one ( CosNaming_Binding *& b ){
+    CORBA::Boolean  _0RL__next_one ( CosNaming_Binding *& b ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
-      CORBA::Boolean _result = 0;
-      return _result;
+      CORBA::Boolean _0RL_result = 0;
+      return _0RL_result;
     }
 
-    CORBA::Boolean  ___next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ){
+    CORBA::Boolean  _0RL__next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
-      CORBA::Boolean _result = 0;
-      return _result;
+      CORBA::Boolean _0RL_result = 0;
+      return _0RL_result;
     }
 
     void destroy (  ){
@@ -685,8 +686,8 @@ class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFac
     }
 
   protected:
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
-      return BindingIterator::_widenFromTheMostDerivedIntf(repoId);
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id) {
+      return BindingIterator::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);
     }
   };
 
