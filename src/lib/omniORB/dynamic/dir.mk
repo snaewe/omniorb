@@ -182,12 +182,12 @@ OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
 endif
 
 Naming.hh NamingSK.cc:	Naming.idl
-	-$(CP) $^ .
-	$(OMNIORB2_IDL_FPATH) $(notdir $^)
+	-if [ "$^" != Naming.idl ]; then $(CP) $^ . ; fi
+	$(OMNIORB2_IDL_FPATH) Naming.idl
 
 omniLifeCycle.hh omniLifeCycleSK.cc: omniLifeCycle.idl
-	-$(CP) $^ .
-	$(OMNIORB2_IDL_FPATH) $(notdir $^)
+	-if [ "$^" != omniLifeCycle.idl ]; then $(CP) $^ . ; fi
+	$(OMNIORB2_IDL_FPATH) omniLifeCycle.idl
 
 clean::
 	$(RM) $(lib) NamingSK.cc omniLifeCycleSK.cc
