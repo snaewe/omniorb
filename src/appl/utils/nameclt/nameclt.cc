@@ -1,3 +1,27 @@
+// -*- Mode: C++; -*-
+//                          Package   : nameclt
+// nameclt.cc               Author    : Tristan Richardson (tjr)
+//
+//    Copyright (C) 1997 Olivetti & Oracle Research Laboratory
+//
+//  This file is part of nameclt.
+//
+//  Omniidl2 is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+//  USA.
+//
+
 #include <iostream.h>
 #include <stdlib.h>
 #ifdef __NT__
@@ -6,33 +30,56 @@
 #include "omniORB2/Naming.hh"
 #endif
 
+static int advanced = 0;
+static const char* command;
+
+static void GetName(int argc, char** argv, int& n, int argsAfter,
+		    const char* usageAfter, CosNaming::Name& name);
+
 static void
 usage(const char* progname)
 {
-  cerr << "usage: " << progname << " [-ior <NameService-object-reference>] <operation> [object name]"
-       << "\nwhere <operation> is one of: "
-       << "\n\n bind <object name> <stringified IOR>"
-       << "\n    (bind name and object)"
-       << "\n rebind <object name> <stringified IOR>"
-       << "\n    (bind name and object even if binding already exists)"
-       << "\n bind_context <object name> <stringified context IOR>"
-       << "\n    (bind name and context)"
-       << "\n rebind_context <object name> <stringified context IOR>"
-       << "\n    (bind name and context even if binding already exists)"
-       << "\n new_context"
-       << "\n    (returns stringified IOR for a new context)"
-       << "\n bind_new_context <context name>"
-       << "\n    (binds name to a new context, and returns the stringified context IOR)"
-       << "\n resolve <object name>"
-       << "\n    (returns stringified IOR bound to specified name)"
-       << "\n unbind <object name>"
+  cerr << "\nusage: " << progname;
+
+  if (advanced) {
+    cerr << " [-advanced]";
+  }
+
+  cerr << " [-ior <NameService-object-reference>] <operation>"
+       << "\n\nwhere <operation> is one of:\n"
+       << "\n list <context-name>"
+       << "\n    (lists contexts and objects bound to the context with the"
+       << " specified name)"
+       << "\n bind_new_context <context-name>"
+       << "\n    (binds name to a new context, and returns the stringified"
+       << " context IOR)"
+       << "\n remove_context <context-name>"
+       << "\n    (unbinds and destroys the named context)"
+       << "\n bind <object-name> <stringified-IOR>"
+       << "\n    (binds name to object)"
+       << "\n unbind <object-name>"
        << "\n    (unbinds name and object)"
-       << "\n list <context name>"
-       << "\n    (lists contexts and objects bound to the context with the specified name)"
-       << "\n\n    <object name>, <context name> :  name1_id name1_kind name2_id name2_kind ..."
-       << "\n     nameN_id NameN_kind"
+       << "\n resolve <object-name>"
+       << "\n    (returns stringified IOR bound to specified name)";
+
+  if (advanced) {
+    cerr << "\n\nAdvanced operations:\n"
+	 << "\n bind_context <context-name> <stringified-context-IOR>"
+	 << "\n    (binds name to context)"
+	 << "\n rebind <object-name> <stringified-IOR>"
+	 << "\n    (binds name to object even if binding already exists)"
+	 << "\n rebind_context <context-name> <stringified-context-IOR>"
+	 << "\n    (binds name to context even if binding already exists)"
+	 << "\n new_context"
+	 << "\n    (returns stringified IOR for a new context)"
+	 << "\n destroy"
+	 << "\n    (destroys the naming context given with -ior flag)";
+  }
+
+  cerr << "\n\n<object-name>,<context-name> :  name1_id name1_kind ..."
+       << " nameN_id nameN_kind\n"
        << endl;
-exit(1);
+  exit(1);
 }
 
 
@@ -44,8 +91,28 @@ main(int argc, char **argv)
   CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
   CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
 
-  if (argc < 2) usage(argv[0]);
-  int n = 1;
+  const char* ior = (const char*)0;
+  int n;
+
+  for (n = 1; n < argc; n++) {
+
+    if (argv[n][0] != '-')
+      break;
+
+    if (strcmp(argv[n], "-ior") == 0) {
+      n++;
+      if (n == argc) usage(argv[0]);
+      ior = argv[n];
+
+    } else if (strcmp(argv[n], "-advanced") == 0) {
+      advanced = 1;
+
+    } else {
+      usage(argv[0]);
+    }
+  }
+
+  if (n == argc) usage(argv[0]);
 
 
   //
@@ -54,344 +121,407 @@ main(int argc, char **argv)
   //
 
   CosNaming::NamingContext_var rootContext;
+  CORBA::Object_var initServ;
 
-  try {
-    CORBA::Object_var initServ;
-
-    if (strcmp(argv[n], "-ior") == 0) {
-      if (argc < 4) usage(argv[0]);
-      n++;
-      initServ = orb->string_to_object(argv[n]);
-      n++;
-    } else {
-      initServ = orb->resolve_initial_references("NameService");
-    }
-
-    rootContext = CosNaming::NamingContext::_narrow(initServ);
-    if (CORBA::is_nil(rootContext)) {
-      cerr << "NameService object reference was not a NamingContext." << endl;
+  if (ior != (const char*)0) {
+    try {
+      initServ = orb->string_to_object(ior);
+    } catch (...) {
+      cerr << "Error: '" << ior << "' is not a valid object reference" << endl;
       exit(1);
     }
-  }
-  catch(CORBA::ORB::InvalidName& ex) {
+  } else {
+    try {
+      initServ = orb->resolve_initial_references("NameService");
+    } catch(CORBA::ORB::InvalidName& ex) {
       cerr << "Service required is invalid [does not exist]." << endl;
       exit(1);
+    }
   }
 
-
-  //
-  // bind
-  // ----
-  //
-
-  if (strcmp(argv[n], "bind") == 0) {
-
-    n++;
-
-    int n_components = (argc - n - 1) / 2;
-
-    if (n_components < 1) {
-      cerr << "bind usage: " << argv[0] <<" bind name1_id name1_kind ... nameN_kind objref"
-	   << endl;
-      return 1;
-    }
-
-    CosNaming::Name name(n_components);
-    name.length(n_components);
-
-    for (int i = 0; i < n_components; i++) {
-      name[i].id   = (const char*) argv[n++];
-      name[i].kind = (const char*) argv[n++];
-    }
-
-    CORBA::Object_var obj = orb->string_to_object(argv[n]);
-
-    rootContext->bind(name, obj);
+  rootContext = CosNaming::NamingContext::_narrow(initServ);
+  if (CORBA::is_nil(rootContext)) {
+    cerr << "NameService object reference was not a NamingContext." << endl;
+    exit(1);
   }
 
+  command = argv[n];
+  n++;
 
-  //
-  // rebind
-  // ------
-  //
 
-  else if (strcmp(argv[n], "rebind") == 0) {
+  try {
 
-    n++;
 
-    int n_components = (argc - n - 1) / 2;
+    //
+    // list
+    // ----
+    //
 
-    if (n_components < 1) {
-      cerr << "rebind usage: " << argv[0] << " rebind name1_id name1_kind ... nameN_kind objref"
-	   << endl;
-      return 1;
-    }
+    if (strcmp(command, "list") == 0) {
 
-    CosNaming::Name name(n_components);
-    name.length(n_components);
+      CosNaming::NamingContext_var context;
 
-    for (int i = 0; i < n_components; i++) {
-      name[i].id   = (const char*) argv[n++];
-      name[i].kind = (const char*) argv[n++];
-    }
+      if (argc == n) {
 
-    CORBA::Object_var obj = orb->string_to_object(argv[n]);
+	context = rootContext;
 
-    rootContext->rebind(name, obj);
-  }
+      } else {
 
+	CosNaming::Name name;
+	GetName(argc, argv, n, 0, "", name);
 
-  //
-  // bind_context
-  // ------------
-  //
+	CORBA::Object_var obj = rootContext->resolve(name);
 
-  else if (strcmp(argv[n], "bind_context") == 0) {
+	context = CosNaming::NamingContext::_narrow(obj);
 
-    n++;
-
-    int n_components = (argc - n - 1) / 2;
-
-    if (n_components < 1) {
-      cerr << "bind_context usage: " << argv[0] << " bind_context name1_id name1_kind ... nameN_kind objref"
-	   << endl;
-      return 1;
-    }
-
-    CosNaming::Name name(n_components);
-    name.length(n_components);
-
-    for (int i = 0; i < n_components; i++) {
-      name[i].id   = (const char*) argv[n++];
-      name[i].kind = (const char*) argv[n++];
-    }
-
-    CORBA::Object_var obj = orb->string_to_object(argv[n]);
-
-    CosNaming::NamingContext_var context
-      = CosNaming::NamingContext::_narrow(obj);
-
-    if (CORBA::is_nil(context)) {
-      cerr << "bind_context: not a naming context" << endl;
-      exit(1);
-    }
-
-    rootContext->bind_context(name, context);
-  }
-
-
-  //
-  // rebind_context
-  // --------------
-  //
-
-  else if (strcmp(argv[n], "rebind_context") == 0) {
-
-    n++;
-
-    int n_components = (argc - n - 1) / 2;
-
-    if (n_components < 1) {
-      cerr << "rebind_context usage: " << argv[0] << " rebind_context name1_id name1_kind ... nameN_kind objref"
-	   << endl;
-      return 1;
-    }
-
-    CosNaming::Name name(n_components);
-    name.length(n_components);
-
-    for (int i = 0; i < n_components; i++) {
-      name[i].id   = (const char*) argv[n++];
-      name[i].kind = (const char*) argv[n++];
-    }
-
-    CORBA::Object_var obj = orb->string_to_object(argv[n]);
-
-    CosNaming::NamingContext_var context
-      = CosNaming::NamingContext::_narrow(obj);
-
-    if (CORBA::is_nil(context)) {
-      cerr << "rebind_context: not a naming context" << endl;
-      exit(1);
-    }
-
-    rootContext->rebind_context(name, context);
-  }
-
-
-  //
-  // resolve
-  // -------
-  //
-
-  else if (strcmp(argv[n], "resolve") == 0) {
-
-    n++;
-
-    int n_components = (argc - n) / 2;
-
-    if (n_components < 1) {
-      cerr << "resolve usage: " << argv[0] << " resolve name1_id name1_kind ... nameN_kind"
-	   << endl;
-      return 1;
-    }
-
-    CosNaming::Name name(n_components);
-    name.length(n_components);
-
-    for (int i = 0; i < n_components; i++) {
-      name[i].id   = (const char*) argv[n++];
-      name[i].kind = (const char*) argv[n++];
-    }
-
-    CORBA::Object_var obj = rootContext->resolve(name);
-
-    char* p = orb->object_to_string(obj);
-    cerr << p << endl;
-  }
-
-
-  //
-  // unbind
-  // -------
-  //
-
-  else if (strcmp(argv[n], "unbind") == 0) {
-
-    n++;
-
-    int n_components = (argc - n) / 2;
-
-    if (n_components < 1) {
-      cerr << "unbind usage: " << argv[0] << " unbind name1_id name1_kind ... nameN_kind"
-	   << endl;
-      return 1;
-    }
-
-    CosNaming::Name name(n_components);
-    name.length(n_components);
-
-    for (int i = 0; i < n_components; i++) {
-      name[i].id   = (const char*) argv[n++];
-      name[i].kind = (const char*) argv[n++];
-    }
-
-    rootContext->unbind(name);
-  }
-
-
-  //
-  // new_context
-  // -----------
-  //
-
-  else if (strcmp(argv[n], "new_context") == 0) {
-
-    n++;
-
-    if (argc > n) {
-      cerr << "new_context takes no args" << endl;
-      return 1;
-    }
-
-    CosNaming::NamingContext_var context = rootContext->new_context();
-
-    char* p = orb->object_to_string(context);
-    cerr << p << endl;
-  }
-
-
-  //
-  // bind_new_context
-  // ----------------
-  //
-
-  else if (strcmp(argv[n], "bind_new_context") == 0) {
-
-    n++;
-
-    int n_components = (argc - n) / 2;
-
-    if (n_components < 1) {
-      cerr << "bind_new_context usage: " << argv[0] << " bind_new_context name1_id name1_kind ... nameN_kind"
-	   << endl;
-      return 1;
-    }
-
-    CosNaming::Name name(n_components);
-    name.length(n_components);
-
-    for (int i = 0; i < n_components; i++) {
-      name[i].id   = (const char*) argv[n++];
-      name[i].kind = (const char*) argv[n++];
-    }
-
-    CosNaming::NamingContext_var context = rootContext->bind_new_context(name);
-
-    char* p = orb->object_to_string(context);
-    cerr << p << endl;
-  }
-
-
-  //
-  // list
-  // ----
-  //
-
-  else if (strcmp(argv[n], "list") == 0) {
-
-    n++;
-
-    CosNaming::NamingContext_var context;
-
-    int n_components = (argc - n) / 2;
-
-    if (n_components == 0) {
-
-      context = rootContext;
-
-    } else {
-      CosNaming::Name name(n_components);
-      name.length(n_components);
-
-      for (int i = 0; i < n_components; i++) {
-	name[i].id   = (const char*) argv[n++];
-	name[i].kind = (const char*) argv[n++];
+	if (CORBA::is_nil(context)) {
+	  cerr << "list: not a naming context" << endl;
+	  exit(1);
+	}
       }
+
+      CosNaming::BindingList* bl = 0;
+      CosNaming::BindingIterator_ptr bi = 0;
+      int first_n = 5, repeat_n = 3;
+
+      context->list(first_n, bl, bi);
+
+      do {
+	for (unsigned int i = 0; i < bl->length(); i++) {
+	  cerr << "(" << (*bl)[i].binding_name[0].id << ","
+	       << (*bl)[i].binding_name[0].kind << ") binding type "
+	       << (((*bl)[i].binding_type == CosNaming::nobject) ?
+		   "nobject" : "ncontext")
+	       << endl;
+	}
+
+	delete bl;
+	bl = 0;
+
+      } while (bi->next_n(repeat_n, bl));
+
+      bi->destroy();
+      return 0;
+    }
+
+
+    //
+    // bind_new_context
+    // ----------------
+    //
+
+    if (strcmp(command, "bind_new_context") == 0) {
+
+      CosNaming::Name name;
+      GetName(argc, argv, n, 0, "", name);
+
+      CosNaming::NamingContext_var context = rootContext->bind_new_context(name);
+
+      char* p = orb->object_to_string(context);
+      cerr << p << endl;
+      return 0;
+    }
+
+
+    //
+    // remove_context
+    // --------------
+    //
+    // This actually does a destroy and unbind.
+    //
+
+    if (strcmp(command, "remove_context") == 0) {
+
+      CosNaming::Name name;
+      GetName(argc, argv, n, 0, "", name);
 
       CORBA::Object_var obj = rootContext->resolve(name);
 
-      context = CosNaming::NamingContext::_narrow(obj);
+      CosNaming::NamingContext_var context
+	= CosNaming::NamingContext::_narrow(obj);
 
       if (CORBA::is_nil(context)) {
-	cerr << "list: not a naming context" << endl;
+	cerr << "remove_context: not a naming context" << endl;
 	exit(1);
       }
+
+      context->destroy();
+
+      rootContext->unbind(name);
+      return 0;
     }
 
-    CosNaming::BindingList* bl = 0;
-    CosNaming::BindingIterator_ptr bi = 0;
-    int first_n = 5, repeat_n = 3;
 
-    context->list(first_n, bl, bi);
+    //
+    // bind
+    // ----
+    //
 
-    do {
-      for (unsigned int i = 0; i < bl->length(); i++) {
-	cerr << "(" << (*bl)[i].binding_name[0].id << ","
-	     << (*bl)[i].binding_name[0].kind << ") binding type "
-	     << (((*bl)[i].binding_type == CosNaming::nobject) ?
-		 "nobject" : "ncontext")
+    if (strcmp(command, "bind") == 0) {
+
+      CosNaming::Name name;
+      GetName(argc, argv, n, 1, "objref", name);
+
+      CORBA::Object_var obj;
+
+      try {
+	obj = orb->string_to_object(argv[n]);
+      } catch (...) {
+	cerr << "Error: '" << argv[n] << "' is not a valid object reference"
 	     << endl;
+	exit(1);
       }
 
-      delete bl;
-      bl = 0;
+      rootContext->bind(name, obj);
+      return 0;
+    }
 
-    } while (bi->next_n(repeat_n, bl));
 
-    bi->destroy();
+    //
+    // unbind
+    // -------
+    //
 
+    if (strcmp(command, "unbind") == 0) {
+
+      CosNaming::Name name;
+      GetName(argc, argv, n, 0, "", name);
+
+      if (!advanced) {
+
+	CORBA::Object_var obj = rootContext->resolve(name);
+
+	CosNaming::NamingContext_var context
+	  = CosNaming::NamingContext::_narrow(obj);
+
+	if (!CORBA::is_nil(context)) {
+	  cerr << "Error: unbind: can't unbind a naming context.\n"
+	       << "Use remove_context to remove an empty naming context."
+	       << endl;
+	  exit(1);
+	}
+      }
+
+      rootContext->unbind(name);
+      return 0;
+    }
+
+
+    //
+    // resolve
+    // -------
+    //
+
+    if (strcmp(command, "resolve") == 0) {
+
+      CosNaming::Name name;
+      GetName(argc, argv, n, 0, "", name);
+
+      CORBA::Object_var obj = rootContext->resolve(name);
+
+      char* p = orb->object_to_string(obj);
+      cout << p << endl;
+      return 0;
+    }
+
+
+
+    /////////////////////////
+    //
+    // Advanced operations
+    //
+    /////////////////////////
+
+    if (!advanced) usage(argv[0]);
+
+
+    //
+    // bind_context
+    // ------------
+    //
+
+    if (strcmp(command, "bind_context") == 0) {
+
+      CosNaming::Name name;
+      GetName(argc, argv, n, 1, "objref", name);
+
+      CORBA::Object_var obj;
+
+      try {
+	obj = orb->string_to_object(argv[n]);
+      } catch (...) {
+	cerr << "Error: '" << argv[n] << "' is not a valid object reference"
+	     << endl;
+	exit(1);
+      }
+
+      CosNaming::NamingContext_var context
+	= CosNaming::NamingContext::_narrow(obj);
+
+      if (CORBA::is_nil(context)) {
+	cerr << "Error: bind_context: not a naming context" << endl;
+	exit(1);
+      }
+
+      rootContext->bind_context(name, context);
+      return 0;
+    }
+
+
+    //
+    // rebind
+    // ------
+    //
+
+    if (strcmp(command, "rebind") == 0) {
+
+      CosNaming::Name name;
+      GetName(argc, argv, n, 1, "objref", name);
+
+      CORBA::Object_var obj;
+
+      try {
+	obj = orb->string_to_object(argv[n]);
+      } catch (...) {
+	cerr << "Error: '" << argv[n] << "' is not a valid object reference"
+	     << endl;
+	exit(1);
+      }
+
+      rootContext->rebind(name, obj);
+      return 0;
+    }
+
+
+    //
+    // rebind_context
+    // --------------
+    //
+
+    if (strcmp(command, "rebind_context") == 0) {
+
+      CosNaming::Name name;
+      GetName(argc, argv, n, 1, "objref", name);
+
+      CORBA::Object_var obj;
+
+      try {
+	obj = orb->string_to_object(argv[n]);
+      } catch (...) {
+	cerr << "Error: '" << argv[n] << "' is not a valid object reference"
+	     << endl;
+	exit(1);
+      }
+
+      CosNaming::NamingContext_var context
+	= CosNaming::NamingContext::_narrow(obj);
+
+      if (CORBA::is_nil(context)) {
+	cerr << "Error: rebind_context: not a naming context" << endl;
+	exit(1);
+      }
+
+      rootContext->rebind_context(name, context);
+      return 0;
+    }
+
+
+    //
+    // new_context
+    // -----------
+    //
+
+    if (strcmp(command, "new_context") == 0) {
+
+      if (argc > n) {
+	cerr << "Error: new_context takes no args" << endl;
+	return 1;
+      }
+
+      CosNaming::NamingContext_var context = rootContext->new_context();
+
+      char* p = orb->object_to_string(context);
+      cout << p << endl;
+      return 0;
+    }
+
+
+    //
+    // destroy
+    // -------
+    //
+
+    if (strcmp(command, "destroy") == 0) {
+
+      if (argc > n) {
+	cerr << "Error: destroy takes no args" << endl;
+	return 1;
+      }
+
+      rootContext->destroy();
+      return 0;
+    }
+
+    usage(argv[0]);
   }
-  else usage(argv[0]);
-  return 0;
+
+  catch (CosNaming::NamingContext::NotFound& ex) {
+    cerr << command << ": NotFound exception: ";
+    if (ex.why == CosNaming::NamingContext::missing_node) {
+      cerr << "missing node";
+    } else if (ex.why == CosNaming::NamingContext::not_context) {
+      cerr << "not context";
+    } else if (ex.why == CosNaming::NamingContext::not_object) {
+      cerr << "not object";
+    }
+    cerr << endl;
+    return 1;
+  }
+
+  catch (CosNaming::NamingContext::InvalidName) {
+    cerr << command << ": InvalidName exception" << endl;
+    return 1;
+  }
+
+  catch (CosNaming::NamingContext::AlreadyBound) {
+    cerr << command << ": AlreadyBound exception" << endl;
+    return 1;
+  }
+
+  catch (CosNaming::NamingContext::NotEmpty) {
+    cerr << command << ": NotEmpty exception" << endl;
+    return 1;
+  }
+
+  catch (CosNaming::NamingContext::CannotProceed) {
+    cerr << command << ": CannotProceed exception" << endl;
+    return 1;
+  }
+
+  return 1;
+}
+
+
+
+static void
+GetName(int argc, char** argv, int& n, int argsAfter, const char* usageAfter,
+	CosNaming::Name& name)
+{
+  int n_args = (argc - n - argsAfter);
+
+  if (((n_args % 2) != 0) || (n_args < 2)) {
+    cerr << "usage: " << argv[0] << " " << command
+	 << " name1_id name1_kind ... nameN_id nameN_kind " << usageAfter
+	 << endl;
+    exit(1);
+  }
+
+  int n_components = n_args / 2;
+
+  name.length(n_components);
+
+  for (int i = 0; i < n_components; i++) {
+    name[i].id   = (const char*) argv[n++];
+    name[i].kind = (const char*) argv[n++];
+  }
 }
