@@ -1,3 +1,11 @@
+Wed Aug  6 21:40:59 BST 2003 dgrisby
+====================================
+
+- Reentrant gethostbyname for Linux and Irix.
+
+src/lib/omniORB/orbcore/libcWrapper.cc
+
+
 Wed Aug  6 21:32:42 BST 2003 dgrisby
 ====================================
 

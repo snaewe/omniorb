@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.14  2003/08/06 20:43:03  dgrisby
+  Reentrant gethostbyname for Linux and Irix.
+
   Revision 1.19.2.13  2003/08/06 20:34:00  dgrisby
   More vxWorks patches.
 
@@ -267,6 +270,68 @@ again:
   }
   delete [] buffer;
   return ret;
+
+#elif defined(__irix__) && __OSVERSION__ >= 6
+
+  // Use gethostbyname_r() on Irix 6.5
+
+  struct hostent ent;
+  char* buffer = new char[256];
+  int buflen = 256;
+  int rc;
+  IP4AddrInfo* ret;
+
+again:
+  if (gethostbyname_r(node,&ent,buffer,buflen,&rc) == 0) {
+    if (errno == ERANGE) {
+      // buffer is too small to store the result, try again
+      delete [] buffer;
+      buflen = buflen * 2;
+      buffer = new char [buflen];
+      goto again;
+    }
+    else {
+      ret = 0;
+    }
+  }
+  else {
+    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+  }
+  delete [] buffer;
+  return ret;
+
+#elif defined(__linux__) && __OSVERSION__ >= 2
+
+  // Use gethostbyname_r() on Linux 
+
+  struct hostent ent;
+  char* buffer = new char[256];
+  int buflen = 256;
+  int rc, retValue;
+  struct hostent *hp;
+  IP4AddrInfo* ret;
+
+again:
+  retValue = gethostbyname_r(node,&ent,buffer,buflen,&hp,&rc);
+  if (hp == 0) {
+    if (retValue == ERANGE) {
+      // buffer is too small to store the result, try again
+      delete [] buffer;
+      buflen = buflen * 2;
+      buffer = new char [buflen];
+      goto again;
+    }
+    else {
+      ret = 0;
+    }
+  }
+  else {
+    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+  }
+  delete [] buffer;
+  return ret;
+
+
 
 #elif defined(__osf1__)
 
