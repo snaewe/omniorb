@@ -17,6 +17,7 @@
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
 #  alpha_osf1_3.2            Digital Unix 3.2, DEC C++ v5.5
 #  alpha_osf1_4.0            Digital Unix 4.0, DEC C++ v6.0
+#  alpha_osf1_5.0            Tru64 5.0, DEC C++ v6.2
 #  alpha_linux_2.0           alpha linux (compiler problem,still doesn't work)
 #  powerpc_aix_4.2           IBM AIX 4.2, IBM C Set++
 #  powerpc_aix_4.2_xlc5      IBM AIX 4.2, XLC 5.0 (a.k.a. Visual Age 5.0)
@@ -55,6 +56,7 @@
 #platform = alpha_nt_4.0
 #platform = alpha_osf1_3.2
 #platform = alpha_osf1_4.0
+#platform = alpha_osf1_5.0
 #platform = powerpc_aix_4.2
 #platform = powerpc_aix_4.3
 #platform = powerpc_aix_4.2_xlc5
