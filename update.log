@@ -1,3 +1,20 @@
+Wed Jan 21 20:27:48 GMT 1998 bjh
+================================
+
+- Java example cleanup and addition of Java 'weatherman'
+
+src/java/UK/co/orl/omniorb/dir.mk
+src/java/UK/co/orl/omniorb/OmniOrbConfig.java
+src/java/UK/co/orl/weather/dir.mk  NEW
+src/java/UK/co/orl/weather/Clock.java  NEW
+src/java/UK/co/orl/weather/Compass.java  NEW
+src/java/UK/co/orl/weather/Dial.java  NEW
+src/java/UK/co/orl/weather/Gauge.java  NEW
+src/java/UK/co/orl/weather/Pointer.java  NEW
+src/java/UK/co/orl/weather/TrianglePointer.java  NEW
+mk/beforedir.mk
+bin/scripts/java_weatherman  NEW
+
 Wed Jan 21 16:38:36 GMT 1998 sll
 ================================
 
