@@ -28,6 +28,13 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/03 18:49:17  sll
+  Separate out the marshalling of byte, octet and char into 3 set of distinct
+  marshalling functions.
+  Renamed put_char_array and get_char_array to put_octet_array and
+  get_octet_array.
+  New string marshal member functions.
+
   Revision 1.1.2.1  2000/10/27 15:42:08  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -205,9 +212,9 @@ TCS_W_UTF_16::marshalWChar(cdrStream& stream, omniCodeSet::UniChar uc)
 
   _CORBA_Octet o;
 
-  o = 2;                  o >>= stream;
-  o = (uc & 0xff00) >> 8; o >>= stream;
-  o = (uc & 0x00ff);      o >>= stream;
+  o = 2;                  stream.marshalOctet(o);
+  o = (uc & 0xff00) >> 8; stream.marshalOctet(o);
+  o = (uc & 0x00ff);      stream.marshalOctet(o);
 }
 
 void
@@ -234,7 +241,7 @@ TCS_W_UTF_16::marshalWString(cdrStream& stream,
   else {
     _CORBA_UShort tc = 0xfeff; tc >>= stream;
   }
-  stream.put_char_array((const _CORBA_Char*)us, mlen-2, omni::ALIGN_2);
+  stream.put_octet_array((const _CORBA_Octet*)us, mlen-2, omni::ALIGN_2);
 }
 
 
@@ -247,31 +254,31 @@ TCS_W_UTF_16::unmarshalWChar(cdrStream& stream)
   // the next two...
 
   _CORBA_Octet o;
-  o <<= stream;
+  o = stream.unmarshalOctet();
 
   omniCodeSet::UniChar uc;
 
   if (o == 2) {
     // Big endian
-    o <<= stream; uc  = o << 8;
-    o <<= stream; uc |= o;
+    o = stream.unmarshalOctet(); uc  = o << 8;
+    o = stream.unmarshalOctet(); uc |= o;
     return uc;
   }
   else if (o == 4) {
     // BOM
-    o <<= stream; uc  = o << 8;
-    o <<= stream; uc |= o;
+    o = stream.unmarshalOctet(); uc  = o << 8;
+    o = stream.unmarshalOctet(); uc |= o;
 
     if (uc == 0xfeff) {
       // Big endian
-      o <<= stream; uc  = o << 8;
-      o <<= stream; uc |= o;
+      o = stream.unmarshalOctet(); uc  = o << 8;
+      o = stream.unmarshalOctet(); uc |= o;
       return uc;
     }
     else if (uc == 0xfffe) {
       // Little endian
-      o <<= stream; uc  = o;
-      o <<= stream; uc |= o << 8;
+      o = stream.unmarshalOctet(); uc  = o;
+      o = stream.unmarshalOctet(); uc |= o << 8;
       return uc;
     }
     else {
@@ -323,7 +330,7 @@ TCS_W_UTF_16::unmarshalWString(cdrStream& stream,
     if (bound && len > bound)
       OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
 
-    stream.get_char_array((_CORBA_Char*)us, len*2, omni::ALIGN_2);
+    stream.get_octet_array((_CORBA_Octet*)us, len*2, omni::ALIGN_2);
 
     if (!stream.unmarshal_byte_swap()) {
       for (_CORBA_ULong i=0; i < len; i++) {
@@ -351,7 +358,7 @@ TCS_W_UTF_16::unmarshalWString(cdrStream& stream,
       us[0] = uc;
 
     // Read rest of the string
-    stream.get_char_array((_CORBA_Char*)(us+1), (len-1)*2, omni::ALIGN_2);
+    stream.get_octet_array((_CORBA_Octet*)(us+1), (len-1)*2, omni::ALIGN_2);
 
     if (omni::myByteOrder) {
       // We are little endian

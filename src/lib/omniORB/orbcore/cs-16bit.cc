@@ -28,6 +28,13 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/03 18:49:17  sll
+  Separate out the marshalling of byte, octet and char into 3 set of distinct
+  marshalling functions.
+  Renamed put_char_array and get_char_array to put_octet_array and
+  get_octet_array.
+  New string marshal member functions.
+
   Revision 1.1.2.1  2000/10/27 15:42:07  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -160,9 +167,9 @@ omniCodeSet::TCS_W_16bit::marshalWChar(cdrStream& stream,
 
   _CORBA_Octet o;
 
-  o = 2;                  o >>= stream;
-  o = (tc & 0xff00) >> 8; o >>= stream;
-  o = (tc & 0x00ff);      o >>= stream;
+  o = 2;                  stream.marshalOctet(o);
+  o = (tc & 0xff00) >> 8; stream.marshalOctet(o);
+  o = (tc & 0x00ff);      stream.marshalOctet(o);
 }
 
 void
@@ -190,12 +197,12 @@ omniCodeSet::UniChar
 omniCodeSet::TCS_W_16bit::unmarshalWChar(cdrStream& stream)
 {
   _CORBA_UShort tc;
-  _CORBA_Octet  len; len <<= stream;
+  _CORBA_Octet  len; len = stream.unmarshalOctet();
   _CORBA_Octet  o;
 
   // Just to be friendly, we'll skip any leading nulls if len > 2
   while (len-- > 2) {
-    o <<= stream;
+    o = stream.unmarshalOctet();
     if (o != 0)
       OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
   }
@@ -205,13 +212,13 @@ omniCodeSet::TCS_W_16bit::unmarshalWChar(cdrStream& stream)
     tc = 0; // Evil but it might happen, I suppose
     break;
   case 1:
-    o <<= stream;
+    o = stream.unmarshalOctet();
     tc = o;
     break;
   case 2:
     // Again, we assume that wchar is always marshalled big-endian
-    o <<= stream; tc  = o << 8;
-    o <<= stream; tc |= o;
+    o = stream.unmarshalOctet(); tc  = o << 8;
+    o = stream.unmarshalOctet(); tc |= o;
     break;
   }
   omniCodeSet::UniChar uc = pd_toU[(tc & 0xff00) >> 8][tc & 0x00ff];
@@ -270,9 +277,9 @@ omniCodeSet::TCS_W_16bit::fastMarshalWChar(cdrStream&          stream,
     _CORBA_Octet o;
 
     // Assume big endian again
-    o = 2;                  o >>= stream;
-    o = (wc & 0xff00) >> 8; o >>= stream;
-    o = (wc & 0x00ff);      o >>= stream;
+    o = 2;                  stream.marshalOctet(o);
+    o = (wc & 0xff00) >> 8; stream.marshalOctet(o);
+    o = (wc & 0x00ff);      stream.marshalOctet(o);
 
     return 1;
   }
@@ -322,12 +329,12 @@ omniCodeSet::TCS_W_16bit::fastUnmarshalWChar(cdrStream&          stream,
 					     _CORBA_WChar&       wc)
 {
   if (ncs->id() == id()) { // Null transformation
-    _CORBA_Octet  len; len <<= stream;
+    _CORBA_Octet  len; len = stream.unmarshalOctet();
     _CORBA_Octet  o;
 
     // Just to be friendly, we'll skip any leading nulls if len > 2
     while (len-- > 2) {
-      o <<= stream;
+      o = stream.unmarshalOctet();
       if (o != 0)
 	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
     }
@@ -337,13 +344,13 @@ omniCodeSet::TCS_W_16bit::fastUnmarshalWChar(cdrStream&          stream,
       wc = 0; // Evil but it might happen, I suppose
       break;
     case 1:
-      o <<= stream;
+      o = stream.unmarshalOctet();
       wc = o;
       break;
     case 2:
       // Again, we assume that wchar is always marshalled big-endian
-      o <<= stream; wc  = o << 8;
-      o <<= stream; wc |= o;
+      o = stream.unmarshalOctet(); wc  = o << 8;
+      o = stream.unmarshalOctet(); wc |= o;
       break;
     }
     return 1;

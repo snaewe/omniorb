@@ -28,6 +28,13 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/03 18:49:17  sll
+  Separate out the marshalling of byte, octet and char into 3 set of distinct
+  marshalling functions.
+  Renamed put_char_array and get_char_array to put_octet_array and
+  get_octet_array.
+  New string marshal member functions.
+
   Revision 1.1.2.1  2000/10/27 15:42:09  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -343,7 +350,7 @@ TCS_C_UTF_8::marshalChar(cdrStream& stream, omniCodeSet::UniChar uc)
 {
   if (uc < 0x80) {
     _CORBA_Char c = uc;
-    c >>= stream;
+    stream.marshalOctet(c);
   }
   else
     OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
@@ -402,7 +409,7 @@ TCS_C_UTF_8::marshalString(cdrStream& stream,
   }
   _CORBA_ULong mlen = b.length();
   mlen >>= stream;
-  stream.put_char_array((const _CORBA_Char*)b.buffer(), mlen);
+  stream.put_octet_array((const _CORBA_Octet*)b.buffer(), mlen);
 }
 
 
@@ -410,7 +417,7 @@ omniCodeSet::UniChar
 TCS_C_UTF_8::unmarshalChar(cdrStream& stream)
 {
   _CORBA_Char c;
-  c <<= stream;
+  c = stream.unmarshalOctet();
 
   if (c < 0x80)
     return c;
@@ -440,7 +447,7 @@ TCS_C_UTF_8::unmarshalString(cdrStream& stream,
   CORBA::Octet         	   error = 0;
 
   for (_CORBA_ULong i=0; i < len; i++) {
-    c   <<= stream;
+    c   = stream.unmarshalOctet();
     bytes = utf8Count[c];
     lc    = c & utf8Mask[c];
 
@@ -452,13 +459,13 @@ TCS_C_UTF_8::unmarshalString(cdrStream& stream,
     case 5:
     case 4: OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
     case 3:
-      c <<= stream; i++;
+      c = stream.unmarshalOctet(); i++;
       lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
     case 2:
-      c <<= stream; i++;
+      c = stream.unmarshalOctet(); i++;
       lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
     case 1:
-      c <<= stream; i++;
+      c = stream.unmarshalOctet(); i++;
       lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
     }
     if (lc <= 0xffff) {
@@ -493,7 +500,7 @@ TCS_C_UTF_8::fastMarshalChar(cdrStream&          stream,
 			     _CORBA_Char         c)
 {
   if (ncs->id() == id()) { // Null transformation
-    c >>= stream;
+    stream.marshalOctet(c);
     return 1;
   }
   return 0;
@@ -511,7 +518,7 @@ TCS_C_UTF_8::fastMarshalString(cdrStream&          stream,
       OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
 
     len >>= stream;
-    stream.put_char_array((const _CORBA_Char*)s, len);
+    stream.put_octet_array((const _CORBA_Octet*)s, len);
     return 1;
   }
   else if (ncs->kind() == omniCodeSet::CS_8bit) { // Simple 8 bit code set
@@ -553,7 +560,7 @@ TCS_C_UTF_8::fastMarshalString(cdrStream&          stream,
       OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
 
     mlen >>= stream;
-    stream.put_char_array((const _CORBA_Char*)b.buffer(), mlen);
+    stream.put_octet_array((const _CORBA_Octet*)b.buffer(), mlen);
     return 1;
   }
   return 0;
@@ -565,7 +572,7 @@ TCS_C_UTF_8::fastUnmarshalChar(cdrStream&          stream,
 			       _CORBA_Char&        c)
 {
   if (ncs->id() == id()) { // Null transformation
-    c <<= stream;
+    c = stream.unmarshalOctet();
     return 1;
   }
   return 0;
@@ -590,7 +597,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
     s = omniCodeSetUtil::allocC(len);
     omniCodeSetUtil::HolderC h(s);
 
-    stream.get_char_array((_CORBA_Char*)s, len);
+    stream.get_octet_array((_CORBA_Octet*)s, len);
     if (s[len-1] != '\0') OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
 
     h.drop();
@@ -616,7 +623,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
     CORBA::Octet         	    error = 0;
 
     for (_CORBA_ULong i=0; i < mlen; i++) {
-      c   <<= stream;
+      c   = stream.unmarshalOctet();
       bytes = utf8Count[c];
       uc    = c & utf8Mask[c];
 
@@ -629,10 +636,10 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
       case 4:
       case 3: OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
       case 2:
-	c <<= stream; i++;
+	c = stream.unmarshalOctet(); i++;
 	uc = (uc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
       case 1:
-	c <<= stream; i++;
+	c = stream.unmarshalOctet(); i++;
 	uc = (uc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
       }
       c = fromU[(uc & 0xff00) >> 8][uc & 0x00ff];

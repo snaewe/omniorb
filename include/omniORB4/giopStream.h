@@ -29,6 +29,13 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/03 18:49:16  sll
+  Separate out the marshalling of byte, octet and char into 3 set of distinct
+  marshalling functions.
+  Renamed put_char_array and get_char_array to put_octet_array and
+  get_octet_array.
+  New string marshal member functions.
+
   Revision 1.1.2.1  2000/09/27 16:54:08  sll
   *** empty log message ***
 
@@ -564,10 +571,10 @@ private:
 	       
 public:
   // The following implement the abstract functions defined in cdrStream
-  void put_char_array(const _CORBA_Char*, int,
-		      omni::alignment_t align=omni::ALIGN_1);
-  void get_char_array(_CORBA_Char*,int,
-		      omni::alignment_t align=omni::ALIGN_1);
+  void put_octet_array(const _CORBA_Octet* b, int size,
+		       omni::alignment_t align=omni::ALIGN_1);
+  void get_octet_array(_CORBA_Octet* b,int size,
+		       omni::alignment_t align=omni::ALIGN_1);
   void skipInput(_CORBA_ULong);
   _CORBA_Boolean checkInputOverrun(_CORBA_ULong, _CORBA_ULong,
 				   omni::alignment_t align=omni::ALIGN_1);

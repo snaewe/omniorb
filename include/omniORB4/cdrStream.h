@@ -29,6 +29,13 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/11/03 18:49:16  sll
+  Separate out the marshalling of byte, octet and char into 3 set of distinct
+  marshalling functions.
+  Renamed put_char_array and get_char_array to put_octet_array and
+  get_octet_array.
+  New string marshal member functions.
+
   Revision 1.1.2.2  2000/10/10 10:14:27  sll
   Extra ctor for cdrEncapsulationStream which initialise the buffer by
   fetching data from the argument cdrStream.
@@ -104,28 +111,40 @@ public:
 #error "CdrUnMarshal has already been defined"
 #endif
 
-  friend inline void operator>>= (_CORBA_Char a, cdrStream& s) {
-    CdrMarshal(s,_CORBA_Char,omni::ALIGN_1,a);
+  inline void marshalChar(_CORBA_Char a) {
+    CdrMarshal((*this),_CORBA_Char,omni::ALIGN_1,a);
   }
 
-  friend inline void operator<<= (_CORBA_Char& a, cdrStream& s) {
-    CdrUnMarshal(s,_CORBA_Char,omni::ALIGN_1,a);
+  inline _CORBA_Char unmarshalChar() {
+    _CORBA_Char a;
+    CdrUnMarshal((*this),_CORBA_Char,omni::ALIGN_1,a);
+    return a;
   }
 
-#ifdef HAS_Cplusplus_Bool
+  inline void marshalOctet(_CORBA_Octet a) {
+    CdrMarshal((*this),_CORBA_Octet,omni::ALIGN_1,a);
+  }
 
-  friend inline void operator>>= (_CORBA_Boolean b, cdrStream& s) {
+  inline _CORBA_Octet unmarshalOctet() {
+    _CORBA_Octet a;
+    CdrUnMarshal((*this),_CORBA_Octet,omni::ALIGN_1,a);
+    return a;
+  }
+
+  inline void marshalBoolean(_CORBA_Boolean b) {
     _CORBA_Char c = b ? 1 : 0;
-    CdrMarshal(s,_CORBA_Char,omni::ALIGN_1,c);
+    CdrMarshal((*this),_CORBA_Char,omni::ALIGN_1,c);
   }
 
-  friend inline void operator<<= (_CORBA_Boolean& b, cdrStream& s) {
+  inline _CORBA_Boolean unmarshalBoolean() {
     _CORBA_Char c;
-    CdrUnMarshal(s,_CORBA_Char,omni::ALIGN_1,c);
-    b = c ? true : false;
-  }
-
+    CdrUnMarshal((*this),_CORBA_Char,omni::ALIGN_1,c);
+#ifdef HAS_Cplusplus_Bool
+    return c ? true : false;
+#else
+    return c;
 #endif
+  }
 
   friend inline void operator>>= (_CORBA_Short a, cdrStream& s) {
     if (s.pd_marshal_byte_swap) {
@@ -239,15 +258,23 @@ public:
 
 #endif
 
-  virtual void put_char_array(const _CORBA_Char* b, int size,
-			      omni::alignment_t align=omni::ALIGN_1) = 0;
+  void marshalString(const char*,int bounded=0);
+  char* unmarshalString(int bounded=0);
+
+  // void marshalWChar(WChar a);
+  // WChar unmarshalWChar();
+  // void marshalWString(const WChar*,int bounded=0);
+  // char* unmarshalWString(int bounded=0);
+
+  virtual void put_octet_array(const _CORBA_Octet* b, int size,
+			       omni::alignment_t align=omni::ALIGN_1) = 0;
   // <size> must be a multiple of <align>.
   // For instance, if <align> == omni::ALIGN_8 then <size> % 8 == 0.
-    
-  virtual void get_char_array(_CORBA_Char* b,int size,
-			      omni::alignment_t align=omni::ALIGN_1) = 0;
-  // <size> must be a multiple of <align>.
-  // For instance, if <align> == omni::ALIGN_8 then <size> % 8 == 0.
+
+  virtual void get_octet_array(_CORBA_Octet* b,int size,
+			       omni::alignment_t align=omni::ALIGN_1) = 0;
+
+
 
   virtual void skipInput(_CORBA_ULong size) = 0;
   // Skip <size> bytes from the input stream.
@@ -416,9 +443,16 @@ protected:
 public:
 
   inline void
+  unmarshalArrayChar(_CORBA_Short* a, int length)
+  {
+    for( int i = 0; i < length; i++ )
+      a[i] = unmarshalChar();
+  }
+
+  inline void
   unmarshalArrayShort(_CORBA_Short* a, int length)
   {
-    get_char_array((_CORBA_Char*) a, length * 2, omni::ALIGN_2);
+    get_octet_array((_CORBA_Char*) a, length * 2, omni::ALIGN_2);
 
     if( unmarshal_byte_swap() )
       for( int i = 0; i < length; i++ )
@@ -429,7 +463,7 @@ public:
   inline void
   unmarshalArrayUShort(_CORBA_UShort* a, int length)
   {
-    get_char_array((_CORBA_Char*) a, length * 2, omni::ALIGN_2);
+    get_octet_array((_CORBA_Char*) a, length * 2, omni::ALIGN_2);
 
     if( unmarshal_byte_swap() )
       for( int i = 0; i < length; i++ )
@@ -439,7 +473,7 @@ public:
   inline void
   unmarshalArrayLong(_CORBA_Long* a, int length)
   {
-    get_char_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
+    get_octet_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
 
     if( unmarshal_byte_swap() )
       for( int i = 0; i < length; i++ )
@@ -449,7 +483,7 @@ public:
   inline void
   unmarshalArrayULong(_CORBA_ULong* a, int length)
   {
-    get_char_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
+    get_octet_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
 
     if( unmarshal_byte_swap() )
       for( int i = 0; i < length; i++ )
@@ -460,7 +494,7 @@ public:
   inline void
   unmarshalArrayFloat(_CORBA_Float* a, int length)
   {
-    get_char_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
+    get_octet_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
 
     if( unmarshal_byte_swap() )
       for( int i = 0; i < length; i++ ) {
@@ -473,7 +507,7 @@ public:
   inline void
   unmarshalArrayDouble(_CORBA_Double* a, int length)
   {
-    get_char_array((_CORBA_Char*) a, length * 8, omni::ALIGN_8);
+    get_octet_array((_CORBA_Char*) a, length * 8, omni::ALIGN_8);
 
     if( unmarshal_byte_swap() )
       for( int i = 0; i < length; i++ ) {
@@ -535,10 +569,10 @@ protected:
 
 public:
   // The following implement the abstract functions defined in cdrStream
-  void put_char_array(const _CORBA_Char* b, int size,
-		      omni::alignment_t align=omni::ALIGN_1);
-  void get_char_array(_CORBA_Char* b,int size,
-		      omni::alignment_t align=omni::ALIGN_1);
+  void put_octet_array(const _CORBA_Octet* b, int size,
+		       omni::alignment_t align=omni::ALIGN_1);
+  void get_octet_array(_CORBA_Octet* b,int size,
+		       omni::alignment_t align=omni::ALIGN_1);
   void skipInput(_CORBA_ULong size);
   _CORBA_Boolean checkInputOverrun(_CORBA_ULong itemSize, 
 				   _CORBA_ULong nItems,
@@ -579,8 +613,8 @@ public:
   size_t total() { return pd_total; }
 
   // The following implements the abstract functions defined in cdrStream
-  void put_char_array(const _CORBA_Char* b, int size,
-		      omni::alignment_t align=omni::ALIGN_1);
+  void put_octet_array(const _CORBA_Octet* b, int size,
+		       omni::alignment_t align=omni::ALIGN_1);
 
   _CORBA_Boolean reserveOutputSpace(omni::alignment_t align,size_t required);
 
@@ -590,7 +624,8 @@ public:
 				    _CORBA_ULong nItems,
 				    omni::alignment_t align=omni::ALIGN_1);
 
-  void get_char_array(_CORBA_Char*,int,omni::alignment_t align=omni::ALIGN_1);
+  void get_octet_array(_CORBA_Octet* b,int size,
+		       omni::alignment_t align=omni::ALIGN_1);
 
   void skipInput(_CORBA_ULong);
 

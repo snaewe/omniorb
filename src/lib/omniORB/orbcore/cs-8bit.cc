@@ -28,6 +28,13 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/03 18:49:17  sll
+  Separate out the marshalling of byte, octet and char into 3 set of distinct
+  marshalling functions.
+  Renamed put_char_array and get_char_array to put_octet_array and
+  get_octet_array.
+  New string marshal member functions.
+
   Revision 1.1.2.1  2000/10/27 15:42:08  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -135,7 +142,7 @@ omniCodeSet::TCS_C_8bit::marshalChar(cdrStream& stream,
   _CORBA_Char c = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
   if (uc && !c) OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
 
-  c >>= stream;
+  stream.marshalOctet(c);
 }
 
 void
@@ -152,7 +159,7 @@ omniCodeSet::TCS_C_8bit::marshalString(cdrStream& stream,
     uc = us[i];
     c = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
     if (uc && !c) OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
-    c >>= stream;
+    stream.marshalOctet(c);
   }
 }
 
@@ -160,7 +167,7 @@ omniCodeSet::UniChar
 omniCodeSet::TCS_C_8bit::unmarshalChar(cdrStream& stream)
 {
   _CORBA_Char c;
-  c <<= stream;
+  c = stream.unmarshalOctet();
 
   omniCodeSet::UniChar uc = pd_toU[c];
   if (c && !uc) OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
@@ -189,7 +196,7 @@ omniCodeSet::TCS_C_8bit::unmarshalString(cdrStream& stream,
   omniCodeSet::UniChar uc;
 
   for (_CORBA_ULong i=0; i < len; i++) {
-    c <<= stream;
+    c = stream.unmarshalOctet();
     uc = pd_toU[c];
     if (c && !uc) OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
     us[i] = uc;
@@ -207,7 +214,7 @@ omniCodeSet::TCS_C_8bit::fastMarshalChar(cdrStream&          stream,
 					 _CORBA_Char         c)
 {
   if (ncs->id() == id()) { // Null transformation
-    c >>= stream;
+    stream.marshalOctet(c);
     return 1;
   }
   return 0;
@@ -225,7 +232,7 @@ omniCodeSet::TCS_C_8bit::fastMarshalString(cdrStream&          stream,
       OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
 
     len >>= stream;
-    stream.put_char_array((const _CORBA_Char*)s, len);
+    stream.put_octet_array((const _CORBA_Octet*)s, len);
     return 1;
   }
   return 0;
@@ -237,7 +244,7 @@ omniCodeSet::TCS_C_8bit::fastUnmarshalChar(cdrStream&          stream,
 					   _CORBA_Char&        c)
 {
   if (ncs->id() == id()) { // Null transformation
-    c <<= stream;
+    c = stream.unmarshalOctet();
     return 1;
   }
   return 0;
@@ -262,7 +269,7 @@ omniCodeSet::TCS_C_8bit::fastUnmarshalString(cdrStream&          stream,
     s = omniCodeSetUtil::allocC(len);
     omniCodeSetUtil::HolderC h(s);
 
-    stream.get_char_array((_CORBA_Char*)s, len);
+    stream.get_octet_array((_CORBA_Octet*)s, len);
     if (s[len-1] != '\0') OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
 
     h.drop();
