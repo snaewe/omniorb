@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.2  1997/03/10 11:50:57  sll
-  Minor changes to accomodate the creation of a public API for omniORB2.
+  Revision 1.3  1997/04/23 11:12:34  sll
+  New member skip().
 
+// Revision 1.2  1997/03/10  11:50:57  sll
+// Minor changes to accomodate the creation of a public API for omniORB2.
+//
   Revision 1.1  1997/01/08 17:26:01  sll
   Initial revision
 
@@ -168,6 +171,13 @@ MemBufferedStream::copy(const MemBufferedStream &m) {
   pd_out_mkr = (void *) ((omni::ptr_arith_t) pd_out_mkr + 
 			 ((omni::ptr_arith_t) m.pd_out_mkr - 
 			  (omni::ptr_arith_t) m.startofstream()));
+  return;
+}
+
+void
+MemBufferedStream::skip(CORBA::ULong size)
+{
+  align_and_get_bytes(omni::ALIGN_1,size);
   return;
 }
 
