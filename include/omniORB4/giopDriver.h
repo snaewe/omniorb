@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/11/03 19:01:37  sll
+  Use OMNIORB_FOR_EACH_SYS_EXCEPTION to declare repository IDs.
+
   Revision 1.2.2.2  2000/09/27 17:11:14  sll
   Updated to use the new cdrStream class and its derived class giopStream.
   GIOP_S now stores the request header content in giopStream::requestInfo.
@@ -95,47 +98,25 @@ class GIOP_Basetypes {
 public:
 
   struct _SysExceptRepoID {
-    _CORBA_Char *id;
+    char* id;
     _CORBA_ULong len;
 
-    _SysExceptRepoID(_CORBA_Char *i) {
+    _SysExceptRepoID(char *i) {
       id = i; len = strlen((const char *)i);
     }
   };
   class SysExceptRepoID {
   public:
-    static _core_attr const _SysExceptRepoID UNKNOWN;
-    static _core_attr const _SysExceptRepoID BAD_PARAM;
-    static _core_attr const _SysExceptRepoID NO_MEMORY;
-    static _core_attr const _SysExceptRepoID IMP_LIMIT;
-    static _core_attr const _SysExceptRepoID COMM_FAILURE;
-    static _core_attr const _SysExceptRepoID INV_OBJREF;
-    static _core_attr const _SysExceptRepoID OBJECT_NOT_EXIST;
-    static _core_attr const _SysExceptRepoID NO_PERMISSION;
-    static _core_attr const _SysExceptRepoID INTERNAL;
-    static _core_attr const _SysExceptRepoID MARSHAL;
-    static _core_attr const _SysExceptRepoID INITIALIZE;
-    static _core_attr const _SysExceptRepoID NO_IMPLEMENT;
-    static _core_attr const _SysExceptRepoID BAD_TYPECODE;
-    static _core_attr const _SysExceptRepoID BAD_OPERATION;
-    static _core_attr const _SysExceptRepoID NO_RESOURCES;
-    static _core_attr const _SysExceptRepoID NO_RESPONSE;
-    static _core_attr const _SysExceptRepoID PERSIST_STORE;
-    static _core_attr const _SysExceptRepoID BAD_INV_ORDER;
-    static _core_attr const _SysExceptRepoID TRANSIENT;
-    static _core_attr const _SysExceptRepoID FREE_MEM;
-    static _core_attr const _SysExceptRepoID INV_IDENT;
-    static _core_attr const _SysExceptRepoID INV_FLAG;
-    static _core_attr const _SysExceptRepoID INTF_REPOS;
-    static _core_attr const _SysExceptRepoID BAD_CONTEXT;
-    static _core_attr const _SysExceptRepoID OBJ_ADAPTER;
-    static _core_attr const _SysExceptRepoID DATA_CONVERSION;
-    static _core_attr const _SysExceptRepoID TRANSACTION_REQUIRED;
-    static _core_attr const _SysExceptRepoID TRANSACTION_ROLLEDBACK;
-    static _core_attr const _SysExceptRepoID INVALID_TRANSACTION;
-    static _core_attr const _SysExceptRepoID WRONG_TRANSACTION;
+
+#define OMNIORB_DECLARE_SYS_EXCEPTION_REPOID(name) \
+    static _core_attr const _SysExceptRepoID name;
+
+OMNIORB_FOR_EACH_SYS_EXCEPTION(OMNIORB_DECLARE_SYS_EXCEPTION_REPOID)
+
+#undef OMNIORB_DECLARE_SYS_EXCEPTION_REPOID
+
     static _core_attr const _CORBA_ULong maxIDLen;
-    static _core_attr const _CORBA_Char *version;
+    static _core_attr const char* version;
     static _core_attr const _CORBA_ULong versionLen;
 #define omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen 46
   };
