@@ -1,3 +1,58 @@
+Fri Jul 25 16:52:55 BST 2003 dgrisby
+====================================
+
+- VS 7 support.
+
+README.win32
+config/config.mk
+mk/win32.mk
+mk/platforms/x86_nt_4.0_vs_7.mk   -- new
+
+- Configure SSL correctly on RH 9.
+
+acinclude.m4
+aclocal.m4
+configure
+mk/beforeauto.mk.in
+
+- Avoid linker warnings on Windows.
+
+include/omniORB4/internal/libcWrapper.h
+
+- Dinosaur compatible hex conversion.
+
+src/appl/utils/genior/genior.cc
+
+- Initialise base classes in correct order.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+- vxWorks patches.
+
+mk/platforms/powerpc_vxWorks_5.3.mk              -- new
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+- BOA locking bug.
+
+src/lib/omniORB/orbcore/corbaBoa.cc
+
+- Bug with nil return from _get_interface.
+
+src/lib/omniORB/orbcore/objectStub.cc
+
+- Incorrect COMM_FAILURE with GIOP 1.2 CloseConnection.
+
+bugfixes-401.xml
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+
+
 Wed Jul 16 15:14:50 BST 2003 dgrisby
 ====================================
 

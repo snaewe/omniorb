@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.20  2003/07/25 16:07:18  dgrisby
+  Incorrect COMM_FAILURE with GIOP 1.2 CloseConnection.
+
   Revision 1.1.4.19  2003/01/22 11:40:12  dgrisby
   Correct serverSendException interceptor use.
 
@@ -224,8 +227,11 @@ giopImpl11::inputMessageBegin(giopStream* g,
       g->impl()->inputMessageBegin(g,g->impl()->unmarshalWildCardRequestHeader);
       return;
     }
-    inputTerminalProtocolError(g);
-    // never reaches here.
+    // We accept a CloseConnection message with any GIOP version.
+    if ((GIOP::MsgType)hdr[7] != GIOP::CloseConnection) {
+      inputTerminalProtocolError(g);
+      // never reaches here.
+    }
   }
 
   g->pd_unmarshal_byte_swap = (((hdr[6] & 0x1) == _OMNIORB_HOST_BYTE_ORDER_)

@@ -8,6 +8,17 @@
 
 <buglist version="4.0.1">
 
+<bug id="8" date="Fri Jul 25 15:48:26 BST 2003" user="dgrisby">
+  <summary>COMM_FAILURE after orderly connection closure</summary>
+  <reported>Daniel Bell</reported>
+  <listlink
+  href="http://www.omniorb-support.com/pipermail/omniorb-list/2003-July/023924.html"/>
+  <text>
+  Clients using GIOP 1.0 or 1.1 would report a COMM_FAILURE when a
+  server closed a connection with a GIOP 1.2 CloseConnection message.
+  </text>
+</bug>
+
 <bug id="7" date="Wed Jul  2 11:54:20 BST 2003" user="dgrisby">
   <summary>Race condition in POA destruction</summary>
   <reported>Emmanuel Taurel</reported>
