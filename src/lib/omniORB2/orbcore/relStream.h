@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.6.3  2000/03/27 17:30:40  sll
+ Changed access control to ctor.
+
  Revision 1.2.6.2  1999/09/25 17:00:20  sll
  Merged changes from omni2_8_develop branch.
 
@@ -70,8 +73,11 @@ class reliableStreamStrand : public Strand {
 public:
 
   reliableStreamStrand(size_t buffer_size, Rope* r);
+
+protected:
   virtual ~reliableStreamStrand();
 
+public:
   size_t MaxMTU() const;
   Strand::sbuf receive(size_t size,CORBA::Boolean exactly,int align,
 		       CORBA::Boolean startMTU=0);
