@@ -27,6 +27,14 @@
 
 /*
   $Log$
+  Revision 1.39.4.1  1999/09/15 20:18:43  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.39  1999/08/04 10:17:39  sll
   Added missing operator for non-copy Any insertion.
 
@@ -444,18 +452,11 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << "static CORBA::Boolean is_nil(" << objref_uqname() << " p);\n";
   IND(s); s << "static void release(" << objref_uqname() << " p);\n";
   IND(s); s << "static void duplicate(" << objref_uqname() << " p);\n";
-  IND(s); s << "static size_t NP_alignedSize("
-	    << objref_uqname() << " obj,size_t initialoffset);\n";
   IND(s); s << "static void marshalObjRef("
-	    << objref_uqname() << " obj,NetBufferedStream &s);\n";
+	    << objref_uqname() << " obj,cdrStream &s);\n";
   IND(s); s << "static "
 	    << objref_uqname() 
-	    << " unmarshalObjRef(NetBufferedStream &s);\n";
-  IND(s); s << "static void marshalObjRef("
-	    << objref_uqname() << " obj,MemBufferedStream &s);\n";
-  IND(s); s << "static "
-	    << objref_uqname() 
-	    << " unmarshalObjRef(MemBufferedStream &s);\n";
+	    << " unmarshalObjRef(cdrStream &s);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n";
   IND(s); s << "typedef _CORBA_ObjRef_Var<"
@@ -568,54 +569,28 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << "static " << objref_uqname() << " _narrow(CORBA::Object_ptr);\n";
   IND(s); s << "static " << objref_uqname() << " _nil();\n\n";
 
-  IND(s); s << "static inline size_t NP_alignedSize("
-	    << objref_uqname() << " obj,size_t initialoffset) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return CORBA::AlignedObjRef(obj,"
-	    << IRrepoId() << "," << (strlen(repositoryID())+1) 
-	    << ",initialoffset);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
   IND(s); s << "static inline void marshalObjRef("
-	    << objref_uqname() << " obj,NetBufferedStream &s) {\n";
+	    << objref_uqname() << " obj,cdrStream &s) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::MarshalObjRef(obj,"
-	    << IRrepoId() << "," << (strlen(repositoryID())+1) 
-	    << ",s);\n";
+  IND(s); s << "s.marshalObjRef((CORBA::is_nil(obj) ? 0 : obj->PR_getobj()));\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
   IND(s); s << "static inline " << objref_uqname()
-	    << " unmarshalObjRef(NetBufferedStream &s) {\n";
+	    << " unmarshalObjRef(cdrStream &s) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef("
-	    << IRrepoId() << ",s);\n";
-  IND(s); s << objref_uqname() << " _result = " << fqname() << 
-	    "::_narrow(_obj);\n";
-  IND(s); s << "CORBA::release(_obj);\n";
-  IND(s); s << "return _result;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
 
-  IND(s); s << "static inline void marshalObjRef("
-	    << objref_uqname() << " obj,MemBufferedStream &s) {\n";
+  IND(s); s << "omniObject* obj = s.unMarshalObjRef(" << IRrepoId() << ");\n";
+  IND(s); s << "if (obj)\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::MarshalObjRef(obj,"
-	    << IRrepoId() << "," << (strlen(repositoryID())+1) 
-	    << ",s);\n";
+  IND(s); s << "return (" << objref_uqname() 
+	    << ")(obj->_widenFromTheMostDerivedIntf("
+	    << IRrepoId() << "));\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << "static inline " << objref_uqname()
-	    << " unmarshalObjRef(MemBufferedStream &s) {\n";
+  IND(s); s << "else\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef("
-	    << IRrepoId() << ",s);\n";
-  IND(s); s << objref_uqname() << " _result = " << fqname() << 
-	    "::_narrow(_obj);\n";
-  IND(s); s << "CORBA::release(_obj);\n";
-  IND(s); s << "return _result;\n";
+  IND(s); s << "return _nil();\n";
+  DEC_INDENT_LEVEL();
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -624,7 +599,8 @@ o2be_interface::produce_hdr(std::fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "protected:\n\n";
   INC_INDENT_LEVEL();
-  IND(s); s << uqname() << "() {\n";
+  IND(s); s << uqname() << "() { this->PR_setobj(this); }\n";
+#if 0
   INC_INDENT_LEVEL();
   IND(s); s << "if (!is_proxy())\n";
   INC_INDENT_LEVEL();
@@ -633,6 +609,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << "this->PR_setobj(this);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
+#endif
   IND(s); s << "virtual ~" << uqname() << "();\n";
   IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id=0);\n";
   s << "\n";
@@ -660,8 +637,17 @@ o2be_interface::produce_hdr(std::fstream &s)
   s << " public virtual " << uqname() << " {\n";
   IND(s); s << "public:\n\n";
   INC_INDENT_LEVEL();
-  IND(s); s << server_uqname() << "() {}\n";
-  IND(s); s << server_uqname() << "(const " << objectkeytype(this) << "& k);\n";
+  IND(s); s << server_uqname() << "() {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "PR_setRepositoryID(" << IRrepoId() << ");\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << server_uqname() << "(const " << objectkeytype(this) << "& k) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "PR_setRepositoryID(" << IRrepoId() << ");\n";
+  IND(s); s << "PR_setKey(k);\n";
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
   IND(s); s << "virtual ~" << server_uqname() << "();\n";
   IND(s); s << objref_uqname() << " _this() { return "
 	    << uqname() << "::_duplicate(this); }\n";
@@ -743,12 +729,9 @@ o2be_interface::produce_hdr(std::fstream &s)
   s << " public virtual " << uqname() << " {\n";
   IND(s); s << "public:\n\n";
   INC_INDENT_LEVEL();
-  IND(s); s << proxy_uqname() << " (Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release) :\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "omniObject(" << IRrepoId() << ",r,key,keysize,profiles,release) {\n";
+  IND(s); s << proxy_uqname() << " (GIOPObjectInfo* objInfo) : omniObject(objInfo,(const char*)" << IRrepoId() << ") {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "omni::objectIsReady(this);\n";
-  DEC_INDENT_LEVEL();
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "virtual ~" << proxy_uqname() << "();\n";
@@ -826,7 +809,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
   IND(s); s << nil_uqname() << "() : omniObject(omniObject::nilObjectManager())" 
-	    << " { this->PR_setobj(0); }\n";
+	    << " { PR_setRepositoryID(" << IRrepoId() << "); this->PR_setobj(0); }\n";
   IND(s); s << "virtual ~" << nil_uqname() << "();\n";
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1320,7 +1303,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n";
   IND(s); s << "virtual ~" << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " ();\n";
   IND(s); s << "virtual const char *irRepoId() const;\n";
-  IND(s); s << "virtual CORBA::Object_ptr newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release);\n";
+  IND(s); s << "virtual CORBA::Object_ptr newProxyObject(GIOPObjectInfo* objInfo);\n";
   IND(s); s << "virtual CORBA::Boolean is_a(const char *base_repoId) const;\n";
   // _nil()
   IND(s); s << "static " << objref_uqname() << " _nil() {\n";
@@ -1389,18 +1372,11 @@ o2be_interface_fwd::produce_hdr(std::fstream &s)
   IND(s); s << "static CORBA::Boolean is_nil(" << intf->objref_uqname() << " p);\n";
   IND(s); s << "static void release(" << intf->objref_uqname() << " p);\n";
   IND(s); s << "static void duplicate(" << intf->objref_uqname() << " p);\n";
-  IND(s); s << "static size_t NP_alignedSize("
-	    << intf->objref_uqname() << " obj,size_t initialoffset);\n";
   IND(s); s << "static void marshalObjRef("
-	    << intf->objref_uqname() << " obj,NetBufferedStream &s);\n";
+	    << intf->objref_uqname() << " obj,cdrStream &s);\n";
   IND(s); s << "static "
 	    << intf->objref_uqname() 
-	    << " unmarshalObjRef(NetBufferedStream &s);\n";
-  IND(s); s << "static void marshalObjRef("
-	    << intf->objref_uqname() << " obj,MemBufferedStream &s);\n";
-  IND(s); s << "static "
-	    << intf->objref_uqname() 
-	    << " unmarshalObjRef(MemBufferedStream &s);\n";
+	    << " unmarshalObjRef(cdrStream &s);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n";
   IND(s); s << "typedef _CORBA_ObjRef_Var<"
@@ -1589,9 +1565,10 @@ o2be_interface::produce_skel(std::fstream &s)
 
   // server skeleton dispatch function
   IND(s); s << "CORBA::Boolean\n";
-  IND(s); s << server_fqname() << "::dispatch(GIOP_S &_0RL_s,const char *_0RL_op,CORBA::Boolean _0RL_response_expected)\n";
+  IND(s); s << server_fqname() << "::dispatch(GIOP_S &_giop_s,const char *_0RL_op,CORBA::Boolean _0RL_response_expected)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
+  IND(s); s << "cdrStream& _0RL_s = (cdrStream&)_giop_s;\n";
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     idl_bool notfirst = I_FALSE;
@@ -1676,7 +1653,7 @@ o2be_interface::produce_skel(std::fstream &s)
 	  }
 	  IND(s); s << ((notfirst)?"else ":"")
 		    << "if (" << intf_name
-		    << "::dispatch(_0RL_s,_0RL_op,_0RL_response_expected)) {\n";
+		    << "::dispatch(_giop_s,_0RL_op,_0RL_response_expected)) {\n";
 	  INC_INDENT_LEVEL();
 	  IND(s); s << "return 1;\n";
 	  DEC_INDENT_LEVEL();
@@ -1693,23 +1670,13 @@ o2be_interface::produce_skel(std::fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
   
-
-  IND(s); s << server_fqname() << "::" << server_uqname() 
-	    << " (const " << objectkeytype(this) << "& k)\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "omniRopeAndKey l(0,(CORBA::Octet*)&k,(CORBA::ULong)sizeof(k));\n";
-  IND(s); s << "setRopeAndKey(l,0);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
   IND(s); s << objectkeytype(this) << "\n";
   IND(s); s << server_fqname() << "::_key()\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "omniRopeAndKey l;\n";
-  IND(s); s << "getRopeAndKey(l);\n";
-  IND(s); s << "return (*((" << objectkeytype(this) << "*)l.key()));\n";
+  IND(s); s << objectkeytype(this) << " result;\n";
+  IND(s); s << "getKey(result);\n";
+  IND(s); s << "return result;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -1865,18 +1832,9 @@ o2be_interface::produce_skel(std::fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << "size_t\n";
-  IND(s); s << fqname() << "_Helper::NP_alignedSize("
-	    << objref_fqname() << " obj,size_t initialoffset) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return " << fqname() 
-	    << "::NP_alignedSize(obj,initialoffset);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
   IND(s); s << "void\n";
   IND(s); s << fqname() << "_Helper::marshalObjRef("
-	    << objref_fqname() << " obj,NetBufferedStream &s) {\n";
+	    << objref_fqname() << " obj,cdrStream &s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << fqname() << "::marshalObjRef(obj,s);\n";
   DEC_INDENT_LEVEL();
@@ -1884,23 +1842,7 @@ o2be_interface::produce_skel(std::fstream &s)
 
   IND(s); s << objref_fqname()
 	    << " "
-	    << fqname() <<"_Helper::unmarshalObjRef(NetBufferedStream &s) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return " << fqname() << "::unmarshalObjRef(s);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "_Helper::marshalObjRef("
-	    << objref_fqname() << " obj,MemBufferedStream &s) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << fqname() << "::marshalObjRef(obj,s);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << objref_fqname()
-	    << " "
-	    << fqname() <<"_Helper::unmarshalObjRef(MemBufferedStream &s) {\n";
+	    << fqname() <<"_Helper::unmarshalObjRef(cdrStream &s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "return " << fqname() << "::unmarshalObjRef(s);\n";
   DEC_INDENT_LEVEL();
@@ -1916,12 +1858,12 @@ o2be_interface::produce_skel(std::fstream &s)
   IND(s); s << "}\n\n";
   // _newProxyObject()
   IND(s); s << "CORBA::Object_ptr\n";
-  IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release)\n";
+  IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::newProxyObject(GIOPObjectInfo* objInfo)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   if (!(idl_global->compile_flags() & IDL_CF_LIFECYCLE)) {
     IND(s); s << proxy_fqname() << " *p = new " << proxy_fqname()
-	      << "(r,key,keysize,profiles,release);\n";
+	      << "(objInfo);\n";
     IND(s); s << "if (!p) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << "throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);\n";
@@ -1930,6 +1872,8 @@ o2be_interface::produce_skel(std::fstream &s)
     IND(s); s << "return (CORBA::Object_ptr) p;\n";
   }
   else {
+    // XXX  Not changed yet.
+    // SLL 19 Aug 99.
     IND(s); s << "if (_may_move_local) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << lcproxy_fqname() << " *p = new " << lcproxy_fqname()

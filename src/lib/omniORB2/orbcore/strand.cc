@@ -29,9 +29,13 @@
 
 /*
   $Log$
-  Revision 1.10  1999/08/30 16:51:59  sll
-  Removed WrTestLock and heartbeat argument in WrLock.
-  Replace with Sync::clicksSet, Sync::clicksDecrAndGet and Sync::clicksGet.
+  Revision 1.10.4.1  1999/09/15 20:18:28  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
 
   Revision 1.9  1999/05/26 11:54:13  sll
   Replaced WrTimedLock with WrTestLock.
@@ -72,10 +76,9 @@
 #pragma hdrstop
 #endif
 
-#include <scavenger.h>
 #include <ropeFactory.h>
 
-Strand::Strand(Rope *r, CORBA::Boolean heapAllocated)
+Strand::Strand(Rope *r)
   : pd_rdcond(&r->pd_lock), pd_wrcond(&r->pd_lock)
 {
   pd_head = 0;
@@ -87,11 +90,9 @@ Strand::Strand(Rope *r, CORBA::Boolean heapAllocated)
   r->pd_head = this;
   pd_rope = r;
   pd_dying = 0;
-  pd_heapAllocated = heapAllocated;
   pd_refcount = 0;
   pd_seqNumber = 1;
-  pd_clicks = (r->is_incoming() ? StrandScavenger::inIdleTimeLimit() :
-	                          StrandScavenger::outIdleTimeLimit());
+  pd_reuse = 0;
   return;
 }
 
@@ -130,14 +131,20 @@ Strand::incrRefCount(CORBA::Boolean held_rope_mutex)
 }
 
 void
-Strand::decrRefCount(CORBA::Boolean held_rope_mutex)
+Strand::decrRefCount(CORBA::Boolean held_rope_mutex,CORBA::Boolean deleteflag)
 {
-  if (!held_rope_mutex)
-    pd_rope->pd_lock.lock();
+  Rope* r;
+  if (!held_rope_mutex) {
+    r = pd_rope;
+    r->pd_lock.lock();
+  }
   pd_refcount--;
   assert(pd_refcount >= 0);
+  if (pd_refcount == 0 && deleteflag) {
+    delete this;
+  }
   if (!held_rope_mutex)
-    pd_rope->pd_lock.unlock();
+    r->pd_lock.unlock();
   return;
 }
 
@@ -153,99 +160,74 @@ Strand::is_idle(CORBA::Boolean held_rope_mutex)
   return idle;
 }
 
-CORBA::Boolean
-Strand::is_unused(CORBA::Boolean held_rope_mutex)
+void
+Strand::setReUseFlag()
 {
-  CORBA::Boolean unused;
-  if (!held_rope_mutex)
-    pd_rope->pd_lock.lock();
-  unused = ((pd_head == 0)? 1: 0);
-  if (!held_rope_mutex)
-    pd_rope->pd_lock.unlock();
-  return unused;
+  pd_reuse = 1;
+}
+
+void
+Strand::raiseException(CORBA::ULong minor, CORBA::ULong completed)
+{
+  if (pd_reuse) {
+    throw CORBA::TRANSIENT(minor,(CORBA::CompletionStatus)completed);
+  }
+  else {
+    throw CORBA::COMM_FAILURE(minor,(CORBA::CompletionStatus)completed);
+  }
+}
+
+
+Strand::Sync*
+Strand::
+Sync::getSync(Strand* s)
+{
+  return s->pd_head;
+}
+
+omni_mutex&
+Strand::
+Sync::getMutex(Strand* s)
+{
+  return s->pd_rope->pd_lock;
+}
+
+omni_mutex&
+Strand::
+Sync::getMutex(Rope* s)
+{
+  return s->pd_lock;
+}
+
+Strand*
+Strand::
+Sync::getStrand(Rope* s)
+{
+  return s->getStrand();
+}
+
+void
+Strand::
+Sync::setStrandIsDying(Strand* s)
+{
+  s->_setStrandIsDying();
 }
 
 Strand::
-Sync::Sync(Strand *s,CORBA::Boolean rdLock,CORBA::Boolean wrLock) 
+Sync::Sync(Strand *s) 
 {
   // Caller of this function must ensure that pd_refcount is not zero.
-  // This ensures that no other thread can destroy this strand
-  // before this function grabs the MUTEX (s->pd_rope->pd_lock).
 
-  pd_strand = 0;
-  pd_secondHand = 0;
-  s->pd_rope->pd_lock.lock();
-
-  if (s->_strandIsDying()) {
-    // If this strand or the rope it belongs is being shutdown, stop here
-    s->pd_rope->pd_lock.unlock();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
-  }
-
-  // enter this to the list in strand <s>
+  pd_strand = s;
   pd_next = s->pd_head;
   s->pd_head = this;
-  pd_strand = s;
-
   s->incrRefCount(1);
-
-  // Acquire the locks on the strand
-  // Always do the Read lock before the Write lock to avoid deadlock
-  if (rdLock) {
-    RdLock(1);
-  }
-  if (wrLock) {
-    WrLock(1);
-  }
-
-  s->pd_rope->pd_lock.unlock();
-  return;
 }
-
-Strand::
-Sync::Sync(Rope *r,CORBA::Boolean rdLock,CORBA::Boolean wrLock)
-{
-  pd_strand = 0;
-  r->pd_lock.lock();
-  Strand *s;
-
-  try {
-    s = r->getStrand(pd_secondHand);
-  }
-  catch(...) {
-    r->pd_lock.unlock();
-    throw;
-  }
-
-  pd_next = s->pd_head;	
-  s->pd_head = this;
-  pd_strand = s;
-
-  s->incrRefCount(1);
-
-  // Acquire the locks on the strand
-  // Always do the Read lock before the Write lock to avoid deadlock
-
-  if (rdLock) {
-    RdLock(1);
-  }
-
-  if (wrLock) {
-    WrLock(1);
-  }
-  r->pd_lock.unlock();
-  return;
-}
-
 
 Strand::
 Sync::~Sync()
 {
   if (!pd_strand) return;
-
-  Rope *r = pd_strand->pd_rope;
-
-  r->pd_lock.lock();
 
   // remove this from the list in strand <pd_strand>
   Strand::Sync **p = &pd_strand->pd_head;
@@ -257,17 +239,12 @@ Sync::~Sync()
   pd_strand->decrRefCount(1);
 
   // If this is the last sync object and the strand is dying, delete it.
-  if (pd_strand->is_idle(1) && strandIsDying())
+  if (pd_strand->is_idle(1) && pd_strand->_strandIsDying())
     {
-      if (pd_strand->pd_heapAllocated)
-  	delete pd_strand;
-      else
-  	pd_strand->~Strand();
+      delete pd_strand;
     }
   
   pd_strand = 0;
-  r->pd_lock.unlock();
-  return;
 }
 
 void
@@ -351,63 +328,31 @@ Sync::WrUnlock(CORBA::Boolean held_rope_mutex)
   return;
 }
 
-void
+CORBA::Boolean
 Strand::
-Sync::clicksSet(int clicks, CORBA::Boolean held_rope_mutex)
+Sync::garbageCollect()
 {
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.lock();
-
-  pd_strand->pd_clicks = clicks;
-
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.unlock();
-}
-
-int
-Strand::
-Sync::clicksDecrAndGet(Strand* s)
-{
-  s->pd_clicks--;
-  return s->pd_clicks;
-}
-int
-Strand::
-Sync::clicksGet(Strand* s)
-{
-  return s->pd_clicks;
-}
-
-
-void
-Strand::
-Sync::setStrandIsDying()
-{
-  pd_strand->_setStrandIsDying();
-  return;
+  // The default is not to garbageCollect.
+  // This function should be overloaded by the derived class to
+  // determine whether it is appropriate to garbage collect this strand.
+  return 0;
 }
 
 CORBA::Boolean
 Strand::
-Sync::strandIsDying()
+Sync::is_unused()
 {
-  return pd_strand->_strandIsDying();
-}
-
-CORBA::Boolean
-Strand::
-Sync::isReUsingExistingConnection() const
-{
-  return pd_secondHand;
+  // The default is always indicate the strand is unused.
+  // This function should be overloaded by the derived class to
+  // determine whether it is really unused.
+  return 1;
 }
 
 Rope::Rope(Anchor *a,
-	   unsigned int maxStrands,
-	   CORBA::Boolean heapAllocated)
+	   unsigned int maxStrands)
   : pd_lock()
 {
   pd_head = 0;
-  pd_heapAllocated = heapAllocated;
   pd_maxStrands = maxStrands;
   pd_anchor = a;
   pd_refcount = 0;
@@ -449,7 +394,7 @@ Rope::CutStrands(CORBA::Boolean held_rope_mutex)
 }
 
 Strand *
-Rope::getStrand(CORBA::Boolean& secondHand)
+Rope::getStrand()
 {
   Strand *p;
   unsigned int n = 0;
@@ -458,22 +403,19 @@ Rope::getStrand(CORBA::Boolean& secondHand)
     while ((p = next())) {
       if (!p->_strandIsDying()) {
 	n++;
-	if (p->is_unused(1)) {
-	  secondHand = 1;
+	Strand::Sync* q;
+	if (!(q = Strand::Sync::getSync(p)) || q->is_unused())
 	  break;
-	}
       }
     }
   }
   if (!p) {
     if (n < pd_maxStrands) {
       p = newStrand();
-      secondHand = 0;
     }
     else {
       Strand_iterator next(this,1);
       p = next();
-      secondHand = 1;
     }
   }
   return p;
@@ -578,10 +520,7 @@ Strand_iterator::operator() ()
   while (pd_s && pd_s->is_idle(1) && pd_s->_strandIsDying()) {
     Strand *p=pd_s;
     pd_s = pd_s->pd_next;
-    if (p->pd_heapAllocated)
-      delete p;
-    else
-      p->~Strand();
+    delete p;
   }
   if (pd_s) {
     pd_s->incrRefCount(1);
@@ -642,17 +581,11 @@ Rope_iterator::operator() ()
 		  }
 		  p->shutdown();
 		  Strand* np = p->pd_next;
-		  if (p->pd_heapAllocated)
-		    delete p;
-		  else
-		    p->~Strand();
+		  delete p;
 		  p = np;
 		}
 	      rp->pd_lock.unlock();
-	      if (rp->pd_heapAllocated)
-		delete rp;
-	      else
-		rp->~Rope();
+	      delete rp;
 	      continue;
 	    }
 	}

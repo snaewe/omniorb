@@ -27,6 +27,14 @@
 
 /*
   $Log$
+  Revision 1.29.4.1  1999/09/15 20:18:40  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.29  1999/08/30 18:48:39  sll
   *** empty log message ***
 
@@ -805,19 +813,11 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
 
       IND(s); s << (in_root ? "":"friend ")
 		<< "inline void operator >>= (" << e->unambiguous_name(tdef)
-		<< ", NetBufferedStream&);\n";
+		<< ", cdrStream&);\n";
 
       IND(s); s << (in_root ? "":"friend ")
 		<< "inline void operator <<= (" << e->unambiguous_name(tdef)
-		<< "&, NetBufferedStream&);\n";
-
-      IND(s); s << (in_root ? "":"friend ")
-		<< "inline void operator >>= (" << e->unambiguous_name(tdef)
-		<< ", MemBufferedStream&);\n";
-
-      IND(s); s << (in_root ? "":"friend ")
-		<< "inline void operator <<= (" << e->unambiguous_name(tdef)
-		<< "&, MemBufferedStream&);\n";
+		<< "&, cdrStream&);\n";
 
       s << "#endif\n";
     }

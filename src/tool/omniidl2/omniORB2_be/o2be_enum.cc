@@ -28,6 +28,14 @@
 
 /*
   $Log$
+  Revision 1.15.4.1  1999/09/15 20:18:45  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.15  1999/07/02 19:14:16  sll
   Typedef of a typedef of an enum now translates to a C++ typedef of a
   typedef.
@@ -169,7 +177,7 @@ void
 o2be_enum::produce_binary_operators_in_hdr(std::fstream &s)
 {
   IND(s); s << "inline void operator >>=(" << fqname()
-	    << " _e, NetBufferedStream& s) {\n";
+	    << " _e, cdrStream& s) {\n";
 
   INC_INDENT_LEVEL();
   IND(s); s << "::operator>>=((CORBA::ULong)_e, s);\n";
@@ -177,42 +185,8 @@ o2be_enum::produce_binary_operators_in_hdr(std::fstream &s)
   IND(s); s << "}\n\n";
 
   IND(s); s << "inline void operator <<= (" << fqname()
-	    << "& _e, NetBufferedStream& s) {\n";
+	    << "& _e, cdrStream& s) {\n";
 
-  INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::ULong _0RL_e;\n";
-  IND(s); s << "::operator<<=(_0RL_e,s);\n";
-  IND(s); s << "switch (_0RL_e) {\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, IK_decls);
-    while (!(i.is_done())) {
-      IND(s) s << "case " << o2be_name::narrow_and_produce_fqname(i.item()) << ":\n";
-      i.next();
-    }
-  }
-  INC_INDENT_LEVEL();
-  IND(s); s << "_e = (" << fqname() << ") _0RL_e;\n";
-  IND(s); s << "break;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "default:\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "_CORBA_marshal_error();\n";
-  DEC_INDENT_LEVEL();
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << "inline void operator>>= (" << fqname()
-	    << " _e, MemBufferedStream& s) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << "inline void operator<<= (" << fqname()
-	    << "& _e,MemBufferedStream& s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong _0RL_e;\n";
   IND(s); s << "::operator<<=(_0RL_e,s);\n";

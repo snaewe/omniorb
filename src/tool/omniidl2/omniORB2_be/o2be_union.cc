@@ -28,6 +28,14 @@
 
 /*
   $Log$
+  Revision 1.31.4.1  1999/09/15 20:18:39  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.31  1999/08/20 11:37:57  djr
   Bug in generated MACRO -- too many )'s.
 
@@ -1030,11 +1038,8 @@ o2be_union::produce_hdr(std::fstream& s)
 
 
   IND(s); s << "\n";
-  IND(s); s << "size_t NP_alignedSize(size_t initialoffset) const;\n";
-  IND(s); s << "void operator>>= (NetBufferedStream&) const;\n";
-  IND(s); s << "void operator<<= (NetBufferedStream&);\n";
-  IND(s); s << "void operator>>= (MemBufferedStream&) const;\n";
-  IND(s); s << "void operator<<= (MemBufferedStream&);\n\n";
+  IND(s); s << "void operator>>= (cdrStream&) const;\n";
+  IND(s); s << "void operator<<= (cdrStream&);\n";
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     s << "#if defined(__GNUG__) || defined(__DECCXX) && (__DECCXX_VER < 60000000)\n";
@@ -1254,151 +1259,8 @@ o2be_union::produce_skel(std::fstream& s)
 
   s << "\n";
 
-  IND(s); s << "size_t\n";
-  IND(s); s << fqname() << "::NP_alignedSize(size_t initialoffset) const\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::ULong _msgsize = initialoffset;\n";
-  {
-    o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     disc_type(),
-		     o2be_operation::wIN,mapping);
-    o2be_operation::produceSizeCalculation(
-		     s,
-		     disc_type(),
-		     ScopeAsDecl(defined_in()),
-		     "",
-		     "_msgsize",
-		     "pd__d",
-		     ntype,
-		     mapping);
-  }
-
-  if (!(nodefault() && no_missing_disc_value()))
-    {
-      IND(s); s << "if (pd__default) {\n";
-      INC_INDENT_LEVEL();
-      {
-	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-	while (!i.is_done())
-	  {
-	    AST_Decl* d = i.item();
-	    if (d->node_type() == AST_Decl::NT_union_branch)
-	      {
-		AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
-		if (l->label_kind() == AST_UnionLabel::UL_default)
-		  {
-		    o2be_field *f = o2be_union_branch::narrow_from_decl(d);
-		    o2be_operation::argMapping mapping;
-		    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-										   f->field_type(),
-										   o2be_operation::wIN,mapping);
-		    if (ntype == o2be_operation::tString) {
-		      ntype = o2be_operation::tStringMember;
-		      mapping.is_pointer = I_FALSE;
-		    }
-		    else if (ntype == o2be_operation::tObjref) {
-		      ntype = o2be_operation::tObjrefMember;
-		      mapping.is_pointer = I_FALSE;
-		    }
-		    else if (ntype == o2be_operation::tTypeCode) {
-		      ntype = o2be_operation::tTypeCodeMember;
-		      mapping.is_pointer = I_FALSE;
-		    }
-
-		    char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
-		    strcpy(tmpname,"pd_");
-		    strcat(tmpname,f->uqname());
-		    o2be_operation::produceSizeCalculation(
-							   s,
-							   f->field_type(),
-							   ScopeAsDecl(defined_in()),
-							   "",
-							   "_msgsize",
-							   tmpname,
-							   ntype,
-							   mapping);
-		    delete [] tmpname;
-		    break;
-		  }
-	      }
-	    i.next();
-	  }
-      }
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      IND(s); s << "else {\n";
-    }
-  INC_INDENT_LEVEL();
-  IND(s); s << "switch(pd__d) {\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	if (d->node_type() == AST_Decl::NT_union_branch)
-	  {
-	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
-	    if (l->label_kind() == AST_UnionLabel::UL_label)
-	      {
-		o2be_field *f = o2be_union_branch::narrow_from_decl(d);
-		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val(),this);
-		s << ":\n";
-		INC_INDENT_LEVEL();
-		o2be_operation::argMapping mapping;
-		o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     f->field_type(),
-		     o2be_operation::wIN,mapping);
-		if (ntype == o2be_operation::tString) {
-		  ntype = o2be_operation::tStringMember;
-		  mapping.is_pointer = I_FALSE;
-		}
-		else if (ntype == o2be_operation::tObjref) {
-		  ntype = o2be_operation::tObjrefMember;
-		  mapping.is_pointer = I_FALSE;
-		}
-		else if (ntype == o2be_operation::tTypeCode) {
-		  ntype = o2be_operation::tTypeCodeMember;
-		  mapping.is_pointer = I_FALSE;
-		}
-
-		char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
-		strcpy(tmpname,"pd_");
-		strcat(tmpname,f->uqname());
-		o2be_operation::produceSizeCalculation(
-		     s,
-		     f->field_type(),
-		     ScopeAsDecl(defined_in()),
-		     "",
-		     "_msgsize",
-		     tmpname,
-		     ntype,
-		     mapping);
-		delete [] tmpname;
-		IND(s); s << "break;\n";
-		DEC_INDENT_LEVEL();
-	      }
-	  }
-	i.next();
-      }
-  }
-  produce_default_break(*this, s);
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
-  if (!(nodefault() && no_missing_disc_value()))
-    {
-      IND(s); s << "}\n";
-    }
-  IND(s); s << "return _msgsize;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
   IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator>>= (NetBufferedStream& _n) const\n";
+  IND(s); s << fqname() << "::operator>>= (cdrStream& _n) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   {
@@ -1535,7 +1397,7 @@ o2be_union::produce_skel(std::fstream& s)
   IND(s); s << "}\n\n";
 
   IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator<<= (NetBufferedStream& _n)\n";
+  IND(s); s << fqname() << "::operator<<= (cdrStream& _n)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   {
@@ -1622,229 +1484,6 @@ o2be_union::produce_skel(std::fstream& s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
   
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator>>= (MemBufferedStream& _n) const\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     disc_type(),
-		     o2be_operation::wIN,mapping);
-    o2be_operation::produceMarshalCode(
-		     s,
-		     disc_type(),
-		     ScopeAsDecl(defined_in()),
-		     "_n",
-		     "pd__d",
-		     ntype,
-		     mapping);
-  }
-  if (!(nodefault() && no_missing_disc_value()))
-    {
-      IND(s); s << "if (pd__default) {\n";
-      INC_INDENT_LEVEL();
-      {
-	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-	while (!i.is_done())
-	  {
-	    AST_Decl* d = i.item();
-	    if (d->node_type() == AST_Decl::NT_union_branch)
-	      {
-		AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
-		if (l->label_kind() == AST_UnionLabel::UL_default)
-		  {
-		    o2be_field *f = o2be_union_branch::narrow_from_decl(d);
-		    o2be_operation::argMapping mapping;
-		    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-										   f->field_type(),
-										   o2be_operation::wIN,mapping);
-		    if (ntype == o2be_operation::tString) {
-		      ntype = o2be_operation::tStringMember;
-		      mapping.is_pointer = I_FALSE;
-		    }
-		    else if (ntype == o2be_operation::tObjref) {
-		      ntype = o2be_operation::tObjrefMember;
-		      mapping.is_pointer = I_FALSE;
-		    }
-		    else if (ntype == o2be_operation::tTypeCode) {
-		      ntype = o2be_operation::tTypeCodeMember;
-		      mapping.is_pointer = I_FALSE;
-		    }
-
-		    char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
-		    strcpy(tmpname,"pd_");
-		    strcat(tmpname,f->uqname());
-		    o2be_operation::produceMarshalCode(
-						       s,
-						       f->field_type(),
-						       ScopeAsDecl(defined_in()),
-						       "_n",
-						       tmpname,
-						       ntype,
-						       mapping);
-		    delete [] tmpname;
-		    break;
-		  }
-	      }
-	    i.next();
-	  }
-      }
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      IND(s); s << "else {\n";
-    }
-  INC_INDENT_LEVEL();
-  IND(s); s << "switch(pd__d) {\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	if (d->node_type() == AST_Decl::NT_union_branch)
-	  {
-	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
-	    if (l->label_kind() == AST_UnionLabel::UL_label)
-	      {
-		o2be_field *f = o2be_union_branch::narrow_from_decl(d);
-		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val(),this);
-		s << ":\n";
-		INC_INDENT_LEVEL();
-		o2be_operation::argMapping mapping;
-		o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     f->field_type(),
-		     o2be_operation::wIN,mapping);
-		if (ntype == o2be_operation::tString) {
-		  ntype = o2be_operation::tStringMember;
-		  mapping.is_pointer = I_FALSE;
-		}
-		else if (ntype == o2be_operation::tObjref) {
-		  ntype = o2be_operation::tObjrefMember;
-		  mapping.is_pointer = I_FALSE;
-		}
-		else if (ntype == o2be_operation::tTypeCode) {
-		  ntype = o2be_operation::tTypeCodeMember;
-		  mapping.is_pointer = I_FALSE;
-		}
-
-		char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
-		strcpy(tmpname,"pd_");
-		strcat(tmpname,f->uqname());
-		o2be_operation::produceMarshalCode(
-		     s,
-		     f->field_type(),
-		     ScopeAsDecl(defined_in()),
-		     "_n",
-		     tmpname,
-		     ntype,
-		     mapping);
-		delete [] tmpname;
-		IND(s); s << "break;\n";
-		DEC_INDENT_LEVEL();
-	      }
-	  }
-	i.next();
-      }
-  }
-  produce_default_break(*this, s);
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
-  if (!(nodefault() && no_missing_disc_value()))
-    {
-      IND(s); s << "}\n";
-    }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator<<= (MemBufferedStream& _n)\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     disc_type(),
-		     o2be_operation::wIN,mapping);
-    o2be_operation::produceUnMarshalCode(
-		     s,
-		     disc_type(),
-		     ScopeAsDecl(defined_in()),
-		     "_n",
-		     "pd__d",
-		     ntype,
-		     mapping);
-  }
-
-  IND(s); s << "switch(pd__d) {\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	if (d->node_type() == AST_Decl::NT_union_branch)
-	  {
-	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
-	    o2be_field *f = o2be_union_branch::narrow_from_decl(d);
-	    if (l->label_kind() == AST_UnionLabel::UL_label)
-	      {
-		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val(),this);
-		s << ":\n";
-		INC_INDENT_LEVEL();
-		IND(s); s << "pd__default = 0;\n";
-	      }
-	    else
-	      {
-		IND(s); s << "default:\n";
-		INC_INDENT_LEVEL();
-		IND(s); s << "pd__default = 1;\n";
-	      }
-	    o2be_operation::argMapping mapping;
-	    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     f->field_type(),
-		     o2be_operation::wIN,mapping);
-	    if (ntype == o2be_operation::tString) {
-	      ntype = o2be_operation::tStringMember;
-	      mapping.is_pointer = I_FALSE;
-	    }
-	    else if (ntype == o2be_operation::tObjref) {
-	      ntype = o2be_operation::tObjrefMember;
-	      mapping.is_pointer = I_FALSE;
-	    }
-	    else if (ntype == o2be_operation::tTypeCode) {
-	      ntype = o2be_operation::tTypeCodeMember;
-	      mapping.is_pointer = I_FALSE;
-	    }
-
-	    char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
-	    strcpy(tmpname,"pd_");
-	    strcat(tmpname,f->uqname());
-	    o2be_operation::produceUnMarshalCode(
-		     s,
-		     f->field_type(),
-		     ScopeAsDecl(defined_in()),
-		     "_n",
-		     tmpname,
-		     ntype,
-		     mapping);
-	    delete [] tmpname;
-	    IND(s); s << "break;\n";
-	    DEC_INDENT_LEVEL();
-	  }
-	i.next();
-      }
-  }
-  if (nodefault() && !no_missing_disc_value()) {
-    IND(s); s << "default: pd__default = 1; break;\n";
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
 }
 
 

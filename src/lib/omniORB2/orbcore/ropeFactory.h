@@ -29,6 +29,14 @@
 
 /*
  $Log$
+ Revision 1.7.4.1  1999/09/15 20:18:29  sll
+ Updated to use the new cdrStream abstraction.
+ Marshalling operators for NetBufferedStream and MemBufferedStream are now
+ replaced with just one version for cdrStream.
+ Derived class giopStream implements the cdrStream abstraction over a
+ network connection whereas the cdrMemoryStream implements the abstraction
+ with in memory buffer.
+
  Revision 1.7  1999/08/16 19:27:41  sll
  The ctor of ropeFactory_iterator now takes a pointer argument.
 
@@ -50,6 +58,10 @@
 #ifndef __ROPEFACTORY_H__
 #define __ROPEFACTORY_H__
 
+#ifndef __GIOPOBJECTINFO_H_EXTERNAL_GUARD__
+#define __GIOPOBJECTINFO_H_EXTERNAL_GUARD__
+#include <giopObjectInfo.h>
+#endif
 
 // Each derived ropeFactory implements a set of policies:
 //
@@ -119,11 +131,10 @@ public:
   virtual CORBA::Boolean decodeIOPprofile(const IOP::TaggedProfile& profile,
 					  // return values:
 					  Endpoint*&     addr,
-					  CORBA::Octet*& objkey,
-					  size_t&        objkeysize) const = 0;
+					  GIOPObjectInfo* objectInfo)const = 0;
   // If the return value is TRUE (1), the IOP profile can be decoded by
   // this factory (i.e. is_IOPprofileId(profile.tag) returns TRUE). Its
-  // content is returned in <addr>, <objkey>, <objkeysize>. <addr> and <objkey>
+  // content is returned in <addr> and <objectInfo>>. <addr> is
   // are heap allocated by this function and should be released by the caller.
   //
   // This function may raise a CORBA::MARSHALL or a CORBA::NO_MEMORY exception.
@@ -199,11 +210,8 @@ public:
   // Rope_iterator() (defined in rope.h) and pass this factory instance to
   // its ctor.
 
+  static omniObject* iopProfilesToRope(GIOPObjectInfo* objectInfo);
 
-  static omniObject* iopProfilesToRope(const IOP::TaggedProfileList *profiles,
-				       _CORBA_Octet *&objkey,
-				       size_t &keysize,
-				       Rope_var& rope);
   // Look at the IOP tagged profile list <profiles>, returns the most
   // most suitable Rope to talk to the object and its object key.
   // If no suitable Rope can be found, throw an exception.

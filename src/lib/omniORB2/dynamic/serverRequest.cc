@@ -29,6 +29,14 @@
 
 /*
  $Log$
+ Revision 1.7.4.1  1999/09/15 20:18:22  sll
+ Updated to use the new cdrStream abstraction.
+ Marshalling operators for NetBufferedStream and MemBufferedStream are now
+ replaced with just one version for cdrStream.
+ Derived class giopStream implements the cdrStream abstraction over a
+ network connection whereas the cdrMemoryStream implements the abstraction
+ with in memory buffer.
+
  Revision 1.7  1999/08/30 19:02:39  sll
  Added ENABLE_CLIENT_IR_SUPPORT.
 
@@ -80,9 +88,11 @@ ServerRequestImpl::ctx()
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
   }
 
-  if( pd_giopS->RdMessageUnRead() >= 4 ) {
+  cdrStream& s = *pd_giopS;
+
+  if(s.checkInputOverrun(1,4,omni::ALIGN_1)) {
     pd_state = SR_ERROR;
-    pd_context = CORBA::Context::unmarshalContext(*pd_giopS);
+    pd_context = CORBA::Context::unmarshalContext(s);
     pd_state = SR_GOT_PARAMS;
   } else
     pd_context = new ContextImpl("", CORBA::Context::_nil());
@@ -111,7 +121,7 @@ ServerRequestImpl::params(CORBA::NVList_ptr parameters)
     for( CORBA::ULong i = 0; i < num_args; i++){
       CORBA::NamedValue_ptr arg = pd_params->item(i);
       if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
-	arg->value()->NP_unmarshalDataOnly(*pd_giopS);
+	arg->value()->NP_unmarshalDataOnly((cdrStream&)*pd_giopS);
     }
   }
 

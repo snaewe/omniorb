@@ -29,6 +29,14 @@
 
 /*
  $Log$
+ Revision 1.46.4.1  1999/09/15 20:18:15  sll
+ Updated to use the new cdrStream abstraction.
+ Marshalling operators for NetBufferedStream and MemBufferedStream are now
+ replaced with just one version for cdrStream.
+ Derived class giopStream implements the cdrStream abstraction over a
+ network connection whereas the cdrMemoryStream implements the abstraction
+ with in memory buffer.
+
  Revision 1.46  1999/08/30 18:45:58  sll
  Made #include ir stubs conditional on ENABLE_CLIENT_IR_SUPPORT.
  Application code has to define ENABLE_CLIENT_IR_SUPPORT in order to act
@@ -202,8 +210,6 @@
 #endif
 
 #include <omniORB2/omniInternal.h>
-#include <omniORB2/templatedecls.h>
-#include <omniORB2/stringtypes.h>
 
 _CORBA_MODULE CORBA
 
@@ -283,25 +289,15 @@ _CORBA_MODULE_BEG
     Any(TypeCode_ptr tc, void* value, Boolean release = 0);	
 
     // Marshalling operators
-    void operator>>= (NetBufferedStream& s) const;
-    void operator<<= (NetBufferedStream& s);
-
-    void operator>>= (MemBufferedStream& s) const;
-    void operator<<= (MemBufferedStream& s);
-
-    size_t NP_alignedSize(size_t initialoffset) const;
+    void operator>>= (cdrStream& s) const;
+    void operator<<= (cdrStream& s);
 
     void* NP_pd() { return pd_ptr; }
     void* NP_pd() const { return pd_ptr; }
 
     // omniORB2 data-only marshalling functions
-    void NP_marshalDataOnly(NetBufferedStream& s) const;
-    void NP_unmarshalDataOnly(NetBufferedStream& s);
-
-    void NP_marshalDataOnly(MemBufferedStream& s) const;
-    void NP_unmarshalDataOnly(MemBufferedStream& s);
-
-    size_t NP_alignedDataOnlySize(size_t initialoffset) const;
+    void NP_marshalDataOnly(cdrStream& s) const;
+    void NP_unmarshalDataOnly(cdrStream& s);
 
     // omniORB2 internal stub support routines
     void PR_packFrom(TypeCode_ptr newtc, void* tcdesc);
@@ -1163,14 +1159,9 @@ _CORBA_MODULE_BEG
     static Context_ptr _nil();
 
     // omniORB2 specifics.
-    static size_t NP_alignedSize(Context_ptr ctxt, const char*const* which,
-				 int whichlen, size_t initialoffset);
     static void marshalContext(Context_ptr ctxt, const char*const* which,
-			       int whichlen, NetBufferedStream& s);
-    static void marshalContext(Context_ptr ctxt, const char*const* which,
-			       int whichlen, MemBufferedStream& s);
-    static Context_ptr unmarshalContext(NetBufferedStream& s);
-    static Context_ptr unmarshalContext(MemBufferedStream& s);
+			       int whichlen, cdrStream& s);
+    static Context_ptr unmarshalContext(cdrStream& s);
 
     static inline _CORBA_Boolean PR_is_valid(Context_ptr p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
@@ -1395,11 +1386,8 @@ _CORBA_MODULE_BEG
 
     TypeCode_ptr _ptr;
 
-    void operator>>=(NetBufferedStream& s) const;
-    void operator<<=(NetBufferedStream& s);
-    void operator>>=(MemBufferedStream& s) const;
-    void operator<<=(MemBufferedStream& s);
-    size_t NP_alignedSize(size_t initialoffset) const;
+    void operator>>=(cdrStream& s) const;
+    void operator<<=(cdrStream& s);
   };
 
 
@@ -1452,11 +1440,8 @@ _CORBA_MODULE_BEG
     static _CORBA_Boolean is_nil(Object_ptr obj);
     static void release(Object_ptr obj);
     static void duplicate(Object_ptr obj);
-    static size_t NP_alignedSize(Object_ptr obj,size_t initialoffset);
-    static void marshalObjRef(Object_ptr obj,NetBufferedStream& s);
-    static Object_ptr unmarshalObjRef(NetBufferedStream& s);
-    static void marshalObjRef(Object_ptr obj,MemBufferedStream& s);
-    static Object_ptr unmarshalObjRef(MemBufferedStream& s);
+    static void marshalObjRef(Object_ptr obj,cdrStream& s);
+    static Object_ptr unmarshalObjRef(cdrStream& s);
   };
 
   class Object {
@@ -1499,11 +1484,8 @@ _CORBA_MODULE_BEG
     _CORBA_Boolean NP_is_nil() const;
     void PR_setobj(omniObject *obj);
     omniObject *PR_getobj();
-    static size_t NP_alignedSize(Object_ptr obj, size_t initialoffset);
-    static void marshalObjRef(Object_ptr obj, NetBufferedStream& s);
-    static Object_ptr unmarshalObjRef(NetBufferedStream& s);
-    static void marshalObjRef(Object_ptr obj, MemBufferedStream& s);
-    static Object_ptr unmarshalObjRef(MemBufferedStream& s);
+    static void marshalObjRef(Object_ptr obj, cdrStream& s);
+    static Object_ptr unmarshalObjRef(cdrStream& s);
     static Object CORBA_Object_nil;
     static const _CORBA_Char* repositoryID;
 
@@ -1658,12 +1640,9 @@ _CORBA_MODULE_BEG
       virtual const char* _NP_mostDerivedTypeId() const;
     };
 
-    static void marshalTypeCode(TypeCode_ptr obj,NetBufferedStream& s);
-    static TypeCode_ptr unmarshalTypeCode(NetBufferedStream& s);
+    static void marshalTypeCode(TypeCode_ptr obj,cdrStream& s);
+    static TypeCode_ptr unmarshalTypeCode(cdrStream& s);
     // omniORB2 marshalling & support routines
-
-    static void marshalTypeCode(TypeCode_ptr obj,MemBufferedStream& s);
-    static TypeCode_ptr unmarshalTypeCode(MemBufferedStream& s);
 
     // omniORB only static constructors
     // 1) These constructors are used by omniORB stubs & libraries to produce
@@ -1734,7 +1713,6 @@ _CORBA_MODULE_BEG
     static TypeCode_ptr PR_string_tc();
 
     // omniORB internal functions
-    size_t NP_alignedSize(size_t initialoffset) const;
     virtual CORBA::Boolean NP_is_nil() const;
 
     static inline _CORBA_Boolean PR_is_valid(TypeCode_ptr p ) {
@@ -2716,7 +2694,6 @@ _CORBA_MODULE_BEG
     // Calling this function would destroy the ORB runtime. After this function
     // is called, the ORB_ptr should not be used.
 
-
     static ORB_ptr _duplicate(ORB_ptr p);
     static ORB_ptr _nil();
 
@@ -2845,20 +2822,6 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN void release(DynAny_ptr d);
 
 
-  // omniORB2 private functions.
-  _CORBA_MODULE_FN Object_ptr UnMarshalObjRef(const char *repoId,
-					      NetBufferedStream& s);
-  _CORBA_MODULE_FN void MarshalObjRef(Object_ptr obj, const char *repoId,
-				      size_t repoIdSize, NetBufferedStream& s);
-  _CORBA_MODULE_FN size_t AlignedObjRef(Object_ptr obj, const char *repoId,
-					size_t repoIdSize,
-					size_t initialoffset);
-  _CORBA_MODULE_FN Object_ptr UnMarshalObjRef(const char *repoId,
-					      MemBufferedStream& s);
-  _CORBA_MODULE_FN void MarshalObjRef(Object_ptr obj, const char* repoId,
-				      size_t repoIdSize, MemBufferedStream& s);
-
-
   class Object_member;
   class Object_INOUT_arg;
   class Object_OUT_arg;
@@ -2967,21 +2930,10 @@ private:
       return *this;
     }
 
-    inline size_t NP_alignedSize(size_t initialoffset) const {
-      return CORBA::Object::NP_alignedSize(_ptr,initialoffset);
-    }
-    inline void operator>>= (NetBufferedStream& s) const {
+    inline void operator>>= (cdrStream& s) const {
       CORBA::Object::marshalObjRef(_ptr,s);
     }
-    inline void operator<<= (NetBufferedStream& s) {
-      Object_ptr _result = CORBA::Object::unmarshalObjRef(s);
-      CORBA::release(_ptr);
-      _ptr = _result;
-    }
-    inline void operator>>= (MemBufferedStream& s) const {
-      CORBA::Object::marshalObjRef(_ptr,s);
-    }
-    inline void operator<<= (MemBufferedStream& s) {
+    inline void operator<<= (cdrStream& s) {
       Object_ptr _result = CORBA::Object::unmarshalObjRef(s);
       CORBA::release(_ptr);
       _ptr = _result;
@@ -3266,12 +3218,15 @@ private:
   
     virtual const char *irRepoId() const = 0;
     // returns the Interface Repository ID.
-       
+
+#if 0       
     virtual CORBA::Object_ptr newProxyObject(Rope *r,
 					     _CORBA_Octet *key,
 					     size_t keysize,
 					     IOP::TaggedProfileList *profiles,
 					     _CORBA_Boolean release) = 0;
+#endif
+    virtual CORBA::Object_ptr newProxyObject(GIOPObjectInfo* objInfo) = 0;
     // returns a new proxy object.
 
     virtual _CORBA_Boolean  is_a(const char *base_repoId) const = 0;

@@ -31,26 +31,38 @@
 // TypeCode-oriented data parser.
 //
 //  The tcParser class is initialised with a TypeCode and
-// a MemBufferedStream. The MemBufferedStream is used to
+// a cdrMemoryStream. The cdrMemoryStream is used to
 // store data of type described by the associated TypeCode.
 //
 //  The operations <copyTo> and <copyFrom> are used to
-// insert and extract the data from the MemBufferedStream.
+// insert and extract the data from the cdrMemoryStream.
 // Overloaded versions are provided to marshal the data
-// into and out of Mem and Net BufferedStreams - this is
+// into and out of cdrStreams - this is
 // used for (un)marshalling values of type Any.
 //
 //  In addition the data passed into and out of the internal
-// MemBufferedStream may be described by a tcDescriptor.
+// cdrMemoryStream may be described by a tcDescriptor.
 // The user of the tcParser will setup a tcDescriptor to
 // describe where the data to be copied to/from the
-// MemBufferedStream is in memory. For simple types this is
+// cdrMemoryStream is in memory. For simple types this is
 // a pointer to the location in memory. For more complex
 // types the tcDescriptor provides call-backs to provide
 // additional information such as the length and data of
 // a string, or to create a tcDescriptor for the members
 // of a struct.
 //
+
+/*
+  $Log$
+  Revision 1.5.4.1  1999/09/15 20:18:13  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
+*/
 
 #ifndef __TCDESCRIPTOR_H__
 #define __TCDESCRIPTOR_H__

@@ -29,26 +29,38 @@
 // TypeCode-oriented data parser.
 //
 //  The tcParser class is initialised with a TypeCode and
-// a MemBufferedStream. The MemBufferedStream is used to
+// a cdrMemoryStream. The cdrMemoryStream is used to
 // store data of type described by the associated TypeCode.
 //
 //  The operations <copyTo> and <copyFrom> are used to
-// insert and extract the data from the MemBufferedStream.
+// insert and extract the data from the cdrMemoryStream.
 // Overloaded versions are provided to marshal the data
-// into and out of Mem and Net BufferedStreams - this is
+// into and out of cdrStream - this is
 // used for (un)marshalling values of type Any.
 //
 //  In addition the data passed into and out of the internal
-// MemBufferedStream may be described by a tcDescriptor.
+// cdrMemoryStream may be described by a tcDescriptor.
 // The user of the tcParser will setup a tcDescriptor to
 // describe where the data to be copied to/from the
-// MemBufferedStream is in memory. For simple types this is
+// cdrMemoryStream is in memory. For simple types this is
 // a pointer to the location in memory. For more complex
 // types the tcDescriptor provides call-backs to provide
 // additional information such as the length and data of
 // a string, or to create a tcDescriptor for the members
 // of a struct.
 //
+
+/*
+  $Log$
+  Revision 1.3.4.1  1999/09/15 20:18:21  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
+*/
 
 #ifndef __TCPARSER_H__
 #define __TCPARSER_H__
@@ -62,19 +74,18 @@ class TypeCode_base;
 class tcParser
 {
 public:
-  tcParser(MemBufferedStream& mbuf, CORBA::TypeCode_ptr tc)
+  tcParser(cdrMemoryStream& mbuf, CORBA::TypeCode_ptr tc)
     : pd_mbuf(mbuf), pd_tc(CORBA::TypeCode::_duplicate(tc)) {}
-  // Pass in a Membufferedstream to use and a TypeCode describing
+  // Pass in a cdrMemorystream to use and a TypeCode describing
   // how to arrange the data within it. The stream passed in MUST
   // exist for at least as long as this tcParser object. The
   // TypeCode will be duplicated by the tcParser for internal use
   // (and released by the destructor).
   //  <tc> must not be nil.
 
-  void copyTo(NetBufferedStream &nbuf, int rewind=1);
-  void copyTo(MemBufferedStream &mbuf, int rewind=1);
+  void copyTo(cdrStream& buf, int rewind=1); 
   // Marshals the contents of the tcParser's mbuf into the
-  // specified Net or Mem buffered stream, according to the
+  // specified giopStream or a cdrMemoryStream, according to the
   // associated TypeCode. If <rewind> is true (default) then
   // the mbuf is rewound first.
   //  Throws CORBA::MARSHAL on error.
@@ -84,8 +95,8 @@ public:
   // described by the tcDescriptor structure.
   //  Throws CORBA::MARSHAL on error.
 
-  void copyFrom(NetBufferedStream &nbuf, int flush=1);
-  void copyFrom(MemBufferedStream &mbuf, int flush=1);
+
+  void copyFrom(cdrStream& buf, int flush=1);
   // Marshals a value of the type given by the internal TypeCode
   // from the supplied stream into the internal buffer. If <flush>
   // is true (default) then it flushes the internal buffer first.
@@ -98,13 +109,6 @@ public:
   // the internal buffer first.
   //  Should not ever fail - so no exceptions are thrown.
 
-  size_t alignedSize(size_t initialoffset);
-  // Accepts an initialoffset and returns what the offset
-  // would be if the data were marshalled with the CDR
-  // alignment restriction, at the initialoffset specified.
-  // The operation involves traversing the data tree, which
-  // could potentially be an expensive thing to do.
-
   CORBA::TypeCode_ptr getTC() const;
   // Return a pointer to the TC currently used to control
   // the behaviour of this parser.
@@ -114,8 +118,7 @@ public:
   // with pd_tc, replace pd_tc with the value of tc.
   // Otherwise raises the BAD_TYPECODE exception
 
-  static void skip(MemBufferedStream&, CORBA::TypeCode_ptr tc);
-  static void skip(NetBufferedStream&, CORBA::TypeCode_ptr tc);
+  static void skip(cdrStream&, CORBA::TypeCode_ptr tc);
   // Read and discard a value of type <tc> from the stream.
   // Throws a CORBA::MARSHAL exception if a marshalling error
   // is encountered.
@@ -143,26 +146,9 @@ private:
   // from the buffer.
   void fetchSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata);
 
-  // calculateItemSize
-  // Examines the data at the current position in the internal
-  // buffer and returns the offset resulting from marshalling
-  // that data using CDR semantics, at the specified initialoffet,
-  // into another buffer.
-  size_t calculateItemSize(const TypeCode_base *tc,
-			   const size_t initialoffset);
-
-  // calculateSimpleItemSize
-  // Examines the data at the current position in the internal
-  // buffer and returns the offset resulting from marshalling
-  // that data using CDR semantics, at the specified initialoffet,
-  // into another buffer.
-  size_t calculateSimpleItemSize(const CORBA::TCKind tck,
-				 const size_t initialoffset);
-
-
   // FIELDS
 
-  MemBufferedStream& pd_mbuf;
+  cdrMemoryStream& pd_mbuf;
   CORBA::TypeCode_var pd_tc;
 };
 

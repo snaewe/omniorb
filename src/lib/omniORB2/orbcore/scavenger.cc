@@ -28,14 +28,13 @@
  
 /*
   $Log$
-  Revision 1.10  1999/08/31 19:22:37  sll
-  Revert back to single inheritance. The bug that causes occasional thread
-  exit on startup has been identified. start_undetached() should be called
-  from the most derived type. Previously it was called in _Scavenger.
-
-  Revision 1.9  1999/08/30 16:49:00  sll
-  Scavenger threads now scan for idle connections and stuck remote calls.
-  Another thread Ripper_t is used to do the actual shutdown.
+  Revision 1.10.4.1  1999/09/15 20:18:28  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
 
   Revision 1.8  1999/08/16 19:27:20  sll
   Added a per-compilation unit initialiser object.
@@ -73,15 +72,13 @@
 #pragma hdrstop
 #endif
 
-#include <limits.h>
-
 #include <ropeFactory.h>
 #include <objectManager.h>
 #include <scavenger.h>
 
 class _Scavenger : public omni_thread {
 public:
-  _Scavenger() : pd_isdying(0), pd_cond(&pd_mutex)  {}
+  _Scavenger() : pd_isdying(0), pd_cond(&pd_mutex)  { }
   void poke() { pd_cond.signal(); }
   void setIsDying() { omni_mutex_lock sync(pd_mutex); pd_isdying = 1; }
   CORBA::Boolean isDying() const { return pd_isdying; }
@@ -91,44 +88,20 @@ protected:
   CORBA::Boolean pd_isdying;
   omni_mutex     pd_mutex;
   omni_condition pd_cond;
-};
 
-
-class Ripper_t : public _Scavenger {
-  // Instance of this class do the dirty work of calling shutdown on the
-  // strand. The call shutdown may actually block for considerable time.
-  // We do not want the in or out scavenger thread to lose track of
-  // time because of this.
-public:
-  virtual void* run_undetached(void * arg);
-
-  Ripper_t(const char* id,ropeFactoryList* l) : pd_id(id), 
-                                                pd_scan(0), pd_l(l) {
-    start_undetached();
-  }
-  virtual ~Ripper_t() {}
-
-  void triggerScan() { omni_mutex_lock sync(pd_mutex); pd_scan = 1; poke(); }
-
-private:
-  const char*      pd_id;
-  CORBA::Boolean   pd_scan;
-  ropeFactoryList* pd_l;
-  Ripper_t();
 };
 
 class inScavenger_t : public _Scavenger {
 public:
-  inScavenger_t () { start_undetached(); }
+  inScavenger_t() { start_undetached(); }
   virtual void* run_undetached(void *arg);
 protected:
   virtual ~inScavenger_t() {}
 };
 
-
 class outScavenger_t : public _Scavenger {
 public:
-  outScavenger_t () { start_undetached(); }
+  outScavenger_t() { start_undetached(); }
   virtual void* run_undetached(void *arg);
 protected:
   virtual ~outScavenger_t() {}
@@ -150,6 +123,7 @@ int StrandScavenger::clientCallTimeLimit() { return clientCallTimeLimit_; }
 int StrandScavenger::serverCallTimeLimit() { return serverCallTimeLimit_; }
 int StrandScavenger::outIdleTimeLimit() { return outIdleTimeLimit_; }
 int StrandScavenger::inIdleTimeLimit() { return inIdleTimeLimit_; }
+
 
 void
 StrandScavenger::initInScavenger()
@@ -202,90 +176,13 @@ StrandScavenger::killOutScavenger()
 }
 
 void*
-Ripper_t::run_undetached(void*)
-{
-  if (omniORB::traceLevel >= 15) {
-    omniORB::log << pd_id << " Ripper: start.\n";
-    omniORB::log.flush();
-  }
-
-  while (1) {
-
-    Strand *s;
-    {
-      omni_mutex_lock sync(pd_mutex);
-
-      while (!isDying() ) {
-	if (!pd_scan) {
-	  pd_cond.wait();
-	  continue;
-	}
-
-	if (omniORB::traceLevel >= 15) {
-	  omniORB::log << pd_id << " Ripper: scan.\n";
-	  omniORB::log.flush();
-	}
-
-	ropeFactory_iterator iter(pd_l);
-	ropeFactory* rp;
-
-	while ((rp = (ropeFactory*)iter())) {
-	  Rope_iterator next_rope(rp->anchor());
-	  Rope *r;
-	  while ((r = next_rope())) {
-	    Strand_iterator next_strand(r);
-	    while ((s = next_strand())) {
-	      if (!s->_strandIsDying() && Strand::Sync::clicksGet(s) < 0) {
-
-		// Should shutdown this strand. Release all mutexes before
-		// doing so. Increment the reference count on the strand
-		// to make sure that it does not go away once the
-		// mutexes have been released.
-		s->incrRefCount(1);
-		goto do_shutdown;
-	      }
-	    }
-	  }
-	}
-	pd_scan = 0;
-      }
-      goto cleanup;
-    }
-
-  do_shutdown:
-
-    // Do shutdown once the all the mutexes has been released.
-    // On some platform, e.g. linux and under certain condition,
-    // shutdown(2) actually blocks for seconds before returning.
-    // If we do shutdown while holding the mutexes, e.g. the
-    // rope mutex, we will stop the progress of other threads in
-    // the ORB. This is bad!
-
-    s->shutdown();
-    s->decrRefCount();
-
-    // XXX Go back to scan the strands all over again. This is rather
-    // inefficent especially when we have a long list of strands to
-    // shutdown.
-  }
- cleanup:
-
-  if (omniORB::traceLevel >= 15) {
-    omniORB::log << pd_id << " Ripper: exit.\n";
-    omniORB::log.flush();
-  }
-  return 0;
-}
-
-void*
-inScavenger_t::run_undetached(void *)
+inScavenger_t::run_undetached(void *arg)
 {
   if (omniORB::traceLevel >= 15) {
     omniORB::log << "inScavenger: start.\n";
     omniORB::log.flush();
   }
 
-  Ripper_t* ripper = new Ripper_t("in",omniObjectManager::root()->incomingRopeFactories());
   pd_mutex.lock();
   while (!isDying())
     {
@@ -310,15 +207,13 @@ inScavenger_t::run_undetached(void *)
       pd_mutex.unlock();
 
       if (omniORB::traceLevel >  10) {
-	omniORB::log << "inScavenger: scanning incoming connections\n";
+	omniORB::log << "inScavenger: scanning for idle incoming connections\n";
 	omniORB::log.flush();
       }
 
       {
 	ropeFactory_iterator iter(omniObjectManager::root()->incomingRopeFactories());
 	ropeFactory* rp;
-	CORBA::Boolean doshutdown = 0;
-
 	while ((rp = (ropeFactory*)iter())) {
 	  // Scan all the outgoing rope
 	  Rope_iterator next_rope(rp->anchor());
@@ -330,23 +225,21 @@ inScavenger_t::run_undetached(void *)
 	      Strand *s;
 	      while ((s = next_strand())) 
 		{
-		  if (!s->_strandIsDying() && 
-		      Strand::Sync::clicksDecrAndGet(s) < 0) {
-		      doshutdown = 1;
+		  Strand::Sync* q;
+		  if ((q = Strand::Sync::getSync(s)) && q->garbageCollect()) {
+		    if (omniORB::traceLevel > 10) {
+		      omniORB::log << "inScavenger: shutting down idle connection\n";
+		      omniORB::log.flush();
+		    }
+		    s->shutdown();
 		  }
 		}
 	    }
 	}
-	if (doshutdown) ripper->triggerScan();
       }
       pd_mutex.lock();
     }
   pd_mutex.unlock();
-
-  ripper->setIsDying();
-  ripper->triggerScan();
-  ripper->join(0);
-  ripper = 0;
 
   if (omniORB::traceLevel >= 15) {
     omniORB::log << "inScavenger: exit.\n";
@@ -356,14 +249,12 @@ inScavenger_t::run_undetached(void *)
 }
 
 void*
-outScavenger_t::run_undetached(void *)
+outScavenger_t::run_undetached(void *arg)
 {
   if (omniORB::traceLevel >= 15) {
     omniORB::log << "outScavenger: start.\n";
     omniORB::log.flush();
   }
-
-  Ripper_t* ripper = new Ripper_t("out",globalOutgoingRopeFactories);
 
   pd_mutex.lock();
   while (!isDying())
@@ -389,14 +280,12 @@ outScavenger_t::run_undetached(void *)
       pd_mutex.unlock();
 
       if (omniORB::traceLevel > 10) {
-	omniORB::log << "outScavenger: scanning outgoing connections\n";
+	omniORB::log << "outScavenger: scanning for idle outgoing connections\n";
 	omniORB::log.flush();
       }
       {
 	ropeFactory_iterator iter(globalOutgoingRopeFactories);
 	ropeFactory* rp;
-	CORBA::Boolean doshutdown = 0;
-
 	while ((rp = (ropeFactory*)iter())) {
 	  // Scan all the outgoing rope
 	  Rope_iterator next_rope(rp->anchor());
@@ -408,23 +297,21 @@ outScavenger_t::run_undetached(void *)
 	      Strand *s;
 	      while ((s = next_strand())) 
 		{
-		  if (!s->_strandIsDying() && 
-		      Strand::Sync::clicksDecrAndGet(s) < 0) {
-		      doshutdown = 1;
+		  Strand::Sync* q;
+		  if ((q = Strand::Sync::getSync(s)) && q->garbageCollect()) {
+		    if (omniORB::traceLevel > 10) {
+		      omniORB::log << "outScavenger: shutting down idle connection\n";
+		      omniORB::log.flush();
+		    }
+		    s->shutdown();
 		  }
 		}
 	    }
 	}
-	if (doshutdown) ripper->triggerScan();
       }
       pd_mutex.lock();
     }
   pd_mutex.unlock();
-
-  ripper->setIsDying();
-  ripper->triggerScan();
-  ripper->join(0);
-  ripper = 0;
 
   if (omniORB::traceLevel >= 15) {
     omniORB::log << "outScavenger: exit.\n";
@@ -432,6 +319,33 @@ outScavenger_t::run_undetached(void *)
   }
   return 0;
 }
+
+static
+void
+scanForIdle(Anchor* anchor,char* thread_name)
+{
+  // Scan all the outgoing rope
+  Rope_iterator next_rope(anchor);
+  Rope *r;
+  while ((r = next_rope())) 
+    {
+      // For each rope, scan all the strands
+      Strand_iterator next_strand(r);
+      Strand *s;
+      while ((s = next_strand())) 
+	{
+	  Strand::Sync* q;
+	  if ((q = Strand::Sync::getSync(s)) && q->garbageCollect()) {
+	    if (omniORB::traceLevel > 10) {
+	      omniORB::log << thread_name << ": shutting down idle connection\n";
+	      omniORB::log.flush();
+	    }
+	    s->shutdown();
+	  }
+	}
+    }
+}
+
 
 void 
 omniORB::idleConnectionScanPeriod(omniORB::idleConnType direction,

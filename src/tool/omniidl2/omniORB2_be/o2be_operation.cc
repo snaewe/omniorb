@@ -28,9 +28,13 @@
 
 /*
   $Log$
-  Revision 1.34  1999/09/15 10:30:01  djr
-  produce_invoke() did not pass ctxt argument if operation had no
-  other arguments.
+  Revision 1.34.4.1  1999/09/15 20:18:41  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
 
   Revision 1.33  1999/08/20 11:39:10  djr
   Removed debug output (left in by mistake!).
@@ -271,20 +275,22 @@ o2be_operation::produce_decl(std::fstream &s, const char* prefix,
 void
 o2be_operation::produce_invoke(std::fstream &s)
 {
-  s << uqname() << '(';
+  s << uqname() << "(";
 
   UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-  int first = 1;
 
   while( !i.is_done() ) {
-    o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
-    s << (first ? "":", ") << a->uqname();
-    first = 0;
+    o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+    s << a->uqname();
     i.next();
+    s << ((!i.is_done()) ? ", " : (context()?",":""));
   }
 
-  if( context() )   s << (first ? "ctxt" : ", ctxt");
-  s << ')';
+  if (context()) {
+    s << "ctxt";
+  }
+
+  s << ")";
 }
 
 
@@ -449,11 +455,10 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 
   // Declaration of methods to implement the call.
   if( has_any_in_args() || has_any_inout_args() ) {
-    IND(s); s << "virtual CORBA::ULong alignedSize(CORBA::ULong size_in);\n";
-    IND(s); s << "virtual void marshalArguments(GIOP_C&);\n";
+    IND(s); s << "virtual void marshalArguments(cdrStream&);\n";
   }
   if( has_any_inout_args() || has_any_out_args() || !return_is_void() ) {
-    IND(s); s << "virtual void unmarshalReturnedValues(GIOP_C&);\n";
+    IND(s); s << "virtual void unmarshalReturnedValues(cdrStream&);\n";
   }
   if( !no_user_exception() ) {
     IND(s); s << "virtual void userException(GIOP_C&, const char*);\n";
@@ -491,51 +496,9 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
   IND(s); s << "};\n\n";
 
   if( has_any_in_args() || has_any_inout_args() ) {
-    // Method to calculate the size of the arguments.
-
-    IND(s); s << "CORBA::ULong " << class_name
-	      << "::alignedSize(CORBA::ULong msgsize)\n";
-    IND(s); s << "{\n";
-    INC_INDENT_LEVEL();
-    {
-      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-      while( !i.is_done() ) {
-	argMapping mapping;
-	argType ntype;
-
-	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
-	char* argname = new char[1 + strlen(a->uqname()) + 4];
-	strcpy(argname, "arg_");
-	strcat(argname, a->uqname());
-
-	switch( a->direction() ) {
-	case AST_Argument::dir_IN:
-	  ntype = ast2ArgMapping(a->field_type(), wIN, mapping);
-	  produceSizeCalculation(s, a->field_type(), o2be_global::root(),
-				 "giop_client", "msgsize",
-				 argname, ntype, mapping);
-	  break;
-	case AST_Argument::dir_INOUT:
-	  ntype = ast2ArgMapping(a->field_type(), wINOUT, mapping);
-	  produceSizeCalculation(s, a->field_type(), o2be_global::root(),
-				 "giop_client", "msgsize",
-				 argname, ntype, mapping);
-	  break;
-	case AST_Argument::dir_OUT:
-	  break;
-	}
-
-	delete[] argname;
-	i.next();
-      }
-    }
-    IND(s); s << "return msgsize;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-
     // Method to marshal the arguments onto the stream.
     IND(s); s << "void " << class_name
-	      << "::marshalArguments(GIOP_C& giop_client)\n";
+	      << "::marshalArguments(cdrStream& giop_client)\n";
     IND(s); s << "{\n";
     INC_INDENT_LEVEL();
     {
@@ -579,7 +542,7 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
     // Method to unmarshal returned values from the stream.
 
     IND(s); s << "void " << class_name
-	      << "::unmarshalReturnedValues(GIOP_C& giop_client)\n";
+	      << "::unmarshalReturnedValues(cdrStream& giop_client)\n";
     IND(s); s << "{\n";
     INC_INDENT_LEVEL();
     // Declare temporary variables and allocate memory for variable
@@ -815,7 +778,7 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 	argType ntype = tStructVariable;
 	argMapping mapping = {I_FALSE,I_TRUE,I_FALSE,I_FALSE};
 	produceUnMarshalCode(s, i.item(), o2be_global::root(),
-			     "giop_client", "_ex", ntype, mapping);
+			     "(cdrStream&)giop_client", "_ex", ntype, mapping);
 	IND(s); s << "giop_client.RequestCompleted();\n";
 	IND(s); s << "throw _ex;\n";
 	DEC_INDENT_LEVEL();
@@ -901,27 +864,10 @@ o2be_operation::produce_proxy_skel(std::fstream& s, o2be_interface& def_in,
 void
 o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 {
-  if (flags() == AST_Operation::OP_oneway) {
-    IND(s); s << "if (_0RL_response_expected) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-  }
   // Even if this is request reply, the caller may send a GIOP request
   // message with no responds specified in the header. Therefore the
   // stub code should not throw an exception.
-  // XXX In fact, this end should just dump the result from the upcall.
-  //     This is not done at the moment.
-#if 0
-  else {
-    IND(s); s << "if (!_0RL_response_expected) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-  }
-#endif
+  // In fact, this end should just dump the result from the upcall.
   {
     // unmarshall arguments
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1002,7 +948,7 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 			   tContext,mapping);
     }
   }
-  IND(s); s << "_0RL_s.RequestReceived();\n";
+  IND(s); s << "_giop_s.RequestReceived();\n";
 
   IND(s);
   if (!return_is_void()) {
@@ -1047,7 +993,7 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
   }
 
   if (flags() == AST_Operation::OP_oneway) {
-    IND(s); s << "_0RL_s.ReplyCompleted();\n";
+    IND(s); s << "_giop_s.ReplyCompleted();\n";
     IND(s); s << "return 1;\n";
     return;
   }
@@ -1066,20 +1012,13 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 	argType ntype = tStructVariable;
 	argMapping mapping = {I_FALSE,I_TRUE,I_FALSE,I_FALSE};
 
-	IND(s); s << "size_t _0RL_msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
-
-	produceConstStringSizeCalculation(s,"_0RL_msgsize",excpt->repoIdConstLen());
-	produceSizeCalculation(s,i.item(),
-			       (AST_Decl*)&def_in,
-			       "_0RL_s","_0RL_msgsize","_0RL_ex",ntype,mapping);
-
-	IND(s); s << "_0RL_s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_0RL_msgsize);\n";
+	IND(s); s << "_giop_s.InitialiseReply(GIOP::USER_EXCEPTION);\n";
 	produceConstStringMarshalCode(s,"_0RL_s",excpt->repoIdConstName(),
 				      excpt->repoIdConstLen());
 	produceMarshalCode(s,i.item(),
 			   (AST_Decl*)&def_in,
 			   "_0RL_s","_0RL_ex",ntype,mapping);
-	IND(s); s << "_0RL_s.ReplyCompleted();\n";
+	IND(s); s << "_giop_s.ReplyCompleted();\n";
 	IND(s); s << "return 1;\n";
 	DEC_INDENT_LEVEL();
 	IND(s); s << "}\n";
@@ -1087,104 +1026,7 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
       }
   }
 
-  // calculate reply message size
-  IND(s); s << "size_t _0RL_msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
-  if (!return_is_void())
-    {
-      argMapping mapping;
-      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
-      if ((ntype == tObjref || ntype == tString || ntype == tTypeCode ||
-	   mapping.is_pointer) && !mapping.is_arrayslice)
-	{
-	  // These are declared as <type>_var variable
-	  if (ntype == tString) {
-	    produceSizeCalculation(s,return_type(),
-				   (AST_Decl*)&def_in,
-				   "_0RL_s","_0RL_msgsize",
-				   "_0RL_result",ntype,mapping);
-	  }
-	  else {
-	    // use operator->() to get to the pointer
-	    produceSizeCalculation(s,return_type(),
-				   (AST_Decl*)&def_in,
-				   "_0RL_s","_0RL_msgsize",
-				   "(_0RL_result.operator->())",ntype,mapping);
-	  }
-	}
-      else
-	{
-	  produceSizeCalculation(s,return_type(),
-				 (AST_Decl*)&def_in,
-				 "_0RL_s","_0RL_msgsize",
-				 "_0RL_result",ntype,mapping);
-	}
-
-    }
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	argMapping mapping;
-	argType ntype;
-
-	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
-	switch(a->direction())
-	  {
-	  case AST_Argument::dir_OUT:
-	    {
-	      ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-	      if ((ntype == tObjref || ntype == tString ||
-		   ntype == tTypeCode ||
-		   (mapping.is_reference && mapping.is_pointer))
-		  && !mapping.is_arrayslice)
-		{
-		  // These are declared as <type>_var variable
-		  if (ntype == tString) {
-		    produceSizeCalculation(s,a->field_type(),
-					   (AST_Decl*)&def_in,
-					   "_0RL_s","_0RL_msgsize",
-					   a->uqname(),ntype,mapping);
-		  }
-		  else {
-		    // use operator->() to get to the pointer
-		    char *_argname = new char[strlen(a->uqname())+
-					     strlen("(.operator->())")+1];
-		    strcpy(_argname,"(");
-		    strcat(_argname,a->uqname());
-		    strcat(_argname,".operator->())");
-		    produceSizeCalculation(s,a->field_type(),
-					   (AST_Decl*)&def_in,
-					   "_0RL_s","_0RL_msgsize",
-					   _argname,ntype,mapping);
-		    delete [] _argname;
-		  }
-		}
-	      else
-		{
-		  produceSizeCalculation(s,a->field_type(),
-					 (AST_Decl*)&def_in,
-					 "_0RL_s","_0RL_msgsize",
-					 a->uqname(),ntype,mapping);
-		}
-	      break;
-	    }
-	  case AST_Argument::dir_INOUT:
-	    {
-	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceSizeCalculation(s,a->field_type(),
-				     (AST_Decl*)&def_in,
-				     "_0RL_s","_0RL_msgsize",
-				     a->uqname(),ntype,mapping);
-	      break;
-	    }
-	  case AST_Argument::dir_IN:
-	      break;
-	  }
-	i.next();
-      }
-  }
-
-  IND(s); s << "_0RL_s.InitialiseReply(GIOP::NO_EXCEPTION,(CORBA::ULong)_0RL_msgsize);\n";
+  IND(s); s << "_giop_s.InitialiseReply(GIOP::NO_EXCEPTION);\n";
 
   // marshall results
   if (!return_is_void())
@@ -1280,7 +1122,7 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
       }
   }
 
-  IND(s); s << "_0RL_s.ReplyCompleted();\n";
+  IND(s); s << "_giop_s.ReplyCompleted();\n";
   IND(s); s << "return 1;\n";
   return;
 }
@@ -2414,10 +2256,10 @@ o2be_operation::declareVarType(std::fstream& s,AST_Decl* decl,AST_Decl*
 
 
 void
-o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
+o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 				     AST_Decl* used_in,
-				     const char* netstream,
-				     const char* argname,
+				     const char *netstream,
+				     const char *argname,
 				     argType type, argMapping mapping,
 				     idl_bool no_size_check)
 {
@@ -2515,44 +2357,44 @@ o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
 	    break;
 
 	  case tShort:
-	    IND(s); s << "CdrStreamHelper_unmarshalArrayShort("
-		      << netstream << ", " << ptr_to_first_elm << ", "
+	    IND(s); s << netstream << ".unmarshalArrayShort("
+		      << ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tUShort:
-	    IND(s); s << "CdrStreamHelper_unmarshalArrayUShort("
-		      << netstream << ", " << ptr_to_first_elm << ", "
+	    IND(s); s << netstream << ".unmarshalArrayUShort("
+		      << ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tLong:
-	    IND(s); s << "CdrStreamHelper_unmarshalArrayLong("
-		      << netstream << ", " << ptr_to_first_elm << ", "
+	    IND(s); s << netstream << ".unmarshalArrayLong("
+		      << ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tULong:
-	    IND(s); s << "CdrStreamHelper_unmarshalArrayULong("
-		      << netstream << ", " << ptr_to_first_elm << ", "
+	    IND(s); s << netstream << ".unmarshalArrayULong("
+		      << ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tEnum:
-	    IND(s); s << "CdrStreamHelper_unmarshalArrayULong("
-		      << netstream << ", (_CORBA_ULong*) "
+	    IND(s); s << netstream << ".unmarshalArrayULong("
+		      << " (_CORBA_ULong*) "
 		      << ptr_to_first_elm << ", " << total_length << ");\n";
 	    break;
 
 	  case tFloat:
-	    IND(s); s << "CdrStreamHelper_unmarshalArrayFloat("
-		      << netstream << ", " << ptr_to_first_elm << ", "
+	    IND(s); s << netstream << ".unmarshalArrayFloat("
+		      << ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tDouble:
-	    IND(s); s << "CdrStreamHelper_unmarshalArrayDouble("
-		      << netstream << ", " << ptr_to_first_elm << ", "
+	    IND(s); s << netstream << ".unmarshalArrayDouble("
+		      << ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
@@ -2688,7 +2530,7 @@ o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
 	      IND(s); s << "}\n";
 	      if (!no_size_check)
 		{
-		  IND(s); s << "else if ( " << netstream << ".RdMessageUnRead() < _len)\n";
+		  IND(s); s << "else if ( !" << netstream << ".checkInputOverrun(1,_len))\n";
 		  INC_INDENT_LEVEL();
 		  IND(s); s << "throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);\n";
 		  DEC_INDENT_LEVEL();

@@ -29,9 +29,13 @@
 
 /*
   $Log$
-  Revision 1.11  1999/08/30 16:55:43  sll
-  Replaced WrTestLock and heartbeat in WrLock with clicksDecrAndGet,
-  clicksGet and clicksSet.
+  Revision 1.11.4.1  1999/09/15 20:18:13  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
 
   Revision 1.10  1999/07/02 19:17:33  sll
   Removed inlined virtual dtor. Some compilers generate a copy of the
@@ -84,14 +88,16 @@
 
 class Rope;
 class Endpoint;
-class NetBufferedStream;
+class cdrStream;
 class Strand_iterator;
 class Rope_iterator;
 
 class Strand {
 public:
 
-  Strand(Rope *r,_CORBA_Boolean heapAllocated = 0);
+  // Strand object must be heap allocated.
+
+  Strand(Rope *r);
   // Concurrency Control:
   //    MUTEX = r->pd_lock
   // Pre-condition:
@@ -346,7 +352,8 @@ public:
   // Post-condition:
   //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
 
-  void decrRefCount(_CORBA_Boolean held_rope_mutex = 0);
+  void decrRefCount(_CORBA_Boolean held_rope_mutex = 0,
+		    _CORBA_Boolean deleteflag = 0);
   // Concurrency Control:
   //      MUTEX = pd_rope->pd_lock
   // Pre-condition:
@@ -354,6 +361,9 @@ public:
   //      Hold <MUTEX> on enter if held_rope_mutex == TRUE              
   // Post-condition:
   //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
+  //
+  // Decrement reference count. If reference count == 0 and deleteflag == TRUE
+  // delete the strand.
 
   _CORBA_Boolean is_idle(_CORBA_Boolean held_rope_mutex = 0);
   // Return TRUE(1) if the reference count is zero.
@@ -366,59 +376,59 @@ public:
   // Post-condition:
   //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
 
-  _CORBA_Boolean is_unused(_CORBA_Boolean held_rope_mutex = 0);
-  // Return TRUE(1) if  !is_idle() && no Sync object is parking on this strand
-  //
+  void setReUseFlag();
   // Concurrency Control:
-  //      MUTEX = pd_rope->pd_lock
+  //    MUTEX = pd_rope->pd_lock
   // Pre-condition:
-  //      Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
-  //      Hold <MUTEX> on enter if held_rope_mutex == TRUE              
+  //    Must hold <MUTEX> on entry
   // Post-condition:
-  //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
+  //	Still hold <MUTEX> on exit
+  //
+  // Mark this strand as a reused connection. This affects the behaviour
+  // of the strand when it encounters error.
+  // If the reuse flag is not set, a CORBA::COMM_FAILURE is raised.
+  // Otherwise, a CORBA::TRANSIENT is raised.
+  // The upper layers may catch TRANSIENT and retries the invocation again.
+  // The default value of the reuse flag is not set.
 
+  void raiseException(_CORBA_ULong minor,_CORBA_ULong completed);
+  // Concurrency Control:
+  //    None.
+  //
+  // This function never returns. Instead it throws either CORBA::COMM_FAILURE
+  // or CORBA::TRANSIENT depending on the state of the reuse flag (see
+  // setReUseFlag().
+  // The arguments are passed verbatim to the ctor of the system exceptions.
 
   class Sync {
 
   public:
-    Sync(Strand *s,_CORBA_Boolean RdLock=1,_CORBA_Boolean WrLock=1);
+
+    Sync(Strand *s);
     // Concurrency Control:
     //    MUTEX = s->pd_rope->pd_lock
     // Pre-condition:
-    //    Does not hold <MUTEX> on entry
+    //    Must hold <MUTEX> on entry
     // Post-condition:
-    //    Does not hold <MUTEX> on exit, even if an exception is raised.
+    //    Still hold <MUTEX> on exit.
     //
-    // Exclusive access to a Strand is provided by instantiating a Sync
-    // object. Initial locking modes can be specified in the constructor
-    // of the Sync object. The constructor also enters the Sync object
-    // to a private queue of the Strand. The iterator Sync_iterator can
-    // be used to go through all the Sync objects that are associated with
-    // a Strand.
+    // This object must be heap allocated.
+    //
+    // This ctor has the side effect of entering the Sync object to
+    // the private queue of the Strand.
     //
     // Caller must ensure that the reference count of the argument strand <s>
     // is non-zero. This ctor also increment the reference count of the
     // strand internally using Strand::incrRefCount().
-
-    Sync(Rope *r,_CORBA_Boolean RdLock=1,_CORBA_Boolean WrLock=1);
-    // Concurrency Control:
-    //    MUTEX = r->pd_lock
-    // Pre-condition:
-    //	  Does not hold <MUTEX> on entry
-    // Post-condition:
-    //	  Does not hold <MUTEX> on exit, even if an exception is raised.
     //
-    // A strand from the argument <r> is grabbed by this Sync object.
-    // This ctor also increment the reference count of the strand internally
-    // using Strand::incrRefCount().
 
-    ~Sync();
+    virtual ~Sync();
     // Concurrency Control:
     // 	  MUTEX = pd_strand->pd_rope->pd_lock
     // Pre-condition:
-    //    Does not hold <MUTEX> on entry
+    //    Must <MUTEX> on entry
     // Post-condition:
-    //    Does not hold <MUTEX> on exit
+    //    Still <MUTEX> on exit
     //    
     // IMPORTANT: the destructor DOES NOT check whether a read or a write
     //            lock is held by this object. Make sure that any lock
@@ -426,25 +436,53 @@ public:
     //            destructor is called.
     //
     // This dtor decrement the reference count of the strand by calling
-    // Strand::decrRefCount(). If the reference count reaches 0 
-    // (Strand::is_idle() returns TRUE) and the strand has been flagged for
-    // closing down (Strand::StrandIsDying() returns TRUE), the dtor of the
-    // strand is called.
-
-    _CORBA_Boolean isReUsingExistingConnection() const;
-    // Concurency Control:
-    //     None required.
+    // Strand::decrRefCount(). 
     //
-    // Returns true if this is not the first Sync object instantiated to
-    // use the Strand. False otherwise.
-    // This method is intended for the caller to decide on a course of
-    // action if a COMM_FAILURE has been thrown. If this method returns
-    // true, the COMM_FAILURE may be considered a soft failure because
-    // it is only a cached network connection that is broken. If this method
-    // returns false, then the connection to the remote end is really
-    // broken and may be considered as a hard failure.
+    // If the reference count reaches 0 (Strand::is_idle() returns TRUE) and 
+    // the strand has been flagged for closing down (Strand::StrandIsDying() 
+    // returns TRUE), the dtor of the strand is called.
+
+
+    virtual _CORBA_Boolean garbageCollect();
+    // Concurrency Control:
+    // 	  MUTEX = pd_strand->pd_rope->pd_lock
+    //
+    // Pre-condition:
+    //    Must hold <MUTEX> on enter.
+    // Post-condition:
+    //    Still hold <MUTEX> on exit.
+    //
+    // Return TRUE if pd_strand can safely be shutdown.
+
+    virtual _CORBA_Boolean is_unused();
+    // Concurrency Control:
+    // 	  MUTEX = pd_strand->pd_rope->pd_lock
+    //
+    // Pre-condition:
+    //    Must hold <MUTEX> on enter.
+    // Post-condition:
+    //    Still hold <MUTEX> on exit.
+    //
+    // Return true if pd_strand is not in use.
+
+    static Sync* getSync(Strand* s);
+    // Concurrency Control:
+    // 	  MUTEX = s->pd_rope->pd_lock
+    // Pre-condition:
+    //    Must hold <MUTEX> on enter
+    // Post-condition:
+    //    Still hold <MUTEX> on exit
+    //
+    // Return the head of the private queue of Sync objects in the strand.
+
+    static void        setStrandIsDying(Strand*);
 
   protected:
+
+    static omni_mutex& getMutex(Strand*);
+    static omni_mutex& getMutex(Rope*);
+    static Strand*     getStrand(Rope*);
+
     void RdLock(_CORBA_Boolean held_rope_mutex=0);
     void WrLock(_CORBA_Boolean held_rope_mutex=0);
     void RdUnlock(_CORBA_Boolean held_rope_mutex=0);
@@ -454,68 +492,20 @@ public:
     //            2. Never acquire a Read lock while holding a Write lock.
     //               Must release the Read lock first.
     // Concurrency Control:
-    // 	  MUTEX = pd_strand->pd_rope->pd_lock or argument <s>->pd_rope->pd_lock
+    // 	  MUTEX = pd_strand->pd_rope->pd_lock
     // Pre-condition:
     //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
     //          Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
     //          Hold <MUTEX> on enter if held_rope_mutex == TRUE
-    //
     // Post-condition:
     //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
     //        Restore <MUTEX> to the same state as indicated by held_rope_mutex
     //
     // WrLock blocks until it has acquired a write lock on the strand.
-    // The same applies to RdLock.
-    //
+  
+    Sync*   pd_next;
+    Strand* pd_strand;
 
-  public:
-    static int clicksDecrAndGet(Strand*s);
-    // Atomic operation. Decrement pd_clicks and returns its new value.
-    // Concurrency Control:
-    // 	  MUTEX = <s>->pd_rope->pd_lock
-    // Pre-condition:
-    //          Must hold <MUTEX> on enter
-    // Post-condition:
-    //        Still held <MUTEX> on exit
-
-    static int clicksGet(Strand*s);
-    // Atomic operation. Get the value of pd_clicks.
-    // Concurrency Control:
-    // 	  MUTEX = <s>->pd_rope->pd_lock
-    // Pre-condition:
-    //          Must hold <MUTEX> on enter
-    // Post-condition:
-    //        Still held <MUTEX> on exit
-
-  protected:
-    void clicksSet(int clicks, _CORBA_Boolean held_rope_mutex=0);
-    // Atomic operation. Set the value of pd_clicks with <clicks>
-    // Concurrency Control:
-    // 	  MUTEX = pd_strand->pd_rope->pd_lock
-    // Pre-condition:
-    //          Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
-    //          Hold <MUTEX> on enter if held_rope_mutex == TRUE
-    // Post-condition:
-    //        Restore <MUTEX> to the same state as indicated by held_rope_mutex
-
-    Strand *get_strand() { return pd_strand; }
-    // Concurrency Control:
-    //     None required.
-
-    void setStrandIsDying();
-    // Concurrency Control:
-    //     None. Beware of race conditions!!!
-    // Same as Strand::_setStrandIsDying
-
-    _CORBA_Boolean strandIsDying();
-    // Concurrency Control:
-    //     None. Beware of race conditions!!!!
-    // Same as Strand::_strandIsDying.
-    
-  private:
-    Sync *pd_next;
-    Strand *pd_strand;
-    _CORBA_Boolean pd_secondHand;
     Sync();
   };
 
@@ -541,10 +531,10 @@ private:
   Strand         *pd_next;
   Rope           *pd_rope;
   _CORBA_Boolean  pd_dying;
-  _CORBA_Boolean  pd_heapAllocated;
   int		  pd_refcount;
-  _CORBA_ULong    pd_seqNumber;
-  int             pd_clicks;
+  _CORBA_ULong     pd_seqNumber;
+
+  _CORBA_Boolean  pd_reuse;
 
   // Make the default constructor private. This traps at compile time
   // any attempt to allocate an array of objects using the new operator.
@@ -607,6 +597,11 @@ public:
     return *this;
   }
   operator Endpoint*() const { return pd_p; }
+
+  Endpoint*& out() { if (pd_p) { delete pd_p; pd_p = 0; } return pd_p; }
+  Endpoint* _retn() { Endpoint* tmp = pd_p; pd_p = 0; return tmp; }
+  
+
 private:
   Endpoint* pd_p;
   Endpoint_var& operator=(const Endpoint_var&);
@@ -662,9 +657,11 @@ private:
 
 class Rope {
 public:
+
+  // Rope objects must be heap allocated.
+
   Rope(Anchor *a,
-       unsigned int maxStrands,
-       _CORBA_Boolean heapAllocated = 0);
+       unsigned int maxStrands);
   // Concurrency Control:
   //    MUTEX = a->pd_lock
   // Pre-condition:
@@ -759,7 +756,7 @@ protected:
 #endif
 
   omni_mutex pd_lock;
-  virtual Strand *getStrand(_CORBA_Boolean& secondHand);
+  virtual Strand *getStrand();
   // Concurrency Control:
   //     MUTEX = pd_lock
   // Pre-condition:
@@ -772,11 +769,6 @@ protected:
   // the number of strands has not exceeded pd_maxStrands, call newStrand()
   // to create a new one.
   // A thread may be blocked in this function until a free strand is available.
-  //
-  // Strands created as a side-effect of this call may be cached to serve
-  // subsequent calls. If the strand is created directly as a result of
-  // this call, i.e.  no request has gone through yet, <secondHand> is set
-  // to 0. Otherwise, this is a cached strand, <secondHand> is set to 1.
   //
 
   virtual Strand *newStrand() = 0;
@@ -807,8 +799,6 @@ private:
 
 
   unsigned int    pd_maxStrands;
-
-  _CORBA_Boolean  pd_heapAllocated;
 
   Strand         *pd_head;
   Rope           *pd_next;
@@ -860,6 +850,8 @@ public:
   inline Rope* operator->() const { return _ptr; }
 
   inline operator Rope*() const { return _ptr; }
+
+  inline Rope* _retn() { Rope* p = _ptr; _ptr = 0; return p; }
 
   Rope* _ptr;
 };

@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.18.4.1  1999/09/15 20:18:30  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.18  1999/08/16 19:24:33  sll
   The ctor of ropeFactory_iterator now takes a pointer argument.
 
@@ -52,8 +60,16 @@
   Temporary work-around for egcs compiler.
 
   $Log$
-  Revision 1.18  1999/08/16 19:24:33  sll
-  The ctor of ropeFactory_iterator now takes a pointer argument.
+  Revision 1.18.4.1  1999/09/15 20:18:30  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
+  Revision 1.19  1999/09/12 19:01:37  sll
+  updated to use the new cdrstreams.
 
   Revision 1.17  1999/03/11 16:25:54  djr
   Updated copyright notice
@@ -102,16 +118,12 @@
 #include <excepthandler.h>
 #include <omniORB2/proxyCall.h>
 #include <bootstrap_i.h>
-
+#include <giopStreamImpl.h>
 
 static CORBA::Object_ptr internal_get_interface(const char* repoId);
 
-
-omniObject::omniObject(omniObjectManager* m)    // ctor for local object
+omniObject::omniObject(omniObjectManager* m)
 {
-  pd_repoId = 0;
-  pd_repoIdsize = 0;
-  pd_original_repoId = 0;
   pd_refCount = 0;
   pd_next = 0;
   pd_flags.proxy = 0;
@@ -121,49 +133,36 @@ omniObject::omniObject(omniObjectManager* m)    // ctor for local object
   pd_flags.commfail_exception_handler = 0;
   pd_flags.system_exception_handler = 0;
   pd_flags.existent_and_type_verified = 1;
+  pd_objectInfo   = 0;
+  pd_data.l.pd_manager = m;
   if( m != omniObject::nilObjectManager() ) {
-    omniORB::generateNewKey(pd_objkey.native);
-    pd_objkeysize = sizeof(pd_objkey.native);
-    pd_manager = ((m) ? m : omniObjectManager::root());
-    IOP::TaggedProfileList_var pl(new IOP::TaggedProfileList);
-    ropeFactory_iterator iter(pd_manager->incomingRopeFactories());
-    incomingRopeFactory* rp;
-    while ((rp = (incomingRopeFactory*) iter())) {
-      rp->getIncomingIOPprofiles((CORBA::Octet*)&pd_objkey.native,
-				 pd_objkeysize,
-				 *(pl.operator->()));
-    }
-    pd_iopprofile = pl._ptr;
-    pl._ptr = 0;
+    omniORB::generateNewKey(pd_data.l.pd_key);
+    pd_data.l.pd_manager = ((m) ? m : omniObjectManager::root());
   }
-  else {
-    // nil object
-    pd_objkeysize = 0;
-    pd_manager = m;
-    pd_iopprofile = 0;
-  }
-  return;
 }
 
-
-omniObject::omniObject(const char *repoId,   // ctor for proxy object
-	       Rope *r,
-	       CORBA::Octet *key,
-	       size_t keysize,
-	       IOP::TaggedProfileList *profiles,
-	       CORBA::Boolean release)
+void
+omniObject::PR_setRepositoryID(const char* repoId)
 {
-  if (!repoId || !r || !profiles)
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-  // keysize may be >= 0, key may be nil.
+  if (is_proxy())
+    throw omniORB::fatalException(__FILE__,__LINE__,
+	 "omniObject::PR_setRepostioryID called in the wrong state.");
 
-  pd_repoIdsize = strlen(repoId)+1;
-  pd_repoId = new char[pd_repoIdsize];
-  if (!pd_repoId)
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-  strcpy(pd_repoId,repoId);
-  pd_original_repoId = 0;
-  pd_rope = r;  // caller has already done a r->incrRefCount()
+  pd_repositoryID = repoId;
+}
+
+void
+omniObject::PR_setKey(const omniObjectKey& k)
+{
+  if (is_proxy())
+    throw omniORB::fatalException(__FILE__,__LINE__,
+	 "omniObject::PR_setKey called in the wrong state.");
+
+  pd_data.l.pd_key = k;
+}
+
+omniObject::omniObject(GIOPObjectInfo* objInfo,const char* use_as_repoID)
+{
   pd_refCount = 0;
   pd_next = 0;
   pd_flags.disposed = 0;
@@ -174,206 +173,44 @@ omniObject::omniObject(const char *repoId,   // ctor for proxy object
   pd_flags.system_exception_handler = 0;
   pd_flags.proxy = 1;
 
-  if (!release) {
-    pd_iopprofile = 0;
-    pd_objkey.foreign = 0;
-    try {
-      pd_iopprofile = new IOP::TaggedProfileList(*profiles);
-      if (!pd_iopprofile)
-	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-      pd_objkeysize = keysize;
-      if (keysize) {
-	pd_objkey.foreign = new CORBA::Octet[keysize];
-	if (!pd_objkey.foreign)
-	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-	memcpy((void *)pd_objkey.foreign,(const void *)key,keysize);
-      }
-    }
-    catch (...) {
-      delete [] pd_repoId;
-      if (pd_iopprofile) delete pd_iopprofile;
-      if (pd_objkey.foreign) delete [] pd_objkey.foreign;
-      throw;
-    }
+  pd_repositoryID = objInfo->repositoryID();
+
+  pd_objectInfo = objInfo;
+
+  if (strcmp((const char*)pd_repositoryID,use_as_repoID) != 0) {
+    pd_data.p.pd_use_as_repositoryID = CORBA::string_dup(use_as_repoID);
   }
   else {
-    pd_objkeysize = keysize;
-    pd_objkey.foreign =  key;
-    pd_iopprofile = profiles;
+    pd_data.p.pd_use_as_repositoryID = 0;
   }
-  return;
+
+  pd_data.p.pd_originalInfo = 0;
 
 }
 
-CORBA::Boolean
-omniObject::getRopeAndKey(omniRopeAndKey& k) const
+
+omniObject::~omniObject()
 {
-  omni_mutex_lock sync(omniObject::objectTableLock);
-  CORBA::Boolean result = 0;
-  if (is_proxy()) {
-    k.rope(pd_rope);
-    k.key(pd_objkey.foreign,(CORBA::ULong)pd_objkeysize);
-    result = pd_flags.forwardlocation;
+  if (pd_refCount) {
+    // A dtor should not be called if the reference count is not 0
+    assert(0);
   }
-  else {
-    // This is a local object, we have to return a loopback rope in case 
-    // the caller is using the rope to contact this object. One situation
-    // in which this can occur is when the LOCATION FORWARDING code in
-    // a proxy object's stub get this object as the new object reference
-    // to forward the request to.
-    k.rope(pd_manager->defaultLoopBack());
-    k.key((CORBA::Octet*)&pd_objkey.native,sizeof(pd_objkey.native));
+
+  if (pd_flags.transient_exception_handler |
+      pd_flags.commfail_exception_handler |
+      pd_flags.system_exception_handler) {
+    omniExHandlers_iterator iter;
+    iter.remove(this);
   }
-  return result;
-}
 
-void
-omniObject::setRopeAndKey(const omniRopeAndKey& l,
-			  CORBA::Boolean keepIOP)
-{
-  omni_mutex_lock sync(omniObject::objectTableLock);
-  if (is_proxy()) {
-    if (pd_rope) {
-      if (pd_rope != l.rope()) {
-	pd_rope->decrRefCount();
-	l.rope()->incrRefCount();
-      }
-    }
-    pd_rope = l.rope();
-    if (pd_objkeysize < l.keysize()) {
-      delete [] pd_objkey.foreign;
-      pd_objkey.foreign = new CORBA::Octet[l.keysize()];
-    }
-    pd_objkeysize = l.keysize();
-    memcpy((void*)pd_objkey.foreign,(void*)l.key(),pd_objkeysize);
-    if (!keepIOP) {
-      IOP::TaggedProfileList_var np;
-      Endpoint* addr = 0;
-      (void) pd_rope->remote_is(addr);
-      {
-	const ropeFactory* rf;
-	ropeFactory_iterator iter(globalOutgoingRopeFactories);
-	while ((rf = iter())) {
-	  if (rf->isOutgoing(addr)) {
-	    np = new IOP::TaggedProfileList(1);
-	    np->length(1);
-	    rf->getType()->encodeIOPprofile(addr,pd_objkey.foreign,
-					    pd_objkeysize,np[0]);
-	    break;
-	  }
-	}
-      }
-      delete pd_iopprofile;
-      pd_iopprofile = np._ptr; np._ptr = 0;
-      pd_flags.forwardlocation = 0;
-    }
-    else {
-      pd_flags.forwardlocation = 1;
-    }
+  if (pd_objectInfo) pd_objectInfo->release();
+
+  if (pd_flags.proxy) {
+    if (pd_data.p.pd_use_as_repositoryID) 
+      CORBA::string_free(pd_data.p.pd_use_as_repositoryID);
+    if (pd_data.p.pd_originalInfo)
+      pd_data.p.pd_originalInfo->release();
   }
-  else {
-    if (pd_refCount)
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-    memcpy((void*)&pd_objkey.native,
-	   (void*)l.key(),
-	   sizeof(pd_objkey.native));
-    if (!keepIOP) {
-      IOP::TaggedProfileList_var np;
-      np = new IOP::TaggedProfileList;
-      {
-	ropeFactory_iterator iter(pd_manager->incomingRopeFactories());
-	incomingRopeFactory* rp;
-	while ((rp = (incomingRopeFactory*) iter())) {
-	  rp->getIncomingIOPprofiles((CORBA::Octet*)&pd_objkey.native,
-				     pd_objkeysize,
-				     *np._ptr);
-	}
-      }
-      delete pd_iopprofile;
-      pd_iopprofile = np._ptr; np._ptr = 0;
-      pd_flags.forwardlocation = 0;
-    }
-    else {
-      pd_flags.forwardlocation = 1;
-    }
-  }
-}
-
-void
-omniObject::resetRopeAndKey()
-{
-  omni_mutex_lock sync(omniObject::objectTableLock);
-  if (is_proxy()) {
-    if (pd_flags.forwardlocation) {
-      Rope_var       _rope;
-      CORBA::Octet*  _key;
-      size_t         _keysize;
-      omniObject*    _localobj;
-      if ((_localobj = ropeFactory::iopProfilesToRope(pd_iopprofile,
-						     _key,_keysize,_rope))) {
-	// strangely enough, the object is now found in the local object
-	// table. It may be the case that when this proxy object was
-	// created, the local object has not been instantiated. The
-	// ORB returns a rope so that a call to the object proceeds
-	// via the network loopback.
-	// We override this and change it to return a network
-	// loopback.
-	_rope = _localobj->_objectManager()->defaultLoopBack();
-	_rope->incrRefCount();
-	CORBA::Octet* k;
-	CORBA::ULong ks;
-	_localobj->getKey(k,ks);
-	_keysize = sizeof(ks);
-	_key  = new CORBA::Octet[_keysize];
-	memcpy((void*)_key,(void*)k,_keysize);
-      }
-
-      if (pd_rope) {
-	pd_rope->decrRefCount();
-      }
-      pd_rope = _rope;
-      _rope._ptr = 0;
-      delete [] pd_objkey.foreign;
-      pd_objkey.foreign = _key;
-      pd_objkeysize = _keysize;
-
-      pd_flags.forwardlocation = 0;
-      pd_flags.existent_and_type_verified = 0;
-    }
-  }
-  else {
-    // A local object, Not allowed to reset the Rope and Key
-    // just ignored this command.
-  }
-}
-
-void
-omniObject::PR_IRRepositoryId(const char *ir)
-{
-  if (is_proxy()) 
-    {
-      if (!pd_original_repoId) {
-	pd_original_repoId = pd_repoId;
-	pd_repoId = 0;
-      }
-      pd_flags.existent_and_type_verified = 0;
-    }
-  else 
-    {
-      if (getRefCount()) {
-	throw omniORB::fatalException(__FILE__,__LINE__,
-				      "omniObject::PR_IRRepositoryId()- tried to set IR Id for an activated object");
-      }
-    }
-
-  if (pd_repoId)
-    delete [] pd_repoId;
-  pd_repoIdsize = strlen(ir) + 1;
-  pd_repoId = new char [pd_repoIdsize];
-  if (!pd_repoId)
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-  strcpy(pd_repoId,ir);
-  return;
 }
 
 CORBA::Boolean
@@ -387,6 +224,8 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
 				  " this function inside a proxy object.");
   }
   
+  cdrStream& s = (cdrStream&)_s;
+
   if (strcmp(_op,"_is_a") == 0)
     {
       if (!_response_expected) {
@@ -395,21 +234,19 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
       CORBA::String_var id;
       {
 	CORBA::ULong _len;
-	_len <<= _s;
-	if (!_len || _s.RdMessageUnRead() < _len)
+	_len <<= s;
+	if (!_len || !s.checkInputOverrun(1,_len))
 	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 	id = CORBA::string_alloc(_len-1);
-	if (!((char *)id))
+	if (!((const char *)id))
 	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-	_s.get_char_array((CORBA::Char *)((char *)id),_len);
+	s.get_char_array((CORBA::Char *)((const char *)id),_len);
       }
       _s.RequestReceived();
       CORBA::Boolean _result;
       _result = _real_is_a(id);
-      size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize += 1;
-      _s.InitialiseReply(GIOP::NO_EXCEPTION,(CORBA::ULong)_msgsize);
-      _result >>= _s;
+      _s.InitialiseReply(GIOP::NO_EXCEPTION);
+      _result >>= s;
       _s.ReplyCompleted();
       return 1;
     }
@@ -420,10 +257,8 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
       }
       _s.RequestReceived();
       CORBA::Boolean _result = 0;
-      size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize += 1;
-      _s.InitialiseReply(GIOP::NO_EXCEPTION,(CORBA::ULong)_msgsize);
-      _result >>= _s;
+      _s.InitialiseReply(GIOP::NO_EXCEPTION);
+      _result >>= s;
       _s.ReplyCompleted();
       return 1;
     }
@@ -432,10 +267,8 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
       _s.RequestReceived();
       CORBA::Object_ptr result;
       result = internal_get_interface(NP_IRRepositoryId());
-      size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      msgsize = CORBA::Object::NP_alignedSize(result, msgsize);
-      _s.InitialiseReply(GIOP::NO_EXCEPTION, CORBA::ULong(msgsize));
-      CORBA::Object::marshalObjRef(result, _s);
+      _s.InitialiseReply(GIOP::NO_EXCEPTION);
+      CORBA::Object::marshalObjRef(result, s);
       _s.ReplyCompleted();
       return 1;
     }
@@ -458,7 +291,6 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
 #endif
 }
 
-
 void
 omniObject::assertObjectExistent()
 {
@@ -473,19 +305,19 @@ omniObject::assertObjectExistent()
   // so potentially  we can have multiple threads doing the following
   // simulataneously. That is alright except perhaps a bit of redundent work.
 
-  if (pd_original_repoId != 0) 
+  if (pd_data.p.pd_use_as_repositoryID != 0) 
     {
-      // If the repository ID has been updated (pd_original_repoid != 0),
+      // If the repository ID has been updated,
       // we have to verify if the object does indeed support the interface
       // of this proxy object. The repository ID of this proxy object is
-      // stored in pd_original_repoId.  Use _is_a() operation to query the
+      // stored in pd_use_as_repositoryID. Use _is_a() operation to query the
       // remote object to see if it supports the interface identified by
-      // pd_original_repoId.
-      if (!_real_is_a(pd_original_repoId)) {
+      // pd_use_as_repositoryID.
+      if (!_real_is_a(pd_data.p.pd_use_as_repositoryID)) {
 	if (omniORB::traceLevel > 0) {
 	  omniORB::log << "Warning: in omniObject::assertObjectExistent(), the object with the IR repository ID:\n"
 	       << "         " << NP_IRRepositoryId() << " returns FALSE to the query\n"
-	       << "         is_a(\"" << pd_original_repoId << "\").\n"
+	       << "         is_a(\"" << pd_data.p.pd_use_as_repositoryID << "\").\n"
 	       << "         A CORBA::INV_OBJREF is raised.\n";
 	  omniORB::log.flush();
 	}
@@ -497,83 +329,113 @@ omniObject::assertObjectExistent()
     {
       // Use GIOP LocateRequest to verify that the object exists.
       CORBA::ULong retries = 0;
-#ifndef EGCS_WORKAROUND
-AOE_again:
-#else
-while (1) {
-#endif
-      omniRopeAndKey rak;
-      CORBA::Boolean fwd = getRopeAndKey(rak);
-      CORBA::Boolean reuse = 0;
-      try {
-	GIOP_C _c(rak.rope());
-	reuse = _c.isReUsingExistingConnection();
-	CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(rak.keysize(),14);
 
-	switch (_c.IssueLocateRequest(rak.key(),rak.keysize()))
-	  {
-	  case GIOP::OBJECT_HERE:
-	    pd_flags.existent_and_type_verified = 1;
-	    _c.RequestCompleted();
-	    return;
-	    break;	// dummy break
-	  case GIOP::UNKNOWN_OBJECT:
-	    _c.RequestCompleted();
-	    throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
-	    break;        // dummy break
-	  case GIOP::OBJECT_FORWARD:
+      while (1) {
+
+	CORBA::Boolean fwd;
+	GIOPObjectInfo* invokeInfo = getInvokeInfo(fwd);
+
+	try {
+
+	  GIOP_C _c(invokeInfo);
+
+	  GIOP::LocateStatusType rc;
+
+	  switch ((rc = _c.IssueLocateRequest()))
 	    {
+	    case GIOP::OBJECT_HERE:
+	      pd_flags.existent_and_type_verified = 1;
+	      _c.RequestCompleted();
+	      return;
+	      break;	// dummy break
+
+	    case GIOP::UNKNOWN_OBJECT:
+	      _c.RequestCompleted();
+	      throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
+	      break;        // dummy break
+
+	    case GIOP::OBJECT_FORWARD:
+	    case GIOP::OBJECT_FORWARD_PERM:
 	      {
-		CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+		CORBA::Object_var obj =
+		  CORBA::Object::unmarshalObjRef((cdrStream&)_c);
 		_c.RequestCompleted();
-		if (CORBA::is_nil(obj)) {
-		  if (omniORB::traceLevel > 10) {
-		    omniORB::log << "Received GIOP::OBJECT_FORWARD in LocateReply message that contains a nil object reference.\n";
+		if( CORBA::is_nil(obj) ){
+		  if( omniORB::traceLevel > 10 ){
+		    omniORB::log << "Received GIOP::LOCATION_FORWARD message that"
+		      " contains a nil object reference.\n";
 		    omniORB::log.flush();
 		  }
-		  throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+		  throw CORBA::COMM_FAILURE(0, CORBA::COMPLETED_NO);
 		}
-		omniRopeAndKey _0RL_r;
-		obj->PR_getobj()->getRopeAndKey(_0RL_r);
-		setRopeAndKey(_0RL_r);
+		GIOPObjectInfo* newinfo = obj->PR_getobj()->getInvokeInfo(fwd);
+		setInvokeInfo(newinfo,
+			      (rc == GIOP::OBJECT_FORWARD_PERM) ? 0 : 1);
+		break;
 	      }
-	      if (omniORB::traceLevel > 10) {
-		omniORB::log << "GIOP::OBJECT_FORWARD: retry request.\n";
-		omniORB::log.flush();
-	      }
-	      break;
+
+	    default:
+	      throw omniORB::fatalException(__FILE__,__LINE__,
+					    "omniObject::assertObjectExistent "
+					    " returned an invalid code");
 	    }
-	  }
-      }
-      catch (const CORBA::COMM_FAILURE& ex) {
-	if (reuse || fwd) {
-	  if (fwd)
-	    resetRopeAndKey();
-	  CORBA::TRANSIENT ex2(ex.minor(),ex.completed());
-	  if (!_omni_callTransientExceptionHandler(this,retries++,ex2))
-	    throw ex2;
 	}
-	else {
-	  if (!_omni_callCommFailureExceptionHandler(this,retries++,ex))
+	catch (const CORBA::COMM_FAILURE& ex) {
+	  if (fwd) {
+	    resetInvokeInfo();
+	    CORBA::TRANSIENT ex2(ex.minor(),ex.completed());
+	    if (!_omni_callTransientExceptionHandler(this,retries++,ex2))
+	      throw ex2;
+	  }
+	  else {
+	    if (!_omni_callCommFailureExceptionHandler(this,retries++,ex))
+	      throw;
+	  }
+	}
+	catch (const CORBA::TRANSIENT& ex) {
+	  if (!_omni_callTransientExceptionHandler(this,retries++,ex))
+	    throw;
+	}
+	catch (const CORBA::SystemException& ex) {
+	  if (!_omni_callSystemExceptionHandler(this,retries++,ex))
 	    throw;
 	}
       }
-      catch (const CORBA::TRANSIENT& ex) {
-	if (!_omni_callTransientExceptionHandler(this,retries++,ex))
-	  throw;
-      }
-      catch (const CORBA::SystemException& ex) {
-	if (!_omni_callSystemExceptionHandler(this,retries++,ex))
-	  throw;
-      }
-#ifndef EGCS_WORKAROUND
-      goto AOE_again;
-#else
-}
-#endif
     }
-  return;
 }
+
+class omniIsACallDesc  : public OmniProxyCallDesc
+{
+public:
+  inline omniIsACallDesc(const char* _op, size_t _op_len, const char* p) :
+    OmniProxyCallDesc(_op, _op_len), arg_x(p)  {
+    skipAssertObjectExistence();
+  }
+
+  virtual void marshalArguments(cdrStream& s) {
+    CORBA::ULong _len = (((const char*) arg_x) ? 
+			 strlen((const char*) arg_x) + 1 : 1);
+    _len >>= s;
+    if (_len > 1)
+      s.put_char_array((const CORBA::Char *)((const char*) arg_x),_len);
+    else {
+      if ((const char*) arg_x == 0 && omniORB::traceLevel > 1)
+        _CORBA_null_string_ptr(0);
+      CORBA::Char('\0') >>= s;
+    }
+  }
+
+  virtual void unmarshalReturnedValues(cdrStream& s) {
+    pd_result <<= s;
+  }
+
+  inline CORBA::Boolean result() { return pd_result; }
+
+private:
+  const char* arg_x;
+  CORBA::Boolean pd_result;
+};
+
 
 CORBA::Boolean
 omniObject::_real_is_a(const char *repoId)
@@ -581,7 +443,7 @@ omniObject::_real_is_a(const char *repoId)
   if (!repoId)
     return 0;
 
-  if (!is_proxy() || pd_original_repoId == 0) {
+  if (!is_proxy() || pd_data.p.pd_use_as_repositoryID == 0) {
     if (_widenFromTheMostDerivedIntf(repoId) ||
 	strcmp((const char*)CORBA::Object::repositoryID,repoId) == 0)
       return 1;
@@ -589,11 +451,11 @@ omniObject::_real_is_a(const char *repoId)
       return 0;
   }
 
-  // Reach here because is_proxy() == 1 and pd_original_repoId != 0
+  // Reach here because is_proxy() == 1 and pd_use_as_repositoryID != 0
   // This is the case when the repository ID of the object is not the
   // same as the original repository ID of this proxy object.
   // That is, we don't know the exact type of this object but some time
-  // in the past we were told this object is of type pd_original_repoId.
+  // in the past we were told this object is of type pd_use_as_repositoryID.
   // We have to use the _is_a operation to query the remote object to see
   // see if it really is an instance of the type identified by <repoId>.
 
@@ -603,106 +465,11 @@ omniObject::_real_is_a(const char *repoId)
     omniORB::log.flush();
   }
 
-  CORBA::ULong   _retries = 0;
-#ifndef EGCS_WORKAROUND
-ISA_again:
-#else
-while(1) {
-#endif
-  omniRopeAndKey _r;
-  CORBA::Boolean _fwd = getRopeAndKey(_r);
-  CORBA::Boolean _reuse = 0;
-  CORBA::Boolean _result;
-  try {
-    GIOP_C _c(_r.rope());
-    _reuse = _c.isReUsingExistingConnection();
-    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),6);
-    _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
-    _msgsize += 4 + strlen((const char *)repoId) + 1;
-    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"_is_a",6,_msgsize,0);
-    {
-      CORBA::ULong _len = strlen((const char *)repoId)+1;
-      _len >>= _c;
-      _c.put_char_array((const CORBA::Char *)((const char*)repoId),_len);
-    }
-    switch (_c.ReceiveReply())
-    {
-      case GIOP::NO_EXCEPTION:
-      {
-        _result <<= _c;
-        _c.RequestCompleted();
-        return _result;
-        break;
-      }
-      case GIOP::USER_EXCEPTION:
-      {
-        _c.RequestCompleted(1);
-        throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
-        break;
-      }
-      case GIOP::SYSTEM_EXCEPTION:
-      {
-        _c.RequestCompleted(1);
-        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
-      }
-      case GIOP::LOCATION_FORWARD:
-      {
-        {
-          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
-          _c.RequestCompleted();
-          if (CORBA::is_nil(obj)) {
-            if (omniORB::traceLevel > 10) {
-              omniORB::log << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\n";
-	      omniORB::log.flush();
-            }
-            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
-          }
-          omniRopeAndKey _0RL_r;
-          obj->PR_getobj()->getRopeAndKey(_0RL_r);
-          setRopeAndKey(_0RL_r);
-        }
-        if (omniORB::traceLevel > 10) {
-          omniORB::log << "GIOP::LOCATION_FORWARD: retry request.\n";
-	  omniORB::log.flush();
-        }
-	break;
-      }
-    }
-  }
-  catch (const CORBA::COMM_FAILURE& ex) {
-    if (_reuse || _fwd) {
-      if (_fwd)
-        resetRopeAndKey();
-      CORBA::TRANSIENT ex2(ex.minor(),ex.completed());
-      if (!_omni_callTransientExceptionHandler(this,_retries++,ex2))
-	throw ex2;
-    }
-    else {
-      if (!_omni_callCommFailureExceptionHandler(this,_retries++,ex))
-	throw;
-    }
-  }
-  catch (const CORBA::TRANSIENT& ex) {
-    if (!_omni_callTransientExceptionHandler(this,_retries++,ex))
-      throw;
-  }
-  catch (const CORBA::SystemException& ex) {
-    if (!_omni_callSystemExceptionHandler(this,_retries++,ex))
-      throw;
-  }
-#ifndef EGCS_WORKAROUND
-  goto ISA_again;
-#else
+  omniIsACallDesc _call_desc("_is_a",6,repoId);
+  OmniProxyCallWrapper::invoke(this, _call_desc);
+  return _call_desc.result();
 }
-#endif
-#ifdef NEED_DUMMY_RETURN
-  {
-    // never reach here! Dummy return to keep some compilers happy.
-    CORBA::Boolean _result = 0;
-    return _result;
-  }
-#endif
-}
+
 
 void*
 omniObject::_realNarrow(const char* repoId)
@@ -728,9 +495,11 @@ omniObject::_realNarrow(const char* repoId)
       if (_real_is_a(repoId)) {
 	// OK, it is a base type
 	try {
-	  omniObject* omniobj = omni::createObjRef(NP_IRRepositoryId(),
-						   repoId,
-						   iopProfiles(),0);
+	  GIOPObjectInfo* objInfo;
+	  if (!(objInfo = pd_data.p.pd_originalInfo))
+	    objInfo = pd_objectInfo;
+	  omniObject* omniobj = omni::createObjRef(NP_IRRepositoryId(),repoId,
+			new IOP::TaggedProfileList(*objInfo->iopProfiles()));
 	  target = omniobj->_widenFromTheMostDerivedIntf(repoId);
 	}
 	catch(...) {}
@@ -822,41 +591,6 @@ omniObject::_systemExceptionHandler(void* new_handler,void* cookie)
 }
 
 
-
-omniObject::~omniObject()
-{
-  if (pd_refCount) {
-    // A dtor should not be called if the reference count is not 0
-    assert(0);
-  }
-  if (is_proxy() && pd_rope) {
-    pd_rope->decrRefCount();
-    pd_rope = 0;
-  }
-  if (pd_repoId)
-    delete [] pd_repoId;
-  pd_repoId = 0;
-  if (pd_original_repoId)
-    delete [] pd_original_repoId;
-  pd_original_repoId = 0;
-  if (is_proxy() && pd_objkey.foreign) {
-    delete [] pd_objkey.foreign;
-    pd_objkey.foreign = 0;
-  }
-  if (pd_iopprofile) {
-    delete pd_iopprofile;
-    pd_iopprofile = 0;
-  }
-  if (pd_flags.transient_exception_handler |
-      pd_flags.commfail_exception_handler |
-      pd_flags.system_exception_handler) {
-    omniExHandlers_iterator iter;
-    iter.remove(this);
-  }
-  return;
-}
-
-
 class nilObjectManager : public omniObjectManager {
 public:
   ropeFactoryList* incomingRopeFactories() {
@@ -874,6 +608,7 @@ public:
 #endif
   }
 };
+
 
 static nilObjectManager _nilObjectManager;
 
@@ -894,9 +629,8 @@ public:
     : OmniProxyCallDesc("lookup_id", 10),
       arg_search_id(_search_id)  {}
 
-  virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
-  virtual void marshalArguments(GIOP_C&);
-  virtual void unmarshalReturnedValues(GIOP_C&);
+  virtual void marshalArguments(cdrStream&);
+  virtual void unmarshalReturnedValues(cdrStream&);
 
   inline CORBA::Object_ptr result() { return pd_result; }
 
@@ -906,28 +640,20 @@ private:
 };
 
 
-CORBA::ULong
-OmniORBGetInterfaceCallDesc::alignedSize(CORBA::ULong msgsize)
+void
+OmniORBGetInterfaceCallDesc::marshalArguments(cdrStream& s)
 {
-  msgsize = omni::align_to(msgsize,omni::ALIGN_4);
-  return msgsize + 4 + (arg_search_id ? strlen(arg_search_id) + 1 : 1);
+  CORBA::String_member m;
+  m._ptr = (char*) arg_search_id;
+  m >>= s;
+  m._ptr = 0;
 }
 
 
 void
-OmniORBGetInterfaceCallDesc::marshalArguments(GIOP_C& giop_client)
+OmniORBGetInterfaceCallDesc::unmarshalReturnedValues(cdrStream& s)
 {
-  CORBA::String_member s;
-  s._ptr = (char*) arg_search_id;
-  s >>= giop_client;
-  s._ptr = 0;
-}
-
-
-void
-OmniORBGetInterfaceCallDesc::unmarshalReturnedValues(GIOP_C& giop_client)
-{
-  pd_result = CORBA::Object::unmarshalObjRef(giop_client);
+  pd_result = CORBA::Object::unmarshalObjRef(s);
 }
 
 
@@ -946,4 +672,137 @@ internal_get_interface(const char* repoId)
   return call_desc.result();
 }
 
+//////////////////////////////////////////////////////////////////////
+/////////////////////// GIOPObjectInfo         ///////////////////////
+//////////////////////////////////////////////////////////////////////
 
+GIOPObjectInfo::GIOPObjectInfo() : pd_refcount(1) {}
+
+GIOPObjectInfo*
+omniObject::getInvokeInfo(CORBA::Boolean& location_forwarded)
+{
+  omni_mutex_lock sync(omniObject::objectTableLock);
+
+  if (!is_proxy()) {
+
+    // XXX We are holding the objectTableLock while creating the
+    //     GIOPObjectInfo. This is bad and would hurt MP performance.
+    //
+    // We create a GIOPObjectInfo if we haven't got one yet.
+    pd_objectInfo = new GIOPObjectInfo();
+    pd_objectInfo->repositoryID_ = pd_repositoryID;
+
+    IOP::TaggedProfileList_var pl(new IOP::TaggedProfileList);
+    ropeFactory_iterator iter(pd_data.l.pd_manager->incomingRopeFactories());
+    incomingRopeFactory* rp;
+    while ((rp = (incomingRopeFactory*) iter())) {
+      rp->getIncomingIOPprofiles((CORBA::Octet*)&pd_data.l.pd_key,
+				 sizeof(pd_data.l.pd_key),
+				 *(pl.operator->()));
+    }
+    pd_objectInfo->iopProfiles_ = pl._retn();
+    // We also have to return a loopback rope in case 
+    // the caller is using the rope to contact this object. One situation
+    // in which this can occur is when the LOCATION FORWARDING code in
+    // a proxy object's stub get this object as the new object reference
+    // to forward the request to.
+    pd_objectInfo->rope_ = pd_data.l.pd_manager->defaultLoopBack();
+    pd_objectInfo->rope_->incrRefCount();
+    pd_objectInfo->version_ = giopStreamImpl::maxVersion()->version();
+    pd_objectInfo->object_key_.length(sizeof(pd_data.l.pd_key));
+    memcpy((void*)pd_objectInfo->object_key_.get_buffer(),
+	   (void*)&pd_data.l.pd_key,sizeof(pd_data.l.pd_key));
+  }
+  else {
+    location_forwarded = pd_flags.forwardlocation;
+  }
+  pd_objectInfo->duplicateNoLock();
+  return pd_objectInfo;
+}
+
+void
+omniObject::setInvokeInfo(GIOPObjectInfo* g, CORBA::Boolean keepIOP)
+{
+  omni_mutex_lock sync(omniObject::objectTableLock);
+
+  if (!is_proxy()) return;
+
+  GIOPObjectInfo* old = pd_objectInfo;
+  pd_objectInfo = g;
+
+  if (keepIOP) {
+    pd_flags.forwardlocation = 1;
+    if (!pd_data.p.pd_originalInfo) {
+      pd_data.p.pd_originalInfo = old;
+    }
+    else {
+      old->releaseNoLock();
+    }
+  }
+  else {
+    pd_flags.forwardlocation = 0;
+    old->releaseNoLock();
+    if (pd_data.p.pd_originalInfo) {
+      pd_data.p.pd_originalInfo->releaseNoLock();
+      pd_data.p.pd_originalInfo = 0;
+    }
+  }
+}
+
+void
+omniObject::resetInvokeInfo()
+{
+  omni_mutex_lock sync(omniObject::objectTableLock);
+
+  if (!is_proxy()) return;
+
+  if (pd_flags.forwardlocation) {
+    pd_objectInfo->releaseNoLock();
+    pd_objectInfo = pd_data.p.pd_originalInfo;
+    pd_data.p.pd_originalInfo = 0;
+    pd_flags.forwardlocation = 0;
+    pd_flags.existent_and_type_verified = 0;
+  }
+}
+
+void
+GIOPObjectInfo::duplicate()
+{
+  omni_mutex_lock sync(omniObject::objectTableLock);
+  duplicateNoLock();
+}
+
+void
+GIOPObjectInfo::duplicateNoLock()
+{
+
+  if (pd_refcount <= 0)
+    throw omniORB::fatalException(__FILE__,__LINE__,
+			    "GIOPObjectInfo::duplicate() -ve ref count.");
+  pd_refcount++;
+}
+
+void
+GIOPObjectInfo::release()
+{
+  omni_mutex_lock sync(omniObject::objectTableLock);
+  releaseNoLock();
+}
+
+void
+GIOPObjectInfo::releaseNoLock()
+{
+  if (pd_refcount <= 0)
+    throw omniORB::fatalException(__FILE__,__LINE__,
+			    "GIOPObjectInfo::release() -ve ref count.");
+  pd_refcount--;
+  if (pd_refcount == 0) delete this;
+}
+
+void
+omniObject::getKey(omniObjectKey& k)
+{
+  assert(!is_proxy());
+
+  memcpy((void*)&k,(void*)&pd_data.l.pd_key,sizeof(k));
+}

@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.4.4.1  1999/09/15 20:18:18  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.4  1999/05/25 18:10:46  sll
   Now CORBA::ORB::ObjectIdList and CORBA_InitialReference::ObjIdList
   are different types.
@@ -83,11 +91,8 @@ class omniInitialReferences {
     CORBA::Object_member ref;
 
     // The following marshalling functions are not implemented.
-    size_t NP_alignedSize(size_t initialoffset) const;
-    void operator>>= (NetBufferedStream &s) const;
-    void operator<<= (NetBufferedStream &s);
-    void operator>>= (MemBufferedStream &s) const;
-    void operator<<= (MemBufferedStream &s);
+    void operator>>= (cdrStream &s) const;
+    void operator<<= (cdrStream &s);
   };
 
   _CORBA_Unbounded_Sequence< serviceRecord > pd_serviceList;

@@ -28,6 +28,18 @@
 //    This is done to avoid changing the CORBA header every time Any changes.
 //
 
+/* 
+   $Log$
+   Revision 1.3.6.1  1999/09/15 20:18:25  sll
+   Updated to use the new cdrStream abstraction.
+   Marshalling operators for NetBufferedStream and MemBufferedStream are now
+   replaced with just one version for cdrStream.
+   Derived class giopStream implements the cdrStream abstraction over a
+   network connection whereas the cdrMemoryStream implements the abstraction
+   with in memory buffer.
+
+*/
+
 #include "anyP.h"
 
 
@@ -36,7 +48,7 @@
 
 AnyP::AnyP(CORBA::TypeCode_ptr tc)
 {
-  pd_mbuf = new MemBufferedStream();
+  pd_mbuf = new cdrMemoryStream();
   pd_releaseptr = 0;
   pd_parser = new tcParser(*pd_mbuf, tc);
   pd_cached_data_ptr = 0;
@@ -46,7 +58,7 @@ AnyP::AnyP(CORBA::TypeCode_ptr tc)
 AnyP::AnyP(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release)
 {
   // Create a read-only membufferedstream to read from the supplied buffer
-  pd_mbuf = new MemBufferedStream(value);
+  pd_mbuf = new cdrMemoryStream(value);
   pd_dataptr = value;
   pd_releaseptr = release;
   pd_parser = new tcParser(*pd_mbuf, tc);
@@ -56,15 +68,15 @@ AnyP::AnyP(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release)
 
 AnyP::AnyP(const AnyP* existing)
 {
-  pd_mbuf = new MemBufferedStream();
+  pd_mbuf = new cdrMemoryStream();
   pd_releaseptr = 0;
   pd_parser = new tcParser(*pd_mbuf, existing->pd_parser->getTC());
-  existing->pd_mbuf->rewind_in_mkr();
+  existing->pd_mbuf->rewindInputPtr();
   try {
     pd_parser->copyFrom(*existing->pd_mbuf);
   }
   catch(CORBA::MARSHAL&) {
-    pd_mbuf->rewind_inout_mkr();
+    pd_mbuf->rewindPtrs();
   }
   pd_cached_data_ptr = 0;
 }

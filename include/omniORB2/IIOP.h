@@ -31,6 +31,14 @@
 
 /*
   $Log$
+  Revision 1.10.4.1  1999/09/15 20:18:15  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.10  1999/06/18 21:13:24  sll
   Updted to copyright notice.
 
@@ -67,17 +75,12 @@ public:
     _CORBA_Char minor; 
   };
 
-  // Current IIOP Protocol version
-  static _core_attr const _CORBA_Char current_major;
-  static _core_attr const _CORBA_Char current_minor;
-
   struct ProfileBody {
-    Version                 iiop_version;
-    _CORBA_Char*            host;       // deleted by dtor
+    Version                 version;
+    _CORBA_String_member    host;
     _CORBA_UShort           port;
     _CORBA_Unbounded_Sequence_Octet  object_key;
-
-    ~ProfileBody() { if (host) delete [] host; }
+    IOP::MultipleComponentProfile    components;
   };
 
 };

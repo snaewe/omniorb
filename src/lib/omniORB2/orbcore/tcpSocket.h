@@ -29,6 +29,14 @@
 
 /*
  $Log$
+ Revision 1.5.4.1  1999/09/15 20:18:28  sll
+ Updated to use the new cdrStream abstraction.
+ Marshalling operators for NetBufferedStream and MemBufferedStream are now
+ replaced with just one version for cdrStream.
+ Derived class giopStream implements the cdrStream abstraction over a
+ network connection whereas the cdrMemoryStream implements the abstraction
+ with in memory buffer.
+
  Revision 1.5  1999/07/09 21:04:29  sll
  Added private data member in tcpSocketMTincomingFactory.
 
@@ -92,8 +100,7 @@ public:
   CORBA::Boolean decodeIOPprofile(const IOP::TaggedProfile& profile,
 					  // return values:
 					  Endpoint*&     addr,
-					  CORBA::Octet*& objkey,
-					  size_t&        objkeysize) const;
+				          GIOPObjectInfo* objectInfo) const;
   void encodeIOPprofile(const Endpoint* addr,
 			const CORBA::Octet* objkey,
 			const size_t objkeysize,
@@ -167,8 +174,7 @@ public:
   static const unsigned int buffer_size;
 
   tcpSocketStrand(tcpSocketOutgoingRope *r,
-		  tcpSocketEndpoint *remote,
-		  _CORBA_Boolean heapAllocated = 0);
+		  tcpSocketEndpoint *remote);
   // Concurrency Control:
   //    MUTEX = r->pd_lock
   // Pre-condition:
@@ -177,8 +183,7 @@ public:
   //    Still hold <MUTEX> on exit, even if an exception is raised
 
   tcpSocketStrand(tcpSocketIncomingRope *r,
-		  tcpSocketHandle_t sock,
-		  _CORBA_Boolean heapAllocated = 0);
+		  tcpSocketHandle_t sock);
   // Concurrency Control:
   //    MUTEX = r->pd_lock
   // Pre-condition:

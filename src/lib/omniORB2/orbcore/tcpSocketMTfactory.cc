@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.22.4.1  1999/09/15 20:18:27  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.22  1999/08/30 16:54:24  sll
   Wait much less time in tcpSocketStrand::shutdown. Added trace message.
 
@@ -210,12 +218,11 @@ private:
 class tcpSocketWorker : public omni_thread {
 public:
   tcpSocketWorker(tcpSocketStrand* s, tcpSocketMTincomingFactory* f) : 
-          omni_thread(s), pd_factory(f), pd_sync(s,0,0) 
+          omni_thread(s), pd_factory(f)
     {
-      s->decrRefCount();
       start();
     }
-  virtual ~tcpSocketWorker() { 
+  virtual ~tcpSocketWorker() {
     omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
     assert(pd_factory->pd_shutdown_nthreads != 0);
     if (pd_factory->pd_shutdown_nthreads > 0) {
@@ -231,7 +238,6 @@ public:
 
 private:
   tcpSocketMTincomingFactory* pd_factory;
-  Strand::Sync    pd_sync;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -429,7 +435,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 					     unsigned int maxStrands,
 					     tcpSocketEndpoint *e,
 					     CORBA::Boolean exportflag)
-  : Rope(f->anchor(),maxStrands,1), pd_export(exportflag), 
+  : Rope(f->anchor(),maxStrands), pd_export(exportflag), 
     pd_shutdown(NO_THREAD), rendezvouser(0)
 {
   struct sockaddr_in myaddr;
@@ -709,7 +715,7 @@ tcpSocketMToutgoingFactory::findOrCreateOutgoing(Endpoint* addr)
 tcpSocketOutgoingRope::tcpSocketOutgoingRope(tcpSocketMToutgoingFactory* f,
 					     unsigned int maxStrands,
 					     tcpSocketEndpoint *e)
-  : Rope(f->anchor(),maxStrands,1)
+  : Rope(f->anchor(),maxStrands)
 {
   remote = new tcpSocketEndpoint(e);
 }
@@ -729,7 +735,7 @@ tcpSocketOutgoingRope::~tcpSocketOutgoingRope()
 Strand *
 tcpSocketOutgoingRope::newStrand()
 {
-  return new tcpSocketStrand(this,remote,1);
+  return new tcpSocketStrand(this,remote);
 }
 
 
@@ -741,15 +747,14 @@ tcpSocketOutgoingRope::newStrand()
 const 
 unsigned int 
 tcpSocketStrand::buffer_size = 8192 + (int)omni::max_alignment;
-
+//tcpSocketStrand::buffer_size = 1024 + (int)omni::max_alignment;
 
 static tcpSocketHandle_t realConnect(tcpSocketEndpoint* r);
 
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketOutgoingRope *rope,
-				 tcpSocketEndpoint   *r,
-				 CORBA::Boolean heapAllocated)
-  : reliableStreamStrand(tcpSocketStrand::buffer_size,rope,heapAllocated),
+				 tcpSocketEndpoint   *r)
+  : reliableStreamStrand(tcpSocketStrand::buffer_size,rope),
     pd_send_giop_closeConnection(0), pd_delay_connect(0)
 {
   // Do not try to connect to the remote host in this ctor.
@@ -769,9 +774,8 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketOutgoingRope *rope,
 }
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketIncomingRope *r,
-				 tcpSocketHandle_t sock,
-				 CORBA::Boolean heapAllocated)
-  : reliableStreamStrand(tcpSocketStrand::buffer_size,r,heapAllocated),
+				 tcpSocketHandle_t sock)
+  : reliableStreamStrand(tcpSocketStrand::buffer_size,r),
     pd_socket(sock), pd_send_giop_closeConnection(1), pd_delay_connect(0)
 {
 }
@@ -819,6 +823,8 @@ static void dumpbuf(unsigned char* buf, size_t sz)
 size_t
 tcpSocketStrand::ll_recv(void* buf, size_t sz)
 {
+  assert (sz < tcpSocketStrand::buffer_size);
+
   if (pd_delay_connect) {
     // We have not connect to the remote host yet. Do the connect now.
     // Note: May block on connect for sometime if the remote host is down
@@ -826,10 +832,11 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
     if ((pd_socket = realConnect(pd_delay_connect)) == RC_INVALID_SOCKET) {
       _setStrandIsDying();
 #ifndef __WIN32__
-      throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+      raiseException(errno,CORBA::COMPLETED_NO);
 #else
-      throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+      raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
+      // Never reach here.
     }
     delete pd_delay_connect;
     pd_delay_connect = 0;
@@ -844,24 +851,26 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
 	{
 	  _setStrandIsDying();
 #ifndef __WIN32__
-	  throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+	  raiseException(errno,CORBA::COMPLETED_NO);
 #else
-	  throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+	  raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
+	  // Never reach here
 	}
     }
     else
       if (rx == 0) {
 	_setStrandIsDying();
 #ifndef __WIN32__
-	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+	raiseException(errno,CORBA::COMPLETED_NO);
 #else
-	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+	raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
+	// Never reach here.
       }
     break;
   }
-  if (omniORB::traceLevel >= 25) {
+  if (omniORB::traceLevel >= 30) {
       fprintf(stderr,"ll_recv: %d bytes\n",rx);
       ::dumpbuf((unsigned char*)buf,rx);
   }
@@ -878,9 +887,9 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
     if ((pd_socket = realConnect(pd_delay_connect)) == RC_INVALID_SOCKET) {
       _setStrandIsDying();
 #ifndef __WIN32__
-      throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+      raiseException(errno,CORBA::COMPLETED_NO);
 #else
-      throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+      raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
     }
     delete pd_delay_connect;
@@ -890,7 +899,7 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
   int tx;
   char *p = (char *)buf;
 
-  if (omniORB::traceLevel >= 25) {
+  if (omniORB::traceLevel >= 30) {
       fprintf(stderr,"ll_send: %d bytes\n",sz);
       ::dumpbuf((unsigned char*)buf,sz);
   }
@@ -902,14 +911,14 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
 	continue;
       else {
 	_setStrandIsDying();
-	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+	raiseException(errno,CORBA::COMPLETED_NO);
       }
 #else
       if (::WSAGetLastError() == WSAEINTR)
  	continue;
       else {
  	_setStrandIsDying();
-	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_MAYBE);
+	raiseException(::WSAGetLastError(),CORBA::COMPLETED_MAYBE);
       }
 #endif
     }
@@ -917,9 +926,9 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
       if (tx == 0) {
 	_setStrandIsDying();
 #ifndef __WIN32__
-	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+	raiseException(errno,CORBA::COMPLETED_NO);
 #else
-	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+	raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
       }
     sz -= tx;
@@ -957,7 +966,7 @@ tcpSocketStrand::shutdown()
 	FD_ZERO(&wrfds);
 	FD_SET(pd_socket,&wrfds);
 #       endif
-	struct timeval t = { 0,100000};
+	struct timeval t = { 0,100000 };
 	int rc;
 	if ((rc = select(pd_socket+1,0,&wrfds,0,&t)) <= 0) {
 	  // Any timeout or error, we just don't border sending the message.
@@ -973,16 +982,7 @@ tcpSocketStrand::shutdown()
       }
     }
   _setStrandIsDying();
-  if (omniORB::traceLevel >= 25) {
-    omniORB::log << "tcpSocketStrand::shutdown() fd no. " << pd_socket << "\n";
-    omniORB::log.flush();
-  }
   SHUTDOWNSOCKET(pd_socket);
-  if (omniORB::traceLevel >= 25) {
-    omniORB::log << "tcpSocketStrand::shutdown() fd no. " << pd_socket 
-		 << " Done\n";
-    omniORB::log.flush();
-  }
   return;
 }
 
@@ -1162,7 +1162,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	  continue;
 	}
 
-	newSt = new tcpSocketStrand(r,new_sock,1);
+	newSt = new tcpSocketStrand(r,new_sock);
 	newSt->incrRefCount(1);
       }
 
@@ -1381,6 +1381,9 @@ tcpSocketWorker::_realRun(void *arg)
       }
     }
   }
+
+  s->decrRefCount(0,1);
+
   if (omniORB::traceLevel >= 5) {
     omniORB::log << "tcpSocketMT Worker thread: exits.\n";
     omniORB::log.flush();

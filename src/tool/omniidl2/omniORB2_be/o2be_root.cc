@@ -28,6 +28,14 @@
 
 /*
   $Log$
+  Revision 1.22.4.1  1999/09/15 20:18:41  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.22  1999/07/02 19:15:44  sll
   Do not generate #include <orb.hh>.
 
@@ -118,7 +126,7 @@ const char* operators_fragment_suffix = "_operators";
 
 // Do not forget to update the version number in omniORB_x_y below.
 // The variable is defined in omniInternal.h.
-#define OMNIORB_LIBRARY_VERSION    "omniORB_2_8"
+#define OMNIORB_LIBRARY_VERSION    "omniORB_2_9"
 
 
 o2be_root::o2be_root(UTL_ScopedName *n, UTL_StrList *p)

@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.11.4.1  1999/09/15 20:18:14  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.11  1999/06/26 17:55:19  sll
   Added new exception return type terminateProcessing.
 
@@ -63,9 +71,9 @@
 // side functions.
 //
 // GIOP_C and GIOP_S are built on top of a strand. Direct access to the strand
-// can be done via the NetBufferedStream class which is a public base
-// class of GIOP_C and GIOP_S. Typically clients of GIOP_C and GIOP_S uses
-// the NetBufferedStream interface to marshall and unmarshall arguments.
+// can be done via the cdrStream member of GIOP_C and GIOP_S.
+// Typically clients of GIOP_C and GIOP_S uses
+// the cdrStream interface to marshall and unmarshall arguments.
 //
 // Calling the constructors of GIOP_C and GIOP_S acquire a strand.
 // GIOP_C and GIOP_S implements the appropriate exclusive access to the
@@ -73,17 +81,7 @@
 
 class GIOP_Basetypes {
 public:
-  class MessageHeader {
-  public:
-    typedef _CORBA_Char HeaderType[8];
-    static _core_attr const HeaderType Request;
-    static _core_attr const HeaderType Reply;
-    static _core_attr const HeaderType CancelRequest;
-    static _core_attr const HeaderType LocateRequest;
-    static _core_attr const HeaderType LocateReply;
-    static _core_attr const HeaderType CloseConnection;
-    static _core_attr const HeaderType MessageError;
-  };
+
   struct _SysExceptRepoID {
     _CORBA_Char *id;
     _CORBA_ULong len;
@@ -133,10 +131,13 @@ public:
 };
 
 
-class GIOP_C : public GIOP_Basetypes, public NetBufferedStream {
+class GIOP_C {
 public:
 
-  GIOP_C(Rope *r);
+  GIOP_C(GIOPObjectInfo* f);
+  // GIOP_C ctor. The argument f will be managed by this object and will
+  // be released in the dtor.
+
   ~GIOP_C();
 
   enum State { Idle,
@@ -152,12 +153,12 @@ public:
   //       Idle                  -  no request has been initiated
   //       RequestInProgress     -  a request is being composed, arguments
   //                                can be marshalled into the
-  //                                NetBufferedStream
+  //                                cdrStream
   //       WaitingForReply       -  the request has been sent, no reply
   //                                has come in yet.
   //       ReplyIsBeingProcessed -  a reply has started arriving, results
   //                                can be unmarshalled from the
-  //                                NetBufferedStream
+  //                                cdrStream
   //       Zombie                -  the destructor has been called
   //
   // Calling the member functions InitialiseRequest(), ReceiveReply() and
@@ -196,8 +197,8 @@ public:
   //
   // When the destructor is called, the state is examined. If it is *not* in
   // Idle or WaitingForReply, there is something seriously wrong with the
-  // NetBufferedStream. Also the state of the strand, on which the
-  // NetBufferedStream is built, is unknown. For this reason, the strand
+  // cdrStream. Also the state of the strand, on which the
+  // cdrStream is built, is unknown. For this reason, the strand
   // is marked as dying by the destructor. The destructor may be called
   // multiple times. It simply returns if the instance is already in Zombie
   // state.
@@ -208,52 +209,43 @@ public:
   // CORBA::INTERNAL() exception to be raised.
   //
 
-  void InitialiseRequest(const void          *objkey,
-			 const size_t         objkeysize,
-			 const char          *opname,
-			 const size_t         opnamesize,
-			 const size_t         msgsize,
-			 const _CORBA_Boolean oneway);
+  void InitialiseRequest(const char      *opname,
+			 size_t           opnamesize,
+			 _CORBA_Boolean   oneway,
+			 _CORBA_Boolean   response_expected);
   // Initialise a Request message.
   // Note: <msgsize> is the size of the whole message including the
   //       GIOP message header and the Request message header.
+  // XXX For the moment, the following invariant must be true:
+  //         <oneway> == !<response_expected>
+  //     This will be relax in future to allow for optional use of
+  //     the response_flags feature in GIOP 1.2 or above.
 
 
   GIOP::ReplyStatusType ReceiveReply();
 
   void RequestCompleted(_CORBA_Boolean skip=0);
 
-  GIOP::LocateStatusType IssueLocateRequest(const void   *objkey,
-					    const size_t  objkeysize);
+  GIOP::LocateStatusType IssueLocateRequest();
 
-  static size_t RequestHeaderSize(const size_t objkeysize,
-				  const size_t opnamesize);
-  // Return the header size. This includes the size of the GIOP message
-  // header and the Request message header.
-
-  size_t MaxMessageSize() const { return pd_max_message_size; }
-  // Returns the maximum size of a GIOP message (excluding the header) that
-  // can be delivered or received. This value is the smallest of two
-  // values: the ORB-wide limit and the transport dependent limit.
-  //
-  // If an incoming message exceeds this limit, the message will not be
-  // unmarshalled and the CORBA::COMM_FAILURE exception will be raised. The
-  // connection is closed as a result.
-  //
-  // If an outgoing message exceeds this limit, the CORBA::MARSHAL exception
-  // will be raised.
+  inline operator cdrStream& () { return (cdrStream&)(*pd_cdrStream); }
+  inline operator giopStream& () { return *pd_cdrStream; }
 
 private:
   State pd_state;
   _CORBA_ULong pd_request_id;
   _CORBA_Boolean pd_response_expected;
-  size_t pd_max_message_size;
+  GIOPObjectInfo* pd_invokeInfo;
+  giopStream* pd_cdrStream;
 
   void UnMarshallSystemException();
 
+  GIOP_C();
+  GIOP_C(const GIOP_C&);
+  GIOP_C& operator=(const GIOP_C&);
 };
 
-class GIOP_S : public GIOP_Basetypes, public NetBufferedStream {
+class GIOP_S {
 public:
 
   static void dispatcher(Strand *s);
@@ -289,12 +281,12 @@ public:
   //      Idle                        - no request has been received
   //      RequestIsBeingProcessed     - a request is being processed, arguments
   //                                    can be unmarshalled from the
-  //                                    NetBufferedStream
+  //                                    cdrStream
   //      WaitingForReply             - An upcall has been dispatched into
   //                                    the object implementation
   //      ReplyIsBeingComposed        - a reply is being composed, results
   //                                    can be marshalled into the
-  //                                    NetBufferedStream
+  //                                    cdrStream
   //      Zombie                      - the destructor has been called
   //
   // Calling the member functions RequestReceived(), InitialiseReply() and
@@ -340,8 +332,8 @@ public:
   //       reply sequence and propagate the exception back to the client.
   //
   // The destructor examines the state, if it is *not* in Idle, there is
-  // something seriously wrong with the NetBufferedStream. Also the state
-  // of the strand, on which the NetBufferedStream is built, is unknown.
+  // something seriously wrong with the cdrStream. Also the state
+  // of the strand, on which the cdrStream is built, is unknown.
   // For this reason, the strand is marked as dying by the destructor. The
   // destructor may be called multiple times. It simply returns if the instance
   // is already in Zombie state.
@@ -353,29 +345,10 @@ public:
 
   void RequestReceived(_CORBA_Boolean skip=0);
 
-  void InitialiseReply(const GIOP::ReplyStatusType status,
-		       const size_t  msgsize);
+  void InitialiseReply(GIOP::ReplyStatusType status);
   // Initialise a Reply message
-  // Note: <msgsize> is the size of the whole message including the
-  //       GIOP message header and the Request message header
 
   void ReplyCompleted();
-
-  static size_t ReplyHeaderSize();
-  // Return the reply header size. This includes the size of the GIOP message
-  // header and the Reply message header
-
-  size_t MaxMessageSize() const { return pd_max_message_size; }
-  // Returns the maximum size of a GIOP message (excluding the header) that
-  // can be delivered or received. This value is the smallest of two
-  // values: the ORB-wide limit and the transport dependent limit.
-  //
-  // If an incoming message exceeds this limit, a MessageError message
-  // will be sent and the CORBA::COMM_FAILURE exception will be raised. The
-  // connection is closed as a result.
-  //
-  // If an outgoing message exceeds this limit, the CORBA::MARSHAL exception
-  // will be raised.
 
   class terminateProcessing {
   public:
@@ -385,27 +358,21 @@ public:
     ~terminateProcessing() {}
   };
 
+  inline operator cdrStream& () { return (cdrStream&)(*pd_cdrStream); }
+  inline operator giopStream& () { return *pd_cdrStream; }
+
 private:
-  State pd_state;
-  _CORBA_ULong   pd_request_id;
-  _CORBA_Boolean pd_response_expected;
-  size_t         pd_max_message_size;
+  State                   pd_state;
+  giopStream::requestInfo pd_invokeInfo;
+  giopStream*             pd_cdrStream;
 
-#define OMNIORB_GIOPDRIVER_GIOP_S_INLINE_BUF_SIZE 32
+  void HandleRequest();
+  void HandleLocateRequest();
+  void HandleCancelRequest();
 
-  _CORBA_Octet  *pd_operation;
-  _CORBA_Octet   pd_op_buffer[OMNIORB_GIOPDRIVER_GIOP_S_INLINE_BUF_SIZE];
-  _CORBA_Octet  *pd_principal;
-  _CORBA_Octet   pd_pr_buffer[OMNIORB_GIOPDRIVER_GIOP_S_INLINE_BUF_SIZE];
-
-  omniObjectKey pd_objkey;
-
-  void HandleRequest(_CORBA_Boolean byteorder);
-  void HandleLocateRequest(_CORBA_Boolean byteorder);
-  void HandleCancelRequest(_CORBA_Boolean byteorder);
-  void HandleMessageError();
-  void HandleCloseConnection();
-  void SendMsgErrorMessage();
+  GIOP_S();
+  GIOP_S(const GIOP_S&);
+  GIOP_S& operator=(const GIOP_S&);
 };
 
 

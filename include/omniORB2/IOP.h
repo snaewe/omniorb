@@ -31,6 +31,14 @@
 
 /*
   $Log$
+  Revision 1.7.4.1  1999/09/15 20:18:15  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.7  1999/06/18 21:13:56  sll
   Updated copyright notice.
 
@@ -67,90 +75,210 @@ public:
     _CORBA_Unbounded_Sequence_Octet profile_data;
 
     // the following are omniORB2 private functions
-    size_t NP_alignedSize(size_t initialoffset) {
-      size_t alignedsize = ((initialoffset+3) & ~((int)3))
-	     + sizeof(ProfileId);
-      return profile_data.NP_alignedSize(alignedsize);
-    }
-    void operator>>= (NetBufferedStream &s);
-    void operator<<= (NetBufferedStream &s);
-    void operator>>= (MemBufferedStream &s);
-    void operator<<= (MemBufferedStream &s);
+    void operator>>= (cdrStream &s);
+    void operator<<= (cdrStream &s);
   };
 
   typedef _CORBA_Unbounded_Sequence<TaggedProfile> TaggedProfileList;
+
+  class TaggedProfileList_out;
   class TaggedProfileList_var {
   public:
-    TaggedProfileList_var() { _ptr = 0; }
-    TaggedProfileList_var(TaggedProfileList* p) { _ptr = p; }
-    TaggedProfileList_var(TaggedProfileList_var& p);
-    ~TaggedProfileList_var() { if (_ptr) delete _ptr; }
-    TaggedProfileList_var& operator= (const TaggedProfileList_var& p) {
-      if (p._ptr) {
-	if (!_ptr) {
-	  _ptr = new TaggedProfileList;
-	  if (!_ptr) {
-	    _CORBA_new_operator_return_null();
-	    // never reach here
-	  }
-	}
-	*_ptr = *p._ptr;
-      }
-      else {
-	if (_ptr) delete _ptr;
-	_ptr = 0;
+    typedef TaggedProfileList _Tseq;
+    typedef TaggedProfileList_var _T_var;
+
+    inline TaggedProfileList_var() : pd_seq(0) {}
+    inline TaggedProfileList_var(_Tseq* s) : pd_seq(s) {}
+    inline TaggedProfileList_var(const _T_var& sv) {
+      if( sv.pd_seq ) {
+	pd_seq = new _Tseq;
+	*pd_seq = *sv.pd_seq;
+      } else
+	pd_seq = 0;
+    }
+    inline ~TaggedProfileList_var() { if( pd_seq ) delete pd_seq; }
+
+    inline _T_var& operator = (_Tseq* s) {
+      if( pd_seq )  delete pd_seq;
+      pd_seq = s;
+      return *this;
+    }
+    inline _T_var& operator = (const _T_var& sv) {
+      if( sv.pd_seq ) {
+	if( !pd_seq )  pd_seq = new _Tseq;
+	*pd_seq = *sv.pd_seq;
+      } else if( pd_seq ) {
+	delete pd_seq;
+	pd_seq = 0;
       }
       return *this;
     }
-    TaggedProfileList_var& operator= (TaggedProfileList* p) {
-      if (_ptr) delete _ptr;
-      _ptr = p;
-      return *this;
-    }
-    TaggedProfile& operator[] (_CORBA_ULong index) { 
-      return (_ptr->NP_data())[index]; 
-    }
-    const TaggedProfile& operator[] (_CORBA_ULong index) const {
-      return (_ptr->NP_data())[index];
-    }
-    inline TaggedProfileList* operator->() const { 
-      return (TaggedProfileList*)_ptr; 
-    }
-    TaggedProfileList* _ptr;
+
+    inline TaggedProfile& operator [] (_CORBA_ULong i) {   return (*pd_seq)[i]; }
+    inline _Tseq* operator -> () { return pd_seq; }
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+    inline operator _Tseq& () const { return *pd_seq; }
+#else
+    inline operator const _Tseq& () const { return *pd_seq; }
+    inline operator _Tseq& () { return *pd_seq; }
+#endif
+
+    inline const _Tseq& in() const { return *pd_seq; }
+    inline _Tseq& inout() { return *pd_seq; }
+    inline _Tseq*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }
+    inline _Tseq* _retn() { _Tseq* tmp = pd_seq; pd_seq = 0; return tmp; }
+
+    friend class TaggedProfileList_out;
+
+  private:
+    _Tseq* pd_seq;
   };
+
+
+  class TaggedProfileList_out {
+  public:
+    typedef TaggedProfileList _Tseq;
+    typedef TaggedProfileList_var _T_var;
+
+    inline TaggedProfileList_out(_Tseq*& s) : _data(s) { _data = 0; }
+    inline TaggedProfileList_out(_T_var& sv)
+      : _data(sv.pd_seq) { sv = (_Tseq*) 0; }
+    inline TaggedProfileList_out(const TaggedProfileList_out& s) : _data(s._data) { }
+    inline TaggedProfileList_out& operator=(const TaggedProfileList_out& s) { _data = s._data; return *this; }
+    inline TaggedProfileList_out& operator=(_Tseq* s) { _data = s; return *this; }
+    inline operator _Tseq*&() { return _data; }
+    inline _Tseq*& ptr() { return _data; }
+    inline _Tseq* operator->() { return _data; }
+    inline TaggedProfile& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
+    _Tseq*& _data;
+
+  private:
+    TaggedProfileList_out();
+    TaggedProfileList_out operator=( const _T_var&);
+  };
+
 
   struct IOR {
     _CORBA_Char       *type_id;
     TaggedProfileList  profiles;
-
-    // the following are omniORB2 private functions
-    size_t NP_alignedSize(size_t initialoffset) {
-      size_t alignedsize = ((initialoffset+3) & ~((int)3))
-	     + sizeof(_CORBA_ULong);
-      alignedsize += strlen((const char *)type_id) + 1;
-      return profiles.NP_alignedSize(alignedsize);
-    }
   };
 
   typedef _CORBA_ULong ComponentId;
+  static _core_attr const ComponentId TAG_ORB_TYPE;
+  static _core_attr const ComponentId TAG_CODE_SETS;
+  static _core_attr const ComponentId TAG_POLICIES;
+  static _core_attr const ComponentId TAG_ALTERNATE_IIOP_ADDRESS;
+  static _core_attr const ComponentId TAG_ASSOCIATION_OPTIONS;
+  static _core_attr const ComponentId TAG_SEC_NAME;
+  static _core_attr const ComponentId TAG_SPKM_1_SEC_MECH;
+  static _core_attr const ComponentId TAG_SPKM_2_SEC_MECH;
+  static _core_attr const ComponentId TAG_KERBEROSV5_SEC_MECH;
+  static _core_attr const ComponentId TAG_CSI_ECMA_SECRET_SEC_MECH;
+  static _core_attr const ComponentId TAG_CSI_ECMA_HYBRID_SEC_MECH;
+  static _core_attr const ComponentId TAG_SSL_SEC_TRANS;
+  static _core_attr const ComponentId TAG_CSI_ECMA_PUBLIC_SEC_MECH;
+  static _core_attr const ComponentId TAG_GENERIC_SEC_MECH;
+  static _core_attr const ComponentId TAG_JAVA_CODEBASE;
+  static _core_attr const ComponentId TAG_COMPLETE_OBJECT_KEY;
+  static _core_attr const ComponentId TAG_ENDPOINT_ID_POSITION;
+  static _core_attr const ComponentId TAG_LOCATION_POLICY;
+  static _core_attr const ComponentId TAG_DCE_STRING_BINDING;
+  static _core_attr const ComponentId TAG_DCE_BINDING_NAME;
+  static _core_attr const ComponentId TAG_DCE_NO_PIPES;
+  static _core_attr const ComponentId TAG_DCE_SEC_MECH;
+
+  static const char* ComponentIDtoName(ComponentId);
+  // omniORB2 private function.
+  // Return the name given the ComponentId. Return nil if the ComponentId
+  // is not recongised.
 
   struct TaggedComponent {
     ComponentId	            tag;
     _CORBA_Unbounded_Sequence_Octet component_data;
 
     // the following are omniORB2 private functions
-    size_t NP_alignedSize(size_t initialoffset) {
-      size_t alignedsize = ((initialoffset+3) & ~((int)3))
-	     + sizeof(_CORBA_ULong);
-      return component_data.NP_alignedSize(alignedsize);
-    }
-    void operator>>= (NetBufferedStream &s);
-    void operator<<= (NetBufferedStream &s);
-    void operator>>= (MemBufferedStream &s);
-    void operator<<= (MemBufferedStream &s);
+    void operator>>= (cdrStream &s);
+    void operator<<= (cdrStream &s);
   };
   
   typedef _CORBA_Unbounded_Sequence<TaggedComponent> MultipleComponentProfile;
+
+  class MultipleComponentProfile_out;
+
+  class MultipleComponentProfile_var {
+  public:
+    typedef MultipleComponentProfile _Tseq;
+    typedef MultipleComponentProfile_var _T_var;
+
+    inline MultipleComponentProfile_var() : pd_seq(0) {}
+    inline MultipleComponentProfile_var(_Tseq* s) : pd_seq(s) {}
+    inline MultipleComponentProfile_var(const _T_var& sv) {
+      if( sv.pd_seq ) {
+	pd_seq = new _Tseq;
+	*pd_seq = *sv.pd_seq;
+      } else
+	pd_seq = 0;
+    }
+    inline ~MultipleComponentProfile_var() { if( pd_seq ) delete pd_seq; }
+
+    inline _T_var& operator = (_Tseq* s) {
+      if( pd_seq )  delete pd_seq;
+      pd_seq = s;
+      return *this;
+    }
+    inline _T_var& operator = (const _T_var& sv) {
+      if( sv.pd_seq ) {
+	if( !pd_seq )  pd_seq = new _Tseq;
+	*pd_seq = *sv.pd_seq;
+      } else if( pd_seq ) {
+	delete pd_seq;
+	pd_seq = 0;
+      }
+      return *this;
+    }
+
+    inline TaggedComponent& operator [] (_CORBA_ULong i) {   return (*pd_seq)[i]; }
+    inline _Tseq* operator -> () { return pd_seq; }
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+    inline operator _Tseq& () const { return *pd_seq; }
+#else
+    inline operator const _Tseq& () const { return *pd_seq; }
+    inline operator _Tseq& () { return *pd_seq; }
+#endif
+
+    inline const _Tseq& in() const { return *pd_seq; }
+    inline _Tseq& inout() { return *pd_seq; }
+    inline _Tseq*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }
+    inline _Tseq* _retn() { _Tseq* tmp = pd_seq; pd_seq = 0; return tmp; }
+
+    friend class MultipleComponentProfile_out;
+
+  private:
+    _Tseq* pd_seq;
+  };
+
+  class MultipleComponentProfile_out {
+  public:
+    typedef MultipleComponentProfile _Tseq;
+    typedef MultipleComponentProfile_var _T_var;
+
+    inline MultipleComponentProfile_out(_Tseq*& s) : _data(s) { _data = 0; }
+    inline MultipleComponentProfile_out(_T_var& sv)
+      : _data(sv.pd_seq) { sv = (_Tseq*) 0; }
+    inline MultipleComponentProfile_out(const MultipleComponentProfile_out& s) : _data(s._data) { }
+    inline MultipleComponentProfile_out& operator=(const MultipleComponentProfile_out& s) { _data = s._data; return *this; }
+    inline MultipleComponentProfile_out& operator=(_Tseq* s) { _data = s; return *this; }
+    inline operator _Tseq*&() { return _data; }
+    inline _Tseq*& ptr() { return _data; }
+    inline _Tseq* operator->() { return _data; }
+    inline TaggedComponent& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
+    _Tseq*& _data;
+
+  private:
+    MultipleComponentProfile_out();
+    MultipleComponentProfile_out operator=( const _T_var&);
+  };
+
 
   typedef _CORBA_ULong ServiceID;
 
@@ -159,31 +287,114 @@ public:
     _CORBA_Unbounded_Sequence_Octet context_data;
 
     // the following are omniORB2 private functions
-    size_t NP_alignedSize(size_t initialoffset) {
-      size_t alignedsize = ((initialoffset+3) & ~((int)3))
-	     + sizeof(_CORBA_ULong);
-      return context_data.NP_alignedSize(alignedsize);
-    }
-    void operator>>= (NetBufferedStream &s);
-    void operator<<= (NetBufferedStream &s);
-    void operator>>= (MemBufferedStream &s);
-    void operator<<= (MemBufferedStream &s);
+    void operator>>= (cdrStream &s);
+    void operator<<= (cdrStream &s);
   };
 
   typedef _CORBA_Unbounded_Sequence<ServiceContext> ServiceContextList;
 
+  class ServiceContextList_out;
+
+  class ServiceContextList_var {
+  public:
+    typedef ServiceContextList _Tseq;
+    typedef ServiceContextList_var _T_var;
+
+    inline ServiceContextList_var() : pd_seq(0) {}
+    inline ServiceContextList_var(_Tseq* s) : pd_seq(s) {}
+    inline ServiceContextList_var(const _T_var& sv) {
+      if( sv.pd_seq ) {
+	pd_seq = new _Tseq;
+	*pd_seq = *sv.pd_seq;
+      } else
+	pd_seq = 0;
+    }
+    inline ~ServiceContextList_var() { if( pd_seq ) delete pd_seq; }
+
+    inline _T_var& operator = (_Tseq* s) {
+      if( pd_seq )  delete pd_seq;
+      pd_seq = s;
+      return *this;
+    }
+    inline _T_var& operator = (const _T_var& sv) {
+      if( sv.pd_seq ) {
+	if( !pd_seq )  pd_seq = new _Tseq;
+	*pd_seq = *sv.pd_seq;
+      } else if( pd_seq ) {
+	delete pd_seq;
+	pd_seq = 0;
+      }
+      return *this;
+    }
+
+    inline ServiceContext& operator [] (_CORBA_ULong i) {   return (*pd_seq)[i]; }
+    inline _Tseq* operator -> () { return pd_seq; }
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+    inline operator _Tseq& () const { return *pd_seq; }
+#else
+    inline operator const _Tseq& () const { return *pd_seq; }
+    inline operator _Tseq& () { return *pd_seq; }
+#endif
+
+    inline const _Tseq& in() const { return *pd_seq; }
+    inline _Tseq& inout() { return *pd_seq; }
+    inline _Tseq*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }
+    inline _Tseq* _retn() { _Tseq* tmp = pd_seq; pd_seq = 0; return tmp; }
+
+    friend class ServiceContextList_out;
+
+  private:
+    _Tseq* pd_seq;
+  };
+
+  class ServiceContextList_out {
+  public:
+    typedef ServiceContextList _Tseq;
+    typedef ServiceContextList_var _T_var;
+
+    inline ServiceContextList_out(_Tseq*& s) : _data(s) { _data = 0; }
+    inline ServiceContextList_out(_T_var& sv)
+      : _data(sv.pd_seq) { sv = (_Tseq*) 0; }
+    inline ServiceContextList_out(const ServiceContextList_out& s) : _data(s._data) { }
+    inline ServiceContextList_out& operator=(const ServiceContextList_out& s) { _data = s._data; return *this; }
+    inline ServiceContextList_out& operator=(_Tseq* s) { _data = s; return *this; }
+    inline operator _Tseq*&() { return _data; }
+    inline _Tseq*& ptr() { return _data; }
+    inline _Tseq* operator->() { return _data; }
+    inline ServiceContext& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
+    _Tseq*& _data;
+
+  private:
+    ServiceContextList_out();
+    ServiceContextList_out operator=( const _T_var&);
+  };
+
   static _core_attr const ServiceID TransactionService;
+  static _core_attr const ServiceID CodeSets; 
+  static _core_attr const ServiceID ChainBypassCheck;
+  static _core_attr const ServiceID ChainBypassInfo;
+  static _core_attr const ServiceID LogicalThreadId;
+  static _core_attr const ServiceID BI_DIR_IIOP;
+  static _core_attr const ServiceID SendingContextRunTime;
+  static _core_attr const ServiceID INVOCATION_POLICIES;
+  static _core_attr const ServiceID FORWARDED_IDENTITY;
+  static _core_attr const ServiceID UnknownExceptionInfo;
+
+  static const char* ServiceIDtoName(ServiceID);
+  // omniORB2 private function.
+  // Return the name given the ComponentId. Return nil if the ComponentId
+  // is not recongised.
 
 
   // omniORB2 private function
-  static _CORBA_Char * iorToEncapStr(const _CORBA_Char *type_id,
-				     const TaggedProfileList *profiles);
+  static char* iorToEncapStr(const char *type_id,
+			     const TaggedProfileList *profiles);
   // returns a heap allocated and stringified IOR representation
   // (ref CORBA 2 spec. 10.6.5)
 
   // omniORB2 private function
-  static void EncapStrToIor(const _CORBA_Char *str,
-			    _CORBA_Char *&type_id,
+  static void EncapStrToIor(const char *str,
+			    char *&type_id,
 			    TaggedProfileList *&profiles);
   // returns the type id and the tagged profile list encapsulated in
   // the stringified IOR representation. Both return values are heap

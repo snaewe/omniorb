@@ -28,6 +28,14 @@
 
 /*
   $Log$
+  Revision 1.8.4.1  1999/09/15 20:18:28  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.8  1999/08/23 08:35:59  sll
   Do not prepend the tcpSocketFactoryType singleton onto the
   ropeFactoryTypeList. This has been done by the ctor of ropeFactoryType.
@@ -63,25 +71,11 @@
 #pragma hdrstop
 #endif
 
+#include <giopStreamImpl.h>
+#include <giopObjectInfo.h>
 #include <ropeFactory.h>
 #include <tcpSocket.h>
 #include <gatekeeper.h>
-
-#ifndef Swap16
-#define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
-#else
-#error "Swap16 has already been defined"
-#endif
-
-#ifndef Swap32
-#define Swap32(l) ((((l) & 0xff000000) >> 24) | \
-		   (((l) & 0x00ff0000) >> 8)  | \
-		   (((l) & 0x0000ff00) << 8)  | \
-		   (((l) & 0x000000ff) << 24))
-#else
-#error "Swap32 has already been defined"
-#endif
-
 
 const char* tcpSocketEndpoint::protocol_name = "TCPIP";
 tcpSocketFactoryType* tcpSocketFactoryType::singleton = 0;
@@ -115,130 +109,66 @@ tcpSocketFactoryType::is_protocol(const char* name) const
   return (strcmp(name,tcpSocketEndpoint::protocol_name) == 0) ? 1 : 0;
 }
 
+
+#if 0
 CORBA::Boolean
 tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
+					  // return values:
+					  Endpoint*&     addr,
+					  CORBA::Octet*& objkey,
+					  size_t&        objkeysize,
+				       GIOPObjectInfo_var& objectInfo) const
+#endif
+CORBA::Boolean
+tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
+				       // return values:
 				       Endpoint*&     addr,
-				       CORBA::Octet*& objkey,
-				       size_t&        objkeysize) const
+				       GIOPObjectInfo* objectInfo) const
+
 {
   if (profile.tag != IOP::TAG_INTERNET_IOP)
     return 0;
 
-  CORBA::Char*  host;
-  CORBA::UShort port;
-  CORBA::ULong begin = 0;
-  CORBA::ULong end = 0;
+  cdrEncapsulationStream s(profile.profile_data.get_buffer(),
+			   profile.profile_data.length(),
+			   1); /* No 8 bytes align data member, so
+				  4 bytes align is sufficent. */
 
-  // profile.profile_data[0] - byteorder
-  end += 1;
-  if (profile.profile_data.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  IIOP::ProfileBody body;
 
-  CORBA::Boolean byteswap = ((profile.profile_data[begin] == 
-			      omni::myByteOrder) ? 0 : 1);
-
-  // profile.profile_data[1] - iiop_version.major
-  // profile.profile_data[2] - iiop_version.minor
-  begin = end;
-  end = begin + 2;
-  if (profile.profile_data.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  body.version.major <<= s;
+  body.version.minor <<= s;
   
-  // iiop_version.major must be 1
-  if (profile.profile_data[begin]   != 1)
+  if (body.version.major != 1) 
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  
-  // iiop_version.minor is either 0 or above.
-  CORBA::Octet minor_version = profile.profile_data[begin+1];
 
-  // profile.profile_data[3] - padding
-  // profile.profile_data[4] - profile.profile_data[7] host string length
-  begin = end + 1;
-  end = begin + 4;
-  if (profile.profile_data.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  {
-    CORBA::ULong len;
-    if (!byteswap) {
-      len = ((CORBA::ULong &) profile.profile_data[begin]);
-    }
-    else {
-      CORBA::ULong t = ((CORBA::ULong &) profile.profile_data[begin]);
-      len = Swap32(t);
-    }
+  body.host <<= s;
 
-    // profile.profile_data[8] - profile.profile_data[8+len-1] host string
-    begin = end;
-    end = begin + len;
-    if (profile.profile_data.length() <= end)
+  body.port <<= s;
+
+  body.object_key <<= s;
+
+  switch (body.version.minor) {
+  case 0:
+    // Check if the profile body ends here.
+    if (s.checkInputOverrun(1,1))
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    // Is this string null terminated?
-    if (((char)profile.profile_data[end-1]) != '\0')
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    host = (CORBA::Char*)&profile.profile_data[begin];
-  }
-    
-  // align to CORBA::UShort
-  begin = (end + 1) & ~(1);
-  // profile.profile_data[begin] port number
-  end = begin + 2;
-  if (profile.profile_data.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  if (!byteswap) {
-    port = ((CORBA::UShort &) profile.profile_data[begin]);
-  }
-  else {
-    CORBA::UShort t = ((CORBA::UShort &) profile.profile_data[begin]);
-    port = Swap16(t);
+    break;
+  default:
+    body.components <<= s;
   }
 
-  // align to CORBA::ULong
-  begin = (end + 3) & ~(3);
-  // profile.profile_data[begin]  object key length
-  end = begin + 4;
-  if (profile.profile_data.length() < end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  // XXX Examine all the profile components and extract the component
+  //     information we are interested in.
 
-  if (profile.profile_data.length() == end) {
-    objkeysize = 0;
-    objkey = new CORBA::Octet[1];
-  }
-  else {
-    CORBA::ULong len;
-    if (!byteswap) {
-      len = ((CORBA::ULong &) profile.profile_data[begin]);
-    }
-    else {
-      CORBA::ULong t = ((CORBA::ULong &) profile.profile_data[begin]);
-      len = Swap32(t);
-    }
+  objectInfo->version_.major = body.version.major;
+  objectInfo->version_.minor = body.version.minor;
+  CORBA::ULong max = body.object_key.maximum();
+  CORBA::ULong len = body.object_key.length();
+  objectInfo->object_key_.replace(max,len,body.object_key.get_buffer(1),1);
+  addr = new tcpSocketEndpoint((CORBA::Char*)body.host._ptr,body.port);
+  body.host._ptr = 0;
 
-    begin = end;
-    end = begin + len;
-    if (profile.profile_data.length() < end)
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    if (minor_version == 0) {
-      // This profile is IIOP 1.0. The encapsulated profile must end exactly
-      // at the end of the object key.
-      if (profile.profile_data.length() != end) {
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-      }
-    }
-    else {
-      // This profile is IIOP 1.1 or above, any data in the profile that
-      // occurs after the object key is silently ignored.
-      // Nothing to do.
-    }
-
-    // extract object key
-    objkeysize = len;
-    objkey = new CORBA::Octet[objkeysize];
-    memcpy((void *)objkey,(void *)&(profile.profile_data[begin]),objkeysize);
-  }
-  addr = new tcpSocketEndpoint(host,port);
   return 1;
 }
 
@@ -253,42 +183,50 @@ tcpSocketFactoryType::encodeIOPprofile(const Endpoint* addr,
     throw omniORB::fatalException(__FILE__,__LINE__,
 				  "Endpoint is not tcpSocket");
 
+  CORBA::ULong hlen = strlen((const char *)tcpaddr->host()) + 1;
   profile.tag = IOP::TAG_INTERNET_IOP;
 
-  CORBA::ULong hlen = strlen((const char *)tcpaddr->host()) + 1;
+  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+
+  CORBA::ULong bufsize;
   {
-    // calculate the total size of the encapsulated stream
-    CORBA::ULong total = 8 + hlen;        // first 4 bytes + aligned host
-    total = ((total + 1) & ~(1)) + 2;     // aligned port value
-    total = ((total + 3) & ~(3)) + 4 +	// aligned object key
-      objkeysize;
-    
-    profile.profile_data.length(total);
+    cdrCountingStream s;
+    omni::myByteOrder >>= s;
+    ver.major >>= s;
+    ver.minor >>= s;
+    hlen >>= s;
+    s.put_char_array((CORBA::Char*)tcpaddr->host(),hlen);
+    tcpaddr->port() >>= s;
+    ::operator>>=((CORBA::ULong) objkeysize,s);
+    s.put_char_array((CORBA::Char*)objkey,objkeysize);
+
+    if (ver.minor > 0) {
+      // XXX extra component puts here.
+      ::operator>>=((CORBA::ULong)0,s);
+    }
+    bufsize = s.total();
   }
 
-  profile.profile_data[0] = omni::myByteOrder;
-  profile.profile_data[1] = 1;       // IIOP major version no. = 1
-  profile.profile_data[2] = 0;       // IIOP minor version no. = 0
-  profile.profile_data[3] = 0;
   {
-    CORBA::ULong &l = (CORBA::ULong &) profile.profile_data[4];
-    l = hlen;
-  }
-  memcpy((void *)&(profile.profile_data[8]),(void *)tcpaddr->host(),hlen);
-  CORBA::ULong idx = ((8 + hlen) + 1) & ~(1);
-  {
-    CORBA::UShort &l = (CORBA::UShort &) profile.profile_data[idx];
-    l = tcpaddr->port();
-  }
-  idx = ((idx + 2) + 3) & ~(3);
-  {
-    CORBA::ULong &l = (CORBA::ULong &) profile.profile_data[idx];
-    l = objkeysize;
-  }
-  if (objkeysize) {
-    idx += 4;
-    memcpy((void *)&profile.profile_data[idx],
-	   (void *)objkey,objkeysize);
+    cdrEncapsulationStream s(bufsize,1);
+    ver.major >>= s;
+    ver.minor >>= s;
+    hlen >>= s;
+    s.put_char_array((CORBA::Char*)tcpaddr->host(),hlen);
+    tcpaddr->port() >>= s;
+    ::operator>>=((CORBA::ULong) objkeysize,s);
+    s.put_char_array((CORBA::Char*)objkey,objkeysize);
+
+    if (ver.minor > 0) {
+      // XXX extra component puts here.
+      ::operator>>=((CORBA::ULong)0,s);
+    }
+
+    CORBA::Octet* p;
+    CORBA::ULong max;
+    CORBA::ULong len;
+    s.getOctetStream(p,max,len);
+    profile.profile_data.replace(max,len,p,1);
   }
 }
 

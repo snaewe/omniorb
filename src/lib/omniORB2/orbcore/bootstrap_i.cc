@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.9.4.1  1999/09/15 20:18:33  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.9  1999/08/16 19:23:21  sll
   Replace static variable dtor with initialiser object to enumerate the
   list of initial object reference on shutdown.
@@ -230,8 +238,8 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
 
     t->encodeIOPprofile((Endpoint*)&addr,objkey,4,p[0]);
 
-    CORBA::String_var ior((char*) IOP::iorToEncapStr((const CORBA::Char*)
-				CORBA_InitialReferences_IntfRepoID,&p));
+    CORBA::String_var ior(IOP::iorToEncapStr(
+			       CORBA_InitialReferences_IntfRepoID,&p));
     CORBA::Object_var o((CORBA::Object_ptr) (omni::stringToObject(ior)
                                ->_widenFromTheMostDerivedIntf(0)));
     pd_bootagent = CORBA_InitialReferences::_narrow(o);
@@ -283,7 +291,7 @@ public:
       omniORB::log <<
 	"  Name  : " << name << "\n"
 	"  IR ID : " << obj->PR_getobj()->NP_IRRepositoryId() << "\n"
-	"  ObjRef: " << (char*)sref << "\n";
+	"  ObjRef: " << (const char*)sref << "\n";
     }
 
     omniORB::log.flush();

@@ -29,6 +29,14 @@
  
 /*
   $Log$
+  Revision 1.9.4.1  1999/09/15 20:18:31  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.9  1999/05/25 17:06:14  sll
   Make sure all padding bytes are converted to 0s in the stringified IOR.
 
@@ -74,37 +82,32 @@
 #endif
 
 
-CORBA::Char * 
-IOP::iorToEncapStr(const CORBA::Char *type_id,
+char*
+IOP::iorToEncapStr(const char *type_id,
 		   const IOP::TaggedProfileList *profiles)
 {
-  MemBufferedStream buf;
+  CORBA::ULong l = strlen(type_id) + 1;
 
-  CORBA::ULong l = strlen((const char *)type_id) + 1;
+  cdrCountingStream count;
+  omni::myByteOrder >>= count;
+  l >>= count;
+  count.put_char_array((CORBA::Char*)type_id,l);
+  *profiles >>= count;
 
-  // lets make an effort to ensure that all the padding bytes are zero'ed.
-  {
-    size_t bufsize = 8 + l;
-    bufsize = profiles->NP_alignedSize(bufsize);
-    CORBA::Char dummy = 0;
-    for (int i=0; i < bufsize; i++) dummy >>= buf;
-    buf.rewind_inout_mkr();
-  }
+  cdrMemoryStream buf(count.total(),1);
 
   // create an encapsulation
   omni::myByteOrder >>= buf;
   l >>= buf;
-  buf.put_char_array(type_id,l);
+  buf.put_char_array((CORBA::Char*)type_id,l);
   *profiles >>= buf;
 
   // turn the encapsulation into a hex string with "IOR:" prepended
-  buf.rewind_in_mkr();
-  size_t s = buf.unRead();
-  CORBA::Char * data = (CORBA::Char *)buf.data();
+  buf.rewindInputPtr();
+  size_t s = buf.bufSize();
+  CORBA::Char * data = (CORBA::Char *)buf.bufPtr();
 
   char *result = new char[4+s*2+1];
-  if (!result)
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
   result[4+s*2] = '\0';
   result[0] = 'I';
   result[1] = 'O';
@@ -124,18 +127,18 @@ IOP::iorToEncapStr(const CORBA::Char *type_id,
     else
       result[j+1] = 'a' + (v - 10);
   }
-  return (CORBA::Char *)result;
+  return result;
 }
 
 void
-IOP::EncapStrToIor(const CORBA::Char *str,
-		   CORBA::Char *&type_id,
+IOP::EncapStrToIor(const char *str,
+		   char*& type_id,
 		   IOP::TaggedProfileList *&profiles)
 {
-  size_t s = (str ? strlen((const char *)str) : 0);
+  size_t s = (str ? strlen(str) : 0);
   if (s<4)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  const char *p = (const char *) str;
+  const char *p = str;
   if (p[0] != 'I' ||
       p[1] != 'O' ||
       p[2] != 'R' ||
@@ -145,7 +148,7 @@ IOP::EncapStrToIor(const CORBA::Char *str,
   s = (s-4)/2;  // how many octets are there in the string
   p += 4;
 
-  MemBufferedStream buf((int)s);
+  cdrMemoryStream buf((int)s);
   for (int i=0; i<(int)s; i++) {
     int j = i*2;
     CORBA::Octet v;
@@ -176,106 +179,88 @@ IOP::EncapStrToIor(const CORBA::Char *str,
     v >>= buf;
   }
 
-  buf.rewind_in_mkr();
+  buf.rewindInputPtr();
   CORBA::Boolean b;
   b <<= buf;
-  buf.byteOrder(b);
+  buf.setByteSwapFlag(b);
 
-  type_id = 0;
-  profiles = 0;
-  try {
-    CORBA::ULong l;
-    l <<= buf;
-    if (l > buf.unRead())
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  CORBA::String_var repoID;
+  IOP::TaggedProfileList_var profileList;
 
-    switch (l) {
+  CORBA::ULong l;
+  l <<= buf;
+  if (!buf.checkInputOverrun(1,l))
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 
-    case 0:
+  switch (l) {
+
+  case 0:
 #ifdef NO_SLOPPY_NIL_REFERENCE
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 #else
-      // According to the CORBA specification 2.0 section 10.6.2:
-      //   Null object references are indicated by an empty set of
-      //   profiles, and by a NULL type ID (a string which contain
-      //   only *** a single terminating character ***).
-      //
-      // Therefore the idlen should be 1.
-      // Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
-      // and sends out a 0 len string.
-      // We quietly accept it here. Turn this off by defining
-      //   NO_SLOPPY_NIL_REFERENCE
-      type_id = new CORBA::Char[1];
-      type_id[0] = (CORBA::Char)'\0';
+    // According to the CORBA specification 2.0 section 10.6.2:
+    //   Null object references are indicated by an empty set of
+    //   profiles, and by a NULL type ID (a string which contain
+    //   only *** a single terminating character ***).
+    //
+    // Therefore the idlen should be 1.
+    // Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
+    // and sends out a 0 len string.
+    // We quietly accept it here. Turn this off by defining
+    //   NO_SLOPPY_NIL_REFERENCE
+    repoID = CORBA::string_alloc(1);
+    repoID[0] = '\0';
 #endif	
-      break;
+    break;
 
-    case 1:
-      type_id = new CORBA::Char[1];
-      buf.get_char_array(type_id,1);
-      if (type_id[0] != (CORBA::Char)'\0')
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-      break;
+  case 1:
+    repoID = CORBA::string_alloc(1);
+    buf.get_char_array((CORBA::Char*)((const char*)repoID),1);
+    if (repoID[0] != '\0')
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    break;
 
-    default:
-      type_id = new CORBA::Char[l];
-      if (!type_id)
-	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-      buf.get_char_array(type_id,l);
-    }
-
-    profiles = new IOP::TaggedProfileList;
-    if (!profiles)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-    *profiles <<= buf;
+  default:
+    repoID = CORBA::string_alloc(l);
+    buf.get_char_array((CORBA::Char*)((const char*)repoID),l);
+    if( repoID[l - 1] != '\0' )
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   }
-  catch (...) {
-    if (type_id) delete [] type_id;
-    if (profiles) delete profiles;
-    throw;
-  }
+
+  profileList = new IOP::TaggedProfileList;
+  (IOP::TaggedProfileList&)profileList <<= buf;
+
+  type_id = repoID._retn();
+  profiles = profileList._retn();
   return;
 }
 
 void
-IOP::TaggedProfile::operator>>= (NetBufferedStream &s) {
+IOP::TaggedProfile::operator>>= (cdrStream &s) {
     tag >>= s;
     profile_data >>= s;
 }
 
 void
-IOP::TaggedProfile::operator<<= (NetBufferedStream &s) {
+IOP::TaggedProfile::operator<<= (cdrStream &s) {
   tag <<= s;
   profile_data <<= s;
 }
 
 void
-IOP::TaggedProfile::operator>>= (MemBufferedStream &s) {
-    tag >>= s;
-    profile_data >>= s;
+IOP::TaggedComponent::operator>>= (cdrStream& s) {
+  tag >>= s;
+  component_data >>= s;
 }
 
 void
-IOP::TaggedProfile::operator<<= (MemBufferedStream &s) {
+IOP::TaggedComponent::operator<<= (cdrStream& s) {
   tag <<= s;
-  profile_data <<= s;
+  component_data <<= s;
 }
+
 
 #undef Swap16
 #undef Swap32
 
-#if defined(__GNUG__)
-
-// The following template classes are defined before the template functions
-// inline void _CORBA_Sequence<T>::operator<<= (NetBufferedStream &s) etc
-// are defined.
-// G++ (2.7.2 or may be later versions as well) does not compile in the
-// template functions as a result.
-// The following is a workaround which explicitly instantiate the classes
-// again.
-
-template class _CORBA_Sequence<IOP::TaggedProfile>;
-template class _CORBA_Unbounded_Sequence<IOP::TaggedProfile>;
-
-#endif
 

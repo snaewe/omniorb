@@ -28,6 +28,14 @@
 
 /*
  $Log$
+ Revision 1.4.4.1  1999/09/15 20:18:14  sll
+ Updated to use the new cdrStream abstraction.
+ Marshalling operators for NetBufferedStream and MemBufferedStream are now
+ replaced with just one version for cdrStream.
+ Derived class giopStream implements the cdrStream abstraction over a
+ network connection whereas the cdrMemoryStream implements the abstraction
+ with in memory buffer.
+
  Revision 1.4  1999/06/18 21:17:05  sll
  Updated copyright notice.
 
@@ -46,16 +54,16 @@ class OmniProxyCallDesc {
 public:
   inline OmniProxyCallDesc(const char* op, size_t op_len,
 			   CORBA::Boolean has_exceptions = 0)
-    : pd_has_user_exceptions(has_exceptions),
+    : pd_assert_object_existent(omniORB::verifyObjectExistsAndType),
+      pd_has_user_exceptions(has_exceptions),
       pd_operation(op), pd_operation_len(op_len) {}
 
-  virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
+  virtual void initialise(cdrStream&);
+
+  virtual void marshalArguments(cdrStream&);
   // Defaults to no arguments.
 
-  virtual void marshalArguments(GIOP_C&);
-  // Defaults to no arguments.
-
-  virtual void unmarshalReturnedValues(GIOP_C&);
+  virtual void unmarshalReturnedValues(cdrStream&);
   // Defaults to no arguments and returns void.
 
   virtual void userException(GIOP_C& giop_client, const char* repoId);
@@ -69,8 +77,11 @@ public:
   }
   inline const char* operation() const { return pd_operation; }
   inline size_t operation_len() const  { return pd_operation_len; }
+  inline void skipAssertObjectExistence() { pd_assert_object_existent = 0; }
+  inline CORBA::Boolean doAssertObjectExistence() { return pd_assert_object_existent; }
 
 private:
+  CORBA::Boolean pd_assert_object_existent;
   CORBA::Boolean pd_has_user_exceptions;
   const char* pd_operation;
   size_t pd_operation_len;
@@ -81,18 +92,20 @@ private:
 class OmniOWProxyCallDesc {
 public:
   inline OmniOWProxyCallDesc(const char* op, size_t op_len)
-    : pd_operation(op), pd_operation_len(op_len) {}
+    : pd_assert_object_existent(omniORB::verifyObjectExistsAndType),
+      pd_operation(op), pd_operation_len(op_len) {}
 
-  virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
-  // Defaults to no arguments.
+  virtual void initialise(cdrStream&);
 
-  virtual void marshalArguments(GIOP_C&);
+  virtual void marshalArguments(cdrStream&);
   // Defaults to no arguments.
 
   inline const char* operation() const { return pd_operation; }
   inline size_t operation_len() const  { return pd_operation_len; }
-
+  inline void skipAssertObjectExistence() { pd_assert_object_existent = 0; }
+  inline CORBA::Boolean doAssertObjectExistence() { return pd_assert_object_existent; }
 private:
+  CORBA::Boolean pd_assert_object_existent;
   const char* pd_operation;
   size_t pd_operation_len;
   OmniOWProxyCallDesc();

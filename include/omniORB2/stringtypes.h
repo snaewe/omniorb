@@ -29,6 +29,14 @@
 
 /*
  $Log$
+ Revision 1.5.4.1  1999/09/15 20:18:13  sll
+ Updated to use the new cdrStream abstraction.
+ Marshalling operators for NetBufferedStream and MemBufferedStream are now
+ replaced with just one version for cdrStream.
+ Derived class giopStream implements the cdrStream abstraction over a
+ network connection whereas the cdrMemoryStream implements the abstraction
+ with in memory buffer.
+
  Revision 1.5  1999/08/30 17:14:59  sll
  Added workaround for gcc-2.95 in the conversion operators for string_var
  and string_member.
@@ -249,11 +257,8 @@ public:
     return tmp;
   }
 
-  void operator >>= (NetBufferedStream& s) const;
-  void operator <<= (NetBufferedStream& s);
-  void operator >>= (MemBufferedStream& s) const;
-  void operator <<= (MemBufferedStream& s);
-  size_t NP_alignedSize(size_t initialoffset) const;
+  void operator >>= (cdrStream& s) const;
+  void operator <<= (cdrStream& s);
 
 private:
   char* pd_data;
@@ -392,12 +397,20 @@ public:
     return ElemT(pd_data[i],pd_rel);
   }
 
+#if SIZEOF_PTR == SIZEOF_LONG
+  typedef long ptr_arith_t;
+#elif SIZEOF_PTR == SIZEOF_INT
+  typedef int ptr_arith_t;
+#else
+#error "No suitable type to do pointer arithmetic"
+#endif
+
   static inline char** allocbuf(_CORBA_ULong nelems) {
     if (!nelems) return 0;
     char** b = new char*[nelems+2];
-    omni::ptr_arith_t l = nelems;
+    ptr_arith_t l = nelems;
     memset(b,0,sizeof(*b)*(nelems+2));
-    b[0] = (char*) ((omni::ptr_arith_t) 0x53515354U);
+    b[0] = (char*) ((ptr_arith_t) 0x53515354U);
     b[1] = (char*) l;
     return b+2;
   }
@@ -405,11 +418,11 @@ public:
   static inline void freebuf(char** buf) {
     if (!buf) return;
     char** b = buf-2;
-    if ((omni::ptr_arith_t)b[0] != ((omni::ptr_arith_t) 0x53515354U)) {
+    if ((ptr_arith_t)b[0] != ((ptr_arith_t) 0x53515354U)) {
       _CORBA_bad_param_freebuf();
       return;
     }
-    omni::ptr_arith_t l = (omni::ptr_arith_t) b[1];
+    ptr_arith_t l = (ptr_arith_t) b[1];
     for (_CORBA_ULong i = 0; i < (_CORBA_ULong) l; i++) {
       if (buf[i])
 	delete [] (buf[i]);
@@ -464,11 +477,8 @@ public:
   }
 
   // omniORB2 extensions
-  size_t NP_alignedSize(size_t initialoffset) const;
-  void operator >>= (NetBufferedStream& s) const;
-  void operator <<= (NetBufferedStream& s);
-  void operator >>= (MemBufferedStream& s) const;
-  void operator <<= (MemBufferedStream& s);
+  void operator >>= (cdrStream& s) const;
+  void operator <<= (cdrStream& s);
 
 protected:
   inline _CORBA_Sequence__String()

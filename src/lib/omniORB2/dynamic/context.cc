@@ -29,8 +29,13 @@
 
 /*
  $Log$
- Revision 1.10  1999/09/15 18:02:21  djr
- Fixed bug in marshalling of Contexts (when specified values are missing).
+ Revision 1.9.4.1  1999/09/15 20:18:25  sll
+ Updated to use the new cdrStream abstraction.
+ Marshalling operators for NetBufferedStream and MemBufferedStream are now
+ replaced with just one version for cdrStream.
+ Derived class giopStream implements the cdrStream abstraction over a
+ network connection whereas the cdrMemoryStream implements the abstraction
+ with in memory buffer.
 
  Revision 1.9  1999/06/26 18:03:30  sll
  Corrected minor bug in marshal.
@@ -49,12 +54,6 @@
  Added marshalling methods, plus a few minor mods.
 
 */
-
-#include <omniORB2/CORBA.h>
-
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
 
 #include <context.h>
 #include <pseudo.h>
@@ -314,9 +313,9 @@ ContextImpl::decrRefCount()
     if( !pd_refCount ) {
       if( omniORB::traceLevel > 0 ) {
 	omniORB::log <<
-	  "omniORB: WARNING -- CORBA::release() was called too many times\n"
-	  " for a CORBA::Context object - the object has already been\n"
-	  " destroyed.\n";
+	  "Warning: omniORB2 has detected that CORBA::release() was called\n"
+	  " too many times for a CORBA::Context object - the object has\n"
+	  " already been destroyed.\n";
 	omniORB::log.flush();
       }
       return;
@@ -551,42 +550,10 @@ CORBA::Context::_nil()
   return &_nilContext;
 }
 
-
-size_t
-CORBA::Context::NP_alignedSize(CORBA::Context_ptr ctxt,
+void
+CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
 			       const char*const* which,
-			       int whichlen, size_t offset)
-{
-  // Space for the number of context entries ...
-  offset = omni::align_to(offset, omni::ALIGN_4) + 4;
-
-  if( CORBA::is_nil(ctxt) )  return offset;
-  ContextImpl* c = (ContextImpl*) ctxt;
-
-  for( int i = 0; i < whichlen; i++ ) {
-
-    const char* value = c->lookup_single(which[i]);
-
-    // Missing context strings are silently not passed...
-    // See Henning & Vinoski p97.
-    if( !value )  continue;
-
-    int len = strlen(which[i]) + 1;
-    offset = omni::align_to(offset, omni::ALIGN_4) + 4 + len;
-
-    len = strlen(value) + 1;
-    offset = omni::align_to(offset, omni::ALIGN_4) + 4 + len;
-
-  }
-
-  return offset;
-}
-
-
-template<class buf_t>
-inline void
-marshal(CORBA::Context_ptr ctxt, const char*const* which,
-	int whichlen, buf_t& s)
+			       int whichlen, cdrStream& s)
 {
   if( CORBA::is_nil(ctxt) ) {
     CORBA::ULong(0) >>= s;
@@ -594,24 +561,18 @@ marshal(CORBA::Context_ptr ctxt, const char*const* which,
   }
   ContextImpl* c = (ContextImpl*) ctxt;
 
-  // First we need to count the number of context strings
-  // we actually have to pass.  This is very inefficient!
-  int n = 0;
-  for( int i = 0; i < whichlen; i++ )
-    if( c->lookup_single(which[i]) )  n++;
-
   // The length of the sequence of strings is twice the
   // number of context entries ...
-  CORBA::ULong(n * 2) >>= s;
+  CORBA::ULong(whichlen * 2) >>= s;
 
-  for( int j = 0; j < whichlen; j++ ) {
+  for( int i = 0; i < whichlen; i++ ) {
 
-    const char* value = c->lookup_single(which[j]);
+    const char* value = c->lookup_single(which[i]);
     if( !value )  continue;
 
-    CORBA::ULong len = strlen(which[j]) + 1;
+    CORBA::ULong len = strlen(which[i]) + 1;
     len >>= s;
-    s.put_char_array((CORBA::Char*) which[j], len);
+    s.put_char_array((CORBA::Char*) which[i], len);
 
     len = strlen(value) + 1;
     len >>= s;
@@ -620,28 +581,8 @@ marshal(CORBA::Context_ptr ctxt, const char*const* which,
   }
 }
 
-
-void
-CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
-			       const char*const* which,
-			       int whichlen, NetBufferedStream& s)
-{
-  marshal(ctxt, which, whichlen, s);
-}
-
-
-void
-CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
-			       const char*const* which,
-			       int whichlen, MemBufferedStream& s)
-{
-  marshal(ctxt, which, whichlen, s);
-}
-
-
-template<class buf_t>
-inline CORBA::Context_ptr
-unmarshal(buf_t& s)
+CORBA::Context_ptr
+CORBA::Context::unmarshalContext(cdrStream& s)
 {
   CORBA::ULong nentries;
   nentries <<= s;
@@ -667,20 +608,6 @@ unmarshal(buf_t& s)
   }
 
   return c;
-}
-
-
-CORBA::Context_ptr
-CORBA::Context::unmarshalContext(NetBufferedStream& s)
-{
-  return unmarshal(s);
-}
-
-
-CORBA::Context_ptr
-CORBA::Context::unmarshalContext(MemBufferedStream& s)
-{
-  return unmarshal(s);
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -30,6 +30,14 @@
 
 /* 
  * $Log$
+ * Revision 1.33.4.1  1999/09/15 20:18:20  sll
+ * Updated to use the new cdrStream abstraction.
+ * Marshalling operators for NetBufferedStream and MemBufferedStream are now
+ * replaced with just one version for cdrStream.
+ * Derived class giopStream implements the cdrStream abstraction over a
+ * network connection whereas the cdrMemoryStream implements the abstraction
+ * with in memory buffer.
+ *
  * Revision 1.33  1999/08/24 12:37:28  djr
  * TypeCode_struct and TypeCode_except modified to use 'const char*' properly.
  *
@@ -303,7 +311,7 @@ CORBA::TypeCode::_nil()
 
 // omniORB2 marshalling routines
 void
-CORBA::TypeCode::marshalTypeCode(TypeCode_ptr obj,NetBufferedStream &s)
+CORBA::TypeCode::marshalTypeCode(TypeCode_ptr obj,cdrStream &s)
 {
   TypeCode_offsetTable otbl;
 
@@ -312,7 +320,7 @@ CORBA::TypeCode::marshalTypeCode(TypeCode_ptr obj,NetBufferedStream &s)
 
 
 CORBA::TypeCode_ptr
-CORBA::TypeCode::unmarshalTypeCode(NetBufferedStream &s)
+CORBA::TypeCode::unmarshalTypeCode(cdrStream &s)
 {
   TypeCode_offsetTable otbl;
 
@@ -321,39 +329,6 @@ CORBA::TypeCode::unmarshalTypeCode(NetBufferedStream &s)
 
   return tc;
 }
-
-
-void
-CORBA::TypeCode::marshalTypeCode(TypeCode_ptr obj,MemBufferedStream &s)
-{
-  TypeCode_offsetTable otbl;
-
-  TypeCode_marshaller::marshal(ToTcBase_Checked(obj), s, &otbl);
-}
-
-
-CORBA::TypeCode_ptr
-CORBA::TypeCode::unmarshalTypeCode(MemBufferedStream &s)
-{
-  TypeCode_offsetTable otbl;
-
-  TypeCode_base* tc = TypeCode_marshaller::unmarshal(s, &otbl);
-  TypeCode_collector::markLoopMembers(tc);
-
-  return tc;
-}
-
-
-// omniORB internal functions
-size_t
-CORBA::TypeCode::NP_alignedSize(size_t initialoffset) const
-{
-  TypeCode_offsetTable otbl;
-
-  return TypeCode_marshaller::alignedSize(ToConstTcBase_Checked(this),
-					  initialoffset, &otbl);
-}
-
 
 CORBA::Boolean
 CORBA::TypeCode::NP_is_nil() const
@@ -746,42 +721,15 @@ TypeCode_base::~TypeCode_base()
 }
 
 
-size_t
-TypeCode_base::NP_alignedSimpleParamSize(size_t initialoffset,
-					 TypeCode_offsetTable* otbl) const
-{
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
-#ifdef NEED_DUMMY_RETURN
-  return 0;
-#endif
-}
-
-size_t
-TypeCode_base::NP_alignedComplexParamSize(size_t initialoffset,
-					  TypeCode_offsetTable* otbl) const
-{
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
-#ifdef NEED_DUMMY_RETURN
-  return 0;
-#endif
-}
-
 void
-TypeCode_base::NP_marshalSimpleParams(NetBufferedStream &,
+TypeCode_base::NP_marshalSimpleParams(cdrStream &,
 				      TypeCode_offsetTable* ) const
 {
   throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
 }
 
 void
-TypeCode_base::NP_marshalSimpleParams(MemBufferedStream &,
-				      TypeCode_offsetTable* ) const
-{
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
-}
-
-void
-TypeCode_base::NP_marshalComplexParams(MemBufferedStream &,
+TypeCode_base::NP_marshalComplexParams(cdrStream &,
 				       TypeCode_offsetTable* ) const
 {
   throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
@@ -990,9 +938,9 @@ TypeCode_base*
 TypeCode_base::NP_compactTc()
 {
   if ( !pd_compactTc ) {
-    // Bounce this typecode off a membufferedstream.
+    // Bounce this typecode off a cdrMemorystream.
     // This ensures that any resursive members are duplicated correctly.
-    MemBufferedStream s;
+    cdrMemoryStream s;
     CORBA::TypeCode::marshalTypeCode(this,s);
     pd_compactTc = ToTcBase(CORBA::TypeCode::unmarshalTypeCode(s));
     // Now remove all names and member_names from the typecode
@@ -1037,21 +985,14 @@ TypeCode_string::~TypeCode_string() {}
 
 
 void
-TypeCode_string::NP_marshalSimpleParams(NetBufferedStream &s,
-					TypeCode_offsetTable* ) const
-{
-  pd_length >>= s;
-}
-
-void
-TypeCode_string::NP_marshalSimpleParams(MemBufferedStream &s,
+TypeCode_string::NP_marshalSimpleParams(cdrStream &s,
 					TypeCode_offsetTable* ) const
 {
   pd_length >>= s;
 }
 
 TypeCode_base*
-TypeCode_string::NP_unmarshalSimpleParams(NetBufferedStream &s,
+TypeCode_string::NP_unmarshalSimpleParams(cdrStream &s,
 					  TypeCode_offsetTable* otbl)
 {
   TypeCode_string* _ptr = new TypeCode_string;
@@ -1061,31 +1002,6 @@ TypeCode_string::NP_unmarshalSimpleParams(NetBufferedStream &s,
   _ptr->pd_length <<= s;
 
   return _ptr;
-}
-
-
-TypeCode_base*
-TypeCode_string::NP_unmarshalSimpleParams(MemBufferedStream &s,
-					  TypeCode_offsetTable* otbl)
-{
-  TypeCode_string* _ptr = new TypeCode_string;
-
-  otbl->addEntry(otbl->currentOffset(), _ptr);
-
-  _ptr->pd_length <<= s;
-
-  return _ptr;
-}
-
-
-size_t
-TypeCode_string::NP_alignedSimpleParamSize(size_t initialoffset,
-					   TypeCode_offsetTable* otbl) const
-{
-  // Allocate space for the string bound
-  size_t _msgsize = initialoffset;
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_4)+4;
-  return _msgsize;
 }
 
 
@@ -1164,7 +1080,7 @@ TypeCode_objref::~TypeCode_objref() {}
 
 
 void
-TypeCode_objref::NP_marshalComplexParams(MemBufferedStream &s,
+TypeCode_objref::NP_marshalComplexParams(cdrStream &s,
 					 TypeCode_offsetTable* ) const
 {
   pd_repoId >>= s;
@@ -1172,7 +1088,7 @@ TypeCode_objref::NP_marshalComplexParams(MemBufferedStream &s,
 }
 
 TypeCode_base*
-TypeCode_objref::NP_unmarshalComplexParams(MemBufferedStream &s,
+TypeCode_objref::NP_unmarshalComplexParams(cdrStream &s,
 					   TypeCode_offsetTable* otbl)
 {
   TypeCode_objref*  _ptr = new TypeCode_objref;
@@ -1192,19 +1108,6 @@ TypeCode_objref::NP_paramListType() const
   return plt_Complex;
 }
 
-
-size_t
-TypeCode_objref::NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable* otbl) const
-{
-  // Space for repositoryId and name
-  size_t _msgsize = initialoffset;
-
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
-
-  return _msgsize;
-}
 
 CORBA::Boolean
 TypeCode_objref::NP_extendedEqual(const TypeCode_base*  TCp,
@@ -1300,7 +1203,7 @@ TypeCode_alias::~TypeCode_alias() {}
 
 
 void
-TypeCode_alias::NP_marshalComplexParams(MemBufferedStream &s,
+TypeCode_alias::NP_marshalComplexParams(cdrStream &s,
 					TypeCode_offsetTable* otbl) const
 {
   pd_repoId >>= s;
@@ -1309,7 +1212,7 @@ TypeCode_alias::NP_marshalComplexParams(MemBufferedStream &s,
 }
 
 TypeCode_base*
-TypeCode_alias::NP_unmarshalComplexParams(MemBufferedStream &s,
+TypeCode_alias::NP_unmarshalComplexParams(cdrStream &s,
 					  TypeCode_offsetTable* otbl)
 {
   TypeCode_alias* _ptr = new TypeCode_alias;
@@ -1337,22 +1240,6 @@ TypeCode_alias::NP_complete_recursive_sequences(TypeCode_base*  tc,
     pd_complete =
       ToTcBase(pd_content)->NP_complete_recursive_sequences(tc, offset);
   return pd_complete;
-}
-
-
-size_t
-TypeCode_alias::NP_alignedComplexParamSize(size_t initialoffset,
-					   TypeCode_offsetTable* otbl) const
-{
-  // Space for repositoryId and name
-  size_t _msgsize = initialoffset;
-
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
-  _msgsize =
-    TypeCode_marshaller::alignedSize(ToTcBase(pd_content), _msgsize, otbl);
-
-  return _msgsize;
 }
 
 
@@ -1502,7 +1389,7 @@ TypeCode_sequence::~TypeCode_sequence() {}
 
 
 void
-TypeCode_sequence::NP_marshalComplexParams(MemBufferedStream &s,
+TypeCode_sequence::NP_marshalComplexParams(cdrStream &s,
 					   TypeCode_offsetTable* otbl) const
 {
   if (!pd_complete)
@@ -1512,7 +1399,7 @@ TypeCode_sequence::NP_marshalComplexParams(MemBufferedStream &s,
 }
 
 TypeCode_base*
-TypeCode_sequence::NP_unmarshalComplexParams(MemBufferedStream &s,
+TypeCode_sequence::NP_unmarshalComplexParams(cdrStream &s,
 					     TypeCode_offsetTable* otbl)
 {
   TypeCode_sequence* _ptr = new TypeCode_sequence;
@@ -1572,16 +1459,6 @@ TypeCode_paramListType
 TypeCode_sequence::NP_paramListType() const
 {
   return plt_Complex;
-}
-
-
-size_t
-TypeCode_sequence::NP_alignedComplexParamSize(size_t initialoffset,
-					      TypeCode_offsetTable* otbl) const
-{
-  initialoffset = TypeCode_marshaller::alignedSize(ToTcBase(pd_content),
-						   initialoffset, otbl);
-  return omni::align_to(initialoffset, omni::ALIGN_4) + 4;
 }
 
 
@@ -1722,7 +1599,7 @@ TypeCode_array::~TypeCode_array() {}
 
 
 void
-TypeCode_array::NP_marshalComplexParams(MemBufferedStream &s,
+TypeCode_array::NP_marshalComplexParams(cdrStream &s,
 					TypeCode_offsetTable* otbl) const
 {
   TypeCode_marshaller::marshal(ToTcBase(pd_content), s, otbl);
@@ -1730,7 +1607,7 @@ TypeCode_array::NP_marshalComplexParams(MemBufferedStream &s,
 }
 
 TypeCode_base*
-TypeCode_array::NP_unmarshalComplexParams(MemBufferedStream &s,
+TypeCode_array::NP_unmarshalComplexParams(cdrStream &s,
 					  TypeCode_offsetTable* otbl)
 {
   TypeCode_array* _ptr = new TypeCode_array;
@@ -1754,15 +1631,6 @@ TypeCode_array::NP_complete_recursive_sequences(TypeCode_base*  tc,
       ToTcBase(pd_content)->NP_complete_recursive_sequences(tc, offset+1);
 
   return pd_complete;
-}
-
-size_t
-TypeCode_array::NP_alignedComplexParamSize(size_t initialoffset,
-					   TypeCode_offsetTable* otbl) const
-{
-  initialoffset = TypeCode_marshaller::alignedSize(ToTcBase(pd_content),
-						   initialoffset, otbl);
-  return omni::align_to(initialoffset, omni::ALIGN_4) + 4;
 }
 
 CORBA::Boolean
@@ -1925,7 +1793,7 @@ TypeCode_struct::~TypeCode_struct()
 
 
 void
-TypeCode_struct::NP_marshalComplexParams(MemBufferedStream &s,
+TypeCode_struct::NP_marshalComplexParams(cdrStream &s,
 					 TypeCode_offsetTable* otbl) const
 {
   pd_repoId >>= s;
@@ -1943,7 +1811,7 @@ TypeCode_struct::NP_marshalComplexParams(MemBufferedStream &s,
 
 
 TypeCode_base*
-TypeCode_struct::NP_unmarshalComplexParams(MemBufferedStream& s,
+TypeCode_struct::NP_unmarshalComplexParams(cdrStream& s,
 					   TypeCode_offsetTable* otbl)
 {
   TypeCode_struct* _ptr = new TypeCode_struct;
@@ -1998,31 +1866,6 @@ TypeCode_struct::NP_complete_recursive_sequences(TypeCode_base*  tc,
     }
 
   return pd_complete;
-}
-
-size_t
-TypeCode_struct::NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable* otbl) const
-{
-  // Allocate space for the repoId, name, number of fields & their
-  // names & types
-  size_t _msgsize = initialoffset;
-
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-
-  for( CORBA::ULong i = 0; i < pd_nmembers; i++ )
-    {
-      CORBA::String_member name;
-      name = pd_members[i].name;
-      _msgsize = name.NP_alignedSize(_msgsize);
-      name._ptr = 0;
-      _msgsize = TypeCode_marshaller::alignedSize(ToTcBase(pd_members[i].type),
-						  _msgsize, otbl);
-    }
-
-  return _msgsize;
 }
 
 // OMG Interface:
@@ -2315,7 +2158,7 @@ TypeCode_except::~TypeCode_except()
 
 
 void
-TypeCode_except::NP_marshalComplexParams(MemBufferedStream &s,
+TypeCode_except::NP_marshalComplexParams(cdrStream &s,
 					 TypeCode_offsetTable* otbl) const
 {
   pd_repoId >>= s;
@@ -2332,7 +2175,7 @@ TypeCode_except::NP_marshalComplexParams(MemBufferedStream &s,
 }
 
 TypeCode_base*
-TypeCode_except::NP_unmarshalComplexParams(MemBufferedStream& s,
+TypeCode_except::NP_unmarshalComplexParams(cdrStream& s,
 					   TypeCode_offsetTable* otbl)
 {
   TypeCode_except* _ptr = new TypeCode_except;
@@ -2390,30 +2233,6 @@ TypeCode_except::NP_complete_recursive_sequences(TypeCode_base*  tc,
   return pd_complete;
 }
 
-size_t
-TypeCode_except::NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable* otbl) const
-{
-  // Allocate space for the repoId, name, number of fields &
-  // their names & types.
-  size_t _msgsize = initialoffset;
-
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-
-  for( CORBA::ULong i = 0; i < pd_nmembers; i++ )
-    {
-      CORBA::String_member name;
-      name = pd_members[i].name;
-      _msgsize = name.NP_alignedSize(_msgsize);
-      name._ptr = 0;
-      _msgsize = TypeCode_marshaller::alignedSize(ToTcBase(pd_members[i].type),
-						  _msgsize, otbl);
-    }
-
-  return _msgsize;
-}
 
 // OMG Interface:
 CORBA::Boolean
@@ -2698,7 +2517,7 @@ TypeCode_enum::~TypeCode_enum() {}
 
 
 void
-TypeCode_enum::NP_marshalComplexParams(MemBufferedStream& s,
+TypeCode_enum::NP_marshalComplexParams(cdrStream& s,
 				       TypeCode_offsetTable* otbl) const
 {
   pd_repoId >>= s;
@@ -2708,7 +2527,7 @@ TypeCode_enum::NP_marshalComplexParams(MemBufferedStream& s,
 
 
 TypeCode_base*
-TypeCode_enum::NP_unmarshalComplexParams(MemBufferedStream &s,
+TypeCode_enum::NP_unmarshalComplexParams(cdrStream &s,
 					 TypeCode_offsetTable* otbl)
 {
   TypeCode_enum* _ptr = new TypeCode_enum;
@@ -2720,20 +2539,6 @@ TypeCode_enum::NP_unmarshalComplexParams(MemBufferedStream &s,
   _ptr->pd_members <<= s;
 
   return _ptr;
-}
-
-
-size_t
-TypeCode_enum::NP_alignedComplexParamSize(size_t initialoffset,
-					  TypeCode_offsetTable* otbl) const
-{
-  size_t _msgsize = initialoffset;
-
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
-  _msgsize = pd_members.NP_alignedSize(_msgsize);
-
-  return _msgsize;
 }
 
 
@@ -2979,7 +2784,7 @@ TypeCode_union::~TypeCode_union() {}
 
 
 void
-TypeCode_union::NP_marshalComplexParams(MemBufferedStream &s,
+TypeCode_union::NP_marshalComplexParams(cdrStream &s,
 					TypeCode_offsetTable* otbl) const
 {
   pd_repoId >>= s;
@@ -3000,7 +2805,7 @@ TypeCode_union::NP_marshalComplexParams(MemBufferedStream &s,
 
 
 TypeCode_base*
-TypeCode_union::NP_unmarshalComplexParams(MemBufferedStream &s,
+TypeCode_union::NP_unmarshalComplexParams(cdrStream &s,
 					  TypeCode_offsetTable* otbl)
 {
   TypeCode_union* _ptr = new TypeCode_union;
@@ -3055,34 +2860,6 @@ TypeCode_union::NP_complete_recursive_sequences(TypeCode_base*  tc,
     }
 
   return pd_complete;
-}
-
-
-size_t
-TypeCode_union::NP_alignedComplexParamSize(size_t initialoffset,
-					   TypeCode_offsetTable* otbl) const
-{
-  size_t _msgsize = initialoffset;
-
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
-  _msgsize = TypeCode_marshaller::alignedSize(ToTcBase(pd_discrim_tc),
-					      _msgsize, otbl);
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-
-  const CORBA::ULong memberCount = pd_members.length();
-  for( CORBA::ULong i = 0; i < memberCount; i++ )
-    {
-      _msgsize =
-	TypeCode_union_helper::labelAlignedSize(_msgsize, pd_discrim_tc);
-      _msgsize = pd_members[i].aname.NP_alignedSize(_msgsize);
-      _msgsize =
-	TypeCode_marshaller::alignedSize(ToTcBase(pd_members[i].atype),
-					 _msgsize, otbl);
-    }
-
-  return _msgsize;
 }
 
 
@@ -3606,7 +3383,7 @@ static omni_mutex* pd_cached_paramlist_lock = 0;
 
 void
 TypeCode_marshaller::marshal(TypeCode_base* tc,
-			     NetBufferedStream& s,
+			     cdrStream& s,
 			     TypeCode_offsetTable* otbl)
 {
   // If this _exact_ typecode has already been marshalled into the stream
@@ -3619,7 +3396,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
       tck_indirect >>= s;
 
       // Now write out the offset
-      CORBA::Long offset = tc_offset - (s.WrMessageAlreadyWritten());
+      CORBA::Long offset = tc_offset - (s.currentOutputPtr());
       offset >>= s;
     }
   else
@@ -3629,7 +3406,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
       tck >>= s;
 
       // Set the current offset of the offset table
-      otbl->setOffset(s.WrMessageAlreadyWritten() - 4);
+      otbl->setOffset(s.currentOutputPtr() - 4);
 
       // Establish whether there are parameters to marshal
       switch( paramListType(tck) ) {
@@ -3647,7 +3424,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	// Complex parameter list
 	{
 	  CORBA::Boolean has_cached_paramlist = 0;
-	  MemBufferedStream* paramlist = 0;
+	  cdrMemoryStream* paramlist = 0;
 
 	  // The typecode is complex and wasn't found, so add it to the table
 	  otbl->addEntry(otbl->currentOffset(), tc);
@@ -3667,7 +3444,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	    paramlist = tc->pd_cached_paramlist;
 	  } else {
 	    // Create a MemBufferedStream to marshal the data into
-	    paramlist = new MemBufferedStream();
+	    paramlist = new cdrMemoryStream();
 
 	    try {
 	      // Create a child TypeCode_offsetTable with the correct base
@@ -3680,7 +3457,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	      TypeCode_offsetTable offsetTbl(otbl, -8);
 
 	      // Write out the byteorder
-	      paramlist->byteOrder() >>= *paramlist;
+	      omni::myByteOrder >>= *paramlist;
 
 	      // Call the supplied typecode object to marshal its complex
 	      // parameter data into the temporary stream.
@@ -3695,11 +3472,11 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	  }
 
 	  // Now write the size of the encapsulation out to the main stream
-	  ::operator>>= ((CORBA::ULong)paramlist->alreadyWritten(), s);
+	  ::operator>>= ((CORBA::ULong)paramlist->bufSize(), s);
 
 	  // And copy the data out to the main stream
-	  s.put_char_array((CORBA::Char*) paramlist->data(),
-			   paramlist->alreadyWritten());
+	  s.put_char_array((CORBA::Char*) paramlist->bufPtr(),
+			   paramlist->bufSize());
 
 #if 0
 	  // Ensure that the paramlist is freed, or saved as a cached
@@ -3728,7 +3505,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 
 
 TypeCode_base*
-TypeCode_marshaller::unmarshal(NetBufferedStream& s,
+TypeCode_marshaller::unmarshal(cdrStream& s,
 			       TypeCode_offsetTable* otbl)
 {
   // Read the kind from the stream
@@ -3736,7 +3513,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
   tck <<= s;
 
   // Set the current position value in the offsetTable
-  otbl->setOffset(s.RdMessageAlreadyRead()-4);
+  otbl->setOffset(s.currentInputPtr()-4);
 
   // Depending on the kind, create the correct type of TypeCode class
 
@@ -3761,7 +3538,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
       // Indirection typecode
     case 0xffffffff:
       {
-	CORBA::Long currpos = s.RdMessageAlreadyRead();
+	CORBA::Long currpos = s.currentInputPtr();
 	CORBA::Long offset;
 
 	// Read in the offset within the GIOP message
@@ -3855,14 +3632,13 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
       // Create a buffered stream to handle the encapsulation
       // and read the data in.
       //?? Can we do this without lots of copying? Is it worth it?
-      MemBufferedStream mbs(size);
-      if( s.overrun(size) )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-      mbs.copy_from(s, size);
+      cdrMemoryStream mbs(size);
+      s.copy_to(mbs, size);
 
       // Get the byte order
       CORBA::Boolean byteorder;
       byteorder <<= mbs;
-      mbs.byteOrder(byteorder);
+      mbs.setByteSwapFlag(byteorder);
 
       // Now switch on the Kind to call the appropriate
       // unmarshalComplexParams fn.
@@ -3907,376 +3683,6 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
   return 0;
 #endif
 }
-
-
-void
-TypeCode_marshaller::marshal(TypeCode_base* tc,
-			     MemBufferedStream& s,
-			     TypeCode_offsetTable* otbl)
-{
-  // If this _exact_ typecode has already been marshalled into the stream
-  // then just put in an indirection
-  CORBA::Long tc_offset;
-  if( omniORB::useTypeCodeIndirections && otbl->lookupTypeCode(tc, tc_offset) )
-    {
-      // The desired typecode was found, so write out an indirection!
-      CORBA::ULong tck_indirect = 0xffffffff;
-      tck_indirect >>= s;
-
-      CORBA::Long offset = tc_offset-(s.alreadyWritten());
-      offset >>= s;
-    }
-  else
-    {
-      // Now write out the Kind
-      CORBA::ULong tck = tc->NP_kind();
-      tck >>= s;
-
-      // Set the current offset of the offset table
-      otbl->setOffset(s.alreadyWritten()-4);
-
-      // Establish whether there are parameters to marshal
-      switch( paramListType(tck) ) {
-
-      case plt_None:
-	// No parameters
-	break;
-
-      case plt_Simple:
-	// Simple parameter list
-	tc->NP_marshalSimpleParams(s, otbl);
-	break;
-
-      case plt_Complex:
-	// Complex parameter list
-	{
-	  CORBA::Boolean has_cached_paramlist = 0;
-	  MemBufferedStream* paramlist = 0;
-
-	  // The typecode is complex and wasn't found, so add it to the table
-	  otbl->addEntry(otbl->currentOffset(), tc);
-
-#if 0
-	  // This is broken!!!!!
-
-	  // Is there already a cached form of the parameter list?
-	  if (!tc->pd_loop_member) {
-	    omni_mutex_lock l(*pd_cached_paramlist_lock);
-
-	    has_cached_paramlist = tc->pd_cached_paramlist != 0;
-	  }
-#endif
-
-	  if (has_cached_paramlist) {
-	    paramlist = tc->pd_cached_paramlist;
-	  } else {
-	    // Create a MemBufferedStream to marshal the data into
-	    paramlist = new MemBufferedStream();
-
-	    try {
-	      // Create a child TypeCode_offsetTable with the correct base
-	      // offset.
-	      //  NB: When the offsetTable is passed to us, the currentOffset
-	      // value will indicate the START of the typecode we're
-	      // marshalling.  Relative to the start of the encapsulated
-	      // data, this location has offset -8, allowing four bytes for
-	      // the TypeCode Kind and four for the encapsulation size.
-	      TypeCode_offsetTable offsetTbl(otbl, -8);
-
-	      // Write out the byteorder
-	      paramlist->byteOrder() >>= *paramlist;
-
-	      // Call the supplied typecode object to marshal its complex
-	      // parameter data into the temporary stream.
-	      tc->NP_marshalComplexParams(*paramlist, &offsetTbl);
-
-	      // And we're done!
-	    }
-	    catch (...) {
-	      if( paramlist != 0 )  delete paramlist;
-	      throw;
-	    }
-	  }
-
-	  // Now write the size of the encapsulation out to the main stream
-	  ::operator>>= ((CORBA::ULong)paramlist->alreadyWritten(), s);
-
-	  // And copy the data out to the main stream
-	  s.put_char_array((CORBA::Char*) paramlist->data(),
-			   paramlist->alreadyWritten());
-
-#if 0
-	  // Ensure that the paramlist is freed, or saved as a cached
-	  // param list if not a part of a loop.
-	  if( !has_cached_paramlist ){
-	    if( tc->pd_loop_member ){
-	      delete paramlist;
-	    }else{
-	      omni_mutex_lock l(*pd_cached_paramlist_lock);
-
-	      // Check some other thread hasn't made the parameter list ...
-	      if( tc->pd_cached_paramlist == 0 )
-		tc->pd_cached_paramlist = paramlist;
-	      else
-		delete paramlist;
-	    }
-	  }
-#else
-	  delete paramlist;
-#endif
-	  break;
-	}
-      } // switch( paramListType(tck) ) {
-    }
-}
-
-
-TypeCode_base*
-TypeCode_marshaller::unmarshal(MemBufferedStream& s,
-			       TypeCode_offsetTable* otbl)
-{
-  // Read the kind from the stream
-  CORBA::ULong tck;
-  tck <<= s;
-
-  // Set the current position value in the offsetTable
-  otbl->setOffset(s.RdMessageAlreadyRead()-4);
-
-  // Depending on the kind, create the correct type of TypeCode class
-
-  // Each simple typecode class provides a NP_unmarshalSimpleParams
-  // static function which reads the parameters in from a stream &
-  // constructs a typecode of that type.  NP_unmarshalSimpleParams is
-  // passed the current TypeCode_offsetTable, in order that indirection
-  // typecodes can be correctly interpreted.
-
-  // Each complex typecode class provides a NP_unmarshalComplexParams
-  // static function which reads the parameters in from a stream &
-  // constructs a typecode of that type.  NP_unmarshalComplexParams is
-  // passed a child TypeCode_offsetTable and MemBufferedStream, in order
-  // that indirection typecodes can be correctly interpreted.
-
-  switch( paramListType(tck) ) {
-
-    // TypeCode Kinds with no parameters
-  case plt_None:
-
-    switch (tck) {
-
-      // Indirection typecode
-    case 0xffffffff:
-      {
-	CORBA::Long currpos = s.alreadyRead();
-	CORBA::Long offset;
-
-	// Read in the offset within the GIOP message
-	offset <<= s;
-
-	// Now look it up in the table
-	TypeCode_base* tc = otbl->lookupOffset(offset+currpos);
-	if (tc == 0)
-	  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-
-	return TypeCode_collector::duplicateRef(ToTcBase(tc));
-      }
-
-    // Simple types with no parameters
-    case CORBA::tk_null:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_null));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_null));
-    case CORBA::tk_void:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_void));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_void));
-    case CORBA::tk_short:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_short));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_short));
-    case CORBA::tk_ushort:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_ushort));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_ushort));
-    case CORBA::tk_long:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_long));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_long));
-    case CORBA::tk_ulong:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_ulong));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_ulong));
-    case CORBA::tk_float:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_float));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_float));
-    case CORBA::tk_double:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_double));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_double));
-    case CORBA::tk_boolean:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_boolean));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_boolean));
-    case CORBA::tk_char:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_char));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_char));
-    case CORBA::tk_octet:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_octet));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_octet));
-    case CORBA::tk_any:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_any));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_any));
-    case CORBA::tk_TypeCode:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_TypeCode));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_TypeCode));
-    case CORBA::tk_Principal:
-      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_Principal));
-      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_Principal));
-
-    default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-    };
-    // Never reach here
-
-    // TypeCode Kinds with simple parameter lists
-  case plt_Simple:
-
-    switch (tck) {
-
-    case CORBA::tk_string:
-      return TypeCode_string::NP_unmarshalSimpleParams(s, otbl);
-
-    default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-    };
-    // Never reach here
-
-    // TypeCode Kinds with complex parameter lists
-  case plt_Complex:
-    {
-      // Create a child TypeCode_offsetTable with the correct base offset.
-      //  NB: When the offsetTable is passed to us, the currentOffset value
-      // will indicate the START of the typecode we're unmarshalling.
-      // Relative to the start of the encapsulated data, this location has
-      // offset -8, allowing four bytes for the TypeCode Kind and four for
-      // the encapsulation size.
-      TypeCode_offsetTable tbl(otbl, -8);
-
-      // Read the size of the encapsulation
-      CORBA::ULong size;
-      size <<= s;
-
-      // Create a buffered stream to handle the encapsulation
-      // and read the data in.
-      //?? Can we do this without lots of copying? Is it worth it?
-      MemBufferedStream mbs(size);
-      mbs.copy_from(s, size);
-
-      // Get the byte order
-      CORBA::Boolean byteorder;
-      byteorder <<= mbs;
-      mbs.byteOrder(byteorder);
-
-      // Now switch on the Kind to call the appropriate
-      // unmarshalComplexParams fn.
-      switch (tck) {
-
-      case CORBA::tk_objref:
-	return TypeCode_objref::NP_unmarshalComplexParams(mbs, &tbl);
-
-      case CORBA::tk_alias:
-	return TypeCode_alias::NP_unmarshalComplexParams(mbs, &tbl);
-
-      case CORBA::tk_sequence:
-	return TypeCode_sequence::NP_unmarshalComplexParams(mbs, &tbl);
-
-      case CORBA::tk_array:
-	return TypeCode_array::NP_unmarshalComplexParams(mbs, &tbl);
-
-      case CORBA::tk_struct:
-	return TypeCode_struct::NP_unmarshalComplexParams(mbs, &tbl);
-
-      case CORBA::tk_except:
-	return TypeCode_except::NP_unmarshalComplexParams(mbs, &tbl);
-
-      case CORBA::tk_enum:
-	return TypeCode_enum::NP_unmarshalComplexParams(mbs, &tbl);
-
-      case CORBA::tk_union:
-	return TypeCode_union::NP_unmarshalComplexParams(mbs, &tbl);
-
-      default:
-	throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-      };
-      // Never reach here
-    }
-
-  default:
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-    // Never reach here
-  };
-
-#ifdef NEED_DUMMY_RETURN
-  return 0;
-#endif
-}
-
-
-size_t
-TypeCode_marshaller::alignedSize(const TypeCode_base* tc,
-				 size_t offset,
-				 TypeCode_offsetTable* otbl)
-{
-  // If this _exact_ typecode would have already appeared in the stream
-  // then just put in an indirection.
-  CORBA::Long tc_offset;
-  if( omniORB::useTypeCodeIndirections && otbl->lookupTypeCode(tc, tc_offset) )
-    {
-      // The desired typecode was found, so add space for an indirection!
-      // (kind and offset value)
-      return omni::align_to(offset, omni::ALIGN_4) + 8;
-    }
-  else
-    {
-      size_t _msgsize = offset;
-
-      // Make space for the Kind
-      _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-
-      // Size of parameter list depends upon TypeCode Kind
-      switch( paramListType(tc->NP_kind()) ) {
-
-      case plt_None:
-	return _msgsize;
-
-      case plt_Simple:
-	return tc->NP_alignedSimpleParamSize(_msgsize, otbl);
-
-      case plt_Complex:
-	// The typecode wasn't found, so add it to the table
-	otbl->addEntry(offset, (TypeCode_base*) tc);
-
-	// Allocate space for the encapsulation length field
-	_msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-
-#if 0
-	// Does the typecode have a cached parameter list?
-	{
-	  omni_mutex_lock l(*pd_cached_paramlist_lock);
-	  if( tc->pd_cached_paramlist != 0 ) {
-	    // There are cached parameters, so just make space for them
-	    _msgsize += tc->pd_cached_paramlist->alreadyWritten();
-	    return _msgsize;
-	  }
-	}
-#endif
-
-	size_t _save = _msgsize;
-
-	// Allocate space for the byteorder byte
-	_msgsize++;
-
-	// And find out how much space the parameters will occupy
-	return tc->NP_alignedComplexParamSize(_msgsize, otbl);
-      }
-
-    }
-
-  // Needed by g++
-  return 0;
-}
-
 
 // Function used to establish whether a particular typecode Kind
 // has no parameters, simple parameters, or complex parameters
@@ -4801,10 +4207,10 @@ TypeCode_union_helper::insertLabel(CORBA::Any& label,
 }
 
 
-template <class buf_t>
-inline void
-internal_marshalLabel(TypeCode_union::Discriminator l,
-		      CORBA::TypeCode_ptr tc, buf_t& s)
+void
+TypeCode_union_helper::marshalLabel(TypeCode_union::Discriminator l,
+				    CORBA::TypeCode_ptr tc,
+				    cdrStream &s)
 {
   switch( tc->kind() ) {
   case CORBA::tk_char:
@@ -4858,27 +4264,9 @@ internal_marshalLabel(TypeCode_union::Discriminator l,
 }
 
 
-void
-TypeCode_union_helper::marshalLabel(TypeCode_union::Discriminator l,
-				    CORBA::TypeCode_ptr tc,
-				    MemBufferedStream &s)
-{
-  internal_marshalLabel(l, tc, s);
-}
-
-
-void
-TypeCode_union_helper::marshalLabel(TypeCode_union::Discriminator l,
-				    CORBA::TypeCode_ptr tc,
-				    NetBufferedStream& s)
-{
-  internal_marshalLabel(l, tc, s);
-}
-
-
-template <class buf_t>
-inline TypeCode_union::Discriminator
-internal_unmarshalLabel(CORBA::TypeCode_ptr tc, buf_t& s)
+TypeCode_union::Discriminator
+TypeCode_union_helper::unmarshalLabel(CORBA::TypeCode_ptr tc,
+				      cdrStream& s)
 {
   switch( tc->kind() ) {
   case CORBA::tk_char:
@@ -4930,53 +4318,6 @@ internal_unmarshalLabel(CORBA::TypeCode_ptr tc, buf_t& s)
        "TypeCode_union_helper::unmarshalLabel() - illegal disciminator type");
   }
 
-#ifdef NEED_DUMMY_RETURN
-  return 0;
-#endif
-}
-
-
-TypeCode_union::Discriminator
-TypeCode_union_helper::unmarshalLabel(CORBA::TypeCode_ptr tc,
-				      MemBufferedStream& s)
-{
-  return internal_unmarshalLabel(tc, s);
-}
-
-
-TypeCode_union::Discriminator
-TypeCode_union_helper::unmarshalLabel(CORBA::TypeCode_ptr tc,
-				      NetBufferedStream& s)
-{
-  return internal_unmarshalLabel(tc, s);
-}
-
-
-size_t
-TypeCode_union_helper::labelAlignedSize(size_t initoffset,
-					CORBA::TypeCode_ptr tc)
-{
-  switch( tc->kind() ) {
-  case CORBA::tk_char:
-  case CORBA::tk_octet:
-  case CORBA::tk_boolean:
-    return initoffset + 1;
-
-  case CORBA::tk_short:
-  case CORBA::tk_ushort:
-    return omni::align_to(initoffset, omni::ALIGN_2) + 2;
-
-  case CORBA::tk_long:
-  case CORBA::tk_ulong:
-  case CORBA::tk_enum:
-    return omni::align_to(initoffset, omni::ALIGN_4) + 4;
-
-  // case CORBA::tk_wchar:
-
-  default:
-    throw omniORB::fatalException(__FILE__,__LINE__,
-     "TypeCode_union_helper::labelAlignedSize() - illegal disciminator type");
-  }
 #ifdef NEED_DUMMY_RETURN
   return 0;
 #endif
@@ -5066,37 +4407,17 @@ CORBA::TypeCode_member::operator=(const CORBA::TypeCode_var& p)
 }
 
 void
-CORBA::TypeCode_member::operator>>=(NetBufferedStream& s) const
+CORBA::TypeCode_member::operator>>=(cdrStream& s) const
 {
   CORBA::TypeCode::marshalTypeCode(_ptr, s);
 }
 
 void
-CORBA::TypeCode_member::operator<<=(NetBufferedStream& s)
+CORBA::TypeCode_member::operator<<=(cdrStream& s)
 {
   CORBA::TypeCode_ptr _result = CORBA::TypeCode::unmarshalTypeCode(s);
   CORBA::release(_ptr);
   _ptr = _result;
-}
-
-void
-CORBA::TypeCode_member::operator>>=(MemBufferedStream& s) const
-{
-  CORBA::TypeCode::marshalTypeCode(_ptr, s);
-}
-
-void
-CORBA::TypeCode_member::operator<<=(MemBufferedStream& s)
-{
-  CORBA::TypeCode_ptr _result = CORBA::TypeCode::unmarshalTypeCode(s);
-  CORBA::release(_ptr);
-  _ptr = _result;
-}
-
-size_t
-CORBA::TypeCode_member::NP_alignedSize(size_t initialoffset) const
-{
-  return _ptr->NP_alignedSize(initialoffset);
 }
 
 //////////////////////////////////////////////////////////////////////

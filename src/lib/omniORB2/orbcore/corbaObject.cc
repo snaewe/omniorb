@@ -29,6 +29,14 @@
  
 /*
   $Log$
+  Revision 1.19.4.1  1999/09/15 20:18:33  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.19  1999/06/22 14:57:20  sll
   _is_equivalent() now throws OBJECT_NOT_EXIST instead of BAD_PARAM if
   the parameter is an invalid object reference.
@@ -77,6 +85,7 @@
 #pragma hdrstop
 #endif
 
+#include <omniORB2/proxyCall.h>
 #include <ropeFactory.h>
 #include <objectManager.h>
 
@@ -189,15 +198,11 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
     omniObject * objptr = PR_getobj();
     if (!objptr) return 0;
     omniObject * other_objptr = other_object->PR_getobj();
-    omniRopeAndKey rak, other_rak;
-    objptr->getRopeAndKey(rak);
-    other_objptr->getRopeAndKey(other_rak);
-    if (rak.keysize() != other_rak.keysize() ||
-	memcmp((void*)rak.key(),(void*)other_rak.key(),
-	       rak.keysize()) != 0)
-      {
-	return 0; // object keys do not match
-      }
+
+    CORBA::Boolean original;
+    GIOPObjectInfo_var self_info = objptr->getInvokeInfo(original);
+    GIOPObjectInfo_var other_info = other_objptr->getInvokeInfo(original);
+    
     if (!objptr->is_proxy()) {
       // this is a local object
       if (!other_objptr->is_proxy()) {
@@ -207,7 +212,7 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
 	// other_object is a proxy.
 	// Have to check if the proxy actually points back to this object
 	// via the loop back connection
-	if (objptr->_objectManager()->defaultLoopBack() == other_rak.rope())
+	if (objptr->_objectManager()->defaultLoopBack() == other_info->rope())
 	  return 1;
 	else
 	  return 0;
@@ -219,7 +224,7 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
 	// other_object is local.
 	// Have to check if this proxy actually points back to the local
 	// object via the loop back connection
-	if (other_objptr->_objectManager()->defaultLoopBack() == rak.rope())
+	if (other_objptr->_objectManager()->defaultLoopBack() == self_info->rope())
 	  return 1;
 	else
 	  return 0;
@@ -227,7 +232,7 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
       else {
 	// both are proxy objects, check whether they go back to the same
 	// address space. Note: object keys are not globally unique.
-	if (rak.rope() == other_rak.rope())
+	if (self_info->rope() == other_info->rope())
 	  return 1;
 	else
 	  return 0;
@@ -244,11 +249,12 @@ Object::_hash(CORBA::ULong maximum)
     return 0;
   }
   omniObject * objptr = PR_getobj();
-  omniRopeAndKey rak;
-  objptr->getRopeAndKey(rak);
 
-  size_t s = rak.keysize();
-  char *k = (char *)rak.key();
+  CORBA::Boolean original;
+  GIOPObjectInfo_var self_info = objptr->getInvokeInfo(original);
+
+  size_t s = self_info->keysize();
+  char *k = (char*)self_info->key();
   CORBA::ULong v = 0;
 
   unsigned int i;
@@ -267,6 +273,23 @@ Object::_hash(CORBA::ULong maximum)
   return (v % maximum);
 }
 
+
+class omniNonExistentProxyCallDesc : public OmniProxyCallDesc
+{
+public:
+  inline omniNonExistentProxyCallDesc(const char* _op, size_t _op_len) :
+    OmniProxyCallDesc(_op, _op_len)  {}
+
+  virtual void unmarshalReturnedValues(cdrStream& s) {
+    pd_result <<= s;
+  }
+  inline CORBA::Boolean result() { return pd_result; }
+
+private:
+  CORBA::Boolean pd_result;
+};
+
+
 CORBA::Boolean
 CORBA::
 Object::_non_existent()
@@ -284,102 +307,15 @@ Object::_non_existent()
     return 0;
   }
 
-  CORBA::ULong   _retries = 0;
-#ifndef EGCS_WORKAROUND
-NONEXIST_again:
-#else
-while(1) {
-#endif
-  omniRopeAndKey _r;
-  CORBA::Boolean _fwd = objptr->getRopeAndKey(_r);
-  CORBA::Boolean _reuse = 0;
-  CORBA::Boolean _result;
   try {
-    GIOP_C _c(_r.rope());
-    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),14);
-    _c.InitialiseRequest(_r.key(),
-			 _r.keysize(),
-			 (char *)"_non_existent",14,_msgsize,0);
-    switch (_c.ReceiveReply())
-      {
-      case GIOP::NO_EXCEPTION:
-	{
-	  _result <<= _c;
-	  _c.RequestCompleted();
-	  return _result;
-	  break;
-	}
-      case GIOP::USER_EXCEPTION:
-	{
-	  _c.RequestCompleted(1);
-	  throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
-	  break;
-	}
-      case GIOP::SYSTEM_EXCEPTION:
-	{
-	  _c.RequestCompleted(1);
-	  throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
-	}
-      case GIOP::LOCATION_FORWARD:
-	{
-	  {
-	    CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
-	    _c.RequestCompleted();
-	    if (CORBA::is_nil(obj)) {
-	      if (omniORB::traceLevel > 10) {
-		omniORB::log << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\n";
-		omniORB::log.flush();
-	      }
-	      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
-	    }
-	    omniRopeAndKey _0RL_r;
-	    obj->PR_getobj()->getRopeAndKey(_0RL_r);
-	    objptr->setRopeAndKey(_0RL_r);
-	  }
-	  if (omniORB::traceLevel > 10) {
-	    omniORB::log << "GIOP::LOCATION_FORWARD: retry request.\n";
-	    omniORB::log.flush();
-	  }
-	  break;
-	}
-      }
+    omniNonExistentProxyCallDesc _call_desc("_non_existent", 14);
+
+    OmniProxyCallWrapper::invoke(objptr, _call_desc);
+    return _call_desc.result();
   }
   catch (const CORBA::OBJECT_NOT_EXIST&) {
     return 1;
   }
-  catch (const CORBA::COMM_FAILURE& ex) {
-    if (_reuse || _fwd) {
-      if (_fwd)
-        objptr->resetRopeAndKey();
-      CORBA::TRANSIENT ex2(ex.minor(),ex.completed());
-      if (!_omni_callTransientExceptionHandler(objptr,_retries++,ex2))
-	throw ex2;
-    }
-    else {
-      if (!_omni_callCommFailureExceptionHandler(objptr,_retries++,ex))
-	throw;
-    }
-  }
-  catch (const CORBA::TRANSIENT& ex) {
-    if (!_omni_callTransientExceptionHandler(objptr,_retries++,ex))
-      throw;
-  }
-  catch (const CORBA::SystemException& ex) {
-    if (!_omni_callSystemExceptionHandler(objptr,_retries++,ex))
-      throw;
-  }
-#ifndef EGCS_WORKAROUND
-  goto NONEXIST_again;
-#else
-}
-#endif
-#ifdef NEED_DUMMY_RETURN
-  {
-    // never reach here! Dummy return to keep some compilers happy.
-    CORBA::Boolean _result = 0;
-    return _result;
-  }
-#endif
 }
 
 
@@ -395,59 +331,22 @@ Object::_get_implementation()
 }
 
 
-size_t
-CORBA::
-Object::NP_alignedSize(CORBA::Object_ptr obj,size_t initialoffset)
-{
-  if (CORBA::is_nil(obj)) {
-    return CORBA::AlignedObjRef(obj,0,0,initialoffset);
-  }
-  else {
-    const char *repoId = obj->PR_getobj()->NP_IRRepositoryId();
-    return CORBA::AlignedObjRef(obj,repoId,strlen(repoId)+1,initialoffset);
-  }
-}
-
 void
 CORBA::
-Object::marshalObjRef(CORBA::Object_ptr obj,NetBufferedStream &s)
+Object::marshalObjRef(CORBA::Object_ptr obj,cdrStream &s)
 {
-  if (CORBA::is_nil(obj)) {
-    CORBA::MarshalObjRef(obj,0,0,s);
-  }
-  else {
-    const char *repoId = obj->PR_getobj()->NP_IRRepositoryId();
-    CORBA::MarshalObjRef(obj,repoId,strlen(repoId)+1,s);
-  }
+  s.marshalObjRef((CORBA::is_nil(obj) ? 0 : obj->PR_getobj()));
 }
 
 CORBA::Object_ptr
 CORBA::
-Object::unmarshalObjRef(NetBufferedStream &s)
+Object::unmarshalObjRef(cdrStream &s)
 {
-  CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef(0,s);
-  return _obj;
-}
-
-void
-CORBA::
-Object::marshalObjRef(CORBA::Object_ptr obj,MemBufferedStream &s)
-{
-  if (CORBA::is_nil(obj)) {
-    CORBA::MarshalObjRef(obj,0,0,s);
-  }
-  else {
-    const char *repoId = obj->PR_getobj()->NP_IRRepositoryId();
-    CORBA::MarshalObjRef(obj,repoId,strlen(repoId)+1,s);
-  }
-}
-
-CORBA::Object_ptr
-CORBA::
-Object::unmarshalObjRef(MemBufferedStream &s)
-{
-  CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef(0,s);
-  return _obj;
+  omniObject* obj = s.unMarshalObjRef(0);
+  if (obj)
+    return (CORBA::Object_ptr)(obj->_widenFromTheMostDerivedIntf(0));
+  else
+    return CORBA::Object::_nil();
 }
 
 CORBA::Object_ptr
@@ -478,38 +377,18 @@ Object_Helper::duplicate(CORBA::Object_ptr obj)
   CORBA::Object::_duplicate(obj);
 }
 
-size_t
-CORBA::
-Object_Helper::NP_alignedSize(CORBA::Object_ptr obj,size_t initialoffset)
-{
-  return CORBA::Object::NP_alignedSize(obj,initialoffset);
-}
-
 void
 CORBA::
-Object_Helper::marshalObjRef(CORBA::Object_ptr obj,NetBufferedStream &s)
+Object_Helper::marshalObjRef(CORBA::Object_ptr obj,cdrStream &s)
 {
   CORBA::Object::marshalObjRef(obj,s);
 }
 
 CORBA::Object_ptr
 CORBA::
-Object_Helper::unmarshalObjRef(NetBufferedStream &s)
+Object_Helper::unmarshalObjRef(cdrStream &s)
 {
   return CORBA::Object::unmarshalObjRef(s);
 }
 
-void
-CORBA::
-Object_Helper::marshalObjRef(CORBA::Object_ptr obj,MemBufferedStream &s)
-{
-  CORBA::Object::marshalObjRef(obj,s);
-}
-
-CORBA::Object_ptr
-CORBA::
-Object_Helper::unmarshalObjRef(MemBufferedStream &s)
-{
-  return CORBA::Object::unmarshalObjRef(s);
-}
 

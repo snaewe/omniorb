@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.29.4.1  1999/09/15 20:18:14  sll
+  Updated to use the new cdrStream abstraction.
+  Marshalling operators for NetBufferedStream and MemBufferedStream are now
+  replaced with just one version for cdrStream.
+  Derived class giopStream implements the cdrStream abstraction over a
+  network connection whereas the cdrMemoryStream implements the abstraction
+  with in memory buffer.
+
   Revision 1.29  1999/08/16 19:33:07  sll
   New per-compilation unit initialiser class omniInitialiser.
 
@@ -117,15 +125,17 @@
 #include <omnithread.h>
 #include <omniORB2/CORBA_sysdep.h>
 #include <omniORB2/CORBA_basetypes.h>
-#include <omniORB2/seqtemplates.h>
+#include <omniORB2/seqTemplatedecls.h>
+#include <omniORB2/stringtypes.h>
 #include <omniORB2/IOP.h>
 #include <omniORB2/GIOP.h>
 #include <omniORB2/IIOP.h>
+#include <omniORB2/templatedecls.h>
 
 class Rope;
 class GIOP_S;
 class GIOP_C;
-class GIOPobjectLocation;
+class GIOPObjectInfo;
 class omniObject;
 class initFile;
 class omniObjectManager;
@@ -142,7 +152,7 @@ extern void omniPy_objectIsReady(omniObject* obj);
 //   the variable name stays the same with compatible shared library, e.g.
 //   2.5.1.
 //
-extern _core_attr const char* omniORB_2_8;
+extern _core_attr const char* omniORB_2_9;
 
 
 #include <omniORB2/rope.h>
@@ -221,10 +231,10 @@ public:
   // (ref CORBA 2 spec. 10.6.5)
   // returns 0 if this is a null object reference
 
+  // XXX
   static omniObject * createObjRef(const char *mostDerivedRepoId,
 				   const char *targetRepoId,
-				   IOP::TaggedProfileList* profiles,
-				   _CORBA_Boolean release);
+				   IOP::TaggedProfileList* profiles);
   // Returns an object pointer identified by <mostDerivedRepoId> & <profiles>.
   // If release is TRUE, the returned object assumes resposibility of
   // the heap allocated <profiles>.
@@ -236,65 +246,10 @@ public:
   // would be raised.
   // If <targetRepoId> == 0, then the desired interface is the pseudo object
   // CORBA::Object from which all interfaces derived.
+  //
+  // If an exception occurs, <profiles> is freed.
+  
 
-};
-
-//////////////////////////////////////////////////////////////////////
-/////////////////////////// omniRopeAndKey ///////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-class omniRopeAndKey {
-public:
-  inline omniRopeAndKey(Rope *r,_CORBA_Octet *k, _CORBA_ULong ksize) 
-                 : pd_r(r), pd_keysize(0)
-  {
-    key(k,ksize);
-  }
-
-  inline omniRopeAndKey() : pd_r(0), pd_keysize(0) {}
-
-  inline ~omniRopeAndKey() { 
-    if (pd_keysize > sizeof(omniObjectKey)) {
-      delete [] pd_keyptr;
-    }
-  }
-
-  inline Rope* rope() const { return pd_r; }
-
-  inline _CORBA_Octet* key() const { 
-    if (pd_keysize <= sizeof(omniObjectKey)) {
-      return (_CORBA_Octet*)&pd_key; 
-    }
-    else {
-      return pd_keyptr; 
-    }
-  }
-   
-  inline _CORBA_ULong  keysize() const { return pd_keysize; }
-
-  inline void rope(Rope* r) { pd_r = r; }
-  inline void key(_CORBA_Octet* k, _CORBA_ULong ksize) {
-    if (pd_keysize > sizeof(omniObjectKey)) delete [] pd_keyptr;
-    pd_keysize = ksize;
-    if (pd_keysize <= sizeof(omniObjectKey)) {
-      memcpy((void *)&pd_key,(void*)k,pd_keysize);
-    }
-    else {
-      pd_keyptr = new _CORBA_Octet[pd_keysize];
-      memcpy((void*)pd_keyptr,(void*)k,pd_keysize);
-    }
-  }
-
-private:
-  Rope*             pd_r;
-  _CORBA_ULong      pd_keysize;
-  union {
-    _CORBA_Octet*   pd_keyptr;
-    omniObjectKey   pd_key;
-  };
-
-  omniRopeAndKey& operator=(const omniRopeAndKey&);
-  omniRopeAndKey(const omniRopeAndKey&);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -305,74 +260,43 @@ class omniObject {
 
 protected:
 
-  omniObject(omniObjectManager*p =0); // ctor local object
-  omniObject(const char *repoId,   // ctor for proxy object
-	 Rope *r,
-	 _CORBA_Octet *key,
-	 size_t keysize,
-      	 IOP::TaggedProfileList *profiles,
-	 _CORBA_Boolean release); 
-  // If release TRUE, the object assumes management of the heap allocated
-  // <key> and <profiles>.
+#if 0
+  omniObject(omniObjectManager* p, const char* repoID); // ctor local object
+  omniObject(omniObjectManager*p, const char* repoID, const omniObjectKey& k);
+#endif
+  omniObject(omniObjectManager* p = 0); // ctor local object
+
+  omniObject(GIOPObjectInfo* objInfo,const char* use_as_repoID); // ctor proxy
 
   virtual ~omniObject();
 
+  void PR_setRepositoryID(const char* repoID);
+  void PR_setKey(const omniObjectKey& k);
+
+
 public:
 
-  void  PR_IRRepositoryId(const char* s);
-  // Set the IR repository ID of this object to <s>.
 
-  // NOTE: this function must only be called by createObjRef() and
-  // equivalent functions. It is only public so that other libraries
-  // can provide createObjRef() functions. Never call it in any other
-  // circumstance.
-  //
-  // NOTE: this function is **not thread-safe**. It *should not* be called
-  //       if there is any chance that the object might be accessed
-  //       concurrently by another thread.
-  //
-  // If this is a local object
-  //    1. If omni::objectIsReady() has been called for this object,
-  //       this function will throw a omniORB::fatalException().
-  //    2. otherwise, <s> is recorded as the current IR repository ID.
-  //
-  // If this is a proxy object
-  //    1. The IR repository ID of this object was initialised by the
-  //       ctor for proxy objects. This value is preserved.
-  //    2. <s> is then recorded as the current IR repository ID.
-  //    3. An internal flag (pd_flags.existent_and_type_verified) is set to 0.
-  //       This will cause assertObjectExistent() to check the type and
-  //       verify the existent of the object before it performs the next
-  //       invocation.
+  GIOPObjectInfo* getInvokeInfo(_CORBA_Boolean& location_forwarded);
+  // Returns a GIOPObjectInfo with all the information necessary to do a
+  // GIOP request.  If the info does not correspond to that contained in
+  // the object's IOR, set <original> to 1. Typically this is because a
+  // setInvokeInfo has been called. Otherwise returns 0.  The returned
+  // object should be released by calling its _release() method.  This
+  // function is atomic and thread-safe.
+  // 
 
-  void setRopeAndKey(const omniRopeAndKey& l,_CORBA_Boolean keepIOP=1);
-  // Set new values to the rope and key. If keepIOP is true, keep the
-  // original IOP profile. Otherwise update the profile as well.
-  // This function is thread-safe.
+  void setInvokeInfo(GIOPObjectInfo*,_CORBA_Boolean keepIOP=1);
+  // Use the argument GIOPObjectInfo for future invocations.
+  // Future invocations will make use the new info. Typically this function
+  // is used to update the object state with the info contained in a
+  // LOCATION FORWARD message.
+  // Ownership of argument GIOPObjectInfo now belongs to this object.
+  // This function is atomic and thread-safe.
 
-  void resetRopeAndKey();
-  // If this is a proxy object, reset the rope and key to the values
-  // stored in the IOP profile.
-  // This function has no effect on local objects and is silently ignored.
-  // This function is thread-safe.
-
-  _CORBA_Boolean getRopeAndKey(omniRopeAndKey& l) const;
-  // Get the current value of the rope and key. If the values are the same
-  // as those stored in the IOP profile, the return value is 0. Otherwise
-  // the return value is 1.
-  // This function is thread-safe.
-
-  void getKey(_CORBA_Octet*& key, _CORBA_ULong& ksize) const {
-    // This is a non-thread safe function to read the key of this object.
-    // The object continues to own the storage of <key>.
-    // If the key is modified concurrently by another thread's call to
-    // setRopeAndKey(), the behaviour is undefined.
-    if( is_proxy() )  key = pd_objkey.foreign;
-    else              key = (_CORBA_Octet*) &pd_objkey.native;
-
-    ksize = pd_objkeysize;
-  }
-
+  void resetInvokeInfo();
+  // Reset the state of the object to be the same as described in its IOR.
+  // This function is atomic and thread-safe.
 
   void assertObjectExistent();
   // If this is a local object, 
@@ -408,10 +332,9 @@ public:
   // Return 1 if this is a proxy object, 0 if this is a local object.
   // This function is thread-safe.
 
-  inline const char* NP_IRRepositoryId() const { return pd_repoId; }
-  // Return the IR repository ID of this object. The value is returned 
-  // is either the value given to the ctor or set by the most recent
-  // call to PR_IRRepositoryID().
+  inline const char* NP_IRRepositoryId() const { return pd_repositoryID; }
+  // Return the IR repository ID of this object. This is the ID that
+  // is recorded in the IOR of this object.
   //  This function is thread-safe.
 
   virtual void* _widenFromTheMostDerivedIntf(const char* type_id,
@@ -437,11 +360,6 @@ public:
   // null pointer will be returned.
   // This function DO NOT throw any exception under any circumstance.
   // This function is thread-safe.
-
-  inline IOP::TaggedProfileList* iopProfiles() const { 
-    // This function is thread-safe.
-    return pd_iopprofile; 
-  }
 
   _CORBA_Boolean _real_is_a(const char *repoId);
   // Returns 1 if the object is really an instance of the type identified
@@ -512,7 +430,7 @@ public:
   // to the exception handler.
   // This function is thread-safe.
 
-  omniObjectManager* _objectManager() const { return pd_manager; }
+  omniObjectManager* _objectManager() const { return pd_data.l.pd_manager; }
   // This function should only be called for local object.
   // Returns the object manager of this object.
   // Calling this function for a proxy object would result in undefined
@@ -533,19 +451,11 @@ public:
 
   static omniObjectManager*  nilObjectManager();
 
+protected:
+  void getKey(omniObjectKey&);
+
 private:
-  union {
-    _CORBA_Octet* foreign;
-    omniObjectKey native;
-  }                    pd_objkey;
-  size_t               pd_objkeysize;
-  char*                pd_repoId;
-  size_t               pd_repoIdsize;
-  char*                pd_original_repoId;
-  union {
-    Rope*              pd_rope;
-    omniObjectManager* pd_manager;
-  };
+
   int                  pd_refCount;
   omniObject*          pd_next;
 
@@ -559,7 +469,25 @@ private:
     _CORBA_UShort system_exception_handler    : 1;
   } pd_flags;
 
-  IOP::TaggedProfileList* pd_iopprofile;
+  _CORBA_String_member    pd_repositoryID;
+  // Repository ID encoded in the IOR
+
+  GIOPObjectInfo*         pd_objectInfo;
+
+  union {
+    struct  {
+      char*                   pd_use_as_repositoryID;
+      // Repository ID of the interface this object is used as.
+      // If this value does not equals pd_use_as_repositoryID, the object 
+      // has to be contacted to verify its true type before the first
+      // invocation.
+      GIOPObjectInfo*         pd_originalInfo;
+    } p;
+    struct {
+      omniObjectKey           pd_key;
+      omniObjectManager*      pd_manager;
+    } l;
+  } pd_data;
 
   inline int getRefCount() const     { return pd_refCount;  }
   inline void setRefCount(int count) { pd_refCount = count; }
@@ -585,7 +513,45 @@ public:
   virtual void detach() = 0;
 };
 
-#include <omniORB2/bufferedStream.h>
+class omniObject_var {
+public:
+  inline omniObject_var() : pd_obj(0) { }
+  inline omniObject_var(omniObject* p) : pd_obj(p) {}
+  inline ~omniObject_var() {
+    if (pd_obj) omni::objectRelease(pd_obj); pd_obj = 0;
+  }
+  inline omniObject_var(const omniObject_var& p) : pd_obj(p.pd_obj) {
+    if (pd_obj) {
+      omni::objectDuplicate(pd_obj);
+    }
+  }	
+  inline omniObject_var& operator= (omniObject* p) {
+    if (pd_obj) omni::objectRelease(pd_obj);
+    pd_obj = p;
+    return *this;
+  }
+  inline omniObject_var& operator= (const omniObject_var& p) {
+    if (pd_obj) omni::objectRelease(pd_obj);
+    pd_obj = p.pd_obj;
+    if (pd_obj) {
+      omni::objectDuplicate(pd_obj);
+    }
+    return *this;
+  }
+  
+  inline omniObject* operator->() const { return pd_obj; }
+
+  inline operator omniObject*() const { return pd_obj; }
+
+  inline omniObject* retn() { omniObject* p = pd_obj; pd_obj = 0; return p; }
+
+private:
+  omniObject* pd_obj;
+};
+
+#include <omniORB2/cdrStream.h>
+#include <omniORB2/seqTemplatedefns.h>
+#include <omniORB2/giopStream.h>
 #include <omniORB2/giopDriver.h>
 
 
