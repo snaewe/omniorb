@@ -266,8 +266,8 @@ DRV_stripped_name(char *fn)
 	return NULL;
     l = strlen(n);
 #if defined(__WIN32__)
-    for (n += l; l > 0 && *n != '\\'; l--, n--);
-    if (*n == '\\') n++;
+    for (n += l; l > 0 && (*n != '\\' && *n != '/') ; l--, n--);
+    if (*n == '\\' || *n == '/') n++;
 #elif defined(__VMS)
     for (n += l; l > 0 && *n != ']' && *n != ':'; l--, n--);
     if (*n == ']' || *n == ':') n++;
