@@ -1,3 +1,15 @@
+Mon Dec 14 11:08:37 GMT 1998 sll
+================================
+
+- omniidl2 bug fix
+
+  now generate correct stub for #pragma version <interface> <version no> again.
+  The bug is caused by the difference in definition of yytext between Sun's
+  yacc and bison.
+
+src/tool/omniidl2/fe/idl.yy
+src/tool/omniidl2/fe/y.tab.cc
+
 Tue Dec  1 20:41:33 GMT 1998 sll
 ================================
 
