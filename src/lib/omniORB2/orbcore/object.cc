@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.10  1998/02/27 13:59:30  sll
+  Minor update to cope with the change of manager() to _objectManager() in
+  class omniObject.
+
   Revision 1.9  1997/12/09 17:13:52  sll
   Added support for system exception handlers.
   Updated to use the rope factory interfaces.
@@ -255,7 +259,7 @@ omniObject::resetRopeAndKey()
 	// via the network loopback.
 	// We override this and change it to return a network
 	// loopback.
-	_rope = _localobj->manager()->defaultLoopBack();
+	_rope = _localobj->_objectManager()->defaultLoopBack();
 	_rope->incrRefCount();
 	CORBA::Octet* k;
 	CORBA::ULong ks;
