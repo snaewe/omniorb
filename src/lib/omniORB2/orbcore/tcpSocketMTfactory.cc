@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.4  1999/09/27 13:26:23  djr
+  Updates to loggin to ensure prefix is always omniORB:
+
   Revision 1.22.6.3  1999/09/27 11:01:13  djr
   Modifications to logging.
 
@@ -1224,7 +1227,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       omni_thread::sleep(1,0);
       continue;
     }
-    catch(const omniORB::fatalException& ex) {
+    catch(omniORB::fatalException& ex) {
       if (omniORB::trace(0)) {
 	omniORB::logger l;
 	l << "You have caught an omniORB bug, details are as follows:\n" <<
