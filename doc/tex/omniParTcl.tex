@@ -1,0 +1,584 @@
+\documentclass[11pt]{article}
+\usepackage{a4}
+
+\input /homedir/krw/tex/macros/fixtoday.sty
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\textwidth}{1.0in}
+\addtolength{\headheight}{0.2in}
+
+% So that the headers use the new dimensions, the package is
+% included after the dimensions are reset:
+\usepackage{fancyheadings}
+\pagestyle{fancyplain}
+
+\def\omniParTcl{{\tt omniParTcl}}
+\def\tcltk{{\tt Tcl/Tk}}
+\def\tcl{{\tt Tcl}}
+\def\tk{{\tt Tk}}
+
+\def\CXX{\relax C$^{++}$\relax}
+
+\begin{document}
+  
+\title{{\bf \omniParTcl}\\
+       {\normalsize Creating \tcltk\ GUIs for \CXX\ applications}}
+\author{Kenneth R.\ Wood\\
+        Olivetti Research Ltd.}
+\date{\today} 
+\maketitle
+
+\begin{abstract}
+\noindent
+We describe a clean and simple method for integrating \tcltk\ and \CXX\
+in order to provide the means to create graphical user interfaces for
+Orbix-based applications, both clients and servers.  In fact, the method
+is a general one which allows the creation of a \tcltk\ GUI for any \CXX\
+program.
+
+The method allows \CXX\ functions to be invoked from a \tcltk\ script and
+allows \tcltk\ commands to be scheduled for evaluation from \CXX.  
+Although most \omniParTcl\ applications will be multithreaded,
+all \tcltk\ processing is guaranteed to be confined to a single thread.
+No modification to the Tk scheduler is required.
+\end{abstract}
+
+\section{Introduction}
+
+\omniParTcl\ (pronounced ``omni-{\em particle}'' and intended to
+evoke the idea of ``{\em Par\/}allel {\em \tcl\/}'') provides a mechanism
+for attaching a graphical front-end written in \tcltk\ to a \CXX\
+program.  It was motivated by the perceived need for
+better-than-command-line interfaces for Omni/Orbix applications.  In
+discussion, the following criteria were established for any integration
+of \tcltk\ and \CXX:
+
+\begin{itemize}
+
+\item 
+It must be possible for the \tcltk\ interface to run in parallel with
+\CXX\ computation.  This requirement stems from potential delays in
+Orbix RPCs, but it is also desirable in the general case to allow
+the user to continue to interact with an application during
+lengthy computations of any sort.
+
+\item
+All \tcltk\ primitives should be invoked from a single thread.  This
+frees us---at least to a certain extent---from worries about
+thread-aware i/o and, more importantly, prevents dangerous inter-thread
+recursion which could otherwise easily occur given the diverse range of
+execution triggers in \tcltk.
+
+\item
+Polling should not be used in synchronizing \tcltk\ and \CXX\
+threads.  This obviates the need to predetermine the balance between
+interactive response time and CPU wastage on polling.  More generally,
+it also removes the danger of multiple \omniParTcl\ applications
+dominating the CPU simply due to polling.
+
+\item 
+If possible, no modifications to the Tk scheduler should be required.
+That is, we would like our \tcltk\ interface to be managed by a {\tt
+wish} which has been constructed using only the standard
+hooks.  This makes it much more likely that the integration technique
+will work with future releases of \tcltk, and also means that upgrading
+to such future releases will involve little, if any, work.
+
+\end{itemize}
+
+\noindent
+\omniParTcl\ has been designed to meet all of these criteria.
+
+\section{Using \omniParTcl}
+
+To write an application using \omniParTcl, you create two related pieces
+of code:
+
+\begin{enumerate}
+
+\item The application code.  This is the \CXX\ source of your
+application, which will consist of any number of \CXX\ functions and
+may, of course, include Orbix code.  Your application code must define
+{\tt Tcl\_Appinit()} and {\tt main()}.  Your {\tt Tcl\_Appinit()} must
+call {\tt omniParTcl\_Init()} which takes the same form as {\tt
+Tcl\_Init()} and {\tt Tk\_Init()}.  Your {\tt main()} must call
+{\tt Tk\_Main()}.
+
+By using {\tt Tcl\_CreateCommand} within your definition of {\tt
+Tcl\_Appinit}, you will nominate certain of your \CXX\ functions as
+callable from \tcl.  Usually these \tcl-callable \CXX\ functions will
+launch one or more parallel threads and return control to the main
+\tcltk\ thread, although simple functions can be run in the main thread
+if their execution does not interfere unduly with the \tcltk\ user
+interface.
+
+For communication in the other direction, \omniParTcl\ provides two
+\CXX\ functions which schedule \tcltk\ commands for evaluation in the
+primary thread.  
+
+\begin{itemize}
+\item
+{\tt omniTclMeAndRun(s)} schedules \tcltk\ script {\tt s}
+for evaluation as soon as possible and returns control
+immediately to the calling \CXX\ thread.  
+\item
+{\tt omniTclMeAndWait(s)}
+schedules the script for evaluation and does not return control to the
+caller until the script has been evaluated.  
+\end{itemize}
+
+\noindent
+Clearly, {\tt omniTclMeAndWait()} cannot be used by a
+\CXX\ function running in the main thread.
+
+\item
+
+The \tcltk\ script.  This implements your graphical user interface, and
+will contain calls to the \CXX\ functions nominated in {\tt Tcl\_Appinit()}
+as callable from \tcltk.  If the script is to be executable, the first 
+line will be
+
+\bigskip
+\verb|#!myApp -f|
+\bigskip
+
+\noindent
+where {\tt myApp} is the name of your compiled \CXX\ application code.
+However, since {\tt myApp} is a {\tt wish}, you could also run your
+program with {\tt myApp -file <script>} where {\tt <script>} is the name
+of your \tcltk\ script.  In the latter case, of course, no special first line
+is required.
+
+\end{enumerate}
+
+\section{Building \tcltk\ scripts in \CXX}
+
+To make it easier to build complex \tcltk\ scripts for scheduling
+with the {\tt TclMe} functions, \omniParTcl\ provides a \CXX\ class
+wrapper for the {\tt Tcl\_DString} routines.  In fact, the wrapper also
+extends {\tt Tcl\_DString} functionality by providing overloaded
+members for appending longs and doubles, and by extending {\tt
+appendElement} to behave exactly like {\tt append}.
+
+Thus, 
+you can use {\tt append()} and {\tt appendElement()} to
+attach strings, longs, and doubles to a growing DString.  E.g.
+
+\begin{verbatim}
+     tclDString ds;
+     double d;
+     long i;
+
+     ...
+
+     ds.append("set mylist ");
+     ds.startSublist();
+     ds.appendElement(i);
+     ds.appendElement(d);
+     ds.endSublist();
+
+     omniTclMeAndRun(ds.value());
+\end{verbatim}
+
+Note also that there are appropriate default arguments for certain
+member functions so that, for example, the following equivalences
+hold,
+
+\begin{verbatim}
+     ds.append("xyz")     <==>     ds.append("xyz", -1)
+
+     ds.append(i)         <==>     ds.append(i,"%d")  
+
+     ds.append(d)         <==>     ds.append(d,"%g")
+\end{verbatim}
+
+\noindent
+and similar ones hold for the {\tt appendElement()} versions.  Thus, by
+default you append an entire string, a long in decimal format, and a
+double in the smallest accurate way, but by providing the second
+argument you can append only part of string, longs in hex or octal, and
+doubles in any format you choose.
+
+See the \tcltk\ manual for more detail about the {\tt Tcl\_DString} functions.
+
+\section{How it works}
+
+\omniParTcl\ really just organizes a few simple conventions.   
+First, {\tt omniParTcl\_Init} sets things up by
+performing the following tasks:
+
+\begin{itemize}
+\item
+It creates a pipe and uses the function {\tt Tk\_CreateFileHandler} to
+arrange to call the function {\tt cxxTclScriptHandler()} whenever data
+is available to read from the pipe.
+
+\item
+It creates two mutexes, one for protecting access to the pipe and 
+another for protecting access to a queue of scripts awaiting evaluation.
+\end{itemize}
+
+\noindent
+The essential behaviour of \omniParTcl\ is then determined by the
+interplay between the two script-evaluation functions,
+{\tt omniTclMeAndRun()} and {\tt omniTclMeAndWait()}, and 
+the function {\tt cxxTclScriptHandler()}.  Recall that the latter
+is always invoked within the primary \tcltk\ thread, while the
+two {\tt TclMe} functions will typically be invoked in
+other threads.
+
+\begin{itemize}
+
+\item Each of the two {\tt TclMe} functions puts the supplied
+script onto the same FIFO queue of scripts awaiting evaluation, and
+writes a byte to the pipe.  {\tt omniTclMeAndRun()} simply returns at
+this point, while {\tt omniTclMeAndWait()} creates a condition variable,
+puts it on the queue with the script, and then waits on it.
+
+\item {\tt cxxTclScriptHandler()} is invoked within the primary
+\tcltk\ thread when there is something to read from the pipe.  It
+performs the following steps until the queue is empty:
+
+\begin{itemize}
+
+\item It consumes a byte from the pipe.
+
+\item It removes a script from the queue and
+evaluates it using {\tt Tcl\_GlobalEval}.
+
+\item If the script is paired with a condition variable, 
+it signals on the condition.
+\end{itemize}
+
+\end{itemize}
+
+\noindent
+The interplay amongst these functions (in particular, their access
+to the pipe and script queue) is, of course, properly mutex-protected.
+
+Er, that's it.
+
+\section{Non-graphical and mixed applications}
+
+Because the \omniParTcl\ developer writes his or her own {\tt main()},
+the application's behaviour can be tailored in various ways.  In
+particular, by calling {\tt Tcl\_Main} instead of {\tt Tk\_Main}
+and by omitting the call to {\tt Tk\_Init} in 
+{\tt Tcl\_Appinit()}, the developer can write an application which
+uses \tcl\ without \tk\ to create the (presumably non-graphical) interface.
+
+Perhaps more usefully, the developer could provide both types of interface
+and allow a command-line flag to dictate which one is used.  
+
+\section{Where is it now?}
+
+\omniParTcl\ is installed in the Omni Development Environment,
+on Solaris only for the time being.  The source can be found in:
+
+\begin{verbatim}
+/project/omni/develop/master/if/include/omniParTcl.h
+/project/omni/develop/master/lib/omniParTcl/*
+\end{verbatim}
+
+In order to encourage migration to the new \tcltk\ libraries,
+\omniParTcl\ is built for \tcl 7.4 and \tk 4.0 and will not
+work with earlier versions.  In fact, the Makefile variables 
+{\tt OMNIPARTCLDEFINE} and {\tt OMNIPARTCLLIB} automatically provide include
+files and libraries for \tcl 7.4 and \tk 4.0.  However, if there is a
+pressing need to use \omniParTcl\ with \tcl 7.3 and \tk 3.6, it can
+easily be built for these.
+
+Note that the {\tt omnithread} library is required for all \omniParTcl\
+applications, even those which have only a single thread.
+
+\section{An Example}
+
+The code for a simple \omniParTcl\ application appears on the following
+pages.  The source consists of three files.
+
+\begin{enumerate}
+\item {\tt ptt.cc}: the \CXX\ application code.
+\item {\tt ptt.tcl}: the \tcltk\ interface script.
+\item {\tt Imakefile}: the Imakefile to build the example in the Omni
+                       Development Environment.
+\end{enumerate}
+
+\noindent
+These files can be found in
+{\tt /project/omni/develop/master/appl/tests/partcltest}.
+
+\medskip
+
+In order to emphasize the \omniParTcl\ side of things, this example does
+not use Orbix.  However, no extra magic is required to incorporate Orbix
+code into an \omniParTcl\ application, and examples which use Orbix
+and which have much more complex user interfaces will soon be
+appearing in {\tt /project/omni/develop/master/appl/weather/clients}.
+(They already exist in {\tt /homedir/krw/weather/weather\_appl} but there
+they use a slightly older version of \omniParTcl.)
+
+\newpage
+\begin{verbatim}
+//---------------------------------------------------------------------------
+// ptt.cc - Simple test of omniParTcl.  We just repeatedly update a couple of 
+//          variables on the C++ side and monitor their values in Tcl/Tk 
+//          labels.  To test communication the other way, we allow the user 
+//          to change the output format for one of the variables.
+//
+// $Id$
+// $Author$
+//---------------------------------------------------------------------------
+
+#include <string.h>
+#include "omniParTcl.h"
+
+static omni_thread *threadOne;
+static omni_thread *threadTwo;
+
+static char *fmt;
+static omni_mutex fmtMutex;
+
+//---------------------------------------------------------------------------
+
+void threadOneFunc(void *arg)
+{
+  tclDString ds;
+  static long i = 0;
+  
+  while (1) { // Repeatedly do some Tcl.
+      
+    ds.init();
+    ds.append("set tclVarOne ");
+
+    //
+    // By using appendElement() rather than append() we ensure that
+    // any format string (e.g. one containing whitespace) will work.
+    //
+    fmtMutex.acquire();
+    ds.appendElement(++i,fmt);      
+    fmtMutex.release();    
+    
+    omniTclMeAndRun(ds.value());
+    ds.free();
+      
+    omniTclMeAndWait("update");
+    
+    omni_thread::sleep(0,100000000); // Sleep a bit
+  }
+}
+\end{verbatim}
+\newpage
+\begin{verbatim}
+//---------------------------------------------------------------------------
+
+void threadTwoFunc(void *arg)
+{
+  tclDString ds;
+  static double d = 0.999;
+  
+  while (1) { // Repeatedly do some Tcl.
+
+    ds.init();
+    ds.append("set tclVarTwo ");
+    ds.append(d);
+    
+    omniTclMeAndRun(ds.value());
+    ds.free();
+
+    d -= 0.001;
+    
+    omni_thread::sleep(1,0); // Sleep a second
+  }
+}
+
+//---------------------------------------------------------------------------
+
+int startThreadOne(ClientData clientData, Tcl_Interp *interp,
+                   int argc, char *argv[])
+{
+  if ((threadOne = omni_thread::create(threadOneFunc,NULL)) == NULL) {
+    Tcl_SetResult(interp, "ptt: cannot create threadOne", TCL_VOLATILE);
+    return TCL_ERROR;
+  }
+  return TCL_OK;
+}
+
+//---------------------------------------------------------------------------
+
+int startThreadTwo(ClientData clientData, Tcl_Interp *interp,
+                   int argc, char *argv[])
+{
+  if ((threadTwo = omni_thread::create(threadTwoFunc,NULL)) == NULL) {
+    Tcl_SetResult(interp, "ptt: cannot create threadTwo", TCL_VOLATILE);
+    return TCL_ERROR;
+  }
+  return TCL_OK;
+}
+\end{verbatim}
+\newpage
+\begin{verbatim}
+//---------------------------------------------------------------------------
+
+int setFormat(ClientData clientData, Tcl_Interp *interp,
+              int argc, char *argv[])
+{
+  //
+  // Make sure we've been passed a new format string.  
+  // If so, use it to update the format.  Otherwise,
+  // leave it as-is.
+  //
+  
+  if (argc >= 2) {
+    delete fmt;
+    fmtMutex.acquire();
+    fmt = new char[strlen(argv[1])+1];
+    strcpy(fmt,argv[1]);
+    fmtMutex.release();
+  }
+  
+  return TCL_OK;
+}
+
+//---------------------------------------------------------------------------
+
+int Tcl_AppInit(Tcl_Interp *interp)
+{
+  //
+  // For omniParTcl applications, Tcl_Appinit must call omniParTcl_Init()
+  // as well as the Tcl and Tk init routines.   Any C++ functions which
+  // are to be callable from Tcl must be specified in a call to
+  // Tcl_CreateCommand().
+  //
+
+  Tk_Window main;
+  main = Tk_MainWindow(interp);
+
+  if (Tcl_Init(interp) == TCL_ERROR) {
+    return TCL_ERROR;
+  }
+  if (Tk_Init(interp) == TCL_ERROR) {
+    return TCL_ERROR;
+  }
+  if (omniParTcl_Init(interp) == TCL_ERROR) {
+    return TCL_ERROR;
+  }
+
+  // tcl_RcFileName = ".mytclrc"; // No RC file for this app.
+
+  //
+  // Make our C++ functions available in Tck/Tk.
+  //
+  Tcl_CreateCommand(interp, "CXXstartThreadOne", startThreadOne,
+                    (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+
+  Tcl_CreateCommand(interp, "CXXstartThreadTwo", startThreadTwo,
+                    (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+
+  Tcl_CreateCommand(interp, "CXXsetformat", setFormat,
+                    (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+
+  //
+  // Application specific initialization.  Default format for
+  // the first variable is standard decimal.
+  //
+  fmt = new char[3];
+  strcpy(fmt,"%d");
+  
+  return TCL_OK;
+}
+
+//---------------------------------------------------------------------------
+
+int main(int argc, char *argv[])
+{
+  //
+  // omniParTcl is designed for use with Tcl7.4/Tk4.0 which means that
+  // the user must write his or her own main().  This provides extra
+  // flexibility.  For example, a command-line switch could determine
+  // whether the application used a graphical interface (in which case
+  // it would call Tk_Main) or an ascii interface (in which case it
+  // would call Tcl_Main.)
+  //
+  // For typical Tk-based graphical interfaces, main() simply calls
+  // Tk_Main() and returns 0 as below.  In this case, the program
+  // behaves like a standard wish and would typically be invoked
+  // using the "# <program> -f" construct at the top of a Tcl/Tk
+  // source file.
+  //
+  
+  Tk_Main(argc, argv, Tcl_AppInit);  // Run the Tk scheduler.
+  return 0;	                     // Make the compiler happy.
+}
+\end{verbatim}
+
+
+\newpage
+\begin{verbatim}
+#!./ptt -f
+#
+# Simple test of omniParTcl.  We just repeatedly update a couple of 
+# variables on the C++ side and monitor their values in Tcl/Tk labels.
+# To test communication the other way, we allow the user to change the
+# output format for one of the variables.
+#
+# $Id$
+# $Author$
+#
+
+set tclVarOne 0
+set tclVarTwo 0
+
+CXXstartThreadOne
+CXXstartThreadTwo
+
+label .l1 -textvariable tclVarOne -bg cyan
+label .l2 -textvariable tclVarTwo -bg green
+
+button .q -text "Quit" -command exit
+button .b -text "Change format" -command changeFormat
+
+pack .q .l1 .l2 .b -fill both
+update
+
+proc changeFormat {} {
+  pack forget .b  
+  label .fl -text "New format string:"
+  entry .fe 
+  pack .fl .fe -side left
+  update
+  bind .fe <Return> {CXXsetformat [.fe get] \
+                     destroy .fe; destroy .fl \
+                     pack .b; update}
+}
+\end{verbatim}
+
+
+\newpage
+\begin{verbatim}
+#
+# Imakefile for simple omniParTcl test.
+#
+# $Id$
+# $Author$
+#
+
+CXXSRCS = ptt.cc
+
+INCLUDES = $(OMNITHREADDEFINE) $(OMNIPARTCLDEFINE)
+
+all:: ProgramTargetName(ptt)
+
+NormalCplusplusProgramTarget(ptt,ptt.o,\
+$(OMNITHREADDEPEND) $(OMNIPARTCLDEPEND),\
+$(OMNITHREADLIB) $(OMNIPARTCLLIB),\
+NullParameter)
+
+InstallProgram(ptt,$(BINDIR))
+
+DependTarget()
+\end{verbatim}
+
+
+\end{document}
+
+
