@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.19.6.8  2000/02/07 15:27:36  dpg1
+  Silly mistake in _is_equivalent() for pseudo object references.
+
   Revision 1.19.6.7  2000/02/04 18:11:01  djr
   Minor mods for IRIX (casting pointers to ulong instead of int).
 
@@ -147,7 +150,7 @@ CORBA::Object::_is_equivalent(CORBA::Object_ptr other_object)
   // Pseudo objects are equivalent only if pointers are equal.
   // (So the above test should have gotten it).
   if( _NP_is_pseudo() )
-    return other_object->_NP_is_pseudo();
+    return 0;
 
   if( other_object->_NP_is_nil() ) {
     return _NP_is_nil();
