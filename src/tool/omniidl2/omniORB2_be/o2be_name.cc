@@ -27,9 +27,12 @@
 
 /*
   $Log$
-  Revision 1.8  1998/01/27 16:46:29  ewc
-  *** empty log message ***
+  Revision 1.9  1998/04/07 18:49:01  sll
+  Use std::fstream instead of fstream.
 
+// Revision 1.8  1998/01/27  16:46:29  ewc
+// *** empty log message ***
+//
   Revision 1.7  1997/12/09 19:54:58  sll
   *** empty log message ***
 
@@ -44,7 +47,6 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
-#include <iostream.h>
 
 static char *internal_produce_scope_name(UTL_ScopedName *n,char *separator);
 static char *internal_check_name_for_reserved_words(char *p);
@@ -859,7 +861,7 @@ return 0; // For MSVC++ 4.2
 
 void
 o2be_name::narrow_and_produce_typecode_skel(AST_Decl *decl, 
-					    fstream& s)
+					    std::fstream& s)
 {
   switch(decl->node_type())
     {
@@ -905,7 +907,7 @@ o2be_name::narrow_and_produce_typecode_skel(AST_Decl *decl,
 
 void 
 o2be_name::produce_typecode_member(AST_Decl *decl, 
-				   fstream& s,
+				   std::fstream& s,
 				   idl_bool new_ptr)
 {
   switch(decl->node_type())
