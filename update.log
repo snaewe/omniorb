@@ -1,3 +1,12 @@
+Tue Dec  4 14:29:26 GMT 2001 dpg1
+=================================
+
+- Minor corbaloc bugs.
+
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/uri.cc
+
+
 Mon Dec  3 18:44:37 GMT 2001 dpg1
 =================================
 

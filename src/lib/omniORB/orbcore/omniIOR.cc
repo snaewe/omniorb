@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2001/12/04 14:32:27  dpg1
+  Minor corbaloc bugs.
+
   Revision 1.1.2.10  2001/09/19 17:26:50  dpg1
   Full clean-up after orb->destroy().
 
@@ -177,7 +180,7 @@ omniIOR::omniIOR(const char* repoId,
 
   pd_iopProfiles = new IOP::TaggedProfileList();
 
-  if (callInterceptors == NoInterceptor) {
+  if (callInterceptors != NoInterceptor) {
     _OMNI_NS(omniInterceptors)::encodeIOR_T::info_T info(*this,iiop,
 				(callInterceptors == DefaultInterceptors));
     omniORB::getInterceptors()->encodeIOR.visit(info);
