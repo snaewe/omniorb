@@ -481,6 +481,8 @@ if $interactive; then
   for s in $sources; do
     echo "Shadow $s ?"
     myread shadow y
-    oshadow $s
+    if [ "$shadow" = "y" ]; then
+      oshadow $s
+    fi
   done
 fi
