@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/30 12:25:59  djr
+  Minor changes.
+
   Revision 1.1.2.1  1999/09/22 14:26:52  djr
   Major rewrite of orbcore to support POA.
 
@@ -88,9 +91,9 @@ omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
 
   omni::localInvocationCount++;
 
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-  // gcc cannot catch exceptions by base class, hence we cannot
-  // trap invalid exceptions going through here.  Never mind.
+#ifndef HAS_Cplusplus_catch_exception_by_base
+  // The compiler cannot catch exceptions by base class, hence
+  // we cannot trap invalid exceptions going through here.
   pd_adapter->dispatch(call_desc, this);
 
 #else

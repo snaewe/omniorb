@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/09/30 12:25:59  djr
+  Minor changes.
+
   Revision 1.1.2.2  1999/09/24 17:11:13  djr
   New option -ORBtraceInvocations and omniORB::traceInvocations.
 
@@ -123,7 +126,7 @@ omniORB::fatalException::fatalException(const char* file, int line,
 					const char* errmsg)
   : pd_file(file), pd_line(line), pd_errmsg(errmsg)
 {
-  if( abortOnInternalError )  /*??*abort();*/ *(volatile int*)0;
+  if( abortOnInternalError )  abort();
 }
 
 //////////////////////////////////////////////////////////////////////

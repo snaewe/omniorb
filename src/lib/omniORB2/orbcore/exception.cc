@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.9.6.2  1999/09/30 12:25:58  djr
+  Minor changes.
+
   Revision 1.9.6.1  1999/09/22 14:26:48  djr
   Major rewrite of orbcore to support POA.
 
@@ -277,7 +280,7 @@ _omni_callSystemExceptionHandler(omniObjRef* obj,
 }
 
 
-//?? This should really be extensible ...
+// This should really be extensible ...
 static int exHandlersTableSize = 103;
 
 
