@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.33  1999/08/20 11:39:10  djr
+  Removed debug output (left in by mistake!).
+
   Revision 1.32  1999/08/09 12:27:15  sll
   Removed trace message.
 
@@ -2932,7 +2935,6 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 	  }
 	}
 	ptr_to_first_elm += ")";
-	std::cout << "ptr_to_first_elm = " << ptr_to_first_elm << std::endl;
 
 	switch (atype)
 	  {
