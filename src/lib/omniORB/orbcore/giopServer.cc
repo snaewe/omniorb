@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.16  2001/09/20 13:26:14  dpg1
+  Allow ORB_init() after orb->destroy().
+
   Revision 1.22.2.15  2001/09/19 17:26:49  dpg1
   Full clean-up after orb->destroy().
 
@@ -133,6 +136,7 @@ giopServer::giopServer() : pd_state(IDLE), pd_nconnections(0),
 ////////////////////////////////////////////////////////////////////////////
 giopServer::~giopServer()
 {
+  singleton() = 0;
   delete [] pd_connectionState;
 }
 
@@ -1005,7 +1009,7 @@ giopServer::Link::is_empty(giopServer::Link& head)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-giopServer*
+giopServer*&
 giopServer::singleton() {
   static giopServer* singleton_ = 0;
   if (!singleton_) {

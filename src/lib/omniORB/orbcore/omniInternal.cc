@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.23  2001/09/20 13:26:14  dpg1
+  Allow ORB_init() after orb->destroy().
+
   Revision 1.2.2.22  2001/09/19 17:26:50  dpg1
   Full clean-up after orb->destroy().
 
@@ -1332,8 +1335,6 @@ public:
   }
 
   void attach() {
-    OMNIORB_ASSERT(!objectTable);  OMNIORB_ASSERT(!omni::internalLock);
-
     if (!omni::internalLock)   omni::internalLock   = new omni_tracedmutex;
     if (!omni::poRcLock)       omni::poRcLock       = new omni_tracedmutex;
     if (!omni::objref_rc_lock) omni::objref_rc_lock = new omni_tracedmutex;
@@ -1449,6 +1450,9 @@ void _omniFinalCleanup::cleanup()
       << (tracked == 1 ? "" : "s" )
       << ".\n";
   }
+
+  // Remove list of proxyObjectFactories
+  proxyObjectFactory::shutdown();
 
   // Delete mutexes
   delete &omni::nilRefLock();

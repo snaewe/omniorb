@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.28  2001/09/20 13:26:13  dpg1
+  Allow ORB_init() after orb->destroy().
+
   Revision 1.33.2.27  2001/09/19 17:26:48  dpg1
   Full clean-up after orb->destroy().
 
@@ -443,12 +446,6 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
 {
   omni_tracedmutex_lock sync(orb_lock);
 
-//    if( orb_destroyed ) {
-//      omniORB::logs(1, "The ORB cannot be re-initialised!");
-//      OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_ORBHasShutdown,
-//  		  CORBA::COMPLETED_NO);
-//    }
-
   if( the_orb ) {
     the_orb->_NP_incrRefCount();
     return the_orb;
@@ -824,8 +821,6 @@ omniOrbORB::destroy()
     omni_omniInternal_initialiser_.detach();
     omni_transportRules_initialiser_.detach();
     omni_giopEndpoint_initialiser_.detach();
-
-    proxyObjectFactory::shutdown();
 
     pd_destroyed = 1;
     orb = the_orb;
@@ -1470,12 +1465,14 @@ public:
 #endif // _HAS_SIGNAL
 
     orbAsyncInvoker = new ORBAsyncInvoker(orbParameters::maxServerThreadPoolSize);
+    invoker_shutting_down = 0;
   }
 
   void detach() {
     if (orbAsyncInvoker) {
       delete orbAsyncInvoker;
       orbAsyncInvoker = 0;
+      invoker_shutting_down = 0;
     }
 #ifdef __WIN32__
     (void) WSACleanup();

@@ -114,9 +114,10 @@ void
 omniCurrent::init()
 {
   static CORBA::Boolean done = 0;
-  OMNIORB_ASSERT(!done);
-  thread_key = omni_thread::allocate_key();
-  done = 1;
+  if (!done) {
+    thread_key = omni_thread::allocate_key();
+    done = 1;
+  }
 }
 
 omniCurrent::omniCurrent(omni_thread* thread)

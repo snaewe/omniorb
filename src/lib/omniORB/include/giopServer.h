@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/09/20 13:26:13  dpg1
+  Allow ORB_init() after orb->destroy().
+
   Revision 1.1.4.5  2001/08/17 15:00:47  dpg1
   Fixes for pre-historic compilers.
 
@@ -67,7 +70,7 @@ class giopStrand;
 class giopServer : public orbServer {
 public:
 
-  static giopServer* singleton();
+  static giopServer*& singleton();
   ~giopServer();
 
   const char* instantiate(const char* endpoint_uri,

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/09/20 13:26:15  dpg1
+  Allow ORB_init() after orb->destroy().
+
   Revision 1.1.4.4  2001/09/19 17:26:51  dpg1
   Full clean-up after orb->destroy().
 
@@ -129,8 +132,6 @@ class omni_omniTransport_initialiser : public omniInitialiser {
 public:
 
   void attach() {
-    OMNIORB_ASSERT(!omniTransportLock);
-
     if (!omniTransportLock) omniTransportLock = new omni_tracedmutex;
   }
 

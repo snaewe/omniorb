@@ -1,3 +1,17 @@
+Thu Sep 20 14:21:17 BST 2001 dpg1
+=================================
+
+- Allow ORB_init() after orb->destroy().
+
+src/lib/omniORB/include/giopServer.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+
+
 Thu Sep 20 12:26:46 BST 2001 sll
 ================================
 
