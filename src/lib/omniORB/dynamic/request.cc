@@ -36,32 +36,26 @@
 
 RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation)
 {
+  pd_target = CORBA::Object::_duplicate(target);
+
+  pd_operation = CORBA::string_dup(operation);
+
+  pd_arguments = new NVListImpl();
+
+  pd_result = new NamedValueImpl(CORBA::Flags(0));
+  pd_result->value()->replace(CORBA::_tc_void, (void*)0);
+
+  pd_environment = new EnvironmentImpl;
+
+  pd_state = RS_READY;
+  pd_deferredRequest = 0;
+
   if( CORBA::is_nil(target) )
     throw omniORB::fatalException(__FILE__,__LINE__,
 	  "CORBA::RequestImpl::RequestImpl()");
 
   if( !operation || !*operation )
     throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
-
-  pd_target = target;
-
-  pd_operation = CORBA::string_dup(operation);
-
-  pd_arguments = new NVListImpl();
-  pd_i_own_arguments = 1;
-
-  pd_result = new NamedValueImpl(CORBA::Flags(0));
-  pd_result->value()->replace(CORBA::_tc_void, (void*)0);
-  pd_i_own_result = 1;
-
-  pd_environment = new EnvironmentImpl;
-
-  pd_exceptions  = CORBA::ExceptionList::_nil();
-  pd_contexts    = CORBA::ContextList::_nil();
-  pd_context     = CORBA::Context::_nil();
-
-  pd_state = RS_READY;
-  pd_deferredRequest = 0;
 }
 
 
@@ -70,42 +64,34 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation,
 			 CORBA::NVList_ptr arguments,
 			 CORBA::NamedValue_ptr result)
 {
+  pd_target = CORBA::Object::_duplicate(target);
+
+  pd_operation = CORBA::string_dup(operation);
+
+  if( CORBA::is_nil(arguments) )
+    pd_arguments = new NVListImpl();
+  else
+    pd_arguments = CORBA::NVList::_duplicate(arguments);
+
+  if( CORBA::is_nil(result) ){
+    pd_result = new NamedValueImpl(CORBA::Flags(0));
+    pd_result->value()->replace(CORBA::_tc_void, (void*) 0);
+  } else
+    pd_result = CORBA::NamedValue::_duplicate(result);
+
+  pd_environment = new EnvironmentImpl;
+
+  pd_context     = CORBA::Context::_duplicate(context);
+
+  pd_state = RS_READY;
+  pd_deferredRequest = 0;
+
   if( CORBA::is_nil(target) )
     throw omniORB::fatalException(__FILE__,__LINE__,
 	  "CORBA::RequestImpl::RequestImpl()");
 
   if( !operation || !*operation )
     throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
-
-  pd_target = target;
-
-  pd_operation = CORBA::string_dup(operation);
-
-  if( CORBA::is_nil(arguments) ){
-    pd_arguments = new NVListImpl();
-    pd_i_own_arguments = 1;
-  }else{
-    pd_arguments = arguments;
-    pd_i_own_arguments = 0;
-  }
-
-  if( CORBA::is_nil(result) ){
-    pd_result = new NamedValueImpl(CORBA::Flags(0));
-    pd_result->value()->replace(CORBA::_tc_void, (void*)0);
-    pd_i_own_result = 1;
-  }else{
-    pd_result = result;
-    pd_i_own_result = 0;
-  }
-
-  pd_environment = new EnvironmentImpl;
-
-  pd_exceptions  = CORBA::ExceptionList::_nil();
-  pd_contexts    = CORBA::ContextList::_nil();
-  pd_context     = context;
-
-  pd_state = RS_READY;
-  pd_deferredRequest = 0;
 }
 
 
@@ -116,52 +102,41 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation,
 			 CORBA::ExceptionList_ptr exceptions,
 			 CORBA::ContextList_ptr contexts)
 {
+  pd_target = CORBA::Object::_duplicate(target);
+
+  pd_operation = CORBA::string_dup(operation);
+
+  if( CORBA::is_nil(arguments) )
+    pd_arguments = new NVListImpl();
+  else
+    pd_arguments = CORBA::NVList::_duplicate(arguments);
+
+  if( CORBA::is_nil(result) ){
+    pd_result = new NamedValueImpl(CORBA::Flags(0));
+    pd_result->value()->replace(CORBA::_tc_void, (void*) 0);
+  } else
+    pd_result = CORBA::NamedValue::_duplicate(result);
+
+  pd_environment = new EnvironmentImpl;
+
+  pd_exceptions  = CORBA::ExceptionList::_duplicate(exceptions);
+  pd_contexts    = CORBA::ContextList::_duplicate(contexts);
+  pd_context     = CORBA::Context::_duplicate(context);
+
+  pd_state = RS_READY;
+  pd_deferredRequest = 0;
+
   if( CORBA::is_nil(target) )
     throw omniORB::fatalException(__FILE__,__LINE__,
 	  "CORBA::RequestImpl::RequestImpl()");
 
   if( !operation || !*operation )
     throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
-
-  pd_target = target;
-
-  pd_operation = CORBA::string_dup(operation);
-
-  if( CORBA::is_nil(arguments) ){
-    pd_arguments = new NVListImpl();
-    pd_i_own_arguments = 1;
-  }else{
-    pd_arguments = arguments;
-    pd_i_own_arguments = 0;
-  }
-
-  if( CORBA::is_nil(result) ){
-    pd_result = new NamedValueImpl(CORBA::Flags(0));
-    pd_result->value()->replace(CORBA::_tc_void, (void*)0);
-    pd_i_own_result = 1;
-  }else{
-    pd_result = result;
-    pd_i_own_result = 0;
-  }
-
-  pd_environment = new EnvironmentImpl;
-
-  pd_exceptions  = exceptions;
-  pd_contexts    = contexts;
-  pd_context     = context;
-
-  pd_state = RS_READY;
-  pd_deferredRequest = 0;
 }
 
 
 RequestImpl::~RequestImpl()
 {
-  // pd_operation frees itself
-  if( pd_i_own_arguments )  CORBA::release(pd_arguments);
-  if( pd_i_own_result    )  CORBA::release(pd_result);
-  CORBA::release(pd_environment);
-
   if( pd_deferredRequest && omniORB::traceLevel > 0 ){
     omniORB::log <<
       "Warning: omniORB2 has detected that the application did not collect\n"
@@ -238,9 +213,7 @@ RequestImpl::ctx(CORBA::Context_ptr context)
 CORBA::Any&
 RequestImpl::add_in_arg()
 {
-  // Can only add arguments if they were NOT passed to the constructor
-  // (and only before we invoke the operation!)
-  if( !pd_i_own_arguments || pd_state != RS_READY )
+  if( pd_state != RS_READY )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add(CORBA::ARG_IN)->value());
@@ -250,7 +223,7 @@ RequestImpl::add_in_arg()
 CORBA::Any&
 RequestImpl::add_in_arg(const char* name)
 {
-  if( !pd_i_own_arguments || pd_state != RS_READY )
+  if( pd_state != RS_READY )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add_item(name, CORBA::ARG_IN)->value());
@@ -260,7 +233,7 @@ RequestImpl::add_in_arg(const char* name)
 CORBA::Any&
 RequestImpl::add_inout_arg()
 {
-  if( !pd_i_own_arguments || pd_state != RS_READY )
+  if( pd_state != RS_READY )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add(CORBA::ARG_INOUT)->value());
@@ -270,7 +243,7 @@ RequestImpl::add_inout_arg()
 CORBA::Any&
 RequestImpl::add_inout_arg(const char* name)
 {
-  if( !pd_i_own_arguments || pd_state != RS_READY )
+  if( pd_state != RS_READY )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add_item(name, CORBA::ARG_INOUT)->value());
@@ -280,7 +253,7 @@ RequestImpl::add_inout_arg(const char* name)
 CORBA::Any&
 RequestImpl::add_out_arg()
 {
-  if( !pd_i_own_arguments || pd_state != RS_READY )
+  if( pd_state != RS_READY )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add(CORBA::ARG_OUT)->value());
@@ -290,7 +263,7 @@ RequestImpl::add_out_arg()
 CORBA::Any&
 RequestImpl::add_out_arg(const char* name)
 {
-  if( !pd_i_own_arguments || pd_state != RS_READY )
+  if( pd_state != RS_READY )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add_item(name, CORBA::ARG_OUT)->value());
@@ -724,7 +697,8 @@ RequestImpl::marshalContext(GIOP_C& giop_client)
     len >>= giop_client;
     giop_client.put_char_array((CORBA::Char*)name, len);
 
-    const char* value = ((ContextImpl*)pd_context)->lookup_single(name);
+    const char* value =
+      ((ContextImpl*)(CORBA::Context_ptr) pd_context)->lookup_single(name);
     if( !value )  value = "";
     len = CORBA::ULong(strlen(value) + 1);
     len >>= giop_client;
@@ -873,7 +847,7 @@ CORBA::release(Request_ptr p)
 
 CORBA::Status
 CORBA::Object::_create_request(CORBA::Context_ptr ctx,
-			       const char *operation,
+			       const char* operation,
 			       CORBA::NVList_ptr arg_list,
 			       CORBA::NamedValue_ptr result,
 			       CORBA::Request_out request,
@@ -888,7 +862,7 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 
 CORBA::Status 
 CORBA::Object::_create_request(CORBA::Context_ptr ctx,
-                               const char *operation,
+                               const char* operation,
 			       CORBA::NVList_ptr arg_list,
 			       CORBA::NamedValue_ptr result,
 			       CORBA::ExceptionList_ptr exceptions,
