@@ -1341,3 +1341,17 @@ _0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc)
 {
   return (CORBA::Object_ptr) ((CORBA::Object_member*)desc->opq_objref)->_ptr;
 }
+
+
+void
+_0RL_tcParser_objref2_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
+{
+  *((_CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>*)desc->opq_objref) = ptr;
+}
+
+
+CORBA::Object_ptr
+_0RL_tcParser_objref2_getObjectPtr(tcObjrefDesc* desc)
+{
+  return (CORBA::Object_ptr) ((_CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>*)desc->opq_objref)->_ptr;
+}
