@@ -2,6 +2,7 @@ TOP=../../..
 CURRENT=src/tool/omniidl
 BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
+INSTALL=@INSTALL@
 
 include $(TOP)/mk/beforeauto.mk
 include @srcdir@/dir.mk

@@ -638,7 +638,6 @@ CC              = @CC@
 CXX             = @CXX@
 RANLIB		= @RANLIB@
 MKDIRHIER	= $(BASE_OMNI_TREE)/bin/scripts/omkdirhier
-INSTALL		= @INSTALL@
 INSTLIBFLAGS	= -m 0644
 INSTEXEFLAGS	= -m 0755
 CP		= cp

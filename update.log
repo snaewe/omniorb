@@ -1,3 +1,12 @@
+Tue Feb 19 12:41:01 GMT 2002 dpg1
+=================================
+
+- Grr. Autoconf sometimes decides to use a relative path to install-sh.
+
+external_merge/mk/beforeauto.mk.in
+*/GNUmakefile.in
+
+
 Mon Feb 18 18:55:18 GMT 2002 dpg1
 =================================
 
