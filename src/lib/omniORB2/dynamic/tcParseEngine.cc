@@ -28,12 +28,14 @@
 
 
 /* $Log$
-/* Revision 1.1  1998/01/27 15:49:07  ewc
-/* Initial revision
+/* Revision 1.2  1998/04/07 19:37:54  sll
+/* Remove iostream.h
 /*
+// Revision 1.1  1998/01/27  15:49:07  ewc
+// Initial revision
+//
  */
 
-#include <iostream.h>
 #include <string.h>
 
 #include "tcParseEngine.h"
