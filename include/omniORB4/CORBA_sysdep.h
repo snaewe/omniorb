@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/10/03 17:34:47  sll
+ Temporary debugging #define for gcc. To be removed before final release.
+
  Revision 1.2.2.1  2000/07/17 10:35:33  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -223,6 +226,9 @@
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Cplusplus_Bool
 #  endif
+
+// XXX Temporary define to be removed in final release.
+#define Suppress_Spurious_gcc_Warnings
 
 #elif defined(__DECCXX)
 // DEC C++ compiler
