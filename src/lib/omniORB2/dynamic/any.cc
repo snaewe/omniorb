@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.20.2.1  2000/08/04 17:10:25  dpg1
+ * Long long support
+ *
  * Revision 1.20  2000/07/13 15:26:03  dpg1
  * Merge from omni3_develop for 3.0 release.
  *
@@ -377,6 +380,24 @@ CORBA::Any::operator<<=(ULong u)
   pdAnyP()->setData(CORBA::_tc_ulong, tcd);
 }
 
+#ifdef HAS_LongLong
+void
+CORBA::Any::operator<<=(LongLong l)
+{
+  tcDescriptor tcd;
+  tcd.p_longlong = &l;
+  pdAnyP()->setData(CORBA::_tc_longlong, tcd);
+}
+
+void
+CORBA::Any::operator<<=(ULongLong u)
+{
+  tcDescriptor tcd;
+  tcd.p_ulonglong = &u;
+  pdAnyP()->setData(CORBA::_tc_ulonglong, tcd);
+}
+#endif
+
 
 #if !defined(NO_FLOAT)
 void
@@ -395,6 +416,17 @@ CORBA::Any::operator<<=(Double d)
   tcd.p_double = &d;
   pdAnyP()->setData(CORBA::_tc_double, tcd);
 }
+
+#ifdef HAS_LongDouble
+void
+CORBA::Any::operator<<=(LongDouble d)
+{
+  tcDescriptor tcd;
+  tcd.p_longdouble = &d;
+  pdAnyP()->setData(CORBA::_tc_longdouble, tcd);
+}
+#endif
+
 #endif
 
 
@@ -539,6 +571,25 @@ CORBA::Any::operator>>=(ULong& u) const
   return pdAnyP()->getData(CORBA::_tc_ulong, tcd);
 }
 
+#ifdef HAS_LongLong
+CORBA::Boolean
+CORBA::Any::operator>>=(LongLong& l) const
+{
+  tcDescriptor tcd;
+  tcd.p_longlong = &l;
+  return pdAnyP()->getData(CORBA::_tc_longlong, tcd);
+}
+
+  
+CORBA::Boolean
+CORBA::Any::operator>>=(ULongLong& u) const
+{
+  tcDescriptor tcd;
+  tcd.p_ulonglong = &u;
+  return pdAnyP()->getData(CORBA::_tc_ulonglong, tcd);
+}
+#endif
+
 
 #if !defined(NO_FLOAT)
 CORBA::Boolean
@@ -557,6 +608,17 @@ CORBA::Any::operator>>=(Double& d) const
   tcd.p_double = &d;
   return pdAnyP()->getData(CORBA::_tc_double, tcd);
 }
+
+#ifdef HAS_LongDouble
+CORBA::Boolean
+CORBA::Any::operator>>=(LongDouble& d) const
+{
+  tcDescriptor tcd;
+  tcd.p_longdouble = &d;
+  return pdAnyP()->getData(CORBA::_tc_longdouble, tcd);
+}
+#endif
+
 #endif
 
 CORBA::Boolean CORBA::Any::operator>>=(CORBA::Any*& a) const

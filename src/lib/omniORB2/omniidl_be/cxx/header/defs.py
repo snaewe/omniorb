@@ -28,11 +28,18 @@
 
 # $Id$
 # $Log$
+# Revision 1.34.2.2  2000/08/04 17:10:29  dpg1
+# Long long support
+#
 # Revision 1.34.2.1  2000/08/02 10:52:02  dpg1
 # New omni3_1_develop branch, merged from omni3_develop.
 #
 # Revision 1.34  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.31.2.19  2000/08/03 21:27:39  djs
+# Typo in -Wbvirtual_objref code caused incorrect operation signatures to be
+# generated in the _objref class of an interface.
 #
 # Revision 1.31.2.18  2000/07/26 15:29:08  djs
 # Missing typedef and forward when generating BOA skeletons
@@ -443,7 +450,7 @@ def visitInterface(node):
     if config.state['Virtual Objref Methods']:
         # non-abstract virtual functions
         objref_operations_str = string.join(
-            map( lambda x: "virtual " + x + ";\n", virtual_operations ), "")
+            map( lambda x: "virtual " + x + ";\n", operations ), "")
         objref_attributes_str = string.join(
             map( lambda x: "virtual " + x + ";\n", attributes ), "")
         

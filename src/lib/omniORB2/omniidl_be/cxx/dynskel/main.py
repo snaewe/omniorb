@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.1  2000/08/04 17:10:28  dpg1
+# Long long support
+#
 # Revision 1.15  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -162,7 +165,9 @@ def initSymbols():
                   "_0RL_buildDesc_cany",
                   "_0RL_buildDesc_cstring",
                   "_0RL_buildDesc_cCORBA_mObject",
-                  "_0RL_buildDesc_cTypeCode" ]:
+                  "_0RL_buildDesc_cTypeCode",
+                  "_0RL_buildDesc_clonglong",
+                  "_0RL_buildDesc_cunsigned_plonglong"]:
         defineSymbol(name)
 
 def defineSymbol(name):

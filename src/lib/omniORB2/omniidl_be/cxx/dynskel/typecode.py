@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.1  2000/08/04 17:10:29  dpg1
+# Long long support
+#
 # Revision 1.17  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -295,6 +298,8 @@ def mkTypeCode(type, declarator = None, node = None):
         idltype.tk_octet:   "octet",
         idltype.tk_any:     "any",
         idltype.tk_TypeCode: "TypeCode",
+        idltype.tk_longlong: "longlong",
+        idltype.tk_ulonglong: "ulonglong"
         }
     if basic.has_key(type.kind()):
         return prefix + basic[type.kind()] + "_tc()"

@@ -84,6 +84,14 @@ public:
   virtual void insert_ulong(CORBA::ULong value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
+#ifdef HAS_LongLong
+  virtual void insert_longlong(CORBA::LongLong value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_ulonglong(CORBA::ULongLong value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif
 #ifndef NO_FLOAT
   virtual void insert_float(CORBA::Float value) {
     _CORBA_invoked_nil_pseudo_ref();
@@ -91,6 +99,11 @@ public:
   virtual void insert_double(CORBA::Double value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
+#ifdef HAS_LongDouble
+  virtual void insert_longdouble(CORBA::LongDouble value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif
 #endif
   virtual void insert_string(const char* value) {
     _CORBA_invoked_nil_pseudo_ref();
@@ -132,6 +145,16 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
+#ifdef HAS_LongLong
+  virtual CORBA::LongLong get_longlong() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::ULongLong get_ulonglong() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+#endif
 #ifndef NO_FLOAT
   virtual CORBA::Float get_float() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -141,6 +164,12 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0.0;
   }
+#ifdef HAS_LongDouble
+  virtual CORBA::LongDouble get_longdouble() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0.0;
+  }
+#endif
 #endif
   virtual char* get_string() {
     _CORBA_invoked_nil_pseudo_ref();

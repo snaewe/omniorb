@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.6.2.1  2000/08/04 17:10:30  dpg1
+ Long long support
+
  Revision 1.6  2000/07/13 15:25:54  dpg1
  Merge from omni3_develop for 3.0 release.
 
@@ -161,6 +164,11 @@
 #define HAS_Cplusplus_const_cast
 // Unset this define if the compiler does not support const_cast<T*>
 
+#define HAS_Cplusplus_catch_exception_by_base
+// Unset this define if the compiler does not support catching
+// exceptions by base class.
+
+
 #if defined(__GNUG__)
 // GNU G++ compiler
 
@@ -170,15 +178,21 @@
 #     define SIZEOF_PTR  8
 #  endif
 
+#  if __GNUG__ == 2 && __GNUC_MINOR__ == 7
+#     undef HAS_Cplusplus_catch_exception_by_base
+#  endif
+
 // Activate temporary workaround for a bug in post-1.0 egcs snapshots
 // No side-effect on other gcc compilers. May be removed in future once
 // the bug is fixed.
 #define EGCS_WORKAROUND
 
+#define NEED_DUMMY_RETURN
+
 // Minor version number 91 is for egcs version 1.*  Some older
 // versions of 1.* may not support namespaces properly - this is
 // only tested for egcs 1.1.1
-#  if __GNUC_MINOR__ >= 91
+#  if __GNUC_MINOR__ >= 91 || __GNUC_MINOR__ == 9
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Cplusplus_Bool
 #  endif
@@ -186,6 +200,10 @@
 #if defined(__x86__)
 #  define HAS_LongLong
 #  define HAS_LongDouble
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGDOUBLE_DECL long double 
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
 #endif
 
 #elif defined(__DECCXX)
@@ -199,20 +217,42 @@
 #  if __DECCXX_VER >= 60000000
 #     define HAS_LongLong
 #     define HAS_LongDouble
+#     define _CORBA_LONGLONG_DECL   long long
+#     define _CORBA_ULONGLONG_DECL  unsigned long long
+#     define _CORBA_LONGDOUBLE_DECL long double
+#     define _CORBA_LONGLONG_CONST(x) (x##LL)
 #     ifndef NO_Cplusplus_Bool
 #       define HAS_Cplusplus_Bool
 #     endif
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
 #     define HAS_pch
+#     define OMNI_REQUIRES_FQ_BASE_CTOR
 // Uncomment the following lines to enable the use of namespace with cxx v5.6
 // Notice that the source code may have to be patched to compile.
 //#  elif __DECCXX_VER >= 50600000
 //#     define HAS_Cplusplus_Namespace
 //#     define NEED_DUMMY_RETURN
 #  else
+//    Compaq C++ 5.x
+//    Work-around for OpenVMS VAX Compaq C++ 5.6 compiler problem with
+//    %CXX-W-CANTCOMPLETE messages.  Note that this cannot be disabled with a
+//    compiler switch if the message occurs in a template instantiation (but
+//    this pragma wasn't implemented until 6.something on Unix).
+#     ifdef __VMS
+#       pragma message disable CANTCOMPLETE
+#     endif
 #     define NEED_DUMMY_RETURN
 #     undef  HAS_Cplusplus_const_cast
+#     define OMNI_REQUIRES_FQ_BASE_CTOR
+#     define OMNI_OPERATOR_REFPTR_REQUIRES_TYPEDEF
+#     define OMNI_PREMATURE_INSTANTIATION
+//    Extra macros from the Compaq C++ 5.x patch (in <top>/patches/) to be
+//    added here
+#     ifndef OMNI_OPERATOR_REFPTR
+#       error "Patch for Compaq C++ 5.x has not been applied."
+#     endif
+
 #  endif
 
 #elif defined(__SUNPRO_CC) 
@@ -223,6 +263,13 @@
 #    define HAS_Cplusplus_Namespace
 #    define HAS_Std_Namespace
 #  endif
+
+#  define HAS_LongLong
+#  define HAS_LongDouble
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGDOUBLE_DECL long double 
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
 
 // XXX
 // This is a hack to work around a bug in SUN C++ compiler (seen on 4.2).
@@ -254,6 +301,14 @@
 #endif
 #define _HAS_NOT_GOT_strcasecmp
 #define _HAS_NOT_GOT_strncasecmp
+// No current version of MSVC++ can catch exceptions by base class
+#undef HAS_Cplusplus_catch_exception_by_base
+
+#define HAS_LongLong
+#define _CORBA_LONGLONG_DECL   __int64
+#define _CORBA_ULONGLONG_DECL  unsigned __int64
+#define _CORBA_LONGLONG_CONST(x) (x)
+
 
 #elif defined(__BCPLUSPLUS__)
 #define HAS_Cplusplus_Namespace
@@ -262,6 +317,8 @@
 
 #if _COMPILER_VERSION >= 721
 #define HAS_Cplusplus_Namespace
+#define HAS_Cplusplus_Bool
+#define OMNI_REQUIRES_FQ_BASE_CTOR
 #endif
 
 #if  _MIPS_SZINT == 64
@@ -276,13 +333,16 @@
 #     define SIZEOF_PTR 8
 #endif
 
-#elif defined(__xlC__) && (__xlC__ <= 0x0306)
+#elif defined(__xlC__)
+#  if (__xlC__ <= 0x0306)
+#    undef HAS_Cplusplus_const_cast
+#  elif (__xlC__ >= 0x0500) // added in xlC 5.0 (a.k.a. Visual Age 5.0)
+#    define HAS_Cplusplus_Bool
+#    define HAS_Cplusplus_Namespace
+#    define HAS_Std_Namespace
+#  endif
 
-#undef HAS_Cplusplus_const_cast
-
-#endif
-
-#if defined(__hpux__)
+#elif defined(__hpux__)
 // Recent versions of HP aCC (A01.18 and A.03.13) have an identifying macro.
 // In the future, we should be able to remove the gcc test.
 // In case this is an older compiler aCC, test if this is gcc, if not assume 
@@ -321,6 +381,13 @@
 // after omniORB2/CORBA.h.
 #endif
 
+#ifdef _T
+#error "Name conflict: _T is defined as a macro in a header file included before this."
+// FreeBSD's ctype.h, and maybe other files, define _T. omniORB uses
+// _T in various places as a class name. Fix this error by moving the
+// offending header after all omniORB includes.
+#endif
+
 
 // Default flag values if not already overridden above
 
@@ -354,12 +421,15 @@
 # if !defined(__WIN32__)
 #  define _HAS_SIGNAL 1
 # endif
-#elif defined(__linux__) && defined(__powerpc__)
-# define _OMNIORB_HOST_BYTE_ORDER_ 0
-# define _HAS_SIGNAL 1
+# if defined(__nextstep__)
+#  define _USE_MACH_SIGNAL 1
+#  define _NO_STRDUP 1
+#  define _USE_GETHOSTNAME 1
+# endif
 #elif defined(__aix__) && defined(__powerpc__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
+# define OMNI_REQUIRES_FQ_BASE_CTOR 1
 #elif defined(__hpux__) && defined(__hppa__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
@@ -374,18 +444,7 @@
 # if __VMS_VER >= 70000000
 #  define _HAS_SIGNAL 1
 # else
-#  include <string.h>
-#  include <stdlib.h>
-// Pre 7.x VMS does not have strdup.
-inline static char*
-strdup (char* str)
-{
-  char* newstr;
-
-  newstr = (char*) malloc(strlen(str) + 1);
-  if( newstr )  strcpy(newstr, str);
-  return newstr;
-}
+#  define _NO_STRDUP 1
 #  define _HAS_NOT_GOT_strcasecmp
 #  define _HAS_NOT_GOT_strncasecmp
 # endif
@@ -404,8 +463,8 @@ strdup (char* str)
 #if defined(_MSC_VER)
 
 //
-// _OMNIORB2_LIBRARY         is defined when the omniORB2 library is compiled.
-// _OMNIORB2_DYNAMIC_LIBRARY is defined when the dynamic library is compiled.
+// _OMNIORB_LIBRARY         is defined when the omniORB library is compiled.
+// _OMNIORB_DYNAMIC_LIBRARY is defined when the dynamic library is compiled.
 //  These are defined on the command line when compiling the libraries.
 //
 // _WINSTATIC                is defined when an application is compiled to
@@ -647,6 +706,29 @@ strdup (char* str)
 
 
 #endif // HAS_Cplusplus_Namespace
+
+
+#ifdef OMNI_REQUIRES_FQ_BASE_CTOR
+# define OMNIORB_BASE_CTOR(a)   a
+#else
+# define OMNIORB_BASE_CTOR(a)
+#endif
+
+#ifndef OMNI_OPERATOR_REFPTR
+// Only used when the source tree is patched with DEC C++ 5.6 workarounds
+#define OMNI_OPERATOR_REFPTR(T) inline operator T*&()
+#endif
+
+#ifndef OMNI_CONSTRTYPE_FIX_VAR_MEMBER
+// Only used when the source tree is patched with DEC C++ 5.6 workarounds
+#define OMNI_CONSTRTYPE_FIX_VAR_MEMBER(T) \
+   typedef _CORBA_ConstrType_Fix_Var<T> _var_type;
+#endif
+
+#ifndef OMNI_CONSTRTYPE_FIX_VAR
+// Only used when the source tree is patched with DEC C++ 5.6 workarounds
+#define OMNI_CONSTRTYPE_FIX_VAR(T) typedef T::_var_type T##_var;
+#endif
 
 #ifndef USE_omniORB_logStream
 // New stubs use omniORB::logStream. Old stubs still need cerr. Include

@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.11.2.1  2000/08/04 17:10:26  dpg1
+ * Long long support
+ *
  * Revision 1.11  2000/07/13 15:26:02  dpg1
  * Merge from omni3_develop for 3.0 release.
  *
@@ -836,7 +839,8 @@ public:
   // This type is used to store discriminator values for all types
   // of discriminator - so must be able to store values as large
   // as the largest discriminator type.
-  typedef CORBA::PR_unionDiscriminator Discriminator;
+  typedef CORBA::PR_unionDiscriminator       Discriminator;
+  typedef CORBA::PR_unionDiscriminatorSigned DiscriminatorSigned;
 
   TypeCode_union(const char* repoId, const char* name,
 		 TypeCode_base* discTC, const CORBA::UnionMemberSeq& members);

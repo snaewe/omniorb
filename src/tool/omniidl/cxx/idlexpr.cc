@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.1  2000/08/04 17:10:31  dpg1
+// Long long support
+//
 // Revision 1.7  2000/07/13 15:25:53  dpg1
 // Merge from omni3_develop for 3.0 release.
 //
@@ -523,7 +526,7 @@ _CORBA_LongLong ConstExpr::evalAsLongLong() {
   case IdlType::tk_longlong: r = c_->constAsLongLong(); break;
   case IdlType::tk_ulonglong: {
     _CORBA_ULongLong z = c_->constAsULongLong();
-    r = z; p = (z <= 0x7fffffffffffffffLL);
+    r = z; p = (z <= _CORBA_LONGLONG_CONST(0x7fffffffffffffff));
     break;
   }
   default:

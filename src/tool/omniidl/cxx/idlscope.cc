@@ -28,11 +28,17 @@
 
 // $Id$
 // $Log$
+// Revision 1.14.2.2  2000/08/04 17:10:32  dpg1
+// Long long support
+//
 // Revision 1.14.2.1  2000/08/02 10:51:49  dpg1
 // New omni3_1_develop branch, merged from omni3_develop.
 //
 // Revision 1.14  2000/07/13 15:25:52  dpg1
 // Merge from omni3_develop for 3.0 release.
+//
+// Revision 1.11.2.3  2000/08/04 09:10:27  dpg1
+// Fix look-up of escaped identifiers broken on 19 July. (Bug 14.)
 //
 // Revision 1.11.2.2  2000/08/01 09:46:47  dpg1
 // No longer complain about inheriting an operation into an interface
@@ -622,15 +628,19 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
     s = this;
 
   // Find entry for each name component
-  const Entry* e = 0;
-  EntryList*   el;
+  const Entry*          e = 0;
+  EntryList*            el;
   ScopedName::Fragment* f = sn->scopeList();
+  const char*           fid;
 
   _CORBA_Boolean top_component = 1;
 
   while (f) {
+    fid = f->identifier();
+    if (fid[0] == '_') fid++;
+
     do {
-      el = s->iFindWithInheritance(f->identifier());
+      el = s->iFindWithInheritance(fid);
 
       e = 0;
       if (el) {
@@ -661,16 +671,16 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
     if (!e) {
       char* ssn = sn->toString();
       IdlError(file, line, "Error in look-up of `%s': `%s' not found",
-	       ssn, f->identifier());
+	       ssn, fid);
       delete [] ssn;
       return 0;
     }
 
-    if (strcmp(f->identifier(), e->identifier())) {
+    if (strcmp(fid, e->identifier())) {
       // Case clash
       char* ssn = sn->toString();
       IdlError(file, line, "Error in look-up of `%s': `%s' differs in case",
-	       ssn, f->identifier());
+	       ssn, fid);
       delete [] ssn;
       ssn = e->scopedName()->toString();
       IdlErrorCont(e->file(), e->line(), "from `%s' declared here", ssn);

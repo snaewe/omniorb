@@ -1,3 +1,43 @@
+Fri Aug  4 18:02:51 BST 2000 dpg1
+=================================
+
+- Long long support
+
+include/omniORB3/CORBA.h
+include/omniORB3/CORBA_basetypes.h
+include/omniORB3/CORBA_sysdep.h
+include/omniORB3/bufferedStream.h
+include/omniORB3/omniORB.h
+include/omniORB3/tcDescriptor.h
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/dynAny.cc
+src/lib/omniORB2/dynamic/dynAny.h
+src/lib/omniORB2/dynamic/dynAnyNil.cc
+src/lib/omniORB2/dynamic/tcParser.cc
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/omniidl_be/cxx/skutil.py
+src/lib/omniORB2/omniidl_be/cxx/types.py
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/logIOstream.cc
+src/tool/omniidl/cxx/CORBA_basetypes.h
+src/tool/omniidl/cxx/CORBA_sysdep.h
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idlexpr.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlutil.cc
+src/tool/omniidl/cxx/idlutil.h
+src/tool/omniidl/cxx/lex.yy.cc
+
+
 Wed Aug  2 11:46:47 BST 2000 dpg1
 =================================
 

@@ -140,6 +140,10 @@ union tcUnionDiscriminatorType
   CORBA::Char u_char;
   CORBA::Boolean u_boolean;
   CORBA::ULong u_enum;
+#ifdef HAS_LongLong
+  CORBA::LongLong u_longlong;
+  CORBA::ULongLong u_ulonglong;
+#endif
 };
 
 struct tcUnionDesc
@@ -235,6 +239,13 @@ union tcDescriptor {
   CORBA::Char*    p_char;
   CORBA::Octet*   p_octet;
   CORBA::ULong*   p_enum;
+#ifdef HAS_LongLong
+  CORBA::LongLong*   p_longlong;
+  CORBA::ULongLong*  p_ulonglong;
+#endif
+#ifdef HAS_LongDouble
+  CORBA::LongDouble* p_longdouble;
+#endif
 
   CORBA::Any*     p_any;
 
@@ -329,6 +340,21 @@ _0RL_buildDesc_cunsigned_plong(tcDescriptor &desc, const CORBA::ULong &data)
   desc.p_ulong = (CORBA::ULong *)&data;
 }
 
+#ifdef HAS_LongLong
+inline void
+_0RL_buildDesc_clonglong(tcDescriptor &desc, const CORBA::LongLong &data)
+{
+  desc.p_longlong = (CORBA::LongLong *)&data;
+}
+
+inline void
+_0RL_buildDesc_cunsigned_plonglong(tcDescriptor &desc,
+				   const CORBA::ULongLong &data)
+{
+  desc.p_ulonglong = (CORBA::ULongLong *)&data;
+}
+#endif
+
 #if !defined(NO_FLOAT)
 inline void
 _0RL_buildDesc_cfloat(tcDescriptor &desc, const CORBA::Float &data)
@@ -341,6 +367,14 @@ _0RL_buildDesc_cdouble(tcDescriptor &desc, const CORBA::Double &data)
 {
   desc.p_double = (CORBA::Double *)&data;
 }
+
+#ifdef HAS_LongDouble
+inline void
+_0RL_buildDesc_clongdouble(tcDescriptor &desc, const CORBA::LongDouble &data)
+{
+  desc.p_longdouble = (CORBA::LongDouble *)&data;
+}
+#endif
 #endif
 
 /////////

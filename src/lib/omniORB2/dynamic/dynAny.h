@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.6.2.1  2000/08/04 17:10:25  dpg1
+ Long long support
+
  Revision 1.6  2000/07/13 15:26:02  dpg1
  Merge from omni3_develop for 3.0 release.
 
@@ -195,9 +198,16 @@ public:
   virtual void insert_ushort(CORBA::UShort value);
   virtual void insert_long(CORBA::Long value);
   virtual void insert_ulong(CORBA::ULong value);
+#ifdef HAS_LongLong
+  virtual void insert_longlong(CORBA::LongLong value);
+  virtual void insert_ulonglong(CORBA::ULongLong value);
+#endif
 #ifndef NO_FLOAT
   virtual void insert_float(CORBA::Float value);
   virtual void insert_double(CORBA::Double value);
+#ifdef HAS_LongDouble
+  virtual void insert_longdouble(CORBA::LongDouble value);
+#endif
 #endif
   virtual void insert_string(const char* value);
   virtual void insert_reference(CORBA::Object_ptr value);
@@ -210,9 +220,16 @@ public:
   virtual CORBA::UShort get_ushort();
   virtual CORBA::Long get_long();
   virtual CORBA::ULong get_ulong();
+#ifdef HAS_LongLong
+  virtual CORBA::LongLong get_longlong();
+  virtual CORBA::ULongLong get_ulonglong();
+#endif
 #ifndef NO_FLOAT
   virtual CORBA::Float get_float();
   virtual CORBA::Double get_double();
+#ifdef HAS_LongDouble
+  virtual CORBA::LongDouble get_longdouble();
+#endif
 #endif
   virtual char* get_string();
   virtual CORBA::Object_ptr get_reference();
@@ -347,9 +364,16 @@ public:
   virtual void insert_ushort(CORBA::UShort value);
   virtual void insert_long(CORBA::Long value);
   virtual void insert_ulong(CORBA::ULong value);
+#ifdef HAS_LongLong
+  virtual void insert_longlong(CORBA::LongLong value);
+  virtual void insert_ulonglong(CORBA::ULongLong value);
+#endif
 #ifndef NO_FLOAT
   virtual void insert_float(CORBA::Float value);
   virtual void insert_double(CORBA::Double value);
+#ifdef HAS_LongDouble
+  virtual void insert_longdouble(CORBA::LongDouble value);
+#endif
 #endif
   virtual void insert_string(const char* value);
   virtual void insert_reference(CORBA::Object_ptr value);
@@ -362,9 +386,16 @@ public:
   virtual CORBA::UShort get_ushort();
   virtual CORBA::Long get_long();
   virtual CORBA::ULong get_ulong();
+#ifdef HAS_LongLong
+  virtual CORBA::LongLong get_longlong();
+  virtual CORBA::ULongLong get_ulonglong();
+#endif
 #ifndef NO_FLOAT
   virtual CORBA::Float get_float();
   virtual CORBA::Double get_double();
+#ifdef HAS_LongDouble
+  virtual CORBA::LongDouble get_longdouble();
+#endif
 #endif
   virtual char* get_string();
   virtual CORBA::Object_ptr get_reference();
@@ -600,9 +631,16 @@ public:
   virtual void insert_ushort(CORBA::UShort value);
   virtual void insert_long(CORBA::Long value);
   virtual void insert_ulong(CORBA::ULong value);
+#ifdef HAS_LongLong
+  virtual void insert_longlong(CORBA::LongLong value);
+  virtual void insert_ulonglong(CORBA::ULongLong value);
+#endif
 #ifndef NO_FLOAT
   virtual void insert_float(CORBA::Float value);
   virtual void insert_double(CORBA::Double value);
+#ifdef HAS_LongDouble
+  virtual void insert_longdouble(CORBA::LongDouble value);
+#endif
 #endif
   virtual void insert_string(const char* value);
   virtual void insert_reference(CORBA::Object_ptr value);
@@ -692,9 +730,16 @@ public:
   virtual void insert_ushort(CORBA::UShort value);
   virtual void insert_long(CORBA::Long value);
   virtual void insert_ulong(CORBA::ULong value);
+#ifdef HAS_LongLong
+  virtual void insert_longlong(CORBA::LongLong value);
+  virtual void insert_ulonglong(CORBA::ULongLong value);
+#endif
 #ifndef NO_FLOAT
   virtual void insert_float(CORBA::Float value);
   virtual void insert_double(CORBA::Double value);
+#ifdef HAS_LongDouble
+  virtual void insert_longdouble(CORBA::LongDouble value);
+#endif
 #endif
   virtual void insert_string(const char* value);
   virtual void insert_reference(CORBA::Object_ptr value);
@@ -707,9 +752,16 @@ public:
   virtual CORBA::UShort get_ushort();
   virtual CORBA::Long get_long();
   virtual CORBA::ULong get_ulong();
+#ifdef HAS_LongLong
+  virtual CORBA::LongLong get_longlong();
+  virtual CORBA::ULongLong get_ulonglong();
+#endif
 #ifndef NO_FLOAT
   virtual CORBA::Float get_float();
   virtual CORBA::Double get_double();
+#ifdef HAS_LongDouble
+  virtual CORBA::LongDouble get_longdouble();
+#endif
 #endif
   virtual char* get_string();
   virtual CORBA::Object_ptr get_reference();

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.18.2.1  2000/08/04 17:10:31  dpg1
+// Long long support
+//
 // Revision 1.18  2000/07/13 15:25:53  dpg1
 // Merge from omni3_develop for 3.0 release.
 //
@@ -129,6 +132,33 @@
 #include <idldump.h>
 #include <idlerr.h>
 #include <idlconfig.h>
+
+
+// PyLongFromLongLong is broken in Python 1.5.2. Workaround here:
+#ifdef HAS_LongLong
+#  if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0X01050200)
+#    error "omniidl requires Python 1.5.2 or higher"
+
+#  elif (PY_VERSION_HEX < 0x02000000)
+
+// Don't know when it was fixed -- certainly in 2.0.0
+
+static inline PyObject* MyPyLong_FromLongLong(_CORBA_LongLong ll)
+{
+  if (ll >= 0) // Positive numbers work OK
+    return PyLong_FromLongLong(ll);
+  else {
+    _CORBA_ULongLong ull = (~ll) + 1; // Hope integers are 2's complement...
+    PyObject* p = PyLong_FromUnsignedLongLong(ull);
+    PyObject* n = PyNumber_Negative(p);
+    Py_DECREF(p);
+    return n;
+  }
+}
+#  else
+#    define MyPyLong_FromLongLong(ll) PyLong_FromLongLong(ll)
+#  endif
+#endif
 
 
 #define ASSERT_RESULT     if (!result_) PyErr_Print(); assert(result_)
@@ -430,7 +460,6 @@ visitConst(Const* c)
   c->constType()->accept(*this);
   PyObject* pytype = result_;
   PyObject* pyv;
-  char      buffer[80];
 
   switch(c->constKind()) {
   case IdlType::tk_short:  pyv = PyInt_FromLong(c->constAsShort());  break;
@@ -454,14 +483,11 @@ visitConst(Const* c)
 
 #ifdef HAS_LongLong
   case IdlType::tk_longlong:
-    sprintf(buffer, "%Ld", c->constAsLongLong());
-    pyv = PyLong_FromString(buffer, 0, 0);
-    break;
+    pyv = MyPyLong_FromLongLong(c->constAsLongLong()); break;
 
   case IdlType::tk_ulonglong:
-    sprintf(buffer, "%Lu", c->constAsULongLong());
-    pyv = PyLong_FromString(buffer, 0, 0);
-    break;
+    pyv = PyLong_FromUnsignedLongLong(c->constAsULongLong()); break;
+
 #endif
 #ifdef HAS_LongDouble
   case IdlType::tk_longdouble:
@@ -648,7 +674,6 @@ PythonVisitor::
 visitCaseLabel(CaseLabel* l)
 {
   PyObject* pyv;
-  char buffer[80];
 
   switch(l->labelKind()) {
   case IdlType::tk_short:  pyv = PyInt_FromLong(l->labelAsShort());  break;
@@ -662,12 +687,10 @@ visitCaseLabel(CaseLabel* l)
     break;
 #ifdef HAS_LongLong
   case IdlType::tk_longlong:
-    sprintf(buffer, "%Ld", l->labelAsLongLong());
-    pyv = PyLong_FromString(buffer, 0, 0);
+    pyv = MyPyLong_FromLongLong(l->labelAsLongLong());
     break;
   case IdlType::tk_ulonglong:
-    sprintf(buffer, "%Lu", l->labelAsULongLong());
-    pyv = PyLong_FromString(buffer, 0, 0);
+    pyv = PyLong_FromUnsignedLongLong(l->labelAsULongLong());
     break;
 #endif
   case IdlType::tk_wchar:   pyv = PyInt_FromLong(l->labelAsWChar());  break;

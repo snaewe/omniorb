@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6.2.1  2000/08/04 17:10:32  dpg1
+// Long long support
+//
 // Revision 1.6  2000/07/13 15:25:52  dpg1
 // Merge from omni3_develop for 3.0 release.
 //
@@ -42,6 +45,8 @@
 //
 
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <idlutil.h>
 
 char* idl_strdup(const char* s)
@@ -109,3 +114,58 @@ int strcasecmp(const char* s1, const char* s2)
   else                                  return 1;
 }
 #endif
+
+
+#ifdef HAS_LongLong
+
+#  ifdef __WIN32__
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  IdlIntLiteral ull;
+  switch (base) {
+  case 8:
+    sscanf(text, "%I64o", &ull);
+    break;
+  case 10:
+    sscanf(text, "%I64d", &ull);
+    break;
+  case 16:
+    sscanf(text, "%I64x", &ull);
+    break;
+  default:
+    abort();
+  }
+  return ull;
+}
+
+#  else
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  return strtoull(text, 0, base);
+}
+
+#  endif
+
+#else
+
+// No long long support
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  return strtoul(text, 0, base);
+}
+
+#endif
+
+
+IdlFloatLiteral
+idl_strtod(const char* text)
+{
+  // *** Should cope with long double
+  return strtod(text,0);
+}

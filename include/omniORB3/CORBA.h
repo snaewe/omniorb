@@ -29,8 +29,15 @@
 
 /*
  $Log$
+ Revision 1.3.2.1  2000/08/04 17:10:23  dpg1
+ Long long support
+
  Revision 1.3  2000/07/13 15:26:06  dpg1
  Merge from omni3_develop for 3.0 release.
+
+ Revision 1.1.2.10  2000/08/04 15:26:10  dpg1
+ ORB_init() now defaults ORB id to empty string, and accepts empty
+ string as valid.
 
  Revision 1.1.2.9  2000/07/10 13:06:44  dpg1
  Initialisation of Any insertion functions was missing from system
@@ -266,9 +273,16 @@ _CORBA_MODULE_BEG
   typedef _CORBA_UShort  UShort;
   typedef _CORBA_Long    Long;
   typedef _CORBA_ULong   ULong;
+# ifdef HAS_LongLong
+  typedef _CORBA_LongLong  LongLong;
+  typedef _CORBA_ULongLong ULongLong;
+# endif
 # ifndef NO_FLOAT
   typedef _CORBA_Float   Float;
   typedef _CORBA_Double  Double;
+# ifdef HAS_LongDouble
+  typedef _CORBA_LongDouble LongDouble;
+# endif
 # endif
 
   typedef _CORBA_Boolean& Boolean_out;
@@ -362,10 +376,20 @@ _CORBA_MODULE_BEG
 
     void operator<<=(ULong u);
 
+#ifdef HAS_LongLong
+    void operator<<=(LongLong  l);
+    void operator<<=(ULongLong u);
+#endif
+
 #if !defined(NO_FLOAT)
     void operator<<=(Float f);
 
     void operator<<=(Double d);
+
+#ifdef HAS_LongDouble
+    void operator<<=(LongDouble l);
+#endif
+
 #endif
 
     void operator<<=(const Any& a);   // copying
@@ -422,10 +446,20 @@ _CORBA_MODULE_BEG
 
     Boolean operator>>=(ULong& u) const;
 
+#ifdef HAS_LongLong
+    Boolean operator>>=(LongLong&  l) const;
+    Boolean operator>>=(ULongLong& u) const;
+#endif
+
 #if !defined(NO_FLOAT)
     Boolean operator>>=(Float& f) const;
 
     Boolean operator>>=(Double& d) const;
+
+#ifdef HAS_LongDouble
+    Boolean operator>>=(LongDouble& l) const;
+#endif
+
 #endif
 
     Boolean operator>>=(const Any*& a) const;
@@ -580,6 +614,16 @@ _CORBA_MODULE_BEG
       *pd_data <<= u;
     }
 
+#ifdef HAS_LongLong
+    inline void operator<<=(LongLong l) {
+      *pd_data <<= l;
+    }
+
+    inline void operator<<=(ULongLong u) {
+      *pd_data <<= u;
+    }
+#endif
+
 #if !defined(NO_FLOAT)
     inline void operator<<=(Float f) {
       *pd_data <<= f;
@@ -588,6 +632,13 @@ _CORBA_MODULE_BEG
     inline void operator<<=(Double d) {
       *pd_data <<= d;
     }
+
+#ifdef HAS_LongDouble
+    inline void operator<<=(LongDouble d) {
+      *pd_data <<= d;
+    }
+#endif
+
 #endif
 
     inline void operator<<=(const Any& a) {
@@ -646,6 +697,17 @@ _CORBA_MODULE_BEG
       return (*pd_data >>= u);
     }
 
+#ifdef HAS_LongLong
+    inline Boolean operator>>=(LongLong& l) const {
+      return (*pd_data >>= l);
+    }
+
+    inline Boolean operator>>=(ULongLong& u) const {
+      return (*pd_data >>= u);
+    }
+#endif
+
+
 #if !defined(NO_FLOAT)
     inline Boolean operator>>=(Float& f) const {
       return (*pd_data >>= f);
@@ -654,6 +716,12 @@ _CORBA_MODULE_BEG
     inline Boolean operator>>=(Double& d) const {
       return (*pd_data >>= d);
     }
+
+#ifdef HAS_LongDouble
+    inline Boolean operator>>=(LongDouble& d) const {
+      return (*pd_data >>= d);
+    }
+#endif
 
 #endif
 
@@ -1508,7 +1576,13 @@ _CORBA_MODULE_BEG
     TypeCode_ptr type;
   };
 
+#ifndef HAS_LongLong
   typedef ULong PR_unionDiscriminator;
+  typedef Long  PR_unionDiscriminatorSigned;
+#else
+  typedef ULongLong PR_unionDiscriminator;
+  typedef LongLong  PR_unionDiscriminatorSigned;
+#endif
 
   struct PR_unionMember {
     const char*           name;
@@ -1539,7 +1613,10 @@ _CORBA_MODULE_BEG
     tk_sequence	= 19,
     tk_array	= 20,
     tk_alias	= 21,
-    tk_except	= 22
+    tk_except	= 22,
+    tk_longlong   = 23,
+    tk_ulonglong  = 24,
+    tk_longdouble = 25
   };
 
 
@@ -1666,6 +1743,13 @@ _CORBA_MODULE_BEG
     static TypeCode_ptr PR_Principal_tc();
     static TypeCode_ptr PR_Object_tc();
     static TypeCode_ptr PR_string_tc();
+#ifdef HAS_LongLong
+    static TypeCode_ptr PR_longlong_tc();
+    static TypeCode_ptr PR_ulonglong_tc();
+#endif
+#ifdef HAS_LongDouble
+    static TypeCode_ptr PR_longdouble_tc();
+#endif
 
     // omniORB internal functions
     size_t _NP_alignedSize(size_t initialoffset) const;
@@ -1707,6 +1791,9 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_Object;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_string;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_NamedValue;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_longlong;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_ulonglong;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_longdouble;
 
 
   //////////////////////////////////////////////////////////////////////
@@ -1767,9 +1854,16 @@ _CORBA_MODULE_BEG
     virtual void insert_ushort(UShort value) = 0;
     virtual void insert_long(Long value) = 0;
     virtual void insert_ulong(ULong value) = 0;
+#ifdef HAS_LongDouble
+    virtual void insert_longlong(LongLong value) = 0;
+    virtual void insert_ulonglong(ULongLong value) = 0;
+#endif
 #ifndef NO_FLOAT
     virtual void insert_float(Float value) = 0;
     virtual void insert_double(Double value) = 0;
+#ifdef HAS_LongDouble
+    virtual void insert_longdouble(LongDouble value) = 0;
+#endif
 #endif
     virtual void insert_string(const char* value) = 0;
     virtual void insert_reference(Object_ptr value) = 0;
@@ -1782,9 +1876,16 @@ _CORBA_MODULE_BEG
     virtual UShort get_ushort() = 0;
     virtual Long get_long() = 0;
     virtual ULong get_ulong() = 0;
+#ifdef HAS_LongLong
+    virtual LongLong get_longlong() = 0;
+    virtual ULongLong get_ulonglong() = 0;
+#endif
 #ifndef NO_FLOAT
     virtual Float get_float() = 0;
     virtual Double get_double() = 0;
+#ifdef HAS_LongDouble
+    virtual LongDouble get_longdouble() = 0;
+#endif
 #endif
     virtual char* get_string() = 0;
     virtual Object_ptr get_reference() = 0;
@@ -2425,7 +2526,7 @@ _CORBA_MODULE_BEG
   typedef String_var ORBid_var;
 
   _CORBA_MODULE_FN ORB_ptr ORB_init(int& argc, char** argv,
-				    const char* orb_identifier);
+				    const char* orb_identifier="");
 
 
   //////////////////////////////////////////////////////////////////////

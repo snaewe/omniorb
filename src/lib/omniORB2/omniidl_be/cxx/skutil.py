@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.1  2000/08/04 17:10:26  dpg1
+# Long long support
+#
 # Revision 1.18  2000/07/13 15:26:01  dpg1
 # Merge from omni3_develop for 3.0 release.
 #
@@ -319,6 +322,8 @@ def unmarshall(to, environment, type, decl, name,
             idltype.tk_float:  "Float",
             idltype.tk_double: "Double",
             idltype.tk_enum:   "ULong",
+            idltype.tk_longlong: "LongLong",
+            idltype.tk_ulonglong: "ULongLong"
             }
         if array_helper_suffix.has_key(d_type.type().kind()):
             typecast = "((" + type_name + "*) " + element_name + ")"

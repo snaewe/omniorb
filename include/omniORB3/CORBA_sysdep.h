@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.3.2.1  2000/08/04 17:10:24  dpg1
+ Long long support
+
  Revision 1.3  2000/07/13 15:26:06  dpg1
  Merge from omni3_develop for 3.0 release.
 
@@ -221,6 +224,15 @@
 #     define HAS_Cplusplus_Bool
 #  endif
 
+#if defined(__x86__)
+#  define HAS_LongLong
+//#  define HAS_LongDouble
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGDOUBLE_DECL long double 
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
+#endif
+
 #elif defined(__DECCXX)
 // DEC C++ compiler
 
@@ -230,6 +242,12 @@
 #     define SIZEOF_PTR  8
 #  endif
 #  if __DECCXX_VER >= 60000000
+#     define HAS_LongLong
+//#     define HAS_LongDouble
+#     define _CORBA_LONGLONG_DECL   long long
+#     define _CORBA_ULONGLONG_DECL  unsigned long long
+#     define _CORBA_LONGDOUBLE_DECL long double
+#     define _CORBA_LONGLONG_CONST(x) (x##LL)
 #     ifndef NO_Cplusplus_Bool
 #       define HAS_Cplusplus_Bool
 #     endif
@@ -273,6 +291,13 @@
 #    define HAS_Std_Namespace
 #  endif
 
+#  define HAS_LongLong
+//#  define HAS_LongDouble
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGDOUBLE_DECL long double 
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
+
 // XXX
 // This is a hack to work around a bug in SUN C++ compiler (seen on 4.2).
 // When instantiating templates, the compiler may generate code in Template.DB.
@@ -305,6 +330,11 @@
 #define _HAS_NOT_GOT_strncasecmp
 // No current version of MSVC++ can catch exceptions by base class
 #undef HAS_Cplusplus_catch_exception_by_base
+
+#define HAS_LongLong
+#define _CORBA_LONGLONG_DECL   __int64
+#define _CORBA_ULONGLONG_DECL  unsigned __int64
+#define _CORBA_LONGLONG_CONST(x) (x)
 
 
 #elif defined(__BCPLUSPLUS__)

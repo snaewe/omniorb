@@ -8,6 +8,38 @@
 
 <buglist>
 
+<bug id="15" date="Fri Aug  4 12:33:25 BST 2000" user="dpg1">
+
+  <summary>Fixes for AIX with xlC</summary>
+  <reported>Michael Donahue</reported>
+
+  <text>Small updates to make rules and omniidl</text>
+</bug>
+
+<bug id="14" date="Fri Aug  4 10:00:42 BST 2000" user="dpg1">
+
+  <summary>Fix to bug 4 broke escaped identifiers</summary>
+  <reported>dme</reported>
+
+  <text>The fix to <a href="#bug4">bug 4</a> broke look-ups of escaped
+  identifiers. omniidl would complain about differences in case
+  between the escaped identifier and the target.</text>
+
+</bug>
+
+<bug id="13" date="Thu Aug  3 22:22:24 BST 2000" user="djs">
+
+  <summary>omniIDL/C++ generated method signature mismatch when using 
+           -Wbvirtual_objref</summary>
+
+  <reported>dme</reported>
+
+  <text>omniIDL generated a method prototype in the .hh file which didn't
+  match up with the implementation in the SK.cc file due to a variable
+  name typo in the C++ backend.</text>
+
+</bug>
+
 <bug id="12" date="Tue Aug  1 12:21:35 BST 2000" user="dpg1">
 
   <summary>Comments are incorrectly attached to struct

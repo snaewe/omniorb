@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.2  2000/08/04 17:10:28  dpg1
+# Long long support
+#
 # Revision 1.33.2.1  2000/08/02 10:52:03  dpg1
 # New omni3_1_develop branch, merged from omni3_develop.
 #
@@ -514,7 +517,9 @@ typeSizeAlignMap = {
     idltype.tk_float:   (4, 4),
     idltype.tk_enum:    (4, 4),
     idltype.tk_double:  (8, 8),
-    idltype.tk_octet:   (1, 1)
+    idltype.tk_octet:   (1, 1),
+    idltype.tk_longlong:  (8, 8),
+    idltype.tk_ulonglong: (8, 8)
     }
 
 

@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.12.2.1  2000/08/04 17:10:25  dpg1
+   Long long support
+
    Revision 1.12  2000/07/13 15:26:02  dpg1
    Merge from omni3_develop for 3.0 release.
 
@@ -516,6 +519,21 @@ DynAnyImpl::insert_ulong(CORBA::ULong value)
 {
   value >>= doWrite(CORBA::tk_ulong);
 }
+
+#ifdef HAS_LongLong
+void
+DynAnyImpl::insert_longlong(CORBA::LongLong value)
+{
+  value >>= doWrite(CORBA::tk_longlong);
+}
+
+void
+DynAnyImpl::insert_ulonglong(CORBA::ULongLong value)
+{
+  value >>= doWrite(CORBA::tk_ulonglong);
+}
+#endif
+
 #ifndef NO_FLOAT
 void
 DynAnyImpl::insert_float(CORBA::Float value)
@@ -529,6 +547,15 @@ DynAnyImpl::insert_double(CORBA::Double value)
 {
   value >>= doWrite(CORBA::tk_double);
 }
+
+#ifdef HAS_LongDouble
+void
+DynAnyImpl::insert_longdouble(CORBA::LongDouble value)
+{
+  value >>= doWrite(CORBA::tk_longdouble);
+}
+#endif
+
 #endif
 
 void
@@ -639,6 +666,25 @@ DynAnyImpl::get_ulong()
   return value;
 }
 
+#ifdef HAS_LongLong
+CORBA::LongLong
+DynAnyImpl::get_longlong()
+{
+  CORBA::LongLong value;
+  value <<= doRead(CORBA::tk_longlong);
+  return value;
+}
+
+CORBA::ULongLong
+DynAnyImpl::get_ulonglong()
+{
+  CORBA::ULongLong value;
+  value <<= doRead(CORBA::tk_ulonglong);
+  return value;
+}
+#endif
+
+
 #ifndef NO_FLOAT
 CORBA::Float
 DynAnyImpl::get_float()
@@ -648,7 +694,6 @@ DynAnyImpl::get_float()
   return value;
 }
 
-
 CORBA::Double
 DynAnyImpl::get_double()
 {
@@ -656,6 +701,17 @@ DynAnyImpl::get_double()
   value <<= doRead(CORBA::tk_double);
   return value;
 }
+
+#ifdef HAS_LongDouble
+CORBA::LongDouble
+DynAnyImpl::get_longdouble()
+{
+  CORBA::LongDouble value;
+  value <<= doRead(CORBA::tk_longdouble);
+  return value;
+}
+#endif
+
 #endif
 
 char*
@@ -1010,6 +1066,22 @@ DynAnyConstrBase::insert_ulong(CORBA::ULong value)
   value >>= writeCurrent(CORBA::tk_ulong);
 }
 
+#ifdef HAS_LongLong
+void
+DynAnyConstrBase::insert_longlong(CORBA::LongLong value)
+{
+  value >>= writeCurrent(CORBA::tk_longlong);
+}
+
+
+void
+DynAnyConstrBase::insert_ulonglong(CORBA::ULongLong value)
+{
+  value >>= writeCurrent(CORBA::tk_ulonglong);
+}
+#endif
+
+
 #ifndef NO_FLOAT
 void
 DynAnyConstrBase::insert_float(CORBA::Float value)
@@ -1023,6 +1095,15 @@ DynAnyConstrBase::insert_double(CORBA::Double value)
 {
   value >>= writeCurrent(CORBA::tk_double);
 }
+
+#ifdef HAS_LongDouble
+void
+DynAnyConstrBase::insert_longdouble(CORBA::LongDouble value)
+{
+  value >>= writeCurrent(CORBA::tk_longdouble);
+}
+#endif
+
 #endif
 
 void
@@ -1138,6 +1219,26 @@ DynAnyConstrBase::get_ulong()
   return value;
 }
 
+#ifdef HAS_LongLong
+CORBA::LongLong
+DynAnyConstrBase::get_longlong()
+{
+  CORBA::LongLong value;
+  value <<= readCurrent(CORBA::tk_longlong);
+  return value;
+}
+
+
+CORBA::ULongLong
+DynAnyConstrBase::get_ulonglong()
+{
+  CORBA::ULongLong value;
+  value <<= readCurrent(CORBA::tk_ulonglong);
+  return value;
+}
+#endif
+
+
 #ifndef NO_FLOAT
 CORBA::Float
 DynAnyConstrBase::get_float()
@@ -1155,6 +1256,17 @@ DynAnyConstrBase::get_double()
   value <<= readCurrent(CORBA::tk_double);
   return value;
 }
+
+#ifdef HAS_LongDouble
+CORBA::Double
+DynAnyConstrBase::get_longdouble()
+{
+  CORBA::LongDouble value;
+  value <<= readCurrent(CORBA::tk_longdouble);
+  return value;
+}
+#endif
+
 #endif
 
 char*
@@ -1733,6 +1845,24 @@ DynUnionImpl::insert_ulong(CORBA::ULong value)
   discriminatorHasChanged();
 }
 
+#ifdef HAS_LongLong
+void
+DynUnionImpl::insert_longlong(CORBA::LongLong value)
+{
+  value >>= writeCurrent(CORBA::tk_longlong);
+  discriminatorHasChanged();
+}
+
+
+void
+DynUnionImpl::insert_ulonglong(CORBA::ULongLong value)
+{
+  value >>= writeCurrent(CORBA::tk_ulonglong);
+  discriminatorHasChanged();
+}
+#endif
+
+
 #ifndef NO_FLOAT
 void
 DynUnionImpl::insert_float(CORBA::Float value)
@@ -1748,6 +1878,16 @@ DynUnionImpl::insert_double(CORBA::Double value)
   value >>= writeCurrent(CORBA::tk_double);
   discriminatorHasChanged();
 }
+
+#ifdef HAS_LongDouble
+void
+DynUnionImpl::insert_double(CORBA::LongDouble value)
+{
+  value >>= writeCurrent(CORBA::tk_longdouble);
+  discriminatorHasChanged();
+}
+#endif
+
 #endif
 
 void
@@ -1863,6 +2003,26 @@ DynUnionImpl::get_ulong()
   return value;
 }
 
+#ifdef HAS_LongLong
+CORBA::LongLong
+DynUnionImpl::get_longlong()
+{
+  CORBA::LongLong value;
+  value <<= readCurrent(CORBA::tk_longlong);
+  return value;
+}
+
+
+CORBA::ULongLong
+DynUnionImpl::get_ulonglong()
+{
+  CORBA::ULongLong value;
+  value <<= readCurrent(CORBA::tk_ulonglong);
+  return value;
+}
+#endif
+
+
 #ifndef NO_FLOAT
 CORBA::Float
 DynUnionImpl::get_float()
@@ -1880,6 +2040,17 @@ DynUnionImpl::get_double()
   value <<= readCurrent(CORBA::tk_double);
   return value;
 }
+
+#ifdef HAS_LongDouble
+CORBA::LongDouble
+DynUnionImpl::get_longdouble()
+{
+  CORBA::LongDouble value;
+  value <<= readCurrent(CORBA::tk_longdouble);
+  return value;
+}
+#endif
+
 #endif
 
 char*
@@ -2301,6 +2472,24 @@ DynUnionDisc::insert_ulong(CORBA::ULong value)
   if( pd_union )  pd_union->discriminatorHasChanged();
 }
 
+#ifdef HAS_LongLong
+void
+DynUnionDisc::insert_longlong(CORBA::LongLong value)
+{
+  value >>= doWrite(CORBA::tk_longlong);
+  if( pd_union )  pd_union->discriminatorHasChanged();
+}
+
+
+void
+DynUnionDisc::insert_ulonglong(CORBA::ULongLong value)
+{
+  value >>= doWrite(CORBA::tk_ulonglong);
+  if( pd_union )  pd_union->discriminatorHasChanged();
+}
+#endif
+
+
 #ifndef NO_FLOAT
 void
 DynUnionDisc::insert_float(CORBA::Float value)
@@ -2316,6 +2505,16 @@ DynUnionDisc::insert_double(CORBA::Double value)
   // Not a legal discriminator type.
   throw CORBA::DynAny::InvalidValue();
 }
+
+#ifdef HAS_LongDouble
+void
+DynUnionDisc::insert_longdouble(CORBA::LongDouble value)
+{
+  // Not a legal discriminator type.
+  throw CORBA::DynAny::InvalidValue();
+}
+#endif
+
 #endif
 
 void
@@ -2389,6 +2588,14 @@ DynUnionDisc::set_value(TypeCode_union::Discriminator v)
   case CORBA::tk_ulong:
     insert_ulong((CORBA::ULong)v);
     break;
+#ifdef HAS_LongLong
+  case CORBA::tk_longlong:
+    insert_longlong((CORBA::LongLong)v);
+    break;
+  case CORBA::tk_ulonglong:
+    insert_ulonglong((CORBA::ULongLong)v);
+    break;
+#endif
   // case CORBA::tk_wchar:
   default:
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -3002,9 +3209,16 @@ create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root)
     case CORBA::tk_long:
     case CORBA::tk_ushort:
     case CORBA::tk_ulong:
+#ifdef HAS_LongLong
+    case CORBA::tk_longlong:
+    case CORBA::tk_ulonglong:
+#endif
 #ifndef NO_FLOAT
     case CORBA::tk_float:
     case CORBA::tk_double:
+#ifdef HAS_LongDouble
+    case CORBA::tk_longdouble:
+#endif
 #endif
     case CORBA::tk_boolean:
     case CORBA::tk_char:
@@ -3101,9 +3315,16 @@ CORBA::ORB::create_basic_dyn_any(TypeCode_ptr tc)
   case CORBA::tk_long:
   case CORBA::tk_ushort:
   case CORBA::tk_ulong:
+#ifdef HAS_LongLong
+  case CORBA::tk_longlong:
+  case CORBA::tk_ulonglong:
+#endif
 #ifndef NO_FLOAT
   case CORBA::tk_float:
   case CORBA::tk_double:
+#ifdef HAS_LongDouble
+  case CORBA::tk_longdouble:
+#endif
 #endif
   case CORBA::tk_boolean:
   case CORBA::tk_char:
