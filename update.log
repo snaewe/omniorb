@@ -1,3 +1,90 @@
+Fri Dec 12 18:36:11 GMT 1997 sll
+================================
+
+- Changed pathname of the default configuration file to 
+       /project/omni/var/omniORB_NEW.cfg
+
+- New hook for plugging in access control policy modules to determine 
+  whether to accept new client connections.
+- Unix platforms use host-based access control based on tcp_wrapper_7.6.
+- Win32 and ATMos remains unchanged, i.e. all incomings are accepted.
+
+lib/omniORB2/dir.mk
+lib/omniORB2/corbaOrb.cc
+lib/omniORB2/initFile.cc
+lib/omniORB2/tcpSocketMTfactory.cc
+lib/omniORB2/tcpSocket.cc
+lib/omniORB2/tcpATMosMTfactory.cc
+lib/omniORB2/tcpATMos.cc
+lib/omniORB2/sharedlib/dir.mk
+
+include/omniORB2/omniORB.h
+
+lib/omniORB2/gatekeepers/dir.mk NEW
+lib/omniORB2/gatekeepers/dummystub/dir.mk NEW
+lib/omniORB2/gatekeepers/dummystub/gatekeeper.cc NEW
+lib/omniORB2/gatekeepers/tcpwrapper/BLURB NEW
+lib/omniORB2/gatekeepers/tcpwrapper/Banners.Makefile NEW
+lib/omniORB2/gatekeepers/tcpwrapper/CHANGES NEW
+lib/omniORB2/gatekeepers/tcpwrapper/DISCLAIMER NEW
+lib/omniORB2/gatekeepers/tcpwrapper/README NEW
+lib/omniORB2/gatekeepers/tcpwrapper/README.IRIX NEW
+lib/omniORB2/gatekeepers/tcpwrapper/README.NIS NEW
+lib/omniORB2/gatekeepers/tcpwrapper/clean_exit.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/diag.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/dir.mk NEW
+lib/omniORB2/gatekeepers/tcpwrapper/environ.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/eval.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/fakelog.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/fakelog2.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/fix_options.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/fromhost.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/gatekeeper.cc NEW
+lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.3 NEW
+lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.5 NEW
+lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/hosts_ctl.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/hosts_options.5 NEW
+lib/omniORB2/gatekeepers/tcpwrapper/inetcf.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/inetcf.h NEW
+lib/omniORB2/gatekeepers/tcpwrapper/misc.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/miscd.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/mystdarg.h NEW
+lib/omniORB2/gatekeepers/tcpwrapper/myvsyslog.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/ncr.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/options.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/patchlevel.h NEW
+lib/omniORB2/gatekeepers/tcpwrapper/percent_m.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/percent_x.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/printf.ck NEW
+lib/omniORB2/gatekeepers/tcpwrapper/ptx.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/refuse.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/rfc931.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/safe_finger.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/scaffold.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/scaffold.h NEW
+lib/omniORB2/gatekeepers/tcpwrapper/setenv.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/shell_cmd.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/socket.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/strcasecmp.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tcpd.8 NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tcpd.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tcpd.h NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tcpdchk.8 NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tcpdchk.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tcpdmatch.8 NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tcpdmatch.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tli-sequent.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tli-sequent.h NEW
+lib/omniORB2/gatekeepers/tcpwrapper/tli.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/try-from.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/update.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/vfprintf.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/workarounds.c NEW
+lib/omniORB2/gatekeepers/tcpwrapper/sharedlib NEW
+lib/omniORB2/gatekeepers/tcpwrapper/sharedlib/dir.mk NEW
+
+
 Wed Dec 10 11:31:59 GMT 1997 sll
 ================================
 
