@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.17  1998/04/07 18:40:29  sll
+  Use std::fstream instead of fstream.
+  Stub now use omniORB::log to log error messages.
+
   Revision 1.16  1998/03/25 14:39:12  sll
   *** empty log message ***
 
@@ -74,7 +78,7 @@ o2be_attribute::o2be_attribute(idl_bool ro,
 }
 
 void
-o2be_attribute::produce_decl_rd(fstream &s,const char *prefix,
+o2be_attribute::produce_decl_rd(std::fstream &s,const char *prefix,
 				idl_bool out_var_default,
 				idl_bool use_fully_qualified_names)
 {
@@ -119,7 +123,7 @@ o2be_attribute::produce_decl_rd(fstream &s,const char *prefix,
 }
 
 void
-o2be_attribute::produce_decl_wr(fstream &s,const char *prefix,
+o2be_attribute::produce_decl_wr(std::fstream &s,const char *prefix,
 				idl_bool out_var_default,
 				idl_bool use_fully_qualified_names)
 {
@@ -166,7 +170,7 @@ o2be_attribute::produce_decl_wr(fstream &s,const char *prefix,
 }
 
 void
-o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
+o2be_attribute::produce_proxy_rd_skel(std::fstream &s,o2be_interface &defined_in)
 {
   idl_bool hasVariableLenOutArgs = I_FALSE;
 
@@ -305,7 +309,8 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
   INC_INDENT_LEVEL();
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "cerr << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\" << endl;\n";
+  IND(s); s << "omniORB::log << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\\n\";\n";
+  IND(s); s << "omniORB::log.flush();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
@@ -318,7 +323,8 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
   IND(s); s << "}\n";
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "cerr << \"GIOP::LOCATION_FORWARD: retry request.\" << endl;\n";
+  IND(s); s << "omniORB::log << \"GIOP::LOCATION_FORWARD: retry request.\\n\";\n";
+  IND(s); s << "omniORB::log.flush();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "break;\n";
@@ -614,7 +620,7 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
 }
 
 void 
-o2be_attribute::produce_proxy_wr_skel(fstream &s,o2be_interface &defined_in)
+o2be_attribute::produce_proxy_wr_skel(std::fstream &s,o2be_interface &defined_in)
 {
   idl_bool hasVariableLenOutArgs = I_FALSE;
 
@@ -702,7 +708,8 @@ o2be_attribute::produce_proxy_wr_skel(fstream &s,o2be_interface &defined_in)
   INC_INDENT_LEVEL();
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "cerr << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\" << endl;\n";
+  IND(s); s << "omniORB::log << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\\n\";\n";
+  IND(s); s << "omniORB::log.flush();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
@@ -715,7 +722,8 @@ o2be_attribute::produce_proxy_wr_skel(fstream &s,o2be_interface &defined_in)
   IND(s); s << "}\n";
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "cerr << \"GIOP::LOCATION_FORWARD: retry request.\" << endl;\n";
+  IND(s); s << "omniORB::log << \"GIOP::LOCATION_FORWARD: retry request.\\n\";\n";
+  IND(s); s << "omniORB::log.flush();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "break;\n";
@@ -803,7 +811,7 @@ o2be_attribute::produce_proxy_wr_skel(fstream &s,o2be_interface &defined_in)
 }
 
 void
-o2be_attribute::produce_server_rd_skel(fstream &s,o2be_interface &defined_in)
+o2be_attribute::produce_server_rd_skel(std::fstream &s,o2be_interface &defined_in)
 {
   IND(s); s << "if (!_0RL_response_expected) {\n";
   INC_INDENT_LEVEL();
@@ -912,7 +920,7 @@ o2be_attribute::produce_server_rd_skel(fstream &s,o2be_interface &defined_in)
 }
 
 void
-o2be_attribute::produce_server_wr_skel(fstream &s,o2be_interface &defined_in)
+o2be_attribute::produce_server_wr_skel(std::fstream &s,o2be_interface &defined_in)
 {
   IND(s); s << "if (!_0RL_response_expected) {\n";
   INC_INDENT_LEVEL();
@@ -958,7 +966,7 @@ o2be_attribute::produce_server_wr_skel(fstream &s,o2be_interface &defined_in)
 }
 
 void
-o2be_attribute::produce_nil_rd_skel(fstream &s)
+o2be_attribute::produce_nil_rd_skel(std::fstream &s)
 {
   IND(s); produce_decl_rd(s);
   s << " {\n";
@@ -1033,7 +1041,7 @@ o2be_attribute::produce_nil_rd_skel(fstream &s)
 }
 
 void
-o2be_attribute::produce_nil_wr_skel(fstream &s)
+o2be_attribute::produce_nil_wr_skel(std::fstream &s)
 {
   IND(s); produce_decl_wr(s);
   s << " {\n";
@@ -1044,7 +1052,7 @@ o2be_attribute::produce_nil_wr_skel(fstream &s)
 }
 
 void
-o2be_attribute::produce_lcproxy_rd_skel(fstream &s,o2be_interface &defined_in)
+o2be_attribute::produce_lcproxy_rd_skel(std::fstream &s,o2be_interface &defined_in)
 {
   idl_bool hasVariableLenOutArgs = I_FALSE;
 
@@ -1183,7 +1191,8 @@ o2be_attribute::produce_lcproxy_rd_skel(fstream &s,o2be_interface &defined_in)
   INC_INDENT_LEVEL();
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "cerr << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\" << endl;\n";
+  IND(s); s << "omniORB::log << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\\n\";\n";
+  IND(s); s << "omniORB::log.flush();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
@@ -1195,7 +1204,8 @@ o2be_attribute::produce_lcproxy_rd_skel(fstream &s,o2be_interface &defined_in)
   IND(s); s << "_0RL_w->_forward_to(obj);\n";
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "cerr << \"GIOP::LOCATION_FORWARD: retry request.\" << endl;\n";
+  IND(s); s << "omniORB::log << \"GIOP::LOCATION_FORWARD: retry request.\\n\";\n";
+  IND(s); s << "omniORB::log.flush();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "return _0RL_w->" << uqname() << "();\n";
@@ -1519,7 +1529,7 @@ o2be_attribute::produce_lcproxy_rd_skel(fstream &s,o2be_interface &defined_in)
 }
 
 void 
-o2be_attribute::produce_lcproxy_wr_skel(fstream &s,o2be_interface &defined_in)
+o2be_attribute::produce_lcproxy_wr_skel(std::fstream &s,o2be_interface &defined_in)
 {
   idl_bool hasVariableLenOutArgs = I_FALSE;
 
@@ -1607,7 +1617,8 @@ o2be_attribute::produce_lcproxy_wr_skel(fstream &s,o2be_interface &defined_in)
   INC_INDENT_LEVEL();
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "cerr << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\" << endl;\n";
+  IND(s); s << "omniORB::log << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\\n\";\n";
+  IND(s); s << "omniORB::log.flush();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
@@ -1619,7 +1630,8 @@ o2be_attribute::produce_lcproxy_wr_skel(fstream &s,o2be_interface &defined_in)
   IND(s); s << "_0RL_w->_forward_to(obj);\n";
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "cerr << \"GIOP::LOCATION_FORWARD: retry request.\" << endl;\n";
+  IND(s); s << "omniORB::log << \"GIOP::LOCATION_FORWARD: retry request.\\n\";\n";
+  IND(s); s << "omniORB::log.flush();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "_0RL_w->" << uqname() << "(_value);\n";
@@ -1744,7 +1756,7 @@ o2be_attribute::produce_lcproxy_wr_skel(fstream &s,o2be_interface &defined_in)
 
 
 void
-o2be_attribute::produce_dead_rd_skel(fstream &s)
+o2be_attribute::produce_dead_rd_skel(std::fstream &s)
 {
   IND(s); produce_decl_rd(s,0,I_FALSE,I_TRUE);
   s << " {\n";
@@ -1820,7 +1832,7 @@ o2be_attribute::produce_dead_rd_skel(fstream &s)
 }
 
 void
-o2be_attribute::produce_dead_wr_skel(fstream &s)
+o2be_attribute::produce_dead_wr_skel(std::fstream &s)
 {
   IND(s); produce_decl_wr(s,0,I_FALSE,I_TRUE);
   s << " {\n";
@@ -1831,7 +1843,7 @@ o2be_attribute::produce_dead_wr_skel(fstream &s)
 }
 
 void
-o2be_attribute::produce_home_rd_skel(fstream& s, o2be_interface &defined_in)
+o2be_attribute::produce_home_rd_skel(std::fstream& s, o2be_interface &defined_in)
 {
   IND(s); produce_decl_rd(s,0,I_FALSE,I_TRUE);
   s << "{\n";
@@ -1843,7 +1855,7 @@ o2be_attribute::produce_home_rd_skel(fstream& s, o2be_interface &defined_in)
 }
 
 void
-o2be_attribute::produce_home_wr_skel(fstream& s, o2be_interface &defined_in)
+o2be_attribute::produce_home_wr_skel(std::fstream& s, o2be_interface &defined_in)
 {
   IND(s); produce_decl_wr(s,0,I_FALSE,I_TRUE);
   s << "{\n";
@@ -1855,7 +1867,7 @@ o2be_attribute::produce_home_wr_skel(fstream& s, o2be_interface &defined_in)
 }
 
 void
-o2be_attribute::produce_wrapproxy_rd_skel(fstream& s,
+o2be_attribute::produce_wrapproxy_rd_skel(std::fstream& s,
 					  o2be_interface &defined_in)
 {
   IND(s); produce_decl_rd(s,0,I_FALSE,I_TRUE);
@@ -1868,7 +1880,7 @@ o2be_attribute::produce_wrapproxy_rd_skel(fstream& s,
 }
 
 void
-o2be_attribute::produce_wrapproxy_wr_skel(fstream& s,
+o2be_attribute::produce_wrapproxy_wr_skel(std::fstream& s,
 					  o2be_interface &defined_in)
 {
   IND(s); produce_decl_wr(s,0,I_FALSE,I_TRUE);
