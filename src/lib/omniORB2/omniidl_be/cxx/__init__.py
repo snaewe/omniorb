@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.5  2000/05/24 17:16:34  dpg1
+# Minor omniidl usage message fix.
+#
 # Revision 1.18.2.4  2000/05/04 14:34:50  djs
 # Added new flag splice-modules which causes all continuations to be output
 # as one lump. Default is now to output them in pieces following the IDL.
@@ -125,7 +128,7 @@ import re, sys
 
 cpp_args = ["-D__OMNIIDL_CXX__"]
 usage_string = """\
-  -Wbh=<sufix>      Specify suffix for generated header files
+  -Wbh=<suffix>     Specify suffix for generated header files
   -Wbs=<suffix>     Specify suffix for generated stub files
   -Wba              Generate code for TypeCodes and Any
   -Wbtp             Generate 'tie' implementation skeletons
