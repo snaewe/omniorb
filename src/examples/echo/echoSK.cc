@@ -178,9 +178,9 @@ _impl_Echo::_dispatch(GIOP_S& giop_s)
   const char* op = giop_s.invokeInfo().operation();
 
   if( !strcmp(op, "echoString") ) {
-    // XXX Not done yet.
-
-
+    
+    _0RL_cd_01531d3e51c81a80_00000000 call_desc("_echoString",sizeof("_echoString"),0,1);
+    _upcall(giop_s,call_desc);
     return 1;
   }
 
