@@ -1,3 +1,13 @@
+Mon Jun 19 15:14:30 BST 2000 dpg1
+=================================
+
+- More explicit casts to (const char*) when using String_var with logger
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/uri.cc
+
+
 Mon Jun 19 14:52:39 BST 2000 dpg1
 =================================
 

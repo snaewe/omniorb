@@ -30,6 +30,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.3  2000/06/19 14:18:33  dpg1
+// Explicit cast to (const char*) when using String_var with logger.
+//
 // Revision 1.1.2.2  2000/05/24 17:18:11  dpg1
 // Rename IIOP::DEFAULT_PORT IIOP::DEFAULT_CORBALOC_PORT
 //
@@ -702,7 +705,7 @@ corbanameURIHandler::toObject(const char* uri, unsigned int cycles)
     }
     if (omniORB::trace(10)) {
       omniORB::logger l;
-      l << "string_to_object attempting to resolve `" << sname
+      l << "string_to_object attempting to resolve `" << (const char*)sname
 	<< "' from naming service\n";
     }
     CORBA::Object_ptr result = nc->resolve(name);
@@ -712,7 +715,7 @@ corbanameURIHandler::toObject(const char* uri, unsigned int cycles)
     if (omniORB::trace(10)) {
       omniORB::logger l;
       l << "string_to_object received a NotFound exception trying to "
-	<< "resolve `" << sname << "' from naming service\n";
+	<< "resolve `" << (const char*)sname << "' from naming service\n";
     }
     OMNIORB_THROW(BAD_PARAM, MINOR_OTHER, CORBA::COMPLETED_NO);
   }
@@ -720,7 +723,7 @@ corbanameURIHandler::toObject(const char* uri, unsigned int cycles)
     if (omniORB::trace(10)) {
       omniORB::logger l;
       l << "string_to_object received a CannotProceed exception trying to "
-	<< "resolve `" << sname << "' from naming service\n";
+	<< "resolve `" << (const char*)sname << "' from naming service\n";
     }
     OMNIORB_THROW(BAD_PARAM, MINOR_OTHER, CORBA::COMPLETED_NO);
   }
@@ -728,7 +731,7 @@ corbanameURIHandler::toObject(const char* uri, unsigned int cycles)
     if (omniORB::trace(10)) {
       omniORB::logger l;
       l << "string_to_object received an InvalidName exception trying to "
-	<< "resolve `" << sname << "' from naming service\n";
+	<< "resolve `" << (const char*)sname << "' from naming service\n";
     }
     OMNIORB_THROW(BAD_PARAM, MINOR_OTHER, CORBA::COMPLETED_NO);
   }

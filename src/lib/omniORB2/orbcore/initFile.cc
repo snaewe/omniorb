@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.30.6.7  2000/06/19 14:18:33  dpg1
+  Explicit cast to (const char*) when using String_var with logger.
+
   Revision 1.30.6.6  2000/05/24 17:21:07  dpg1
   Fix const-correctness in error functions
 
@@ -293,7 +296,7 @@ void initFile::initialize()
 	if (omniORB::trace(1)) {
 	  omniORB::logger l;
 	  l << "Configuration error: invalid ORBInitRef parameter `"
-	    << data << "'.\n";
+	    << (const char*)data << "'.\n";
 	}
 	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
       }
@@ -309,7 +312,7 @@ void initFile::initialize()
 	if (omniORB::trace(1)) {
 	  omniORB::logger l;
 	  l << "Configuration error: syntactically incorrect URI `"
-	    << uri << "'\n";
+	    << (const char*)uri << "'\n";
 	}
 	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
       }
