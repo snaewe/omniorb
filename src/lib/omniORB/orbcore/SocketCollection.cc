@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.21  2004/08/17 14:59:47  dgrisby
+  New selectable socket limit was wrong on Windows.
+
   Revision 1.1.2.20  2004/04/19 09:29:40  dgrisby
   Only close pipes if they were opened successfully.
 
@@ -106,9 +109,11 @@
 #  include "iostream.h"
 #endif
 
-
-#define SELECTABLE_FD_LIMIT FD_SETSIZE
-
+#if defined(__WIN32__)
+#  define SELECTABLE_FD_LIMIT INVALID_SOCKET
+#else
+#  define SELECTABLE_FD_LIMIT FD_SETSIZE
+#endif
 
 OMNI_NAMESPACE_BEGIN(omni)
 

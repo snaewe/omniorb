@@ -1,3 +1,11 @@
+Tue Aug 17 15:55:17 BST 2004 dgrisby
+====================================
+
+- New selectable socket limit was wrong on Windows.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Wed Aug 11 12:17:05 BST 2004 dgrisby
 ====================================
 
