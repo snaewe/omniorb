@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/09/27 17:03:57  sll
+ Changed newObjRef signature to accept omniIOR* as an argument.
+
  Revision 1.2.2.1  2000/07/17 10:35:37  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -77,8 +80,7 @@ public:
   // Returns the Interface Repository ID for proxies this
   // factory can instantiate.
 
-  virtual omniObjRef* newObjRef(const char* mostDerivedTypeId,
-				IOP::TaggedProfileList* profiles,
+  virtual omniObjRef* newObjRef(omniIOR* ior,
 				omniIdentity* id, omniLocalIdentity* lid) = 0;
   // Returns a new object reference. Consumes <profiles>.
 
