@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.20  1999/03/22 13:31:58  djr
+  Do proper conversion between Char and Boolean for pd_byte_order.
+
   Revision 1.19  1999/01/07 18:31:20  djr
   MemBufferedStream modified so that interface and semantics more closely
   match NetBufferedStream.
@@ -614,11 +617,11 @@ public:
   }
 
   inline _CORBA_Char byteOrder() const {
-    return pd_byte_order;
+    return _CORBA_Char(pd_byte_order);
   }
 
   inline void byteOrder(_CORBA_Char b) {
-    pd_byte_order = b;
+    pd_byte_order = b ? 1 : 0;
   }
 
   inline _CORBA_Char RdMessageByteOrder() const {
