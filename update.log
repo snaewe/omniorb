@@ -1,4 +1,12 @@
 
+Tue Feb  9 17:44:19 GMT 1999 djr
+================================
+
+- Fixed bug in TypeCode_alignTable generation for structures and exceptions.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Tue Feb  9 09:41:08 GMT 1999 djr
 ================================
 
