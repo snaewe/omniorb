@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.20  1999/05/26 10:40:51  sll
+  Each sequence is now generated as a separate type.
+
   Revision 1.19  1999/05/20 15:24:26  sll
   Explicitly cast a StringBuf to const char* when passed to stream <<
   operator. MSVC++ is confused otherwise.
@@ -234,6 +237,12 @@
 #define SEQUENCE_TEMPLATE_BOUNDED_ARRAY__OCTET \
   "_CORBA_Bounded_Sequence_Array__Octet"
 
+#define SEQUENCE_TEMPLATE_UNBOUNDED_OBJREF \
+  "_CORBA_Unbounded_Sequence_ObjRef"
+
+#define SEQUENCE_TEMPLATE_BOUNDED_OBJREF \
+  "_CORBA_Bounded_Sequence_ObjRef"
+
 #define SEQUENCE_TEMPLATE_ADPT_CLASS \
   "_CORBA_Sequence_OUT_arg"
 
@@ -347,6 +356,42 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 	return result;
 	break;
 
+    case o2be_operation::tObjref:
+      {
+	char* iname;
+	if (o2be_global::qflag()) {
+	  iname = o2be_name::narrow_and_produce_fqname(base_type());
+	}
+	else {
+	  iname = o2be_name::narrow_and_produce_unambiguous_name(base_type(),
+								   used_in);
+	}
+	if (s_max) {
+	  // bounded sequence
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_OBJREF) + 
+	                    strlen(iname) + strlen(baseclassname) + 25;
+	  result = new char[namesize];
+	  sprintf(result,
+		  "%s<%s,%s,%d>",
+		  SEQUENCE_TEMPLATE_BOUNDED_OBJREF,
+		  iname,
+		  baseclassname,
+		  (int) s_max);
+	}
+	else {
+	  // unbounded sequence
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_OBJREF) +
+	                    strlen(iname) + strlen(baseclassname) + 5;
+	  result = new char[namesize];
+	  sprintf(result,
+		  "%s<%s,%s >",
+		  SEQUENCE_TEMPLATE_UNBOUNDED_OBJREF,
+		  iname,
+		  baseclassname);
+	}
+	return result;
+	break;
+      }
     case o2be_operation::tChar:
       elmsize = 1;
       alignment = 1;
@@ -702,7 +747,8 @@ o2be_sequence::bound()
   return 0;
 }
 
-size_t
+
+static size_t
 calc_recursive_sequence_offset(AST_Decl* node, AST_Decl* base_type,
 			       size_t offset = 0)
 {
@@ -826,50 +872,187 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
     }
   }
 
+  // Compilers cannot distinguish identical template types. We need to
+  // be able to distinguish between identical sequence types, so that
+  // when we insert into an Any we get the correct repo Id. Thus we have
+  // to have a separate C++ class for each typedef'ed sequence type.
+  //  This class just needs to define the relevant constructors and
+  // assignment operator.
+
+  const char* template_name = seq_template_name(tdef);
+  StringBuf t_star_constructor_arg, index_ret_type;
+  int is_seq_of_array = 0;
+
   o2be_operation::argMapping mapping;
   o2be_operation::argType ntype =
     o2be_operation::ast2ArgMapping(base_type(), o2be_operation::wIN, mapping);
 
-  IND(s); s << "typedef " << seq_template_name(tdef)
-	    << " " << tdef->uqname() << ";\n";
-
-  StringBuf var_type;
-
   switch( ntype ) {
-  case o2be_operation::tArrayFixed:
-  case o2be_operation::tArrayVariable:
-    var_type += "_CORBA_Sequence_Array_Var<";
-    var_type += tdef->uqname();
-    var_type += ", ";
-    var_type += seq_member_name(tdef);
-    var_type += "_slice>";
+  case o2be_operation::tString:
+    t_star_constructor_arg += "char*";
+    index_ret_type += "_CORBA_String_member&";
     break;
 
-  case o2be_operation::tString:
-    {
-      if( bound() ) {
-	var_type += B_SEQUENCE_STRING_VAR;
-	var_type += '<';
-	var_type += (int) bound();
-	var_type += '>';
-      }
-      else {
-	var_type += UB_SEQUENCE_STRING_VAR;
-      }
-      break;
-    }
+  case o2be_operation::tObjref:
+    t_star_constructor_arg +=
+      o2be_name::narrow_and_produce_unambiguous_name(base_type(), tdef);
+    t_star_constructor_arg += "_ptr";
+    index_ret_type += seq_member_name(tdef);
+    index_ret_type += "&";
+    break;
+
+  case o2be_operation::tArrayFixed:
+  case o2be_operation::tArrayVariable:
+    t_star_constructor_arg += seq_member_name(tdef);
+    index_ret_type += seq_member_name(tdef);
+    index_ret_type += "_slice*";
+    is_seq_of_array = 1;
+    break;
 
   default:
-    var_type += "_CORBA_Sequence_Var<";
-    var_type += tdef->uqname();
-    var_type += ", ";
-    var_type += seq_member_name(tdef);
-    var_type += " >";
+    t_star_constructor_arg += seq_member_name(tdef);
+    index_ret_type += seq_member_name(tdef);
+    index_ret_type += "&";
     break;
   }
 
-  IND(s); s << "typedef " << (const char*)var_type 
-	    << ' ' << tdef->uqname() << "_var;\n\n";
+  IND(s); s << "class " << tdef->uqname() << " : public "
+	    << template_name << " {\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+  // Default constructor.
+  IND(s); s << "inline " << tdef->uqname() << "() {}\n";
+  // Copy constructor.
+  IND(s); s << "inline " << tdef->uqname()
+	    << "(const " << tdef->uqname() << "& seq)\n";
+  IND(s); s << "  : " << template_name << "(seq) {}\n";
+  if( bound() ) {
+    // T* data constructor.
+    IND(s); s << "inline " << tdef->uqname()
+	      << "(CORBA::ULong len, "
+	      << (const char*) t_star_constructor_arg 
+	      << "* val, CORBA::Boolean rel=0)\n";
+    IND(s); s << "  : " << template_name << "(len, val, rel) {}\n";
+  } else {
+    // Maximum constructor.
+    IND(s); s << "inline " << tdef->uqname() << "(CORBA::ULong max)\n";
+    IND(s); s << "  : " << template_name << "(max) {}\n";
+    // T* data constructor.
+    IND(s); s << "inline " << tdef->uqname()
+	      << "(CORBA::ULong max, CORBA::ULong len, "
+	      << (const char*) t_star_constructor_arg 
+	      << "* val, CORBA::Boolean rel=0)\n";
+    IND(s); s << "  : " << template_name << "(max, len, val, rel) {}\n";
+  }
+  // operator =
+  IND(s); s << "inline " << tdef->uqname() << "& operator = (const "
+	    << tdef->uqname() << "& seq) {\n";
+  IND(s); s << "  " << template_name << "::operator=(seq);\n";
+  IND(s); s << "  return *this;\n";
+  IND(s); s << "};\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
+
+  StringBuf var_type;
+  var_type += tdef->uqname();
+  var_type += "_var";
+
+  StringBuf out_type;
+  out_type += tdef->uqname();
+  out_type += "_out";
+
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////////////// T_var ///////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  IND(s); s << "class " << (const char*) out_type << ";\n\n";
+
+  IND(s); s << "class " << (const char*) var_type << " {\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "typedef " << tdef->uqname() << " _T;\n";
+  IND(s); s << "typedef " << (const char*) var_type << " _T_var;\n\n";
+
+  IND(s); s << "inline " << (const char*) var_type << "() : pd_seq(0) {}\n";
+  IND(s); s << "inline " << (const char*) var_type << "(_T* s) : pd_seq(s) {}\n";
+  IND(s); s << "inline " << (const char*) var_type << "(const _T_var& sv) {\n";
+  IND(s); s << "  if( sv.pd_seq ) {\n";
+  IND(s); s << "    pd_seq = new _T;\n";
+  IND(s); s << "    *pd_seq = *sv.pd_seq;\n";
+  IND(s); s << "  } else\n";
+  IND(s); s << "    pd_seq = 0;\n";
+  IND(s); s << "}\n";
+  IND(s); s << "inline ~" << (const char*) var_type
+	    << "() { if( pd_seq ) delete pd_seq; }\n\n";
+
+  IND(s); s << "inline _T_var& operator = (_T* s) {\n";
+  IND(s); s << "  if( pd_seq )  delete pd_seq;\n";
+  IND(s); s << "  pd_seq = s;\n";
+  IND(s); s << "  return *this;\n";
+  IND(s); s << "}\n";
+  IND(s); s << "inline _T_var& operator = (const _T_var& sv) {\n";
+  IND(s); s << "  if( sv.pd_seq ) {\n";
+  IND(s); s << "    if( !pd_seq )  pd_seq = new _T;\n";
+  IND(s); s << "    *pd_seq = *sv.pd_seq;\n";
+  IND(s); s << "  } else if( pd_seq ) {\n";
+  IND(s); s << "    delete pd_seq;\n";
+  IND(s); s << "    pd_seq = 0;\n";
+  IND(s); s << "  }\n";
+  IND(s); s << "  return *this;\n";
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "inline " << (const char*) index_ret_type
+	    << " operator [] (_CORBA_ULong i) { ";
+  if( is_seq_of_array )
+    s << "  return (" << (const char*) index_ret_type 
+      << ") ((pd_seq->NP_data())[i]); }\n";
+  else
+    s << "  return (*pd_seq)[i]; }\n";
+  IND(s); s << "inline _T* operator -> () { return pd_seq; }\n";
+  s << "#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7\n";
+  IND(s); s << "inline operator _T& () const { return *pd_seq; }\n";
+  s << "#else\n";
+  IND(s); s << "inline operator const _T& () const { return *pd_seq; }\n";
+  IND(s); s << "inline operator _T& () { return *pd_seq; }\n";
+  s << "#endif\n\n";
+
+  IND(s); s << "inline const _T& in() const { return *pd_seq; }\n";
+  IND(s); s << "inline _T& inout() { return *pd_seq; }\n";
+  IND(s); s << "inline _T*& out() { return pd_seq; }\n";
+  IND(s); s << "inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; "
+	    "return tmp; }\n\n";
+
+  IND(s); s << "friend class " << (const char*) out_type << ";\n\n";
+
+  DEC_INDENT_LEVEL();
+  IND(s); s << "private:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_T* pd_seq;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
+
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////////////// T_out ///////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  IND(s); s << "class " << (const char*) out_type << " {\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "typedef " << tdef->uqname() << " _T;\n";
+  IND(s); s << "typedef " << (const char*) var_type << " _T_var;\n\n";
+
+  IND(s); s << "inline " << (const char*) out_type << "(_T*& s) : _data(s) {}\n";
+  IND(s); s << "inline " << (const char*) out_type << "(_T_var& sv)\n";
+  IND(s); s << "  : _data(sv.pd_seq) { sv = (_T*) 0; }\n\n";
+
+  IND(s); s << "_T*& _data;\n\n";
+
+  DEC_INDENT_LEVEL();
+  IND(s); s << "private:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << (const char*) out_type << "();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
 }
 
 
@@ -878,62 +1061,22 @@ o2be_sequence::produce_typedef_binary_operators_in_hdr(std::fstream& s,
 						       o2be_typedef* tdef)
 {
   if( idl_global->compile_flags() & IDL_CF_ANY ) {
+
     // Generate the Any insertion and extraction operators.
-    //
-    // These are difficult for sequences since identical sequence
-    // types are not distinguishable by the comiler. This means that
-    // we cannot have global versions of the operators - since it is
-    // impossible to be sure they won't be redefined in another
-    // source file.
-    //  Thus the operators themselves must be inlined. To prevent the
-    // buildDesc mechanism from being exposed in the header file the
-    // work of the operator is done in a globally visible function,
-    // which is given a unique name to prevent clashes with identical
-    // types.
-    //  Further guards are used to prevent multiple clashing declar-
-    // ations of the operators, and to prevent generation of more code
-    // than is strictly necessary.
 
-    const char* canon_name = canonical_name();
-    const char* seq_type_name = seq_template_name(o2be_global::root());
-    const char* tdef_idname = tdef->_idname();
+    IND(s); s << "extern void operator <<= (CORBA::Any& a, const "
+	      << tdef->fqname() << "& s);\n";
 
-    s << "#ifndef __0RL_seq_any" << canon_name << "__\n";
-    s << "#define __0RL_seq_any" << canon_name << "__\n";
-    s << "#define __0RL_seq_anyimpl_" << tdef_idname << "__\n";
-
-    IND(s); s << "extern void _0RL_seq_anyinsert_" << tdef_idname
-	      << "(CORBA::Any&, const " << seq_type_name << "&);\n\n";
-
-    IND(s); s << "inline void operator<<=(CORBA::Any& a, const "
-	      << seq_type_name << "& s)\n";
-    IND(s); s << "{\n";
+    IND(s); s << "inline void operator <<= (CORBA::Any& a, "
+	      << tdef->fqname() << "* sp) {\n";
     INC_INDENT_LEVEL();
-    IND(s); s << "_0RL_seq_anyinsert_" << tdef_idname << "(a, s);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-
-    IND(s); s << "inline void operator<<=(CORBA::Any& a, "
-	      << seq_type_name << "* sp)\n";
-    IND(s); s << "{\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "_0RL_seq_anyinsert_" << tdef_idname << "(a, *sp);\n";
+    IND(s); s << "a <<= *sp;\n";
     IND(s); s << "delete sp;\n";
     DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
+    IND(s); s << "}\n";
 
-    IND(s); s << "extern CORBA::Boolean _0RL_seq_anyextract_" << tdef_idname
-	      << "(const CORBA::Any&, " << seq_type_name << "*&);\n\n";
-
-    IND(s); s << "inline CORBA::Boolean operator>>=(const CORBA::Any& a, "
-	      << seq_type_name << "*& sp)\n";
-    IND(s); s << "{\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "return _0RL_seq_anyextract_" << tdef_idname << "(a, sp);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-
-    s << "#endif\n\n";
+    IND(s); s << "extern CORBA::Boolean operator >>= (const CORBA::Any& a, "
+	      << tdef->fqname() << "*& sp);\n\n";
   }
 }
 
@@ -949,12 +1092,10 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
 
   produce_buildDesc_support(s);
 
-  s << "#if defined(__0RL_seq_any" << canon_name << "__) && "
-    "defined(__0RL_seq_anyimpl_" << tdef_idname << "__)\n";
-  s << "#undef __0RL_seq_any" << canon_name << "__\n\n";
+  // Any insertion operator.
 
-  IND(s); s << "void _0RL_seq_anyinsert_" << tdef_idname
-	    << "(CORBA::Any& a, const " << seq_type_name << "& s)\n";
+  IND(s); s << "void operator <<= (CORBA::Any& a, const "
+	    << tdef->fqname() << "& s)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "tcDescriptor tcdesc;\n";
@@ -962,6 +1103,8 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
   IND(s); s << "a.PR_packFrom(" << tdef->fqtcname() << ", &tcdesc);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
+
+  // Helper to delete one of these, since the Any keeps the storage.
 
   IND(s); s << "void _0RL_seq_delete_" << tdef_idname
 	    << "(void* data)\n";
@@ -971,8 +1114,10 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << "CORBA::Boolean _0RL_seq_anyextract_" << tdef_idname
-	    << "(const CORBA::Any& a, " << seq_type_name << "*& s_out)\n";
+  // Any extraction operator.
+
+  IND(s); s << "CORBA::Boolean operator >>= (const CORBA::Any& a, "
+	    << tdef->fqname() << "*& s_out)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "s_out = 0;\n";
@@ -1015,8 +1160,6 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
-
-  s << "#endif\n\n";
 }
 
 
@@ -1025,43 +1168,10 @@ o2be_sequence::out_adptarg_name(o2be_typedef* tdef, AST_Decl* used_in)
 {
   if( pd_out_adptarg_name )  return pd_out_adptarg_name;
 
-  o2be_operation::argMapping mapping;
-  o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(base_type(),
-						 o2be_operation::wIN, mapping);
-
-  switch( ntype ) {
-  case o2be_operation::tString:
-    {
-      StringBuf p;
-      if( bound() ) {
-	p += B_SEQUENCE_STRING_OUT;
-	p += '<';
-	p += (int) bound();
-	p += '>';
-      }
-      else p += UB_SEQUENCE_STRING_OUT;
-      pd_out_adptarg_name = p.release();
-    }
-    break;
-
-  default:
-    {
-      const char* ubname;
-      if( o2be_global::qflag() )  ubname = tdef->fqname();
-      else                        ubname = tdef->unambiguous_name(used_in);
-
-      pd_out_adptarg_name = new char[strlen(SEQUENCE_TEMPLATE_ADPT_CLASS) +
-				    strlen("<, >") + strlen(ubname) * 2 +
-				    strlen("_var") + 1];
-      strcpy(pd_out_adptarg_name, SEQUENCE_TEMPLATE_ADPT_CLASS);
-      strcat(pd_out_adptarg_name, "<");
-      strcat(pd_out_adptarg_name, ubname);
-      strcat(pd_out_adptarg_name, ",");
-      strcat(pd_out_adptarg_name, ubname);
-      strcat(pd_out_adptarg_name, "_var >");
-    }
-    break;
-  }
+  StringBuf out_type;
+  out_type += tdef->unambiguous_name(used_in);
+  out_type += "_out";
+  pd_out_adptarg_name = out_type.release();
 
   return pd_out_adptarg_name;
 }
