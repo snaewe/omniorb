@@ -1,4 +1,12 @@
 
+Mon Jan 18 11:02:47 GMT 1999 tjr
+================================
+
+- fix omni_thread::sleep bug found by Bjorn Wennberg
+
+src/lib/omnithread/posix.cc
+
+
 Thu Jan 14 10:16:08 GMT 1999 djr
 ================================
 
