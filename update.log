@@ -1,5 +1,17 @@
-Thu Apr 25 21:31:41 BST 2002 dpg1
-=================================
+Fri Apr 26 00:07:43 BST 2002 dgrisby
+====================================
+
+- Minor tweak to codeset setting interceptors for GIOP 1.0.
+
+src/lib/omniORB/orbcore/cdrStream.cc
+
+- Bug with invalid omniidl option reporting.
+
+src/tool/omniidl/python/omniidl/main.py
+
+
+Thu Apr 25 21:31:41 BST 2002 dgrisby
+====================================
 
 - Better job of looking for omnicpp.
 

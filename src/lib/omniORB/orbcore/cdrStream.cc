@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2002/04/25 23:13:30  dgrisby
+  Minor tweak to codeset setting interceptors for GIOP 1.0.
+
   Revision 1.1.2.11  2001/11/14 17:13:43  dpg1
   Long double support.
 
@@ -482,8 +485,12 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
   if (ver.minor < 1) {
     // Code set service context is only defined from GIOP 1.1 onwards,
     // so here we do not attempt to set a codeset service context.
-    info.giopstream.TCS_C(omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver));
-    info.giopstream.TCS_W(0);
+    if (!d.tcs_selected) {
+      d.tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
+      d.tcs_w = 0;
+    }
+    info.giopstream.TCS_C(d.tcs_c);
+    info.giopstream.TCS_W(d.tcs_w);
     return 1;
   }
 
@@ -557,16 +564,19 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
 static
 CORBA::Boolean
 getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info) {
+  giopStrand& d = (giopStrand&)(info.giop_s);
   GIOP::Version ver = info.giop_s.version();
 
   if (ver.minor < 1) {
     // Code set service context is only defined from  GIOP 1.1 onwards
-    info.giop_s.TCS_C(omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver));
-    info.giop_s.TCS_W(0);
+    if (!d.tcs_selected) {
+      d.tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
+      d.tcs_w = 0;
+    }
+    info.giop_s.TCS_C(d.tcs_c);
+    info.giop_s.TCS_W(d.tcs_w);
     return 1;
   }
-
-  giopStrand& d = (giopStrand&)(info.giop_s);
 
   omniCodeSet::TCS_C* tcs_c = d.tcs_c;
   omniCodeSet::TCS_W* tcs_w = d.tcs_w;
