@@ -67,7 +67,7 @@ long i00afunc ();
 #define ADDRESS_FUNCTION(arg) &(arg)
 #endif
 
-#if __STDC__
+#if defined(__STDC__) || defined(__DMC__)
 typedef void *pointer;
 #else
 typedef char *pointer;

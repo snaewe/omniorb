@@ -946,6 +946,14 @@ omni_thread::release_dummy()
 }
 
 
+#if defined(__DMC__) && defined(_WINDLL)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  return TRUE;
+}
+#endif
+
+
 #define INSIDE_THREAD_IMPL_CC
 #include "threaddata.cc"
 #undef INSIDE_THREAD_IMPL_CC

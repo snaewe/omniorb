@@ -1,3 +1,31 @@
+Thu Jan 16 10:59:20 GMT 2003 dgrisby
+====================================
+
+- Patches to support Digital Mars C++. Thanks Christof Meerwald.
+
+config/config.mk
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/dynAny.h
+include/omniORB4/linkHacks.h
+include/omniORB4/internal/objectTable.h
+mk/platforms/x86_win32_dmc.mk          	 -- new
+readmes/README.dmc                     	 -- new
+src/appl/omniNames/log.cc
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/codesets/omniCodeSets.cc
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynAnyNil.cc
+src/lib/omniORB/dynamic/dynamicLib.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omnithread/nt.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlutil.cc
+src/tool/omniidl/cxx/cccp/alloca.c
+
+
 Tue Jan 14 14:11:52 GMT 2003 dgrisby
 ====================================
 

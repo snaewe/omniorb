@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.20  2003/01/16 11:08:26  dgrisby
+ Patches to support Digital Mars C++. Thanks Christof Meerwald.
+
  Revision 1.2.2.19  2002/02/18 11:59:12  dpg1
  Full autoconf support.
 
@@ -196,6 +199,15 @@
 // Disable warnings about a member function in a derived class overriding
 // a member function in the base class.
 #  pragma warning(disable: 4250)
+
+#elif defined(__DMC__)
+#  define NEED_DUMMY_RETURN
+
+#  ifdef _WINSTATIC
+#    define _OMNIORB_NTDLL_IMPORT
+#  else
+#    define _OMNIORB_NTDLL_IMPORT  __declspec(dllimport)
+#  endif
 
 #else
 

@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2003/01/16 11:08:26  dgrisby
+  Patches to support Digital Mars C++. Thanks Christof Meerwald.
+
   Revision 1.1.2.5  2002/11/06 11:58:28  dgrisby
   Partial AIX patches.
 
@@ -202,6 +205,23 @@
 #  define _CORBA_LONGLONG_DECL   __int64
 #  define _CORBA_ULONGLONG_DECL  unsigned __int64
 #  define _CORBA_LONGLONG_CONST(x) (x)
+
+#elif defined(__DMC__)
+//  Digital Mars C++
+#  define HAS_Cplusplus_Bool
+#  define HAS_Cplusplus_Namespace
+#  define HAS_Std_Namespace
+
+#  define HAVE_STRTOULL
+
+#  define HAS_LongDouble
+#  define HAS_LongLong
+#  define _CORBA_LONGDOUBLE_DECL long double
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
+
+#  define OMNI_REQUIRES_FQ_BASE_CTOR
 
 #elif defined(__BCPLUSPLUS__)
 #  define HAS_Cplusplus_Namespace

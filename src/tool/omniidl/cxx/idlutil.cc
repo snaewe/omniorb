@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.7  2003/01/16 11:08:27  dgrisby
+// Patches to support Digital Mars C++. Thanks Christof Meerwald.
+//
 // Revision 1.5.2.6  2002/01/15 16:38:14  dpg1
 // On the road to autoconf. Dependencies refactored, configure.ac
 // written. No makefiles yet.
@@ -134,7 +137,7 @@ int strcasecmp(const char* s1, const char* s2)
 
 #ifdef HAS_LongLong
 
-#  if defined(__WIN32__)
+#  if defined(_MSC_VER)
 
 IdlIntLiteral
 idl_strtoul(const char* text, int base)

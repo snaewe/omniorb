@@ -50,7 +50,7 @@ ifdef UnixPlatform
 endif
 
 ifdef Win32Platform
-  DIR_CPPFLAGS += -D "NTArchitecture" 
+  DIR_CPPFLAGS += -D"NTArchitecture" 
   EXTRA_LIBS    = $(SOCKET_LIB) advapi32.lib
   MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
   MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC

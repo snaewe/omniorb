@@ -35,7 +35,7 @@
 
 
 #define OMNI_EXPORT_LINK_FORCE_SYMBOL(modname) \
-  int _omni_ ## modname ## _should_be_linked_but_is_not_
+  int _omni_ ## modname ## _should_be_linked_but_is_not_ = 0
 
 
 #define OMNI_FORCE_LINK(modname) \

@@ -70,6 +70,9 @@
 #elif defined(__GNUG__) && __GNUG__ >= 3
 #  define USE_STREAM_OPEN
 #  define OPEN(name,mode,perm) open(name,mode)
+#elif defined(__DMC__)
+#  define USE_STREAM_OPEN
+#  define OPEN(name,mode,perm) open(name,mode,perm)
 #endif
 
 #ifndef HAVE_STRDUP

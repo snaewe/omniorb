@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.13  2003/01/16 11:08:26  dgrisby
+  Patches to support Digital Mars C++. Thanks Christof Meerwald.
+
   Revision 1.2.2.12  2002/10/14 20:07:11  dgrisby
   Per objref / per thread timeouts.
 
@@ -167,3 +170,11 @@ CORBA::ULong
 omniORB::giopMaxMsgSize() {
   return orbParameters::giopMaxMsgSize;
 }
+
+
+#if defined(__DMC__) && defined(_WINDLL)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  return TRUE;
+}
+#endif

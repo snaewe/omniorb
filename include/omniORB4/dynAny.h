@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2003/01/16 11:08:26  dgrisby
+  Patches to support Digital Mars C++. Thanks Christof Meerwald.
+
   Revision 1.1.2.1  2001/10/17 16:44:01  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -54,6 +57,12 @@ _CORBA_MODULE_BEG
     static _CORBA_Boolean is_nil(_ptr_type);
     static void release(_ptr_type);
     static void duplicate(_ptr_type);
+
+#ifdef __DMC__
+    // Digital Mars C++ tries to instantiate a template that needs these
+    static inline void marshalObjRef(_ptr_type, cdrStream &) { }
+    static inline _ptr_type unmarshalObjRef(cdrStream &) { return _nil(); }
+#endif
   };
 
   class DynAny : public CORBA::Object {
@@ -299,6 +308,12 @@ _CORBA_MODULE_BEG
     typedef _CORBA_ConstrType_Variable_Var<NameValuePair> _var_type;
     CORBA::String_member id;
     CORBA::Any value;
+
+#ifdef __DMC__
+    // Digital Mars C++ tries to instantiate a template that needs these
+    inline void operator >>= (cdrStream &) const { }
+    inline void operator <<= (const cdrStream &) { }
+#endif
   };
 
   typedef NameValuePair::_var_type NameValuePair_var;
@@ -417,6 +432,12 @@ _CORBA_MODULE_BEG
     typedef _CORBA_ConstrType_Variable_Var<NameDynAnyPair> _var_type;
     CORBA::String_member id;
     DynAny_member value;
+
+#ifdef __DMC__
+    // Digital Mars C++ tries to instantiate a template that needs these
+    inline void operator >>= (cdrStream &) const { }
+    inline void operator <<= (const cdrStream &) { }
+#endif
   };
 
   typedef NameDynAnyPair::_var_type NameDynAnyPair_var;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2003/01/16 11:08:26  dgrisby
+  Patches to support Digital Mars C++. Thanks Christof Meerwald.
+
   Revision 1.1.2.2  2001/08/22 13:31:31  dpg1
   Christof's fixes for gcc 3.0.1.
 
@@ -70,6 +73,8 @@ public:
 
     ALL_STATES    = 15
   };
+
+  static void* thisClassCompare(omniIdentity*, void*);
 
   ~omniObjTableEntry();
 
@@ -177,8 +182,6 @@ public:
   // List of objrefs with references to this id.
   //  Must hold <omni::internalLock>
 
-
-  static void* thisClassCompare(omniIdentity*, void*);
 
   static inline omniObjTableEntry* downcast(omniIdentity* id)
   {

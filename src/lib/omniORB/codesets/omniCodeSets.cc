@@ -41,3 +41,13 @@ OMNI_FORCE_LINK(CS_CP1251);
 OMNI_FORCE_LINK(CS_UCS_4);
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(omniCodeSets);
+
+
+#if defined(__DMC__) && defined(_WINDLL)
+#  include <windows.h>
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  return TRUE;
+}
+#endif

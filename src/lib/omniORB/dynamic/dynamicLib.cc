@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2003/01/16 11:08:26  dgrisby
+  Patches to support Digital Mars C++. Thanks Christof Meerwald.
+
   Revision 1.2.2.8  2001/11/27 14:35:08  dpg1
   Context, DII fixes.
 
@@ -117,3 +120,11 @@ lookup_id_lcfn(omniCallDescriptor* cd, omniServant* svnt)
 }
 
 OMNI_NAMESPACE_END(omni)
+
+
+#if defined(__DMC__) && defined(_WINDLL)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  return TRUE;
+}
+#endif

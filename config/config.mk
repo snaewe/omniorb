@@ -14,6 +14,7 @@
 #  x86_nt_3.5                x86 Windows NT 3.5, MS VC++ 5.0
 #  x86_nt_4.0                x86 Windows NT 4.0, MS VC++ 5.0
 #  x86_win95                 Windows 95, MS VC++ 5.0
+#  x86_win32_dmc             x86 Win32, Digital Mars C++ (>= 8.32.14)
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
 #  alpha_osf1_3.2            Digital Unix 3.2, DEC C++ v5.5
 #  alpha_osf1_4.0            Digital Unix 4.0, DEC C++ v6.0
@@ -54,6 +55,7 @@
 #platform = x86_nt_3.5
 #platform = x86_nt_4.0
 #platform = x86_win95
+#platform = x86_win32_dmc
 #platform = alpha_nt_4.0
 #platform = alpha_osf1_3.2
 #platform = alpha_osf1_4.0

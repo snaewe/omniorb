@@ -36,6 +36,18 @@
 
 #include <dynAnyImpl.h>
 
+// *** DMC requires inheritance to be the opposite way around to that
+// used in previous omniORB releases. For a micro release, the order
+// must stay the same, for binary compatibility, hence this
+// ugliness...
+
+#ifndef __DMC__
+#  define NILINHERITANCE(x) public DynamicAny::x, public omniNilDynAny
+#else
+#  define NILINHERITANCE(x) public omniNilDynAny, public DynamicAny::x
+#endif
+
+
 OMNI_USING_NAMESPACE(omni)
 
 
@@ -381,7 +393,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////// omniNilDynFixed //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynFixed : public DynamicAny::DynFixed, public omniNilDynAny {
+class omniNilDynFixed : NILINHERITANCE(DynFixed) {
 public:
   omniNilDynFixed() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
@@ -430,7 +442,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////// omniNilDynEnum ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynEnum : public DynamicAny::DynEnum, public omniNilDynAny {
+class omniNilDynEnum : NILINHERITANCE(DynEnum) {
 public:
   omniNilDynEnum() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
@@ -485,7 +497,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 ////////////////////////// omniNilDynStruct //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynStruct : public DynamicAny::DynStruct, public omniNilDynAny {
+class omniNilDynStruct : NILINHERITANCE(DynStruct) {
 public:
   omniNilDynStruct() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
@@ -548,7 +560,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////// omniNilDynUnion //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynUnion : public DynamicAny::DynUnion, public omniNilDynAny {
+class omniNilDynUnion : NILINHERITANCE(DynUnion) {
 public:
   omniNilDynUnion() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
@@ -626,7 +638,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 ///////////////////////// omniNilDynSequence /////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynSequence : public DynamicAny::DynSequence, public omniNilDynAny {
+class omniNilDynSequence : NILINHERITANCE(DynSequence) {
 public:
   omniNilDynSequence() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 
@@ -688,7 +700,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////// omniNilDynArray //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynArray : public DynamicAny::DynArray, public omniNilDynAny {
+class omniNilDynArray : NILINHERITANCE(DynArray) {
 public:
   omniNilDynArray() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
 

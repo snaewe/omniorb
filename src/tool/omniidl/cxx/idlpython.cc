@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.17.2.15  2003/01/16 11:08:27  dgrisby
+// Patches to support Digital Mars C++. Thanks Christof Meerwald.
+//
 // Revision 1.17.2.14  2002/10/28 11:56:50  dgrisby
 // Work around VC++ 7 problem with FILE* change.
 //
@@ -1566,7 +1569,7 @@ extern "C" {
   static PyObject* IdlPyAlwaysTempFile(PyObject* self, PyObject* args)
   {
     if (!PyArg_ParseTuple(args, (char*)"")) return 0;
-#if defined (_MSC_VER) && _MSC_VER > 1200
+#if defined (_MSC_VER) && _MSC_VER > 1200 || defined(__DMC__)
     return PyInt_FromLong(1);
 #else
     return PyInt_FromLong(0);
