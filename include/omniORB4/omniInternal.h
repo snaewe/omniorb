@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2000/11/15 17:03:38  sll
+  Added include codeSets.h.
+
   Revision 1.2.2.4  2000/11/03 18:58:47  sll
   Unbounded sequence of octet got a new type name.
 
@@ -383,6 +386,7 @@ public:
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+#include <omniORB4/codeSets.h>
 #include <omniORB4/cdrStream.h>
 #include <omniORB4/seqTemplatedefns.h>
 #include <omniORB4/giopStream.h>
