@@ -2108,6 +2108,10 @@ parameter_list
 	{
 	  idl_global->set_parse_state(IDL_GlobalData::PS_OpQsSeen);
         }
+        | error
+        {
+           idl_global->err()->syntax_error(idl_global->parse_state());
+        }
 	;
 
 at_least_one_parameter : parameter parameters ;
