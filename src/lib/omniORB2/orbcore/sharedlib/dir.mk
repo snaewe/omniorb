@@ -119,7 +119,7 @@ lib = $(patsubst %.lib,%.dll,$(implib))
 libname = $(patsubst %.dll,%,$(lib))
 
 # Extra libraries required by NT
-NT_EXTRA_LIBS = wsock32.lib advapi32.lib
+NT_EXTRA_LIBS = ws2_32.lib advapi32.lib
 endif
 
 #############################################################################
