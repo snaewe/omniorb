@@ -13,6 +13,7 @@ include/omniORB4/CORBA_primitive_types.h
 include/omniORB4/CORBA_sysdep.h
 include/omniORB4/stringtypes.h
 include/omniORB4/wstringtypes.h
+src/examples/echo/echo.idl         -- deleted
 src/examples/lifecycle/OBSOLETE    -- deleted
 src/lib/omniORB/dynamic/context.cc
 src/lib/omniORB/dynamic/contextList.cc
