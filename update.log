@@ -1,3 +1,11 @@
+Tue Apr  3 19:22:34 BST 2001 djs
+================================
+
+- Fixed bug caused by the unexpected interaction between two previous
+  omniidl/C++ fixes. 
+
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+
 
 Tue Mar 27 17:56:31 BST 2001 djr
 ================================
