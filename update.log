@@ -1,3 +1,24 @@
+Thu Sep 21 17:31:34 BST 2000 djs
+================================
+
+- Activated Poller generating code in omniidl
+
+src/lib/omniORB2/omniidl_be/cxx/ami/ami.py
+src/lib/omniORB2/omniidl_be/cxx/ami/hooks.py
+src/lib/omniORB2/omniidl_be/cxx/ami/objref.py
+src/lib/omniORB2/omniidl_be/cxx/ami/poller.py
+
+- Added a polling example
+src/examples/ami/echo/echo_poller.cc                    (NEW)
+src/examples/ami/echo/dir.mk
+
+- Minor modifications
+
+src/examples/ami/echo/echo.cc
+src/lib/omniORB2/omniidl_be/cxx/ast.py
+src/lib/omniORB2/orbcore/omniAMI.cc
+
+
 Wed Sep 20 14:20:14 BST 2000 djs
 ================================
 
