@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/11/15 17:05:17  sll
+  Consolated GIOP related states of a strand into a giopStreamInfo structure.
+
   Revision 1.2.2.2  2000/09/27 17:01:06  sll
   Updated to use the new cdrStream abstraction.
   Removed Sync class.
@@ -122,6 +125,7 @@ class cdrStream;
 class Strand_iterator;
 class Rope_iterator;
 class giopStream;
+class giopStreamInfo;
 
 class Strand {
 public:
@@ -448,6 +452,7 @@ protected:
   void _setStrandIsDying() { pd_dying = 1; return; }
 
   friend class giopStream;
+  friend class giopStreamInfo;
   friend class Strand_iterator;
   friend class Rope;
   friend class Rope_iterator;
@@ -459,7 +464,7 @@ private:
   omni_condition  pd_wrcond;
   int             pd_wr_nwaiting;
 
-  giopStream     *pd_head;
+  giopStreamInfo *pd_giop_info;
   Strand         *pd_next;
   Rope           *pd_rope;
   _CORBA_Boolean  pd_dying;
@@ -468,8 +473,6 @@ private:
 
   _CORBA_Boolean  pd_reuse;
 
-  GIOP::Version   pd_giop_version;
-  _CORBA_Boolean  pd_giop_biDir;
 
   int             pd_clicks;
   void setClicks(int c) { pd_clicks = c; }
