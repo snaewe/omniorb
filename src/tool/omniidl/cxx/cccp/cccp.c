@@ -308,7 +308,9 @@ extern char *version_string;
 extern int sys_nerr;
 extern char *sys_errlist[];
 #else	/* HAVE_STRERROR */
+#ifndef DONT_DECLARE_STRERROR
 char *strerror ();
+#endif
 #endif
 #else	/* VMS */
 char *strerror (int,...);

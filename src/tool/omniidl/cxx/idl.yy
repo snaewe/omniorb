@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6  1999/11/04 17:16:55  dpg1
+// Changes for NT.
+//
 // Revision 1.5  1999/11/03 17:24:05  dpg1
 // Added optional pragmas all over the place.
 //
@@ -46,6 +49,7 @@
 
 %{
 
+#include <stdlib.h>
 #include <string.h>
 
 #include <idlutil.h>

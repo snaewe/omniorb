@@ -12,7 +12,7 @@
 #include <string.h>
 
 
-char *index( char *s, char c )
+char *index( char *s, int c )
 {
   if( s != NULL ) {
     while( *s != '\0' && *s != c ) s++;
@@ -24,7 +24,7 @@ char *index( char *s, char c )
 }
 
 
-char *rindex( char *s, char c )
+char *rindex( char *s, int c )
 {
   char *ss;
 

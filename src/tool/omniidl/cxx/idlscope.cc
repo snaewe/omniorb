@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7  1999/11/04 17:16:55  dpg1
+// Changes for NT.
+//
 // Revision 1.6  1999/11/02 17:07:25  dpg1
 // Changes to compile on Solaris.
 //
@@ -51,6 +54,7 @@
 #include <idlscope.h>
 #include <idlast.h>
 #include <idlerr.h>
+#include <idlutil.h>
 
 #include <string.h>
 

@@ -28,20 +28,18 @@ BISON = bison -d -o y.tab.c
 
 idlc = $(patsubst %,$(BinPattern),idlc)
 
-CXXDEBUGFLAGS = -g
+# y.tab.h y.tab.cc: $(YYSRC)
+# 	@-$(RM) $@
+# 	$(BISON) $<
+# 	mv -f y.tab.c y.tab.cc
 
-all:: $(idlc)
-
-$(idlc): $(OBJS) idlc.o
-	@($(CXXExecutable))
-
-y.tab.h y.tab.cc: $(YYSRC)
-	@-$(RM) $@
-	$(BISON) $<
-	mv -f y.tab.c y.tab.cc
-
-lex.yy.cc: $(LLSRC) y.tab.h
-	$(FLEX) $< > $@
+# lex.yy.cc: $(LLSRC) y.tab.h
+# 	$(FLEX) $< | sed -e 's/^#include <unistd.h>//' > $@
+# 	echo '#ifdef __VMS' >> $@
+# 	echo '// Some versions of DEC C++ for OpenVMS set the module name used by the' >> $@
+# 	echo '// librarian based on the last #line encountered.' >> $@
+# 	echo '#line' `cat $@ | wc -l` '"lex_yy.cc"' >> $@
+# 	echo '#endif' >> $@
 
 
 #############################################################################
@@ -50,6 +48,7 @@ lex.yy.cc: $(LLSRC) y.tab.h
 
 ifdef UnixPlatform
 CXXDEBUGFLAGS = -g
+DIR_CPPFLAGS += -I/usr/local/include/python1.5 -I/usr/include/python1.5
 endif
 
 
@@ -125,3 +124,44 @@ export:: $(lib)
           ln -s $(soname) $(libname); \
          )
 endif
+
+
+
+#############################################################################
+#   Make rules for Windows                                                  #
+#############################################################################
+
+ifdef Win32Platform
+
+DIR_CPPFLAGS += -DMSDOS -DNO_STRCASECMP -DYY_NEVER_INTERACTIVE
+
+DIR_CPPFLAGS += -I"c:\progra~1/Python/include"
+PYLIBPATH = -libpath:"c:\progra~1\Python\libs"
+
+implib = _omniidl.lib
+lib = $(patsubst %.lib,%.pyd,$(implib))
+
+all:: $(lib)
+
+$(lib): $(OBJS) $(PYOBJS)
+	(set -x; \
+	 $(RM) $@; \
+	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $(PYOBJS) $$libs; \
+	)
+
+export:: $(lib)
+	@$(ExportLibrary)
+
+
+endif
+
+
+
+#############################################################################
+#   Test executable                                                         #
+#############################################################################
+
+all:: $(idlc)
+
+$(idlc): $(OBJS) idlc.o
+	@($(CXXExecutable))

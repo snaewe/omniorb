@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4  1999/11/04 17:16:54  dpg1
+// Changes for NT.
+//
 // Revision 1.3  1999/11/02 17:07:24  dpg1
 // Changes to compile on Solaris.
 //
@@ -81,6 +84,7 @@ kindAsString() const
   case tk_abstract_interface: return "abstract interface";
   }
   assert(0);
+  return ""; // To keep MSVC happy
 }
 
 IdlType*
