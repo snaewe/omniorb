@@ -11,6 +11,10 @@
 
 /*
   $Log$
+  Revision 1.4  1997/04/23 11:20:47  sll
+  - fetch() now takes an argument (default to 0) to optionally specify
+    the maximum number of bytes to fetch.
+
   Revision 1.3  1997/01/23 16:55:41  sll
   New static member variable has_spawned_rendevous_threads.
 
@@ -178,7 +182,10 @@ public:
 private:
 
   void transmit();
-  void fetch();
+  void fetch(CORBA::ULong max=0);
+  // fetch data from the network to the internal buffer.
+  // If <max>=0, fetch as much as possible, otherwise fetch at most <max>
+  // bytes.
 
   tcpSocketHandle_t pd_socket;
   void    *pd_tx_buffer;
