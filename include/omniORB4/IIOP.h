@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2000/11/15 17:01:59  sll
+  Default ProfileBody ctor set components max to 2.
+
   Revision 1.2.2.3  2000/10/04 16:50:06  sll
   Updated header comment.
 
@@ -99,6 +102,8 @@ public:
     Address                 address;
     _CORBA_Unbounded_Sequence_Octet  object_key;
     IOP::MultipleComponentProfile    components;
+
+    ProfileBody() : components(2) {}
   };
 
   static _core_attr const _CORBA_UShort DEFAULT_CORBALOC_PORT;
