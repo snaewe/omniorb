@@ -6,7 +6,7 @@
 #           veryclean - do a veryclean in all subdirectories
 #
 #
-SUBDIRS = implicit_activation
+SUBDIRS = implicit_activation persistent_objref
 
 TOP = ..\..
 

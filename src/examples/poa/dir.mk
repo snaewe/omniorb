@@ -1,4 +1,4 @@
-SUBDIRS = implicit_activation
+SUBDIRS = implicit_activation persistent_objref
 
 
 all::
