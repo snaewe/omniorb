@@ -26,6 +26,9 @@
 
 /* 
    $Log$
+   Revision 1.15  1999/06/02 16:44:01  sll
+   Added support for -F flag.
+
    Revision 1.14  1999/03/11 16:26:11  djr
    Updated copyright notice
 
@@ -89,7 +92,8 @@ o2be_module::produce_hdr(std::fstream &s)
   if (!(in_main_file()))
     return;
 
-  if (defined_in() != 0)
+  if (defined_in() != 0 &&
+      !(idl_global->compile_flags() & IDL_BE_GENERATE_FRAGMENT))
     {
       s << "\n";
       IND(s); s << "_CORBA_MODULE " << uqname() << "\n\n";
@@ -143,7 +147,8 @@ o2be_module::produce_hdr(std::fstream &s)
       i.next();
     }
 
-  if (defined_in() != 0)
+  if (defined_in() != 0 &&
+      !(idl_global->compile_flags() & IDL_BE_GENERATE_FRAGMENT))
     {
       DEC_INDENT_LEVEL();
       s << "\n";

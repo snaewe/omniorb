@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.24  1999/06/02 16:43:42  sll
+ Added support for -F flag.
+
  Revision 1.23  1999/05/26 10:09:36  sll
  New class o2be_nested_typedef to deal with recursive generation of stub
  code for nested types in struct, union and exception.
@@ -1242,14 +1245,17 @@ public:
 
 private:
   o2be_root();
-
+  std::fstream hdr;
+  std::fstream hdr_defs;
+  std::fstream hdr_opers;
+  std::fstream skel;
+  std::fstream dynskel;
   char* basename;
   int   baselen;
-  std::fstream pd_hdr;
-  std::fstream pd_skel;
-  std::fstream pd_dynskel;
 
   void produce_hdr(std::fstream& s);
+  void produce_hdr_defs(std::fstream& s);
+  void produce_hdr_operators(std::fstream& s);
   void produce_skel(std::fstream& s);
   void produce_dynskel(std::fstream& s);
 };
@@ -1267,18 +1273,10 @@ private:
   static char*      pd_skelsuffix;
   static char*      pd_dynskelsuffix;
   static size_t     pd_suffixlen;
-  static int        pd_aflag;      // generate stub for 'any' type
-  static int        pd_fflag;      // generate stub for float and double
   static int        pd_qflag;      // always use fully qualified name
   static int        pd_mflag;      // generate stub to work around MSVC bugs
 
 public:
-  static void set_aflag(int f) { pd_aflag = f; }
-  static int aflag() { return pd_aflag; }
-
-  static void set_fflag(int f) { pd_fflag = f; }
-  static int fflag() { return pd_fflag; }
-
   static void set_qflag(int f) { pd_qflag = f; }
   static int qflag() { return pd_qflag; }
 
