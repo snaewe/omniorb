@@ -815,9 +815,20 @@ UTL_Scope::look_in_inherited(UTL_ScopedName *e, idl_bool treat_as_ref)
    */
   for (nis = i->n_inherits(), is = i->inherits(); nis > 0; nis--, is++) {
     d = (*is)->lookup_by_name_local(e->head(),treat_as_ref);
-    if (d && e->tail()) d = iter_lookup_by_name_local(d,e,treat_as_ref);
-    if (d != NULL)
-      return d;
+
+    if (d) {
+      // Found first naming component in this inherited interface
+      if (e->tail()) {
+	// More name components to go
+	d = iter_lookup_by_name_local(d,e,treat_as_ref);
+      }
+      if (d) return d;
+    }
+    else {
+      // Not found in this interface. How about ones it inherits from?
+      d = (*is)->look_in_inherited(e, treat_as_ref);
+      if (d) return d;
+    }
   }
   /*
    * Not found
