@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.27  1998/08/21 19:26:48  sll
+ New private function _omni_set_NameService.
+
  Revision 1.26  1998/08/19 15:59:00  sll
  All <<= and >>= operators are now defined in the global namespace.
  In particular, the operator>>= and <<= for DefinitionKind have been
@@ -2743,6 +2746,9 @@ extern CORBA::Boolean _omni_callCommFailureExceptionHandler(omniObject*,
 extern CORBA::Boolean _omni_callSystemExceptionHandler(omniObject*,
 					     CORBA::ULong,
 					     const CORBA::SystemException&);
+
+
+extern void _omni_set_NameService(CORBA::Object_ptr);
 
 // Include the COSS Naming Service header:
 #ifndef __CORBA_H_EXTERNAL_GUARD__
