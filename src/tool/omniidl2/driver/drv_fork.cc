@@ -137,7 +137,7 @@ DRV_fork()
   for (DRV_file_index = 0; DRV_file_index < DRV_nfiles; DRV_file_index++) {
     if ((child_pid = fork()) != 0) {
       if (child_pid == -1) {
-	cerr << GTDEVEL("IDL: fork failed\n");
+	std::cerr << GTDEVEL("IDL: fork failed\n");
 	exit(99);
       }
 
