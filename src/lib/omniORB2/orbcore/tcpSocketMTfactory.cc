@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.19  1999/06/26 18:10:52  sll
+  Use WSAGetLastError() on win32 to get the errno correctly.
+
   Revision 1.18  1999/05/31 14:03:06  sll
   Remove set_terminate workaround when compiled with SUN C++ 5.0.
 
@@ -360,7 +363,11 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
   // ignored.
 
   if ((pd_rendezvous = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
+#ifndef __WIN32__
     throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+    throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
   }
   myaddr.sin_family = INETSOCKET;
   myaddr.sin_addr.s_addr = INADDR_ANY;
@@ -372,7 +379,11 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 		   SO_REUSEADDR,(char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR)
       {
 	CLOSESOCKET(pd_rendezvous);
+#ifndef __WIN32__
 	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
       }
   }
 
@@ -380,13 +391,21 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 	   sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) 
   {
     CLOSESOCKET(pd_rendezvous);
+#ifndef __WIN32__
     throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+    throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
   }
 
   // Make it a passive socket
   if (listen(pd_rendezvous,5) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_rendezvous);
+#ifndef __WIN32__
     throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+    throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
   }
   
   {
@@ -406,7 +425,11 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
     if (getsockname(pd_rendezvous,
 		    (struct sockaddr *)&myaddr,&l) == RC_SOCKET_ERROR) {
       CLOSESOCKET(pd_rendezvous);
+#ifndef __WIN32__
       throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+      throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
     }
 
     e->port(ntohs(myaddr.sin_port));
@@ -700,7 +723,11 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
     //
     if ((pd_socket = realConnect(pd_delay_connect)) == RC_INVALID_SOCKET) {
       _setStrandIsDying();
+#ifndef __WIN32__
       throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+      throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
     }
     delete pd_delay_connect;
     pd_delay_connect = 0;
@@ -714,13 +741,21 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
       else
 	{
 	  _setStrandIsDying();
-	  throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_MAYBE);
+#ifndef __WIN32__
+	  throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+	  throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
 	}
     }
     else
       if (rx == 0) {
 	_setStrandIsDying();
-	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+#ifndef __WIN32__
+	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
       }
     break;
   }
@@ -736,7 +771,11 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
     //
     if ((pd_socket = realConnect(pd_delay_connect)) == RC_INVALID_SOCKET) {
       _setStrandIsDying();
+#ifndef __WIN32__
       throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+      throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
     }
     delete pd_delay_connect;
     pd_delay_connect = 0;
@@ -746,17 +785,30 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
   char *p = (char *)buf;
   while (sz) {
     if ((tx = ::send(pd_socket,p,sz,0)) == RC_SOCKET_ERROR) {
+#ifndef __WIN32__
       if (errno == EINTR)
 	continue;
       else {
 	_setStrandIsDying();
-	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_MAYBE);
+	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
       }
+#else
+      if (::WSAGetLastError() == WSAEINTR)
+ 	continue;
+      else {
+ 	_setStrandIsDying();
+	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_MAYBE);
+      }
+#endif
     }
     else
       if (tx == 0) {
 	_setStrandIsDying();
-	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+#ifndef __WIN32__
+	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
       }
     sz -= tx;
     p += tx;
@@ -967,7 +1019,11 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
       if ((new_sock = ::accept(r->pd_rendezvous,(struct sockaddr *)&raddr,&l)) 
 	                          == RC_INVALID_SOCKET) {
+#ifndef __WIN32__
 	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
       }
 
       if (omniORB::traceLevel >= 15) {
@@ -1082,9 +1138,15 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       struct timeval t = { 1,0};
       int rc;
       if ((rc = select(r->pd_rendezvous+1,&rdfds,0,0,&t)) <= 0) {
+#ifndef __WIN32__
 	if (rc < 0 && errno != EINTR) {
 	  die = 1;
 	}
+#else
+ 	if (rc < 0 && ::WSAGetLastError() != WSAEINTR) {
+	  die = 1;
+	}
+#endif
 	if (omniORB::traceLevel >= 15) {
 	  omniORB::log << "tcpSocketMT Rendezvouser thread: waiting on shutdown state to change to NO_THREAD.\n";
 	  omniORB::log.flush();
