@@ -40,10 +40,6 @@ endif
 # 
 VERSION = $(OMNIORB_VERSION)
 
-major_version = $(word 1,$(subst ., ,$(VERSION)))
-minor_version = $(word 2,$(subst ., ,$(VERSION)))
-micro_version = 0
-
 COS_SKLIB_NAME    = COS
 COS_DYNSKLIB_NAME = COSDynamic
 
@@ -62,44 +58,33 @@ ifdef ELF_SHARED_LIBRARY
 
 DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
 
-sklibname = lib$(COS_SKLIB_NAME)$(major_version)$(SHAREDLIB_SUFFIX)
-sksoname  = $(sklibname).$(minor_version)
-sklib = $(sksoname).$(micro_version)
+SharedLibraryNameSpec := $(COS_SKLIB_NAME).$(VERSION)
+skfullname := $(SharedLibraryFullName)
+sksoname    := $(SharedLibrarySoName)
+skname     := $(SharedLibraryName)
 
-dynsklibname = lib$(COS_DYNSKLIB_NAME)$(major_version)$(SHAREDLIB_SUFFIX)
-dynsksoname  = $(dynsklibname).$(minor_version)
-dynsklib = $(dynsksoname).$(micro_version)
+SharedLibraryNameSpec := $(COS_DYNSKLIB_NAME).$(VERSION)
+dynskfullname := $(SharedLibraryFullName)
+dynsksoname    := $(SharedLibrarySoName)
+dynskname     := $(SharedLibraryName)
 
+all:: $(skfullname) $(dynskfullname)
 
-ifdef AIX
-
-sklibname = lib$(COS_SKLIB_NAME)$(major_version)$(minor_version)$(SHAREDLIB_SUFFIX)
-sksoname  = lib$(COS_SKLIB_NAME)$(major_version).so.$(minor_version).$(micro_version)
-sklib = $(sklibname).$(micro_version)
-
-dynsklibname = lib$(COS_DYNSKLIB_NAME)$(major_version)$(minor_version)$(SHAREDLIB_SUFFIX)
-dynsksoname  = lib$(COS_DYNSKLIB_NAME)$(major_version).so.$(minor_version).$(micro_version)
-dynsklib = $(dynsklibname).$(micro_version)
-
-endif
-
-all:: $(sklib) $(dynsklib)
-
-$(sklib): $(COS_SK_OBJS)
-	(soname=$(sksoname) libname=$(sklibname) \
+$(skfullname): $(COS_SK_OBJS)
+	(soname=$(sksoname) libname=$(skname) \
          extralibs="$(OMNIORB_LIB_NODYN)"; \
          $(MakeCXXSharedLibrary))
 
-$(dynsklib): $(COS_DYNSK_OBJS)
-	(soname=$(dynsksoname) libname=$(sklibname) \
+$(dynskfullname): $(COS_DYNSK_OBJS)
+	(soname=$(dynsksoname) libname=$(dynskname) \
          extralibs="$(OMNIORB_LIB)"; \
          $(MakeCXXSharedLibrary))
 
-export:: $(sklib)
-	@(soname=$(sksoname) libname=$(sklibname); $(ExportSharedLibrary))
+export:: $(skfullname)
+	@(soname=$(sksoname) libname=$(skname); $(ExportSharedLibrary))
 
-export:: $(dynsklib)
-	@(soname=$(dynsksoname) libname=$(dynsklibname);$(ExportSharedLibrary))
+export:: $(dynskfullname)
+	@(soname=$(dynsksoname) libname=$(dynskname);$(ExportSharedLibrary))
 
 clean::
 	$(RM) $(sklib) $(dynsklib)

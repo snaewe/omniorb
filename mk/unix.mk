@@ -234,3 +234,25 @@ define TclScriptExecutable
  chmod a+x $@; \
 )
 endef
+
+
+# Shared library support stuff
+#
+# Default setup. Work for most platforms. For those exceptions, override
+# the rules in their platform files.
+#
+SHAREDLIB_SUFFIX = so
+SharedLibraryFullName = $(shell fn() {\
+                                  echo lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4; \
+                                 }; \
+                                fn $(subst ., ,$(SharedLibraryNameSpec)))
+
+SharedLibrarySoName = $(shell fn() {\
+                                 echo lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3; \
+                              }; \
+                              fn $(subst ., ,$(SharedLibraryNameSpec)))
+
+SharedLibraryName = $(shell fn() {\
+                                echo lib$$1$$2.$(SHAREDLIB_SUFFIX); \
+                            }; \
+                            fn $(subst ., ,$(SharedLibraryNameSpec)))

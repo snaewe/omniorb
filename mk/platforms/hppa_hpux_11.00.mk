@@ -173,7 +173,7 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 #       libname = shared library name (e.g. libfoo.so)
 #      
 
-SHAREDLIB_SUFFIX   = .sl
+SHAREDLIB_SUFFIX   = sl
 
 ifeq ($(notdir $(CXX)),aCC)
 

@@ -1,3 +1,30 @@
+Tue Aug  1 18:15:25 BST 2000 sll
+================================
+
+- Make shared library rules updates. 
+  Now a single set of rules in dir.mk applies to all unix platforms that
+  can build shared libraries.
+
+mk/unix.mk
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/i586_linux_2.0_glibc.mk
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/unix.mk
+external_merge/mk/platforms/hppa_hpux_10.20.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+
+src/services/mklib/mkBOAlib/sharedlib/dir.mk
+src/services/mklib/sharedlib/dir.mk
+
+
 Tue Aug  1 12:21:35 BST 2000 dpg1
 =================================
 

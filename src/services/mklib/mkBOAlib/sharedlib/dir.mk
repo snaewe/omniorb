@@ -42,10 +42,6 @@ endif
 # 
 VERSION = $(OMNIORB_VERSION)
 
-major_version = $(word 1,$(subst ., ,$(VERSION)))
-minor_version = $(word 2,$(subst ., ,$(VERSION)))
-micro_version = 0
-
 COS_SKLIB_NAME    = COS_BOA
 
 COS_SK_OBJS = $(COS_INTERFACES:%=%SK.o)
@@ -60,30 +56,24 @@ ifdef ELF_SHARED_LIBRARY
 
 DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
 
-sklibname = lib$(COS_SKLIB_NAME)$(major_version)$(SHAREDLIB_SUFFIX)
-sksoname  = $(sklibname).$(minor_version)
-sklib = $(sksoname).$(micro_version)
+SharedLibraryNameSpec := $(COS_SKLIB_NAME).$(VERSION)
+skfullname := $(SharedLibraryFullName)
+sksoname    := $(SharedLibrarySoName)
+skname     := $(SharedLibraryName)
 
-ifdef AIX
+all:: $(skfullname)
 
-sklibname = lib$(COS_SKLIB_NAME)$(major_version)$(minor_version)$(SHAREDLIB_SUFFIX)
-sksoname  = lib$(COS_SKLIB_NAME)$(major_version).so.$(minor_version).$(micro_version)
-sklib = $(sklibname).$(micro_version)
-
-endif
-
-all:: $(sklib)
-
-$(sklib): $(COS_SK_OBJS)
-	(soname=$(sksoname) libname=$(sklibname) \
+$(skfullname): $(COS_SK_OBJS)
+	(soname=$(sksoname) libname=$(skname) \
          extralibs="$(OMNIORB_LIB_NODYN)"; \
          $(MakeCXXSharedLibrary))
 
-export:: $(sklib)
-	@(soname=$(sksoname) libname=$(sklibname); $(ExportSharedLibrary))
+export:: $(skfullname)
+	@(soname=$(sksoname) libname=$(skname); $(ExportSharedLibrary))
 
 clean::
 	$(RM) $(sklib)
+
 
 endif
 

@@ -165,7 +165,22 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 #       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
 #       libname = shared library name (e.g. libfoo.so)
 #      
-SHAREDLIB_SUFFIX   = .a
+SHAREDLIB_SUFFIX   = a
+
+SharedLibraryFullName = $(shell fn() {\
+                                  echo lib$$1$$2$$3.$(SHAREDLIB_SUFFIX).$$4; \
+                                 }; \
+                                fn $(subst ., ,$(SharedLibraryNameSpec)))
+
+SharedLibrarySoName = $(shell fn() {\
+                                 echo lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3; \
+                              }; \
+                              fn $(subst ., ,$(SharedLibraryNameSpec)))
+
+SharedLibraryName = $(shell fn() {\
+                                echo lib$$1$$2$$3.$(SHAREDLIB_SUFFIX); \
+                            }; \
+                            fn $(subst ., ,$(SharedLibraryNameSpec)))
 
 ifeq ($(notdir $(CXX)),xlC_r)
 
