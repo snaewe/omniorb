@@ -198,11 +198,11 @@ PortableServer::DynamicImplementation::_dispatch(omniCallHandle& handle)
   switch( sreq.state() ){
   case omniServerRequest::SR_READY:
     if( omniORB::trace(1) ){
-      omniORB::log <<
+      omniORB::logger log;
+      log <<
 	"omniORB: WARNING -- A Dynamic Implementation Routine\n"
 	" (DynamicImplementation::invoke()) failed to call arguments()\n"
 	" on the ServerRequest object. BAD_INV_ORDER is thrown.\n";
-      omniORB::log.flush();
     }
     OMNIORB_THROW(BAD_INV_ORDER,
 		  BAD_INV_ORDER_ArgumentsNotCalled,
@@ -217,11 +217,11 @@ PortableServer::DynamicImplementation::_dispatch(omniCallHandle& handle)
 
   case omniServerRequest::SR_DSI_ERROR:
     if( omniORB::trace(1) ){
-      omniORB::log <<
+      omniORB::logger log;
+      log <<
 	"omniORB: WARNING -- A Dynamic Implementation Routine\n"
 	" (DynamicImplementation::invoke()) did not properly implement\n"
 	" the Dynamic Skeleton Interface.\n";
-      omniORB::log.flush();
     }
     OMNIORB_THROW(BAD_INV_ORDER,
 		  BAD_INV_ORDER_ErrorInDynamicImplementation,
@@ -229,13 +229,13 @@ PortableServer::DynamicImplementation::_dispatch(omniCallHandle& handle)
 
   case omniServerRequest::SR_ERROR:
     if( omniORB::trace(1) ) {
-      omniORB::log <<
+      omniORB::logger log;
+      log <<
 	"omniORB: WARNING -- A system exception was thrown when\n"
 	" unmarshalling arguments for a DSI servant.  However the Dynamic\n"
 	" Implementation Routine (DynamicImplementation::invoke()) did not\n"
 	" propagate the exception or pass it to the server request.\n"
 	" CORBA::MARSHAL is being passed back to the client anyway.\n";
-      omniORB::log.flush();
     }
     OMNIORB_THROW(MARSHAL,
 		  MARSHAL_ExceptionInDSINotPropagated,

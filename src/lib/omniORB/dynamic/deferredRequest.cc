@@ -29,6 +29,7 @@
 //
 
 #include <deferredRequest.h>
+#include <orbParameters.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -64,17 +65,17 @@ DeferredRequest::run_undetached(void* arg)
       pd_request->invoke();
     }
     catch(CORBA::SystemException& ex){
-      if( omniORB::diiThrowsSysExceptions )
+      if( orbParameters::diiThrowsSysExceptions )
 	// Store the exception so that it can be thrown later
 	pd_exception = CORBA::Exception::_duplicate(&ex);
       else{
 	if( omniORB::traceLevel > 0 ){
-	  omniORB::log <<
+	  omniORB::logger log;
+	  log <<
 	    "omniORB: BUG: file <" << __FILE__ << ">, line <" << __LINE__ <<
 	    "\n Request->invoke() raised a system exception.\n"
 	    " omni::diiThrowsSysExceptions = " <<
-	    omniORB::diiThrowsSysExceptions << ".\n";
-	  omniORB::log.flush();
+	    orbParameters::diiThrowsSysExceptions << ".\n";
 	}
       }
     }

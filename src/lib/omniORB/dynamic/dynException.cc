@@ -48,8 +48,9 @@ void operator<<=(CORBA::Any& a, const CORBA::Exception& ex)
     ex.insertToAnyFn()(a,ex);
   }
   else {
-    omniORB::log << "Error: function to insert the user exception into an Any is not available\n";
-    omniORB::log.flush();
+    omniORB::logger log;
+    log << "Error: function to insert the user exception into an Any is not available\n";
+    log.flush();
     OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_NO);
   }
 }
@@ -60,8 +61,9 @@ void operator<<=(CORBA::Any& a, const CORBA::Exception* ex)
     ex->insertToAnyFnNCP()(a,ex);
   }
   else {
-    omniORB::log << "Error: function to insert the user exception into an Any is not available\n";
-    omniORB::log.flush();
+    omniORB::logger log;
+    log << "Error: function to insert the user exception into an Any is not available\n";
+    log.flush();
     OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_NO);
   }
 }

@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.8.2.6  2001/08/17 17:07:06  sll
+  Remove the use of omniORB::logStream.
+
   Revision 1.8.2.5  2001/08/15 10:26:12  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -75,7 +78,7 @@
 
   */
 
-// Implement omniORB::logStream using stderr.
+// Implement omniORB::logger using stderr.
 
 
 
@@ -91,96 +94,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>
-
-static omniORB::logStream _log;
-
-#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
-// MSVC++ does not give the variables external linkage otherwise. Its a bug.
-namespace omniORB {
-
-logStream& log = _log;
-
-}
-#else
-
-omniORB::logStream& omniORB::log = _log;
-
-#endif
-
-
-omniORB::logStream::logStream() : pd_state(0)
-{
-}
-
-omniORB::logStream::~logStream()
-{
-}
-
-omniORB::logStream& 
-omniORB::logStream::operator<<(char c)
-{
-  fprintf(stderr,"%c",c);
-  return *this;
-}
-
-
-omniORB::logStream&
-omniORB::logStream::operator<<(const char *s)
-{
-  fprintf(stderr,"%s",s);
-  return *this;
-}
-
-omniORB::logStream&
-omniORB::logStream::operator<<(const void *p)
-{
-  fprintf(stderr,"%p",p);
-  return *this;
-}
-
-omniORB::logStream&
-omniORB::logStream::operator<<(int n)
-{
-  fprintf(stderr,"%d",n);
-  return *this;
-}
-
-omniORB::logStream&
-omniORB::logStream::operator<<(unsigned int n)
-{
-  fprintf(stderr,"%u",n);
-  return *this;
-}
-
-omniORB::logStream&
-omniORB::logStream::operator<<(long n)
-{
-  fprintf(stderr,"%ld",n);
-  return *this;
-}
-
-omniORB::logStream&
-omniORB::logStream::operator<<(unsigned long n)
-{
-  fprintf(stderr,"%lu",n);
-  return *this;
-}
-
-#ifndef NO_FLOAT
-omniORB::logStream&
-omniORB::logStream::operator<<(double n)
-{
-  fprintf(stderr,"%g",n);
-  return *this;
-}
-#endif
-
-omniORB::logStream&
-omniORB::logStream::flush()
-{
-  fflush(stderr);
-  return *this;
-}
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// omniORB::logger //////////////////////////

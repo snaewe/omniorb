@@ -85,7 +85,7 @@ gateKeeper::checkConnect(Strand *s) {
      * lookups and double checks will be done on demand.
      */
 
-    request_init(&request, RQ_DAEMON, (char *) omniORB::serverName,
+    request_init(&request, RQ_DAEMON, (char *) "",
 		 RQ_FILE, ((tcpConnection*)connection)->handle(), 0);
     fromhost(&request);
     /*
@@ -97,9 +97,9 @@ gateKeeper::checkConnect(Strand *s) {
       // refuse just exits, which is no good.
       // refuse(&request);
       if (omniORB::traceLevel >= 1) {
-	omniORB::log << "refused connect from " << eval_client(&request) 
-		     << "\n";
-	omniORB::log.flush();
+	omniORB::logger log;
+	log << "refused connect from " << eval_client(&request) 
+	    << "\n";
       }
       // syslog(deny_severity, "refused connect from %s", eval_client(request));
       return 0;
@@ -107,8 +107,8 @@ gateKeeper::checkConnect(Strand *s) {
     } else {
       // syslog(allow_severity, "connect from %s", eval_client(&request));
       if (omniORB::traceLevel >= 5) {
-	omniORB::log << "connect from " << eval_client(&request) << "\n";
-	omniORB::log.flush();
+	omniORB::logger log;
+	log << "connect from " << eval_client(&request) << "\n";
       }
       return 1;
     }
