@@ -141,8 +141,7 @@ EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &s,
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
   p.iiop_version.major = s[begin];
   p.iiop_version.minor = s[begin+1];
-  if (p.iiop_version.major != IIOP::current_major ||
-      p.iiop_version.minor != IIOP::current_minor)
+  if (p.iiop_version.major != 1)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 
   // s[3] - padding
