@@ -1,3 +1,42 @@
+Mon Aug 16 20:18:08 BST 1999 sll
+================================
+
+- Replace the use of static variables dtor for cleanup. Replace this with
+  explicit calls to per-compilation unit initialisation and cleanup.
+
+- new member function CORBA::ORB::NP_destory(). This member is called by
+  the application to cleanup the ORB before exit.
+
+include/omniORB2/CORBA.h
+include/omniORB2/omniInternal.h
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/bootstrap_i.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/object.cc
+src/lib/omniORB2/orbcore/objectRef.cc
+src/lib/omniORB2/orbcore/ropeFactory.cc
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/ropeFactory.h
+
+src/examples/echo/eg1.cc
+src/examples/echo/eg2_clt.cc
+src/examples/echo/eg2_impl.cc
+src/examples/echo/eg3_clt.cc
+src/examples/echo/eg3_impl.cc
+src/examples/echo/eg3_tieimpl.cc
+src/examples/anyExample/anyExample_clt.cc
+src/examples/anyExample/anyExample_impl.cc
+src/examples/dii/echo_diiclt.cc
+src/examples/dsi/echo_dsiimpl.cc
+src/examples/lifecycle/lcserver.cc
+src/examples/lifecycle/lcclient.cc
+src/examples/lifecycle/lcremove.cc
+
+src/appl/utils/nameclt/nameclt.cc
+
+
 Sat Aug 14 17:40:58 BST 1999 sll
 ================================
 
