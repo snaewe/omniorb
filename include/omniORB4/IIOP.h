@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:06:43  sll
+  New helper functions to decode an IOR.
+
   Revision 1.2.2.1  2000/07/17 10:35:34  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -78,29 +81,34 @@
 #ifndef __OMNIORB_IIOP_H__
 #define __OMNIORB_IIOP_H__
 
-
 class IIOP {
 public:
 
-  struct Version { 
-    _CORBA_Char major;
-    _CORBA_Char minor; 
+  typedef GIOP::Version Version;
+
+  struct Address {
+    _CORBA_String_member    host;
+    _CORBA_UShort           port;
   };
 
-  // Current IIOP Protocol version
-  static _core_attr const _CORBA_Char current_major;
-  static _core_attr const _CORBA_Char current_minor;
-
   struct ProfileBody {
-    Version                 iiop_version;
-    _CORBA_Char*            host;       // deleted by dtor
-    _CORBA_UShort           port;
+    Version                 version;
+    Address                 address;
     _CORBA_Unbounded_Sequence_Octet  object_key;
-
-    ~ProfileBody() { if (host) delete [] host; }
+    IOP::MultipleComponentProfile    components;
   };
 
   static _core_attr const _CORBA_UShort DEFAULT_CORBALOC_PORT;
+
+  static void encodeProfile(const ProfileBody&,IOP::TaggedProfile&);
+  static void addAlternativeIIOPAddress(
+		   IOP::MultipleComponentProfile& components,
+		   const Address& addr);
+
+  static void decodeProfile(const IOP::TaggedProfile&, ProfileBody&);
+  static void decodeMultiComponentProfile(const IOP::TaggedProfile&,
+					  ProfileBody&);
+
 };
 
 
