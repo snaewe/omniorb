@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.39.2.1  1999/09/22 13:44:40  sll
+ Updated for AIX 4.2 and 4.3
+
  Revision 1.39  1999/08/30 18:43:34  sll
  Removed ENABLE_CLIENT_IR_SUPPORT as the default define. Application code
  should define this macro if the code is to act as a client to an
@@ -250,7 +253,7 @@
 #     define SIZEOF_PTR 8
 #endif
 
-#elif defined(__xlC__) && (__xlC__ <= 0x0301)
+#elif defined(__xlC__) && (__xlC__ <= 0x0306)
 
 #undef HAS_Cplusplus_const_cast
 

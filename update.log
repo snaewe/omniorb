@@ -1,3 +1,17 @@
+Wed Sep 22 14:40:39 BST 1999 sll
+================================
+
+- updated for AIX 4.2/3
+
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.3.mk   NEW
+
+include/omniORB2/CORBA_sysdep.h
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
 Wed Sep 22 13:06:18 BST 1999 sll
 ================================
 

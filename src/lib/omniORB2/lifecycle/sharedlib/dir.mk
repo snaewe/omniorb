@@ -348,7 +348,7 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(lclib): $(LC_OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib_r \
+        $(MAKECPPSHAREDLIB) \
              -o $(lcsoname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
          -L../../orbcore/sharedlib -l$(libcorename) \

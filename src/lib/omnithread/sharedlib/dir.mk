@@ -240,7 +240,7 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib_r \
+        $(MAKECPPSHAREDLIB) \
              -o $(soname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) \
          -p 40; \

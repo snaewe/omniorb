@@ -333,7 +333,7 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(dynlib): $(DYN2_OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib_r \
+        $(MAKECPPSHAREDLIB) \
              -o $(dynsoname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
          -L../../orbcore/sharedlib -l$(libcorename) -p 40; \
