@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2001/11/13 14:14:03  dpg1
+  AsyncInvoker properly waits for threads to finish.
+
   Revision 1.1.2.6  2001/08/16 09:53:18  sll
   Added stdlib.h to give abort a prototype.
 
@@ -84,6 +87,14 @@ public:
     if (omniAsyncInvoker::traceLevel >= 10) {
       fprintf(stderr,"omniAsyncInvoker: thread id=%d has exited. Total threads = %d\n",pd_id,pd_pool->pd_totalthreads);
     }
+
+    pd_pool->pd_lock->lock();
+    if (pd_pool->pd_totalthreads == 0) {
+      pd_pool->pd_lock->unlock();
+      pd_pool->pd_cond->signal();
+    }
+    else
+      pd_pool->pd_lock->unlock();
   }
 
   void run(void*) {
@@ -151,9 +162,6 @@ public:
 
     pd_pool->pd_totalthreads--;
     pd_pool->pd_nthreads--;
-    if (pd_pool->pd_totalthreads == 0) {
-      pd_pool->pd_cond->signal();
-    }
     pd_pool->pd_lock->unlock();
   }
 
@@ -202,6 +210,7 @@ omniAsyncInvoker::~omniAsyncInvoker() {
 
   delete pd_cond;
   delete pd_lock;
+  LOG(10, "omniAsyncInvoker: deleted.\n");
 }
 
 ///////////////////////////////////////////////////////////////////////////
