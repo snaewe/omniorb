@@ -1,0 +1,22 @@
+# appl/test/threadtests/Imakefile
+
+/* makedepend generates dependency rules for 
+      C   files listed in $(SRCS) and
+      C++ files listed in $(CXXSRCS) 
+   Don't put C++ files in $(SRCS)
+*/
+SRCS    =
+CXXSRCS = threadcancel.cc diner.cc
+
+INCLUDES = $(OMNITHREADDEFINE)
+
+
+all:: diner
+
+NormalCplusplusProgramTarget(diner,diner.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),)
+
+all:: threadcancel
+
+NormalCplusplusProgramTarget(threadcancel,threadcancel.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),)
+
+DependTarget()
