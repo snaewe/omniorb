@@ -1,3 +1,18 @@
+Mon Oct 18 12:45:52 BST 2004 dgrisby
+====================================
+
+- accept() error handling didn't work on MacOS X.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+
+- Accidentally checked in test makefile.
+
+src/examples/echo/dir.mk
+
+
 Mon Oct 18 03:51:44 BST 2004 dgrisby
 ====================================
 
