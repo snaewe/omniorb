@@ -11,7 +11,7 @@
 %DVIPSWebPage: (www.radicaleye.com)
 %DVIPSCommandLine: dvips omniORB
 %DVIPSParameters: dpi=600, compressed
-%DVIPSSource:  TeX output 2000.06.27:1136
+%DVIPSSource:  TeX output 2000.06.27:1522
 %%BeginProcSet: texc.pro
 %!
 /TeXDict 300 dict def TeXDict begin/N{def}def/B{bind def}N/S{exch}N/X{S
@@ -1944,22 +1944,21 @@ Fs(')d(r)n(espectively)-10 b(.)40 b(This)27 b(is)g(an)g(arbitrary)h
 (choice)f(as)g(ther)n(e)f(is)h(no)g(standar)n(dised)63
 4010 y(set)21 b(of)i(kind)f(values.)63 4279 y Fk(2.10.1)98
 b(Obtaining)26 b(the)e(Root)i(Context)f(Object)g(Reference)63
-4460 y Fs(The)e(initial)j(contact)f(with)f(the)f(Naming)i(Service)f
-(can)h(be)f(established)f(via)j(what)e(we)g(called)63
-4573 y(the)17 b Fr(r)n(oot)j Fs(context.)25 b(The)18
-b(object)g(r)n(efer)n(ence)g(to)f(the)h(r)n(oot)f(context)g(is)h(pr)n
-(ovided)g(by)g(the)f(ORB)i(and)63 4686 y(can)32 b(be)f(obtained)g(by)g
-(calling)i Ff(resolve_initial)o(_re)o(fe)o(re)o(nc)o(es)o(\(\))p
-Fs(.)48 b(The)30 b(following)63 4799 y(code)21 b(fragment)i(shows)e
-(how)h(it)h(is)g(used:)204 4953 y Fe(CORBA)o(::)o(ORB_ptr)49
-b(orb)g(=)h(CORBA)o(::ORB_init)n(\(argc)o(,argv)o(,"omniORB3)n("\);)p
-63 5123 1316 4 v 146 5179 a Fj(1)m(1)197 5211 y Fi(Ther)o(e)25
-b(ar)o(e)h(escaping)f(r)o(ules)h(to)g(cope)g(with)h(id)e(and)i(kind)e
-(\002elds)g(which)j(contain)f(`.')45 b(and)26 b(`/')g(characters.)63
-5302 y(See)20 b(chapter)h(4)g(of)f(this)g(manual,)i(and)f(chapter)g(3)g
-(of)f(the)h(CORBA)f(services)f(speci\002cation,)i(as)f(updated)g(for)g
-(the)63 5394 y(Inter)o(operable)e(Naming)g(Service)h([OMG99b].)p
-eop
+4460 y Fs(The)c(initial)j(contact)f(with)f(the)f(Naming)i(Service)f
+(can)h(be)g(established)e(via)j(the)d Fr(r)n(oot)j Fs(context.)63
+4573 y(The)33 b(object)g(r)n(efer)n(ence)g(to)g(the)g(r)n(oot)g
+(context)g(is)g(pr)n(ovided)g(by)h(the)f(ORB)g(and)h(can)h(be)e(ob-)63
+4686 y(tained)25 b(by)h(calling)i Ff(resolve_initia)o(l_)o(re)o(fer)o
+(en)o(ce)o(s\()o(\))p Fs(.)k(The)25 b(following)h(code)f(frag-)63
+4799 y(ment)d(shows)f(how)h(it)h(is)g(used:)204 4953
+y Fe(CORBA)o(::)o(ORB_ptr)49 b(orb)g(=)h(CORBA)o(::ORB_init)n(\(argc)o
+(,argv)o(,"omniORB3)n("\);)p 63 5123 1316 4 v 146 5179
+a Fj(1)m(1)197 5211 y Fi(Ther)o(e)25 b(ar)o(e)h(escaping)f(r)o(ules)h
+(to)g(cope)g(with)h(id)e(and)i(kind)e(\002elds)g(which)j(contain)f(`.')
+45 b(and)26 b(`/')g(characters.)63 5302 y(See)20 b(chapter)h(4)g(of)f
+(this)g(manual,)i(and)f(chapter)g(3)g(of)f(the)h(CORBA)f(services)f
+(speci\002cation,)i(as)f(updated)g(for)g(the)63 5394
+y(Inter)o(operable)e(Naming)g(Service)h([OMG99b].)p eop
 %%Page: 22 30
 22 29 bop 221 282 a Fs(22)2093 b Fg(CHAPTER)21 b(2.)51
 b(THE)22 b(BASICS)362 539 y Fe(CORBA)o(::Object_var)48
@@ -2857,11 +2856,11 @@ b(Object)35 b(keys)e(containing)j(non-ASCII)63 4774 y(characters)22
 b(can)i(use)e(the)f(standar)n(d)h(URI)g(\045)h(escapes:)290
 4971 y Ff(corbaloc:iiop:m)o(yh)o(os)o(t.)o(ex)o(amp)o(le)o(.c)o(om)o
 (:1)o(234)o(/M)o(y\045)o(ef)o(Ob)o(jec)o(tK)o(ey)63 5168
-y Fs(denotes)d(an)j(object)f(with)h(the)f(value)h(239)h(\(hex)e(ef\))h
-(in)g(the)f(thir)n(d)h(octet.)204 5281 y(The)g(pr)n(otocol)g(name)g(`)p
-Ff(iiop)p Fs(')g(can)h(be)g(abbr)n(eviated)g(to)f(the)g(empty)f
-(string,)h(so)f(the)h(origi-)63 5394 y(nal)g(URI)f(can)h(be)g(written:)
-1662 5622 y(49)p eop
+y Fs(denotes)d(an)j(object)f(key)g(with)g(the)g(value)h(239)h(\(hex)f
+(ef\))g(in)g(the)f(thir)n(d)g(octet.)204 5281 y(The)h(pr)n(otocol)g
+(name)g(`)p Ff(iiop)p Fs(')g(can)h(be)g(abbr)n(eviated)g(to)f(the)g
+(empty)f(string,)h(so)f(the)h(origi-)63 5394 y(nal)g(URI)f(can)h(be)g
+(written:)1662 5622 y(49)p eop
 %%Page: 50 58
 50 57 bop 221 282 a Fs(50)1033 b Fg(CHAPTER)21 b(4.)51
 b(INTEROPERABLE)19 b(NAMING)j(SER)-5 b(VICE)448 539 y

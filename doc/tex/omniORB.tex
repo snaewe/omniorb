@@ -14,6 +14,7 @@
 % To make the PDF version (having already made the PS version):
 %
 %  $ pdflatex omniORB
+%  $ pdflatex omniORB
 %
 % To make the HTML version, you need HeVeA 1.05.
 %
@@ -1356,9 +1357,9 @@ arbitrary choice as there is no standardised set of kind values.
 \subsection{Obtaining the Root Context Object Reference}
 \label{resolveinit}
 
-The initial contact with the Naming Service can be established via
-what we called the \term{root} context. The object reference to the
-root context is provided by the ORB and can be obtained by calling
+The initial contact with the Naming Service can be established via the
+\term{root} context. The object reference to the root context is
+provided by the ORB and can be obtained by calling
 \op{resolve\_initial\_references}. The following code fragment shows
 how it is used:
 
@@ -2456,8 +2457,8 @@ escapes:
 \corbauri{efObjectKey}
 \end{quote}
 
-\noindent denotes an object with the value 239 (hex ef) in the third
-octet.
+\noindent denotes an object key with the value 239 (hex ef) in the
+third octet.
 
 The protocol name `\corbauri{iiop}' can be abbreviated to the empty
 string, so the original URI can be written:
