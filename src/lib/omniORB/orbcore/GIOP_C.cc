@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/09/03 16:54:06  sll
+  In initialise(), set deadline from the parameters in calldescriptor.
+
   Revision 1.1.4.5  2001/09/03 13:28:09  sll
   In the calldescriptor, in addition to the first address, record the current
   address in use.
@@ -85,6 +88,9 @@ GIOP_C::initialise(const omniIOR* i,
   state(IOP_C::Idle);
   ior(i);
   calldescriptor(calldesc);
+  unsigned long secs,nanosecs;
+  calldesc->getDeadline(secs,nanosecs);
+  setDeadline(secs,nanosecs);
   key(k);
   keysize(ksz);
   requestId(pd_strand->newSeqNumber());
