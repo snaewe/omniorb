@@ -59,6 +59,15 @@ main(int argc, char **argv)
   boa->impl_is_ready();
   // Tell the BOA we are ready. The BOA's default behaviour is to block
   // on this call indefinitely.
+  
+  // Call boa->impl_shutdown() from another thread would unblock the
+  // main thread from impl_is_ready().
+  //
+  // To properly shutdown the BOA and the ORB, add the following calls
+  // after impl_is_ready() returns.
+  //
+  // boa->destroy();
+  // orb->NP_destroy();
 
   return 0;
 }

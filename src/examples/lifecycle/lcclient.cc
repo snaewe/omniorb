@@ -55,5 +55,9 @@ main(int argc, char **argv) {
     }
   }
 
+  boa->destroy();
+
+  orb->NP_destroy();
+
   return 0;
 }
