@@ -1,3 +1,13 @@
+
+Wed Oct 13 16:40:34 BST 1999 djr
+================================
+
+- Fixed bug in omniidl3.  Typedef of objref as member of exception
+  caused seg fault.
+
+src/tool/omniidl3/omniORB2_be/o2be_exception.cc
+
+
 Fri Oct  8 14:42:35 BST 1999 sll
 ================================
 
