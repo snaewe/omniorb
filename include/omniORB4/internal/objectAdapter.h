@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.7  2002/08/21 19:55:42  dgrisby
+ Add endPointPublishAllIFs option.
+
  Revision 1.1.4.6  2001/09/20 09:27:43  dpg1
  Remove assertion failure on exit if not all POAs are deleted.
 
@@ -225,7 +228,7 @@ public:
   static const omnivector<const char*>& listMyEndpoints();
 
   struct Options {
-    inline Options() {}
+    inline Options() : publish_all(0) {}
     ~Options();
 
     struct EndpointURI {
@@ -235,6 +238,7 @@ public:
     };
     typedef omnivector<EndpointURI*> EndpointURIList;
     EndpointURIList   endpoints;
+    CORBA::Boolean    publish_all;
   };
 
   static Options options;

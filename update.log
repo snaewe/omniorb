@@ -1,3 +1,12 @@
+Wed Aug 21 20:53:17 BST 2002 dgrisby
+====================================
+
+- Add endPointPublishAllIFs option.
+
+include/omniORB4/internal/objectAdapter.h
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Wed Aug 21 07:18:58 BST 2002 dgrisby
 ====================================
 

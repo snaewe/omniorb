@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.16  2002/08/21 19:55:42  dgrisby
+ Add endPointPublishAllIFs option.
+
  Revision 1.2.2.15  2002/03/27 11:44:53  dpg1
  Check in interceptors things left over from last week.
 
@@ -141,7 +144,7 @@ static omnivector<_OMNI_NS(orbServer)*> oa_servers;
 static omnivector<const char*>          oa_endpoints;
 static _OMNI_NS(Rope)*                  oa_loopback = 0;
 static void instantiate_defaultloopback(omnivector<const char*>& endpoints);
-
+static const char* pick_endpoint(omnivector<const char*>&, const char*);
 
 omni_tracedmutex     omniObjAdapter::sd_detachedObjectLock;
 omni_tracedcondition omniObjAdapter::sd_detachedObjectSignal(
@@ -266,6 +269,63 @@ omniObjAdapter::initialise()
       }
       oa_endpoints.push_back(address);
       myendpoints.push_back(address);
+    }
+
+    if (options.publish_all) {
+
+      const char* first_tcp = pick_endpoint(oa_endpoints, "giop:tcp");
+
+      if (first_tcp) {
+	int port;
+	sscanf(first_tcp, "giop:tcp:%*[^:]:%d", &port);
+
+	const omnivector<const char*>* ifaddrs
+	  = giopTransportImpl::getInterfaceAddress("giop:tcp");
+
+	if (ifaddrs && !ifaddrs->empty()) {
+
+	  omnivector<const char*>::const_iterator i;
+
+	  for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
+
+	    // Skip loopback address
+	    if (omni::strMatch(*i, "127.0.0.1")) continue;
+
+	    const char* format1 = "giop:tcp:%s:";
+	    const char* format2 = "giop:tcp:%s:%d";
+
+	    CORBA::String_var estr(CORBA::string_alloc(strlen(*i)+
+						       strlen(format2) + 6));
+	    sprintf(estr,format1,*i);
+
+	    if (!pick_endpoint(oa_endpoints, estr)) {
+
+	      sprintf(estr,format2,*i,port);
+	      const char* address = instantiate_endpoint(estr, 0, 1);
+
+	      // instantiate_endpoint usually returns the same string
+	      // we gave it. In that case, the _var must drop
+	      // ownership of it.
+	      if (address == (char*)estr) estr._retn();
+
+	      if (!address) {
+		if (omniORB::trace(1)) {
+		  omniORB::logger log;
+		  log << "Error: Unable to create an endpoint of this "
+		      << "description: " << (const char*)estr << "\n";
+		}
+		OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
+			      CORBA::COMPLETED_NO);
+	      }
+	      oa_endpoints.push_back(address);
+	    }
+	  }
+	}
+      }
+      else {
+	omniORB::logs(1, "Warning: endPointPublishAllIFs option ignored since "
+		      "there are no TCP endPoints.");
+      }
     }
 
     instantiate_defaultloopback(myendpoints);
@@ -524,7 +584,7 @@ instantiate_defaultloopback(omnivector<const char*>& endpoints) {
 	     "         Any attempt to talk to a local object may fail.\n"
 	     "         This error is caused by the lack of a suitable endpoint\n"
              "         that is layered on top of TCP, SSL or UNIX socket.\n"
-             "         To correct this problem, check if the -ORBendpoint\n"
+             "         To correct this problem, check if the -ORBendPoint\n"
 	     "         options are consistent.\n";
     }
   }
@@ -704,6 +764,35 @@ public:
 static endpointNoListenHandler endpointNoListenHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
+class endpointPublishAllIFsHandler : public orbOptions::Handler {
+public:
+
+  endpointPublishAllIFsHandler() : 
+    orbOptions::Handler("endPointPublishAllIFs",
+			"endPointPublishAllIFs = 0 or 1",
+			1,
+			"-ORBendPublishAllIFs < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    omniObjAdapter::options.publish_all = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    orbOptions::addKVBoolean(key(),omniObjAdapter::options.publish_all,
+			     result);
+  }
+};
+
+static endpointPublishAllIFsHandler endpointPublishAllIFsHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -716,6 +805,7 @@ public:
     orbOptions::singleton().registerHandler(endpointHandler_);
     orbOptions::singleton().registerHandler(endpointNoPublishHandler_);
     orbOptions::singleton().registerHandler(endpointNoListenHandler_);
+    orbOptions::singleton().registerHandler(endpointPublishAllIFsHandler_);
   }
 
   void attach() { 
