@@ -60,7 +60,12 @@ AnyP::AnyP(const AnyP* existing)
   pd_releaseptr = 0;
   pd_parser = new tcParser(*pd_mbuf, existing->pd_parser->getTC());
   existing->pd_mbuf->rewind_in_mkr();
-  pd_parser->copyFrom(*existing->pd_mbuf);
+  try {
+    pd_parser->copyFrom(*existing->pd_mbuf);
+  }
+  catch(CORBA::MARSHAL&) {
+    pd_mbuf->rewind_inout_mkr();
+  }
   pd_cached_data_ptr = 0;
 }
 
