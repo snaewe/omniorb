@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/05/04 13:55:27  sll
+  When a system exception is raised, send the exception before skipping rest
+  of the input message. Helpful if the client sends a message shorter than
+  the header indicates. Otherwise the server will sit there waiting for the
+  remaining bytes that will never come. Eventually the server side timeout
+  mechanism kicks in but by then the server will just close the connection
+  rather than telling the client it has detected a marshalling exception.
+
   Revision 1.1.4.3  2001/05/02 14:22:05  sll
   Cannot rely on the calldescriptor still being there when a user exception
   is raised.
@@ -254,6 +262,18 @@ GIOP_S::handleRequest() {
       } \
 } while (0)
 
+#define MARSHAL_SYSTEM_EXCEPTION() do { \
+    if (pd_state == RequestHeaderIsBeingProcessed) { \
+      impl()->sendMsgErrorMessage(this); \
+      return 0; \
+    } else if (response_expected()) { \
+      impl()->sendSystemException(this,ex); \
+    } \
+    if (pd_state == RequestIsBeingProcessed) { \
+      SkipRequestBody(); \
+    } \
+} while (0) 
+
 # ifndef HAS_Cplusplus_catch_exception_by_base
 
   // We have to catch each type of system exception separately
@@ -261,15 +281,7 @@ GIOP_S::handleRequest() {
   // types.
 #   define CATCH_AND_MARSHAL(name)  \
   catch (CORBA::name& ex) {  \
-    if (pd_state == RequestIsBeingProcessed) { \
-      SkipRequestBody(); \
-    } \
-    if (pd_state == RequestHeaderIsBeingProcessed) { \
-      impl()->sendMsgErrorMessage(this); \
-      return 0; \
-    } else if (response_expected()) { \
-      impl()->sendSystemException(this,ex); \
-    } \
+    MARSHAL_SYSTEM_EXCEPTION(); \
   }
 
   OMNIORB_FOR_EACH_SYS_EXCEPTION(CATCH_AND_MARSHAL)
@@ -288,16 +300,7 @@ GIOP_S::handleRequest() {
 
 
   catch(CORBA::SystemException& ex) {
-    if (pd_state == RequestIsBeingProcessed) {
-      SkipRequestBody();
-    }
-    if (pd_state == RequestHeaderIsBeingProcessed) {
-      impl()->sendMsgErrorMessage(this);
-      return 0;
-    }
-    else if (response_expected()) {
-      impl()->sendSystemException(this,ex);
-    }
+    MARSHAL_SYSTEM_EXCEPTION();
     // If the client does not expect a response, we quietly drop
     // the system exception.
   }
@@ -307,6 +310,7 @@ GIOP_S::handleRequest() {
     }
   }
 #undef MARSHAL_USER_EXCEPTION
+#undef MARSHAL_SYSTEM_EXCEPTION
 
   catch(const giopStream::CommFailure&) {
     throw;
@@ -373,6 +377,19 @@ GIOP_S::handleLocateRequest() {
 			                        GIOP::OBJECT_FORWARD,
                             release_it,0);
   }
+
+#define MARSHAL_SYSTEM_EXCEPTION() do { \
+    if (pd_state == RequestHeaderIsBeingProcessed) { \
+      impl()->sendMsgErrorMessage(this); \
+      return 0; \
+    } else if (response_expected()) { \
+      impl()->sendSystemException(this,ex); \
+    } \
+    if (pd_state == RequestIsBeingProcessed) { \
+      SkipRequestBody(); \
+    } \
+} while (0) 
+
 # ifndef HAS_Cplusplus_catch_exception_by_base
 
   // We have to catch each type of system exception separately
@@ -380,17 +397,7 @@ GIOP_S::handleLocateRequest() {
   // types.
 #   define CATCH_AND_MARSHAL(name)  \
   catch (CORBA::name& ex) {  \
-    if (pd_state == RequestIsBeingProcessed) { \
-      SkipRequestBody(); \
-    } \
-    if (pd_state != RequestHeaderIsBeingProcessed) { \
-      impl()->sendLocateReply(this,GIOP::LOC_SYSTEM_EXECPTION, \
-			      CORBA::Object::_nil(),&ex); \
-    } \
-    else { \
-      impl()->sendMsgErrorMessage(this); \
-      return 0; \
-    } \
+    MARSHAL_SYSTEM_EXCEPTION(); \
   }
 
   OMNIORB_FOR_EACH_SYS_EXCEPTION(CATCH_AND_MARSHAL)
@@ -399,17 +406,7 @@ GIOP_S::handleLocateRequest() {
 #endif
 
   catch(CORBA::SystemException& ex) {
-    if (pd_state == RequestIsBeingProcessed) {
-      SkipRequestBody();
-    }
-    if (pd_state != RequestHeaderIsBeingProcessed) {
-      impl()->sendLocateReply(this,GIOP::LOC_SYSTEM_EXCEPTION,
-			      CORBA::Object::_nil(),&ex);
-    }
-    else {
-      impl()->sendMsgErrorMessage(this);
-      return 0;
-    }
+    MARSHAL_SYSTEM_EXCEPTION();
   }
 
   pd_state = Idle;
