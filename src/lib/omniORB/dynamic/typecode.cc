@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.25  1999/04/21 13:24:57  djr
+ * Fixed bug in generation of typecode alignment tables.
+ *
  * Revision 1.24  1999/03/19 15:15:39  djr
  * Now accept indirections to fundamental TypeCodes. Option to accept
  * misaligned indirections.
@@ -1679,16 +1682,23 @@ TypeCode_array::generateAlignmentTable()
 				(pd_length - 1) * size_aligned);
   } else if( eat.has_only_simple() ) {
     // We need to copy the first element separately, and then the
-    // rest as a simple block.
+    // rest as a simple block. This is possible because a struct of
+    // simple blocks will always finish with the same alignment
+    // (modulo the max alignment requirement of the elements).
     pd_alignmentTable.setNumEntries(eat.entries() + 1);
-    CORBA::ULong elemsize = 0;
+    CORBA::ULong start = 0;
     for( unsigned i = 0; i < eat.entries(); i++ ) {
       pd_alignmentTable.add(eat, i);
-      elemsize = omni::align_to(elemsize, eat[i].simple.alignment);
-      elemsize += eat[i].simple.size;
+      start = omni::align_to(start, eat[i].simple.alignment);
+      start += eat[i].simple.size;
     }
-    pd_alignmentTable.addSimple(eat[0].simple.alignment,
-				(pd_length - 1) * elemsize);
+    CORBA::ULong end = start;
+    for( unsigned j = 0; j < eat.entries(); j++ ) {
+      end = omni::align_to(end, eat[j].simple.alignment);
+      end += eat[j].simple.size;
+    }
+    pd_alignmentTable.addSimple(omni::ALIGN_1,
+				(pd_length - 1) * (end - start));
   } else {
     pd_alignmentTable.setNumEntries(1);
     pd_alignmentTable.addNasty(this);
@@ -2452,17 +2462,12 @@ TypeCode_enum::~TypeCode_enum() {}
 
 
 void
-TypeCode_enum::NP_marshalComplexParams(MemBufferedStream &s,
+TypeCode_enum::NP_marshalComplexParams(MemBufferedStream& s,
 				       TypeCode_offsetTable* otbl) const
 {
   pd_repoId >>= s;
   pd_name >>= s;
-
-  const CORBA::ULong memberCount = pd_members.length();
-  memberCount >>= s;
-
-  for( CORBA::ULong i = 0; i < memberCount; i++ )
-    pd_members[i] >>= s;
+  pd_members >>= s;
 }
 
 
@@ -2476,13 +2481,7 @@ TypeCode_enum::NP_unmarshalComplexParams(MemBufferedStream &s,
 
   _ptr->pd_repoId <<= s;
   _ptr->pd_name <<= s;
-
-  CORBA::ULong memberCount;
-  memberCount <<= s;
-  _ptr->pd_members.length(memberCount);
-
-  for( CORBA::ULong i = 0; i < memberCount; i++ )
-    _ptr->pd_members[i] <<= s;
+  _ptr->pd_members <<= s;
 
   return _ptr;
 }
@@ -2496,12 +2495,7 @@ TypeCode_enum::NP_alignedComplexParamSize(size_t initialoffset,
 
   _msgsize = pd_repoId.NP_alignedSize(_msgsize);
   _msgsize = pd_name.NP_alignedSize(_msgsize);
-
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-
-  const CORBA::ULong memberCount = pd_members.length();
-  for( CORBA::ULong i = 0; i < memberCount; i++ )
-    _msgsize = pd_members[i].NP_alignedSize(_msgsize);
+  _msgsize = pd_members.NP_alignedSize(_msgsize);
 
   return _msgsize;
 }
@@ -3904,6 +3898,7 @@ TypeCode_marshaller::alignedSize(const TypeCode_base* tc,
 	// Allocate space for the encapsulation length field
 	_msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
 
+#if 0
 	// Does the typecode have a cached parameter list?
 	{
 	  omni_mutex_lock l(*pd_cached_paramlist_lock);
@@ -3913,9 +3908,12 @@ TypeCode_marshaller::alignedSize(const TypeCode_base* tc,
 	    return _msgsize;
 	  }
 	}
+#endif
+
+	size_t _save = _msgsize;
 
 	// Allocate space for the byteorder byte
-	_msgsize = omni::align_to(_msgsize, omni::ALIGN_1) + 1;
+	_msgsize++;
 
 	// And find out how much space the parameters will occupy
 	return tc->NP_alignedComplexParamSize(_msgsize, otbl);
