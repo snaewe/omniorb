@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2002/03/14 12:21:49  dpg1
+  Undo accidental scavenger period change, remove invalid assertion.
+
   Revision 1.1.4.13  2002/03/13 16:05:39  dpg1
   Transport shutdown fixes. Reference count SocketCollections to avoid
   connections using them after they are deleted. Properly close
@@ -108,7 +111,7 @@ CORBA::ULong orbParameters::outConScanPeriod = 120;
 //  Valid values = (n >= 0 in seconds) 
 //                  0 --> do not close idle connections.
 
-CORBA::ULong orbParameters::inConScanPeriod = 20;
+CORBA::ULong orbParameters::inConScanPeriod = 180;
 //  Idle connections shutdown. The ORB periodically scans all the
 //  incoming connections to detect if they are idle.
 //  If no operation has passed through a connection for a scan period,

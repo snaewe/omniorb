@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2002/03/14 12:21:49  dpg1
+  Undo accidental scavenger period change, remove invalid assertion.
+
   Revision 1.1.2.7  2002/03/13 16:05:38  dpg1
   Transport shutdown fixes. Reference count SocketCollections to avoid
   connections using them after they are deleted. Properly close
@@ -148,13 +151,7 @@ SocketCollection::SocketCollection() :
 /////////////////////////////////////////////////////////////////////////
 SocketCollection::~SocketCollection()
 {
-  // refcount is permitted to be 1 here, since client-side collections
-  // are created statically. Assertions in incrRefCount and
-  // decrRefCount hopefully trigger if a collection is deleted
-  // prematurely.
-  OMNIORB_ASSERT(pd_refcount == 0 || pd_refcount == 1);
   pd_refcount = -1;
-
   delete [] pd_hash_table;
 }
 
