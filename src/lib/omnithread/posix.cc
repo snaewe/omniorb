@@ -60,7 +60,7 @@
 #endif
 
 #define DB(x) // x
-// #include <iostream.h> or #include <iostream> if DB is on.
+//#include <iostream.h> or #include <iostream> if DB is on.
 
 #if (PthreadDraftVersion <= 6)
 #define ERRNO(x) (((x) != 0) ? (errno) : 0)
@@ -682,17 +682,24 @@ omni_thread::exit(void* return_value)
 {
     omni_thread* me = self();
 
-    me->mutex.lock();
+    if (me)
+      {
+	me->mutex.lock();
 
-    me->_state = STATE_TERMINATED;
+	me->_state = STATE_TERMINATED;
 
-    me->mutex.unlock();
+	me->mutex.unlock();
 
-    DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
-       << me->detached << " return value " << return_value << endl);
+	DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
+	   << me->detached << " return value " << return_value << endl);
 
-    if (me->detached)
-	delete me;
+	if (me->detached)
+	  delete me;
+      }
+    else
+      {
+	DB(cerr << "omni_thread::exit: called with a non-omnithread. Exit quietly." << endl);
+      }
 
     pthread_exit(return_value);
 }
@@ -712,6 +719,12 @@ omni_thread::self(void)
     me = (omni_thread *)pthread_getspecific(self_key);
 
 #endif
+
+    if (!me) {
+      // This thread is not created by omni_thread::start because it
+      // doesn't has a class omni_thread instance attached to its key.
+      DB(cerr << "omni_thread::self: called with a non-ominthread. NULL is returned." << endl);
+    }
 
     return me;
 }
