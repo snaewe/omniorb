@@ -1,8 +1,7 @@
-RELEASE NOTES for omniORB 4.0 release candidate
-===============================================
+RELEASE NOTES for omniORB 4.0.0
+===============================
 
-This is the first release candidate of omniORB 4.0. With luck, this
-will become omniORB 4.0.0.
+This is omniORB 4.0.0. It is a stable release.
 
 See README.unix or README.win32 for building instructions.
 
@@ -29,12 +28,8 @@ And many other improvements.
 Known issues
 ------------
 
-This release candidate has the following known issues and omissions.
-
- - No known issues preventing the 4.0.0 release.
-
-These issues will not be resolved before the 4.0.0 release, but will
-be fixed by 4.0.1.
+This release has the following known issues and omissions. They are
+planned for the 4.0.1 release.
 
  - Some interceptors are not implemented yet.
 

@@ -1,3 +1,15 @@
+Sun Sep 22 22:06:56 BST 2002 dgrisby
+====================================
+
+- Updates for 4.0.0 release.
+
+ReleaseNotes_4.0.0.txt    -- new
+ReleaseNotes_4.0_rc1.txt  -- deleted
+THIS_IS_OMNIORB_4_0_0     -- new
+THIS_IS_OMNIORB_4_0_RC_1  -- deleted
+bugfixes-400.xml          -- new
+
+
 Sat Sep 21 23:50:47 BST 2002 dgrisby
 ====================================
 
