@@ -1,0 +1,228 @@
+\documentclass[11pt]{article}
+\usepackage{a4}
+\usepackage{fancyheadings}
+\pagestyle{fancyplain}
+
+\title{The OMNI Thread Abstraction}
+
+\author{Tristan Richardson\\
+Olivetti Research Laboratory \\
+Cambridge \\
+}
+
+\date{17 August 1995}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The OMNI thread abstraction is designed to provide a common set of thread
+operations for use in programs written in C++.  Programs written using the
+abstraction should be much easier to port between different architectures with
+different underlying threads primitives.
+
+The programming interface is designed to be similar to the C language interface
+to POSIX threads (IEEE draft standard 1003.1c - previously 1003.4a, often known
+as ``pthreads'').
+
+Much of the abstraction consists of simple C++ object wrappers around pthread
+calls.  However for some features such as thread-specific data, a better
+interface can be offered because of the use of C++.
+
+Some of the more complex features of pthreads are not supported because of the
+difficulty of ensuring the same features can be offered on top of other thread
+systems.  Such features include thread cancellation and complex scheduling
+control (though simple thread priorities are supported).
+
+The abstraction layer is currently implemented for the following architectures
+/ thread systems:
+
+\begin{itemize}
+
+\item Solaris 2.3/2.4 (solaris threads)
+\item Solaris 2.3/2.4 (pthreads draft 6)
+\item Alpha OSF1 (pthreads draft 4)
+\item Windows NT (NT threads)
+\item ATMos (pthreads draft 6)
+
+\end{itemize}
+
+See the {\tt omnithread.h} header file for full details of the API.  The
+descriptions below assume you have some previous knowledge of threads, mutexes,
+condition variables and semaphores.  Also refer to the POSIX threads
+documentation for further explanation of these ideas (particularly condition
+variables, the use of which may not be particularly intuitive when first
+encountered).
+
+
+\section{Synchronisation objects}
+
+Synchronisation objects are used to synchronise threads within the same
+process.  There is no inter-process synchronisation provided.  The
+synchronisation objects provided are mutexes, condition variables and counting
+semaphores.
+
+\subsection{Mutex}
+
+An object of type {\tt omni\_mutex} is used for mutual exclusion.  It provides
+two operations, {\tt lock()} and {\tt unlock()}.  The alternative names {\tt
+acquire()} and {\tt release()} can be used if preferred.  Behaviour is
+undefined when a thread attempts to lock the same mutex again or when a mutex
+is locked by one thread and unlocked by a different thread.
+
+
+\subsection{Condition Variable}
+
+A condition variable is represented by an {\tt omni\_condition} and is used for
+signalling between threads.  A call to {\tt wait()} causes a thread to wait on
+the condition variable.  A call to {\tt signal()} wakes up at least one thread
+if any are waiting.  A call to {\tt broadcast()} wakes up all threads waiting
+on the condition variable.
+
+When constructed, a pointer to an {\tt omni\_mutex} must be given.  A condition
+variable {\tt wait()} has an implicit mutex {\tt unlock()} and {\tt lock()}
+around it.  The link between condition variable and mutex lasts for the
+lifetime of the condition variable (unlike pthreads where the link is only for
+the duration of the wait).  The same mutex may be used with several condition
+variables.
+
+A wait with a timeout can be achieved by calling {\tt timed\_wait()}.  This is
+given an absolute time to wait until.  The routine {\tt
+omni\_thread::get\_time()} can be used to turn a relative time into an absolute
+time.  {\tt timed\_wait()} returns {\tt ETIMEDOUT} if the time expires before
+the condition variable is signalled.
+
+
+\subsection{Counting semaphores}
+
+An {\tt omni\_semaphore} is a counting semaphore.  When created it is given an
+initial unsigned integer value.  When {\tt wait()} is called, the value is
+decremented if non-zero.  If the value is zero then the thread blocks instead.
+When {\tt post()} is called, if any threads are blocked in {\tt wait()},
+exactly one thread is woken. If no threads were blocked then the value of the
+semaphore is incremented.
+
+If a thread calls {\tt try\_wait()}, then the thread won't block if the
+semaphore's value is 0, returning {\tt EAGAIN} instead.
+
+At present there is no way of querying the value of the semaphore.
+
+
+
+\section{Thread object}
+
+A thread is represented by an {\tt omni\_thread} object.  There are broadly two
+different ways in which it can be used.
+
+The first way is simply to create an {\tt omni\_thread} object, giving a
+particular function which the thread should execute.  This is like the POSIX
+(or any other) C language interface.
+
+The second method of use is to create a new class which inherits from {\tt
+omni\_thread}.  In this case the thread will execute the {\tt run()} member
+function of the new class.  One advantage of this scheme is that
+thread-specific data can be implemented simply by having data members of the
+new class.
+
+When constructed a thread is in the "new" state and has not actually started.
+A call to {\tt start()} causes the thread to begin executing.  A static member
+function {\tt create()} is provided to construct and start a thread in a single
+call.  A thread exits by calling {\tt exit()} or by returning from the thread
+function.
+
+Threads can be either detached or undetached.  Detached threads are threads for
+which all state will be lost upon exit.  Other threads cannot determine when a
+detached thread will disappear, and therefore should not attempt to access the
+thread object unless some explicit synchronisation with the detached thread
+guarantees that it still exists.
+
+Undetached threads are threads for which storage is not reclaimed until another
+thread waits for its termination by calling {\tt join()}.  An exit value can be
+passed from an undetached thread to the thread which joins it.
+
+Detached / undetached threads are distinguished on creation by the type of
+function they execute.  Undetached threads execute a function which has a {\tt
+void*} return type, whereas detached threads execute a function which has a
+{\tt void} return type.  Unfortunately C++ member functions are not allowed to
+be distinguished simply by their return type.  Thus in the case of a derived
+class of {\tt omni\_thread} which needs an undetached thread, the member
+function executed by the thread is called {\tt run\_undetached()} rather than
+{\tt run()}, and it is started by calling {\tt start\_undetached()} instead of
+{\tt start()}.
+
+The abstraction currently supports three priorities of thread, but no guarantee
+is made of how this will affect underlying thread scheduling.  The three
+priorities are {\tt PRIORITY\_LOW}, {\tt PRIORITY\_NORMAL} and {\tt
+PRIORITY\_HIGH}.  By default all threads run at {\tt PRIORITY\_NORMAL}.  A
+different priority can be specified on thread creation, or while the thread is
+running using {\tt set\_priority().}  A thread's current priority is returned
+by {\tt priority()}.
+
+Other functions provided are {\tt self()} which returns the calling thread's
+{\tt omni\_thread} object, {\tt yield()} which requests that other threads be
+allowed to run, {\tt id()} which returns an integer id for the thread for use
+in debugging, {\tt state()}, {\tt sleep()} and {\tt get\_time()}.
+
+
+\section{Using threads in OMNI programs}
+
+All you need to do is include the {\tt omnithread.h} header file in your source
+code, and then link in the omnithread library in to your executable.  The
+details of what you need to put in your Imakefile to make the header files and
+library available is best explained by example.  If your program doesn't use
+CORBA then you just need something like this:
+
+\begin{verbatim}
+XCOMM
+XCOMM Non-CORBA Imakefile
+XCOMM
+
+CXXSRCS = wob.cc
+
+DEFINES = $(OMNITHREADDEFINE)
+
+NormalCplusplusProgramTarget(wob,wob.o,$(OMNITHREADDEPEND),\
+        $(OMNITHREADLIB),NullParameter)
+
+\end{verbatim}
+
+If you use CORBA then things are slightly more complicated in that the details
+differ according to whether OmniORB or Orbix is being used (this is because
+OmniORB uses OMNI threads internally).  Your Imakefile should be written to
+cope with both:
+
+\begin{verbatim}
+XCOMM
+XCOMM CORBA Imakefile
+XCOMM
+
+CXXSRCS = wob.cc
+
+#ifdef UseOmniORB
+
+DEFINES = $(CORBA_DEFINE)
+
+NormalCplusplusProgramTarget(wob,wob.o,$(CORBA_LIBDEPEND),\
+        $(CORBA_CLTLIB),NullParameter)
+
+#else
+
+DEFINES = $(CORBA_DEFINE) $(OMNITHREADDEFINE)
+
+NormalCplusplusProgramTarget(wob,wob.o,\
+        $(CORBA_LIBDEPEND) $(OMNITHREADDEPEND),\
+        $(CORBA_CLTLIB) $(OMNITHREADLIB),NullParameter)
+
+#endif
+
+\end{verbatim}
+
+Note that it is important that {\tt \$(CORBA\_CLTLIB)} or {\tt
+\$(CORBA\_SRVLIB)} appears before {\tt \$(OMNITHREADLIB)} in the
+NormalCplusplusProgramTarget rule.\footnote{This is because linking the Solaris
+thread library before the Orbix library results in a binary which segmentation
+faults inside the Orbix library initialisation.}
+
+\end{document}
