@@ -111,7 +111,7 @@ MDFLAGS += -p shared/
 ifdef Win32Platform
 # in case of Win32 lossage:
 imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
-         $(OMNIORB_LIB_NODYN))
+         $(OMNIORB_LIB))
 dynimps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
          $(OMNIORB_LIB))
 else
