@@ -65,9 +65,8 @@ do
 
 	for filename
 	do
-		if [ ! -z $filename ]
-			then
-			path=$prefix$filename
+		path=$prefix$filename
+		if [ ! -z $filename ]; then
 			prefix=$path/
 		fi
 		shift
