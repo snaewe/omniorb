@@ -110,14 +110,17 @@ interactive() {
 
   echo
   echo "Does this build tree have an export tree ?"
-  myread hasexporttree y
+
+  current=`pwd`
+  if [ `basename $current` = "build" ]; then
+    defaultexporttree=`dirname $current`
+    myread hasexporttree y
+  else
+    myread hasexporttree n
+  fi
+
 
   if [ "$hasexporttree" = "y" ]; then
-    current=`pwd`
-    if [ `basename $current` = "build" ]; then
-      defaultexporttree=`dirname $current`
-    fi
-
     echo
     echo "Enter the export tree"
     myread exporttree $defaultexporttree
@@ -146,6 +149,7 @@ interactive() {
 
     extraenvimports=`echo $OMNI_IMPORT_TREES | tr ' ' '\n' | \
 		     egrep -v '^'$exporttree'$'`
+    extraenvimports=`echo $extraenvimports`
 
     if [ "$extraenvimports" != "" ]; then
       echo "Do you also want to import from $extraenvimports ?"
@@ -217,9 +221,13 @@ getdefaultplatform() {
 
 if [ $# -eq 0 ]; then
 
+  interactive=true
+
   interactive
 
 else
+
+  interactive=false
 
   while [ "$1" != "" ]; do
     case "$1" in
@@ -458,3 +466,21 @@ for s in $sources; do
   echo $s >>$dest/config/sources
 
 done
+
+
+
+###########################################################################
+#
+# See if we should shadow the source trees
+#
+
+if $interactive; then
+  echo "************************************************************************"
+  echo
+  cd $dest
+  for s in $sources; do
+    echo "Shadow $s ?"
+    myread shadow y
+    oshadow $s
+  done
+fi
