@@ -1,3 +1,11 @@
+Tue Jul 27 00:52:10 BST 2004 dgrisby
+====================================
+
+- Add missing include files to install rules.
+
+include/omniORB4/GNUmakefile.in
+
+
 Mon Jul 26 23:55:25 BST 2004 dgrisby
 ====================================
 
