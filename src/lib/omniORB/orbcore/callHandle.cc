@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  2001/08/01 10:08:21  dpg1
+ Main thread policy.
+
  Revision 1.1.2.3  2001/07/31 16:29:40  sll
  Make call descriptor available from omniCurrent in the unmarshalling of
  arguments on the server side.
@@ -48,12 +51,68 @@
 #include <omniORB4/omniServant.h>
 #include <omniORB4/IOP_C.h>
 #include <poacurrentimpl.h>
+#include <invoker.h>
 
 
 static void
 dealWithUserException(cdrMemoryStream& stream,
 		      omniCallDescriptor& desc,
 		      CORBA::UserException& ex);
+
+
+#ifdef HAS_Cplusplus_Namespace
+namespace {
+#endif
+  class PostInvoker {
+  public:
+    inline PostInvoker(omniCallHandle::PostInvokeHook* hook)
+      : pd_hook(hook) {}
+    inline ~PostInvoker() {
+      if (pd_hook)
+	pd_hook->postinvoke();
+    }
+  private:
+    omniCallHandle::PostInvokeHook* pd_hook;
+  };
+
+  class MainThreadTask : public omniTask {
+  public:
+    inline MainThreadTask(omniServant* servant, omniCallDescriptor& desc,
+			  omni_tracedmutex* mu, omni_tracedcondition* cond)
+      : omniTask(omniTask::DedicatedThread),
+	pd_servant(servant),
+	pd_desc(desc),
+	pd_mu(mu),
+	pd_cond(cond),
+	pd_except(0),
+	pd_done(0)
+    {
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	l << "Preparing to dispatch '" << desc.op() << "' to main thread\n";
+      }
+    }
+
+    void execute();
+    // Called by the async invoker. Performs the upcall. If an
+    // exception occurs, places a copy in pd_except.
+
+    void wait();
+    // Wait for execute() to finish. Throws the exception in pd_except
+    // if there is one.
+    
+  private:
+    omniServant*          pd_servant;
+    omniCallDescriptor&   pd_desc;
+    omni_tracedmutex*     pd_mu;
+    omni_tracedcondition* pd_cond;
+    CORBA::Exception*     pd_except;
+    int                   pd_done;
+  };
+
+#ifdef HAS_Cplusplus_Namespace
+};
+#endif
 
 
 void
@@ -64,14 +123,29 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
   desc.poa(pd_poa);
   desc.localId(pd_localId);
 
+  omniCallDescriptor* to_insert;
+  if (pd_mainthread_mu)
+    to_insert = 0;
+  else
+    to_insert = &desc;
+
+  _OMNI_NS(poaCurrentStackInsert) insert(to_insert);
+
   if (pd_iop_s) { // Remote call
-    _OMNI_NS(poaCurrentStackInsert) _i(desc);
     pd_iop_s->ReceiveRequest(desc);
     {
-      if (pd_upcall_hook)
-	pd_upcall_hook->upcall(servant, desc);
-      else
+      PostInvoker postinvoker(pd_postinvoke_hook);
+
+      if (!pd_mainthread_mu) {
 	desc.doLocalCall(servant);
+      }
+      else {
+	// Main thread dispatch
+	MainThreadTask mtt(servant, desc,
+			   pd_mainthread_mu, pd_mainthread_cond);
+	int i = _OMNI_NS(orbAsyncInvoker)->insert(&mtt); OMNIORB_ASSERT(i);
+	mtt.wait();
+      }
     }
     pd_iop_s->SendReply();
   }
@@ -79,12 +153,18 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
 
     if (pd_call_desc == &desc) {
       // Fast case -- call descriptor can invoke directly on the servant
-      _OMNI_NS(poaCurrentStackInsert) _i(desc);
+      PostInvoker postinvoker(pd_postinvoke_hook);
 
-      if (pd_upcall_hook)
-	pd_upcall_hook->upcall(servant, desc);
-      else
+      if (!pd_mainthread_mu) {
 	desc.doLocalCall(servant);
+      }
+      else {
+	// Main thread dispatch
+	MainThreadTask mtt(servant, desc,
+			   pd_mainthread_mu, pd_mainthread_cond);
+	int i = _OMNI_NS(orbAsyncInvoker)->insert(&mtt); OMNIORB_ASSERT(i);
+	mtt.wait();
+      }
     }
     else {
       // Cannot call directly -- use a memory stream for now
@@ -98,11 +178,18 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
       desc.unmarshalArguments(stream);
 
       try {
-	_OMNI_NS(poaCurrentStackInsert) _i(desc);
-	if (pd_upcall_hook)
-	  pd_upcall_hook->upcall(servant, desc);
-	else
+	PostInvoker postinvoker(pd_postinvoke_hook);
+
+	if (!pd_mainthread_mu) {
 	  desc.doLocalCall(servant);
+	}
+	else {
+	  // Main thread dispatch
+	  MainThreadTask mtt(servant, desc,
+			     pd_mainthread_mu, pd_mainthread_cond);
+	  int i = _OMNI_NS(orbAsyncInvoker)->insert(&mtt); OMNIORB_ASSERT(i);
+	  mtt.wait();
+	}
       }
 #ifdef HAS_Cplusplus_catch_exception_by_base
       catch (CORBA::UserException& ex) {
@@ -195,4 +282,69 @@ omniCallHandle::SkipRequestBody()
 {
   if (pd_iop_s)
     pd_iop_s->SkipRequestBody();
+}
+
+
+void
+MainThreadTask::execute()
+{
+  if (omniORB::traceInvocations) {
+    omniORB::logger l;
+    l << "Main thread dispatch '" << pd_desc.op() << "'\n";
+  }
+
+  try {
+    _OMNI_NS(poaCurrentStackInsert) insert(&pd_desc);
+    pd_desc.doLocalCall(pd_servant);
+  }
+#ifdef HAS_Cplusplus_catch_exception_by_base
+  catch (CORBA::Exception& ex) {
+    pd_except = CORBA::Exception::_duplicate(&ex);
+  }
+#else
+#  define DUPLICATE_AND_STORE(name) \
+  catch (CORBA::name& ex) { \
+    pd_except = CORBA::Exception::_duplicate(&ex); \
+  }
+
+  OMNIORB_FOR_EACH_SYS_EXCEPTION(DUPLICATE_AND_STORE)
+#  undef DUPLICATE_AND_STORE
+
+  catch (omniORB::StubUserException& uex) {
+    pd_except = CORBA::Exception::_duplicate(uex.ex());
+  }
+#endif
+  catch (...) {
+    CORBA::UNKNOWN ex;
+    pd_except = CORBA::Exception::_duplicate(&ex);
+  }
+
+  {
+    // Wake up the dispatch thread
+    omni_tracedmutex_lock l(*pd_mu);
+    pd_done = 1;
+    pd_cond->signal();
+  }
+}
+
+void
+MainThreadTask::wait()
+{
+  {
+    omni_tracedmutex_lock l(*pd_mu);
+    while (!pd_done)
+      pd_cond->wait();
+  }
+  if (pd_except) {
+    // This interesting construction contrives to ask the
+    // heap-allocated exception to throw a copy of itself, then
+    // deletes it.
+    try {
+      pd_except->_raise();
+    }
+    catch (...) {
+      delete pd_except;
+      throw;
+    }
+  }
 }

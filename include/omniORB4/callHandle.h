@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  2001/08/01 10:08:19  dpg1
+ Main thread policy.
+
  Revision 1.1.2.2  2001/06/07 16:24:08  dpg1
  PortableServer::Current support.
 
@@ -56,18 +59,20 @@ public:
     : pd_iop_s(iop_s),
       pd_call_desc(0),
       pd_op(iop_s->operation_name()),
-      pd_upcall_hook(0),
+      pd_postinvoke_hook(0),
       pd_poa(0),
-      pd_localId(0)
+      pd_localId(0),
+      pd_mainthread_mu(0)
   {}
 
   inline omniCallHandle(omniCallDescriptor* call_desc)
     : pd_iop_s(0),
       pd_call_desc(call_desc),
       pd_op(call_desc->op()),
-      pd_upcall_hook(0),
+      pd_postinvoke_hook(0),
       pd_poa(0),
-      pd_localId(0)
+      pd_localId(0),
+      pd_mainthread_mu(0)
   {}
 
   inline const char*         operation_name() const { return pd_op; }
@@ -76,16 +81,18 @@ public:
 
   void upcall(omniServant* servant, omniCallDescriptor& desc);
 
-  // Class UpcallHook is used to insert extra processing before and
-  // after an upcall is made. It is used in the ServantLocator case to
-  // call postinvoke() before the results of an upcall are marshalled.
-  class UpcallHook {
+  // Class PostInvokeHook is used to insert extra processing after the
+  // upcall is made but before the results are marshalled. It is used
+  // in ServantLocator dispatch.
+  class PostInvokeHook {
   public:
-    virtual void upcall(omniServant*, omniCallDescriptor&) = 0;
+    virtual void postinvoke() = 0;
   };
 
-  inline void upcall_hook(UpcallHook* hook) { pd_upcall_hook = hook; }
-  inline UpcallHook* upcall_hook() { return pd_upcall_hook; }
+  inline void postinvoke_hook(PostInvokeHook* hook) {
+    pd_postinvoke_hook = hook;
+  }
+  inline PostInvokeHook* postinvoke_hook() { return pd_postinvoke_hook; }
 
   void SkipRequestBody();
   // SkipRequestBody is called if an exception occurs while
@@ -95,13 +102,20 @@ public:
   inline void poa(_OMNI_NS(omniOrbPOA)* poa) { pd_poa = poa; }
   inline void localId(omniLocalIdentity* id) { pd_localId = id; }
 
+  inline void mainThread(omni_tracedmutex* mu, omni_tracedcondition* cond) {
+    pd_mainthread_mu   = mu;
+    pd_mainthread_cond = cond;
+  }
+
 private:
   _OMNI_NS(IOP_S)*      pd_iop_s;
   omniCallDescriptor*   pd_call_desc;
   const char*           pd_op;
-  UpcallHook*           pd_upcall_hook;
+  PostInvokeHook*       pd_postinvoke_hook;
   _OMNI_NS(omniOrbPOA)* pd_poa;
   omniLocalIdentity*    pd_localId;
+  omni_tracedmutex*     pd_mainthread_mu;
+  omni_tracedcondition* pd_mainthread_cond;
 
 private:
   // Not implemented

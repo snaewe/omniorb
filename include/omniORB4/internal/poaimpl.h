@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/08/01 10:08:21  dpg1
+  Main thread policy.
+
   Revision 1.1.4.5  2001/07/31 16:10:38  sll
   Added GIOP BiDir support.
 
@@ -182,14 +185,21 @@ public:
   //////////////////////
 
   enum {
-    RPP_ACTIVE_OBJ_MAP = 0,
+    TP_ORB_CTRL      = 0,
+    TP_SINGLE_THREAD = 1,
+    TP_MAIN_THREAD   = 2
+  };
+  // Values for the threading field of Policies below.
+
+  enum {
+    RPP_ACTIVE_OBJ_MAP  = 0,
     RPP_DEFAULT_SERVANT = 1,
     RPP_SERVANT_MANAGER = 2
   };
   // Values for the req_processing field of Policies below.
 
   struct Policies {
-    unsigned single_threaded        : 1;
+    unsigned threading              : 2;
     unsigned transient              : 1;
     unsigned multiple_id            : 1;
     unsigned user_assigned_id       : 1;
@@ -347,27 +357,22 @@ private:
   // default servant, ServantActivator and ServantLocator
   // respectively.
 
-  class PostInvokeHook : public omniCallHandle::UpcallHook {
+  class SLPostInvokeHook : public omniCallHandle::PostInvokeHook {
   public:
-    PostInvokeHook(omniOrbPOA*                            poa,
-		   omni_rmutex*                           call_lock,
-		   PortableServer::ServantLocator_ptr     sl,
-		   PortableServer::ObjectId&              oid,
-		   const char*                            op,
-		   PortableServer::ServantLocator::Cookie cookie,
-		   PortableServer::Servant                servant)
-      : pd_poa(poa), pd_call_lock(call_lock),
-	pd_sl(sl), pd_oid(oid), pd_op(op),
+    SLPostInvokeHook(omniOrbPOA*                            poa,
+		     PortableServer::ServantLocator_ptr     sl,
+		     PortableServer::ObjectId&              oid,
+		     const char*                            op,
+		     PortableServer::ServantLocator::Cookie cookie,
+		     PortableServer::Servant                servant)
+      : pd_poa(poa), pd_sl(sl), pd_oid(oid), pd_op(op),
 	pd_cookie(cookie), pd_servant(servant)
     {}
 
-    virtual void upcall(omniServant*, omniCallDescriptor&);
+    virtual void postinvoke();
 
   private:
-    void call_postinvoke();
-
     omniOrbPOA*                            pd_poa;
-    omni_rmutex*                           pd_call_lock;
     PortableServer::ServantLocator_ptr     pd_sl;
     PortableServer::ObjectId&              pd_oid;
     const char*                            pd_op;
@@ -507,10 +512,22 @@ private:
   Policies                             pd_policy;
   // Immutable.
 
-  omni_rmutex*                         pd_call_lock;
-  // This recursive lock is used to enforce the single threaded model
-  // policy.  if( pd_policy.single_threaded ) then a mutex is
-  // allocated.
+  struct MainThreadSync {
+    omni_tracedmutex*     mu;
+    omni_tracedcondition* cond;
+  };
+  union {
+    omni_rmutex*                       pd_call_lock;
+    // This recursive lock is used to enforce the single threaded
+    // model policy. if( pd_policy.threading == TP_SINGLE_THREAD )
+    // then a mutex is allocated.
+
+    MainThreadSync                     pd_main_thread_sync;
+    // This is used to implement the main thread polict. if
+    // (pd_policy.threading == TP_MAIN_THREAD) then a mutex and
+    // condition variable are allocated. These are used by the main
+    // thread to signal the upcall thread when the call finishes.
+  };
 
   omni_tracedmutex                     pd_lock;
   // Protects access to various members.

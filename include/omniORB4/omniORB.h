@@ -24,11 +24,14 @@
 //
 //
 // Description:
-//        This is the public API of omniORB2's extension to CORBA.
+//      This is the public API of omniORB's extension to CORBA.
 //      The API is intended to be used in application code.
 
 /*
   $Log$
+  Revision 1.2.2.10  2001/08/01 10:08:20  dpg1
+  Main thread policy.
+
   Revision 1.2.2.9  2001/07/31 16:10:38  sll
   Added GIOP BiDir support.
 
@@ -265,6 +268,10 @@ _CORBA_MODULE_BEG
   ///////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // This section is only for omniORB 2.x compatibility. Do not use for //
+  // new code.                                                          //
+  //                                                                    //
   // objectKey is a data type that uniquely identify each object        //
   //           implementation in the same address space. Its actual     //
   //           implmentation is not public. The data type should only   //
@@ -293,7 +300,7 @@ _CORBA_MODULE_BEG
                                       const objectKey &k2);             //
   //                                                                    //
   //                                                                    //
-  typedef _CORBA_Unbounded_Sequence_Octet seqOctets;                   //
+  typedef _CORBA_Unbounded_Sequence_Octet seqOctets;                    //
   // Convert a key to a sequence of octets.                             //
   _CORBA_MODULE_FN seqOctets* keyToOctetSequence(const objectKey &k1);  //
   //                                                                    //
@@ -431,9 +438,9 @@ _CORBA_MODULE_BEG
 				 CORBA::Object_ptr obj,                 //
 				 void* cookie,                          //
 				 transientExceptionHandler_t fn);       //
-  //									//
-  _CORBA_MODULE_VAR _core_attr CORBA::ULong defaultTransientRetryDelayIncrement;   //
-  _CORBA_MODULE_VAR _core_attr CORBA::ULong defaultTransientRetryDelayMaximum;     //
+    									//
+  _CORBA_MODULE_VAR _core_attr CORBA::ULong defaultTransientRetryDelayIncrement;
+  _CORBA_MODULE_VAR _core_attr CORBA::ULong defaultTransientRetryDelayMaximum;
   ////////////////////////////////////////////////////////////////////////
 
 
@@ -498,6 +505,9 @@ _CORBA_MODULE_BEG
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // This section is only for omniORB 2.x compatibility. Do not use for //
+  // new code.                                                          //
   //                                                                    //
   // An application can register a handler for loading objects          //
   // dynamically. The handler should have the signature:                //
@@ -647,14 +657,14 @@ _CORBA_MODULE_BEG
   // maxServerThreadPerConnection                                       //
   //   The max. no. of threads the server will dispatch to server the   //
   //   requests coming from one connection.                             //
-  _CORBA_MODULE_VAR _core_attr unsigned int maxServerThreadPerConnection;//
+  _CORBA_MODULE_VAR _core_attr unsigned int maxServerThreadPerConnection;
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
   // maxInterleavedCallsPerConnection                                   //
   //   No. of interleaved calls per connection the server is prepared   //
   //   to accept. If this number is exceeded, the connection is closed. //
-  _CORBA_MODULE_VAR _core_attr unsigned int maxInterleavedCallsPerConnection;//
+  _CORBA_MODULE_VAR _core_attr unsigned int maxInterleavedCallsPerConnection;
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -671,7 +681,7 @@ _CORBA_MODULE_BEG
   //   the max. no. of connections the server will allow before it      //
   //   switch off the one thread per connection policy and move to      //
   //   the thread pool policy.                                          //
-  _CORBA_MODULE_VAR _core_attr unsigned int threadPerConnectionUpperLimit;//
+  _CORBA_MODULE_VAR _core_attr unsigned int threadPerConnectionUpperLimit;
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -870,8 +880,8 @@ _CORBA_MODULE_BEG
   //   The returned object contains all the ORB processing points where //
   //   interception functions can be added.                             //
   //   Calling this function before ORB_init() will result in a system  //
-  //   exception.
-  _CORBA_MODULE_FN _OMNI_NS(omniInterceptors)* getInterceptors();
+  //   exception.                                                       //
+  _CORBA_MODULE_FN _OMNI_NS(omniInterceptors)* getInterceptors();       //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -898,15 +908,32 @@ _CORBA_MODULE_BEG
   //                                                                    //
   // Get functions return null if no code set is configured.            //
   //                                                                    //
-  _CORBA_MODULE_FN void nativeCharCodeSet (const char* name);
-  _CORBA_MODULE_FN void nativeWCharCodeSet(const char* name);
-  _CORBA_MODULE_FN void anyCharCodeSet    (const char* name);
-  _CORBA_MODULE_FN void anyWCharCodeSet   (const char* name);
+  _CORBA_MODULE_FN void nativeCharCodeSet (const char* name);           //
+  _CORBA_MODULE_FN void nativeWCharCodeSet(const char* name);           //
+  _CORBA_MODULE_FN void anyCharCodeSet    (const char* name);           //
+  _CORBA_MODULE_FN void anyWCharCodeSet   (const char* name);           //
+                                                                        //
+  _CORBA_MODULE_FN const char* nativeCharCodeSet();                     //
+  _CORBA_MODULE_FN const char* nativeWCharCodeSet();                    //
+  _CORBA_MODULE_FN const char* anyCharCodeSet();                        //
+  _CORBA_MODULE_FN const char* anyWCharCodeSet();                       //
+  ////////////////////////////////////////////////////////////////////////
 
-  _CORBA_MODULE_FN const char* nativeCharCodeSet();
-  _CORBA_MODULE_FN const char* nativeWCharCodeSet();
-  _CORBA_MODULE_FN const char* anyCharCodeSet();
-  _CORBA_MODULE_FN const char* anyWCharCodeSet();
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // setMainThread()                                                    //
+  //                                                                    //
+  // POAs with the MAIN_THREAD policy dispatch calls on the "main"      //
+  // thread. By default, omniORB assumes that the thread which          //
+  // initialised the omnithread library is the "main" thread. To choose //
+  // a different thread, call this function from the desired "main"     //
+  // thread. The calling thread must have an omni_thread associated     //
+  // with it. If it does not, throws CORBA::INITIALIZE.                 //
+  //                                                                    //
+  // Note that calls are only actually dispatched to the "main" thread  //
+  // if ORB::run() or ORB::perform_work() is called from that thread.   //
+  //                                                                    //
+  _CORBA_MODULE_FN void setMainThread();                                //
   ////////////////////////////////////////////////////////////////////////
 
 

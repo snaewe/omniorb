@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.12  2001/08/01 10:08:22  dpg1
+  Main thread policy.
+
   Revision 1.2.2.11  2001/07/31 16:10:37  sll
   Added GIOP BiDir support.
 
@@ -393,7 +396,17 @@ static omniOrbPOA* theINSPOA  = 0;
 
 omniOrbPOA::~omniOrbPOA()
 {
-  if( pd_policy.single_threaded )  delete pd_call_lock;
+  switch (pd_policy.threading) {
+  case TP_ORB_CTRL:
+    break;
+  case TP_SINGLE_THREAD:
+    delete pd_call_lock;
+    break;
+  case TP_MAIN_THREAD:
+    delete pd_main_thread_sync.cond;
+    delete pd_main_thread_sync.mu;
+    break;
+  };
 }
 
 
@@ -408,7 +421,7 @@ omniOrbPOA::create_POA(const char* adapter_name,
 
   // Setup the default policies.
   Policies policy;
-  policy.single_threaded = 0;
+  policy.threading = TP_ORB_CTRL;
   policy.transient = 1;
   policy.multiple_id = 0;
   policy.user_assigned_id = 0;
@@ -1355,8 +1368,15 @@ omniOrbPOA::dispatch(omniCallHandle& handle, omniLocalIdentity* id)
 
   omni::internalLock->unlock();
 
-  omni_optional_rlock sync(pd_call_lock, !pd_policy.single_threaded,
-			   !pd_policy.single_threaded);
+  omni_optional_rlock sync(pd_call_lock,
+			   pd_policy.threading != TP_SINGLE_THREAD,
+			   pd_policy.threading != TP_SINGLE_THREAD);
+
+  if (pd_policy.threading == TP_MAIN_THREAD) {
+    omni_thread* self = omni_thread::self();
+    if (!(self && self->id() == omni::mainThreadId))
+      handle.mainThread(pd_main_thread_sync.mu, pd_main_thread_sync.cond);
+  }
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
@@ -1436,8 +1456,9 @@ omniOrbPOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
 
   omni::internalLock->unlock();
 
-  omni_optional_rlock sync(pd_call_lock, !pd_policy.single_threaded,
-			   !pd_policy.single_threaded);
+  omni_optional_rlock sync(pd_call_lock,
+			   pd_policy.threading != TP_SINGLE_THREAD,
+			   pd_policy.threading != TP_SINGLE_THREAD);
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
@@ -1445,11 +1466,24 @@ omniOrbPOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
       << id << '\n';
   }
 
-  call_desc.poa(this);
-  {
-    _OMNI_NS(poaCurrentStackInsert) _i(call_desc);
-    call_desc.doLocalCall(id->servant());
+  if (pd_policy.threading == TP_MAIN_THREAD) {
+    omni_thread* self = omni_thread::self();
+    if (!(self && self->id() == omni::mainThreadId)) {
+      // Have to mess with thread switching. Leave it to
+      // omniCallHandle::upcall()
+      omniCallHandle handle(&call_desc);
+      handle.poa(this);
+      handle.localId(id);
+      handle.mainThread(pd_main_thread_sync.mu, pd_main_thread_sync.cond);
+      handle.upcall(id->servant(), call_desc);
+      return;
+    }
   }
+
+  // Normal case -- do the call here
+  call_desc.poa(this);
+  _OMNI_NS(poaCurrentStackInsert) insert(&call_desc);
+  call_desc.doLocalCall(id->servant());
 }
 
 
@@ -1594,10 +1628,20 @@ omniOrbPOA::omniOrbPOA(const char* name,
     ((char*) pd_poaId)[pd_poaIdSize - 1] = '\0';
   }
 
+  switch (policies.threading) {
+  case TP_ORB_CTRL:
+    break;
+  case TP_SINGLE_THREAD:
+    pd_call_lock = new omni_rmutex();
+    break;
+  case TP_MAIN_THREAD:
+    pd_main_thread_sync.mu  = new omni_tracedmutex();
+    pd_main_thread_sync.cond= new omni_tracedcondition(pd_main_thread_sync.mu);
+    break;
+  } 
+
   // We assume that the policies given have been checked for validity.
   pd_policy = policies;
-
-  if( pd_policy.single_threaded )  pd_call_lock = new omni_rmutex();
 }
 
 
@@ -1876,7 +1920,7 @@ initialise_poa()
   // The root poa differs from the default policies only in that
   // it has the IMPLICIT_ACTIVATION policy.
   omniOrbPOA::Policies policy;
-  policy.single_threaded = 0;
+  policy.threading = omniOrbPOA::TP_ORB_CTRL;
   policy.transient = 1;
   policy.multiple_id = 0;
   policy.user_assigned_id = 0;
@@ -1918,7 +1962,7 @@ omniOrbPOA::omniINSPOA()
       ::initialise_poa();
 
     omniOrbPOA::Policies policy;
-    policy.single_threaded     = 0;
+    policy.threading           = omniOrbPOA::TP_ORB_CTRL;;
     policy.transient           = 0;
     policy.multiple_id         = 0;
     policy.user_assigned_id    = 1;
@@ -2601,9 +2645,9 @@ omniOrbPOA::dispatch_to_sl(omniCallHandle& handle,
   the_id.setServant((PortableServer::Servant) servant, this);
 
   // Create upcall hook
-  PostInvokeHook upcallHook(this, pd_call_lock, sl, oid,
-			    handle.operation_name(), cookie, servant);
-  handle.upcall_hook(&upcallHook);
+  SLPostInvokeHook postinvokeHook(this, sl, oid, handle.operation_name(),
+				  cookie, servant);
+  handle.postinvoke_hook(&postinvokeHook);
 
   omni::internalLock->lock();
   the_id.dispatch(handle);
@@ -2611,30 +2655,12 @@ omniOrbPOA::dispatch_to_sl(omniCallHandle& handle,
 
 void
 omniOrbPOA::
-PostInvokeHook::
-upcall(omniServant* servant, omniCallDescriptor& desc)
-{
-  try {
-    desc.doLocalCall(servant);
-  }
-  catch (...) {
-    call_postinvoke();
-    throw;
-  }
-  call_postinvoke();
-}
-
-void
-omniOrbPOA::
-PostInvokeHook::
-call_postinvoke()
+SLPostInvokeHook::
+postinvoke()
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
-  {
-    omni_optional_rlock(pd_call_lock, !pd_call_lock, !pd_call_lock);
-    pd_sl->postinvoke(pd_oid, pd_poa, pd_op, pd_cookie, pd_servant);
-  }
+  pd_sl->postinvoke(pd_oid, pd_poa, pd_op, pd_cookie, pd_servant);
   pd_poa->exitAdapter();
 }
 
@@ -2776,7 +2802,7 @@ transfer_and_check_policies(omniOrbPOA::Policies& pout,
   // Keep track of which policies have been set, so we can detect
   // incompatibilities.
   omniOrbPOA::Policies seen;
-  seen.single_threaded = 0;
+  seen.threading = 0;
   seen.transient = 0;
   seen.multiple_id = 0;
   seen.user_assigned_id = 0;
@@ -2794,12 +2820,30 @@ transfer_and_check_policies(omniOrbPOA::Policies& pout,
       {
 	PortableServer::ThreadPolicy_var p;
 	p = PortableServer::ThreadPolicy::_narrow(pin[i]);
-	if( seen.single_threaded && pout.single_threaded !=
-	    (p->value() == PortableServer::SINGLE_THREAD_MODEL) )
+
+	if( seen.threading ) {
+	  if ( pout.threading == omniOrbPOA::TP_ORB_CTRL &&
+	       p->value() != PortableServer::ORB_CTRL_MODEL ||
+	       pout.threading == omniOrbPOA::TP_SINGLE_THREAD &&
+	       p->value() != PortableServer::SINGLE_THREAD_MODEL ||
+	       pout.threading == omniOrbPOA::TP_MAIN_THREAD &&
+	       p->value() != PortableServer::MAIN_THREAD_MODEL )
+	    throw PortableServer::POA::InvalidPolicy(i);
+	}
+	switch( p->value() ) {
+	case PortableServer::ORB_CTRL_MODEL:
+	  pout.threading = omniOrbPOA::TP_ORB_CTRL;
+	  break;
+	case PortableServer::SINGLE_THREAD_MODEL:
+	  pout.threading = omniOrbPOA::TP_SINGLE_THREAD;
+	  break;
+	case PortableServer::MAIN_THREAD_MODEL:
+	  pout.threading = omniOrbPOA::TP_MAIN_THREAD;
+	  break;
+	default:
 	  throw PortableServer::POA::InvalidPolicy(i);
-	pout.single_threaded =
-	  p->value() == PortableServer::SINGLE_THREAD_MODEL;
-	seen.single_threaded = 1;
+	}
+	seen.threading = 1;
 	break;
       }
 

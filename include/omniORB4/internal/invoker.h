@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/08/01 10:08:20  dpg1
+  Main thread policy.
+
   Revision 1.1.4.1  2001/04/18 17:18:59  sll
   Big checkin with the brand new internal APIs.
 
@@ -44,7 +47,22 @@
 
 OMNI_NAMESPACE_BEGIN(omni)
 
-extern omniAsyncInvoker* orbAsyncInvoker;
+  class ORBAsyncInvoker : public omniAsyncInvoker {
+  public:
+    ORBAsyncInvoker(unsigned int max=10000)
+      : omniAsyncInvoker(max) {}
+
+    virtual ~ORBAsyncInvoker();
+
+    int  work_pending();
+    void perform(unsigned long secs = 0, unsigned long nanosecs = 0);
+
+  protected:
+    int insert_dedicated(omniTask*);
+    int cancel_dedicated(omniTask*);
+  };
+
+  extern ORBAsyncInvoker* orbAsyncInvoker;
 
 OMNI_NAMESPACE_END(omni)
 

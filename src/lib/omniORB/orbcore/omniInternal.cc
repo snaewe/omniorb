@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.14  2001/08/01 10:08:21  dpg1
+  Main thread policy.
+
   Revision 1.2.2.13  2001/07/31 16:40:03  sll
   Added argument to selectRope.
 
@@ -166,13 +169,12 @@ const omni::alignment_t          omni::max_alignment = ALIGN_8;
 
 int                              omni::remoteInvocationCount = 0;
 int                              omni::localInvocationCount = 0;
+int                              omni::mainThreadId = 0;
 
 omni_tracedmutex*                omni::objref_rc_lock = 0;
 // Protects omniObjRef reference counting.
 
 OMNI_NAMESPACE_BEGIN(omni)
-
-omniAsyncInvoker*                orbAsyncInvoker = 0;
 
 // The local object table.  This is a dynamically resized
 // open hash table.
@@ -1052,15 +1054,9 @@ public:
 
     objectTable = new omniLocalIdentity* [objectTableSize];
     for( CORBA::ULong i = 0; i < objectTableSize; i++ )  objectTable[i] = 0;
-
-    orbAsyncInvoker = new omniAsyncInvoker(omniORB::maxServerThreadPoolSize);
   }
 
   void detach() {
-    if (orbAsyncInvoker) {
-      delete orbAsyncInvoker;
-      orbAsyncInvoker = 0;
-    }
   }
 };
 

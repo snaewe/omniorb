@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/08/01 10:08:20  dpg1
+  Main thread policy.
+
   Revision 1.1.4.1  2001/04/18 17:18:18  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -79,6 +82,12 @@ public:
   // Override CORBA::Object.
 
   void actual_shutdown();
+
+  CORBA::Boolean run_timeout(unsigned long secs, unsigned long nanosecs);
+  // Same as run(), but stopping when the absolute timeout is reached.
+  // Returns true if shutdown, false if timed out. Note the potential
+  // for race conditions if shutdown coincides with timeout: only
+  // treat a timed-out indication as a hint.
 
 private:
   void do_shutdown(CORBA::Boolean wait_for_completion);

@@ -1,3 +1,29 @@
+Wed Aug  1 11:00:21 BST 2001 dpg1
+=================================
+
+- AyncInvoker no longer maintains its own dedicated thread queue.
+  Derived classes must provide the implementation.
+
+include/omniAsyncInvoker.h
+src/lib/omniAsyncInvoker/invoker.cc
+
+- Main thread policy.
+
+include/omniORB4/callHandle.h
+include/omniORB4/omniInternal.h
+include/omniORB4/omniORB.h
+include/omniORB4/poa.h
+src/lib/omniORB/include/corbaOrb.h
+src/lib/omniORB/include/invoker.h
+src/lib/omniORB/include/poacurrentimpl.h
+src/lib/omniORB/include/poaimpl.h
+src/lib/omniORB/orbcore/callHandle.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Tue Jul 31 20:23:03 BST 2001 sll
 ================================
 
