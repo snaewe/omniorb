@@ -76,7 +76,6 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 # CORBA stuff
 #
 
-omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
 CorbaImplementation = OMNIORB
 
 # It is known that the linker on Irix 6.4 and 6.5 has some peculiar
@@ -94,12 +93,10 @@ CorbaImplementation = OMNIORB
 #
 OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
 		$(patsubst %,$(LibSearchPattern),omniDynamic2) \
-	        $($(omniORBGatekeeperImplementation)_LIB) \
                 $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 
 OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
-	        $($(omniORBGatekeeperImplementation)_LIB) \
                 $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 

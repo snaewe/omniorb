@@ -13,6 +13,9 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
+# Revision 1.1.4.2  2001/08/29 17:48:08  sll
+# The rules to link the gatekeeper shared library are no longer needed.
+#
 # Revision 1.1.4.1  2000/08/21 13:31:49  sll
 # Merged make rules update from omni3_develop
 #
@@ -46,9 +49,6 @@ EmbeddedSystem = 1
 
 # RTEMS uses similar make/build structure as Unix, so turn this on
 UnixPlatform = 1
-
-# No gatekeeper
-NoGateKeeper = 1
 
 #
 # Global defines to build the ORB runtime libraries.
@@ -276,12 +276,6 @@ OMNIORB_TCPWRAPGK_LIB = $(patsubst %,$(LibSearchPattern),tcpwrapGK)
 lib_depend := $(patsubst %,$(LibPattern),tcpwrapGK)
 OMNIORB_TCPWRAPGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
-omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
-
-OMNIORB_LIB += $($(omniORBGatekeeperImplementation)_LIB)
-OMNIORB_LIB_NODYN += $($(omniORBGatekeeperImplementation)_LIB)
-OMNIORB_LIB_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
-OMNIORB_LIB_NODYN_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
 
 # thread libraries required by omniORB. Make sure this is the last in
 # the list of omniORB related libraries

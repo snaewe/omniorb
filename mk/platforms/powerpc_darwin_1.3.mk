@@ -50,7 +50,6 @@ MKDIRHIER = mkdir -p
 # CORBA stuff
 #
 
-omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
 CorbaImplementation = OMNIORB
 
 #

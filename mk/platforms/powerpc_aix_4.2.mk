@@ -99,12 +99,6 @@ LibSharedSearchPattern = -l%
 # CORBA stuff
 #
 
-# For the moment, gatekeeper feature is disabled with shared library.
-# Override the defaults set in unix.mk
-#
-#omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
-#omniORBGatekeeperImplementation = NO_IMPL
-
 #
 # Notice that the version number 3.0 is hardwired in OMNIORB_LIB.
 #

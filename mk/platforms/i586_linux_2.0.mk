@@ -55,7 +55,6 @@ IMPORT_CPPFLAGS += -D__x86__ -D__linux__ -D__OSVERSION__=2
 # CORBA stuff
 #
 
-omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
 CorbaImplementation = OMNIORB
 
 #

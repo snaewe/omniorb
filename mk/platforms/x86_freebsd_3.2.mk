@@ -51,7 +51,6 @@ INSTALL = install -c
 IMPORT_CPPFLAGS += -D__x86__ -D__freebsd__ -D__OSVERSION__=3
 
 
-omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
 CorbaImplementation = OMNIORB
 
 #

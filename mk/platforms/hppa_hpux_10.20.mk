@@ -125,8 +125,6 @@ THREAD_LIB =
 #
 # CORBA stuff
 #
-#omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
-omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
 CorbaImplementation = OMNIORB
 
 #

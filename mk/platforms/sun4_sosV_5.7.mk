@@ -105,7 +105,6 @@ THREAD_LIB = -lthread $(CXXMTFLAG)
 # CORBA stuff
 #
 
-omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
 CorbaImplementation = OMNIORB
 
 #

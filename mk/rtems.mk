@@ -13,6 +13,9 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
+# Revision 1.2.4.3  2001/08/29 17:48:06  sll
+# The rules to link the gatekeeper shared library are no longer needed.
+#
 # Revision 1.2.4.2  2000/11/09 12:27:46  dpg1
 # Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 #
@@ -275,23 +278,6 @@ OMNIORB_DYN_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%DynSK.cc
 OMNIORB_DYN_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%DynSK.o
 OMNIORB_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
 
-
-# omniORB access control policy modules
-
-OMNIORB_DUMMYGK_LIB = $(patsubst %,$(LibSearchPattern),omniGK_stub)
-lib_depend := $(patsubst %,$(LibPattern),omniGK_stub)
-OMNIORB_DUMMYGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
-
-OMNIORB_TCPWRAPGK_LIB = $(patsubst %,$(LibSearchPattern),tcpwrapGK)
-lib_depend := $(patsubst %,$(LibPattern),tcpwrapGK)
-OMNIORB_TCPWRAPGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
-
-omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
-
-OMNIORB_LIB += $($(omniORBGatekeeperImplementation)_LIB)
-OMNIORB_LIB_NODYN += $($(omniORBGatekeeperImplementation)_LIB)
-OMNIORB_LIB_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
-OMNIORB_LIB_NODYN_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
 
 # thread libraries required by omniORB. Make sure this is the last in
 # the list of omniORB related libraries

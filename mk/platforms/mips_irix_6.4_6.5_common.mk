@@ -102,7 +102,6 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 # CORBA stuff
 #
 
-omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
 CorbaImplementation = OMNIORB
 
 # SGI linker has some peculiar requirements on the order in which share
@@ -125,12 +124,10 @@ CorbaImplementation = OMNIORB
 
 OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
 		$(patsubst %,$(LibSearchPattern),omniDynamic3) \
-	        $($(omniORBGatekeeperImplementation)_LIB) \
                 $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 
 OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
-	        $($(omniORBGatekeeperImplementation)_LIB) \
                 $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 

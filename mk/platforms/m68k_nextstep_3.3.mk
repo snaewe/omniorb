@@ -57,9 +57,6 @@ IMPORT_CPPFLAGS += -D__m68k__ -D__nextstep__ -D__OSVERSION__=3
 # CORBA stuff
 #
 
-#omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
-#omniORBGatekeeperImplementation = NO_IMPL
-omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
 CorbaImplementation = OMNIORB
 
 #

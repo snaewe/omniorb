@@ -190,24 +190,6 @@ OMNIORB_DYN_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%DynSK.cc
 OMNIORB_DYN_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%DynSK.o
 OMNIORB_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
 
-
-# omniORB access control policy modules
-
-OMNIORB_DUMMYGK_LIB = $(patsubst %,$(LibSearchPattern),omniGK_stub)
-lib_depend := $(patsubst %,$(LibPattern),omniGK_stub)
-OMNIORB_DUMMYGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
-
-OMNIORB_TCPWRAPGK_LIB = $(patsubst %,$(LibSearchPattern),tcpwrapGK)
-lib_depend := $(patsubst %,$(LibPattern),tcpwrapGK)
-OMNIORB_TCPWRAPGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
-
-omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
-
-OMNIORB_LIB += $($(omniORBGatekeeperImplementation)_LIB)
-OMNIORB_LIB_NODYN += $($(omniORBGatekeeperImplementation)_LIB)
-OMNIORB_LIB_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
-OMNIORB_LIB_NODYN_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
-
 OMNIORB_LIB += $(OMNIASYNCINVOKER_LIB)
 OMNIORB_LIB_NODYN += $(OMNIASYNCINVOKER_LIB)
 OMNIORB_LIB_DEPEND += $(OMNIASYNCINVOKER_LIB_DEPEND)
