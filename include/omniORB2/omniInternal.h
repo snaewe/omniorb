@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15  1997/12/15 15:26:32  sll
+  Added the missing dllimport/dllexport for WIN32.
+
   Revision 1.14  1997/12/12 19:59:19  sll
   Added version variable omniORB_x_y.
 
@@ -90,7 +93,7 @@ class omniObjectManager;
 //   the variable name stays the same with compatible shared library, e.g.
 //   2.4.1.
 //
-extern const char* omniORB_2_4;
+extern const char* _OMNIORB2_NTDLL_ omniORB_2_4;
 
 #include <omniORB2/rope.h>
 
