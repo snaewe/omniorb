@@ -35,6 +35,14 @@ REGEDIT4
 ;"traceLevel" = "1"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Trace Exceptions
+;     If true, then system exceptions will be logged when they are thrown.
+;
+;     Valid values = 0 or 1
+;
+"traceInvocations" = "0"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Trace Invocations
 ;     If true, then each local and remote invocation will generate a trace 
 ;     message.

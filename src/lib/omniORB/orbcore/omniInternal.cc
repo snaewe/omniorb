@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.35  2004/07/23 13:25:44  dgrisby
+  New traceExceptions option.
+
   Revision 1.2.2.34  2004/03/02 15:31:22  dgrisby
   Support for persistent server identifier.
 
@@ -237,6 +240,11 @@ CORBA::ULong  omniORB::traceLevel = 1;
 //    level 40 - dump the complete giop message
 //
 //    Valid values = (n >= 0)
+
+CORBA::Boolean  omniORB::traceExceptions = 0;
+//    If true, then system exceptions are logged when they are thrown.
+//
+//    Valid values = 0 or 1
 
 CORBA::Boolean  omniORB::traceInvocations = 0;
 //    If true, then each local and remote invocation will generate a trace 
@@ -1281,6 +1289,8 @@ public:
 				 orbOptions::expect_ulong_msg);
     }
     omniORB::traceLevel = v;
+    if (v >= 10)
+      omniORB::traceExceptions = 1;
   }
 
   void dump(orbOptions::sequenceString& result) {
@@ -1291,6 +1301,35 @@ public:
 };
 
 static traceLevelHandler traceLevelHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class traceExceptionsHandler : public orbOptions::Handler {
+public:
+
+  traceExceptionsHandler() : 
+    orbOptions::Handler("traceExceptions",
+			"traceExceptions = 0 or 1",
+			1,
+			"-ORBtraceExceptions < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    omniORB::traceExceptions = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),omniORB::traceExceptions,
+			     result);
+  }
+};
+
+static traceExceptionsHandler traceExceptionsHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
 class traceInvocationsHandler : public orbOptions::Handler {
@@ -1418,6 +1457,7 @@ public:
 
   omni_omniInternal_initialiser() {
     orbOptions::singleton().registerHandler(traceLevelHandler_);
+    orbOptions::singleton().registerHandler(traceExceptionsHandler_);
     orbOptions::singleton().registerHandler(traceInvocationsHandler_);
     orbOptions::singleton().registerHandler(traceThreadIdHandler_);
     orbOptions::singleton().registerHandler(objectTableSizeHandler_);

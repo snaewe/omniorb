@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.28  2004/07/23 13:25:44  dgrisby
+  New traceExceptions option.
+
   Revision 1.1.4.27  2003/09/25 13:47:44  dgrisby
   Log connection attempts.
 
@@ -516,7 +519,7 @@ giopStream::CommFailure::_raise(CORBA::ULong minor,
 {
   if (status != CORBA::COMPLETED_NO) retry = 0;
 #ifndef OMNIORB_NO_EXCEPTION_LOGGING
-  if( omniORB::trace(10) ) {
+  if( omniORB::traceExceptions ) {
     omniORB::logger l;
     l << "throw giopStream::CommFailure from "
       << omniExHelper::strip(filename) 	

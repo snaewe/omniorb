@@ -240,7 +240,7 @@ _OMNI_NS(omniExHelper)::strip(const char* fn)
   void _OMNI_NS(omniExHelper)::name(const char* file, int line, \
 		  CORBA::ULong minor , CORBA::CompletionStatus status) \
   { \
-    if( omniORB::trace(10) ) { \
+    if( omniORB::traceExceptions ) { \
       omniORB::logger l; \
       l << "throw " #name << " from " << strip(file) << ":" << line \
         << " ("; \
