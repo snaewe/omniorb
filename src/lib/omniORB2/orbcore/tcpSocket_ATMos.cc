@@ -6,13 +6,15 @@
 // Copyright (C) Olivetti - Oracle Research Limited, 1996
 //
 // Description:
-//	Implementation of the Strand using TCP/IP and socket interface
+//	Implementation of the Strand using TCP/IP and ATMos IP package
+//      interface.
 //	
+
 
 /*
   $Log$
-  Revision 1.2  1997/01/21 14:27:09  ewc
-  Fixed minor bug in tcpSocketRope::remote_is()
+  Revision 1.3  1997/01/21 14:42:44  ewc
+  Minor change to comments.
 
 // Revision 1.1  1997/01/08  18:35:17  ewc
 // Initial revision
