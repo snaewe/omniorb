@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2004/10/18 11:46:47  dgrisby
+  accept() error handling didn't work on MacOS X.
+
   Revision 1.1.2.11  2004/10/17 22:27:24  dgrisby
   Handle errors in accept() properly. Thanks Kamaldeep Singh Khanuja and
   Jeremy Van Grinsven.
@@ -227,46 +230,43 @@ unixEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 CORBA::Boolean
 unixEndpoint::notifyReadable(SocketHandle_t fd) {
 
-again:
-
   if (fd == pd_socket) {
+    // New connection
     SocketHandle_t sock;
+again:
     sock = ::accept(pd_socket,0,0);
     if (sock == RC_SOCKET_ERROR) {
       if (ERRNO == RC_EBADF) {
         omniORB::logs(20, "accept() returned EBADF, unable to continue");
         return 0;
       }
-      else if (ERRNO == RC_EINTR ) {
+      else if (ERRNO == RC_EINTR) {
         omniORB::logs(20, "accept() returned EINTR, trying again");
         goto again;
       }
-      else if (ERRNO == RC_ECONNABORTED || ERRNO == RC_EPROTO ) {
-        omniORB::logs(20, "accept() returned ECONNABORTED, ignoring accept");
-        goto ignore;
-      }
-      else if (ERRNO == RC_EAGAIN ) {
+      else if (ERRNO == RC_EAGAIN) {
         omniORB::logs(20, "accept() returned EAGAIN, trying again");
         goto again;
       }
-      if (omniORB::trace(1)) {
+      if (omniORB::trace(20)) {
         omniORB::logger log;
-        log << "Error: accept failed with unknown error " << ERRNO << "\n";
+        log << "accept() failed with unknown error " << ERRNO << "\n";
       }
-      return 0;
     }
-    pd_new_conn_socket = sock;
-
-ignore:
-
+    else {
+      pd_new_conn_socket = sock;
+    }
     setSelectable(pd_socket,1,0,1);
     return 1;
   }
-  SocketLink* conn = findSocket(fd,1);
-  if (conn) {
-    pd_callback_func(pd_callback_cookie,(unixConnection*)conn);
+  else {
+    // Existing connection
+    SocketLink* conn = findSocket(fd,1);
+    if (conn) {
+      pd_callback_func(pd_callback_cookie,(unixConnection*)conn);
+    }
+    return 1;
   }
-  return 1;
 }
 
 OMNI_NAMESPACE_END(omni)
