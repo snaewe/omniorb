@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2002/03/21 11:00:05  dpg1
+  Minor message tweaks.
+
   Revision 1.2.2.7  2002/03/14 15:12:33  dpg1
   More logging for tracedmutexes/conditions.
 
@@ -89,8 +92,8 @@
 #ifdef OMNIORB_ENABLE_LOCK_TRACES
 
 static const char* bug_msg =
-  " This is a bug in omniORB. Please submit a report (with stack\n"
-  " trace if possible) to <omniorb@uk.research.att.com>.\n";
+  " This is probably a bug in omniORB. Please submit a report\n"
+  " (with stack trace if possible) to <omniorb@omniorb.org>.\n";
 
 
 omni_tracedmutex::omni_tracedmutex()

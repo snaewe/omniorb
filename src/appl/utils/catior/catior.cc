@@ -421,24 +421,24 @@ int main(int argc, char* argv[])
 	  
 	}
 	else {
-	  cout << "Unrecognised profile tag: "
-	       << (int) (ior.profiles[count].tag)
+	  cout << "Unrecognised profile tag: 0x"
+	       << hex << (unsigned)(ior.profiles[count].tag)
 	       << endl;
 	}
       }
     }
   }
   catch(CORBA::MARSHAL& ex) {
-    cerr << "Invalid stringified IOR supplied." << endl;
+    cerr << "\nInvalid stringified IOR supplied." << endl;
     const char* ms = ex.NP_minorString();
     if (ms)
-      cerr << "(MARSHAL Minor = " << ms << ")" << endl;
+      cerr << "(CORBA::MARSHAL: minor = " << ms << ")" << endl;
     else
-      cerr << "(MARSHAL Minor = " << ex.minor() << ")" << endl;
+      cerr << "(CORBA::MARSHAL: minor = " << ex.minor() << ")" << endl;
     return 1;
   }
   catch(...) {
-    cerr << "Exception while processing stringified IOR." << endl;
+    cerr << "\nException while processing stringified IOR." << endl;
     return 1;
   }
 

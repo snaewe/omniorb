@@ -1,3 +1,22 @@
+Thu Mar 21 10:51:11 GMT 2002 dpg1
+=================================
+
+- Minor tweaks to sample config.
+
+sample.cfg
+sample.reg
+
+- HPUX fixes.
+
+external_merge/mk/beforeauto.mk.in
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+
+- Minor message tweaks.
+
+src/appl/utils/catior/catior.cc
+src/lib/omniORB/orbcore/tracedthread.cc
+
+
 Tue Mar 19 15:40:33 GMT 2002 dpg1
 =================================
 
