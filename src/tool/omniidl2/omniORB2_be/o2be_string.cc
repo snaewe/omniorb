@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.7  1998/01/27 16:49:27  ewc
+   Added support for type Any and TypeCode
+
   Revision 1.6  1997/12/09 19:55:28  sll
   *** empty log message ***
 
@@ -66,6 +69,12 @@ o2be_string::o2be_string(AST_Expression *v)
   set__fqname(p);
   set_scopename("");
   set__scopename("");
+
+  set_tcname("");
+  set_fqtcname("");
+  set__fqtcname("");
+
+  set_recursive_seq(I_FALSE);
 }
 
 o2be_string::o2be_string(AST_Expression *v, long wide)
@@ -112,6 +121,10 @@ o2be_string::o2be_string(AST_Expression *v, long wide)
   set__fqname(p);
   set_scopename("");
   set__scopename("");
+
+  set_tcname("");
+  set_fqtcname("");
+  set__fqtcname("");
 }
 
 const char *

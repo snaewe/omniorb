@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.7  1998/01/27 16:50:17  ewc
+   Added support for type Any and TypeCode
+
   Revision 1.6  1997/12/23 19:29:37  sll
   Now generate the implementation of array helper functions defined in
   the global scope in the skeleton file. This applies to typedef of array
@@ -51,6 +54,7 @@
 
 #define OBJREF_MEMBER_TEMPLATE_NAME "_CORBA_ObjRef_Member"
 #define STRING_MEMBER_NAME          "CORBA::String_member"
+#define TYPECODE_MEMBER_NAME        "CORBA::TypeCode_member"
 #define SEQUENCE_VAR_TEMPLATE	    "_CORBA_ConstrType_Variable_Var"
 
 o2be_typedef::o2be_typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
@@ -93,6 +97,8 @@ o2be_typedef::o2be_typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
       pd_fm_uqname = uqname();
       break;
     }
+
+  set_recursive_seq(I_FALSE);
 }
 
 void
@@ -103,6 +109,17 @@ o2be_typedef::produce_hdr(fstream &s)
 
   while (decl->node_type() == AST_Decl::NT_typedef) {
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+  }
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    if (check_recursive_seq() == I_FALSE) {
+      set_recursive_seq(I_FALSE);
+      // TypeCode_ptr declaration
+      IND(s); s << ((defined_in() == idl_global->root()) ? "extern " : 
+		    "static ") 
+		<< "const CORBA::TypeCode_ptr " << tcname() << ";\n";
+    }
+    else set_recursive_seq(I_TRUE);
   }
 
   switch (decl->node_type())
@@ -158,6 +175,48 @@ o2be_typedef::produce_skel(fstream &s)
 	o2be_array::produce_typedef_skel(s,this,
 					 o2be_typedef::narrow_from_decl(base_type()));
     }
+
+  if ((idl_global->compile_flags() & IDL_CF_ANY) && 
+      recursive_seq() == I_FALSE) {
+    // Produce code for types any and TypeCode
+    this->produce_typecode_skel(s);
+    
+    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+	      << "_01RL_" << _fqtcname() << ";\n\n";
+  }
+}
+
+void
+o2be_typedef::produce_typecode_skel(fstream &s)
+{  
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
+    s << "#define " << "__01RL_" << _fqtcname() << "__\n\n";
+    
+    AST_Decl *decl = base_type();
+    
+    if (!decl->in_main_file() || 
+	decl->node_type() == AST_Decl::NT_array || 
+	decl->node_type() == AST_Decl::NT_sequence)
+      o2be_name::narrow_and_produce_typecode_skel(decl,s);	       
+    
+    IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname()
+	      << "(\""<< repositoryID() << "\", \"" << uqname() 
+	      << "\", ";
+    o2be_name::produce_typecode_member(decl,s,I_FALSE);
+    s << ");\n\n";
+	
+
+    s << "#endif\n\n";
+  }
+  return;
+}
+
+idl_bool 
+o2be_typedef::check_recursive_seq()
+{
+  AST_Decl *base_decl = base_type();
+  return o2be_name::narrow_and_check_recursive_seq(base_decl);
 }
 
 const char*
@@ -201,6 +260,14 @@ o2be_typedef::fieldMemberType_fqname(AST_Decl* used_in)
       result = new char[strlen(STRING_MEMBER_NAME)+1];
       strcpy(result,STRING_MEMBER_NAME);
       break;
+    case AST_Decl::NT_pre_defined:
+      if(o2be_predefined_type::narrow_from_decl(decl)->pt() == 
+	 AST_PredefinedType::PT_TypeCode)
+	{
+	  result = new char[strlen(TYPECODE_MEMBER_NAME)+1];
+	  strcpy(result,TYPECODE_MEMBER_NAME);
+	  break;
+	}      
     default:
       result = (char*) ubname;
       break;

@@ -28,9 +28,12 @@
 
 /*
   $Log$
-  Revision 1.10  1998/01/20 19:13:56  sll
-  Added support for OpenVMS.
+  Revision 1.11  1998/01/27 16:51:01  ewc
+   Added support for type Any and TypeCode
 
+// Revision 1.10  1998/01/20  19:13:56  sll
+// Added support for OpenVMS.
+//
   Revision 1.9  1997/12/23 19:26:58  sll
   Fixed a number of bugs related to unions that have array members.
 
@@ -169,6 +172,7 @@ o2be_union::o2be_union(AST_ConcreteType *dt,
   strcat(pd_out_adptarg_name,",");
   strcat(pd_out_adptarg_name,fqname());
   strcat(pd_out_adptarg_name,"_var>");  
+  set_recursive_seq(I_FALSE);
 }
 
 AST_UnionBranch *
@@ -205,7 +209,9 @@ o2be_union::add_union_branch(AST_UnionBranch *un)
       break;
     case AST_Decl::NT_pre_defined:
       if (o2be_predefined_type::narrow_from_decl(decl)->pt()
-	  == AST_PredefinedType::PT_any) 
+	  == AST_PredefinedType::PT_any ||
+	  o2be_predefined_type::narrow_from_decl(decl)->pt()
+	  == AST_PredefinedType::PT_TypeCode) 
 	{
 	  pd_isvar = I_TRUE;
 	}
@@ -479,7 +485,8 @@ o2be_union::produce_hdr(fstream &s)
 		ntype != o2be_operation::tUnionFixed &&
 		ntype != o2be_operation::tSequence &&
 		ntype != o2be_operation::tArrayVariable &&
-		ntype != o2be_operation::tAny)
+		ntype != o2be_operation::tAny &&
+		ntype != o2be_operation::tTypeCode)
 	      {
 		has_fix_member = I_TRUE;
 		if (ntype == o2be_operation::tArrayFixed) 
@@ -520,6 +527,13 @@ o2be_union::produce_hdr(fstream &s)
 		  IND(s); s << o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this)
 			    << " " << f->uqname() << " () const { return "
 			    << "pd_" << f->uqname() << "._ptr; }\n";
+		  break;
+		}
+	      case o2be_operation::tTypeCode:
+		{
+		  IND(s); s << "CORBA::TypeCode_ptr " << f->uqname()
+			    << " () const { return pd_" << f->uqname()
+			    << "._ptr; }\n";
 		  break;
 		}
 	      case o2be_operation::tSequence:
@@ -772,6 +786,72 @@ o2be_union::produce_hdr(fstream &s)
 		  DEC_INDENT_LEVEL();
 		  IND(s); s << "}\n";
 		  break;
+		}
+	      case o2be_operation::tTypeCode:
+		{
+		IND(s); s << "void "
+			  << f->uqname() << "(CORBA::TypeCode_ptr _value) {\n";
+		INC_INDENT_LEVEL();
+		if (l->label_kind() == AST_UnionLabel::UL_label)
+		  {
+		    IND(s); s << "pd__d = ";
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
+		    s << ";\n";
+		    IND(s); s << "pd__default = 0;\n";
+		  }
+		else
+		  {
+		    IND(s); s << "pd__d = ";
+		    produce_default_value(*this,s);
+		    s << ";\n";
+		    IND(s); s << "pd__default = 1;\n";
+		  }
+		IND(s); s << "pd_" << f->uqname() << " = CORBA::TypeCode::_duplicate(_value);\n";
+		DEC_INDENT_LEVEL();
+		IND(s); s << "}\n";
+		IND(s); s << "void "
+			  << f->uqname() << "(const " 
+			  << o2be_predefined_type::TypeCodeMemberName() 
+			  << "& _value) {\n";
+		INC_INDENT_LEVEL();
+		if (l->label_kind() == AST_UnionLabel::UL_label)
+		  {
+		    IND(s); s << "pd__d = ";
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
+		    s << ";\n";
+		    IND(s); s << "pd__default = 0;\n";
+		  }
+		else
+		  {
+		    IND(s); s << "pd__d = ";
+		    produce_default_value(*this,s);
+		    s << ";\n";
+		    IND(s); s << "pd__default = 1;\n";
+		  }
+		IND(s); s << "pd_" << f->uqname() << " = _value;\n";
+		DEC_INDENT_LEVEL();
+		IND(s); s << "}\n";
+		IND(s); s << "void "
+			  << f->uqname() << "(const CORBA::TypeCode_var& _value) {\n";
+		INC_INDENT_LEVEL();
+		if (l->label_kind() == AST_UnionLabel::UL_label)
+		  {
+		    IND(s); s << "pd__d = ";
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
+		    s << ";\n";
+		    IND(s); s << "pd__default = 0;\n";
+		  }
+		else
+		  {
+		    IND(s); s << "pd__d = ";
+		    produce_default_value(*this,s);
+		    s << ";\n";
+		    IND(s); s << "pd__default = 1;\n";
+		  }
+		IND(s); s << "pd_" << f->uqname() << " = _value;\n";
+		DEC_INDENT_LEVEL();
+		IND(s); s << "}\n";
+		break;
 		}
 	      case o2be_operation::tSequence:
 #ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
@@ -1094,7 +1174,10 @@ o2be_union::produce_hdr(fstream &s)
 			      << " pd_" << f->uqname() << ";\n";
 		  }
 		break;
-
+	      case o2be_operation::tTypeCode:
+		IND(s); s << o2be_predefined_type::TypeCodeMemberName()
+			  << " pd_" << f->uqname() << ";\n";
+		break;
 #ifdef __VMS
               case o2be_operation::tFloat:
               case o2be_operation::tDouble:
@@ -1175,6 +1258,44 @@ o2be_union::produce_hdr(fstream &s)
 	    << ((isVariable())?"Variable":"Fix")
 	    << "_Var<" << uqname() << "> " 
 	      << uqname() << "_var;\n\n";
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    if (check_recursive_seq() == I_FALSE) {
+      set_recursive_seq(I_FALSE);
+
+      // TypeCode_ptr declaration
+      IND(s); s << ((defined_in() == idl_global->root()) ? "extern " : 
+		    "static ") 
+		<< "const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+
+    // any insertion operators (inline definitions)
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "inline void operator<<=(CORBA::Any& _a, const " << uqname() 
+		<< "& _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+      IND(s); s << tcname() << "->NP_fillInit(_0RL_mbuf);\n";
+      IND(s); s << "_s >>= _0RL_mbuf;\n";
+      IND(s); s << "_a.NP_replaceData(" << tcname() << ",_0RL_mbuf);\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "inline void operator<<=(CORBA::Any& _a, " << uqname() 
+		<< "* _sp) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "::operator<<=(_a,*_sp);\n";
+      IND(s); s << "delete _sp;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      // any extraction operator (declaration)
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+		<< uqname() << "*& _sp);\n\n";
+    }
+    else set_recursive_seq(I_TRUE);
+  }
 
   produce_seq_hdr_if_defined(s);
 }
@@ -1282,6 +1403,10 @@ o2be_union::produce_skel(fstream &s)
 		      ntype = o2be_operation::tObjrefMember;
 		      mapping.is_pointer = I_FALSE;
 		    }
+		    else if (ntype == o2be_operation::tTypeCode) {
+		      ntype = o2be_operation::tTypeCodeMember;
+		      mapping.is_pointer = I_FALSE;
+		    }
 
 		    char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
 		    strcpy(tmpname,"pd_");
@@ -1334,6 +1459,10 @@ o2be_union::produce_skel(fstream &s)
 		}
 		else if (ntype == o2be_operation::tObjref) {
 		  ntype = o2be_operation::tObjrefMember;
+		  mapping.is_pointer = I_FALSE;
+		}
+		else if (ntype == o2be_operation::tTypeCode) {
+		  ntype = o2be_operation::tTypeCodeMember;
 		  mapping.is_pointer = I_FALSE;
 		}
 
@@ -1414,6 +1543,10 @@ o2be_union::produce_skel(fstream &s)
 		      ntype = o2be_operation::tObjrefMember;
 		      mapping.is_pointer = I_FALSE;
 		    }
+		    else if (ntype == o2be_operation::tTypeCode) {
+		      ntype = o2be_operation::tTypeCodeMember;
+		      mapping.is_pointer = I_FALSE;
+		    }
 
 		    char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
 		    strcpy(tmpname,"pd_");
@@ -1465,6 +1598,10 @@ o2be_union::produce_skel(fstream &s)
 		}
 		else if (ntype == o2be_operation::tObjref) {
 		  ntype = o2be_operation::tObjrefMember;
+		  mapping.is_pointer = I_FALSE;
+		}
+		else if (ntype == o2be_operation::tTypeCode) {
+		  ntype = o2be_operation::tTypeCodeMember;
 		  mapping.is_pointer = I_FALSE;
 		}
 
@@ -1555,6 +1692,10 @@ o2be_union::produce_skel(fstream &s)
 	      ntype = o2be_operation::tObjrefMember;
 	      mapping.is_pointer = I_FALSE;
 	    }
+	    else if (ntype == o2be_operation::tTypeCode) {
+	      ntype = o2be_operation::tTypeCodeMember;
+	      mapping.is_pointer = I_FALSE;
+	    }
 
 	    char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
 	    strcpy(tmpname,"pd_");
@@ -1627,6 +1768,10 @@ o2be_union::produce_skel(fstream &s)
 		      ntype = o2be_operation::tObjrefMember;
 		      mapping.is_pointer = I_FALSE;
 		    }
+		    else if (ntype == o2be_operation::tTypeCode) {
+		      ntype = o2be_operation::tTypeCodeMember;
+		      mapping.is_pointer = I_FALSE;
+		    }
 
 		    char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
 		    strcpy(tmpname,"pd_");
@@ -1678,6 +1823,10 @@ o2be_union::produce_skel(fstream &s)
 		}
 		else if (ntype == o2be_operation::tObjref) {
 		  ntype = o2be_operation::tObjrefMember;
+		  mapping.is_pointer = I_FALSE;
+		}
+		else if (ntype == o2be_operation::tTypeCode) {
+		  ntype = o2be_operation::tTypeCodeMember;
 		  mapping.is_pointer = I_FALSE;
 		}
 
@@ -1767,6 +1916,10 @@ o2be_union::produce_skel(fstream &s)
 	      ntype = o2be_operation::tObjrefMember;
 	      mapping.is_pointer = I_FALSE;
 	    }
+	    else if (ntype == o2be_operation::tTypeCode) {
+	      ntype = o2be_operation::tTypeCodeMember;
+	      mapping.is_pointer = I_FALSE;
+	    }
 
 	    char *tmpname = new char [strlen("pd_")+strlen(f->uqname())+1];
 	    strcpy(tmpname,"pd_");
@@ -1794,6 +1947,174 @@ o2be_union::produce_skel(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
+
+  if ((idl_global->compile_flags() & IDL_CF_ANY) && 
+      recursive_seq() == I_FALSE) {
+    // Produce code for types any and TypeCode
+    this->produce_typecode_skel(s);
+
+    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+	      << "_01RL_" << _fqtcname() << ";\n\n";
+    
+    IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << fqname() << "*" << " _0RL_t = (" << fqname() << "*) _data;\n";
+    IND(s); s << "delete _0RL_t;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+        
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	      << fqname() << "*& _sp) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+    IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
+	      << ",1)) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_sp = 0;\n";
+    IND(s); s << "return 0;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "else {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
+    IND(s); s << "if (!_0RL_data) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
+    IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
+    IND(s); s << fqname() << "* _0RL_tmp = new " << fqname() << ";\n";
+    IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
+    IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
+    IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << _fqname() 
+	      << "_delete);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+    IND(s); s << "_sp = (" << fqname() << "*) _0RL_data;\n";
+    IND(s); s << "return 1;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  } 
+}
+
+void
+o2be_union::produce_typecode_skel(fstream &s)
+{
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
+    s << "#define " << "__01RL_" << _fqtcname() << "__\n\n";
+ 
+   {
+     // Produce static TypeCodes for members that are not
+     // defined in this file.
+
+     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+     while (!i.is_done())
+       {
+	 AST_Decl *d = i.item();
+	 if (d->node_type() == AST_Decl::NT_union_branch)
+	   {
+	     AST_Decl *decl = 
+	       AST_UnionBranch::narrow_from_decl(d)->field_type();
+	      if (!decl->in_main_file() || 
+		  decl->node_type() == AST_Decl::NT_array || 
+		  decl->node_type() == AST_Decl::NT_sequence)
+		o2be_name::narrow_and_produce_typecode_skel(decl,s);	       
+	   }
+	 i.next();
+       }
+   }
+
+   // Produce static TypeCode for discriminant type (if necessary).
+   AST_ConcreteType *discrimt = disc_type();
+   if (!discrimt->in_main_file()) 
+     o2be_name::narrow_and_produce_typecode_skel(discrimt,s);
+     
+   
+   unsigned int memberCount = 0;
+   unsigned int defaultMember = 0;
+
+   IND(s); s << "static CORBA::PR_unionMember _02RL_" << _fqtcname()
+	     << "[] = {\n";
+   INC_INDENT_LEVEL();
+   {
+     // Produce entries in PR_unionMember for union members
+     // (name, TypeCode_ptr, and label value)
+     
+     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+     while (!i.is_done())
+       {
+	 AST_Decl *d = i.item();
+	 if (d->node_type() == AST_Decl::NT_union_branch)
+	   {
+	     IND(s); s << "{\"" 
+		       << o2be_union_branch::narrow_from_decl(d)->uqname() 
+		       << "\", ";
+
+	     AST_Decl *decl = 
+	       AST_UnionBranch::narrow_from_decl(d)->field_type();
+	     o2be_name::produce_typecode_member(decl,s);
+	     s << ", ";
+
+	     AST_UnionLabel *l = 
+	       o2be_union_branch::narrow_from_decl(d)->label();
+	     if (l->label_kind() == AST_UnionLabel::UL_label)
+	       {
+		 AST_ConcreteType *ct = disc_type();
+		 if (ct->node_type() == AST_Decl::NT_enum)
+		   {
+		     AST_Decl *v = 
+		    AST_Enum::narrow_from_decl(ct)->lookup_by_value(l->label_val());
+		     s << o2be_name::narrow_and_produce_fqname(v);
+		   }
+		 else produce_disc_value(s,disc_type(),l->label_val(),this);
+	       }
+	     else 
+	       {
+		 // this label is default
+		 s << "0";
+		 defaultMember = memberCount;
+	       }
+	     s << "}";
+	     memberCount++;
+	     i.next();
+	     if (i.is_done()) s << " };\n";
+	     else s << ",\n";    
+	   }
+	 else i.next();
+       }
+   }
+   DEC_INDENT_LEVEL();
+
+   IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname()
+	     << "(\"" << repositoryID() << "\", \"" << uqname() << "\", ";
+   o2be_name::produce_typecode_member(discrimt,s,I_FALSE);
+   s << ", _02RL_" << _fqtcname() << ", " << memberCount;
+   if (!nodefault()) s << ", " << defaultMember;
+   s << ");\n\n";
+
+   s << "#endif\n\n";
+  }
+  return;
+}
+
+idl_bool 
+o2be_union::check_recursive_seq()
+{
+  UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+  while (!i.is_done())
+    {
+      AST_Decl *d = i.item();
+      if (d->node_type() == AST_Decl::NT_union_branch)
+	{
+	  AST_Decl *decl = 
+	    AST_UnionBranch::narrow_from_decl(d)->field_type();
+	  if (o2be_name::narrow_and_check_recursive_seq(decl) == I_TRUE)
+	    return I_TRUE;
+	}
+      i.next();
+    }
+  return I_FALSE;
 }
 
 void
@@ -2201,6 +2522,7 @@ o2be_union::out_adptarg_name(AST_Decl* used_in) const
     }
   }
 }
+
 
 IMPL_NARROW_METHODS1(o2be_union, AST_Union)
 IMPL_NARROW_FROM_DECL(o2be_union)
