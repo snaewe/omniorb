@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17  1999/12/15 12:12:31  djs
+# Fix building string form of ulong constants
+#
 # Revision 1.16  1999/12/14 17:38:13  djs
 # Fixed anonymous sequences of sequences bug
 #
@@ -699,7 +702,11 @@ def valueString(type, value, environment):
        type.kind() == idltype.tk_ulong     or \
        type.kind() == idltype.tk_ulonglong:
         #return str(repr(value))
-        return str(int(eval(str(value))))
+        s = str(value)
+        if s[-1] == 'L':
+            return s[0:-1]
+        return s
+        #return str(int(eval(str(value))))
     if type.kind() == idltype.tk_float     or \
        type.kind() == idltype.tk_double:
         return str(value)
