@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.16  1999/01/18 13:54:51  djr
+ * Fixed bugs in implementation of unions.
+ *
  * Revision 1.15  1999/01/11 15:45:23  djr
  * New implementation.
  *
@@ -2604,7 +2607,7 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
   pd_alignmentTable.setNumEntries(1);
   pd_alignmentTable.addNasty(this);
 
-  pd_have_calculated_implicit_default = 0;
+  pd_have_calculated_default_value = 0;
 }
 
 
@@ -2642,7 +2645,7 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
   pd_alignmentTable.setNumEntries(1);
   pd_alignmentTable.addNasty(this);
 
-  pd_have_calculated_implicit_default = 0;
+  pd_have_calculated_default_value = 0;
 }
 
 
@@ -2652,7 +2655,7 @@ TypeCode_union::TypeCode_union()
   pd_alignmentTable.setNumEntries(1);
   pd_alignmentTable.addNasty(this);
 
-  pd_have_calculated_implicit_default = 0;
+  pd_have_calculated_default_value = 0;
 }
 
 
@@ -2672,7 +2675,8 @@ TypeCode_union::NP_marshalComplexParams(MemBufferedStream &s,
   memberCount >>= s;
   for( CORBA::ULong i = 0; i < memberCount; i++ )
     {
-      TypeCode_union_helper::marshalLabel(pd_members[i].alabel, pd_discrim_tc, s);
+      TypeCode_union_helper::marshalLabel(pd_members[i].alabel,
+					  pd_discrim_tc, s);
       pd_members[i].aname >>= s;
       TypeCode_marshaller::marshal(ToTcBase(pd_members[i].atype), s, otbl);
     }
@@ -2768,24 +2772,25 @@ TypeCode_union::NP_extendedEqual(const TypeCode_base*  TCp,
 				  CORBA::Boolean langEquiv,
 				  const TypeCode_pairlist* tcpl) const
 {
-  if ((NP_kind() == TCp->NP_kind()) &&
+  if( (NP_kind() == TCp->NP_kind()) &&
       NP_namesEqualOrNull(NP_id(), TCp->NP_id()) &&
       NP_namesEqualOrNull(NP_name(), TCp->NP_name()) &&
       (NP_discriminator_type()->NP_equal(TCp->NP_discriminator_type(),
 					 langEquiv, tcpl)) &&
-      (NP_default_index() == TCp->NP_default_index()) &&
+      (NP_default_index() == TCp->NP_default_index() ||
+       NP_default_index() < 0 && TCp->NP_default_index() < 0) &&
       (NP_member_count() == TCp->NP_member_count())) {
     const CORBA::ULong memberCount = pd_members.length();
 
     TypeCode_union* uTCp = (TypeCode_union*)TCp;
 
     for( CORBA::ULong i = 0; i < memberCount; i++ ) {
-      if( !(pd_members[i].alabel == uTCp->pd_members[i].alabel) ||
+      if( (i != NP_default_index() &&
+	   pd_members[i].alabel != uTCp->pd_members[i].alabel) ||
 	  !NP_namesEqualOrNull(pd_members[i].aname,
 			       uTCp->pd_members[i].aname) ||
 	  !ToTcBase(pd_members[i].atype)->
-	      NP_equal(ToTcBase(uTCp->pd_members[i].atype),
-		       langEquiv, tcpl) )
+	  NP_equal(ToTcBase(uTCp->pd_members[i].atype), langEquiv, tcpl) )
 	return 0;
     }
 
@@ -2816,17 +2821,20 @@ TypeCode_union::NP_member_count() const
   return pd_members.length();
 }
 
+
 const char*
 TypeCode_union::NP_member_name(CORBA::ULong index) const
 {
   return pd_members[index].aname;
 }
 
+
 TypeCode_base*
 TypeCode_union::NP_member_type(CORBA::ULong index) const
 {
   return ToTcBase(pd_members[index].atype);
 }
+
 
 CORBA::Any*
 TypeCode_union::NP_member_label(CORBA::ULong i) const
@@ -2837,11 +2845,13 @@ TypeCode_union::NP_member_label(CORBA::ULong i) const
   return a;
 }
 
+
 TypeCode_base*
 TypeCode_union::NP_discriminator_type() const
 {
   return ToTcBase(pd_discrim_tc);
 }
+
 
 CORBA::Long
 TypeCode_union::NP_default_index() const
@@ -2849,11 +2859,13 @@ TypeCode_union::NP_default_index() const
   return pd_default;
 }
 
+
 CORBA::Long
 TypeCode_union::NP_param_count() const
 {
   return 2 + (member_count() * 3);
 }
+
 
 CORBA::Any*
 TypeCode_union::NP_parameter(CORBA::Long index) const
@@ -2912,7 +2924,7 @@ TypeCode_union::NP_index_from_discriminator(Discriminator d) const
   CORBA::Long n = pd_members.length();
 
   for( CORBA::Long i = 0; i < n; i++ )
-    if( pd_members[i].alabel == d )
+    if( pd_members[i].alabel == d && i != pd_default )
       return i;
 
   if( pd_default >= 0 )  return pd_default;
@@ -2928,54 +2940,57 @@ TypeCode_union::NP_default_value()
        "TypeCode_union::NP_default_value() - union has no default"
 				  " (not even implicit)");
 
-  if( pd_default >= 0 )  return pd_members[pd_default].alabel;
-
-  // If we get here this union has an implicit default.
-
-  if( !pd_have_calculated_implicit_default ) {
+  if( !pd_have_calculated_default_value ) {
 
     // We need to search for a suitable value.
-    // The following loops look like they might never terminate - but
-    // in fact they will because we do know that there must be some
+    // Some of the following loops look like they might never terminate -
+    // but in fact they will because we do know that there must be some
     // value of the given type which is not in the union.
 
     switch( ToTcBase(pd_discrim_tc)->NP_kind() ) {
     case CORBA::tk_char:
       {
 	CORBA::UShort c = 0x0;
-	while( 1 )
-	  if( NP_index_from_discriminator(c++) < 0 ) {
-	    pd_implicit_default = c - 1;
+	while( 1 ) {
+	  CORBA::Long i = NP_index_from_discriminator(c++);
+	  if( i < 0 || i == pd_default ) {
+	    pd_default_value = c - 1;
 	    break;
 	  }
+	}
 	break;
       }
     case CORBA::tk_boolean:
       {
-	if( NP_index_from_discriminator(0) < 0 )
-	  pd_implicit_default = 0;
+	CORBA::Long i = NP_index_from_discriminator(0);
+	if( i < 0 || i == pd_default )
+	  pd_default_value = 0;
 	else
-	  pd_implicit_default = 1;
+	  pd_default_value = 1;
 	break;
       }
     case CORBA::tk_short:
       {
 	CORBA::Long c = -0x7fff;
-	while( 1 )
-	  if( NP_index_from_discriminator(c++) < 0 ) {
-	    pd_implicit_default = c - 1;
+	while( 1 ) {
+	  CORBA::Long i = NP_index_from_discriminator(c++);
+	  if( i < 0 || i == pd_default ) {
+	    pd_default_value = c - 1;
 	    break;
 	  }
+	}
 	break;
       }
     case CORBA::tk_long:
       {
 	CORBA::Long c = -0x7fffffff;
-	while( 1 )
-	  if( NP_index_from_discriminator(c++) < 0 ) {
-	    pd_implicit_default = c - 1;
+	while( 1 ) {
+	  CORBA::Long i = NP_index_from_discriminator(c++);
+	  if( i < 0 || i == pd_default ) {
+	    pd_default_value = c - 1;
 	    break;
 	  }
+	}
 	break;
       }
     case CORBA::tk_ushort:
@@ -2983,11 +2998,13 @@ TypeCode_union::NP_default_value()
     case CORBA::tk_enum:
       {
 	CORBA::ULong c = 0x0;
-	while( 1 )
-	  if( NP_index_from_discriminator(c++) < 0 ) {
-	    pd_implicit_default = c - 1;
+	while( 1 ) {
+	  CORBA::Long i = NP_index_from_discriminator(c++);
+	  if( i < 0 || i == pd_default ) {
+	    pd_default_value = c - 1;
 	    break;
 	  }
+	}
 	break;
       }
     default:
@@ -2995,10 +3012,10 @@ TypeCode_union::NP_default_value()
       break;
     }
 
-    pd_have_calculated_implicit_default = 1;
+    pd_have_calculated_default_value = 1;
   }
 
-  return pd_implicit_default;
+  return pd_default_value;
 }
 
 
@@ -3028,11 +3045,14 @@ TypeCode_union::NP_aliasExpand()
     utc->pd_discrim_tc =
       TypeCode_collector::duplicateRef(ToTcBase(pd_discrim_tc));
   utc->pd_default = pd_default;
+  utc->pd_have_calculated_default_value = pd_have_calculated_default_value;
+  utc->pd_default_value = pd_default_value;
   utc->pd_members.length(pd_members.length());
 
   for( CORBA::ULong i = 0; i < pd_members.length(); i++ ) {
     if( ToTcBase(pd_members[i].atype)->NP_containsAnAlias() )
-      utc->pd_members[i].atype = ToTcBase(pd_members[i].atype)->NP_aliasExpand();
+      utc->pd_members[i].atype =
+	ToTcBase(pd_members[i].atype)->NP_aliasExpand();
     else
       utc->pd_members[i].atype =
 	TypeCode_collector::duplicateRef(ToTcBase(pd_members[i].atype));
