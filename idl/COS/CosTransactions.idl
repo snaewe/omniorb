@@ -14,7 +14,9 @@
 module CosTransactions {
 
 	// Forward references for interfaces defined later in module
+#ifdef __DEFINE_CURRENT__
 	interface Current;
+#endif
 	interface TransactionFactory;
 	interface Control;
 	interface Terminator;
@@ -78,7 +80,9 @@ module CosTransactions {
 	exception InvalidControl {};
 	exception Unavailable {};
 	exception SynchronizationUnavailable {};
-	
+
+#ifdef __DEFINE_CURRENT__
+
 	// Current transaction 
 	interface Current : CORBA::Current {
 		void begin()
@@ -103,6 +107,7 @@ module CosTransactions {
 			raises(InvalidControl);
 	};
 
+#endif
 
 	interface TransactionFactory {
 		Control create(in unsigned long time_out);
