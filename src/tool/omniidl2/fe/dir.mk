@@ -34,10 +34,21 @@ $(lib): $(OBJS)
 #	@-$(RM) $@
 #	flex -B $<
 #	sed -e 's/^#include <unistd.h>//' lex.yy.c > $@
+#	echo '#ifdef __VMS' >> $@
+#	echo '// Some versions of DEC C++ for OpenVMS set the module name used by the' >> $@
+#	echo '// librarian based on the last #line encountered.' >> $@
+#	echo '#line' `cat $@ | wc -l` '"lex_yy.cc"' >> $@
+#	echo '#endif' >> $@
 #
 #y.tab.cc: idl.yy
 #	@-$(RM) $@
 #	bison -d -y $<
 #	mv -f y.tab.c y.tab.cc
+#	echo '#ifdef __VMS' >> $@
+#	echo '// Some versions of DEC C++ for OpenVMS set the module name used by the' >> $@
+#	echo '// librarian based on the last #line encountered.' >> $@
+#	echo '#line' `cat $@ | wc -l` '"y_tab.cc"' >> $@
+#	echo '#endif' >> $@
+#
 #clean::
 #	$(RM) y.tab.cc y.tab.hh y.tab.c y.tab.h lex.yy.c lex.yy.cc

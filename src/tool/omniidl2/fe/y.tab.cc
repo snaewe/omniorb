@@ -3580,7 +3580,7 @@ yyerror(const char *)
 {
 }
 #ifdef __VMS
-//  Some versions of DEC C++ for OpenVMS set the module name used by the
-//  librarian based on the last #line encountered.
-#line 3583 "y_tab.cc"
+// Some versions of DEC C++ for OpenVMS set the module name used by the
+// librarian based on the last #line encountered.
+#line 3584 "y_tab.cc"
 #endif
