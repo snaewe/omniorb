@@ -1,3 +1,75 @@
+Fri Aug  3 18:36:13 BST 2001 sll
+================================
+
+- Moved OMNIORB_THROW so that it can be used in stub headers
+
+src/lib/omniORB/include/exceptiondefs.h
+
+
+- System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_basetypes.h
+include/omniORB4/minorCode.h
+include/omniORB4/omniORB.h
+include/omniORB4/seqTemplatedefns.h
+include/omniORB4/stringtypes.h
+include/omniORB4/userexception.h
+
+
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/callDescriptor.cc
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaFixed.cc
+src/lib/omniORB/orbcore/corbaObject.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/corbaWString.cc
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/dynamicLib.cc
+src/lib/omniORB/orbcore/exception.cc
+src/lib/omniORB/orbcore/exceptn.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/inProcessIdentity.cc
+src/lib/omniORB/orbcore/initFile.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/interceptors.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/localIdentity.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/minorCode.cc   NEW
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/omniServant.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/portableserver.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/uri.cc
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+- Make sure dll import spec for win32 is properly done.
+
+include/omniORB4/omniTransport.h
+src/lib/omniORB/include/giopBiDir.h
+src/lib/omniORB/include/giopRope.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/include/giopStream.h
+
 Thu Aug  2 13:58:45 BST 2001 sll
 ================================
 
