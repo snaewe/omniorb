@@ -217,7 +217,9 @@ endif
 #
 # Shared library support stuff
 #
+ifndef EmbeddedSystem
 BuildSharedLibrary = 1
+endif
 
 SharedLibraryFullNameTemplate = $(SharedLibraryLibNameTemplate).lib
 SharedLibraryLibNameTemplate  = $$1$$2$$3$$4_rt$${extrasuffix:-}
@@ -300,11 +302,14 @@ libname=$(SharedLibraryLibNameTemplate); \
 dllname=$$targetdir/$$libname.dll; \
 defname=$$targetdir/$(SharedLibraryExportSymbolFileNameTemplate); \
 version=$(SharedLibraryVersionStringTemplate); \
+if [ -z "$$nodeffile" ]; then \
 $(MakeCXXExportSymbolDefinitionFile) \
+defflag="-def:$$defname"; \
+fi; \
 set -x; \
 $(RM) $@; \
 $(CXXLINK) -out:$$dllname -DLL $(MSVC_DLL_CXXLINKNODEBUGOPTIONS) \
--def:$$defname -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
+$$defflag -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
 $^ $$extralibs;
 endef
 

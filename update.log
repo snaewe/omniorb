@@ -1,3 +1,16 @@
+Wed Aug 16 17:56:43 BST 2000 sll
+================================
+
+- shared library make rule update.
+- Don't build shared library if platform is ETS kernel
+- Use gcc (instead of the bundled cc) on hpux 11.00 at ALC and FP
+
+external_merge/mk/mklib.mk
+external_merge/mk/win32.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/hppa_hpux_11.00.mk
+
+
 Wed Aug 16 12:16:02 BST 2000 sll
 ================================
 

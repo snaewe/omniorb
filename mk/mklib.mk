@@ -76,7 +76,7 @@ mkshared::
 
 mkshared:: $(shlib)
 
-$(shlib): $(patsubst %, shared/%, $(LIB_OBJS))
+$(shlib): $(patsubst %, shared/%, $(LIB_OBJS) $(LIB_SHARED_ONLY_OBJS))
 	@(namespec="$(namespec)" extralibs="$(imps)"; \
          $(MakeCXXSharedLibrary))
 
@@ -146,7 +146,7 @@ mkshareddbug::
 
 mkshareddbug:: $(dbugshlib)
 
-$(dbugshlib): $(patsubst %, shareddebug/%, $(LIB_OBJS))
+$(dbugshlib): $(patsubst %, shareddebug/%, $(LIB_OBJS) $(LIB_SHARED_ONLY_OBJS))
 	(namespec="$(namespec)" debug=1 extralibs="$(dbugimps)"; \
          $(MakeCXXSharedLibrary))
 
