@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.23  1999/05/22 17:40:57  sll
+  Added #ifdef __CIAO__ so that CCia would not complain about gnu/linux
+  particulars.
+
   Revision 1.22  1999/03/19 15:18:00  djr
   New option acceptMisalignedIndirections
 
@@ -236,7 +240,7 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
 
     omniORB::seed.hi = omniORB::seed.med = 0;
 
-#ifdef _HAS_SIGNAL
+#if defined(_HAS_SIGNAL) && !defined(__CIAO__)
 #ifndef _USE_MACH_SIGNAL
 #  ifndef __SINIX__
     struct sigaction act;
