@@ -315,11 +315,24 @@ fe_populate(AST_Module *m)
   m->fe_add_predefined_type(pdt);
 
   // Now the pseudo object types
+
   AST_Interface *intf;
   intf = idl_global->gen()->create_interface(create_scoped_name("Object"),
 					     0,0,NULL);
   
   m->fe_add_interface(intf);
+
+
+  AST_Module *modl;
+  modl = idl_global->gen()->create_module(create_scoped_name("CORBA"),NULL);
+
+  pdt = idl_global->gen()
+                ->create_predefined_type(AST_PredefinedType::PT_TypeCode,
+					   create_scoped_name("TypeCode"),
+					   NULL);
+  modl->fe_add_predefined_type(pdt);
+  
+  m->fe_add_module(modl);
 }
 
 /*
