@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.22  1999/07/02 19:15:44  sll
+  Do not generate #include <orb.hh>.
+
   Revision 1.21  1999/06/18 20:48:00  sll
   Updated to replace _LC_attr with _dyn_attr and _core_attr.
 
@@ -355,6 +358,11 @@ o2be_root::produce_hdr(std::fstream &s)
 
     for( j = 0; j < nfiles; j++ ) {
       char* bname = filelist[j]->get_string();
+      if (strcmp(bname,"orb.idl") == 0) {
+	// orb.idl is a dummy IDL file to maintain backward compatibility
+	// do not generate a #include for the corresponding header file.
+	continue;
+      }
       char* ep = strrchr(bname, '.');
       size_t blen = ep ? (ep - bname) : strlen(bname);
       char* filename = new char[blen + 1 + o2be_global::suffixlen()];
