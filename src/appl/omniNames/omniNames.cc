@@ -166,10 +166,9 @@ main(int argc, char **argv)
   //
 
   insertArgs(argc, argv, 1, 2);
-  argv[1] = strdup("-ORBpoa_iiop_port");
-  argv[2] = new char[16];
-  sprintf(argv[2], "%d", port);
-
+  argv[1] = strdup("-ORBendpoint");
+  argv[2] = new char[20];
+  sprintf(argv[2], "giop:tcp::%d", port);
 
   //
   // Initialize the ORB and the object adapter.

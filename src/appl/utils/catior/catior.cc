@@ -393,7 +393,7 @@ int main(int argc, char* argv[])
 	if (ior.profiles[count].tag == IOP::TAG_INTERNET_IOP) {
 
 	  IIOP::ProfileBody pBody;
-	  IIOP::decodeProfile(ior.profiles[count],pBody);
+	  IIOP::unmarshalProfile(ior.profiles[count],pBody);
 
 	  cout << "IIOP " << (int) pBody.version.major << "."
 	       << (int) pBody.version.minor << " ";
@@ -415,7 +415,8 @@ int main(int argc, char* argv[])
 	  
 	  cout << "Multiple Componet Profile ";
 	  IIOP::ProfileBody pBody;
-	  IIOP::decodeMultiComponentProfile(ior.profiles[count],pBody);
+	  IIOP::unmarshalMultiComponentProfile(ior.profiles[count],
+					       pBody.components);
 	  print_tagged_components(pBody.components);
 
 	  cout << endl;

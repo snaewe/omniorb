@@ -58,6 +58,11 @@ main(int argc, char **argv)
       // Obtain a reference to the object, and register it in
       // the naming service.
       obj = myecho->_this();
+
+      CORBA::String_var x;
+      x = orb->object_to_string(obj);
+      cerr << x << "\n";
+
       if( !bindObjectToName(orb, obj) )
 	return 1;
 

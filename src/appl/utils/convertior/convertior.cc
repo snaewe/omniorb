@@ -281,7 +281,7 @@ char* convertRef(const char* old_ior, const char* hostname)
 
       if (ior.profiles[count].tag == IOP::TAG_INTERNET_IOP) {
 	IIOP::ProfileBody pBody;
-	IIOP::decodeProfile(ior.profiles[count],pBody);
+	IIOP::unmarshalProfile(ior.profiles[count],pBody);
 	pBody.address.host = hostname;
 	IOP::TaggedProfile profile;
 	IIOP::encodeProfile(pBody,profile);

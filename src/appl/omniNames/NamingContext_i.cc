@@ -39,6 +39,7 @@ ReadersWritersLock NamingContext_i::lock;
 NamingContext_i* NamingContext_i::headContext = (NamingContext_i*)0;
 NamingContext_i* NamingContext_i::tailContext = (NamingContext_i*)0;
 
+OMNI_USING_NAMESPACE(omni)
 
 //
 // Ctor.

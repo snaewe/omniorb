@@ -49,24 +49,26 @@ int main(int argc, char** argv)
   try {
     CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+    {
+      CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+      PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
-    // NB. You can activate the POA before or after
-    // activating objects in that POA.
-    PortableServer::POAManager_var pman = poa->the_POAManager();
-    pman->activate();
+      // NB. You can activate the POA before or after
+      // activating objects in that POA.
+      PortableServer::POAManager_var pman = poa->the_POAManager();
+      pman->activate();
 
-    Echo_i* myecho = new Echo_i();
+      Echo_i* myecho = new Echo_i();
 
-    // This activates the object in the root POA (by default), and
-    // returns a reference to it.
-    Echo_var myechoref = myecho->_this();
+      // This activates the object in the root POA (by default), and
+      // returns a reference to it.
+      Echo_var myechoref = myecho->_this();
 
-    myecho->_remove_ref();
+      myecho->_remove_ref();
 
-    hello(myechoref);
+      hello(myechoref);
 
+    }
     orb->destroy();
   }
   catch(CORBA::COMM_FAILURE& ex) {

@@ -39,6 +39,9 @@
 #include <ctype.h>
 
 
+static GIOP::Version giop_version = { 1,2 };
+static CORBA::Boolean extra_profiles = 1;
+
 static char* genRef(const char* IRTypeId, const char* hostname, 
 		    int port,  const char* objectid, int hex);
 
@@ -273,7 +276,7 @@ genRef(const char* IRTypeId, const char* hostname, int port,
     }
   }
   
-  omniIOR* ior = new omniIOR(IRTypeId,*keySeed,&addrs,1);
+  omniIOR* ior = new omniIOR(IRTypeId,*keySeed,&addrs,1,giop_version,extra_profiles);
   omniObjRef* objref = omni::createObjRef(CORBA::Object::_PD_repoId,ior,0);
   
   CORBA::String_var result;

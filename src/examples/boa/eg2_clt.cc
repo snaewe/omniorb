@@ -37,12 +37,12 @@ int main(int argc, char** argv)
       cerr << "usage:  eg2_clt <object reference>" << endl;
       return 1;
     }
+    {
+      CORBA::Object_var obj = orb->string_to_object(argv[1]);
+      Echo_var echoref = Echo::_narrow(obj);
 
-    CORBA::Object_var obj = orb->string_to_object(argv[1]);
-    Echo_var echoref = Echo::_narrow(obj);
-
-    hello(echoref);
-
+      hello(echoref);
+    }
     orb->destroy();
   }
   catch(CORBA::COMM_FAILURE& ex) {

@@ -1,3 +1,26 @@
+Thu Apr 19 10:36:20 BST 2001 sll
+================================
+
+- Big checkin with the brand new internal APIs.
+
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/INSMapper.h
+src/appl/omniNames/NamingContext_i.cc
+src/appl/omniNames/log.cc
+src/appl/omniNames/omniNames.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/appl/utils/genior/genior.cc
+src/appl/utils/nameclt/nameclt.cc
+src/examples/anyExample/anyExample_clt.cc
+src/examples/boa/eg2_clt.cc
+src/examples/echo/eg3_impl.cc
+src/examples/poa/implicit_activation/eg1.cc
+src/examples/poa/persistent_objref/eg2_impl.cc
+src/examples/poa/servant_manager/servant_activator.cc
+src/examples/poa/servant_manager/servant_locator.cc
+
+
 Thu Apr 19 10:23:16 BST 2001 sll
 ================================
 

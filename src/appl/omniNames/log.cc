@@ -470,7 +470,17 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
     // Check to see if we need an INS forwarding agent
     omniIOR_var ior;
     ior = rootContext->_getIOR();
-    if (strncmp((const char*)ior->iiop.object_key.get_buffer(),
+
+    IIOP::ProfileBody iiop;
+    const IOP::TaggedProfileList& profiles = ior->iopProfiles();
+    for (CORBA::ULong index = 0; index < profiles.length(); index++) {
+      if (profiles[index].tag == IOP::TAG_INTERNET_IOP) {
+	IIOP::unmarshalProfile(profiles[index],iiop);
+	break;
+      }
+    }
+
+    if (strncmp((const char*)iiop.object_key.get_buffer(),
 		"NameService", 11)) {
       cerr << ts.t() << "(Pre-INS log file)" << endl;
       new INSMapper(the_ins_poa, rootContext);

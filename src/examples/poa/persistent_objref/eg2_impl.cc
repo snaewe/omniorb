@@ -54,34 +54,36 @@ int main(int argc, char** argv)
 
     if( argc != 1 )  usage();
 
-    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-    PortableServer::POA_var root_poa = PortableServer::POA::_narrow(obj);
-    PortableServer::POAManager_var pman = root_poa->the_POAManager();
-    pman->activate();
+    {
+      CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+      PortableServer::POA_var root_poa = PortableServer::POA::_narrow(obj);
+      PortableServer::POAManager_var pman = root_poa->the_POAManager();
+      pman->activate();
 
-    // Create a new POA with the persistent lifespan policy.
-    CORBA::PolicyList pl;
-    pl.length(2);
-    pl[0] = root_poa->create_lifespan_policy(PortableServer::PERSISTENT);
-    pl[1] = root_poa->create_id_assignment_policy(PortableServer::USER_ID);
+      // Create a new POA with the persistent lifespan policy.
+      CORBA::PolicyList pl;
+      pl.length(2);
+      pl[0] = root_poa->create_lifespan_policy(PortableServer::PERSISTENT);
+      pl[1] = root_poa->create_id_assignment_policy(PortableServer::USER_ID);
 
-    PortableServer::POA_var poa = root_poa->create_POA("my poa", pman, pl);
+      PortableServer::POA_var poa = root_poa->create_POA("my poa", pman, pl);
 
-    // Always use the same object id.
-    PortableServer::ObjectId_var oid =
-      PortableServer::string_to_ObjectId("my echo object");
+      // Always use the same object id.
+      PortableServer::ObjectId_var oid =
+	PortableServer::string_to_ObjectId("my echo object");
 
-    // Activate the echo object...
-    Echo_i* myecho = new Echo_i();
-    poa->activate_object_with_id(oid, myecho);
+      // Activate the echo object...
+      Echo_i* myecho = new Echo_i();
+      poa->activate_object_with_id(oid, myecho);
 
-    obj = myecho->_this();
-    CORBA::String_var sior(orb->object_to_string(obj));
-    cerr << "'" << (char*)sior << "'" << endl;
+      obj = myecho->_this();
+      CORBA::String_var sior(orb->object_to_string(obj));
+      cerr << "'" << (char*)sior << "'" << endl;
 
-    myecho->_remove_ref();
+      myecho->_remove_ref();
 
-    orb->run();
+      orb->run();
+    }
     orb->destroy();
   }
   catch(CORBA::SystemException&) {

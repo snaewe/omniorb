@@ -76,15 +76,16 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    CORBA::Object_var obj = orb->string_to_object(argv[1]);
-    anyExample_var ref = anyExample::_narrow(obj);
-    if( CORBA::is_nil(ref) ) {
-      cerr << "Can't narrow reference to type anyExample (or it was nil)."
-	   << endl;
-      return 1;
+    {
+      CORBA::Object_var obj = orb->string_to_object(argv[1]);
+      anyExample_var ref = anyExample::_narrow(obj);
+      if( CORBA::is_nil(ref) ) {
+	cerr << "Can't narrow reference to type anyExample (or it was nil)."
+	     << endl;
+	return 1;
+      }
+      hello(ref);
     }
-    hello(ref);
-
     orb->destroy();
   }
   catch(CORBA::COMM_FAILURE& ex) {

@@ -69,35 +69,37 @@ int main(int argc, char** argv)
   try {
     orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-    // Get hold of the root poa, and activate it.
-    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-    PortableServer::POA_var root_poa = PortableServer::POA::_narrow(obj);
-    PortableServer::POAManager_var poa_man = root_poa->the_POAManager();
-    poa_man->activate();
+    {
+      // Get hold of the root poa, and activate it.
+      CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+      PortableServer::POA_var root_poa = PortableServer::POA::_narrow(obj);
+      PortableServer::POAManager_var poa_man = root_poa->the_POAManager();
+      poa_man->activate();
 
-    // Create a new poa to hold our echo objects.
-    CORBA::PolicyList pl;
-    pl.length(1);
-    pl[0] = root_poa->create_request_processing_policy(
-				   PortableServer::USE_SERVANT_MANAGER);
+      // Create a new poa to hold our echo objects.
+      CORBA::PolicyList pl;
+      pl.length(1);
+      pl[0] = root_poa->create_request_processing_policy(
+							 PortableServer::USE_SERVANT_MANAGER);
 
-    PortableServer::POA_var poa = root_poa->create_POA("mypoa", poa_man, pl);
+      PortableServer::POA_var poa = root_poa->create_POA("mypoa", poa_man, pl);
 
-    // Activate a servant activator in the root poa.
-    MyActivator_i* sa = new MyActivator_i;
-    PortableServer::ObjectId_var id = root_poa->activate_object(sa);
-    PortableServer::ServantActivator_var saref = sa->_this();
-    sa->_remove_ref();
+      // Activate a servant activator in the root poa.
+      MyActivator_i* sa = new MyActivator_i;
+      PortableServer::ObjectId_var id = root_poa->activate_object(sa);
+      PortableServer::ServantActivator_var saref = sa->_this();
+      sa->_remove_ref();
 
-    // Register the servant activator with our new poa.
-    poa->set_servant_manager(saref);
+      // Register the servant activator with our new poa.
+      poa->set_servant_manager(saref);
 
-    // Print out a reference to an object.
-    CORBA::Object_var ref = poa->create_reference("IDL:Echo:1.0");
-    CORBA::String_var sior(orb->object_to_string(ref));
-    cout << "'" << (char*) sior << "'" << endl;
+      // Print out a reference to an object.
+      CORBA::Object_var ref = poa->create_reference("IDL:Echo:1.0");
+      CORBA::String_var sior(orb->object_to_string(ref));
+      cout << "'" << (char*) sior << "'" << endl;
 
-    orb->run();
+      orb->run();
+    }
     orb->destroy();
   }
   catch(CORBA::SystemException&) {

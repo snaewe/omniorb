@@ -23,6 +23,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.3  2001/04/19 09:39:05  sll
+// Big checkin with the brand new internal APIs.
+//
 // Revision 1.2.2.2  2000/10/09 16:20:56  sll
 // Ported to omniORB 4 API.
 //
@@ -76,7 +79,7 @@ public:
   Mapper(char* id, CORBA::Object_ptr obj);
   ~Mapper() {}
 
-  CORBA::Boolean _dispatch(GIOP_S& giop_s) { do_redir(); return 1; }
+  CORBA::Boolean _dispatch(_OMNI_NS(IOP_S)&) { do_redir(); return 1; }
   CORBA::Boolean _is_a(const char* id) { do_redir(); return 1; }
 
   void do_redir();
@@ -253,9 +256,9 @@ main(int argc, char** argv)
   if (port == 0) port = IIOP::DEFAULT_CORBALOC_PORT;
 
   insertArgs(argc, argv, 1, 2);
-  argv[1] = strdup("-ORBpoa_iiop_port");
-  argv[2] = new char[16];
-  sprintf(argv[2], "%d", port);
+  argv[1] = strdup("-ORBendpoint");
+  argv[2] = new char[20];
+  sprintf(argv[2], "giop:tcp::%d", port);
 
   orb = CORBA::ORB_init(argc, argv, "omniORB4");
 

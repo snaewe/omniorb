@@ -27,6 +27,8 @@
 #include <omniORB4/Naming.hh>
 #include <omniORB4/omniURI.h>
 
+OMNI_USING_NAMESPACE(omni)
+
 static int advanced = 0;
 static const char* command;
 
