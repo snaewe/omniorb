@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2001/08/31 11:57:16  sll
+  Client side transport selection is now determined by the clientTransportRules.
+
   Revision 1.1.4.12  2001/08/21 11:02:14  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -88,6 +91,7 @@
 #include <initialiser.h>
 #include <orbOptions.h>
 #include <orbParameters.h>
+#include <transportRules.h>
 
 #include <stdlib.h>
 
@@ -581,55 +585,89 @@ giopRope::filterAndSortAddressList(const giopAddressList& addrlist,
 				   omnivector<CORBA::ULong>& ordered_list,
 				   CORBA::Boolean& use_bidir)
 {
-  // We should consult the configuration table to decide which address is
-  // more preferable than the others. Some of the addresses in addrlist
-  // may not be usable anyway. We then record the order of addresses to use
-  // in pd_addresses_order.
+  // We consult the clientTransportRules to decide which address is more
+  // preferable than others. The rules may forbide the use of some of the
+  // addresses and these will be filtered out. We then record the order
+  // of the remaining addresses in order_list.
+  // If any of the non-exlusion clientTransportRules have the "bidir"
+  // attribute, use_bidir will be set to 1, otherwise it is set to 0.
 
-  // XXX Since we haven't got a configuration table yet, we use all the
-  //     addresses and use them in the order as supplied.
+  use_bidir = 0;
+
+  // For each address, find the rule that is applicable. Record the
+  // rules priority in the priority list.
+  omnivector<CORBA::ULong> prioritylist;
+
   CORBA::ULong index;
   CORBA::ULong total = addrlist.size();
-  for (index = 0; index < total; index++)
-    ordered_list.push_back(index);
-
-  // XXX Make SSL the first one to try if it is available.
   for (index = 0; index < total; index++) {
-    if (strcmp(addrlist[index]->type(),"giop:ssl")==0) {
-      ordered_list[index] = ordered_list[0];
-      ordered_list[0] = index;
-      break;
+    transportRules::sequenceString actions;
+    CORBA::ULong matchedRule;
+
+    if ( transportRules::clientRules().match(addrlist[index]->address(),
+					     actions,matchedRule)        ) {
+
+      const char* transport = strchr(addrlist[index]->type(),':');
+      OMNIORB_ASSERT(transport);
+      transport++;
+      
+      CORBA::ULong i;
+      CORBA::Boolean matched = 0;
+      CORBA::Boolean usebidir = 0;
+      CORBA::ULong priority;
+      for (i = 0; i < actions.length(); i++ ) {
+	size_t len = strlen(actions[i]);
+	if (strncmp(actions[i],transport,len) == 0 ) {
+	  priority = (matchedRule << 16) + actions.length() - i;
+	  matched = 1;
+	}
+	else if ( strcmp(actions[i],"none") == 0 ) {
+	  break;
+	}
+	else if ( strcmp(actions[i],"bidir") == 0 ) {
+	  usebidir = 1;
+	}
+      }
+      if (matched) {
+	ordered_list.push_back(index);
+	prioritylist.push_back(priority);
+	if (usebidir && orbParameters::offerBiDirectionalGIOP) {
+	  use_bidir = 1;
+	}
+      }
     }
   }
 
-  // XXX Make unix socket the first one to try if it is available.
-  for (index = 0; index < total; index++) {
-    if (strcmp(addrlist[index]->type(),"giop:unix")==0) {
-      ordered_list[index] = ordered_list[0];
-      ordered_list[0] = index;
-      break;
+  // If we have more than 1 addresses to use, sort them according to
+  // their value in prioritylist.
+  if ( ordered_list.size() > 1 ) {
+    // Won't it be nice to just use stl qsort? It is tempting to just
+    // forget about old C++ compiler and use stl. Until the time has come
+    // use shell sort to sort the addresses in order.
+    int n = ordered_list.size();
+    for (int gap=n/2; gap > 0; gap=gap/2 ) {
+      for (int i=gap; i < n ; i++)
+	for (int j =i-gap; j>=0; j=j-gap) {
+	  if ( prioritylist[j] < prioritylist[j+gap] ) {
+	    CORBA::ULong temp = ordered_list[j];
+	    ordered_list[j] = ordered_list[j+gap];
+	    ordered_list[j+gap] = temp;
+	    temp = prioritylist[j];
+	    prioritylist[j] = prioritylist[j+gap];
+	    prioritylist[j+gap] = temp;
+	  }
+	}
     }
   }
-
-  if (orbParameters::offerBiDirectionalGIOP) {
-    // XXX in future, we will be more selective as to which addresses will
-    // use bidirectional.
-    use_bidir = 1;
-    // XXX A temporary, ugly and local hack to make sure that we do not
-    //     use bidir to contact our naming service even when 
-    //     offerBiDirectionalGIOP is set. This is done so that our testsuite
-    //     works when using the naming service to pass the IOR. (Our code
-    //     resolves the IOR before initialising a POA.)
-    if (!addrlist.empty() && 
-	strcmp(addrlist[0]->address(),"giop:tcp:158.124.64.61:5009") == 0) {
-      use_bidir = 0;
+#if 0
+  {
+    omniORB::logger log;
+    log << "Sorted addresses are: \n";
+    for (int i=0; i<ordered_list.size(); i++) {
+      log << addrlist[ordered_list[i]]->address() << "\n";
     }
   }
-  else {
-    use_bidir = 0;
-  }
-
-
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////

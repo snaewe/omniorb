@@ -1,3 +1,13 @@
+Fri Aug 31 12:54:14 BST 2001 sll
+================================
+
+- Client side transport selection is now determined by the 
+  clientTransportRules.
+
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/transportRules.cc
+
+
 Wed Aug 29 18:41:55 BST 2001 sll
 ================================
 
