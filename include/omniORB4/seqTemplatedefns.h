@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/11/20 14:41:44  sll
+  Simplified sequence template hierachy and added templates for sequence of
+  wchar and sequence of array of wchar.
+
   Revision 1.1.2.3  2000/11/07 18:19:54  sll
   Revert to use explicit castings in the marshalling operators of sequence of
   arrays.
@@ -64,7 +68,7 @@
 //////////////////////////////////////////////////////////////////////
 template <class T>
 inline void
-_CORBA_Sequence<T>::operator>>= (cdrStream& s) const
+_CORBA_Unbounded_Sequence<T>::operator>>= (cdrStream& s) const
 {
   ::operator>>=(_CORBA_ULong(pd_len), s);
   for( int i = 0; i < (int)pd_len; i++ )
@@ -75,11 +79,38 @@ _CORBA_Sequence<T>::operator>>= (cdrStream& s) const
 //////////////////////////////////////////////////////////////////////
 template <class T>
 inline void
-_CORBA_Sequence<T>::operator<<= (cdrStream& s)
+_CORBA_Unbounded_Sequence<T>::operator<<= (cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+  if (!s.checkInputOverrun(1,l)) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for( _CORBA_ULong i = 0; i < l; i++ )
+    pd_buf[i] <<= s;
+}
+
+//////////////////////////////////////////////////////////////////////
+template <class T,int max>
+inline void
+_CORBA_Bounded_Sequence<T,max>::operator>>= (cdrStream& s) const
+{
+  ::operator>>=(_CORBA_ULong(pd_len), s);
+  for( int i = 0; i < (int)pd_len; i++ )
+    pd_buf[i] >>= s;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+template <class T,int max>
+inline void
+_CORBA_Bounded_Sequence<T,max>::operator<<= (cdrStream& s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (!s.checkInputOverrun(1,l) || (l > max)) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -233,9 +264,36 @@ _CORBA_Sequence_Octet::operator<<= (cdrStream& s)
 }
 
 //////////////////////////////////////////////////////////////////////
+inline
+void
+_CORBA_Sequence_WChar::operator>>= (cdrStream& s) const
+{
+  _CORBA_ULong l = Base_T_seq::length();
+  l >>= s;
+  for( _CORBA_ULong i = 0; i < l; i++ )
+    s.marshalWChar(pd_buf[i]);
+}
+
+//////////////////////////////////////////////////////////////////////
+inline
+void
+_CORBA_Sequence_WChar::operator<<= (cdrStream& s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for( _CORBA_ULong i = 0; i < l; i++ )
+    pd_buf[i] = s.unmarshalWChar();
+}
+
+//////////////////////////////////////////////////////////////////////
 template <class T,class T_slice,class Telm,int dimension>
 inline void
-_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (cdrStream& s) const
+_CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (cdrStream& s) const
 {
   pd_len >>= s;
   for (_CORBA_ULong i=0; i<pd_len; i++) {
@@ -250,11 +308,46 @@ _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (cdrStream& s) cons
 //////////////////////////////////////////////////////////////////////
 template <class T,class T_slice,class Telm,int dimension>
 inline void
-_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (cdrStream& s)
+_CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (cdrStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
   if (s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    for (_CORBA_ULong j=0; j<dimension; j++) {
+      *((Telm*)(pd_buf[i]) + j) <<= s;
+    }
+  }
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
+template <class T,class T_slice,class Telm,int dimension,int max>
+inline void
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator>>= (cdrStream& s) const
+{
+  pd_len >>= s;
+  for (_CORBA_ULong i=0; i<pd_len; i++) {
+    for (_CORBA_ULong j=0; j<dimension; j++) {
+      *((Telm*)(pd_buf[i]) + j) >>= s;
+    }
+  }
+  return;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+template <class T,class T_slice,class Telm,int dimension,int max>
+inline void
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator<<= (cdrStream& s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (s.checkInputOverrun(1,l) || (l > max)) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -350,6 +443,37 @@ _CORBA_Sequence_Array_Octet<T,T_slice,dimension>::operator<<=(cdrStream& s)
   s.get_octet_array((_CORBA_Octet*)pd_buf,(int)l*dimension);
 }
 
+//////////////////////////////////////////////////////////////////////
+template<class T, class T_slice, int dimension>
+inline void
+_CORBA_Sequence_Array_WChar<T,T_slice,dimension>::operator>>=(cdrStream& s) const
+{
+  pd_len >>= s;
+  for (_CORBA_ULong i=0; i<pd_len; i++) {
+    for (_CORBA_ULong j=0; j<dimension; j++) {
+      s.marshalWChar(*((_CORBA_WChar*)(pd_buf[i]) + j));
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+template<class T, class T_slice, int dimension>
+inline void
+_CORBA_Sequence_Array_WChar<T,T_slice,dimension>::operator<<=(cdrStream& s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    for (_CORBA_ULong j=0; j<dimension; j++) {
+      *((_CORBA_WChar*)(pd_buf[i]) + j) =  s.unmarshalWChar();
+    }
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 template <class T,class T_slice,class Telm,int dimension,int elmSize,int elmAlignment>
