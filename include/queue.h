@@ -3,20 +3,17 @@
 
 #include <omnithread.h>
 
+#define QTRACE(prefix, message) omniORB::logs(10, prefix ": " message)
 
-#undef DEBUG
-
-#ifdef DEBUG
-#  define QTRACE(prefix,message)  \
-  cerr << prefix << ": " << message << endl;
-#else
-#  define QTRACE(x, y)
-#endif
-
+// Should the queue be bounded? If an enqueue() call fails then the calling
+// thread will have to be blocked indefinitely.
 const unsigned int max_queue_size = 1048576;
 
+// A bounded-length queue built out of a dynamic array which provides
+// a timedwait-based dequeue method.
 template<class T> class TimedQueue{
  protected:
+  // Queue can resize it's internal array
   unsigned long next_size_up(){
     return num_slots * 2;
   }
@@ -26,24 +23,26 @@ template<class T> class TimedQueue{
   inline unsigned long empty_slots(){
     return num_slots - used_slots;
   }
+  // Make the internal array the next size up (must be holding the
+  // state lock)
   void grow(){
     QTRACE("Q", "growing");
     unsigned long new_size = next_size_up();
     T *new_items = new T[new_size];
-    
-    unsigned long new_index = 0;
-    // assumes full, will copy harmless NULL data if not
+
+    // copy all existing data into new array
+    unsigned long new_write_index = 0;
     unsigned long n_to_copy = used_slots;
     while (n_to_copy-- > 0){
-      new_items[new_index ++] = items[next_read_index];
+      new_items[new_write_index ++] = items[next_read_index];
       next_read_index = (next_read_index + 1) % num_slots;
     }
 
     delete[] items;
     items = new_items;
-    next_read_index = 0;
-    next_write_index = new_index;
     num_slots = new_size;
+
+    next_read_index = 0;
   }
 
 
@@ -64,19 +63,17 @@ template<class T> class TimedQueue{
 
     if (!empty_slots()){
       QTRACE("Q", "enqueue: queue full");
-      // queue is full
+      // queue is full- either resize or block the caller.
       if (next_size_up() > max_queue_size){
-	// have to block caller
 	QTRACE("Q", "enqueue:  +-having to block caller");
 	while (!empty_slots()) pd_add_cond.wait();
       }else{
 	grow();
-	OMNIORB_ASSERT(used_slots != num_slots);
+	OMNIORB_ASSERT(empty_slots());
       }
     }
     items[next_write_index] = thing;
     next_write_index = (next_write_index + 1) % num_slots;
-    OMNIORB_ASSERT(next_write_index != next_read_index);
     used_slots ++;
 
     pd_remove_cond.signal();
@@ -104,10 +101,10 @@ template<class T> class TimedQueue{
 	}
       }
       QTRACE("Q", "Got item from queue");
-      thing = items[next_read_index ++];
-      if (next_read_index == num_slots) next_read_index = 0;
-      
+      thing = items[next_read_index];
+      next_read_index = (next_read_index + 1) % num_slots;      
       used_slots --;
+
       // maybe shrink the queue again?
       pd_add_cond.signal();
     }
