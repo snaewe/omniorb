@@ -27,16 +27,16 @@
 //   Dynamic Skeleton Interface (DSI).
 //
 
-// XXX Temporary disable ENABLE_CLIENT_IR_SUPPORT
-//#define ENABLE_CLIENT_IR_SUPPORT
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB4/CORBA.h>
 #include <dynamicImplementation.h>
-#include <dynException.h>
+#include <omniORB4/IOP_S.h>
 #include <omniORB4/callDescriptor.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////// DynamicImplementation ///////////////////////
@@ -80,46 +80,10 @@ PortableServer::DynamicImplementation::_is_a(const char* logical_type_id)
 }
 
 
-class omni_DynamicImplementation_ResultMarshaller : public giopMarshaller {
-public:
-  omni_DynamicImplementation_ResultMarshaller(omniServerRequest& req) :
-    pd_req(req) {}
-
-  void marshal(cdrStream& s) {
-    pd_req.result().NP_marshalDataOnly(s);
-    for( CORBA::ULong j = 0; j < pd_req.params()->count(); j++ ){
-      CORBA::NamedValue_ptr arg = pd_req.params()->item(j);
-      if( arg->flags() & CORBA::ARG_OUT ||
-	  arg->flags() & CORBA::ARG_INOUT )
-	arg->value()->NP_marshalDataOnly(s);
-    }
-  }
-
-private:
-  omniServerRequest& pd_req;
-
-};
-
-class omni_DynamicImplementation_ExceptionMarshaller : public giopMarshaller {
-public:
-  omni_DynamicImplementation_ExceptionMarshaller(omniServerRequest& req) :
-    pd_req(req) {}
-
-  void marshal(cdrStream& s) {
-    CORBA::TypeCode_var tc = pd_req.exception().type();
-    s.marshalRawString(tc->id());
-    pd_req.exception().NP_marshalDataOnly(s);
-  }
-
-private:
-  omniServerRequest& pd_req;
-
-};
-
 _CORBA_Boolean
-PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
+PortableServer::DynamicImplementation::_dispatch(IOP_S& giop_s)
 {
-  const char* op = giop_s.invokeInfo().operation();
+  const char* op = giop_s.operation_name();
 
   // We do not want to handle standard object operations ...
   if( !strcmp(op, "_is_a"          ) ||
@@ -148,30 +112,11 @@ PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
     }
     OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
 
+
   case omniServerRequest::SR_GOT_PARAMS:
-  case omniServerRequest::SR_GOT_CTX:
   case omniServerRequest::SR_GOT_RESULT:
-    if( giop_s.invokeInfo().response_expected() ){
-
-      omni_DynamicImplementation_ResultMarshaller m(sreq);
-      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, m);
-    }
-    break;
-
-  case omniServerRequest::SR_EXCEPTION:  // User & System exception
-    if( giop_s.invokeInfo().response_expected() ){
-      GIOP::ReplyStatusType status;
-      if (isaSystemException(&sreq.exception()))
-	status = GIOP::SYSTEM_EXCEPTION;
-      else
-	status = GIOP::USER_EXCEPTION;
-
-      omni_DynamicImplementation_ExceptionMarshaller m(sreq);
-      giop_s.InitialiseReply(status, m);
-    }
-    else {
-      OMNIORB_THROW(UNKNOWN,0,CORBA::COMPLETED_NO);
-    }
+  case omniServerRequest::SR_EXCEPTION:
+    sreq.do_reply();
     break;
 
   case omniServerRequest::SR_DSI_ERROR:
@@ -197,8 +142,6 @@ PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
     OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
   }
 
-  giop_s.ReplyCompleted();
-
   return 1;
 }
 
@@ -207,12 +150,6 @@ PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
 omniObjRef*
 PortableServer::DynamicImplementation::_do_get_interface()
 {
-  //XXX
-  throw omniORB::fatalException(__FILE__,__LINE__,
-				"Not ported yet.");
-
-  return 0;
-#if 0
   CORBA::_objref_InterfaceDef* p = _get_interface();
   if( p )  return p->_PR_getobj();
 
@@ -244,5 +181,6 @@ PortableServer::DynamicImplementation::_do_get_interface()
 
   return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
 #endif
-#endif
 }
+
+

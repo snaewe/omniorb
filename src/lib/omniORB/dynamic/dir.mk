@@ -3,12 +3,9 @@
 ORB_SRCS = \
            any.cc \
            anyP.cc \
-           bootstrapdynstub.cc \
            constants.cc \
            context.cc \
            contextList.cc \
-           corbaidldynstub.cc \
-           corbaidlstub.cc \
            deferredRequest.cc \
            dynamicImplementation.cc \
            dynamicLib.cc \
@@ -17,23 +14,29 @@ ORB_SRCS = \
            dynException.cc \
 	   environment.cc \
            exceptionList.cc \
-           irstub.cc \
-           ir.cc \
-           irdynstub.cc \
 	   namedValue.cc \
            nvList.cc \
-           Namingdynstub.cc \
 	   orbMultiRequest.cc \
 	   pseudoBase.cc \
            request.cc \
            serverRequest.cc \
            tcParser.cc \
            typecode.cc \
-           unknownUserExn.cc
+           unknownUserExn.cc \
+           $(BUILTIN_STUB_SRCS)
 
+BUILTIN_STUB_SRCS = \
+           bootstrapdynstub.cc \
+           corbaidldynstub.cc \
+           corbaidlstub.cc \
+           irstub.cc \
+           ir.cc \
+           irdynstub.cc \
+           Namingdynstub.cc
 
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
+DIR_CPPFLAGS += -I../include $(patsubst %,-I%/../include,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
 DIR_CPPFLAGS += -D_OMNIORB_DYNAMIC_LIBRARY

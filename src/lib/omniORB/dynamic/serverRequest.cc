@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.8.2.5  2001/04/19 09:15:43  sll
+ Big checkin with the brand new internal APIs.
+ Scoped where appropriate with the omni namespace.
+
  Revision 1.8.2.4  2000/10/09 16:24:59  sll
  Progress internal state to SR_GOT_CTX and bypass SR_GOT_PARAMS in
  arguments() when there is no context pending to be retrieved.
@@ -64,31 +68,81 @@
 */
 
 #include <omniORB4/CORBA.h>
-
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
-
+#include <omniORB4/callDescriptor.h>
+#include <omniORB4/IOP_S.h>
 #include <dynamicImplementation.h>
 #include <pseudo.h>
 #include <context.h>
-#include <dynException.h>
 #include <exceptiondefs.h>
-
 
 CORBA::ServerRequest::~ServerRequest()  {}
 
+OMNI_NAMESPACE_BEGIN(omni)
 
-omniServerRequest::~omniServerRequest()  {}
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+class serverRequestCallDescriptor : public omniCallDescriptor {
+public:
+
+  /////////////////////////////////////////////////////////////////////
+  inline serverRequestCallDescriptor(const char* op,size_t oplen,
+				     CORBA::NVList_ptr nvlist) :
+     omniCallDescriptor(0, op, oplen, 0, 0, 0, 1),pd_params(nvlist) {}
+
+  /////////////////////////////////////////////////////////////////////
+  void unmarshalArguments(cdrStream& s) {
+
+    CORBA::ULong num_args = pd_params->count();
+
+    for( CORBA::ULong i = 0; i < num_args; i++){
+      CORBA::NamedValue_ptr arg = pd_params->item(i);
+      if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
+	arg->value()->NP_unmarshalDataOnly(s);
+    }
+
+    // If there is no space left for context info...
+    if ( s.checkInputOverrun(1,4) ) {
+      pd_context = CORBA::Context::unmarshalContext(s);
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////
+  void marshalReturnedValues(cdrStream& s) {
+
+    pd_result.NP_marshalDataOnly(s);
+    for( CORBA::ULong j = 0; j < pd_params->count(); j++ ){
+      CORBA::NamedValue_ptr arg = pd_params->item(j);
+      if( arg->flags() & CORBA::ARG_OUT ||
+	  arg->flags() & CORBA::ARG_INOUT )
+	arg->value()->NP_marshalDataOnly(s);
+    }
+  }
+
+  CORBA::Context_var pd_context;
+  CORBA::NVList_var  pd_params;
+  CORBA::Any         pd_result;
+  CORBA::Any         pd_exception;
+};
 
 
-const char*
-omniServerRequest::operation()
-{
-  return pd_giop_s.invokeInfo().operation();
+////////////////////////////////////////////////////////////////////////
+omniServerRequest::~omniServerRequest()  {
+  if (pd_calldesc) {
+    delete pd_calldesc;
+    pd_calldesc = 0;
+  }
 }
 
 
+////////////////////////////////////////////////////////////////////////
+const char*
+omniServerRequest::operation()
+{
+  return pd_giop_s.operation_name();
+}
+
+
+////////////////////////////////////////////////////////////////////////
 void
 omniServerRequest::arguments(CORBA::NVList_ptr& parameters)
 {
@@ -101,31 +155,19 @@ omniServerRequest::arguments(CORBA::NVList_ptr& parameters)
     OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
   }
 
-  pd_params = parameters;
   pd_state = SR_ERROR;
 
-  // unmarshal the arguments
-  cdrStream& s = pd_giop_s;
+  pd_calldesc = new serverRequestCallDescriptor(pd_giop_s.operation_name(),
+		 			 strlen(pd_giop_s.operation_name()),
+					 parameters);
 
-  CORBA::ULong num_args = pd_params->count();
+  pd_giop_s.ReceiveRequest(*((omniCallDescriptor*)pd_calldesc));
 
-  for( CORBA::ULong i = 0; i < num_args; i++){
-    CORBA::NamedValue_ptr arg = pd_params->item(i);
-    if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
-      arg->value()->NP_unmarshalDataOnly(s);
-  }
-
-  // If there is no space left for context info...
-  if ( !s.checkInputOverrun(1,4) ) {
-    pd_giop_s.RequestReceived();
-    pd_state = SR_GOT_CTX;
-  }
-  else {
-    pd_state = SR_GOT_PARAMS;
-  }
+  pd_state = SR_GOT_PARAMS;
 }
 
 
+////////////////////////////////////////////////////////////////////////
 CORBA::Context_ptr
 omniServerRequest::ctx()
 {
@@ -136,34 +178,25 @@ omniServerRequest::ctx()
     OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
 
-  cdrStream& s = pd_giop_s;
-
-  if( s.checkInputOverrun(1,4) ) {
-    pd_state = SR_ERROR;
-    pd_context = CORBA::Context::unmarshalContext(s);
-    pd_giop_s.RequestReceived();
-    pd_state = SR_GOT_CTX;
-  }
-
-  return pd_context;
+  return pd_calldesc->pd_context;
 }
 
 
+////////////////////////////////////////////////////////////////////////
 void
 omniServerRequest::set_result(const CORBA::Any& value)
 {
-  if( !(pd_state == SR_GOT_PARAMS || pd_state == SR_GOT_CTX) ) {
+  if( !(pd_state == SR_GOT_PARAMS) ) {
     pd_state = SR_DSI_ERROR;
     OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
-  if( pd_state == SR_GOT_PARAMS )
-    pd_giop_s.RequestReceived();
 
-  pd_result = value;
+  pd_calldesc->pd_result = value;
   pd_state = SR_GOT_RESULT;
 }
 
 
+////////////////////////////////////////////////////////////////////////
 void
 omniServerRequest::set_exception(const CORBA::Any& value)
 {
@@ -174,26 +207,102 @@ omniServerRequest::set_exception(const CORBA::Any& value)
     OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   switch( pd_state ) {
-  case SR_READY:
-    if( isaSystemException(&value) )
-      pd_giop_s.RequestReceived(1);
-    else {
-      pd_state = SR_DSI_ERROR;
-      OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
-    }
-    break;
-
   case SR_GOT_PARAMS:
-  case SR_GOT_CTX:
   case SR_GOT_RESULT:
   case SR_EXCEPTION:
   case SR_ERROR:
     break;
 
+  case SR_READY:
+    pd_state = SR_DSI_ERROR;
   case SR_DSI_ERROR:
     OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
 
-  pd_exception = value;
+  pd_calldesc->pd_exception = value;
   pd_state = SR_EXCEPTION;
 }
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+class FromAnyUserException : public CORBA::UserException {
+public:
+  virtual ~FromAnyUserException() {}
+
+  FromAnyUserException(const CORBA::Any& v,const char* id) : 
+      value(v), repoid(id) {}
+
+  const char* _NP_repoId(int* size) const {
+    *size = strlen(repoid);
+    return repoid;
+  }
+
+  void _NP_marshal(cdrStream& s) const {
+    s.marshalRawString(repoid);
+    value.NP_marshalDataOnly(s);
+  }
+
+private:
+
+  // We don't expect any of these functions to be called.
+  // Any call to these functions is a bug!
+  void _raise() { 
+    throw omniORB::fatalException(__FILE__,__LINE__,
+				  "Wrong usage of class FromAnyUserException");
+  }
+  Exception* _NP_duplicate() const {
+    throw omniORB::fatalException(__FILE__,__LINE__,
+				  "Wrong usage of class FromAnyUserException");
+  }
+  const char* _NP_typeId() const {
+    throw omniORB::fatalException(__FILE__,__LINE__,
+				  "Wrong usage of class FromAnyUserException");
+  }
+
+private:
+  const CORBA::Any& value;
+  const char* repoid;
+
+  FromAnyUserException();
+  FromAnyUserException(const FromAnyUserException&);
+  FromAnyUserException& operator=(const FromAnyUserException&);
+};
+
+////////////////////////////////////////////////////////////////////////
+void
+omniServerRequest::do_reply()
+{
+  switch ( pd_state ) {
+  case omniServerRequest::SR_GOT_PARAMS:
+  case omniServerRequest::SR_GOT_RESULT:
+    {
+      pd_giop_s.SendReply();
+      break;
+    }
+  case omniServerRequest::SR_EXCEPTION:  // User & System exception
+    {
+      CORBA::TypeCode_var tc = pd_calldesc->pd_exception.type();
+      const char* repoid = tc->id();
+
+#     define TEST_AND_EXTRACT_SYSEXCEPTION(name) \
+      if ( strcmp("IDL:omg.org/CORBA/" #name ":1.0",repoid) == 0 ) { \
+         CORBA::name* ex; \
+         pd_calldesc->pd_exception >>= ex; \
+         pd_giop_s.SendException(ex); \
+          return; \
+      }
+      OMNIORB_FOR_EACH_SYS_EXCEPTION(TEST_AND_EXTRACT_SYSEXCEPTION)
+#     undef TEST_AND_EXTRACT_SYSEXCEPTION
+
+      FromAnyUserException ex(pd_calldesc->pd_exception,repoid);
+      pd_giop_s.SendException(&ex);
+      break;
+    }
+  default:
+    // Never reach here.
+    break;
+  }
+}
+
+
+OMNI_NAMESPACE_END(omni)
