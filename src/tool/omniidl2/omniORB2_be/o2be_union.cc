@@ -28,9 +28,13 @@
 
 /*
   $Log$
-  Revision 1.12  1998/03/02 14:13:18  ewc
-  OpenVMS union patch applied.
+  Revision 1.13  1998/04/07 18:53:50  sll
+  Stub code modified to accommodate the use of namespace to represent module.
+  Use std::fstream instead of fstream.
 
+// Revision 1.12  1998/03/02  14:13:18  ewc
+// OpenVMS union patch applied.
+//
 // Revision 1.11  1998/01/27  16:51:01  ewc
 //  Added support for type Any and TypeCode
 //
@@ -130,11 +134,18 @@
 #define ADPT_CLASS_TEMPLATE  "_CORBA_ConstrType_Variable_OUT_arg"
 
 static void
-produce_disc_value(fstream &s,AST_ConcreteType *t,AST_Expression *exp,
+produce_disc_value(std::fstream &s,AST_ConcreteType *t,AST_Expression *exp,
 		   AST_Decl* used_in);
 
 static void
-produce_default_value(o2be_union &u,fstream& s);
+produce_default_value(o2be_union &u,std::fstream& s);
+
+// added to address a problem with "default: break;" being generated when the
+// discriminator is a boolean:
+// BCV 23-FEB-1998 12:50:30.66
+static void
+produce_default_break(o2be_union& u, std::fstream& s);
+
 
 typedef union {
   int i_val;
@@ -229,7 +240,7 @@ o2be_union::add_union_branch(AST_UnionBranch *un)
 }
 
 void
-o2be_union::produce_hdr(fstream &s)
+o2be_union::produce_hdr(std::fstream &s)
 {
   if (!nodefault())
     {
@@ -370,7 +381,7 @@ o2be_union::produce_hdr(fstream &s)
 	i.next();
       }
   }
-  IND(s); s << "default: break;\n";
+  produce_default_break(*this, s);
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
@@ -436,7 +447,7 @@ o2be_union::produce_hdr(fstream &s)
 	i.next();
       }
   }
-  IND(s); s << "default: break;\n";
+  produce_default_break(*this, s);
   DEC_INDENT_LEVEL();
   if (!(nodefault() && no_missing_disc_value())) {
     IND(s); s << "}\n";
@@ -1268,13 +1279,12 @@ o2be_union::produce_hdr(fstream &s)
       set_recursive_seq(I_FALSE);
 
       // TypeCode_ptr declaration
-      IND(s); s << ((defined_in() == idl_global->root()) ? "extern " : 
-		    "static ") 
-		<< "const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+      IND(s); s << VarToken(*this)
+		<< " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
 
     // any insertion operators (inline definitions)
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "inline void operator<<=(CORBA::Any& _a, const " << uqname() 
+      IND(s); s << FriendToken(*this)
+		<< " inline void operator<<=(CORBA::Any& _a, const " << uqname() 
 		<< "& _s) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
@@ -1284,18 +1294,18 @@ o2be_union::produce_hdr(fstream &s)
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
 
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "inline void operator<<=(CORBA::Any& _a, " << uqname() 
+      IND(s); s << FriendToken(*this)
+		<< " inline void operator<<=(CORBA::Any& _a, " << uqname() 
 		<< "* _sp) {\n";
       INC_INDENT_LEVEL();
-      IND(s); s << "::operator<<=(_a,*_sp);\n";
+      IND(s); s << "_a <<= *_sp;\n";
       IND(s); s << "delete _sp;\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
 
       // any extraction operator (declaration)
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+      IND(s); s << FriendToken(*this)
+		<< " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 		<< uqname() << "*& _sp);\n\n";
     }
     else set_recursive_seq(I_TRUE);
@@ -1305,7 +1315,7 @@ o2be_union::produce_hdr(fstream &s)
 }
 
 void
-o2be_union::produce_skel(fstream &s)
+o2be_union::produce_skel(std::fstream &s)
 {
   s << "\n";
   {
@@ -1490,7 +1500,7 @@ o2be_union::produce_skel(fstream &s)
 	i.next();
       }
   }
-  IND(s); s << "default: break;\n";
+  produce_default_break(*this, s);
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
@@ -1628,7 +1638,7 @@ o2be_union::produce_skel(fstream &s)
 	i.next();
       }
   }
-  IND(s); s << "default: break;\n";
+  produce_default_break(*this, s);
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
@@ -1853,7 +1863,7 @@ o2be_union::produce_skel(fstream &s)
 	i.next();
       }
   }
-  IND(s); s << "default: break;\n";
+  produce_default_break(*this, s);
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
@@ -1957,8 +1967,36 @@ o2be_union::produce_skel(fstream &s)
     // Produce code for types any and TypeCode
     this->produce_typecode_skel(s);
 
-    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-	      << "_01RL_" << _fqtcname() << ";\n\n";
+    if (defined_in() != idl_global->root() &&
+	defined_in()->scope_node_type() == AST_Decl::NT_module)
+      {
+	s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+	IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
+	AST_Decl* inscope = ScopeAsDecl(defined_in());
+	char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+	if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	  {
+	    scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	    IND(s); s << "namespace " << scopename << " = " 
+		      << o2be_name::narrow_and_produce_fqname(inscope)
+		      << ";\n";
+	  }
+	IND(s); s << "namespace " << scopename << " {\n";
+	INC_INDENT_LEVEL();
+	IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+	DEC_INDENT_LEVEL();
+	IND(s); s << "}\n";
+	s << "#else\n";
+	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+	s << "#endif\n";
+      }
+    else
+      {
+	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+      }
     
     IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
     INC_INDENT_LEVEL();
@@ -2002,7 +2040,7 @@ o2be_union::produce_skel(fstream &s)
 }
 
 void
-o2be_union::produce_typecode_skel(fstream &s)
+o2be_union::produce_typecode_skel(std::fstream &s)
 {
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
@@ -2122,7 +2160,7 @@ o2be_union::check_recursive_seq()
 }
 
 void
-o2be_union::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
+o2be_union::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
   IND(s); s << "typedef " << unambiguous_name(tdef)
 	    << " " << tdef->uqname() << ";\n";
@@ -2257,7 +2295,7 @@ o2be_union::no_missing_disc_value()
 
 static
 void
-produce_default_value(o2be_union &u,fstream& s)
+produce_default_value(o2be_union &u,std::fstream& s)
 {
   AST_Decl *decl = u.disc_type();
   while (decl->node_type() == AST_Decl::NT_typedef)
@@ -2367,7 +2405,7 @@ produce_default_value(o2be_union &u,fstream& s)
 
 static
 void
-produce_disc_value(fstream &s,AST_ConcreteType *t,AST_Expression *exp,
+produce_disc_value(std::fstream &s,AST_ConcreteType *t,AST_Expression *exp,
 		   AST_Decl* used_in)
 {
 
@@ -2499,6 +2537,37 @@ lookup_by_disc_value(o2be_union& u,disc_value_t v)
       i.next();
     }
   return 0;
+}
+
+
+static void
+produce_default_break(o2be_union& u, std::fstream& s)
+{
+
+// I actually question whether this was needed at all.  In each call the line
+// "default: break;" is generated at the very end of the switch statement.
+// Semantically this is useless code, but maybe there was a reason it was there.
+// In particular, if both true and false are specified for a boolean
+// discriminator, this causes a warning on MSVC when CORBA::Boolean is a "real"
+// C++ bool type.
+
+// bcv 23-FEB-1998 12:59:02.59
+
+  AST_Decl *decl = u.disc_type();
+  while (decl->node_type() == AST_Decl::NT_typedef)
+    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+  if (decl->node_type()==AST_Decl::NT_pre_defined &&
+      AST_PredefinedType::narrow_from_decl(decl)->pt()==
+	AST_PredefinedType::PT_boolean &&
+      u.nodefault() &&
+      u.no_missing_disc_value()) {
+    s << "#ifndef HAS_Cplusplus_Bool\n";
+    IND(s); s << "default: break;\n";
+    s << "#endif\n";
+  } else {
+    IND(s); s << "default: break;\n";
+  }
 }
 
 const char *

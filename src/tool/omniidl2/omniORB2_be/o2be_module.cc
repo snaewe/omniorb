@@ -26,6 +26,10 @@
 
 /* 
    $Log$
+   Revision 1.6  1998/04/07 18:48:29  sll
+   Stub code modified to accommodate the use of namespace to represent module.
+   Use std::fstream instead of fstream.
+
    Revision 1.5  1997/12/09 19:55:33  sll
    *** empty log message ***
 
@@ -38,8 +42,6 @@
 #include <idl_extern.hh>
 #include <o2be.h>
 
-#include <iostream.h>
-
 o2be_module::o2be_module(UTL_ScopedName *n, UTL_StrList *p)
                  : AST_Decl(AST_Decl::NT_module, n, p),
 		   UTL_Scope(AST_Decl::NT_module),
@@ -48,15 +50,15 @@ o2be_module::o2be_module(UTL_ScopedName *n, UTL_StrList *p)
 }
 
 void
-o2be_module::produce_hdr(fstream &s)
+o2be_module::produce_hdr(std::fstream &s)
 {
   if (!(in_main_file()))
     return;
 
   if (defined_in() != 0)
     {
-      IND(s); s << "_CORBA_MODULE " << uqname() << " {\n";
-      IND(s); s << "_CORBA_MODULE_PUBLIC\n\n";
+      IND(s); s << "_CORBA_MODULE " << uqname() << "\n\n";
+      IND(s); s << "_CORBA_MODULE_BEG\n\n";
       INC_INDENT_LEVEL();
     }
 
@@ -109,14 +111,14 @@ o2be_module::produce_hdr(fstream &s)
     {
       DEC_INDENT_LEVEL();
 
-      IND(s); s << "};\n\n";
+      IND(s); s << "_CORBA_MODULE_END\n\n";
     }
 
   return;
 }
 
 void
-o2be_module::produce_skel(fstream &s)
+o2be_module::produce_skel(std::fstream &s)
 {
   if (!(in_main_file()))
     return;
