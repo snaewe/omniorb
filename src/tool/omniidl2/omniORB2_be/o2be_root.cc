@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.7  1997/12/12 20:02:33  sll
+  Generate reference to version variable omniORB_x_y in skel file.
+
   Revision 1.6  1997/12/10 11:35:56  sll
   Updated life cycle service stub.
 
@@ -200,6 +203,13 @@ void
 o2be_root::produce_skel(fstream &skel)
 {
   skel << "#include \""<<basename<<o2be_global::hdrsuffix()<<"\"\n\n" << endl;
+
+
+  // Do not forget to update the version number in omniORB_x_y below.
+  // The variable is defined in omniInternal.h.
+  skel << "static const char* _0RL_library_version = "
+       << "omniORB_2_4" 
+       << ";\n\n" << endl;
 
   if (idl_global->indent() == NULL)
     idl_global->set_indent(new UTL_Indenter());
