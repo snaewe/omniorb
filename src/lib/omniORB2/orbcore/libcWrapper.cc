@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.7  1997/05/06 15:22:38  sll
-  Public release.
+  Revision 1.8  1997/08/21 22:04:49  sll
+  Changed to use the new platform identification proprocessor macro.
 
+// Revision 1.7  1997/05/06  15:22:38  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -46,7 +49,7 @@ LibcWrapper::gethostbyname(const char *name,
 			   LibcWrapper::hostent_var &h,
 			   int &rc)
 {
-#if defined(__sunos__) && defined(SVR4)
+#if defined(__sunos__) && __OSVERSION__ >= 5
 
   // Use gethostbyname_r() on Solaris 2
   if (!h.pd_buffer) {
