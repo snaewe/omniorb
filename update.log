@@ -1,4 +1,18 @@
 
+Fri Mar  3 14:23:36 GMT 2000 djr
+================================
+
+- Minor improvement to BOA skeleton support.  Reduces amount of
+  generated code required, and solves problems with ambiguous names
+  in multiply-inherited descendants.  (NB. Still outstanding problem
+  with _this(), but not sure why).
+
+include/omniORB3/CORBA.h
+include/omniORB3/boa.h
+include/omniORB3/omniORB.h
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
 Fri Mar  3 09:41:28 GMT 2000 djr
 ================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2000/03/03 14:29:17  djr
+  Improvement to BOA skeletons (less generated code).
+
   Revision 1.1.2.5  1999/09/30 11:49:27  djr
   Implemented catching user-exceptions in GIOP_S for all compilers.
 
@@ -104,6 +107,18 @@
 
 #ifndef __OMNIORB_H__
 #define __OMNIORB_H__
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// omniOrbBoaKey ///////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+struct omniOrbBoaKey {
+  _CORBA_ULong hi;
+  _CORBA_ULong med;
+  _CORBA_ULong lo;
+};
+
 
 _CORBA_MODULE omniORB
 
