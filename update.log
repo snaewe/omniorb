@@ -1,3 +1,13 @@
+Sun Aug 18 15:51:47 BST 2002 dgrisby
+====================================
+
+- Add Voyager codeset to contrib directory.
+
+contrib/README
+contrib/Voyager/README-Voyager.txt
+contrib/Voyager/cs-voyager.cc
+
+
 Fri Aug 16 20:22:30 BST 2002 dgrisby
 ====================================
 
