@@ -29,6 +29,13 @@
 #                       CORBA::ServiceOption, CORBA::ServiceDetailType
 #        -- currently missing from omniORB's CORBA.h
 
+
+# Uncomment this line to optimize the size of the COS library by only
+# including things required by omniNotify.
+
+OPTIMIZE_OMNINOTIFY = 1
+
+
 COS_ALL_INT = \
   $(TIMEBASE_INT) \
   $(COS_REL_INT) \
@@ -56,10 +63,14 @@ TIMEBASE_INT = \
 COS_EVT_INT = \
   CosTime \
   CosEventComm \
-  CosEventChannelAdmin \
+  CosEventChannelAdmin
+
+ifndef OPTIMIZE_OMNINOTIFY
+COS_EVT_INT += \
   CosTypedEventComm \
   CosTypedEventChannelAdmin \
   CosTimerEvent
+endif
 
 # Interfaces for Notification
 #   DEPENDS_ON: TIMEBASE_INT, COS_EVT_INT
@@ -67,12 +78,14 @@ COS_NFY_INT = \
   CosNotification \
   CosNotifyComm \
   CosNotifyFilter \
-  CosNotifyChannelAdmin \
+  CosNotifyChannelAdmin
+
+ifndef OPTIMIZE_OMNINOTIFY
+COS_NFY_INT += \
   CosTypedNotifyComm \
-  CosTypedNotifyChannelAdmin \
-  AttNotifyChannelAdmin
-# Note: AttNotifyChannelAdmin defines non-standard extenions
-# to the CosNotifyChannelAdmin interface
+  CosTypedNotifyChannelAdmin
+endif
+
 
 # Interfaces for Relationships
 COS_REL_INT = \
