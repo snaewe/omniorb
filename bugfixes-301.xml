@@ -1,0 +1,174 @@
+<?xml version="1.0" standalone="yes"?>
+<?xml-stylesheet type="text/xsl" href="bugfixes.xsl"?>
+
+<!-- The following bugs have been fixed since the omniORB 3.0.1     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist>
+
+<bug id="14" date="Mon Sep 25 11:52:16 BST 2000" user="dpg1">
+
+  <summary>Clash with name _T</summary>
+  <reported>All sorts of people</reported>
+  <text>
+  omniORB used <code>_T</code> as a template class name in various
+  places. This causes problems with standard headers on some
+  platforms, which <code>#define _T</code>. All uses of
+  <code>_T</code> have been changed.
+  </text>
+</bug>
+
+<bug id="13" date="Tue Sep 21 15:13:05 BST 2000" user="sll">
+
+  <summary>Workaround for the Sun C++ 5.0 or Forte WS 6.0 exception
+  unwinding bug</summary>
+  <reported>Sai-Lai Lo</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-08/0241.html"/>
+  <text>
+   Sun C++ 5.0 or Forte C++ 6.0 generated code will segv occasionally
+   when concurrent threads throw an exception. The stack trace points
+   to a problem in the exception unwinding. The workaround seems to be
+   to install explicitly an uncaught exception handler.
+  </text>
+</bug>
+
+<bug id="12" date="Tue Sep 19 14:50:05 BST 2000" user="djs">
+
+  <summary>C++ backend reversed order of includes in .hh file</summary>
+  <reported>NODA Itsuki</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-09/0090.html"/>
+  <text>
+  If an IDL source file #included &lt;a.idl&gt; and &lt;b.idl&gt; then the
+  resulting header would #include &lt;b.hh&gt; before &lt;a.hh&gt;.
+  </text>
+</bug>
+
+<bug id="11" date="Tue Sep 19 10:08:31 BST 2000" user="dpg1">
+
+  <summary>Bug when assigning a String_var to itself</summary>
+  <reported>Stefan Engelhardt</reported>
+  <text>
+  Assigning a String_var to itself would incorrectly delete the string
+  contents.
+  </text>
+</bug>
+
+<bug id="10" date="Wed Sep 13 10:09:43 BST 2000" user="djs">
+
+  <summary>omniidl/C++ bug with unions with implicit default members</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-09/0054.html"/>
+  <text>
+  The generated <code>_d(...)</code> method was incomplete, preventing
+  the discriminant from being changed within the set of legal default
+  values after calling <code>_default()</code> on a union with an implicit
+  default member.
+  </text>
+</bug>
+
+<bug id="9" date="Mon Sep 11 15:12:38 BST 2000" user="dpg1">
+
+  <summary>omniidl produces no useful output on Windows 98</summary>
+  <reported>Guangyu Gu, Mark Pumar, others</reported>
+  <text>
+  On some Windows 98 machines, but not others, the C pre-processor
+  output is echoed to the screen, rather than forming the input to
+  omniidl. omniidl therefore fails to generate any code. This fix adds
+  a <code>-T</code> option to omniidl, which uses a temporary file
+  rather than a pipe between the pre-processor and omniidl. It is
+  reported that this works on affected Win98 machines.
+  </text>
+</bug>
+
+
+<bug id="8" date="Wed Sep  6 12:13:30 BST 2000" user="dpg1">
+
+  <summary>Support for Python 1.6 and 2.0b1</summary>
+  <text>
+  omniidl was hard-coded to require Python 1.5.2, just in case later
+  versions were incompatible. 1.6 and 2.0b1 are compatible, so they
+  are now supported.
+  </text>
+</bug>
+
+<bug id="7" date="Mon Sep  4 10:02:41 BST 2000" user="dpg1">
+
+  <summary>#includes of iostream.h left in omniORB headers</summary>
+  <reported>Paul Nader</reported>
+  <text>
+  Several files had <code>#include&lt;iostream.h&gt;</code> left
+  behind from debugging. This causes problems for code which does
+  <code>#include &lt;iostream&gt;</code> without the <code>.h</code>.
+  </text>
+</bug>
+
+
+<bug id="6" date="Wed Aug 30 10:43:34 BST 2000" user="dpg1">
+
+  <summary>BOA constructor with object key broken</summary>
+  <reported>Paul Nader</reported>
+  <text>
+  The fix to <a href="bug300.html#bug8">bug 8</a> in omniORB 3.0.0 did
+  not actually work.
+  </text>
+</bug>
+
+<bug id="5" date="Fri Aug 25 14:25:20 BST 2000" user="dpg1">
+
+  <summary>omniidl loses all but the first comment with -K</summary>
+  <reported>Richard Gruet</reported>
+  <text>
+  On some platforms, omniidl -K would lose all but the first comment
+  attached to a node. The code used a construct whose evaluation order
+  is undefined in C++, so it worked with some compilers, but not
+  others.
+  </text>
+</bug>
+
+<bug id="4" date="Wed Aug 23 16:44:36 BST 2000" user="djs">
+
+  <summary>MSVC5/6 marshalling multidimensional arrays of basic types</summary>
+  <reported>dme</reported>
+  <text>MSVC5/6 fail to resolve the correct operator[] when marshalling
+        a multidimensional array of basic types, only in the return case
+        (not when using an out type)
+  </text>
+</bug>
+
+<bug id="3" date="Tue Aug 22 15:48:11 BST 2000" user="sll">
+
+  <summary>"Unexpected" exception at initialization</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-08/0066.html"/>
+  <text>When the port specified via -ORBpoa_iiop_port happens to be in use,
+        an internal omniORB exception is raised by resolve_initial_reference().
+        Now a system exception CORBA::INITIALIZE is raised instead.
+  </text>
+</bug>
+
+<bug id="2" date="Tue Aug 22 10:59:21 BST 2000" user="dpg1">
+
+  <summary>Missing make rules for GCC on Solaris</summary>
+  <reported>Mark Borges</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-08/0170.html"/>
+  <text>Make rules for the omniDynamic shared library were missing, so
+  the new libCOS failed to link.</text>
+</bug>
+
+
+<bug id="1" date="Mon Aug 21 10:11:51 BST 2000" user="dpg1">
+
+  <summary>Typo in omniidl.idltype.Declared.name()</summary>
+
+  <reported>Richard Gruet</reported>
+
+  <text>
+  The <code>name()</code> function of <code>idltype.Declared</code>
+  accidentally returned a list containing a single string rather than
+  just the string itself.
+  </text>
+</bug>
+
+</buglist>

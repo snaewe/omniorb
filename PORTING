@@ -35,7 +35,7 @@ files. The details are as follows:
 
 2. Porting omniidl
 
-   omniidl requires Python 1.5.2, which is available from
+   omniidl requires Python 1.5.2 or higher, which is available from
 
      http://www.python.org/download/
 

@@ -1,9 +1,39 @@
+Mon Oct  2 17:30:13 BST 2000 dpg1
+=================================
+
+- Updates for 3.0.2 release
+
+bugfixes-301.xml   -- new
+bugfixes.xml
+bugfixes.xsl
+doc/tex/cover.tex
+external_merge/PORTING
+external_merge/README.FIRST
+external_merge/README.SunC++5
+external_merge/README.hpux11
+external_merge/README.unix
+external_merge/README.win32
+external_merge/ReleaseNote_omniORB_301   -- deleted
+external_merge/ReleaseNote_omniORB_302   -- new
+external_merge/THIS_IS_omniORB_3_0_1     -- deleted
+external_merge/THIS_IS_omniORB_3_0_2     -- new
+external_merge/mk/rtems.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+
+- Fix dodgy line in OSF makefile
+
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+
+
 Fri Sep 29 15:44:42 BST 2000 sll
 ================================
 
 - Added new platform file for Redhat 7.0 (gcc-2.96)
 
 mk/platforms/i586_linux_2.0_glibc2.1_gcc2.96.mk      NEW
+
  
 Mon Sep 25 11:52:16 BST 2000 dpg1
 =================================

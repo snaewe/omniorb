@@ -19,7 +19,7 @@
   <tr>
     <td width="15%"><img src="images/omniORB3logo.gif"/></td>
     <td align="center" bgcolor="#000000"><h1 class="banner">
-        <font color="#FFFFFF"><em>omniORB 3.0.1 Bug List</em></font></h1>
+        <font color="#FFFFFF"><em>omniORB 3.0.2 Bug List</em></font></h1>
     </td>
 
     <td width="15%"><p align="center">
@@ -70,14 +70,14 @@
         <tr><td>
 
 	  <p>
-	  The following bugs in omniORB 3.0.1 have been fixed. You can
+	  The following bugs in omniORB 3.0.2 have been fixed. You can
 	  get the fixes in three ways:</p>
 
           <ul><li>Update from <a href="cvs.html">CVS</a> in the
                   <code>"omni3_develop"</code> branch.</li>
 
-              <li>Apply <a href="ftp://ftp.uk.research.att.com/pub/omniORB/omniORB3/omniORB_301_bugfixes.patch">this
-                  patch</a> to the omniORB 3.0.1 distribution.</li>
+              <li>Apply <a href="ftp://ftp.uk.research.att.com/pub/omniORB/omniORB3/omniORB_302_bugfixes.patch">this
+                  patch</a> to the omniORB 3.0.2 distribution.</li>
 
               <li>Download the latest <a
               href="ftp://ftp.uk.research.att.com/pub/omniORB/omniORB_3_snapshots/">source
@@ -88,6 +88,7 @@
           <p>
           The bugs page for earlier versions can be found here:
           <ul> 
+              <li><a href="bug301.html">3.0.1</a></li>
               <li><a href="bug300.html">3.0.0</a></li>
 	      <li><a href="omniORBbug_old.html">for 2.8.0 and earlier</a></li>
           </ul>

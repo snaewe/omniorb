@@ -1,7 +1,7 @@
 This is version 3.0 of omniORB. We also refer to this version as omniORB3.
 
-This release is a minor release since omniORB 3.0.0.  For a summary of
-changes since the last release, please read the file ReleaseNote_omniORB_301.
+This release is a minor release since omniORB 3.0.1.  For a summary of
+changes since the last release, please read the file ReleaseNote_omniORB_302.
 
 omniORB3 is copyright AT&T Laboratories - Cambridge. It is free
 software. The programs in omniORB3 are distributed under the GNU
@@ -55,10 +55,10 @@ CHANGES_250      - contains details of changes from 2.4.0 to 2.5.0.
 
 CHANGES_240      - contains details of changes from 2.2.0 to 2.4.0.
 
-ReleaseNote_omniORB_301 - release notes of 3.0.1
+ReleaseNote_omniORB_302 - release notes of 3.0.2
 
 IMPORTANT NOTE for users upgrading from 2.7.1 or earlier:
-   Since 2.8.0, omniORB2 has been updated to CORBA 2.3. In order to comply 
+   Since 2.8.0, omniORB has been updated to CORBA 2.3. In order to comply 
    with the 2.3 specification, it is necessary to change the
    semantics of the extraction of string, object reference and typecode
    from an Any. Please read CHANGES_280 for details.
