@@ -27,7 +27,7 @@
 
 /*
   $Log$
-  Revision 1.4  1997/05/06 13:51:37  sll
+  Revision 1.5  1997/05/06 17:28:38  sll
   Public release.
 
   */
@@ -134,7 +134,6 @@ BE_init()
 void
 BE_version()
 {
-  cerr << GTDEVEL("omniORB back end, version 2.0 (without type \"any\" support)\n");
 }
 
 //
@@ -188,9 +187,8 @@ usage()
   cerr << GTDEVEL(" -Idir\t\t\tincludes dir in search path for preprocessor\n");
   cerr << GTDEVEL(" -Uname\t\t\tundefines name for preprocessor\n");
   cerr << GTDEVEL(" -V\t\t\tprints version info then exits\n");
-  cerr << GTDEVEL(" -f          Enable support for \"float\" and \"double\" type\n");
-  cerr << GTDEVEL(" -h suffix   Specify non-default suffix for generated header file\n");
-  cerr << GTDEVEL(" -s suffix   Specify non-default suffix for generated stub file\n");
+  cerr << GTDEVEL(" -h suffix   Specify non-default suffix for the generated header file(s)\n");
+  cerr << GTDEVEL(" -s suffix   Specify non-default suffix for the generated stub file(s)\n");
   cerr << GTDEVEL(" -u\t\t\tprints usage message and exits\n");
 
   cerr << GTDEVEL(" -v\t\t\ttraces compilation stages\n");
@@ -219,7 +217,7 @@ BE_parse_args(int argc, char **argv)
 
   DRV_cpp_init();
   idl_global->set_prog_name(argv[0]);
-  while ((c = getopt(argc,argv,"D:EI:U:Vuvwfh:s:")) != EOF)
+  while ((c = getopt(argc,argv,"D:EI:U:Vuvwh:s:")) != EOF)
     {
       switch (c) 
 	{
@@ -238,9 +236,6 @@ BE_parse_args(int argc, char **argv)
 	  idl_global->set_compile_flags(idl_global->compile_flags() |
 					IDL_CF_VERSION);
 	  return;
-	case 'f':
-	  o2be_global::set_fflag(1);
-	  break;
 	case 'h':
 	  o2be_global::set_hdrsuffix(optarg);
 	  break;
