@@ -1,3 +1,11 @@
+Wed Apr  9 11:24:46 BST 2003 dgrisby
+====================================
+
+- Silly variable reuse bug in new CORBA 3 keyword check.
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Mon Mar 31 16:21:26 BST 2003 dgrisby
 ====================================
 

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.13.2.9  2003/04/09 10:26:48  dgrisby
+// Silly variable reuse bug in new CORBA 3 keyword check.
+//
 // Revision 1.13.2.8  2003/03/20 10:24:27  dgrisby
 // Warn about use of CORBA 3 keywords in IDL.
 //
@@ -1304,7 +1307,9 @@ keywordClash(const char* identifier, const char* file, int line)
     "setraises", "typeid", "typeprefix", "uses", 0
   };
 
-  for (const char** k = keywords; *k; k++) {
+  const char** k;
+
+  for (k = keywords; *k; k++) {
     if (Config::caseSensitive) {
       if (!strcmp(*k, identifier)) {
 	IdlError(file, line, "Identifier '%s' is identical to keyword '%s'",
@@ -1320,7 +1325,7 @@ keywordClash(const char* identifier, const char* file, int line)
       }
     }
   }
-  for (const char** k = new_keywords; *k; k++) {
+  for (k = new_keywords; *k; k++) {
     if (Config::caseSensitive) {
       if (!strcmp(*k, identifier)) {
 	IdlWarning(file, line, "Identifier '%s' is identical to "
