@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.14.2.9  2000/08/29 10:20:26  dpg1
+// Operations and attributes now have repository ids.
+//
 // Revision 1.14.2.8  2000/08/25 13:33:02  dpg1
 // Multiple comments preceding a declaration are now properly attached on
 // all platforms
@@ -323,13 +326,22 @@ scopedNameToDecl(const char* file, int line, const ScopedName* sn)
   const Scope::Entry* se = Scope::current()->findScopedName(sn, file, line);
 
   if (se) {
-    if (se->kind() == Scope::Entry::E_DECL) {
+    switch (se->kind()) {
+
+    case Scope::Entry::E_MODULE:
+    case Scope::Entry::E_DECL:
+    case Scope::Entry::E_CALLABLE:
+    case Scope::Entry::E_INHERITED:
       return se->decl();
+
+    default:
+      {
+	char* ssn = sn->toString();
+	IdlError(file, line, "`%s' is not a declaration", ssn);
+	IdlErrorCont(se->file(), se->line(), "(`%s' created here)", ssn);
+	delete [] ssn;
+      }
     }
-    char* ssn = sn->toString();
-    IdlError(file, line, "`%s' is not a declaration", ssn);
-    IdlErrorCont(se->file(), se->line(), "(`%s' created here)", ssn);
-    delete [] ssn;
   }
   return 0;
 }
@@ -833,7 +845,8 @@ Declarator(const char* file, int line, _CORBA_Boolean mainFile,
     DeclRepoId(identifier),
     sizes_(sizes),
     thisType_(0),
-    alias_(0)
+    alias_(0),
+    attribute_(0)
 {
 }
 
@@ -848,8 +861,9 @@ const char*
 Declarator::
 kindAsString() const
 {
-  if (alias_) return "typedef declarator";
-  else return "declarator";
+  if (alias_)     return "typedef declarator";
+  if (attribute_) return "attribute declarator";
+                  return "declarator";
 }
 
 void
@@ -858,6 +872,13 @@ setAlias(Typedef* td)
 {
   alias_    = td;
   thisType_ = new DeclaredType(IdlType::tk_alias, this, this);
+}
+
+void
+Declarator::
+setAttribute(Attribute* at)
+{
+  attribute_ = at;
 }
 
 // Typedef
@@ -1382,7 +1403,8 @@ Attribute(const char* file, int line, _CORBA_Boolean mainFile,
 
   for (Declarator* d = declarators; d; d = (Declarator*)d->next()) {
     assert(!d->sizes()); // Enforced by grammar
-    Scope::current()->addCallable(d->eidentifier(), 0, this, file, line);
+    d->setAttribute(this);
+    Scope::current()->addCallable(d->eidentifier(), 0, d, file, line);
   }
 }
 
@@ -1494,6 +1516,7 @@ Operation(const char* file, int line, _CORBA_Boolean mainFile,
 	  const char* identifier)
 
   : Decl(D_OPERATION, file, line, mainFile),
+    DeclRepoId(identifier),
     oneway_(oneway),
     returnType_(returnType),
     parameters_(0),
@@ -1503,11 +1526,6 @@ Operation(const char* file, int line, _CORBA_Boolean mainFile,
   if (returnType) delType_ = returnType->shouldDelete();
   else            delType_ = 0;
 
-  if (identifier[0] == '_')
-    identifier_ = idl_strdup(identifier+1);
-  else
-    identifier_ = idl_strdup(identifier);
-
   Scope* s = Scope::current()->newOperationScope(file, line);
   Scope::current()->addCallable(identifier, s, this, file, line);
   Scope::startScope(s);
@@ -1516,7 +1534,6 @@ Operation(const char* file, int line, _CORBA_Boolean mainFile,
 Operation::
 ~Operation()
 {
-  delete [] identifier_;
   if (parameters_) delete parameters_;
   if (raises_)     delete raises_;
   if (contexts_)   delete contexts_;

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.8.2.6  2000/08/29 10:20:26  dpg1
+// Operations and attributes now have repository ids.
+//
 // Revision 1.8.2.5  2000/08/04 11:39:03  dpg1
 // Updates for AIX with xlC
 //
@@ -515,6 +518,7 @@ protected:
 
 
 class Typedef;
+class Attribute;
 
 class Declarator : public Decl, public DeclRepoId {
 public:
@@ -530,17 +534,20 @@ public:
 				// Null if a simple declarator
 
   // Only for typedef declarators
-  IdlType*   thisType() const { return thisType_; }
-  Typedef*   alias()    const { return alias_; } 
+  IdlType*   thisType()  const { return thisType_; }
+  Typedef*   alias()     const { return alias_; } 
+  Attribute* attribute() const { return attribute_; }
 
   void accept(AstVisitor& visitor) { visitor.visitDeclarator(this); }
 
-  void setAlias(Typedef* td);
+  void setAlias    (Typedef*   td);
+  void setAttribute(Attribute* at);
 
 private:
   ArraySize*  sizes_;
   IdlType*    thisType_;
   Typedef*    alias_;
+  Attribute*  attribute_;
 };
 
 
@@ -915,7 +922,7 @@ protected:
 
 
 // Operation
-class Operation : public Decl {
+class Operation : public Decl, public DeclRepoId {
 public:
   Operation(const char* file, int line, _CORBA_Boolean mainFile,
 	    _CORBA_Boolean oneway, IdlType* return_type,
@@ -927,7 +934,6 @@ public:
   // Queries
   _CORBA_Boolean oneway()     const { return oneway_; }
   IdlType*       returnType() const { return returnType_; }
-  const char*    identifier() const { return identifier_; }
   Parameter*     parameters() const { return parameters_; }
   RaisesSpec*    raises()     const { return raises_; }
   ContextSpec*   contexts()   const { return contexts_; }
@@ -942,7 +948,6 @@ private:
   _CORBA_Boolean oneway_;
   IdlType*       returnType_;
   _CORBA_Boolean delType_;
-  char*          identifier_;
   Parameter*     parameters_;
   RaisesSpec*    raises_;
   ContextSpec*   contexts_;

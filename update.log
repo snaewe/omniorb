@@ -1,3 +1,18 @@
+Tue Aug 29 11:17:26 BST 2000 dpg1
+=================================
+
+- In omniidl, operations and attributes now have repository ids.
+
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/python/omniidl/idlast.py
+
+
 Fri Aug 25 14:25:20 BST 2000 dpg1
 =================================
 

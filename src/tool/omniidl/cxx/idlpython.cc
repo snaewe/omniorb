@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.12  2000/08/29 10:20:26  dpg1
+// Operations and attributes now have repository ids.
+//
 // Revision 1.15.2.11  2000/08/14 16:07:52  dpg1
 // Error message now says "Could not open..." rather than "Could not
 // find..." when Python imports fail.
@@ -833,65 +836,21 @@ visitAttribute(Attribute* a)
   PyObject* pyattrType = result_;
 
   Declarator* d;
-  int         i;
+  int         i, l;
 
-  for (i=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++i);
-  PyObject* pyidentifiers = PyList_New(i);
-
-  PyObject *pragmas  = 0;
-  PyObject *comments = 0;
-  PyObject *tmp1, *tmp2;
+  for (l=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++l);
+  PyObject* pydeclarators = PyList_New(l);
 
   for (i=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++i) {
-    if (pragmas) {
-      tmp1 = pragmasToList(d->pragmas());
-      tmp2 = PySequence_Concat(pragmas, tmp1);
-      Py_DECREF(tmp1);
-      Py_DECREF(pragmas);
-      pragmas = tmp2;
-    }
-    else
-      pragmas = pragmasToList(d->pragmas());
-
-    if (comments) {
-      tmp1 = commentsToList(d->comments());
-      tmp2 = PySequence_Concat(comments, tmp1);
-      Py_DECREF(tmp1);
-      Py_DECREF(comments);
-      comments = tmp2;
-    }
-    else
-      comments = commentsToList(d->comments());
-
-    PyList_SetItem(pyidentifiers, i, PyString_FromString(d->identifier()));    
+    d->accept(*this);
+    PyList_SetItem(pydeclarators, i, result_);
   }
-
-  if (pragmas) {
-    tmp1 = pragmasToList(a->pragmas());
-    tmp2 = PySequence_Concat(pragmas, tmp1);
-    Py_DECREF(tmp1);
-    Py_DECREF(pragmas);
-    pragmas = tmp2;
-  }
-  else
-    pragmas = pragmasToList(a->pragmas());
-
-  if (comments) {
-    tmp1 = commentsToList(a->comments());
-    tmp2 = PySequence_Concat(comments, tmp1);
-    Py_DECREF(tmp1);
-    Py_DECREF(comments);
-    comments = tmp2;
-  }
-  else
-    comments = commentsToList(a->comments());
-
   result_ = PyObject_CallMethod(idlast_, (char*)"Attribute", (char*)"siiNNiNN",
 				a->file(), a->line(), (int)a->mainFile(),
-				pragmas,
-				comments,
+				pragmasToList(a->pragmas()),
+				commentsToList(a->comments()),
 				(int)a->readonly(), pyattrType,
-				pyidentifiers);
+				pydeclarators);
   ASSERT_RESULT;
 }
 
@@ -942,12 +901,15 @@ visitOperation(Operation* o)
     PyList_SetItem(pycontexts, i, PyString_FromString(c->context()));
 
   result_ =
-    PyObject_CallMethod(idlast_,(char*)"Operation",(char*)"siiNNiNsNNN",
+    PyObject_CallMethod(idlast_,(char*)"Operation",(char*)"siiNNiNsNsNNN",
 			o->file(), o->line(), (int)o->mainFile(),
 			pragmasToList(o->pragmas()),
 			commentsToList(o->comments()),
 			(int)o->oneway(), pyreturnType,
-			o->identifier(), pyparameters,
+			o->identifier(),
+			scopedNameToList(o->scopedName()),
+			o->repoId(),
+			pyparameters,
 			pyraises, pycontexts);
   ASSERT_RESULT;
 }
