@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2004/10/22 20:46:22  dgrisby
+  Fix theoretical attempt to free stack data.
+
   Revision 1.1.4.10  2003/02/17 01:24:04  dgrisby
   Grow cdrMemoryStreams exponentially rather than linearly.
 
@@ -515,7 +518,7 @@ cdrEncapsulationStream::getOctetStream(CORBA::Octet*& databuffer,
   
   max = ((omni::ptr_arith_t) pd_outb_end - (omni::ptr_arith_t) begin);
   len = ((omni::ptr_arith_t) pd_outb_mkr - (omni::ptr_arith_t) begin);
-  if (begin == pd_bufp) {
+  if (begin == pd_bufp && pd_bufp != pd_inline_buffer) {
     databuffer = (CORBA::Octet*) pd_bufp;
     pd_readonly_and_external_buffer = 1;
   }
