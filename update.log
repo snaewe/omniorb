@@ -1,3 +1,43 @@
+Wed Nov 15 16:56:08 GMT 2000 sll
+================================
+
+- Added char, wchar codeset convertor support to cdrStream.
+- Added support for sending and interpreting code set service context.
+- Added interceptors along the giop request processing path.
+
+include/omniORB4/CORBA.h
+include/omniORB4/IIOP.h
+include/omniORB4/IOP.h
+include/omniORB4/cdrStream.h
+include/omniORB4/codeSets.h
+include/omniORB4/giopStream.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniInterceptors.h
+include/omniORB4/omniInternal.h
+include/omniORB4/rope.h
+include/omniORB4/wstringtypes.h
+
+src/appl/utils/catior/catior.cc
+
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+src/lib/omniORB/orbcore/cdrStream.cc                 NEW
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/corbaWString.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopStream10.cc
+src/lib/omniORB/orbcore/giopStream11.cc
+src/lib/omniORB/orbcore/giopStream12.cc
+src/lib/omniORB/orbcore/interceptors.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/strand.cc
+
+
+
 Mon Nov 13 12:38:44 GMT 2000 dpg1
 =================================
 
