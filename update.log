@@ -1,3 +1,16 @@
+Tue May 16 12:10:00 BST 2000 djs
+================================
+
+- Updated omniIDL C++ example interface implementation generator
+  (invoked by passing -Wbexample to omniidl)
+  Now produces simple skeletons with the right signatures and with #warnings
+  where the user should have edited the output.
+
+src/lib/omniORB2/omniidl_be/cxx/impl/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/impl/main.py
+src/lib/omniORB2/omniidl_be/cxx/impl/template.py
+
+
 Fri May  5 19:57:44 BST 2000 dpg1
 =================================
 
