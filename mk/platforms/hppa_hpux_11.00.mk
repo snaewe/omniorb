@@ -19,6 +19,7 @@ HppaProcessor = 1
 
 include $(THIS_IMPORT_TREE)/mk/unix.mk
 
+
 #
 # Replacements for implicit rules
 #
@@ -47,9 +48,8 @@ IMPORT_CPPFLAGS += -D__hppa__ -D__hpux__ -D__OSVERSION__=11
 AR = ar cq
 RANLIB = ranlib
 MKDIRHIER = mkdir -p
-INSTALL		= cp -f
-INSTLIBFLAGS	= 
-INSTEXEFLAGS	= 
+INSTALL         = $(TOP)/bin/scripts/install-sh -c
+INSTLIBFLAGS    = -m 0755    # shared library must have executable flag set.
 
 CPP = /lib/cpp
 
@@ -62,7 +62,10 @@ CPP = /lib/cpp
 CXX = aCC
 CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus
 CXXDEBUGFLAGS = -O
-CXXOPTIONS   += -w -I /opt/aCC/include +inst_v +DAportable
+CXXOPTIONS   += -w +inst_v +DAportable \
+                       -D_THREAD_SAFE \
+                       -DRWSTD_MULTI_THREAD \
+                     -DRW_MULTI_THREAD 
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -Wl,+s
 
@@ -138,9 +141,7 @@ CorbaImplementation = OMNIORB
 ThreadSystem = Posix
 
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10
-OMNITHREAD_CPPFLAGS = -DRWSTD_MULTI_THREAD \
-		      -DRW_MULTI_THREAD \
-		      -D_HPUX_SOURCE \
+OMNITHREAD_CPPFLAGS = -D_HPUX_SOURCE \
 		      -D_POSIX_C_SOURCE=199506L
 HPTHREADLIBS = -lpthread
 OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) $(HPTHREADLIBS)

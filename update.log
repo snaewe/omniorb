@@ -1,3 +1,21 @@
+Wed Jun 28 12:45:10 BST 2000 sll
+================================
+
+- Merged HPUX and IRIX platform files
+
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+
+Copied from external_merge:
+
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/mips_irix_6.2_n32.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/mips_irix_6.4_64.mk
+mk/platforms/mips_irix_6.4_n32.mk
+mk/platforms/mips_irix_6.5_64.mk
+mk/platforms/mips_irix_6.5_n32.mk
+
+
 Tue Jun 27 18:01:44 BST 2000 sll
 ================================
 
