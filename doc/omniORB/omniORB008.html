@@ -4,7 +4,7 @@
 <HEAD>
 
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.06+1 of 2002-11-06">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
  Connection and Thread Management
 </TITLE>
@@ -77,7 +77,7 @@ object drives the GIOP protocol directly and blocks on the connection
 to receive the reply. The first time the client makes a call to a
 particular address space, the ORB opens a suitable connection to the
 remote address space (based on the client transport rule as described
-in section&nbsp;<A HREF="#sec:clientRule">8.7.177Client transport rulessubsection.8.7.1</A>). After the reply has been received,
+in section&nbsp;<A HREF="#sec:clientRule">8.7.179Client transport rulessubsection.8.7.1</A>). After the reply has been received,
 the ORB caches the open network connection, ready for use by another
 call.<BR>
 <BR>
@@ -408,7 +408,7 @@ The action is one or more of the following:<BR>
 <TR><TD VALIGN=top ALIGN=left NOWRAP>5.</TD>
 <TD VALIGN=top ALIGN=left NOWRAP><TT>bidir</TT></TD>
 <TD VALIGN=top ALIGN=left>Any connection to this address should be used
- bidirectionally (see section&nbsp;<A HREF="#sec:bidir">8.879Bidirectional GIOPsection.8.8</A>)</TD>
+ bidirectionally (see section&nbsp;<A HREF="#sec:bidir">8.881Bidirectional GIOPsection.8.8</A>)</TD>
 </TR></TABLE><BR>
 The transport-selecting actions form a prioritised list, so
 an action of `<TT>unix,tcp,ssl</TT>' means to use a Unix transport if

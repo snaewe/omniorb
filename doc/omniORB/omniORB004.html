@@ -4,7 +4,7 @@
 <HEAD>
 
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.06+1 of 2002-11-06">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
  omniORB configuration and API
 </TITLE>
@@ -126,6 +126,15 @@ error stream. The following levels are defined:<BR>
 The trace level is cumulative, so at level 40, all trace
 messages are output.<BR>
 <BR>
+<TT>traceExceptions</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If the <TT>traceExceptions</TT> parameter is set true, all system
+exceptions are logged as they are thrown, along with details about
+where the exception is thrown from. This parameter is enabled by
+default if the traceLevel is set to 10 or more.<BR>
+<BR>
 <TT>traceInvocations</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>0</TT><BR>
 <BR>
@@ -182,7 +191,7 @@ at start-up.<BR>
  <TT>5</TT><BR>
 <BR>
 <BR>
-As explained in chapter&nbsp;<A HREF="omniORB008.html#chap:connections">871Connection and Thread Managementchapter.8</A>, omniORB regularly
+As explained in chapter&nbsp;<A HREF="omniORB008.html#chap:connections">873Connection and Thread Managementchapter.8</A>, omniORB regularly
 scans incoming and outgoing connections, so it can close unused
 ones. This value is the granularity in seconds at which the ORB
 performs its scans. A value of zero turns off the scanning altogether.<BR>
@@ -192,14 +201,14 @@ performs its scans. A value of zero turns off the scanning altogether.<BR>
 <BR>
 <BR>
 The native code set the application is using for <TT>char</TT> and
-<TT>string</TT>. See chapter&nbsp;<A HREF="omniORB009.html#chap:codesets">981Code set conversionchapter.9</A>.<BR>
+<TT>string</TT>. See chapter&nbsp;<A HREF="omniORB009.html#chap:codesets">983Code set conversionchapter.9</A>.<BR>
 <BR>
 <TT>nativeWCharCodeSet</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>UTF-16</TT><BR>
 <BR>
 <BR>
 The native code set the application is using for <TT>wchar</TT> and
-<TT>wstring</TT>. See chapter&nbsp;<A HREF="omniORB009.html#chap:codesets">981Code set conversionchapter.9</A>.<BR>
+<TT>wstring</TT>. See chapter&nbsp;<A HREF="omniORB009.html#chap:codesets">983Code set conversionchapter.9</A>.<BR>
 <BR>
 <TT>omniORB_27_CompatibleAnyExtraction</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>0</TT><BR>
@@ -235,7 +244,7 @@ Specify the objects available from
 &lt;<I>key</I>&gt;=&lt;<I>uri</I>&gt;, where the <I>key</I> is the name
 given to <TT>resolve_initial_references()</TT> and
 <I>uri</I> is a valid CORBA object reference URI, as detailed in
-chapter&nbsp;<A HREF="omniORB006.html#chap:ins">661Interoperable Naming Servicechapter.6</A>.<BR>
+chapter&nbsp;<A HREF="omniORB006.html#chap:ins">663Interoperable Naming Servicechapter.6</A>.<BR>
 <BR>
 <TT>DefaultInitRef</TT> &nbsp;&nbsp; <I>default</I> =
  <TT><I>none</I></TT><BR>
@@ -243,14 +252,14 @@ chapter&nbsp;<A HREF="omniORB006.html#chap:ins">661Interoperable Naming Servicec
 <BR>
 Specify the default URI prefix for
 <TT>resolve_initial_references()</TT>, as explained in
-chapter&nbsp;<A HREF="omniORB006.html#chap:ins">661Interoperable Naming Servicechapter.6</A>.<BR>
+chapter&nbsp;<A HREF="omniORB006.html#chap:ins">663Interoperable Naming Servicechapter.6</A>.<BR>
 <BR>
 <TT>clientTransportRule</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>* unix,tcp,ssl</TT><BR>
 <BR>
 <BR>
 Used to specify the way the client contacts a server, depending on the
-server's address. See section&nbsp;<A HREF="omniORB008.html#sec:clientRule">8.7.177Client transport rulessubsection.8.7.1</A> for details.<BR>
+server's address. See section&nbsp;<A HREF="omniORB008.html#sec:clientRule">8.7.179Client transport rulessubsection.8.7.1</A> for details.<BR>
 <BR>
 <TT>clientCallTimeOutPeriod</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>0</TT><BR>
@@ -260,7 +269,7 @@ Call timeout in milliseconds for the client side. If a call takes
 longer than the specified number of milliseconds, the ORB closes the
 connection and raises a <TT>TRANSIENT</TT> exception. A value of zero
 means no timeout; calls can block for ever. See
-section&nbsp;<A HREF="omniORB008.html#sec:timeoutAPI">8.3.173Client side timeoutssubsection.8.3.1</A> for more information about timeouts.<BR>
+section&nbsp;<A HREF="omniORB008.html#sec:timeoutAPI">8.3.175Client side timeoutssubsection.8.3.1</A> for more information about timeouts.<BR>
 <BR>
 <B>Note</B>: omniORB 3 had timeouts specified in seconds; omniORB
 4.0 uses milliseconds for timeouts.<BR>
@@ -279,7 +288,7 @@ has a noticeable performance impact, so it is turned off by default.<BR>
 <BR>
 Idle timeout in seconds for outgoing (i.e. client initiated)
 connections. If a connection has been idle for this amount of time,
-the ORB closes it. See section&nbsp;<A HREF="omniORB008.html#sec:connShutdown">8.575Idle connection shutdownsection.8.5</A>.<BR>
+the ORB closes it. See section&nbsp;<A HREF="omniORB008.html#sec:connShutdown">8.577Idle connection shutdownsection.8.5</A>.<BR>
 <BR>
 <TT>maxGIOPConnectionPerServer</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>5</TT><BR>
@@ -313,7 +322,7 @@ single connection.<BR>
 If set true, the client will indicate to servers that it is willing to
 accept callbacks on client-initiated connections using bidirectional
 GIOP, provided the relevant POA policies are set. See
-section&nbsp;<A HREF="omniORB008.html#sec:bidir">8.879Bidirectional GIOPsection.8.8</A>.<BR>
+section&nbsp;<A HREF="omniORB008.html#sec:bidir">8.881Bidirectional GIOPsection.8.8</A>.<BR>
 <BR>
 <TT>diiThrowsSysExceptions</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>0</TT><BR>
@@ -378,7 +387,7 @@ These parameters affect server-side operations.<BR>
 <TT>endPointPublishAllIFs</TT><BR>
 These options determine the end-points the ORB should listen on, and
 the details that should be published in IORs. See
-chapter&nbsp;<A HREF="omniORB008.html#chap:connections">871Connection and Thread Managementchapter.8</A> for details.<BR>
+chapter&nbsp;<A HREF="omniORB008.html#chap:connections">873Connection and Thread Managementchapter.8</A> for details.<BR>
 <BR>
 <TT>serverTransportRule</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>* unix,tcp,ssl</TT><BR>
@@ -404,7 +413,7 @@ timeout.<BR>
 <BR>
 Idle timeout in seconds for incoming. If a connection has been idle
 for this amount of time, the ORB closes it. See
-section&nbsp;<A HREF="omniORB008.html#sec:connShutdown">8.575Idle connection shutdownsection.8.5</A>.<BR>
+section&nbsp;<A HREF="omniORB008.html#sec:connShutdown">8.577Idle connection shutdownsection.8.5</A>.<BR>
 <BR>
 <TT>threadPerConnectionPolicy</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>1</TT><BR>
@@ -456,14 +465,14 @@ should start again.<BR>
 <BR>
 If true, threads from the pool temporarily behave a bit like thread
 per connection after dispatching a call. See
-section&nbsp;<A HREF="omniORB008.html#sec:watchConn">8.4.274Thread pool modesubsection.8.4.2</A> for details.<BR>
+section&nbsp;<A HREF="omniORB008.html#sec:watchConn">8.4.276Thread pool modesubsection.8.4.2</A> for details.<BR>
 <BR>
 <TT>acceptBiDirectionalGIOP</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>0</TT><BR>
 <BR>
 <BR>
 Determines whether a server will ever accept clients' offers of
-bidirectional GIOP connections. See section&nbsp;<A HREF="omniORB008.html#sec:bidir">8.879Bidirectional GIOPsection.8.8</A>.<BR>
+bidirectional GIOP connections. See section&nbsp;<A HREF="omniORB008.html#sec:bidir">8.881Bidirectional GIOPsection.8.8</A>.<BR>
 <BR>
 <TT>unixTransportDirectory</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>/tmp/omni-%u</TT><BR>

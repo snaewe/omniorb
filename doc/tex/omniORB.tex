@@ -182,12 +182,19 @@ AT\&T Laboratories Cambridge\\
 
 \vfill
 \vfill
-November 2002
+July 2004
 \vfill
 
 \end{center}
 
 \clearpage
+
+{\Large \bf Changes and Additions, July 2004}
+\begin{itemize}
+\item Minor updates.
+\end{itemize}
+
+\vspace{\baselineskip}
 
 {\Large \bf Changes and Additions, November 2002}
 \begin{itemize}
@@ -2450,6 +2457,14 @@ level 40     & dump complete contents of each giop message\\
 
 \noindent The trace level is cumulative, so at level 40, all trace
 messages are output.
+
+
+\confopt{traceExceptions}{0}
+
+If the \code{traceExceptions} parameter is set true, all system
+exceptions are logged as they are thrown, along with details about
+where the exception is thrown from. This parameter is enabled by
+default if the traceLevel is set to 10 or more.
 
 
 \confopt{traceInvocations}{0}
