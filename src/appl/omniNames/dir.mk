@@ -1,8 +1,11 @@
-DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
-ifeq ($(platform),x86_nt_3.5)
-CXXOPTIONS += -O2
+ifdef NTArchitecture
+DEFAULT_LOGDIR = \"C:\\OMNINAMES\"
+else
+DEFAULT_LOGDIR = \"/var/omniNames\"
 endif
+
+DIR_CPPFLAGS = $(CORBA_CPPFLAGS) -DDEFAULT_LOGDIR=$(DEFAULT_LOGDIR)
 
 CXXSRCS = omniNames.cc NamingContext_i.cc log.cc
 
