@@ -25,6 +25,9 @@
 
 /*
   $Log$
+  Revision 1.7  1997/12/23 19:27:31  sll
+  Now generate the correct stub for exception with anonymous array member.
+
   Revision 1.6  1997/12/09 19:55:20  sll
   *** empty log message ***
 
@@ -69,28 +72,71 @@ o2be_exception::produce_hdr(fstream &s)
       {
 	AST_Decl *d = i.item();
 	AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     decl,						   
-		     o2be_operation::wIN,mapping);
-
+	AST_Decl *tdecl = decl;
+	while (tdecl->node_type() == AST_Decl::NT_typedef)
+	  tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 	IND(s);
-	switch (ntype)
+	switch (tdecl->node_type())
 	  {
-	  case o2be_operation::tString:
-	    s << o2be_string::fieldMemberTypeName();
-	    break;
-	  case o2be_operation::tObjref:
+	  case AST_Decl::NT_string:
 	    {
-	      while (decl->node_type() == AST_Decl::NT_typedef)
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      s << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(this);
+	      if (decl->node_type() == AST_Decl::NT_string)
+		s << o2be_string::fieldMemberTypeName();
+	      else
+		s << o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname(this);
+	      s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	      break;
 	    }
-	  break;
+	  case AST_Decl::NT_interface:
+	    {
+	      if (decl->node_type() == AST_Decl::NT_interface)
+		s << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(this);
+	      else
+		s << o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname(this);
+	      s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	      break;
+	    }
+	  case AST_Decl::NT_array:
+	    {
+	      if (decl->node_type() == AST_Decl::NT_array) {
+		// Check if this is an anonymous array type, if so
+		// generate the supporting typedef.
+		if (decl->has_ancestor(this)) {
+		  char* fname = o2be_field::narrow_from_decl(d)->uqname();
+		  char * tmpname = new char [strlen(fname) + 2];
+		  strcpy(tmpname,"_");
+		  strcat(tmpname,fname);
+		  o2be_array::narrow_from_decl(decl)->produce_typedef_in_union(s,tmpname,this);
+		}
+		o2be_array::narrow_from_decl(decl)->produce_struct_member_decl(s,d,this);
+	      }
+	      else {
+		s << o2be_typedef::narrow_from_decl(decl)->unambiguous_name(this);
+		s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	      }
+	      break;
+	    }
+#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
+	  case AST_Decl::NT_sequence:
+	    {
+	      if (decl->node_type() == AST_Decl::NT_sequence) {
+		s << o2be_sequence::narrow_from_decl(decl)->seq_template_name(this)
+		  << " "
+		  << o2be_field::narrow_from_decl(d)->uqname()
+		  << ";\n";
+	      }
+	      else {
+		s << o2be_typedef::narrow_from_decl(decl)->unambiguous_name(this);
+		s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+	      }
+	      break;
+	    }
+#endif
 	  default:
-	    s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
+	    s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
+	      << " " << o2be_field::narrow_from_decl(d)->uqname() << ";\n";
 	  }
-	s << " " << o2be_field::narrow_from_decl(d)->uqname() << ";\n";
+
 	i.next();
       }
   }
@@ -115,18 +161,45 @@ o2be_exception::produce_hdr(fstream &s)
 		     o2be_operation::wIN,mapping);
 
 	s << ((mapping.is_const) ? "const ":"");
-	if (ntype == o2be_operation::tObjref) {
+
+	switch (ntype) {
+	case o2be_operation::tObjref:
 	  s << o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this);
-	}
-	else if (ntype == o2be_operation::tString) {
+	  break;
+	case o2be_operation::tString:
 	  s << "char* ";
-	}
-	else {
+	  break;
+	case o2be_operation::tArrayFixed:
+	case o2be_operation::tArrayVariable:
+	  // Check if this is an anonymous array type, if so
+	  // use the supporting typedef for the array
+	  if (decl->node_type() == AST_Decl::NT_array &&
+	      decl->has_ancestor(this))
+	    {
+	      s << "_0RL_" << o2be_field::narrow_from_decl(d)->uqname();
+	    }
+	  else
+	    {
+	      s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
+	    }
+	  break;
+	case o2be_operation::tSequence:
+#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
+	  if (decl->node_type() == AST_Decl::NT_sequence) {
+	    s << o2be_sequence::narrow_from_decl(decl)->seq_template_name(this);
+	  }
+	  else {
+	    s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
+	  }
+	  break;
+#endif
+	default:
 	  s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
 	    << ((mapping.is_arrayslice) ? "_slice":"")
 	    << " "
 	    << ((mapping.is_pointer)    ? "*":"")
 	    << ((mapping.is_reference)  ? "&":"");
+	  break;
 	}
 	s << " _" << o2be_field::narrow_from_decl(d)->uqname();
 	i.next();
@@ -241,18 +314,44 @@ o2be_exception::produce_skel(fstream &s)
 		     o2be_operation::wIN,mapping);
 
 	s << ((mapping.is_const) ? "const ":"");
-	if (ntype == o2be_operation::tObjref) {
-	  s << o2be_interface::narrow_from_decl(decl)->objref_fqname();
-	}
-	else if (ntype == o2be_operation::tString) {
+	switch (ntype) {
+	case o2be_operation::tObjref:
+	  s << o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this);
+	  break;
+	case o2be_operation::tString:
 	  s << "char* ";
-	}
-	else {
-	  s << o2be_name::narrow_and_produce_fqname(decl)
+	  break;
+	case o2be_operation::tArrayFixed:
+	case o2be_operation::tArrayVariable:
+	  // Check if this is an anonymous array type, if so
+	  // use the supporting typedef for the array
+	  if (decl->node_type() == AST_Decl::NT_array &&
+	      decl->has_ancestor(this))
+	    {
+	      s << "_0RL_" << o2be_field::narrow_from_decl(d)->uqname();
+	    }
+	  else
+	    {
+	      s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
+	    }
+	  break;
+	case o2be_operation::tSequence:
+#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
+	  if (decl->node_type() == AST_Decl::NT_sequence) {
+	    s << o2be_sequence::narrow_from_decl(decl)->seq_template_name(this);
+	  }
+	  else {
+	    s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
+	  }
+	  break;
+#endif
+	default:
+	  s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
 	    << ((mapping.is_arrayslice) ? "_slice":"")
 	    << " "
 	    << ((mapping.is_pointer)    ? "*":"")
 	    << ((mapping.is_reference)  ? "&":"");
+	  break;
 	}
 	s << " _" << o2be_field::narrow_from_decl(d)->uqname();
 	i.next();
