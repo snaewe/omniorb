@@ -29,11 +29,15 @@
 
 // This MUST NOT be compiled with omniidl -l
 
-/* $Log$
-/* Revision 1.1  1997/09/20 17:08:55  dpg1
-/* Initial revision
-/*
- */
+// $Id$
+
+// $Log$
+// Revision 1.1.4.1  1999/10/04 17:36:05  dpg1
+// Comments in Log fixed!
+//
+// Revision 1.1  1997/09/20 17:08:55  dpg1
+// Initial revision
+//
 
 
 #ifndef _omniLifeCycle_idl_
