@@ -202,14 +202,14 @@ main(int argc, char **argv)
 
       while (bi->next_one(b)) {
 
-	cerr << (char*)b->binding_name[0].id;
+	cout << (char*)b->binding_name[0].id;
 	if (strcmp(b->binding_name[0].kind, "") != 0) {
-	  cerr << "." << (char*)b->binding_name[0].kind;
+	  cout << "." << (char*)b->binding_name[0].kind;
 	}
 	if (b->binding_type == CosNaming::ncontext) {
-	  cerr << "/";
+	  cout << "/";
 	}
-	cerr << endl;
+	cout << endl;
       }
 
       bi->destroy();
@@ -237,7 +237,7 @@ main(int argc, char **argv)
 	= rootContext->bind_new_context(name);
 
       char* p = orb->object_to_string(context);
-      cerr << p << endl;
+      cout << p << endl;
       return 0;
     }
 
