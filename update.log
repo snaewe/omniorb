@@ -1,3 +1,13 @@
+
+Wed Mar  7 12:27:05 GMT 2001 djr
+================================
+
+- A couple of minor fixes.  operator->() _must_ return a T*.
+
+include/omniORB3/templatedecls.h
+include/omniORB3/seqtemplates.h
+
+
 Wed Feb 21 14:10:25 GMT 2001 dpg1
 =================================
 

@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  2001/03/07 12:29:57  djr
+ A couple of minor fixes (operator-> must return T* according to spec).
+
  Revision 1.1.2.1  1999/09/24 09:51:53  djr
  Moved from omniORB2 + some new files.
 
@@ -1142,7 +1145,7 @@ public:
     if( i >= pd_len )  _CORBA_bound_check_error();
     return ElemT(pd_data[i],pd_rel);
   }
-  inline const ElemT operator[] (_CORBA_ULong i) const {
+  inline ElemT operator[] (_CORBA_ULong i) const {
     if( i >= pd_len )  _CORBA_bound_check_error();
     return ElemT(pd_data[i],pd_rel);
   }
