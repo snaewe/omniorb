@@ -1,3 +1,11 @@
+Wed Dec 17 16:23:21 GMT 1997 bjh
+================================
+Java compilation cleaned up a little but not re-activated.
+
+mk/beforedir.mk
+mk/afterdir.mk
+mk/platforms/sun4_sosV_5.5.mk
+
 
 Tue Dec 16 16:04:09 GMT 1997 tjr
 ================================
