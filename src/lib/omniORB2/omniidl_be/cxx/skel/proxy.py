@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.4  2000/04/05 10:58:03  djs
+# Scoping problem with generated proxies for attributes (not operations)
+#
 # Revision 1.15.2.3  2000/03/20 11:50:27  djs
 # Removed excess buffering- output templates have code attached which is
 # lazily evaluated when required.
@@ -677,6 +680,7 @@ def attribute(attribute):
     fully_scoped_attrTypes = tyutil.operationArgumentType(attrType,
                                                           environment, 0)
     attrTypes = tyutil.operationArgumentType(attrType, environment, 0)
+
 
     return_type = fully_scoped_attrTypes[0]
     if is_array:

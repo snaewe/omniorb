@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.5  2000/04/05 10:58:02  djs
+# Scoping problem with generated proxies for attributes (not operations)
+#
 # Revision 1.27.2.4  2000/03/20 11:50:26  djs
 # Removed excess buffering- output templates have code attached which is
 # lazily evaluated when required.
@@ -407,13 +410,16 @@ def visitInterface(node):
                                                         outer_environment,
                                                         0)
         return_type = attrTypes[0]
-
+        scoped_return_type = scoped_attrTypes[0]
+        
         # FIXME: change to the old compiler might make this always use
         # fully scoped names
         if is_array:
-            scoped_in_type = attrTypes[1]+"_slice*"
+            in_type = attrTypes[1]+"_slice*"
+            scoped_in_type = scoped_attrTypes[1]+"_slice*"
         else:
-            scoped_in_type = attrTypes[1]
+            in_type = attrTypes[1]
+            scoped_in_type = scoped_attrTypes[1]
 
 
         for ident in attribute.identifiers():
