@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2002/02/13 16:02:40  dpg1
+  Stability fixes thanks to Bastiaan Bakker, plus threading
+  optimisations inspired by investigating Bastiaan's bug reports.
+
   Revision 1.1.4.5  2001/12/03 18:46:25  dpg1
   Race condition in giopWorker destruction.
 
@@ -156,7 +160,7 @@ giopWorker::execute() {
   }
 
   
-  CORBA::Boolean done = pd_singleshot;
+  CORBA::Boolean go = 1;
 
   do {
     {
@@ -170,9 +174,9 @@ giopWorker::execute() {
 	exit_on_error = 1;
       }
     }
-    pd_server->notifyWkDone(this,exit_on_error);
+    go = pd_server->notifyWkDone(this,exit_on_error);
 
-  } while(!(done || exit_on_error));
+  } while(go && !exit_on_error);
 
 }
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2002/02/13 16:02:38  dpg1
+  Stability fixes thanks to Bastiaan Bakker, plus threading
+  optimisations inspired by investigating Bastiaan's bug reports.
+
   Revision 1.1.4.7  2001/12/03 18:48:14  dpg1
   Clean up strange indentation.
 
@@ -216,11 +220,14 @@ private:
   //
   // Callback functions used by giopWorker
   //
-  void notifyWkDone(giopWorker*,CORBA::Boolean exit_on_error);
+  CORBA::Boolean notifyWkDone(giopWorker*,CORBA::Boolean exit_on_error);
   // Callback by giopWorker when it finishes one upcall.
   //
   // The flag exit_on_error indicates whether the task ends because it
   // was told or trigged by an error.
+  //
+  // Returns true if the worker should continue processing another
+  // upcall; false if it should finish.
   //
   // Thread Safety preconditions:
   //    Caller MUST NOT hold pd_lock. The lock is acquired by this method.
@@ -304,6 +311,8 @@ private:
   connectionState* csInsert(giopStrand*);
 
   void removeConnectionAndWorker(giopWorker* conn);
+  // Thread Safety preconditions:
+  //    Caller MUST NOT hold pd_lock. The lock is acquired by this method.
 
   giopServer();
 };

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.22.2.18  2002/02/13 16:02:39  dpg1
+  Stability fixes thanks to Bastiaan Bakker, plus threading
+  optimisations inspired by investigating Bastiaan's bug reports.
+
   Revision 1.22.2.17  2002/02/01 11:21:19  dpg1
   Add a ^L to comments.
 
@@ -321,6 +325,7 @@ void
 giopServer::activate()
 {
   // Caller is holding pd_lock
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 1);
 
   giopEndpointList::iterator i;
   i    = pd_endpoints.begin();
@@ -368,7 +373,9 @@ giopServer::activate()
 	delete task;
 	cs->connection->Shutdown();
 	csRemove(cs->connection);
+	pd_lock.unlock();
 	delete cs;
+	pd_lock.lock();
 	continue;
       }
       task->insert(cs->workers);
@@ -659,7 +666,9 @@ giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
 	    cs->strand->safeDelete();
 	  }
 	  csRemove(conn);
+	  pd_lock.unlock();
 	  delete cs;
+	  pd_lock.lock();
 
 	  throw outOfResource();
 	}
@@ -769,50 +778,66 @@ giopServer::notifyCallFullyBuffered(giopConnection* conn)
 
 ////////////////////////////////////////////////////////////////////////////
 void
-giopServer::removeConnectionAndWorker(giopWorker* w) {
+giopServer::removeConnectionAndWorker(giopWorker* w)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 0);
 
-  giopConnection* conn = w->strand()->connection;
+  connectionState* cs;
+  CORBA::Boolean   cs_removed = 0;
 
-  conn->pd_dying = 1; // From now on, the giopServer will not create
-                      // any more workers to serve this connection.
+  {
+    omni_tracedmutex_lock sync(pd_lock);
 
-  connectionState* cs = csLocate(conn);
-  // We remove the lock on pd_lock before calling the connection's
-  // clearSelectable(). This is necessary so that a simultaneous
-  // callback from the Rendezvouser thread will have a chance to
-  // look at the connectionState table.
-  pd_lock.unlock();
+    giopConnection* conn = w->strand()->connection;
 
-  conn->clearSelectable();
+    conn->pd_dying = 1; // From now on, the giopServer will not create
+    // any more workers to serve this connection.
 
-  // Once we reach here, it is certain that the rendezvouser thread
-  // would not take any interest in this connection anymore. It
-  // is therefore safe to delete this record.
-  pd_lock.lock();
+    cs = csLocate(conn);
 
-  if (w->singleshot()) pd_n_temporary_workers--;
+    // We remove the lock on pd_lock before calling the connection's
+    // clearSelectable(). This is necessary so that a simultaneous
+    // callback from the Rendezvouser thread will have a chance to
+    // look at the connectionState table.
+    pd_lock.unlock();
 
-  w->remove();
-  delete w;
+    conn->clearSelectable();
 
-  conn->pd_n_workers--;
+    // Once we reach here, it is certain that the rendezvouser thread
+    // would not take any interest in this connection anymore. It
+    // is therefore safe to delete this record.
+    pd_lock.lock();
 
-  if (Link::is_empty(cs->workers)) {
-    csRemove(conn);
-    delete cs;
-  }
+    if (w->singleshot()) pd_n_temporary_workers--;
 
-  if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) &&
-	pd_nconnections == 0             &&
-	Link::is_empty(pd_bidir_monitors)   ) {
-      pd_cond.broadcast();
+    w->remove();
+    delete w;
+
+    conn->pd_n_workers--;
+
+    if (Link::is_empty(cs->workers)) {
+      csRemove(conn);
+      cs_removed = 1;
+    }
+
+    if (pd_state == INFLUX) {
+      if (Link::is_empty(pd_rendezvousers) &&
+	  pd_nconnections == 0             &&
+	  Link::is_empty(pd_bidir_monitors)   ) {
+	pd_cond.broadcast();
+      }
     }
   }
+  // Must not hold pd_lock when deleting cs, since the deletion may
+  // cause a call to SocketCollection::removeSocket(), which needs to
+  // lock the fdset lock. The fdset lock comes before pd_lock in the
+  // partial order.
+  if (cs_removed)
+    delete cs;
 }
 
 ////////////////////////////////////////////////////////////////////////////
-void
+CORBA::Boolean
 giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 {
   // Theory of operation: read the state diagrams at the end of this file.
@@ -820,9 +845,8 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,0);
 
   if (exit_on_error) {
-    omni_tracedmutex_lock sync(pd_lock);
     removeConnectionAndWorker(w);
-    return;
+    return 0;
   }
 
   giopConnection* conn = w->strand()->connection;
@@ -836,6 +860,7 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       omni_tracedmutex_lock sync(pd_lock);
       conn->pd_dedicated_thread_in_upcall = 0;
       conn->pd_has_hit_n_workers_limit = 0;
+      return 1;
     }
     else {
       // This is a temporary worker thread
@@ -847,22 +872,20 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 	// doing so.
 	conn->pd_has_hit_n_workers_limit = 0;
 	if (conn->pd_dedicated_thread_in_upcall ) {
-	  if (!orbAsyncInvoker->insert(w)) {
-	    OMNIORB_ASSERT(0);
-	  }
-	  return;
+	  return 1;
 	}
       }
       w->remove();
       delete w;
       conn->pd_n_workers--;
       pd_n_temporary_workers--;
+      return 0;
     }
   }
   else {
-
     // This connection is managed with the thread-pool policy
     // setSelectable if this is the only worker thread.
+
     OMNIORB_ASSERT(w->singleshot() == 1); // Never called by a dedicated thread
     CORBA::Boolean doselect;
     {
@@ -873,31 +896,48 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 	// There is definitely a request pending. We re-cycle this
 	// worker to deal with it.
 	conn->pd_has_hit_n_workers_limit = 0;
-	if (!orbAsyncInvoker->insert(w)) {
-	  OMNIORB_ASSERT(0);
-	}
-	return;
+	return 1;
       }
 
+      // If there are other workers for this connection, or there are
+      // too many temporary workers, let this worker finish.
+
+      if (conn->pd_n_workers > 1 ||
+	  pd_n_temporary_workers > orbParameters::maxServerThreadPoolSize) {
+
+	w->remove();
+	delete w;
+	conn->pd_n_workers--;
+	pd_n_temporary_workers--;
+	return 0;
+      }
+    }
+    // May be able to re-use this worker.
+    //
+    // We could call conn->setSelectable(1).
+    // Instead we call Peek(). This thread will be used for a short time to
+    // monitor the connection. If the connection is available for reading,
+    // the callback function peekCallBack is called. We can afford to
+    // call Peek() here because this thread is otherwise idle.
+    CORBA::Boolean readable = 0;
+    conn->Peek(peekCallBack,(void*)&readable);
+    if (readable) {
+      // There is data to be read. Tell the worker to go around again.
+      return 1;
+    }
+    else {
+      // Worker is no longer needed.
+      omni_tracedmutex_lock sync(pd_lock);
       w->remove();
       delete w;
       conn->pd_n_workers--;
       pd_n_temporary_workers--;
-      // Set doselect if this is the last worker for this connection and
-      // there is no worker tasks that cannot be allocated to a thread from
-      // the pool.
-      doselect = (conn->pd_n_workers == 0 &&
-		  pd_n_temporary_workers < orbParameters::maxServerThreadPoolSize);
-    }
-    if (doselect) {
-      // We could call conn->setSelectable(1).
-      // Instead we call Peek(). This thread will be used for a short time to
-      // monitor the connection. If the connection is available for reading,
-      // the callback function peekCallBack is called. We can afford to
-      // call Peek() here because this thread is otherwise idle.
-      conn->Peek(peekCallBack,(void*)this);
+      return 0;
     }
   }
+  // Never reach here
+  OMNIORB_ASSERT(0);
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -905,8 +945,8 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 // connection indeed has something to read immediately.
 void
 giopServer::peekCallBack(void* cookie, giopConnection* conn) {
-  giopServer* this_ = (giopServer*)cookie;
-  this_->notifyRzReadable(conn);
+  CORBA::Boolean* readable = (CORBA::Boolean*)cookie;
+  *readable = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////
