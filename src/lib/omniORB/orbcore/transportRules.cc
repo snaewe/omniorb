@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/31 11:56:52  sll
+  Change the default preference to unix,tcp,ssl.
+  Minor fix to extractIPv4.
+
   Revision 1.1.2.2  2001/08/29 17:54:15  sll
   New method dumpRule.
 
@@ -168,6 +172,7 @@ static char* extractIPv4(const char* endpoint) {
   if (p) {
     p++;
     const char* q = strchr(p,':');
+    if (!q) return 0;
     CORBA::ULong l = q - p;
     if (l) {
       CORBA::String_var ipv4(CORBA::string_alloc(l));
@@ -510,12 +515,12 @@ public:
     if (clientRules_.pd_rules.size() == 0) {
       // Add a default rule
       parseAndAddRuleString(clientRules_.pd_rules,
-                            "*  unix,tcp,ssl");
+                            "*  unix,ssl,tcp");
     }
     if (serverRules_.pd_rules.size() == 0) {
       // Add a default rule
       parseAndAddRuleString(serverRules_.pd_rules,
-			    "* unix,tcp,ssl");
+			    "* unix,ssl,tcp");
     }
   }
   void detach() { 
