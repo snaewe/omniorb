@@ -1,3 +1,12 @@
+
+Mon Jul 19 10:50:03 BST 1999 djr
+================================
+
+- Put back prefix Exception/UserException onto type id of exceptions.
+
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+
+
 Fri Jul  9 22:01:23 BST 1999 sll
 ================================
 
@@ -52,6 +61,7 @@ src/tool/omniidl2/omniORB2_be/o2be_union.cc
 src/tool/omniidl2/omniORB2_be/o2be_struct.cc
 src/tool/omniidl2/omniORB2_be/o2be_interface.cc
 src/tool/omniidl2/omniORB2_be/o2be_root.cc
+
 
 Thu Jul  1 11:17:57 BST 1999 djr
 ================================
@@ -200,7 +210,6 @@ src/tool/omniidl2/omniORB2_be/o2be_struct.cc
 src/tool/omniidl2/omniORB2_be/o2be_union.cc
 
 
-
 Fri Jun 18 23:33:13 BST 1999 sll
 ================================
 
@@ -328,6 +337,7 @@ omniORB2/orbcore/bootstrapstub.cc            NEW
 omniORB2/dynamic/Namingdynstub.cc            NEW
 omniORB2/dynamic/bootstrapdynstub.cc         NEW
 
+
 Tue Jun  8 10:42:37 BST 1999 djr
 ================================
 
@@ -360,6 +370,7 @@ src/tool/omniidl2/omniORB2_be/o2be_enum.cc
 src/tool/omniidl2/omniORB2_be/o2be_name.cc
 src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
 src/tool/omniidl2/include/idl_defines.hh
+
 
 Wed Jun  2 17:49:13 BST 1999 sll
 ================================
@@ -428,6 +439,7 @@ src/appl/omniNames/omniNames.cc
 src/appl/omniNames/NamingContext_i.cc
 src/appl/omniNames/log.cc
 
+
 Thu May 27 21:28:03 BST 1999 sll
 ================================
 
@@ -450,6 +462,7 @@ Wed May 26 13:23:26 BST 1999 sll
 
 include/omniORB2/CORBA.h
 include/omniORB2/CORBA_sysdep.h
+
 
 Wed May 26 13:16:28 BST 1999 sll
 ================================
@@ -476,6 +489,7 @@ Wed May 26 12:36:42 BST 1999 sll
 include/omniORB2/rope.h
 src/lib/omniORB2/orbcore/strand.cc
 src/lib/omniORB2/orbcore/scavenger.cc
+
 
 Tue May 25 13:53:29 BST 1999 sll
 ================================
@@ -581,7 +595,6 @@ src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
 src/tool/omniidl2/omniORB2_be/o2be_enum.cc
 src/tool/omniidl2/omniORB2_be/o2be_name_mangle.cc
 src/tool/omniidl2/omniORB2_be/o2be_buildDesc.cc
-
 
 
 Sat May 22 18:36:21 BST 1999 sll
