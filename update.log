@@ -1,3 +1,21 @@
+Tue Jun 27 16:09:30 BST 2000 sll
+================================
+
+- On some platforms, e.g. HPUX 11 and Windows NT, shutdown() does not
+  unblock a thread in recv() when the socket is of the active type, i.e.
+  a connect() was called on the socket previously.
+  This is now fixed by using select or poll before calling into recv on
+  these platforms.
+  This is only done when the strand is outgoing. shutdown() seems to work
+  fine on incoming strands.
+
+  connect() is now non-blocking, except on OpenVMS. Previously, this is
+  only done on Solaris. The effect is that client call timeout also works even
+  when a connection cannot be established and the kernel takes a long
+  time to report this as an error.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
 Tue Jun 27 11:44:21 BST 2000 dpg1
 =================================
 
