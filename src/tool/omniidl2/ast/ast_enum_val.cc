@@ -88,6 +88,7 @@ AST_EnumVal::AST_EnumVal(unsigned long v, UTL_ScopedName *n, UTL_StrList *p)
 			   new AST_Expression(v), n, p),
 	      AST_Decl(AST_Decl::NT_enum_val, n, p)
 {
+   constant_value()->set_ec(AST_Expression::EC_symbol);
 }
 
 /*
