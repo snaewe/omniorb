@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.2  1997/03/11 19:56:43  sll
-  keyToOctetSequence and octetSequenceToKey should be static. Fixed.
+  Revision 1.3  1997/03/26 17:38:42  ewc
+  Runtime converted to Win32 DLL
 
+ * Revision 1.2  1997/03/11  19:56:43  sll
+ * keyToOctetSequence and octetSequenceToKey should be static. Fixed.
+ *
  * Revision 1.1  1997/03/10  11:41:57  sll
  * Initial revision
  *
@@ -22,8 +25,8 @@
 #ifndef __OMNIORB_H__
 #define __OMNIORB_H__
 
-class omniORB {
 
+class  _OMNIORB2_NTDLL_ omniORB {
 public:
 
   ///////////////////////////////////////////////////////////////////////
