@@ -11,10 +11,13 @@
  
 /*
   $Log$
-  Revision 1.2  1997/01/08 18:21:06  ewc
-  Corrected bug in omniORB::iopProfilesToRope (code assumed that profile
-  tag was IOP::TAG_INTERNET_IOP)
+  Revision 1.3  1997/01/21 14:25:35  ewc
+  Added support for initial reference interface.
 
+// Revision 1.2  1997/01/08  18:21:06  ewc
+// Corrected bug in omniORB::iopProfilesToRope (code assumed that profile
+// tag was IOP::TAG_INTERNET_IOP)
+//
 // Revision 1.1  1996/10/10  14:37:53  sll
 // Initial revision
 //
@@ -23,6 +26,8 @@
 #include <omniORB2/CORBA.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream.h>
+#include <string.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -65,6 +70,8 @@ static CORBA::Boolean boa_initialised = 0;
 
 static Anchor incomingAnchor;
 static Anchor outgoingAnchor;
+
+static initFile* configFile = NULL;
 
 static size_t          max_giop_message_size = 256 * 1024;
 
@@ -111,6 +118,10 @@ omniORB::init(int &argc,char **argv,const char *orb_identifier)
 
   objectRef_init();
 
+  // Get configuration information:
+  configFile = new initFile;
+  configFile->initialize();
+  
   CORBA::ULong l = strlen("nobody")+1;
   CORBA::Octet *p = (CORBA::Octet *) "nobody";
   omniORB::myPrincipalID.length(l);
@@ -157,6 +168,64 @@ omniORB::boaInit(int &argc,char **argv,const char *orb_identifier)
     throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
   return;
 }
+
+
+omniObject* omniORB::resolveInitRef(const char* identifier)
+{
+  // Resolve initial references:
+
+if (strcmp(identifier,"InterfaceRepository") == 0)
+  {
+    // No Interface Repository
+    throw CORBA::INTF_REPOS(10426,CORBA::COMPLETED_NO);
+    return NULL;
+  }
+else if (strcmp(identifier,"NameService") == 0)
+  {
+    if (configFile->NameService == NULL)
+      {
+	// Failed to get a reference to the Naming Service during ORB 
+	// initialization
+
+	throw CORBA::NO_RESOURCES(0,CORBA::COMPLETED_NO);
+	return NULL;
+      }
+    else 
+      {
+	return configFile->NameService;
+      }
+  }
+else
+  {
+    // No further ObjectIds are defined
+    
+    throw CORBA::ORB::InvalidName();
+    return NULL;
+  }
+}
+
+
+unsigned long
+omniORB::listInitServices(char**& servicelist)
+{
+  // List known initial CORBA Services for which ORB can return a reference
+  
+  int number_services = 1;  // Number of possible known services
+
+  servicelist = new char*[number_services];
+
+  if (configFile->NameService != NULL)
+    {
+      servicelist[0] = new char[12];
+      strcpy(servicelist[0],"NameService");
+    }
+  else number_services--;
+  
+  if (number_services == 0) delete[] servicelist;
+
+  return number_services;
+}
+
 
 Rope *
 omniORB::iopProfilesToRope(const IOP::TaggedProfileList *profiles,
