@@ -1,3 +1,11 @@
+Fri Apr 26 21:20:58 BST 2002 dgrisby
+====================================
+
+- codeSetUtil didn't do the _core_attr thing for the GIOP version constants.
+
+include/omniORB4/internal/codeSetUtil.h
+
+
 Fri Apr 26 00:07:43 BST 2002 dgrisby
 ====================================
 
