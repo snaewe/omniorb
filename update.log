@@ -1,3 +1,10 @@
+Fri Mar 10 16:43:09 GMT 2000 dpg1
+=================================
+
+- MSVC++ cannot catch exceptions by base class
+
+include/omniORB3/CORBA_sysdep.h
+
 
 Fri Mar 10 11:57:45 GMT 2000 djr
 ================================
