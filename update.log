@@ -1,3 +1,32 @@
+Wed Apr  8 17:02:05 BST 1998 sll
+================================
+
+- Merged patch for Reliant UNIX 5.43
+- Fixed memory leak in omni_thread::join() with
+  draft 4 implementations.
+
+include/omniORB2/CORBA_sysdep.h
+include/omnithread.h
+
+src/lib/omniORB2/corbaOrb.cc
+src/lib/omniORB2/objectKey.cc
+src/lib/omniORB2/tcpSocketMTfactory.cc
+src/lib/omniORB2/any.cc
+src/lib/omniORB2/typecode.cc
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omnithread/posix.cc
+src/lib/omnithread/sharedlib/dir.mk
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+src/tool/omniidl2/driver/drv_fork.cc
+src/tool/omniidl2/driver/drv_preproc.cc
+src/tool/omniidl2/util/utl_identifier.cc
+src/tool/omniidl2/include/idl.hh
+src/tool/omniidl2/dir.mk
+src/appl/utils/genior/genior.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+
+
 Tue Apr  7 19:32:45 BST 1998 sll
 ================================
 

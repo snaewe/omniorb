@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.12  1998/04/08 16:08:57  sll
+  *** empty log message ***
+
   Revision 1.11  1998/04/07 18:41:11  sll
   Use std::cerr instead of cerr.
   Added compiler flag -m.
@@ -231,16 +234,18 @@ BE_prep_arg(char *arg, idl_bool unknown_flag)
   return;
 }
 
+#ifndef __WIN32__
+extern char *optarg;
+extern int optind;
+#endif
+
 void
 BE_parse_args(int argc, char **argv)
 {
   int c;
   char *buffer;
 
-#ifndef __WIN32__
-  extern char *optarg;
-  extern int optind;
-#else	
+#ifdef __WIN32__
  o2be_global::set_skelsuffix("SK.cpp");
 #endif
 

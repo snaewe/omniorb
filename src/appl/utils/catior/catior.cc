@@ -224,6 +224,11 @@ EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &s,
 }
 
 
+#if !defined(__WIN32__)
+extern char* optarg;
+extern int optind;
+#endif
+
 
 int main(int argc, char* argv[])
 {
@@ -235,11 +240,6 @@ int main(int argc, char* argv[])
 
 
   // Get options:
-
-#ifndef __WIN32__
-  extern char* optarg;
-  extern int optind;
-#endif
 
   int c;
   int hexflag = 0;
