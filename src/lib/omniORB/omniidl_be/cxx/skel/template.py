@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.25  2003/07/25 16:03:06  dgrisby
+# Initialise base classes in correct order.
+#
 # Revision 1.3.2.24  2003/06/19 16:22:21  dgrisby
 # Updates to facilitate Windows omniNotify port. Work around DLL issues
 # and a compiler bug.
@@ -269,8 +272,9 @@ interface_objref = """\
 
 
 @fq_objref_name@::@objref_name@(omniIOR* ior, omniIdentity* id) :
+   omniObjRef(::@name@::_PD_repoId, ior, id, 1)@comma@
    @inherits_str@
-   omniObjRef(::@name@::_PD_repoId, ior, id, 1)@init_shortcut@
+   @init_shortcut@
 {
   _PR_setobj(this);
 }

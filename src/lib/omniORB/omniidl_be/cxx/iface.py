@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.13  2003/07/25 16:03:06  dgrisby
+# Initialise base classes in correct order.
+#
 # Revision 1.1.4.12  2003/03/03 15:02:30  dgrisby
 # -Wbvirtual_objref option went astray. Thanks Malge Nishant.
 #
@@ -325,7 +328,8 @@ class _objref_I(Class):
                    inherits_fqname = i.name().fullyQualify())
 
     # build the inherits list
-    inherits_str = ""
+    
+    inherits_str_list = []
     for i in self.interface().inherits():
       objref_name = i.name().prefix("_objref_")
 
@@ -334,7 +338,7 @@ class _objref_I(Class):
       if objref_name.needFlatName(self._environment):
         objref_str = objref_name.flatName()
 
-      this_inherits_str = objref_str + "(ior, id),\n"
+      this_inherits_str = objref_str + "(ior, id)"
 
       # FIXME:
       # The powerpc-aix OMNIORB_BASE_CTOR workaround still works here
@@ -350,10 +354,18 @@ class _objref_I(Class):
         inherits_scope_prefix = string.join(prefix, "::") + "::"
         this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix +\
                             ")" + this_inherits_str
-      inherits_str = inherits_str + this_inherits_str
+
+      inherits_str_list.append(this_inherits_str)
+
+    inherits_str = string.join(inherits_str_list, ",\n")
+    if inherits_str:
+      comma = ","
+    else:
+      comma = ""
 
     if config.state['Shortcut']:
-      init_shortcut = ", _shortcut(0)"
+      inherits_str  = inherits_str + ","
+      init_shortcut = "_shortcut(0)"
     else:
       init_shortcut = ""
 
@@ -362,6 +374,7 @@ class _objref_I(Class):
                fq_objref_name = self.name().fullyQualify(),
                objref_name = self.name().simple(),
                inherits_str = inherits_str,
+               comma = comma,
                _ptrToObjRef_ptr = _ptrToObjRef_ptr,
                _ptrToObjRef_str = _ptrToObjRef_str,
                init_shortcut = init_shortcut)
