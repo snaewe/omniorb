@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.20  1999/02/18 15:51:23  djr
+ * Option to not use indirections in on-the-wire TypeCodes.
+ *
  * Revision 1.19  1999/02/12 11:52:12  djr
  * Typecodes for arrays were marshalled/unmarshalled incorrectly.
  *
@@ -748,6 +751,7 @@ TypeCode_base::NP_equal(const TypeCode_base* TCp,
     return NP_extendedEqual(TCp, langEquiv, &tcpl_tmp);
 }
 
+
 CORBA::Boolean
 TypeCode_base::NP_extendedEqual(const TypeCode_base* TCp,
 				CORBA::Boolean langEquiv,
@@ -756,6 +760,7 @@ TypeCode_base::NP_extendedEqual(const TypeCode_base* TCp,
   // Base types are equivalent if their Kinds match
   return NP_kind() == TCp->NP_kind();
 }
+
 
 const char*
 TypeCode_base::NP_id() const
@@ -959,6 +964,7 @@ TypeCode_string::NP_unmarshalSimpleParams(NetBufferedStream &s,
   return _ptr;
 }
 
+
 TypeCode_base*
 TypeCode_string::NP_unmarshalSimpleParams(MemBufferedStream &s,
 					  TypeCode_offsetTable* otbl)
@@ -972,6 +978,7 @@ TypeCode_string::NP_unmarshalSimpleParams(MemBufferedStream &s,
   return _ptr;
 }
 
+
 size_t
 TypeCode_string::NP_alignedSimpleParamSize(size_t initialoffset,
 					   TypeCode_offsetTable* otbl) const
@@ -981,6 +988,7 @@ TypeCode_string::NP_alignedSimpleParamSize(size_t initialoffset,
   _msgsize = omni::align_to(_msgsize, omni::ALIGN_4)+4;
   return _msgsize;
 }
+
 
 CORBA::Boolean
 TypeCode_string::NP_extendedEqual(const TypeCode_base*  TCp,
@@ -1204,6 +1212,7 @@ TypeCode_alias::NP_unmarshalComplexParams(MemBufferedStream &s,
   return _ptr;
 }
 
+
 CORBA::Boolean
 TypeCode_alias::NP_complete_recursive_sequences(TypeCode_base*  tc,
 						CORBA::ULong offset)
@@ -1216,6 +1225,7 @@ TypeCode_alias::NP_complete_recursive_sequences(TypeCode_base*  tc,
       ToTcBase(pd_content)->NP_complete_recursive_sequences(tc, offset);
   return pd_complete;
 }
+
 
 size_t
 TypeCode_alias::NP_alignedComplexParamSize(size_t initialoffset,
@@ -1231,6 +1241,7 @@ TypeCode_alias::NP_alignedComplexParamSize(size_t initialoffset,
 
   return _msgsize;
 }
+
 
 CORBA::Boolean
 TypeCode_alias::NP_extendedEqual(const TypeCode_base*  TCp,
@@ -2492,7 +2503,7 @@ TypeCode_enum::NP_extendedEqual(const TypeCode_base* TCp,
       NP_namesEqualOrNull(NP_name(), TCp->NP_name()) &&
       (pd_members.length() == TCp->NP_member_count()))
     {
-      const CORBA::ULong memberCount = pd_members.length();
+      CORBA::ULong memberCount = pd_members.length();
       TypeCode_enum* TCe = (TypeCode_enum*) TCp;
 
       for( CORBA::ULong i=0; i < memberCount; i++ )
@@ -2816,7 +2827,7 @@ TypeCode_union::NP_extendedEqual(const TypeCode_base*  TCp,
     TypeCode_union* uTCp = (TypeCode_union*)TCp;
 
     for( CORBA::ULong i = 0; i < memberCount; i++ ) {
-      if( (i != NP_default_index() &&
+      if( (CORBA::Long(i) != NP_default_index() &&
 	   pd_members[i].alabel != uTCp->pd_members[i].alabel) ||
 	  !NP_namesEqualOrNull(pd_members[i].aname,
 			       uTCp->pd_members[i].aname) ||
@@ -3211,6 +3222,7 @@ TypeCode_offsetTable::lookupTypeCode(const TypeCode_base*  tc,
 // Initialised in check_static_data_is_initialised().
 static omni_mutex* pd_cached_paramlist_lock;
 
+
 void
 TypeCode_marshaller::marshal(TypeCode_base* tc,
 			     NetBufferedStream& s,
@@ -3219,7 +3231,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
   // If this _exact_ typecode has already been marshalled into the stream
   // then just put in an indirection
   CORBA::Long tc_offset;
-  if( otbl->lookupTypeCode(tc, tc_offset) )
+  if( omniORB::useTypeCodeIndirections && otbl->lookupTypeCode(tc, tc_offset) )
     {
       // The desired typecode was found, so write out an indirection!
       CORBA::ULong tck_indirect = 0xffffffff;
@@ -3502,7 +3514,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
   // If this _exact_ typecode has already been marshalled into the stream
   // then just put in an indirection
   CORBA::Long tc_offset;
-  if (otbl->lookupTypeCode(tc, tc_offset))
+  if( omniORB::useTypeCodeIndirections && otbl->lookupTypeCode(tc, tc_offset) )
     {
       // The desired typecode was found, so write out an indirection!
       CORBA::ULong tck_indirect = 0xffffffff;
