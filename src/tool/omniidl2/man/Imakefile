@@ -1,5 +1,7 @@
 XCOMM omniidl/man/Imakefile $Id$
 
+all::
+
 install:: install.man
 
 InstallManPage(omniidl,$(MANDIR))
