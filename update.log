@@ -1,3 +1,14 @@
+Fri Sep 24 15:44:15 BST 1999 sll
+================================
+
+- Rearranged the order of the clean and veryclean rules in the dir.mk files
+  so that make veryclean can complete.
+
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/dynamic/dir.mk
+src/lib/omniORB2/lifecycle/dir.mk
+
 Fri Sep 24 12:30:49 BST 1999 sll
 ================================
 

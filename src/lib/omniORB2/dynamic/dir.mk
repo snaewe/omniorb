@@ -206,6 +206,9 @@ ifndef BuildWin32DebugLibraries
 endif
 
 clean::
+	@$(MakeSubdirs)
+
+clean::
 	$(RM) $(dynlib) NamingDynSK.cc bootstrapDynSK.cc
 
 export:: $(dynlib)

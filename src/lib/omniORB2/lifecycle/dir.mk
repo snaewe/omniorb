@@ -182,6 +182,9 @@ omniLifeCycleDynSK.cc: ../omniLifeCycleDynSK.cc
 endif
 
 clean::
+	@$(MakeSubdirs)
+
+clean::
 	$(RM) $(lclib) omniLifeCycleSK.cc omniLifeCycleDynSK.cc
 
 export:: $(lclib)
@@ -190,7 +193,3 @@ export:: $(lclib)
 export::
 	@$(MakeSubdirs)
 
-ifdef Win32Platform
-
-
-endif
