@@ -21,3 +21,8 @@ export:: idlvisitor.py
 
 export:: output.py
 	@(file="output.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
+export::
+	@(set -x; \
+	python -c 'import compileall; compileall.compile_dir("$(PYLIBDIR)")'; \
+	)

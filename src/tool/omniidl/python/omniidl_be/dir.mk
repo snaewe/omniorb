@@ -8,3 +8,8 @@ export:: dump.py
 
 export:: example.py
 	@(file="example.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
+export::
+	@(set -x; \
+	python -c 'import compileall; compileall.compile_dir("$(PYLIBDIR)")'; \
+	)

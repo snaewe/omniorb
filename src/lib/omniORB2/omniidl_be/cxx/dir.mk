@@ -29,4 +29,7 @@ export:: env.py
 export:: config.py
 	@(file="config.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
-
+export::
+	@(set -x; \
+	python -c 'import compileall; compileall.compile_dir("$(PYLIBDIR)")'; \
+	)

@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.2  2000/02/16 16:23:52  dpg1
+# Support things for Python neophytes.
+#
 # Revision 1.15.2.1  2000/02/14 18:34:52  dpg1
 # New omniidl merged in.
 #
@@ -83,7 +86,7 @@
 
 import sys
 
-if sys.version[:5] != "1.5.2":
+if sys.version[:6] != "1.5.2 ":
     sys.stderr.write("\n\n")
     sys.stderr.write("omniidl: WARNING!!\n\n")
     sys.stderr.write("omniidl: Python version 1.5.2 is required.\n")
