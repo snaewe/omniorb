@@ -48,6 +48,7 @@ ifdef Cygwin
 # there's a bug in gcc 3.2 (build 20020927) that makes gcc crash
 # when optimizing these files ...
 CXXDEBUGFLAGS = -O0
+extralibs += -lomniDynamic4
 endif
 
 
@@ -137,11 +138,11 @@ mkshared::
 mkshared:: $(skshared) $(dynskshared) 
 
 $(skshared): $(patsubst %, shared/%, $(COS_SK_OBJS))
-	@(namespec="$(sknamespec)" extralibs="$(imps)"; \
+	@(namespec="$(sknamespec)"; extralibs="$(imps) $(extralibs)"; \
          $(MakeCXXSharedLibrary))
 
-$(dynskshared): $(patsubst %, shared/%, $(COS_DYNSK_OBJS))
-	@(namespec="$(dynsknamespec)" extralibs="$(skshared) $(dynimps)"; \
+$(dynskshared): $(patsubst %, shared/%, $(COS_DYNSK_OBJS) $(COS_SK_OBJS))
+	@(namespec="$(dynsknamespec)"; extralibs="$(dynimps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshared)
@@ -234,11 +235,11 @@ mkshareddbug::
 mkshareddbug:: $(skshareddbug) $(dynskshareddbug) 
 
 $(skshareddbug): $(patsubst %, shareddebug/%, $(COS_SK_OBJS))
-	(namespec="$(sknamespec)" debug=1 extralibs="$(dbugimps)"; \
+	(namespec="$(sknamespec)"; debug=1; extralibs="$(dbugimps) $(extralibs)"; \
          $(MakeCXXSharedLibrary))
 
 $(dynskshareddbug): $(patsubst %, shareddebug/%, $(COS_DYNSK_OBJS))
-	@(namespec="$(dynsknamespec)" debug=1 extralibs="$(skshareddbug) $(dbugimps)"; \
+	@(namespec="$(dynsknamespec)"; debug=1; extralibs="$(skshareddbug) $(dbugimps) $(extralibs)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshareddbug)

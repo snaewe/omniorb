@@ -1,3 +1,20 @@
+Wed Feb 11 12:20:31 GMT 2004 dgrisby
+====================================
+
+- Cygwin patches. Thanks Douglas Brown.
+
+bin/scripts/omkdirhier
+mk/beforeauto.mk.in
+mk/mklib.mk
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omnithread/dir.mk
+src/services/mklib/dir.mk
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/cccp/dir.mk
+
+
 Wed Feb 11 11:52:30 GMT 2004 dgrisby
 ====================================
 

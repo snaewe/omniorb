@@ -31,9 +31,17 @@ export:: $(omnicpp)
 
 else
 
+ifdef Cygwin
+export:: $(omnicpp)
+	@(dir="$(EXPORT_TREE)/$(BINDIR)"; file="$(omnicpp)"; \
+	$(ExportExecutableFileToDir))
+
+else
 export:: $(omnicpp)
 	@(dir="$(EXPORT_TREE)/$(LIBDIR)"; file="$(omnicpp)"; \
 	$(ExportExecutableFileToDir))
+
+endif
 
 ifdef INSTALLTARGET
 install:: $(omnicpp)

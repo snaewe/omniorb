@@ -65,8 +65,11 @@ do
 
 	for filename
 	do
-		path=$prefix$filename
-		prefix=$path/
+		if [ ! -z $filename ]
+			then
+			path=$prefix$filename
+			prefix=$path/
+		fi
 		shift
 
 		test -d "$path" || {

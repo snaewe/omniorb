@@ -117,7 +117,7 @@ $(shlib): $(OBJS) $(PYOBJS)
 else
 #### ugly AIX section end, normal build command
 $(shlib): $(OBJS) $(PYOBJS)
-	@(namespec="$(namespec)"; $(MakeCXXSharedLibrary))
+	@(namespec="$(namespec)"; extralibs="$(extralibs)"; $(MakeCXXSharedLibrary))
 endif
 
 all:: $(shlib)
@@ -139,6 +139,15 @@ clean::
 veryclean::
 	$(RM) *.o
 	(dir=.; $(CleanSharedLibrary))
+
+ifdef Cygwin
+
+SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-soname=$$soname,--export-dynamic,--enable-auto-import
+
+extralibs += -L$(PYPREFIX)/lib/python$(PYVERSION)/config \
+ -lpython$(PYVERSION).dll
+
+endif
 
 else
 

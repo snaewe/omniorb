@@ -530,9 +530,10 @@ OMNIORB_SSL_CPPFLAGS += $(OPEN_SSL_CPPFLAGS)
 BuildSharedLibrary = 1       # Enable by default
 SHAREDLIB_SUFFIX = so
 
-SharedLibraryFullNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
-SharedLibrarySoNameTemplate   = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3
-SharedLibraryLibNameTemplate  = lib$$1$$2.$(SHAREDLIB_SUFFIX)
+SharedLibraryFullNameTemplate 	= lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
+SharedLibrarySoNameTemplate   	= lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3
+SharedLibraryLibNameTemplate  	= lib$$1$$2.$(SHAREDLIB_SUFFIX)
+SharedLibraryImplibNameTemplate = lib$$1$$2.a
 
 SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-soname,$$soname
 
@@ -540,6 +541,13 @@ define SharedLibraryFullName
 fn() { \
 if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi ; \
 echo $(SharedLibraryFullNameTemplate); \
+}; fn
+endef
+
+define SharedLibraryImplibName
+fn() { \
+if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi ; \
+echo $(SharedLibraryImplibNameTemplate); \
 }; fn
 endef
 
@@ -588,15 +596,30 @@ define ExportSharedLibrary
  $(ExportSharedLibraryToDir)
 endef
 
+define ExportImplibLibrary
+ dir="$(EXPORT_TREE)/$(LIBDIR)"; \
+ $(ExportLibraryToDir)
+endef
+
 define InstallSharedLibrary
  dir="$(INSTALLLIBDIR)"; \
  $(ExportSharedLibraryToDir)
+endef
+
+define InstallImplibLibrary
+ dir="$(INSTALLLIBDIR)"; \
+ $(ExportLibraryToDir)
 endef
 
 
 define CleanSharedLibrary
 ( set -x; \
 $(RM) $${dir:-.}/*.$(SHAREDLIB_SUFFIX).* )
+endef
+
+define CleanImplibLibrary
+( set -x; \
+$(RM) $${dir:-.}/*.a )
 endef
 
 
@@ -990,26 +1013,60 @@ endif
 
 ###################
 ifdef Cygwin
+CXXLINKOPTIONS += -Wl,--enable-auto-import
 IMPORT_CPPFLAGS += -D__linux__ -D__cygwin__
 SHAREDLIB_CPPFLAGS =
 OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
 OMNITHREAD_CPPFLAGS = -D_REENTRANT
 OMNITHREAD_LIB += -lpthread
 BinPattern = %.exe
+
+SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-soname=$$soname,--out-implib=$$implib,--export-dynamic,--enable-auto-import
+
+define ExportLibraryToDir
+(files="$^"; \
+ for file in $$files; do \
+   $(ExportExecutableFileToDir); \
+ done; \
+)
+endef
+
 define MakeCXXSharedLibrary
  $(ParseNameSpec); \
  soname=$(SharedLibrarySoNameTemplate); \
+ implib=$(SharedLibraryImplibNameTemplate); \
  set -x; \
  $(RM) $@; \
  $(CXX) $(SharedLibraryPlatformLinkFlagsTemplate) -o $@ \
  $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs;
 endef
 
+define ExportSharedLibrary
+ dir="$(EXPORT_TREE)/$(BINDIR)"; \
+ $(ExportSharedLibraryToDir)
+endef
+
+define ExportImplibLibrary
+ dir="$(EXPORT_TREE)/$(LIBDIR)"; \
+ $(ExportLibraryToDir)
+endef
+
+define InstallSharedLibrary
+ dir="$(INSTALLBINDIR)"; \
+ $(ExportSharedLibraryToDir)
+endef
+
+define InstallImplibLibrary
+ dir="$(INSTALLBINDIR)"; \
+ $(ExportLibraryToDir)
+endef
+
 SHAREDLIB_SUFFIX = dll
 
-SharedLibraryFullNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
-SharedLibrarySoNameTemplate   = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3
-SharedLibraryLibNameTemplate  = lib$$1$$2.$(SHAREDLIB_SUFFIX)
+SharedLibraryFullNameTemplate 	 = cyg$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
+SharedLibrarySoNameTemplate   	 = cyg$$1$$2.$(SHAREDLIB_SUFFIX).$$3
+SharedLibraryLibNameTemplate  	 = cyg$$1$$2.$(SHAREDLIB_SUFFIX)
+SharedLibraryImplibNameTemplate  = lib$$1$$2.dll.a
 
 endif
 

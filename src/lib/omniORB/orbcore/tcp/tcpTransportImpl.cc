@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.20  2004/02/11 12:19:17  dgrisby
+  Cygwin patches. Thanks Douglas Brown.
+
   Revision 1.1.2.19  2003/11/06 10:18:39  dgrisby
   Expand FD_SETSIZE on Windows.
 
@@ -313,9 +316,12 @@ void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
 
     if ( ifr[i].ifr_addr.sa_family == AF_INET ) {
       struct sockaddr_in* iaddr = (struct sockaddr_in*)&ifr[i].ifr_addr;
-      CORBA::String_var s;
-      s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
-      ifaddrs.push_back(s._retn());
+
+      if ( iaddr->sin_addr.s_addr != 0 ) {
+	CORBA::String_var s;
+	s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+	ifaddrs.push_back(s._retn());
+      }
     }
   }
   free(ifc.ifc_buf);

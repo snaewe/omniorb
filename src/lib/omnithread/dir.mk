@@ -120,7 +120,7 @@ mkshared::
 mkshared:: $(shlib)
 
 $(shlib): $(patsubst %, shared/%, $(LIB_OBJS))
-	@(namespec="$(namespec)" extralibs="$(imps)" nodeffile=1; \
+	@(namespec="$(namespec)" extralibs="$(imps) $(extralibs)" nodeffile=1; \
          $(MakeCXXSharedLibrary))
 
 export:: $(shlib)
@@ -140,6 +140,25 @@ clean::
 veryclean::
 	$(RM) shared/*.o
 	@(dir=shared; $(CleanSharedLibrary))
+
+ifdef Cygwin
+
+implib := $(shell $(SharedLibraryImplibName) $(namespec))
+
+export:: $(implib)
+	@(namespec="$(namespec)"; $(ExportImplibLibrary))
+
+install:: $(implib)
+	@(dir="$(INSTALLLIBDIR)"; namespec="$(namespec)"; \
+          $(ExportLibraryToDir))
+
+clean::
+	(dir=.; $(CleanImplibLibrary))
+
+veryclean::
+	(dir=.; $(CleanImplibLibrary))
+
+endif
 
 else
 
@@ -209,7 +228,7 @@ mkshareddbug::
 mkshareddbug:: $(dbugshlib)
 
 $(dbugshlib): $(patsubst %, shareddebug/%, $(LIB_OBJS))
-	(namespec="$(namespec)" debug=1 extralibs="$(dbugimps)" nodeffile=1; \
+	(namespec="$(namespec)" debug=1 extralibs="$(dbugimps) $(extralibs)" nodeffile=1; \
          $(MakeCXXSharedLibrary))
 
 export:: $(dbugshlib)

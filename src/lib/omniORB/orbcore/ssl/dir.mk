@@ -22,6 +22,10 @@ EXTRA_LIBS    = $(SOCKET_LIB) advapi32.lib
 SHARED_ONLY_OBJS = msvcdllstub.o
 endif
 
+ifdef Cygwin
+OPEN_SSL_LIB += -lssl.dll -lcrypto.dll
+endif
+
 LIB_NAME     := omnisslTP
 LIB_VERSION  := $(OMNIORB_SSL_VERSION)
 LIB_OBJS     := $(SSL_OBJS)
