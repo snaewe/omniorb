@@ -3754,8 +3754,9 @@ TypeCodes), regardless of whether the {\tt -ORBtcAliasExpand} flag is set to 1
 or not. 
 
 \paragraph*{Recursive TypeCodes.}
-omniORB2 does not yet support recursive TypeCodes. This means that types such 
-as the following can not be inserted or extracted from an Any:
+omniORB2 does now (as of version 2.7) support recursive TypeCodes. This
+means that types such as the following can be inserted or extracted from
+an Any:
 {\small
 \begin{verbatim}
    
@@ -3767,12 +3768,6 @@ struct Test4 {
 
 \end{verbatim}
 }
-If these types are specified in IDL, omniidl2 will not generate Any insertion/
-extraction operators, so an attempt to insert/extract them will result in 
-compile-time errors. Similarly, it won't generate a {\tt \_tc\_} TypeCode for
-the type. If another type contains a type which is recursive, operators won't 
-be generated for that type either, and so on. Recursive TypeCodes will be 
-supported in a future release of omniORB2.
 
 \paragraph*{Type-unsafe construction and insertion.}
 If using the type-unsafe Any constructor, or the {\tt CORBA::Any::replace()} 
@@ -3797,9 +3792,9 @@ Inserting and extracting simultaneously from the same Any (in 2 different
 threads) is undefined behaviour.
 
 Extracting simultaneously from the same Any (in 2 or more different threads)
-may result in a memory leak if the type being extracted is a constructed type.
-It was decided not to mutex the Any, as this condition should rarely arise, 
-and adding a mutex would lead to performance penalties.
+also leads to undefined behaviour.
+It was decided not to protect the Any with a mutex, as this condition
+should rarely arise, and adding a mutex would lead to performance penalties.
 
 
 \section{TypeCode in omniORB2}
@@ -5692,12 +5687,14 @@ short anOpn(in string a);
 \noindent{}An operation invocation may be created as follows:
 
 {\small \begin{verbatim}
+CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB2");
+...
 CORBA::NVList_var args;
-CORBA::ORB::create_list(1, args);
+orb->create_list(1, args);
 *(args->add(CORBA::ARG_IN)->value()) <<= (const char*) "Hello World!";
 
 CORBA::NamedValue_var result;
-CORBA::ORB::create_named_value(result);
+orb->create_named_value(result);
 result->value()->replace(CORBA::_tc_short, 0);
 
 CORBA::Request_var req = obj->_create_request(CORBA::Context::_nil(),
