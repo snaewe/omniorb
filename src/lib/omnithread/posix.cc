@@ -1,0 +1,873 @@
+//				Package : omnithread
+// omnithread/posix.cc		Created : 7/94 tjr
+//
+// Copyright (C) Olivetti Research Ltd 1994, 1995
+//
+// Implementation of OMNI thread abstraction for posix threads
+//
+// The source below tests for the definition of the macros:
+//     PthreadDraftVersion
+//     PthreadSupportThreadPriority
+//     NoNanoSleep
+//     NeedPthreadInit
+//
+// As different draft versions of the pthread standard P1003.4a/P1003.1c
+// define slightly different APIs, the macro 'PthreadDraftVersion'
+// identifies the draft version supported by this particular platform.
+//
+// Some unix variants do not support thread priority unless a real-time
+// kernel option is installed. The macro 'PthreadSupportThreadPriority',
+// if defined, enables the use of thread priority. If it is not defined,
+// setting or changing thread priority will be silently ignored.
+//
+// nanosleep() is defined in Posix P1003.4 since Draft 9 (?).
+// Not all platforms support this standard. The macro 'NoNanoSleep'
+// identifies platform that don't.
+//
+
+#include <iostream.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <time.h>
+#include "omnithread.h"
+
+#define DB(x) // x
+
+
+#if (PthreadDraftVersion <= 6)
+#define ERRNO(x) (((x) != 0) ? (errno) : 0)
+#else
+#define ERRNO(x) (x)
+#endif
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Mutex
+//
+///////////////////////////////////////////////////////////////////////////
+
+
+omni_mutex::omni_mutex(void)
+{
+#if (PthreadDraftVersion == 4)
+
+    int rc = ERRNO(pthread_mutex_init(&posix_mutex,
+				      pthread_mutexattr_default));
+#else
+
+    int rc = ERRNO(pthread_mutex_init(&posix_mutex, 0));
+
+#endif
+
+    if (rc != 0)
+	cerr << "omni_mutex::omni_mutex: pthread_mutex_init error "
+	     << rc << endl;
+}
+
+
+omni_mutex::~omni_mutex(void)
+{
+    int rc = ERRNO(pthread_mutex_destroy(&posix_mutex));
+
+    if (rc != 0)
+	cerr << "omni_mutex::~omni_mutex: pthread_mutex_destroy error "
+	     << rc << endl;
+}
+
+
+int omni_mutex::lock(void)
+{
+    return ERRNO(pthread_mutex_lock(&posix_mutex));
+}
+
+
+int omni_mutex::unlock(void)
+{
+    return ERRNO(pthread_mutex_unlock(&posix_mutex));
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Condition variable
+//
+///////////////////////////////////////////////////////////////////////////
+
+
+omni_condition::omni_condition(omni_mutex* m) : mutex(m)
+{
+#if (PthreadDraftVersion == 4)
+
+    int rc = ERRNO(pthread_cond_init(&posix_cond, pthread_condattr_default));
+
+#else
+
+    int rc = ERRNO(pthread_cond_init(&posix_cond, 0));
+
+#endif
+
+    if (rc != 0)
+	cerr << "omni_condition::omni_condition: pthread_cond_init error "
+	     << rc << endl;
+}
+
+
+omni_condition::~omni_condition(void)
+{
+    int rc = ERRNO(pthread_cond_destroy(&posix_cond));
+
+    if (rc != 0)
+	cerr << "omni_condition::~omni_condition: pthread_cond_destroy error "
+	     << rc << endl;
+}
+
+
+int omni_condition::wait(void)
+{
+    return ERRNO(pthread_cond_wait(&posix_cond, &mutex->posix_mutex));
+}
+
+
+int omni_condition::timed_wait(unsigned long secs, unsigned long nanosecs)
+{
+    timespec rqts = { secs, nanosecs };
+
+    int rc = ERRNO(pthread_cond_timedwait(&posix_cond,
+					  &mutex->posix_mutex, &rqts));
+#if (PthreadDraftVersion <= 6)
+    if (rc == EAGAIN)
+	rc = ETIMEDOUT;
+#endif
+
+    return rc;
+}
+
+
+int omni_condition::signal(void)
+{
+    return ERRNO(pthread_cond_signal(&posix_cond));
+}
+
+
+int omni_condition::broadcast(void)
+{
+    return ERRNO(pthread_cond_broadcast(&posix_cond));
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Counting semaphore
+//
+///////////////////////////////////////////////////////////////////////////
+
+
+omni_semaphore::omni_semaphore(unsigned int initial) : c(&m)
+{
+    value = initial;
+}
+
+
+omni_semaphore::~omni_semaphore(void)
+{
+}
+
+
+int omni_semaphore::wait(void)
+{
+    m.lock();
+
+    while (value == 0) {
+
+	int rc = c.wait();
+
+	if (rc != 0) {
+	    m.unlock();
+	    return rc;
+	}
+    }
+
+    value--;
+
+    m.unlock();
+
+    return 0;
+}
+
+
+int omni_semaphore::try_wait(void)
+{
+    m.lock();
+
+    if (value == 0) {
+	m.unlock();
+	return EAGAIN;
+    }
+
+    value--;
+
+    m.unlock();
+
+    return 0;
+}
+
+
+int omni_semaphore::post(void)
+{
+    m.lock();
+
+    if (value == 0) {
+	c.signal();
+    }
+
+    value++;
+
+    m.unlock();
+
+    return 0;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Thread
+//
+///////////////////////////////////////////////////////////////////////////
+
+
+//
+// static variables
+//
+
+int omni_thread::init_t::count = 0;
+
+omni_mutex* omni_thread::next_id_mutex;
+int omni_thread::next_id = 0;
+
+static pthread_key_t self_key;
+
+static int lowest_priority;
+static int normal_priority;
+static int highest_priority;
+
+
+//
+// Initialisation function (gets called before any user code).
+//
+
+omni_thread::init_t::init_t(void)
+{
+    if (count++ != 0)	// only do it once however many objects get created.
+	return;
+
+    DB(cerr << "omni_thread::init: posix 1003.4a (draft "
+       << PthreadDraftVersion << ") implementation initialising\n");
+
+#ifdef NeedPthreadInit
+
+    pthread_init();
+
+#endif
+
+#if (PthreadDraftVersion == 4)
+
+    int rc = ERRNO(pthread_keycreate(&self_key, NULL));
+
+    if (rc != 0) {
+	cerr << "omni_thread::init: pthread_keycreate error " << rc << endl;
+	::exit(1);
+    }
+
+    lowest_priority = PRI_OTHER_MIN;
+    highest_priority = PRI_OTHER_MAX;
+
+#else
+
+    int rc = ERRNO(pthread_key_create(&self_key, NULL));
+
+    if (rc != 0) {
+	cerr << "omni_thread::init: pthread_key_create error " << rc << endl;
+	::exit(1);
+    }
+
+    lowest_priority = sched_get_priority_min(SCHED_FIFO);
+    highest_priority = sched_get_priority_max(SCHED_FIFO);
+
+#endif
+
+    switch (highest_priority - lowest_priority) {
+
+    case 0:
+    case 1:
+	normal_priority = lowest_priority;
+	break;
+
+    default:
+	normal_priority = lowest_priority + 1;
+	break;
+    }
+
+    next_id_mutex = new omni_mutex;
+
+    //
+    // Create object for this (i.e. initial) thread.
+    //
+
+    omni_thread* t = new omni_thread;
+
+    if (t->_state != STATE_NEW) {
+	cerr << "omni_thread::init: problem creating initial thread object\n";
+	::exit(1);
+    }
+
+    t->_state = STATE_RUNNING;
+
+    t->posix_thread = pthread_self();
+
+    DB(cerr << "initial thread " << t->id() << endl);
+
+    rc = ERRNO(pthread_setspecific(self_key, (void*)t));
+
+    if (rc != 0) {
+	cerr << "omni_thread::init: pthread_setspecific error " << rc << endl;
+	::exit(1);
+    }
+
+#ifdef PthreadSupportThreadPriority
+
+#if (PthreadDraftVersion == 4)
+
+    rc = ERRNO(pthread_setprio(t->posix_thread,
+			       posix_priority(PRIORITY_NORMAL)));
+    if (rc != 0) {
+	cerr << "omni_thread::init: pthread_setprio error " << rc << endl;
+	::exit(1);
+    }
+
+#else
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+
+    rc = ERRNO(pthread_attr_setprio(&attr, posix_priority(PRIORITY_NORMAL)));
+
+    if (rc != 0) {
+	cerr << "omni_thread::init: pthread_attr_setprio error " << rc << endl;
+	::exit(1);
+    }
+
+    rc = ERRNO(pthread_setschedattr(t->posix_thread, attr));
+
+    if (rc != 0) {
+	cerr << "omni_thread::init: pthread_setschedattr error " << rc << endl;
+	::exit(1);
+    }
+
+#endif   /* PthreadDraftVersion */
+
+#endif   /* PthreadSupportThreadPriority */
+}
+
+
+//
+// Wrapper for thread creation.
+//
+
+extern "C" {
+
+    //
+    // I'm not sure if you should be able to declare a static member function
+    // as extern "C" like this but it seems to work.  If not, all you need
+    // is a simple non-member function like this:
+    //
+    // static void* wrapper2(void* ptr) { return omni_thread::wrapper(ptr) }
+    //
+
+    void* omni_thread::wrapper(void* ptr)
+    {
+	omni_thread* me = (omni_thread*)ptr;
+
+	DB(cerr << "omni_thread::wrapper: thread " << me->id()
+	   << " started\n");
+
+	int rc = ERRNO(pthread_setspecific(self_key, me));
+
+	if (rc != 0)
+	    cerr << "omni_thread wrapper: pthread_setspecific error "
+		 << rc << endl;
+
+	//
+	// Now invoke the thread function with the given argument.
+	//
+
+	if (me->fn_void != NULL) {
+	    (*me->fn_void)(me->thread_arg);
+	    omni_thread::exit();
+	}
+
+	if (me->fn_ret != NULL) {
+	    void* return_value = (*me->fn_ret)(me->thread_arg);
+	    omni_thread::exit(return_value);
+	}
+
+	if (me->detached) {
+	    me->run(me->thread_arg);
+	    omni_thread::exit();
+	} else {
+	    void* return_value = me->run_undetached(me->thread_arg);
+	    omni_thread::exit(return_value);
+	}
+
+	// should never get here.
+
+	return NULL;
+    }
+}
+
+
+//
+// Constructors for omni_thread - set up the thread object but don't
+// start it running.
+//
+
+// construct a detached thread running a given function.
+
+omni_thread::omni_thread(void (*fn)(void*), void* arg, priority_t pri)
+{
+    common_constructor(arg, pri, 1);
+    fn_void = fn;
+    fn_ret = NULL;
+}
+
+// construct an undetached thread running a given function.
+
+omni_thread::omni_thread(void* (*fn)(void*), void* arg, priority_t pri)
+{
+    common_constructor(arg, pri, 0);
+    fn_void = NULL;
+    fn_ret = fn;
+}
+
+// construct a thread which will run either run() or run_undetached().
+
+omni_thread::omni_thread(void* arg, priority_t pri)
+{
+    common_constructor(arg, pri, 1);
+    fn_void = NULL;
+    fn_ret = NULL;
+}
+
+// common part of all constructors.
+
+void omni_thread::common_constructor(void* arg, priority_t pri, int det)
+{
+    _state = STATE_NEW;
+    _priority = pri;
+
+    next_id_mutex->lock();
+    _id = next_id++;
+    next_id_mutex->unlock();
+
+    thread_arg = arg;
+    detached = det;	// may be altered in start_undetached()
+
+    // posix_thread is set up in initialisation routine or start().
+}
+
+
+//
+// Destructor for omni_thread.
+//
+
+omni_thread::~omni_thread(void)
+{
+    DB(cerr << "destructor called for thread " << id() << endl);
+}
+
+
+//
+// Start the thread
+//
+
+int omni_thread::start(void)
+{
+    int rc;
+
+    mutex.lock();
+
+    if (_state != STATE_NEW) {
+	mutex.unlock();
+	DB(cerr << "omni_thread::start: thread not in \"new\" state\n");
+	return EINVAL;
+    }
+
+#ifdef PthreadSupportThreadPriority
+
+#if (PthreadDraftVersion == 4)
+
+#define THREAD_ATTR (attr)
+
+    pthread_attr_t attr;
+    pthread_attr_create(&attr);
+    rc = ERRNO(pthread_attr_setprio(&attr, posix_priority(_priority)));
+
+#else
+
+#define THREAD_ATTR (&attr)
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    rc = ERRNO(pthread_attr_setprio(&attr, posix_priority(_priority)));
+
+#endif	/* PthreadDraftVersion */
+
+    if (rc != 0) {
+	mutex.unlock();
+	return rc;
+    }
+
+#else	/* PthreadSupportThreadPriority */
+
+#if (PthreadDraftVersion == 4)
+
+#define THREAD_ATTR pthread_attr_default
+
+#else
+
+#define THREAD_ATTR NULL
+
+#endif	/* PthreadDraftVersion */
+
+#endif	/* PthreadSupportThreadPriority */
+
+    rc = ERRNO(pthread_create(&posix_thread, THREAD_ATTR, wrapper,
+			      (void*)this));
+    if (rc != 0) {
+	mutex.unlock();
+	return rc;
+    }
+
+    _state = STATE_RUNNING;
+
+    if (detached) {
+
+	rc = ERRNO(pthread_detach(&posix_thread));
+
+	if (rc != 0) {
+	    mutex.unlock();
+	    return rc;
+	}
+    }
+
+    mutex.unlock();
+
+    return 0;
+}
+
+//
+// Start a thread which will run the member function run_undetached().
+//
+
+int omni_thread::start_undetached(void)
+{
+    if ((fn_void != NULL) || (fn_ret != NULL))
+	return EINVAL;
+
+    detached = 0;
+    return start();
+}
+
+
+//
+// join - simply check error conditions & call pthread_join.
+//
+
+int omni_thread::join(void** status)
+{
+    mutex.lock();
+
+    if ((_state != STATE_RUNNING) && (_state != STATE_TERMINATED)) {
+	mutex.unlock();
+	DB(cerr << "omni_thread::join: thread not in running or "
+	   << "terminated state\n");
+	return EINVAL;
+    }
+
+    mutex.unlock();
+
+    if (this == self()) {
+	DB(cerr << "omni_thread::join: can't join with self\n");
+	return EINVAL;
+    }
+
+    if (detached) {
+	DB(cerr << "omni_thread::join: can't join with detached thread\n");
+	return EINVAL;
+    }
+
+    DB(cerr << "omni_thread::join: doing pthread_join\n");
+
+    int rc = ERRNO(pthread_join(posix_thread, status));
+
+    if (rc != 0) return rc;
+
+    DB(cerr << "omni_thread::join: pthread_join succeeded\n");
+
+    delete this;
+
+    return 0;
+}
+
+
+//
+// Change this thread's priority.
+//
+
+int omni_thread::set_priority(priority_t pri)
+{
+    mutex.lock();
+
+    if (_state != STATE_RUNNING) {
+	mutex.unlock();
+	DB(cerr << "omni_thread::set_priority: thread not in running state\n");
+	return EINVAL;
+    }
+
+    _priority = pri;
+
+#ifdef PthreadSupportThreadPriority
+
+#if (PthreadDraftVersion == 4)
+
+    int rc = ERRNO(pthread_setprio(posix_thread, posix_priority(pri)));
+
+#else
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+
+    int rc = ERRNO(pthread_attr_setprio(&attr, posix_priority(pri)));
+
+    if (rc != 0) {
+	mutex.unlock();
+	return rc;
+    }
+
+    rc = ERRNO(pthread_setschedattr(posix_thread, attr));
+
+#endif
+
+    if (rc != 0) {
+	mutex.unlock();
+	return rc;
+    }
+
+#endif /* PthreadSupportThreadPriority */
+
+    mutex.unlock();
+
+    return 0;
+}
+
+
+//
+// create - construct a new thread object and start it running.  Returns thread
+// object if successful, null pointer if not.
+//
+
+// detached version
+
+omni_thread* omni_thread::create(void (*fn)(void*), void* arg, priority_t pri)
+{
+    omni_thread* t = new omni_thread(fn, arg, pri);
+
+    int rc = t->start();
+
+    if (rc != 0) {
+	cerr << "omni_thread::create: start error " << rc << endl;
+	delete t;
+	return (omni_thread*)NULL;
+    }
+
+    return t;
+}
+
+// undetached version
+
+omni_thread* omni_thread::create(void* (*fn)(void*), void* arg, priority_t pri)
+{
+    omni_thread* t = new omni_thread(fn, arg, pri);
+
+    int rc = t->start();
+
+    if (rc != 0) {
+	cerr << "omni_thread::create: start error " << rc << endl;
+	delete t;
+	return (omni_thread*)NULL;
+    }
+
+    return t;
+}
+
+// backwards-compatible version
+
+omni_thread* omni_thread::create(void* (*fn)(void*), int det, void* arg)
+{
+    omni_thread* t = new omni_thread(fn, arg, PRIORITY_NORMAL);
+
+    t->detached = det;
+
+    int rc = t->start();
+
+    if (rc != 0) {
+	cerr << "omni_thread::create: start error " << rc << endl;
+	delete t;
+	return (omni_thread*)NULL;
+    }
+
+    return t;
+}
+
+
+//
+// exit() _must_ lock the mutex even in the case of a detached thread.  This is
+// because a thread may run to completion before the thread that created it has
+// had a chance to get out of start().  By locking the mutex we ensure that the
+// creating thread must have reached the end of start() before we delete the
+// thread object.  Of course, once the call to start() returns, the user can
+// still incorrectly refer to the thread object, but that's their problem.
+//
+
+void omni_thread::exit(void* return_value)
+{
+    omni_thread* me = self();
+
+    me->mutex.lock();
+
+    if (me->_state != STATE_RUNNING)
+	cerr << "omni_thread::exit: thread not in \"running\" state\n";
+
+    me->_state = STATE_TERMINATED;
+
+    me->mutex.unlock();
+
+    DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
+       << me->detached << " return value " << return_value << endl);
+
+    if (me->detached)
+	delete me;
+
+    pthread_exit(return_value);
+}
+
+omni_thread* omni_thread::self(void)
+{
+    omni_thread* me;
+
+    int rc = ERRNO(pthread_getspecific(self_key, (void**)&me));
+
+    if (rc != 0) {
+	cerr << "omni_thread::self: pthread_getspecific error " << rc << endl;
+	return (omni_thread*)NULL;
+    }
+
+    return me;
+}
+
+void omni_thread::yield(void)
+{
+#if (PthreadDraftVersion == 4)
+  pthread_yield();
+#else
+  pthread_yield(NULL);
+#endif
+}
+
+int omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
+{
+    timespec rqts = { secs, nanosecs };
+#ifndef NoNanoSleep
+    if (nanosleep(&rqts, (timespec*)NULL) != 0)
+	return errno;
+#else
+#if defined(__osf1__) && defined(__alpha__)
+    if (pthread_delay_np(&rqts) != 0)
+	return errno;
+#else
+    cerr << "Fatal: omni_thread::sleep is not supported." << endl;
+    ::exit(1);
+#endif
+#endif
+    return 0;
+}
+
+int omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
+			  unsigned long rel_sec, unsigned long rel_nsec)
+{
+    int rc = 0;
+#if defined(__osf1__) && defined(__alpha__)
+    timespec abs, rel;
+    rel.tv_sec = rel_sec;
+    rel.tv_nsec = rel_nsec;
+    rc = ERRNO(pthread_get_expiration_np(&rel, &abs));
+#else
+    timespec abs;
+    clock_gettime(CLOCK_REALTIME, &abs);
+    abs.tv_nsec += rel_nsec;
+    abs.tv_sec += rel_sec + abs.tv_nsec / 1000000000;
+    abs.tv_nsec = abs.tv_nsec % 1000000000;
+#endif
+    *abs_sec = abs.tv_sec;
+    *abs_nsec = abs.tv_nsec;
+    return rc;
+}
+
+
+int omni_thread::posix_priority(priority_t pri)
+{
+    switch (pri) {
+
+    case PRIORITY_LOW:
+	return lowest_priority;
+
+    case PRIORITY_NORMAL:
+	return normal_priority;
+
+    case PRIORITY_HIGH:
+	return highest_priority;
+
+    default:
+	return -1;
+    }
+}
+
+
+//
+// The inclusion of cancel() here is a dirty hack to keep omniORB happy.
+// It should disappear in the near future.
+//
+
+int omni_thread::cancel(void)
+{
+    if (this == self()) {
+	DB(cerr << "omni_thread::cancel: can't cancel self\n");
+	return EINVAL;
+    }
+
+    DB(cerr << "omni_thread::cancel: doing pthread_cancel on " << id()
+       << "\n");
+
+    int rc = ERRNO(pthread_cancel(posix_thread));
+
+    if (rc != 0) {
+	DB(cerr << "omni_thread::cancel: pthread_cancel failed\n");
+	return rc;
+    }
+
+    return 0;
+}
