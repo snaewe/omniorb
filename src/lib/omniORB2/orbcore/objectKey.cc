@@ -30,9 +30,12 @@
  
 /*
   $Log$
-  Revision 1.6  1998/01/20 17:32:26  sll
-  Added support for OpenVMS.
+  Revision 1.7  1998/04/07 19:41:57  sll
+  Updated for when omniORB is a namespace.
 
+// Revision 1.6  1998/01/20  17:32:26  sll
+// Added support for OpenVMS.
+//
   Revision 1.5  1997/12/18 17:32:42  sll
   *** empty log message ***
 
@@ -62,7 +65,19 @@
 #include <sys/time.h>
 #endif
 
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the variable external linkage otherwise. Its a bug.
+namespace omniORB {
+  objectKey seed;
+}
+// operators are defined in the omniORB namespace
+#define OPERATOR_PREFIX omniORB::
+#else
+// operators are defined in the global namespace
 omniORB::objectKey       omniORB::seed;
+#define OPERATOR_PREFIX
+#endif
+
 static omni_mutex        internalLock;
 
 int
@@ -150,6 +165,7 @@ omniORB::nullkey()
 }
 
 int 
+OPERATOR_PREFIX 
 operator==(const omniORB::objectKey &k1,const omniORB::objectKey &k2)
 {
   return (k1.hi == k2.hi &&
@@ -158,6 +174,7 @@ operator==(const omniORB::objectKey &k1,const omniORB::objectKey &k2)
 }
 
 int 
+OPERATOR_PREFIX
 operator!=(const omniORB::objectKey &k1,const omniORB::objectKey &k2)
 {
   return (k1.hi != k2.hi ||
