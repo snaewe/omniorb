@@ -1,3 +1,13 @@
+Tue Jan 16 12:52:13 GMT 2001 dpg1
+=================================
+
+- omniNames and omniMapper now complain if they cannot open the
+  requested port, rather than dying with an uncaught exception.
+
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/omniNames.cc
+
+
 Tue Jan 16 11:49:14 GMT 2001 dpg1
 =================================
 
