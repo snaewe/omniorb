@@ -11,6 +11,9 @@
  
 /*
   $Log$
+  Revision 1.2  1997/03/10 11:53:06  sll
+  Minor changes to accomodate the creation of a public API for omniORB2.
+
   Revision 1.1  1997/01/08 17:26:01  sll
   Initial revision
 
@@ -20,7 +23,7 @@
 
 omniObject::omniObject()                     // ctor for local object
 {
-  omniObjectKey::generateNewKey(pd_objkey.native);
+  omniORB::generateNewKey(pd_objkey.native);
   pd_objkeysize = sizeof(pd_objkey.native);
   pd_repoId = 0;
   pd_rope = 0;
@@ -28,7 +31,7 @@ omniObject::omniObject()                     // ctor for local object
   pd_refCount = 0;
   pd_next = 0;
   pd_disposed = 0;
-  pd_iopprofile = omniORB::objectToIopProfiles(this);
+  pd_iopprofile = omni::objectToIopProfiles(this);
   return;
 }
 

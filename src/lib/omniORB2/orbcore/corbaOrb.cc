@@ -11,6 +11,9 @@
 
 /*
   $Log$
+  Revision 1.4  1997/03/10 11:54:28  sll
+  Minor changes to accomodate the creation of a public API for omniORB2.
+
   Revision 1.3  1997/01/23 16:38:33  sll
   Locals like boa_initialised are now static members of the omniORB class.
 
@@ -40,12 +43,12 @@ ORB::~ORB()
 CORBA::ORB_ptr
 CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
 {
-  omniORB::initLock.lock();
-  if (!omniORB::orb_initialised) {
-    omniORB::init(argc,argv,orb_identifier);
-    omniORB::orb_initialised = 1;
+  omni::initLock.lock();
+  if (!omni::orb_initialised) {
+    omni::init(argc,argv,orb_identifier);
+    omni::orb_initialised = 1;
   }
-  omniORB::initLock.unlock();
+  omni::initLock.unlock();
   return &CORBA::ORB::orb;
 }
 
@@ -53,30 +56,41 @@ CORBA::BOA_ptr
 CORBA::
 ORB::BOA_init(int &argc, char **argv, const char *boa_identifier)
 {
-  omniORB::initLock.lock();
-  if (!omniORB::boa_initialised) {
-    omniORB::boaInit(argc,argv,boa_identifier);
-    omniORB::boa_initialised = 1;
+  omni::initLock.lock();
+  if (!omni::boa_initialised) {
+    omni::boaInit(argc,argv,boa_identifier);
+    omni::boa_initialised = 1;
   }
-  omniORB::initLock.unlock();
+  omni::initLock.unlock();
   return &CORBA::BOA::boa;
 }
+
+CORBA::BOA_ptr
+CORBA::
+BOA::getBOA()
+{
+  if (!omni::boa_initialised) {
+    throw CORBA::OBJ_ADAPTER(0,CORBA::COMPLETED_NO);
+  }
+  return &CORBA::BOA::boa;
+}
+
 
 char *
 CORBA::
 ORB::object_to_string(CORBA::Object_ptr p)
 {
   if (CORBA::is_nil(p))
-    return omniORB::objectToString(0);
+    return omni::objectToString(0);
   else 
-    return omniORB::objectToString(p->PR_getobj());
+    return omni::objectToString(p->PR_getobj());
 }
 
 CORBA::Object_ptr
 CORBA::
 ORB::string_to_object(const char *m)
 {
-  omniObject *objptr = omniORB::stringToObject(m);
+  omniObject *objptr = omni::stringToObject(m);
   if (objptr)
     return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
   else
@@ -115,7 +129,7 @@ CORBA::is_nil(ORB_ptr p)
 CORBA::Object_ptr 
 CORBA::ORB::resolve_initial_references(const char* identifier)
 {
-  omniObject* objptr = omniORB::resolveInitRef(identifier);
+  omniObject* objptr = omni::resolveInitRef(identifier);
 
   if (objptr)
       return (CORBA::Object_ptr) (objptr->_widenFromTheMostDerivedIntf(0));
@@ -128,7 +142,7 @@ ORB::ObjectIdList* CORBA::ORB::list_initial_services()
 {
 char** servicelist;
 
-unsigned long listlen = omniORB::listInitServices(servicelist);
+unsigned long listlen = omni::listInitServices(servicelist);
 
 ObjectIdList* idlist;
 

@@ -11,6 +11,9 @@
  
 /*
   $Log$
+  Revision 1.2  1997/03/10 11:50:33  sll
+  Minor changes to accomodate the creation of a public API for omniORB2.
+
   Revision 1.1  1997/01/08 17:26:01  sll
   Initial revision
 
@@ -50,7 +53,7 @@ IIOP::profileToEncapStream(IIOP::ProfileBody &p,
   }
 
 
-  s[0] = omniORB::myByteOrder;
+  s[0] = omni::myByteOrder;
   s[1] = IIOP::current_major;
   s[2] = IIOP::current_minor;
   s[3] = 0;
@@ -86,7 +89,7 @@ IIOP::EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &s,
   if (s.length() <= end)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 
-  CORBA::Boolean byteswap = ((s[begin] == omniORB::myByteOrder) ? 0 : 1);
+  CORBA::Boolean byteswap = ((s[begin] == omni::myByteOrder) ? 0 : 1);
 
   // s[1] - iiop_version.major
   // s[2] - iiop_version.minor
@@ -183,7 +186,7 @@ IOP::iorToEncapStr(const CORBA::Char *type_id,
   MemBufferedStream buf;
 
   // create an encapsulation
-  omniORB::myByteOrder >>= buf;
+  omni::myByteOrder >>= buf;
   CORBA::ULong l = strlen((const char *)type_id) + 1;
   l >>= buf;
   buf.put_char_array(type_id,l);

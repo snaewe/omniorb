@@ -11,9 +11,12 @@
  
 /*
   $Log$
+  Revision 1.4  1997/03/10 11:56:44  sll
+  Minor changes to accomodate the creation of a public API for omniORB2.
+
   Revision 1.3  1997/01/24 19:30:22  sll
   In HandleRequest(), check whether CORBA::INV_OBJREF is thrown by
-  omniORB::locateObject() or by the upper level dispatch.
+  omni::locateObject() or by the upper level dispatch.
 
 // Revision 1.2  1997/01/13  14:55:47  sll
 // If the request message size in the header is too large, throw a COMM_FAILURE
@@ -106,11 +109,11 @@ GIOP_S::ReplyHeaderSize()
   msgsize += sizeof(CORBA::ULong); // XXX 0 length service context
   
   // ReplyHeader.request_id
-  // msgsize = omniORB::align_to(msgsize,omniORB::ALIGN_4);
+  // msgsize = omni::align_to(msgsize,omni::ALIGN_4);
   msgsize += sizeof(CORBA::ULong);
 
   // ReplyHeader.reply_status
-  // msgsize = omniORB::align_to(msgsize,omniORB::ALIGN_4);
+  // msgsize = omni::align_to(msgsize,omni::ALIGN_4);
   msgsize += sizeof(CORBA::ULong);
 
   return msgsize;
@@ -360,7 +363,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
       // This key did not come from this orb.
       // silently skip the key. Initialise pd_objkey to all zeros and
       // let the call to locateObject() below to raise the proper exception
-      pd_objkey.hi = pd_objkey.med = pd_objkey.lo = 0;
+      pd_objkey = omniORB::nullkey();
       skip(keysize);
     }
     else {
@@ -416,7 +419,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 
   omniObject *obj = 0;    
   try {
-    obj = omniORB::locateObject(pd_objkey);
+    obj = omni::locateObject(pd_objkey);
     if (!obj->dispatch(*this,(const char *)pd_operation,pd_response_expected)) 
       {
 	RequestReceived(1);
@@ -522,7 +525,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN,ex);
   }
   if (obj)
-    omniORB::objectRelease(obj);
+    omni::objectRelease(obj);
 
   return;
 }
@@ -617,9 +620,9 @@ MarshallSystemException(GIOP_S *s,
   CORBA::ULong msgsize = GIOP_S::ReplyHeaderSize();
   CORBA::ULong exsize = id.len + 
     GIOP_Basetypes::SysExceptRepoID::versionLen + 1;
-  msgsize =  omniORB::align_to(msgsize,omniORB::ALIGN_4);
+  msgsize =  omni::align_to(msgsize,omni::ALIGN_4);
   msgsize += sizeof(CORBA::ULong) + exsize;
-  msgsize =  omniORB::align_to(msgsize,omniORB::ALIGN_4);
+  msgsize =  omni::align_to(msgsize,omni::ALIGN_4);
   msgsize += sizeof(CORBA::ULong) + sizeof(CORBA::ULong);
   
   s->InitialiseReply(GIOP::SYSTEM_EXCEPTION,msgsize);
