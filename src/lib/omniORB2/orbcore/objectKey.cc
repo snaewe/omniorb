@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.8  1998/04/08 16:06:38  sll
+  Added support for Reliant UNIX 5.43
+
   Revision 1.7  1998/04/07 19:41:57  sll
   Updated for when omniORB is a namespace.
 
@@ -103,7 +106,11 @@ omniORB::generateNewKey(omniORB::objectKey& k)
       // On unices, add the process id to med.
       // Initialise lo to 0.
       struct timeval v;
+#ifndef __SINIX__
       gettimeofday(&v,0);
+#else
+      gettimeofday(&v);
+#endif
       omniORB::seed.hi = v.tv_sec;
       omniORB::seed.med = (v.tv_usec << 12);
 #if defined(UnixArchitecture) || defined(__VMS)

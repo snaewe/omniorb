@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.8  1998/04/08 16:06:49  sll
+  Added support for Reliant UNIX 5.43
+
   Revision 1.7  1998/04/07 19:39:40  sll
   Replace cerr with omniORB::log.
 
@@ -335,7 +338,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
     // GNU C library uses socklen_t * instead of int* in getsockname().
     // This is suppose to be compatible with the upcoming POSIX standard.
     socklen_t l;
-#elif defined(__aix__) || defined(__VMS)
+#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__)
     size_t l;
 # else
     int l;
@@ -876,7 +879,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       // GNU C library uses socklen_t * instead of int* in accept ().
       // This is suppose to be compatible with the upcoming POSIX standard.
       socklen_t l;
-#elif defined(__aix__) || defined(__VMS)
+#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__)
     size_t l;
 #else
     int l;
@@ -1015,7 +1018,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
     // GNU C library uses socklen_t * instead of int* in accept ().
     // This is suppose to be compatible with the upcoming POSIX standard.
     socklen_t l;
-#elif defined(__aix__) || defined(__VMS)
+#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__)
     size_t l;
 #else
     int l;
