@@ -50,6 +50,8 @@ extern "C" {
 }
 #endif
 
+#if !defined(__WIN32__)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,6 +59,8 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#endif // __WIN32__
 
 #endif
 # define unput(c) {yytchar= (c);if(yytchar=='\n')yylineno--;*yysptr++=yytchar;}
