@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.2  2000/04/26 18:22:30  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.3.2.1  2000/02/14 18:34:54  dpg1
 # New omniidl merged in.
 #
@@ -44,7 +48,7 @@
 """Produce bounded string #ifdefs for .hh"""
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, config, name
+from omniidl_be.cxx import tyutil, util, config, types
 from omniidl_be.cxx.header import template
 
 import tcstring
@@ -90,19 +94,19 @@ def visitStringType(type):
                n = str(type.bound()))    
 
 def visitAttribute(node):
-    attrType = node.attrType()
-    if tyutil.isString(attrType):
-        attrType.accept(self)
+    attrType = types.Type(node.attrType())
+    if attrType.string():
+        attrType.type().accept(self)
 
 def visitOperation(node):
-    returnType = node.returnType()
-    if tyutil.isString(returnType):
-        returnType.accept(self)
+    returnType = types.Type(node.returnType())
+    if returnType.string():
+        returnType.type().accept(self)
 
     for p in node.parameters():
-        paramType = p.paramType()
-        if tyutil.isString(paramType):
-            paramType.accept(self)
+        paramType = types.Type(p.paramType())
+        if paramType.string():
+            paramType.type().accept(self)
             
 def visitInterface(node):
     if not(node.mainFile()):

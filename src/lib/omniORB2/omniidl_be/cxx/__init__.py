@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.3  2000/04/26 18:22:12  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.18.2.2  2000/02/18 23:01:19  djs
 # Updated example implementation code generating module
 #
@@ -109,7 +113,8 @@ from omniidl_be.cxx import skel
 from omniidl_be.cxx import dynskel
 from omniidl_be.cxx import impl
 
-from omniidl_be.cxx import env
+from omniidl_be.cxx import id
+
 from omniidl_be.cxx import config
 
 import re, sys
@@ -193,7 +198,6 @@ def process_args(args):
 def run(tree, args):
     """Entrypoint to the C++ backend"""
 
-
     filename = tree.file()
     regex = re.compile(r"(.*/|)(.+)\.idl")
     match = regex.search(filename)
@@ -206,9 +210,9 @@ def run(tree, args):
     walker = config.WalkTreeForIncludes()
     tree.accept(walker)
 
-    # build the cache of environments
-    environments = env.WalkTree()
+    environments = id.WalkTree()
     tree.accept(environments)
+    
 
     # set the default behaviour
     config.setTypecodeFlag(0)

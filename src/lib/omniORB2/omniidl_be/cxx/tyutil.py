@@ -24,10 +24,14 @@
 #
 # Description:
 #   
-#   Type utility functions designed for the C++ backend
+#   General utility functions designed for the C++ backend
 
 # $Id$
 # $Log$
+# Revision 1.30.2.6  2000/04/26 18:22:14  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.30.2.5  2000/03/24 16:25:10  djs
 # Added in " "s around "<" and ">" in templates to make the output parse
 # correctly when they are nested.
@@ -151,582 +155,338 @@
 # General module renaming
 #
 
-"""Type utility functions specific to the C++ backend"""
+"""General utility functions specific to the C++ backend"""
 
-# Contents list: (out of date)
-#
-# deref : type -> type
-#   Returns the most dereferenced type (ie recurses along chains
-#   of typedefs)
-#
-# mapID : identifier -> identifier
-#   Returns a legal C++ identifier corresponding to an IDL identifier
-#   (escapes C++ keywords etc)
-#
-# principalID : type * scope -> string
-#   Maps basic types onto their C++ counterparts and maps all other
-#   types onto scope::identifier
-#
-# objRefTemplate : type * suffix * scope -> string
-#   Returns a template instance corresponding to a reference to the
-#   argument type
-#
-# sequenceTemplate : sequence type * scope -> string
-#   Returns a template instance corresponding to a sequence
-#   eg _CORBA_Bounded_sequence.....
-#
-# isVariableType : type -> bool
-# isVariableDecl : decl -> bool
-#   Returns true if the representation of the type will occupy a
-#   variable amount of storage (eg strings)
-#
-# typeDims : type -> int list
-#   Recovers the full dimensions of a type, by recursing through
-#   array typedef declarators
-#
-# guardName : scoped name -> string
-#   Returns a string useful as an #ifdef style guard. Escapes non-
-#   alphanumeric chars
-#
-# operationArgumentType : type * scope * boolean -> string
-#   Returns a list containing [return type, in type, out type, inout type]
-#   for a specific type. The boolean argument is true for the virtual
-#   functions of the _impl_<name> class
-#
-# isInteger   : type * boolean -> boolean
-# isChar      : type * boolean -> boolean
-# isFloating  : type * boolean -> boolean
-# isBoolean   : type * boolean -> boolean
-# isEnum      : type * boolean -> boolean
-# isOctet     : type * boolean -> boolean
-# isString    : type * boolean -> boolean
-# isObjRef    : type * boolean -> boolean
-# isSequence  : type * boolean -> boolean
-# isTypeCode  : type * boolean -> boolean
-# isTypedef   : type * boolean -> boolean
-# isStruct    : type * boolean -> boolean
-# isUnion     : type * boolean -> boolean
-#   Type of type :) functions. If boolean argument is true, will
-#   perform a full dereference first. Default is false.
-#
-# scope : scoped name -> scope
-#   Returns the scope part of the scoped name
-#
-# name : scoped name -> name
-#   Returns the name part of the scoped name
-#
 from omniidl import idlutil, idltype, idlast
 
-from omniidl_be.cxx import util, config
+from omniidl_be.cxx import util, config, id
 
 import string, re
 
 import tyutil
 self = tyutil
 
-def deref(type):
-    assert isinstance(type, idltype.Type)
-    while type.kind() == idltype.tk_alias:
-        type = type.decl().alias().aliasType()
-    return type
 
-# dereference type but keep dimensions (ie don't deref across
-# array declarators)
-def derefKeepDims(type):
-    assert isinstance(type, idltype.Type)
-
-    while tyutil.isTypedef(type):
-        decl = type.decl()
-        if decl.sizes() != []:
-            return type
-        type = decl.alias().aliasType()
-
-    return type
-
-# ------------------------------------------------------------------
-
-# List of C++ reserved words, minus IDL reserved words
+# ------------------------------------------------------ DEPRECATED FUNCTIONS
 #
-reservedWords = [
-    "and", "and_eq", "asm", "auto", 
-    "bool", "bitand", "bitor", "break", 
-    "catch",  "class", "compl", "const_cast", "continue",
-    "delete", "do", "dynamic_cast",
-    "else", "explicit", "export", "extern",
-    "false", "for", "friend", 
-    "goto", "if", "inline", "int", 
-    "mutable", 
-    "namespace", "new", "not", "not_eq",
-    "operator", "or", "or_eq",
-    "private", "protected", "public",
-    "register", "reinterpret_cast", "return",
-    "signed", "sizeof", "static", "static_cast",
-    "template", "this", "throw", "true", "try", "typeid", "typename",
-    "using", 
-    "virtual", "volatile", "wchar_t", "while",
-    "xor", "xor_eq" ]
+be_nice = 0
+
+def deprecated(fn):
+    if be_nice: return
+    
+    print "Function " + fn.__name__ + " is now deprecated"
+    print fn.__doc__
+
+
+def deref(type):
+    """tyutil.deref(idltype.Type): idltype.Type should be replaced by
+       calling the deref() method of a types.Type object
+       eg
+         # wrap type
+         new_type = types.Type(idltype_type_instance)
+         # new operation
+         deref_new_type = new_type.deref()
+         # unwrap type
+         deref_idltype_instance = deref_new_type.type()"""
+    assert isinstance(type, idltype.Type)
+    deprecated(deref)
+    
+    return types.Type(type).deref().type()
+
+def derefKeepDims(type):
+    """tyutil.derefKeepDims(idltype.Type): idltype.Type should be replaced
+       by calling the deref(keep_dims = 1) method of a types.Type object
+       (see tyutil.deref.__doc__)"""
+    assert isinstance(type, idltype.Type)
+    deprecated(derefKeepDims)
+    
+    return types.Type(type).deref(keep_dims = 1).type()
 
 def mapID(identifier):
-    for i in reservedWords:
-        if i == identifier:
-            return config.reservedPrefix() + identifier
-    return identifier
+    """tyutil.mapID(identifier string): identifier string should be replaced
+       by a call to id.mapID(identifier)"""
+    assert isinstance(identifier, string)
+    deprecated(mapID)
+    
+    return id.mapID(identifier)
 
 
-
-# It appears that the old compiler will map names in repository IDs
-# to avoid supposed clashes with C++ keywords, but this is totally
-# broken
-# eg mapRepoID("IDL:Module/If/Then") -> "IDL:Module/_cxx_If/_cxx_Then"
 def mapRepoID(id):
-    if not(config.EMULATE_BUGS()):
-        if config.DEBUG():
-            raise RuntimeError("Shouldn't be _breaking_ repository IDs if " +\
-                               "not emulating bugs in the old backend!")
-        else:
-            return id
-    # extract the naming part of the ID
-    regex = re.compile(r"(IDL:)*(.+):(.+)")
-    match = regex.match(id)
-    first_bit = match.group(1)
-    if not(first_bit):
-        first_bit = ""
-    the_name = match.group(2)
-    ver = match.group(3)
-    # extract the name 
-    elements = re.split(r"/", the_name)
-    mapped_elements = []
-    for element in elements:
-        mapped_elements.append(tyutil.mapID(element))
-    # put it all back together again
-    return first_bit + string.join(mapped_elements, "/") + ":" + ver
+    """tyutil.mapRepoID(repoID string) : repoID string has no useful purpose
+       anylonger- it served to emulate an old bug where omniidl{2,3} would
+       break repository IDs eg
+        IDL:Module/If/Then:1.0 -> IDL:Module/_cxx_If/_cxx_Then:1.0"""
+    deprecated(mapRepoID)
+    assert(0)
 
 
+def isVariableType(type, self):
+    """tyutil.isVariableType(idltype.Type) : boolean should be replaced by
+       a call to the .variable() method of a types.Type object"""
+    deprecated(isVariableType)
 
-# ------------------------------------------------------------------
-
-ttsMap = {
-    # From C++ Language Mapping - Mapping for Basic Data Types - June 1999
-    # 1-15
-    idltype.tk_short:      "CORBA::Short",
-    idltype.tk_long:       "CORBA::Long",
-    idltype.tk_longlong:   "CORBA::LongLong",
-    idltype.tk_ushort:     "CORBA::UShort",
-    idltype.tk_ulong:      "CORBA::ULong",
-    idltype.tk_ulonglong:  "CORBA::ULongLong",
-    idltype.tk_float:      "CORBA::Float",
-    idltype.tk_double:     "CORBA::Double",
-    idltype.tk_longdouble: "CORBA::LongDouble",
-    idltype.tk_char:       "CORBA::Char",
-    idltype.tk_wchar:      "CORBA::WChar",
-    idltype.tk_boolean:    "CORBA::Boolean",
-    idltype.tk_octet:      "CORBA::Octet",
-    #
-    idltype.tk_void:       "void",
-    idltype.tk_any:        "CORBA::Any",
-    #idltype.tk_TypeCode:   "CORBA::TypeCode"
-    
-    }
-
-
-# ------------------------------------------------------------------
-
-# An entry in this table indicates we already know is a type is
-# variable or not, without having to look at its declaration.
-already_Variable = {
-    idltype.tk_null:               0,
-    idltype.tk_void:               0,
-    idltype.tk_short:              0,
-    idltype.tk_long:               0,
-    idltype.tk_ushort:             0,
-    idltype.tk_ulong:              0,
-    idltype.tk_float:              0,
-    idltype.tk_double:             0,
-    idltype.tk_boolean:            0,
-    idltype.tk_char:               0,
-    idltype.tk_octet:              0,
-    idltype.tk_any:                1,
-    idltype.tk_objref:             1,
-    idltype.tk_string:             1,
-    idltype.tk_sequence:           1,
-    idltype.tk_except:             1,
-    idltype.tk_longlong:           0,
-    idltype.tk_ulonglong:          0,
-    idltype.tk_longdouble:         0,
-    idltype.tk_wchar:              0,
-    idltype.tk_wstring:            1,
-    idltype.tk_fixed:              0,          
-    idltype.tk_value:              1,      #?
-    idltype.tk_value_box:          1,      #?
-    idltype.tk_abstract_interface: 1,
-    }
-
-def isVariableType(type):
-    assert isinstance(type, idltype.Type)
-    
-    if isinstance(type, idltype.Base):
-        if type.kind() == idltype.tk_any or \
-           type.kind() == idltype.tk_TypeCode:
-            return 1
-        return 0
-    elif isinstance(type, idltype.Sequence) or \
-         isinstance(type, idltype.Fixed)    or \
-         isinstance(type, idltype.String):
-        return 1
-    elif (isinstance(type, idltype.Declared)):
-        return isVariableDecl(type.decl())
-    else:
-        if isinstance(type, idltype.WString):
-            util.fatalError("Wide-strings are not supported")
-        
-        util.fatalError("Type is unknown to the C++ backend: " + repr(type))
-        raise "unknown type: " + repr(type)
+    return types.Type(type).variable()
 
 def isVariableDecl(node):
-    assert isinstance(node, idlast.Decl)
+    """tyutil.isVariableDecl(idlast.Decl) : boolean should be replaced by
+       a call to types.variableDecl(idlast.Decl)"""
+    deprecated(isVariableDecl)
     
-    # interfaces are mapped to objects, which are always
-    # variable types. same goes for exceptions.
-    if isinstance(node, idlast.Interface)       or \
-       isinstance(node, idlast.Forward)         or \
-       isinstance(node, idlast.Exception):
-        return 1
-
-    elif isinstance(node, idlast.Const)            or \
-         isinstance(node, idlast.Enum):
-        return 0
-
-    # a typedef is only a type alias- as such it has no storage
-    # at all. However it eventually points to something that would.
-    elif isinstance(node, idlast.Typedef):
-        return isVariableType(node.aliasType())
-        
-        
-    # a structure is variable if any one of its constituents
-    # is also variable
-    elif isinstance(node, idlast.Struct):
-        for n in node.members():
-            if isVariableType(n.memberType()):
-                return 1
-        return 0
-    
-    # a union is variable if any one if its constituents
-    # is also variable
-    elif isinstance(node, idlast.Union):
-        for c in node.cases():
-            if isVariableType(c.caseType()):
-                return 1
-        return 0
-
-    # a declarator is variable if it is an alias to a variable
-    # type
-    elif isinstance(node, idlast.Declarator) and \
-         node.alias() != None:
-        return isVariableType(node.alias().aliasType())
-
-    else:
-        util.fatalError("Backend doesn't recognise node: " + repr(node))
-        raise "util.isVariable called with a " + repr(node) + \
-              ". Case match incomplete."
-
-# ------------------------------------------------------------------
+    return types.variableDecl(node)
 
 def typeDims(type):
-    assert isinstance(type, idltype.Type)
-    
-    if isinstance(type, idltype.Declared):
-        tyname = type.name()
-        if type.kind() == idltype.tk_alias:
-            tydecl = type.decl()
-            sizes = []
-            if tydecl.sizes() != None:
-                sizes = tydecl.sizes()
-            if tydecl.alias() != None:
-                sizes = sizes + typeDims(tydecl.alias().aliasType())
-            return sizes
+    """tyutil.typeDims(idltype.Type): int dims list should be replaced by
+       a call to the .dims() method of a types.Type object"""
+    deprecated(typeDims)
 
-        # no arrays at this level
-        if (hasattr(type.decl(), "aliasType")):
-            return typeDims(type.decl().aliasType())
-        else:
-            return []
-    return []
+    return types.Type(type).dims()
 
-# ------------------------------------------------------------------
 def escapeChars(text):
-    # escape all escapes
-    text = re.sub(r"_", "__", text)
-    return re.sub(r"\W", "_", text)
+    """tyutil.escapeChars(string): string has been removed"""
+    deprecated(escapeChars)
+    assert(0)
     
 def guardName(scopedName):
-    scopedName = map(escapeChars, scopedName)
+    """tyutil.guardName(scopedName string list): string guard name has
+       been replaced by the .guard() method of a id.Name object"""
+    deprecated(guardName)
 
-    # all but the identifier have _m appended (signifies a module?)
-    scope = map(lambda x: x + "_m", scopedName[0:-1])
-    guard = reduce(lambda x,y: x + y, scope, "") + scopedName[-1]
+    return id.Name(scopedName).guard()
+
+def principalID(environment, type, fully_qualify = 0):
+    """tyutil.principalID(environment, idltype.Type, fully_qualify boolean)
+       has been replaced by methods in a types.Type object eg:
+          types.Type.base(environment = None): a simple C++ type for this type
+          types.Type.member(environment = None): a member type
+       (This needs more engineering)"""
+    deprecated(principalID)
+
+    assert(0)
     
-    return guard
-
-# ------------------------------------------------------------------
-
 def memberType(environment, type, decl = None):
-    assert isinstance(type, idltype.Type)
-    type_dims = typeDims(type)
-    decl_dims = []
-    if decl != None:
-        assert isinstance(decl, idlast.Declarator)
-        decl_dims = decl.sizes()
+    """tyutil.memberType(environment, type, decl = None)
+       has been replaced by methods in a types.Type object. See
+       tyutil.principalID.__doc__ for details"""
+    deprecated(memberType)
 
-    is_array = type_dims != []
-    is_array_declarator = decl_dims != []
-
-    if is_array:
-        # for the type to have dimensions, it must be a typedef
-        return environment.principalID(type)
-
-    derefType = deref(type)
-    if isString(derefType):
-        return "CORBA::String_member"
-    if isObjRef(derefType):
-        return objRefTemplate(derefType, "Member", environment)
-    if isTypeCode(derefType):
-        return "CORBA::TypeCode_member"
-    if isSequence(type):
-        return sequenceTemplate(type, environment)
-
-    return environment.principalID(type)
-
-# ------------------------------------------------------------------
-
+    assert(0)
+    
 def objRefTemplate(type, suffix, environment):
-    name = type.decl().scopedName()
-    if name == ["CORBA", "Object"]:
-        return "CORBA::Object_member"
-    
-    rel_name = environment.relName(name)
-    objref_rel_name = self.scope(rel_name) +\
-                      ["_objref_" + self.name(rel_name)]
+    """tyutil.objRefTemplate(idltype.Type, suffix string, environment) has
+       been replaced by the .objRefTemplate(suffix, environment) method of a
+       types.Type object"""
+    deprecated(objRefTemplate)
 
-    rel_name_string = environment.nameToString(rel_name)
-    objref_rel_name_string = environment.nameToString(objref_rel_name)
-    
-    return "_CORBA_ObjRef_" + suffix + \
-           "< " + objref_rel_name_string + ", " + rel_name_string + "_Helper> "
-
-# ------------------------------------------------------------------
+    return types.Type(type).objRefTemplate(suffix, environment)
 
 def operationArgumentType(type, environment, virtualFn = 0):
-    param_type = environment.principalID(type)
-    isVariable = isVariableType(type)
-    type_dims = typeDims(type)
-    is_array = type_dims != []
+    """tyutil.operationArgumentType(idltype.Type, environment, boolean virtual)
+       has been replaced by the .op(direction, environment = None, use_out = 1)
+       method of the types.Type object. Note that the old function returned a
+       tuple of mappings (one entry per direction) the new function has an
+       extra direction argument.
+
+       Inconsistencies abound with the use of out types. This needs further
+       engineering"""
+    deprecated(operationArgumentType)
+
+    assert(0)
     
-    deref_type = deref(type)
-
-    if is_array and isVariable:
-        if config.OldFlag() and virtualFn:
-            return [ param_type + "_slice*",
-                     "const " + param_type,
-                     param_type + "_slice*&",
-                     param_type ]
-        else:
-            return [ param_type + "_slice*",
-                     "const " + param_type,
-                     param_type + "_out",
-                     param_type ]
-
-    if is_array and not(isVariable):
-
-            return [ param_type + "_slice*",
-                 "const " + param_type,
-                 param_type,
-                 param_type ]
-
-        
-    if virtualFn:
-        if isinstance(deref_type, idltype.String):
-            if config.OldFlag():
-                return [ "char *",
-                         "const char* ",
-                         "char*& ",
-                         "char*& " ]
-            else:
-                return [ "char *",
-                         "const char* ",
-                         "CORBA::String_out ",
-                         "char*& " ]
-        elif isObjRef(deref_type):
-            scopedName = deref_type.scopedName()
-            if scopedName == ["CORBA", "Object"]:
-                if config.OldFlag():
-                    return [ "CORBA::Object_ptr",
-                             "CORBA::Object_ptr",
-                             "CORBA::Object_ptr&",
-                             "CORBA::Object_ptr&" ]
-                else:
-                    return [ "CORBA::Object_ptr",
-                             "CORBA::Object_ptr",
-                             "CORBA::Object_OUT_arg",
-                             "CORBA::Object_ptr&" ]
-            param_type = environment.principalID(deref_type)
-            if config.OldFlag():
-                return [ param_type + "_ptr",
-                         param_type + "_ptr",
-                         param_type + "_ptr&",
-                         param_type + "_ptr&" ]
-            
-            scopedName = deref_type.decl().scopedName()
-            objref_scopedName = scope(scopedName) + \
-                                ["_objref_" + name(scopedName)]
-            objref_name = environment.nameToString(objref_scopedName)
-            return [ param_type + "_ptr",
-                     param_type + "_ptr",
-                     "_CORBA_ObjRef_OUT_arg< " + objref_name + "," + \
-                     param_type + "_Helper > ",
-                     param_type + "_ptr&" ]
-        elif deref_type.kind() == idltype.tk_TypeCode:
-            if config.OldFlag():
-                return [ "CORBA::TypeCode_ptr",
-                         "CORBA::TypeCode_ptr",
-                         "CORBA::TypeCode_ptr&",
-                         "CORBA::TypeCode_ptr&" ]
-            else:
-                return [ "CORBA::TypeCode_ptr",
-                         "CORBA::TypeCode_ptr",
-                         "CORBA::TypeCode_OUT_arg",
-                         "CORBA::TypeCode_ptr&" ]
-        else:
-            pass
-            # same as the other kind
-
-    # typedefs to Anys are a little strange
-    if isTypedef(type) and isAny(deref_type):
-        if config.OldFlag() and virtualFn:
-            return [ param_type + "*",
-                     "const " + param_type + "&",
-                     param_type + "*&",
-                     param_type + "&" ]
-        else:
-            return [ param_type + "*",
-                     "const " + param_type + "&",
-                     "CORBA::Any_OUT_arg",
-                     param_type + "&" ]
-            
-    if isinstance(deref_type, idltype.String):
-        return [ "char *",
-                 "const char* ",
-                 "CORBA::String_out ",
-                 "CORBA::String_INOUT_arg " ]
-    elif deref_type.kind() == idltype.tk_any:
-        if config.OldFlag() and virtualFn:
-            return [ "CORBA::Any*",
-                     "const CORBA::Any&",
-                     "CORBA::Any*&",
-                     "CORBA::Any&" ]
-        else:
-            return [ "CORBA::Any*",
-                     "const CORBA::Any&",
-                     "CORBA::Any_OUT_arg",
-                     "CORBA::Any&" ]
-    elif deref_type.kind() == idltype.tk_TypeCode:
-        return [ "CORBA::TypeCode_ptr",
-                 "CORBA::TypeCode_ptr",
-                 "CORBA::TypeCode_OUT_arg",
-                 "CORBA::TypeCode_INOUT_arg" ]
-    elif isinstance(deref_type, idltype.Base) or \
-         deref_type.kind() == idltype.tk_enum:
-        return [ param_type,
-                 param_type,
-                 param_type + "& ",
-                 param_type + "& " ]
-    elif deref_type.kind() == idltype.tk_objref:
-        if deref_type.scopedName() == ["CORBA", "Object"]:
-            return [ "CORBA::Object_ptr",
-                     "CORBA::Object_ptr",
-                     "CORBA::Object_OUT_arg",
-                     "CORBA::Object_INOUT_arg" ]
-        param_type = environment.principalID(deref_type)
-        scopedName = deref_type.decl().scopedName()
-        objref_scopedName = scope(scopedName) + ["_objref_" + name(scopedName)]
-        objref_name = environment.nameToString(objref_scopedName)
-        return [ param_type + "_ptr",
-                 param_type + "_ptr",
-                 "_CORBA_ObjRef_OUT_arg< " + objref_name + "," + \
-                 param_type + "_Helper > ",
-                 "_CORBA_ObjRef_INOUT_arg< " + objref_name + "," + \
-                 param_type + "_Helper > " ,
-                 param_type + "_Helper > " ]                 
-                 #param_type + "_ptr&" ]
-
-    out_base_type = param_type
-    if isVariable:
-        # Strangeness: if actually a typedef to a struct or union, the _out
-        # type is dereferenced, whilst the others aren't?
-        if isTypedef(type) and (isStruct(deref_type) or isUnion(deref_type)) and\
-           not(config.OldFlag() and virtualFn):
-            out_base_type = environment.principalID(deref_type)
-
-        if config.OldFlag() and virtualFn:
-            return [ param_type + "*",
-                     "const " + param_type + "& ",
-                     out_base_type + "*& ",
-                     param_type + "&"]
-        else:
-            return [ param_type + "*",
-                     "const " + param_type + "& ",
-                     out_base_type + "_out ",
-                     param_type + "& "]
-    else:
-        return [ param_type,
-                 "const " + param_type + "& ",
-                 out_base_type + "& ",
-                 param_type + "& " ]
-    
-# ------------------------------------------------------------------
-
-
-# Used to build the types for exception constructors
 def makeConstructorArgumentType(type, environment, decl = None):
-    # idl.type -> string
-    typeName = environment.principalID(type)
-    isVariable = tyutil.isVariableType(type)
-    derefType = tyutil.deref(type)
-    derefTypeName = environment.principalID(derefType)
-    dims = typeDims(type)
-    decl_dims = []
-    if decl != None:
-        decl_dims = decl.sizes()
-    full_dims = decl_dims + dims
-    
-    is_array = full_dims != []
-    is_array_declarator = decl_dims != []
+    """tyutil.makeConstructorArgumentType(idltype.Type, environment, decl)
+       has been removed. New code uses mapping functions of the types.Type
+       objects with inlined special cases. Further investigation/
+       simplification desirable"""
+    deprecated(makeConstructorArgumentType)
 
-    if is_array:
-        return "const " + typeName
+    assert(0)
 
-    if isTypeCode(derefType):
-        return "CORBA::TypeCode_ptr"
-    if isStruct(derefType) or isUnion(derefType) or isAny(derefType):
-        return "const " + typeName + "&"
-    if isinstance(derefType, idltype.Base) or isEnum(derefType):
-        return typeName
-    if isObjRef(derefType):
-        return derefTypeName + "_ptr"
-    if isSequence(type, 0):
-        return "const " + sequenceTemplate(derefType, environment)
-    elif isSequence(type, 1):
-        return "const " + typeName
-    else:
-        return operationArgumentType(type, environment)[1]
+def templateToString(template):
+    """tyutil.templateToString(template hash)
+       was an internal function and has been hidden inside the types.Type
+       object"""
+    deprecated(templateToString)
+
+    assert(0)
+
+def sequenceTemplate(sequence, environment):
+    """tyutil.sequenceTemplate(sequence idltype.Type, environment)
+       has been replaced with the .sequenceTemplate(environment) method of
+       the types.Type object"""
+    deprecated(sequenceTemplate)
+
+    return types.Type(sequence).sequenceTemplate(environment)
+
+def valueString(type, value, environment):
+    """tyutil.valueString(idltype.Type, value, environment)
+       has been replaced with the .literal(value, environment) method of
+       the types.Type object"""
+    deprecated(valueString)
+
+    return types.Type(type).literal(value, environment)
+
+def const_init_in_def(type):
+    """tyutil.const_init_in_def(idltype.Type): boolean
+       has been replaced with the .representable_by_int() method of the
+       types.Type object"""
+    deprecated(const_init_in_def)
+
+    return types.Type(type).representable_by_int()
+
+def isInteger(type, force_deref = 0):
+    """tyutil.isInteger(idltype.Type): boolean
+       has been replaced with the .integer() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isInteger)
+    assert(not(force_deref))
+
+    return types.Type(type).integer()
+
+def isChar(type, force_deref = 0):
+    """tyutil.isChar(idltype.Type): boolean
+       has been replaced with the .char() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isChar)
+    assert(not(force_deref))
+
+    return types.Type(type).char()
 
 
+def isFloating(type, force_deref = 0):
+    """tyutil.isFloating(idltype.Type): boolean
+       has been replaced with the following types.Type methods:
+          types.Type.float(): boolean
+          types.Type.double(): boolean
+       (the force_deref parameter has been removed)"""
+    deprecated(isFloating)
+    assert(not(force_deref))
+    t = types.Type(type)
+    return t.float() or t.double()
+
+def isBoolean(type, force_deref = 0):
+    """tyutil.isBoolean(idltype.Type): boolean
+       has been replaced with the .boolean() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isBoolean)
+    assert(not(force_deref))
+
+    return types.Type(type).boolean()
 
 
+def isEnum(type, force_deref = 0):
+    """tyutil.isEnum(idltype.Type): boolean
+       has been replaced with the .enum() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isEnum)
+    assert(not(force_deref))
 
-# ------------------------------------------------------------------
+    return types.Type(type).enum()
 
-# This needs to be redesigned. It's too much like the old backend.
 
+def isOctet(type, force_deref = 0):
+    """tyutil.isOctet(idltype.Type): boolean
+       has been replaced with the .octet() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isOctet)
+    assert(not(force_deref))
+
+    return types.Type(type).octet()
+
+
+def isString(type, force_deref = 0):
+    """tyutil.isString(idltype.Type): boolean
+       has been replaced with the .string() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isString)
+    assert(not(force_deref))
+
+    return types.Type(type).string()
+
+
+def isObjRef(type, force_deref = 0):
+    """tyutil.isObjRef(idltype.Type): boolean
+       has been replaced with the .objref() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isObjRef)
+    assert(not(force_deref))
+
+    return types.Type(type).objref()
+
+
+def isSequence(type, force_deref = 0):
+    """tyutil.isSequence(idltype.Type): boolean
+       has been replaced with the .sequence() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isSequence)
+    assert(not(force_deref))
+
+    return types.Type(type).sequence()
+
+
+def isTypeCode(type, force_deref = 0):
+    """tyutil.isTypeCode(idltype.Type): boolean
+       has been replaced with the .typecode() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isTypeCode)
+    assert(not(force_deref))
+
+    return types.Type(type).typecode()
+
+
+def isTypedef(type, force_deref = 0):
+    """tyutil.isTypedef(idltype.Type): boolean
+       has been replaced with the .typedef() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isTypedef)
+    assert(not(force_deref))
+
+    return types.Type(type).typedef()
+
+
+def isStruct(type, force_deref = 0):
+    """tyutil.isStruct(idltype.Type): boolean
+       has been replaced with the .struct() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isStruct)
+    assert(not(force_deref))
+
+    return types.Type(type).struct()
+
+
+def isUnion(type, force_deref = 0):
+    """tyutil.isUnion(idltype.Type): boolean
+       has been replaced with the .union() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isUnion)
+    assert(not(force_deref))
+
+    return types.Type(type).union()
+
+
+def isVoid(type, force_deref = 0):
+    """tyutil.isVoid(idltype.Type): boolean
+       has been replaced with the .void() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isVoid)
+    assert(not(force_deref))
+
+    return types.Type(type).void()
+
+
+def isAny(type, force_deref = 0):
+    """tyutil.isAny(idltype.Type): boolean
+       has been replaced with the .any() method of the types.Type object
+       (the force_deref parameter has been removed)"""
+    deprecated(isAny)
+    assert(not(force_deref))
+
+    return types.Type(type).any()
+
+
+# -----------------------------------------------END OF DEPRECATED FUNCTIONS
+
+
+# Info on size and alignment of basic types
 typeSizeAlignMap = {
     idltype.tk_char:    (1, 1),
     idltype.tk_boolean: (1, 1),
@@ -741,234 +501,12 @@ typeSizeAlignMap = {
     idltype.tk_octet:   (1, 1)
     }
 
-# converts a hash of template properties into a template instance
-def templateToString(template):
-    # ------------------------------------
-    # work out the template name
-    if template["bounded"]:
-        name = "_CORBA_Bounded_Sequence"
-    else:
-        name = "_CORBA_Unbounded_Sequence"
-
-    if template["array"]:
-        name = name + "_Array"
-        
-    if template.has_key("suffix"):
-        name = name + template["suffix"]
-
-    elif template.has_key("objref") and not(template["array"]):
-        name = name + "_ObjRef"
-
-    if template.has_key("fixed"):
-        name = name + "_w_FixSizeElement"
-
-    # ------------------------------------
-    # build the argument list
-    args = []
-
-    seqTypeID      = template["seqTypeID"]
-    derefSeqTypeID = template["derefSeqTypeID"]
-    dimension      = template["dimension"]
-
-    # Note the difference between an ObjRef and an array of ObjRefs
-    if template["array"]:
-        args = args + [seqTypeID, seqTypeID + "_slice"]
-        
-        if template.has_key("objref"):
-            args = args + [template["objref_template"]]
-
-        elif not(template.has_key("suffix")):
-            # __Boolean __Octet __String
-            # these already contain the type info- no need for another
-            # parameter...
-            args = args + [derefSeqTypeID]
-            
-        args = args + [str(dimension)]
-        
-    elif template.has_key("objref"):
-        args = args + [template["objref_name"],
-                       template["objref_template"],
-                       template["objref_helper"]]
-    elif not(template.has_key("suffix")):
-        # see above
-        args = args + [seqTypeID]
-        
-
-
-    if template.has_key("bounded") and \
-       template["bounded"]:
-        args = args + [str(template["bounded"])]
-
-    if template.has_key("fixed"):
-        (element_size, alignment) = template["fixed"]
-        args = args + [str(element_size), str(alignment)]
-
-    # -----------------------------------
-    # build the template instance
-    args_string = string.join(args, ", ")
-#    print "[[[ args = " + repr(args_string) + "]]]"
-    if (args_string != ""):
-        name = name + "< " + args_string + "> "
-        return name
-
-    return name
-
-def sequenceTemplate(sequence, environment):
-    # returns a template instantiation suitable for the
-    # sequence type
-    # (similar in function to o2be_sequence::seq_template_name)
-    assert isinstance(sequence, idltype.Sequence)
-
-    seqType = sequence.seqType()
-    derefSeqType = deref(seqType)
-    seqTypeID = environment.principalID(seqType)
-    derefSeqTypeID = environment.principalID(derefSeqType)
-    if tyutil.isTypeCode(derefSeqType):
-        derefSeqTypeID = "CORBA::TypeCode_member"
-        seqTypeID = "CORBA::TypeCode_member"
-
-
-    seq_dims = typeDims(seqType)
-    is_array = seq_dims != []
-    dimension = reduce(lambda x,y: x * y, seq_dims, 1)
-
-    template = {}
-    template["bounded"]   = sequence.bound()
-    template["array"]     = is_array
-    template["dimension"] = dimension
-
-    template["seqTypeID"] = seqTypeID
-    template["derefSeqTypeID"] = derefSeqTypeID
-
-    # if the seqType is a typedef to a sequence, use the typedef name
-    # else if a direct sequence<sequence<...., do recursion
-    if isSequence(derefSeqType) and not(isTypedef(seqType)):
-        element_template = sequenceTemplate(derefSeqType, environment)
-        template["seqTypeID"] = element_template
-        template["derefSeqTypeID"] = element_template
-
-    if is_array:
-        if isSequence(derefSeqType):
-            template["derefSeqTypeID"] = sequenceTemplate(derefSeqType,
-                                                          environment)
-            
-    
-    if isBoolean(derefSeqType):
-        template["suffix"] = "__Boolean"
-    # strings are always special
-    elif isString(derefSeqType) and not(is_array):
-        template["suffix"] = "__String"
-    elif isOctet(derefSeqType):
-        template["suffix"] = "__Octet"
-                    
-    elif typeSizeAlignMap.has_key(derefSeqType.kind()):
-        template["fixed"] = typeSizeAlignMap[derefSeqType.kind()]
-        
-    elif isObjRef(derefSeqType):
-       scopedName = derefSeqType.decl().scopedName()
-       is_CORBA_Object = scopedName == ["CORBA", "Object"]
-
-       if not(is_CORBA_Object):
-           # CORBA::Object doesn't have an _objref_xxx
-           scopedName = self.scope(scopedName) + \
-                        ["_objref_" + self.name(scopedName)]
-           
-       rel_name = environment.relName(scopedName)
-       objref_name = environment.nameToString(rel_name)
-
-       objref_template = objRefTemplate(derefSeqType, "Member", environment)
-       template["objref_name"]     = objref_name
-       template["objref_template"] = objref_template
-       template["objref_helper"]   = seqTypeID + "_Helper"
-       template["objref"]          = 1
-
-       
-
-    return templateToString(template)
-
-    
-# ------------------------------------------------------------------
-
-digits = map(chr, range(ord('0'), ord('9') + 1))
-lower_case_letters = map(chr, range(ord('a'), ord('z') + 1))
-upper_case_letters = map(chr, range(ord('A'), ord('Z') + 1))
-symbols = list("""`!""£$%^&*()-_+=[{]};:'@#~,<.>/? |""")
-need_escaping = ['\\', '\'']
-
-# (extra quote is to un-confuse emacs)
-
-printable = digits + lower_case_letters + upper_case_letters + symbols +\
-            need_escaping
-
-def valueString(type, value, environment):
-
-    def representChar(c):
-        if not(c in printable):
-            # use the octal representation
-            octal_string = str(oct(ord(c)))
-            return "\\" + "0" * (4 - len(octal_string)) + octal_string
-            
-        if c in need_escaping:
-            return "\\" + str(c) 
-        
-        return str(c)
-    
-    type = deref(type)
-    # (unsigned) short ints are themselves
-    if type.kind() == idltype.tk_short     or \
-       type.kind() == idltype.tk_ushort:
-        return str(value)
-    # careful with long ints to avoid "L" postfix
-    if type.kind() == idltype.tk_long      or \
-       type.kind() == idltype.tk_longlong  or \
-       type.kind() == idltype.tk_ulong     or \
-       type.kind() == idltype.tk_ulonglong:
-        s = str(value)
-        if s[-1] == 'L':
-            return s[0:-1]
-        return s
-    if type.kind() == idltype.tk_float     or \
-       type.kind() == idltype.tk_double:
-        return str(value)
-    # chars are single-quoted
-    if type.kind() == idltype.tk_char      or \
-       type.kind() == idltype.tk_wchar:
-        if not(value in printable):
-            # use the octal representation
-            octal_string = str(oct(ord(value)))
-            return "0" * (4 - len(octal_string)) + octal_string
-            #return "'\\" + "0" * (3 - len(octal_string)) + octal_string + "'" 
-            #return r"'\00" + str(ord(value)) + r"'"
-        if value in need_escaping:
-            return "'\\" + str(value) + "'"
-        
-        return "'" + str(value) + "'"
-    # booleans are straightforward
-    if type.kind() == idltype.tk_boolean:
-        return str(value)
-    if type.kind() == idltype.tk_enum:
-        value = name(value.scopedName())
-        target_scope = scope(type.decl().scopedName())
-        target_name = target_scope + [str(value)]
-        rel_name = environment.relName(target_name)
-        rel_name_string = environment.nameToString(rel_name)
-        return rel_name_string
-    if type.kind() == idltype.tk_string:
-        chars = list(value)
-        chars = map(representChar, chars)
-        return "\"" + string.join(chars, "") + "\""
-    if type.kind() == idltype.tk_octet:
-        return str(value)
-
-    util.fatalError("Internal error when handling value (" + repr(value) +")" )
-    raise "Cannot convert a value (" + repr(value) + ") of type: " +\
-          repr(type) + "(kind == " + repr(type.kind()) + ") into a string."
-        
-        
-# ------------------------------------------------------------------
-
 
 def dimsToString(dims, prefix = ""):
+    """tyutil.dimsToString: dims string list * optional prefix -> dims string
+       Function takes a list of int dimensions (eg [1,2,3]) and a possible
+       prefix string and returns a string [prefix + 1][prefix + 2][prefix + 3]
+       """
     new_dims = []
     for x in dims:
         new_dims.append("[" + prefix + repr(x) + "]")
@@ -976,17 +514,19 @@ def dimsToString(dims, prefix = ""):
     return reduce(append, new_dims, "")
 
 
-# ------------------------------------------------------------------
-
 def sizeCalculation(environment, type, decl, sizevar, argname):
-    #o2be_operation::produceSizeCalculation
+    """tyutil.sizeCalculation: environment * idltype.Type * idlast Declarator
+                        * sizevar string * argname string -> calc string
+       Returns block of code which will work out the size of an argument
+       type (for marshalling purposes)"""
+    # o2be_operation::produceSizeCalculation
     assert isinstance(type, idltype.Type)
     assert isinstance(decl, idlast.Declarator)
 
-    deref_type = deref(type)
+    d_type = type.deref()
 
     dims = decl.sizes()
-    type_dims = typeDims(type)
+    type_dims = type.dims()
     full_dims = dims + type_dims
 
     anonymous_array = dims      != []
@@ -995,13 +535,13 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
 
     num_elements = reduce(lambda x,y:x*y, full_dims, 1)
 
-    isVariable = isVariableType(type)
+    isVariable = type.variable()
 
     string = util.StringStream()
 
     if not(is_array):
-        if typeSizeAlignMap.has_key(type.kind()):
-            size = typeSizeAlignMap[type.kind()][0]
+        if typeSizeAlignMap.has_key(type.type().kind()):
+            size = typeSizeAlignMap[type.type().kind()][0]
             
             if size == 1:
                 string.out("""\
@@ -1022,8 +562,8 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
 
     # thing is an array
     if not(isVariable):
-        if typeSizeAlignMap.has_key(type.kind()):
-            size = typeSizeAlignMap[type.kind()][0]
+        if typeSizeAlignMap.has_key(type.type().kind()):
+            size = typeSizeAlignMap[type.type().kind()][0]
 
             if size == 1:
                 string.out("""\
@@ -1055,7 +595,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
     # thing is an array of variable sized elements
     indexing_string = begin_loop(string, full_dims)
 
-    if isString(deref_type):
+    if d_type.string():
         string.out("""\
 @sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_4);
 @sizevar@ += 4 + (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);""",
@@ -1063,8 +603,9 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
                    indexing_string = indexing_string)
         
 
-    elif isObjRef(deref_type):
-        name = environment.principalID(deref_type)
+    elif d_type.objref():
+        #name = environment.principalID(deref_type)
+        name = d_type.base(environment)
         string.out("""\
 @sizevar@ = @name@_Helper::NP_alignedSize(@argname@@indexing_string@._ptr,@sizevar@);""",
                    sizevar = sizevar, name = name, argname = argname,
@@ -1082,10 +623,10 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
 
     return str(string)
     
-# ------------------------------------------------------------------
-
 
 def allCases(node):
+    """tyutil.allCases(idlast.Decl): idlast.UnionCaseLabel list
+       Returns a list of all the non-default union case labels"""
     assert isinstance(node, idlast.Union)
     list = []
     for n in node.cases():
@@ -1094,9 +635,11 @@ def allCases(node):
                 list.append(l)
     return list
 
-# marks each case node with isDefault : boolean and returns the
-# default case or None if none found
+
 def getDefaultCaseAndMark(node):
+    """tyutil.getDefaultCaseAndMark(idlast.Union): option idlast.UnionCase
+       Returns the default case of a union (if it exists) and sets the
+       isDefault attribute on the default case"""
     assert isinstance(node, idlast.Union)
     default = None
     for c in node.cases():
@@ -1107,32 +650,35 @@ def getDefaultCaseAndMark(node):
                 c.isDefault = 1
     return default
 
+
 def getDefaultLabel(case):
+    """tyutil.getDefaultLabel(idlast.UnionCase): boolean
+       Returns true if the union case has the default label"""
     assert isinstance(case, idlast.UnionCase)
     for l in case.labels():
         if l.default():
             return l
     assert 0
-    # default case must have a default label!
 
-# ------------------------------------------------------------------
 
-# determines whether a set of cases represents an Exhaustive Match
 def exhaustiveMatch(switchType, allCaseValues):
-    # return all the used case values
+    """tyutil.exhaustiveMatch(types.Type, case value list): boolean
+       Returns whether the supplied list of case label values
+       represents an exhaustive match for this switch type. IE is it
+       not possible to have a value:switchType for which there is no
+       corresponding union case"""
     
     # dereference the switch_type (ie if CASE <scoped_name>)
-    switchType = tyutil.deref(switchType)
+    switchType = switchType.deref()
             
-    # same as discrimValueToString
     # CASE <integer_type>
-    if tyutil.isInteger(switchType):
+    if switchType.integer():
         # Assume that we can't possibly do an exhaustive match
         # on the integers, since they're (mostly) very big.
         # maybe should rethink this for the short ints...
         return 0
     # CASE <char_type>
-    elif tyutil.isChar(switchType):
+    elif switchType.char():
         # make a set with all the characters inside
         s = []
         for char in range(0,256):
@@ -1144,14 +690,14 @@ def exhaustiveMatch(switchType, allCaseValues):
         # if the difference is empty, match is exhaustive
         return (len(difference) == 0)
     # CASE <boolean_type>
-    elif tyutil.isBoolean(switchType):
+    elif switchType.boolean():
         s = [0, 1]
         used = map(lambda x: x.value(), allCaseValues)
         difference = util.minus(s, used)
         return (len(difference) == 0)
     # CASE <enum_type>
-    elif tyutil.isEnum(switchType):
-        s = switchType.decl().enumerators()
+    elif switchType.enum():
+        s = switchType.type().decl().enumerators()
         used = map(lambda x: x.value(), allCaseValues)
         difference = util.minus(s, used)
         return (len(difference) == 0)
@@ -1161,20 +707,11 @@ def exhaustiveMatch(switchType, allCaseValues):
               " val="+repr(discrimvalue)
 
 
-# ------------------------------------------------------------------
-
-# returns whether a constant is initialised in the header file definition
-# or in the skeleton code. Equivalent to "is the value representable by
-# an integer?"
-def const_init_in_def(type):
-    assert isinstance(type, idltype.Type)
-    return isInteger(type) or isChar(type) or isBoolean(type) or \
-           isOctet(type)
-
-
-# ------------------------------------------------------------------
-
 def const_qualifier(insideModule, insideClass):
+    """tyutil.const_qualifier(insideModule boolean, insideClass boolean
+       : string
+       Returns the prefix required for the const declaration (depends on
+       scoping)"""
     if not(insideModule) and not(insideClass):
         return "_CORBA_GLOBAL_VAR"
     elif insideClass:
@@ -1182,9 +719,12 @@ def const_qualifier(insideModule, insideClass):
     else:
         return "_CORBA_MODULE_VAR"
 
-# ------------------------------------------------------------------
 
 def allInherits(interface):
+    """tyutil.allInherits(idlast.Interface) -> idlast.Interface list
+       Performs a breadth first search of an interface's inheritance
+       heirarchy. Returns the _set_ (ie no duplicates) of ancestor
+       interfaces"""
     assert isinstance(interface, idlast.Interface)
     # breadth first search
     def bfs(current, bfs):
@@ -1204,96 +744,3 @@ def allInherits(interface):
 
     return util.setify(list)
 
-# ------------------------------------------------------------------
-
-
-def isInteger(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_short     or \
-           type.kind() == idltype.tk_long      or \
-           type.kind() == idltype.tk_longlong  or \
-           type.kind() == idltype.tk_ushort    or \
-           type.kind() == idltype.tk_ulong     or \
-           type.kind() == idltype.tk_ulonglong
-
-def isChar(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_char     or \
-           type.kind() == idltype.tk_wchar
-
-def isFloating(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_float    or \
-           type.kind() == idltype.tk_double
-
-def isBoolean(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_boolean
-
-def isEnum(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_enum
-
-def isOctet(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_octet
-
-def isString(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return isinstance(type, idltype.String)
-
-def isObjRef(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return isinstance(type, idltype.Declared) and \
-           type.kind() == idltype.tk_objref
-
-def isSequence(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return isinstance(type, idltype.Sequence)
-
-def isTypeCode(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_TypeCode
-
-# Ignore the force_deref argument
-def isTypedef(type, force_deref = 0):
-    return type.kind() == idltype.tk_alias
-
-def isStruct(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_struct
-
-def isUnion(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_union
-
-def isVoid(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_void
-
-def isAny(type, force_deref = 0):
-    if force_deref:
-        type = deref(type)
-    return type.kind() == idltype.tk_any
-
-
-# ------------------------------------------------------------------
-
-def scope(scopedName):
-    return scopedName[0:-1]
-
-def name(scopedName):
-    return scopedName[-1]

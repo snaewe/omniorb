@@ -29,6 +29,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.4.2.2  2000/04/26 18:22:30  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.4.2.1  2000/02/14 18:34:55  dpg1
 # New omniidl merged in.
 #
@@ -54,7 +58,7 @@
   for the C++ backend"""
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, config, name
+from omniidl_be.cxx import tyutil, util, config, id
 from omniidl_be.cxx.header import template
 
 import marshal
@@ -99,10 +103,12 @@ def visitInterface(node):
     for d in node.declarations():
         d.accept(self)
 
-    cxxname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
-    idLen = len(tyutil.mapRepoID(node.repoId())) + 1
+    name = id.Name(node.scopedName())
+    cxx_name = name.fullyQualify()
+    idLen = len(node.repoId()) + 1
+
     stream.out(template.interface_marshal_forward,
-               name = cxxname, idLen = str(idLen))        
+               name = cxx_name, idLen = str(idLen))        
 
 def visitTypedef(node):
     pass

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.4  2000/04/26 18:22:37  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.1.2.3  2000/03/09 15:21:53  djs
 # Better handling of internal compiler exceptions (eg attempts to use
 # wide string types)
@@ -44,7 +48,7 @@
 import string
 
 from omniidl import idlast, idltype, idlutil, idlvisitor
-from omniidl_be.cxx import tyutil, util, name, env, config
+from omniidl_be.cxx import tyutil, util, config, id, types
 from omniidl_be.cxx.impl import template
 
 import main
@@ -69,16 +73,16 @@ def run(tree):
     reference = util.StringStream()
     refcount = util.StringStream()
     for i in bii.allInterfaces():
-        fqname = string.join(i.scopedName(), "::")
-        cxx_name = tyutil.mapID(i.identifier())
-        impl_name = cxx_name + "_i"
+        name = id.Name(i.scopedName())
+        
+        impl_name = name.simple() + "_i"
         inst_name = "my" + impl_name
         allocate.out("@impl_name@* @inst_name@ = new @impl_name@();",
                      impl_name = impl_name, inst_name = inst_name)
         activate.out("PortableServer::ObjectId_var @inst_name@id = poa->activate_object(@inst_name@);",inst_name = inst_name)
         refcount.out("@inst_name@->_remove_ref();", inst_name = inst_name)
         reference.out(template.interface_ior,
-                      fqname = fqname,
+                      fqname = name.fullyQualify(cxx = 0),
                       inst_name = inst_name)
 
     # output the main code
@@ -99,7 +103,6 @@ class BuildInterfaceImplementations(idlvisitor.AstVisitor):
 
     def __init__(self, stream):
         self.stream = stream
-        self.__globalScope = name.globalScope()
         self.__nested = 0
         # keep track of all interfaces for later use
         self.__allInterfaces = []
@@ -134,17 +137,18 @@ class BuildInterfaceImplementations(idlvisitor.AstVisitor):
         self.__allInterfaces.append(node)
     
         name = node.identifier()
-        cxx_name = tyutil.mapID(name)
+        cxx_name = id.mapID(name)
 
-        scopedName = node.scopedName()
-        cxx_scopedName = map(tyutil.mapID, scopedName)
+        scopedName = id.Name(node.scopedName())
+        #cxx_scopedName = map(tyutil.mapID, scopedName)
         
-        outer_environment = env.lookup(node)
-        environment = outer_environment.enterScope(name)
+        outer_environment = id.lookup(node)
+        environment = outer_environment.enter(name)
         scope = environment.scope()
 
-        cxx_fqname = self.__globalScope.nameToString(scopedName)
-        fqname = string.join(scopedName, "::")
+        cxx_fqname = scopedName.fullyQualify()
+
+        fqname = scopedName.fullyQualify(cxx = 0)
 
         
         # build methods corresponding to attributes, operations etc
@@ -163,16 +167,18 @@ class BuildInterfaceImplementations(idlvisitor.AstVisitor):
                                   util.append )
         for c in allCallables:
             if isinstance(c, idlast.Attribute):
-                attrType = c.attrType()
-                derefAttrType = tyutil.deref(attrType)
+                attrType = types.Type(c.attrType())
+                d_attrType = attrType.deref()
 
-                argtypes = tyutil.operationArgumentType\
-                           (attrType, outer_environment)
-                returnType = argtypes[0]
-                inType = argtypes[1]
+                #argtypes = tyutil.operationArgumentType\
+                #           (attrType, outer_environment)
+                #returnType = argtypes[0]
+                #inType = argtypes[1]
             
                 for i in c.identifiers():
-                    attribname = tyutil.mapID(i)
+                    attribname = id.mapID(i)
+                    returnType = attrType.op(types.RET, outer_environment)
+                    inType = attrType.op(types.IN, outer_environment)
                     attributes.append(returnType + " " + attribname + "()")
                     if not(c.readonly()):
                         attributes.append("void " + cxx_fqname + "_i::" +\
@@ -180,23 +186,27 @@ class BuildInterfaceImplementations(idlvisitor.AstVisitor):
             elif isinstance(c, idlast.Operation):
                 params = []
                 for p in c.parameters():
-                    paramType = p.paramType()
-                    virtual_types = tyutil.operationArgumentType\
-                                    (paramType, outer_environment, virtualFn = 1)
-                    type = virtual_types[p.direction() + 1]
+                    paramType = types.Type(p.paramType())
+                    cxx_type = paramType.op(types.direction(p),
+                                            outer_environment)
+                    #virtual_types = tyutil.operationArgumentType\
+                    #                (paramType, outer_environment, virtualFn = 1)
+                    #type = virtual_types[p.direction() + 1]
                     
-                    argname = tyutil.mapID(p.identifier())
-                    params.append(type + " " + argname)
+                    argname = id.mapID(p.identifier())
+                    params.append(cxx_type + " " + argname)
 
                 # deal with possible "context"
                 if c.contexts() != []:
                     params.append("CORBA::Context_ptr _ctxt")
                     virtual_params.append("CORBA::Context_ptr _ctxt")
-                
-                return_type = tyutil.operationArgumentType\
-                              (c.returnType(), outer_environment,
-                               virtualFn = 0)[0]
-                opname = tyutil.mapID(c.identifier())
+
+                return_type = types.Type(c.returnType()).op(types.RET,
+                                                            outer_environment)
+                #return_type = tyutil.operationArgumentType\
+                #              (c.returnType(), outer_environment,
+                #               virtualFn = 0)[0]
+                opname = id.mapID(c.identifier())
                 arguments = string.join(params, ", ")
                 operations.append(return_type + " " + cxx_fqname + "_i::" +\
                                   opname + "(" + arguments + ")")

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.4  2000/04/26 18:22:20  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.14.2.3  2000/03/23 15:31:10  djs
 # Failed to handle recursive unions properly where the cycle had more
 # than one node (didn't use recursion detection functions everywhere it
@@ -96,7 +100,7 @@
 import string, re
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, config, name
+from omniidl_be.cxx import tyutil, util, config, types, id
 from omniidl_be.cxx.dynskel import tcstring, template
 
 import typecode
@@ -141,7 +145,7 @@ def defineName(mangledname):
 
 # mangleName("_0RL_tc", ["CORBA", "Object"]) -> "_ORL_tc_CORBA_Object"
 def mangleName(prefix, scopedName):
-    mangled = prefix + tyutil.guardName(scopedName)
+    mangled = prefix + id.Name(scopedName).guard()
     return mangled
 
 # We need to be able to detect recursive types so keep track of the current
@@ -198,10 +202,11 @@ def external_linkage(decl, mangled_name = ""):
         return
 
     where = bottomhalf
-    scopedName = map(tyutil.mapID, decl.scopedName())
-    scope = tyutil.scope(scopedName)
-    tc_name = name.prefixName(scopedName, "_tc_")
-    tc_unscoped_name = "_tc_" + tyutil.name(scopedName)
+    scopedName = id.Name(decl.scopedName())
+    scope = scopedName.scope()
+    tc_name = scopedName.prefix("_tc_")
+    tc_unscoped_name = tc_name.simple()
+    tc_name = tc_name.fullyQualify()
 
     if mangled_name == "":
         mangled_name = mangleName(config.privatePrefix() + "_tc_",
@@ -246,7 +251,7 @@ const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
 # Basic types have new typecodes generated, derived types are assumed
 # to already exist and a name is passed instead
 def mkTypeCode(type, declarator = None, node = None):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
 
     prefix = "CORBA::TypeCode::PR_"
 
@@ -260,6 +265,9 @@ def mkTypeCode(type, declarator = None, node = None):
             post_str = post_str + ")"
 
         return pre_str + mkTypeCode(type, None, node) + post_str
+
+    type = type.type()
+    
 
     basic = {
         idltype.tk_short:   "short",
@@ -300,7 +308,7 @@ def mkTypeCode(type, declarator = None, node = None):
                    ", " + str(depth) + ")"
             
         return prefix + "sequence_tc(" + str(type.bound()) + ", " +\
-               mkTypeCode(type.seqType()) + ")"
+               mkTypeCode(types.Type(type.seqType())) + ")"
 
     if isinstance(type, idltype.Fixed):
         util.fatalError("Fixed types are not supported")
@@ -308,18 +316,18 @@ def mkTypeCode(type, declarator = None, node = None):
 
     assert isinstance(type, idltype.Declared)
 
-    if tyutil.isObjRef(type):
+    if type.kind() == idltype.tk_objref:
         scopedName = type.decl().scopedName()
         if scopedName == ["CORBA", "Object"]:
             return prefix + "Object_tc()"
+        scopedName = id.Name(scopedName)
+        
         repoID = type.decl().repoId()
-        if config.EMULATE_BUGS():
-            repoID = tyutil.mapRepoID(repoID)
-        iname = tyutil.mapID(tyutil.name(scopedName))
+        iname = scopedName.simple()
         return prefix + "interface_tc(\"" + repoID + "\", " +\
                    "\"" + iname + "\")"
 
-    guard_name = tyutil.guardName(type.scopedName())
+    guard_name = id.Name(type.scopedName()).guard()
 
     return config.privatePrefix() + "_tc_" + guard_name
         
@@ -375,9 +383,9 @@ def buildMembersStructure(node):
     array = []
 
     for m in members:
-        memberType = m.memberType()
+        memberType = types.Type(m.memberType())
         for d in m.declarators():
-            this_name = tyutil.mapID(tyutil.name(d.scopedName()))
+            this_name = id.Name(d.scopedName()).simple()
             typecode = mkTypeCode(memberType, d, node)
             array.append( "{\"" + this_name + "\", " + typecode + "}" )
 
@@ -420,7 +428,6 @@ def visitStruct(node):
     
     for child in node.members():
         memberType = child.memberType()
-        #if child.constrType():
         if isinstance(memberType, idltype.Declared):
             memberType.decl().accept(self)
 
@@ -443,9 +450,7 @@ def visitStruct(node):
     
         num = numMembers(node)
         repoID = node.repoId()
-        if config.EMULATE_BUGS():
-            repoID = tyutil.mapRepoID(repoID)
-        struct_name = tyutil.mapID(tyutil.name(scopedName))
+        struct_name = id.Name(scopedName).simple()
 
         tophalf.out("""\
 static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repoID@", "@name@", @structmember_mangled_name@, @n@);""",
@@ -486,12 +491,12 @@ def visitUnion(node):
     # need to build a static array of node members in a similar fashion
     # to structs
     array = []
-    switchType = node.switchType()
-    deref_switchType = tyutil.deref(switchType)
-    if isinstance(switchType, idltype.Declared):
+    switchType = types.Type(node.switchType())
+    deref_switchType = switchType.deref()
+    if isinstance(switchType.type(), idltype.Declared):
         override = self.__override
         self.__override = 1
-        switchType.decl().accept(self)
+        switchType.type().decl().accept(self)
         self.__override = override
         
     numlabels = 0
@@ -501,15 +506,15 @@ def visitUnion(node):
     for c in node.cases():
         numcases = numcases + 1
         decl = c.declarator()
-        caseType = c.caseType()
+        caseType = types.Type(c.caseType())
 
         override = self.__override
         self.__override = 1
-        if isinstance(caseType, idltype.Declared):
-            caseType.decl().accept(self)
-        elif isinstance(caseType, idltype.Sequence):
+        if isinstance(caseType.type(), idltype.Declared):
+            caseType.type().decl().accept(self)
+        elif caseType.sequence():
             # anonymous sequence
-            seqType = caseType.seqType()
+            seqType = caseType.type().seqType()
             while isinstance(seqType, idltype.Sequence):
                 seqType = seqType.seqType()
             # careful of recursive unions
@@ -520,28 +525,27 @@ def visitUnion(node):
         self.__override = override
         
         typecode = mkTypeCode(caseType, decl, node)
-        case_name = tyutil.mapID(tyutil.name(decl.scopedName()))
+        case_name = id.Name(decl.scopedName()).simple()
+        #case_name = tyutil.mapID(tyutil.name(decl.scopedName()))
 
-        env = name.Environment()
+        #env = name.Environment()
         for l in c.labels():
             if l.default():
                 label = "0"
                 hasDefault = numlabels
             # FIXME: same problem happens in defs/header and skel/main
-            elif tyutil.isChar(switchType) and l.value() == '\0':
+            elif switchType.char() and l.value() == '\0':
                 label = "0000"
             else:
-                label = tyutil.valueString(switchType, l.value(), env)
+                label = switchType.literal(l.value())
             array.append( "{\"" + case_name + "\", " + typecode + ", " + label + "}")
             numlabels = numlabels + 1
 
 
     discrim_tc = mkTypeCode(deref_switchType)
     repoID = node.repoId()
-    if config.EMULATE_BUGS():
-        repoID = tyutil.mapRepoID(repoID)
 
-    union_name = tyutil.mapID(tyutil.name(scopedName))
+    union_name = id.Name(scopedName).simple()
     unionmember_mangled_name = mangleName(config.privatePrefix() + \
                                           "_unionMember_", scopedName)
     
@@ -587,15 +591,13 @@ def visitEnum(node):
 
     names = []
     for enumerator in enumerators:
-        names.append("\"" + tyutil.name(enumerator.scopedName()) + "\"")
+        names.append("\"" + id.Name(enumerator.scopedName()).simple(cxx=0) + "\"")
 
-    enum_name = tyutil.name(scopedName)
+    enum_name = id.Name(scopedName).simple()
     
     repoID = node.repoId()
-    if config.EMULATE_BUGS():
-        repoID = tyutil.mapRepoID(repoID)
 
-    tc_name = name.prefixName(scopedName, "_tc_")
+    tc_name = id.Name(scopedName).prefix("_tc_").fullyQualify()
     enummember_mangled_name = mangleName(config.privatePrefix() + \
                                          "_enumMember_", scopedName)
 
@@ -638,9 +640,7 @@ def visitInterface(node):
     self.__immediatelyInsideModule = insideModule
     
     repoID = node.repoId()
-    if config.EMULATE_BUGS():
-        repoID = tyutil.mapRepoID(repoID)
-    iname = tyutil.mapID(tyutil.name(node.scopedName()))
+    iname = id.Name(node.scopedName()).simple()
     typecode = "CORBA::TypeCode::PR_interface_tc(\"" + repoID + "\", \"" +\
                iname + "\")"
 
@@ -652,15 +652,17 @@ def visitInterface(node):
 
 
 def recurse(type):
-    deref_type = tyutil.deref(type)
-    if isinstance(type, idltype.Declared):
-        base_decl = type.decl()
+    assert isinstance(type, types.Type)
+    
+    deref_type = type.deref()
+    if isinstance(type.type(), idltype.Declared):
+        base_decl = type.type().decl()
         override = self.__override
         self.__override = 1
         base_decl.accept(self)
         self.__override = override
-    elif tyutil.isSequence(deref_type):
-        seqType = deref_type.seqType()
+    elif deref_type.sequence():
+        seqType = deref_type.type().seqType()
         if isinstance(seqType, idltype.Declared):
             base_decl = seqType.decl()
 
@@ -668,9 +670,9 @@ def recurse(type):
             self.__override = 1
             base_decl.accept(self)
             self.__override = override
-        elif isinstance(seqType, idltype.Sequence):
+        elif types.Type(seqType).sequence():
             # anonymous sequence
-            recurse(seqType.seqType())
+            recurse(types.Type(seqType.seqType()))
 
             
         
@@ -679,7 +681,7 @@ def visitDeclarator(declarator):
     # this must be a typedef declarator
     
     node = declarator.alias()
-    aliasType = node.aliasType()
+    aliasType = types.Type(node.aliasType())
 
     recurse(aliasType)
     
@@ -689,12 +691,10 @@ def visitDeclarator(declarator):
         return
     
     repoID = declarator.repoId()
-    if config.EMULATE_BUGS():
-        repoID = tyutil.mapRepoID(repoID)
     typecode = mkTypeCode(aliasType, declarator)
         
     scopedName = declarator.scopedName()
-    typedef_name = tyutil.mapID(tyutil.name(scopedName))
+    typedef_name = id.Name(scopedName).simple()
     
     tophalf.out("""\
 static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_alias_tc("@repoID@", "@name@", @typecode@);
@@ -713,7 +713,7 @@ def visitTypedef(node):
     if not(node.mainFile()) and not(self.__override):
         return
 
-    aliasType = node.aliasType()
+    aliasType = types.Type(node.aliasType())
 
     prefix = "CORBA::TypeCode::PR_"
 
@@ -765,14 +765,12 @@ def visitException(node):
     # output the structure of members
     tophalf.out(str(buildMembersStructure(node)))
     
-    tc_name = name.prefixName(scopedName, "_tc_")
+    tc_name = id.Name(scopedName).prefix("_tc_").fullyQualify()
 
     num = numMembers(node)
 
     repoID = node.repoId()
-    if config.EMULATE_BUGS():
-        repoID = tyutil.mapRepoID(repoID)
-    ex_name = tyutil.mapID(tyutil.name(scopedName))
+    ex_name = id.Name(scopedName).simple()
     structmember_mangled_name = mangleName(config.privatePrefix() + \
                                            "_structmember_", scopedName)
     if num == 0:

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.4  2000/04/26 18:22:19  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.6.2.3  2000/03/24 22:30:17  djs
 # Major code restructuring:
 #   Control flow is more recursive and obvious
@@ -90,7 +94,6 @@ def generate(stream, tree):
 
     # This is the bit shared with the header file?
     tcstring = omniidl_be.cxx.dynskel.tcstring.__init__(stream)
-    #tree.accept(tcstring)
 
     Typecode = omniidl_be.cxx.dynskel.typecode.__init__(stream)
     tree.accept(Typecode)

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.6  2000/04/26 18:22:20  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.12.2.5  2000/04/05 10:58:36  djs
 # Missing function declaration when a union has a switch type declared in
 # another file
@@ -100,7 +104,7 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, name, config
+from omniidl_be.cxx import tyutil, util, id, types, config
 from omniidl_be.cxx.skel import mangler
 from omniidl_be.cxx.dynskel import template
 
@@ -197,15 +201,13 @@ def visitInterface(node):
     for n in node.declarations():
         n.accept(self)
 
-    scopedName = node.scopedName()
-    global_env = name.Environment()
-    fqname = global_env.nameToString(scopedName)
-    guard_name = tyutil.guardName(scopedName)
-    scopedName = map(tyutil.mapID, scopedName)
+    scopedName = id.Name(node.scopedName())
+    fqname = scopedName.fullyQualify()
+    guard_name = scopedName.guard()
 
-    objref_name = name.prefixName(scopedName, "_objref_")
-    tc_name = name.prefixName(scopedName, "_tc_")
-    helper_name = name.suffixName(scopedName, "_Helper")
+    objref_name = scopedName.prefix("_objref_").fullyQualify()
+    tc_name = scopedName.prefix("_tc_").fullyQualify()
+    helper_name = scopedName.suffix("_Helper").fullyQualify()
 
     objref_member = "_CORBA_ObjRef_Member<" + objref_name + ", " +\
                     helper_name + ">"
@@ -236,10 +238,9 @@ def visitEnum(node):
 
     startingNode(node)
     
-    scopedName = node.scopedName()
-    guard_name = tyutil.guardName(scopedName)
-    global_env = name.Environment()
-    fqname = global_env.nameToString(scopedName)
+    scopedName = id.Name(node.scopedName())
+    guard_name = scopedName.guard()
+    fqname = scopedName.fullyQualify()
     prefix = config.privatePrefix()
 
     # <--- Check we have the necessary definitions already output
@@ -259,9 +260,8 @@ def visitEnum(node):
 # -----------------------------------
 
 def docast(type, decl, string):
-    assert isinstance(type, idltype.Type)
-    global_env = name.Environment()
-    dims = tyutil.typeDims(type)
+    assert isinstance(type, types.Type)
+    dims = type.dims()
     if decl:
         assert isinstance(decl, idlast.Declarator)
         decl_dims = decl.sizes()
@@ -272,24 +272,26 @@ def docast(type, decl, string):
         tail_dims = dims[1:]
         tail_dims_string = tyutil.dimsToString(tail_dims)
     
-    deref_type = tyutil.deref(type)
-    cast_to = global_env.principalID(deref_type)
-    if tyutil.isObjRef(deref_type):
-        cast_to = tyutil.objRefTemplate(deref_type, "Member", global_env)
-    elif tyutil.isSequence(deref_type):
-        cast_to = tyutil.sequenceTemplate(deref_type, global_env)
-    elif tyutil.isTypeCode(deref_type):
+    d_type = type.deref()
+    cast_to = d_type.base()
+    if d_type.objref():
+        cast_to = d_type.objRefTemplate("Member")
+    elif d_type.sequence():
+        cast_to = d_type.sequenceTemplate()
+    elif d_type.typecode():
         cast_to = "CORBA::TypeCode_member"
+        
+    elif d_type.string():
+        cast_to = "CORBA::String_member"
     cast_to = cast_to + "(*)" + tail_dims_string
     return "(const " + cast_to + ")(" + cast_to + ")" +\
            "(" + string + ")"
 
 
 def prototype(decl, where, member = None):
-    scopedName = decl.scopedName()
-    guard_name = "_c" + tyutil.guardName(scopedName)
-    global_env = name.Environment()
-    fqname = global_env.nameToString(scopedName)
+    scopedName = id.Name(decl.scopedName())
+    guard_name = "_c" + scopedName.guard()
+    fqname = scopedName.fullyQualify()
 
     prefix = config.privatePrefix()
 
@@ -327,29 +329,31 @@ def visitFixedType(type):
 
 def visitDeclaredType(type):
     decl = type.decl()
-    if decl.mainFile() and not(isRecursive(decl)) and not(tyutil.isTypedef(type)):
+    type = types.Type(type)
+    if decl.mainFile() and not(isRecursive(decl)) and not(type.typedef()):
         # types declared in the same file will be handled
         #   unless type is recursive -> forward declaration required
         #   unless type is an alias in this file to something in another file
         return
-    if tyutil.isTypedef(type):
-        if type.decl().sizes() != []:
-            visitArray(type.decl().alias().aliasType(), type.decl())
+
+    if type.typedef():
+        if type.type().decl().sizes() != []:
+            visitArray(types.Type(type.type().decl().alias().aliasType()),
+                       type.type().decl())
         else:
-            type.decl().alias().aliasType().accept(self)
+            type.type().decl().alias().aliasType().accept(self)
         return
 
     mem_name = None
-    deref_type = tyutil.deref(type)
-    if tyutil.isObjRef(deref_type):
-        global_env = name.Environment()
-        mem_name = tyutil.objRefTemplate(deref_type, "Member", global_env)
+    d_type = type.deref()
+    if d_type.objref():
+        mem_name = d_type.objRefTemplate("Member")
     
     # make an extern/ forward declaration
     if isRecursive(decl):
         forward(decl, mem_name)
         return
-    external(deref_type.decl(), mem_name)
+    external(d_type.type().decl(), mem_name)
 
 def visitStringType(type):
     bound = type.bound()
@@ -369,23 +373,22 @@ def visitStringType(type):
         
 
 def visitSequenceType(type):
-    global_env = name.Environment()
-    seqType = type.seqType()
-    deref_seqType = tyutil.deref(seqType)
+    seqType = types.Type(type.seqType())
+    d_seqType = seqType.deref()
 
-    seqType_cname = mangler.canonTypeName(tyutil.derefKeepDims(seqType))
-    sequence_template = tyutil.sequenceTemplate(type, global_env)
-    deref_type = tyutil.deref(type)
-    memberType_cname = mangler.canonTypeName(deref_type)
+    seqType_cname = mangler.canonTypeName(seqType.deref(keep_dims = 1))
+    sequence_template = types.Type(type).sequenceTemplate()
+    d_type = types.Type(type).deref()
+    memberType_cname = mangler.canonTypeName(d_type)
 
-    seqType_dims = tyutil.typeDims(seqType)
+    seqType_dims = seqType.dims()
     is_array = seqType_dims != []
 
     # check if the sequence is recursive
-    is_recursive = isinstance(seqType, idltype.Declared) and \
-                   isRecursive(seqType.decl())
+    is_recursive = isinstance(seqType.type(), idltype.Declared) and \
+                   isRecursive(seqType.type().decl())
 
-    seqType.accept(self)
+    seqType.type().accept(self)
 
     # something very strange happens here with strings and casting
     sequence_desc = "((" + sequence_template + "*)_desc->opq_seq)"
@@ -396,8 +399,8 @@ def visitSequenceType(type):
     elementDesc = util.StringStream()
     prefix = config.privatePrefix()
     # djr and jnw's "Super-Hacky Optimisation"
-    if isinstance(deref_seqType, idltype.Base)   and \
-       not(tyutil.isVariableType(deref_seqType)) and \
+    if isinstance(d_seqType.type(), idltype.Base)   and \
+       not(d_seqType.variable()) and \
        not(is_array):
         elementDesc.out(template.sequence_elementDesc_contiguous,
                         sequence = sequence_desc)
@@ -441,41 +444,44 @@ def canonDims(d):
 # alias. So this is outside the normal tree walking pattern.
 def visitArray(type, declarator):
     d_dims = declarator.sizes()
-    d_scopedName = declarator.scopedName()
+    d_scopedName = id.Name(declarator.scopedName())
     d_cname = mangler.canonTypeName(type, declarator)
 
-    deref_type = tyutil.deref(type)
-    deref_kd_type = tyutil.derefKeepDims(type)
-    type_dims = tyutil.typeDims(type)
+    deref_type = type.deref()
+    deref_kd_type = type.deref(keep_dims = 1)
+    type_dims = type.dims()
     full_dims = d_dims + type_dims
 
-    type.accept(self)
+    type.type().accept(self)
 
     # recursively ensure that dependent type info is available
     # (if other typedef dimensions are in a different file)
-    if tyutil.isTypedef(deref_kd_type):
+    if deref_kd_type.typedef():
         # must be an array with dimensions
-        decl = deref_kd_type.decl()
-        visitArray(decl.alias().aliasType(), decl)
+        decl = deref_kd_type.type().decl()
+        visitArray(types.Type(decl.alias().aliasType()), decl)
 
-    global_env = name.Environment()
-    fqname = global_env.nameToString(d_scopedName)
-    tc_name = name.prefixName(d_scopedName, "_tc_")
-    guard_name = tyutil.guardName(d_scopedName)
+    fqname = d_scopedName.fullyQualify()
+    tc_name = d_scopedName.prefix("_tc_").fullyQualify()
+    guard_name = d_scopedName.guard()
 
     # problem with sequences as always
     # Probably should look into derefKeepDims here
-    if tyutil.isSequence(deref_type) and tyutil.isTypedef(type):
-        alias = type.decl().alias()
-        alias_cname = mangler.canonTypeName(alias.aliasType())
+    if deref_type.sequence() and type.typedef():
+        alias = type.type().decl().alias()
+        alias_cname = mangler.canonTypeName(types.Type(alias.aliasType()))
     else:
         alias_cname = mangler.canonTypeName(deref_type)
-    alias_tyname = global_env.principalID(type)
-    deref_kd_alias_tyname = global_env.principalID(deref_kd_type)
-    deref_alias_tyname = global_env.principalID(deref_type)
+    alias_tyname = type.member()
 
-    if tyutil.isObjRef(deref_type):
-        objref_name = tyutil.objRefTemplate(deref_type, "Member", global_env)
+    if type.typedef():
+        alias_tyname = id.Name(type.type().scopedName()).fullyQualify()
+
+    deref_kd_alias_tyname = deref_kd_type.base()
+    deref_alias_tyname = deref_type.base()
+
+    if deref_type.objref():
+        objref_name = deref_type.objRefTemplate("Member")
         deref_alias_tyname = objref_name
         if type_dims == []:
             alias_tyname = objref_name
@@ -487,9 +493,9 @@ def visitArray(type, declarator):
 
     # if thing being aliased is also an array declarator, we need
     # to add its dimensions too.
-    if tyutil.isTypedef(type):
-        current_dims = type.decl().sizes()
-        alias_cname = mangler.canonTypeName(type.decl().alias().aliasType())
+    if type.typedef():
+        current_dims = type.type().decl().sizes()
+        alias_cname = mangler.canonTypeName(types.Type(type.type().decl().alias().aliasType()))
 
     prev_cname = canonDims(current_dims) + alias_cname
     prefix = config.privatePrefix()
@@ -511,14 +517,15 @@ _desc.p_array.opq_array = &""" + prefix + """_tmp;"""
 
     element_name = alias_tyname
     
-    if tyutil.isString(deref_type):
+    if deref_type.string():
         if type_dims == []:
             element_name = "CORBA::String_member"
-    elif tyutil.isSequence(type):
-        element_name = tyutil.sequenceTemplate(type, global_env)
-    elif tyutil.isTypeCode(deref_type):
+    elif type.sequence():
+        element_name = type.sequenceTemplate()
+    elif deref_type.typecode():
         if type_dims == []:
             element_name = "CORBA::TypeCode_member"
+
 
     element_dims = []
     while index >= 0:
@@ -543,6 +550,7 @@ _desc.p_array.opq_array = &""" + prefix + """_tmp;"""
         this_cname = canonDims(current_dims) + alias_cname
 
         generated_symbol = prefix +"_tcParser_getElementDesc"+ this_cname
+
         if not(isDefined(generated_symbol)):
             defineSymbols([ generated_symbol ])
         
@@ -560,10 +568,12 @@ _desc.p_array.opq_array = &""" + prefix + """_tmp;"""
     tail_dims = string.join(dims_tail_index, "")
 
     argtype = deref_alias_tyname
-    if tyutil.isSequence(deref_type):
-        argtype = tyutil.sequenceTemplate(deref_type, global_env)
-    elif tyutil.isTypeCode(deref_type):
+    if deref_type.sequence():
+        argtype = deref_type.sequenceTemplate()
+    elif deref_type.typecode():
         argtype = "CORBA::TypeCode_member"
+    elif deref_type.string():
+        argtype = "CORBA::String_member"
 
     required_symbols = [ prefix + "_tcParser_getElementDesc" + d_cname ]
     generated_symbol = prefix + "_buildDesc" + d_cname
@@ -585,10 +595,10 @@ def visitMembers(node, stream, fqname, guard_name, prefix, static = ""):
     # total up the number of members (enums are a scoping special case)
     num_members = 0
     for m in node.members():
-        memberType = m.memberType()
-        if tyutil.isEnum(memberType) and m.constrType():
+        memberType = types.Type(m.memberType())
+        if memberType.enum() and m.constrType():
             num_members = num_members + \
-                          len(memberType.decl().enumerators())
+                          len(memberType.type().decl().enumerators())
 
         for d in m.declarators():
             num_members = num_members + 1
@@ -603,18 +613,18 @@ def visitMembers(node, stream, fqname, guard_name, prefix, static = ""):
             d_sizes = d.sizes()
             is_array_declarator = d_sizes != []
             if is_array_declarator:
-                visitArray(memberType, d)
+                visitArray(types.Type(memberType), d)
 
     # build the case expression
     cases = util.StringStream()
     index = 0
     for m in node.members():
-        memberType = m.memberType()
-        deref_memberType = tyutil.derefKeepDims(memberType)
-        member_dims = tyutil.typeDims(memberType)
+        memberType = types.Type(m.memberType())
+        deref_memberType = memberType.deref(keep_dims = 1)
+        member_dims = memberType.dims()
         for d in m.declarators():
-            d_scopedName = d.scopedName()
-            d_name = tyutil.mapID(tyutil.name(d_scopedName))
+            d_scopedName = id.Name(d.scopedName())
+            d_name = d_scopedName.simple()
             d_cname = mangler.canonTypeName(deref_memberType, d)
             d_dims = d.sizes()
             full_dims = d_dims + member_dims
@@ -677,10 +687,9 @@ def visitStruct(node):
 
     startingNode(node)
 
-    scopedName = node.scopedName()
-    guard_name = tyutil.guardName(scopedName)
-    global_env = name.Environment()
-    fqname = global_env.nameToString(scopedName)
+    scopedName = id.Name(node.scopedName())
+    guard_name = scopedName.guard()
+    fqname = scopedName.fullyQualify()
     prefix = config.privatePrefix()
     
     # if it's recursive, stick in a forward declaration
@@ -720,14 +729,13 @@ def visitTypedef(node):
 
     startingNode(node)
     
-    aliasType = node.aliasType()
-    deref_aliasType = tyutil.deref(aliasType)
-    type_dims = tyutil.typeDims(aliasType)
-    global_env = name.Environment()
+    aliasType = types.Type(node.aliasType())
+    deref_aliasType = aliasType.deref()
+    type_dims = aliasType.dims()
     prefix = config.privatePrefix()
 
     if node.constrType():
-        aliasType.decl().accept(self)
+        aliasType.type().decl().accept(self)
 
     # we don't need to recurse on the aliased type here because
     # the code generated is only used from the code generated from
@@ -737,14 +745,12 @@ def visitTypedef(node):
     #   aliasType.accept(self)
 
     alias_cname = mangler.canonTypeName(aliasType)
-    alias_tyname = global_env.principalID(aliasType)
-    deref_alias_tyname = global_env.principalID(deref_aliasType)
-    if tyutil.isObjRef(deref_aliasType):
-        alias_tyname = tyutil.objRefTemplate(aliasType, "Member",
-                                             global_env)
-        deref_alias_tyname = tyutil.objRefTemplate(deref_aliasType, "Member",
-                                                   global_env)
-    elif tyutil.isString(deref_aliasType):
+    alias_tyname = aliasType.base()
+    deref_alias_tyname = deref_aliasType.base()
+    if deref_aliasType.objref():
+        alias_tyname = aliasType.objRefTemplate("Member")
+        deref_alias_tyname = deref_aliasType.objRefTemplate("Member")
+    elif deref_aliasType.string():
         alias_tyname = "CORBA::String_member"
 
     for declarator in node.declarators():
@@ -754,10 +760,10 @@ def visitTypedef(node):
         full_dims = decl_dims + type_dims
         is_array = full_dims != []
         is_array_declarator = decl_dims != []
-        scopedName = declarator.scopedName()
-        fqname = global_env.nameToString(scopedName)
-        tc_name = name.prefixName(scopedName, "_tc_")
-        guard_name = tyutil.guardName(scopedName)
+        scopedName = id.Name(declarator.scopedName())
+        fqname = scopedName.fullyQualify()
+        tc_name = scopedName.prefix("_tc_").fullyQualify()
+        guard_name = scopedName.guard()
 
         decl_cname = mangler.canonTypeName(aliasType, declarator)
 
@@ -775,8 +781,12 @@ def visitTypedef(node):
             tail_dims = string.join(dims_tail_index, "")
 
             argtype = deref_alias_tyname
-            if tyutil.isSequence(deref_aliasType):
-                argtype = tyutil.sequenceTemplate(deref_aliasType, global_env)
+            if deref_aliasType.sequence():
+                argtype = deref_aliasType.sequenceTemplate()
+            if deref_aliasType.string():
+                argtype = "CORBA::String_member"
+            if deref_aliasType.typecode():
+                argtype = "CORBA::TypeCode_member"
                 
             assertDefined([ prefix + "_buildDesc" + decl_cname ])
             stream.out(template.typedef_array_decl_oper,
@@ -790,9 +800,9 @@ def visitTypedef(node):
                        guard_name = guard_name)
 
         # --- sequences
-        if not(is_array_declarator) and tyutil.isSequence(aliasType):
+        if not(is_array_declarator) and aliasType.sequence():
             if first_declarator:
-                deref_aliasType.accept(self)
+                deref_aliasType.type().accept(self)
             stream.out(template.typedef_sequence_oper,
                        fqname = fqname,
                        tcname = tc_name,
@@ -809,14 +819,13 @@ def visitUnion(node):
 
     startingNode(node)
     
-    scopedName = node.scopedName()
-    guard_name = tyutil.guardName(scopedName)
-    global_env = name.Environment()
-    fqname = global_env.nameToString(scopedName)
-    switchType = node.switchType()
-    deref_switchType = tyutil.deref(switchType)
+    scopedName = id.Name(node.scopedName())
+    guard_name = scopedName.guard()
+    fqname = scopedName.fullyQualify()
+    switchType = types.Type(node.switchType())
+    deref_switchType = switchType.deref()
     discrim_cname = mangler.canonTypeName(switchType)
-    discrim_type = global_env.principalID(deref_switchType)
+    discrim_type = deref_switchType.base()
 
     allCaseValues = tyutil.allCases(node)
     isExhaustive = tyutil.exhaustiveMatch(switchType, allCaseValues)
@@ -851,14 +860,15 @@ def visitUnion(node):
     switch = util.StringStream()
     if default_case:
         default_decl = default_case.declarator()
-        default_type = default_case.caseType()
-        default_dims = tyutil.typeDims(default_type)
+        default_type = types.Type(default_case.caseType())
+        default_dims = default_type.dims()
         decl_dims = default_decl.sizes()
         full_dims = decl_dims + default_dims
     
         default_is_array = full_dims != []
         mem_cname = mangler.canonTypeName(default_type, default_decl)
-        mem_name = tyutil.mapID(tyutil.name(default_decl.scopedName()))
+        default_decl_name = id.Name(default_decl.scopedName())
+        mem_name = default_decl_name.simple()
         thing = "_u->pd_" + mem_name
         if default_is_array:
             thing = docast(default_type, default_decl, thing)
@@ -880,8 +890,8 @@ def visitUnion(node):
 
     # deal with types
     for c in node.cases():
-        caseType = c.caseType()
-        caseType.accept(self)
+        caseType = types.Type(c.caseType())
+        caseType.type().accept(self)
         
         declarator = c.declarator()
         d_sizes = declarator.sizes()
@@ -889,12 +899,12 @@ def visitUnion(node):
         if is_array_declarator:
             visitArray(caseType, declarator)
                 
-        deref_caseType = tyutil.deref(caseType)
+        deref_caseType = caseType.deref()
         type_cname = mangler.canonTypeName(caseType, declarator)
-        type_name = global_env.principalID(caseType)
-        deref_type_name = global_env.principalID(deref_caseType)
-        mem_name = tyutil.mapID(tyutil.name(c.declarator().scopedName()))
-        case_dims = tyutil.typeDims(caseType)
+        type_name = caseType.base()
+        deref_type_name = deref_caseType.base()
+        mem_name = id.Name(c.declarator().scopedName()).simple()
+        case_dims = caseType.dims()
         full_dims = d_sizes + case_dims
         
         is_array = full_dims != []
@@ -909,10 +919,10 @@ def visitUnion(node):
                 continue
             # FIXME: same problem occurs in header/defs and
             # skel/main and dynskel/bdesc
-            if tyutil.isChar(switchType) and l.value() == '\0':
+            if switchType.char() and l.value() == '\0':
                 label = "0000"
             else:
-                label = tyutil.valueString(switchType, l.value(), global_env)
+                label = switchType.literal(l.value())
             required_symbols.append(prefix + "_buildDesc" + type_cname)
             switch.out("""\
       case @label@:
@@ -956,17 +966,16 @@ def visitUnion(node):
 def visitForward(node):
     if not(node.mainFile()) and not(self.__override):
         return
-    scopedName = node.scopedName()
-    guard_name = tyutil.guardName(scopedName)
-    global_env = name.Environment()
+    scopedName = id.Name(node.scopedName())
+    guard_name = scopedName.guard()
     prefix = config.privatePrefix()
 
     symbol = prefix + "_buildDesc_c" + guard_name
     if not(isDefined(symbol)):
         stream.out("// forward declaration of interface")
-        interface_type = idltype.Declared(node, node.scopedName(),
-                                          idltype.tk_objref)
-        mem_name = tyutil.objRefTemplate(interface_type, "Member", global_env)
+        interface_type = types.Type(idltype.Declared(node, node.scopedName(),
+                                          idltype.tk_objref))
+        mem_name = interface_type.objRefTemplate("Member")
 
         forward(node, mem_name)
 
@@ -984,10 +993,9 @@ def visitException(node):
 
     startingNode(node)
     
-    scopedName = node.scopedName()
-    guard_name = tyutil.guardName(scopedName)
-    global_env = name.Environment()
-    fqname = global_env.nameToString(scopedName)
+    scopedName = id.Name(node.scopedName())
+    guard_name = scopedName.guard()
+    fqname = scopedName.fullyQualify()
     prefix = config.privatePrefix()
 
     for m in node.members():

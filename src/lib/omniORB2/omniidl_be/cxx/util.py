@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.5  2000/04/26 18:22:15  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.12.2.4  2000/03/20 11:49:28  djs
 # Added a "LazyStream" class to help reduce the amount of output buffering
 # required
@@ -99,13 +103,17 @@ import sys, re, string
 def fatalError(explanation):
     if config.DEBUG():
         # don't exit the program in debug mode...
+        print "[" + explanation + "]"
+        raise RuntimeError("Fatal Error occurred, halting.")
         return
     
     lines = string.split(explanation, "\n")
     lines = [ "Fatal error in C++ backend", "" ] + lines
+    lines = lines + [ "Debug mode is currently off" ]
 
     for line in lines:
         sys.stderr.write("omniidl: " + line + "\n")
+    
 
     sys.exit(-1)
         
@@ -119,7 +127,8 @@ def fatalError(explanation):
 
 #   (modified from dpg1s to keep track of output indent level
 #    semi-automatically)
-#   
+#
+# Out of date:
 # Doesnt have a stack of preceeding whitespace length as python does, instead
 # interprets an increase as a single inc_indent() and a decrease as a
 # dec_indent() First output line within a Stream.out() call sets the origin
@@ -282,10 +291,10 @@ def append(x, y):
 
 # Build a loop iterating over every element of a multidimensional
 # thing and return the indexing string
-# Everywhere but in exception skeletons is iter_type = CORBA::ULong.
-def start_loop(where, dims, prefix = "_i", iter_type = "CORBA::ULong"):
+def start_loop(where, dims, prefix = "_i"):
     index = 0
     istring = ""
+    iter_type = "CORBA::ULong"
     for dimension in dims:
         where.out("""\
 for (@iter_type@ @prefix@@n@ = 0;@prefix@@n@ < @dim@;_i@n@++) {""",
@@ -305,10 +314,11 @@ def finish_loop(where, dims):
         where.out("}")
     
 # Create a nested block as a container and call start_loop
-def block_begin_loop(string, full_dims, iter_type = "CORBA::ULong"):
+def block_begin_loop(string, full_dims):
+    iter_type = "CORBA::ULong"
     string.out("{")
     string.inc_indent()
-    return start_loop(string, full_dims, iter_type = iter_type)
+    return start_loop(string, full_dims)
 
 # finish the loop and close the nested block
 def block_end_loop(string, full_dims):

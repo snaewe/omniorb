@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.3  2000/04/26 18:22:30  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.7.2.2  2000/03/20 11:50:20  djs
 # Removed excess buffering- output templates have code attached which is
 # lazily evaluated when required.
@@ -67,7 +71,7 @@
 # similar to o2be_root::produce_hdr_operators in the old C++ BE
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, config, name
+from omniidl_be.cxx import tyutil, util, config, id, types
 from omniidl_be.cxx.header import template
 
 import opers
@@ -102,9 +106,8 @@ def visitStruct(node):
 
     # TypeCode and Any
     if config.TypecodeFlag():
-        env = name.Environment()
-        fqname = env.nameToString(node.scopedName())
-    
+        fqname = id.Name(node.scopedName()).fullyQualify()
+
         stream.out(template.any_struct,
                    fqname = fqname)
 
@@ -123,8 +126,7 @@ def visitUnion(node):
     
     # TypeCode and Any
     if config.TypecodeFlag():
-        env = name.Environment()
-        fqname = env.nameToString(node.scopedName())
+        fqname = id.Name(node.scopedName()).fullyQualify()
     
         stream.out(template.any_union,
                    fqname = fqname)
@@ -141,11 +143,12 @@ def visitEnum(node):
     if not(node.mainFile()):
         return
 
-    cxx_fqname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
+    cxx_fqname = id.Name(node.scopedName()).fullyQualify()
+    
     # build the cases
     def cases(stream = stream, node = node):
         for d in node.enumerators():
-            labelname = idlutil.ccolonName(map(tyutil.mapID, d.scopedName()))
+            labelname = id.Name(d.scopedName()).fullyQualify()
             stream.out("case " + labelname + ":\n")
 
     stream.out(template.enum_operators,
@@ -170,8 +173,7 @@ def visitInterface(node):
 
     # Typecode and Any
     if config.TypecodeFlag():
-        env = name.Environment()
-        fqname = env.nameToString(node.scopedName())
+        fqname = id.Name(node.scopedName()).fullyQualify()
     
         stream.out(template.any_interface,
                    fqname = fqname)
@@ -181,33 +183,28 @@ def visitTypedef(node):
     if not(node.mainFile()):
         return
     
-    aliasType = node.aliasType()
-    deref_aliasType = tyutil.deref(aliasType)
-    type_dims = tyutil.typeDims(aliasType)
+    aliasType = types.Type(node.aliasType())
 
     if node.constrType():
-        aliasType.decl().accept(self)
+        aliasType.type().decl().accept(self)
 
     # don't need to do anything unless generating TypeCodes and Any
     if not(config.TypecodeFlag()):
         return
     
-
-    env = name.Environment()
     for d in node.declarators():
         decl_dims = d.sizes()
-        fqname = env.nameToString(d.scopedName())
+        fqname = id.Name(d.scopedName()).fullyQualify()
 
         array_declarator = decl_dims != []
 
         if array_declarator:
-            
             stream.out(template.any_array_declarator,
                        fqname = fqname)
         # only need to generate these operators if the typedef
         # introduces a new sequence- they already exist for a simple
         # typedef. Hence aliasType rather than deref_aliasType.
-        elif tyutil.isSequence(aliasType):
+        elif aliasType.sequence():
             stream.out(template.any_sequence,
                        fqname = fqname)
             
@@ -231,9 +228,7 @@ def visitException(node):
     if not(config.TypecodeFlag()):
         return
 
-    env = name.Environment()
-    fqname = env.nameToString(node.scopedName())
-
+    fqname = id.Name(node.scopedName()).fullyQualify()
     stream.out(template.any_exception,
                fqname = fqname)
 

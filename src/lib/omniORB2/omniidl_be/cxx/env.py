@@ -30,6 +30,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.2  2000/04/26 18:22:12  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.3.2.1  2000/02/14 18:34:57  dpg1
 # New omniidl merged in.
 #
@@ -49,6 +53,8 @@
 """Prebuilds naming environments for each AST node by walking the tree
    and caching them. Subsequent passes over the tree can then lookup the
    cache rather than redo the calculation"""
+
+assert(0)
 
 from omniidl import idlast, idlvisitor
 from omniidl_be.cxx import tyutil, name

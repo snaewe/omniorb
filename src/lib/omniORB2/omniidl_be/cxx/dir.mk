@@ -34,6 +34,12 @@ export:: name.py
 export:: env.py
 	@(file="env.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: id.py
+	@(file="id.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
+export:: types.py
+	@(file="types.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
 export:: config.py
 	@(file="config.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 

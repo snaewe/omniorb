@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.6  2000/04/26 18:22:28  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.31.2.5  2000/04/05 10:57:37  djs
 # Minor source tidying (removing commented out blocks)
 #
@@ -159,7 +163,8 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, name, env, config
+from omniidl_be.cxx import tyutil, util, config
+from omniidl_be.cxx import id, types
 from omniidl_be.cxx.header import template
 
 import defs
@@ -168,12 +173,22 @@ self = defs
 
 def __init__(stream):
     defs.stream = stream
+    # Need to keep track of how deep within the AST we are
+    # in a recursive procedure these would be extra arguments,
+    # but the visitor pattern necessitates them being global.
     self.__insideInterface = 0
     self.__insideModule = 0
     self.__insideClass = 0
+    # An entry in this hash indicates that an interface has
+    # been declared- therefore any more AST forward nodes for
+    # this interface are ignored.
+    self.__interfaces = {}
 
-    self.__globalScope = name.globalScope()
-    
+    # When we first encounter a module, we deal with all the
+    # continuations straight away. Therefore when we reencounter
+    # a continuation later, we don't duplicate the definitions.
+    self.__completedModules = {}
+
     return defs
 
 #
@@ -186,23 +201,24 @@ def visitAST(node):
 
 def visitModule(node):
     # This may be incorrect wrt reopened modules in multiple
-    # files
+    # files?
     if not(node.mainFile()):
         return
 
     # In case of continuations, don't output the definitions
-    # more than once
+    # more than once (by marking the module as done)
     if self.__completedModules.has_key(node):
         return
     self.__completedModules[node] = 1
     
-    id = node.identifier()
-    cxx_id = tyutil.mapID(id)
-    
+    ident = node.identifier()
+    cxx_id = id.mapID(ident)
+
     if not(config.FragmentFlag()):
         stream.out(template.module_begin, name = cxx_id)
         stream.inc_indent()
 
+    # push self.__insideModule, true
     insideModule = self.__insideModule
     self.__insideModule = 1
 
@@ -215,10 +231,12 @@ def visitModule(node):
         for n in c.definitions():
             n.accept(self)
 
+    # pop self.__insideModule
     self.__insideModule = insideModule
+    
     if not(config.FragmentFlag()):
         stream.dec_indent()
-        stream.out(template.module_end, name = name)
+        stream.out(template.module_end, name = cxx_id)
 
         
 
@@ -226,20 +244,26 @@ def visitInterface(node):
     if not(node.mainFile()):
         return
 
-    name = node.identifier()
-    cxx_name = tyutil.mapID(name)
+    # It's legal to have a forward interface declaration after
+    # the actual interface definition. Make sure we ignore these.
+    self.__interfaces[node] = 1
 
-    outer_environment = env.lookup(node)
-    environment = outer_environment.enterScope(name)
+    name = node.identifier()
+    cxx_name = id.mapID(name)
+
+    outer_environment = id.lookup(node)
+    environment = outer_environment.enter(name)
     scope = environment.scope()
 
+    # push self.__insideInterface, true
+    # push self.__insideClass, true
     insideInterface = self.__insideInterface
     self.__insideInterface = 1
     insideClass = self.__insideClass
     self.__insideClass = 1
     
-    # the ifndef guard name contains scope information
-    guard = tyutil.guardName(scope)
+    # the ifndef guard name contains flattened scope
+    guard = id.Name(scope).guard()
 
     # make the necessary forward references, typedefs and define
     # the _Helper class
@@ -248,17 +272,16 @@ def visitInterface(node):
                name = cxx_name)
 
     # recursively take care of other IDL declared within this
-    # scope
-    def Other_IDL(stream = self.stream, node = node):
+    # scope (evaluate function later- lazy eval though 'thunking')
+    def Other_IDL(node = node, environment = environment):
         for n in node.declarations():
             n.accept(self)
-            
+
     # Output the this interface's corresponding class
     stream.out(template.interface_type,
                name = cxx_name,
                Other_IDL = Other_IDL)
     
-        
     # build methods corresponding to attributes, operations etc
     attributes = []
     operations = []
@@ -266,41 +289,28 @@ def visitInterface(node):
         
     for c in node.callables():
         if isinstance(c, idlast.Attribute):
-            attrType = c.attrType()
-            derefAttrType = tyutil.deref(attrType)
-
-            argtypes = tyutil.operationArgumentType(attrType,
-                                                    outer_environment)
-            returnType = argtypes[0]
-            inType = argtypes[1]
+            attrType = types.Type(c.attrType())
             
             for i in c.identifiers():
-                attribname = tyutil.mapID(i)
-                attributes.append(returnType + " " + attribname + "()")
+                attribname = id.mapID(i)
+                attributes.append(attrType.op(types.RET, outer_environment) +\
+                                  " " + attribname + "()")
                 if not(c.readonly()):
-                    attributes.append("void " + attribname + "(" \
-                                      + inType + ")")
+                    attributes.append("void " + attribname + "("             +\
+                                      attrType.op(types.IN,outer_environment)+\
+                                      ")")
         elif isinstance(c, idlast.Operation):
             params = []
             virtual_params = []
             for p in c.parameters():
-                paramType = p.paramType()
-                types = tyutil.operationArgumentType(paramType,
-                                                     outer_environment,
-                                                     virtualFn = 0)
-                virtual_types = tyutil.operationArgumentType(paramType,
-                                                             outer_environment,
-                                                             virtualFn = 1)
+                paramType = types.Type(p.paramType())
+
                 tuple = ("", "")
-                if   p.is_in() and p.is_out():
-                    tuple = (types[3], virtual_types[3])
-                elif p.is_in():
-                    tuple = (types[1], virtual_types[1])
-                elif p.is_out():
-                    tuple = (types[2], virtual_types[2])
-                else:
-                    assert 0
-                argname = tyutil.mapID(p.identifier())
+                direction = types.direction(p)
+                tuple = (paramType.op(direction, outer_environment, use_out=1),
+                         paramType.op(direction, outer_environment, use_out=0))
+
+                argname = id.mapID(p.identifier())
                 params.append(tuple[0] + " " + argname)
                 virtual_params.append(tuple[1] + " " + argname)
 
@@ -308,11 +318,11 @@ def visitInterface(node):
             if c.contexts() != []:
                 params.append("CORBA::Context_ptr _ctxt")
                 virtual_params.append("CORBA::Context_ptr _ctxt")
-                
-            return_type = tyutil.operationArgumentType(c.returnType(),
-                                                       outer_environment,
-                                                       virtualFn = 0)[0]
-            opname = tyutil.mapID(c.identifier())
+
+            return_type = types.Type(c.returnType()).op(types.RET,
+                                                        outer_environment)
+
+            opname = id.mapID(c.identifier())
             arguments = string.join(params, ", ")
             virtual_arguments = string.join(virtual_params, ", ")
             operations.append(return_type + " " + opname + \
@@ -334,18 +344,16 @@ def visitInterface(node):
     objref_inherits = []
     impl_inherits = []
     for i in node.inherits():
-        scope = tyutil.scope(i.scopedName())
-        id = tyutil.mapID(i.identifier())
-        
-        objref_scoped_name = scope + ["_objref_" + id]
-        impl_scoped_name   = scope + ["_impl_" + id]
 
-        objref_rel_name = environment.relName(objref_scoped_name)
-        impl_rel_name   = environment.relName(impl_scoped_name)
+        name = id.Name(i.scopedName())
+        ident = id.mapID(i.identifier())
+        scope = name.scope()
 
-        objref_string = environment.nameToString(objref_rel_name)
-        impl_string   = environment.nameToString(impl_rel_name)
-        
+        objref_scopedName = name.prefix("_objref_")
+        impl_scopedName   = name.prefix("_impl_")
+        objref_string     = objref_scopedName.unambiguous(environment)
+        impl_string       = impl_scopedName.unambiguous(environment)
+
         objref_inherits.append("public virtual " + objref_string)
         impl_inherits.append("public virtual " + impl_string)
 
@@ -382,6 +390,8 @@ def visitInterface(node):
         stream.out(template.interface_sk,
                    name = cxx_name)
 
+    # pop self.__insideInterface
+    # pop self.__insideClass
     self.__insideInterface = insideInterface
     self.__insideClass = insideClass
 
@@ -401,44 +411,42 @@ def visitForward(node):
         return
     
     # Note it's legal to have multiple forward declarations
-    # of the same name. ignore the duplicates
-    environment = env.lookup(node)
-    try:
-        environment.lookup([None] + node.scopedName())
-        # the name already exists in this scope so we
-        # just ignore it
+    # of the same name. So ignore the duplicates.
+    if self.__interfaces.has_key(node):
         return
-    except KeyError:
-        pass
-
-    environment = env.lookup(node)
+    self.__interfaces[node] = 1
+    
+    environment = id.lookup(node)
     scope = environment.scope()
-    name = tyutil.mapID(node.identifier())
-
-    guard = tyutil.guardName(scope + [name])
+    cxx_id = id.mapID(node.identifier())
+    name = id.Name(node.scopedName())
+    guard = name.guard()
 
     # output the definition
     stream.out(template.interface_begin,
                guard = guard,
-               name = name)
+               name = name.unambiguous(environment))
 
 def visitConst(node):
     if not(node.mainFile()):
         return
 
-    environment = env.lookup(node)
+    environment = id.lookup(node)
     scope = environment.scope()
-    
-    constType = node.constType()
-    deref_constType = tyutil.deref(constType)
-    if isinstance(deref_constType, idltype.String):
+
+    constType = types.Type(node.constType())
+    d_constType = constType.deref()
+    if d_constType.string():
         type_string = "char *"
     else:
-        type_string = environment.principalID(deref_constType)
-    name = tyutil.mapID(node.identifier())
-    value = tyutil.valueString(deref_constType, node.value(), environment)
+        type_string = d_constType.member()
+        # should this be .base?
 
-    representedByInteger =tyutil.const_init_in_def(deref_constType)
+    cxx_name = id.mapID(node.identifier())
+
+    value = d_constType.literal(node.value(), environment)
+
+    representedByInteger = d_constType.representable_by_int()
 
     # depends on whether we are inside a class / in global scope
     # etc
@@ -446,10 +454,10 @@ def visitConst(node):
     if self.__insideClass:
         if representedByInteger:
             stream.out(template.const_inclass_isinteger,
-                       type = type_string, name = name, val = value)
+                       type = type_string, name = cxx_name, val = value)
         else:
             stream.out(template.const_inclass_notinteger,
-                       type = type_string, name = name)
+                       type = type_string, name = cxx_name)
     else:
         where = "GLOBAL"
         if self.__insideModule:
@@ -458,55 +466,45 @@ def visitConst(node):
             stream.out(template.const_outsideclass_isinteger,
                        where = where,
                        type = type_string,
-                       name = name,
+                       name = cxx_name,
                        val = value)
         else:
             stream.out(template.const_outsideclass_notinteger,
                        where = where,
                        type = type_string,
-                       name = name)
+                       name = cxx_name)
 
 
 def visitTypedef(node):
     if not(node.mainFile()):
         return
-    
-    environment = env.lookup(node)
-    scope = environment.scope()
 
+    environment = id.lookup(node)
+    scope = environment.scope()
+    
     is_global_scope = not(self.__insideModule or self.__insideInterface)
     
-    aliasType = node.aliasType()
-    aliasTypeID = environment.principalID(aliasType)
+    aliasType = types.Type(node.aliasType())
+    aliasTypeID = aliasType.member(environment)
 
     # is _this_ type a constructed type?
     if node.constrType():
         node.aliasType().decl().accept(self)
     
-    # work out the actual type being aliased by walking the list
-    derefType = tyutil.deref(aliasType)
-    derefTypeID = environment.principalID(derefType)
+    d_type = aliasType.deref()
+    derefTypeID = d_type.base(environment)
 
-    # the basic name of the immediately aliased type
-    basicReferencedTypeID = environment.principalID(aliasType)
-    
-    # for sequences and object references, construct the template
-    # instance
-    if tyutil.isSequence(derefType):
-        sequenceTemplate = tyutil.sequenceTemplate(derefType, environment)
-    elif tyutil.isObjRef(derefType):
-        objRefTemplate = tyutil.objRefTemplate(derefType, "Member",
-                                               environment)
-    
+    basicReferencedTypeID = aliasType.member(environment)
+
     # each one is handled independently
     for d in node.declarators():
         
         # derivedName is the new typedef'd name
         # alias_dims is a list of dimensions of the type being aliased
-        # is_array is true iff the aliased type is an array
-        derivedName = tyutil.mapID(d.identifier())
-        alias_dims = tyutil.typeDims(aliasType)
-        is_array = (alias_dims != [])
+
+        derivedName = id.mapID(d.identifier())
+        
+        alias_dims = aliasType.dims()
 
         # array_declarator indicates whether this is a simple (non-array)
         # declarator or not
@@ -523,7 +521,7 @@ def visitTypedef(node):
         # is it a simple alias (ie not an array at this level)?
         if not(array_declarator):
             # not an array declarator but a simple declarator to an array
-            if is_array:
+            if aliasType.array():
                 # simple alias to an array should alias all the
                 # array handling functions, but we don't need to duplicate
                 # array looping code since we can just call the functions
@@ -543,53 +541,48 @@ def visitTypedef(node):
                                derived = derivedName)
                            
             # Non-array of string
-            elif tyutil.isString(derefType):
+            elif d_type.string():
                 stream.out(template.typedef_simple_string,
                            name = derivedName)
-            elif tyutil.isTypeCode(derefType):
+            elif d_type.typecode():
                 stream.out(template.typedef_simple_typecode,
                            name = derivedName)
-            elif tyutil.isAny(derefType):
+            elif d_type.any():
                 stream.out(template.typedef_simple_any,
                            name = derivedName)
             # Non-array of basic type
-            elif isinstance(derefType, idltype.Base):
+            elif isinstance(d_type.type(), idltype.Base):
 
                 # typedefs to basic types are always fully qualified?
                 # IDL oddity?
-                basicReferencedTypeID = self.__globalScope.\
-                                        principalID(aliasType)
+                basicReferencedTypeID = aliasType.member()
                 stream.out(template.typedef_simple_basic,
                            base = basicReferencedTypeID,
                            derived = derivedName)
             # a typedef to a struct or union, or a typedef to a
             # typedef to a sequence
-            elif tyutil.isStruct(derefType) or \
-                 tyutil.isUnion(derefType)  or \
-                 (tyutil.isSequence(derefType) and \
-                  tyutil.isTypedef(aliasType)):
-
+            elif d_type.struct() or d_type.union() or (d_type.sequence() and \
+                 aliasType.typedef()):
+                
                 stream.out(template.typedef_simple_constructed,
                            base = basicReferencedTypeID,
                            name = derivedName)
                     
             # Non-array of objrect reference
-            elif tyutil.isObjRef(derefType):
+            elif d_type.objref():
                 # Note that the base name is fully flattened
-                is_CORBA_Object = derefType.scopedName() == ["CORBA", "Object"]
+                is_CORBA_Object = d_type.type().scopedName() ==\
+                                  ["CORBA", "Object"]
                 impl_base = ""
                 objref_base = ""
                 if not(is_CORBA_Object):
-                    scopedName = derefType.decl().scopedName()
-                    relName = environment.relName(scopedName)
-                    
-                    impl_scopedName = tyutil.scope(relName) + \
-                                      ["_impl_" + tyutil.name(relName)]
-                    objref_scopedName = tyutil.scope(relName) + \
-                                        ["_objref_" + tyutil.name(relName)]
-                    impl_name = environment.nameToString(impl_scopedName)
-                    objref_name = environment.nameToString(objref_scopedName)
-                    
+                    scopedName = d_type.type().decl().scopedName()
+                    name = id.Name(scopedName)
+                    impl_scopedName = name.prefix("_impl_")
+                    objref_scopedName = name.prefix("_objref_")
+                    impl_name = impl_scopedName.unambiguous(environment)
+                    objref_name = objref_scopedName.unambiguous(environment)
+
                     impl_base = "typedef " + impl_name + " _impl_" +\
                                 derivedName + ";"
                     objref_base = "typedef " + objref_name + " _objref_" + \
@@ -601,52 +594,49 @@ def visitTypedef(node):
                            impl_base = impl_base,
                            objref_base = objref_base)
             # Non-array of user declared types
-            elif isinstance(derefType, idltype.Declared):
+            elif d_type.kind() in [ idltype.tk_struct, idltype.tk_union,
+                                    idltype.tk_except, idltype.tk_enum ]:
                 stream.out(template.typedef_simple_basic,
                            base = basicReferencedTypeID,
                            derived = derivedName)
             # Non-array of sequence
-            elif isinstance(derefType, idltype.Sequence):
-                seqType = derefType.seqType()
-                seqDerefType = tyutil.deref(seqType)
-                bounded = derefType.bound()
+            elif d_type.sequence():
+                seqType = types.Type(d_type.type().seqType())
+                d_seqType = seqType.deref()
+                bounded = d_type.type().bound()
                 
-                seq_dims = tyutil.typeDims(seqType)
-                is_array = (seq_dims != [])
+                seq_dims = seqType.dims()
 
-                templateName = tyutil.sequenceTemplate(derefType, environment)
+                templateName = d_type.sequenceTemplate(environment)
 
-                if tyutil.isString(seqDerefType):
+                if d_seqType.string():
                     element = "_CORBA_String_member"
                     element_IN = "char *"
-                elif tyutil.isObjRef(seqDerefType):
-                    element = environment.principalID(seqType) + "_ptr"
+                elif d_seqType.objref():
+                    element = seqType.base(environment) + "_ptr"
                     element_IN = element
                 # only if an anonymous sequence
-                elif tyutil.isSequence(seqType):
-                    element = tyutil.sequenceTemplate(seqDerefType,
-                                                      environment)
+                elif seqType.sequence():
+                    element = d_seqType.sequenceTemplate(environment)
                     element_IN = element
                 else:
-                    element = environment.principalID(seqType)
+                    element = seqType.base(environment)
                     element_IN = element
+                    
                 element_ptr = element_IN
-                if tyutil.isString(seqDerefType) and \
-                   not(is_array):
+                if d_seqType.string() and not(seqType.array()):
                     element_ptr = "char*"
-                elif tyutil.isObjRef(seqDerefType) and \
-                     not(is_array):
-                    element_ptr = environment.principalID(seqType) + "_ptr"
+                elif d_seqType.objref() and not(seqType.array()):
+                    element_ptr = seqType.base(environment) + "_ptr"
                 # only if an anonymous sequence
-                elif tyutil.isSequence(seqType) and \
-                     not(is_array):
+                elif seqType.sequence() and not(seqType.array()):
                     element_ptr = element
-                elif tyutil.isTypeCode(seqDerefType):
+                elif d_seqType.typecode():
                     element_ptr = "CORBA::TypeCode_member"
                     element = element_ptr
                     element_IN = element_ptr
                 else:
-                    element_ptr = environment.principalID(seqType)
+                    element_ptr = seqType.base(environment)
                     
                 # enums are a special case
                 # from o2be_sequence.cc:795:
@@ -662,10 +652,9 @@ def visitTypedef(node):
                 if is_global_scope:
                     friend = ""
                     
-                if tyutil.isEnum(seqDerefType) and \
-                   not(is_array):
+                if d_seqType.enum() and not(seqType.array()):
                     stream.out(template.typedef_enum_oper_friend,
-                               element = environment.principalID(seqDerefType),
+                               element = d_seqType.base(environment),
                                friend = friend)
                         
                 # derivedName is the new type identifier
@@ -690,25 +679,21 @@ def visitTypedef(node):
                 
 
                 # start building the _var and _out types
-
                 element_reference = ""
-                if not(is_array):
-                    if tyutil.isString(seqDerefType):
+                if not(aliasType.array()):
+                    if d_seqType.string():
                         # special case alert
                         element_reference = element
-                    elif tyutil.isObjRef(seqDerefType):
-                        element_reference = tyutil.objRefTemplate(seqDerefType,
-                                                                  "Member",
-                                                                  environment)
+                    elif d_seqType.objref():
+                        element_reference = d_seqType.objRefTemplate("Member",
+                                                                     environment)
                     # only if an anonymous sequence
-                    elif tyutil.isSequence(seqType):
-                        element_reference = tyutil.sequenceTemplate(
-                            seqDerefType, environment) + "&"
+                    elif seqType.sequence():
+                        element_reference = d_seqType.sequenceTemplate(environment) + "&"
                     else:
                         element_reference = element + "&"
-                        
                 def subscript_operator_var(stream = stream,
-                                           is_array = is_array,
+                                           is_array = seqType.array(),
                                            element_ptr = element_ptr,
                                            element_ref = element_reference):
                     if is_array:
@@ -719,7 +704,7 @@ def visitTypedef(node):
                                    element = element_ref)
 
                 def subscript_operator_out(stream = stream,
-                                           is_array = is_array,
+                                           is_array = seqType.array(),
                                            element_ptr = element_ptr,
                                            element_ref = element_reference):
                     if is_array:
@@ -740,8 +725,7 @@ def visitTypedef(node):
                            subscript_operator = subscript_operator_out)
 
             else:
-                # FIXME: finish the rest later
-                raise "No code for type = " + repr(type)
+                util.fatalError("Inexhaustive Case Match")
 
 
         # ----------------------------------------------------------------
@@ -752,7 +736,7 @@ def visitTypedef(node):
             dimsString = tyutil.dimsToString(d.sizes())
             taildims = tyutil.dimsToString(d.sizes()[1:])
             
-            typestring = tyutil.memberType(environment, aliasType)
+            typestring = aliasType.member(environment)
 
             stream.out(template.typedef_array,
                        name = derivedName,
@@ -767,16 +751,14 @@ def visitTypedef(node):
             else:
                 # build the _dup loop
                 def dup_loop(stream = stream, all_dims = all_dims):
-                    index = util.start_loop(stream, all_dims,
-                                            iter_type = "unsigned int")
+                    index = util.start_loop(stream, all_dims)
                     stream.out("\n_data@index@ = _s@index@;\n",
                                index = index)
                     util.finish_loop(stream, all_dims)
 
                 # build the _copy loop
                 def copy_loop(stream = stream, all_dims = all_dims):
-                    index = util.start_loop(stream, all_dims,
-                                            iter_type = "unsigned int")
+                    index = util.start_loop(stream, all_dims)
                     stream.out("\n_to@index@ = _from@index@;\n", index = index)
                     util.finish_loop(stream, all_dims)
 
@@ -785,8 +767,7 @@ def visitTypedef(node):
                            name = derivedName,
                            firstdim = repr(all_dims[0]),
                            dup_loop = dup_loop,
-                           copy_loop = copy_loop)
-                            
+                           copy_loop = copy_loop)                            
             # output the _copyHelper class
             stream.out(template.typedef_array_copyHelper,
                        name = derivedName)
@@ -810,22 +791,21 @@ def visitStruct(node):
         return
 
     name = node.identifier()
-    cxx_name = tyutil.mapID(name)
+    cxx_name = id.mapID(name)
 
-    outer_environment = env.lookup(node)
-    environment = outer_environment.enterScope(name)
-    
+    outer_environment = id.lookup(node)
+    environment = outer_environment.enter(name)
     scope = environment.scope()
     
     insideClass = self.__insideClass
     self.__insideClass = 1
             
     type = "Fix"
-    if tyutil.isVariableDecl(node):
+    if types.variableDecl(node):
         type = "Variable"
 
     # Deal with types constructed here
-    def Other_IDL(stream = stream, node = node):
+    def Other_IDL(stream = stream, node = node, environment = environment):
         for m in node.members():
             if m.constrType():
                 m.memberType().decl().accept(self)
@@ -833,21 +813,20 @@ def visitStruct(node):
     # Deal with the actual struct members
     def members(stream = stream, node = node, environment = environment):
         for m in node.members():
-            memberType = m.memberType()
-            derefType = tyutil.deref(memberType)
-            is_array = tyutil.typeDims(memberType) != []
-            
-            memtype = tyutil.memberType(environment, memberType)
+            memberType = types.Type(m.memberType())
+
+            memtype = memberType.member(environment)
 
             for d in m.declarators():
-                id = d.identifier()
-                cxx_id = tyutil.mapID(id)
+                ident = d.identifier()
+
+                cxx_id = id.mapID(ident)
 
                 decl_dims = d.sizes()
                 is_array_declarator = decl_dims != []
 
                 # non-arrays of direct sequences are done via a typedef
-                if not(is_array_declarator) and tyutil.isSequence(memberType):
+                if not(is_array_declarator) and memberType.sequence():
                     stream.out(template.struct_nonarray_sequence,
                                memtype = memtype,
                                cxx_id = cxx_id)
@@ -882,12 +861,13 @@ def visitException(node):
         return
     
     exname = node.identifier()
-    cxx_exname = tyutil.mapID(exname)
 
-    outer_environment = env.lookup(node)
-    environment = outer_environment.enterScope(exname)
-    
+    cxx_exname = id.mapID(exname)
+
+    outer_environment = id.lookup(node)
+    environment = outer_environment.enter(exname)
     scope = environment.scope()
+    
     insideClass = self.__insideClass
     self.__insideClass = 1
 
@@ -903,19 +883,18 @@ def visitException(node):
     # deal with the exceptions members
     def members(stream = stream, node = node, environment = environment):
         for m in node.members():
-            memberType = m.memberType()
-            derefType = tyutil.deref(memberType)
-            type_dims = tyutil.typeDims(memberType)
+            memberType = types.Type(m.memberType())
 
             for d in m.declarators():
                 decl_dims = d.sizes()
-                full_dims = decl_dims + type_dims
+                full_dims = decl_dims + memberType.dims()
                 is_array = full_dims != []
                 is_array_declarator = decl_dims != []
                 
-                memtype = tyutil.memberType(environment, memberType)
-                id = d.identifier()
-                cxx_id = tyutil.mapID(id)
+                memtype = memberType.member(environment)
+                ident = d.identifier()
+
+                cxx_id = id.mapID(ident)
 
                 dims_string = tyutil.dimsToString(decl_dims)
                 
@@ -934,14 +913,24 @@ def visitException(node):
     # deal with ctor args
     ctor_args = []
     for m in node.members():
-        memberType = m.memberType()
+        memberType = types.Type(m.memberType())
+        d_memberType = memberType.deref()
         for d in m.declarators():
             decl_dims = d.sizes()
             is_array_declarator = decl_dims != []
-            ctor_arg_type = tyutil.makeConstructorArgumentType(memberType,
-                                                               environment)
-            id = d.identifier()
-            cxx_id = tyutil.mapID(id)
+            ctor_arg_type = memberType.op(types.IN, environment)
+            # sequences are not passed by reference here
+            if d_memberType.sequence():
+                if memberType.typedef():
+                    ctor_arg_type = "const " + id.Name(memberType.type().decl().scopedName()).unambiguous(environment)
+                else:
+                    ctor_arg_type = "const " + memberType.sequenceTemplate(environment)
+            elif d_memberType.typecode():
+                ctor_arg_type = "CORBA::TypeCode_ptr"
+                
+            ident = d.identifier()
+
+            cxx_id = id.mapID(ident)
 
             if is_array_declarator:
                 ctor_arg_type = "const " + config.privatePrefix() +\
@@ -988,18 +977,19 @@ def visitUnion(node):
     if not(node.mainFile()):
         return
     
-    id = node.identifier()
-    cxx_id = tyutil.mapID(id)
-    outer_environment = env.lookup(node)
-    environment = outer_environment.enterScope(id)
-    
+    ident = node.identifier()
+
+    cxx_id = id.mapID(ident)
+    outer_environment = id.lookup(node)
+    environment = outer_environment.enter(ident)
     scope = environment.scope()
+    
     insideClass = self.__insideClass
     self.__insideClass = 1
     
-    switchType = node.switchType()
-    deref_switchType = tyutil.deref(switchType)
-    
+    switchType = types.Type(node.switchType())
+    d_switchType = switchType.deref()
+
     # in the case where there is no default case and an implicit default
     # member, choose a discriminator value to set. Note that attempting
     # to access the data is undefined
@@ -1016,10 +1006,9 @@ def visitUnion(node):
                                allCases = tyutil.allCases(node),
                                environment = environment):
         # dereference the switch_type (ie if CASE <scoped_name>)
-        switchType = tyutil.deref(switchType)
+        switchType = switchType.deref()
         # get the values from the cases
         values = map(lambda x: x.value(), allCases)
-
 
         # for integer types, find the lowest unused number
         def min_unused(start, used = values):
@@ -1029,23 +1018,22 @@ def visitUnion(node):
             return x
                 
         # CASE <integer_type>
-        if switchType.kind() == idltype.tk_short:
+        kind = switchType.type().kind()
+        if kind == idltype.tk_short:
             short_min = -32767 # - [ 2 ^ (32-1) -1 ]
             return str(min_unused(short_min))
         
-        elif switchType.kind() == idltype.tk_long:
+        elif kind == idltype.tk_long:
             long_min = -2147483647 # - [ 2 ^ (64-1) -1 ]
             return str(min_unused(long_min))
         
-        elif switchType.kind() == idltype.tk_ushort    or \
-             switchType.kind() == idltype.tk_longlong  or \
-             switchType.kind() == idltype.tk_ulong     or \
-             switchType.kind() == idltype.tk_ulonglong:
+        elif kind in [ idltype.tk_ushort, idltype.tk_longlong,
+                       idltype.tk_ulong, idltype.tk_ulonglong ]:
             # unsigned values start at 0
             return str(min_unused(0))
             
         # CASE <char_type>
-        elif tyutil.isChar(switchType):
+        elif kind == idltype.tk_char:
             # choose the first one not already used
             possibles = map(chr, range(0, 255))
             difference = util.minus(possibles, values)
@@ -1054,24 +1042,24 @@ def visitUnion(node):
             # \0 -> '\000'
             if difference[0] == '\0':
                 return "'\\000'"
-            return tyutil.valueString(switchType, difference[0], None)
+            
+            return switchType.literal(difference[0])
 
         # CASE <boolean_type>
-        elif tyutil.isBoolean(switchType):
+        elif kind == idltype.tk_boolean:
             return "0"
+        
         # CASE <enum_type>
-        elif tyutil.isEnum(switchType):
-            enums = switchType.decl().enumerators()
+        elif kind == idltype.tk_enum:
+            enums = switchType.type().decl().enumerators()
             # pick the first enum not already in a case
             difference = util.minus(enums, values)
-            scopedName = difference[0].scopedName()
+            scopedName = id.Name(difference[0].scopedName())
             # need to be careful of scope
-            rel_name = environment.relName(scopedName)
-            return environment.nameToString(rel_name)
-            return tyutil.name(difference[0].scopedName())
+            return scopedName.unambiguous(environment)
         else:
-            raise "chooseArbitraryDefault type="+repr(switchType)+\
-                  " val="+repr(discrimvalue)            
+            util.fatalError("Failed to generate a default union " +\
+                            "discriminator value")
 
     # does the IDL union have any default case?
     # It'll be handy to know which case is the default one later-
@@ -1086,7 +1074,7 @@ def visitUnion(node):
     implicitDefault = not(hasDefault) and not(exhaustive)
 
     fixed = "Fix"
-    if tyutil.isVariableDecl(node):
+    if types.variableDecl(node):
         fixed = "Variable"
 
     def Other_IDL(stream = stream, node = node):
@@ -1118,14 +1106,13 @@ def visitUnion(node):
             for l in c.labels():
                 if l.default(): continue
                 
-                discrimvalue = tyutil.valueString(switchType, l.value(),
-                                                  environment)
-                name = tyutil.mapID(c.declarator().identifier())
+                discrimvalue = switchType.literal(l.value(), environment)
+                name = id.mapID(c.declarator().identifier())
                 stream.out(template.union_ctor_case,
                            discrimvalue = discrimvalue,
-                           name = tyutil.mapID(c.declarator().identifier()))
+                           name = name)
         # Booleans are a special case (isn't everything?)
-        booleanWrap = tyutil.isBoolean(switchType) and exhaustive
+        booleanWrap = switchType.boolean() and exhaustive
         if booleanWrap:
             stream.out(template.union_ctor_bool_default)
         else:
@@ -1142,7 +1129,7 @@ def visitUnion(node):
             for c in node.cases():
                 if c.isDefault:
                     case_id = c.declarator().identifier()
-                    cxx_case_id = tyutil.mapID(case_id)
+                    cxx_case_id = id.mapID(case_id)
                     default = cxx_case_id + "(_value.pd_" + cxx_case_id + ");"
 
 
@@ -1169,25 +1156,22 @@ def visitUnion(node):
             # Following the typedef chain will deliver the base type of
             # the alias. Whether or not it is an array is stored in an
             # ast.Typedef node.
-            caseType = c.caseType()
-            dims = tyutil.typeDims(caseType)
-            
-            # find the dereferenced type of the member if its an alias
-            derefType = tyutil.deref(caseType)
+            caseType = types.Type(c.caseType())
+            d_caseType = caseType.deref()
 
             # the mangled name of the member
             decl = c.declarator()
             decl_dims = decl.sizes()
 
-            full_dims = decl_dims + dims
+            full_dims = decl_dims + caseType.dims()
             
             is_array = full_dims != []
             is_array_declarator = decl_dims != []
-            alias_array = dims != []
-        
-            member = tyutil.mapID(decl.identifier())
+            alias_array = caseType.dims() != []
+
+            member = id.mapID(decl.identifier())
             
-            memtype = tyutil.memberType(environment, caseType)
+            memtype = caseType.member(environment)
             
             # CORBA 2.3 C++ language mapping (June, 1999) 1-34:
             # ... Setting the union value through a modifier function
@@ -1222,12 +1206,11 @@ def visitUnion(node):
                 if label.default():
                     discrimvalue = choose()
                 else:
-                    discrimvalue = tyutil.valueString(switchType,
-                                                      label.value(),
+                    discrimvalue = switchType.literal(label.value(),
                                                       environment)
 
                 # FIXME: stupid special case, see above
-                if tyutil.isChar(switchType) and label.value() == '\0':
+                if switchType.char() and label.value() == '\0':
                     discrimvalue = "0000"
 
                 # only different when array declarator
@@ -1249,8 +1232,7 @@ def visitUnion(node):
                     # build the loop
                     def loop(stream = stream, full_dims = full_dims,
                              member = member):
-                        index = util.start_loop(stream, full_dims,
-                                                iter_type = "unsigned int")
+                        index = util.start_loop(stream, full_dims)
                         stream.out("\npd_" + member + index + " = _value" +\
                                    index + ";\n")
                         util.finish_loop(stream, full_dims)
@@ -1264,22 +1246,22 @@ def visitUnion(node):
                                discrimvalue = discrimvalue,
                                loop = loop)
                     
-                elif derefType.kind() == idltype.tk_any:
+                elif d_caseType.any():
                     # note type != CORBA::Any when its an alias...
                     stream.out(template.union_any,
                                type = memtype,
                                name = member,
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
-                elif derefType.kind() == idltype.tk_TypeCode:
+                elif d_caseType.typecode():
                     stream.out(template.union_typecode,
                                name = member,
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
                 
                     
-                elif isinstance(derefType, idltype.Base) or \
-                     tyutil.isEnum(derefType):
+                elif isinstance(d_caseType.type(), idltype.Base) or \
+                     d_caseType.enum():
                     # basic type
                     stream.out(template.union_basic,
                                type = memtype,
@@ -1287,17 +1269,19 @@ def visitUnion(node):
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
                     
-                elif isinstance(derefType, idltype.String):
+                elif d_caseType.string():
                     stream.out(template.union_string,
                                name = member,
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
-                elif tyutil.isObjRef(derefType):
-                    scopedName = derefType.decl().scopedName()
-                    ptr_name = name.suffixName(scopedName, "_ptr", environment)
-                    Helper_name = name.suffixName(scopedName, "_Helper",
-                                                  environment)
-                    var_name = name.suffixName(scopedName, "_var", environment)
+                elif d_caseType.objref():
+                    scopedName = d_caseType.type().decl().scopedName()
+
+                    name = id.Name(scopedName)
+                    ptr_name = name.suffix("_ptr").unambiguous(environment)
+                    Helper_name = name.suffix("_Helper").unambiguous(
+                        environment)
+                    var_name = name.suffix("_var").unambiguous(environment)
 
                     stream.out(template.union_objref,
                                member = member,
@@ -1307,18 +1291,16 @@ def visitUnion(node):
                                Helper_name = Helper_name,
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
-                elif tyutil.isTypedef(caseType) or \
-                     tyutil.isStruct(derefType) or \
-                     tyutil.isUnion(derefType):
+                elif caseType.typedef() or d_caseType.struct() or \
+                     d_caseType.union():
                     stream.out(template.union_constructed,
                                type = memtype,
                                name = member,
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
 
-                elif isinstance(derefType, idltype.Sequence):
-                    sequence_template = tyutil.sequenceTemplate(derefType,
-                                                                environment)
+                elif d_caseType.sequence():
+                    sequence_template = d_caseType.sequenceTemplate(environment)
                     stream.out(template.union_sequence,
                                sequence_template = sequence_template,
                                member = member,
@@ -1326,14 +1308,13 @@ def visitUnion(node):
                                discrimvalue = discrimvalue)
 
                 else:
-                    raise "Don't know how to output code for union type: "+type
+                    util.fatalError("Unknown union case type encountered")
         return
 
     # Typecode and Any
     def tcParser_unionHelper(stream = stream, node = node):
         if config.TypecodeFlag():
-            guard_name = tyutil.guardName(node.scopedName())
-        
+            guard_name = id.Name(node.scopedName()).guard()
             stream.out(template.union_tcParser_friend,
                        name = guard_name,
                        private_prefix = config.privatePrefix())
@@ -1351,33 +1332,30 @@ def visitUnion(node):
     for c in node.cases():
 
         # find the dereferenced type of the member if its an alias
-        caseType = c.caseType()
-        derefType = tyutil.deref(caseType)
-        is_variable = tyutil.isVariableType(derefType)
-
-        case_dims = tyutil.typeDims(caseType)
+        caseType = types.Type(c.caseType())
+        d_caseType = caseType.deref()
 
         decl = c.declarator()
         decl_dims = decl.sizes()
 
-        full_dims = case_dims + decl_dims
+        full_dims = caseType.dims() + decl_dims
         
         is_array = full_dims != []
         is_array_declarator = decl_dims != []
-        alias_array = case_dims != []
+        member_name = id.mapID(c.declarator().identifier())
 
-        member_name = tyutil.mapID(c.declarator().identifier())
-        type_str = tyutil.memberType(environment, caseType)
+        type_str = caseType.member(environment)
 
         # non-array sequences have had their template typedef'd somewhere
-        if not(is_array_declarator) and tyutil.isSequence(caseType):
+        if not(is_array_declarator) and caseType.sequence():
             type_str = "_" + member_name + "_seq"
         
         dims_str = tyutil.dimsToString(decl_dims)
 
         # Decide what does inside and outside the union {} itself
         # Note: floats in unions are special cases
-        if tyutil.isFloating(derefType) and not(is_array):
+        if (d_caseType.float() or d_caseType.double()) and \
+           not(is_array):
             inside.out(template.union_noproxy_float,
                        type = type_str, name = member_name,
                        dims = dims_str)
@@ -1386,16 +1364,17 @@ def visitUnion(node):
                        dims = dims_str)
             used_inside = used_outside = 1
         else:
-            if is_array and tyutil.isStruct(derefType) and not(is_variable):
+            if is_array and d_caseType.struct() and \
+               not(caseType.variable()):
                 this_stream = inside
                 used_inside = 1
             else:
-                if (isinstance(derefType, idltype.Declared) or  \
-                    isinstance(derefType, idltype.Sequence) or  \
-                    isinstance(derefType, idltype.String)   or \
-                    derefType.kind() == idltype.tk_any      or \
-                    derefType.kind() == idltype.tk_TypeCode)  and \
-                    not(tyutil.isEnum(derefType)):
+                if d_caseType.type().kind() in \
+                   [ idltype.tk_struct, idltype.tk_union,
+                     idltype.tk_except, idltype.tk_string,
+                     idltype.tk_sequence, idltype.tk_any,
+                     idltype.tk_TypeCode, idltype.tk_objref ]:
+                                                 
                     this_stream = outside
                     used_outside = 1
                 else:
@@ -1405,9 +1384,9 @@ def visitUnion(node):
                             type = type_str,
                             name = member_name,
                             dims = dims_str)
-  
-    discrimtype = environment.principalID(deref_switchType)
-        
+
+    discrimtype = d_switchType.base(environment)
+    
     if used_inside:
         _union = util.StringStream()
         _union.out(template.union_union, members = str(inside))
@@ -1444,13 +1423,13 @@ def visitUnion(node):
 def visitEnum(node):
     if not(node.mainFile()):
         return
-    
-    name = tyutil.mapID(node.identifier())
-    cxx_name = tyutil.mapID(name)
+
+    name = id.mapID(node.identifier())
+
     enumerators = node.enumerators()
-    memberlist = map(lambda x: tyutil.name(x.scopedName()), enumerators)
+    memberlist = map(lambda x: id.Name(x.scopedName()).simple(), enumerators)
     stream.out(template.enum,
-               name = cxx_name,
+               name = name,
                memberlist = string.join(memberlist, ", "))
 
     # TypeCode and Any
@@ -1459,7 +1438,6 @@ def visitEnum(node):
         insideClass = self.__insideClass
         qualifier = tyutil.const_qualifier(insideModule, insideClass)
         stream.out(template.typecode,
-                   qualifier = qualifier, name = cxx_name)
+                   qualifier = qualifier, name = name)
     
-    node.written = cxx_name
     return

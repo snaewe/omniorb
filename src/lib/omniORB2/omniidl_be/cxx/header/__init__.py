@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.4  2000/04/26 18:22:27  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.12.2.3  2000/03/21 10:58:49  djs
 # Forgot to make fragment mode use LazyStream instead of Stream
 #
@@ -90,7 +94,7 @@ from omniidl_be.cxx.header import template
 
 # -----------------------------
 # Utility functions
-from omniidl_be.cxx import tyutil, util
+from omniidl_be.cxx import util, id
 
 # -----------------------------
 # System functions
@@ -98,8 +102,6 @@ import re, sys
 
 
 def header(stream, filename):
-    #guard = re.sub(r"\W", "_", filename)
-    
     stream.out(template.header,
                Config = config, guard = filename)
 
@@ -177,7 +179,7 @@ def monolithic(stream, tree):
         filename = elements[len(elements) - 1]
         filename = filename + config.hdrsuffix()
         # s/\W/_/g
-        guardname = tyutil.guardName([filename])
+        guardname = id.Name([filename]).guard()
 
         includes.out(template.main_include,
                      guardname = guardname, filename = filename)
@@ -188,24 +190,15 @@ def monolithic(stream, tree):
     def forward_dec(stream = stream, tree = tree):
         forward = omniidl_be.cxx.header.forward.__init__(stream)
         tree.accept(forward)
-    #forward_dec = util.StringStream()
-    #forward = omniidl_be.cxx.header.forward.__init__(forward_dec)
-    #tree.accept(forward)
 
     # generate the bounded string tcParser stuff
     def string_tcparser(stream = stream, tree = tree):
         tcstring = omniidl_be.cxx.header.tcstring.__init__(stream)
         tree.accept(tcstring)
-    #string_tcparser = util.StringStream()
-    #tcstring = omniidl_be.cxx.header.tcstring.__init__(string_tcparser)
-    #tree.accept(tcstring)
 
     def main_defs(stream = stream, tree = tree):
         defs = omniidl_be.cxx.header.defs.__init__(stream)
         tree.accept(defs)
-    #main_defs = util.StringStream()
-    #defs = omniidl_be.cxx.header.defs.__init__(main_defs)
-    #tree.accept(defs)
 
     def main_poa(stream = stream, tree = tree):
         poa = omniidl_be.cxx.header.poa.__init__(stream)
@@ -215,31 +208,14 @@ def monolithic(stream, tree):
             tie = omniidl_be.cxx.header.tie.__init__(stream)
             tree.accept(tie)
 
-    #main_poa = util.StringStream()
-    #main_tie = util.StringStream()
-    
-    #poa = omniidl_be.cxx.header.poa.__init__(main_poa)
-    #tree.accept(poa)
-    #if config.FlatTieFlag():
-    #    tie = omniidl_be.cxx.header.tie.__init__(main_tie)
-    #    tree.accept(tie)
-
     # see o2be_root::produce_hdr and o2be_root::produce_hdr_defs
     def main_opers(stream = stream, tree = tree):
         opers = omniidl_be.cxx.header.opers.__init__(stream)
         tree.accept(opers)
         
-    #main_opers = util.StringStream()
-    #opers = omniidl_be.cxx.header.opers.__init__(main_opers)
-    #tree.accept(opers)
-
     def main_marshal(stream = stream, tree = tree):
         marshal = omniidl_be.cxx.header.marshal.__init__(stream)
         tree.accept(marshal)
-    #main_marshal = util.StringStream()
-    #marshal = omniidl_be.cxx.header.marshal.__init__(main_marshal)
-    #tree.accept(marshal)
-
 
     # other stuff
     stream.out(template.main,

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.3  2000/04/26 18:22:13  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.15.2.2  2000/03/09 15:21:40  djs
 # Better handling of internal compiler exceptions (eg attempts to use
 # wide string types)
@@ -92,7 +96,7 @@ import string
 
 from omniidl import idlutil, idltype, idlast
 
-from omniidl_be.cxx import util, tyutil
+from omniidl_be.cxx import util, tyutil, types, id
 
 # From http://www-i3.informatik.rwth-aachen.de/funny/babbage.html:
 #
@@ -105,13 +109,13 @@ from omniidl_be.cxx import util, tyutil
 
 # marshalling for struct, union and exception types
 def marshall_struct_union(string, environment, type, decl, argname, to="_n"):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
     if decl:
         assert isinstance(decl, idlast.Declarator)
         dims = decl.sizes()
     else:
         dims = []
-    type_dims = tyutil.typeDims(type)
+    type_dims = type.dims()
     full_dims = dims + type_dims
     is_array        = full_dims != []
 
@@ -127,16 +131,16 @@ def marshall_struct_union(string, environment, type, decl, argname, to="_n"):
 
 def marshall(string, environment, type, decl, argname, to="_n",
              exception = "BAD_PARAM"):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
     if decl:
         assert isinstance(decl, idlast.Declarator)
         dims = decl.sizes()
     else:
         dims = []
         
-    deref_type = tyutil.deref(type)
+    d_type = type.deref()
 
-    type_dims = tyutil.typeDims(type)
+    type_dims = type.dims()
     full_dims = dims + type_dims
 
     # for some reason, a char[10][20][30] x
@@ -149,12 +153,12 @@ def marshall(string, environment, type, decl, argname, to="_n",
 
     num_elements = reduce(lambda x,y:x*y, full_dims, 1)
 
-    type_name = environment.principalID(deref_type)
+    type_name = d_type.base(environment)
 
     # marshall an array of basic things
     if is_array:
-        if tyutil.typeSizeAlignMap.has_key(deref_type.kind()):
-            (size, align) = tyutil.typeSizeAlignMap[deref_type.kind()]
+        if tyutil.typeSizeAlignMap.has_key(d_type.type().kind()):
+            (size, align) = tyutil.typeSizeAlignMap[d_type.type().kind()]
             num_bytes = size * num_elements
             if align != 1:
                 align_str = ", omni::ALIGN_" + str(align)
@@ -168,7 +172,7 @@ def marshall(string, environment, type, decl, argname, to="_n",
                        size = str(num_bytes), align = align_str, to = to)
             return
 
-    if tyutil.isTypeCode(deref_type):
+    if d_type.typecode():
         # same as obj ref
         indexing_string = ""
         if is_array:
@@ -181,14 +185,14 @@ CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
         if is_array:
             util.block_end_loop(string, full_dims)
        
-    elif tyutil.isString(deref_type):
+    elif d_type.string():
         indexing_string = util.block_begin_loop(string, full_dims)
         bounds = util.StringStream()
-        if deref_type.bound() != 0:
+        if d_type.type().bound() != 0:
             bounds.out("""\
     if (_len > @n@+1) {
       throw CORBA::@exception@(0, CORBA::COMPLETED_MAYBE);
-    }""", n = str(deref_type.bound()),
+    }""", n = str(d_type.type().bound()),
                        exception = exception)
 
         string.out("""\
@@ -207,7 +211,7 @@ CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
                    indexing_string = indexing_string,
                    to = to)
         util.block_end_loop(string, full_dims)
-    elif tyutil.isObjRef(deref_type):
+    elif d_type.objref():
         indexing_string = ""
         if is_array:
             indexing_string = util.block_begin_loop(string, full_dims) +\
@@ -236,13 +240,13 @@ CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
 
 def unmarshall_struct_union(string, environment, type, decl, argname,
                             can_throw_marshall, from_where="_n"):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
     if decl:
         assert isinstance(decl, idlast.Declarator)
         dims = decl.sizes()
     else:
         dims = []
-    type_dims = tyutil.typeDims(type)
+    type_dims = type.dims()
     full_dims = dims + type_dims
     is_array        = full_dims != []
 
@@ -260,16 +264,16 @@ def unmarshall_struct_union(string, environment, type, decl, argname,
 def unmarshall(to, environment, type, decl, name,
                can_throw_marshall, from_where = "_n",
                string_via_member = 0):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
     if decl:
         assert isinstance(decl, idlast.Declarator)
         dims = decl.sizes()
     else:
         dims = []
     
-    deref_type = tyutil.deref(type)
+    d_type = type.deref()
 
-    type_dims = tyutil.typeDims(type)
+    type_dims = type.dims()
     full_dims = dims + type_dims
 
     # for some reason, a char[10][20][30] x
@@ -282,8 +286,7 @@ def unmarshall(to, environment, type, decl, name,
 
     num_elements = reduce(lambda x,y:x*y, full_dims, 1)
 
-    type_name = environment.principalID(deref_type)
-    deref_type_name = environment.principalID(deref_type)
+    type_name = d_type.base(environment)
 
     element_name = name + zero_dims_string
 
@@ -291,9 +294,8 @@ def unmarshall(to, environment, type, decl, name,
         # BASIC things
         # octets, chars and booleans are handled via
         # get_char_array
-        if tyutil.isOctet(deref_type) or \
-           tyutil.isChar(deref_type)  or \
-           tyutil.isBoolean(deref_type):
+        if d_type.type().kind() in \
+           [ idltype.tk_octet, idltype.tk_char, idltype.tk_boolean ]:
             to.out("""\
 @from_where@.get_char_array((_CORBA_Char*) ((@type@*) @element_name@), @num@);""",
                    element_name = element_name,
@@ -311,25 +313,22 @@ def unmarshall(to, environment, type, decl, name,
             idltype.tk_double: "Double",
             idltype.tk_enum:   "ULong",
             }
-        if array_helper_suffix.has_key(deref_type.kind()):
-            typecast = "((" + deref_type_name + "*) " + element_name + ")"
+        if array_helper_suffix.has_key(d_type.type().kind()):
+            typecast = "((" + type_name + "*) " + element_name + ")"
             # use the most dereferenced type
-            if tyutil.isEnum(deref_type):
+            if d_type.enum():
                 typecast = "(_CORBA_ULong*) " + typecast
             to.out("""\
 CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
-                       suffix = array_helper_suffix[deref_type.kind()],
+                       suffix = array_helper_suffix[d_type.type().kind()],
                        where = from_where, typecast = typecast,
                        num = str(num_elements))
             return
-        if tyutil.isAny(deref_type) or \
-           tyutil.isTypeCode(deref_type):
+        if d_type.type().kind() in [idltype.tk_any, idltype.tk_TypeCode]:
             pass
         # not sure how to handle other basic types
-        elif isinstance(deref_type, idltype.Base):
+        elif isinstance(d_type.type(), idltype.Base):
             util.fatalError("Internal error generating marshalling code")
-            raise "Don't know how to marshall type: " + repr(deref_type) +\
-              "(kind = " + str(deref_type.kind()) + ") array"
 
 
     # superfluous bracketting
@@ -340,12 +339,12 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
     indexing_string = util.start_loop(to, full_dims)
     element_name = name + indexing_string
 
-    if tyutil.isTypeCode(deref_type):
+    if d_type.typecode():
         to.out("""\
   @element_name@ = CORBA::TypeCode::unmarshalTypeCode(@from_where@);""",
                element_name = element_name,
                from_where = from_where)
-    elif tyutil.isString(deref_type):
+    elif d_type.string():
         if not(is_array) and string_via_member:
             # go via temporary. why?
             to.out("""\
@@ -371,11 +370,11 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
                        from_where = from_where)
                 to.dec_indent()
 
-            if deref_type.bound() != 0:
+            if d_type.type().bound() != 0:
                 to.out("""\
   if (_len > @n@+1) {
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  }""", n = str(deref_type.bound()))
+  }""", n = str(d_type.type().bound()))
 
                
             to.out("""\
@@ -388,8 +387,8 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
                    element_name = element_name,
                    from_where = from_where)
             to.dec_indent()
-    elif tyutil.isObjRef(deref_type):
-        base_type_name = environment.principalID(deref_type)
+    elif d_type.objref():
+        base_type_name = d_type.base(environment)
         to.out("""\
   @element_name@ = @type@_Helper::unmarshalObjRef(@from_where@);""",
                    type = base_type_name,
@@ -417,20 +416,20 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
 def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
                     is_pointer = 0):
     #o2be_operation::produceSizeCalculation
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
     
     # if decl == None then ignore
     if decl:
         assert isinstance(decl, idlast.Declarator)
 
-    deref_type = tyutil.deref(type)
+    d_type = type.deref()
 
     if decl:
         dims = decl.sizes()
     else:
         dims = []
         
-    type_dims = tyutil.typeDims(type)
+    type_dims = type.dims()
     full_dims = dims + type_dims
 
     anonymous_array = dims      != []
@@ -439,7 +438,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
 
     num_elements = reduce(lambda x,y:x*y, full_dims, 1)
 
-    isVariable = tyutil.isVariableType(type)
+    isVariable = type.variable()
 
     if is_pointer:
         dereference = "->"
@@ -449,8 +448,8 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
     string = util.StringStream()
 
     if not(is_array):
-        if tyutil.typeSizeAlignMap.has_key(deref_type.kind()):
-            size = tyutil.typeSizeAlignMap[deref_type.kind()][0]
+        if tyutil.typeSizeAlignMap.has_key(d_type.type().kind()):
+            size = tyutil.typeSizeAlignMap[d_type.type().kind()][0]
             
             if size == 1:
                 string.out("""\
@@ -464,7 +463,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
 
         # FIXME:
         if fixme:
-            if tyutil.isString(deref_type):
+            if d_type.string():
                 string.out("""\
 @sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_4) + 4;
 @sizevar@ += ((const char*) @argname@) ? strlen((const char*) @argname@) + 1 : 1;""",
@@ -475,16 +474,15 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
         # this corresponds to case tObjref in the old BE
         # what is the difference between tObjrefMember and tObjref?
         if fixme:
-            if tyutil.isObjRef(deref_type):
-                name = environment.principalID(deref_type)
+            if d_type.objref():
+                #name = environment.principalID(deref_type)
+                name = d_type.base(environment)
                 string.out("""\
 @sizevar@ = @name@_Helper::NP_alignedSize(@argname@, @sizevar@);""",
                            sizevar = sizevar, name = name, argname = argname)
                 return str(string)
 
         # typecodes may be an exception here
-        #print "[[[ sizevar = " + repr(sizevar) + "  argname = " +\
-        #      repr(argname) + "]]]"
         string.out("""\
 @sizevar@ = @argname@@deref@_NP_alignedSize(@sizevar@);""",
                    sizevar = sizevar, argname = argname, deref = dereference)
@@ -493,13 +491,13 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
 
     # thing is an array
     if not(isVariable):
-        if tyutil.isOctet(deref_type):
+        if d_type.octet():
             string.out("""\
 @sizevar@ += @num_elements@;""", sizevar = sizevar,
                        num_elements = str(num_elements))
             return str(string)
-        if tyutil.typeSizeAlignMap.has_key(deref_type.kind()):
-            size = tyutil.typeSizeAlignMap[deref_type.kind()][0]
+        if tyutil.typeSizeAlignMap.has_key(d_type.type().kind()):
+            size = tyutil.typeSizeAlignMap[d_type.type().kind()][0]
 
             if size == 1:
                 string.out("""\
@@ -533,7 +531,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
     # thing is an array of variable sized elements
     indexing_string = util.block_begin_loop(string, full_dims)
 
-    if tyutil.isString(deref_type):
+    if d_type.string():
         string.out("""\
 @sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_4);
 @sizevar@ += 4 + (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);""",
@@ -541,13 +539,14 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
                    indexing_string = indexing_string)
         
 
-    elif tyutil.isObjRef(deref_type):
-        name = environment.principalID(deref_type)
+    elif d_type.objref():
+        #name = environment.principalID(deref_type)
+        name = d_type.base(environment)
         string.out("""\
 @sizevar@ = @name@_Helper::NP_alignedSize(@argname@@indexing_string@._ptr,@sizevar@);""",
                    sizevar = sizevar, name = name, argname = argname,
                    indexing_string = indexing_string)
-    elif tyutil.isTypeCode(deref_type):
+    elif d_type.typecode():
         string.out("""\
 @sizevar@ = ((@argname@@indexing_string@._ptr)->_NP_alignedSize(@sizevar@));""",
                    sizevar = sizevar, argname = argname,
@@ -563,7 +562,6 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
                
 
     util.block_end_loop(string, full_dims)
-#    print "[[[ " + str(string) + "]]]"
 
     return str(string)
 
@@ -587,8 +585,8 @@ def sort_exceptions(ex):
     # sort the exceptions into lexicographical order
     def lexicographic(exception_a, exception_b):
         # use their full C++ name
-        name_a = string.join(tyutil.mapID(exception_a.scopedName()))
-        name_b = string.join(tyutil.mapID(exception_b.scopedName()))
+        name_a = string.join(id.mapID(exception_a.scopedName()))
+        name_b = string.join(id.mapID(exception_b.scopedName()))
         # name_a <=> name_b
         if name_a < name_b: return -1
         if name_a > name_b: return 1
@@ -597,3 +595,4 @@ def sort_exceptions(ex):
     raises = ex[:]
     raises.sort(lexicographic)
     return raises
+

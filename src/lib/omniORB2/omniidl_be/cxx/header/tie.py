@@ -28,6 +28,10 @@
 #
 # $Id$
 # $Log$
+# Revision 1.11.2.3  2000/04/26 18:22:31  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.11.2.2  2000/03/13 16:01:02  djs
 # Problem generating tie templates with diamond inheritance (duplicated methods
 # by mistake)
@@ -79,7 +83,7 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, name, env, config, util
+from omniidl_be.cxx import tyutil, id, config, util, types
 from omniidl_be.cxx.header import template
 
 import tie
@@ -88,7 +92,7 @@ self = tie
 
 def __init__(stream):
     self.stream = stream
-    self.__environment = name.Environment()
+    #self.__environment = name.Environment()
     return self
 
 
@@ -115,30 +119,23 @@ def visitModule(node):
 def write_template(environment, node, nested = 0):
 
     scopedName = node.scopedName()
-    scope = tyutil.scope(scopedName)
-    iname = tyutil.mapID(node.identifier())
-    prefix = POA_prefix(nested)
-    if scope == []:
-        scope = [prefix]
-        scope_str = environment.nameToString(environment.relName(scope))
-        POA_name = prefix + "_" + iname
-    else:
-        if prefix != "": scope[0] = prefix + "_" + scope[0]
-        full_name = scope + [iname]
-        POA_name = environment.nameToString(environment.relName(full_name))
+    iname = id.mapID(node.identifier())
     
-    flat_scope = string.join(scope, "_")
-    if config.FlatTieFlag():        
-        POA_tie_name = flat_scope + "_" +  iname + "_tie"
+    prefix = POA_prefix(nested)
+    if prefix != "": prefix = prefix + "_"
+    scopedName = node.scopedName()
+    if config.FlatTieFlag():
+        POA_scopedName = [ prefix + scopedName[0] ] +\
+                          scopedName[1:len(scopedName)]
+        POA_name = id.Name(POA_scopedName).fullyQualify()
+        POA_tie_name = string.join(POA_scopedName, "_") + "_tie"
     else:
-        prefix = POA_prefix(nested)
-        if prefix != "": prefix = prefix + "_"
-        
-        POA_tie_name = prefix + iname + "_tie"
+        POA_name = prefix + id.Name(scopedName).simple()
+        POA_tie_name = POA_name + "_tie"
         
     # FIXME: hack because operationArgumentType strips off outermost
     # scope
-    environment = environment.enterScope("dummy")
+    environment = environment.enter("dummy")
 
     # build methods which bind the interface operations and attributes
     # note that this includes inherited callables since tie
@@ -149,12 +146,11 @@ def write_template(environment, node, nested = 0):
     # have been defined already (and which should not be included twice)
     def buildCallables(interface, where, environment, continuation,
                        defined_so_far = {}):
-        global_env = name.Environment()
         callables = interface.callables()
         operations = filter(lambda x:isinstance(x, idlast.Operation),
                             callables)
         for operation in operations:
-            returnType = operation.returnType()
+            returnType = types.Type(operation.returnType())
             identifier = operation.identifier()
             if (defined_so_far.has_key(identifier)):
                 # don't repeat it
@@ -162,31 +158,20 @@ def write_template(environment, node, nested = 0):
             defined_so_far[identifier] = 1
             
             parameters = operation.parameters()
-            has_return_value = not(tyutil.isVoid(returnType))
+            has_return_value = not(returnType.void())
             # FIXME: return types are fully scoped but argument types
             # arent?
-            returnType_name = tyutil.operationArgumentType(returnType,
-                                                           global_env)[0]
-            operation_name = tyutil.mapID(identifier)
+            returnType_name = returnType.op(types.RET)
+
+            operation_name = id.mapID(identifier)
             
             signature = []
             call = []
 
             for parameter in parameters:
-                paramType = parameter.paramType()
-                dir = parameter.direction() + 1
-                if config.EMULATE_BUGS() and not(config.OldFlag()):
-                    # the old compiler scopes this bit wrong (but only when
-                    # _not_ generating old skeletons?!)
-                    argtypes = tyutil.operationArgumentType(paramType,
-                                                            environment,
-                                                            virtualFn = 1)
-                else:
-                    argtypes = tyutil.operationArgumentType(paramType,
-                                                            global_env,
-                                                            virtualFn = 1)
-                param_type_name = argtypes[dir]
-                param_id = tyutil.mapID(parameter.identifier())
+                paramType = types.Type(parameter.paramType())
+                param_type_name = paramType.op(types.direction(parameter))
+                param_id = id.mapID(parameter.identifier())
                 signature.append(param_type_name + " " + param_id)
                 call.append(param_id)
 
@@ -211,11 +196,10 @@ def write_template(environment, node, nested = 0):
                             callables)
         for attribute in attributes:
             identifiers = attribute.identifiers()
-            attrType = attribute.attrType()
-            attrType_names = tyutil.operationArgumentType(attrType, global_env)
+            attrType = types.Type(attribute.attrType())
 
-            attrType_name_RET = attrType_names[0]
-            attrType_name_IN = attrType_names[1]
+            attrType_name_RET = attrType.op(types.RET)
+            attrType_name_IN = attrType.op(types.IN)
             
             for identifier in identifiers:
                 if defined_so_far.has_key(identifier):
@@ -223,13 +207,13 @@ def write_template(environment, node, nested = 0):
                     continue
                 defined_so_far[identifier] = 1
                 
-                id = tyutil.mapID(identifier)
+                ident = id.mapID(identifier)
                 where.out("""\
   @attr_type_ret_name@ @attribute_name@() { return pd_obj->@attribute_name@(); }""", attr_type_ret_name = attrType_name_RET,
-                          attribute_name = id)
+                          attribute_name = ident)
                 if not(attribute.readonly()):
                     where.out("""\
-  void @attribute_name@(@attr_type_in_name@ _value) { pd_obj->@attribute_name@(_value); }""", attribute_name = id,
+  void @attribute_name@(@attr_type_in_name@ _value) { pd_obj->@attribute_name@(_value); }""", attribute_name = ident,
                               attr_type_in_name = attrType_name_IN)                    
         # do the recursive bit
         for i in interface.inherits():
@@ -246,8 +230,9 @@ def write_template(environment, node, nested = 0):
                inherits = POA_name,
                callables = str(where))
     if config.FlatTieFlag() and config.BOAFlag():
-        tie_name = "_tie_" + string.join(map(tyutil.mapID,scopedName), "_")
-        sk_name = name.prefixName(map(tyutil.mapID,scopedName), "_sk_")
+        tie_name = "_tie_" + string.join(map(id.mapID,scopedName), "_")
+        sk_name = id.Name(scopedName).prefix("_sk_")
+
         stream.out(template.tie_template,
                    tie_name = tie_name,
                    inherits = sk_name,
@@ -257,7 +242,7 @@ def visitInterface(node):
     if not(node.mainFile()):
         return
 
-    environment = env.lookup(node)
+    environment = id.lookup(node)
     write_template(environment, node)
 
     for n in node.declarations():

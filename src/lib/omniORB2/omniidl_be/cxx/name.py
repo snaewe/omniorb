@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.3  2000/04/26 18:22:13  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+#
 # Revision 1.8.2.2  2000/03/09 15:21:40  djs
 # Better handling of internal compiler exceptions (eg attempts to use
 # wide string types)
@@ -68,6 +72,8 @@
 #
 
 """Functions relating to naming and environments etc"""
+
+assert(0)
 
 from omniidl import idltype, idlutil
 
