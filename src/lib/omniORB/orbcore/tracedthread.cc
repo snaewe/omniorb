@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2002/03/14 15:12:33  dpg1
+  More logging for tracedmutexes/conditions.
+
   Revision 1.2.2.6  2001/12/03 18:47:39  dpg1
   Detect use after deletion in traced mutex and condition.
 
@@ -109,6 +112,12 @@ omni_tracedmutex::~omni_tracedmutex()
 	  << bug_msg;
     }
     BOMB_OUT();
+  }
+  if (pd_logname) {
+    omni_thread* me = omni_thread::self();
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " deletes mutex.\n";
   }
   if( pd_holder ) {
     {
@@ -267,6 +276,12 @@ omni_tracedcondition::~omni_tracedcondition()
 	  << bug_msg;
     }
     BOMB_OUT();
+  }
+  if (pd_logname) {
+    omni_thread* me = omni_thread::self();
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " deletes condition.\n";
   }
   if( pd_n_waiters ) {
     {
