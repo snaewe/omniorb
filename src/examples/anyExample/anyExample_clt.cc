@@ -5,7 +5,7 @@
 //              This is the client. It uses the COSS naming service
 //              to obtain the object reference.
 //
-// Usage: eg3_clt
+// Usage: anyExample_clt
 //
 //
 //        On startup, the client lookup the object reference from the
