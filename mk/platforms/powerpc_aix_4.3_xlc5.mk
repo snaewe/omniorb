@@ -49,17 +49,19 @@ CXXMAKEDEPEND   += -D__cplusplus -D_AIX
 # Using xlC_r                                                              #
 ############################################################################
 
-# xlC_r 3.1.4 & xlC_r 3.6.6
+# xlC_r 3.1.4, 3.6.6, & 5.0.0
 
-CXX             = xlC_r
-CXXDEBUGFLAGS   =
+CXX		= xlC_r
+CXXDEBUGFLAGS	=
 CXXLINK		= xlC_r
-CXXOPTIONS      = -qmaxmem=8192
+CXXOPTIONS	= -qstaticinline -qmaxmem=8192
 
 # Use C Set++ to compile your C source.
 #
 CC		= xlC_r
-CLINK           = xlC_r
+CDEBUGFLAGS	=
+CLINK		= xlC_r
+COPTIONS	=
 
 # Get the compiler version
 XLCVERSION := $(shell echo "__xlC__" > /tmp/testAIXCompilerVersion.C )
