@@ -8,6 +8,9 @@
 //	IDL interfaces for COSS Naming Service
 //	
 
+#ifndef __NAMING_IDL__
+#define __NAMING_IDL__
+
 #pragma prefix "omg.org"
 
 
@@ -106,3 +109,5 @@ module CosNaming {
 	};
 
 };
+
+#endif // __NAMING_IDL__
