@@ -1,10 +1,22 @@
 
+Fri Jan  7 16:19:24 GMT 2000 djr
+================================
+
+- (dme) provide Foo_copy() for array types per CORBA 2.3
+- (dme) make o2be_root.cc compile on non-gcc platforms
+
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+
+
 Fri Jan  7 14:47:08 GMT 2000 djr
 ================================
 
 - Server and client call timeouts are now disabled by default.
 
 src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
 doc/tex/omniORB2.tex
 
 

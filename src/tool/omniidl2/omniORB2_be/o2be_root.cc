@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.22.6.4  2000/01/07 16:28:01  djr
+  Provide Foo_copy() for array types per CORBA 2.3
+  Minor fix in o2be_root.cc
+
   Revision 1.22.6.3  1999/09/28 16:00:13  djr
   Ooops -- need to workaround MSVC bug in previous patch.
 
@@ -559,7 +563,7 @@ IMPL_NARROW_FROM_SCOPE(o2be_root)
 static char*
 internal_make_include_filename(const char* bname)
 {
-  char* ep = strrchr(bname, '.');
+  const char* ep = strrchr(bname, '.');
   size_t blen = ep ? (ep - bname) : strlen(bname);
   char* filename = new char[blen + 1 + o2be_global::suffixlen()];
   strncpy(filename, bname, blen);
