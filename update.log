@@ -1,3 +1,27 @@
+Thu Jan  8 00:40:27 GMT 1998 bjh
+================================
+
+- Java examples added, but not yet compilable.
+
+src/java NEW
+src/java/dir.mk NEW
+src/java/UK NEW
+src/java/UK/dir.mk NEW
+src/java/UK/co NEW
+src/java/UK/co/dir.mk NEW
+src/java/UK/co/orl NEW
+src/java/UK/co/orl/dir.mk NEW
+src/java/UK/co/orl/omniorb NEW
+src/java/UK/co/orl/omniord/OmniOrbConfig.java NEW
+src/java/UK/co/orl/omniord/dir.mk NEW
+Asrc/java/UK/co/orl/omniord/echo_i.java NEW
+src/java/UK/co/orl/omniord/eg2_clt.java NEW
+src/java/UK/co/orl/omniord/eg2_impl.java NEW
+src/java/UK/co/orl/omniord/eg2multi_impl.java NEW
+src/java/UK/co/orl/omniord/eg3_clt.java NEW
+src/java/UK/co/orl/omniord/eg3_impl.java NEW
+
+
 Tue Jan  6 18:22:20 GMT 1998 sll
 ================================
 
