@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.9.6.3  1999/10/14 16:22:08  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.9.6.2  1999/09/30 12:25:58  djr
   Minor changes.
 
@@ -73,6 +76,7 @@
 
 #include <excepthandler.h>
 #include <omniORB3/omniObjRef.h>
+#include <exception.h>
 
 
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
@@ -391,21 +395,21 @@ _CORBA_use_nil_ptr_as_nil_objref()
 void
 _CORBA_new_operator_return_null()
 {
-  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
 }
 
 
 void
 _CORBA_bound_check_error()
 {
-  throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 }
 
 
 void
 _CORBA_marshal_error()
 {
-  throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 }
 
 
@@ -416,7 +420,7 @@ _CORBA_invoked_nil_pseudo_ref()
 		" operation\n"
 		" on a nil pseudo-object reference.");
 
-  throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
 }
 
 
@@ -439,7 +443,7 @@ _CORBA_invoked_nil_objref()
 		" operation\n"
 		" on a nil reference.");
 
-  throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
 }
 
 

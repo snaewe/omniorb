@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.6  1999/10/14 16:22:06  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.29.6.5  1999/10/04 17:08:32  djr
   Some more fixes/MSVC work-arounds.
 
@@ -136,6 +139,8 @@
 #include <ropeFactory.h>
 #include <initialiser.h>
 #include <dynamicLib.h>
+#include <exception.h>
+
 #ifndef __atmos__
 #include <tcpSocket.h>
 #define _tcpOutgoingFactory tcpSocketMToutgoingFactory
@@ -234,7 +239,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
   omni_tracedmutex_lock sync(orb_lock);
 
   if( !parse_ORB_args(argc,argv,orb_identifier) ) {
-    throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
   if( the_orb ) {
     the_orb->incrRefCount();
@@ -275,7 +280,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     throw;
   }
   catch (...) {
-    throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
 
   the_orb = new omniOrbORB(0);
@@ -289,7 +294,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
 
 #define CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED()  \
   if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();  \
-  if( pd_destroyed )  throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);  \
+  if( pd_destroyed )  OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);  \
   if( pd_shutdown  )  throw CORBA::BAD_INV_ORDER(CORBA::OMGVMCID | 4,  \
 						 CORBA::COMPLETED_NO);  \
 
@@ -313,7 +318,7 @@ omniOrbORB::object_to_string(CORBA::Object_ptr obj)
   CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
 
   if( obj && obj->_NP_is_pseudo() )
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
 
   return omni::objectToString(obj ? obj->_PR_getobj() : 0);
 }
@@ -323,12 +328,12 @@ CORBA::Object_ptr
 omniOrbORB::string_to_object(const char* sior)
 {
   CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
-  if( !sior )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+  if( !sior )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   omniObjRef* objref;
 
   if( !omni::stringToObject(objref, sior) )
-    throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
 
   return objref ?
     (CORBA::Object_ptr) objref->_ptrToObjRef(CORBA::Object::_PD_repoId)
@@ -361,7 +366,7 @@ omniOrbORB::resolve_initial_references(const char* id)
   if( !id )  throw CORBA::ORB::InvalidName();
 
   if( !strcmp(id, "POACurrent") ) {
-    throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
   }
   else if( !strcmp(id, "RootPOA") ) {
     // Instantiate the root POA on demand.
@@ -383,7 +388,7 @@ omniOrbORB::resolve_initial_references(const char* id)
 	!strcmp(id, "SecurityCurrent") ||
 	!strcmp(id, "TransactionCurrent") )
       // Resource not found.
-      throw CORBA::NO_RESOURCES(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(NO_RESOURCES,0,CORBA::COMPLETED_NO);
 
     // The identifier is not defined.
     throw CORBA::ORB::InvalidName();
@@ -436,7 +441,7 @@ omniOrbORB::shutdown(CORBA::Boolean wait_for_completion)
   CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
 
   if( wait_for_completion && 0 /*?? in context of invocation */ )
-    throw CORBA::BAD_INV_ORDER(CORBA::OMGVMCID | 3, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,CORBA::OMGVMCID | 3, CORBA::COMPLETED_NO);
 
   do_shutdown(wait_for_completion);
 }
@@ -450,10 +455,10 @@ omniOrbORB::destroy()
     omni_tracedmutex_lock sync(orb_lock);
 
     if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
-    if( pd_destroyed )  throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+    if( pd_destroyed )  OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
 
     if( 0 /*?? in context of invocation */ )
-      throw CORBA::BAD_INV_ORDER(CORBA::OMGVMCID | 3, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_INV_ORDER,CORBA::OMGVMCID | 3, CORBA::COMPLETED_NO);
 
     if( !pd_shutdown )  do_shutdown(1);
 
@@ -1188,7 +1193,7 @@ public:
     if (rc != 0)
       {
 	// Couldn't find a usable DLL.
-	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
       }
 
     // Confirm that the returned Windows Sockets DLL supports 1.1
@@ -1198,7 +1203,7 @@ public:
       {
 	// Couldn't find a usable DLL
 	WSACleanup();
-	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
       }
 
 #endif

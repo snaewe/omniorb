@@ -28,6 +28,11 @@
 //
 
 #include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <omniORB3/tcDescriptor.h>
 #include <dynException.h>
 #include <exception.h>
@@ -44,7 +49,7 @@ void operator<<=(CORBA::Any& a, const CORBA::Exception& ex)
   else {
     omniORB::log << "Error: function to insert the user exception into an Any is not available\n";
     omniORB::log.flush();
-    throw CORBA::INTERNAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_NO);
   }
 }
 
@@ -56,7 +61,7 @@ void operator<<=(CORBA::Any& a, const CORBA::Exception* ex)
   else {
     omniORB::log << "Error: function to insert the user exception into an Any is not available\n";
     omniORB::log.flush();
-    throw CORBA::INTERNAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_NO);
   }
 }
 

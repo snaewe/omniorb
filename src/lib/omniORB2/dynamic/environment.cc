@@ -34,6 +34,7 @@
 #endif
 
 #include <pseudo.h>
+#include <exception.h>
 
 
 // The correct way of creating an environment object is to use
@@ -86,7 +87,7 @@ CORBA::
 Environment::exception(CORBA::Exception* e)
 {
   if (!CORBA::Exception::PR_is_valid(e))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( pd_exception )  delete pd_exception;
   pd_exception = e;
 }
@@ -182,7 +183,7 @@ CORBA::
 Environment::_duplicate(CORBA::Environment_ptr p)
 {
   if (!PR_is_valid(p))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }

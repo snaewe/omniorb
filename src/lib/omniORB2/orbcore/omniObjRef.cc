@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/14 16:22:14  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.1.2.1  1999/09/22 14:26:59  djr
   Major rewrite of orbcore to support POA.
 
@@ -47,6 +50,7 @@
 #include <objectAdapter.h>
 #include <ropeFactory.h>
 #include <excepthandler.h>
+#include <exception.h>
 
 
 int
@@ -182,7 +186,7 @@ omniObjRef::_assertExistsAndTypeVerified()
 	  " A CORBA::INV_OBJREF is raised.\n";
 	omniORB::log.flush();
       }
-      throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(INV_OBJREF,0,CORBA::COMPLETED_NO);
     }
     {
       omni_tracedmutex_lock sync(omni::internalLock);

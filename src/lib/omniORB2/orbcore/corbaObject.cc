@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.19.6.4  1999/10/14 16:22:06  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.19.6.3  1999/09/27 11:01:10  djr
   Modifications to logging.
 
@@ -76,6 +79,7 @@
 #include <objectAdapter.h>
 #include <ropeFactory.h>
 #include <anonObject.h>
+#include <exception.h>
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// CORBA::Object ///////////////////////////
@@ -107,7 +111,7 @@ CORBA::Object::_is_a(const char* repoId)
 CORBA::Boolean
 CORBA::Object::_non_existent()
 {
-  if ( !_PR_is_valid(this) )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+  if ( !_PR_is_valid(this) )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   if( _NP_is_nil()    )  return 1;
   if( _NP_is_pseudo() )  return 0;
@@ -124,10 +128,10 @@ CORBA::Object::_non_existent()
 CORBA::Boolean
 CORBA::Object::_is_equivalent(CORBA::Object_ptr other_object)
 {
-  if ( !_PR_is_valid(this) )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+  if ( !_PR_is_valid(this) )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   if ( !_PR_is_valid(other_object) ) 
-    throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(OBJECT_NOT_EXIST,0,CORBA::COMPLETED_NO);
 
   if( other_object == this )  return 1;
 
@@ -403,23 +407,23 @@ CORBA::UnMarshalObjRef(const char* repoId, NetBufferedStream& s)
       id = new CORBA::Char[1];
       id[0] <<= s;
       if (id[0] != (CORBA::Char)'\0')
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
       idlen = 0;
       break;
 
     default:
       if (idlen > s.RdMessageUnRead())
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
       id = new CORBA::Char[idlen];
-      if( !id )  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+      if( !id )  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_MAYBE);
       s.get_char_array(id, idlen);
       if( id[idlen - 1] != '\0' )
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
       break;
     }
 
     profiles = new IOP::TaggedProfileList();
-    if( !profiles )  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+    if( !profiles )  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_MAYBE);
     *profiles <<= s;
 
     if (profiles->length() == 0 && idlen == 0) {
@@ -443,7 +447,7 @@ CORBA::UnMarshalObjRef(const char* repoId, NetBufferedStream& s)
       delete[] id;
       id = 0;
 
-      if( !objref )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+      if( !objref )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
       return (CORBA::Object_ptr)  objref->_ptrToObjRef(Object::_PD_repoId);
     }
   }
@@ -528,23 +532,23 @@ CORBA::UnMarshalObjRef(const char* repoId, MemBufferedStream& s)
       id = new CORBA::Char[1];
       id[0] <<= s;
       if (id[0] != (CORBA::Char)'\0')
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
       idlen = 0;
       break;
 
     default:
       if (idlen > s.RdMessageUnRead())
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
       id = new CORBA::Char[idlen];
-      if( !id )  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+      if( !id )  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_MAYBE);
       s.get_char_array(id, idlen);
       if( id[idlen - 1] != '\0' )
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
       break;
     }
 
     profiles = new IOP::TaggedProfileList();
-    if( !profiles )  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+    if( !profiles )  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_MAYBE);
     *profiles <<= s;
 
     if (profiles->length() == 0 && idlen == 0) {
@@ -568,7 +572,7 @@ CORBA::UnMarshalObjRef(const char* repoId, MemBufferedStream& s)
       delete[] id;
       id = 0;
 
-      if( !objref )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+      if( !objref )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
       return (CORBA::Object_ptr)  objref->_ptrToObjRef(Object::_PD_repoId);
     }
   }

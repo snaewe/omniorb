@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.9.6.2  1999/10/14 16:21:55  djr
+ Implemented logging when system exceptions are thrown.
+
  Revision 1.9.6.1  1999/09/22 14:26:29  djr
  Major rewrite of orbcore to support POA.
 
@@ -58,7 +61,8 @@
 
 #include <context.h>
 #include <pseudo.h>
-#include <string.h>
+#include <exception.h>
+
 #include <ctype.h>
 #include <dynamicLib.h>
 
@@ -142,14 +146,14 @@ CORBA::Status
 ContextImpl::set_one_value(const char* prop_name, const CORBA::Any& value)
 {
   // Check the property name is valid.
-  if( !prop_name )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+  if( !prop_name )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
   check_property_name(prop_name);
 
   CORBA::String_var name(CORBA::string_dup(prop_name));
 
   const char* strval;
   if( !(value >>= strval) )
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   insert_single_consume(name._retn(), 
 			((omniORB::omniORB_27_CompatibleAnyExtraction)?
@@ -162,7 +166,7 @@ CORBA::Status
 ContextImpl::set_values(CORBA::NVList_ptr values)
 {
   if( !CORBA::NVList::PR_is_valid(values) || CORBA::is_nil(values) )
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   CORBA::ULong count = values->count();
 
@@ -181,7 +185,7 @@ ContextImpl::delete_values(const char* pattern)
   CORBA::ULong bottom, top;
 
   if( !matchPattern(pattern, bottom, top) )
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   CORBA::ULong nmatches = top - bottom;
   CORBA::ULong count = pd_entries.length();
@@ -207,7 +211,7 @@ ContextImpl::get_values(const char* start_scope, CORBA::Flags op_flags,
     while( !CORBA::is_nil(c) && strcasecmp(c->pd_name, start_scope) )
       c = (ContextImpl*)c->pd_parent;
     if( CORBA::is_nil(c) )
-      throw CORBA::BAD_CONTEXT(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_CONTEXT,0, CORBA::COMPLETED_NO);
   }
 
   int wildcard = 0;
@@ -337,7 +341,7 @@ ContextImpl::matchPattern(const char* pattern, CORBA::ULong& bottom_out,
 			  CORBA::ULong& top_out) const
 {
   if( !pattern || !*pattern )
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   size_t pat_len = strlen(pattern);
   int wildcard = 0;
@@ -394,7 +398,7 @@ ContextImpl::add_values(ContextImpl* c, CORBA::Flags op_flags,
 			CORBA::NVList_ptr val_list)
 {
   if (!CORBA::NVList::PR_is_valid(val_list))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   CORBA::ULong bottom, top;
   omni_mutex_lock lock(c->pd_lock);
@@ -432,9 +436,9 @@ ContextImpl::add_values(ContextImpl* c, CORBA::Flags op_flags,
 void
 ContextImpl::check_context_name(const char* n)
 {
-  if( !isalpha(*n++) )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+  if( !isalpha(*n++) )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
   while( isalnum(*n) || *n == '_' )  n++;
-  if( *n != '\0' )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+  if( *n != '\0' )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 }
 
 
@@ -442,11 +446,11 @@ void
 ContextImpl::check_property_name(const char* n)
 {
   do{
-    if( !isalpha(*n++) )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    if( !isalpha(*n++) )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     while( isalnum(*n) || *n == '_' )  n++;
   }while( *n == '.' && (n++,1) );
 
-  if( *n != '\0' )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+  if( *n != '\0' )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 }
 
 
@@ -534,7 +538,7 @@ CORBA::Context_ptr
 CORBA::Context::_duplicate(Context_ptr p)
 {
   if (!PR_is_valid(p))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) ) {
     ContextImpl* c = (ContextImpl*) p;
     omni_mutex_lock sync(c->pd_lock);
@@ -646,7 +650,7 @@ unmarshal(buf_t& s)
 {
   CORBA::ULong nentries;
   nentries <<= s;
-  if( nentries % 2 )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+  if( nentries % 2 )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
   nentries /= 2;
 
   ContextImpl* c = new ContextImpl("", CORBA::Context::_nil());

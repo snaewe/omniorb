@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  1999/10/14 16:22:05  djr
+ Implemented logging when system exceptions are thrown.
+
  Revision 1.1.2.2  1999/10/04 17:08:31  djr
  Some more fixes/MSVC work-arounds.
 
@@ -44,6 +47,7 @@
 #endif
 
 #include <omniORB3/callDescriptor.h>
+#include <exception.h>
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// omniCallDescriptor /////////////////////////
@@ -88,7 +92,7 @@ omniCallDescriptor::userException(GIOP_C& giop_c, const char* repoId)
   }
 
   giop_c.RequestCompleted(1);
-  throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -133,6 +137,6 @@ void omniStdCallDesc::_cCORBA_mObject_i_cstring::unmarshalReturnedValues(GIOP_C&
 CORBA::ULong
 omniLocalOnlyCallDescriptor::alignedSize(CORBA::ULong)
 {
-  throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
   return 0;
 }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9.6.2  1999/10/14 16:22:12  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.9.6.1  1999/09/22 14:26:54  djr
   Major rewrite of orbcore to support POA.
 
@@ -54,6 +57,12 @@
   */
 
 #include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
+#include <exception.h>
 #include <limits.h>
 
 
@@ -306,7 +315,7 @@ MemBufferedStream::skip(CORBA::ULong size)
 void
 MemBufferedStream::overrun_error()
 {
-  throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
 }
 
 

@@ -1,4 +1,62 @@
 
+Thu Oct 14 16:59:11 BST 1999 djr
+================================
+
+- Added log messages whenever system exceptions are throw, giving
+  source file and line number.  Enabled at trace level 10.  This
+  can be disabled by defining the pre-processor symbol:
+    OMNIORB_NO_EXCEPTION_LOGGING
+
+src/lib/omniORB2/exception.h
+src/lib/omniORB2/orbcore/callDescriptor.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/corbaString.cc
+src/lib/omniORB2/orbcore/dynamicLib.cc
+src/lib/omniORB2/orbcore/exception.cc
+src/lib/omniORB2/orbcore/exceptn.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/ior.cc
+src/lib/omniORB2/orbcore/localIdentity.cc
+src/lib/omniORB2/orbcore/mbufferedStream.cc
+src/lib/omniORB2/orbcore/nbufferedStream.cc
+src/lib/omniORB2/orbcore/objectAdapter.cc
+src/lib/omniORB2/orbcore/omniInternal.cc
+src/lib/omniORB2/orbcore/omniORB.cc
+src/lib/omniORB2/orbcore/omniObjRef.cc
+src/lib/omniORB2/orbcore/omniServant.cc
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poamanager.cc
+src/lib/omniORB2/orbcore/portableserver.cc
+src/lib/omniORB2/orbcore/relStream.cc
+src/lib/omniORB2/orbcore/remoteIdentity.cc
+src/lib/omniORB2/orbcore/strand.cc
+src/lib/omniORB2/orbcore/tcpSocket.cc
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/anyP.cc
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/contextList.cc
+src/lib/omniORB2/dynamic/dynAny.cc
+src/lib/omniORB2/dynamic/dynAnyNil.cc
+src/lib/omniORB2/dynamic/dynException.cc
+src/lib/omniORB2/dynamic/dynamicImplementation.cc
+src/lib/omniORB2/dynamic/environment.cc
+src/lib/omniORB2/dynamic/exceptionList.cc
+src/lib/omniORB2/dynamic/ir.cc
+src/lib/omniORB2/dynamic/namedValue.cc
+src/lib/omniORB2/dynamic/nvList.cc
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/dynamic/serverRequest.cc
+src/lib/omniORB2/dynamic/tcParser.cc
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+
+
 Wed Oct 13 16:40:34 BST 1999 djr
 ================================
 

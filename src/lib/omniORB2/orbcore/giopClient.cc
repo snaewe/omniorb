@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.12.6.2  1999/10/14 16:22:09  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.12.6.1  1999/09/22 14:26:49  djr
   Major rewrite of orbcore to support POA.
 
@@ -59,7 +62,14 @@
   */
 
 #include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <scavenger.h>
+#include <exception.h>
+
 
 GIOP_C::GIOP_C(Rope *r)
   : NetBufferedStream(r,1,1,0)
@@ -141,7 +151,7 @@ GIOP_C::InitialiseRequest(const void          *objkey,
 
   size_t bodysize =msgsize-sizeof(MessageHeader::Request)-sizeof(CORBA::ULong);
   if (bodysize > MaxMessageSize()) {
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
   }
 
   pd_state = GIOP_C::RequestInProgress;
@@ -220,7 +230,7 @@ GIOP_C::ReceiveReply()
     {
       // Wrong header
       setStrandIsDying();
-      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
     }
 
   CORBA::ULong msgsize;
@@ -235,7 +245,7 @@ GIOP_C::ReceiveReply()
   if (msgsize > MaxMessageSize()) {
     // message size has exceeded the limit
     setStrandIsDying();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
   }
 
   RdMessageSize(msgsize,hdr[6]);
@@ -278,7 +288,7 @@ GIOP_C::ReceiveReply()
     // Should never receive anything other that the above
     // Same treatment as wrong header
     setStrandIsDying();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
   }
   return (GIOP::ReplyStatusType)rc;
 }
@@ -323,7 +333,7 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip_msg)
 	  }
 	  else {
 	    setStrandIsDying();
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_NO);
 	  }
 	}
       else {
@@ -388,7 +398,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
       {
 	// Wrong header
 	setStrandIsDying();
-	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
       }
 
     CORBA::ULong msgsize;
@@ -403,7 +413,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
     if (msgsize > MaxMessageSize()) {
       // message size has exceeded the limit
       setStrandIsDying();
-      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
     }
 
     RdMessageSize(msgsize,hdr[6]);
@@ -430,7 +440,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
     // Should never receive anything other that the above
     // Same treatment as wrong header
     setStrandIsDying();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
   }
   return (GIOP::LocateStatusType)rc;
 }
@@ -445,16 +455,13 @@ GIOP_C::UnMarshallSystemException()
   if (strncmp((const char *)repoid,(const char *) \
 	      GIOP_Basetypes::SysExceptRepoID:: _ex .id, \
 	      GIOP_Basetypes::SysExceptRepoID:: _ex .len)==0) \
-    { \
-      CORBA:: _ex ex(m,(CORBA::CompletionStatus)s); \
-      throw ex; \
-    }
+    OMNIORB_THROW(_ex, m, (CORBA::CompletionStatus) s);
 
   // Real code begins here
   CORBA::ULong len;
   len <<= *this;
   if (len > omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen)
-    throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(UNKNOWN,0,CORBA::COMPLETED_MAYBE);
 
   CORBA::Char repoid[omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen];
 
@@ -470,7 +477,7 @@ GIOP_C::UnMarshallSystemException()
   case CORBA::COMPLETED_MAYBE:
     break;
   default:
-    throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(UNKNOWN,0,CORBA::COMPLETED_MAYBE);
   };
 
   CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (UNKNOWN);
@@ -505,7 +512,7 @@ GIOP_C::UnMarshallSystemException()
   CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (WRONG_TRANSACTION);
 
   // If none of the above matched
-  throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+  OMNIORB_THROW(UNKNOWN,0,CORBA::COMPLETED_MAYBE);
 
 #undef CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION
 }

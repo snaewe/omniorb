@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.21.6.5  1999/10/14 16:22:09  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.21.6.4  1999/09/30 11:49:28  djr
   Implemented catching user-exceptions in GIOP_S for all compilers.
 
@@ -115,6 +118,8 @@
 #include <omniORB3/omniServant.h>
 #include <localIdentity.h>
 #include <bootstrap_i.h>
+#include <exception.h>
+
 
 size_t  GIOP_Basetypes::max_giop_message_size = 2048 * 1024;
 
@@ -202,7 +207,7 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
 	  }
 	  else {
 	    setStrandIsDying();
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_NO);
 	  }
 	}
       else {
@@ -218,7 +223,7 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
   // has been killed asynchronously by the scavenger. If it is the case
   // (as indicated by strandIsDying() == 1), we do not proceed any further.
   if (strandIsDying()) {
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_NO);
   }
 
   pd_state = GIOP_S::WaitingForReply;
@@ -259,7 +264,7 @@ GIOP_S::InitialiseReply(const GIOP::ReplyStatusType status, size_t msgsize)
 
   size_t bodysize = msgsize-sizeof(MessageHeader::Reply)-sizeof(CORBA::ULong);
   if (bodysize > MaxMessageSize())
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_YES);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_YES);
 
   // 
   // WrLock();
@@ -359,7 +364,7 @@ GIOP_S::dispatcher(Strand *s)
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
 	    gs.setStrandIsDying();
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
 	gs.HandleRequest(hdr[6]);
@@ -377,7 +382,7 @@ GIOP_S::dispatcher(Strand *s)
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
 	    gs.setStrandIsDying();
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
 	gs.HandleLocateRequest(hdr[6]);
@@ -395,7 +400,7 @@ GIOP_S::dispatcher(Strand *s)
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
 	    gs.setStrandIsDying();
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
 	gs.HandleCancelRequest(hdr[6]);
@@ -413,7 +418,7 @@ GIOP_S::dispatcher(Strand *s)
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
 	    gs.setStrandIsDying();
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.HandleMessageError();
 	break;
@@ -430,7 +435,7 @@ GIOP_S::dispatcher(Strand *s)
 	    // Wrong header
 	    gs.SendMsgErrorMessage();
 	    gs.setStrandIsDying();
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
 	  }
 	gs.HandleCloseConnection();
 	break;
@@ -440,7 +445,7 @@ GIOP_S::dispatcher(Strand *s)
 	// Wrong header or invalid message type
 	gs.SendMsgErrorMessage();
 	gs.setStrandIsDying();
-	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_NO);
       }
     }
 
@@ -484,7 +489,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     if (msgsize > MaxMessageSize()) {
       SendMsgErrorMessage();
       setStrandIsDying();
-      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_NO);
     }
 
     RdMessageSize(msgsize,byteorder);  // Set the size of the message body.
@@ -514,15 +519,15 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 	// Do not blindly allocate a buffer for the operation string
 	// a poison packet might set this to a huge value.
 	if (octetlen > RdMessageUnRead()) {
-	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 	}
 	CORBA::Octet* p = new CORBA::Octet[octetlen];
-	if (!p)  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	if (!p)  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
 	pd_operation = p;
       }
     get_char_array((CORBA::Octet*) pd_operation, octetlen);
     if( !octetlen || pd_operation[octetlen - 1] != '\0' )
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
 
     octetlen <<= *this;
     if (octetlen > OMNIORB_GIOPDRIVER_GIOP_S_INLINE_BUF_SIZE)
@@ -530,10 +535,10 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 	// Do not blindly allocate a buffer for the principal octet vector
 	// a poison packet might set this to a huge value
 	if (octetlen > RdMessageUnRead()) {
-	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 	}
 	CORBA::Octet* p = new CORBA::Octet[octetlen];
-	if (!p)  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	if (!p)  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
 	pd_principal = p;
       }
     get_char_array((CORBA::Octet*) pd_principal, octetlen);
@@ -584,7 +589,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 
     // Oh dear.
 
-    throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
 
   }
 
@@ -732,7 +737,7 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
     if (msgsize > MaxMessageSize()) {
       SendMsgErrorMessage();
       setStrandIsDying();
-      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_NO);
     }
 
     RdMessageSize(msgsize, byteorder);  // Set the size of the message body.
@@ -843,7 +848,7 @@ GIOP_S::HandleCancelRequest(CORBA::Boolean byteorder)
   if (msgsize > MaxMessageSize()) {
     SendMsgErrorMessage();
     setStrandIsDying();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_NO);
   }
 
   RdMessageSize(msgsize,byteorder);    // set the size of the message body
@@ -865,7 +870,7 @@ void
 GIOP_S::HandleCloseConnection()
 {
   setStrandIsDying();
-  throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_NO);
 }
 
 void

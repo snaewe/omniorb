@@ -34,6 +34,7 @@
 #endif
 
 #include <pseudo.h>
+#include <exception.h>
 
 
 #define INIT_MAX_SEQ_LENGTH  6
@@ -236,7 +237,7 @@ CORBA::
 NVList::_duplicate(NVList_ptr p)
 {
   if (!PR_is_valid(p))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
@@ -265,7 +266,7 @@ CORBA::Status
 CORBA::ORB::create_list(Long count, NVList_out new_list)
 {
   if (count < 0)
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   new_list = new NVListImpl();
 

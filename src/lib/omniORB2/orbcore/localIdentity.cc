@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/14 16:22:11  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.1.2.2  1999/09/30 12:25:59  djr
   Minor changes.
 
@@ -48,6 +51,7 @@
 #include <omniORB3/callDescriptor.h>
 #include <objectAdapter.h>
 #include <ropeFactory.h>
+#include <exception.h>
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -112,7 +116,7 @@ omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
       l << "WARNING -- method \'" << call_desc.op() << "\' raised an unknown\n"
 	" exception (not a legal CORBA exception).\n";
     }
-    throw CORBA::UNKNOWN(0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(UNKNOWN,0, CORBA::COMPLETED_MAYBE);
   }
 #endif
 }

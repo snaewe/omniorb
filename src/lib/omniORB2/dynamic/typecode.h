@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.8.6.2  1999/10/14 16:22:04  djr
+ * Implemented logging when system exceptions are thrown.
+ *
  * Revision 1.8.6.1  1999/09/22 14:26:39  djr
  * Major rewrite of orbcore to support POA.
  *
@@ -60,7 +63,6 @@
 #ifndef __TYPECODE_H__
 #define __TYPECODE_H__
 
-#include <omniORB3/CORBA.h>
 #include <omniutilities.h>
 
 
@@ -113,7 +115,7 @@ enum TypeCode_paramListType {
 inline TypeCode_base*
 ToTcBase_Checked(CORBA::TypeCode_ptr a)
 {
-  if( CORBA::is_nil(a) )  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  if( CORBA::is_nil(a) )  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
   return (TypeCode_base*) a;
 }
@@ -122,7 +124,7 @@ inline const TypeCode_base*
 ToConstTcBase_Checked(const CORBA::TypeCode* a)
 {
   if (CORBA::is_nil((CORBA::TypeCode_ptr)a))
-    throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
   return (const TypeCode_base*)a;
 }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/14 16:22:08  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.1.2.2  1999/09/27 11:01:11  djr
   Modifications to logging.
 
@@ -44,6 +47,7 @@
 #endif
 
 #include <dynamicLib.h>
+#include <exception.h>
 
 
 static void init();
@@ -86,7 +90,7 @@ context_aligned_size(size_t initoffset, CORBA::Context_ptr cxtx,
 {
   omniORB::logs(1, "Attempt to marshal context, but omniDynamic library"
 		" is not linked!");
-  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
   return 0;
 }
 
@@ -97,7 +101,7 @@ marshal_context(NetBufferedStream&, CORBA::Context_ptr cxtx,
 {
   omniORB::logs(1, "Attempt to marshal context, but omniDynamic library"
 		" is not linked!");
-  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
 }
 
 

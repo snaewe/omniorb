@@ -27,6 +27,12 @@
 //   Implementation of nil DynAny objects.
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <dynAny.h>
 
 

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/14 16:21:54  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.1.2.1  1999/09/22 14:26:25  djr
   Major rewrite of orbcore to support POA.
 
@@ -35,6 +38,66 @@
 
 #ifndef __OMNIORB_EXCEPTION_H__
 #define __OMNIORB_EXCEPTION_H__
+
+
+#ifndef OMNIORB_NO_EXCEPTION_LOGGING
+
+
+class omniExHelper {
+public:
+
+#define OMNIORB_EX(name) \
+  static void name(const char*, int, CORBA::ULong, CORBA::CompletionStatus)
+
+  OMNIORB_EX (UNKNOWN);
+  OMNIORB_EX (BAD_PARAM);
+  OMNIORB_EX (NO_MEMORY);
+  OMNIORB_EX (IMP_LIMIT);
+  OMNIORB_EX (COMM_FAILURE);
+  OMNIORB_EX (INV_OBJREF);
+  OMNIORB_EX (OBJECT_NOT_EXIST);
+  OMNIORB_EX (NO_PERMISSION);
+  OMNIORB_EX (INTERNAL);
+  OMNIORB_EX (MARSHAL);
+  OMNIORB_EX (INITIALIZE);
+  OMNIORB_EX (NO_IMPLEMENT);
+  OMNIORB_EX (BAD_TYPECODE);
+  OMNIORB_EX (BAD_OPERATION);
+  OMNIORB_EX (NO_RESOURCES);
+  OMNIORB_EX (NO_RESPONSE);
+  OMNIORB_EX (PERSIST_STORE);
+  OMNIORB_EX (BAD_INV_ORDER);
+  OMNIORB_EX (TRANSIENT);
+  OMNIORB_EX (FREE_MEM);
+  OMNIORB_EX (INV_IDENT);
+  OMNIORB_EX (INV_FLAG);
+  OMNIORB_EX (INTF_REPOS);
+  OMNIORB_EX (BAD_CONTEXT);
+  OMNIORB_EX (OBJ_ADAPTER);
+  OMNIORB_EX (DATA_CONVERSION);
+  OMNIORB_EX (TRANSACTION_REQUIRED);
+  OMNIORB_EX (TRANSACTION_ROLLEDBACK);
+  OMNIORB_EX (INVALID_TRANSACTION);
+  OMNIORB_EX (WRONG_TRANSACTION);
+
+#undef OMNIORB_EX
+
+
+};
+
+
+#define OMNIORB_THROW(name, minor, completion) \
+  omniExHelper::name(__FILE__, __LINE__, minor, completion)
+
+
+#else
+
+
+#define OMNIORB_THROW(name, minor, completion) \
+  throw CORBA::name(minor, completion)
+
+
+#endif
 
 
 #define OMNIORB_DEFINE_USER_EX_COMMON_FNS(scope, name, repoid) \

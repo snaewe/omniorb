@@ -222,3 +222,66 @@ STD_EXCEPTION (WRONG_TRANSACTION)
 
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::ORB, InvalidName,
 				       "IDL:omg.org/CORBA/ORB/InvalidName:1.0")
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// omniExHelper ////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+#ifndef OMNIORB_NO_EXCEPTION_LOGGING
+
+static const char* strip(const char* fn)
+{
+  const char* p = fn + strlen(fn);
+
+  while( p > fn && *p != '/' && *p != '\\' && *p != ':' )  p--;
+
+  if( *p == '/' || *p == '\\' || *p == ':' )  p++;
+
+  return p;
+}
+
+
+#define STD_EXCEPTION(name) \
+  void omniExHelper::name(const char* file, int line, \
+		  CORBA::ULong minor , CORBA::CompletionStatus status) \
+  { \
+    if( omniORB::trace(10) ) { \
+      omniORB::logger l; \
+      l << "throw " #name << " from " << strip(file) << ":" << line << '\n'; \
+    } \
+    throw CORBA::name(minor, status); \
+  }
+
+STD_EXCEPTION (UNKNOWN)
+STD_EXCEPTION (BAD_PARAM)
+STD_EXCEPTION (NO_MEMORY)
+STD_EXCEPTION (IMP_LIMIT)
+STD_EXCEPTION (COMM_FAILURE)
+STD_EXCEPTION (INV_OBJREF)
+STD_EXCEPTION (OBJECT_NOT_EXIST)
+STD_EXCEPTION (NO_PERMISSION)
+STD_EXCEPTION (INTERNAL)
+STD_EXCEPTION (MARSHAL)
+STD_EXCEPTION (INITIALIZE)
+STD_EXCEPTION (NO_IMPLEMENT)
+STD_EXCEPTION (BAD_TYPECODE)
+STD_EXCEPTION (BAD_OPERATION)
+STD_EXCEPTION (NO_RESOURCES)
+STD_EXCEPTION (NO_RESPONSE)
+STD_EXCEPTION (PERSIST_STORE)
+STD_EXCEPTION (BAD_INV_ORDER)
+STD_EXCEPTION (TRANSIENT)
+STD_EXCEPTION (FREE_MEM)
+STD_EXCEPTION (INV_IDENT)
+STD_EXCEPTION (INV_FLAG)
+STD_EXCEPTION (INTF_REPOS)
+STD_EXCEPTION (BAD_CONTEXT)
+STD_EXCEPTION (OBJ_ADAPTER)
+STD_EXCEPTION (DATA_CONVERSION)
+STD_EXCEPTION (TRANSACTION_REQUIRED)
+STD_EXCEPTION (TRANSACTION_ROLLEDBACK)
+STD_EXCEPTION (INVALID_TRANSACTION)
+STD_EXCEPTION (WRONG_TRANSACTION)
+#undef STD_EXCEPTION
+
+#endif  // ifndef OMNIORB_NO_EXCEPTION_LOGGING

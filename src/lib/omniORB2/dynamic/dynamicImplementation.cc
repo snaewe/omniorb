@@ -34,6 +34,7 @@
 #include <omniORB3/callDescriptor.h>
 #include <bootstrap_i.h>
 #include <dynamicLib.h>
+#include <exception.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -47,7 +48,7 @@ CORBA::Object_ptr
 PortableServer::DynamicImplementation::_this()
 {
 #if 1
-  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);//??
+  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);//??
   return 0;
 #else
   if( 1 /*?? not in context of invocation */ )
@@ -62,7 +63,7 @@ CORBA::Boolean
 PortableServer::DynamicImplementation::_is_a(const char* logical_type_id)
 {
 #if 1
-  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);//??
+  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);//??
   return 0;
 #else
   // nb. need POACurrent to do this.
@@ -106,7 +107,7 @@ PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
 	" on the ServerRequest object.\n";
       omniORB::log.flush();
     }
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
 
   case omniServerRequest::SR_GOT_PARAMS:
   case omniServerRequest::SR_GOT_CTX:
@@ -169,7 +170,7 @@ PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
 	" the Dynamic Skeleton Interface.\n";
       omniORB::log.flush();
     }
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
 
   case omniServerRequest::SR_ERROR:
     if( omniORB::trace(1) ) {
@@ -181,7 +182,7 @@ PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
 	" CORBA::MARSHAL is being passed back to the client anyway.\n";
       omniORB::log.flush();
     }
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
   }
 
   giop_s.ReplyCompleted();
@@ -201,7 +202,7 @@ PortableServer::DynamicImplementation::_do_get_interface()
   // been overriden, and provide the default implementation.
 
 #if 1
-  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);//??
+  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);//??
   return 0;
 #else
   // nb. need POACurrent to do this.
@@ -209,14 +210,14 @@ PortableServer::DynamicImplementation::_do_get_interface()
   if( !repoId ) {
     omniORB::logs(1, "The _primary_interface() of a dynamic implementation"
 		  " returned 0.");
-    throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INTF_REPOS,0, CORBA::COMPLETED_NO);
   }
 
   // Obtain the object reference for the interface repository.
   CORBA::Object_var repository =
     omniInitialReferences::get("InterfaceRepository");
   if( CORBA::is_nil(repository) )
-    throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INTF_REPOS,0, CORBA::COMPLETED_NO);
 
   // Make a call to the interface repository.
   omniStdCallDesc::_cCORBA_mObject_i_cstring

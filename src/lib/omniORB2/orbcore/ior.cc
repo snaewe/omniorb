@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.9.6.3  1999/10/14 16:22:11  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.9.6.2  1999/09/27 08:48:32  djr
   Minor corrections to get rid of warnings.
 
@@ -63,6 +66,8 @@
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
+
+#include <exception.h>
 
 
 #ifndef Swap16
@@ -114,7 +119,7 @@ IOP::iorToEncapStr(const CORBA::Char* type_id,
 
   char *result = new char[4+s*2+1];
   if (!result)
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
   result[4+s*2] = '\0';
   result[0] = 'I';
   result[1] = 'O';
@@ -145,13 +150,13 @@ IOP::EncapStrToIor(const CORBA::Char* str,
 {
   size_t s = (str ? strlen((const char *)str) : 0);
   if (s<4)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
   const char *p = (const char *) str;
   if (p[0] != 'I' ||
       p[1] != 'O' ||
       p[2] != 'R' ||
       p[3] != ':')
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
   s = (s-4)/2;  // how many octets are there in the string
   p += 4;
@@ -171,7 +176,7 @@ IOP::EncapStrToIor(const CORBA::Char* str,
       v = ((p[j] - 'A' + 10) << 4);
     }
     else
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
     if (p[j+1] >= '0' && p[j+1] <= '9') {
       v += (p[j+1] - '0');
@@ -183,7 +188,7 @@ IOP::EncapStrToIor(const CORBA::Char* str,
       v += (p[j+1] - 'A' + 10);
     }
     else
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
     v >>= buf;
   }
 
@@ -198,13 +203,13 @@ IOP::EncapStrToIor(const CORBA::Char* str,
     CORBA::ULong l;
     l <<= buf;
     if (l > buf.unRead())
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
     switch (l) {
 
     case 0:
 #ifdef NO_SLOPPY_NIL_REFERENCE
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 #else
       // According to the CORBA specification 2.0 section 10.6.2:
       //   Null object references are indicated by an empty set of
@@ -225,19 +230,19 @@ IOP::EncapStrToIor(const CORBA::Char* str,
       type_id = new CORBA::Char[1];
       buf.get_char_array(type_id,1);
       if (type_id[0] != (CORBA::Char)'\0')
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
       break;
 
     default:
       type_id = new CORBA::Char[l];
       if (!type_id)
-	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
       buf.get_char_array(type_id,l);
     }
 
     profiles = new IOP::TaggedProfileList;
     if (!profiles)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
     *profiles <<= buf;
   }
   catch (...) {

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.12.6.2  1999/10/14 16:22:12  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.12.6.1  1999/09/22 14:26:54  djr
   Major rewrite of orbcore to support POA.
 
@@ -64,9 +67,13 @@
 #pragma hdrstop
 #endif
 
+#include <exception.h>
+
+
 #define DIRECT_RCV_CUTOFF 1024
 #define DIRECT_SND_CUTOFF 8192
 #define DO_NOT_AVOID_MISALIGNMENT
+
 
 NetBufferedStream::NetBufferedStream(Strand *s,
 				     CORBA::Boolean Rdlock,
@@ -141,7 +148,7 @@ NetBufferedStream::get_char_array(CORBA::Char* b, int size,
       omni::align_to(current_alignment, align) - current_alignment;
     if (RdMessageSize()) {
       if (size + padding > (int)RdMessageUnRead()) {
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
       }
     }
     if( padding > 0 )  skip(padding, startMTU);
@@ -180,7 +187,7 @@ NetBufferedStream::put_char_array(const CORBA::Char* b, int size,
       omni::align_to(current_alignment, align) - current_alignment;
     if (WrMessageSize()) {
       if (size + padding > (int)WrMessageSpaceLeft()) {
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
       }
     }
     if (startMTU) {
@@ -238,7 +245,7 @@ NetBufferedStream::reserve(size_t minimum,
     {
       if (bufsize < minimum)
 	// Error, try to reserve more bytes than the message size limit
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
       else 
 	if (bufsize > pd_strand->max_reserve_buffer_size())
 	  bufsize = pd_strand->max_reserve_buffer_size();
@@ -309,7 +316,7 @@ NetBufferedStream::receive(size_t minimum,CORBA::Boolean startMTU)
     {
       if (bufsize < minimum) {
 	// Error, try to reserve more bytes than the message size limit
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
       }
       else {
 	if (bufsize > pd_strand->max_receive_buffer_size())
@@ -460,7 +467,7 @@ NetBufferedStream::skip(CORBA::ULong size,CORBA::Boolean startMTU)
     size_t m = RdMessageUnRead();
     if (m && m < size)
       // Error, try to skip more bytes than the message size limit
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
   }
 
   giveback_received();

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.4  1999/10/14 16:22:13  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.1.2.3  1999/09/27 08:48:33  djr
   Minor corrections to get rid of warnings.
 
@@ -55,6 +58,7 @@
 #include <ropeFactory.h>
 #include <anonObject.h>
 #include <initialiser.h>
+#include <exception.h>
 
 
 #if defined(HAS_Cplusplus_Namespace)
@@ -759,7 +763,7 @@ omni::revertToOriginalProfile(omniObjRef* objref)
 
   if( !ropeFactory::iopProfilesToRope(*objref->pd_iopprofiles, key, keysize,
 				      rope, is_local) )
-    throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
 
   omni_tracedmutex_lock sync(internalLock);
 

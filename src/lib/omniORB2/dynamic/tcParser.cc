@@ -27,8 +27,15 @@
 // Description:
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <tcParser.h>
 #include <typecode.h>
+#include <exception.h>
 
 
 #ifndef TRUE
@@ -1272,7 +1279,7 @@ tcParser::calculateItemSize(const TypeCode_base*tc, const size_t initialoffset)
       }
 
     default:
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
       return FALSE;
     }
 }
@@ -1317,7 +1324,7 @@ tcParser::calculateSimpleItemSize(const CORBA::TCKind tck,
     }
 
   default:
-    throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
     return 0;
   }
 }

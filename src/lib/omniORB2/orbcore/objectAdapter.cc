@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  1999/10/14 16:22:12  djr
+ Implemented logging when system exceptions are thrown.
+
  Revision 1.1.2.3  1999/09/24 17:11:13  djr
  New option -ORBtraceInvocations and omniORB::traceInvocations.
 
@@ -52,6 +55,8 @@
 #include <bootstrap_i.h>
 #include <poaimpl.h>
 #include <corbaBoa.h>
+#include <exception.h>
+
 #include <stdlib.h>
 
 #ifndef __atmos__
@@ -353,7 +358,7 @@ omniObjAdapter::defaultLoopBack()
 	  else
 	    // This is tough!!! Haven't got a loop back!
 	    // May be the BOA has been destroyed!!!
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
 	}
       }
     }

@@ -31,6 +31,7 @@
 #define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB3/CORBA.h>
 #include <bootstrap_i.h>
+#include <exception.h>
 
 
 CORBA::InterfaceDef_ptr
@@ -38,7 +39,7 @@ CORBA::
 Object::_get_interface()
 {
   if( _NP_is_nil() )  _CORBA_invoked_nil_objref();
-  if( !_PR_is_valid(this) )  throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !_PR_is_valid(this) )  OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   //?? No - we ought to contact the implementation first, and only
   // if that fails to provide an answer should we try to go direct
@@ -48,7 +49,7 @@ Object::_get_interface()
   CORBA::Repository_ptr repository = CORBA::Repository::_narrow(o);
 
   if( CORBA::is_nil(repository) )
-    throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INTF_REPOS,0, CORBA::COMPLETED_NO);
 
   CORBA::Contained_ptr interf =
     repository->lookup_id(pd_obj->_mostDerivedRepoId());

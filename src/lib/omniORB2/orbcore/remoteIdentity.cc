@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/14 16:22:16  djr
+  Implemented logging when system exceptions are thrown.
+
   Revision 1.1.2.2  1999/09/28 10:54:35  djr
   Removed pretty-printing of object keys from object adapters.
 
@@ -45,6 +48,7 @@
 #include <remoteIdentity.h>
 #include <omniORB3/callDescriptor.h>
 #include <dynamicLib.h>
+#include <exception.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -130,7 +134,7 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
 	CORBA::ULong repoIdLen;
 	repoIdLen <<= giop_c;
 	if( repoIdLen > giop_c.RdMessageUnRead() )
-	  throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+	  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
 	CORBA::String_var repoId(omni::allocString(repoIdLen - 1));
 	giop_c.get_char_array((CORBA::Char*)(char*) repoId, repoIdLen);
 
@@ -210,7 +214,7 @@ omniRemoteIdentity::locateRequest()
 
     case GIOP::UNKNOWN_OBJECT:
       giop_c.RequestCompleted();
-      throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(OBJECT_NOT_EXIST,0,CORBA::COMPLETED_NO);
       break;        // dummy break
 
     case GIOP::OBJECT_FORWARD:

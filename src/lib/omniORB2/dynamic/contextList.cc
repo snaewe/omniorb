@@ -34,6 +34,7 @@
 #endif
 
 #include <pseudo.h>
+#include <exception.h>
 
 
 #define INIT_MAX_SEQ_LENGTH  6
@@ -62,7 +63,7 @@ ContextListImpl::count() const
 void
 ContextListImpl::add(const char* s)
 {
-  if( !s )  throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !s )  OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
 
@@ -80,7 +81,7 @@ ContextListImpl::add(const char* s)
 void
 ContextListImpl::add_consume(char* s)
 {
-  if( !s )  throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !s )  OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
 
@@ -189,7 +190,7 @@ CORBA::
 ContextList::_duplicate(CORBA::ContextList_ptr p)
 {
   if (!PR_is_valid(p))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }

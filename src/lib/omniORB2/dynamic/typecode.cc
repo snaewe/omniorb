@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.2  1999/10/14 16:22:01  djr
+ * Implemented logging when system exceptions are thrown.
+ *
  * Revision 1.33.6.1  1999/09/22 14:26:37  djr
  * Major rewrite of orbcore to support POA.
  *
@@ -150,9 +153,15 @@
 //
  */
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <typecode.h>
 #include <tcParser.h>
-#include <string.h>
+#include <exception.h>
 
 
 // CORBA::TypeCode - core class function implementation
@@ -180,7 +189,7 @@ CORBA::TypeCode::kind() const
 CORBA::Boolean
 CORBA::TypeCode::equal(CORBA::TypeCode_ptr TCp) const
 {
-  if (!PR_is_valid(TCp)) throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if (!PR_is_valid(TCp)) OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   return ToConstTcBase_Checked(this)
     ->NP_equal(ToTcBase_Checked(TCp),0,0);
 }
@@ -188,7 +197,7 @@ CORBA::TypeCode::equal(CORBA::TypeCode_ptr TCp) const
 CORBA::Boolean
 CORBA::TypeCode::equivalent(CORBA::TypeCode_ptr TCp) const
 {
-  if (!PR_is_valid(TCp)) throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if (!PR_is_valid(TCp)) OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   return ToConstTcBase_Checked(this)
     ->NP_equal(ToTcBase_Checked(TCp),1,0);
 }
@@ -281,7 +290,7 @@ CORBA::TypeCode_ptr
 CORBA::TypeCode::_duplicate(CORBA::TypeCode_ptr t)
 {
   if (!PR_is_valid(t))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if (CORBA::is_nil(t))  return t;
   return TypeCode_collector::duplicateRef(ToTcBase(t));
 }
@@ -377,7 +386,7 @@ CORBA::TypeCode::NP_struct_tc(const char* id, const char* name,
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
     if ( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type))
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
   return new TypeCode_struct(id, name, members);
 }
@@ -391,7 +400,7 @@ CORBA::TypeCode::NP_union_tc(const char* id, const char* name,
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
     if( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type) )
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
   return new TypeCode_union(id, name, ToTcBase_Checked(discriminator_type),
 			    members);
@@ -421,7 +430,7 @@ CORBA::TypeCode::NP_exception_tc(const char* id, const char* name,
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
     if ( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type))
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
   return new TypeCode_except(id, name, members);
 }
@@ -750,7 +759,7 @@ size_t
 TypeCode_base::NP_alignedSimpleParamSize(size_t initialoffset,
 					 TypeCode_offsetTable* otbl) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 #ifdef NEED_DUMMY_RETURN
   return 0;
 #endif
@@ -760,7 +769,7 @@ size_t
 TypeCode_base::NP_alignedComplexParamSize(size_t initialoffset,
 					  TypeCode_offsetTable* otbl) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 #ifdef NEED_DUMMY_RETURN
   return 0;
 #endif
@@ -770,21 +779,21 @@ void
 TypeCode_base::NP_marshalSimpleParams(NetBufferedStream &,
 				      TypeCode_offsetTable* ) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 }
 
 void
 TypeCode_base::NP_marshalSimpleParams(MemBufferedStream &,
 				      TypeCode_offsetTable* ) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 }
 
 void
 TypeCode_base::NP_marshalComplexParams(MemBufferedStream &,
 				       TypeCode_offsetTable* ) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 }
 
 const TypeCode_base*
@@ -1506,7 +1515,7 @@ TypeCode_sequence::NP_marshalComplexParams(MemBufferedStream &s,
 					   TypeCode_offsetTable* otbl) const
 {
   if (!pd_complete)
-    throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
   TypeCode_marshaller::marshal(ToTcBase(pd_content), s, otbl);
   pd_length >>= s;
 }
@@ -2873,7 +2882,7 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
   const CORBA::ULong memberCount = members.length();
 
   if (memberCount == 0)
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   pd_repoId = CORBA::string_dup(repositoryId);
   pd_name = CORBA::string_dup(name);
@@ -2895,11 +2904,11 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
     if( CORBA::_tc_octet->equivalent(lbl_tc) )
       {
 	if( pd_default >= 0 )
-	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 	CORBA::Octet v;
 	members[i].label >>= CORBA::Any::to_octet(v);
 	if( v != CORBA::Octet(0) )
-	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 	pd_default = i;
 	pd_members[i].alabel = Discriminator(0);
       }
@@ -3770,7 +3779,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
 	// Now look it up in the table
 	TypeCode_base* tc = otbl->lookupOffset(offset+currpos);
 	if (tc == 0)
-	  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
 
 	return TypeCode_collector::duplicateRef(tc);
       }
@@ -3820,7 +3829,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_Principal));
 
     default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     };
     // Never reach here
 
@@ -3833,7 +3842,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
       return TypeCode_string::NP_unmarshalSimpleParams(s, otbl);
 
     default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     };
     // Never reach here
 
@@ -3856,7 +3865,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
       // and read the data in.
       //?? Can we do this without lots of copying? Is it worth it?
       MemBufferedStream mbs(size);
-      if( s.overrun(size) )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      if( s.overrun(size) )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
       mbs.copy_from(s, size);
 
       // Get the byte order
@@ -3893,13 +3902,13 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
 	return TypeCode_union::NP_unmarshalComplexParams(mbs, &tbl);
 
       default:
-	throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
       };
       // Never reach here
     }
 
   default:
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     // Never reach here
   };
 
@@ -4075,7 +4084,7 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
 	// Now look it up in the table
 	TypeCode_base* tc = otbl->lookupOffset(offset+currpos);
 	if (tc == 0)
-	  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
 
 	return TypeCode_collector::duplicateRef(ToTcBase(tc));
       }
@@ -4125,7 +4134,7 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_Principal));
 
     default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     };
     // Never reach here
 
@@ -4138,7 +4147,7 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
       return TypeCode_string::NP_unmarshalSimpleParams(s, otbl);
 
     default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     };
     // Never reach here
 
@@ -4197,13 +4206,13 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
 	return TypeCode_union::NP_unmarshalComplexParams(mbs, &tbl);
 
       default:
-	throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
       };
       // Never reach here
     }
 
   default:
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     // Never reach here
   };
 
@@ -4314,7 +4323,7 @@ TypeCode_marshaller::paramListType(CORBA::ULong kind)
   if( kind < sizeof(plt) / sizeof(TypeCode_paramListType) )
     return plt[kind];
 
-  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
 #ifdef NEED_DUMMY_RETURN
   return plt_None;
 #endif
@@ -4702,42 +4711,42 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
       {
 	// check that <label> is of the correct type
 	if( !tc->equivalent(lbl_tc) )
-	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 	break;
       }
     default:
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     }
   }
 
   switch( tc->kind() ) {
   case CORBA::tk_char:
     if (lbl_kind != CORBA::tk_char)
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_boolean:
     if (lbl_kind != CORBA::tk_boolean)
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_short:
     if ((sign && ((CORBA::Long) lbl_value < -32768) ) || (lbl_value > 32767) )
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_ushort:
     if ((sign && ((CORBA::Long) lbl_value < 0) ) || (lbl_value > 65536) )
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_long:
     // XXX if ever TypeCode_union::Discriminator is bigger than
     //     CORBA::Long, we should test for the negative limit as well.
    if (!sign && (lbl_value > 2147483647) )
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_ulong:
     // XXX if ever TypeCode_union::Discriminator is bigger than
     //     CORBA::ULong, we should test for the positive limit as well.
     if (sign && ((CORBA::Long) lbl_value < 0))
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_enum:
     {
@@ -4751,7 +4760,7 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
   // case CORBA::tk_wchar:
   case CORBA::tk_octet:
   default:
-    throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
   }
 
   return lbl_value;
@@ -5112,7 +5121,7 @@ CORBA::ORB::create_struct_tc(const char* id, const char* name,
 
   for( i = 0; i < memberCount; i++ ) {
     if (!CORBA::TypeCode::PR_is_valid(members[i].type))
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   }
 
   TypeCode_struct::Member* new_members =
@@ -5141,7 +5150,7 @@ CORBA::ORB::create_union_tc(const char* id, const char* name,
   for( i = 0; i < memberCount; i++ )
     if( !CORBA::TypeCode::PR_is_valid(members[i].type) ||
 	CORBA::is_nil(members[i].type) )
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   return new TypeCode_union(id, name, ToTcBase_Checked(discriminator_type),
 			    members);
@@ -5197,7 +5206,7 @@ CORBA::ORB::create_sequence_tc(CORBA::ULong bound,
 			       CORBA::TypeCode_ptr element_type)
 {
   if (!CORBA::TypeCode::PR_is_valid(element_type))
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   return CORBA::TypeCode::NP_sequence_tc(bound, element_type);
 }
@@ -5207,7 +5216,7 @@ CORBA::ORB::create_array_tc(CORBA::ULong length,
 			    CORBA::TypeCode_ptr element_type)
 {
   if (!CORBA::TypeCode::PR_is_valid(element_type))
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   return CORBA::TypeCode::NP_array_tc(length, element_type);
 }

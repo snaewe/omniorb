@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.7.6.2  1999/10/14 16:22:00  djr
+ Implemented logging when system exceptions are thrown.
+
  Revision 1.7.6.1  1999/09/22 14:26:36  djr
  Major rewrite of orbcore to support POA.
 
@@ -50,6 +53,7 @@
 #include <pseudo.h>
 #include <context.h>
 #include <dynException.h>
+#include <exception.h>
 
 
 CORBA::ServerRequest::~ServerRequest()  {}
@@ -70,11 +74,11 @@ omniServerRequest::arguments(CORBA::NVList_ptr& parameters)
 {
   if( pd_state != SR_READY ) {
     pd_state = SR_DSI_ERROR;
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
   if( CORBA::is_nil(parameters) ) {
     pd_state = SR_DSI_ERROR;
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
   }
 
   pd_params = parameters;
@@ -104,7 +108,7 @@ omniServerRequest::ctx()
 
   if( pd_state != SR_GOT_PARAMS ) {
     pd_state = SR_DSI_ERROR;
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
 
   if( pd_giop_s.RdMessageUnRead() >= 4 ) {
@@ -123,7 +127,7 @@ omniServerRequest::set_result(const CORBA::Any& value)
 {
   if( !(pd_state == SR_GOT_PARAMS || pd_state == SR_GOT_CTX) ) {
     pd_state = SR_DSI_ERROR;
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
   if( pd_state == SR_GOT_PARAMS && pd_giop_s.RdMessageUnRead() > 0 )
     pd_giop_s.RequestReceived();
@@ -140,7 +144,7 @@ omniServerRequest::set_exception(const CORBA::Any& value)
   while( tc->kind() == CORBA::tk_alias )
     tc = tc->content_type();
   if( tc->kind() != CORBA::tk_except )
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   switch( pd_state ) {
   case SR_READY:
@@ -148,7 +152,7 @@ omniServerRequest::set_exception(const CORBA::Any& value)
       pd_giop_s.RequestReceived(1);
     else {
       pd_state = SR_DSI_ERROR;
-      throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
     }
     break;
 
@@ -160,7 +164,7 @@ omniServerRequest::set_exception(const CORBA::Any& value)
     break;
 
   case SR_DSI_ERROR:
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
 
   pd_exception = value;
