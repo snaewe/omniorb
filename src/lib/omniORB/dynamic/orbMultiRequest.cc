@@ -62,18 +62,14 @@ static omni_condition q_cv(&q_lock);
 CORBA::Status
 CORBA::ORB::send_multiple_requests_oneway(const RequestSeq& rs)
 {
-  int any_failed = 0;
-
   for( CORBA::ULong i = 0; i < rs.length(); i++ ) {
     try {
       rs[i]->send_oneway();
     }
-    catch(...) {
-      any_failed = 1;
+    catch(CORBA::Exception& ex) {
+      ((RequestImpl*) rs[i]._ptr)->storeExceptionInEnv();
     }
   }
-
-  if( any_failed )  throw CORBA::UNKNOWN(0, CORBA::COMPLETED_MAYBE);
 
   RETURN_CORBA_STATUS;
 }
