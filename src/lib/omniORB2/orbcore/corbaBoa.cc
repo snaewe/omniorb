@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.4  1999/09/28 10:54:32  djr
+  Removed pretty-printing of object keys from object adapters.
+
   Revision 1.13.6.3  1999/09/24 17:11:11  djr
   New option -ORBtraceInvocations and omniORB::traceInvocations.
 
@@ -560,7 +563,7 @@ omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
-    l << "Dispatching remote call \'" << giop_s.operation() << "\' to "
+    l << "Dispatching remote call \'" << giop_s.operation() << "\' to: "
       << id << '\n';
   }
 
@@ -650,33 +653,6 @@ omniOrbBOA::lastInvocationHasCompleted(omniLocalIdentity* id)
   delete id->servant();
   met_detached_object();
   id->die();
-}
-
-
-char*
-omniOrbBOA::ppObject(omniLocalIdentity* id)
-{
-  // output: boa<key-in-hex>
-
-  static char cm[] = { '0', '1', '2', '3', '4', '5', '6', '7',
-		       '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-
-  int size = 6 + id->keysize() * 2;
-  char* ret = new char[size];
-  char* s = ret;
-  strcpy(s, "boa<");
-  s += strlen(s);
-
-  const unsigned char* k = (const unsigned char*) id->key();
-
-  for( int i = 0; i < id->keysize(); i++, k++ ) {
-    *s++ = cm[*k >> 4];
-    *s++ = cm[*k & 0xf];
-  }
-  *s++ = '>';
-  *s++ = '\0';
-
-  return ret;
 }
 
 //////////////////////////////////////////////////////////////////////

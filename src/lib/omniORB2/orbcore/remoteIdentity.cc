@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/28 10:54:35  djr
+  Removed pretty-printing of object keys from object adapters.
+
   Revision 1.1.2.1  1999/09/22 14:27:06  djr
   Major rewrite of orbcore to support POA.
 
@@ -78,7 +81,7 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
 
   omniRemoteIdentity_RefHolder rh(this);
 
-  if( omniORB::trace(10) ) {
+  if( omniORB::traceInvocations ) {
     omniORB::logger l;
     l << "Invoke '" << call_desc.op() << "' on remote: " << this << '\n';
   }

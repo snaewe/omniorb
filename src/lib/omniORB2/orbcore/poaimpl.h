@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/09/28 10:54:35  djr
+  Removed pretty-printing of object keys from object adapters.
+
   Revision 1.1.2.2  1999/09/24 10:28:52  djr
   Added POA_Helper and POA::the_children().
 
@@ -126,7 +129,6 @@ public:
   virtual void  dispatch(omniCallDescriptor&, omniLocalIdentity*);
   virtual int   objectExists(const _CORBA_Octet* key, int keysize);
   virtual void  lastInvocationHasCompleted(omniLocalIdentity* id);
-  virtual char* ppObject(omniLocalIdentity*);
 
   //////////////////////
   // omniORB Internal //

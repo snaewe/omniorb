@@ -1,4 +1,18 @@
 
+Tue Sep 28 11:39:14 BST 1999 djr
+================================
+
+- Removed pretty-printing of object keys from object adapters.
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaBoa.h
+src/lib/omniORB2/orbcore/logIOstream.cc
+src/lib/omniORB2/orbcore/objectAdapter.h
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poaimpl.h
+src/lib/omniORB2/orbcore/remoteIdentity.cc
+
+
 Tue Sep 28 10:33:30 BST 1999 djr
 ================================
 

@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.7.6.2  1999/09/28 10:54:33  djr
+  Removed pretty-printing of object keys from object adapters.
+
   Revision 1.7.6.1  1999/09/22 14:26:54  djr
   Major rewrite of orbcore to support POA.
 
@@ -65,7 +68,6 @@
 #endif
 
 #include <localIdentity.h>
-#include <objectAdapter.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>
@@ -275,11 +277,7 @@ omniORB::logger::operator<<(double n)
 #endif
 
 
-static int is_poa_key(const CORBA::Octet*, int);
-static int is_boa_key(const CORBA::Octet*, int);
-static char* pp_poa_key(const CORBA::Octet*, int);
-static char* pp_boa_key(const CORBA::Octet*, int);
-static char* pp_key(const CORBA::Octet*, int);
+static void pp_key(omniORB::logger& l, const CORBA::Octet*, int);
 
 
 omniORB::logger&
@@ -287,27 +285,8 @@ omniORB::logger::operator<<(omniLocalIdentity* id)
 {
   OMNIORB_ASSERT(id);
 
-  if( id->adapter() ) {
-    char* p = id->adapter()->ppObject(id);
-    *this << p;
-    delete[] p;
-  }
-  else {
-    // Let's try and guess whether this is a poa or boa
-    // id, and ask them to pp it.
-
-    char* p;
-
-    if( is_poa_key(id->key(), id->keysize()) )
-      p = pp_poa_key(id->key(), id->keysize());
-    else if( is_boa_key(id->key(), id->keysize()) )
-      p = pp_boa_key(id->key(), id->keysize());
-    else
-      p = pp_key(id->key(), id->keysize());
-
-    *this << p << " (not activated)";
-    delete[] p;
-  }
+  pp_key(*this, id->key(), id->keysize());
+  if( !id->adapter() )  *this << " (not activated)";
 
   return *this;
 }
@@ -318,20 +297,7 @@ omniORB::logger::operator<<(omniIdentity* id)
 {
   OMNIORB_ASSERT(id);
 
-  // Let's try and guess whether this is a poa or boa
-  // id, and ask them to pp it.
-
-  char* p;
-
-  if( is_poa_key(id->key(), id->keysize()) )
-    p = pp_poa_key(id->key(), id->keysize());
-  else if( is_boa_key(id->key(), id->keysize()) )
-    p = pp_boa_key(id->key(), id->keysize());
-  else
-    p = pp_key(id->key(), id->keysize());
-
-  *this << p;
-  delete[] p;
+  pp_key(*this, id->key(), id->keysize());
 
   return *this;
 }
@@ -340,20 +306,7 @@ omniORB::logger::operator<<(omniIdentity* id)
 omniORB::logger&
 omniORB::logger::operator<<(omniObjKey& k)
 {
-  // Let's try and guess whether this is a poa or boa
-  // id, and ask them to pp it.
-
-  char* p;
-
-  if( is_poa_key(k.key(), k.size()) )
-    p = pp_poa_key(k.key(), k.size());
-  else if( is_boa_key(k.key(), k.size()) )
-    p = pp_boa_key(k.key(), k.size());
-  else
-    p = pp_key(k.key(), k.size());
-
-  *this << p;
-  delete[] p;
+  pp_key(*this, k.key(), k.size());
 
   return *this;
 }
@@ -571,4 +524,20 @@ static char* pp_key(const CORBA::Octet* key, int keysize)
   *s++ = '\0';
 
   return ret;
+}
+
+
+static void pp_key(omniORB::logger& l, const CORBA::Octet* key, int keysize)
+{
+  char* p;
+
+  if( is_poa_key(key, keysize) )
+    p = pp_poa_key(key, keysize);
+  else if( is_boa_key(key, keysize) )
+    p = pp_boa_key(key, keysize);
+  else
+    p = pp_key(key, keysize);
+
+  l << p;
+  delete[] p;
 }

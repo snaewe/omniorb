@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/28 10:54:33  djr
+  Removed pretty-printing of object keys from object adapters.
+
   Revision 1.1.2.1  1999/09/22 14:26:45  djr
   Major rewrite of orbcore to support POA.
 
@@ -88,7 +91,6 @@ public:
   virtual void  dispatch(omniCallDescriptor&, omniLocalIdentity*);
   virtual int   objectExists(const _CORBA_Octet* key, int keysize);
   virtual void  lastInvocationHasCompleted(omniLocalIdentity* id);
-  virtual char* ppObject(omniLocalIdentity*);
 
   //////////////
   // Internal //

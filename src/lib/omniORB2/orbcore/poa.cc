@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  1999/09/28 10:54:34  djr
+  Removed pretty-printing of object keys from object adapters.
+
   Revision 1.1.2.3  1999/09/24 17:11:14  djr
   New option -ORBtraceInvocations and omniORB::traceInvocations.
 
@@ -1237,7 +1240,7 @@ omniOrbPOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
-    l << "Dispatching remote call \'" << giop_s.operation() << "\' to "
+    l << "Dispatching remote call \'" << giop_s.operation() << "\' to: "
       << id << '\n';
   }
 
@@ -1818,50 +1821,6 @@ omniOrbPOA::getAdapter(const _CORBA_Octet* key, int keysize)
 
   poa->pd_refCount++;
   return poa;
-}
-
-
-char*
-omniOrbPOA::ppObject(omniLocalIdentity* id)
-{
-  OMNIORB_ASSERT(id && id->adapter() == this);
-
-  // "/full/poa/name<id> repoid\0"
-
-  int oidsize = id->keysize() - pd_poaIdSize;
-  const CORBA::Octet* oid = id->key() + pd_poaIdSize;
-  const char* rid = id->servant()->_mostDerivedRepoId();
-
-  int size = strlen(pd_fullname) + 2 + 1 + strlen(rid) + 1;
-  size += pd_policy.user_assigned_id ? oidsize : 20;
-  char* name = new char[size];
-  char* d = name;
-
-  const char* s = pd_fullname;
-  while( *s ) {
-    *d++ = isalnum(*s) ? *s : (*s == POA_NAME_SEP ? '/' : '.');
-    s++;
-  }
-  *d++ = '<';
-
-  if( pd_policy.user_assigned_id ) {
-    s = (const char*) oid;
-    while( oidsize-- ) { *d++ = isalnum(*s) ? *s : '.';  s++; }
-  }
-  else {
-    OMNIORB_ASSERT(oidsize == SYS_ASSIGNED_ID_SIZE);
-    CORBA::ULong val;
-    CORBA::Octet* p = (CORBA::Octet*) &val;
-    *p++ = *oid++;  *p++ = *oid++;  *p++ = *oid++;  *p++ = *oid++;
-    sprintf(d, "%lu", (unsigned long) val);
-    d += strlen(d);
-  }
-
-  *d++ = '>';
-  *d++ = ' ';
-  strcpy(d, rid);
-
-  return name;
 }
 
 //////////////////////////////////////////////////////////////////////

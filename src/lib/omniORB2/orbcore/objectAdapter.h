@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  1999/09/28 10:54:34  djr
+ Removed pretty-printing of object keys from object adapters.
+
  Revision 1.1.2.1  1999/09/22 14:26:56  djr
  Major rewrite of orbcore to support POA.
 
@@ -168,11 +171,6 @@ public:
   // method invocations complete (in which case the
   // omniLocalIdentity calls this).
   //  The caller must not hold any locks.
-
-  virtual char* ppObject(omniLocalIdentity*) = 0;
-  // Pretty print a description of this object, and return as
-  // a string (which the caller must deallocate).
-  //?? May not need this ...
 
 
   ////////////////////
