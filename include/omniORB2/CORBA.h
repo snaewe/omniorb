@@ -3,7 +3,25 @@
 // CORBA.h                    Created on: 30/1/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 // 	A complete set of C++ definitions for the CORBA module. The definitions
@@ -13,40 +31,8 @@
 
 /*
  $Log$
- Revision 1.11  1997/04/23 14:00:47  sll
- Added BOA_var and ORB_var.
-
- * Revision 1.10  1997/03/26  17:32:38  ewc
- * Runtime converted to Win32 DLL
- *
- * Revision 1.9  1997/03/19  18:54:04  sll
- * Status is now typedef to void*.
- *
- * Revision 1.8  1997/03/14  10:18:29  sll
- * operator->() in T_var types is const. Fixed.
- *
- * Revision 1.7  1997/03/09  14:42:50  sll
- * String_var and Object_var can now be passed directly as arguments
- * to operations that have string and Object as INOUT and OUT parameters.
- *
- * Revision 1.6  1997/02/19  11:12:37  ewc
- * Added support for Windows NT / MSVC++ 4.2
- *
- Revision 1.5  1997/01/30 20:18:23  sll
- Added new member functions in Object_Helper.
-
- Revision 1.4  1997/01/23 14:55:59  sll
- Removed non-essential template dependency
-
- * Revision 1.3  1997/01/21  14:49:15  ewc
- * Added support for initial reference interface and also includes
- * the COSS Naming Service Interface.
- *
- * Revision 1.2  1997/01/13  15:06:51  sll
- * Added marshalling routines for CORBA::Object.
- *
- Revision 1.1  1997/01/08 17:28:30  sll
- Initial revision
+ Revision 1.12  1997/05/06 16:04:43  sll
+ Public release.
 
 */
 

@@ -3,7 +3,25 @@
 // omniInternal.h             Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
@@ -11,35 +29,8 @@
 
 /*
   $Log$
-  Revision 1.8  1997/04/23 14:23:04  sll
-  New atomic functions in omniObject to set and get an object's rope and
-  key. These functions replaces the non-thread-safe _rope() and objkey().
-
- * Revision 1.7  1997/03/26  17:38:04  ewc
- * Runtime converted to Win32 DLL
- *
- * Revision 1.6  1997/03/10  11:38:49  sll
- * - File renamed to clearly indicated that these are internal interfaces.
- * - class omniORB renamed to class omni. (Class omniORB is now the public
- *   API namespace.)
- *
-  Revision 1.5  1997/01/23 15:07:15  sll
-  Redefined some local static variables to static members of class omniORB.
-  They are initialised in a single file.
-
- * Revision 1.4  1997/01/21  14:50:44  ewc
- * Added support for resolve initial references functions.
- *
- * Revision 1.3  1997/01/13  15:10:06  sll
- * Semantics of createObjRef() changed. Changed comments to document this.
- *
- * Revision 1.2  1997/01/09  10:08:36  ewc
- * Fixed minor bug where omniObjectKey was declared as class, but defined
- * as struct.
- * Added support for ATMos
- *
-  Revision 1.1  1996/10/15 08:57:18  sll
-  Initial revision
+  Revision 1.9  1997/05/06 16:09:13  sll
+  Public release.
 
  */
 

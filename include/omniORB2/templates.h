@@ -3,38 +3,33 @@
 // templates.h                Created on: 14/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //       *** PROPRIETORY INTERFACE ***
 
 /*
   $Log$
-  Revision 1.6  1997/04/23 14:18:49  sll
-  Sequence templates relocated to seqtemplates.h
-
-  Revision 1.5  1997/03/14 10:19:32  sll
-  operator->() in T_var types is const. fixed.
-
- * Revision 1.4  1997/03/10  11:34:24  sll
- * - T_var types can now be passed directly as arguments to operations that
- *   have variable length data types as INOUT and OUT parameters.
- * - New templates: _CORBA_ObjRef_INOUT_arg, _CORBA_ObjRef_OUT_arg,
- *                  _CORBA_ConstrType_Variable_OUT_arg,
- *                  _CORBA_Sequence_OUT_arg, _CORBA_Array_OUT_arg
- *                  _CORBA_Sequence_Var
- * - template _CORBA_ObjRef_Member now has the missing operator->
- * - other minor cleanups.
- *
-  Revision 1.3  1997/02/04 13:56:07  sll
-  Backup the previous change when DEC C++ compiler is used.
-
-  Revision 1.2  1997/01/30 20:23:45  sll
-  Remove reference to CORBA::is_nil() etc in _CORBA_ObjRef_Var and
-  _CORBA_ObjRef_Member.
-
-  Revision 1.1  1997/01/23 15:20:03  sll
-  Initial revision
+  Revision 1.7  1997/05/06 16:11:33  sll
+  Public release.
 
   */
 

@@ -3,28 +3,33 @@
 // seqtemplates.h             Created on: 14/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
 
 /*
  $Log$
- Revision 1.4  1997/04/23 14:07:04  sll
- Moved all sequence templates into this file. The marshalling template
- functions are defined after the classes NetBufferedStream and
- MemBufferedStream are defined.
-
- * Revision 1.3  1997/03/09  13:00:28  sll
- * Minor cleanup.
- *
- Revision 1.2  1997/01/24 19:26:38  sll
- Moved the implementations of the inline members of _CORBA_Sequence<T> back
- into its class definition. This is to work around a bug in Sunpro C++ 4.0
- which make it fails to compile the runtime when optimisation is on.
-
- Revision 1.1  1997/01/23 15:19:58  sll
- Initial revision
+ Revision 1.5  1997/05/06 16:11:10  sll
+ Public release.
 
  */
 

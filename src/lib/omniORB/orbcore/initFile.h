@@ -3,7 +3,25 @@
 // initFile.h                 Created on: 10/01/97
 //                            Author    : Eoin Carroll  (ewc)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
@@ -11,13 +29,9 @@
 
 /*
   $Log$
-  Revision 1.3  1997/03/04 11:08:25  ewc
-  Added support for obtaining initial object reference from Windows NT
-  registry
+  Revision 1.4  1997/05/06 16:08:46  sll
+  Public release.
 
- * Revision 1.2  1997/01/21  15:03:00  ewc
- * Minor change - moved #define from source file to header.
- *
   */
 
 

@@ -3,7 +3,25 @@
 // bufferedstream.h           Created on: 3/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
@@ -11,32 +29,9 @@
 
 /*
   $Log$
-  Revision 1.8  1997/04/28 19:45:10  sll
-  Fixed bug in the marshalling code of _CORBA_*_Sequence_w_FixSizeElement.
+  Revision 1.9  1997/05/06 16:07:50  sll
+  Public release.
 
- * Revision 1.7  1997/04/23  16:13:28  sll
- * Fixed silly. Do not use CORBA::ULong inside template functions.
- *
- * Revision 1.6  1997/04/23  14:11:38  sll
- * Marshalling functions for the sequence templates are defined here.
- * get_char_array and put_char_array are used to marshal sequence of
- * primitive data types.
- *
- * Revision 1.5  1997/03/09  12:59:52  sll
- * Minor cleanup.
- *
-  Revision 1.4  1997/01/23 18:03:49  sll
-  Fixed bug in marshalling of double. The alignment should be 8.
-
-  Revision 1.3  1997/01/23 14:59:27  sll
-  Now included template marshalling code for sequence template.
-
- * Revision 1.2  1997/01/08  19:10:53  ewc
- * Added typedef to work around VC++ 4.2 nested class bug
- *
- * Revision 1.1  1997/01/08  17:28:30  sll
- * Initial revision
- *
   */
 
 #ifndef __BUFFEREDSTREAM_H__
