@@ -29,6 +29,12 @@
 
 /*
  $Log$
+ Revision 1.46.4.3  1999/10/02 18:26:53  sll
+ Reformatted trace messages.
+ Changed signature of BOA::getBOA to accept an optionally argument to
+ inhibit the function to raise an exception when the BOA has not been
+ initialised.
+
  Revision 1.46.4.2  1999/09/25 17:00:09  sll
  Merged changes from omni2_8_develop branch.
 
@@ -2288,7 +2294,7 @@ _CORBA_MODULE_BEG
     static BOA_ptr _duplicate(BOA_ptr);
     static BOA_ptr _nil();
 
-    static BOA_ptr getBOA();
+    static BOA_ptr getBOA(CORBA::Boolean no_exception=0);
     // omniORB2 specific. Must be called after BOA_init is called.
     // Otherwise a CORBA::OBJ_ADAPTOR exception is raised.
 
