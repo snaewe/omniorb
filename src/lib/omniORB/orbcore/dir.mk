@@ -224,3 +224,7 @@ all::
 export::
 	@$(MakeSubdirs)
 
+ifdef INSTALLTARGET
+install::
+	@$(MakeSubdirs)
+endif
