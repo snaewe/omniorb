@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.10  2000/08/18 09:42:44  djs
+# Fixed silly typo in last fix (fix == s/definied/defined/)
+#
 # Revision 1.14.2.9  2000/08/17 18:22:32  djs
 # Fixed typecode generation bug which caused an error for
 #  interface I{
@@ -565,7 +568,7 @@ def visitUnion(node):
                 seqType = seqType.seqType()
             if isinstance(seqType, idltype.Declared):
                 # don't loop forever
-                if not(currently_being_definied(seqType.decl())):
+                if not(currently_being_defined(seqType.decl())):
                     seqType.decl().accept(self)
                 
         self.__override = override
