@@ -86,7 +86,6 @@ public:
 private:
   CORBA::ULong calculateArgDataSize(CORBA::ULong msize);
   void marshalArgs(GIOP_C& giop_client);
-  void marshalContext(GIOP_C& giop_client);
   void unmarshalArgs(GIOP_C& giop_client);
 
   enum State {
