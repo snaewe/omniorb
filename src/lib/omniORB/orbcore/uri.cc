@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.18  2003/11/20 13:39:59  dgrisby
+// corbaloc handler for Unix sockets. Uses omniunix scheme name.
+//
 // Revision 1.2.2.17  2003/08/06 20:34:00  dgrisby
 // More vxWorks patches.
 //
@@ -116,6 +119,7 @@
 #include <omniORB4/omniURI.h>
 #include <omniORB4/minorCode.h>
 #include <initRefs.h>
+#include <SocketCollection.h>
 #include <ctype.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -270,7 +274,7 @@ public:
 
     static ObjAddr* parse(const char*& c);
 
-    enum AddrKind { rir, iiop };
+    enum AddrKind { rir, iiop, uiop };
     virtual AddrKind kind() = 0;
 
     ObjAddr* next_;
@@ -324,6 +328,23 @@ public:
     CORBA::UShort     port_;
   };
 
+  class UiopObjAddr : public ObjAddr {
+  public:
+    UiopObjAddr(const char*& c);
+    virtual ~UiopObjAddr() {};
+
+    ObjAddr::AddrKind kind() { return ObjAddr::uiop; }
+
+    CORBA::Char   minver()   { return minver_; }
+    CORBA::Char   majver()   { return majver_; }
+    const char*   filename() { return (const char*)filename_; }
+    
+  private:
+    CORBA::Char       majver_;
+    CORBA::Char       minver_;
+    CORBA::String_var filename_;
+  };
+
   // Object containing all the parsed data for a corbaloc:
   class Parsed {
   public:
@@ -337,7 +358,6 @@ public:
     unsigned int      key_size_;
   };
 };
-
 
 CORBA::Boolean
 corbalocURIHandler::supports(const char* uri)
@@ -390,6 +410,10 @@ corbalocURIHandler::ObjAddr::parse(const char*& c)
     c += 5;
     return new corbalocURIHandler::IiopObjAddr(c);
   }
+  if (!strncmp(c, "omniunix:", 9)) {
+    c += 9;
+    return new corbalocURIHandler::UiopObjAddr(c);
+  }
   if (!strncmp(c, "rir:", 4)) {
     c += 4;
     return new corbalocURIHandler::RirObjAddr(c);
@@ -437,6 +461,30 @@ ParseVersionNumber(const char*& c, CORBA::Char& majver, CORBA::Char& minver)
   else {
     majver = 1;
     minver = 0;
+  }
+}
+
+
+corbalocURIHandler::UiopObjAddr::UiopObjAddr(const char*& c)
+{
+  const char* p;
+  ParseVersionNumber(c, majver_, minver_);
+
+  for (p=c; *p && *p != ':' && *p != ',' && *p != '#'; p++);
+
+  if (p == c) OMNIORB_THROW(BAD_PARAM,
+                            BAD_PARAM_BadSchemeSpecificPart,
+			    CORBA::COMPLETED_NO);
+
+  filename_ = CORBA::string_alloc(1 + p - c);
+  char* f = (char*)filename_;
+
+  for (; c != p; c++, f++) *f = *c;
+  *f = '\0';
+
+  if (*c == ':') {
+    // Object key should follow.
+    ++c;
   }
 }
 
@@ -600,9 +648,14 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
     // Protocols other than rir
 
     IIOP::Address* addrlist = new IIOP::Address[parsed.addr_count_];
+    int iiop_addr_count = 0;
+    IOP::MultipleComponentProfile tagged_components;
 
     GIOP::Version ver;
     ver.major = 127; ver.minor = 127;
+
+    char  self[64];
+    char* selfp = 0;
 
     ObjAddr* addr;
     int i;
@@ -614,13 +667,35 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
 	case ObjAddr::iiop:
 	  {
 	    IiopObjAddr* iaddr = (IiopObjAddr*)addr;
-	    addrlist[i].host = iaddr->host();
-	    addrlist[i].port = iaddr->port();
+	    addrlist[iiop_addr_count].host = iaddr->host();
+	    addrlist[iiop_addr_count].port = iaddr->port();
 	    if (iaddr->majver() < ver.major ||
 		iaddr->minver() < ver.minor) {
 	      ver.major = iaddr->majver();
 	      ver.minor = iaddr->minver();
 	    }
+            ++iiop_addr_count;
+	  }
+	  break;
+	case ObjAddr::uiop:
+	  {
+	    if (!selfp) {
+	      if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+		omniORB::logs(1, "Cannot get the name of this host.");
+		self[0] = '\0';
+	      }
+	      selfp = self;
+	    }
+            UiopObjAddr* uiop_addr = (UiopObjAddr*)addr;
+            CORBA::ULong index = tagged_components.length();
+            tagged_components.length(index+1);
+            IOP::TaggedComponent& c = tagged_components[index];
+            c.tag = IOP::TAG_OMNIORB_UNIX_TRANS;
+            cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
+            s.marshalRawString(self);
+            s.marshalRawString(uiop_addr->filename());
+            CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+            c.component_data.replace(max,len,p,1);
 	  }
 	  break;
 	default:
@@ -633,10 +708,20 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
 		parsed.key_size_,
 		(CORBA::Octet*)(const char*)parsed.key_,0);
 
+    if (iiop_addr_count <= 0) {
+      OMNIORB_ASSERT(selfp);
+      ver.major = 1;
+      ver.minor = 2;
+      addrlist[0].host = (const char *)self;
+      addrlist[0].port = 0;
+      ++iiop_addr_count;
+    }
+
     omniIOR* ior = new omniIOR((const char*)"",
 			       key,
-			       addrlist,parsed.addr_count_,
-			       ver,omniIOR::NoInterceptor);
+			       addrlist,iiop_addr_count,
+			       ver,omniIOR::NoInterceptor,
+                               &tagged_components);
     delete [] addrlist;
 
     omniObjRef* objref = omni::createObjRef(CORBA::Object::_PD_repoId,ior,0);

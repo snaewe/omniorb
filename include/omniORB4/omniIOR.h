@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2003/11/20 13:39:59  dgrisby
+  corbaloc handler for Unix sockets. Uses omniunix scheme name.
+
   Revision 1.1.2.13  2003/01/14 11:48:15  dgrisby
   Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
 
@@ -215,7 +218,8 @@ public:
   omniIOR(const char* repoId,
 	  const _CORBA_Unbounded_Sequence_Octet& key,
 	  const IIOP::Address* addrs, _CORBA_ULong naddrs,
-	  GIOP::Version ver, interceptorOption call_interceptors);
+	  GIOP::Version ver, interceptorOption call_interceptors,
+          const IOP::MultipleComponentProfile* tagged_components = 0);
 
   ~omniIOR();
 
