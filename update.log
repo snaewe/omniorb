@@ -1,3 +1,11 @@
+Thu May 22 15:47:16 BST 2003 dgrisby
+====================================
+
+- Fix registry code.
+
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+
+
 Thu May 22 14:30:47 BST 2003 dgrisby
 ====================================
 
