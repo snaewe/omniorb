@@ -3,6 +3,7 @@
 #############################################################################
 
 DIR_CPPFLAGS = -I../.. $(patsubst %,-I%/../..,$(VPATH))
+DIR_CPPFLAGS += $(CORBA_CPPFLAGS)
 
 CXXSRCS = gatekeeper.cc
 
