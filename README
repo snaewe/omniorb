@@ -1,7 +1,7 @@
 Don't panic!  There is meant to be nothing here.
 
 All omniORB development happens on CVS branches. Try the
-omni4_0_develop branch for omniORB 4.0.x and omni2_develop for omniORB
+omni4_0_develop branch for omniORB 4.0.x and omni3_develop for omniORB
 3.0.x. Use a checkout command like
 
   cvs checkout -r omni4_0_develop omni
