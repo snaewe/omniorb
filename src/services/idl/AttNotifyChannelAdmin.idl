@@ -1,0 +1,34 @@
+#ifndef _ATT_NOTIFY_CHANNEL_ADMIN_IDL_
+#define _ATT_NOTIFY_CHANNEL_ADMIN_IDL_
+
+#pragma prefix "omg.org"
+
+#ifdef _IDL_TO_JAVA
+#pragma javaPackage "org.omg"
+#endif
+
+#include "CosNotifyChannelAdmin.idl"
+
+// READY offers some additional functionality at the channel
+// level. In particular, one can obtain the event types that
+// are registered by the suppliers  and the event types that
+// are referenced in consumer filters. Moreover, performance
+// related statistics can be obtained from the channel
+
+module AttNotifyChannelAdmin {
+
+  struct PerformanceStats {
+	long num_announcements;
+        long num_notifications;
+  };
+
+  interface EventChannel : CosNotifyChannelAdmin::EventChannel 
+  {
+	CosNotification::EventTypeSeq obtain_subscription_types();
+	CosNotification::EventTypeSeq obtain_offered_types();
+	PerformanceStats              obtain_performance_stats();
+  };
+
+};
+
+#endif
