@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  2000/01/27 16:31:32  djr
+ String_member now initialised to empty string by default.
+
  Revision 1.1.2.1  1999/09/24 09:51:54  djr
  Moved from omniORB2 + some new files.
 
@@ -160,7 +163,8 @@ class _CORBA_String_member {
 public:
   typedef char* ptr_t;
 
-  inline _CORBA_String_member() : pd_data(0), pd_rel(1), _ptr(pd_data) {}
+  inline _CORBA_String_member()
+    : pd_data((char*) omni::empty_string), pd_rel(0), _ptr(pd_data) {}
 
   inline _CORBA_String_member(char*& p, _CORBA_Boolean rel) 
     : pd_data(0), pd_rel(rel), _ptr(p) {}

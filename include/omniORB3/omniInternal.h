@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2000/01/27 16:31:32  djr
+  String_member now initialised to empty string by default.
+
   Revision 1.1.2.5  2000/01/20 11:51:33  djr
   (Most) Pseudo objects now used omni::poRcLock for ref counting.
   New assertion check OMNI_USER_CHECK.
@@ -187,6 +190,10 @@ public:
   static _core_attr _CORBA_Unbounded_Sequence__Octet myPrincipalID;
   static _core_attr const alignment_t                max_alignment;
   // Maximum value of alignment_t
+
+  static const char*const                            empty_string;
+  // Used to initialise empty strings, since some compilers will allocate
+  // a separate instance for each "" in code.
 
   static _core_attr int                              remoteInvocationCount;
   static _core_attr int                              localInvocationCount;

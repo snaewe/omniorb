@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.9  2000/01/27 16:31:33  djr
+  String_member now initialised to empty string by default.
+
   Revision 1.1.2.8  2000/01/20 11:51:35  djr
   (Most) Pseudo objects now used omni::poRcLock for ref counting.
   New assertion check OMNI_USER_CHECK.
@@ -84,6 +87,7 @@ omni_tracedmutex*                omni::internalLock = 0;
 omni_tracedmutex*                omni::poRcLock = 0;
 _CORBA_Unbounded_Sequence__Octet omni::myPrincipalID;
 const omni::alignment_t          omni::max_alignment = ALIGN_8;
+const char*const                 omni::empty_string = "";
 
 int                              omni::remoteInvocationCount = 0;
 int                              omni::localInvocationCount = 0;
@@ -91,7 +95,8 @@ int                              omni::localInvocationCount = 0;
 static omni_tracedmutex*         objref_rc_lock = 0;
 // Protects omniObjRef reference counting.
 
-// The local object table.
+// The local object table.  This is a dynamically resized
+// open hash table.
 static omniLocalIdentity**       objectTable = 0;
 static _CORBA_ULong              objectTableSize = 0;
 static int                       objectTableSizeI = 0;
@@ -99,6 +104,8 @@ static _CORBA_ULong              numObjectsInTable = 0;
 static _CORBA_ULong              maxNumObjects = 0;
 static _CORBA_ULong              minNumObjects = 0;
 
+// Some sort of magic numbers that are supposed
+// to be good for hash tables...
 static int objTblSizes[] = {
   128 + 3,              // 2^7
   1024 + 9,             // 2^10

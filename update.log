@@ -1,4 +1,16 @@
 
+Thu Jan 27 16:27:08 GMT 2000 djr
+================================
+
+- Fixed bug in String_member.  It is now initialised with an
+  empty string by default (rather than null).  This reflects	
+  a change in the mapping.
+
+include/omniORB3/stringtypes.h
+include/omniORB3/omniInternal.h
+src/lib/omniORB2/orbcore/omniInternal.cc
+
+
 Thu Jan 27 10:45:38 GMT 2000 djr
 ================================
 
