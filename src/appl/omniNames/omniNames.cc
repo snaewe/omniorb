@@ -1,15 +1,48 @@
+// -*- Mode: C++; -*-
+//                          Package   : omniNames
+// omniNames.cc             Author    : Tristan Richardson (tjr)
+//
+//    Copyright (C) 1997 Olivetti & Oracle Research Laboratory
+//
+//  This file is part of omniNames.
+//
+//  omniNames is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+//  USA.
+//
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <iostream.h>
 #include <omnithread.h>
-#include "NamingContext_i.h"
-#include "default.h"
+#include <NamingContext_i.h>
 
-static void
+
+// Minimum idle period before we take a checkpoint (15 mins)
+#define DEFAULT_IDLE_TIME_BTW_CHKPT  (15*60)
+
+
+void
 usage()
 {
-  cerr << "usage: omniNames [-start <port>] [<omniORB2-options>...]" << endl;
+  cerr << "\nusage: omniNames [-start <port>] [<omniORB2-options>...]" << endl;
+  cerr << "\nUse -start option to start omniNames for the first time."
+       << endl;
+  cerr << "\nYou can set the environment variable " << LOGDIR_ENV_VAR
+       << " to specify the\ndirectory where the log files are kept.\n"
+       << endl;
   exit(1);
 }
 
@@ -54,10 +87,15 @@ main(int argc, char **argv)
 
   int port = 0;
 
-  if ((argc > 1) && (strcmp(argv[1], "-start") == 0)) {
-    if (argc < 3) usage();
-    port = atoi(argv[2]);
-    removeArgs(argc, argv, 1, 2);
+  if (argc > 1) {
+    if (strcmp(argv[1], "-start") == 0) {
+      if (argc < 3) usage();
+      port = atoi(argv[2]);
+      removeArgs(argc, argv, 1, 2);
+    } else if ((strncmp(argv[1], "-BOA", 4) != 0) &&
+	       (strncmp(argv[1], "-ORB", 4) != 0)) {
+      usage();
+    }
   }
 
 
