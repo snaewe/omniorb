@@ -6,8 +6,7 @@ Tue Sep 19 10:08:31 BST 2000 dpg1
 
 include/omniORB3/stringtypes.h
 
-- Explicit private declarations for inheritance from omniNilDynAny. Is
-  this correct? ***
+- Explicit public declarations for inheritance from omniNilDynAny.
 
 src/lib/omniORB2/dynamic/dynAnyNil.cc
 
