@@ -195,9 +195,13 @@ EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &s,
   begin = (end + 3) & ~(3);
   // s[begin]  object key length
   end = begin + 4;
-  if (s.length() <= end)
+  if (s.length() < end)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  {
+
+  if (s.length() == end) {
+    p.object_key.length(0);
+  }
+  else {
     CORBA::ULong len;
     if (!byteswap) {
       len = ((CORBA::ULong &) s[begin]);
@@ -362,8 +366,6 @@ int main(int argc, char* argv[])
       cerr << "Exception while processing stringified IOR." << endl;
       return -1;
     }
-
-      
   
   delete[] repoID;
   delete profiles;

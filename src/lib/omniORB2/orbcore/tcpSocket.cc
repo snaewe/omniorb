@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.3  1998/03/13 17:34:16  sll
+  Bug fix. No longer reject an IOR with zero length object key.
+
   Revision 1.2  1997/12/12 18:45:33  sll
   Added call to print out the version of gatekeeper.
 
@@ -168,9 +171,14 @@ tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
   begin = (end + 3) & ~(3);
   // profile.profile_data[begin]  object key length
   end = begin + 4;
-  if (profile.profile_data.length() <= end)
+  if (profile.profile_data.length() < end)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  {
+
+  if (profile.profile_data.length() == end) {
+    objkeysize = 0;
+    objkey = new CORBA::Octet[1];
+  }
+  else {
     CORBA::ULong len;
     if (!byteswap) {
       len = ((CORBA::ULong &) profile.profile_data[begin]);
@@ -187,9 +195,9 @@ tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
 
     // extract object key
     objkeysize = len;
+    objkey = new CORBA::Octet[objkeysize];
+    memcpy((void *)objkey,(void *)&(profile.profile_data[begin]),objkeysize);
   }
-  objkey = new CORBA::Octet[objkeysize];
-  memcpy((void *)objkey,(void *)&(profile.profile_data[begin]),objkeysize);
   addr = new tcpSocketEndpoint(host,port);
   return 1;
 }
@@ -237,9 +245,11 @@ tcpSocketFactoryType::encodeIOPprofile(const Endpoint* addr,
     CORBA::ULong &l = (CORBA::ULong &) profile.profile_data[idx];
     l = objkeysize;
   }
-  idx += 4;
-  memcpy((void *)&profile.profile_data[idx],
-	 (void *)objkey,objkeysize);
+  if (objkeysize) {
+    idx += 4;
+    memcpy((void *)&profile.profile_data[idx],
+	   (void *)objkey,objkeysize);
+  }
 }
 
 
