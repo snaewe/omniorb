@@ -22,7 +22,8 @@
 \title{{\bf \omniParTcl}\\
        {\normalsize Creating \tcltk\ GUIs for \CXX\ applications}}
 \author{Kenneth R.\ Wood\\
-        Olivetti Research Ltd.}
+        ORL\\
+	{\small (ODE version 4.0 revisions by Tristan Richardson)}}
 \date{\today} 
 \maketitle
 
@@ -131,21 +132,13 @@ Clearly, {\tt omniTclMeAndWait()} cannot be used by a
 
 \item
 
-The \tcltk\ script.  This implements your graphical user interface, and
-will contain calls to the \CXX\ functions nominated in {\tt Tcl\_Appinit()}
-as callable from \tcltk.  If the script is to be executable, the first 
-line will be
-
-\bigskip
-\verb|#!myApp -f|
-\bigskip
-
-\noindent
-where {\tt myApp} is the name of your compiled \CXX\ application code.
-However, since {\tt myApp} is a {\tt wish}, you could also run your
-program with {\tt myApp -file <script>} where {\tt <script>} is the name
-of your \tcltk\ script.  In the latter case, of course, no special first line
-is required.
+The \tcltk\ script.  This implements your graphical user interface, and will
+contain calls to the \CXX\ functions nominated in {\tt Tcl\_Appinit()} as
+callable from \tcltk.  One way of running your program is with {\tt myApp -file
+<script>} where {\tt myApp} is the name of your compiled \CXX\ application code
+and {\tt <script>} is the name of your \tcltk\ script.  Alternatively you can
+use the {\tt TclScriptExecutable} rule in your {\tt dir.mk}.  This will
+generate a new script with an appropriate \verb|#!| line at the top.
 
 \end{enumerate}
 
@@ -270,23 +263,23 @@ and allow a command-line flag to dictate which one is used.
 
 \section{Where is it now?}
 
-\omniParTcl\ is installed in the Omni Development Environment,
-on Solaris only for the time being.  The source can be found in:
+\omniParTcl\ is installed in the Omni Development Environment.
+The source can be found in:
 
 \begin{verbatim}
-/project/omni/develop/master/if/include/omniParTcl.h
-/project/omni/develop/master/lib/omniParTcl/*
+/project/omni/versionX.Y/include/omniParTcl.h
+/project/omni/versionX.Y/src/lib/omniParTcl/*
 \end{verbatim}
 
 In order to encourage migration to the new \tcltk\ libraries,
 \omniParTcl\ is built for \tcl 7.4 and \tk 4.0 and will not
 work with earlier versions.  In fact, the Makefile variables 
-{\tt OMNIPARTCLDEFINE} and {\tt OMNIPARTCLLIB} automatically provide include
-files and libraries for \tcl 7.4 and \tk 4.0.  However, if there is a
+\verb|OMNIPARTCL_CPPFLAGS| and \verb|OMNIPARTCL_LIB| automatically provide
+include files and libraries for \tcl 7.4 and \tk 4.0.  However, if there is a
 pressing need to use \omniParTcl\ with \tcl 7.3 and \tk 3.6, it can
 easily be built for these.
 
-Note that the {\tt omnithread} library is required for all \omniParTcl\ 
+Note that the {\tt omnithread} library is used for all \omniParTcl\ 
 applications, even those which have only a single thread.
 
 \section{An Example}
@@ -295,36 +288,31 @@ The code for a simple \omniParTcl\ application appears on the following
 pages.  The source consists of three files.
 
 \begin{enumerate}
-\item {\tt ptt.cc}: the \CXX\ application code.
+\item {\tt pttwish.cc}: the \CXX\ application code.
 \item {\tt ptt.tcl}: the \tcltk\ interface script.
-\item {\tt Imakefile}: the Imakefile to build the example in the Omni
+\item {\tt dir.mk}: the makefile to build the example in the Omni
                        Development Environment.
 \end{enumerate}
 
 \noindent
 These files can be found in
-{\tt /project/omni/develop/master/appl/tests/partcltest}.
+{\tt /project/omni/versionX.Y/src/tests/partcl}.
 
 \medskip
 
 In order to emphasize the \omniParTcl\ side of things, this example does
 not use Orbix.  However, no extra magic is required to incorporate Orbix
 code into an \omniParTcl\ application, and examples which use Orbix
-and which have much more complex user interfaces will soon be
-appearing in {\tt /project/omni/develop/master/appl/weather/clients}.
-(They already exist in {\tt /homedir/krw/weather/weather\_appl} but there
-they use a slightly older version of \omniParTcl.)
+and which have much more complex user interfaces can be found by asking the
+author of this document.
 
 \newpage
 \begin{verbatim}
 //---------------------------------------------------------------------------
-// ptt.cc - Simple test of omniParTcl.  We just repeatedly update a couple of 
-//          variables on the C++ side and monitor their values in Tcl/Tk 
+// pttwish.cc - Simple test of omniParTcl. We just repeatedly update a couple
+//          of variables on the C++ side and monitor their values in Tcl/Tk 
 //          labels.  To test communication the other way, we allow the user 
 //          to change the output format for one of the variables.
-//
-// $Id$
-// $Author$
 //---------------------------------------------------------------------------
 
 #include <string.h>
@@ -512,15 +500,11 @@ int main(int argc, char *argv[])
 
 \newpage
 \begin{verbatim}
-#!./ptt -f
 #
 # Simple test of omniParTcl.  We just repeatedly update a couple of 
 # variables on the C++ side and monitor their values in Tcl/Tk labels.
 # To test communication the other way, we allow the user to change the
 # output format for one of the variables.
-#
-# $Id$
-# $Author$
 #
 
 set tclVarOne 0
@@ -554,26 +538,30 @@ proc changeFormat {} {
 \newpage
 \begin{verbatim}
 #
-# Imakefile for simple omniParTcl test.
-#
-# $Id$
-# $Author$
+# dir.mk for simple omniParTcl test.
 #
 
-CXXSRCS = ptt.cc
+CXXSRCS = pttwish.cc
 
-INCLUDES = $(OMNITHREADDEFINE) $(OMNIPARTCLDEFINE)
+DIR_CPPFLAGS = $(OMNIPARTCL_CPPFLAGS)
 
-all:: ProgramTargetName(ptt)
+script = $(patsubst %,$(TclScriptPattern),ptt)
 
-NormalCplusplusProgramTarget(ptt,ptt.o,\
-$(OMNITHREADDEPEND) $(OMNIPARTCLDEPEND),\
-$(OMNITHREADLIB) $(OMNIPARTCLLIB),\
-NullParameter)
+wish = $(patsubst %,$(BinPattern),pttwish)
 
-InstallProgram(ptt,$(BINDIR))
+all:: $(wish) $(script)
 
-DependTarget()
+$(wish): pttwish.o $(OMNIPARTCL_LIB_DEPEND)
+        @(libs="$(OMNIPARTCL_LIB)"; $(CXXExecutable))
+
+$(script): ptt.tcl
+        @(wish="$(wish)"; $(TclScriptExecutable))
+
+export: $(wish) $(script)
+        @$(ExportExecutable)
+
+clean::
+        $(RM) $(wish) $(script)
 \end{verbatim}
 
 
