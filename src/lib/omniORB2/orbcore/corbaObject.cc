@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.19.6.2  1999/09/24 10:29:33  djr
+  CORBA::Object::Object now requires an argument.
+
   Revision 1.19.6.1  1999/09/22 14:26:45  djr
   Major rewrite of orbcore to support POA.
 
@@ -178,7 +181,7 @@ CORBA::Object::_duplicate(CORBA::Object_ptr obj)
 }
 
 
-static CORBA::Object the_nil_object;
+static CORBA::Object the_nil_object(0);
 
 
 CORBA::Object_ptr
