@@ -1,5 +1,13 @@
 PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl_be
 
+ifndef PYTHON
+all::
+	@$(NoPythonError)
+export::
+	@$(NoPythonError)
+endif
+
+
 SUBDIRS = cxx
 
 all::

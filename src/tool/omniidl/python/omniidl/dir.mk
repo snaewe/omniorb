@@ -1,6 +1,14 @@
 PYLIBROOT= $(EXPORT_TREE)/lib/python
 PYLIBDIR = $(PYLIBROOT)/omniidl
 
+ifndef PYTHON
+all::
+	@$(NoPythonError)
+export::
+	@$(NoPythonError)
+endif
+
+
 export:: __init__.py
 	@(file="__init__.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
@@ -25,5 +33,5 @@ export:: output.py
 export::
 	@(set -x; \
 	cd $(PYLIBDIR); \
-	python -c 'import compileall; compileall.compile_dir(".")'; \
+	$(PYTHON) -c 'import compileall; compileall.compile_dir(".")'; \
 	)

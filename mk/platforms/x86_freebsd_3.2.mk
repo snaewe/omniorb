@@ -6,6 +6,14 @@ FreeBSD = 1
 x86Processor = 1
 
 #
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = /usr/local/bin/python
+
+
+#
 # Include general unix things
 #
 

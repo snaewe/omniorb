@@ -1,3 +1,44 @@
+Fri Feb 18 16:09:17 GMT 2000 dpg1
+=================================
+
+- PYTHON make variable to tell the omniidl build process where python
+  is
+
+external_merge/mk/beforedir.mk
+external_merge/mk/platforms/alpha_linux_2.0.mk
+external_merge/mk/platforms/alpha_nt_4.0.mk
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/mk/platforms/hppa_hpux_10.20.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/i586_linux_2.0.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc.mk
+external_merge/mk/platforms/m68k_nextstep_3.3.mk
+external_merge/mk/platforms/mips_irix_6.2_n32.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/mips_sinux_5.43.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/sun4_sosV_5.5.mk
+external_merge/mk/platforms/sun4_sosV_5.6.mk
+external_merge/mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/platforms/x86_freebsd_3.2.mk
+external_merge/mk/platforms/x86_nt_3.5.mk
+external_merge/mk/platforms/x86_nt_4.0.mk
+external_merge/mk/platforms/x86_osr5.mk
+external_merge/mk/platforms/x86_sosV_5.5.mk
+external_merge/mk/platforms/x86_win95.mk
+mk/beforedir.mk
+mk/platforms/i586_linux_2.0_glibc.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.7.mk
+src/lib/omniORB2/omniidl_be/dir.mk
+src/lib/omniORB2/omniidl_be/cxx/dir.mk
+src/tool/omniidl/dir.mk
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/python/omniidl/dir.mk
+src/tool/omniidl/python/omniidl_be/dir.mk
+
 
 Thu Feb 17 14:38:09 GMT 2000 djr
 ================================

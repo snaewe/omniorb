@@ -2,6 +2,14 @@ PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl_be/cxx
 
 SUBDIRS = header skel dynskel
 
+ifndef PYTHON
+all::
+	@$(NoPythonError)
+export::
+	@$(NoPythonError)
+endif
+
+
 all::
 	@$(MakeSubdirs)
 
@@ -32,5 +40,5 @@ export:: config.py
 export::
 	@(set -x; \
 	cd $(PYLIBDIR); \
-	python -c 'import compileall; compileall.compile_dir(".")'; \
+	$(PYTHON) -c 'import compileall; compileall.compile_dir(".")'; \
 	)

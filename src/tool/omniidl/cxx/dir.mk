@@ -4,6 +4,16 @@ IDLMODULE_VERSION = 0x2301# => CORBA 2.3, front-end 0.1
 
 DIR_CPPFLAGS += -DIDLMODULE_VERSION="\"$(IDLMODULE_VERSION)\""
 
+
+ifndef PYTHON
+all::
+	@$(NoPythonError)
+export::
+	@$(NoPythonError)
+endif
+
+
+
 SUBDIRS = cccp
 all::
 	@$(MakeSubdirs)
@@ -48,7 +58,7 @@ idlc = $(patsubst %,$(BinPattern),idlc)
 
 ifdef UnixPlatform
 CXXDEBUGFLAGS = -g
-PYPREFIX := $(shell python -c 'import sys; print sys.prefix')
+PYPREFIX := $(shell $(PYTHON) -c 'import sys; print sys.prefix')
 PYINCDIR := $(PYPREFIX)/include
 DIR_CPPFLAGS += -I$(PYINCDIR)
 endif
@@ -161,12 +171,12 @@ ifdef Win32Platform
 
 DIR_CPPFLAGS += -DMSDOS -DOMNIIDL_EXECUTABLE
 
-PYPREFIX1 := $(shell python -c 'import sys; sys.stdout.write(sys.prefix)')
+PYPREFIX1 := $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.prefix)')
 PYPREFIX  := $(subst Program Files,progra~1,$(PYPREFIX1))
 PYINCDIR  := $(PYPREFIX)/include
 PYLIBDIR  := $(PYPREFIX)/libs
 
-DIR_CPPFLAGS += -I"$(PYINCDIR)"
+DIR_CPPFLAGS += -I"$(PYINCDIR)" -I"$(PYINCDIR)/python1.5"
 CXXLINKOPTIONS += -libpath:"$(PYLIBDIR)"
 
 omniidl = $(patsubst %,$(BinPattern),omniidl)
