@@ -69,24 +69,36 @@ CORBA::Exception::_duplicate(Exception* e)
   else     return 0;
 }
 
-
 CORBA::Exception*
-CORBA::Exception::_narrow(Exception* e)
+CORBA::Exception::_downcast(Exception* e)
 {
   return e;
 }
 
 
+const CORBA::Exception*
+CORBA::Exception::_downcast(const Exception* e)
+{
+  return e;
+}
+
+CORBA::Exception*
+CORBA::Exception::_narrow(Exception* e)
+{
+  return _downcast(e);
+}
+
+
 CORBA::Exception*
 CORBA::
-Exception::_NP_is_a(Exception* e, const char* typeId)
+Exception::_NP_is_a(const Exception* e, const char* typeId)
 {
   if( !e )  return 0;
   size_t len = strlen(typeId);
   if( strncmp(typeId, e->_NP_mostDerivedTypeId(), len) )
     return 0;
   else
-    return e;
+    return (Exception*) e;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -104,9 +116,21 @@ CORBA::SystemException::NP_RepositoryId() const
 
 
 CORBA::SystemException*
-CORBA::SystemException::_narrow(Exception* e)
+CORBA::SystemException::_downcast(Exception* e)
 {
   return (SystemException*)_NP_is_a(e, "Exception/SystemException");
+}
+
+const CORBA::SystemException*
+CORBA::SystemException::_downcast(const Exception* e)
+{
+  return (const SystemException*)_NP_is_a(e, "Exception/SystemException");
+}
+
+CORBA::SystemException*
+CORBA::SystemException::_narrow(Exception* e)
+{
+  return _downcast(e);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -117,9 +141,21 @@ CORBA::UserException::~UserException() {}
 
 
 CORBA::UserException*
-CORBA::UserException::_narrow(Exception* e)
+CORBA::UserException::_downcast(Exception* e)
 {
   return (UserException*)_NP_is_a(e, "Exception/UserException");
+}
+
+const CORBA::UserException*
+CORBA::UserException::_downcast(const Exception* e)
+{
+  return (const UserException*)_NP_is_a(e, "Exception/UserException");
+}
+
+CORBA::UserException*
+CORBA::UserException::_narrow(Exception* e)
+{
+  return _downcast(e);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -148,10 +184,22 @@ CORBA::name::_NP_mostDerivedTypeId() const \
 } \
  \
 CORBA::name* \
-CORBA::name::_narrow(Exception* e) \
+CORBA::name::_downcast(Exception* e) \
 { \
   return (name*)_NP_is_a(e, "Exception/SystemException/" #name); \
-}
+} \
+const CORBA::name* \
+CORBA::name::_downcast(const Exception* e) \
+{ \
+  return (const name*)_NP_is_a(e, "Exception/SystemException/" #name); \
+} \
+CORBA::name* \
+CORBA::name::_narrow(Exception* e) \
+{ \
+  return _downcast(e); \
+} \
+CORBA::Exception::insertExceptionToAny CORBA::name::insertToAnyFn = 0; \
+CORBA::Exception::insertExceptionToAnyNCP CORBA::name::insertToAnyFnNCP = 0;
 
 
 STD_EXCEPTION (UNKNOWN)
@@ -201,9 +249,19 @@ CORBA::scope::name::_raise() \
 } \
  \
 CORBA::scope::name* \
-CORBA::scope::name::_narrow(Exception* e) \
+CORBA::scope::name::_downcast(Exception* e) \
 { \
   return (name*)_NP_is_a(e, "Exception/UserException/" #scope "::" #name); \
+} \
+const CORBA::scope::name* \
+CORBA::scope::name::_downcast(const Exception* e) \
+{ \
+  return (const name*)_NP_is_a(e, "Exception/UserException/" #scope "::" #name); \
+} \
+CORBA::scope::name* \
+CORBA::scope::name::_narrow(Exception* e) \
+{ \
+  return _downcast(e); \
 } \
  \
 CORBA::Exception* \
@@ -216,7 +274,9 @@ const char* \
 CORBA::scope::name::_NP_mostDerivedTypeId() const \
 { \
   return "Exception/UserException/" #scope "::" #name; \
-}
+} \
+CORBA::Exception::insertExceptionToAny CORBA::scope::name::insertToAnyFn = 0; \
+CORBA::Exception::insertExceptionToAnyNCP CORBA::scope::name::insertToAnyFnNCP = 0;
 
 USER_EXCEPTION (ORB,InvalidName)
 #undef USER_EXCEPTION
