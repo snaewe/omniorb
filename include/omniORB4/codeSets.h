@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/09 12:23:04  dpg1
+  Update to compile on Solaris
+
   Revision 1.1.2.1  2000/10/27 15:42:03  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -140,7 +143,7 @@ public:
     CS_Other, // Don't know anything special about this code set
     CS_8bit,  // Simple 8 bit set with one-to-one Unicode mapping
               //  Class must be NCS_C_8bit or TCS_C_8bit
-    CS_16bit, // Simple 16 bit set with one-to-one Unicode mapping
+    CS_16bit  // Simple 16 bit set with one-to-one Unicode mapping
               //  (not Unicode itself, though)
               //  Class must be NCS_W_16bit or TCS_W_16bit
   };
