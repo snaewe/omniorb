@@ -163,13 +163,13 @@ again:
 	return 0;
 #endif
 
-#if defined(__GLIBC__)
+    // Some versions of unix produces this errno when the wait was
+    // interrupted by a unix signal or fork.
     // Some versions of the glibc 2.0.x produces this errno when the 
     // program is debugged under gdb. Straightly speaking this is non-posix
     // compliant. We catch this here to make debugging possible.
     if (rc == EINTR)
       goto again;
-#endif
 
     if (rc == ETIMEDOUT)
 	return 0;
