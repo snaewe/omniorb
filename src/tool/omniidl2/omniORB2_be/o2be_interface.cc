@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.24  1998/08/25 16:33:23  sll
+  Workaround in the generated stub for a MSVC++ bug.
+  Bug fix for the LifeCycle support.
+
   Revision 1.23  1998/08/19 15:52:44  sll
   New member functions void produce_binary_operators_in_hdr and the like
   are responsible for generating binary operators <<= etc in the global
@@ -857,6 +861,7 @@ o2be_interface::produce_hdr(std::fstream &s)
     IND(s); s << "CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }\n";
     IND(s); s << "void _dispose() { _boa()->dispose(this); }\n";
     IND(s); s << "omniORB::objectKey _key();\n";
+    IND(s); s << "virtual void _init_lifecycle();\n";
     IND(s); s << "void _set_lifecycle(omniLifeCycleInfo_ptr li);\n";
     IND(s); s << "omniLifeCycleInfo_ptr _get_lifecycle();\n";
     IND(s); s << "virtual void _move(CORBA::Object_ptr to);\n";
@@ -914,11 +919,7 @@ o2be_interface::produce_hdr(std::fstream &s)
     IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";	
-    IND(s); s << "virtual void _set_home(CORBA::Object_ptr home) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "_home_" << _fqname() << " = " << uqname() << "::_narrow(home);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
+    IND(s); s << "virtual void _set_home(CORBA::Object_ptr home);\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "private:\n";
     INC_INDENT_LEVEL();
@@ -1572,9 +1573,26 @@ o2be_interface::produce_skel(std::fstream &s)
 	    // scoped name. Have to use the alias for the base class in the
 	    // global scope to refer to the virtual member function instead.
 	    if (strcmp(intf_name,intf->server_uqname()) != 0) {
-	      intf_name = new char[strlen(intf->_scopename())+
-				  strlen(intf->server_uqname())+1];
-	      strcpy(intf_name,intf->_scopename());
+	      if (strcmp(uqname(),intf->uqname()) != 0) {
+		intf_name = new char[strlen(intf->_scopename())+
+				    strlen(intf->server_uqname())+1];
+		intf_name[0] = '\0';
+	      }
+	      else {
+		// The interface has the same name as this interface,
+		// Another bug in MSVC {5.0?} causes the wrong dispatch
+		// function to be called.
+		// The workaround is to first cast the this pointer to the 
+		// base class.
+		intf_name = new char[strlen("((*)this)->") +
+                                    strlen(intf->_scopename())*2+
+				    strlen(intf->server_uqname())*2+1];
+		strcpy(intf_name,"((");
+		strcat(intf_name,intf->_scopename());
+		strcat(intf_name,intf->server_uqname());
+		strcat(intf_name,"*)this)->");
+	      }
+	      strcat(intf_name,intf->_scopename());
 	      strcat(intf_name,intf->server_uqname());
 	    }
 	  }
@@ -1969,9 +1987,26 @@ o2be_interface::produce_skel(std::fstream &s)
 	      // scoped name. Have to use the alias for the base class in the
 	      // global scope to refer to the virtual member function instead.
 	      if (strcmp(intf_name,intf->lcserver_uqname()) != 0) {
-		intf_name = new char[strlen(intf->_scopename())+
-				    strlen(intf->lcserver_uqname())+1];
-		strcpy(intf_name,intf->_scopename());
+		if (strcmp(uqname(),intf->uqname()) != 0) {
+		  intf_name = new char[strlen(intf->_scopename())+
+				      strlen(intf->lcserver_uqname())+1];
+		  intf_name[0] = '\0';
+		}
+		else {
+		  // The interface has the same name as this interface,
+		  // Another bug in MSVC {5.0?} causes the wrong dispatch
+		  // function to be called.
+		  // The workaround is to first cast the this pointer to the 
+		  // base class.
+		  intf_name = new char[strlen("((*)this)->") +
+				      strlen(intf->_scopename())*2+
+				      strlen(intf->lcserver_uqname())*2+1];
+		  strcpy(intf_name,"((");
+		  strcat(intf_name,intf->_scopename());
+		  strcat(intf_name,intf->lcserver_uqname());
+		  strcat(intf_name,"*)this)->");
+		}
+		strcat(intf_name,intf->_scopename());
 		strcat(intf_name,intf->lcserver_uqname());
 	      }
 	    }
@@ -2019,8 +2054,20 @@ o2be_interface::produce_skel(std::fstream &s)
     IND(s); s << lcserver_fqname() << "::_this()\n";
     IND(s); s << "{\n";
     INC_INDENT_LEVEL();
-    IND(s); s << "if (CORBA::is_nil(_home_" << _fqname() << ")) {\n";
+    IND(s); s << "if (CORBA::is_nil(_home_" << _fqname() << "))\n";
     INC_INDENT_LEVEL();    
+    IND(s); s << "_init_lifecycle();\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "return " << fqname() << "::_duplicate(_home_"
+	      << _fqname() << ");\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _init_lifecycle:
+    IND(s); s << "void\n";
+    IND(s); s << lcserver_fqname() << "::_init_lifecycle()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
     IND(s); s << home_fqname() << " *wrap = new "
 	      << home_fqname() << "(this);\n";
     IND(s); s << "wrap->_obj_is_ready(CORBA::BOA::getBOA());\n";
@@ -2028,10 +2075,6 @@ o2be_interface::produce_skel(std::fstream &s)
     IND(s); s << "li->_obj_is_ready(li->_boa());\n";
     IND(s); s << "_set_home(wrap);\n";
     IND(s); s << "_set_linfo(li);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    IND(s); s << "return " << fqname() << "::_duplicate(_home_"
-	      << _fqname() << ");\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n\n";
 
@@ -2082,6 +2125,57 @@ o2be_interface::produce_skel(std::fstream &s)
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n\n";
 
+    // _set_home:
+    IND(s); s << "void\n";
+    IND(s); s << lcserver_fqname()
+	      << "::_set_home(CORBA::Object_ptr home)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_home_" << _fqname() << " = " << uqname() << "::_narrow(home);\n";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      ni = n_inherits();
+      intftable = inherits();
+      for (j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  char* intf_name = (char*)intf->unambiguous_lcserver_name(this);
+	  if (o2be_global::mflag()) {
+	    // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	    // of a base class using the member function's fully/partially
+	    // scoped name. Have to use the alias for the base class in the
+	    // global scope to refer to the virtual member function instead.
+	    if (strcmp(intf_name,intf->home_uqname()) != 0) {
+	      if (strcmp(uqname(),intf->uqname()) != 0) {
+		intf_name = new char[strlen(intf->_scopename())+
+				    strlen(intf->home_uqname())+1];
+		intf_name[0] = '\0';
+	      }
+	      else {
+		// The interface has the same name as this interface,
+		// Another bug in MSVC {5.0?} causes the wrong dispatch
+		// function to be called.
+		// The workaround is to first cast the this pointer to the 
+		// base class.
+		intf_name = new char[strlen("((*)this)->") +
+				    strlen(intf->_scopename())*2+
+				    strlen(intf->home_uqname())*2+1];
+		strcpy(intf_name,"((");
+		strcat(intf_name,intf->_scopename());
+		strcat(intf_name,intf->home_uqname());
+		strcat(intf_name,"*)this)->");
+	      }
+	      strcat(intf_name,intf->_scopename());
+	      strcat(intf_name,intf->home_uqname());
+	    }
+	  }
+	  IND(s); s << intf_name << "::_set_home(home);\n";
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+
     // _wrap_home constructor:
     IND(s); s << home_fqname() << "::" << home_uqname()
 	      << "(" << lcserver_fqname() << " *sk)\n";
@@ -2123,9 +2217,26 @@ o2be_interface::produce_skel(std::fstream &s)
 	    // scoped name. Have to use the alias for the base class in the
 	    // global scope to refer to the virtual member function instead.
 	    if (strcmp(intf_name,intf->home_uqname()) != 0) {
-	      intf_name = new char[strlen(intf->_scopename())+
-				  strlen(intf->home_uqname())+1];
-	      strcpy(intf_name,intf->_scopename());
+	      if (strcmp(uqname(),intf->uqname()) != 0) {
+		intf_name = new char[strlen(intf->_scopename())+
+				    strlen(intf->home_uqname())+1];
+		intf_name[0] = '\0';
+	      }
+	      else {
+		// The interface has the same name as this interface,
+		// Another bug in MSVC {5.0?} causes the wrong dispatch
+		// function to be called.
+		// The workaround is to first cast the this pointer to the 
+		// base class.
+		intf_name = new char[strlen("((*)this)->") +
+				    strlen(intf->_scopename())*2+
+				    strlen(intf->home_uqname())*2+1];
+		strcpy(intf_name,"((");
+		strcat(intf_name,intf->_scopename());
+		strcat(intf_name,intf->home_uqname());
+		strcat(intf_name,"*)this)->");
+	      }
+	      strcat(intf_name,intf->_scopename());
 	      strcat(intf_name,intf->home_uqname());
 	    }
 	  }
@@ -2156,9 +2267,26 @@ o2be_interface::produce_skel(std::fstream &s)
 	    // scoped name. Have to use the alias for the base class in the
 	    // global scope to refer to the virtual member function instead.
 	    if (strcmp(intf_name,intf->home_uqname()) != 0) {
-	      intf_name = new char[strlen(intf->_scopename())+
-				  strlen(intf->home_uqname())+1];
-	      strcpy(intf_name,intf->_scopename());
+	      if (strcmp(uqname(),intf->uqname()) != 0) {
+		intf_name = new char[strlen(intf->_scopename())+
+				    strlen(intf->home_uqname())+1];
+		intf_name[0] = '\0';
+	      }
+	      else {
+		// The interface has the same name as this interface,
+		// Another bug in MSVC {5.0?} causes the wrong dispatch
+		// function to be called.
+		// The workaround is to first cast the this pointer to the 
+		// base class.
+		intf_name = new char[strlen("((*)this)->") +
+				    strlen(intf->_scopename())*2+
+				    strlen(intf->home_uqname())*2+1];
+		strcpy(intf_name,"((");
+		strcat(intf_name,intf->_scopename());
+		strcat(intf_name,intf->home_uqname());
+		strcat(intf_name,"*)this)->");
+	      }
+	      strcat(intf_name,intf->_scopename());
 	      strcat(intf_name,intf->home_uqname());
 	    }
 	  }
@@ -2298,9 +2426,26 @@ o2be_interface::produce_skel(std::fstream &s)
 	    // scoped name. Have to use the alias for the base class in the
 	    // global scope to refer to the virtual member function instead.
 	    if (strcmp(intf_name,intf->wrapproxy_uqname()) != 0) {
-	      intf_name = new char[strlen(intf->_scopename())+
-				  strlen(intf->wrapproxy_uqname())+1];
-	      strcpy(intf_name,intf->_scopename());
+	      if (strcmp(uqname(),intf->uqname()) != 0) {
+		intf_name = new char[strlen(intf->_scopename())+
+				    strlen(intf->wrapproxy_uqname())+1];
+		intf_name[0] = '\0';
+	      }
+	      else {
+		// The interface has the same name as this interface,
+		// Another bug in MSVC {5.0?} causes the wrong dispatch
+		// function to be called.
+		// The workaround is to first cast the this pointer to the 
+		// base class.
+		intf_name = new char[strlen("((*)this)->") +
+				    strlen(intf->_scopename())*2+
+				    strlen(intf->wrapproxy_uqname())*2+1];
+		strcpy(intf_name,"((");
+		strcat(intf_name,intf->_scopename());
+		strcat(intf_name,intf->wrapproxy_uqname());
+		strcat(intf_name,"*)this)->");
+	      }
+	      strcat(intf_name,intf->_scopename());
 	      strcat(intf_name,intf->wrapproxy_uqname());
 	    }
 	  }
@@ -2350,9 +2495,26 @@ o2be_interface::produce_skel(std::fstream &s)
 	    // scoped name. Have to use the alias for the base class in the
 	    // global scope to refer to the virtual member function instead.
 	    if (strcmp(intf_name,intf->wrapproxy_uqname()) != 0) {
-	      intf_name = new char[strlen(intf->_scopename())+
-				  strlen(intf->wrapproxy_uqname())+1];
-	      strcpy(intf_name,intf->_scopename());
+	      if (strcmp(uqname(),intf->uqname()) != 0) {
+		intf_name = new char[strlen(intf->_scopename())+
+				    strlen(intf->wrapproxy_uqname())+1];
+		intf_name[0] = '\0';
+	      }
+	      else {
+		// The interface has the same name as this interface,
+		// Another bug in MSVC {5.0?} causes the wrong dispatch
+		// function to be called.
+		// The workaround is to first cast the this pointer to the 
+		// base class.
+		intf_name = new char[strlen("((*)this)->") +
+				    strlen(intf->_scopename())*2+
+				    strlen(intf->wrapproxy_uqname())*2+1];
+		strcpy(intf_name,"((");
+		strcat(intf_name,intf->_scopename());
+		strcat(intf_name,intf->wrapproxy_uqname());
+		strcat(intf_name,"*)this)->");
+	      }
+	      strcat(intf_name,intf->_scopename());
 	      strcat(intf_name,intf->wrapproxy_uqname());
 	    }
 	  }
@@ -2386,9 +2548,26 @@ o2be_interface::produce_skel(std::fstream &s)
 	    // scoped name. Have to use the alias for the base class in the
 	    // global scope to refer to the virtual member function instead.
 	    if (strcmp(intf_name,intf->wrapproxy_uqname()) != 0) {
-	      intf_name = new char[strlen(intf->_scopename())+
-				  strlen(intf->wrapproxy_uqname())+1];
-	      strcpy(intf_name,intf->_scopename());
+	      if (strcmp(uqname(),intf->uqname()) != 0) {
+		intf_name = new char[strlen(intf->_scopename())+
+				    strlen(intf->wrapproxy_uqname())+1];
+		intf_name[0] = '\0';
+	      }
+	      else {
+		// The interface has the same name as this interface,
+		// Another bug in MSVC {5.0?} causes the wrong dispatch
+		// function to be called.
+		// The workaround is to first cast the this pointer to the 
+		// base class.
+		intf_name = new char[strlen("((*)this)->") +
+				    strlen(intf->_scopename())*2+
+				    strlen(intf->wrapproxy_uqname())*2+1];
+		strcpy(intf_name,"((");
+		strcat(intf_name,intf->_scopename());
+		strcat(intf_name,intf->wrapproxy_uqname());
+		strcat(intf_name,"*)this)->");
+	      }
+	      strcat(intf_name,intf->_scopename());
 	      strcat(intf_name,intf->wrapproxy_uqname());
 	    }
 	  }
