@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:12:47  sll
+  New member _upcall().
+
   Revision 1.2.2.1  2000/07/17 10:35:35  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -137,6 +140,10 @@ public:
   }
   // Must hold <omni::internalLock>.
 
+protected:
+  void _upcall(GIOP_S&, omniCallDescriptor&);
+  // Called by the dispatcher in the skeleton implementation stub to drive the 
+  // upcall into the implementation code.
 
 private:
   omniLocalIdentity* pd_identities;
