@@ -8,6 +8,18 @@
 
 <buglist>
 
+<bug id="8" date="Mon Jul 24 11:14:00 BST 2000" user="djs">
+
+  <summary>Added missing constructor to BOA compatibility skeletons.</summary>
+
+  <reported>Paul Nader</reported>
+
+  <text>
+  For an interface I, the _sk_I::_sk_I(const omniOrbBoaKey&amp;) was missing.
+  </text>
+
+</bug>
+
 <bug id="7" date="Fri Jul 21 16:20:43 BST 2000" user="dpg1">
 
   <summary>Support for object references with unlikely repository

@@ -81,7 +81,8 @@
 
               <li>Download the latest <a
               href="ftp://ftp.uk.research.att.com/pub/omniORB/omniORB_3_snapshots/">source
-              snapshot</a></li>
+              snapshot</a>. (Note that this is generated nightly, so the
+              latest bugfixes may not appear until tomorrow.)</li>
           </ul>
 
           <p>
