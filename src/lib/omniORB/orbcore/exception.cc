@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.4  2001/05/11 14:29:23  sll
+  Default tranisent handler now do not retry at all.
+
   Revision 1.10.2.3  2001/04/18 18:18:08  sll
   Big checkin with the brand new internal APIs.
 
@@ -153,6 +156,13 @@ omni_defaultTransientExcHandler(void*,
 				CORBA::ULong n_retries,
 				const CORBA::TRANSIENT& ex)
 {
+  // Set default to no retry.
+  // The normal retry due to cache connection shutdown has already been
+  // dealt with by the caller.
+  return 0;
+
+#if 0
+  // XXX Obsolute code to be removed.
   CORBA::ULong why = ex.minor();
 
   switch (why) {
@@ -174,6 +184,7 @@ omni_defaultTransientExcHandler(void*,
   if (secs)
     omni_thread::sleep(secs,0);
   return 1;
+#endif
 }
 
 
