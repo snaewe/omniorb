@@ -84,7 +84,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 static void
 DRV_version()
 {
-  cerr << "Omniidl 2.4.0\n"
+  cerr << "Omniidl 2.4.1\n"
        << "Copyright (C) 1996, 1997 Olivetti & Oracle Research Laborartory, Cambridge, UK.\n"
        << "Omniidl comes with ABSOLUTELY NO WARRANTY.\n"
        << endl;
