@@ -1,3 +1,17 @@
+Thu Feb 26 17:27:34 GMT 1998 sll
+================================
+
+- Updated to support new preprocessor output
+    # <n1> "filename" <n2> <n3> is now supported
+        A user reported that this new format is used by egcs-1.0.1 but I
+        cannot get egcs-1.0.1 to generate the output.
+    # <n1> $pragma ...
+        This format is used by SGI's C++ compiler
+
+src/tool/omniidl2/fe/idl.ll
+src/tool/omniidl2/fe/lex.yy.cc
+
+
 Thu Feb 26 10:41:43 GMT 1998 sll
 ================================
 
