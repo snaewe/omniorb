@@ -273,6 +273,28 @@ AC_SUBST(ENABLE_STATIC, $omni_cv_enable_static)
 ])
 
 
+dnl This defaults to enabled, and is appropriate for development
+dnl For the release, the obvious chunk below should be replaced with:
+dnl               AC_HELP_STRING([--enable-thread-tracing],
+dnl                  [enable thread and mutex tracing (default disable-thread-tracing)]),
+dnl               omni_cv_enable_thread_tracing=$enableval)
+dnl               omni_cv_enable_thread_tracing=no)
+AC_DEFUN([OMNI_DISABLE_THREAD_TRACING],
+[AC_CACHE_CHECK(whether to trace threads and locking,
+omni_cv_enable_thread_tracing,
+[AC_ARG_ENABLE(thread-tracing,
+               AC_HELP_STRING([--disable-thread-tracing],
+                  [disable thread and mutex tracing (default enable-thread-tracing)]),
+               omni_cv_enable_thread_tracing=$enableval,
+               omni_cv_enable_thread_tracing=yes)
+])
+if test "$omni_cv_enable_thread_tracing" = "yes"; then
+  AC_DEFINE(OMNIORB_ENABLE_LOCK_TRACES,,[define if you want mutexes to be traced])
+fi
+])
+
+
+
 dnl
 dnl Tests from http://www.gnu.org/software/ac-archive/
 dnl

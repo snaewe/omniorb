@@ -33,5 +33,6 @@
 #define __omniconfig_h__
 
 #define OMNI_CONFIG_TRADITIONAL
+#define OMNIORB_ENABLE_LOCK_TRACES
 
 #endif

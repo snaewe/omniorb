@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2002/04/28 20:39:46  dgrisby
+  autoconf, install location tweaks.
+
   Revision 1.2.2.3  2001/12/03 18:47:39  dpg1
   Detect use after deletion in traced mutex and condition.
 
@@ -54,7 +57,10 @@
 #define __OMNI_TRACEDTHREAD_H__
 
 
-#define OMNIORB_ENABLE_LOCK_TRACES
+// Lock tracing is controlled by autoconf, or in the dummy
+// omniconfig.h.  You can override it here if you wish.
+
+//#define OMNIORB_ENABLE_LOCK_TRACES
 
 
 //////////////////////////////////////////////////////////////////////
