@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:09:16  sll
+  New member maxGIOPVersion(), getInterceptors(), noFirewallNavigation,
+  giopTargetAddressMode.
+  LOCATION_FORWARD ctor takes an extra argument to indicate permanent
+  location forwarding.
+
   Revision 1.2.2.1  2000/07/17 10:35:35  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -131,6 +137,7 @@ struct omniOrbBoaKey {
   _CORBA_ULong lo;
 };
 
+class omniInterceptors;
 
 _CORBA_MODULE omniORB
 
@@ -645,6 +652,21 @@ _CORBA_MODULE_BEG
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
+  // maxGIOPVersion()                                                   //
+  // Set the maximum GIOP version the ORB should support. The ORB tries //
+  // to match the <major>.<minor> version as specified. This function   //
+  // should only be called before ORB_init(). Calling this function     //
+  // after ORB_init()  does not cause the ORB to change its maximum     //
+  // supported version, in this case the ORB just returns its version   //
+  // number in <major>.<minor>.                                         //
+  // This function has the same effect as a command-line option:        //
+  //   -ORBmaxGIOPVersion <major no>.<minor no>                         //
+  //   	       	       	       	       	       	       	       	       	//
+  _CORBA_MODULE_FN void maxGIOPVersion(_CORBA_Char& major,              //
+				       _CORBA_Char& minor);             //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
   // In pre-2.8.0 versions, the CORBA::Any extraction operator for     	//
   //   1. unbounded string operator>>=(char*&)                          //
   //   2. bounded string   operator>>=(to_string)                       //
@@ -696,21 +718,49 @@ _CORBA_MODULE_BEG
   // to pass a LOCATION_FORWARD message back to the client -- which     //
   // should retry the request on the object given by argument to the    //
   // constructor.  The reference is consumed.                           //
+  // From GIOP 1.2 onwards, location forward can either be temporary    //
+  // or permanent. This is indicated by the permanent flag.             //
   //  It is recommended that the facilities provided by the POA be used //
   // instead where possible.                                            //
   //                                                                    //
   class LOCATION_FORWARD {                                              //
   public:                                                               //
-    inline LOCATION_FORWARD(CORBA::Object_ptr objref)                   //
-      : pd_objref(objref) {}                                            //
+    inline LOCATION_FORWARD(CORBA::Object_ptr objref,                   //
+			    CORBA::Boolean permanent)                   //
+      : pd_objref(objref), pd_permanent(permanent) {}                   //
                                                                         //
     inline CORBA::Object_ptr get_obj() const { return pd_objref; }      //
+    inline CORBA::Boolean is_permanent() const { return pd_permanent; } //
+                                                                        //
+    inline LOCATION_FORWARD(const LOCATION_FORWARD& l)                  //
+      : pd_objref(l.pd_objref), pd_permanent(l.pd_permanent) {}         //
                                                                         //
   private:                                                              //
     CORBA::Object_ptr pd_objref;                                        //
+    CORBA::Boolean    pd_permanent;                                     //
+    LOCATION_FORWARD();                                                 //
+    LOCATION_FORWARD& operator=(const LOCATION_FORWARD&);               //
   };                                                                    //
   ////////////////////////////////////////////////////////////////////////
 
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // noFirewallNavigation                                               //
+  //   set this boolean flag to TRUE(1) force the ORB to ignore all     //
+  //   firewall proxy information in an object reference(IOR). 	        //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean noFirewallNavigation;     //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // getInterceptors()                                                  //
+  //   Only call this function after ORB_init().                        //
+  //   The returned object contains all the ORB processing points where //
+  //   interception functions can be added.                             //
+  //   Calling this function before ORB_init() will result in a system  //
+  //   exception.
+  _CORBA_MODULE_FN omniInterceptors* getInterceptors();
+  ////////////////////////////////////////////////////////////////////////
 
   // Internal configuration variables. Do not use!
 
@@ -825,6 +875,8 @@ _CORBA_MODULE_BEG
     if( traceLevel >= tl )  do_logs(msg);
   }
   // Writes log message with prefix, and appends '\n'.
+
+  _CORBA_MODULE_VAR _core_attr GIOP::AddressingDisposition giopTargetAddressMode;
 
 
 #ifndef HAS_Cplusplus_Namespace
