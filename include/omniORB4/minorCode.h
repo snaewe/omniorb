@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2002/02/26 14:08:34  dpg1
+  Minor codes for omniORBpy.
+
   Revision 1.1.4.12  2002/01/21 11:51:52  dpg1
   Add TRANSIENT minor code for Python exception.
 
@@ -187,6 +190,8 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_104 OMNIORBMinorCode(104)
 #define OMNIORBMinorCode_105 OMNIORBMinorCode(105)
 #define OMNIORBMinorCode_106 OMNIORBMinorCode(106)
+#define OMNIORBMinorCode_107 OMNIORBMinorCode(107)
+#define OMNIORBMinorCode_108 OMNIORBMinorCode(108)
 
 #define COMMA ,
 #define DeclareValue(name,value) name = value
@@ -268,7 +273,8 @@ code( BAD_PARAM_IncompletePythonType 	     , OMNIORBMinorCode_92 ) sep \
 code( BAD_PARAM_PythonValueOutOfRange	     , OMNIORBMinorCode_95 ) sep \
 code( BAD_PARAM_EmbeddedNullInPythonString   , OMNIORBMinorCode_96 ) sep \
 code( BAD_PARAM_StringIsTooLong              , OMNIORBMinorCode_100 ) sep \
-code( BAD_PARAM_SequenceIsTooLong            , OMNIORBMinorCode_101 )
+code( BAD_PARAM_SequenceIsTooLong            , OMNIORBMinorCode_101 ) sep \
+code( BAD_PARAM_WrongUnionMemberSelected     , OMNIORBMinorCode_107 )
 
 
 enum BAD_PARAM_minor {
@@ -344,7 +350,8 @@ code( BAD_TYPECODE_IllegitimateMember	, OMGMinorCode(2) ) sep \
 code( BAD_TYPECODE_TypeCodeIsNil     	, OMNIORBMinorCode_71 ) sep \
 code( BAD_TYPECODE_InvalidOperation  	, OMNIORBMinorCode_89 ) sep \
 code( BAD_TYPECODE_UnknownKind          , OMNIORBMinorCode_94 ) sep \
-code( BAD_TYPECODE_UnresolvedRecursiveTC, OMNIORBMinorCode_105 )
+code( BAD_TYPECODE_UnresolvedRecursiveTC, OMNIORBMinorCode_105 ) sep \
+code( BAD_TYPECODE_InvalidIndirection   , OMNIORBMinorCode_108 )
 
 enum BAD_TYPECODE_minor {
   DECLARE_BAD_TYPECODE_minors(DeclareValue,COMMA)  
