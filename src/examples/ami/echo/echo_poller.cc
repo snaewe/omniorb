@@ -13,52 +13,7 @@ CORBA::ORB_var orb;
 
 unsigned long int nInvocations = 0;
 
-//
-// Example class implementing IDL interface AMI_EchoHandler
-//
-class AMI_EchoHandler_i: public POA_AMI_EchoHandler,
-			 public PortableServer::RefCountServantBase {
-private:
-  // Make sure all instances are built on the heap by making the
-  // destructor non-public
-  virtual ~AMI_EchoHandler_i() {}
 
-  unsigned long int nReceived;
-public:
-  AMI_EchoHandler_i(): nReceived(0) {}
-
-  // methods corresponding to defined IDL attributes and operations
-  void echoString(const char* ami_return_val){
-    nReceived ++;
-    if (nReceived == nInvocations){
-      cout << "The server said, \"" << ami_return_val << "\"";
-      if (nInvocations > 1)
-	cout << " " << nInvocations << " times";
-      cout << "." << endl;
-      finish();
-    }
-  }
-  void echoString_excep(const struct AMI_EchoExceptionHolder &excep_holder){
-    cout << "Received ExceptionHolder from server" << endl;
-    try{
-      AMI_EchoExceptionHolder _e = excep_holder;
-      _e.raise_echoString();
-
-    } catch (CORBA::UserException &e){
-      cout << "Caught a UserException" << endl;
-    } catch (CORBA::SystemException &e){
-      cout << "Caught a SystemException" << endl;
-    } catch (CORBA::Exception &e){
-      cout << "Caught an Exception" << endl;
-    } catch (...){
-      cout << "Caught an unknown exception type" << endl;
-    }
-    finish();
-  }
-  void finish(){
-    orb->shutdown(0);
-  }
-};
 
 int main(int argc, char** argv)
 {
@@ -84,48 +39,78 @@ int main(int argc, char** argv)
     CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
     PortableServer::POA_var poa = PortableServer::POA::_narrow(poa_obj);
 
-    AMI_EchoHandler_i* handler_servant = new AMI_EchoHandler_i();
-    PortableServer::ObjectId_var handler_id =
-      poa->activate_object(handler_servant);
-    AMI_EchoHandler_var handler_ref = handler_servant->_this();
-
     PortableServer::POAManager_var pman = poa->the_POAManager();
     pman->activate();
 
+
+    AMI_EchoPoller **pollers = new AMI_EchoPoller*[nInvocations];;
+
     // Make the async request
     CORBA::String_var message = (const char*)"Hello there";
-    for (unsigned long int x = 0; x < nInvocations; x++)
-      echoref->sendc_echoString(handler_ref, message);
-    cout << "I said, \"" << message << "\"";
+    for (unsigned long int x = 0; x < nInvocations; x++){
+      pollers[x] = echoref->sendp_echoString(message);
+    }
+    cout << "I sent, \"" << message << "\"";
     if (nInvocations > 1)
       cout << " " << nInvocations << " times";
     cout << "." << endl;
 
-    orb->run();
+    cout << "Polling for replies..." << endl;
+    try{
+      for (unsigned long int x = 0; x < nInvocations; x++){
+	CORBA::String_var result;
+	CORBA::Boolean done = 0;
+	while (!done){
+	  try{
+	    pollers[x]->echoString(100 /* ms */, result);
+	    done = 1;
+	  }catch(CORBA::TIMEOUT &e){
+	    cerr << "Caught CORBA::TIMEOUT-- Retrying" << endl;
+	  }
+	}
+	if (strcmp(message, result) != 0){
+	  cout << "Received a different message!" << endl;
+	  abort();
+	}
+	delete pollers[x];
+      }
+      cout << "Received all replies." << endl;
+
+    }catch(CORBA::TIMEOUT &e){
+      cerr << "Caught CORBA::TIMEOUT." << endl;
+    }catch(CORBA::PollableSet::NoPossiblePollable &e){
+      cerr << "Caught CORBA::PollableSet::NoPossiblePollable." << endl;
+    }catch(CORBA::PollableSet::UnknownPollable &e){
+      cerr << "Caught CORBA::PollableSet::UnknownPollable." << endl;
+    }catch(CORBA::WRONG_TRANSACTION &e){
+      cerr << "Caught CORBA::WrongTransaction." << endl;
+    }
 
     cout << "Shutting down..." << endl;
+    orb->shutdown(1);
+
     sleep(20000);
 
   }
   catch(CORBA::SystemException&) {
     cerr << "Caught CORBA::SystemException." << endl;
-		throw;
+    throw;
   }
   catch(CORBA::Exception&) {
     cerr << "Caught CORBA::Exception." << endl;
-		throw;
+    throw;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
     cerr << "  file: " << fe.file() << endl;
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
-		throw;
+    throw;
   }
   catch(...) {
     cerr << "Caught unknown exception." << endl;
-		abort();
-		throw;
+    abort();
+    throw;
   }
   return 0;
 }
