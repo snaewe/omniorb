@@ -7,6 +7,9 @@
 
 // amrw (7/3/95)
 
+#ifndef __omninest_h_
+#define __omninest_h_
+
 #ifndef CONCAT
 #define CONCAT(A,B) A##B
 #endif 
@@ -75,7 +78,7 @@
 
 #endif
 
-
+#endif
 
 
 
