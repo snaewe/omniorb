@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.2.2  2000/02/15 11:06:17  djr
+ * Fixed bug in create_union_tc() -- problem if discriminator was an alias.
+ *
  * Revision 1.33.2.1  1999/10/26 19:38:23  sll
  * DynAny no longer do alias expansion on the typecode. In other words, all
  * aliases in the typecode are preserved.
@@ -4638,7 +4641,7 @@ TypeCode_collector::checkInternalRefs(TypeCode_base* tc, CORBA::ULong depth)
 
 TypeCode_union::Discriminator
 TypeCode_union_helper::extractLabel(const CORBA::Any& label,
-				    CORBA::TypeCode_ptr tc)
+				    CORBA::TypeCode_ptr dtc)
 {
   // When the discriminator is a long, short, unsigned short or unsigned long,
   // we have to cast the label value from any of these kinds and check
@@ -4646,10 +4649,13 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
   CORBA::TCKind lbl_kind;
   TypeCode_union::Discriminator lbl_value;
   CORBA::Boolean sign = 0;    // 1 == signed.
+  CORBA::TypeCode_var aetc = TypeCode_base::aliasExpand(ToTcBase(dtc));
 
   {
     CORBA::TypeCode_var lbl_tc = label.type();
-    lbl_kind = lbl_tc->kind();
+    CORBA::TypeCode_var ae_lbl_tc=TypeCode_base::aliasExpand(ToTcBase(lbl_tc));
+    lbl_kind = ToTcBase(ae_lbl_tc)->NP_kind();
+
     switch (lbl_kind) {
     case CORBA::tk_char:
       {
@@ -4705,7 +4711,7 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
     case CORBA::tk_enum:
       {
 	// check that <label> is of the correct type
-	if( !tc->equivalent(lbl_tc) )
+	if( !dtc->equivalent(lbl_tc) )
 	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 	break;
       }
@@ -4714,7 +4720,7 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
     }
   }
 
-  switch( tc->kind() ) {
+  switch( aetc->kind() ) {
   case CORBA::tk_char:
     if (lbl_kind != CORBA::tk_char)
       throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
@@ -4748,7 +4754,7 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
       CORBA::ULong c;
       tcDescriptor enumdesc;
       enumdesc.p_enum = &c;
-      label.PR_unpackTo(tc, &enumdesc);
+      label.PR_unpackTo(dtc, &enumdesc);
       lbl_value = c;
       break;
     }

@@ -1,4 +1,18 @@
 
+Tue Feb 15 11:01:09 GMT 2000 djr
+================================
+
+- Fixed bug in TypeCodes -- create_union_tc failed if the discriminator
+  type was an alias.
+
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+
+- Fixed typo in the optimisation below.
+
+src/lib/omniORB2/dynamic/tcParser.cc
+
+
 Thu Feb 10 17:58:14 GMT 2000 djr
 ================================
 
