@@ -11,6 +11,18 @@
 
 module RDITestTypes {
 
+  typedef string StringArrayFive[5];
+  typedef string StringArrayTen[10];
+ 
+  enum UnionSwitch { a, b, c, d, e};    
+  union UnionType switch (UnionSwitch) {
+       case a: long aLong;
+       case b: string bString;
+       case c: short cShort;
+       case d: StringArrayFive dArray;
+       default: boolean defaultBoolean;
+  };
+
   typedef sequence<string> StringSeq;
   typedef sequence<double> DoubleSeq;
 
