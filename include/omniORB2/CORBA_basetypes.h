@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.12  1999/08/15 13:52:17  sll
+ New VMS float implementation.
+
  Revision 1.11  1999/06/18 21:11:24  sll
  Updated copyright notice.
 
@@ -90,39 +93,61 @@ typedef unsigned int              _CORBA_ULong;
 
 #ifndef NO_FLOAT
 
-#if defined(__VMS)
-
-// VMS now always uses proxies for float.
-#define USING_PROXY_FLOAT
-
-class _CORBA_Float {
-  _CORBA_Long pd_f;
-  void cvt_(float f);
-  float cvt_() const;
-public:
-  // using compiler generated copy constructor and copy assignment
-  _CORBA_Float();
-  _CORBA_Float(float f);
-  operator float() const;
-};
-
-class _CORBA_Double {
-  _CORBA_Long pd_d[2];
-  void cvt_(double d);
-  double cvt_() const;
-public:
-  // using compiler generated copy constructor and copy assignment
-  _CORBA_Double();
-  _CORBA_Double(double d);
-  operator double() const;
-};
-
-#else
-
+#ifndef __VMS
 
 // This platform uses IEEE float
 typedef float                     _CORBA_Float;
 typedef double                    _CORBA_Double;
+
+#else	// VMS float test
+
+// VMS now always uses proxies for float.
+#define USING_PROXY_FLOAT
+
+#undef cvt_
+#if __D_FLOAT
+#define cvt_ cvt_d_
+#elif __G_FLOAT
+#define cvt_ cvt_g_
+#else
+#define cvt_ cvt_ieee_
+#endif
+
+class _CORBA_Float {
+  _CORBA_Long pd_f;
+  void cvt_d_(float f);
+  float cvt_d_() const;
+  void cvt_g_(float f);
+  float cvt_g_() const;
+#ifndef __VAX
+  void cvt_ieee_(float f);
+  float cvt_ieee_() const;
+#endif
+public:
+  // using compiler generated copy constructor and copy assignment
+  inline _CORBA_Float() {cvt_(0.0f);}
+  inline _CORBA_Float(float f) {cvt_(f);}
+  inline operator float() const {return cvt_();}
+};
+
+class _CORBA_Double {
+  _CORBA_Long pd_d[2];
+  void cvt_d_(double d);
+  double cvt_d_() const;
+  void cvt_g_(double d);
+  double cvt_g_() const;
+#ifndef __VAX
+  void cvt_ieee_(double d);
+  double cvt_ieee_() const;
+#endif
+public:
+  // using compiler generated copy constructor and copy assignment
+  inline _CORBA_Double() {cvt_(0.0);}
+  inline _CORBA_Double(double d) {cvt_(d);}
+  inline operator double() const {return cvt_();}
+};
+
+#undef cvt_
 
 #endif   // VMS float test
 #endif   // !defined(NO_FLOAT)
