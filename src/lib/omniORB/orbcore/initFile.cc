@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.30  1999/09/01 13:13:55  sll
+  Fixed #ifdef macro so that the code compiles for ETS kernel.
+
   Revision 1.29  1999/08/16 19:24:08  sll
   Added a per-compilation unit initialiser.
 
@@ -161,7 +164,7 @@ initFile::~initFile()
   if (fData) {
     delete [] fData;
   }
-#if defined(NTArchitecture)
+#if defined(__WIN32__) && !defined(__ETS_KERNEL__)
   if (use_registry) {
     RegCloseKey(init_hkey);
   }
