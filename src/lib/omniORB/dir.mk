@@ -7,10 +7,10 @@
 
 SUBDIRS += orbcore
 
-#ifndef OrbCoreOnly
-#SUBDIRS += dynamic
-#endif
-#
+ifndef OrbCoreOnly
+SUBDIRS += dynamic
+endif
+
 #EXPORTHEADERS = omniORB4/Naming.hh \
 #                omniORB4/corbaidl_defs.hh \
 #                omniORB4/corbaidl_operators.hh \
