@@ -32,9 +32,12 @@
 
 /*
  $Log$
- Revision 1.10  1997/05/06 16:06:03  sll
- Public release.
+ Revision 1.11  1997/07/21 17:07:38  tjr
+ use new OS / processor macros
 
+ * Revision 1.10  1997/05/06  16:06:03  sll
+ * Public release.
+ *
 */
 
 #ifndef __CORBA_SYSDEP_H__
@@ -115,9 +118,9 @@
 #elif defined(__sunos__) && defined(__sparc__)
 #define _OMNIORB_HOST_BYTE_ORDER_ 0
 #define _HAS_SIGNAL 1
-#elif defined(_X86_) || defined(__i386__)
+#elif defined(__x86__)
 #define _OMNIORB_HOST_BYTE_ORDER_ 1
-#if !defined(__NT__)
+#if !defined(__WIN32__)
 #define _HAS_SIGNAL 1
 #endif
 #else
@@ -129,7 +132,7 @@
 // Note that if an application is being compiled (using MSVC++ on NT or '95) 
 // to use the static library, the macro _WINSTATIC should be defined.
 
-#if defined(__NT__) && defined(_MSC_VER)
+#if defined(__WIN32__) && defined(_MSC_VER)
 
 #if defined(_OMNIORB2_DLL) && defined(_WINSTATIC)
 #error "Both _OMNIORB2_DLL and _WINSTATIC are defined."
@@ -151,7 +154,7 @@
 #else
 #define _OMNIORB2_NTDLL_
 #endif
-   // __NT__ && _MSC_VER
+   // __WIN32__ && _MSC_VER
  
 // This implementation *DOES NOT* support the Dynamic Invocation Interface
 // and the Dynamic Skeleton Interface. Hence some of the psuedo objects are
