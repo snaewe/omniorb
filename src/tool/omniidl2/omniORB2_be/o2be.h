@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.27.6.2  1999/10/13 15:17:59  djr
+ Fixed problem with call descriptors shared between ops and attrs.
+
  Revision 1.27.6.1  1999/09/24 10:05:21  djr
  Updated for omniORB3.
 
@@ -841,6 +844,8 @@ public:
   // (Server side).
 
   void produce_client_decl(std::fstream& s, AST_Decl* used_in,
+			   idl_bool use_inout_adapter,
+			   idl_bool use_out_adapter,
 			   const char* prefix = 0,
 			   const char* alias_prefix = 0);
   // Produce the declaration of the mapping of this operation.

@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.23.6.2  1999/10/13 15:18:00  djr
+  Fixed problem with call descriptors shared between ops and attrs.
+
   Revision 1.23.6.1  1999/09/24 10:05:22  djr
   Updated for omniORB3.
 
@@ -195,9 +198,9 @@ o2be_attribute::produce_read_proxy_call_desc(std::fstream& s,
   INC_INDENT_LEVEL();
 
   // Constructor.
-  IND(s); s << "inline " << class_name
-	    << "(LocalCallFn lcfn, const char* op, size_t oplen) :\n";
-  IND(s); s << "  omniCallDescriptor(lcfn, op, oplen)  {}\n\n";
+  IND(s); s << "inline " << class_name << "(LocalCallFn lcfn, const char* op,"
+	    " size_t oplen, _CORBA_Boolean oneway) :\n";
+  IND(s); s << "  omniCallDescriptor(lcfn, op, oplen, oneway)  {}\n\n";
 
   // Declaration of methods to implement the call.
   IND(s); s << "virtual void unmarshalReturnedValues(GIOP_C&);\n";
@@ -262,12 +265,12 @@ o2be_attribute::produce_write_proxy_call_desc(std::fstream& s,
   INC_INDENT_LEVEL();
 
   // Constructor.
-  IND(s); s << "inline " << class_name
-	    << "(LocalCallFn lcfn, const char* op, size_t oplen, ";
+  IND(s); s << "inline " << class_name << "(LocalCallFn lcfn, const char* op,"
+	    " size_t oplen, _CORBA_Boolean oneway, ";
   produce_decl_wr(s, o2be_global::root(), I_TRUE);
-  s << " arg) :\n";
-  IND(s); s << "  omniCallDescriptor(lcfn, op, oplen),\n";
-  IND(s); s << "  _value(arg)  {}\n\n";
+  s << " a_0) :\n";
+  IND(s); s << "  omniCallDescriptor(lcfn, op, oplen, oneway),\n";
+  IND(s); s << "  arg_0(a_0)  {}\n\n";
 
   // Declaration of methods to implement the call.
   IND(s); s << "virtual CORBA::ULong alignedSize(CORBA::ULong);\n";
@@ -275,7 +278,7 @@ o2be_attribute::produce_write_proxy_call_desc(std::fstream& s,
 
   // Private data members - argument.
   IND(s); produce_decl_wr(s, o2be_global::root(), I_TRUE);
-  s << " _value;\n";
+  s << " arg_0;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n\n";
 
@@ -291,7 +294,7 @@ o2be_attribute::produce_write_proxy_call_desc(std::fstream& s,
   o2be_operation::produceSizeCalculation(s, field_type(),
 					 o2be_global::root(),
 					 "giop_client", "msgsize",
-					 "_value", ntype, mapping);
+					 "arg_0", ntype, mapping);
   IND(s); s << "return msgsize;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n\n";
@@ -303,7 +306,7 @@ o2be_attribute::produce_write_proxy_call_desc(std::fstream& s,
   INC_INDENT_LEVEL();
   o2be_operation::produceMarshalCode(s, field_type(),
 				     o2be_global::root(), "giop_client",
-				     "_value", ntype, mapping);
+				     "arg_0", ntype, mapping);
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n\n";
 }
@@ -340,7 +343,7 @@ o2be_attribute::produce_proxy_rd_skel(std::fstream& s,
   IND(s); s << call_desc_class << " _call_desc(" << lcfn
 	    << ", \"_get_" << local_name()->get_string() << "\", "
 	    << (strlen(local_name()->get_string()) + strlen("_get_") + 1)
-	    << ");\n\n";
+	    << ", 0);\n\n";
   IND(s); s << "_invoke(_call_desc);\n";
   IND(s); s << "return _call_desc.result();\n";
   DEC_INDENT_LEVEL();
@@ -367,7 +370,7 @@ o2be_attribute::produce_proxy_wr_skel(std::fstream& s,
   IND(s); s << def_in.server_fqname() << "* impl = ("
 	    << def_in.server_fqname() << "*) svnt->_ptrToInterface("
 	    << def_in.fqname() << "::_PD_repoId);\n";
-  IND(s); s << "impl->" << uqname() << "(tcd->_value);\n";
+  IND(s); s << "impl->" << uqname() << "(tcd->arg_0);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n\n";
 
@@ -375,13 +378,13 @@ o2be_attribute::produce_proxy_wr_skel(std::fstream& s,
   IND(s); s << "void " << def_in.proxy_fqname() << "::"
 	    << uqname() << '(';
   produce_decl_wr(s, o2be_interface::narrow_from_scope(defined_in()), I_TRUE);
-  s << " _value)\n";
+  s << " arg_0)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << call_desc_class << " _call_desc(" << lcfn
 	    << ", \"_set_" << local_name()->get_string() << "\", "
 	    << (strlen(local_name()->get_string()) + strlen("_set_") + 1)
-	    << ", _value);\n\n";
+	    << ", 0, arg_0);\n\n";
   IND(s); s << "_invoke(_call_desc);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n\n";

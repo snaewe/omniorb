@@ -6,6 +6,15 @@ Wed Oct 13 16:11:27 BST 1999 sll
 
 src/lib/omnithread/posix.cc
 
+- Fixed omniidl3 bug.  Call descriptors for operations and attributes
+  used different naming conventions for members, but can be used
+  interchangeably.
+
+src/too/omniidl2/omniORB2_be/o2be.h
+src/too/omniidl2/omniORB2_be/o2be_attribute.cc
+src/too/omniidl2/omniORB2_be/o2be_interface.cc
+src/too/omniidl2/omniORB2_be/o2be_operation.cc
+
 
 Wed Oct 13 13:38:21 BST 1999 djr
 ================================

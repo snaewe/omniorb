@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.34.6.3  1999/10/13 15:18:03  djr
+  Fixed problem with call descriptors shared between ops and attrs.
+
   Revision 1.34.6.2  1999/09/30 11:49:29  djr
   Implemented catching user-exceptions in GIOP_S for all compilers.
 
@@ -255,7 +258,10 @@ o2be_operation::produce_decl(std::fstream& s, AST_Decl* used_in,
 
 void
 o2be_operation::produce_client_decl(std::fstream& s, AST_Decl* used_in,
-			    const char* prefix, const char* alias_prefix)
+				    idl_bool use_inout_adapter,
+				    idl_bool use_out_adapter,
+				    const char* prefix,
+				    const char* alias_prefix)
 {
   o2be_interface* intf = o2be_interface::narrow_from_scope(defined_in());
   o2be_module* my_scope = o2be_module::narrow_from_scope(intf->defined_in());
@@ -308,8 +314,7 @@ o2be_operation::produce_client_decl(std::fstream& s, AST_Decl* used_in,
     while( !i.is_done() ) {
       argMapping mapping;
       argType    ntype;
-      idl_bool   outvar = I_FALSE;
-      idl_bool   inoutptr = I_FALSE;
+      idl_bool   useadapter = I_FALSE;
 
       o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
 
@@ -319,36 +324,40 @@ o2be_operation::produce_client_decl(std::fstream& s, AST_Decl* used_in,
 	break;
       case AST_Argument::dir_INOUT:
 	ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	switch(ntype) {
-	case tObjref:
-	case tString:
-	case tTypeCode:
-	  inoutptr = I_TRUE;
-	  break;
-	default:
-	  break;
+	if( use_inout_adapter ) {
+	  switch(ntype) {
+	  case tObjref:
+	  case tString:
+	  case tTypeCode:
+	    useadapter = I_TRUE;
+	    break;
+	  default:
+	    break;
+	  }
 	}
 	break;
       case AST_Argument::dir_OUT:
 	ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-	switch(ntype) {
-	case tObjref:
-	case tStructVariable:
-	case tUnionVariable:
-	case tString:
-	case tSequence:
-	case tArrayVariable:
-	case tAny:
-	case tTypeCode:
-	  outvar = I_TRUE;
-	  break;
-	default:
-	  break;
+	if( use_out_adapter ) {
+	  switch(ntype) {
+	  case tObjref:
+	  case tStructVariable:
+	  case tUnionVariable:
+	  case tString:
+	  case tSequence:
+	  case tArrayVariable:
+	  case tAny:
+	  case tTypeCode:
+	    useadapter = I_TRUE;
+	    break;
+	  default:
+	    break;
+	  }
 	}
 	break;
       }
 
-      if( !outvar && !inoutptr ) {
+      if( !useadapter ) {
 	s << ((mapping.is_const) ? "const ":"");
 	if (ntype == tObjref) {
 	  AST_Decl* decl = a->field_type();
@@ -375,104 +384,103 @@ o2be_operation::produce_client_decl(std::fstream& s, AST_Decl* used_in,
 	  << (mapping.is_reference  ? "&":"")
 	  << " " << a->uqname();
       }
-      else
-	{
-	  switch( ntype ) {
-	  case tObjref:
-	    {
-	      AST_Decl *decl = a->field_type();
-	      while (decl->node_type() == AST_Decl::NT_typedef) {
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      }
-	      o2be_interface* intf = o2be_interface::narrow_from_decl(decl);
-	      if (a->direction() == AST_Argument::dir_INOUT) {
-		s << intf->inout_adptarg_name(my_scope);
-	      }
-	      else {
-		s << intf->out_adptarg_name(my_scope);
-	      }
-	      break;
+      else {
+	switch( ntype ) {
+	case tObjref:
+	  {
+	    AST_Decl *decl = a->field_type();
+	    while (decl->node_type() == AST_Decl::NT_typedef) {
+	      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 	    }
-	  case tString:
-	    {
-	      if (a->direction() == AST_Argument::dir_INOUT) {
-		s << "CORBA::String_INOUT_arg";
-	      }
-	      else {
-		s << "CORBA::String_out";
-	      }
-	      break;
+	    o2be_interface* intf = o2be_interface::narrow_from_decl(decl);
+	    if (a->direction() == AST_Argument::dir_INOUT) {
+	      s << intf->inout_adptarg_name(my_scope);
 	    }
-	  case tAny:
-	    {
-	      if (a->direction() == AST_Argument::dir_OUT) {
-		s << "CORBA::Any_OUT_arg";
-	      }
-	      break;
+	    else {
+	      s << intf->out_adptarg_name(my_scope);
 	    }
-	  case tTypeCode:
-	    {
-	      if (a->direction() == AST_Argument::dir_INOUT) {
-		s << "CORBA::TypeCode_INOUT_arg";
-	      }
-	      else {
-		s << "CORBA::TypeCode_OUT_arg";
-	      }
-	      break;
-	    }
-	  case tStructVariable:
-	    {
-	      AST_Decl *decl = a->field_type();
-	      while (decl->node_type() == AST_Decl::NT_typedef)
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      o2be_structure* p = o2be_structure::narrow_from_decl(decl);
-	      if (a->direction() == AST_Argument::dir_OUT)
-		s << p->out_adptarg_name(my_scope);
-	      break;
-	    }
-	  case tUnionVariable:
-	    {
-	      AST_Decl *decl = a->field_type();
-	      while (decl->node_type() == AST_Decl::NT_typedef)
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      o2be_union* p = o2be_union::narrow_from_decl(decl);
-	      if (a->direction() == AST_Argument::dir_OUT)
-		s << p->out_adptarg_name(my_scope);
-	      break;
-	    }
-	  case tSequence:
-	    {
-	      AST_Decl *decl = a->field_type();
-	      if (decl->node_type() != AST_Decl::NT_typedef)
-		throw o2be_internal_error(__FILE__,__LINE__,
-					  "Typedef expected");
-	      o2be_typedef* tp = o2be_typedef::narrow_from_decl(decl);
-	      while (decl->node_type() == AST_Decl::NT_typedef)
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      o2be_sequence* p = o2be_sequence::narrow_from_decl(decl);
-	      if (a->direction() == AST_Argument::dir_OUT)
-		s << p->out_adptarg_name(tp, my_scope);
-	      break;
-	    }
-	  case tArrayVariable:
-	    {
-	      AST_Decl* decl = a->field_type();
-	      if (decl->node_type() != AST_Decl::NT_typedef)
-		throw o2be_internal_error(__FILE__,__LINE__,
-					  "Typedef expected");
-	      o2be_typedef* tp = o2be_typedef::narrow_from_decl(decl);
-	      while (decl->node_type() == AST_Decl::NT_typedef)
-		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      o2be_array* p = o2be_array::narrow_from_decl(decl);
-	      if (a->direction() == AST_Argument::dir_OUT)
-		s << p->out_adptarg_name(tp, my_scope);
-	      break;
-	    }
-	  default:
 	    break;
 	  }
-	  s << " " << a->uqname();
+	case tString:
+	  {
+	    if (a->direction() == AST_Argument::dir_INOUT) {
+	      s << "CORBA::String_INOUT_arg";
+	    }
+	    else {
+	      s << "CORBA::String_out";
+	    }
+	    break;
+	  }
+	case tAny:
+	  {
+	    if (a->direction() == AST_Argument::dir_OUT) {
+	      s << "CORBA::Any_OUT_arg";
+	    }
+	    break;
+	  }
+	case tTypeCode:
+	  {
+	    if (a->direction() == AST_Argument::dir_INOUT) {
+	      s << "CORBA::TypeCode_INOUT_arg";
+	    }
+	    else {
+	      s << "CORBA::TypeCode_OUT_arg";
+	    }
+	    break;
+	  }
+	case tStructVariable:
+	  {
+	    AST_Decl *decl = a->field_type();
+	    while (decl->node_type() == AST_Decl::NT_typedef)
+	      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	    o2be_structure* p = o2be_structure::narrow_from_decl(decl);
+	    if (a->direction() == AST_Argument::dir_OUT)
+	      s << p->out_adptarg_name(my_scope);
+	    break;
+	  }
+	case tUnionVariable:
+	  {
+	    AST_Decl *decl = a->field_type();
+	    while (decl->node_type() == AST_Decl::NT_typedef)
+	      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	    o2be_union* p = o2be_union::narrow_from_decl(decl);
+	    if (a->direction() == AST_Argument::dir_OUT)
+	      s << p->out_adptarg_name(my_scope);
+	    break;
+	  }
+	case tSequence:
+	  {
+	    AST_Decl *decl = a->field_type();
+	    if (decl->node_type() != AST_Decl::NT_typedef)
+	      throw o2be_internal_error(__FILE__,__LINE__,
+					"Typedef expected");
+	    o2be_typedef* tp = o2be_typedef::narrow_from_decl(decl);
+	    while (decl->node_type() == AST_Decl::NT_typedef)
+	      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	    o2be_sequence* p = o2be_sequence::narrow_from_decl(decl);
+	    if (a->direction() == AST_Argument::dir_OUT)
+	      s << p->out_adptarg_name(tp, my_scope);
+	    break;
+	  }
+	case tArrayVariable:
+	  {
+	    AST_Decl* decl = a->field_type();
+	    if (decl->node_type() != AST_Decl::NT_typedef)
+	      throw o2be_internal_error(__FILE__,__LINE__,
+					"Typedef expected");
+	    o2be_typedef* tp = o2be_typedef::narrow_from_decl(decl);
+	    while (decl->node_type() == AST_Decl::NT_typedef)
+	      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	    o2be_array* p = o2be_array::narrow_from_decl(decl);
+	    if (a->direction() == AST_Argument::dir_OUT)
+	      s << p->out_adptarg_name(tp, my_scope);
+	    break;
+	  }
+	default:
+	  break;
 	}
+	s << " " << a->uqname();
+      }
       i.next();
       s << ((!i.is_done()) ? ", " : (context()?", ":""));
     }
@@ -1166,7 +1174,7 @@ o2be_operation::produce_proxy_skel(std::fstream& s, o2be_interface& def_in,
   ////////////////////////////////////
   // Generate the actual proxy method.
   ////////////////////////////////////
-  IND(s); produce_client_decl(s, o2be_global::root(),
+  IND(s); produce_client_decl(s, o2be_global::root(), 1, 1,
 			      def_in.proxy_fqname(), alias_prefix);
   s << "\n";
   IND(s); s << "{\n";
