@@ -1,3 +1,11 @@
+Sat Sep 21 23:50:47 BST 2002 dgrisby
+====================================
+
+- Really use C comments.
+
+include/omniconfig.h
+
+
 Sat Sep 21 21:56:33 BST 2002 dgrisby
 ====================================
 
