@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.32  1999/08/20 11:41:12  djr
+ * Yet another TypeCode alias-expand bug.
+ *
  * Revision 1.31  1999/08/06 16:55:17  sll
  * Added missing break statement in extractLabel. This bug affects enum
  * discriminator.
@@ -281,7 +284,7 @@ CORBA::TypeCode::_duplicate(CORBA::TypeCode_ptr t)
 }
 
 // Initialised in check_static_data_is_initialised().
-static omni_mutex* _nil_TypeCode_lock;
+static omni_mutex* _nil_TypeCode_lock = 0;
 static CORBA::TypeCode_ptr _nil_TypeCode_ptr = 0;
 
 CORBA::TypeCode_ptr
@@ -666,7 +669,7 @@ CORBA::release(TypeCode_ptr o)
 //////////////////////////////////////////////////////////////////////
 
 TypeCode_base::TypeCode_base(CORBA::TCKind tck)
-  : pd_complete(0), pd_mark(0), pd_ref_count(1),
+  : pd_complete(1), pd_mark(0), pd_ref_count(1),
     pd_loop_member(0), pd_internal_ref_count(0),
     pd_cached_paramlist(0),
     pd_aliasExpandedTc(0), pd_compactTc(0), pd_tck(tck)
@@ -722,6 +725,7 @@ TypeCode_base::TypeCode_base(CORBA::TCKind tck)
     break;
 
   default:
+    pd_complete = 0;
     break;
   }
 }
@@ -957,14 +961,21 @@ TypeCode_base::NP_aliasExpand(TypeCode_pairlist*)
 #endif
 }
 
+
+static omni_mutex* aliasExpandedTc_lock = 0;
+
+
 TypeCode_base*
 TypeCode_base::aliasExpand(TypeCode_base* tc)
 {
   if( !tc->pd_aliasExpandedTc ) {
-    if( tc->NP_containsAnAlias() )
-      tc->pd_aliasExpandedTc = tc->NP_aliasExpand(0);
-    else
-      tc->pd_aliasExpandedTc = tc;
+    TypeCode_base* aetc =
+      tc->NP_containsAnAlias() ? tc->NP_aliasExpand(0) : tc;
+
+    aliasExpandedTc_lock->lock();
+    if( !tc->pd_aliasExpandedTc )  tc->pd_aliasExpandedTc = aetc;
+    else                           TypeCode_collector::releaseRef(aetc);
+    aliasExpandedTc_lock->unlock();
   }
 
   return TypeCode_collector::duplicateRef(tc->pd_aliasExpandedTc);
@@ -1509,6 +1520,9 @@ TypeCode_sequence::NP_unmarshalComplexParams(MemBufferedStream &s,
     // think it matters.  We only use pd_offset when
     // creating typecodes.
     _ptr->pd_offset = 1;
+  else
+    _ptr->pd_offset = 0;
+
   _ptr->pd_length <<= s;
   _ptr->pd_complete = 1;
 
@@ -3582,7 +3596,7 @@ TypeCode_pairlist::search(const TypeCode_pairlist* pl, const TypeCode_base* tc)
 // list data, which is stored in typecodes when they are first marshalled.
 
 // Initialised in check_static_data_is_initialised().
-static omni_mutex* pd_cached_paramlist_lock;
+static omni_mutex* pd_cached_paramlist_lock = 0;
 
 
 void
@@ -4309,7 +4323,7 @@ TypeCode_marshaller::paramListType(CORBA::ULong kind)
 // in progress at any one time.
 
 // Initialised in check_static_data_is_initialised().
-static omni_mutex* pd_refcount_lock;
+static omni_mutex* pd_refcount_lock = 0;
 
 
 // Duplicating typecodes
@@ -5262,6 +5276,7 @@ static void check_static_data_is_initialised()
 
   // Mutexes
   _nil_TypeCode_lock = new omni_mutex();
+  aliasExpandedTc_lock = new omni_mutex();
   pd_cached_paramlist_lock = new omni_mutex();
   pd_refcount_lock = new omni_mutex();
 
