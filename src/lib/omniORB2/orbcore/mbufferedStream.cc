@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9  1999/05/10 16:36:04  djr
+  Fixed bug in constructors for read-only streams.
+
   Revision 1.8  1999/03/11 16:25:54  djr
   Updated copyright notice
 
@@ -159,11 +162,12 @@ MemBufferedStream::MemBufferedStream(void* databuffer) {
 #error "No suitable integer type available to calculate maximum" \
   " pointer value from"
 #endif
-  rewind_inout_mkr();
+  pd_in_mkr = startofstream();
+  pd_out_mkr = pd_bufend;
 }
 
 
-MemBufferedStream::MemBufferedStream(void *databuffer, size_t maxLen)
+MemBufferedStream::MemBufferedStream(void* databuffer, size_t maxLen)
 {
   // Create a read-only MemBufferedStream, which reads from an
   // externally-managed buffer and has a limited length
@@ -171,7 +175,8 @@ MemBufferedStream::MemBufferedStream(void *databuffer, size_t maxLen)
   pd_byte_order = omni::myByteOrder;
   pd_bufp = databuffer;
   pd_bufend = (void *)((omni::ptr_arith_t)pd_bufp + (omni::ptr_arith_t)maxLen);
-  rewind_inout_mkr();
+  pd_in_mkr = startofstream();
+  pd_out_mkr = pd_bufend;
 }
 
 
