@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.28  2002/10/14 20:07:13  dgrisby
+  Per objref / per thread timeouts.
+
   Revision 1.2.2.27  2002/01/02 18:17:41  dpg1
   Segfault during final clean-up if ORB not initialised.
 
@@ -595,7 +598,9 @@ omniObjRef::omniObjRef(const char* intfRepoId, omniIOR* ior,
 		       omniIdentity* id, _CORBA_Boolean static_repoId)
   : pd_refCount(1),
     pd_ior(ior),
-    pd_id(id)
+    pd_id(id),
+    pd_timeout_secs(0),
+    pd_timeout_nanosecs(0)
 {
   OMNIORB_ASSERT(intfRepoId);
   OMNIORB_ASSERT(ior);
@@ -688,17 +693,36 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
   call_desc.objref(this);
 
-  // XXX set the deadline. In future, we may use per-objref timeout setting
-  // as well as per-thread timeout setting.
-  if (orbParameters::clientCallTimeOutPeriod.secs ||
-      orbParameters::clientCallTimeOutPeriod.nanosecs) {
+  omniCurrent* current;
+  unsigned long abs_secs = 0, abs_nanosecs = 0;
 
-    unsigned long abs_secs,abs_nanosecs;
+  if (pd_timeout_secs || pd_timeout_nanosecs) {
+    omni_thread::get_time(&abs_secs,&abs_nanosecs,
+			  pd_timeout_secs, pd_timeout_nanosecs);
+  }
+  else if (orbParameters::supportPerThreadTimeOut &&
+	   (current = omniCurrent::get()) &&
+	   (current->timeout_secs() || current->timeout_nanosecs())) {
+    
+    if (current->timeout_absolute()) {
+      abs_secs     = current->timeout_secs();
+      abs_nanosecs = current->timeout_nanosecs();
+    }
+    else {
+      omni_thread::get_time(&abs_secs,&abs_nanosecs,
+			    current->timeout_secs(),
+			    current->timeout_nanosecs());
+    }
+  }
+  else if (orbParameters::clientCallTimeOutPeriod.secs ||
+	   orbParameters::clientCallTimeOutPeriod.nanosecs) {
+
     omni_thread::get_time(&abs_secs,&abs_nanosecs,
 			  orbParameters::clientCallTimeOutPeriod.secs,
 			  orbParameters::clientCallTimeOutPeriod.nanosecs);
-    call_desc.setDeadline(abs_secs,abs_nanosecs);
   }
+  if (abs_secs || abs_nanosecs)
+    call_desc.setDeadline(abs_secs,abs_nanosecs);
 
   while(1) {
 
@@ -978,17 +1002,37 @@ omniObjRef::_locateRequest()
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 
   omniCallDescriptor dummy_calldesc(0,0,0,0,0,0,0);
-  // XXX set the deadline. In future, we may use per-objref timeout setting
-  // as well as per-thread timeout setting.
-  if (orbParameters::clientCallTimeOutPeriod.secs ||
-      orbParameters::clientCallTimeOutPeriod.nanosecs) {
 
-    unsigned long abs_secs,abs_nanosecs;
+  omniCurrent* current;
+  unsigned long abs_secs = 0, abs_nanosecs = 0;
+
+  if (pd_timeout_secs || pd_timeout_nanosecs) {
+    omni_thread::get_time(&abs_secs,&abs_nanosecs,
+			  pd_timeout_secs, pd_timeout_nanosecs);
+  }
+  else if (orbParameters::supportPerThreadTimeOut &&
+	   (current = omniCurrent::get()) &&
+	   (current->timeout_secs() || current->timeout_nanosecs())) {
+    
+    if (current->timeout_absolute()) {
+      abs_secs     = current->timeout_secs();
+      abs_nanosecs = current->timeout_nanosecs();
+    }
+    else {
+      omni_thread::get_time(&abs_secs,&abs_nanosecs,
+			    current->timeout_secs(),
+			    current->timeout_nanosecs());
+    }
+  }
+  else if (orbParameters::clientCallTimeOutPeriod.secs ||
+	   orbParameters::clientCallTimeOutPeriod.nanosecs) {
+
     omni_thread::get_time(&abs_secs,&abs_nanosecs,
 			  orbParameters::clientCallTimeOutPeriod.secs,
 			  orbParameters::clientCallTimeOutPeriod.nanosecs);
-    dummy_calldesc.setDeadline(abs_secs,abs_nanosecs);
   }
+  if (abs_secs || abs_nanosecs)
+    dummy_calldesc.setDeadline(abs_secs,abs_nanosecs);
   
   while(1) {
 

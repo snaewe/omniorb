@@ -353,6 +353,17 @@ REGEDIT4
 "clientCallTimeOutPeriod" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; supportPerThreadTimeOut
+;
+
+;    If true, each client thread may have its own timeout. This adds
+;    some overhead to each call, so it is off by default.
+;
+;    Valid values = 0 or 1
+;
+"supportPerThreadTimeOut" = "0"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; outConScanPeriod
 ;
 ;   Idle connections shutdown. The ORB periodically scans all the

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2002/10/14 20:06:41  dgrisby
+  Per objref / per thread timeouts.
+
   Revision 1.1.2.3  2002/03/18 16:50:17  dpg1
   New threadPoolWatchConnection parameter.
 
@@ -132,7 +135,7 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportCurrent;
 //  can set the value to 0, resulting in a small performance
 //  improvement.
 
-_CORBA_MODULE_VAR _core_attr CORBA::Boolean      strictIIOP;
+_CORBA_MODULE_VAR _core_attr CORBA::Boolean strictIIOP;
 //   Enable vigorous check on incoming IIOP messages
 //
 //   In some (sloppy) IIOP implementations, the message size value in
@@ -166,8 +169,6 @@ _CORBA_MODULE_VAR _core_attr CORBA::ULong scanGranularity;
 //  Valid values = (n >= 0 in seconds) 
 //                  0 --> do not scan for idle connections.
 //
-
-
 
 
 _CORBA_MODULE_VAR _core_attr CORBA::ULong objectTableSize;
@@ -279,7 +280,6 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean offerBiDirectionalGIOP;
 //
 //   Valid values = 0 or 1
 
-
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean  diiThrowsSysExceptions;
 // If the value of this variable is 1 then the Dynamic Invacation Interface
 // functions (Request::invoke, send_oneway, send_deferred, get_response,
@@ -299,7 +299,6 @@ _CORBA_MODULE_VAR _core_attr CORBA::ULong outConScanPeriod;
 //  Valid values = (n >= 0 in seconds) 
 //                  0 --> do not close idle connections.
 
-
 _CORBA_MODULE_VAR _core_attr timeValue clientCallTimeOutPeriod;
 //   Call timeout. On the client side, if a remote call takes longer
 //   than the timeout value, the ORB will shutdown the connection and
@@ -307,6 +306,12 @@ _CORBA_MODULE_VAR _core_attr timeValue clientCallTimeOutPeriod;
 //
 //   Valid values = (n >= 0 in seconds) 
 //                   0 --> no timeout. Block till a reply comes back
+
+_CORBA_MODULE_VAR _core_attr CORBA::Boolean supportPerThreadTimeOut;
+//   If true, each thread may have a timeout associated with it. This
+//   gives a performance hit due to accessing per-thread data.
+//
+//   Valid values = 0 or 1
 
 _CORBA_MODULE_VAR _core_attr CORBA::String_var bootstrapAgentHostname;
 // Applies to the client side. Non-zero enables the use of Sun's bootstrap

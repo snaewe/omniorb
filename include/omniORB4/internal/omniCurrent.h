@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/10/14 20:06:41  dgrisby
+  Per objref / per thread timeouts.
+
   Revision 1.1.2.2  2001/08/17 17:12:34  sll
   Modularise ORB configuration parameters.
 
@@ -88,8 +91,10 @@ public:
   }
 
   // Accessors
-  inline omniCallDescriptor* callDescriptor() { return pd_callDescriptor; }
-
+  inline omniCallDescriptor* callDescriptor() { return pd_callDescriptor;   }
+  inline unsigned long  timeout_secs()        { return pd_timeout_secs;     }
+  inline unsigned long  timeout_nanosecs()    { return pd_timeout_nanosecs; }
+  inline CORBA::Boolean timeout_absolute()    { return pd_timeout_absolute; }
 
   // Stack manipulation
   inline void pushCallDescriptor(omniCallDescriptor* desc)
@@ -105,19 +110,40 @@ public:
     pd_callDescriptor = pd_callDescriptor->pd_current_next;
   }
 
+  // Timeout setting
+  inline void setTimeout(unsigned long secs, unsigned long ns) {
+    pd_timeout_secs     = secs;
+    pd_timeout_nanosecs = ns;
+    pd_timeout_absolute = 0;
+  }
+  inline void setDeadline(unsigned long secs, unsigned long ns) {
+    pd_timeout_secs     = secs;
+    pd_timeout_nanosecs = ns;
+    pd_timeout_absolute = 1;
+  }
+
 private:
   static _core_attr omni_thread::key_t thread_key;
 
   omniCallDescriptor* pd_callDescriptor;
+  // Stack of call descriptors
 
-  // Not implemented
+  unsigned long       pd_timeout_secs;
+  unsigned long       pd_timeout_nanosecs;
+  // Per-thread timeout
+
+  CORBA::Boolean      pd_timeout_absolute;
+  // If true, timeout is an absolute completion time, otherwise it's a
+  // time per call.
+
+  // Not implemented:
   omniCurrent(const omniCurrent&);
   omniCurrent& operator=(const omniCurrent&);
 };
 
 #ifdef _core_attr_defined
 # undef _core_attr
-# undef _cure_attr_defined
+# undef _core_attr_defined
 #endif
 
 #endif // __OMNICURRENT_H__

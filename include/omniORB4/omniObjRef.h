@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.12  2002/10/14 20:06:06  dgrisby
+  Per objref / per thread timeouts.
+
   Revision 1.2.2.11  2001/11/12 13:46:07  dpg1
   _unchecked_narrow, improved _narrow.
 
@@ -317,6 +320,12 @@ public:
   // speed.
   //  No concurrency control!
 
+  inline void _setTimeout(unsigned long secs, unsigned long ns)
+  {
+    pd_timeout_secs     = secs;
+    pd_timeout_nanosecs = ns;
+  }
+
 protected:
   virtual ~omniObjRef();
   // Must not hold <omni::internalLock>.
@@ -443,6 +452,9 @@ private:
 
   } pd_flags;
   // Mutable.  Protected by <omni::internalLock>.
+
+  unsigned long pd_timeout_secs;
+  unsigned long pd_timeout_nanosecs;
 };
 
 

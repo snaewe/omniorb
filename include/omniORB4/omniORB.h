@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.19  2002/10/14 20:06:03  dgrisby
+  Per objref / per thread timeouts.
+
   Revision 1.2.2.18  2002/08/16 17:47:39  dgrisby
   Documentation, message updates. ORB tweaks to match docs.
 
@@ -256,6 +259,38 @@ _CORBA_MODULE_BEG
   // if ORB::run() or ORB::perform_work() is called from that thread.   //
   //                                                                    //
   _CORBA_MODULE_FN void setMainThread();                                //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // setClientCallTimeout()                                             //
+  // setClientThreadCallTimeout()                                       //
+  // setClientThreadCallDeadline()                                      //
+  //                                                                    //
+  // Functions to set call timeouts at runtime.                         //
+  //                                                                    //
+  // setClientCallTimeout() either sets the global timeout, or the      //
+  // timeout for the specfied object reference. The timeout is          //
+  // specified in milliseconds.                                         //
+  //                                                                    //
+  // setClientThreadCallTimeout() sets the timeout for the calling      //
+  // thread to the specified number of milliseconds. If the calling     //
+  // thread is not an omni_thread, it throws CORBA::INITIALIZE.         //
+  //                                                                    //
+  // setClientThreadCall Deadline() sets an absolute deadline for all   //
+  // calls in the calling thread. The seconds and nanoseconds should be //
+  // acquired from omni_thread::get_time(). Again throws INITIALIZE if  //
+  // the calling thread is not an omni_thread.                          //
+  //                                                                    //
+  _CORBA_MODULE_FN void setClientCallTimeout(CORBA::ULong millisecs);   //
+  _CORBA_MODULE_FN void setClientCallTimeout(CORBA::Object_ptr obj,     //
+    					     CORBA::ULong millisecs);   //
+                                                                        //
+  _CORBA_MODULE_FN void setClientThreadCallTimeout(CORBA::ULong millisecs);
+                                                                        //
+  _CORBA_MODULE_FN void setClientThreadCallDeadline(unsigned long secs, //
+                                                    unsigned long ns);  //
+                                                                        //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////

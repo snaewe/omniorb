@@ -1,3 +1,20 @@
+Mon Oct 14 20:59:38 BST 2002 dgrisby
+====================================
+
+- Per objref / per thread timeouts.
+
+sample.cfg
+sample.reg
+include/omniORB4/omniORB.h
+include/omniORB4/omniObjRef.h
+include/omniORB4/internal/omniCurrent.h
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Mon Oct 14 15:48:35 BST 2002 dgrisby
 ====================================
 
