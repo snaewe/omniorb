@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.10.4.2  1999/09/16 16:04:25  sll
+  Bug fix. Rope_iterator now use Strand::Sync::is_unused() to test if the
+  strand is not in use. giopStream::is_unused() now remove unused giopStream
+  as a side-effect. The net effect is that unused outgoing Rope is now
+  deleted correctly.
+
   Revision 1.10.4.1  1999/09/15 20:18:28  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -574,7 +580,8 @@ Rope_iterator::operator() ()
 	      Strand *p = rp->pd_head;
 	      while (p)
 		{
-		  if (!p->is_idle(1)) {
+		  Strand::Sync* q;
+		  if ((q = Strand::Sync::getSync(p)) && !q->is_unused()) {
 		    // This is wrong, nobody should be using this strand.
 		    throw omniORB::fatalException(__FILE__,__LINE__,
 						  "Rope_iterator::operator() () tries to delete a strand that is not idle.");

@@ -1,3 +1,12 @@
+Thu Sep 16 17:00:26 BST 1999 sll
+================================
+
+- Bug fix in garbage collection of unused outgoing Rope 
+
+src/lib/omniORB2/orbcore/giopStream.cc
+src/lib/omniORB2/orbcore/strand.cc
+
+
 Wed Sep 15 22:06:46 BST 1999 sll
 ================================
 

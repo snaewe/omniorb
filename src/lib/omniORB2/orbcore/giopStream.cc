@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/16 16:04:25  sll
+  Bug fix. Rope_iterator now use Strand::Sync::is_unused() to test if the
+  strand is not in use. giopStream::is_unused() now remove unused giopStream
+  as a side-effect. The net effect is that unused outgoing Rope is now
+  deleted correctly.
+
   Revision 1.1.2.1  1999/09/15 20:37:27  sll
   *** empty log message ***
 
@@ -863,7 +869,23 @@ giopStream::garbageCollect()
 CORBA::Boolean
 giopStream::is_unused()
 {
-  return (pd_state == UnUsed) ? 1 : 0;
+  giopStream* p = (giopStream*) Strand::Sync::getSync(pd_strand);
+
+  CORBA::Boolean rc = 1;
+
+  while (p) {
+
+    if (p->pd_state == UnUsed) {
+      giopStream* q = p;
+      p = (giopStream*) p->pd_next;
+      delete q;
+    }	
+    else {
+      rc = 0;
+      p = (giopStream*) p->pd_next;
+    }
+  }
+  return rc;
 }
 
 //////////////////////////////////////////////////////////////////////////////
