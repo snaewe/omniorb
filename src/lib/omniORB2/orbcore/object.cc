@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.11  1998/03/19 15:22:47  sll
+  Fixed so that omniObject ctor would not reject zero length key.
+
   Revision 1.10  1998/02/27 13:59:30  sll
   Minor update to cope with the change of manager() to _objectManager() in
   class omniObject.
@@ -97,8 +100,10 @@ omniObject::omniObject(const char *repoId,   // ctor for proxy object
 	       IOP::TaggedProfileList *profiles,
 	       CORBA::Boolean release)
 {
-  if (!repoId || !r || !key || !keysize || !profiles)
+  if (!repoId || !r || !profiles)
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  // keysize may be >= 0, key may be nil.
+
 
   pd_repoIdsize = strlen(repoId)+1;
   pd_repoId = new char[pd_repoIdsize];
@@ -125,10 +130,12 @@ omniObject::omniObject(const char *repoId,   // ctor for proxy object
       if (!pd_iopprofile)
 	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
       pd_objkeysize = keysize;
-      pd_objkey.foreign = new CORBA::Octet[keysize];
-      if (!pd_objkey.foreign)
-	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-      memcpy((void *)pd_objkey.foreign,(const void *)key,keysize);
+      if (keysize) {
+	pd_objkey.foreign = new CORBA::Octet[keysize];
+	if (!pd_objkey.foreign)
+	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	memcpy((void *)pd_objkey.foreign,(const void *)key,keysize);
+      }
     }
     catch (...) {
       delete [] pd_repoId;
