@@ -1,3 +1,14 @@
+Tue Aug 15 10:30:06 BST 2000 sll
+================================
+
+- AIX platform file update. Add platform specific flags to IMPORT_CPPFLAGS 
+  instead of overwrite its value.
+
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+
 Mon Aug 14 20:29:57 BST 2000 djs
 ================================
 

@@ -27,7 +27,7 @@ include $(THIS_IMPORT_TREE)/mk/unix.mk
 # C preprocessor macro definitions for this architecture
 #
 
-IMPORT_CPPFLAGS = -D__aix__ -D__powerpc__ -D__OSVERSION__=4
+IMPORT_CPPFLAGS += -D__aix__ -D__powerpc__ -D__OSVERSION__=4
 
 #
 # Standard programs
