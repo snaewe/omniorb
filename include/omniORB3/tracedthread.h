@@ -19,16 +19,20 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
-//	*** PROPRIETORY INTERFACE ***
-//	
+//    omni_thread style mutex and condition variables with checks.
+//
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/02/09 12:06:37  djr
+  Additional checks for tracedmutex/conditions.
+  Removed superflouous member of omni_tracedmutex.
+
   Revision 1.1.2.1  1999/09/24 09:51:57  djr
   Moved from omniORB2 + some new files.
 
@@ -77,8 +81,8 @@ private:
 
   omni_mutex     pd_lock;    // protects other members
   omni_condition pd_cond;    // so can wait for mutex to unlock
-  omni_mutex     pd_m;       // the mutex
   omni_thread*   pd_holder;  // the thread holding pd_m, or 0
+  int            pd_n_conds; // number of dependent condition vars
 };
 
 //////////////////////////////////////////////////////////////////////

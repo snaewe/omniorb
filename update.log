@@ -2,6 +2,13 @@
 Wed Feb  9 11:57:28 GMT 2000 djr
 ================================
 
+- Minor improvements to omni_tracedmutex/condition.  Now checks that mutex
+  is destroyed before associated condvar.  Unnecassary member
+  omni_tracedmutex::pd_m removed.
+
+include/omniORB3/tracedthread.h
+src/lib/omniORB2/orbcore/tracedthread.cc
+
 - Fixed a bug in insertion to/extraction from Anys.  tcParser code now
   uses a flag to determine whether to free the string, and sets the flag
   if a new string is allocated (to ensure the String_member releases it
