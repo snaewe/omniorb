@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.11  1999/02/26 10:41:45  djr
+  Removed brackets round 'new char[(int)(len)]' to work around MSVC bug.
+
   Revision 1.10  1999/02/01 15:40:44  djr
   Initialise strings allocated with string_alloc() to zero length.
   Inline uses of string_alloc() and string_free().
@@ -64,7 +67,7 @@
 #include <omniORB2/CORBA.h>
 
 
-#define ALLOC_BYTES(len)  (new char[(int)(len)])
+#define ALLOC_BYTES(len)  new char[(int)(len)]
 #define FREE_BYTES(p)     delete[] (p)
 
 
