@@ -121,6 +121,11 @@
   </html>
 </xsl:template>
 
+<xsl:template match="buglist">
+    <xsl:apply-templates/>
+</xsl:template>
+
+
 <xsl:template match="bug">
 
     <a><xsl:attribute name="name">bug<xsl:value-of select="@id"/>
