@@ -1,0 +1,68 @@
+#!/usr/bin/env perl
+
+# Special purpose wrapper around "diff -u --ignore-all-space"
+# to make it ignore patches consisting entirely of whitespace
+# change (specifically insertion and deletion of blank lines)
+#
+
+use strict;
+
+die("wdiff <file1> <file2>") unless ($#ARGV == 1);
+    
+
+my $a = $ARGV[0];
+my $b = $ARGV[1];
+
+die("File <$a> not found: $!") if (! (-e $a));
+die("File <$b> not found: $!") if (! (-e $b));
+
+my @changes = `diff -u --ignore-all-space $a $b`;
+
+# first 2 lines are header
+my $header = "";
+$header .= shift(@changes);
+$header .= shift(@changes);
+
+
+sub isPatchUseful{
+    my $lines = shift;
+    my $line;
+    foreach $line (@$lines){
+	return 1 if ($line =~ /^(\+|-)\s*\S+/);
+    }
+    return 0;
+}
+
+my $patches = [];
+
+my $thisPatch = [];
+my $different = 0;
+while ($_ = shift(@changes)){
+    if (/^@@ .+ @@/){
+	if ($thisPatch){
+	    # does thisPatch have some real differences inside?
+	    if (isPatchUseful($thisPatch)){
+		push @$patches, $thisPatch;
+		$different = 1;
+	    }
+	    $thisPatch = [];
+	}
+    }
+    push @$thisPatch, $_;
+}
+if (isPatchUseful($thisPatch)){
+    push @$patches, $thisPatch;
+    $different = 1;
+}
+
+exit(0) if (!$different);
+
+print $header;
+foreach $thisPatch (@$patches){
+    my $line;
+    foreach $line (@$thisPatch){
+	print $line;
+    }
+}
+
+exit(1);

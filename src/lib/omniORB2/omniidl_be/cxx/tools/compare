@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+
+# Compares files with diff, ignoring additions or subtractions of blank lines
+#
+
+die("compare <file1> <file2>") unless ($#ARGV == 1);
+    
+
+my $a = $ARGV[0];
+my $b = $ARGV[1];
+
+@changes = `diff --ignore-all-space --ignore-space-change --ignore-blank-lines $a $b`;
+
+while (@changes){
+    $line = shift @changes;
+    if ($line =~ /^(>|<)\s*\S+\s*/){
+       print "Lots of differences!";
+       exit(1);
+    }
+}
+exit(0);
