@@ -1,3 +1,17 @@
+Thu Nov  1 12:02:30 GMT 2001 dpg1
+=================================
+
+- Function in SystemException to return minor code string.
+
+include/omniORB4/CORBA_Exception.h
+src/appl/utils/catior/catior.cc
+src/lib/omniORB/orbcore/exceptn.cc
+
+- Don't return void in void function.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Mon Oct 29 17:26:52 GMT 2001 dpg1
 =================================
 
