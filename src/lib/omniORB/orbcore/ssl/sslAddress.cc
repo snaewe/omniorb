@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/07/13 15:35:09  sll
+   Error in setblocking and setnonblocking now causes the socket to be closed
+   as well.
+
   Revision 1.1.2.3  2001/06/20 18:35:17  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -140,7 +144,10 @@ sslAddress::Connect(unsigned long deadline_secs,
     return 0;
   }
 
-  if (tcpConnection::setnonblocking(sock) == RC_INVALID_SOCKET) return 0;
+  if (tcpConnection::setnonblocking(sock) == RC_INVALID_SOCKET) {
+    CLOSESOCKET(sock);
+    return 0;
+  }
     
   if (::connect(sock,(struct sockaddr *)&raddr,
 		sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) {
@@ -217,7 +224,10 @@ sslAddress::Connect(unsigned long deadline_secs,
 
   } while (0);
 
-  if (tcpConnection::setblocking(sock) == RC_INVALID_SOCKET) return 0;
+  if (tcpConnection::setblocking(sock) == RC_INVALID_SOCKET) {
+    CLOSESOCKET(sock);
+    return 0;
+  }
 
   ::SSL* ssl = SSL_new(pd_ctx->get_SSL_CTX());
   SSL_set_fd(ssl, sock);
