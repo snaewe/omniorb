@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/10/29 15:41:31  dpg1
+// DeclaredType() now takes extra DeclRepoId* argument.
+//
 // Revision 1.1  1999/10/27 14:06:00  dpg1
 // *** empty log message ***
 //
@@ -1343,7 +1346,7 @@ fixed_pt_const_type:
     ;
 
 value_base_type:
-    VALUEBASE { $$ = new DeclaredType(IdlType::tk_value, 0); }
+    VALUEBASE { $$ = new DeclaredType(IdlType::tk_value, 0, 0); }
     ;
 
 pragma:
