@@ -34,7 +34,7 @@ CMAKEDEPEND       = $(CC) -M
 
 CXX               = arm-gcc
 CXXDEBUGFLAGS     = -O3
-CXXOPTIONS        = -nostdinc -nostdinc++ -fno-common -fno-builtin -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses
+CXXOPTIONS        = -nostdinc -nostdinc++ -fno-common -fno-builtin -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses
 CXXMAKEDEPEND     = $(CXX) -M
 
 CATOBJ            = catobj
