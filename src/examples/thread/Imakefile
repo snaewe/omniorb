@@ -13,13 +13,13 @@ INCLUDES = $(OMNITHREADDEFINE)
 
 all:: diner
 
-NormalCplusplusProgramTarget(diner,diner.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),)
+NormalCplusplusProgramTarget(diner,diner.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),$(OMNIEXTRASYSLIB))
 
 InstallProgram(diner,$(BINDIR))
 
 all:: threadcancel
 
-NormalCplusplusProgramTarget(threadcancel,threadcancel.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),)
+NormalCplusplusProgramTarget(threadcancel,threadcancel.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),$(OMNIEXTRASYSLIB))
 
 InstallProgram(threadcancel,$(BINDIR))
 
