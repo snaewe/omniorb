@@ -30,5 +30,6 @@
 
 #if defined(ENABLE_CLIENT_IR_SUPPORT)
 # include <omniORB2/CORBA.h>
+# include <omniORB2/proxyCall.h>
 # include <../corbaidlSK.cc>
 #endif
