@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.29  1999/07/01 10:27:38  djr
+ * Fixed NP_aliasExpand().
+ * Added omg.org to a few IR repo IDs.
+ *
  * Revision 1.28  1999/06/22 15:02:07  sll
  * Corrected bug in TypeCode_alias::NP_extendedEqual.
  *
@@ -784,14 +788,8 @@ TypeCode_base::NP_equal(const TypeCode_base* TCp,
   if (this == TCp) return 1;
 
   // Check the pairlist for a match, for recursive typecodes
-  const TypeCode_pairlist* tcpl_iterator = tcpl;
-  while (tcpl_iterator != 0)
-    {
-      if ((tcpl_iterator->d_tc1 == this) &&
-	  (tcpl_iterator->d_tc2 == TCp))
-	return 1;
-      tcpl_iterator = tcpl_iterator->d_next;
-    }
+  if( TypeCode_pairlist::contains(tcpl, this, TCp) )
+    return 1;
 
   // No match, so create a pair for these two codes, to avoid loops
   TypeCode_pairlist tcpl_tmp(tcpl, this, TCp);
@@ -943,7 +941,7 @@ TypeCode_base::NP_containsAnAlias()
 
 
 TypeCode_base*
-TypeCode_base::NP_aliasExpand()
+TypeCode_base::NP_aliasExpand(TypeCode_pairlist*)
 {
   throw omniORB::fatalException(__FILE__,__LINE__,
      "TypeCode_base::NP_aliasExpand() - should not have been called");
@@ -957,7 +955,7 @@ TypeCode_base::aliasExpand(TypeCode_base* tc)
 {
   if( !tc->pd_aliasExpandedTc ) {
     if( tc->NP_containsAnAlias() )
-      tc->pd_aliasExpandedTc = tc->NP_aliasExpand();
+      tc->pd_aliasExpandedTc = tc->NP_aliasExpand(0);
     else
       tc->pd_aliasExpandedTc = tc;
   }
@@ -1409,20 +1407,23 @@ TypeCode_alias::NP_parameter(CORBA::Long index) const
   return rv;
 }
 
+
 CORBA::Boolean
 TypeCode_alias::NP_containsAnAlias()
 {
   return 1;
 }
 
+
 TypeCode_base*
-TypeCode_alias::NP_aliasExpand()
+TypeCode_alias::NP_aliasExpand(TypeCode_pairlist* tcpl)
 {
   if( ToTcBase(pd_content)->NP_containsAnAlias() )
-    return ToTcBase(pd_content)->NP_aliasExpand();
+    return ToTcBase(pd_content)->NP_aliasExpand(tcpl);
   else
     return TypeCode_collector::duplicateRef(ToTcBase(pd_content));
 }
+
 
 void
 TypeCode_alias::removeOptionalNames()
@@ -1496,6 +1497,11 @@ TypeCode_sequence::NP_unmarshalComplexParams(MemBufferedStream &s,
   otbl->addEntry(otbl->currentOffset(), _ptr);
 
   _ptr->pd_content = TypeCode_marshaller::unmarshal(s, otbl);
+  if( !ToTcBase(_ptr->pd_content)->complete() )
+    // Not necassarily correct offset -- but I don't
+    // think it matters.  We only use pd_offset when
+    // creating typecodes.
+    _ptr->pd_offset = 1;
   _ptr->pd_length <<= s;
   _ptr->pd_complete = 1;
 
@@ -1610,29 +1616,53 @@ TypeCode_sequence::NP_parameter(CORBA::Long index) const
   return rv;
 }
 
+
 CORBA::Boolean
 TypeCode_sequence::NP_containsAnAlias()
 {
-  // If recursive sequence, we should already have met an
-  // alias if there is one.
-  if( pd_offset )  return 0;
-  else             return ToTcBase(pd_content)->NP_containsAnAlias();
+  if( pd_offset ) {
+    // If any of the nodes included in the recursive loop need
+    // to be replaced with an expanded version, then we need to
+    // replace all of them.  So say we are a (sub) member of
+    // a structure -- then if any of the members contains an
+    // alias, then we need to be replaced.
+    //  It would be very difficult to detect this however, so
+    // lets play safe and say that this is kind of like an alias,
+    // so say yes.  This just means that some recursive sequences
+    // get duplicated needlessly.
+
+    return 1;
+  }
+  else
+    return ToTcBase(pd_content)->NP_containsAnAlias();
 }
 
+
 TypeCode_base*
-TypeCode_sequence::NP_aliasExpand()
+TypeCode_sequence::NP_aliasExpand(TypeCode_pairlist* tcpl)
 {
-  if( pd_offset ) {
-    // If recursive sequence ...
-    return new TypeCode_sequence(pd_length, pd_offset);
+  TypeCode_sequence* tc = new TypeCode_sequence;
+  TypeCode_pairlist pl(tcpl, tc, this);
+
+  TypeCode_base* rcontent =
+    (TypeCode_base*) TypeCode_pairlist::search(tcpl, ToTcBase(pd_content));
+
+  if( rcontent ) {
+    // Recursive sequence ...
+    tc->pd_content = TypeCode_collector::duplicateRef(rcontent);
+    // Not necassarily correct offset -- but I don't
+    // think it matters.  We only use pd_offset when
+    // creating typecodes.
+    tc->pd_offset = 1;
   }
   else {
-    // otherwise ...
-    TypeCode_base* content = ToTcBase(pd_content)->NP_aliasExpand();
-    TypeCode_base* seq = new TypeCode_sequence(pd_length, content);
-    TypeCode_collector::releaseRef(content);
-    return seq;
+    tc->pd_content = ToTcBase(pd_content)->NP_aliasExpand(&pl);
+    tc->pd_offset = 0;
   }
+  tc->pd_length = pd_length;
+  tc->pd_complete = 1;
+
+  return tc;
 }
 
 void
@@ -1766,6 +1796,7 @@ TypeCode_array::NP_parameter(CORBA::Long index) const
   return rv;
 }
 
+
 void
 TypeCode_array::generateAlignmentTable()
 {
@@ -1806,20 +1837,28 @@ TypeCode_array::generateAlignmentTable()
   }
 }
 
+
 CORBA::Boolean
 TypeCode_array::NP_containsAnAlias()
 {
   return ToTcBase(pd_content)->NP_containsAnAlias();
 }
 
+
 TypeCode_base*
-TypeCode_array::NP_aliasExpand()
+TypeCode_array::NP_aliasExpand(TypeCode_pairlist* tcpl)
 {
-  TypeCode_base* content = ToTcBase(pd_content)->NP_aliasExpand();
-  TypeCode_base* newtc = new TypeCode_array(pd_length, content);
-  TypeCode_collector::releaseRef(content);
-  return newtc;
+  TypeCode_array* tc = new TypeCode_array;
+  TypeCode_pairlist pl(tcpl, tc, this);
+
+  tc->pd_content = ToTcBase(pd_content)->NP_aliasExpand(&pl);
+  tc->pd_length = pd_length;
+  tc->pd_complete = 1;
+  tc->generateAlignmentTable();
+
+  return tc;
 }
+
 
 void
 TypeCode_array::removeOptionalNames()
@@ -2177,13 +2216,21 @@ TypeCode_struct::NP_containsAnAlias()
 
 
 TypeCode_base*
-TypeCode_struct::NP_aliasExpand()
+TypeCode_struct::NP_aliasExpand(TypeCode_pairlist* tcpl)
 {
+  TypeCode_struct* tc = new TypeCode_struct;
+  TypeCode_pairlist pl(tcpl, tc, this);
+
+  tc->pd_repoId = pd_repoId;
+  tc->pd_name = pd_name;
+  tc->pd_nmembers = pd_nmembers;
+
   CORBA::PR_structMember* members = new CORBA::PR_structMember[pd_nmembers];
+  tc->pd_members = members;
 
   for( CORBA::ULong i = 0; i < pd_nmembers; i++ ) {
     if( ToTcBase(pd_members[i].type)->NP_containsAnAlias() )
-      members[i].type = ToTcBase(pd_members[i].type)->NP_aliasExpand();
+      members[i].type = ToTcBase(pd_members[i].type)->NP_aliasExpand(&pl);
     else
       members[i].type =
 	TypeCode_collector::duplicateRef(ToTcBase(pd_members[i].type));
@@ -2191,9 +2238,10 @@ TypeCode_struct::NP_aliasExpand()
     members[i].name = CORBA::string_dup(pd_members[i].name);
   }
 
-  return new TypeCode_struct(CORBA::string_dup(pd_repoId),
-			     CORBA::string_dup(pd_name),
-			     members, pd_nmembers);
+  tc->pd_complete = 1;
+  tc->generateAlignmentTable();
+
+  return tc;
 }
 
 void
@@ -2553,13 +2601,21 @@ TypeCode_except::NP_containsAnAlias()
 
 
 TypeCode_base*
-TypeCode_except::NP_aliasExpand()
+TypeCode_except::NP_aliasExpand(TypeCode_pairlist* tcpl)
 {
+  TypeCode_except* tc = new TypeCode_except;
+  TypeCode_pairlist pl(tcpl, tc, this);
+
+  tc->pd_repoId = pd_repoId;
+  tc->pd_name = pd_name;
+  tc->pd_nmembers = pd_nmembers;
+
   CORBA::PR_structMember* members = new CORBA::PR_structMember[pd_nmembers];
+  tc->pd_members = members;
 
   for( CORBA::ULong i = 0; i < pd_nmembers; i++ ) {
     if( ToTcBase(pd_members[i].type)->NP_containsAnAlias() )
-      members[i].type = ToTcBase(pd_members[i].type)->NP_aliasExpand();
+      members[i].type = ToTcBase(pd_members[i].type)->NP_aliasExpand(&pl);
     else
       members[i].type =
 	TypeCode_collector::duplicateRef(ToTcBase(pd_members[i].type));
@@ -2567,9 +2623,10 @@ TypeCode_except::NP_aliasExpand()
     members[i].name = CORBA::string_dup(pd_members[i].name);
   }
 
-  return new TypeCode_except(CORBA::string_dup(pd_repoId),
-			     CORBA::string_dup(pd_name),
-			     members, pd_nmembers);
+  tc->pd_complete = 1;
+  tc->generateAlignmentTable();
+
+  return tc;
 }
 
 void
@@ -3301,35 +3358,39 @@ TypeCode_union::NP_containsAnAlias()
 }
 
 TypeCode_base*
-TypeCode_union::NP_aliasExpand()
+TypeCode_union::NP_aliasExpand(TypeCode_pairlist* tcpl)
 {
-  TypeCode_union* utc = new TypeCode_union();
+  TypeCode_union* tc = new TypeCode_union();
+  TypeCode_pairlist pl(tcpl, tc, this);
 
-  utc->pd_repoId = pd_repoId;
-  utc->pd_name = pd_name;
+  tc->pd_repoId = pd_repoId;
+  tc->pd_name = pd_name;
   if( ToTcBase(pd_discrim_tc)->NP_containsAnAlias() )
-    utc->pd_discrim_tc = ToTcBase(pd_discrim_tc)->NP_aliasExpand();
+    tc->pd_discrim_tc = ToTcBase(pd_discrim_tc)->NP_aliasExpand(&pl);
   else
-    utc->pd_discrim_tc =
+    tc->pd_discrim_tc =
       TypeCode_collector::duplicateRef(ToTcBase(pd_discrim_tc));
-  utc->pd_default = pd_default;
-  utc->pd_have_calculated_default_value = pd_have_calculated_default_value;
-  utc->pd_default_value = pd_default_value;
-  utc->pd_members.length(pd_members.length());
+  tc->pd_default = pd_default;
+  tc->pd_have_calculated_default_value = pd_have_calculated_default_value;
+  tc->pd_default_value = pd_default_value;
+  tc->pd_members.length(pd_members.length());
 
   for( CORBA::ULong i = 0; i < pd_members.length(); i++ ) {
     if( ToTcBase(pd_members[i].atype)->NP_containsAnAlias() )
-      utc->pd_members[i].atype =
-	ToTcBase(pd_members[i].atype)->NP_aliasExpand();
+      tc->pd_members[i].atype =
+	ToTcBase(pd_members[i].atype)->NP_aliasExpand(&pl);
     else
-      utc->pd_members[i].atype =
+      tc->pd_members[i].atype =
 	TypeCode_collector::duplicateRef(ToTcBase(pd_members[i].atype));
-    utc->pd_members[i].aname = pd_members[i].aname;
-    utc->pd_members[i].alabel = pd_members[i].alabel;
+    tc->pd_members[i].aname = pd_members[i].aname;
+    tc->pd_members[i].alabel = pd_members[i].alabel;
   }
 
-  return utc;
+  tc->pd_complete = 1;
+
+  return tc;
 }
+
 
 void
 TypeCode_union::removeOptionalNames()
@@ -3467,6 +3528,38 @@ TypeCode_offsetTable::lookupTypeCode(const TypeCode_base*  tc,
       entry = entry->pd_next;
     }
 
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+////////////////////////// TypeCode_pairlist /////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+int
+TypeCode_pairlist::contains(const TypeCode_pairlist* pl,
+			    const TypeCode_base* t1, const TypeCode_base* t2)
+{
+  while( pl ) {
+
+    if( t1 == pl->d_tc1 && t2 == pl->d_tc2 )
+      return 1;
+
+    pl = pl->d_next;
+  }
+  return 0;
+}
+
+
+const TypeCode_base*
+TypeCode_pairlist::search(const TypeCode_pairlist* pl, const TypeCode_base* tc)
+{
+  while( pl ) {
+
+    if( tc == pl->d_tc2 )
+      return pl->d_tc1;
+
+    pl = pl->d_next;
+  }
   return 0;
 }
 
@@ -5175,11 +5268,11 @@ static void check_static_data_is_initialised()
   CORBA::_tc_any = new TypeCode_base(CORBA::tk_any);
   CORBA::_tc_TypeCode = new TypeCode_base(CORBA::tk_TypeCode);
   CORBA::_tc_Principal = new TypeCode_base(CORBA::tk_Principal);
-  CORBA::_tc_Object = new TypeCode_objref("IDL:CORBA/Object:1.0","Object");
+  CORBA::_tc_Object = new TypeCode_objref("IDL:omg.org/CORBA/Object:1.0","Object");
   CORBA::_tc_string = new TypeCode_string(0);
   {
-    CORBA::TypeCode_var tc_Flags = new TypeCode_alias("IDL:CORBA/Flags:1.0", "Flags",ToTcBase(CORBA::_tc_ulong));
-    CORBA::TypeCode_var tc_Identifier = new TypeCode_alias("IDL:CORBA/Identifier:1.0", "Identifier", ToTcBase(CORBA::_tc_string));
+    CORBA::TypeCode_var tc_Flags = new TypeCode_alias("IDL:omg.org/CORBA/Flags:1.0", "Flags",ToTcBase(CORBA::_tc_ulong));
+    CORBA::TypeCode_var tc_Identifier = new TypeCode_alias("IDL:omg.org/CORBA/Identifier:1.0", "Identifier", ToTcBase(CORBA::_tc_string));
 
     CORBA::PR_structMember nvMembers[4];
 
@@ -5192,7 +5285,7 @@ static void check_static_data_is_initialised()
     nvMembers[3].name = "arg_modes";
     nvMembers[3].type = tc_Flags;
     
-    CORBA::_tc_NamedValue = CORBA::TypeCode::PR_struct_tc("IDL:CORBA/NamedValue:1.0", "NamedValue",nvMembers, 4);
+    CORBA::_tc_NamedValue = CORBA::TypeCode::PR_struct_tc("IDL:omg.org/CORBA/NamedValue:1.0", "NamedValue",nvMembers, 4);
   }
 }
 
