@@ -59,11 +59,11 @@ idlc = $(patsubst %,$(BinPattern),idlc)
 
 ifdef UnixPlatform
 #CXXDEBUGFLAGS = -g
-PYPREFIX  := $(shell $(PYTHON) -c 'import sys; print sys.exec_prefix')
+PYEPREFIX := $(shell $(PYTHON) -c 'import sys; print sys.exec_prefix')
+PYPREFIX  := $(shell $(PYTHON) -c 'import sys; print sys.prefix')
 PYVERSION := $(shell $(PYTHON) -c 'import sys; print sys.version[:3]')
-PYINCDIR  := $(PYPREFIX)/include
 PYINCFILE := "<python$(PYVERSION)/Python.h>"
-DIR_CPPFLAGS += -I$(PYINCDIR) -DPYTHON_INCLUDE=$(PYINCFILE)
+DIR_CPPFLAGS += -I$(PYEPREFIX)/include -I$(PYPREFIX)/include -DPYTHON_INCLUDE=$(PYINCFILE)
 endif
 
 

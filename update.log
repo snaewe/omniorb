@@ -1,3 +1,11 @@
+Wed Oct 17 10:30:11 BST 2001 dpg1
+=================================
+
+- Use sys.prefix as well as sys.exec_prefix to find Python includes.
+
+src/tool/omniidl/cxx/dir.mk
+
+
 Fri Oct  5 17:47:54 BST 2001 dpg1
 =================================
 
