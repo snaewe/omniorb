@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2004/03/30 13:15:28  dgrisby
+  Remove spurious empty lines in config dump.
+
   Revision 1.1.2.9  2004/02/06 16:17:44  dgrisby
   Properly handle large giopMaxMsgSize settings.
 
@@ -377,8 +380,7 @@ orbOptions::dumpCurrentSet() const {
 
   if (!pd_handlers_sorted) ((orbOptions*)this)->sortHandlers();
 
-  sequenceString_var result(new sequenceString(pd_handlers.size()));
-  result->length(pd_values.size());
+  sequenceString_var result(new sequenceString());
 
   omnivector<orbOptions::Handler*>::const_iterator i = pd_handlers.begin();
   omnivector<orbOptions::Handler*>::const_iterator last = pd_handlers.end();
@@ -387,7 +389,6 @@ orbOptions::dumpCurrentSet() const {
     (*i)->dump(result.inout());
   }
   return result._retn();
-  
 }
 
 

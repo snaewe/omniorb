@@ -1,3 +1,15 @@
+Tue Mar 30 14:25:37 BST 2004 dgrisby
+====================================
+
+- Allow scavenger thread to restart.
+
+src/lib/omniORB/orbcore/giopStrand.cc
+
+- Remove spurious empty lines in config dump.
+
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Tue Mar 30 10:51:03 BST 2004 dgrisby
 ====================================
 
