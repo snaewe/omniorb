@@ -1,3 +1,16 @@
+Mon Sep  3 14:23:18 BST 2001 sll
+================================
+
+- Make sure locateRequest follows the same retry semantics as a normal
+  invocation.
+
+include/omniORB4/callDescriptor.h
+src/lib/omniORB/include/transportRules.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+
+
 Fri Aug 31 12:54:14 BST 2001 sll
 ================================
 
