@@ -4,11 +4,10 @@ include ../libdefs.mk
 # Generate BOA skeleton
 DIR_IDLFLAGS += -WbBOA
 
-# Look for .idl files in <top>/idl plus ../../idl
-vpath %.idl ../../idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../../idl)
+# Look for .idl files in <top>/idl
+vpath %.idl $(IMPORT_TREES:%=%/idl/COS)
 
-DIR_IDLFLAGS += -I. -I../../idl $(patsubst %,-I%/../../idl,$(VPATH)) \
-                   $(patsubst %,-I%/idl,$(IMPORT_TREES))
+DIR_IDLFLAGS += -I. $(patsubst %,-I%/idl/COS,$(IMPORT_TREES))
 
 
 COS_SKLIB_NAME    = COS_BOA

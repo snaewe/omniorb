@@ -1,3 +1,17 @@
+Fri Aug 11 16:55:32 BST 2000 sll
+================================
+
+- Moved COS idls to a place that can be included by application IDLs.
+
+external_merge/mk/cos.mk
+
+idl/COS/*                  NEW
+src/services/idl/*         REMOVED
+
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+
 Fri Aug 11 14:52:49 BST 2000 sll
 ================================
 

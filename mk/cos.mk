@@ -11,7 +11,16 @@
 #   e.g.
 #   foo: foo.o $(COS_LIB_NODYN_DEPEND) $(CORBA_LIB_DEPEND)
 #          @(libs="$(COS_LIB_NODYN) $(CORBA_LIB)"; $(CXXExecutable))
+#
+# To use the COS idls in application IDLs
+#   DIR_IDLFLAGS += $(COS_IDLFLAGS)
+#
+# To compile the application stubs:
+#   DIR_CPPFLAGS += $(COS_CPPFLAGS)
 
+COS_IDLFLAGS     =  $(patsubst %,-I%/idl/COS,$(IMPORT_TREES))
+
+COS_CPPFLAGS     =  $(patsubst %,-I%/include/COS,$(IMPORT_TREES))
 
 COS_VERSION      = $(OMNIORB_VERSION)
 
