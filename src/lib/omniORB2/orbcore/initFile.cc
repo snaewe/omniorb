@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13  1997/08/27 10:19:52  sll
+  Removed static variables inside functions.
+
   Revision 1.12  1997/05/12 14:13:33  ewc
   Minor cosmetic change.
 
@@ -54,7 +57,7 @@
 #endif
 
 #include <omniORB2/CORBA.h>
-
+#include <initFile.h>
 
 #ifndef INIT_ENV_VAR
 #define INIT_ENV_VAR "OMNIORB_CONFIG"    
@@ -70,12 +73,11 @@
 #define INIT_MAX_CONFIG 10   
                      // Maximum number of entries in configuration 
 
-initFile::initFile()
+initFile::initFile() : fData(0), fsize(0), currpos(0), NameService(0)
 {
-  NameService = NULL;
-
 #ifdef __NT__
   use_registry = 0;
+  curr_index = 0;
 #endif
 }
 
@@ -275,8 +277,6 @@ int initFile::getnextentry(char*& entryname, char*& data)
     return getRegistryEntry(entryname, data);
 #endif
 
-  static long currpos = 0;
-
 // Skip initial whitespace:
   if (currpos == fsize) return 0;
   while (isspace(fData[currpos]) || fData[currpos] == '#')
@@ -349,8 +349,6 @@ int initFile::getnextentry(char*& entryname, char*& data)
 
 int initFile::getRegistryEntry(char*& entryname, char*& data)
 {
-  static DWORD curr_index = 0;
-
   DWORD dataType;
   DWORD init_ValLen = init_maxValLen+1;
   DWORD init_DataLen = init_maxDataLen+1;
