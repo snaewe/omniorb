@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.26  1998/10/08 10:53:19  sll
+ Disable MSVC++ warnings C4768 and C4250.
+
  Revision 1.25  1998/09/23 15:25:51  sll
  Workaround for SUN C++ compiler Template.DB code regeneration bug.
 
@@ -330,12 +333,18 @@ strdup (char* str)
 
 #endif
 
-#if defined(_MSC_VAR) && defined(_DEBUG)
+#if defined(_MSC_VER)
+#if defined(_DEBUG)
 // The type name instantiated from the sequence templates could exceeds the
 // 255 char limit of the debug symbol names. It is harmless except that one
 // cannot read their values with the debugger. Disable the warning about
 // the symbol name truncation.
 #pragma warning(disable: 4786)
+#endif
+
+// Disable warnings about a member function in a derived class overriding
+// a member function in the base class.
+#pragma warning(disable: 4250)
 #endif
 
 #ifdef HAS_Cplusplus_Namespace
