@@ -89,10 +89,11 @@ public:
 
   // Constructor(s)
   AST_Union();
-  AST_Union(AST_ConcreteType *disc_type, UTL_ScopedName *n, UTL_StrList *p);
+  AST_Union(UTL_ScopedName *n, UTL_StrList *p);
   virtual ~AST_Union() {}
 
   // Data Accessors
+  void disc_type(AST_ConcreteType *dt);
   AST_ConcreteType *disc_type();
   AST_Expression::ExprType udisc_type();
 
