@@ -136,8 +136,12 @@ def main(argv):
 
             if verbose: print omniidl + ": Running back-end `" + backend + "'"
 
-            exec "import be." + backend
-            exec "be." + backend + ".run(tree)"
-
+            try:
+                exec "import be." + backend
+                exec "be." + backend + ".run(tree)"
+            except ImportError:
+                sys.stderr.write(omniidl + ": Could not import back-end `" + \
+                                 backend + "'\n")
+                sys.exit(1)
 
 main(sys.argv)
