@@ -85,7 +85,7 @@ extern  "C" void yyerror(const char*);
 #endif
 
 extern int yylex();
-extern char yytext[];
+extern char* yytext;
 
 #ifndef alloca
 #define alloca malloc
