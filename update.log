@@ -1,3 +1,8 @@
+Thu Dec 18 18:43:44 GMT 1997 bjh
+================================
+
+mk/beforedir.mk - Java re-enabled.  This _should_ be safe.
+
 Thu Dec 18 17:20:14 GMT 1997 sll
 ================================
 
