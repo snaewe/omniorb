@@ -1,4 +1,4 @@
-.TH obuildtree 1 "25.10.96" "ORL"
+.TH obuildtree 1 "29.06.98" "ORL"
 .SH NAME
 obuildtree \- create an OMNI build tree
 .SH SYNOPSIS
@@ -16,10 +16,7 @@ given no arguments it prompts for the information it needs about the build
 tree.  This includes the platform name, the name of the destination directory,
 the base OMNI tree, which import trees it imports from, whether it has an
 export tree and whether it has any source trees.  Most of the questions have
-sensible defaults.  If any source trees have been specified then
-.B obuildtree
-will also offer to create a shadow of each of them by running
-.B oshadow.
+sensible defaults.
 
 Alternatively options can be given to specify information on the command line.
 Information is not prompted for in this mode.  Any information missing from the
@@ -44,7 +41,6 @@ should be set to the command needed to run GNU make if this is different from
 .B make
 
 .SH SEE ALSO
-.BR oshadow (1)
 .BR omake (1)
 
 .SH FILES

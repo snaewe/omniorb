@@ -13,7 +13,7 @@
 \author{Tristan Richardson\\
         ORL\\
         Cambridge}
-\date{30 April 1998}
+\date{30 June 1998}
 
 \begin{document}
 
@@ -108,7 +108,7 @@ trees.  See the hello world example below.
 \item If the user wants to build the same source code on multiple platforms the
 code can be placed in a source tree.  Several build trees can then be created
 each of which shadow the source tree (i.e. have the same directory structure
-but no files).  Again these build trees need not have an export tree.
+but no source files).  Again these build trees need not have an export tree.
 
 \item
 \label{twoimporttrees}
@@ -219,8 +219,6 @@ Import trees are:
 /project/omni/release
 
 No source trees
-
-************************************************************************
 
 \end{verbatim}}
 
@@ -337,11 +335,11 @@ also be a rule for removing the executable when ``{\tt omake clean}'' is done.
 
 \section{Using a source tree}
 
-Assume now you want to build the same code on several platforms.  Put {\tt
-hello.c} and {\tt dir.mk} in a directory called {\tt src}.  Now create a
+Now assume you want to build the same code on several platforms.  Put {\tt
+hello.c} and {\tt dir.mk} in a directory called {\tt src}.  Create a
 directory alongside it called {\tt build} and inside there run ``{\tt
 obuildtree}''.  This time specify the full path of the {\tt src} directory (or
-if you prefer ``{\tt ../../src}'') as a source tree.  You should now be able to
+if you prefer ``{\tt ../../src}'') as a source tree.  You should be able to
 type ``{\tt omake}'' inside the build tree and have it compile your program
 even though the source file is not in the local build directory.
 
@@ -351,17 +349,8 @@ specifies a {\tt -I} flag causing make to search for the {\tt dir.mk} in the
 source files in that directory.  In this way there is no need for symbolic
 links from the build tree back to the source tree.
 
-You should also now be able to create a similar build tree for another platform
-using the same source tree, thereby compiling for both platforms from the same
-source files.
-
-For all but the most trivial of examples, your source tree will actually be a
-proper tree with several levels of subdirectories.  In this case each build
-tree needs to have the same directory structure as your source tree.  The
-``{\tt oshadow}'' utility can be used for this purpose (in fact {\tt
-obuildtree} should ask if you want to run {\tt oshadow} for each of the source
-trees when you first create the build tree).  Essentially {\tt oshadow} is just
-like ``{\tt lndir}'' but without the symbolic links.
+You can create a similar build tree for another platform using the same source
+tree, thereby compiling for both platforms from the same source files.
 
 \section{Creating an import/export tree}
 
@@ -753,8 +742,7 @@ build tree for each platform.  Go into the {\tt build} directory and run ``{\tt
 obuildtree}''.  Nearly all the the defaults should be correct.  Make sure that
 your top-level directory ({\tt /project/wobble/version1.0}) is the export tree
 as well as the first import tree, and also that the source tree is the same
-with {\tt src} appended ({\tt /project/wobble/version1.0/src}).  The final
-thing ``{\tt obuildtree}'' should do is run ``{\tt oshadow}'' for you.
+with {\tt src} appended ({\tt /project/wobble/version1.0/src}).
 
 Go into the {\it platform} subdirectory and do ``{\tt omake export}''.  If you
 got your {\tt dir.mk} files correct everything will now build and be exported
