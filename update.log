@@ -1,3 +1,21 @@
+Mon Jul 10 11:43:51 BST 2000 dpg1
+=================================
+
+- Add patch file for AIX VisualAge C++ 5.0.
+
+external_merge/README.aix                  -- new
+external_merge/patches/README
+external_merge/patches/aix_xlC_5.0.patch   -- new
+
+- Various references to omniORB2 changed.
+
+external_merge/README.ETSKernel
+external_merge/README.Linux
+external_merge/README.SunC++5
+external_merge/README.unix
+external_merge/README.win32
+
+
 Mon Jul 10 11:41:10 BST 2000 sll
 ================================
 

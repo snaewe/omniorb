@@ -1,4 +1,4 @@
-This file contains information on installing, building and using omniORB2
+This file contains information on installing, building and using omniORB
 on Unix platforms. 
 
 If you are upgrading from 2.2.0, do not miss the important information about
@@ -9,7 +9,7 @@ platforms. Linux users should also consult the file README.Linux.
 Users intended to use egcs or gcc should also read README.egcs and
 README.gcc
 
-omniORB2 has been tested on the following Unix platforms:
+omniORB has been tested on the following Unix platforms:
 
   o Solaris 2.{5,6}/ Sun SparcCompiler C++ version 4.2
   o Windows NT / Windows 95 / Visual C++ version 5.0 (and also version 6.0)
@@ -35,8 +35,8 @@ Roadmap
 
 The directory structure of this distribution looks as follows:
 
-./doc                             : omniORB2 documentation
-./man                             : omniORB2 manual pages
+./doc                             : omniORB documentation
+./man                             : omniORB manual pages
 ./mk                              : make configuration files
 ./config                          : configuration files for target platform
 ./include                         : include files
@@ -121,8 +121,8 @@ Configuration
   and ./bin/<platform>/.
 
 
-  4. Add omniORB2 libraries to search path
-  ----------------------------------------
+  4. Add omniORB libraries to search path
+  ---------------------------------------
 
   Since the shared libraries libomniORB3.so and libomnithread.so are not in
   the directories searched by the dynamic loader by default, you must add 
@@ -166,7 +166,7 @@ Configuration
       ORBInitialHost wobble
       ORBInitialPort 1234
 
-      Any omniORB2 clients of release 2.6.0 or later is able to use this
+      Any omniORB clients of release 2.6.0 or later is able to use this
       information to locate the root context of the Naming Service. 
 
     o Set the environment variable OMNIORB_CONFIG to contain the full
@@ -188,12 +188,12 @@ Writing your own Makefile
 =========================
 
 The distribution makefiles may be a bit much to digest.
-Here is a few tips of what to put into your makefiles to compile omniORB2
+Here is a few tips of what to put into your makefiles to compile omniORB
 programs:
 
 1. Compiler flags:
 
-To compile omniORB2 programs correctly, several C++ preprocessor defines
+To compile omniORB programs correctly, several C++ preprocessor defines
 must be specified to identify the target platform.
 
 Sun Solaris 2.5     |__sparc__  __sunos__  __OSVERSION__=5           |
@@ -222,9 +222,8 @@ OMNITHREAD_LIB and OMNIORB2_LIB is set to.
 The runtime libraries that you have to link to your executables are:
 
 libomnithread.so   - omnithread share library
-libomniORB2.so     - omniORB2 runtime shared library
-libomniDynamic2.so - omniORB2 runtime shared library for dynamic features
-libomniLC.so       - lifecycle service runtime shared library
+libomniORB3.so     - omniORB3 runtime shared library
+libomniDynamic3.so - omniORB3 runtime shared library for dynamic features
 
 One of the following gatekeeper libraries:
  - libtcpwrapGK.so   - implemented using tcpwrapper
@@ -248,7 +247,7 @@ The product is the files: echo.hh and echoSK.cc
 Documentation
 =============
 
-You must read the omniORB2 and the OMNI naming service user guides. Follow
+You must read the omniORB and the OMNI naming service user guides. Follow
 the instructions in the guides to complete the configuration process.
 
 Important Change to omniNames for users upgrading from version 2.2.0
@@ -285,7 +284,7 @@ b) If you want to continue to use the old omniNames, you can undo this
      1. Edit <top>/src/lib/omniORB2/Naming.idl and remove the 
         #pragma prefix "omg.org" line.
      2. Do the same to <top>/idl/Naming.idl.
-     3. Remove <top>/include/omniORB2/Naming.hh.
+     3. Remove <top>/include/omniORB3/Naming.hh.
      4. Rebuild everything. You should do a gnumake/make veryclean at the
         top of <top>/src to make sure that the naming service stubs are
         regenerated.

@@ -11,6 +11,6 @@ crashes when there are concurrent activities, try recompile with -g only.
 
 Another anonying feature of the compiler is that it has a habit of taking
 up all the CPU cycles and huge amount of memory (350M) doing who knows
-what. Sometimes compiling a moderate size omniORB2 stub could take 20
+what. Sometimes compiling a moderate size omniORB stub could take 20
 minutes or so on a 300MHz UltraSparc.
 
