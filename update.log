@@ -1,4 +1,19 @@
 
+Tue Apr  6 09:30:57 BST 1999 djr
+================================
+
+- Updated the version number to 2.8.0
+
+include/omniORB2/omniInternal.h
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+
+- MSVC is not FD compliant regarding decls of const ints and enums.
+
+include/omniORB2/CORBA_sysdep.h
+
+
 Wed Mar 31 15:37:42 GMT 1999 djr
 ================================
 
