@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.14  1998/08/26 11:05:05  sll
+  Test for NEED_DUMMY_RETURN in _get_interface and _get_implementation.
+
   Revision 1.13  1998/08/14 13:44:30  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -352,7 +355,9 @@ Object::_get_implementation()
   // XXX not implemented yet
   throw omniORB::fatalException(__FILE__,__LINE__,
 				"CORBA::Object::_get_implementation() has not been implemeted yet.");
+#ifdef NEED_DUMMY_RETURN
   return 0;
+#endif
 }
 
 CORBA::InterfaceDef_ptr
@@ -362,7 +367,9 @@ Object::_get_interface()
   // XXX not implemented yet
   throw omniORB::fatalException(__FILE__,__LINE__,
 				"CORBA::Object::_get_interface() has not been implemeted yet.");
+#ifdef NEED_DUMMY_RETURN
   return 0;
+#endif
 }
 
 size_t
