@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.7  1999/12/06 14:03:00  djr
+  *** empty log message ***
+
   Revision 1.1.2.6  1999/10/29 13:18:18  djr
   Changes to ensure mutexes are constructed when accessed.
 
@@ -414,8 +417,9 @@ omni::activateObject(omniServant* servant, omniObjAdapter* adapter,
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Activating: " << id << '\n';
-    if( objreflist )  l << " (has local refs).\n";
+    l << "Activating: " << id;
+    if( objreflist )  l << " (has local refs)";
+    l << '\n';
   }
 
   while( objreflist ) {
