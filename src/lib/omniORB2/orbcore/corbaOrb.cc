@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.4.5  2000/03/27 17:33:15  sll
+  New command line option -ORBmaxGIOPVersion.
+
   Revision 1.29.4.4  1999/10/05 20:36:31  sll
   Added option -ORBgiopTargetAddressMode <0|1|2> to control the
   TargetAddress mode used when invoking on a remote object using GIOP 1.2
@@ -812,6 +815,27 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	continue;
       }
 
+      // -ORBmaxGIOPVersion <major no>.<minor no>
+      if ( strcmp(argv[idx],"-ORBmaxGIOPVersion") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBmaxGIOPVersion parameter.");
+	  return 0;
+	}
+	unsigned int major, minor;
+	if ( sscanf(argv[idx+1], "%u.%u", &major, &minor) != 2 ||
+	     major > 255 || minor > 255) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBmaxGIOPVersion parameter.");
+	  return 0;
+	}
+	CORBA::Char ma = major;
+	CORBA::Char mi = minor;
+	omniORB::maxGIOPVersion(ma,mi);
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
       // -ORBhelp
       if( strcmp(argv[idx],"-ORBhelp") == 0 ) {
 	omniORB::logger l;
@@ -836,7 +860,8 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 #if 1  // For testing only
           "    -ORBgiopTargetAddressMode <0|1|2>\n"
 #endif
-	  "    -ORBlcdMode\n";
+	  "    -ORBlcdMode\n"
+	  "    -ORBmaxGIOPVersion <major no. 1-255>.<minor no. 0-255>\n";
 	move_args(argc,argv,idx,1);
 	continue;
       }
