@@ -91,7 +91,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<stdlib.h>		// POSIX standard defns
 #include	<string.h>		// POSIX string funcs
-#ifdef __aix__
+#if defined(__aix__) || defined(__SINIX__)
 #include        <strings.h>
 #endif
 #include	<ctype.h>		// External functions

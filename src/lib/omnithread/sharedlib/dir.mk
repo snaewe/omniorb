@@ -342,3 +342,43 @@ export:: $(lib)
 
 endif
 endif
+
+#############################################################################
+#   Make rules for to Reliant Unix                                          #
+#############################################################################
+
+ifdef SINIX
+ifeq ($(notdir $(CXX)),CC)
+
+DIR_CPPFLAGS += -Kpic
+
+libname = libomnithread.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+$(lib): $(OBJS)
+	(set -x; \
+        $(RM) $@; \
+        CC -G -z text -Kthread -KPIC -o $@ -h $(soname) $(IMPORT_LIBRARY_FLAGS) \
+         $($(IMPORT_LIBRARY_DIRS)) \
+         $(filter-out $(LibSuffixPattern),$^); \
+       )
+
+all:: $(lib)
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
+endif
+

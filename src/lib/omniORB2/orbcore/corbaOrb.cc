@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13  1998/04/08 16:06:25  sll
+  Added support for Reliant UNIX 5.43.
+
   Revision 1.12  1998/04/07 19:32:38  sll
   Replace cerr with omniORB::log.
   Use namespace and bool type if available.
@@ -103,6 +106,12 @@ static CORBA::Object_ptr NameServiceRef   = 0;
 static omni_mutex        internalLock;
 
 
+#ifdef __SINIX__
+// Why haven't we got this signature from signal.h? - sll
+//
+extern "C" int sigaction(int, const struct sigaction *, struct sigaction *);
+#endif
+
 // constants
 
 static
@@ -167,6 +176,7 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
 
 #ifdef _HAS_SIGNAL
 #ifndef _USE_MACH_SIGNAL
+#  ifndef __SINIX__
     struct sigaction act;
     sigemptyset(&act.sa_mask);
     act.sa_handler = SIG_IGN;
@@ -177,6 +187,19 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
 	omniORB::log.flush();
       }
     }
+#  else
+    // SINUX
+    struct sigaction act;
+    sigemptyset(&act.sa_mask);
+    act.sa_handler = (void (*)())0;
+    act.sa_flags = 0;
+    if (sigaction(SIGPIPE,&act,0) < 0) {
+      if (omniORB::traceLevel > 0) {
+	omniORB::log << "Warning: omni::init() cannot install the SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
+	omniORB::log.flush();
+      }
+    }
+#  endif
 #else
     struct sigvec act;
     act.sv_mask = 0;

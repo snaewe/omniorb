@@ -31,6 +31,9 @@ OBJ_LIBS += \
 
 LIBS += $(OBJ_LIBS)
 
+ifdef SINIX
+LIBS += -L/usr/ucblib -lucb
+endif
 
 all::
 	@$(MakeSubdirs)

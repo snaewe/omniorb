@@ -111,7 +111,7 @@ extern "C" char * mktemp(char *);
 #include	<sys/wait.h>		// POSIX definition of wait()
 #endif		// defined(__hpux__)
 
-#if defined(__aix__)
+#if defined(__aix__) || defined(__SINIX__)
 #include        <unistd.h>              // POSIX standard types
 #include        <sys/wait.h>            // POSIX definition of wait()
 #endif

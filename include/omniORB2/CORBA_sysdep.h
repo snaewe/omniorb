@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.17  1998/04/08 16:11:20  sll
+ Added support for Reliant UNIX 5.43.
+
  Revision 1.16  1998/04/07 20:07:06  sll
  Added the use of namespace.
 
@@ -198,6 +201,9 @@ strdup (char* str)
     return newstr;
 }
 #endif
+#elif defined(__SINIX__)
+#define _OMNIORB_HOST_BYTE_ORDER_ 0
+#define _HAS_SIGNAL 1
 #else
 #error "The byte order of this platform is unknown"
 #endif

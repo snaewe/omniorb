@@ -124,6 +124,9 @@ class omni_thread;
 #elif defined(__VMS)
 #include <omnithread/posix.h>
 
+#elif defined(__SINIX__)
+#include <omnithread/posix.h>
+
 #else
 #error "No implementation header file"
 #endif
