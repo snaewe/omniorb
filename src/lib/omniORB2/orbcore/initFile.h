@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9.6.1  1999/09/15 20:24:09  sll
+  Updated to use const char* casting.
+
   Revision 1.9  1999/03/11 16:25:53  djr
   Updated copyright notice
 
@@ -71,18 +74,18 @@ private:
   long fsize;
   long currpos;
 
-  inline void invref(char* entryname);
-  inline void multerr(char* entryname);      
-  inline void dataerr(char* entryname);
+  inline void invref(const char* entryname);
+  inline void multerr(const char* entryname);      
+  inline void dataerr(const char* entryname);
   inline void parseerr();
  
 #ifdef __WIN32__ 
 // WIN32 -specific error reporting functions:
   inline void noValsFound();
-  inline void formaterr(char* entryname);
+  inline void formaterr(const char* entryname);
 #endif
 
-  int read_file(char* config_fname);
+  int read_file(const char* config_fname);
   int getnextentry(CORBA::String_var& entryname,CORBA::String_var& data);
  
 #if defined(__WIN32__) && !defined(__ETS_KERNEL__)
