@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/06/13 20:13:49  sll
+  Minor updates to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.2  2001/05/01 16:04:42  sll
   Silly use of sizeof() on const char*. Should use strlen().
 
@@ -59,9 +62,9 @@ tcpAddress::tcpAddress(const char* address) {
 
   pd_address_string = address;
   // OMNIORB_ASSERT(strncmp(address,"giop:tcp:",9) == 0);
-  const char* host = index(address,':');
-  host = index(host+1,':') + 1;
-  const char* port = index(host,':') + 1;
+  const char* host = strchr(address,':');
+  host = strchr(host+1,':') + 1;
+  const char* port = strchr(host,':') + 1;
   CORBA::ULong hostlen = port - host - 1;
   // OMNIORB_ASSERT(hostlen);
   pd_address.host = CORBA::string_alloc(hostlen);
@@ -102,7 +105,7 @@ tcpAddress::connect(unsigned long deadline_secs,
   LibcWrapper::hostent_var h;
   int  rc;
   tcpSocketHandle_t sock;
-    
+
   if (! LibcWrapper::isipaddr(pd_address.host)) {
     if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
       return 0;
@@ -142,7 +145,7 @@ tcpAddress::connect(unsigned long deadline_secs,
 #else
 
   if (tcpConnection::setnonblocking(sock) == RC_INVALID_SOCKET) return 0;
-    
+
   if (::connect(sock,(struct sockaddr *)&raddr,
 		sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) {
 

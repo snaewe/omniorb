@@ -19,7 +19,7 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2001/06/13 20:12:32  sll
+  Minor updates to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.6  2001/05/31 16:18:12  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -55,6 +58,8 @@
 #include <codeSetUtil.h>
 #include <initialiser.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
+
 //
 // Linked lists of code set objects
 //
@@ -69,8 +74,6 @@ versionMatch(GIOP::Version v1, GIOP::Version v2)
 {
   return (v1.major == v2.major && v1.minor == v2.minor);
 }
-
-OMNI_NAMESPACE_BEGIN(omni)
 
 //
 // Code set id constants
@@ -91,7 +94,6 @@ const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_4   = 0x00010106;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_8   = 0x05010001;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_16  = 0x00010109;
 
-
 //
 // GIOP version constants
 //
@@ -99,8 +101,6 @@ const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_16  = 0x00010109;
 const GIOP::Version omniCodeSetUtil::GIOP10 = { 1,0 };
 const GIOP::Version omniCodeSetUtil::GIOP11 = { 1,1 };
 const GIOP::Version omniCodeSetUtil::GIOP12 = { 1,2 };
-
-
 
 omniCodeSet::NCS_C*
 omniCodeSet::getNCS_C(CONV_FRAME::CodeSetId id)

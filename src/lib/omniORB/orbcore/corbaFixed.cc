@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.3  2001/06/13 20:12:32  sll
+// Minor updates to make the ORB compiles with MSVC++.
+//
 // Revision 1.1.2.2  2001/04/09 15:18:46  dpg1
 // Tweak fixed point to make life easier for omniORBpy.
 //
@@ -272,7 +275,7 @@ CORBA::Fixed::round(CORBA::UShort scale) const
     memcpy(work, pd_val, OMNI_FIXED_DIGITS);
 
     int i = cut;
-    for (int i = cut; i < OMNI_FIXED_DIGITS; ++i) {
+    for (i = cut; i < OMNI_FIXED_DIGITS; ++i) {
       if (++work[cut] <= 9) break;
       work[cut] = 0;
     }

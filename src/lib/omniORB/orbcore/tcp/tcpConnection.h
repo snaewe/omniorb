@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/13 20:13:49  sll
+  Minor updates to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.1  2001/04/18 18:10:44  sll
   Big checkin with the brand new internal APIs.
 
@@ -77,6 +80,7 @@
 
 #include <winsock.h>
 #include <sys/types.h>
+#include <libcWrapper.h>
 
 #define RC_INADDR_NONE     INADDR_NONE
 #define RC_INVALID_SOCKET  INVALID_SOCKET
@@ -86,7 +90,7 @@
 #define SHUTDOWNSOCKET(sock) ::shutdown(sock,2)
 #define ERRNO              ::WSAGetLastError()
 #define EINPROGRESS        WSAEWOULDBLOCK
-#define RC_EINTR           WASEINTR
+#define RC_EINTR           WSAEINTR
 #define SOCKNAME_SIZE_T    int
 
 OMNI_NAMESPACE_BEGIN(omni)

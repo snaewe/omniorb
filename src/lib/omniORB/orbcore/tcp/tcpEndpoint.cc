@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/06/13 20:13:49  sll
+  Minor updates to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.2  2001/05/01 16:04:42  sll
   Silly use of sizeof() on const char*. Should use strlen().
 
@@ -46,7 +49,7 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 /////////////////////////////////////////////////////////////////////////
-tcpEndpoint::tcpEndpoint(const IIOP::Address& address) : 
+tcpEndpoint::tcpEndpoint(const IIOP::Address& address) :
   pd_socket(RC_INVALID_SOCKET), pd_address(address) {
 
   pd_address_string = (const char*) "giop:tcp:255.255.255.255:65535";
@@ -58,9 +61,9 @@ tcpEndpoint::tcpEndpoint(const char* address) : pd_socket(RC_INVALID_SOCKET) {
 
   pd_address_string = address;
   // OMNIORB_ASSERT(strncmp(address,"giop:tcp:",9) == 0);
-  const char* host = index(address,':');
-  host = index(host+1,':') + 1;
-  const char* port = index(host,':') + 1;
+  const char* host = strchr(address,':');
+  host = strchr(host+1,':') + 1;
+  const char* port = strchr(host,':') + 1;
   CORBA::ULong hostlen = port - host - 1;
   // OMNIORB_ASSERT(hostlen);
   pd_address.host = CORBA::string_alloc(hostlen);
@@ -104,7 +107,7 @@ tcpEndpoint::bind() {
   if ((pd_socket = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
     return 0;
   }
-    
+
   addr.sin_family = INETSOCKET;
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(pd_address.port);
@@ -208,7 +211,7 @@ tcpEndpoint::poke() {
   if ((conn = (tcpConnection*)target->connect()) == 0) {
     if (omniORB::trace(1)) {
       omniORB::logger log;
-      log << "Warning: Fail to connect to myself (" 
+      log << "Warning: Fail to connect to myself ("
 	  << (const char*) pd_address_string << ") via tcp!\n";
       log << "Warning: ATM this is ignored but this may cause the ORB shutdown to hang.\n";
     }

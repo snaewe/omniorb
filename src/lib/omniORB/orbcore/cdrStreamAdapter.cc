@@ -19,15 +19,18 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETARY INTERFACE ***
-//	
+//
 
 // $Log$
+// Revision 1.1.2.3  2001/06/13 20:12:32  sll
+// Minor updates to make the ORB compiles with MSVC++.
+//
 // Revision 1.1.2.2  2001/05/10 15:03:50  dpg1
 // Update cdrStreamAdapter to modified cdrStream interface.
 //
@@ -40,9 +43,7 @@
 #include <omniORB4/cdrStream.h>
 
 
-#ifdef HAS_Cplusplus_Namespace
-namespace {
-#endif
+OMNI_NAMESPACE_BEGIN(omni)
 
   class StreamAdapterStateCopier {
   public:
@@ -59,9 +60,9 @@ namespace {
     cdrStreamAdapter* pd_s;
   };
 
-#ifdef HAS_Cplusplus_Namespace
-}
-#endif
+OMNI_NAMESPACE_END(omni)
+
+OMNI_USING_NAMESPACE(omni)
 
 
 void
@@ -88,7 +89,7 @@ cdrStreamAdapter::skipInput(_CORBA_ULong size)
 }
 
 _CORBA_Boolean
-cdrStreamAdapter::checkInputOverrun(_CORBA_ULong itemSize, 
+cdrStreamAdapter::checkInputOverrun(_CORBA_ULong itemSize,
 				    _CORBA_ULong nItems,
 				    omni::alignment_t align)
 {

@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/13 20:13:15  sll
+  Minor updates to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.1  2001/04/18 18:10:51  sll
   Big checkin with the brand new internal APIs.
 
@@ -55,11 +58,11 @@ matchType(const char* uri,const char*& param,CORBA::Boolean allowShortHand) {
 
   CORBA::String_var expanded;
   if (allowShortHand) {
-    const char* p1 = index(uri,':');
+    const char* p1 = strchr(uri,':');
     // Either the uri is of the form ":xxxx:xxxx" or "xxx::xxxx" do we
     // have to expand.
     if (p1 && (uri == p1 || *(p1+1) == ':')) {
-      const char* p2 = index(p1+1,':');
+      const char* p2 = strchr(p1+1,':');
       if (p2) {
 	CORBA::ULong len = (p1 - uri) + (p2 - p1) + sizeof("giop:tcp");
 	expanded = CORBA::string_alloc(len);
@@ -68,7 +71,7 @@ matchType(const char* uri,const char*& param,CORBA::Boolean allowShortHand) {
 	}
 	else {
 	  strncpy(expanded,uri,(p1-uri));
-	  expanded[p1-uri] = '\0';
+	  ((char*) expanded)[p1-uri] = '\0';
 	}
 	if (p2 == p1+1) {
 	  strcat(expanded,":tcp");
@@ -76,7 +79,7 @@ matchType(const char* uri,const char*& param,CORBA::Boolean allowShortHand) {
 	else {
 	  len = strlen(expanded);
 	  strncat(expanded,p1,(p2-p1));
-	  expanded[len+(p2-p1)] = '\0';
+	  ((char*)expanded)[len+(p2-p1)] = '\0';
 	}
 	protocol = expanded;
 	param = p2 + 1;
@@ -116,7 +119,7 @@ giopAddress::str2Address(const char* address) {
 ////////////////////////////////////////////////////////////////////////
 giopEndpoint*
 giopEndpoint::str2Endpoint(const char* endpoint) {
-  
+
   const char* param;
   giopTransportImpl* impl = matchType(endpoint,param,1);
   if (impl) {

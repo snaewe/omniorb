@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/13 20:13:49  sll
+  Minor updates to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.1  2001/04/18 18:10:44  sll
   Big checkin with the brand new internal APIs.
 
@@ -195,7 +198,7 @@ tcpConnection::send(void* buf, size_t sz,
 
     // Reach here if we can write without blocking or we don't
     // care if we block here.
-    if ((tx = ::send(pd_socket,buf,sz,0)) == RC_SOCKET_ERROR) {
+    if ((tx = ::send(pd_socket,(char*)buf,sz,0)) == RC_SOCKET_ERROR) {
       if (ERRNO == RC_EINTR)
 	continue;
       else
@@ -207,7 +210,7 @@ tcpConnection::send(void* buf, size_t sz,
   } while(0);
 
   return tx;
-  
+
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -281,7 +284,7 @@ tcpConnection::recv(void* buf, size_t sz,
 
     // Reach here if we can read without blocking or we don't
     // care if we block here.
-    if ((rx = ::recv(pd_socket,buf,sz,0)) == RC_SOCKET_ERROR) {
+    if ((rx = ::recv(pd_socket,(char*)buf,sz,0)) == RC_SOCKET_ERROR) {
       if (ERRNO == RC_EINTR)
 	continue;
       else
@@ -332,7 +335,7 @@ tcpConnection::tcpConnection(tcpSocketHandle_t sock) : pd_socket(sock) {
   }
   pd_myaddress = ip4ToString((CORBA::ULong)addr.sin_addr.s_addr,
 			     (CORBA::UShort)addr.sin_port,"giop:tcp:");
-  
+
   l = sizeof(struct sockaddr_in);
   if (getpeername(pd_socket,
 		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {

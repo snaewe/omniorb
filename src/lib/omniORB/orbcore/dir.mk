@@ -122,13 +122,14 @@ ORB_OBJS      = $(ORB_SRCS:.cc=.o)
 CXXSRCS       = $(ORB_SRCS)
 
 ifdef NoGateKeeper
-ORB_SRCS     += gatekeeper.cc
+ORB_OBJS     += gatekeeper.o
+vpath %.cc $(VPATH):$(VPATH:%=%/gatekeepers/dummystub)
 endif
 
 LIB_NAME     := omniORB
 LIB_VERSION  := $(OMNIORB_VERSION)
 LIB_OBJS     := $(ORB_OBJS)
-LIB_IMPORTS  := $(OMNITHREAD_LIB) $(EXTRA_LIBS)
+LIB_IMPORTS  := $(OMNIASYNCINVOKER_LIB) $(OMNITHREAD_LIB) $(EXTRA_LIBS)
 LIB_SHARED_ONLY_OBJS := $(SHARED_ONLY_OBJS)
 
 include $(BASE_OMNI_TREE)/mk/mklib.mk

@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/13 20:13:50  sll
+  Minor updates to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.1  2001/04/18 18:10:43  sll
   Big checkin with the brand new internal APIs.
 
@@ -58,7 +61,7 @@ tcpTransportImpl::~tcpTransportImpl() {
 giopEndpoint*
 tcpTransportImpl::toEndpoint(const char* param) {
 
-  const char* p = index(param,':');
+  const char* p = strchr(param,':');
   if (!p) return 0;
   IIOP::Address address;
   if (param == p) {
@@ -68,7 +71,7 @@ tcpTransportImpl::toEndpoint(const char* param) {
   else {
     address.host = CORBA::string_alloc(p-param);
     strncpy(address.host,param,p-param);
-    address.host[p-param] = '\0';
+    ((char*)address.host)[p-param] = '\0';
   }
   if (*(++p) != '\0') {
     int v;
@@ -85,8 +88,8 @@ tcpTransportImpl::toEndpoint(const char* param) {
 /////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 tcpTransportImpl::isValid(const char* param) {
-  
-  const char* p = index(param,':');
+
+  const char* p = strchr(param,':');
   if (!p || param == p || *p == '\0') return 0;
   int v;
   if (sscanf(p+1,"%d",&v) != 1) return 0;
@@ -99,11 +102,11 @@ static
 CORBA::Boolean
 parseAddress(const char* param, IIOP::Address& address) {
 
-  const char* p = index(param,':');
+  const char* p = strchr(param,':');
   if (!p || param == p || *p == '\0') return 0;
   address.host = CORBA::string_alloc(p-param);
   strncpy(address.host,param,p-param);
-  address.host[p-param] = '\0';
+  ((char*) address.host)[p-param] = '\0';
   ++p;
   int v;
   if (sscanf(p,"%d",&v) != 1) return 0;
