@@ -24,7 +24,7 @@ vpath %.cc ..
 
 else
 
-vpath %.cc ../..
+vpath %.cc .. ../..
 
 endif
 
