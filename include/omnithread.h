@@ -161,6 +161,10 @@ class omni_thread;
 #elif defined(__darwin__)
 #include <omnithread/posix.h>
 
+#elif defined(__macos__)
+#include <omnithread/posix.h>
+#include <sched.h>
+
 #else
 #error "No implementation header file"
 #endif

@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2003/03/12 14:07:44  dgrisby
+  MacOS port. Thanks Wolfgang Textor.
+
   Revision 1.1.2.8  2003/02/21 15:56:09  dgrisby
   Silence macro redefinition warnings on Windows.
 
@@ -293,6 +296,16 @@
 #    define _CORBA_LONGLONG_CONST(x) (x##LL)
 #  endif
 
+#elif defined(__MWERKS__)
+// Metrowerks CodeWarrior Pro 8 or later for Mac OS Classic or Carbon
+#  define HAS_Cplusplus_Bool
+#  define HAS_Cplusplus_Namespace
+#  define HAS_Std_Namespace
+#  define HAS_LongLong
+#  define _CORBA_LONGLONG_DECL long long
+#  define _CORBA_ULONGLONG_DECL unsigned long long
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
+
 #endif
 
 
@@ -414,6 +427,11 @@
 
 #elif defined(__vxWorks__)
 #  undef HAVE_GETTIMEOFDAY
+
+#elif defined(__macos__)
+#  define SIZEOF_WCHAR 2
+#  define OMNI_SOCKNAME_SIZE_T socklen_t
+#  define HAVE_STRTOULL 1
 
 #endif
 

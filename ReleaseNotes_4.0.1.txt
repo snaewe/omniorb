@@ -12,7 +12,7 @@ New features since omniORB 4.0.0
  - Bug fixes.
  - Per object reference and per-thread timeouts.
  - Complete interceptors.
- - Support for new platforms: VxWorks, Digital Mars C++
+ - Support for new platforms: MacOS, VxWorks, Digital Mars C++
  - Small performance improvements.
 
 
