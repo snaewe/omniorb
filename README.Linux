@@ -40,7 +40,7 @@ Suse 6.1
 Comes with egcs-1.1.2 without the --enable-threads configuration. This
 compiler cannot be used to compile omniORB programs.
 
-Debian
+Debain
 ------
 
 Make sure you have the right compiler package.

@@ -1,6 +1,6 @@
 CXXSRCS = convertior.cc
 
-CorbaImplementation = OMNIORB2
+CorbaImplementation = OMNIORB
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
 CONVERTIOR = $(patsubst %,$(BinPattern),convertior)
@@ -11,7 +11,7 @@ clean::
 	$(RM) $(CONVERTIOR)
 
 $(CONVERTIOR): convertior.o $(CORBA_LIB_DEPEND)
-	@(libs="$(CORBA_LIB)"; $(CXXExecutable))
+	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))
 
 export:: $(CONVERTIOR)
 	@$(ExportExecutable)

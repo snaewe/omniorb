@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // bootstrapdynstub.cc        Created on: 6/1999
 //                            Author    : Sai-Lai Lo (sll)
 //
@@ -27,4 +27,4 @@
 //
 
 #define USE_core_stub_in_nt_dll
-#include <../bootstrapDynSK.cc>
+#include <omniORB3/bootstrapDynSK.cc>

@@ -7,6 +7,14 @@ AIX = 1
 PowerPCProcessor = 1
 
 #
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = /usr/local/bin/python
+
+
+#
 # Include general unix things
 #
 
@@ -58,20 +66,20 @@ LibSharedSearchPattern = -l%
 # For the moment, gatekeeper feature is disabled with shared library.
 # Override the defaults set in unix.mk
 #
-#omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-omniORB2GatekeeperImplementation = NO_IMPL
+#omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+omniORBGatekeeperImplementation = NO_IMPL
 #
-# Notice that the version number 2.7 is hardwired in OMNIORB2_LIB.
+# Notice that the version number 2.7 is hardwired in OMNIORB_LIB.
 #
-OMNIORB2_LIB = $(patsubst %,$(LibSharedSearchPattern),omniORB27) \
+OMNIORB_LIB = $(patsubst %,$(LibSharedSearchPattern),omniORB30) \
                 $(OMNITHREAD_LIB) $(SOCKET_LIB)
-lib_depend := $(patsubst %,$(LibSharedPattern),omniORB27)
-OMNIORB2_LIB_DEPEND1 := $(GENERATE_LIB_DEPEND)
-OMNIORB2_LIB_DEPEND = $(OMNIORB2_LIB_DEPEND1) $(OMNITHREAD_LIB_DEPEND)
+lib_depend := $(patsubst %,$(LibSharedPattern),omniORB30)
+OMNIORB_LIB_DEPEND1 := $(GENERATE_LIB_DEPEND)
+OMNIORB_LIB_DEPEND = $(OMNIORB_LIB_DEPEND1) $(OMNITHREAD_LIB_DEPEND)
 
-OMNIORB2_LC_LIB = $(patsubst %,$(LibSharedSearchPattern),omniLC2)
+OMNIORB_LC_LIB = $(patsubst %,$(LibSharedSearchPattern),omniLC2)
 
-CorbaImplementation = OMNIORB2
+CorbaImplementation = OMNIORB
 
 #
 # OMNI thread stuff
@@ -84,7 +92,7 @@ OMNITHREAD_LIB = -lomnithread2 -lpthreads
 OMNITHREAD_STATIC_LIB = -lomnithread-ar -lpthreads-ar
 
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
 OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // scavenger.h                Created on: 5/8/97
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -28,8 +28,11 @@
 
 /*
   $Log$
-  Revision 1.4  1999/09/22 19:21:48  sll
-  omniORB 2.8.0 public release.
+  Revision 1.5  2000/07/04 15:22:50  dpg1
+  Merge from omni3_develop.
+
+  Revision 1.3.6.2  1999/09/24 15:01:37  djr
+  Added module initialisers, and sll's new scavenger implementation.
 
   Revision 1.3.2.1  1999/09/21 20:37:17  sll
   -Simplified the scavenger code and the mechanism in which connections

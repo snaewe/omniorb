@@ -1,12 +1,23 @@
 #
-# i586_linux_2.0_glibc.mk - make variables and rules specific to Linux 2.0
-#                           and glibc-2.1  (e.g. Redhat 6.x systems)
-#                            
+# i586_linux_2.0_glibc2.1.mk - make variables and rules specific to Linux 2.x
+#                              and glibc-2.1
 #
-
 
 Linux = 1
 x86Processor = 1
+
+ABSTOP = $(shell cd $(TOP); pwd)
+
+#
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter. If you do not
+# wish to make a complete installation, you may download a minimal
+# Python from ftp://ftp.uk.research.att.com/pub/omniORB/python/
+# In that case, uncomment the first line below.
+
+#PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
+#PYTHON = /usr/local/bin/python
 
 
 #
@@ -53,8 +64,8 @@ IMPORT_CPPFLAGS += -D__x86__ -D__linux__ -D__OSVERSION__=2
 # CORBA stuff
 #
 
-omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-CorbaImplementation = OMNIORB2
+omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+CorbaImplementation = OMNIORB
 
 #
 # OMNI thread stuff
@@ -78,7 +89,7 @@ lib_depend := $(patsubst %,$(LibPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
 OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg

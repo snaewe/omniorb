@@ -6,6 +6,19 @@
 SunOS = 1
 SparcProcessor = 1
 
+ABSTOP = $(shell cd $(TOP); pwd)
+
+#
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter. If you do not
+# wish to make a complete installation, you may download a minimal
+# Python from ftp://ftp.uk.research.att.com/pub/omniORB/python/
+# In that case, uncomment the first line below.
+
+#PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
+#PYTHON = /usr/local/bin/python
+
 
 #
 # Include general unix things
@@ -93,8 +106,8 @@ THREAD_LIB = -lthread $(CXXMTFLAG)
 # CORBA stuff
 #
 
-omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-CorbaImplementation = OMNIORB2
+omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+CorbaImplementation = OMNIORB
 
 #
 # OMNI thread stuff
@@ -118,7 +131,7 @@ ThreadSystem = Posix
 lib_depend := $(patsubst %,$(LibPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
 OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg

@@ -1,13 +1,14 @@
-# dir.mk for omniORB2
+# dir.mk for omniORB
 #
 # Build a shared library in this directory
-# **** DO NOT forget to update the $(VERSION) number.
+# **** DO NOT forget to update the version number.
+# **** Remember to change <top>/mk/unix.mk and <top>/mk/win32.mk too
 #
 
 # The Version number is constructed as follows:
 #    <major version no.>.<minor version no.>.<micro version no.>
 #
-# The <major version no.> is always 2 for omniORB2.
+# The <major version no.> is always 3 for omniORB3.
 #
 # The <minor version no.> changes when:
 #   1. Public interfaces have been extended but remains backward compatible
@@ -19,7 +20,7 @@
 # corresponds to a pure bug fix release.
 #
 # 
-VERSION = 2.8.0
+VERSION = $(OMNIORB_VERSION)
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
@@ -76,9 +77,9 @@ DIR_CPPFLAGS += -DNTArchitecture
 ifndef BuildWin32DebugLibraries
 
 # Temporary added micro version number to the name of the dll.
-implib = $(patsubst %,$(DLLPattern),omniORB2$(minor_version)$(micro_version))
-#implib = $(patsubst %,$(DLLPattern),omniORB2$(minor_version))
-staticlib = ../$(patsubst %,$(LibPattern),omniORB2)
+implib = $(patsubst %,$(DLLPattern),omniORB3$(minor_version)$(micro_version))
+#implib = $(patsubst %,$(DLLPattern),omniORB3$(minor_version))
+staticlib = ../$(patsubst %,$(LibPattern),omniORB3)
 
 CXXOPTIONS  = $(MSVC_DLL_CXXNODEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_DLL_CXXLINKNODEBUGOPTIONS)
@@ -94,9 +95,9 @@ else
 #
 
 # Temporary added micro version number to the name of the dll.
-implib = $(patsubst %,$(DLLDebugPattern),omniORB2$(minor_version)$(micro_version))
-#implib = $(patsubst %,$(DLLDebugPattern),omniORB2$(minor_version))
-staticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omniORB2)
+implib = $(patsubst %,$(DLLDebugPattern),omniORB3$(minor_version)$(micro_version))
+#implib = $(patsubst %,$(DLLDebugPattern),omniORB3$(minor_version))
+staticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omniORB3)
 
 CXXDEBUGFLAGS = 
 CXXOPTIONS = $(MSVC_DLL_CXXDEBUGFLAGS)
@@ -133,25 +134,25 @@ endif
 #   Make variables common to all platforms                                  #
 #############################################################################
 
-ORB2_SRCS = bootstrap_i.cc \
-            constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
+ORB_SRCS = \
+	    taskqueue.cc omniServant.cc omniObjRef.cc \
+	    localIdentity.cc remoteIdentity.cc \
+	    objectAdapter.cc callDescriptor.cc \
+	    poa.cc portableserver.cc poamanager.cc \
+	    poastubs.cc \
+	    proxyFactory.cc omniInternal.cc anonObject.cc \
+            initRefs.cc \
+            constants.cc corbaObject.cc corbaOrb.cc corbaBoa.cc \
             corbaString.cc \
-            exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
+            exception.cc giopClient.cc giopServer.cc initFile.cc \
+            ior.cc uri.cc \
             libcWrapper.cc mbufferedStream.cc nbufferedStream.cc \
-            object.cc objectKey.cc objectRef.cc ropeFactory.cc \
-            strand.cc scavenger.cc exceptn.cc proxyCall.cc \
-            current.cc policy.cc orbservice.cc domainManager.cc \
+            ropeFactory.cc \
+            strand.cc scavenger.cc exceptn.cc omniORB.cc tracedthread.cc \
+            policy.cc dynamicLib.cc \
             $(NETLIBSRCS) $(LOG_SRCS) bootstrapstub.cc Namingstub.cc
 
-ORB2_OBJS = bootstrap_i.o \
-            constants.o corbaBoa.o corbaObject.o corbaOrb.o \
-            corbaString.o \
-            exception.o giopClient.o giopServer.o initFile.o ior.o \
-            libcWrapper.o mbufferedStream.o nbufferedStream.o \
-            object.o objectRef.o objectKey.o ropeFactory.o \
-            strand.o scavenger.o exceptn.o proxyCall.o \
-            current.o policy.o orbservice.o domainManager.o \
-            $(NETLIBOBJS) $(LOG_OBJS) bootstrapstub.o Namingstub.o
+ORB_OBJS =  $(ORB_SRCS:.cc=.o)
 
 LOG_SRCS = logIOstream.cc
 LOG_OBJS = logIOstream.o
@@ -160,9 +161,9 @@ DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -I./.. -I./../.. -I./../../..
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
-DIR_CPPFLAGS += -D_OMNIORB2_LIBRARY
+DIR_CPPFLAGS += -D_OMNIORB_LIBRARY
 
-CXXSRCS = $(ORB2_SRCS) $(LOG_SRCS)
+CXXSRCS = $(ORB_SRCS) $(LOG_SRCS)
 
 #############################################################################
 #   Make rules for Solaris 2.x                                              #
@@ -176,11 +177,11 @@ lib = $(soname).$(micro_version)
 
 ifeq ($(notdir $(CXX)),CC)
 
-DIR_CPPFLAGS += -Kpic
+DIR_CPPFLAGS += -KPIC
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
         $(RM) $@; \
         CC -G -o $@ -h $(soname) $(IMPORT_LIBRARY_FLAGS) \
@@ -210,7 +211,7 @@ DIR_CPPFLAGS += -fPIC
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
@@ -250,7 +251,7 @@ lib = $(soname).$(micro_version)
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
@@ -286,7 +287,7 @@ lib = $(soname).$(micro_version)
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(rpath="$(RPATH)"; \
          for arg in $(OMNITHREAD_LIB) /usr/lib/cmplrs/cxx; do \
          if expr "$$arg" : "-L" >/dev/null; then \
@@ -341,7 +342,7 @@ all:: $(lib)
 
 ifeq ($(notdir $(CXX)),xlC_r)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
         $(RM) $@; \
         $(MAKECPPSHAREDLIB) \
@@ -356,7 +357,7 @@ endif
 
 ifeq ($(notdir $(CXX)),g++)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
          $(RM) $@; \
          $(CXXLINK) -shared -mthreads \
@@ -428,13 +429,13 @@ all:: $(lib)
 all::
 	@$(MakeSubdirs)
 
-$(lib): $(ORB2_OBJS) msvcdllstub.o omniORB2.def
+$(lib): $(ORB_OBJS) msvcdllstub.o omniORB3.def
 	(libs="$(NT_EXTRA_LIBS) $(OMNITHREAD_LIB)"; \
          $(RM) $@; \
-         $(CXXLINK) -out:$@ -DLL  $(CXXLINKOPTIONS) -def:omniORB2.def -IMPLIB:$(implib) $(IMPORT_LIBRARY_FLAGS) $(ORB2_OBJS) msvcdllstub.o $$libs; \
+         $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) -def:omniORB3.def -IMPLIB:$(implib) $(IMPORT_LIBRARY_FLAGS) $(ORB_OBJS) msvcdllstub.o $$libs; \
         )
 
-# omniORB2.def
+# omniORB3.def
 #  - This file contains all the functions and static class variables
 #    exported by the DLL. The symbols are extracted from the output of
 #    dumpbin.
@@ -452,16 +453,16 @@ $(lib): $(ORB2_OBJS) msvcdllstub.o omniORB2.def
 #    and class static variable and static function symbols start with one ?.
 #                                                             - SLL
 #
-omniORB2.def: $(staticlib)
+omniORB3.def: $(staticlib)
 	(set -x; \
-         echo "LIBRARY $(libname)" > omniORB2.def; \
-         echo "VERSION $(minor_version).$(micro_version)" >> omniORB2.def; \
-         echo "EXPORTS" >> omniORB2.def; \
+         echo "LIBRARY $(libname)" > omniORB3.def; \
+         echo "VERSION $(minor_version).$(micro_version)" >> omniORB3.def; \
+         echo "EXPORTS" >> omniORB3.def; \
          DUMPBIN.EXE /SYMBOLS $(staticlib) | \
          egrep '^[^ ]+ +[^ ]+ +SECT[^ ]+ +[^ ]+ +\(\) +External +\| +\?[^ ]*|^[^ ]+ +[^ ]+ +SECT[^ ]+ +[^ ]+ +External +\| +\?[^?][^ ]*'|\
          egrep -v 'deleting destructor[^(]+\(unsigned int\)' | \
          cut -d'|' -f2 | \
-         cut -d' ' -f2 | $(SORT) -u >> omniORB2.def; )
+         cut -d' ' -f2 | $(SORT) -u >> omniORB3.def; )
 
 
 clean::
@@ -480,7 +481,7 @@ export::
 
 # Ideally, we would like to build the dummy gatekeeper stub just like other
 # platforms, i.e. as a separate static library. However, it proves to be quite
-# tricky because the omniORB2 DLL needs the symbols provided by gatekeeper.o
+# tricky because the omniORB DLL needs the symbols provided by gatekeeper.o
 # to be resolved when the DLL is build. For the moment, just workaround the
 # problem by building the stub directly into the library.
 #
@@ -526,7 +527,7 @@ NETLIBOBJS +=  gatekeeper.o
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
          $(RM) $@; \
          aCC -b -Wl,+h$(soname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
@@ -575,7 +576,7 @@ lib     = $(soname).$(micro_version)
 #
 NETLIBOBJS +=  gatekeeper.o
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
          $(RM) $@; \
          CC -G -z text -Kthread -KPIC -o $@ -h $(soname) \
@@ -627,7 +628,7 @@ lib = $(soname).$(micro_version)
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
          $(RM) $@; \
          $(LINK.cc) -KPIC -shared -Wl,-h,$(libname) \
@@ -667,7 +668,7 @@ lib = $(soname).$(micro_version)
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \

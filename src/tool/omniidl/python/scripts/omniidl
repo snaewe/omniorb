@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# This shell script attempts to run omniidl.py using a Python
+# interpreter named omnipython in the same directory. If it is not
+# found, it falls-back on using a Python interpreter from the PATH.
+#
+# If this script does not work for you, make sure there is a suitable
+# Python interpreter on your path, and run omniidlrun.py directly.
+
+
+# Figure out where this script is running from
+case $0 in
+  /*|*/*) dir=`dirname $0`;;
+esac
+if test -z $dir; then
+    me=`basename $0`
+    dir=`(IFS=':'; for p in $PATH; do echo $p; done) |
+    while read p ; do
+        if test -x $p/$me ; then
+        echo $p
+        break
+      fi
+    done`
+fi
+
+omnipython=$dir/omnipython
+omniidl=$dir/omniidlrun.py
+
+if test -x $omnipython ; then
+    $omnipython $omniidl $@
+else
+    $omniidl $@
+fi

@@ -6,6 +6,14 @@ FreeBSD = 1
 x86Processor = 1
 
 #
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = /usr/local/bin/python
+
+
+#
 # Include general unix things
 #
 
@@ -43,8 +51,8 @@ INSTALL = install -c
 IMPORT_CPPFLAGS += -D__x86__ -D__freebsd__ -D__OSVERSION__=3
 
 
-omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-CorbaImplementation = OMNIORB2 
+omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+CorbaImplementation = OMNIORB
 
 #
 # OMNI thread stuff
@@ -53,7 +61,7 @@ CorbaImplementation = OMNIORB2
 ThreadSystem = Posix
 OMNITHREAD_POSIX_CPPFLAGS =
 OMNITHREAD_CPPFLAGS = -D_REENTRANT -D_THREAD_SAFE
-OMNITHREAD_LIBS = $(patsubst %,$(LibSearchPattern),omnithread)
+OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread)
 
 OMNITHREAD_POSIX_CPPFLAGS += -DUsePthread -DPthreadDraftVersion=10
 
@@ -61,7 +69,7 @@ lib_depend := $(patsubst %,$(LibPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
 OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
@@ -73,6 +81,10 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 # this tree to statically linke with the omniORB libraries.
 # build tools semistatic : shared with system libs and static with omniORB libs
 #CORBA_LIB	= -Wl,-Bstatic
-#CORBA_LIB	+= -lomniORB2 -lomniDynamic2 -ltcpwrapGK -lomnithread
+#CORBA_LIB	+= -lomniORB3 -lomniDynamic2 -ltcpwrapGK -lomnithread
 #CORBA_LIB	+= -Wl,-Bdynamic
 #OMNITHREAD_LIB = 
+#CORBA_LIB_NODYN	= -Wl,-Bstatic
+#CORBA_LIB_NODYN	+= -lomniORB3 -ltcpwrapGK -lomnithread
+#CORBA_LIB_NODYN	+= -Wl,-Bdynamic
+#OMNITHREAD_LIB_NODYN = -lomnithread

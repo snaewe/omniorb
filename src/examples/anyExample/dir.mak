@@ -72,4 +72,4 @@ veryclean::
 # stubs to support the life cycle service.
 #
 anyExample.hh anyExampleSK.cc: anyExample.idl
-	$(TOP)\bin\x86_win32\omniidl2 -a -h .hh -s SK.cc anyExample.idl
+	$(TOP)\bin\x86_win32\omniidl -bcxx -Wbh=.hh -Wbs=SK.cc -Wba anyExample.idl

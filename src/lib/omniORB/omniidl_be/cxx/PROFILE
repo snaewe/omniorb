@@ -1,0 +1,65 @@
+Results from profiling the C++ backend working on
+   CVSROOT/testsuite/idl/CosTrading.idl
+on Tue Jan 11 15:54:11 GMT 2000:
+
+>>> p.sort_stats('time').print_stats(15)
+Tue Jan 11 15:00:28 2000    costrading_prof
+
+         567727 function calls (564917 primitive calls) in 69.010 CPU seconds
+
+   Ordered by: internal time
+   List reduced from 367 to 15 due to restriction <15>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    71731   11.000    0.000   15.020    0.000 re.py:112(match)
+    37015    5.480    0.000   14.890    0.000 util.py:106(__wscount)
+    94605    5.320    0.000    5.320    0.000 re.py:290(__init__)
+    16203    5.290    0.000   34.410    0.002 util.py:126(doSub)
+    34659    5.100    0.000   14.120    0.000 util.py:112(__wsstrip)
+     2356    4.880    0.002   56.150    0.024 util.py:121(out)
+    17513    4.670    0.000   11.900    0.001 re.py:135(subn)
+    10502    3.540    0.000    6.250    0.001 util.py:129(replace)
+    71674    3.430    0.000    3.430    0.000 re.py:306(end)
+    21176    2.510    0.000    2.510    0.000 re.py:335(group)
+    16204    1.900    0.000    2.220    0.000 re.py:95(search)
+    17513    1.880    0.000   13.780    0.001 re.py:128(sub)
+     5275    1.030    0.000    1.030    0.000 tyutil.py:232(mapID)
+3913/2327    0.910    0.000    1.340    0.001 tyutil.py:386(typeDims)
+    15273    0.800    0.000    0.800    0.000 util.py:118(write)
+
+
+On pitanga (P2 300MHz)
+   omniidl -bcxx CosTrading.idl
+took an average of 32.3s to complete
+
+with the simpler (non-auto indenting) Stream/StringStream
+   omniidl -bcxx CosTrading.idl
+took an average of 13.9s to complete
+
+>>> p.strip_dirs()
+<pstats.Stats instance at 8226660>
+>>> p.sort_stats('time').print_stats(15)
+Tue Jan 11 17:09:46 2000    costrading_prof
+
+         261705 function calls (258895 primitive calls) in 32.860 CPU seconds
+
+   Ordered by: internal time
+   List reduced from 363 to 15 due to restriction <15>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     2356    4.800    0.002   18.910    0.008 util.py:192(out)
+    77958    3.980    0.000    3.980    0.000 util.py:219(write)
+    10502    3.790    0.000    6.860    0.001 util.py:197(replace)
+    21176    2.780    0.000    2.780    0.000 re.py:335(group)
+     3666    2.510    0.001    9.470    0.003 re.py:135(subn)
+3913/2327    1.320    0.000    1.850    0.001 tyutil.py:386(typeDims)
+     5275    1.240    0.000    1.240    0.000 tyutil.py:232(mapID)
+2170/2027    0.770    0.000    3.470    0.002 name.py:270(principalID)
+     1296    0.620    0.000    1.900    0.001 name.py:169(relName)
+     3666    0.580    0.000   10.050    0.003 re.py:128(sub)
+     3062    0.550    0.000    0.880    0.000 tyutil.py:190(deref)
+     7561    0.520    0.000    0.520    0.000 idlutil.py:81(pruneScope)
+    18010    0.500    0.000    0.500    0.000 idltype.py:108(kind)
+    11031    0.500    0.000    0.500    0.000 util.py:230(write)
+     4613    0.470    0.000    0.710    0.000 idlutil.py:51(slashName)
+

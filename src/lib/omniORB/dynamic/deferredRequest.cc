@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // deferredRequest.cc         Created on: 10/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -69,7 +69,7 @@ DeferredRequest::run_undetached(void* arg)
       else{
 	if( omniORB::traceLevel > 0 ){
 	  omniORB::log <<
-	    "omniORB2 Bug: file <" << __FILE__ << ">, line <" << __LINE__ <<
+	    "omniORB: BUG: file <" << __FILE__ << ">, line <" << __LINE__ <<
 	    "\n Request->invoke() raised a system exception.\n"
 	    " omni::diiThrowsSysExceptions = " <<
 	    omniORB::diiThrowsSysExceptions << ".\n";

@@ -1,6 +1,6 @@
 CXXSRCS = genior.cc
 
-CorbaImplementation = OMNIORB2
+CorbaImplementation = OMNIORB
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
 GENIOR = $(patsubst %,$(BinPattern),genior)
@@ -11,7 +11,7 @@ clean::
 	$(RM) $(GENIOR)
 
 $(GENIOR): genior.o $(CORBA_LIB_DEPEND)
-	@(libs="$(CORBA_LIB)"; $(CXXExecutable))
+	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))
 
 export:: $(GENIOR)
 	@$(ExportExecutable)

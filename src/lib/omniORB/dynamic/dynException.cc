@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // dynException.cc            Created on: 10/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,9 +27,15 @@
 //   Exceptions used in the Dynamic library.
 //
 
-#include <omniORB2/CORBA.h>
-#include <omniORB2/tcDescriptor.h>
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
+#include <omniORB3/tcDescriptor.h>
 #include <dynException.h>
+#include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 ////////  Implementation of Any Insertion for Exception //////////////
@@ -43,7 +49,7 @@ void operator<<=(CORBA::Any& a, const CORBA::Exception& ex)
   else {
     omniORB::log << "Error: function to insert the user exception into an Any is not available\n";
     omniORB::log.flush();
-    throw CORBA::INTERNAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_NO);
   }
 }
 
@@ -55,7 +61,7 @@ void operator<<=(CORBA::Any& a, const CORBA::Exception* ex)
   else {
     omniORB::log << "Error: function to insert the user exception into an Any is not available\n";
     omniORB::log.flush();
-    throw CORBA::INTERNAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_NO);
   }
 }
 
@@ -63,69 +69,28 @@ void operator<<=(CORBA::Any& a, const CORBA::Exception* ex)
 ////////////// Implementation of standard UserException //////////////
 //////////////////////////////////////////////////////////////////////
 
-#define USER_EXCEPTION_1(name) \
-      USER_EXCEPTION(name,name,#name)
-
-#define USER_EXCEPTION_2(scope,name) \
-    USER_EXCEPTION(scope::name,name,#scope "/" #name)
-
-#define USER_EXCEPTION(fqname,uqname,repostr) \
- \
-CORBA::fqname::~uqname() {} \
- \
-void \
-CORBA::fqname::_raise() \
-{ \
-  throw *this; \
-} \
- \
-CORBA::fqname* \
-CORBA::fqname::_downcast(Exception* e) \
-{ \
-  return (CORBA::fqname*)_NP_is_a(e, "Exception/UserException/" repostr ); \
-} \
-const CORBA::fqname* \
-CORBA::fqname::_downcast(const Exception* e) \
-{ \
-  return (const fqname*)_NP_is_a(e, "Exception/UserException/" repostr ); \
-} \
-CORBA::fqname* \
-CORBA::fqname::_narrow(Exception* e) \
-{ \
-  return _downcast(e); \
-} \
- \
-CORBA::Exception* \
-CORBA::fqname::_NP_duplicate() const \
-{ \
-  return new fqname (); \
-} \
- \
-const char* \
-CORBA::fqname::_NP_mostDerivedTypeId() const \
-{ \
-  return "Exception/UserException/" repostr ; \
-} \
-CORBA::Exception::insertExceptionToAny CORBA::fqname::insertToAnyFn = 0; \
-CORBA::Exception::insertExceptionToAnyNCP CORBA::fqname::insertToAnyFnNCP = 0;
-
-
-USER_EXCEPTION_1 (WrongTransaction)
-USER_EXCEPTION_2 (ContextList,Bounds)
-USER_EXCEPTION_2 (ExceptionList,Bounds)
-USER_EXCEPTION_2 (NVList,Bounds)
-USER_EXCEPTION_2 (TypeCode,Bounds)
-USER_EXCEPTION_2 (TypeCode,BadKind)
-USER_EXCEPTION_2 (DynAny,Invalid)
-USER_EXCEPTION_2 (DynAny,InvalidValue)
-USER_EXCEPTION_2 (DynAny,TypeMismatch)
-USER_EXCEPTION_2 (DynAny,InvalidSeq)
-USER_EXCEPTION_2 (ORB,InconsistentTypeCode)
-
-#undef USER_EXCEPTION_1
-#undef USER_EXCEPTION_2
-#undef USER_EXCEPTION
-
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA, WrongTransaction,
+		       "IDL:omg.org/CORBA/WrongTransaction:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::ContextList, Bounds,
+		       "IDL:omg.org/CORBA/ContextList/Bounds:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::ExceptionList, Bounds,
+		       "IDL:omg.org/CORBA/ExceptionList/Bounds:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::NVList, Bounds,
+		       "IDL:omg.org/CORBA/NVList/Bounds:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::TypeCode, Bounds,
+		       "IDL:omg.org/CORBA/TypeCode/Bounds:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::TypeCode, BadKind,
+		       "IDL:omg.org/CORBA/TypeCode/BadKind:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::DynAny, Invalid,
+		       "IDL:omg.org/CORBA/DynAny/Invalid:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::DynAny, InvalidValue,
+		       "IDL:omg.org/CORBA/DynAny/InvalidValue:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::DynAny, TypeMismatch,
+		       "IDL:omg.org/CORBA/DynAny/TypeMismatch:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::DynAny, InvalidSeq,
+		       "IDL:omg.org/CORBA/DynAny/InvalidSeq:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::ORB, InconsistentTypeCode,
+		       "IDL:omg.org/CORBA/ORB/InconsistentTypeCode:1.0")
 
 //////////////////////////////////////////////////////////////////////
 ////////////// Implementation of User   Exception Any operators //////
@@ -468,36 +433,8 @@ name##_insertToAnyNCP(CORBA::Any& a,const CORBA::Exception* e) \
   insertSystemExceptionToAny(a,_tc_##name,ex); \
 }
 
-STD_EXCEPTION (UNKNOWN)
-STD_EXCEPTION (BAD_PARAM)
-STD_EXCEPTION (NO_MEMORY)
-STD_EXCEPTION (IMP_LIMIT)
-STD_EXCEPTION (COMM_FAILURE)
-STD_EXCEPTION (INV_OBJREF)
-STD_EXCEPTION (OBJECT_NOT_EXIST)
-STD_EXCEPTION (NO_PERMISSION)
-STD_EXCEPTION (INTERNAL)
-STD_EXCEPTION (MARSHAL)
-STD_EXCEPTION (INITIALIZE)
-STD_EXCEPTION (NO_IMPLEMENT)
-STD_EXCEPTION (BAD_TYPECODE)
-STD_EXCEPTION (BAD_OPERATION)
-STD_EXCEPTION (NO_RESOURCES)
-STD_EXCEPTION (NO_RESPONSE)
-STD_EXCEPTION (PERSIST_STORE)
-STD_EXCEPTION (BAD_INV_ORDER)
-STD_EXCEPTION (TRANSIENT)
-STD_EXCEPTION (FREE_MEM)
-STD_EXCEPTION (INV_IDENT)
-STD_EXCEPTION (INV_FLAG)
-STD_EXCEPTION (INTF_REPOS)
-STD_EXCEPTION (BAD_CONTEXT)
-STD_EXCEPTION (OBJ_ADAPTER)
-STD_EXCEPTION (DATA_CONVERSION)
-STD_EXCEPTION (TRANSACTION_REQUIRED)
-STD_EXCEPTION (TRANSACTION_ROLLEDBACK)
-STD_EXCEPTION (INVALID_TRANSACTION)
-STD_EXCEPTION (WRONG_TRANSACTION)
+
+OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)
 #undef STD_EXCEPTION
 
 
@@ -562,40 +499,11 @@ public:
 
 #define STD_EXCEPTION(name) \
 CORBA::name::insertToAnyFn    = name##_insertToAny; \
-CORBA::name::insertToAnyFnNCP = name##_insertToAnyNCP
+CORBA::name::insertToAnyFnNCP = name##_insertToAnyNCP;
 
-    STD_EXCEPTION (UNKNOWN);
-    STD_EXCEPTION (BAD_PARAM);
-    STD_EXCEPTION (NO_MEMORY);
-    STD_EXCEPTION (IMP_LIMIT);
-    STD_EXCEPTION (COMM_FAILURE);
-    STD_EXCEPTION (INV_OBJREF);
-    STD_EXCEPTION (OBJECT_NOT_EXIST);
-    STD_EXCEPTION (NO_PERMISSION);
-    STD_EXCEPTION (INTERNAL);
-    STD_EXCEPTION (MARSHAL);
-    STD_EXCEPTION (INITIALIZE);
-    STD_EXCEPTION (NO_IMPLEMENT);
-    STD_EXCEPTION (BAD_TYPECODE);
-    STD_EXCEPTION (BAD_OPERATION);
-    STD_EXCEPTION (NO_RESOURCES);
-    STD_EXCEPTION (NO_RESPONSE);
-    STD_EXCEPTION (PERSIST_STORE);
-    STD_EXCEPTION (BAD_INV_ORDER);
-    STD_EXCEPTION (TRANSIENT);
-    STD_EXCEPTION (FREE_MEM);
-    STD_EXCEPTION (INV_IDENT);
-    STD_EXCEPTION (INV_FLAG);
-    STD_EXCEPTION (INTF_REPOS);
-    STD_EXCEPTION (BAD_CONTEXT);
-    STD_EXCEPTION (OBJ_ADAPTER);
-    STD_EXCEPTION (DATA_CONVERSION);
-    STD_EXCEPTION (TRANSACTION_REQUIRED);
-    STD_EXCEPTION (TRANSACTION_ROLLEDBACK);
-    STD_EXCEPTION (INVALID_TRANSACTION);
-    STD_EXCEPTION (WRONG_TRANSACTION);
-
+    OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)
 #undef STD_EXCEPTION
+
 
 #define USER_EXCEPTION_1(name) USER_EXCEPTION(name,name)
 

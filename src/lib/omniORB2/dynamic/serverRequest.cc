@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // serverRequest.cc           Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -29,8 +29,18 @@
 
 /*
  $Log$
- Revision 1.7  1999/08/30 19:02:39  sll
- Added ENABLE_CLIENT_IR_SUPPORT.
+ Revision 1.8  2000/07/04 15:23:14  dpg1
+ Merge from omni3_develop.
+
+ Revision 1.7.6.3  2000/06/22 10:40:13  dpg1
+ exception.h renamed to exceptiondefs.h to avoid name clash on some
+ platforms.
+
+ Revision 1.7.6.2  1999/10/14 16:22:00  djr
+ Implemented logging when system exceptions are thrown.
+
+ Revision 1.7.6.1  1999/09/22 14:26:36  djr
+ Major rewrite of orbcore to support POA.
 
  Revision 1.6  1999/06/18 20:59:12  sll
  Allow system exception to be returned inside exception().
@@ -40,97 +50,94 @@
 
 */
 
-#define ENABLE_CLIENT_IR_SUPPORT
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <dynamicImplementation.h>
 #include <pseudo.h>
 #include <context.h>
 #include <dynException.h>
+#include <exceptiondefs.h>
 
 
-CORBA::ServerRequest::~ServerRequest() {}
+CORBA::ServerRequest::~ServerRequest()  {}
+
+
+omniServerRequest::~omniServerRequest()  {}
 
 
 const char*
-ServerRequestImpl::op_name()
+omniServerRequest::operation()
 {
-  return pd_opName;
+  return pd_giop_s.operation();
 }
 
 
-CORBA::OperationDef_ptr
-ServerRequestImpl::op_def()
+void
+omniServerRequest::arguments(CORBA::NVList_ptr& parameters)
 {
-  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
-#ifdef NEED_DUMMY_RETURN
-  return 0;
-#endif
+  if( pd_state != SR_READY ) {
+    pd_state = SR_DSI_ERROR;
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+  }
+  if( CORBA::is_nil(parameters) ) {
+    pd_state = SR_DSI_ERROR;
+    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  }
+
+  pd_params = parameters;
+  pd_state = SR_ERROR;
+
+  // unmarshal the arguments
+  CORBA::ULong num_args = pd_params->count();
+
+  for( CORBA::ULong i = 0; i < num_args; i++){
+    CORBA::NamedValue_ptr arg = pd_params->item(i);
+    if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
+      arg->value()->NP_unmarshalDataOnly(pd_giop_s);
+  }
+
+  // If there is no space left for context info...
+  if( pd_giop_s.RdMessageUnRead() < 4 )
+    pd_giop_s.RequestReceived();
+
+  pd_state = SR_GOT_PARAMS;
 }
 
 
 CORBA::Context_ptr
-ServerRequestImpl::ctx()
+omniServerRequest::ctx()
 {
-  // Returns an empty context if no context information supplied.
-  //  NB. This will change for CORBA 2.2, which specifies that a
-  // nil context is returned if no context is specified in the
-  // IDL.
+  // Returns a nil context if no context information supplied.
 
   if( pd_state != SR_GOT_PARAMS ) {
-    pd_state = SR_ERROR;
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    pd_state = SR_DSI_ERROR;
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
 
-  if( pd_giopS->RdMessageUnRead() >= 4 ) {
+  if( pd_giop_s.RdMessageUnRead() >= 4 ) {
     pd_state = SR_ERROR;
-    pd_context = CORBA::Context::unmarshalContext(*pd_giopS);
-    pd_state = SR_GOT_PARAMS;
-  } else
-    pd_context = new ContextImpl("", CORBA::Context::_nil());
+    pd_context = CORBA::Context::unmarshalContext(pd_giop_s);
+    pd_giop_s.RequestReceived();
+    pd_state = SR_GOT_CTX;
+  }
 
   return pd_context;
 }
 
 
 void
-ServerRequestImpl::params(CORBA::NVList_ptr parameters)
-{
-  if( pd_state != SR_READY ) {
-    pd_state = SR_ERROR;
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
-  }
-  if( CORBA::is_nil(parameters) ) {
-    pd_state = SR_ERROR;
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
-  }
-
-  pd_params = parameters;
-
-  { // unmarshal the arguments
-    CORBA::ULong num_args = pd_params->count();
-
-    for( CORBA::ULong i = 0; i < num_args; i++){
-      CORBA::NamedValue_ptr arg = pd_params->item(i);
-      if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
-	arg->value()->NP_unmarshalDataOnly(*pd_giopS);
-    }
-  }
-
-  pd_giopS->RequestReceived();
-  pd_state = SR_GOT_PARAMS;
-}
-
-
-void
-ServerRequestImpl::result(CORBA::Any* value)
+omniServerRequest::set_result(const CORBA::Any& value)
 {
   if( !(pd_state == SR_GOT_PARAMS || pd_state == SR_GOT_CTX) ) {
-    pd_state = SR_ERROR;
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    pd_state = SR_DSI_ERROR;
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
-  if( !value ) {
-    pd_state = SR_ERROR;
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
-  }
+  if( pd_state == SR_GOT_PARAMS && pd_giop_s.RdMessageUnRead() > 0 )
+    pd_giop_s.RequestReceived();
 
   pd_result = value;
   pd_state = SR_GOT_RESULT;
@@ -138,20 +145,33 @@ ServerRequestImpl::result(CORBA::Any* value)
 
 
 void
-ServerRequestImpl::exception(CORBA::Any* value)
+omniServerRequest::set_exception(const CORBA::Any& value)
 {
-  if( !(pd_state == SR_GOT_PARAMS || pd_state == SR_GOT_CTX) ) {
-    if (isaSystemException(value)) {
-      pd_giopS->RequestReceived(1);
-    }
+  CORBA::TypeCode_var tc = value.type();
+  while( tc->kind() == CORBA::tk_alias )
+    tc = tc->content_type();
+  if( tc->kind() != CORBA::tk_except )
+    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+
+  switch( pd_state ) {
+  case SR_READY:
+    if( isaSystemException(&value) )
+      pd_giop_s.RequestReceived(1);
     else {
-      pd_state = SR_ERROR;
-      throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+      pd_state = SR_DSI_ERROR;
+      OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
     }
-  }
-  if( !value ) {
-    pd_state = SR_ERROR;
-    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    break;
+
+  case SR_GOT_PARAMS:
+  case SR_GOT_CTX:
+  case SR_GOT_RESULT:
+  case SR_EXCEPTION:
+  case SR_ERROR:
+    break;
+
+  case SR_DSI_ERROR:
+    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
   }
 
   pd_exception = value;

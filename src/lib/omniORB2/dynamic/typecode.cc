@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // typecode.cc                Created on: 03/09/98
 //                            Author    : James Weatherall (jnw)
 //
@@ -30,21 +30,39 @@
 
 /* 
  * $Log$
- * Revision 1.37  2000/03/02 16:41:32  djr
- * Update from omni2_8_develop
+ * Revision 1.38  2000/07/04 15:23:13  dpg1
+ * Merge from omni3_develop.
  *
- * Revision 1.33.2.3  2000/02/17 14:42:05  djr
+ * Revision 1.33.6.10  2000/06/27 16:23:25  sll
+ * Merged OpenVMS port.
+ *
+ * Revision 1.33.6.9  2000/03/20 15:09:30  djr
+ * Fixed signed/unsigned mismatch.
+ *
+ * Revision 1.33.6.8  2000/02/21 10:59:13  djr
+ * Another TypeCode_union w aliased discriminator fix.
+ *
+ * Revision 1.33.6.7  2000/02/17 14:43:57  djr
  * Another fix for TypeCode_union when discriminator tc contains an alias.
  *
- * Revision 1.33.2.2  2000/02/15 11:06:17  djr
+ * Revision 1.33.6.6  2000/02/15 13:43:42  djr
  * Fixed bug in create_union_tc() -- problem if discriminator was an alias.
  *
- * Revision 1.33.2.1  1999/10/26 19:38:23  sll
+ * Revision 1.33.6.5  1999/10/29 13:18:12  djr
+ * Changes to ensure mutexes are constructed when accessed.
+ *
+ * Revision 1.33.6.4  1999/10/26 20:18:20  sll
  * DynAny no longer do alias expansion on the typecode. In other words, all
  * aliases in the typecode are preserved.
  *
- * Revision 1.33  1999/08/24 12:37:28  djr
- * TypeCode_struct and TypeCode_except modified to use 'const char*' properly.
+ * Revision 1.33.6.3  1999/10/14 17:31:31  djr
+ * Minor corrections.
+ *
+ * Revision 1.33.6.2  1999/10/14 16:22:01  djr
+ * Implemented logging when system exceptions are thrown.
+ *
+ * Revision 1.33.6.1  1999/09/22 14:26:37  djr
+ * Major rewrite of orbcore to support POA.
  *
  * Revision 1.32  1999/08/20 11:41:12  djr
  * Yet another TypeCode alias-expand bug.
@@ -163,9 +181,14 @@
 //
  */
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <typecode.h>
 #include <tcParser.h>
-#include <string.h>
 
 
 // CORBA::TypeCode - core class function implementation
@@ -180,6 +203,15 @@
 /////////////////////////// CORBA::TypeCode //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+#if !defined(OMNIORB_NO_EXCEPTION_LOGGING) && defined(__DECCXX) && __DECCXX_VER > 60000000
+//  Compaq C++ 6.x needs dummy return if function is called to throw an
+//  exception.
+#ifndef NEED_DUMMY_RETURN
+#define NEED_DUMMY_RETURN
+#endif
+#endif
+
+
 CORBA::TypeCode::~TypeCode() {
   pd_magic = 0;
 }
@@ -193,7 +225,7 @@ CORBA::TypeCode::kind() const
 CORBA::Boolean
 CORBA::TypeCode::equal(CORBA::TypeCode_ptr TCp) const
 {
-  if (!PR_is_valid(TCp)) throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if (!PR_is_valid(TCp)) OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   return ToConstTcBase_Checked(this)
     ->NP_equal(ToTcBase_Checked(TCp),0,0);
 }
@@ -201,7 +233,7 @@ CORBA::TypeCode::equal(CORBA::TypeCode_ptr TCp) const
 CORBA::Boolean
 CORBA::TypeCode::equivalent(CORBA::TypeCode_ptr TCp) const
 {
-  if (!PR_is_valid(TCp)) throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if (!PR_is_valid(TCp)) OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   return ToConstTcBase_Checked(this)
     ->NP_equal(ToTcBase_Checked(TCp),1,0);
 }
@@ -294,24 +326,22 @@ CORBA::TypeCode_ptr
 CORBA::TypeCode::_duplicate(CORBA::TypeCode_ptr t)
 {
   if (!PR_is_valid(t))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if (CORBA::is_nil(t))  return t;
   return TypeCode_collector::duplicateRef(ToTcBase(t));
 }
 
-// Initialised in check_static_data_is_initialised().
-static omni_mutex* _nil_TypeCode_lock = 0;
-static CORBA::TypeCode_ptr _nil_TypeCode_ptr = 0;
 
 CORBA::TypeCode_ptr
 CORBA::TypeCode::_nil()
 {
-  omni_mutex_lock l(*_nil_TypeCode_lock);
-
-  if( _nil_TypeCode_ptr == 0 )
-    _nil_TypeCode_ptr = new TypeCode;
-
-  return _nil_TypeCode_ptr;
+  static TypeCode* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new TypeCode;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 // omniORB2 marshalling routines
@@ -359,7 +389,7 @@ CORBA::TypeCode::unmarshalTypeCode(MemBufferedStream &s)
 
 // omniORB internal functions
 size_t
-CORBA::TypeCode::NP_alignedSize(size_t initialoffset) const
+CORBA::TypeCode::_NP_alignedSize(size_t initialoffset) const
 {
   TypeCode_offsetTable otbl;
 
@@ -390,7 +420,7 @@ CORBA::TypeCode::NP_struct_tc(const char* id, const char* name,
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
     if ( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type))
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
   return new TypeCode_struct(id, name, members);
 }
@@ -404,7 +434,7 @@ CORBA::TypeCode::NP_union_tc(const char* id, const char* name,
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
     if( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type) )
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
   return new TypeCode_union(id, name, ToTcBase_Checked(discriminator_type),
 			    members);
@@ -434,7 +464,7 @@ CORBA::TypeCode::NP_exception_tc(const char* id, const char* name,
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
     if ( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type))
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
   return new TypeCode_except(id, name, members);
 }
@@ -763,41 +793,37 @@ size_t
 TypeCode_base::NP_alignedSimpleParamSize(size_t initialoffset,
 					 TypeCode_offsetTable* otbl) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
-#ifdef NEED_DUMMY_RETURN
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
   return 0;
-#endif
 }
 
 size_t
 TypeCode_base::NP_alignedComplexParamSize(size_t initialoffset,
 					  TypeCode_offsetTable* otbl) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
-#ifdef NEED_DUMMY_RETURN
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
   return 0;
-#endif
 }
 
 void
 TypeCode_base::NP_marshalSimpleParams(NetBufferedStream &,
 				      TypeCode_offsetTable* ) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 }
 
 void
 TypeCode_base::NP_marshalSimpleParams(MemBufferedStream &,
 				      TypeCode_offsetTable* ) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 }
 
 void
 TypeCode_base::NP_marshalComplexParams(MemBufferedStream &,
 				       TypeCode_offsetTable* ) const
 {
-  throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 }
 
 const TypeCode_base*
@@ -1213,8 +1239,8 @@ TypeCode_objref::NP_alignedComplexParamSize(size_t initialoffset,
   // Space for repositoryId and name
   size_t _msgsize = initialoffset;
 
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
+  _msgsize = pd_repoId._NP_alignedSize(_msgsize);
+  _msgsize = pd_name._NP_alignedSize(_msgsize);
 
   return _msgsize;
 }
@@ -1360,8 +1386,8 @@ TypeCode_alias::NP_alignedComplexParamSize(size_t initialoffset,
   // Space for repositoryId and name
   size_t _msgsize = initialoffset;
 
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
+  _msgsize = pd_repoId._NP_alignedSize(_msgsize);
+  _msgsize = pd_name._NP_alignedSize(_msgsize);
   _msgsize =
     TypeCode_marshaller::alignedSize(ToTcBase(pd_content), _msgsize, otbl);
 
@@ -1519,7 +1545,7 @@ TypeCode_sequence::NP_marshalComplexParams(MemBufferedStream &s,
 					   TypeCode_offsetTable* otbl) const
 {
   if (!pd_complete)
-    throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
   TypeCode_marshaller::marshal(ToTcBase(pd_content), s, otbl);
   pd_length >>= s;
 }
@@ -2021,15 +2047,15 @@ TypeCode_struct::NP_alignedComplexParamSize(size_t initialoffset,
   // names & types
   size_t _msgsize = initialoffset;
 
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
+  _msgsize = pd_repoId._NP_alignedSize(_msgsize);
+  _msgsize = pd_name._NP_alignedSize(_msgsize);
   _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
 
   for( CORBA::ULong i = 0; i < pd_nmembers; i++ )
     {
       CORBA::String_member name;
       name = pd_members[i].name;
-      _msgsize = name.NP_alignedSize(_msgsize);
+      _msgsize = name._NP_alignedSize(_msgsize);
       name._ptr = 0;
       _msgsize = TypeCode_marshaller::alignedSize(ToTcBase(pd_members[i].type),
 						  _msgsize, otbl);
@@ -2411,15 +2437,15 @@ TypeCode_except::NP_alignedComplexParamSize(size_t initialoffset,
   // their names & types.
   size_t _msgsize = initialoffset;
 
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
+  _msgsize = pd_repoId._NP_alignedSize(_msgsize);
+  _msgsize = pd_name._NP_alignedSize(_msgsize);
   _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
 
   for( CORBA::ULong i = 0; i < pd_nmembers; i++ )
     {
       CORBA::String_member name;
       name = pd_members[i].name;
-      _msgsize = name.NP_alignedSize(_msgsize);
+      _msgsize = name._NP_alignedSize(_msgsize);
       name._ptr = 0;
       _msgsize = TypeCode_marshaller::alignedSize(ToTcBase(pd_members[i].type),
 						  _msgsize, otbl);
@@ -2742,9 +2768,9 @@ TypeCode_enum::NP_alignedComplexParamSize(size_t initialoffset,
 {
   size_t _msgsize = initialoffset;
 
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
-  _msgsize = pd_members.NP_alignedSize(_msgsize);
+  _msgsize = pd_repoId._NP_alignedSize(_msgsize);
+  _msgsize = pd_name._NP_alignedSize(_msgsize);
+  _msgsize = pd_members._NP_alignedSize(_msgsize);
 
   return _msgsize;
 }
@@ -2886,7 +2912,7 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
   const CORBA::ULong memberCount = members.length();
 
   if (memberCount == 0)
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   pd_repoId = CORBA::string_dup(repositoryId);
   pd_name = CORBA::string_dup(name);
@@ -2908,11 +2934,11 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
     if( CORBA::_tc_octet->equivalent(lbl_tc) )
       {
 	if( pd_default >= 0 )
-	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 	CORBA::Octet v;
 	members[i].label >>= CORBA::Any::to_octet(v);
 	if( v != CORBA::Octet(0) )
-	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 	pd_default = i;
 	pd_members[i].alabel = Discriminator(0);
       }
@@ -3077,8 +3103,8 @@ TypeCode_union::NP_alignedComplexParamSize(size_t initialoffset,
 {
   size_t _msgsize = initialoffset;
 
-  _msgsize = pd_repoId.NP_alignedSize(_msgsize);
-  _msgsize = pd_name.NP_alignedSize(_msgsize);
+  _msgsize = pd_repoId._NP_alignedSize(_msgsize);
+  _msgsize = pd_name._NP_alignedSize(_msgsize);
   _msgsize = TypeCode_marshaller::alignedSize(ToTcBase(pd_discrim_tc),
 					      _msgsize, otbl);
   _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
@@ -3089,7 +3115,7 @@ TypeCode_union::NP_alignedComplexParamSize(size_t initialoffset,
     {
       _msgsize =
 	TypeCode_union_helper::labelAlignedSize(_msgsize, pd_discrim_tc);
-      _msgsize = pd_members[i].aname.NP_alignedSize(_msgsize);
+      _msgsize = pd_members[i].aname._NP_alignedSize(_msgsize);
       _msgsize =
 	TypeCode_marshaller::alignedSize(ToTcBase(pd_members[i].atype),
 					 _msgsize, otbl);
@@ -3204,7 +3230,7 @@ TypeCode_union::NP_member_label(CORBA::ULong i) const
   CORBA::Any* a = new CORBA::Any;
   if( !a )  _CORBA_new_operator_return_null();
 
-  if (i != pd_default) {
+  if (CORBA::Long(i) != pd_default) {
     TypeCode_union_helper::insertLabel(*a, pd_members[i].alabel, pd_discrim_tc);
   } else {
     (*a) <<= CORBA::Any::from_octet((CORBA::Octet)0);
@@ -3783,7 +3809,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
 	// Now look it up in the table
 	TypeCode_base* tc = otbl->lookupOffset(offset+currpos);
 	if (tc == 0)
-	  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
 
 	return TypeCode_collector::duplicateRef(tc);
       }
@@ -3833,7 +3859,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_Principal));
 
     default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     };
     // Never reach here
 
@@ -3846,7 +3872,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
       return TypeCode_string::NP_unmarshalSimpleParams(s, otbl);
 
     default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     };
     // Never reach here
 
@@ -3869,7 +3895,7 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
       // and read the data in.
       //?? Can we do this without lots of copying? Is it worth it?
       MemBufferedStream mbs(size);
-      if( s.overrun(size) )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      if( s.overrun(size) )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
       mbs.copy_from(s, size);
 
       // Get the byte order
@@ -3906,13 +3932,13 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
 	return TypeCode_union::NP_unmarshalComplexParams(mbs, &tbl);
 
       default:
-	throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
       };
       // Never reach here
     }
 
   default:
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     // Never reach here
   };
 
@@ -4088,7 +4114,7 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
 	// Now look it up in the table
 	TypeCode_base* tc = otbl->lookupOffset(offset+currpos);
 	if (tc == 0)
-	  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
 
 	return TypeCode_collector::duplicateRef(ToTcBase(tc));
       }
@@ -4138,7 +4164,7 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_Principal));
 
     default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     };
     // Never reach here
 
@@ -4151,7 +4177,7 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
       return TypeCode_string::NP_unmarshalSimpleParams(s, otbl);
 
     default:
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     };
     // Never reach here
 
@@ -4210,13 +4236,13 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
 	return TypeCode_union::NP_unmarshalComplexParams(mbs, &tbl);
 
       default:
-	throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
       };
       // Never reach here
     }
 
   default:
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
     // Never reach here
   };
 
@@ -4327,7 +4353,7 @@ TypeCode_marshaller::paramListType(CORBA::ULong kind)
   if( kind < sizeof(plt) / sizeof(TypeCode_paramListType) )
     return plt[kind];
 
-  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
 #ifdef NEED_DUMMY_RETURN
   return plt_None;
 #endif
@@ -4718,42 +4744,42 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
       {
 	// check that <label> is of the correct type
 	if( !dtc->equivalent(lbl_tc) )
-	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 	break;
       }
     default:
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     }
   }
 
   switch( aetc->kind() ) {
   case CORBA::tk_char:
     if (lbl_kind != CORBA::tk_char)
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_boolean:
     if (lbl_kind != CORBA::tk_boolean)
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_short:
     if ((sign && ((CORBA::Long) lbl_value < -32768) ) || (lbl_value > 32767) )
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_ushort:
     if ((sign && ((CORBA::Long) lbl_value < 0) ) || (lbl_value > 65536) )
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_long:
     // XXX if ever TypeCode_union::Discriminator is bigger than
     //     CORBA::Long, we should test for the negative limit as well.
    if (!sign && (lbl_value > 2147483647) )
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_ulong:
     // XXX if ever TypeCode_union::Discriminator is bigger than
     //     CORBA::ULong, we should test for the positive limit as well.
     if (sign && ((CORBA::Long) lbl_value < 0))
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
     break;
   case CORBA::tk_enum:
     {
@@ -4767,7 +4793,7 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
   // case CORBA::tk_wchar:
   case CORBA::tk_octet:
   default:
-    throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
   }
 
   return lbl_value;
@@ -5086,7 +5112,7 @@ CORBA::TypeCode_member&
 CORBA::TypeCode_member::operator=(const CORBA::TypeCode_var& p)
 {
   CORBA::release(_ptr);
-  _ptr = CORBA::TypeCode::_duplicate(p.pd_TC);
+  _ptr = CORBA::TypeCode::_duplicate(p.pd_ref);
   return *this;
 }
 
@@ -5119,9 +5145,9 @@ CORBA::TypeCode_member::operator<<=(MemBufferedStream& s)
 }
 
 size_t
-CORBA::TypeCode_member::NP_alignedSize(size_t initialoffset) const
+CORBA::TypeCode_member::_NP_alignedSize(size_t initialoffset) const
 {
-  return _ptr->NP_alignedSize(initialoffset);
+  return _ptr->_NP_alignedSize(initialoffset);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -5137,7 +5163,7 @@ CORBA::ORB::create_struct_tc(const char* id, const char* name,
 
   for( i = 0; i < memberCount; i++ ) {
     if (!CORBA::TypeCode::PR_is_valid(members[i].type))
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   }
 
   TypeCode_struct::Member* new_members =
@@ -5166,7 +5192,7 @@ CORBA::ORB::create_union_tc(const char* id, const char* name,
   for( i = 0; i < memberCount; i++ )
     if( !CORBA::TypeCode::PR_is_valid(members[i].type) ||
 	CORBA::is_nil(members[i].type) )
-      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   return new TypeCode_union(id, name, ToTcBase_Checked(discriminator_type),
 			    members);
@@ -5222,7 +5248,7 @@ CORBA::ORB::create_sequence_tc(CORBA::ULong bound,
 			       CORBA::TypeCode_ptr element_type)
 {
   if (!CORBA::TypeCode::PR_is_valid(element_type))
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   return CORBA::TypeCode::NP_sequence_tc(bound, element_type);
 }
@@ -5232,7 +5258,7 @@ CORBA::ORB::create_array_tc(CORBA::ULong length,
 			    CORBA::TypeCode_ptr element_type)
 {
   if (!CORBA::TypeCode::PR_is_valid(element_type))
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   return CORBA::TypeCode::NP_array_tc(length, element_type);
 }
@@ -5307,7 +5333,6 @@ static void check_static_data_is_initialised()
   is_initialised = 1;
 
   // Mutexes
-  _nil_TypeCode_lock = new omni_mutex();
   aliasExpandedTc_lock = new omni_mutex();
   pd_cached_paramlist_lock = new omni_mutex();
   pd_refcount_lock = new omni_mutex();

@@ -1,53 +1,82 @@
-This file provides some pointers to port omniORB2 to a new platform.
+This file provides some pointers to port omniORB3 to a new platform.
 
-It should be straightforward to port omniORB2 to any platform which support
-POSIX style threads, BSD style sockets and has a decent C++ compiler which
-supports exceptions and templates. The description below assumes the port
-is to a unix platform but the information provided is valid for any
-platforms.
+It should be straightforward to port omniORB3 to any platform which
+support POSIX style threads, BSD style sockets and has a decent C++
+compiler which supports exceptions and templates. The description
+below assumes the port is to a unix platform but the information
+provided is valid for any platforms.
 
 To start a port, you must create a platform configuration file in
-./mk/platforms for the new platform. It is better to copy an existing one
-and modify to suit the new platform. Next, edit the file ./mk/config.mk to set the platform variable to the new platform. Suppose you have created a new file called x_y_z.mk. You should put a line like this in ./mk/config.mk:
+./mk/platforms for the new platform. It is better to copy an existing
+one and modify to suit the new platform. Next, edit the file
+./mk/config.mk to set the platform variable to the new platform.
+Suppose you have created a new file called x_y_z.mk. You should put a
+line like this in ./mk/config.mk:
 
 platform = x_y_z
 
-The makefiles in the distribution only work with GNUmake. Make sure that
-you have the program installed.
+The makefiles in the distribution only work with GNUmake. Make sure
+that you have the program installed.
 
-The libraries and programs in omniORB2 are configured by a number of
-CPP macros specified as compiler flags and in several header files. The
-details are as follows:
+The libraries and programs in omniORB3 are configured by a number of
+CPP macros specified as compiler flags and in several header
+files. The details are as follows:
 
 1. Platform specific macros
 
-   Each platform must be provided with three macros to identify the OS,
-   the CPU and the OS version. For instance, the compiler flags for the
-   supported platforms are:
+   Each platform must be provided with three macros to identify the
+   OS, the CPU and the OS version. For instance, the compiler flags
+   for the supported platforms are:
 
    Solaris 2.5/ Sparc      | -D__sunos__ -D__sparc__ -D__OSVERSION__=5 -DSVR4
    Digital Unix 3.2/ Alpha | -D__osf1__ -D__alpha__ -D__OSVERSION__=3
    Linux 2.0/ x86          | -D__linux__ -D__x86__ -D__OSVERSION__=2
 
-2. Porting omnithread library
 
-   The file ./include/omnithread.h should be edited to include #if conditionals
-   that can uniquely identify the new platform and to include the appropriate
-   implementation-specific header file.
+2. Porting omniidl
 
-   There are different POSIX threads implementations that conform to different
-   draft versions. The following compiler flags should be used to identify
-   the exact versions:
+   omniidl requires Python 1.5.2, which is available from
+
+     http://www.python.org/download/
+
+   You can also get the source tarball from
+
+     ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.tgz
+
+   On Unix platforms, omniidl is a shared library which is dynamically
+   loaded by Python. It should be relatively easy to come up with the
+   make rules to build the shared library, based upon the existing
+   platforms.
+
+   If you have difficulties building a shared library omniidl, you can
+   build an executable which is statically linked to the Python
+   interpreter. See the make rules for Windows to see how to do that.
+
+   You must set the make variable PYTHON to the full path of your
+   Python interpreter.
+
+
+3. Porting omnithread library
+
+   The file ./include/omnithread.h should be edited to include #if
+   conditionals that can uniquely identify the new platform and to
+   include the appropriate implementation-specific header file.
+
+   There are different POSIX threads implementations that conform to
+   different draft versions. The following compiler flags should be
+   used to identify the exact versions:
 
    o -DPthreadDraftVersion=<x>  (e.g. x = 10 for Solaris 2.5)
    o -DPthreadSupportThreadPriority
    o -DNoNanoSleep
 
-3. Porting omniORB2 library
 
-   The file ./include/omniORB2/CORBA_sysdep.h contains #if conditionals that
-   define the size of primitive data types, CPU endian and other platform
-   specific information. You should add to this file the information about
-   the new platform.
+4. Porting omniORB3 library
+
+   The file ./include/omniORB3/CORBA_sysdep.h contains #if
+   conditionals that define the size of primitive data types, CPU
+   endian and other platform specific information. You should add to
+   this file the information about the new platform.
+
 
 Good Luck.

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // relStream.h                Created on: 30/9/97
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,8 +29,16 @@
 
 /*
  $Log$
- Revision 1.3  1999/09/22 19:21:47  sll
- omniORB 2.8.0 public release.
+ Revision 1.4  2000/07/04 15:22:51  dpg1
+ Merge from omni3_develop.
+
+ Revision 1.2.8.3  2000/01/28 15:57:09  djr
+ Removed superflouous ref counting in Strand_iterator.
+ Removed flags to indicate that Ropes and Strands are heap allocated.
+ Improved allocation of client requests to strands.
+
+ Revision 1.2.8.2  1999/09/24 15:01:36  djr
+ Added module initialisers, and sll's new scavenger implementation.
 
  Revision 1.2.4.1  1999/09/21 20:37:16  sll
  -Simplified the scavenger code and the mechanism in which connections
@@ -66,7 +74,7 @@ class reliableStreamStrand : public Strand {
 
 public:
 
-  reliableStreamStrand(size_t buffer_size, Rope* r, CORBA::Boolean h);
+  reliableStreamStrand(size_t buffer_size, Rope* r);
   virtual ~reliableStreamStrand();
 
   size_t MaxMTU() const;

@@ -1,0 +1,602 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.05">
+<TITLE>
+ The omniORB API
+</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORB005.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB007.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<HR>
+
+<H1>Chapter&nbsp;6&nbsp;&nbsp; The omniORB API</H1>
+<A NAME="omniORBapi"></A>In this chapter, we introduce the omniORB API. The purpose of this API
+is to provide access points to omniORB specific functionality that is
+not covered by the CORBA specification. Obviously, if you use this
+API in your application, that part of your code is not going to be
+portable to run unchanged on other vendors' ORBs. To make it easier to
+identify omniORB dependent code, this API is defined under the name
+space `<TT>omniORB</TT>'<A NAME="text16" HREF="#note16"><SUP><FONT SIZE=2>1</FONT></SUP></A>.<BR>
+<BR>
+<A NAME="toc26"></A>
+<H2>6.1&nbsp;&nbsp; ORB initialisation options</H2>
+<A NAME="omniorbapioptions"></A><TT>CORBA::ORB_init()</TT> accepts the following standard command-line
+arguments:<BR>
+<BR>
+<TABLE CELLSPACING=2 CELLPADDING=0>
+<TR><TD ALIGN=left NOWRAP></TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBid omniORB3</TT></TD>
+<TD ALIGN=left NOWRAP>The identifier must be `omniORB3'.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBInitRef </TT>&lt;<I>ObjectId</I>&gt;=&lt;<I>ObjectURI</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB004.html#sec:insargs">4.2</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBDefaultInitRef </TT>&lt;<I>Default URI</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB004.html#sec:insargs">4.2</A>.
+</TD>
+</TR></TABLE><BR>
+and the following omniORB-specific arguments:<BR>
+<BR>
+<TABLE CELLSPACING=2 CELLPADDING=0>
+<TR><TD ALIGN=left NOWRAP></TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBtraceLevel </TT>&lt;<I>level</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#rttrace">6.3</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBtraceInvocations</TT></TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#rttrace">6.3</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBstrictIIOP</TT></TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec:strictIIOP">6.9</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBtcAliasExpand </TT>&lt;<I>0 or 1</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB009.html#anyOmniORB">9.2</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBgiopMaxMsgSize </TT>&lt;<I>size in bytes</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#giopmsg">6.5</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBobjectTableSize </TT>&lt;<I>number of entries</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec:objtable">6.6</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBserverName </TT>&lt;<I>string</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec_servername">6.4</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBno_bootstrap_agent</TT></TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#bootstrap">6.8</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBdiiThrowsSysExceptions </TT>&lt;<I>0 or 1</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB011.html#dii_invoke">11.4</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBabortOnInternalError </TT>&lt;<I>0 or 1</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec_fatal">6.10</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBverifyObjectExistsAndType </TT>&lt;<I>0 or 1</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec_lcd">6.9</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBinConScanPeriod </TT>&lt;<I>0--max integer</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB008.html#sec_shut">8.3</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBoutConScanPeriod </TT>&lt;<I>0--max integer</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB008.html#sec_shut">8.3</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBclientCallTimeOutPeriod </TT>&lt;<I>0--max integer</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB008.html#sec_shut">8.3</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBserverCallTimeOutPeriod </TT>&lt;<I>0--max integer</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB008.html#sec_shut">8.3</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBscanGranularity </TT>&lt;<I>0--max integer</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB008.html#sec_shut">8.3</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBlcdMode</TT></TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec_lcd">6.9</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBpoa_iiop_port </TT>&lt;<I>port no.</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec:nameport">6.2</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBpoa_iiop_name_port </TT>&lt;<I>hostname</I>[<I>:port no.]</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec:nameport">6.2</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBhelp</TT></TD>
+<TD ALIGN=left NOWRAP>Lists all ORB command line options.</TD>
+</TR></TABLE><BR>
+and these two obsolete omniORB-specific arguments:<BR>
+<BR>
+<TABLE CELLSPACING=2 CELLPADDING=0>
+<TR><TD ALIGN=left NOWRAP></TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBInitialHost </TT>&lt;<I>string</I>&gt;</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#bootstrap">6.8</A>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-ORBInitialPort </TT>&lt;<I>1--65535</I>&gt;]</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#bootstrap">6.8</A>.</TD>
+</TR></TABLE><BR>
+As defined in the CORBA specification, any command-line
+arguments understood by the ORB will be removed from <TT>argv</TT> when
+the initialisation functions return. Therefore, an application is not
+required to handle any command-line arguments it does not understand.<BR>
+<BR>
+<A NAME="toc27"></A>
+<H2>6.2&nbsp;&nbsp; Hostname and port</H2>
+<A NAME="sec:nameport"></A>Normally, omniORB lets the operating system pick which port number it
+should use to listen for IIOP calls. Alternatively, you can specify a
+particular port using <TT>-ORBpoa_iiop_port</TT>. If you specify
+<TT>-ORBpoa_iiop_port</TT> more than once, omniORB will listen on
+all the ports you specify.<BR>
+<BR>
+By default, the ORB can work out the IP address of the host machine.
+This address is recorded in the object references of the local
+objects. However, when the host has multiple network interfaces and
+multiple IP addresses, it may be desirable for the application to
+control what address the ORB should use. This can be done by defining
+the environment variable <TT>OMNIORB_USEHOSTNAME</TT> to contain the
+preferred host name or IP address in dot-numeric form. Alternatively,
+the same can be achieved using the <TT>-ORBpoa_iiop_name_port</TT>
+option. You can optionally specify a port number too. Again, you can
+specify more than one host name by using
+<TT>-ORBpoa_iiop_name_port</TT> more than once.<BR>
+<BR>
+<A NAME="toc28"></A>
+<H2>6.3&nbsp;&nbsp; Run-time Tracing and Diagnostic Messages</H2>
+<A NAME="rttrace"></A>omniORB can output tracing and diagnostic messages to the standard
+error stream. To avoid conflicts between old-style <TT>iostream.h</TT>
+and new-style <TT>iostream</TT>, omniORB uses neither. Some or all of
+these messages can be turned on/off by setting the variable
+<TT>omniORB::traceLevel</TT>. The type definition of the variable is:<BR>
+<BR>
+<PRE>
+CORBA::ULong omniORB::traceLevel = 1; // The default value is 1
+</PRE>At the moment, the following trace levels are defined:<BR>
+<BR>
+<TABLE CELLSPACING=2 CELLPADDING=0>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>&nbsp;</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 0</TD>
+<TD VALIGN=top ALIGN=left>turn off all tracing and informational messages</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 1</TD>
+<TD VALIGN=top ALIGN=left>informational messages only</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 2</TD>
+<TD VALIGN=top ALIGN=left>the above plus configuration information</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 5</TD>
+<TD VALIGN=top ALIGN=left>the above plus notifications when server threads are
+ created or communication endpoints are shutdown</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 10--20</TD>
+<TD VALIGN=top ALIGN=left>the above plus execution and exception traces</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 25</TD>
+<TD VALIGN=top ALIGN=left>the above plus hex dumps of all data sent and received
+ by the ORB via its network connections.</TD>
+</TR></TABLE><BR>
+The variable can be changed by assignment inside your
+applications. It can also be changed by specifying the command-line
+option: <TT>-ORBtraceLevel </TT>&lt;<I>level</I>&gt;. For instance:<BR>
+<BR>
+<PRE>
+$ eg2_impl -ORBtraceLevel 5
+</PRE>New in omniORB 3, you can also trace operation invocations by setting
+<TT>omniORB::traceInvocations</TT> to true, or with the
+<TT>-ORBtraceInvocations</TT> command line argument.<BR>
+<BR>
+<A NAME="toc29"></A>
+<H2>6.4&nbsp;&nbsp; Server Name</H2>
+<A NAME="sec_servername"></A>Applications can optionally specify a name to identify the server
+process. At the moment, this name is only used by the host-based
+access control module. See section&nbsp;<A HREF="omniORB008.html#sec_accept">8.5</A> for details. The
+name is stored in the variable <TT>omniORB::serverName</TT>.<BR>
+<BR>
+<PRE>
+CORBA::String_var omniORB::serverName;
+</PRE>The variable can be changed by assignment inside your
+applications. It can also be changed by specifying the command-line
+option: <TT>-ORBserverName </TT>&lt;<I>string</I>&gt;.<BR>
+<BR>
+<A NAME="toc30"></A>
+<H2>6.5&nbsp;&nbsp; GIOP Message Size</H2>
+<A NAME="giopmsg"></A>omniORB sets a limit on the GIOP message size that can be sent or
+received. The value can be obtained by calling:<BR>
+<BR>
+<PRE>
+size_t omniORB::MaxMessageSize();
+</PRE>and can be changed by:<BR>
+<BR>
+<PRE>
+void omniORB::MaxMessageSize(size_t newvalue);
+</PRE>or by the command-line option <TT>-ORBgiopMaxMsgSize</TT>.
+The exact value is somewhat arbitrary. The reason such a limit exists
+is to provide some way to protect the server side from resource
+exhaustion. Think about the case when the server receives a rogue
+GIOP(IIOP) request message that contains a sequence length field set
+to 2<SUP><FONT SIZE=2>31</FONT></SUP>. With a reasonable message size limit, the server can
+reject this rogue message straight away.<BR>
+<BR>
+<A NAME="toc31"></A>
+<H2>6.6&nbsp;&nbsp; Object table size</H2>
+<A NAME="sec:objtable"></A>omniORB uses a hash table to store the mapping from object keys to
+servant objects. Normally, it dynamically re-sizes the hash table when
+it becomes too full or too empty. This is the most efficient trade-off
+between performance and memory usage. However, since all POA
+operations which add or remove objects from the table can (very
+occasionally) cause the object table to resize, the time spent in POA
+operations is much less predictable than if the table size was fixed.<BR>
+<BR>
+To prevent omniORB from resizing its object table, set the variable
+<TT>omniORB::objectTableSize</TT> to the number of hash table
+entries you require <EM>before</EM> calling <TT>CORBA::ORB_init()</TT>.
+Alternatively, use the <TT>-ORBobjectTableSize</TT> argument. Note
+that omniORB uses an open hash table so you can have any number of
+objects active, no matter what size table you specify. If you have
+many more active objects than hash table entries, object look-up
+performance will become linear with the number of objects.<BR>
+<BR>
+<A NAME="toc32"></A>
+<H2>6.7&nbsp;&nbsp; POA request holding timeout</H2>POAs can be put into the <I>holding</I> state, which means that
+incoming requests are queued until the POA is set to a different
+state. Normally, queued requests are held for ever (or until the
+client times out as described in section&nbsp;<A HREF="omniORB008.html#sec_shut">8.3</A>). If you set
+<TT>omniORB::poaHoldRequestTimeout</TT> to a non-zero time in seconds,
+held requests will be cancelled after that time. When requests are
+cancelled in this way, the caller is sent a <TT>TRANSIENT</TT>
+exception.<BR>
+<BR>
+<A NAME="toc33"></A>
+<H2>6.8&nbsp;&nbsp; Obsolete Initial Object Reference Bootstrapping</H2>
+<A NAME="bootstrap"></A>Starting from 2.6.0, but superseded by the Interoperable Naming
+Service in omniORB 3, a mechanism is available for the ORB runtime to
+obtain the initial object references to CORBA services. The bootstrap
+service is a special object with the object key `INIT' and the
+following interface<A NAME="text17" HREF="#note17"><SUP><FONT SIZE=2>2</FONT></SUP></A>:<BR>
+<BR>
+<PRE>
+  // IDL
+  module CORBA {
+    interface InitialReferences {
+      Object get(in ORB::ObjectId id);
+      // returns the initial object reference of the service
+      // identified by &lt;id&gt;. For example the id for the
+      // Naming service is "NameService".
+
+      ORB::ObjectIdList list();
+      // returns the list of service ids that this agent knows
+   };
+ };
+</PRE>By default, all omniORB servers contain an instance of this object and
+are able to respond to remote invocations. To prevent the ORB from
+instantiating this object, the command-line option
+<TT>-ORBno_bootstrap_agent</TT> should be specified.<BR>
+<BR>
+In particular, the Naming Service omniNames is able to respond to a
+query through this interface and return the object reference of its
+root context. In effect, the bootstrap agent provides a level of
+indirection. All omniORB clients still have to be supplied with the
+address of the bootstrap agent. However, the information is much
+easier to specify than a stringified IOR! Another advantage of this
+approach is that it is completely compatible with JavaIDL. This makes
+it possible for programs written for JavaIDL to share a Naming
+Service with omniORB.<BR>
+<BR>
+The address of the bootstrap agent is given by the
+<TT>ORBInitialHost</TT> and <TT>ORBInitialPort</TT> parameter in the
+omniORB configuration file (section&nbsp;<A HREF="omniORB001.html#setup">1.2</A>). The parameters can
+also be specified as command-line options
+(section&nbsp;<A HREF="#omniorbapioptions">6.1</A>). The parameter
+<TT>ORBInitialPort</TT> is optional. If it is not specified, port
+number 900 will be used.<BR>
+<BR>
+During initialisation, the ORB reads the parameters in the omniORB
+configuration file. If the parameter <TT>NAMESERVICE</TT> is
+specified, the stringified IOR is used as the object reference of the
+root naming context. If the parameter is absent and the parameter
+<TT>ORBInitialHost</TT> is present, the ORB contacts the bootstrap
+agent at the address specified to obtain the root naming context when
+the application calls <TT>resolve_initial_references()</TT>. If neither is
+present, <TT>resolve_initial_references()</TT> returns a nil object
+reference. Finally, the command line argument
+<TT>-ORBInitialHost</TT> overrides any parameters in the
+configuration file. The ORB always contacts the bootstrap agent at the
+address specified to obtain the root naming context.<BR>
+<BR>
+Now we are ready to describe a simple way to set up omniNames.<BR>
+<BR>
+<OL type=1>
+<LI>
+ Start omniNames for the first time on a machine (e.g. wobble):<BR>
+<BR>
+<TT>$ omniNames -start 1234</TT><BR>
+<BR>
+
+<LI> Add to omniORB.cfg:<BR>
+<BR>
+<TT>ORBInitialHost wobble</TT><BR>
+<BR>
+<TT>ORBInitialPort 1234</TT><BR>
+<BR>
+
+<LI> All omniORB applications will now be able to contact omniNames.<BR>
+<BR>
+Alternatively, the command line options can be used, for example:<BR>
+<BR>
+<TT>$ eg3_impl -ORBInitialHost wobble -ORBInitialPort 1234 &amp;</TT><BR>
+<BR>
+<TT>$ eg3_clt -ORBInitialHost wobble -ORBInitialPort 1234</TT></OL><A NAME="toc34"></A>
+<H2>6.9&nbsp;&nbsp; GIOP Lowest Common Denominator Mode</H2>
+<A NAME="sec_lcd"></A>
+<A NAME="sec:strictIIOP"></A>Sometimes, to cope with bugs in another ORB, it is necessary to
+disable various GIOP and IIOP features in order to achieve
+interoperability. If the command line option <TT>-ORBlcdMode</TT> is
+present or the function <TT>omniORB::enableLcdMode()</TT> is called, the ORB
+enters the so-called `lowest common denominator mode'. It bends over
+backwards to cope with bugs in the ORB at the other end. This is
+purely a transitional measure. The long term solution is to report the
+bugs to the other vendors and ask them to fix them expediently.<BR>
+<BR>
+In some (sloppy) IIOP implementations, the message size value in the
+IIOP header can be larger than the actual body size, i.e. there is
+garbage at the end. As the spec does not say the message size must
+match the body size exactly, this is not a clear violation of the
+spec. omniORB's default policy is to expect incoming messages to be
+formatted properly. Any messages that have garbage at the end will be
+rejected.<BR>
+<BR>
+<TT>-ORBlcdMode</TT> and <TT>omniORB::enableLcdMode()</TT> set omniORB to
+silently skip the unread part of such invalid messages. Alternatively,
+you can just change this policy with the <TT>-ORBstrictIIOP 0</TT>
+command line, or by setting <TT>omniORB::strictIIOP</TT> to zero.
+The problem with doing this is that the header message size may
+actually be garbage, caused by a bug in the sender's code. The
+receiving thread may block forever as it tries to read more data from
+the connection. In this case the sender won't send any more as it
+thinks it has marshalled in all the data.<BR>
+<BR>
+By default, omniORB uses the GIOP LOCATE_REQUEST message to verify
+the existence of an object prior to the first invocation. If another
+vendor's ORB is known not to be able to handle this GIOP message, set
+the variable <TT>omniORB::verifyObjectExistsAndType</TT> to 0 to
+disable this feature, and hence achieve interoperability. The command
+line option <TT>-ORBverifyObjectExistsAndType</TT> has the same
+effect.<BR>
+<BR>
+<A NAME="toc35"></A>
+<H2>6.10&nbsp;&nbsp; Trapping omniORB Internal Errors</H2>
+<A NAME="sec_fatal"></A><PRE>
+class fatalException {
+public:
+    const char *file() const;
+    int line() const;
+    const char *errmsg() const;
+};
+</PRE>When omniORB detects an internal problem that is most likely to be
+caused by a bug in the runtime, it raises the exception
+<TT>omniORB::fatalException</TT>. When this exception is raised, it is
+not sensible to proceed with any operation that involves the ORB's
+runtime. It is best to exit the program immediately. The exception
+structure carried by <TT>omniORB::fatalException</TT> contains the exact
+location (the file name and the line number) where the exception is
+raised. You are strongly encouraged to file a bug report and point out
+the location.<BR>
+<BR>
+It may help to cause a core-dump and look at the stack trace to locate
+where the exception was thrown. This can be done by setting the
+variable <TT>omniORB::abortOnInternalError</TT> to 1. The variable
+can also be set via the command line option
+<TT>-ORBabortOnInternalError</TT>.<BR>
+<BR>
+<BR>
+<BR>
+<A NAME="toc36"></A>
+<H2>6.11&nbsp;&nbsp; System Exception Handlers</H2>By default, all system exceptions which are raised during an operation
+invocation, with the exception of <TT>CORBA::TRANSIENT</TT>, are
+propagated to the application code. Some applications may prefer to
+trap these exceptions within the proxy objects so that the application
+logic does not have to deal with the error condition. For example,
+when a <TT>CORBA::COMM_FAILURE</TT> is received, an application may
+just want to retry the invocation until it finally succeeds. This
+approach is useful for objects that are persistent and their
+operations are idempotent.<BR>
+<BR>
+omniORB provides a set of functions to install exception handlers.
+Once they are installed, proxy objects will call these handlers when
+the associated system exceptions are raised by the ORB runtime.
+Handlers can be installed for <TT>CORBA::TRANSIENT</TT>,
+<TT>CORBA::COMM_FAILURE</TT> and <TT>CORBA::SystemException</TT>. This
+last handler covers all system exceptions other than the two covered
+by the first two handlers. An exception handler can be installed for
+individual proxy objects, or it can be installed for all proxy objects
+in the address space.<BR>
+<BR>
+
+<H3>6.11.1&nbsp;&nbsp; CORBA::TRANSIENT handlers</H3>When a <TT>CORBA::TRANSIENT</TT> exception is raised by the ORB runtime,
+the default behaviour of the proxy objects is to retry indefinitely
+until the operation succeeds. Successive retries will be delayed
+progressively by multiples of
+<TT>omniORB::defaultTransientRetryDelayIncrement</TT>. The delay
+will be limited to the maximum specified by
+<TT>omniORB::defaultTransientRetryDelayMaximum</TT>. The unit of both
+values are in seconds.<BR>
+<BR>
+The ORB runtime will raise <TT>CORBA::TRANSIENT</TT> under the following
+conditions:<BR>
+<BR>
+<OL type=1>
+<LI> When a <EM>cached</EM> network connection is broken while an
+operation invocation is in progress. The ORB will try to open a new
+connection at the next invocation.<BR>
+<BR>
+
+<LI> When the proxy object has been redirected by a location forward
+message by the remote object to a new location and the object at the
+new location cannot be contacted. In addition to the
+<TT>CORBA::TRANSIENT</TT> exception, the proxy object also resets its
+internal state so that the next invocation will be directed at the
+original location of the remote object.<BR>
+<BR>
+
+<LI> When the remote object reports <TT>CORBA::TRANSIENT</TT>.</OL>Applications can override the default behaviour by installing their
+own exception handler. The API to do so is summarised below:<BR>
+<BR>
+<PRE>
+class omniORB {
+public:
+  
+typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
+                                                CORBA::ULong n_retries,
+                                                const CORBA::TRANSIENT&amp; ex);
+
+static void installTransientExceptionHandler(void* cookie,
+                                             transientExceptionHandler_t fn);
+
+static void installTransientExceptionHandler(CORBA::Object_ptr obj,
+                                             void* cookie,
+                                             transientExceptionHandler_t fn);
+  
+static CORBA::ULong defaultTransientRetryDelayIncrement;
+static CORBA::ULong defaultTransientRetryDelayMaximum;
+}
+</PRE>The overloaded function <TT>installTransientExceptionHandler()</TT> can be
+used to install the exception handlers for <TT>CORBA::TRANSIENT</TT>.
+Two forms are available: the first form installs an exception handler
+for all object references except for those which have an exception
+handler installed by the second form, which takes an additional
+argument to identify the target object reference. The argument
+<TT>cookie</TT> is an opaque pointer which will be passed on by the ORB
+when it calls the exception handler.<BR>
+<BR>
+An exception handler will be called by proxy objects with three
+arguments. The <TT>cookie</TT> is the opaque pointer registered by
+<TT>installTransientExceptionHandler()</TT>. The argument <TT>n_retries</TT>
+is the number of times the proxy has called this handler for the same
+invocation. The argument <TT>ex</TT> is the value of the exception
+caught. The exception handler is expected to do whatever is
+appropriate and returns a boolean value. If the return value is
+TRUE(1), the proxy object retries the operation. If the return value
+is FALSE(0), the <TT>CORBA::TRANSIENT</TT> exception is propagated into
+the application code.<BR>
+<BR>
+The following sample code installs a simple exception handler for all
+objects and for a specific object:<BR>
+<BR>
+<PRE>
+CORBA::Boolean my_transient_handler1 (void* cookie,
+                                      CORBA::ULong retries,
+                                      const CORBA::TRANSIENT&amp; ex)
+{
+   cerr &lt;&lt; "transient handler 1 called." &lt;&lt; endl;
+   return 1;           // retry immediately.
+}
+ 
+CORBA::Boolean my_transient_handler2 (void* cookie,
+                                      CORBA::ULong retries,
+                                      const CORBA::TRANSIENT&amp; ex)
+{
+   cerr &lt;&lt; "transient handler 2 called." &lt;&lt; endl;
+   return 1;           // retry immediately.
+}
+
+
+static Echo_ptr myobj;
+
+void installhandlers()
+{
+   omniORB::installTransientExceptionHandler(0,my_transient_handler1);
+   // All proxy objects will call my_transient_handler1 from now on.
+
+   omniORB::installTransientExceptionHandler(myobj,0,my_transient_handler2);
+   // The proxy object of myobj will call my_transient_handler2 from now on.
+}
+</PRE>
+<H3>6.11.2&nbsp;&nbsp; CORBA::COMM_FAILURE</H3>When the ORB runtime fails to establish a network connection to the
+remote object and none of the conditions listed above for raising a
+<TT>CORBA::TRANSIENT</TT> is applicable, it raises a
+<TT>CORBA::COMM_FAILURE</TT> exception.<BR>
+<BR>
+The default behaviour of the proxy objects is to propagate this
+exception to the application. Applications can override the default
+behaviour by installing their own exception handlers. The API to do so
+is summarised below:<BR>
+<BR>
+<PRE>
+class omniORB {
+public:
+
+typedef CORBA::Boolean (*commFailureExceptionHandler_t)(void* cookie,
+                                                CORBA::ULong n_retries,
+                                                const CORBA::COMM_FAILURE&amp; ex);
+
+static void installCommFailureExceptionHandler(void* cookie,
+                                             commFailureExceptionHandler_t fn);
+
+static void installCommFailureExceptionHandler(CORBA::Object_ptr obj,
+                                             void* cookie,
+                                             commFailureExceptionHandler_t
+                                             fn);
+}
+</PRE>The functions are equivalent to their counterparts for
+<TT>CORBA::TRANSIENT</TT>.<BR>
+<BR>
+
+<H3>6.11.3&nbsp;&nbsp; CORBA::SystemException</H3>To report an error condition, the ORB runtime may raise other system
+exceptions. If the exception is neither <TT>CORBA::TRANISENT</TT> nor
+<TT>CORBA::COMM_FAILURE</TT>, the default behaviour of the proxy
+objects is to propagate this exception to the application.
+Applications can override the default behaviour by installing their
+own exception handlers. The API to do so is summarised below:<BR>
+<BR>
+<PRE>
+class omniORB {
+public:
+
+typedef CORBA::Boolean (*systemExceptionHandler_t)(void* cookie,
+                                            CORBA::ULong n_retries,
+                                            const CORBA::SystemException&amp; ex);
+
+static void installSystemExceptionHandler(void* cookie,
+                                          systemExceptionHandler_t fn);
+
+static void installSystemExceptionHandler(CORBA::Object_ptr obj,
+                                          void* cookie,
+                                          systemExceptionHandler_t fn);
+}
+</PRE>The functions are equivalent to their counterparts for
+<TT>CORBA::TRANSIENT</TT>.<BR>
+<BR>
+<A NAME="toc37"></A>
+<H2>6.12&nbsp;&nbsp; Location forwarding</H2>
+<A NAME="sec:locationForward"></A>Any CORBA operation invocation can return a <TT>LOCATION_FORWARD</TT>
+message to the caller, indicating that it should retry the invocation
+on a new object reference. The standard allows ServantManagers to
+trigger <TT>LOCATION_FORWARD</TT>s by raising the
+<TT>PortableServer::ForwardRequest</TT> exception, but it does not
+provide a similar mechanism for normal servants. omniORB provides the
+<TT>omniORB::LOCATION_FORWARD</TT> exception for this purpose. It can
+be thrown by any operation implementation.<BR>
+<BR>
+<PRE>
+class LOCATION_FORWARD {
+public:
+  LOCATION_FORWARD(CORBA::Object_ptr objref);
+};
+</PRE>The exception object consumes the object reference it is
+passed.<BR>
+<BR>
+<HR WIDTH="50%" SIZE=1><DL>
+<DT><A NAME="note16" HREF="#text16"><FONT SIZE=5>1</FONT></A><DD> <TT>omniORB</TT> is a class name if the
+C++ compiler does not support the <TT>namespace</TT> keyword.
+
+<DT><A NAME="note17" HREF="#text17"><FONT SIZE=5>2</FONT></A><DD> This interface was first defined by Sun's
+NEO and is in used in Sun's JavaIDL.
+</DL>
+<HR>
+<A HREF="omniORB005.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB007.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

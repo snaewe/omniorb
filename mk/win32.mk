@@ -235,50 +235,65 @@ endif
 # CORBA stuff
 #
 
-# Note that the DLL version is being used, so link to omniorb2_rt.lib
+# Note that the DLL version is being used, so link to omniorb3_rt.lib
 
-lib_depend := $(patsubst %,$(DLLPattern),omniORB280)
+OMNIORB_VERSION = 3.0.0
+OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
+OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
+OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+
+lib_depend := $(patsubst %,$(DLLPattern),omniORB300)
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
-lib_depend := $(patsubst %,$(DLLPattern),omniDynamic280)
+lib_depend := $(patsubst %,$(DLLPattern),omniDynamic300)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
+ifndef OpenNTBuildTree
+# GNU-WIN32 wrapper
+OMNIORB_IDL_ONLY = oidlwrapper.exe -gnuwin32 -bcxx -Wbh=.hh -Wbs=SK.cc
+else
+# OpenNT wrapper
+OMNIORB_IDL_ONLY = oidlwrapper.exe -opennt -bcxx -Wbh=.hh -Wbs=SK.cc
+endif
 
-OMNIORB2_IDL_ONLY = omniidl2.exe -h .hh -s SK.cc
-OMNIORB2_IDL_ANY_FLAGS = -a
-OMNIORB2_IDL = $(OMNIORB2_IDL_ONLY) $(OMNIORB2_IDL_ANY_FLAGS)
-OMNIORB2_CPPFLAGS = -D__OMNIORB2__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
+OMNIORB_IDL_ANY_FLAGS = -Wba
+OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
+OMNIORB_CPPFLAGS = -D__OMNIORB3__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 
-OMNIORB2_LIB = $(patsubst %,$(DLLSearchPattern),omniORB280) \
-		$(patsubst %,$(DLLSearchPattern),omniDynamic280) \
+OMNIORB_LIB = $(patsubst %,$(DLLSearchPattern),omniORB300) \
+		$(patsubst %,$(DLLSearchPattern),omniDynamic300) \
 		$(OMNITHREAD_LIB) wsock32.lib advapi32.lib
-OMNIORB2_LIB_NODYN = $(patsubst %,$(DLLSearchPattern),omniORB280) \
+OMNIORB_LIB_NODYN = $(patsubst %,$(DLLSearchPattern),omniORB300) \
 		$(OMNITHREAD_LIB) wsock32.lib advapi32.lib
 
-OMNIORB2_LIB_NODYN_DEPEND := $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND)
-OMNIORB2_LIB_DEPEND := $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND) \
+OMNIORB_LIB_NODYN_DEPEND := $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND)
+OMNIORB_LIB_DEPEND := $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND) \
 			$(omniDynamic_lib_depend)
 
-OMNIORB2_STATIC_STUB_OBJS = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.o)
-OMNIORB2_STATIC_STUB_SRCS = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.cc)
-OMNIORB2_DYN_STUB_OBJS = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%DynSK.o)
-OMNIORB2_DYN_STUB_SRCS = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%DynSK.cc)
+OMNIORB_STATIC_STUB_OBJS = \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.o)
+OMNIORB_STATIC_STUB_SRCS = \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.cc)
+OMNIORB_DYN_STUB_OBJS = \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%DynSK.o)
+OMNIORB_DYN_STUB_SRCS = \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%DynSK.cc)
 
-OMNIORB2_STUB_SRCS = $(OMNIORB2_STATIC_STUB_SRCS) $(OMNIORB2_DYN_STUB_SRCS)
-OMNIORB2_STUB_OBJS = $(OMNIORB2_STATIC_STUB_OBJS) $(OMNIORB2_DYN_STUB_OBJS)
+OMNIORB_STUB_SRCS = $(OMNIORB_STATIC_STUB_SRCS) $(OMNIORB_DYN_STUB_SRCS)
+OMNIORB_STUB_OBJS = $(OMNIORB_STATIC_STUB_OBJS) $(OMNIORB_DYN_STUB_OBJS)
 
-OMNIORB2_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%SK.cc
-OMNIORB2_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%SK.o
-OMNIORB2_DYN_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%DynSK.cc
-OMNIORB2_DYN_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%DynSK.o
-OMNIORB2_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
+OMNIORB_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%SK.cc
+OMNIORB_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%SK.o
+OMNIORB_DYN_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%DynSK.cc
+OMNIORB_DYN_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%DynSK.o
+OMNIORB_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
 
 
 # LifeCycle stuff
 
-OMNIORB2_IDL_LC_FLAGS = -l
-OMNIORB2_LC_LIB = $(patsubst %,$(DLLSearchPattern),omniLC30)
+OMNIORB_IDL_LC_FLAGS = -l
+OMNIORB_LC_LIB = $(patsubst %,$(DLLSearchPattern),omniLC30)
 
-CorbaImplementation = OMNIORB2
+CorbaImplementation = OMNIORB
 
 #
 # OMNI thread stuff

@@ -1,184 +1,78 @@
-diff -r -c omniORB_2.8.0/include/omniORB2/CORBA.h omniORB_2.8.0_cxx5.6/include/omniORB2/CORBA.h
-*** omniORB_2.8.0/include/omniORB2/CORBA.h	Sat Aug 14 15:26:21 1999
---- omniORB_2.8.0_cxx5.6/include/omniORB2/CORBA.h	Sat Aug 14 15:36:02 1999
+*** include/omniORB3/CORBA_sysdep.h	Tue Jun 27 16:23:24 2000
+--- cxx56include/omniORB3/CORBA_sysdep.h	Thu Jun 29 12:34:15 2000
 ***************
-*** 666,673 ****
---- 666,679 ----
+*** 242,247 ****
+--- 242,270 ----
+  #     define OMNI_PREMATURE_INSTANTIATION
+  //    Extra macros from the Compaq C++ 5.x patch (in <top>/patches/) to be
+  //    added here
++ #define OMNI_OPERATOR_REFPTR(T)\
++   typedef T*& _1RTP_##T;\
++   inline operator _1RTP_##T()
++ 
++ //  This platform can't handle:
++ //
++ //  template <class T>
++ //  struct X {
++ //    T t;              // (1)
++ //  };
++ //  struct Y {
++ //    typedef X<Y> Z;   // (2)
++ //  };
++ //
++ //  because X<Y> is instantiated at (2) so that T is an incomplete type at (1).
++ 
++ #define OMNI_CONSTRTYPE_FIX_VAR_MEMBER(T)
++ #define OMNI_CONSTRTYPE_FIX_VAR(T) typedef _CORBA_ConstrType_Fix_Var<T> T##_var;
++ 
++ //  Note that this is only a problem with fixed length constructed types.  The
++ //  variable length constructed type var uses a pointer, so the forward
++ //  declaration is okay.
++ 
+  #     ifndef OMNI_OPERATOR_REFPTR
+  #       error "Patch for Compaq C++ 5.x has not been applied."
+  #     endif
+*** include/omniORB3/CORBA.h	Tue Jun 27 16:15:07 2000
+--- cxx56include/omniORB3/CORBA.h	Thu Jun 29 12:51:16 2000
+***************
+*** 717,723 ****
       }
       inline Any_OUT_arg& operator=(Any* p) { _data = p; return *this; }
   
-+ #ifndef HAS_POINTER_REF_BUG
-      operator Any*& () { return _data; }
+!     operator Any*& () { return _data; }
       Any*& ptr() { return _data; }
-+ #else
-+     typedef Any*& PointerRef;
-+     operator PointerRef () { return _data; }
-+     PointerRef ptr() { return _data; }
-+ #endif
   
       Any*& _data;
-    private:
-Only in omniORB_2.8.0/include/omniORB2: CORBA_basetypes.h
-diff -r -c omniORB_2.8.0/include/omniORB2/CORBA_sysdep.h omniORB_2.8.0_cxx5.6/include/omniORB2/CORBA_sysdep.h
-*** omniORB_2.8.0/include/omniORB2/CORBA_sysdep.h	Sat Aug 14 13:31:36 1999
---- omniORB_2.8.0_cxx5.6/include/omniORB2/CORBA_sysdep.h	Sat Aug 14 15:36:02 1999
-***************
-*** 159,164 ****
---- 159,172 ----
-  #elif defined(__DECCXX)
-  // DEC C++ compiler
-  
-+ #  if __DECCXX_VER < 60000000
-+ #    define HAS_POINTER_REF_BUG
-+ #    define HAS_RECURSIVE_TEMPLATE_BUG
-+ #  else
-+ #    undef HAS_POINTER_REF_BUG
-+ #    undef HAS_RECURSIVE_TEMPLATE_BUG
-+ #  endif
-+ 
-  #  if defined(__alpha) && !defined(__VMS)
-  #     define SIZEOF_LONG 8
-  #     define SIZEOF_INT  4
-diff -r -c omniORB_2.8.0/include/omniORB2/stringtypes.h omniORB_2.8.0_cxx5.6/include/omniORB2/stringtypes.h
-*** omniORB_2.8.0/include/omniORB2/stringtypes.h	Fri Jun 18 21:28:30 1999
---- omniORB_2.8.0_cxx5.6/include/omniORB2/stringtypes.h	Sat Aug 14 15:36:02 1999
-***************
-*** 328,335 ****
---- 328,341 ----
-    inline _CORBA_String_out& operator=(const char* p) {
-      _data = _CORBA_String_var::string_dup(p); return *this;
-    }
-+ #ifndef HAS_POINTER_REF_BUG
-    operator char*& () { return _data; }
-    char*& ptr() { return _data; }
-+ #else
-+   typedef char*& PointerRef;
-+   operator PointerRef () { return _data; }
-+   PointerRef ptr() { return _data; }
-+ #endif
-  
-    char*& _data;
-  
-***************
-*** 442,448 ****
---- 448,458 ----
-  #endif
-        s->copybuffer(pd_max);
+--- 717,723 ----
       }
-+ #if !defined(__DECCXX) || __DECCXX_VER >= 60000000
-      return pd_data; 
-+ #else
-+     return (const char* const*)pd_data; 
-+ #endif
-    }
+      inline Any_OUT_arg& operator=(Any* p) { _data = p; return *this; }
   
+!     OMNI_OPERATOR_REFPTR(Any) { return _data; }
+      Any*& ptr() { return _data; }
   
-diff -r -c omniORB_2.8.0/include/omniORB2/templatedecls.h omniORB_2.8.0_cxx5.6/include/omniORB2/templatedecls.h
-*** omniORB_2.8.0/include/omniORB2/templatedecls.h	Sat Aug 14 14:13:58 1999
---- omniORB_2.8.0_cxx5.6/include/omniORB2/templatedecls.h	Sat Aug 14 16:15:53 1999
+      Any*& _data;
 ***************
-*** 592,599 ****
-      _data = ((T*)p);
-      return * this;
-    }
-!   inline operator T*&()  { return _data; }
-!   inline T*& ptr()       { return _data; }
-    inline T* operator->() const { return _data; }
-  
-    T*& _data;
---- 592,605 ----
-      _data = ((T*)p);
-      return * this;
-    }
-! #ifndef HAS_POINTER_REF_BUG
-!   inline operator T*&() { return _data; }
-!   inline T*& ptr() { return _data; }
-! #else
-!   typedef T*& PointerRef;
-!   inline operator PointerRef() { return _data; }
-!   inline PointerRef ptr() { return _data; }
-! #endif
-    inline T* operator->() const { return _data; }
-  
-    T*& _data;
+*** 2310,2316 ****
+  	_data = s._data; return *this;
+        }
+        inline ObjectIdList_out& operator=(T* s) { _data = s; return *this; }
+!       inline operator T*&() { return _data; }
+        inline T*& ptr() { return _data; }
+        inline T* operator->() { return _data; }
+        inline _CORBA_String_element operator [] (_CORBA_ULong i) {
+--- 2310,2316 ----
+  	_data = s._data; return *this;
+        }
+        inline ObjectIdList_out& operator=(T* s) { _data = s; return *this; }
+!       OMNI_OPERATOR_REFPTR(T) { return _data; }
+        inline T*& ptr() { return _data; }
+        inline T* operator->() { return _data; }
+        inline _CORBA_String_element operator [] (_CORBA_ULong i) {
+*** src/lib/omniORB2/dynamic/pseudo.h	Wed Sep 22 14:26:36 1999
+--- cxx56src/lib/omniORB2/dynamic/pseudo.h	Thu Jun 29 14:06:23 2000
 ***************
-*** 676,684 ****
---- 682,697 ----
-    inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
-    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
-    inline T_out& operator=(T* p) { _data = p; return *this; }
-+ #ifndef HAS_POINTER_REF_BUG
-    inline operator T*&() { return _data; }
-    inline T*& ptr() { return _data; }
-    inline T*& operator->() { return _data; }
-+ #else
-+   typedef T*& PointerRef;
-+   inline operator PointerRef() { return _data; }
-+   inline PointerRef ptr() { return _data; }
-+   inline PointerRef operator->() { return _data; }
-+ #endif
-  
-    T*& _data;
-  
-***************
-*** 778,786 ****
---- 791,806 ----
-    inline _CORBA_ConstrType_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
-    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
-    inline T_out& operator=(T* p) { _data = p; return *this; }
-+ #ifndef HAS_POINTER_REF_BUG
-    inline operator T*&() { return _data; }
-    inline T*& ptr() { return _data; }
-    inline T*& operator->() { return _data; }
-+ #else
-+   typedef T*& PointerRef;
-+   inline operator PointerRef() { return _data; }
-+   inline PointerRef ptr() { return _data; }
-+   inline PointerRef operator->() { return _data; }
-+ #endif
-  
-    T*& _data;
-  
-***************
-*** 878,888 ****
-    inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
-    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
-    inline T_out& operator=(T* p) { _data = p; return *this; }
-    inline operator T*&() { return _data; }
-    inline T*& ptr() { return _data; }
-    inline T& operator[] (_CORBA_ULong index) {
-!     return _data[index];
-    }
-  
-    T*& _data;
-  private:
---- 898,917 ----
-    inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
-    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
-    inline T_out& operator=(T* p) { _data = p; return *this; }
-+ #ifndef HAS_POINTER_REF_BUG
-    inline operator T*&() { return _data; }
-    inline T*& ptr() { return _data; }
-    inline T& operator[] (_CORBA_ULong index) {
-!     return *(pd_data + index);
-    }
-+ #else
-+   typedef T*& PointerRef;
-+   inline operator PointerRef() { return _data; }
-+   inline PointerRef ptr() { return _data; }
-+   inline T& operator[] (_CORBA_ULong index) {
-+     return *(pd_data + index);
-+   }
-+ #endif
-  
-    T*& _data;
-  private:
-diff -r -c omniORB_2.8.0/src/lib/omniORB2/dynamic/pseudo.h omniORB_2.8.0_cxx5.6/src/lib/omniORB2/dynamic/pseudo.h
-*** omniORB_2.8.0/src/lib/omniORB2/dynamic/pseudo.h	Tue May 25 18:34:45 1999
---- omniORB_2.8.0_cxx5.6/src/lib/omniORB2/dynamic/pseudo.h	Sat Aug 14 15:36:02 1999
-***************
-*** 149,155 ****
---- 149,159 ----
+*** 145,151 ****
+--- 145,155 ----
     virtual CORBA::Boolean NP_is_nil() const;
     virtual CORBA::ContextList_ptr NP_duplicate();
   
@@ -190,100 +84,230 @@ diff -r -c omniORB_2.8.0/src/lib/omniORB2/dynamic/pseudo.h omniORB_2.8.0_cxx5.6/
   
   private:
     void free_entries();
-diff -r -c omniORB_2.8.0/src/tool/omniidl2/omniORB2_be/o2be_sequence.cc omniORB_2.8.0_cxx5.6/src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
-*** omniORB_2.8.0/src/tool/omniidl2/omniORB2_be/o2be_sequence.cc	Mon Aug  9 13:27:53 1999
---- omniORB_2.8.0_cxx5.6/src/tool/omniidl2/omniORB2_be/o2be_sequence.cc	Sat Aug 14 15:36:02 1999
+*** include/omniORB3/stringtypes.h	Tue Jun 27 16:15:08 2000
+--- cxx56include/omniORB3/stringtypes.h	Thu Jun 29 12:46:41 2000
 ***************
-*** 970,979 ****
+*** 488,494 ****
+    }
+    inline ~_CORBA_String_inout() {}
   
-    IND(s); s << "inline const _Tseq& in() const { return *pd_seq; }\n";
-    IND(s); s << "inline _Tseq& inout() { return *pd_seq; }\n";
-    IND(s); s << "inline _Tseq*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }\n";
-    IND(s); s << "inline _Tseq* _retn() { _Tseq* tmp = pd_seq; pd_seq = 0; "
-  	    "return tmp; }\n\n";
-- 
-    IND(s); s << "friend class " << (const char*) out_type << ";\n\n";
+!   inline operator char*&()  { return _data; }
   
-    DEC_INDENT_LEVEL();
---- 970,983 ----
+    char*& _data;
   
-    IND(s); s << "inline const _Tseq& in() const { return *pd_seq; }\n";
-    IND(s); s << "inline _Tseq& inout() { return *pd_seq; }\n";
-+   s << "#ifndef HAS_POINTER_REF_BUG\n";
-    IND(s); s << "inline _Tseq*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }\n";
-+   s << "#else\n";
-+   IND(s); s << "typedef _Tseq*& PointerRef;\n";
-+   IND(s); s << "inline PointerRef out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }\n";
-+   s << "#endif\n";
-    IND(s); s << "inline _Tseq* _retn() { _Tseq* tmp = pd_seq; pd_seq = 0; "
-  	    "return tmp; }\n\n";
-    IND(s); s << "friend class " << (const char*) out_type << ";\n\n";
+--- 488,494 ----
+    }
+    inline ~_CORBA_String_inout() {}
   
-    DEC_INDENT_LEVEL();
-***************
-*** 1001,1008 ****
-    IND(s); s << "inline " << (const char*) out_type << "& operator=(const "
-  	    << (const char*) out_type << "& s) { _data = s._data; return *this; }\n";
-    IND(s); s << "inline " << (const char*) out_type << "& operator=(_Tseq* s) { _data = s; return *this; }\n";
-    IND(s); s << "inline operator _Tseq*&() { return _data; }\n";
-    IND(s); s << "inline _Tseq*& ptr() { return _data; }\n";
-    IND(s); s << "inline _Tseq* operator->() { return _data; }\n";
-    IND(s); s << "inline " << (const char*) index_ret_type
-  	    << " operator [] (_CORBA_ULong i) { ";
---- 1005,1018 ----
-    IND(s); s << "inline " << (const char*) out_type << "& operator=(const "
-  	    << (const char*) out_type << "& s) { _data = s._data; return *this; }\n";
-    IND(s); s << "inline " << (const char*) out_type << "& operator=(_Tseq* s) { _data = s; return *this; }\n";
-+   s << "#ifndef HAS_POINTER_REF_BUG\n";
-    IND(s); s << "inline operator _Tseq*&() { return _data; }\n";
-    IND(s); s << "inline _Tseq*& ptr() { return _data; }\n";
-+   s << "#else\n";
-+   IND(s); s << "typedef _Tseq*& PointerRef;\n";
-+   IND(s); s << "inline operator PointerRef() { return _data; }\n";
-+   IND(s); s << "inline PointerRef ptr() { return _data; }\n";
-+   s << "#endif\n";
-    IND(s); s << "inline _Tseq* operator->() { return _data; }\n";
-    IND(s); s << "inline " << (const char*) index_ret_type
-  	    << " operator [] (_CORBA_ULong i) { ";
-diff -r -c omniORB_2.8.0/src/tool/omniidl2/omniORB2_be/o2be_struct.cc omniORB_2.8.0_cxx5.6/src/tool/omniidl2/omniORB2_be/o2be_struct.cc
-*** omniORB_2.8.0/src/tool/omniidl2/omniORB2_be/o2be_struct.cc	Mon Aug  9 13:28:13 1999
---- omniORB_2.8.0_cxx5.6/src/tool/omniidl2/omniORB2_be/o2be_struct.cc	Sat Aug 14 16:24:28 1999
-***************
-*** 152,160 ****
---- 152,162 ----
-    IND(s); s << "struct " << uqname() << " {\n";
-    INC_INDENT_LEVEL();
+!   OMNI_OPERATOR_REFPTR(char)  { return _data; }
   
-+   s << "#ifndef HAS_RECURSIVE_TEMPLATE_BUG\n";
-    IND(s); s << "typedef _CORBA_ConstrType_"
-  	    << ((isVariable())?"Variable":"Fix")
-  	    << "_Var<" << uqname() << "> _var_type;\n";
-+   s << "#endif//HAS_RECURSIVE_TEMPLATE_BUG\n";
-  
-    o2be_nested_typedef::produce_hdr(s,this);
+    char*& _data;
   
 ***************
-*** 248,255 ****
-    DEC_INDENT_LEVEL();
-    IND(s); s << "};\n\n";
+*** 517,524 ****
+    inline _CORBA_String_out& operator=(const char* p) {
+      _data = ((p) ? _CORBA_String_var::string_dup(p) : 0); return *this;
+    }
+! 
+!   operator char*& () { return _data; }
+    char*& ptr()       { return _data; }
   
-    IND(s); s << "typedef " << uqname() << "::_var_type " 
-! 	    << uqname() << "_var;\n\n";
+    char*& _data;
+--- 517,523 ----
+    inline _CORBA_String_out& operator=(const char* p) {
+      _data = ((p) ? _CORBA_String_var::string_dup(p) : 0); return *this;
+    }
+!   OMNI_OPERATOR_REFPTR(char) { return _data; }
+    char*& ptr()       { return _data; }
   
-    IND(s); s << "typedef ";
-    if (isVariable()) {
---- 250,263 ----
-    DEC_INDENT_LEVEL();
-    IND(s); s << "};\n\n";
+    char*& _data;
+*** include/omniORB3/poa.h	Tue Jun 27 16:15:08 2000
+--- cxx56include/omniORB3/poa.h	Thu Jun 29 12:46:41 2000
+***************
+*** 260,266 ****
+      inline ObjectId_out(const ObjectId_out& s) : _data(s._data) { }
+      inline ObjectId_out& operator=(const ObjectId_out& s) { _data = s._data; return *this; }
+      inline ObjectId_out& operator=(_T* s) { _data = s; return *this; }
+!     inline operator _T*&() { return _data; }
+      inline _T*& ptr() { return _data; }
+      inline _T* operator->() { return _data; }
+      inline CORBA::Octet& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
+--- 260,266 ----
+      inline ObjectId_out(const ObjectId_out& s) : _data(s._data) { }
+      inline ObjectId_out& operator=(const ObjectId_out& s) { _data = s._data; return *this; }
+      inline ObjectId_out& operator=(_T* s) { _data = s; return *this; }
+!     OMNI_OPERATOR_REFPTR(_T) { return _data; }
+      inline _T*& ptr() { return _data; }
+      inline _T* operator->() { return _data; }
+      inline CORBA::Octet& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
+*** include/omniORB3/templateDecls.h	Tue Jun 27 16:15:09 2000
+--- cxx56include/omniORB3/templateDecls.h	Thu Jun 29 12:46:42 2000
+***************
+*** 682,688 ****
+    }
+    inline ~_CORBA_ObjRef_INOUT_arg() {}
   
-+   s << "#ifndef HAS_RECURSIVE_TEMPLATE_BUG\n";
-    IND(s); s << "typedef " << uqname() << "::_var_type " 
-! 	    << uqname() << "_var;\n";
-!   s << "#else //HAS_RECURSIVE_TEMPLATE_BUG\n";
-!   IND(s); s << "typedef _CORBA_ConstrType_"
-! 	    << ((isVariable())?"Variable":"Fix")
-! 	    << "_Var<" << uqname() << ">" << uqname() << "_var;\n";
-!   s << "#endif//HAS_RECURSIVE_TEMPLATE_BUG\n\n";
+!   inline operator T*&()  { return _data; }
   
-    IND(s); s << "typedef ";
-    if (isVariable()) {
+    T*& _data;
+  
+--- 682,688 ----
+    }
+    inline ~_CORBA_ObjRef_INOUT_arg() {}
+  
+!   OMNI_OPERATOR_REFPTR(T)  { return _data; }
+  
+    T*& _data;
+  
+***************
+*** 719,725 ****
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+  
+!   inline operator T*&()  { return _data; }
+    inline T*& ptr()       { return _data; }
+    inline T* operator->() const { return _data; }
+  
+--- 719,725 ----
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+  
+!   OMNI_OPERATOR_REFPTR(T)  { return _data; }
+    inline T*& ptr()       { return _data; }
+    inline T* operator->() const { return _data; }
+  
+***************
+*** 840,846 ****
+    inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   inline operator T*&() { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T*& operator->() { return _data; }
+  
+--- 840,846 ----
+    inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   OMNI_OPERATOR_REFPTR(T) { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T*& operator->() { return _data; }
+  
+***************
+*** 943,949 ****
+    inline _CORBA_ConstrType_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   inline operator T*&() { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T*& operator->() { return _data; }
+  
+--- 943,949 ----
+    inline _CORBA_ConstrType_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   OMNI_OPERATOR_REFPTR(T) { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T*& operator->() { return _data; }
+  
+***************
+*** 1044,1050 ****
+    inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   inline operator T*&() { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T& operator[] (_CORBA_ULong index) {
+      return _data[index];
+--- 1044,1050 ----
+    inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   OMNI_OPERATOR_REFPTR(T) { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T& operator[] (_CORBA_ULong index) {
+      return _data[index];
+*** src/lib/omniORB2/omniidl_be/cxx/header/template.py	Mon Jun 26 16:24:00 2000
+--- cxx56src/lib/omniORB2/omniidl_be/cxx/header/template.py	Thu Jun 29 14:18:30 2000
+***************
+*** 622,628 ****
+      _data = s;
+      return *this;
+    }
+!   inline operator T*&()  { return _data; }
+    inline T*& ptr()       { return _data; }
+    inline T* operator->() { return _data; }
+  
+--- 622,628 ----
+      _data = s;
+      return *this;
+    }
+!   OMNI_OPERATOR_REFPTR(T)  { return _data; }
+    inline T*& ptr()       { return _data; }
+    inline T* operator->() { return _data; }
+  
+***************
+*** 656,661 ****
+--- 656,682 ----
+  };
+  
+  typedef @name@::_var_type @name@_var;
++ 
++ typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
++ """
++ 
++ # Added for DEC C++ 5.6:
++ struct_fix = """\
++ struct @name@ {
++   OMNI_CONSTRTYPE_FIX_VAR_MEMBER(@name@)
++ 
++   @Other_IDL@
++ 
++   @members@
++ 
++   size_t _NP_alignedSize(size_t initialoffset) const;
++   void operator>>= (NetBufferedStream &) const;
++   void operator<<= (NetBufferedStream &);
++   void operator>>= (MemBufferedStream &) const;
++   void operator<<= (MemBufferedStream &);
++ };
++ 
++ OMNI_CONSTRTYPE_FIX_VAR(@name@)
+  
+  typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
+  """
+*** src/lib/omniORB2/omniidl_be/cxx/header/defs.py	Tue Jun 27 16:15:10 2000
+--- cxx56src/lib/omniORB2/omniidl_be/cxx/header/defs.py	Thu Jun 29 14:18:31 2000
+***************
+*** 886,897 ****
+                                 dims = tyutil.dimsToString(decl_dims))
+              
+      # Output the structure itself
+!     stream.out(template.struct,
+!                name = cxx_name,
+!                type = type,
+!                Other_IDL = Other_IDL,
+!                members = members)
+!     
+      self.__insideClass = insideClass
+  
+      # TypeCode and Any
+--- 886,903 ----
+                                 dims = tyutil.dimsToString(decl_dims))
+              
+      # Output the structure itself
+!     if type == "Fix":
+!         stream.out(template.struct_fix,
+!                    name = cxx_name,
+!                    type = type,
+!                    Other_IDL = Other_IDL,
+!                    members = members)
+!     else:
+!         stream.out(template.struct,
+!                    name = cxx_name,
+!                    type = type,
+!                    Other_IDL = Other_IDL,
+!                    members = members)
+      self.__insideClass = insideClass
+  
+      # TypeCode and Any

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // dynAny.h                   Created on: 11/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -29,12 +29,15 @@
 
 /*
  $Log$
- Revision 1.4  1999/10/26 19:41:19  sll
- Update from omni2_8_develop
+ Revision 1.5  2000/07/04 15:23:15  dpg1
+ Merge from omni3_develop.
 
- Revision 1.2.4.1  1999/09/22 16:38:26  djr
- Removed MT locking for 'DynAny's.
- New methods DynUnionImpl::NP_disc_value() and NP_disc_index().
+ Revision 1.2.8.3  1999/10/26 20:18:20  sll
+ DynAny no longer do alias expansion on the typecode. In other words, all
+ aliases in the typecode are preserved.
+
+ Revision 1.2.8.2  1999/09/22 16:15:59  djr
+ Removed MT locking.
 
 */
 

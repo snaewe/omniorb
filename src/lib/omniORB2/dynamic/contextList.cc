@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // contextList.cc             Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,7 +27,14 @@
 //   Implementation of CORBA::ContextList.
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <pseudo.h>
+#include <exceptiondefs.h>
 
 
 #define INIT_MAX_SEQ_LENGTH  6
@@ -56,7 +63,7 @@ ContextListImpl::count() const
 void
 ContextListImpl::add(const char* s)
 {
-  if( !s )  throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !s )  OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
 
@@ -74,7 +81,7 @@ ContextListImpl::add(const char* s)
 void
 ContextListImpl::add_consume(char* s)
 {
-  if( !s )  throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !s )  OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
 
@@ -141,7 +148,7 @@ ContextListImpl::free_entries()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilCtList : public CORBA::ContextList {
+class omniNilCtList : public CORBA::ContextList {
 public:
   virtual CORBA::ULong count() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -169,8 +176,6 @@ public:
   }
 };
 
-static NilCtList _nilContextList;
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -183,7 +188,7 @@ CORBA::
 ContextList::_duplicate(CORBA::ContextList_ptr p)
 {
   if (!PR_is_valid(p))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
@@ -193,7 +198,13 @@ CORBA::ContextList_ptr
 CORBA::
 ContextList::_nil()
 {
-  return &_nilContextList;
+  static omniNilCtList* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilCtList;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -209,8 +220,7 @@ CORBA::release(CORBA::ContextList_ptr p)
 
 
 CORBA::Status
-CORBA::
-ORB::create_context_list(ContextList_out ctxtlist)
+CORBA::ORB::create_context_list(ContextList_out ctxtlist)
 {
   ctxtlist = new ContextListImpl();
   RETURN_CORBA_STATUS;

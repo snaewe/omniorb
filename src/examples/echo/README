@@ -1,9 +1,9 @@
 The programs in this directory are used as examples in chapter 2 The Basics
-of "The omniORB2 User's Guide".
+of "The omniORB User's Guide".
 
 1. eg1                - collocated object implementation and client
 2. eg2_clt, eg2_impl  - the object implementation and the client are in 
-                        different address spaces. The client obtain the
+                        different address spaces. The client obtains the
                         stringified object reference from the command line.
 3. eg3_clt, eg3_impl  - same as 2 except that the object reference is
                         passed via the COS Naming service.
@@ -21,7 +21,8 @@ To Compile
 
 + On NT and Windows 95
 
-  - Make sure that you <Top>\bin\x86_win32 in you PATH environment variable.
+  - Make sure that you have <Top>\bin\x86_win32 in you PATH environment
+    variable.
   - Do 'nmake /f dir.mak' in this directory. When nmake finishes, the binaries
     are compiled.
 
@@ -29,38 +30,46 @@ To Compile
 To Run The Programs
 -------------------
 
-- On unix, since the shared libraries libomniORB2.so and libomnithread.so
+- On unix, since the shared libraries libomniORB3.so and libomnithread.so
   are not in the directories searched by the dynamic loader by default, you
-  must add the library directory to the search path. 
+  must add the library directory to the search path.
 
   On Solaris 2.5
      $ LD_LIBRARY_PATH=<absolute pathname of ../../../lib/sun4_sosV_5.5>
      $ export LD_LIBRARY_PATH
 
-- On NT, make sure that you <Top>\bin\x86_win32 in you PATH environment 
+- On NT, make sure that you have <Top>\bin\x86_win32 in you PATH environment
   variable.
 
 - Example 3 requires the presence of the COS Naming service. Make sure that
   the naming service is running before trying to run eg3_clt and eg3_impl.
   See ../../../README.{unix,win32} and Chapter 1 of 
-  "The omniORB2 User's Guide" for details.
+  "The omniORB User's Guide" for details.
 
 - The programs are expected to produce the following output:
 
 > $ ./eg1
-> I said,"Hello!". The Object said,"Hello!"
+> I said, "Hello!".
+> The Echo object replied, "Hello!".
 
 > $ ./eg2_impl
-> 'IOR:000000000000000d49444c3a4563686f3a312e300077e450000000010000000000000028000100000000000d3139322e352e3233392e3134002095f30000000c3369f9a0a5a66bef00000001'
+> 'IOR:000000000000000d49444c3a4563686f3a312e300077e4500000000100000000000
+> 00028000100000000000d3139322e352e3233392e3134002095f30000000c3369f9a0a5a
+> 66bef00000001'
 
    Cut and paste the stringified IOR emitted by eg2_impl to be the command
-   line argument to eg2_clt
-> $ ./eg2_clt 'IOR:000000000000000d49444c3a4563686f3a312e300077e450000000010000000000000028000100000000000d3139322e352e3233392e3134002095f30000000c3369f9a0a5a66bef00000001'
-> I said,"Hello!". The Object said,"Hello!"
+   line argument to eg2_clt:
 
-  If the naming service is running:
+> $ ./eg2_clt 'IOR:000000000000000d49444c3a4563686f3a312e300077e4500000000
+> 10000000000000028000100000000000d3139322e352e3233392e3134002095f30000000
+> c3369f9a0a5a66bef00000001'
+> I said, "Hello!".
+> The Echo object replied, "Hello!".
+
+   If the naming service is running:
+
 > $ ./eg3_impl
 
 > $ ./eg3_clt
-> I said,"Hello!". The Object said,"Hello!"
-
+> I said, "Hello!".
+> The Echo object replied, "Hello!".

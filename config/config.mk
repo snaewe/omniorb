@@ -20,10 +20,10 @@
 #  x86_win95                 Windows 95, MS VC++ 5.0
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
 #  i586_linux_2.0_glibc      x86 Redhat linux 5.1,egcs-980302 or later snapshot
-#  i586_linux_2.0_glibc2.1   x86 glibc-2.1, e.g. Redhat linux 6.x
+#  i586_linux_2.0_glibc2.1   x86 Redhat linux 6, etc
 #  alpha_linux_2.0           alpha linux (compiler problem,still doesn't work)
 #  m68k_nextstep_3.3         NextStep 3.3, gcc-2.7.2
-#  x86_nextstep_3.3          NextStep 3.3 x86
+#  x86_nextstep_3.3          NextStep 3.3, x86
 #  mips_sinux_5.43           Reliant UNIX from Siemens-Nixdorf (SNI)
 #  mips_irix_6.2_n32         SGI Irix 6.2 - 32bit mode
 #  mips_irix_6.3_n32         SGI Irix 6.3 - 32bit mode
@@ -32,9 +32,10 @@
 #  mips_irix_6.5_n32         SGI Irix 6.5 - 32bit mode
 #  mips_irix_6.5_64          SGI Irix 6.5 - 64bit mode
 #  x86_ets                   Phar Lap Realtime ETS-kernel
-#  x86_sco5                  SCO OpenServer 5
-#  x86_uw7		     SCO UnixWare 7 (7.1.0)
-#  i386_freebsd_3.2          x86 FreeBSD 3.2, egcs 1.1.2
+#  x86_osr5                  SCO OpenServer 5
+#  x86_uw7                   SCO UnixWare 7 (7.1.0)
+#  x86_freebsd_3.2           x86 FreeBSD 3.2, egcs 1.1.2
+#  x86_freebsd_4.0           x86 FreeBSD 4.0, gcc 2.95
 
 # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
 # edit the make variables, such as CC and CXX, in the file.
@@ -66,9 +67,10 @@
 #platform = mips_irix_6.5_n32
 #platform = mips_irix_6.5_64
 #platform = x86_ets
-#platform = x86_sco5
+#platform = x86_osr5
 #platform = x86_uw7
-#platform = i386_freebsd_3.2
+#platform = x86_freebsd_3.2
+#platform = x86_freebsd_4.0
 
 # On Win32 platforms, uncomment the following line to build all the binaries
 # with debugging information. Useful if you want to debug the binaries under
@@ -89,9 +91,9 @@ include $(THIS_IMPORT_TREE)/mk/beforedir.mk
 endif
 
 ifndef EmbeddedSystem
-OMNIORB2_IDL_FPATH = $(TOP)/$(BINDIR)/$(OMNIORB2_IDL)
+OMNIORB_IDL_FPATH = $(TOP)/$(BINDIR)/$(OMNIORB_IDL)
 else
-OMNIORB2_IDL_FPATH = $(TOP)/$(HOSTBINDIR)/$(OMNIORB2_IDL)
+OMNIORB_IDL_FPATH = $(TOP)/$(HOSTBINDIR)/$(OMNIORB_IDL)
 endif
 
 include dir.mk

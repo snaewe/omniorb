@@ -1,0 +1,240 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.05">
+<TITLE>
+ Connection Management
+</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORB007.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB009.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<HR>
+
+<H1>Chapter&nbsp;8&nbsp;&nbsp; Connection Management</H1>
+<A NAME="ch_conn"></A>This chapter describes how omniORB manages network connections.<BR>
+<BR>
+<A NAME="toc41"></A>
+<H2>8.1&nbsp;&nbsp; Background</H2>In CORBA, the ORB is the `middleware' that allows a client to invoke
+an operation on an object without regard to its implementation or
+location. In order to invoke an operation on an object, a client needs
+to `bind' to the object by acquiring its object reference. Such a
+reference may be obtained as the result of an operation on another
+object (such as a naming service) or by conversion from a stringified
+representation. If the object is in a different address space, the
+binding process involves the ORB building a proxy object in the
+client's address space. The ORB arranges for invocations on the proxy
+object to be transparently mapped to equivalent invocations on the
+implementation object.<BR>
+<BR>
+For the sake of interoperability, CORBA mandates that all ORBs should
+support IIOP as the means to communicate remote invocations over a
+TCP/IP connection. IIOP is asymmetric with respect to the roles of the
+parties at the two ends of a connection. At one end is the client
+which can only initiate remote invocations. At the other end is the
+server which can only receive remote invocations.<BR>
+<BR>
+Notice that in CORBA, as in most distributed systems, remote bindings
+are established implicitly without application intervention. This
+provides the illusion that all objects are local, a property known as
+`location transparency'. CORBA does not specify when such bindings
+should be established or how they should be multiplexed over the
+underlying network connections. Instead, ORBs are free to implement
+implicit binding by a variety of means.<BR>
+<BR>
+The rest of this chapter describes how omniORB manages network
+connections and the programming interface to fine tune the management
+policy.<BR>
+<BR>
+<A NAME="toc42"></A>
+<H2>8.2&nbsp;&nbsp; The Model</H2>omniORB is designed from the ground up to be fully multi-threaded. The
+objective is to maximise the degree of concurrency and at the same
+time eliminate any unnecessary thread overhead. Another objective is
+to minimise the interference by the activities of other threads on the
+progress of a remote invocation. In other words, thread `cross-talk'
+should be minimised within the ORB. To achieve these objectives, the
+degree of multiplexing at every level is kept to a minimum.<BR>
+<BR>
+On the client side of a connection, the thread that invokes on a proxy
+object drives the IIOP protocol directly and blocks on the connection
+to receive the reply. On the server side, a dedicated thread blocks on
+the connection. When it receives a request, it performs the up-call to
+the object and sends the reply when the up-call returns. There is no
+thread switching along the call chain.<BR>
+<BR>
+With this design, there is at most one call in-flight at any time on a
+connection. If there is only one connection, concurrent invocations to
+the same remote address space would have to be serialised. To
+eliminate this limitation, omniORB implements a dynamic
+policy---multiple connections to the same remote address space are
+created on demand and cached when there are concurrent invocations in
+progress.<BR>
+<BR>
+To be more precise, a network connection to another address space is
+only established when a remote invocation is about to be made.
+Therefore, there may be one or more object references in one address
+space that refer to objects in a different address space but unless
+the application invokes on these objects, no network connection is
+made. The maximum number of connections opened to another address
+space is 5 by default. Since 2.6.0, this parameter can be changed by
+setting the variable <TT>omniORB::maxTcpConnectionPerServer</TT>
+<EM>before</EM> calling <TT>ORB_init()</TT>.<BR>
+<BR>
+It is wasteful to leave a connection open when it has been left unused
+for a considerable time. Too many idle connections could block out new
+connections to a server when it runs out of spare communication
+channels. For example, most Unix platforms have a limit on the number
+of file handles a process can open. 64 is the usual default limit. The
+value can be increased to a maximum of a thousand or more by changing
+the `ulimit' in the shell.<BR>
+<BR>
+<A NAME="toc43"></A>
+<H2>8.3&nbsp;&nbsp; Idle Connection Shutdown and Remote Call Timeout</H2>
+<A NAME="sec_shut"></A>Inside the ORB, a thread is dedicated to scan for idle connections.
+The thread looks after both the outgoing connections and the incoming
+connections.<BR>
+<BR>
+When a connection is idle for a period of time, the connection is
+shutdown. Similarly, if a remote call has not completed within a
+defined period of time, the connection is shutdown and the ORB will
+return <TT>COMM_FAILURE</TT> to the client.<BR>
+<BR>
+How often the internal thread scans the connections is determined by
+the value of the <EM>scan granularity</EM>. This value is defaulted to 5
+seconds and can be changed using the command-line option
+<TT>-ORBscanGranularity</TT> or using the
+<TT>omniORB::scanGranularity</TT> call. Notice that this value
+determines the precision the ORB is able to keep to the value of the
+idle connection or remote call timeout.<BR>
+<BR>
+How long the ORB will wait before it shuts down an idle connection is
+determined by the idleConnectionPeriods. There are separate values for
+incoming and outgoing connections. The default values are 180 and 120
+seconds for incoming and outgoing connections respectively. These
+values can be changed using the command-line options
+<TT>-ORBinConScanPeriod</TT> and <TT>-ORBoutConScanPeriod</TT>. They
+can also be controlled by the
+<TT>omniORB::idleConnectionScanPeriod()</TT> call.<BR>
+<BR>
+Similarly, how long the ORB will wait for a remote call to complete is
+determined by the parameter clientCallTimeOutPeriod for the client
+side and the serverCallTimeOutPeroid for the server side. By default
+calls will not timeout on either the client or server side.<BR>
+<BR>
+The timeouts can be changed using the
+<TT>omniORB::callTimeOutPeriod()</TT> call, or with the command line
+options <TT>-ORBclientCallTimeOutPeriod</TT> and
+<TT>-ORBserverCallTimeOutPeriod</TT>.<BR>
+<BR>
+The APIs are documented in <TT>include/omniORB3/omniORB.h</TT>.<BR>
+<BR>
+<PRE>
+class omniORB {
+public:
+
+  static void scanGranularity(CORBA::ULong sec);
+
+  static CORBA::ULong scanGranularity();
+
+  enum   idleConnType { idleIncoming, idleOutgoing };
+
+  static void idleConnectionScanPeriod(idleConnType direction, CORBA::ULong sec);
+
+  static CORBA::ULong idleConnectionScanPeriod(idleConnType direction);
+
+  enum   callTimeOutType { clientSide, serverSide };
+
+  static void callTimeOutPeriod(callTimeOutType direction, CORBA::ULong sec);
+
+  static CORBA::ULong callTimeOutPeriod(callTimeOutType direction);
+};
+</PRE>The scan can be disabled completely by setting the scan granularity to
+0.<BR>
+<BR>
+<A NAME="toc44"></A>
+<H2>8.4&nbsp;&nbsp; Interoperability Considerations</H2>The IIOP specification allows both the client and the server to
+shutdown a connection unilaterally. When one end is about to shutdown
+a connection, it should send a closeConnection message to the other
+end. It should also make sure that the message will reach the other
+end before it proceeds to shutdown the connection.<BR>
+<BR>
+The client should distinguish between an orderly and an abnormal
+connection shutdown. When a client receives a closeConnection message
+before the connection is closed, the condition is an orderly shutdown.
+If the message is not received, the condition is an abnormal shutdown.
+In an abnormal shutdown, the ORB should raise a <TT>COMM_FAILURE</TT>
+exception whereas in an orderly shutdown, the ORB should <EM>not</EM>
+raise an exception and should try to re-establish a new connection
+transparently.<BR>
+<BR>
+omniORB implements these semantics completely. However, it is known
+that some ORBs are not (yet) able to distinguish between an orderly
+and an abnormal shutdown. Usually this is manifested as the client in
+these ORBs seeing a <TT>COMM_FAILURE</TT> occasionally when connected
+to an omniORB server. The work-around is either to catch the exception
+in the application code and retry, or to turn off the idle connection
+shutdown inside the omniORB server.<BR>
+<BR>
+<A NAME="toc45"></A>
+<H2>8.5&nbsp;&nbsp; Connection Acceptance</H2>
+<A NAME="sec_accept"></A>omniORB provides the hook to implement a connection acceptance policy.
+Inside the ORB runtime, a thread is dedicated to receive new
+connections. When the thread is given the handle of a new connection
+by the operating system, it calls the policy module to decide if the
+connection can be accepted. If the answer is yes, the ORB will start
+serving requests coming in from that connection. Otherwise, the
+connection is shutdown immediately.<BR>
+<BR>
+There can be a number of policy module implementations. The basic one
+is a dummy module which just accepts every connection.<BR>
+<BR>
+In addition, a host-based access control module is available on Unix
+platforms. The module uses the IP address of the client to decide if
+the connection can be accepted. The module is implemented using
+<EM>tcp_wrappers 7.6</EM>. The access control policy can be defined as
+rules in two access control files: <TT>hosts.allow</TT> and
+<TT>hosts.deny</TT>. The syntax of the rules is described in the manual
+page <TT>hosts_access(5)</TT> which can be found in
+appendix&nbsp;<A HREF="omniORB013.html#apx:hostsaccess">A</A>. The syntax defines a simple access
+control language that is based on client (host name/address, user
+name), and server (process name, host name/address) patterns. When
+searching for a match on the server process name, the ORB uses the
+value of <TT>omniORB::serverName</TT>. <TT>ORB_init()</TT> uses the argument
+<TT>argv[0]</TT> to set the default value of this variable. This can be
+overridden by the application with the <TT>-ORBserverName
+</TT>&lt;<I>string</I>&gt; command line argument<BR>
+<BR>
+The default location of the access control files is <TT>/etc</TT>. This
+can be overridden by the extra options in <TT>omniORB.cfg</TT>. For
+instance:<BR>
+<BR>
+<PRE>
+# omniORB configuration file - extra options
+
+GATEKEEPER_ALLOWFILE   /project/omni/var/hosts.allow
+
+GATEKEEPER_DENYFILE    /project/omni/var/hosts.deny
+
+</PRE>As each policy module is implemented as a separate library, the choice
+of policy module is determined at program linkage time. For instance,
+if the host-based access control module is in use:<BR>
+<BR>
+<PRE>
+% eg1 -ORBtraceLevel 2
+omniORB gateKeeper is tcpwrapGK 1.0 - based on tcp_wrappers_7.6 
+I said,"Hello!". The Object said,"Hello!"
+</PRE>Whereas if the dummy module is in use:<BR>
+<BR>
+<PRE>
+% eg1 -ORBtraceLevel 2
+omniORB gateKeeper is not installed. All incoming are accepted.
+I said,"Hello!". The Object said,"Hello!"
+</PRE><HR>
+<A HREF="omniORB007.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="omniORB009.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

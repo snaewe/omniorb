@@ -9,6 +9,14 @@ BINDIR = bin/x86_win32
 LIBDIR = lib/x86_win32
 
 #
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = //c/progra~1/Python/python
+
+
+#
 # Include general win32 things
 #
 

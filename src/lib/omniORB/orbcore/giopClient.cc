@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // giopClient.cc              Created on: 26/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,27 @@
  
 /*
   $Log$
+  Revision 1.13  2000/07/04 15:22:57  dpg1
+  Merge from omni3_develop.
+
+  Revision 1.12.6.4  2000/06/22 10:37:50  dpg1
+  Transport code now throws omniConnectionBroken exception rather than
+  CORBA::COMM_FAILURE when things go wrong. This allows the invocation
+  code to distinguish between transport problems and COMM_FAILURES
+  propagated from the server side.
+
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
+  Revision 1.12.6.3  1999/10/18 11:27:39  djr
+  Centralised list of system exceptions.
+
+  Revision 1.12.6.2  1999/10/14 16:22:09  djr
+  Implemented logging when system exceptions are thrown.
+
+  Revision 1.12.6.1  1999/09/22 14:26:49  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.12  1999/08/30 16:50:17  sll
   Added call to Strand::Sync::clicksSet to control how long a call is
   allowed to progress or how long an idle connection is to stay open.
@@ -55,8 +76,15 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <scavenger.h>
+#include <exceptiondefs.h>
+
 
 GIOP_C::GIOP_C(Rope *r)
   : NetBufferedStream(r,1,1,0)
@@ -138,7 +166,7 @@ GIOP_C::InitialiseRequest(const void          *objkey,
 
   size_t bodysize =msgsize-sizeof(MessageHeader::Request)-sizeof(CORBA::ULong);
   if (bodysize > MaxMessageSize()) {
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
   }
 
   pd_state = GIOP_C::RequestInProgress;
@@ -217,7 +245,7 @@ GIOP_C::ReceiveReply()
     {
       // Wrong header
       setStrandIsDying();
-      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW_CONNECTION_BROKEN(0,CORBA::COMPLETED_MAYBE);
     }
 
   CORBA::ULong msgsize;
@@ -232,7 +260,7 @@ GIOP_C::ReceiveReply()
   if (msgsize > MaxMessageSize()) {
     // message size has exceeded the limit
     setStrandIsDying();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW_CONNECTION_BROKEN(0,CORBA::COMPLETED_MAYBE);
   }
 
   RdMessageSize(msgsize,hdr[6]);
@@ -275,7 +303,7 @@ GIOP_C::ReceiveReply()
     // Should never receive anything other that the above
     // Same treatment as wrong header
     setStrandIsDying();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW_CONNECTION_BROKEN(0,CORBA::COMPLETED_MAYBE);
   }
   return (GIOP::ReplyStatusType)rc;
 }
@@ -320,7 +348,7 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip_msg)
 	  }
 	  else {
 	    setStrandIsDying();
-	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+	    OMNIORB_THROW_CONNECTION_BROKEN(0,CORBA::COMPLETED_NO);
 	  }
 	}
       else {
@@ -385,7 +413,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
       {
 	// Wrong header
 	setStrandIsDying();
-	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW_CONNECTION_BROKEN(0,CORBA::COMPLETED_MAYBE);
       }
 
     CORBA::ULong msgsize;
@@ -400,7 +428,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
     if (msgsize > MaxMessageSize()) {
       // message size has exceeded the limit
       setStrandIsDying();
-      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW_CONNECTION_BROKEN(0,CORBA::COMPLETED_MAYBE);
     }
 
     RdMessageSize(msgsize,hdr[6]);
@@ -427,7 +455,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
     // Should never receive anything other that the above
     // Same treatment as wrong header
     setStrandIsDying();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW_CONNECTION_BROKEN(0,CORBA::COMPLETED_MAYBE);
   }
   return (GIOP::LocateStatusType)rc;
 }
@@ -442,16 +470,13 @@ GIOP_C::UnMarshallSystemException()
   if (strncmp((const char *)repoid,(const char *) \
 	      GIOP_Basetypes::SysExceptRepoID:: _ex .id, \
 	      GIOP_Basetypes::SysExceptRepoID:: _ex .len)==0) \
-    { \
-      CORBA:: _ex ex(m,(CORBA::CompletionStatus)s); \
-      throw ex; \
-    }
+    OMNIORB_THROW(_ex, m, (CORBA::CompletionStatus) s);
 
   // Real code begins here
   CORBA::ULong len;
   len <<= *this;
   if (len > omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen)
-    throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(UNKNOWN,0,CORBA::COMPLETED_MAYBE);
 
   CORBA::Char repoid[omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen];
 
@@ -467,42 +492,13 @@ GIOP_C::UnMarshallSystemException()
   case CORBA::COMPLETED_MAYBE:
     break;
   default:
-    throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(UNKNOWN,0,CORBA::COMPLETED_MAYBE);
   };
 
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (UNKNOWN);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (BAD_PARAM);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (NO_MEMORY);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (IMP_LIMIT);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (COMM_FAILURE);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (INV_OBJREF);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (OBJECT_NOT_EXIST);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (NO_PERMISSION);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (INTERNAL);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (MARSHAL);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (INITIALIZE);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (NO_IMPLEMENT);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (BAD_TYPECODE);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (BAD_OPERATION);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (NO_RESOURCES);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (NO_RESPONSE);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (PERSIST_STORE);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (BAD_INV_ORDER);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (TRANSIENT);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (FREE_MEM);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (INV_IDENT);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (INV_FLAG);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (INTF_REPOS);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (BAD_CONTEXT);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (OBJ_ADAPTER);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (DATA_CONVERSION);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (TRANSACTION_REQUIRED);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (TRANSACTION_ROLLEDBACK);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (INVALID_TRANSACTION);
-  CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION (WRONG_TRANSACTION);
+  OMNIORB_FOR_EACH_SYS_EXCEPTION(CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION)
 
   // If none of the above matched
-  throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+  OMNIORB_THROW(UNKNOWN,0,CORBA::COMPLETED_MAYBE);
 
 #undef CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION
 }

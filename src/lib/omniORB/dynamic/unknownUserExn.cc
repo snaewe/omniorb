@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // unknownUserExn.cc          Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,12 +27,11 @@
 //   Implementation of CORBA::UnknownUserException.
 //
 
-#include <omniORB2/CORBA.h>
-#include <omniORB2/tcDescriptor.h>
+#include <omniORB3/CORBA.h>
+#include <omniORB3/tcDescriptor.h>
 
 
-CORBA::
-UnknownUserException::UnknownUserException(Any* ex)
+CORBA::UnknownUserException::UnknownUserException(Any* ex)
   : pd_exception(ex)
 {
   if( !ex )
@@ -43,32 +42,44 @@ UnknownUserException::UnknownUserException(Any* ex)
 }
 
 
-CORBA::
-UnknownUserException::~UnknownUserException()
+CORBA::UnknownUserException::~UnknownUserException()
 {
   delete pd_exception;
 }
 
 
 CORBA::Any&
-CORBA::
-UnknownUserException::exception()
+CORBA::UnknownUserException::exception()
 {
   return *pd_exception;
 }
 
 
 void
-CORBA::
-UnknownUserException::_raise()
+CORBA::UnknownUserException::_raise()
 {
   throw *this;
 }
 
 
+CORBA::UnknownUserException*
+CORBA::UnknownUserException::_downcast(Exception* e)
+{
+  return (UnknownUserException*) _NP_is_a(e,
+			 "Exception/UserException/UnknownUserException");
+}
+
+
+const CORBA::UnknownUserException*
+CORBA::UnknownUserException::_downcast(const Exception* e)
+{
+  return (const UnknownUserException*) _NP_is_a(e,
+		       "Exception/UserException/UnknownUserException");
+}
+
+
 CORBA::Exception*
-CORBA::
-UnknownUserException::_NP_duplicate() const
+CORBA::UnknownUserException::_NP_duplicate() const
 {
   // pd_exception is guarenteed not null
   Any* ex = new Any(*pd_exception);
@@ -78,32 +89,33 @@ UnknownUserException::_NP_duplicate() const
 
 
 const char*
-CORBA::
-UnknownUserException::_NP_mostDerivedTypeId() const
+CORBA::UnknownUserException::_NP_typeId() const
 {
   return "Exception/UserException/UnknownUserException";
 }
 
 
-CORBA::UnknownUserException*
-CORBA::
-UnknownUserException::_downcast(Exception* e)
+const char*
+CORBA::UnknownUserException::_NP_repoId(int* size) const
 {
-  return (UnknownUserException*)_NP_is_a(e, "Exception/UserException/UnknownUserException");
+  *size = sizeof("IDL:omg.org/CORBA/UnknownUserException:1.0");
+  return "IDL:omg.org/CORBA/UnknownUserException:1.0";
 }
 
-const CORBA::UnknownUserException*
-CORBA::
-UnknownUserException::_downcast(const Exception* e)
+
+void
+CORBA::UnknownUserException::_NP_marshal(NetBufferedStream&) const
 {
-  return (const UnknownUserException*)_NP_is_a(e, "Exception/UserException/UnknownUserException");
+  // I don't think we can be called.
+  OMNIORB_ASSERT(0);
 }
 
-CORBA::UnknownUserException*
-CORBA::
-UnknownUserException::_narrow(Exception* e)
+
+void
+CORBA::UnknownUserException::_NP_marshal(MemBufferedStream&) const
 {
-  return _downcast(e);
+  // I don't think we can be called.
+  OMNIORB_ASSERT(0);
 }
 
 
@@ -257,4 +269,3 @@ UnknownUserException_insertToAnyNCP(CORBA::Any& a,const CORBA::Exception* e)
 CORBA::Exception::insertExceptionToAny CORBA::UnknownUserException::insertToAnyFn = UnknownUserException_insertToAny;
 
 CORBA::Exception::insertExceptionToAnyNCP CORBA::UnknownUserException::insertToAnyFnNCP = UnknownUserException_insertToAnyNCP;
-

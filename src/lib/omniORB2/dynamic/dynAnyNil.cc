@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // dynAnyNil.cc               Created on: 11/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,14 +27,20 @@
 //   Implementation of nil DynAny objects.
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <dynAny.h>
 
 
 //////////////////////////////////////////////////////////////////////
-////////////////////////////// NilDynAny /////////////////////////////
+//////////////////////////// omniNilDynAny ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilDynAny : public virtual CORBA::DynAny {
+class omniNilDynAny : public virtual CORBA::DynAny {
 public:
   virtual CORBA::TypeCode_ptr type() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -180,19 +186,24 @@ public:
   }
 };
 
-static NilDynAny _nilDynAny;
 
 CORBA::DynAny_ptr
 CORBA::DynAny::_nil()
 {
-  return &_nilDynAny;
+  static omniNilDynAny* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynAny;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
-///////////////////////////// NilDynEnum /////////////////////////////
+/////////////////////////// omniNilDynEnum ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilDynEnum : public CORBA::DynEnum, NilDynAny {
+class omniNilDynEnum : public CORBA::DynEnum, omniNilDynAny {
 public:
   virtual char* value_as_string() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -210,19 +221,24 @@ public:
   }
 };
 
-static NilDynEnum _nilDynEnum;
 
 CORBA::DynEnum_ptr
 CORBA::DynEnum::_nil()
 {
-  return &_nilDynEnum;
+  static omniNilDynEnum* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynEnum;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////// NilDynStruct ////////////////////////////
+////////////////////////// omniNilDynStruct //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilDynStruct : public CORBA::DynStruct, NilDynAny {
+class omniNilDynStruct : public CORBA::DynStruct, omniNilDynAny {
 public:
   virtual char*  current_member_name() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -241,19 +257,24 @@ public:
   }
 };
 
-static NilDynStruct _nilDynStruct;
 
 CORBA::DynStruct_ptr
 CORBA::DynStruct::_nil()
 {
-  return &_nilDynStruct;
+  static omniNilDynStruct* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynStruct;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
-///////////////////////////// NilDynUnion ////////////////////////////
+/////////////////////////// omniNilDynUnion //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilDynUnion : public CORBA::DynUnion, NilDynAny {
+class omniNilDynUnion : public CORBA::DynUnion, omniNilDynAny {
 public:
   virtual CORBA::Boolean set_as_default() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -287,19 +308,24 @@ public:
   }
 };
 
-static NilDynUnion _nilDynUnion;
 
 CORBA::DynUnion_ptr
 CORBA::DynUnion::_nil()
 {
-  return &_nilDynUnion;
+  static omniNilDynUnion* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynUnion;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
-/////////////////////////// NilDynSequence ///////////////////////////
+///////////////////////// omniNilDynSequence /////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilDynSequence : public CORBA::DynSequence, NilDynAny {
+class omniNilDynSequence : public CORBA::DynSequence, omniNilDynAny {
 public:
   virtual CORBA::ULong length() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -317,19 +343,24 @@ public:
   }
 };
 
-static NilDynSequence _nilDynSequence;
 
 CORBA::DynSequence_ptr
 CORBA::DynSequence::_nil()
 {
-  return &_nilDynSequence;
+  static omniNilDynSequence* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynSequence;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
-///////////////////////////// NilDynArray ////////////////////////////
+/////////////////////////// omniNilDynArray //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilDynArray : public CORBA::DynArray, NilDynAny {
+class omniNilDynArray : public CORBA::DynArray, omniNilDynAny {
 public:
   virtual CORBA::AnySeq* get_elements() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -340,10 +371,15 @@ public:
   }
 };
 
-static NilDynArray _nilDynArray;
 
 CORBA::DynArray_ptr
 CORBA::DynArray::_nil()
 {
-  return &_nilDynArray;
+  static omniNilDynArray* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynArray;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }

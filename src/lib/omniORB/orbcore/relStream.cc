@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // relStream.cc               Created on: 18/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -28,8 +28,26 @@
 
 /*
   $Log$
-  Revision 1.3  1999/03/11 16:25:55  djr
-  Updated copyright notice
+  Revision 1.4  2000/07/04 15:22:51  dpg1
+  Merge from omni3_develop.
+
+  Revision 1.3.8.5  2000/06/22 10:40:17  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
+  Revision 1.3.8.4  2000/01/28 15:57:09  djr
+  Removed superflouous ref counting in Strand_iterator.
+  Removed flags to indicate that Ropes and Strands are heap allocated.
+  Improved allocation of client requests to strands.
+
+  Revision 1.3.8.3  1999/10/14 16:22:16  djr
+  Implemented logging when system exceptions are thrown.
+
+  Revision 1.3.8.2  1999/09/24 15:01:35  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
+  Revision 1.3.8.1  1999/09/22 14:27:05  djr
+  Major rewrite of orbcore to support POA.
 
   Revision 1.2  1998/08/14 13:50:58  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
@@ -40,20 +58,22 @@
 
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
 #include <relStream.h>
+#include <exceptiondefs.h>
 #include <limits.h>
+
 
 #define  DO_NOT_AVOID_MISALIGNMENT    
 
-reliableStreamStrand::reliableStreamStrand(size_t buffer_size,
-					   Rope* r, CORBA::Boolean h)
-  : Strand(r,h), pd_buffer_size(buffer_size)
+
+reliableStreamStrand::reliableStreamStrand(size_t buffer_size, Rope* r)
+  : Strand(r), pd_buffer_size(buffer_size)
 {
   pd_tx_buffer = (void *) new char[pd_buffer_size];
   pd_tx_begin  = pd_tx_end = pd_tx_reserved_end = pd_tx_buffer;
@@ -119,7 +139,7 @@ reliableStreamStrand::receive(size_t size,
   }
 
   if (align > (int)omni::max_alignment) {
-    throw CORBA::INTERNAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_MAYBE);
   }
 
   current_alignment = (omni::ptr_arith_t) pd_rx_begin &
@@ -144,7 +164,7 @@ reliableStreamStrand::receive(size_t size,
   if (bsz < size) {
     if (exactly) {
       if (size > max_receive_buffer_size()) {
-	throw CORBA::INTERNAL(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_MAYBE);
       }
       // Not enough data to satisfy the request, fetch() and try again
       // Check if there is enough empty space for fetch() to satisfy this
@@ -230,7 +250,7 @@ reliableStreamStrand::giveback_received(size_t leftover)
   size_t total = (omni::ptr_arith_t)pd_rx_received_end -
     (omni::ptr_arith_t)pd_rx_begin;
   if (total < leftover) {
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
   }
   total -= leftover;
   pd_rx_begin = (void *)((omni::ptr_arith_t)pd_rx_begin + total);
@@ -336,7 +356,7 @@ reliableStreamStrand::reserve(size_t size,
   }
 
   if (align > (int)omni::max_alignment) {
-    throw CORBA::INTERNAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_MAYBE);
   }
 
   int current_alignment = (omni::ptr_arith_t) pd_tx_end & 
@@ -372,7 +392,7 @@ reliableStreamStrand::reserve(size_t size,
   if (bsz < size) {
     if (exactly) {
       if (size > max_reserve_buffer_size()) {
-	throw CORBA::INTERNAL(0,CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(INTERNAL,0,CORBA::COMPLETED_MAYBE);
       }
       // Not enough space to satisfy the request, transmit what is
       // left and try again
@@ -398,7 +418,7 @@ reliableStreamStrand::giveback_reserved(size_t leftover,
   size_t total = (omni::ptr_arith_t)pd_tx_reserved_end -
     (omni::ptr_arith_t)pd_tx_end;
   if (total < leftover) {
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
   }
   total -= leftover;
   pd_tx_end = (void *)((omni::ptr_arith_t)pd_tx_end + total);

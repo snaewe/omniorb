@@ -1,9 +1,17 @@
 #
-# x86_nextstep_3.3.mk - make variables and rules specific to m68k nextstep 3.3
+# m68k_nextstep_3.3.mk - make variables and rules specific to m68k nextstep 3.3
 #
 
 NextStep = 1
 x86Processor = 1
+
+
+#
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = /usr/local/bin/python
 
 
 #

@@ -9,6 +9,14 @@ IndigoProcessor = 1
 
 
 #
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = /usr/local/bin/python
+
+
+#
 # Include general unix things
 #
 
@@ -84,17 +92,17 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 # CORBA stuff
 #
 
-omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-CorbaImplementation = OMNIORB2
+omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+CorbaImplementation = OMNIORB
 
 # SGI linker has some peculiar requirements on the order in which share
 # libraries are specified on the command line.
 #    1. Two libraries cross reference each other, as it is the case with 
-#       -lomniORB2 and -ltcpwrapGK means that -lomniORB2 has to be
+#       -lomniORB3 and -ltcpwrapGK means that -lomniORB3 has to be
 #       repeated after -ltcpwrapGK
 #    2. Multi-threaded programs must have -lpthread as the last option
 #       on the command line.
-# To satisify #2, we arrange in OMNIORB2_LIB that -lpthread is the last
+# To satisify #2, we arrange in OMNIORB_LIB that -lpthread is the last
 # option. So as long as in a dir.mk, the $(CORBA_LIB) is the last one
 # in the assignment to libs, this condition is satisfied. 
 # E.g.
@@ -102,22 +110,22 @@ CorbaImplementation = OMNIORB2
 #        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
 #
 
-# Here we reset the value of OMNIORB2_LIB to meet the above requirements. The
+# Here we reset the value of OMNIORB_LIB to meet the above requirements. The
 # variable was original set in unix.mk
 
-OMNIORB2_LIB = $(patsubst %,$(LibSearchPattern),omniORB2) \
-		$(patsubst %,$(LibSearchPattern),omniDynamic2) \
-	        $($(omniORB2GatekeeperImplementation)_LIB) \
-                $(patsubst %,$(LibSearchPattern),omniORB2) \
+OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
+		$(patsubst %,$(LibSearchPattern),omniDynamic3) \
+	        $($(omniORBGatekeeperImplementation)_LIB) \
+                $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 
-OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB2) \
-	        $($(omniORB2GatekeeperImplementation)_LIB) \
-                $(patsubst %,$(LibSearchPattern),omniORB2) \
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
+	        $($(omniORBGatekeeperImplementation)_LIB) \
+                $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
 OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg

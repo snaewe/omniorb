@@ -27,4 +27,4 @@
 //
 
 #define USE_dyn_stub_in_nt_dll
-#include <../bootstrapSK.cc>
+#include <omniORB3/bootstrapSK.cc>

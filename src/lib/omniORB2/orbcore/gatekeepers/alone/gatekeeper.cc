@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // gatekeeper.cc              Created on: 
 //                            Author    : 
 //
@@ -45,7 +45,7 @@
 
 extern "C" void exit(int) ;
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 #include <libcWrapper.h>
 #include <gatekeeper.h>
 
@@ -99,9 +99,10 @@ gateKeeper::checkConnect( _tcpStrand *s) {
   // ********************************
   // retrieve the client name
   // ********************************
-#if (defined(__GLIBC__) && __GLIBC__ >= 2)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2) || (defined(__freebsd__) && __OSVERSION__ >= 4)
     // GNU C library uses socklen_t * instead of int* in getpeername().
     // This is suppose to be compatible with the upcoming POSIX standard.
+    // FreeBSD 4.0 uses it too.
     socklen_t clientAddrSize;
 #elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
     size_t clientAddrSize;

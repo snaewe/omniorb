@@ -30,7 +30,7 @@
 #include <unistd.h>
 #endif
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
@@ -57,7 +57,7 @@ static void usage(char* progname)
 
 
 
-#if defined(__WIN32__) || defined(__VMS) && __CRTL_VER < 60200000
+#if defined(__WIN32__) || defined(__VMS) && __VMS_VER < 60200000
 
 // WIN32 doesn't have an implementation of getopt() - 
 // supply a getopt() for this program:
@@ -331,7 +331,7 @@ int main(int argc, char* argv[])
 
 CORBA::Char* convertRef(char* old_ior, char* hostname)
 {
-  CORBA::Char* repoID;
+  _CORBA_Char* repoID;
   IOP::TaggedProfileList* old_profiles;
   IOP::TaggedProfileList* new_profiles = new IOP::TaggedProfileList;
 
@@ -348,7 +348,7 @@ CORBA::Char* convertRef(char* old_ior, char* hostname)
 	}
       else
 	{	  
-	  for (long count=0; count < old_profiles->length(); count++)
+	  for (unsigned long count=0; count < old_profiles->length(); count++)
 	    {
 	      if ((*old_profiles)[count].tag == IOP::TAG_INTERNET_IOP)
 		  {

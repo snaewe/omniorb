@@ -30,13 +30,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #ifndef __WIN32__
 #include <unistd.h>
 #endif
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
+#include <ctype.h>
 
 
 static CORBA::Char*
@@ -53,7 +53,7 @@ static void usage(char* progname)
 
 
 
-#if defined(__WIN32__) || defined(__VMS) && __CRTL_VER < 60200000
+#if defined(__WIN32__) || defined(__VMS) && __VMS_VER < 60200000
 
 // WIN32 doesn't have an implementation of getopt() - 
 // supply a getopt() for this program:

@@ -1,66 +1,116 @@
-// eg1.cc - This is the source code of example 1 used in Chapter 2 
-//          "The Basics" of the omniORB2 user guide.
+// eg1.cc - This is the source code of example 1 used in Chapter 2
+//          "The Basics" of the omniORB user guide.
 //
-//          In this example, both the object implementation and the 
+//          In this example, both the object implementation and the
 //          client are in the same process.
 //
 // Usage: eg1
 //
+
 #include <iostream.h>
-#include "echo.hh"
+#include <echo.hh>
 
-#include "echo_i.cc"
-#include "greeting.cc"
 
-int
-main(int argc, char **argv)
+// This is the object implementation.
+
+class Echo_i : public POA_Echo,
+	       public PortableServer::RefCountServantBase
 {
-  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
-  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+public:
+  inline Echo_i() {}
+  virtual ~Echo_i() {}
+  virtual char* echoString(const char* mesg);
+};
 
-  Echo_i *myobj = new Echo_i();
-  // Note: all implementation objects must be instantiated on the
-  // heap using the new operator.
 
-  myobj->_obj_is_ready(boa);
-  // Tell the BOA the object is ready to serve.
-  // This call is omniORB2 specific.
-  //
-  // This call is equivalent to the following call sequence:
-  //     Echo_ptr myobjRef = myobj->_this();
-  //     boa->obj_is_ready(myobjRef);
-  //     CORBA::release(myobjRef);
+char* Echo_i::echoString(const char* mesg)
+{
+  return CORBA::string_dup(mesg);
+}
 
-  boa->impl_is_ready(0,1);
-  // Tell the BOA we are ready and to return immediately once it has
-  // done its stuff. It is omniORB2 specific to call impl_is_ready()
-  // with the extra 2nd argument- CORBA::Boolean NonBlocking,
-  // which is set to TRUE (1) in this case.
+//////////////////////////////////////////////////////////////////////
 
-  Echo_ptr myobjRef = myobj->_this();
-  // Obtain an object reference.
-  // Note: always use _this() to obtain an object reference from the
-  //       object implementation.
+// This function acts as a client to the object.
 
-  hello(myobjRef);
+static void hello(Echo_ptr e)
+{
+  if( CORBA::is_nil(e) ) {
+    cerr << "hello: The object reference is nil!\n" << endl;
+    return;
+  }
 
-  CORBA::release(myobjRef);
-  // Dispose of the object reference.
+  CORBA::String_var src = (const char*) "Hello!";
+  // String literals are (char*) rather than (const char*) on some
+  // old compilers.  Thus it is essential to cast to (const char*)
+  // here to ensure that the string is copied, so that the
+  // CORBA::String_var does not attempt to 'delete' the string
+  // literal.
 
-  myobj->_dispose();
-  // Dispose of the object implementation.
-  // This call is omniORB2 specific.
-  // Note: *never* call the delete operator or the dtor of the object
-  //       directly because the BOA needs to be informed.
-  //
-  // This call is equivalent to the following call sequence:
-  //     Echo_ptr myobjRef = myobj->_this();
-  //     boa->dispose(myobjRef);
-  //     CORBA::release(myobjRef);
+  CORBA::String_var dest = e->echoString(src);
 
-  boa->destroy();
+  cerr << "I said, \"" << (char*)src << "\"." << endl
+       << "The Echo object replied, \"" << (char*)dest <<"\"." << endl;
+}
 
-  orb->NP_destroy();
+//////////////////////////////////////////////////////////////////////
+
+int main(int argc, char** argv)
+{
+  try {
+    // Initialise the ORB.
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+
+    // Obtain a reference to the root POA.
+    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+
+    // We allocate the object on the heap.  Since this is a reference
+    // counted object, it will be deleted by the POA when it is no
+    // longer needed.
+    Echo_i* myecho = new Echo_i();
+
+    // Activate the object.  This tells the POA that this object is
+    // ready to accept requests.
+    PortableServer::ObjectId_var myechoid = poa->activate_object(myecho);
+
+    // Obtain a reference to the object.
+    Echo_var myechoref = myecho->_this();
+
+    // Decrement the reference count of the object implementation, so
+    // that it will be properly cleaned up when the POA has determined
+    // that it is no longer needed.
+    myecho->_remove_ref();
+
+    // Obtain a POAManager, and tell the POA to start accepting
+    // requests on its objects.
+    PortableServer::POAManager_var pman = poa->the_POAManager();
+    pman->activate();
+
+    // Do the client-side call.
+    hello(myechoref);
+
+    // Clean up all the resources.
+    orb->destroy();
+  }
+  catch(CORBA::COMM_FAILURE& ex) {
+    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
+         << "object." << endl;
+  }
+  catch(CORBA::SystemException&) {
+    cerr << "Caught CORBA::SystemException." << endl;
+  }
+  catch(CORBA::Exception&) {
+    cerr << "Caught CORBA::Exception." << endl;
+  }
+  catch(omniORB::fatalException& fe) {
+    cerr << "Caught omniORB::fatalException:" << endl;
+    cerr << "  file: " << fe.file() << endl;
+    cerr << "  line: " << fe.line() << endl;
+    cerr << "  mesg: " << fe.errmsg() << endl;
+  }
+  catch(...) {
+    cerr << "Caught unknown exception." << endl;
+  }
 
   return 0;
 }

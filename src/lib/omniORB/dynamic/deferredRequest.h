@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // deferredRequest.h          Created on: 10/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -31,7 +31,7 @@
 #ifndef __DEFERREDREQUEST_H__
 #define __DEFERREDREQUEST_H__
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 
 class DeferredRequest : public omni_thread {

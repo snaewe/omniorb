@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // exceptn.cc                 Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,39 +27,25 @@
 //  Implementation of the CORBA::Exception hierarchy.
 //
 
-#include <omniORB2/CORBA.h>
-#include <string.h>
+#include <omniORB3/CORBA.h>
 
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
+#include <exceptiondefs.h>
+#include <string.h>
+#include <stdlib.h>
+
+
+_init_in_def_( const CORBA::ULong CORBA::OMGVMCID = 1330446336; )
+
+
+//////////////////////////////////////////////////////////////////////
+////////////////////////////// Exception /////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 CORBA::Exception::~Exception() { pd_magic = 0; }
-
-
-void
-CORBA::Exception::_raise()
-{
-  throw omniORB::fatalException(__FILE__,__LINE__,
-				"_raise() not overriden in derived class"
-				" of CORBA::Exception");
-}
-
-
-CORBA::Exception*
-CORBA::Exception::_NP_duplicate() const
-{
-  throw omniORB::fatalException(__FILE__,__LINE__,
-				"_NP_duplicate() not overriden in derived"
-				" class of CORBA::Exception");
-#ifdef NEED_DUMMY_RETURN
-  return 0;
-#endif
-}
-
-
-const char*
-CORBA::Exception::_NP_mostDerivedTypeId() const
-{
-  return "Exception";
-}
 
 
 CORBA::Exception*
@@ -69,25 +55,6 @@ CORBA::Exception::_duplicate(Exception* e)
   else     return 0;
 }
 
-CORBA::Exception*
-CORBA::Exception::_downcast(Exception* e)
-{
-  return e;
-}
-
-
-const CORBA::Exception*
-CORBA::Exception::_downcast(const Exception* e)
-{
-  return e;
-}
-
-CORBA::Exception*
-CORBA::Exception::_narrow(Exception* e)
-{
-  return _downcast(e);
-}
-
 
 CORBA::Exception*
 CORBA::
@@ -95,24 +62,24 @@ Exception::_NP_is_a(const Exception* e, const char* typeId)
 {
   if( !e )  return 0;
   size_t len = strlen(typeId);
-  if( strncmp(typeId, e->_NP_mostDerivedTypeId(), len) )
+  if( strncmp(typeId, e->_NP_typeId(), len) )
     return 0;
   else
     return (Exception*) e;
 }
 
+
+size_t
+CORBA::Exception::_NP_alignedSize(size_t msgsize) const
+{
+  return msgsize;
+}
+
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
+/////////////////////////// SystemException //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 CORBA::SystemException::~SystemException() {}
-
-
-const char*
-CORBA::SystemException::NP_RepositoryId() const
-{
-  return "";
-}
 
 
 CORBA::SystemException*
@@ -127,14 +94,31 @@ CORBA::SystemException::_downcast(const Exception* e)
   return (const SystemException*)_NP_is_a(e, "Exception/SystemException");
 }
 
-CORBA::SystemException*
-CORBA::SystemException::_narrow(Exception* e)
+
+size_t
+CORBA::SystemException::_NP_alignedSize(size_t msgsize) const
 {
-  return _downcast(e);
+  return omni::align_to(msgsize, omni::ALIGN_4) + 8;
+}
+
+
+void
+CORBA::SystemException::_NP_marshal(NetBufferedStream& s) const
+{
+  pd_minor >>= s;
+  CORBA::ULong(pd_status) >>= s;
+}
+
+
+void
+CORBA::SystemException::_NP_marshal(MemBufferedStream& s) const
+{
+  pd_minor >>= s;
+  CORBA::ULong(pd_status) >>= s;
 }
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
+//////////////////////////// UserException ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 CORBA::UserException::~UserException() {}
@@ -152,12 +136,6 @@ CORBA::UserException::_downcast(const Exception* e)
   return (const UserException*)_NP_is_a(e, "Exception/UserException");
 }
 
-CORBA::UserException*
-CORBA::UserException::_narrow(Exception* e)
-{
-  return _downcast(e);
-}
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -171,112 +149,95 @@ CORBA::name::_raise() \
   throw *this; \
 } \
  \
-CORBA::Exception* \
-CORBA::name::_NP_duplicate() const \
-{ \
-  return new name (pd_minor, pd_status); \
-} \
- \
-const char* \
-CORBA::name::_NP_mostDerivedTypeId() const \
-{ \
-  return "Exception/SystemException/" #name; \
-} \
- \
 CORBA::name* \
 CORBA::name::_downcast(Exception* e) \
 { \
   return (name*)_NP_is_a(e, "Exception/SystemException/" #name); \
 } \
+ \
 const CORBA::name* \
 CORBA::name::_downcast(const Exception* e) \
 { \
   return (const name*)_NP_is_a(e, "Exception/SystemException/" #name); \
 } \
-CORBA::name* \
-CORBA::name::_narrow(Exception* e) \
+ \
+const char* \
+CORBA::name::_NP_repoId(int* size) const \
 { \
-  return _downcast(e); \
+  *size = sizeof("IDL:omg.org/CORBA/" #name ":1.0"); \
+  return "IDL:omg.org/CORBA/" #name ":1.0"; \
 } \
+ \
+CORBA::Exception* \
+CORBA::name::_NP_duplicate() const \
+{ \
+  return new name (*this); \
+} \
+ \
+const char* \
+CORBA::name::_NP_typeId() const \
+{ \
+  return "Exception/SystemException/" #name; \
+} \
+ \
 CORBA::Exception::insertExceptionToAny CORBA::name::insertToAnyFn = 0; \
-CORBA::Exception::insertExceptionToAnyNCP CORBA::name::insertToAnyFnNCP = 0;
+CORBA::Exception::insertExceptionToAnyNCP CORBA::name::insertToAnyFnNCP = 0; \
 
 
-STD_EXCEPTION (UNKNOWN)
-STD_EXCEPTION (BAD_PARAM)
-STD_EXCEPTION (NO_MEMORY)
-STD_EXCEPTION (IMP_LIMIT)
-STD_EXCEPTION (COMM_FAILURE)
-STD_EXCEPTION (INV_OBJREF)
-STD_EXCEPTION (OBJECT_NOT_EXIST)
-STD_EXCEPTION (NO_PERMISSION)
-STD_EXCEPTION (INTERNAL)
-STD_EXCEPTION (MARSHAL)
-STD_EXCEPTION (INITIALIZE)
-STD_EXCEPTION (NO_IMPLEMENT)
-STD_EXCEPTION (BAD_TYPECODE)
-STD_EXCEPTION (BAD_OPERATION)
-STD_EXCEPTION (NO_RESOURCES)
-STD_EXCEPTION (NO_RESPONSE)
-STD_EXCEPTION (PERSIST_STORE)
-STD_EXCEPTION (BAD_INV_ORDER)
-STD_EXCEPTION (TRANSIENT)
-STD_EXCEPTION (FREE_MEM)
-STD_EXCEPTION (INV_IDENT)
-STD_EXCEPTION (INV_FLAG)
-STD_EXCEPTION (INTF_REPOS)
-STD_EXCEPTION (BAD_CONTEXT)
-STD_EXCEPTION (OBJ_ADAPTER)
-STD_EXCEPTION (DATA_CONVERSION)
-STD_EXCEPTION (TRANSACTION_REQUIRED)
-STD_EXCEPTION (TRANSACTION_ROLLEDBACK)
-STD_EXCEPTION (INVALID_TRANSACTION)
-STD_EXCEPTION (WRONG_TRANSACTION)
+OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)
 #undef STD_EXCEPTION
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-#define USER_EXCEPTION(scope,name) \
- \
-CORBA::scope::name::~name() {} \
- \
-void \
-CORBA::scope::name::_raise() \
-{ \
-  throw *this; \
-} \
- \
-CORBA::scope::name* \
-CORBA::scope::name::_downcast(Exception* e) \
-{ \
-  return (name*)_NP_is_a(e, "Exception/UserException/" #scope "::" #name); \
-} \
-const CORBA::scope::name* \
-CORBA::scope::name::_downcast(const Exception* e) \
-{ \
-  return (const name*)_NP_is_a(e, "Exception/UserException/" #scope "::" #name); \
-} \
-CORBA::scope::name* \
-CORBA::scope::name::_narrow(Exception* e) \
-{ \
-  return _downcast(e); \
-} \
- \
-CORBA::Exception* \
-CORBA::scope::name::_NP_duplicate() const \
-{ \
-  return new name (); \
-} \
- \
-const char* \
-CORBA::scope::name::_NP_mostDerivedTypeId() const \
-{ \
-  return "Exception/UserException/" #scope "::" #name; \
-} \
-CORBA::Exception::insertExceptionToAny CORBA::scope::name::insertToAnyFn = 0; \
-CORBA::Exception::insertExceptionToAnyNCP CORBA::scope::name::insertToAnyFnNCP = 0;
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::ORB, InvalidName,
+				       "IDL:omg.org/CORBA/ORB/InvalidName:1.0")
 
-USER_EXCEPTION (ORB,InvalidName)
-#undef USER_EXCEPTION
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// omniExHelper ////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+#ifndef OMNIORB_NO_EXCEPTION_LOGGING
+
+static const char* strip(const char* fn)
+{
+  const char* p = fn + strlen(fn);
+
+  while( p > fn && *p != '/' && *p != '\\' && *p != ':' )  p--;
+
+  if( *p == '/' || *p == '\\' || *p == ':' )  p++;
+
+  return p;
+}
+
+
+#define STD_EXCEPTION(name) \
+  void omniExHelper::name(const char* file, int line, \
+		  CORBA::ULong minor , CORBA::CompletionStatus status) \
+  { \
+    if( omniORB::trace(10) ) { \
+      omniORB::logger l; \
+      l << "throw " #name << " from " << strip(file) << ":" << line << '\n'; \
+    } \
+    throw CORBA::name(minor, status); \
+  }
+
+void omniExHelper::omniConnectionBroken(const char* file, int line,
+					CORBA::ULong minor,
+					CORBA::CompletionStatus status)
+{
+  if( omniORB::trace(10) ) {
+    omniORB::logger l;
+    l << "throw omniConnectionBroken from "
+      << strip(file) << ":" << line << '\n';
+  }
+  throw ::omniConnectionBroken(minor, status);
+}
+
+
+OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)
+#undef STD_EXCEPTION
+
+
+#endif  // ifndef OMNIORB_NO_EXCEPTION_LOGGING

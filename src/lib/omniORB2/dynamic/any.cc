@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // any.cc                     Created on: 31/07/97
 //                            Author1   : Eoin Carroll (ewc)
 //                            Author2   : James Weatherall (jnw)
@@ -28,10 +28,35 @@
 //      Implementation of type any
 
 
-/* $Log$
-/* Revision 1.18  1999/07/02 19:35:16  sll
-/* Corrected typo in operator>>= for typecode.
 /*
+ * $Log$
+ * Revision 1.19  2000/07/04 15:23:17  dpg1
+ * Merge from omni3_develop.
+ *
+ * Revision 1.18.6.6  2000/06/27 16:15:09  sll
+ * New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+ * _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+ * sequence of string and a sequence of object reference.
+ *
+ * Revision 1.18.6.5  2000/02/09 12:04:52  djr
+ * Fixed memory allocation bug in Any insertion/extraction of strings.
+ * Optimisation for insertion/extraction of sequence of simple types.
+ *
+ * Revision 1.18.6.4  1999/10/14 17:31:30  djr
+ * Minor corrections.
+ *
+ * Revision 1.18.6.3  1999/10/14 16:21:54  djr
+ * Implemented logging when system exceptions are thrown.
+ *
+ * Revision 1.18.6.2  1999/09/27 08:48:31  djr
+ * Minor corrections to get rid of warnings.
+ *
+ * Revision 1.18.6.1  1999/09/22 14:26:27  djr
+ * Major rewrite of orbcore to support POA.
+ *
+ * Revision 1.18  1999/07/02 19:35:16  sll
+ * Corrected typo in operator>>= for typecode.
+ *
  * Revision 1.16  1999/07/02 19:10:46  sll
  * Typecode extraction is now non-copy as well.
  *
@@ -99,10 +124,17 @@
 // Revision 1.1  1998/01/27  15:43:47  ewc
 // Initial revision
 //
- */
+*/
+
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #include <anyP.h>
 #include <typecode.h>
+
 
 ////////////////////////////////////////////////////////////////////////
 // In pre-2.8.0 versions, the CORBA::Any extraction operator for
@@ -217,20 +249,20 @@ CORBA::Any::operator<<= (MemBufferedStream& s)
 }
 
 size_t
-CORBA::Any::NP_alignedSize(size_t initialoffset) const
+CORBA::Any::_NP_alignedSize(size_t initialoffset) const
 {
   size_t _msgsize = initialoffset;
   if ( omniORB::tcAliasExpand ) {
     CORBA::TypeCode_var tc =
       TypeCode_base::aliasExpand(ToTcBase(pdAnyP()->getTC_parser()->getTC()));
-    _msgsize = tc->NP_alignedSize(_msgsize);
+    _msgsize = tc->_NP_alignedSize(_msgsize);
   }
   else 
-    _msgsize = pdAnyP()->getTC_parser()->getTC()->NP_alignedSize(_msgsize);
+    _msgsize = pdAnyP()->getTC_parser()->getTC()->_NP_alignedSize(_msgsize);
   return NP_alignedDataOnlySize(_msgsize);
 }
 
-// omniORB2 data-only marshalling functions
+// omniORB data-only marshalling functions
 void
 CORBA::Any::NP_marshalDataOnly(NetBufferedStream& s) const
 {
@@ -261,7 +293,7 @@ CORBA::Any::NP_alignedDataOnlySize(size_t initialoffset) const
   return pdAnyP()->alignedSize(initialoffset);
 }
 
-// omniORB2 internal data packing functions, for use only by stub code
+// omniORB internal data packing functions, for use only by stub code
 void
 CORBA::Any::PR_packFrom(CORBA::TypeCode_ptr newtc,
 			void* tcdesc)
@@ -388,7 +420,7 @@ void
 CORBA::Any::operator<<=(TypeCode_ptr tc)
 {
   if (!CORBA::TypeCode::PR_is_valid(tc)) {
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   }
   CORBA::TypeCode_member tcm(tc);
   tcDescriptor tcd;
@@ -400,14 +432,13 @@ CORBA::Any::operator<<=(TypeCode_ptr tc)
 void
 CORBA::Any::operator<<=(Object_ptr obj)
 {
-  if (!CORBA::Object::PR_is_valid(obj)) {
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if (!CORBA::Object::_PR_is_valid(obj)) {
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   }
-  const char* repoid = (const char*)CORBA::Object::repositoryID;
-  const char* name   = (const char*)"";
-  if (!CORBA::is_nil(obj)) {
-    repoid = obj->PR_getobj()->NP_IRRepositoryId();
-  }
+  const char* repoid = CORBA::Object::_PD_repoId;
+  const char* name   = "";
+  if (!CORBA::is_nil(obj))
+    repoid = obj->_PR_getobj()->_mostDerivedRepoId();
   CORBA::TypeCode_var tc = CORBA::TypeCode::NP_interface_tc(repoid,name);
   tcDescriptor tcd;
   tcd.p_objref.opq_objref = (void*) &obj;
@@ -448,7 +479,8 @@ void
 CORBA::Any::operator<<=(const char* s)
 {
   tcDescriptor tcd;
-  tcd.p_string = (char**) &s;
+  tcd.p_string.ptr = (char**) &s;
+  // tcd.p_string.release not needed for insertion
   pdAnyP()->setData(CORBA::_tc_string, tcd);
 }  
 
@@ -457,7 +489,8 @@ void
 CORBA::Any::operator<<=(from_string s)
 {
   tcDescriptor tcd;
-  tcd.p_string = &s.val;
+  tcd.p_string.ptr = &s.val;
+  // tcd.p_string.release not needed for insertion
 
   if( s.bound ) {
     CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_string_tc(s.bound);
@@ -645,7 +678,8 @@ CORBA::Any::operator>>=(char*& s) const
   else {
     char* p = 0;
     tcDescriptor tcd;
-    tcd.p_string = &p;
+    tcd.p_string.ptr = &p;
+    tcd.p_string.release = 0;
 
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
@@ -669,7 +703,8 @@ CORBA::Any::operator>>=(const char*& s) const
   char* sp = (char*) PR_getCachedData();
   if (sp == 0) {
     tcDescriptor tcd;
-    tcd.p_string = &sp;
+    tcd.p_string.ptr = &sp;
+    tcd.p_string.release = 0;
 
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
@@ -699,7 +734,8 @@ CORBA::Any::operator>>=(to_string s) const
   char* sp = (char*) PR_getCachedData();
   if (sp == 0) {
     tcDescriptor tcd;
-    tcd.p_string = &sp;
+    tcd.p_string.ptr = &sp;
+    tcd.p_string.release = 0;
 
     if (pdAnyP()->getData(newtc, tcd))
     {

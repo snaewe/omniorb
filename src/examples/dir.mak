@@ -6,7 +6,8 @@
 #           veryclean - do a veryclean in all subdirectories
 #
 #
-SUBDIRS = echo thread lifecycle anyExample dii dsi
+#SUBDIRS = echo poa boa thread lifecycle anyExample dii dsi
+SUBDIRS = echo poa boa thread anyExample dii dsi
 
 TOP = ..\..
 

@@ -27,17 +27,27 @@
 
 #include <NamingContext_i.h>
 
-class BindingIterator_i : public virtual CosNaming::_sk_BindingIterator {
+
+#if defined(__sgi) && defined(_COMPILER_VERSION)
+# if _COMPILER_VERSION == 721
+#  define MIPSPRO_WORKAROUND
+# endif
+#endif
+
+
+class BindingIterator_i : public POA_CosNaming::BindingIterator,
+			  public PortableServer::RefCountServantBase
+{
 
 public:
 
-  BindingIterator_i(CORBA::BOA_ptr boa, CosNaming::BindingList* l)
+  BindingIterator_i(PortableServer::POA_ptr poa, CosNaming::BindingList* l)
     : list(l)
   {
-    _obj_is_ready(boa);
+    poa->activate_object(this);
   }
 
-  CORBA::Boolean next_one(CosNaming::Binding*& b) {
+  CORBA::Boolean next_one(CosNaming::Binding_out b) {
 
     CosNaming::BindingList* bl;
     CORBA::Boolean ret = next_n(1, bl);
@@ -45,12 +55,16 @@ public:
     if (ret)
       *b = (*bl)[0];
     else
+#ifndef MIPSPRO_WORKAROUND
       b->binding_type = CosNaming::nobject;
+#else
+      b.ptr()->binding_type = CosNaming::nobject;
+#endif
     delete bl;
     return ret;
   }
 
-  CORBA::Boolean next_n(CORBA::ULong how_many, CosNaming::BindingList*& bl) {
+  CORBA::Boolean next_n(CORBA::ULong how_many, CosNaming::BindingList_out bl) {
 
     //
     // What we do here is return the current list to the caller, shortening
@@ -78,7 +92,8 @@ public:
 
   void destroy(void) {
     // remember the destructor for an object should never be called explicitly.
-    _dispose();
+    PortableServer::ObjectId_var id = the_poa->servant_to_id(this);
+    the_poa->deactivate_object(id);
   }
 
 private:

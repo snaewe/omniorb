@@ -1,0 +1,368 @@
+Release Notes for omniORB 3.0.0 pre3  (28 Jun 2000)
+====================================
+
+For all intents and purposes, this is the release candidate for
+omniORB 3.0.0. This version has been tested on x86 Linux, Windows
+NT/2000, Solaris 2.5.1, Irix 6.5, HPUX 11.00. The purpose of producing
+this pre-release is to give our users a chance to check if there are
+any build problems remaining before we release 3.0.0. So please give
+it a try and report any build problems ASAP.
+
+The last release was 2.8.0 (31st August 1999).
+
+Source code is available via anonymous CVS.  Please see:
+
+      http://www.uk.research.att.com/omniORB/omniORB.html
+      http://www.uk.research.att.com/omniORB/cvs.html
+
+
+If you have an existing build of omniORB 3, you must "make veryclean"
+or remove the tree and start again.
+
+NOTE the new section about omniidl and Python below.
+
+
+Introduction
+------------
+
+This version of omniORB incorporates a major re-write of the core runtime.
+Key features include:
+
+  o  support for the Portable Object Adapter (POA)
+  o  support for the Interoperable Naming Service (INS)
+  o  new IDL compiler
+  o  identical semantics for local and remote object invocations
+  o  location forwarding into and outof the local address space
+  o  new dynamically growing object table (improves performance
+      for applications with large numbers of objects)
+  o  legacy support for the BOA (including using both BOA and POA
+      together in the same process)
+  o  improved message logging, including logging application
+      level requests and throwing of system exceptions
+  o  lots of other stuff
+
+
+Changes since 3.0.0 pre 2
+-------------------------
+
+1. Support for the Interoperable Naming Service. See chapter 4 of the
+   omniORB manual for details.
+
+2. Added new omniIDL/C++ compiler backend flags & features:
+
+    -Wbd=suffix      : changes the DynSK.cc file suffix
+    -Wbkeep_inc_path : Preserves IDL #include path in generated C++ header
+    -Wbuse_quotes    : Uses "" rather than <> in C++ header #includes
+
+   Use 'omniidl -bcxx -u' to get the full list of command line options.
+
+3. Updated user manual
+
+4. Runtime thread debugging trace has been disabled. This results in a
+   noticeable performance improvement, especially in same address space
+   calls. (from 21usec to 6usec on Linux x86 PII 300).
+
+5. Fixed assignment to an element of a sequence of string and a sequence of
+   object reference. Previous version does not work if the compiler
+   does not do the obvious optimisation. Only DEC v5.6 C++ compiler is known
+   to be affected by this bug.
+
+6. Client side call timeout now works on Windows NT and HPUX 11.00.
+
+7. COMM_FAILURE exception propagated from the server side will be reported
+   as an exception to the application. This allows the invocation
+   code to distinguish between transport problems and COMM_FAILURE
+   propagated from the server side.
+
+8. Update omkdepend and the various win32 wrappers for Cygwin's new
+   "mounts v2" registry subtree.  Old Gnuwin32 mounts should still work.
+
+9. Merged OpenVMS port
+
+10. Lots of other minor changes and bug fixes. Refer to the <top>/update.log
+    file for details.
+
+
+Changes since 3.0.0 pre 1
+------------------------------
+
+1. New IDL compiler
+
+   omniidl3 has been replaced by a new general-purpose IDL compiler
+   simply named omniidl. This has several important consequences:
+
+    o omniidl requires Python 1.5.2 to build and run. We recommend
+      that you use a full Python installation, but we have made
+      minimal binary versions for Windows, Solaris and Linux available
+      at:
+
+         ftp://ftp.uk.research.att.com/pub/omniORB/python/
+
+      You must point the makefiles to your Python installation. See
+      README.unix or README.win32 for details.
+
+    o omniidl aims for strict compliance to the IDL specification.
+      You may find that some IDL which used to pass omniidl3 now has
+      compilation errors.
+
+    o omniidl's command-line flags are different. Where before you
+      said
+
+        omniidl3 echo.idl
+
+      to generate the basic stubs and skeletons, you must now say
+
+        omniidl -bcxx echo.idl
+
+      (The -bcxx tells the compiler to use the C++ back-end. If you
+      have omniORBpy installed, you can also say -bpython to generate
+      Python stubs.)
+
+      The following table shows how omniidl3's flags have changed. You
+      can get a list of all omniidl's flags with omniidl -bcxx -u.
+
+      omniidl3 flag    omniidl flag    Meaning
+
+      -Dname[=value]   -Dname[=value]  Define name for preprocessor
+      -Uname           -Uname          Undefine name for preprocessor
+      -E               -E              Run preprocessor only
+      -Idir            -Idir           Include dir in preprocessor search
+      -Ycmd            -Ycmd           Command to run for preprocessor
+      -a               -Wba            Generate code for Typecode and any
+      -h suffix        -Wbh=suffix     Specify suffix for generated headers
+      -s suffix        -Wbs=suffix     Specify suffix for generated stubs
+      -tp              -Wbtp           Generate tie implementation skeletons
+      -tf              -Wbtf           Generate flattened tie skeletons
+      -F               -WbF            Generate code fragments (experts only)
+      -Bboa            -WbBOA          Generate BOA compatible skeletons
+      -Bold_signatures -Wbold          Use CORBA 2.1 signatures
+      -Bold_reserved_prefix
+                       -Wbold_prefix   Prefix C++ reserved words with _
+
+      -u               -u              Print usage information
+      -v               -v              Trace compilation stages
+
+
+    o If you move omniidl out of the omniORB tree, it may be unable to
+      find Python files which it requires. In this case, either use
+      the -p flag to give the full path to the lib/python directory,
+      or set the PYTHONPATH environment variable to contain that
+      location.
+
+    o The make rules for omniidl have not been tested on all platforms
+      (since we don't have access to them). If you encounter build
+      difficulties on your platform, please look at
+      src/tool/omniidl/cxx/dir.mk to see if it is obvious how to fix
+      it.
+
+
+
+Changes since 2.8.0
+-------------------
+
+1. The POA.
+
+   Exists!
+
+   The following features are not implemented:
+
+     o  PortableServer::Current
+     o  DSI is incomplete (depends on Current).
+
+
+2. IDL stubs.
+
+   There are a number of improvements.  You may find that the size of the
+   stub code generated is smaller.
+
+   The stubs must be regenerated with the new IDL compiler to be compatible
+   with the runtime library.
+
+   The current shared runtime library versions are:
+
+   On various unices:
+
+       libomniORB3.so ---> libomniORB3.so.0 --> libomniORB3.so.0.0
+
+   On IBM AIX
+
+       libomniORB30.a
+       libomniDynamic30.a
+
+   On Windows NT/95, the omniORB runtime DLLs for this version are:
+
+       libomniORB300_rt.dll
+       libomniORB300_rt.lib
+       libomniDynamic300_rt.dll
+       libomniDynamic300_rt.lib
+
+   Make sure you update your Visual Studio to pick up the right library.
+
+
+3. New command line options and ORB configuration variables:
+
+    -ORBtraceInvocations
+    omniORB::traceInvocations
+      enable tracing of invocations of CORBA objects.
+
+    -ORBpoa_iiop_port <port number>
+      tells the POA the port number to use.
+
+    -ORBpoa_iiop_name_port <hostname[:port number]>
+      tells the POA the hostname and optionally the port number to use.
+
+      NB. The BOA and POA will both use the same port if used together.
+
+    omniORB::objectTableSize
+
+      The default value is zero, and indicates that omniORB should grow
+      the object table as necassary.  It is recommended that you use
+      this facility.
+
+      Setting another value sets a fixed size for the object table,
+      thus eliminating the overhead of resizing the table if you
+      know in advance the likely number of objects.  Since an open
+      hsah table is used, performance does not suffer disasterously
+      if this number of objects is exceeded.
+
+      If set, this value must be modified before calling CORBA::ORB_init().
+
+    omniORB::poaHoldRequestTimeout
+
+      If a POA is in the HOLDING state, then this value gives the number
+      of seconds after which the POA will timeout and throw a TRANSIENT
+      exception to the client (if the POA is not transitioned to
+      another state).
+
+      The default is zero, which indicates no timeout.
+
+
+4. New mapping for signatures of operations in skeletons.
+
+    The mapping for the arguments to operations in implementation
+    skeletons changed in the spec between versions 2.1 and 2.2.
+    You are now required to use T_out types (where applicable) for
+    'out' arguments.
+
+    This may mean that you have to modify your object implementations.
+    However the old signatures can still be used by passing the
+    -Bold_signatures flag to omniidl3.
+
+
+5. New omniidl3 flags:
+
+    -t has been replaced by two new options:
+
+      -tp              - produce tie implementation skeletons
+      -tf              - generate flattened tie implementation skeletons
+
+    The latter is needed if on your platform modules are mapped to
+    c++ classes, and your compiler does not support template members
+    of classes.
+
+    -Bboa              - generate BOA skeletons (_sk_foo).  By default
+                         only POA skeletons are generated.
+
+    To generate the old-style (BOA compatible) tie skeletons you
+    must supply both the -b and -tf flags.
+
+    -Bold_signatures   - use pre CORBA 2.2 mapping for skeleton operation
+                         signatures.
+
+
+6. The member function CORBA::ORB::NP_destroy() is deprecated.  Use
+   CORBA::ORB::destroy() instead.
+
+
+7. Location Forwarding.
+
+    A new omniORB specific exception omniORB::LOCATION_FORWARD is
+    included.  This may be thrown from an object implementation to
+    indicate to the client that the request should be re-directed
+    to another object.
+
+    For portability you are better off using
+    PortableServer::ForwardRequest within a ServantManager.
+    However omniORB::LOCATION_FORWARD is more flexible, since it
+    can be thrown from any object implementation.
+
+    See include/omniORB3/omniORB.h
+
+
+8. Logging and omniORB::traceLevel.
+
+    All omniORB log messages are now prefixed with 'omniORB:' to make
+    it easy to separate omniORB messages from other messages that
+    might be generated by an application.
+
+    omniORB log messages are now emitted atomically (wrt fprintf()),
+    which ensures that parts of omniORB log messages will never be
+    interleaved.
+
+    A new logging class is used internally for generating log messages,
+    omniORB::log.  This may be useful for generating messages in
+    application programs.  In this case a different prefix from the
+    default can be specified.
+
+    It is possible for the ORB to emit a log message each time a
+    CORBA operation is invoked on a local or remote object.  See the
+    section on command line options and configuration variables.
+
+    A log message is now written whenever a system exception is thrown
+    from the omniORB runtime.  For example:
+
+      omniORB: throw COMM_FAILURE from tcpSocketMTfactory.cc:909
+
+    This is enabled if the omniORB::traceLevel is 10 or greater.
+
+
+9. Examples.
+
+    The standard echo examples have been updated to use the POA.
+    There is a 'boa' directory which uses the old-style BOA interface.
+    There is also a 'poa' directory which isn't very exciting yet,
+    but will soon have a few more samples of POA code.
+
+
+10. omniNames.
+
+    This has been updated to use the POA.  Unfortunately the format of
+    the log file has changed slightly.  Eventually we may write a utility
+    to convert the log file to the new format.  But for now if this is a
+    problem for you, then please continue to use an older version.
+
+
+11. The omniORB user guide has *not* been updated :(
+
+
+12. Things that don't work.
+
+    a) The PortableServer::Current interface is not supported.  Any
+       behaviour depending per-thread context information is not
+       supported.
+
+    b) The DSI interface has changed significantly.  Old code will
+       have to be re-written to the new interface.  There is no
+       support for using the DSI with the BOA.
+        This part of the ORB is incomplete, since it depends in
+       part on PortableServer::Current.  See the example in
+       src/examples/dsi for a way to workaround this problem for
+       now.
+
+    c) The Lifecycle service has not yet been re-implemented.
+
+    d) The name of tie implementation skeletons has changed (in line
+       with the POA mapping).
+
+
+---------------------------
+David Riddoch
+<djr@uk.research.att.com>
+
+Duncan Grisby
+<dgrisby@uk.research.att.com>
+
+-- 
+ -- Duncan Grisby  \  Research Engineer  --
+  -- AT&T Laboratories Cambridge          --
+   -- http://www.uk.research.att.com/~dpg1 --

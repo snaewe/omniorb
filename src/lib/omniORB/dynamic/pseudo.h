@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // pseudo.h                   Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -30,10 +30,6 @@
 
 #ifndef __PSEUDO_H__
 #define __PSEUDO_H__
-
-#ifndef __CORBA_H__
-#include <omniORB2/CORBA.h>
-#endif
 
 
 //////////////////////////////////////////////////////////////////////

@@ -30,12 +30,13 @@
 #include <time.h>
 #include <iostream.h>
 #include <fcntl.h>
-#if defined(__VMS) && __CRTL_VER < 70000000
+#if defined(__VMS) && __VMS_VER < 70000000
 #include <omniVMS/unlink.hxx>
 #include <omniVms/utsname.hxx>
 #endif
 #include <NamingContext_i.h>
 #include <ObjectBinding.h>
+#include <INSMapper.h>
 #include <log.h>
 #include <iomanip.h>
 
@@ -84,12 +85,6 @@ strdup (char* str)
   return newstr;
 }
 #endif  // _NO_STRDUP
-
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
-#ifndef __VMS
-#define USE_ATTACH_FD
-#endif
-#endif
 
 extern void usage();
 
@@ -329,10 +324,13 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
 
 
 void
-omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
+omniNameslog::init(CORBA::ORB_ptr          the_orb,
+		   PortableServer::POA_ptr the_poa,
+		   PortableServer::POA_ptr the_ins_poa)
 {
-  orb = o;
-  boa = b;
+  orb     = the_orb;
+  poa     = the_poa;
+  ins_poa = the_ins_poa;
 
   if (firstTime) {
 
@@ -344,7 +342,7 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
     cerr << ts.t() << "Starting omniNames for the first time." << endl;
 
     try {
-#if defined(USE_ATTACH_FD)
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
 #  ifdef __WIN32__
       int fd = _open(active, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #  else
@@ -361,10 +359,12 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 #endif
       putPort(port, logf);
 
-      omniORB::objectKey k;
-      omniORB::generateNewKey(k);
+      {
+	PortableServer::ObjectId_var refid =
+	  PortableServer::string_to_ObjectId("NameService");
 
-      putCreate(k, logf);
+	putCreate(refid, logf);
+      }
 
       logf.close();
       if (!logf)
@@ -456,6 +456,17 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
   CosNaming::NamingContext_ptr rootContext
     = NamingContext_i::headContext->_this();
 
+  {
+    // Check to see if we need an INS forwarding agent
+    omniObjKey key;
+    rootContext->_getTheKey(key);
+
+    if (strncmp((const char*)key.key(), "NameService", 11)) {
+      cerr << ts.t() << "(Pre-INS log file)" << endl;
+      new INSMapper(the_ins_poa, rootContext);
+    }
+  }
+
   char* p = orb->object_to_string(rootContext);
   cerr << ts.t() << "Root context is " << p << endl;
   // Now use the backdoor to tell the bootstrap agent in this
@@ -466,7 +477,7 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
   CORBA::release(rootContext);	// dispose of the object reference
 
-#if defined(USE_ATTACH_FD)
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
 #  ifdef __WIN32__
   int fd = _open(active, O_WRONLY | O_APPEND);
 #  else
@@ -501,11 +512,11 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
 
 void
-omniNameslog::create(const omniORB::objectKey& key)
+omniNameslog::create(const PortableServer::ObjectId& id)
 {
   if (!startingUp) {
     try {
-      putCreate(key, logf);
+      putCreate(id, logf);
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
@@ -585,7 +596,7 @@ omniNameslog::checkpoint(void)
 
   try {
 
-#if defined(USE_ATTACH_FD)
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
 #  ifdef __WIN32__
     fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #  else
@@ -612,7 +623,8 @@ omniNameslog::checkpoint(void)
     NamingContext_i* nci;
 
     for (nci = NamingContext_i::headContext; nci; nci = nci->next) {
-      putCreate(nci->_key(), ckpf);
+      PortableServer::ObjectId_var id = nci->PR_id();
+      putCreate(id, ckpf);
     }
 
     for (nci = NamingContext_i::headContext; nci; nci = nci->next) {
@@ -706,7 +718,7 @@ omniNameslog::checkpoint(void)
   }
 #endif
 
-#if defined(USE_ATTACH_FD)
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
 #  ifdef __WIN32__
   fd = _open(active, O_WRONLY | O_APPEND);
 #  else
@@ -778,10 +790,10 @@ omniNameslog::getPort(istream& file)
 
 
 void
-omniNameslog::putCreate(const omniORB::objectKey& key, ostream& file)
+omniNameslog::putCreate(const PortableServer::ObjectId& id, ostream& file)
 {
   file << "create ";
-  putKey(key, file);
+  putKey(id, file);
   file << '\n' << flush;
   if (!file) throw IOError();
 }
@@ -794,9 +806,17 @@ omniNameslog::getCreate(istream& file)
   // Argument to "create" is the object key of the naming context.
   //
 
-  omniORB::objectKey k;
-  getKey(k, file);
-  NamingContext_i* rc = new NamingContext_i(boa, k, this);
+  PortableServer::ObjectId id;
+  NamingContext_i*         rc;
+
+  getKey(id, file);
+
+  if (id.length() == 4) // SYS_ASSIGNED_ID_SIZE
+    rc = new NamingContext_i(poa, id, this);
+  else
+    rc = new NamingContext_i(ins_poa, id, this);
+
+  rc->_remove_ref();
 }
 
 
@@ -1002,40 +1022,36 @@ omniNameslog::getUnbind(istream& file)
 
 
 void
-omniNameslog::putKey(const omniORB::objectKey& key, ostream& file)
+omniNameslog::putKey(const PortableServer::ObjectId& id, ostream& file)
 {
-  omniORB::seqOctets* os = omniORB::keyToOctetSequence(key);
   file << hex;
-  for (unsigned int i = 0; i < os->length(); i++) {
+  for (unsigned int i = 0; i < id.length(); i++) {
 #if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
-    file << setfill('0') << setw(2) << (int)(*os)[i];
+    file << setfill('0') << setw(2) << (int)id[i];
 #else
     // Eventually, use the following for all standard C++ compilers
-    file << std::setfill('0') << std::setw(2) << (int)(*os)[i];
+    file << std::setfill('0') << std::setw(2) << (int)id[i];
 #endif
   }
   file << dec;
-  delete os;
 }
 
 
 void
-omniNameslog::getKey(omniORB::objectKey& k, istream& file)
+omniNameslog::getKey(PortableServer::ObjectId& id, istream& file)
 {
   char* str;
   getFinalString(str, file);
 
   int l = strlen(str) / 2;
-  omniORB::seqOctets os(l);
-  os.length(l);
+  id.length(l);
   char* p = str;
   for (int i = 0; i < l; i++) {
     int n;
     sscanf(p,"%02x",&n);
-    os[i] = n;
+    id[i] = n;
     p += 2;
   }
-  k = omniORB::octetSequenceToKey(os);  
   delete [] str;
 }
 

@@ -5,6 +5,14 @@
 WindowsNT = 1
 AlphaProcessor = 1
 
+#
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = //c/progra~1/Python/python
+
+
 BINDIR = bin/alpha_win32
 LIBDIR = lib/alpha_win32
 

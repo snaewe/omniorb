@@ -1,0 +1,886 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD><TITLE>omniidl --- The omniORB IDL Compiler</TITLE>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.05">
+</HEAD>
+<BODY >
+<!--HEVEA command line is: hevea omniidl -->
+<!--HTMLHEAD-->
+<!--ENDHTML-->
+<!--CUT DEF section 1 -->
+<BR>
+<BR>
+
+<H1 ALIGN=center><FONT COLOR=purple>omniidl</FONT> --- The omniORB IDL Compiler</H1>
+
+<H3 ALIGN=center>Duncan Grisby<BR>AT&amp;T Laboratories Cambridge<BR></H3>
+
+<H3 ALIGN=center>June 2000</H3><!--TOC section Introduction-->
+
+<H2>1&nbsp;&nbsp; Introduction</H2><!--SEC END -->
+This manual describes <FONT COLOR=purple>omniidl</FONT>, the omniORB IDL compiler. It is
+intended for developers who wish to write their own IDL compiler
+back-ends, or to modify existing ones. It also documents the design of
+the compiler front-end for those poor souls who have to track the IDL
+specification.<BR>
+<BR>
+If you just wish to use <FONT COLOR=purple>omniidl</FONT> to create stubs for C++ or Python,
+you should read the omniORB or omniORBpy manuals instead of this one.<BR>
+<BR>
+<!--TOC subsection Requirements-->
+
+<H3>1.1&nbsp;&nbsp; Requirements</H3><!--SEC END -->
+Back-ends for <FONT COLOR=purple>omniidl</FONT> are written in Python, so to use it you must
+have an up-to-date Python interpreter. You must also understand Python
+to be able to follow this manual and write back-ends. You can download
+Python and associated documentation from
+<A HREF="http://www.python.org/"><TT>http://www.python.org/</TT></A>.<BR>
+<BR>
+The front-end scanner and parser are written using flex and bison; the
+rest of the front-end is written in C++. The code intentionally avoids
+using any advanced (and useful) features of C++, such as templates, so
+as to make it as portable as possible.<BR>
+<BR>
+<!--TOC subsection Running <FONT COLOR=purple>omniidl</FONT>-->
+
+<H3>1.2&nbsp;&nbsp; Running <FONT COLOR=purple>omniidl</FONT></H3><!--SEC END -->
+On all platforms, there is a command named <FONT COLOR=purple>omniidl</FONT>. On Unix
+platforms, <FONT COLOR=purple>omniidl</FONT> is a Python script which runs Python via the
+<CODE>#!</CODE> mechanism. On Windows NT, there is an executable named
+<TT>omniidl.exe</TT>.<BR>
+<BR>
+The <FONT COLOR=purple>omniidl</FONT> command line has the form:<BR>
+<BR>
+<BLOCKQUOTE> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file 1</I>&gt;<TT> </TT>&lt;<I>file 2</I>&gt;<TT> </TT>...</BLOCKQUOTE>The supported flags are:<BR>
+<BR>
+<TABLE CELLSPACING=2 CELLPADDING=0>
+<TR><TD ALIGN=left NOWRAP></TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-D</TT><I>name</I>[<TT>=</TT><I>value</I>]</TD>
+<TD ALIGN=left NOWRAP>Define <I>name</I> for the preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-U</TT><I>name</I></TD>
+<TD ALIGN=left NOWRAP>Undefine <I>name</I> for the preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-I</TT><I>dir</I></TD>
+<TD ALIGN=left NOWRAP>Include <I>dir</I> in the preprocessor search path.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-E</TT></TD>
+<TD ALIGN=left NOWRAP>Only run the preprocessor, sending its output to stdout.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Y</TT><I>cmd</I></TD>
+<TD ALIGN=left NOWRAP>Use <I>cmd</I> as the preprocessor, rather than the normal C
+ preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-N</TT></TD>
+<TD ALIGN=left NOWRAP>Do not run the preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wp</TT><I>arg</I>[,<I>arg</I>...]</TD>
+<TD ALIGN=left NOWRAP>Send arguments to the preprocessor.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-b</TT><I>back-end</I></TD>
+<TD ALIGN=left NOWRAP>Run the specified back-end. For the C++ ORB, use <TT>-bcxx</TT>.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wb</TT><I>arg</I>[,<I>arg</I>...]</TD>
+<TD ALIGN=left NOWRAP>Send arguments to the back-end.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-nf</TT></TD>
+<TD ALIGN=left NOWRAP>Do not warn about unresolved forward declarations.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-k</TT></TD>
+<TD ALIGN=left NOWRAP>Keep comments after declarations, to be used by some back-ends.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-K</TT></TD>
+<TD ALIGN=left NOWRAP>Keep comments before declarations, to be used by some back-ends.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-C</TT><I>dir</I></TD>
+<TD ALIGN=left NOWRAP>Change directory to <I>dir</I> before writing output files.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-d</TT></TD>
+<TD ALIGN=left NOWRAP>Dump the parsed IDL then exit, without running a back-end.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-p</TT><I>dir</I></TD>
+<TD ALIGN=left NOWRAP>Use <I>dir</I> as a path to find omniidl back-ends.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-V</TT></TD>
+<TD ALIGN=left NOWRAP>Print version information then exit.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-u</TT></TD>
+<TD ALIGN=left NOWRAP>Print usage information.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-v</TT></TD>
+<TD ALIGN=left NOWRAP>Verbose: trace compilation stages.</TD>
+</TR></TABLE><BR>
+If you do not specify any back-ends (with the <TT>-b</TT> flag),
+<FONT COLOR=purple>omniidl</FONT> just runs the compiler front-end, checking that the IDL is
+valid. If you specify more than one back-end, the back-ends are run in
+turn on the abstract syntax tree of each file. This permits you to
+generate stubs for more than one language in a single run. It also
+permits you to write back-ends which annotate or modify the abstract
+syntax tree to be used by later back-ends.<BR>
+<BR>
+For example, the command:<BR>
+<BR>
+<BLOCKQUOTE>
+<TT>omniidl -bdump -bpython foo.idl bar.idl</TT>
+</BLOCKQUOTE>first reads and parses <TT>foo.idl</TT>, and runs the
+<TT>dump</TT> and <TT>python</TT> back-ends on it in turn. Then it reads
+and parses <TT>bar.idl</TT> and runs the two back-ends on that.<BR>
+<BR>
+<!--TOC subsection Preprocessor interactions-->
+
+<H3>1.3&nbsp;&nbsp; Preprocessor interactions</H3><!--SEC END -->
+IDL is processed by the C preprocessor before <FONT COLOR=purple>omniidl</FONT> parses it.
+Unlike the old IDL compiler, which used different C preprocessors on
+different platforms, <FONT COLOR=purple>omniidl</FONT> always uses the GNU C preprocessor
+(which it builds with the name omnicpp). The <TT>-D</TT>,
+<TT>-U</TT>, and <TT>-I</TT> options are just sent to the
+preprocessor. Note that the current directory is not on the include
+search path by default---use `<TT>-I.</TT>' for that. The
+<TT>-Y</TT> option can be used to specify a different preprocessor to
+omnicpp. Beware that line directives inserted by other preprocessors
+are likely to confuse <FONT COLOR=purple>omniidl</FONT>.<BR>
+<BR>
+<!--TOC subsection Forward-declared interfaces-->
+
+<H3>1.4&nbsp;&nbsp; Forward-declared interfaces</H3><!--SEC END -->
+If you have an IDL file like:<BR>
+<BR>
+<PRE>
+interface I;
+interface J {
+  attribute I the_I;
+};
+</PRE>then <FONT COLOR=purple>omniidl</FONT> will normally issue a warning:<BR>
+<BR>
+<PRE>
+  test.idl:1: Warning: Forward declared interface `::I' was never
+  fully defined
+</PRE>It is illegal to declare such IDL in isolation, but it
+<EM>is</EM> valid to define interface <TT>I</TT> in a separate file. If
+you have a lot of IDL with this sort of construct, you will drown
+under the warning messages. Use the <TT>-nf</TT> option to suppress
+them.<BR>
+<BR>
+<!--TOC subsection Comments-->
+
+<H3>1.5&nbsp;&nbsp; Comments</H3><!--SEC END -->
+
+<A NAME="sec:comments"></A>By default, <FONT COLOR=purple>omniidl</FONT> discards comments in the input IDL. However,
+with the <TT>-k</TT> and <TT>-K</TT> options, it preserves the
+comments for use by the back-ends.<BR>
+<BR>
+The two different options relate to how comments are attached to
+declarations within the IDL. Given IDL like:<BR>
+<BR>
+<PRE>
+interface I {
+  void op1();
+  // A comment
+  void op2();
+};
+</PRE>the <TT>-k</TT> flag will attach the comment to <TT>op1()</TT>;
+the <TT>-K</TT> flag will attach it to <TT>op2()</TT>.<BR>
+<BR>
+<!--TOC subsection Copyright-->
+
+<H3>1.6&nbsp;&nbsp; Copyright</H3><!--SEC END -->
+All parts of <FONT COLOR=purple>omniidl</FONT> are licensed under the GNU General Public
+License, available in the file <TT>COPYING</TT>.<BR>
+<BR>
+As a special exception to the terms of the GPL, we do not consider
+back-ends to be derived works of <FONT COLOR=purple>omniidl</FONT>. This means that you may
+distribute back-ends you write under any terms you like. The back-ends
+we distribute are licensed under the GPL, so you must abide by its
+terms if you distribute or modify our back-ends.<BR>
+<BR>
+As another exception, we do not consider the output of the back-ends
+we distribute to be derived works of those back-ends. You may
+therefore use generated stubs with no restrictions.<BR>
+<BR>
+<!--TOC section Back-end interface-->
+
+<H2>2&nbsp;&nbsp; Back-end interface</H2><!--SEC END -->
+
+<A NAME="sec:backend"></A>There are three elements to the back-end interface: requirements on
+the back-end modules themselves, a set of output and utility
+functions, and the interface to the parsed IDL.<BR>
+<BR>
+<!--TOC subsection Back-end modules-->
+
+<H3>2.1&nbsp;&nbsp; Back-end modules</H3><!--SEC END -->
+
+<A NAME="sec:bemodules"></A><FONT COLOR=purple>omniidl</FONT> back-ends are just normal Python modules. When you specify a
+back-end with <TT>-bfoo</TT>, <FONT COLOR=purple>omniidl</FONT> first tries to open the
+Python module named <TT>omniidl_be.foo</TT>. If that fails, it tries to
+open the module just named <TT>foo</TT>, using the normal
+<TT>PYTHONPATH</TT> mechanism. As with any Python module, the module
+<TT>foo</TT> can either be implemented as a single file named
+<TT>foo.py</TT>, or as a directory <TT>foo</TT> containing a file named
+<TT>__init__.py</TT>.<BR>
+<BR>
+The only requirement on back-end modules is that they contain a
+function with the signature <TT>run(tree, args)</TT>, where <TT>tree</TT>
+is an <TT>AST</TT> object as described in section&nbsp;<A HREF="#sec:astclass">2.3.3</A>,
+and <TT>args</TT> is a list of argument strings passed to the back-end.<BR>
+<BR>
+Back-ends may also optionally provide a variable named <TT>cpp_args</TT>
+which contains a list of strings containing arguments to be given to
+the C preprocessor. For example, the Python back-end contains the
+line:<BR>
+<BR>
+<PRE>
+cpp_args = ["-D__OMNIIDL_PYTHON__"]
+</PRE><!--TOC subsection Output and utility functions-->
+
+<H3>2.2&nbsp;&nbsp; Output and utility functions</H3><!--SEC END -->
+The purpose of most back-ends is to output source code in some
+language. It is often the case that much of the output is independent
+of the specifics of the IDL input. The output for an IDL interface,
+for example, might be an extensive class definition containing
+configuration and initialisation code which is largely independent of
+the specifics of the interface. At various places throughout the class
+definition, there would be items which <EM>were</EM> dependent on the
+interface definition.<BR>
+<BR>
+<FONT COLOR=purple>omniidl</FONT> supports this with <EM>template</EM> based output functions.
+Templates are simply strings containing the code to be output,
+including expressions surrounded by `<TT>@</TT>' characters. When the
+templates are output, the keys inside the `<TT>@</TT>' expressions are
+replaced with values according to the output arguments. An
+`<TT>@</TT>' symbol can be output by putting `<TT>@@</TT>' in the
+template.<BR>
+<BR>
+The output facilities are provided in the <TT>omniidl.output</TT> module
+by the <TT>Stream</TT> class. The primary method of <TT>Stream</TT>
+objects is <TT>out()</TT>, which takes arguments of a template string
+and a set of key/value pairs to be used in <TT>@</TT> substitutions.
+For example, if <TT>st</TT> is a <TT>Stream</TT> object, then the code:<BR>
+<BR>
+<PRE>
+    template = """\
+  class @id@ {
+  public:
+    @id@(@type@ a) : a_(a) {}
+  private:
+    @type@ a_;
+  };"""
+
+    st.out(template, id="foo", type="int")
+</PRE>would result in output:<BR>
+<BR>
+<PRE>
+  class foo {
+  public:
+    foo(int a) : a_(a) {}
+  private:
+    int a_;
+  };
+</PRE>When <TT>@</TT> expressions are substituted, the expression is
+actually <EM>evaluated</EM>, not just textually replaced. This means
+that you can write templates containing strings like
+`<TT>@obj.name()@</TT>'. Expressions must evaluate to strings. This
+feature should not be over-used---it is very easy to write
+incomprehensible template expressions. The vast majority of templates
+should only use simple string substitutions.<BR>
+<BR>
+Commonly, it is necessary to nest definitions which are output inside
+other definitions. <TT>Stream</TT> objects keep track of a current
+indentation level to aid this. The methods <TT>inc_indent()</TT> and
+<TT>dec_indent()</TT> increment and decrement the current indent level
+respectively. The number of spaces corresponding to a single indent
+level is configured when the <TT>Stream</TT> is created. Occasionally,
+you may need to output code which ignores the current indent level
+(preprocessor directives in C, for example). The <TT>niout()</TT> method
+is identical to <TT>out()</TT> except that it performs no indentation.<BR>
+<BR>
+The <TT>Stream</TT> constructor takes two arguments, a file opened for
+writing, and an integer specifying how many spaces to use for each
+indent level.<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.output.Stream</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>Stream(file,indent_size)</TT><DD><BR>Initialise a <TT>Stream</TT> with the given output file and indent
+ size.<BR>
+<BR>
+
+<DT><TT>inc_indent()</TT><DD><BR>Increment the indent level.<BR>
+<BR>
+
+<DT><TT>dec_indent()</TT><DD><BR>Decrement the indent level.<BR>
+<BR>
+
+<DT><TT>out(template,key=val,...)</TT><DD><BR>Output the template string <TT>template</TT> with key/value
+ substitution and indenting.<BR>
+<BR>
+
+<DT><TT>niout(template,key=val,...)</TT><DD><BR>As <TT>out()</TT>, but with no indenting.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsubsection Utility functions-->
+
+<H4>2.2.1&nbsp;&nbsp; Utility functions</H4><!--SEC END -->
+The <TT>omniidl.idlutil</TT> module contains a number of useful
+functions:<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlutil</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>escapifyString(str)</TT><DD><BR>Convert any non-printable characters in string <TT>str</TT> into octal
+ escape sequences.<BR>
+<BR>
+
+<DT><TT>pruneScope(target,from)</TT><DD><BR>Given two scoped names represented as lists of strings, return
+ <TT>target</TT> with any prefix it shares with <TT>from</TT> removed. For
+ example:
+ <PRE>
+  &gt;&gt;&gt; pruneScope(['A','B','C','D'],['A','B','D'])
+  ['C','D']
+</PRE>
+<DT><TT>slashName(sn,from)</TT><DD>
+
+<DT><TT>dotName(sn,from)</TT><DD>
+
+<DT><TT>ccolonName(sn,from)</TT><DD><BR>Prune scoped name list <TT>sn</TT> with <TT>pruneScope(sn,from)</TT>,
+ then convert into a string with name components separated by
+ `<TT>/</TT>', `<TT>.</TT>' or `<TT>::</TT>'.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsection Abstract Syntax Tree-->
+
+<H3>2.3&nbsp;&nbsp; Abstract Syntax Tree</H3><!--SEC END -->
+
+<A NAME="sec:ast"></A>The main meat of the back-end interface is in the
+<TT>omniidl.idlast</TT> and <TT>omniidl.idltype</TT> modules. When the
+compiler parses an IDL file, it creates a tree of objects representing
+the IDL declarations. The classes for these declarations are defined
+in the <TT>idlast</TT> module. The way an IDL declaration is split into
+objects closely follows the terms within the IDL grammar presented in
+chapter&nbsp;3 of the CORBA 2.3 specification.<BR>
+<BR>
+<!--TOC subsubsection Visitor pattern-->
+
+<H4>2.3.1&nbsp;&nbsp; Visitor pattern</H4><!--SEC END -->
+All objects within the back-end interface support the <EM>visitor</EM>
+pattern. They have an <TT>accept(visitor)</TT> method which acts on a
+visitor adhering to the interfaces in the <TT>omniidl.idlvisitor</TT>
+module. Note that Python's dynamic type system means that visitor
+objects need not actually derive from the classes defined in
+<TT>idlvisitor</TT><A NAME="text1" HREF="#note1"><SUP><FONT SIZE=2>1</FONT></SUP></A>. Also note that you do not have to use the
+visitor pattern if you do not wish to.<BR>
+<BR>
+<!--TOC subsubsection Pragmas and comments-->
+
+<H4>2.3.2&nbsp;&nbsp; Pragmas and comments</H4><!--SEC END -->
+Any unknown <TT>#pragma</TT>s encountered in the IDL are attached to
+nodes within the AST. Similarly, comments are attached if <FONT COLOR=purple>omniidl</FONT> is
+run with the <TT>-k</TT> or <TT>-K</TT> fields.<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Pragma</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>text()</TT><DD><BR>Text of the pragma.<BR>
+<BR>
+
+<DT><TT>__str__()</TT><DD><BR>Same as <TT>text()</TT>.<BR>
+<BR>
+
+<DT><TT>file()</TT><DD><BR>File containing the pragma.<BR>
+<BR>
+
+<DT><TT>line()</TT><DD><BR>Line within the file.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Comment</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>text()</TT><DD><BR>Text of the comment.<BR>
+<BR>
+
+<DT><TT>__str__()</TT><DD><BR>Same as <TT>text()</TT>.<BR>
+<BR>
+
+<DT><TT>file()</TT><DD><BR>File containing the comment.<BR>
+<BR>
+
+<DT><TT>line()</TT><DD><BR>Line within the file.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsubsection The root of the tree-->
+
+<H4>2.3.3&nbsp;&nbsp; The root of the tree</H4><!--SEC END -->
+
+<A NAME="sec:astclass"></A>The back-end's <TT>run()</TT> function (described in
+section&nbsp;<A HREF="#sec:bemodules">2.1</A>) is passed an object of class <TT>AST</TT>.<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.AST</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>file()</TT><DD><BR>The file name of the main IDL file being compiled.<BR>
+<BR>
+
+<DT><TT>declarations()</TT><DD><BR>List of <TT>Decl</TT> objects corresponding to declarations at file
+ scope.<BR>
+<BR>
+
+<DT><TT>pragmas()</TT><DD><BR>List of <TT>Pragma</TT> objects containing <TT>#pragma</TT>s which
+ occurred before any declarations. Later <TT>#pragma</TT>s are
+ attached to <TT>Decl</TT> objects.<BR>
+<BR>
+
+<DT><TT>comments()</TT><DD><BR>List of <TT>Comment</TT> objects containing comments which were not
+ attached to declarations (see section&nbsp;<A HREF="#sec:comments">1.5</A>).<BR>
+<BR>
+
+<DT><TT>accept(visitor)</TT><DD><BR>Visitor pattern accept.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsubsection Base declaration-->
+
+<H4>2.3.4&nbsp;&nbsp; Base declaration</H4><!--SEC END -->
+All declarations in the tree are derived from the <TT>Decl</TT> class:<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Decl</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>file()</TT><DD><BR>The name of the file in which this declaration was made.<BR>
+<BR>
+
+<DT><TT>line()</TT><DD><BR>The line number within the file.<BR>
+<BR>
+
+<DT><TT>mainFile()</TT><DD><BR>Boolean: true if the declaration is in the main IDL file; false if
+ it is in an included file.<BR>
+<BR>
+
+<DT><TT>pragmas()</TT><DD><BR>List of <TT>Pragma</TT> objects containing <TT>#pragma</TT>s which
+ occurred after this declaration, but before any others.<BR>
+<BR>
+
+<DT><TT>comments()</TT><DD><BR>List of <TT>Comment</TT> objects containing comments attached to this
+ declaration (see section&nbsp;<A HREF="#sec:comments">1.5</A>).<BR>
+<BR>
+
+<DT><TT>accept(visitor)</TT><DD><BR>Visitor pattern accept.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsubsection Declarations with a repository identifier-->
+
+<H4>2.3.5&nbsp;&nbsp; Declarations with a repository identifier</H4><!--SEC END -->
+Some classes of declaration object also inherit from the
+<TT>DeclRepoId</TT> mixin class:<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.DeclRepoId</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>identifier()</TT><DD><BR>Name of the declaration as a string.<BR>
+<BR>
+
+<DT><TT>scopedName()</TT><DD><BR>List of strings forming the fully-scoped name of the declaration.
+ e.g. <TT>::foo::bar::baz</TT> is represented as
+ <TT>['foo','bar','baz']</TT>.<BR>
+<BR>
+
+<DT><TT>repoId()</TT><DD><BR>Repository identifier of the declaration.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsubsection Declaration classes-->
+
+<H4>2.3.6&nbsp;&nbsp; Declaration classes</H4><!--SEC END -->
+The declaration objects making up the tree have the following classes:<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Module (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Module declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>definitions()</TT><DD><BR>List of <TT>Decl</TT> objects declared within this module, in the
+ order they were declared.<BR>
+<BR>
+
+<DT><TT>continuations()</TT><DD><BR>List containing <TT>Module</TT> objects which are continuations of
+ this module. When modules are re-opened, multiple <TT>Module</TT>
+ objects with the same name appear in the enclosing <TT>Module</TT> or
+ <TT>AST</TT> object. In case it's useful, the first <TT>Module</TT>
+ object for a particular module has a list containing continuations
+ of that module. You will probably not have any use for this.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Interface (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Interface declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>abstract()</TT><DD><BR>Boolean: true if the interface is declared abstract.<BR>
+<BR>
+
+<DT><TT>inherits()</TT><DD><BR>List of <TT>Interface</TT> objects from which this one inherits.<BR>
+<BR>
+
+<DT><TT>contents()</TT><DD><BR>List of <TT>Decl</TT> objects for all items declared within this
+ interface.<BR>
+<BR>
+
+<DT><TT>declarations()</TT><DD><BR>Subset of <TT>contents()</TT> containing types, constants and
+ exceptions.<BR>
+<BR>
+
+<DT><TT>callables()</TT><DD><BR>Subset of <TT>contents()</TT> containing <TT>Operation</TT>s and
+ <TT>Attribute</TT>s.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Forward (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Forward-declared interface</I></DIV><DL COMPACT=compact>
+<DT><TT>abstract()</TT><DD><BR>Boolean: true if the interface is declared abstract.<BR>
+<BR>
+
+<DT><TT>fullDecl()</TT><DD><BR><TT>Interface</TT> object corresponding to the full interface
+ declaration or <TT>None</TT> if there is no full declaration.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Const (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Constant declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>constType()</TT><DD><BR><TT>IdlType.Type</TT> object of the constant. Aliases not stripped.<BR>
+<BR>
+
+<DT><TT>constKind()</TT><DD><BR>TypeCode kind of the constant with aliases stripped. So for a
+ constant declared with:
+ <PRE>
+  typedef long MyLong;
+  const MyLong foo = 123;
+</PRE><TT>constKind()</TT> will return <TT>tk_long</TT>, but
+ <TT>constType()</TT> will return an <TT>IdlType.Declared</TT> object
+ (see page&nbsp;<A HREF="#cls:typeDeclared">??</A>) which refers to <TT>MyLong</TT>'s
+ typedef <TT>Declarator</TT> object.<BR>
+<BR>
+
+<DT><TT>value()</TT><DD><BR>Value of the constant. Either an integer or an <TT>Enumerator</TT>
+ object.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Declarator (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Declarator used in typedefs, struct members, etc.</I></DIV><DL COMPACT=compact>
+<DT><TT>sizes()</TT><DD><BR>List of array sizes, or <TT>None</TT> if it is a simple declarator.<BR>
+<BR>
+
+<DT><TT>alias()</TT><DD><BR><TT>Typedef</TT> object that the declarator is part of, or <TT>None</TT>
+ if the object is not a typedef declarator.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Typedef (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Typedef declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>aliasType()</TT><DD><BR><TT>IdlType.Type</TT> object that this is an alias to.<BR>
+<BR>
+
+<DT><TT>constrType()</TT><DD><BR>Boolean: true if the alias type was constructed within this typedef
+ declaration, like
+ <PRE>
+  typedef struct foo { long l; } bar;
+</PRE>
+<DT><TT>declarators()</TT><DD><BR>List of <TT>Declarator</TT> objects.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Member (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Member of a struct or exception</I></DIV><DL COMPACT=compact>
+<DT><TT>memberType()</TT><DD><BR><TT>IdlType.Type</TT> object for the type of this member.<BR>
+<BR>
+
+<DT><TT>constrType()</TT><DD><BR>Boolean: true if the member type was constructed within the member
+ declaration. e.g.<BR>
+<BR>
+<PRE>
+  struct S {
+    struct T {
+      long l;
+    } the_T;
+  };
+</PRE>
+<DT><TT>declarators()</TT><DD><BR>List of <TT>Declarator</TT> objects.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Struct (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Struct declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>members()</TT><DD><BR>List of <TT>Member</TT> objects for the struct contents.<BR>
+<BR>
+
+<DT><TT>recursive()</TT><DD><BR>Boolean: true if the struct is recursive, e.g.<BR>
+<BR>
+<PRE>
+  struct S {
+    long l;
+    sequence &lt;S&gt; ss;
+  };
+</PRE></DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Exception (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Exception declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>members()</TT><DD><BR>List of <TT>Member</TT> objects for the exception contents.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.CaseLabel (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>One label within a union</I></DIV><DL COMPACT=compact>
+<DT><TT>default()</TT><DD><BR>Boolean: true if this is the default label.<BR>
+<BR>
+
+<DT><TT>value()</TT><DD><BR>Label value. Either an integer or an <TT>Enumerator</TT> object. For
+ the default case, returns a value used by none of the other union
+ labels.<BR>
+<BR>
+
+<DT><TT>labelKind()</TT><DD><BR>TypeCode kind of the label.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.UnionCase (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>One case within a union</I></DIV><DL COMPACT=compact>
+<DT><TT>labels()</TT><DD><BR>List of <TT>CaseLabel</TT> objects.<BR>
+<BR>
+
+<DT><TT>caseType()</TT><DD><BR><TT>IdlType.Type</TT> object for the case type.<BR>
+<BR>
+
+<DT><TT>constrType()</TT><DD><BR>Boolean: true if the case type was constructed within the case.<BR>
+<BR>
+
+<DT><TT>declarator()</TT><DD><BR><TT>Declarator</TT> object</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Union (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Union declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>switchType()</TT><DD><BR><TT>IdlType.Type</TT> object corresponding to the switch type.<BR>
+<BR>
+
+<DT><TT>constrType()</TT><DD><BR>Boolean: true if the switch type was declared within the switch
+ statement. Only possible for Enums.<BR>
+<BR>
+
+<DT><TT>cases()</TT><DD><BR>List of <TT>UnionCase</TT> objects.<BR>
+<BR>
+
+<DT><TT>recursive()</TT><DD><BR>Boolean: true if the union is recursive.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Enumerator (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Enumerator of an enum</I></DIV><DL COMPACT=compact>
+<DT><DD><BR>No non-inherited functions.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Enum (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Enum declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>enumerators()</TT><DD><BR>List of <TT>Enumerator</TT> objects.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Attribute (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Attribute declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>readonly()</TT><DD><BR>Boolean: true if the attribute is read only.<BR>
+<BR>
+
+<DT><TT>attrType()</TT><DD><BR><TT>IdlType.Type</TT> object for the attribute's type.<BR>
+<BR>
+
+<DT><TT>identifiers()</TT><DD><BR>List of strings containing the attribute identifiers. e.g. for the
+ declaration<BR>
+<BR>
+<PRE>
+  attribute long a, b;
+</PRE> <TT>identifiers()</TT> will return <TT>['a','b']</TT>.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Parameter (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Parameter of an operation</I></DIV><DL COMPACT=compact>
+<DT><TT>direction()</TT><DD><BR>Integer: 0 == in, 1 == out, 2 == inout.<BR>
+<BR>
+
+<DT><TT>is_in()</TT><DD><BR>Boolean: true if in or inout.<BR>
+<BR>
+
+<DT><TT>is_out()</TT><DD><BR>Boolean: true if out or inout.<BR>
+<BR>
+
+<DT><TT>paramType()</TT><DD><BR><TT>IdlType.Type</TT> object for the parameter type.<BR>
+<BR>
+
+<DT><TT>identifier()</TT><DD><BR>String containing the parameter identifier.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Operation (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Operation declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>oneway()</TT><DD><BR>Boolean: true if the operation is one way.<BR>
+<BR>
+
+<DT><TT>returnType()</TT><DD><BR><TT>IdlType.Type</TT> object for the return type.<BR>
+<BR>
+
+<DT><TT>identifier()</TT><DD><BR>String containing the operation identifier.<BR>
+<BR>
+
+<DT><TT>parameters()</TT><DD><BR>List of <TT>Parameter</TT> objects.<BR>
+<BR>
+
+<DT><TT>raises()</TT><DD><BR>List of <TT>Exception</TT> objects which the operation can raise.<BR>
+<BR>
+
+<DT><TT>contexts()</TT><DD><BR>List of strings declared as context for the operation.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Native (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Native declaration</I></DIV><DL COMPACT=compact>
+<DT><DD><BR>Native should not be used in normal IDL.<BR>
+<BR>
+No non-inherited functions.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.StateMember (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>State member of a concrete valuetype</I></DIV><DL COMPACT=compact>
+<DT><TT>memberAccess()</TT><DD><BR>Integer: 0 == public, 1 == private.<BR>
+<BR>
+
+<DT><TT>memberType()</TT><DD><BR><TT>IdlType.Type</TT> object for member type.<BR>
+<BR>
+
+<DT><TT>constrType()</TT><DD><BR>Boolean: true if the member type is declared within the StateMember.<BR>
+<BR>
+
+<DT><TT>declarators()</TT><DD><BR>List of <TT>Declarator</TT> objects.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Factory (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Factory method of a valuetype</I></DIV><DL COMPACT=compact>
+<DT><TT>identifier()</TT><DD><BR>String containing the factory identifier.<BR>
+<BR>
+
+<DT><TT>parameters()</TT><DD><BR>List of <TT>Parameter</TT> objects.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.ValueForward (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Forward-declared valuetype</I></DIV><DL COMPACT=compact>
+<DT><TT>abstract()</TT><DD><BR>Boolean: true if declared abstract.<BR>
+<BR>
+
+<DT><TT>fullDecl()</TT><DD><BR><TT>Value</TT> or <TT>ValueAbs</TT> object corresponding to the full
+ valuetype declaration or <TT>None</TT> if there is no full declaration.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.ValueBox (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Boxed valuetype declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>boxedType()</TT><DD><BR><TT>IdlType.Type</TT> object for the boxed type.<BR>
+<BR>
+
+<DT><TT>constrType()</TT><DD><BR>Boolean: true if boxed type is declared inside the valuetype
+ declaration.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.ValueAbs (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Abstract valuetype declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>inherits()</TT><DD><BR>List of <TT>ValueAbs</TT> objects from which this inherits.<BR>
+<BR>
+
+<DT><TT>supports()</TT><DD><BR>List of <TT>Interface</TT> objects which this valuetype supports.<BR>
+<BR>
+
+<DT><TT>contents()</TT><DD><BR>List of <TT>Decl</TT> objects for all items defined within this
+ valuetype.<BR>
+<BR>
+
+<DT><TT>declarations()</TT><DD><BR>Subset of <TT>contents()</TT> containing types, constants and
+ exceptions.<BR>
+<BR>
+
+<DT><TT>callables()</TT><DD><BR>Subset of contents() containing <TT>Operation</TT>s and
+ <TT>Attribute</TT>s.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Value (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Valuetype declaration</I></DIV><DL COMPACT=compact>
+<DT><TT>custom()</TT><DD><BR>Boolean: true if declared custom.<BR>
+<BR>
+
+<DT><TT>inherits()</TT><DD><BR>List of valuetypes from which this inherits. The first may be a
+ <TT>Value</TT> object or a <TT>ValueAbs</TT> object; any others will
+ be <TT>ValueAbs</TT> objects.<BR>
+<BR>
+
+<DT><TT>truncatable()</TT><DD><BR>Boolean: true if the inherited <TT>Value</TT> is declared
+ truncatable; false if not, or there is no inherited <TT>Value</TT>.<BR>
+<BR>
+
+<DT><TT>supports()</TT><DD><BR>List of <TT>Interface</TT> objects which this valuetype supports.<BR>
+<BR>
+
+<DT><TT>contents()</TT><DD><BR>List of <TT>Decl</TT> objects for all items defined within this
+ valuetype.<BR>
+<BR>
+
+<DT><TT>declarations()</TT><DD><BR>Subset of <TT>contents()</TT> containing types, constants and
+ exceptions.<BR>
+<BR>
+
+<DT><TT>callables()</TT><DD><BR>Subset of <TT>contents()</TT> containing <TT>Operation</TT>s,
+ <TT>Attribute</TT>s, <TT>StateMember</TT>s and <TT>Factory</TT>s.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsubsection Type objects-->
+
+<H4>2.3.7&nbsp;&nbsp; Type objects</H4><!--SEC END -->
+All type objects are derived from the base class <TT>Type</TT>:<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idltype.Type</TT></B></DIV><BR><DIV ALIGN=center><I>Base class for types</I></DIV><DL COMPACT=compact>
+<DT><TT>kind()</TT><DD><BR>TypeCode kind of type.<BR>
+<BR>
+
+<DT><TT>accept(visitor)</TT><DD><BR>Visitor pattern accept.</DL><HR SIZE=2><BR>
+<BR>
+The basic CORBA types (null, void, short, long, unsigned short,
+unsigned long, float, double, boolean, char, octet, any, TypeCode,
+Principal, long long, unsigned long long, long double, and wide char)
+are represented by objects of type <TT>omniidl.idltype.Base</TT>,
+derived from <TT>Type</TT>, with no extra methods.<BR>
+<BR>
+The template types---string, wstring, sequence, and fixed---do not
+have associated <TT>Decl</TT> objects since they are not explicitly
+declared. They are always implicitly declared as part of another
+declaration.<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idltype.String (Type)</TT></B></DIV><BR><DIV ALIGN=center><I>String type</I></DIV><DL COMPACT=compact>
+<DT><TT>bound()</TT><DD><BR>Bound of a bounded string, or 0 for unbounded strings.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idltype.WString (Type)</TT></B></DIV><BR><DIV ALIGN=center><I>Wide string type</I></DIV><DL COMPACT=compact>
+<DT><TT>bound()</TT><DD><BR>Bound of a bounded wstring, or 0 for unbounded wstrings.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idltype.Sequence (Type)</TT></B></DIV><BR><DIV ALIGN=center><I>Sequence type</I></DIV><DL COMPACT=compact>
+<DT><TT>seqType()</TT><DD><BR><TT>IdlType.Type</TT> object representing what the sequence contains.<BR>
+<BR>
+
+<DT><TT>bound()</TT><DD><BR>Bound of a bounded sequence, or 0 for unbounded sequences.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idltype.Fixed (Type)</TT></B></DIV><BR><DIV ALIGN=center><I>Fixed point type</I></DIV><DL COMPACT=compact>
+<DT><TT>digits()</TT><DD><BR>Number of digits in number.<BR>
+<BR>
+
+<DT><TT>scale()</TT><DD><BR>Scale of number.</DL><HR SIZE=2><BR>
+<BR>
+All other types (interface, struct, union, enum, typedef, exception,
+valuetype) must be explicitly declared. They are represented with
+<TT>Declared</TT> objects:<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idltype.Declared (Type)</TT></B></DIV><BR><DIV ALIGN=center><I>Explicitly declared type</I></DIV><DL COMPACT=compact>
+<DT>
+ <A NAME="cls:typeDeclared"></A><TT>decl()</TT><DD><BR><TT>omniidl.idlast.Decl</TT> object which corresponds to this type.<BR>
+<BR>
+
+<DT><TT>scopedName()</TT><DD><BR>Fully scoped name of the type as a list of strings.<BR>
+<BR>
+
+<DT><TT>name()</TT><DD><BR>Simple name of the type, i.e. the last element of the scoped name.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsubsection Finding a named <TT>Decl</TT>-->
+
+<H4>2.3.8&nbsp;&nbsp; Finding a named <TT>Decl</TT></H4><!--SEC END -->
+Normally, back-ends walk over the tree of <TT>Decl</TT> objects,
+dealing with the declarations as they encounter them. Occasionally,
+however, it may be useful to find a declaration by its scoped name.
+Only <TT>Decl</TT>s which inherit from <TT>DeclRepoId</TT> can be found
+in this way.<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>findDecl(scopedName)</TT><DD><BR>Find the <TT>Decl</TT> object which has the scoped name list
+ <TT>scopedName</TT>. If a declaration with the specified name does not
+ exist, the <TT>DeclNotFound</TT> exception is raised.</DL><HR SIZE=2><BR>
+<BR>
+<!--TOC subsection An example back-end-->
+
+<H3>2.4&nbsp;&nbsp; An example back-end</H3><!--SEC END -->
+The following code is an extremely simple back-end which just prints
+the names of all operations declared within an IDL file.
+Unfortunately, it is so simple that it does not show many features of
+the back-end interface. You should look at the <TT>dump.py</TT> and
+<TT>python.py</TT> back-ends for a more extensive example.<BR>
+<BR>
+<PRE>
+from omniidl import idlast, idlvisitor, idlutil
+import string
+
+class ExampleVisitor (idlvisitor.AstVisitor):
+
+    def visitAST(self, node):
+        for n in node.declarations():
+            n.accept(self)
+
+    def visitModule(self, node):
+        for n in node.definitions():
+            n.accept(self)
+
+    def visitInterface(self, node):
+        name = idlutil.ccolonName(node.scopedName())
+
+        if node.mainFile():
+            for c in node.callables():
+                if isinstance(c, idlast.Operation):
+                    print name + "::" + \
+                          c.identifier() + "()"
+
+def run(tree, args):
+    visitor = ExampleVisitor()
+    tree.accept(visitor)
+</PRE>The visitor object simple recurses through the <TT>AST</TT> and
+<TT>Module</TT> objects, and prints the operation names it finds in
+<TT>Interface</TT> objects.<BR>
+<BR>
+Note that since <TT>AstVisitor</TT> (and similarly <TT>TypeVisitor</TT>
+which is not used in the example) has all operations declared to be
+no-ops, the <TT>ExampleVisitor</TT> class does not have to declare
+visit functions for all node types. This can be a disadvantage if your
+back-end is supposed to perform some action for all node types, since
+there will be no error if you accidentally miss a node type. In those
+situations it is better to declare a visitor class which does not
+derive from the visitor base classes.<BR>
+<BR>
+<!--TOC section Front-end architecture-->
+
+<H2>3&nbsp;&nbsp; Front-end architecture</H2><!--SEC END -->
+Not here yet.<BR>
+<BR>
+<!--BEGIN NOTES document-->
+<HR WIDTH="50%" SIZE=1><DL>
+<DT><A NAME="note1" HREF="#text1"><FONT SIZE=5>1</FONT></A><DD> It is even possible to use a Python module
+as a visitor object.
+</DL>
+<!--END NOTES-->
+<!--HTMLFOOT-->
+<!--ENDHTML-->
+
+<!--FOOTER-->
+<HR SIZE=2>
+<BLOCKQUOTE><EM>This document was translated from L<sup>A</sup>T<sub>E</sub>X by
+</EM><A HREF="http://pauillac.inria.fr/~maranget/hevea/index.html"><EM>H</EM><EM><FONT SIZE=2><sup>E</sup></FONT></EM><EM>V</EM><EM><FONT SIZE=2><sup>E</sup></FONT></EM><EM>A</EM></A><EM>.
+</EM></BLOCKQUOTE></BODY>
+</HTML>
+

@@ -34,8 +34,12 @@
 #endif
 #endif
 
-#include <pthread.h>
-
+#ifndef __POSIX_NT__
+#  include <pthread.h>
+#else
+#  include <windows.h>
+#  include "pthread_nt.h"
+#endif
 extern "C" void* omni_thread_wrapper(void* ptr);
 
 #define OMNI_MUTEX_IMPLEMENTATION			\

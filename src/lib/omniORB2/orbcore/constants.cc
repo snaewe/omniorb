@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // constants.cc               Created on: 15/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,20 @@
 
 /*
   $Log$
+  Revision 1.15  2000/07/04 15:22:59  dpg1
+  Merge from omni3_develop.
+
+  Revision 1.14.6.3  2000/05/24 17:18:10  dpg1
+  Rename IIOP::DEFAULT_PORT IIOP::DEFAULT_CORBALOC_PORT
+
+  Revision 1.14.6.2  2000/04/27 10:40:52  dpg1
+  Interoperable Naming Service
+
+  Add IIOP default port.
+
+  Revision 1.14.6.1  1999/09/22 14:26:43  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.14  1999/05/25 17:22:40  sll
   Added magic number constants for all the pseudo objects.
 
@@ -64,26 +78,25 @@
 // Revision 1.4  1997/05/06  15:07:47  sll
 // Public release.
 //
-  */
+*/
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 
 // See the description of this variable in omniInternal.h
-const char* omniORB_2_8 = "omniORB version 2.8.x";
+const char* omniORB_3_0 = "omniORB version 3.0.x";
 
 
-const IOP::ProfileId       IOP::TAG_INTERNET_IOP = 0;
+const IOP::ProfileId       IOP::TAG_INTERNET_IOP        = 0;
 const IOP::ProfileId       IOP::TAG_MULTIPLE_COMPONENTS = 1;
-const IOP::ServiceID       IOP::TransactionService = 0;
-const CORBA::Char          IIOP::current_major = 1;
-const CORBA::Char          IIOP::current_minor = 0;
-const CORBA::Char          omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
-const omni::alignment_t    omni::max_alignment = ALIGN_8;
-
-
-const CORBA::Char*
-CORBA::Object::repositoryID = (CORBA::Char*) "IDL:omg.org/CORBA/Object:1.0";
+const IOP::ServiceID       IOP::TransactionService      = 0;
+const CORBA::Char          IIOP::current_major          = 1;
+const CORBA::Char          IIOP::current_minor          = 0;
+const CORBA::UShort        IIOP::DEFAULT_CORBALOC_PORT  = 2089;
 
 
 const GIOP_Basetypes::MessageHeader::HeaderType
@@ -283,47 +296,6 @@ const GIOP_Basetypes::_SysExceptRepoID
 // The static function PR_is_valid() in each of the pseudo object class 
 // can be used to test if the instance is indeed valid. If a random pointer 
 // is passed to isvalid(), it is unlikely that the magic number would match.
-const CORBA::ULong CORBA::BOA::PR_magic             = 0x424F4154U; // BOAT
-const CORBA::ULong CORBA::Context::PR_magic         = 0x43545854U; // CTXT
-const CORBA::ULong CORBA::ContextList::PR_magic     = 0x4354584CU; // CTXL
-const CORBA::ULong CORBA::DynAny::PR_magic          = 0x44594E54U; // DYNT
-const CORBA::ULong CORBA::Environment::PR_magic     = 0x454E564CU; // ENVI
+
 const CORBA::ULong CORBA::Exception::PR_magic       = 0x45584354U; // EXCT
-const CORBA::ULong CORBA::ExceptionList::PR_magic   = 0x4558434CU; // EXCL
-const CORBA::ULong CORBA::NamedValue::PR_magic      = 0x4E56414CU; // NVAL
-const CORBA::ULong CORBA::NVList::PR_magic          = 0x4E564C54U; // NVLT
-const CORBA::ULong CORBA::Object::PR_magic          = 0x434F424AU; // COBJ
-const CORBA::ULong CORBA::ORB::PR_magic             = 0x4F524254U; // ORBT
-const CORBA::ULong CORBA::Request::PR_magic         = 0x52455154U; // REQT
-const CORBA::ULong CORBA::TypeCode::PR_magic        = 0x54594F4CU; // TCOL
-
-
-
-
-#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
-// MSVC++ does not give the constant external linkage otherwise. Its a bug.
-namespace omniORB {
-  extern const unsigned int hash_table_size = 103;
-}
-#else
-const unsigned int omniORB::hash_table_size = 103;
-#endif
-
-#if defined(__GNUG__)
-
-// The following template classes are defined before the template functions
-// inline void _CORBA_Sequence<T>::operator<<= (NetBufferedStream &s) etc
-// are defined.
-// G++ (2.7.2 or may be later versions as well) does not compile in the
-// template functions as a result.
-// The following is a workaround which explicitly instantiate the classes
-// again.
-
-#if 0
-//??
-template class _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Octet,1,1>;
-template class _CORBA_Sequence<_CORBA_Octet>;
-#endif
-
-
-#endif
+const CORBA::ULong CORBA::Object::_PR_magic         = 0x434F424AU; // COBJ

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // exceptionList.cc           Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,7 +27,14 @@
 //   Implementation of CORBA::ExceptionList.
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <pseudo.h>
+#include <exceptiondefs.h>
 
 
 #define INIT_MAX_SEQ_LENGTH  6
@@ -57,7 +64,7 @@ void
 ExceptionListImpl::add(CORBA::TypeCode_ptr tc)
 {
   if( !CORBA::TypeCode::PR_is_valid(tc) || CORBA::is_nil(tc) )
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
 
@@ -75,7 +82,7 @@ void
 ExceptionListImpl::add_consume(CORBA::TypeCode_ptr tc)
 {
   if( !CORBA::TypeCode::PR_is_valid(tc) || CORBA::is_nil(tc) )
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
 
@@ -141,7 +148,7 @@ ExceptionListImpl::free_entries()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilExList : public CORBA::ExceptionList {
+class omniNilExList : public CORBA::ExceptionList {
 public:
   virtual CORBA::ULong count() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -169,8 +176,6 @@ public:
   }
 };
 
-static NilExList _nilExceptionList;
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -183,7 +188,7 @@ CORBA::
 ExceptionList::_duplicate(ExceptionList_ptr p)
 {
   if (!PR_is_valid(p))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
@@ -193,7 +198,13 @@ CORBA::ExceptionList_ptr
 CORBA::
 ExceptionList::_nil()
 {
-  return &_nilExceptionList;
+  static omniNilExList* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilExList;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -209,8 +220,7 @@ CORBA::release(ExceptionList_ptr p)
 
 
 CORBA::Status
-CORBA::
-ORB::create_exception_list(ExceptionList_out exclist)
+CORBA::ORB::create_exception_list(ExceptionList_out exclist)
 {
   exclist = new ExceptionListImpl();
   RETURN_CORBA_STATUS;

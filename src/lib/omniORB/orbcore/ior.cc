@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // ior.cc                     Created on: 5/7/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,27 @@
  
 /*
   $Log$
+  Revision 1.10  2000/07/04 15:22:56  dpg1
+  Merge from omni3_develop.
+
+  Revision 1.9.6.5  2000/06/22 10:40:15  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
+  Revision 1.9.6.4  2000/04/27 10:50:30  dpg1
+  Interoperable Naming Service
+
+  IOR: prefix is not case sensitive.
+
+  Revision 1.9.6.3  1999/10/14 16:22:11  djr
+  Implemented logging when system exceptions are thrown.
+
+  Revision 1.9.6.2  1999/09/27 08:48:32  djr
+  Minor corrections to get rid of warnings.
+
+  Revision 1.9.6.1  1999/09/22 14:26:51  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.9  1999/05/25 17:06:14  sll
   Make sure all padding bytes are converted to 0s in the stringified IOR.
 
@@ -52,11 +73,14 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
+
+#include <exceptiondefs.h>
+
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
@@ -74,10 +98,13 @@
 #endif
 
 
-CORBA::Char * 
-IOP::iorToEncapStr(const CORBA::Char *type_id,
-		   const IOP::TaggedProfileList *profiles)
+CORBA::Char*
+IOP::iorToEncapStr(const CORBA::Char* type_id,
+		   const IOP::TaggedProfileList* profiles)
 {
+  OMNIORB_ASSERT(type_id);
+  OMNIORB_ASSERT(profiles);
+
   MemBufferedStream buf;
 
   CORBA::ULong l = strlen((const char *)type_id) + 1;
@@ -85,9 +112,9 @@ IOP::iorToEncapStr(const CORBA::Char *type_id,
   // lets make an effort to ensure that all the padding bytes are zero'ed.
   {
     size_t bufsize = 8 + l;
-    bufsize = profiles->NP_alignedSize(bufsize);
+    bufsize = profiles->_NP_alignedSize(bufsize);
     CORBA::Char dummy = 0;
-    for (int i=0; i < bufsize; i++) dummy >>= buf;
+    for (size_t i=0; i < bufsize; i++) dummy >>= buf;
     buf.rewind_inout_mkr();
   }
 
@@ -104,7 +131,7 @@ IOP::iorToEncapStr(const CORBA::Char *type_id,
 
   char *result = new char[4+s*2+1];
   if (!result)
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
   result[4+s*2] = '\0';
   result[0] = 'I';
   result[1] = 'O';
@@ -124,23 +151,24 @@ IOP::iorToEncapStr(const CORBA::Char *type_id,
     else
       result[j+1] = 'a' + (v - 10);
   }
-  return (CORBA::Char *)result;
+  return (CORBA::Char*) result;
 }
 
+
 void
-IOP::EncapStrToIor(const CORBA::Char *str,
-		   CORBA::Char *&type_id,
-		   IOP::TaggedProfileList *&profiles)
+IOP::EncapStrToIor(const CORBA::Char* str,
+		   CORBA::Char*& type_id,
+		   IOP::TaggedProfileList*& profiles)
 {
   size_t s = (str ? strlen((const char *)str) : 0);
   if (s<4)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
   const char *p = (const char *) str;
-  if (p[0] != 'I' ||
-      p[1] != 'O' ||
-      p[2] != 'R' ||
-      p[3] != ':')
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  if ((p[0] != 'I' && p[0] != 'i') ||
+      (p[1] != 'O' && p[1] != 'o') ||
+      (p[2] != 'R' && p[2] != 'r') ||
+      (p[3] != ':'))
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
   s = (s-4)/2;  // how many octets are there in the string
   p += 4;
@@ -149,7 +177,7 @@ IOP::EncapStrToIor(const CORBA::Char *str,
   for (int i=0; i<(int)s; i++) {
     int j = i*2;
     CORBA::Octet v;
-    
+
     if (p[j] >= '0' && p[j] <= '9') {
       v = ((p[j] - '0') << 4);
     }
@@ -160,7 +188,7 @@ IOP::EncapStrToIor(const CORBA::Char *str,
       v = ((p[j] - 'A' + 10) << 4);
     }
     else
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
     if (p[j+1] >= '0' && p[j+1] <= '9') {
       v += (p[j+1] - '0');
@@ -172,7 +200,7 @@ IOP::EncapStrToIor(const CORBA::Char *str,
       v += (p[j+1] - 'A' + 10);
     }
     else
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
     v >>= buf;
   }
 
@@ -187,13 +215,13 @@ IOP::EncapStrToIor(const CORBA::Char *str,
     CORBA::ULong l;
     l <<= buf;
     if (l > buf.unRead())
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
     switch (l) {
 
     case 0:
 #ifdef NO_SLOPPY_NIL_REFERENCE
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 #else
       // According to the CORBA specification 2.0 section 10.6.2:
       //   Null object references are indicated by an empty set of
@@ -207,26 +235,26 @@ IOP::EncapStrToIor(const CORBA::Char *str,
       //   NO_SLOPPY_NIL_REFERENCE
       type_id = new CORBA::Char[1];
       type_id[0] = (CORBA::Char)'\0';
-#endif	
+#endif
       break;
 
     case 1:
       type_id = new CORBA::Char[1];
       buf.get_char_array(type_id,1);
       if (type_id[0] != (CORBA::Char)'\0')
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
       break;
 
     default:
       type_id = new CORBA::Char[l];
       if (!type_id)
-	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
       buf.get_char_array(type_id,l);
     }
 
     profiles = new IOP::TaggedProfileList;
     if (!profiles)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
     *profiles <<= buf;
   }
   catch (...) {
@@ -237,11 +265,13 @@ IOP::EncapStrToIor(const CORBA::Char *str,
   return;
 }
 
+
 void
 IOP::TaggedProfile::operator>>= (NetBufferedStream &s) {
     tag >>= s;
     profile_data >>= s;
 }
+
 
 void
 IOP::TaggedProfile::operator<<= (NetBufferedStream &s) {
@@ -249,17 +279,20 @@ IOP::TaggedProfile::operator<<= (NetBufferedStream &s) {
   profile_data <<= s;
 }
 
+
 void
 IOP::TaggedProfile::operator>>= (MemBufferedStream &s) {
     tag >>= s;
     profile_data >>= s;
 }
 
+
 void
 IOP::TaggedProfile::operator<<= (MemBufferedStream &s) {
   tag <<= s;
   profile_data <<= s;
 }
+
 
 #undef Swap16
 #undef Swap32
@@ -278,4 +311,3 @@ template class _CORBA_Sequence<IOP::TaggedProfile>;
 template class _CORBA_Unbounded_Sequence<IOP::TaggedProfile>;
 
 #endif
-

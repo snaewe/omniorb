@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // initFile.cc                Created on: 10/01/97
 //                            Author    : Eoin Carroll  (ewc)
 //
@@ -29,8 +29,40 @@
 
 /*
   $Log$
-  Revision 1.31  2000/04/10 12:14:07  djr
-  Update from omni2_8_develop
+  Revision 1.32  2000/07/04 15:22:57  dpg1
+  Merge from omni3_develop.
+
+  Revision 1.30.6.9  2000/06/28 13:20:33  sll
+  Pre-release 3 updates
+
+  Revision 1.30.6.8  2000/06/22 10:40:14  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
+  Revision 1.30.6.7  2000/06/19 14:18:33  dpg1
+  Explicit cast to (const char*) when using String_var with logger.
+
+  Revision 1.30.6.6  2000/05/24 17:21:07  dpg1
+  Fix const-correctness in error functions
+
+  Revision 1.30.6.5  2000/04/27 10:49:33  dpg1
+  Interoperable Naming Service
+
+  Add ORBInitRef and ORBDefaultInitRef config file keys. Existing
+  NAMESERVICE and INTERFACE_REPOSITORY keys deprecated and converted to
+  work with new omniInitialReferences.
+
+  Revision 1.30.6.4  1999/10/16 13:22:53  djr
+  Changes to support compiling on MSVC.
+
+  Revision 1.30.6.3  1999/10/14 16:22:10  djr
+  Implemented logging when system exceptions are thrown.
+
+  Revision 1.30.6.2  1999/09/24 15:01:34  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
+  Revision 1.30.6.1  1999/09/22 14:26:50  djr
+  Major rewrite of orbcore to support POA.
 
   Revision 1.30  1999/09/01 13:13:55  sll
   Fixed #ifdef macro so that the code compiles for ETS kernel.
@@ -101,12 +133,20 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
-#include <omniORB2/Naming.hh>
+#include <omniORB3/CORBA.h>
+#include <omniORB3/Naming.hh>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
+
+#include <initFile.h>
+#include <omniORB3/omniObjRef.h>
+#include <initRefs.h>
+#include <gatekeeper.h>
+#include <initialiser.h>
+#include <exceptiondefs.h>
+#include <corbaOrb.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -131,10 +171,6 @@
 #include <unistd.h>
 #endif
 
-#include <initFile.h>
-#include <bootstrap_i.h>
-
-#include "gatekeeper.h"
 
 #ifndef INIT_ENV_VAR
 #define INIT_ENV_VAR "OMNIORB_CONFIG"    
@@ -143,14 +179,12 @@
 
 #ifndef INIT_REGKEY
 #define INIT_REGKEY  "SOFTWARE\\ORL\\omniORB\\2.0"
-                     // Path to Registry Keys for omniORB2 [NT specific]
+                     // Path to Registry Keys for omniORB [NT specific]
 #endif
 
 
 #define INIT_MAX_CONFIG 10   
                      // Maximum number of entries in configuration 
-
-static const CosNaming::NamingContext_proxyObjectFactory CosNaming_NamingContext_proxyObjectFactory1; // To ensure that Naming Stubs are linked.
 
 
 initFile::initFile() : fData(0), fsize(0), currpos(0)
@@ -180,8 +214,8 @@ void initFile::initialize()
   // Note: Using standard C file functions for compatibility with ATMos
 
   CORBA::String_var config_fname;
-  CORBA::Object_var NameService;
-  CORBA::Object_var InterfaceRepository;
+  int nameServiceSet         = 0;
+  int interfaceRepositorySet = 0;
 
 // Get filename:
 
@@ -262,85 +296,98 @@ void initFile::initialize()
   CORBA::String_var bootstrapAgentHostname;
   CORBA::UShort     bootstrapAgentPort = 900;
 
-  while(getnextentry(entryname,data))
-    {
-      if (strcmp((const char*)entryname,"NAMESERVICE") == 0)
-	{
-	  try
-	    {
-	      if (!CORBA::is_nil(NameService)) {
-		multerr(entryname);
-	      }
-	      omniObject* objptr = omni::stringToObject(data);
-	      NameService = (CORBA::Object_ptr) 
-		                objptr->_widenFromTheMostDerivedIntf(0);
-	    }
-	  catch(const CORBA::MARSHAL&)
-	    {
-	      invref(entryname);
-	    }
-	  omniInitialReferences::singleton()->set("NameService",NameService);
+  while(getnextentry(entryname,data)) {
+
+    if (strcmp((const char*)entryname,"ORBInitRef") == 0) {
+      unsigned int slen = strlen(data) + 1;
+      CORBA::String_var id  = CORBA::string_alloc(slen);
+      CORBA::String_var uri = CORBA::string_alloc(slen);
+      if (sscanf(data, "%[^=]=%s", (char*)id, (char*)uri) != 2) {
+	if (omniORB::trace(1)) {
+	  omniORB::logger l;
+	  l << "Configuration error: invalid ORBInitRef parameter `"
+	    << (const char*)data << "'.\n";
 	}
-      else if (strcmp(entryname, "INTERFACE_REPOSITORY") == 0)
-	{
-	  try
-	    {
-	      if (!CORBA::is_nil(InterfaceRepository)) {
-		multerr(entryname);
-	      }
-	      omniObject* objptr = omni::stringToObject(data);
-	      InterfaceRepository = (CORBA::Object_ptr)
-		objptr->_widenFromTheMostDerivedIntf(0);
-	    }
-	  catch(const CORBA::MARSHAL&)
-	    {
-	      invref(entryname);
-	    }
-	  omniInitialReferences::singleton()->set("InterfaceRepository",
-						  InterfaceRepository);
+	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+      }
+      if (!strcmp(id, "NameService")) {
+	if (nameServiceSet) multerr("NameService");
+	nameServiceSet = 1;
+      }
+      else if (!strcmp(id, "InterfaceRepository")) {
+	if (interfaceRepositorySet) multerr("InterfaceRepository");
+	interfaceRepositorySet = 1;
+      }
+      if (!omniInitialReferences::setFromFile(id, uri)) {
+	if (omniORB::trace(1)) {
+	  omniORB::logger l;
+	  l << "Configuration error: syntactically incorrect URI `"
+	    << (const char*)uri << "'\n";
 	}
-      else if (strcmp(entryname, "GATEKEEPER_ALLOWFILE") == 0)
-	{
-	  gateKeeper::allowFile = CORBA::string_dup(data);	  
-	}
-      else if (strcmp(entryname, "GATEKEEPER_DENYFILE") == 0)
-	{
-	  gateKeeper::denyFile = CORBA::string_dup(data);
-	}
-      else if (strcmp(entryname, "ORBInitialHost") == 0)
-	{
-	  bootstrapAgentHostname = CORBA::string_dup(data);
-	}
-      else if (strcmp(entryname, "ORBInitialPort") == 0)
-	{
-	  unsigned int port;
-	  if (sscanf(data,"%u",&port) != 1 ||
-	      (port == 0 || port >= 65536)) {
-	    invref(entryname);
-	  }
-	  bootstrapAgentPort = (CORBA::UShort)port;
-	}
-      else
-	{
-	  if (omniORB::traceLevel > 0) {
-#ifndef __atmos__
-	    omniORB::log << "Configuration error:  Unknown field (" 
-			 << (const char*) entryname << ") "
-			 << " found in configuration.\n";
-	    omniORB::log.flush();
-#else
-	    kprintf("Configuration error:  ");
-	    kprintf("Unknown field (%s) found in configuration file.\n",(const char*)entryname);
-#endif
-	  }
-	 throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
-	}
+	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+      }
     }
-  if (CORBA::is_nil(NameService) && CORBA::is_nil(InterfaceRepository)) {
+    else if (strcmp((const char*)entryname,"ORBDefaultInitRef") == 0) {
+      omniInitialReferences::setDefaultInitRefFromFile(data);
+    }
+    else if (strcmp((const char*)entryname,"NAMESERVICE") == 0) {
+      if (nameServiceSet) multerr(entryname);
+      nameServiceSet = 1;
+      if (!omniInitialReferences::setFromFile("NameService", data))
+	invref("NameService");
+    }
+    else if (strcmp(entryname, "INTERFACE_REPOSITORY") == 0) {
+      if (interfaceRepositorySet) multerr(entryname);
+      interfaceRepositorySet = 1;
+      if (!omniInitialReferences::setFromFile("InterfaceRepository", data))
+	invref("InterfaceRepository");
+    }
+#ifdef _MSC_VER
+    //??
+    else if (strcmp(entryname, "GATEKEEPER_ALLOWFILE") == 0) {
+      omniORB::logs(1, "WARNING -- gatekeeper disabled.");
+    }
+    else if (strcmp(entryname, "GATEKEEPER_DENYFILE") == 0) {
+      omniORB::logs(1, "WARNING -- gatekeeper disabled.");
+    }
+#else
+    else if (strcmp(entryname, "GATEKEEPER_ALLOWFILE") == 0) {
+      gateKeeper::allowFile = CORBA::string_dup(data);	  
+    }
+    else if (strcmp(entryname, "GATEKEEPER_DENYFILE") == 0) {
+      gateKeeper::denyFile = CORBA::string_dup(data);
+    }
+#endif
+    else if (strcmp(entryname, "ORBInitialHost") == 0) {
+      bootstrapAgentHostname = CORBA::string_dup(data);
+    }
+    else if (strcmp(entryname, "ORBInitialPort") == 0) {
+      unsigned int port;
+      if (sscanf(data,"%u",&port) != 1 ||
+	  (port == 0 || port >= 65536)) {
+	invref(entryname);
+      }
+      bootstrapAgentPort = (CORBA::UShort)port;
+    }
+    else {
+      if (omniORB::traceLevel > 0) {
+#ifndef __atmos__
+	omniORB::log << "Configuration error:  Unknown field (" 
+		     << (const char*) entryname << ") "
+		     << " found in configuration.\n";
+	omniORB::log.flush();
+#else
+	kprintf("Configuration error:  ");
+	kprintf("Unknown field (%s) found in configuration file.\n",(const char*)entryname);
+#endif
+      }
+      OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+    }
+  }
+  if (!nameServiceSet && !interfaceRepositorySet) {
     if ((char*)bootstrapAgentHostname != 0) {
-      omniInitialReferences::singleton()
-	->initialise_bootstrap_agent(bootstrapAgentHostname,
-				     bootstrapAgentPort);
+      omniInitialReferences::initialise_bootstrap_agent(bootstrapAgentHostname,
+							bootstrapAgentPort);
     }
   }
 }
@@ -394,7 +441,7 @@ int initFile::read_file(char* config_fname)
 
   fData = new char[fsize+1];
   if (fData == NULL) 
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
 
   size_t result = fread((void*) fData,1,fsize,iFile);
   fclose(iFile);
@@ -450,7 +497,7 @@ int initFile::getnextentry(CORBA::String_var& entryname,
     }
   while (!isspace(fData[currpos]));
 
-  entryname = CORBA::string_alloc((currpos-startpos) + 1);
+  entryname = omni::allocString(currpos-startpos);
   strncpy(entryname,(fData+startpos),(currpos-startpos));
   ((char*)entryname)[currpos-startpos] = '\0';
 
@@ -481,7 +528,7 @@ int initFile::getnextentry(CORBA::String_var& entryname,
   if (startpos == currpos)
     parseerr();
 
-  data = CORBA::string_alloc((currpos - startpos)+1);
+  data = omni::allocString(currpos - startpos);
   strncpy(data,(fData+startpos),(currpos-startpos));
   ((char*)data)[currpos-startpos] = '\0';
 
@@ -500,8 +547,8 @@ int initFile::getRegistryEntry(CORBA::String_var& entryname,
   DWORD dataType;
   DWORD init_ValLen = init_maxValLen+1;
   DWORD init_DataLen = init_maxDataLen+1;
-  entryname = CORBA::string_alloc(init_ValLen);
-  data      = CORBA::string_alloc(init_DataLen);
+  entryname = omni::allocString(init_ValLen);
+  data      = omni::allocString(init_DataLen);
 
   if (RegEnumValue(init_hkey,curr_index++,(LPTSTR) ((char*)entryname),
 		   &init_ValLen,NULL,
@@ -526,12 +573,13 @@ int initFile::getRegistryEntry(CORBA::String_var& entryname,
 
 // Implementations of inline error-report functions:
 
-void initFile::multerr(char* entryname)
+void initFile::multerr(const char* entryname)
 {
   if (omniORB::traceLevel > 0) {
 #ifndef __atmos__
-    omniORB::log << "Configuration error: Multiple entries found for field "
-	 << entryname << " .\n";
+    omniORB::log <<
+      "omniORB: Configuration error: Multiple entries found for field\n"
+      " " << entryname << " .\n";
     omniORB::log.flush();
 #else
     kprintf("Configuration error: ");
@@ -539,23 +587,25 @@ void initFile::multerr(char* entryname)
 	    entryname);
 #endif
   }
-  throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
 }
 
 
-void initFile::dataerr(char* entryname)
+void initFile::dataerr(const char* entryname)
 {
   if (omniORB::traceLevel > 0) {
 #ifndef __atmos__
-    omniORB::log << "Configuration error: No data found for field "
-		 << entryname << " in configuration file.\n";
+    omniORB::log <<
+      "omniORB: Configuration error: No data found for field " << entryname <<
+      "\n"
+      " in configuration file.\n";
     omniORB::log.flush();
 #else
     kprintf("Configuration error: No data found for field %s",entryname);
     kprintf(" in configuration file.\n");
 #endif
   }
-  throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
 }
 
 
@@ -563,29 +613,30 @@ void initFile::parseerr()
 {
   if (omniORB::traceLevel > 0) {
 #ifndef __atmos__
-    omniORB::log << "Configuration error: Parse error in config file.\n";
+    omniORB::log <<
+      "omniORB: Configuration error: Parse error in config file.\n";
     omniORB::log.flush();
 #else
     kprintf("Configuration error: Parse error in config file.\n");
 #endif
   }
-  throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
 }
 
 
-void initFile::invref(char* entryname)
+void initFile::invref(const char* entryname)
 {
   if (omniORB::traceLevel > 0) {
 #ifndef __atmos__
-    omniORB::log << "Configuration error: Invalid object reference supplied for "
-	 << entryname << ".\n";
+    omniORB::log << "omniORB: Configuration error: Invalid object reference "
+      "supplied for " << entryname << ".\n";
     omniORB::log.flush();
 #else
     kprintf("Configuration error: Invalid object reference supplied for %s.\n",
 	    entryname);
 #endif
   }
-  throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
 }
 
 
@@ -596,14 +647,14 @@ void initFile::invref(char* entryname)
 void initFile::noValsFound()
 {
   if (omniORB::traceLevel > 0) {
-    omniORB::log << "Configuration error: No values found in registry key"
-		 << "\nHKEY_LOCAL_MACHINE\\" 
-		 << INIT_REGKEY << "\n";
-    omniORB::log << "Either set the environment variable OMNIORB_CONFIG to point"
-         << "\nto the omniORB configuration file, or enter the IOR for the"
-         << "\nnaming service in to the registry in the (string) value"
-         << "\nNAMESERVICE , under the registry entry HKEY_LOCAL_MACHINE\\" 
-	 << INIT_REGKEY << "\n";
+    omniORB::log <<
+      "omniORB: Configuration error: No values found in registry key\n" <<
+      " HKEY_LOCAL_MACHINE\\" << INIT_REGKEY << "\n"
+      " Either set the environment variable OMNIORB_CONFIG to point\n"
+      " to the omniORB configuration file, or enter the IOR for the\n"
+      " naming service in to the registry in the (string) value\n"
+      " NAMESERVICE , under the registry entry\n"
+      " HKEY_LOCAL_MACHINE\\" << INIT_REGKEY << "\n";
     omniORB::log.flush();
   }
 }
@@ -612,11 +663,12 @@ void initFile::noValsFound()
 void initFile::formaterr(char* entryname)
 {
   if (omniORB::traceLevel > 0) {
-    omniORB::log << "Configuration error: Data for value " << entryname 
-		 << " is not a character string.\n";
+    omniORB::log <<
+      "omniORB: Configuration error: Data for value " << entryname << "\n"
+      " is not a character string.\n";
     omniORB::log.flush();
   }
-  throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
 }
 
 #endif

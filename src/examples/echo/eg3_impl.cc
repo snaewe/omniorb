@@ -1,83 +1,113 @@
 // eg3_impl.cc - This is the source code of example 3 used in Chapter 2
-//               "The Basics" of the omniORB2 user guide.
+//               "The Basics" of the omniORB user guide.
 //
 //               This is the object implementation.
 //
 // Usage: eg3_impl
 //
-//        On startup, the object reference is registered with the 
+//        On startup, the object reference is registered with the
 //        COS naming service. The client uses the naming service to
 //        locate this object.
 //
 //        The name which the object is bound to is as follows:
 //              root  [context]
 //               |
-//              text  [context] kind [my_context]
+//              test  [context] kind [my_context]
 //               |
 //              Echo  [object]  kind [Object]
 //
 
 #include <iostream.h>
-#include "omnithread.h"
-#include "echo.hh"
+#include <echo.hh>
 
-#include "echo_i.cc"
 
-static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);
+static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr, CORBA::Object_ptr);
+
+
+class Echo_i : public POA_Echo,
+	       public PortableServer::RefCountServantBase
+{
+public:
+  inline Echo_i() {}
+  virtual ~Echo_i() {}
+  virtual char* echoString(const char* mesg);
+};
+
+
+char* Echo_i::echoString(const char* mesg)
+{
+  return CORBA::string_dup(mesg);
+}
+
+//////////////////////////////////////////////////////////////////////
 
 int
 main(int argc, char **argv)
 {
-  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
-  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+  try {
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-  Echo_i *myobj = new Echo_i();
-  myobj->_obj_is_ready(boa);
+    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
-  {
-    Echo_var myobjRef = myobj->_this();
-    if (!bindObjectToName(orb,myobjRef)) {
+    Echo_i* myecho = new Echo_i();
+
+    PortableServer::ObjectId_var myechoid = poa->activate_object(myecho);
+
+    // Obtain a reference to the object, and register it in
+    // the naming service.
+    obj = myecho->_this();
+    if( !bindObjectToName(orb, obj) )
       return 1;
-    }
+
+    myecho->_remove_ref();
+
+    PortableServer::POAManager_var pman = poa->the_POAManager();
+    pman->activate();
+
+    orb->run();
+    orb->destroy();
+  }
+  catch(CORBA::SystemException&) {
+    cerr << "Caught CORBA::SystemException." << endl;
+  }
+  catch(CORBA::Exception&) {
+    cerr << "Caught CORBA::Exception." << endl;
+  }
+  catch(omniORB::fatalException& fe) {
+    cerr << "Caught omniORB::fatalException:" << endl;
+    cerr << "  file: " << fe.file() << endl;
+    cerr << "  line: " << fe.line() << endl;
+    cerr << "  mesg: " << fe.errmsg() << endl;
+  }
+  catch(...) {
+    cerr << "Caught unknown exception." << endl;
   }
 
-  boa->impl_is_ready();
-  // Tell the BOA we are ready. The BOA's default behaviour is to block
-  // on this call indefinitely.
-
-  // Call boa->impl_shutdown() from another thread would unblock the
-  // main thread from impl_is_ready().
-  //
-  // To properly shutdown the BOA and the ORB, add the following calls
-  // after impl_is_ready() returns.
-  //
-  // boa->destroy();
-  // orb->NP_destroy();
   return 0;
 }
 
+//////////////////////////////////////////////////////////////////////
 
-static
-CORBA::Boolean
-bindObjectToName(CORBA::ORB_ptr orb,CORBA::Object_ptr obj)
+static CORBA::Boolean
+bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
 {
   CosNaming::NamingContext_var rootContext;
-  
+
   try {
     // Obtain a reference to the root context of the Name service:
-    CORBA::Object_var initServ;
-    initServ = orb->resolve_initial_references("NameService");
+    CORBA::Object_var obj;
+    obj = orb->resolve_initial_references("NameService");
 
-    // Narrow the object returned by resolve_initial_references()
-    // to a CosNaming::NamingContext object:
-    rootContext = CosNaming::NamingContext::_narrow(initServ);
-    if (CORBA::is_nil(rootContext)) 
-      {
-        cerr << "Failed to narrow naming context." << endl;
-        return 0;
-      }
+    // Narrow the reference returned.
+    rootContext = CosNaming::NamingContext::_narrow(obj);
+    if( CORBA::is_nil(rootContext) ) {
+      cerr << "Failed to narrow the root naming context." << endl;
+      return 0;
+    }
   }
   catch(CORBA::ORB::InvalidName& ex) {
+    // This should not happen!
     cerr << "Service required is invalid [does not exist]." << endl;
     return 0;
   }
@@ -88,45 +118,44 @@ bindObjectToName(CORBA::ORB_ptr orb,CORBA::Object_ptr obj)
 
     CosNaming::Name contextName;
     contextName.length(1);
-    contextName[0].id   = (const char*) "test";    // string copied
-    contextName[0].kind = (const char*) "my_context"; // string copied    
+    contextName[0].id   = (const char*) "test";       // string copied
+    contextName[0].kind = (const char*) "my_context"; // string copied
     // Note on kind: The kind field is used to indicate the type
     // of the object. This is to avoid conventions such as that used
     // by files (name.type -- e.g. test.ps = postscript etc.)
 
     CosNaming::NamingContext_var testContext;
     try {
-      // Bind the context to root, and assign testContext to it:
+      // Bind the context to root.
       testContext = rootContext->bind_new_context(contextName);
     }
     catch(CosNaming::NamingContext::AlreadyBound& ex) {
       // If the context already exists, this exception will be raised.
       // In this case, just resolve the name and assign testContext
       // to the object returned:
-      CORBA::Object_var tmpobj;
-      tmpobj = rootContext->resolve(contextName);
-      testContext = CosNaming::NamingContext::_narrow(tmpobj);
-      if (CORBA::is_nil(testContext)) {
+      CORBA::Object_var obj;
+      obj = rootContext->resolve(contextName);
+      testContext = CosNaming::NamingContext::_narrow(obj);
+      if( CORBA::is_nil(testContext) ) {
         cerr << "Failed to narrow naming context." << endl;
         return 0;
       }
-    } 
+    }
 
-    // Bind the object (obj) to testContext, naming it Echo:
+
+    // Bind objref with name Echo to the testContext:
     CosNaming::Name objectName;
     objectName.length(1);
     objectName[0].id   = (const char*) "Echo";   // string copied
     objectName[0].kind = (const char*) "Object"; // string copied
 
-
-    // Bind obj with name Echo to the testContext:
     try {
-      testContext->bind(objectName,obj);
+      testContext->bind(objectName, objref);
     }
     catch(CosNaming::NamingContext::AlreadyBound& ex) {
-      testContext->rebind(objectName,obj);
+      testContext->rebind(objectName, objref);
     }
-    // Note: Using rebind() will overwrite any Object previously bound 
+    // Note: Using rebind() will overwrite any Object previously bound
     //       to /test/Echo with obj.
     //       Alternatively, bind() can be used, which will raise a
     //       CosNaming::NamingContext::AlreadyBound exception if the name
@@ -137,17 +166,16 @@ bindObjectToName(CORBA::ORB_ptr orb,CORBA::Object_ptr obj)
     // the Name has not already been bound. [This is incorrect behaviour -
     // it should just bind].
   }
-  catch (CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE, unable to contact the "
+  catch(CORBA::COMM_FAILURE& ex) {
+    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
          << "naming service." << endl;
     return 0;
   }
-  catch (omniORB::fatalException& ex) {
-    throw;
-  }
-  catch (...) {
-    cerr << "Caught a system exception while using the naming service."<< endl;
+  catch(CORBA::SystemException&) {
+    cerr << "Caught a CORBA::SystemException while using the naming service."
+	 << endl;
     return 0;
   }
+
   return 1;
 }

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // scavenger.cc               Created on: 5/8/97
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -28,11 +28,17 @@
  
 /*
   $Log$
-  Revision 1.14  2000/01/07 15:46:13  djr
-  Update from omni2_8_develop
+  Revision 1.15  2000/07/04 15:22:50  dpg1
+  Merge from omni3_develop.
 
-  Revision 1.10.2.3  1999/09/27 13:31:43  djr
-  Updated logging to always issue omniORB: prefix.
+  Revision 1.10.6.4  2000/01/07 14:51:14  djr
+  Call timeouts are now disabled by default.
+
+  Revision 1.10.6.3  1999/09/27 11:01:11  djr
+  Modifications to logging.
+
+  Revision 1.10.6.2  1999/09/24 15:01:36  djr
+  Added module initialisers, and sll's new scavenger implementation.
 
   Revision 1.10.2.2  1999/09/23 13:47:25  sll
   Fixed a race condition which causes simple programs that exit quickly to
@@ -88,17 +94,17 @@
   */
 
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
-#include <limits.h>
-
-#include <ropeFactory.h>
-#include <objectManager.h>
 #include <scavenger.h>
+#include <ropeFactory.h>
+#include <objectAdapter.h>
+#include <initialiser.h>
+#include <limits.h>
 
 
 #define LOGMESSAGE(level,prefix,message)  \

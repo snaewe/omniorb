@@ -8,6 +8,14 @@ IndigoProcessor = 1
 
 
 #
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = /usr/local/bin/python
+
+
+#
 # Include general unix things
 #
 
@@ -69,8 +77,8 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 # CORBA stuff
 #
 
-omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-CorbaImplementation = OMNIORB2
+omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+CorbaImplementation = OMNIORB
 
 # It is known that the linker on Irix 6.4 and 6.5 has some peculiar
 # requirements on the order in which share libraries are specified on the 
@@ -78,26 +86,26 @@ CorbaImplementation = OMNIORB2
 #
 # The same may apply to Irix 6.2 and 6.3.
 #
-# Here we reset the value of OMNIORB2_LIB to meet the requirements. The
+# Here we reset the value of OMNIORB_LIB to meet the requirements. The
 # variable was original set in unix.mk
 #
 # "Nilo Stolte" <nilo_stolte@my-dejanews.com> has confirmed that this setup
 # works on Irix 6.3 with 7.2.1 C++ compiler + patches to compiler, posix
 # threads etc.
 #
-OMNIORB2_LIB = $(patsubst %,$(LibSearchPattern),omniORB2) \
+OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
 		$(patsubst %,$(LibSearchPattern),omniDynamic2) \
-	        $($(omniORB2GatekeeperImplementation)_LIB) \
-                $(patsubst %,$(LibSearchPattern),omniORB2) \
+	        $($(omniORBGatekeeperImplementation)_LIB) \
+                $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 
-OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB2) \
-	        $($(omniORB2GatekeeperImplementation)_LIB) \
-                $(patsubst %,$(LibSearchPattern),omniORB2) \
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
+	        $($(omniORBGatekeeperImplementation)_LIB) \
+                $(patsubst %,$(LibSearchPattern),omniORB3) \
                 $(OMNITHREAD_LIB)
 
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
 OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg

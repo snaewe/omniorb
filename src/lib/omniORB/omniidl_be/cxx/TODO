@@ -1,0 +1,48 @@
+Combined list of things to-do and things to think about
+-------------------------------------------------------
+
+* It's possible to contrive IDL examples which clash with internal names:
+    exception e{
+      long pd_insertToAnyFn;     // names inherited from CORBA::Exception
+      long pd_insertToAnyFnNCP;  // and not private
+      long insertExceptionToAny;
+    };
+  A suitable fix is to _ prefix the internal names, but the changes will
+  ripple outwards from the IDL compiler through include/omniORB3/CORBA.h
+
+  Of course it is still possible to contrive IDL examples which don't map
+  properly onto C++ at all:
+
+    interface T {};
+    interface T_var {};
+
+* Fix handling of floats. Mainly aesthetic problem caused by lack of python
+  float type. Floats in source appear with extra digits when output. Not
+  an error, just a difference. (Worth verifying)
+
+* Slight assymmetry in call desc unmarshalling code (positions where temp
+  variables are declared seems to vary)
+
+* Unify string marshalling/ unmarshalling- why is it sometimes done through
+  a String_member and sometimes done at the char level? -- Apparently this 
+  was a changeover which was never 100% completed.
+
+* Surely a return value is semantically identical to an out argument value?
+  Why does it become a special case in the marshalling routines?
+
+* Perhaps we could simplify handling of anonymous sequences etc by introducing
+  (internal) typedefs?
+
+* Would it be possible/ easier to remove need to consider declarators when
+  looking at an object's type? (Maybe this is a just personal dislike of 
+  C/ C++ / IDL declarator syntax) Shouldn't a type be a simple structure
+    t = Sequence of (Array of (Array of (Alias of (Struct foo))))
+  and be independent of it's actual _name(s)_. Perhaps make functions
+    marshal : fn Type -> Function block
+  and store a hashtable of functions available to promote reuse? Or could
+  expand each inline for speed?
+
+  Perhaps create a type class with appropriate constructors (taking types and
+  optional declarators) which contains the marshalling, unmarshalling and
+  alignment code?
+

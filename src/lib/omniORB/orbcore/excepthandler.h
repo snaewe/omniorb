@@ -1,11 +1,11 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // excepthandler.h            Created on: 13/5/97
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
+//    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
-//    This file is part of the omniORB library
+//    This file is part of the omniORB library.
 //
 //    The omniORB library is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Library General Public
@@ -19,18 +19,20 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
-//      
-//      
- 
+//
+
 /*
   $Log$
-  Revision 1.2  1999/03/11 16:25:52  djr
-  Updated copyright notice
+  Revision 1.3  2000/07/04 15:22:57  dpg1
+  Merge from omni3_develop.
+
+  Revision 1.2.8.1  1999/09/22 14:26:48  djr
+  Major rewrite of orbcore to support POA.
 
   Revision 1.1  1997/12/09 18:43:07  sll
   Initial revision
@@ -40,6 +42,8 @@
 #ifndef __EXCEPTHANDLER_H__
 #define __EXCEPTHANDLER_H__
 
+
+#if 0
 extern omniORB::transientExceptionHandler_t   omni_globalTransientExcHandler;
 extern omniORB::commFailureExceptionHandler_t omni_globalCommFailureExcHandler;
 extern omniORB::systemExceptionHandler_t      omni_globalSystemExcHandler;
@@ -57,8 +61,11 @@ extern CORBA::Boolean omni_defaultCommFailureExcHandler(void*,
 extern CORBA::Boolean omni_defaultSystemExcHandler(void*,
 					     CORBA::ULong n_retries,
 					     const CORBA::SystemException& ex);
+#endif
+
 
 class omniExHandlers_iterator;
+
 
 class omniExHandlers {
 public:
@@ -73,9 +80,10 @@ public:
   friend class omniExHandlers_iterator;
 private:
   omniExHandlers();
-  omniObject*             objptr;
+  omniObjRef*             objptr;
   omniExHandlers*         next;
 };
+
 
 class omniExHandlers_iterator {
 public:
@@ -95,19 +103,20 @@ public:
   // Post-condition:
   //       Does not hold <MUTEX> on exit
 
-  omniExHandlers* find_or_create(omniObject* p);
+  omniExHandlers* find_or_create(omniObjRef* p);
   // Locate the omniExHandlers for this object
   // If found just returns
   // else create a new record, initialise all the handler fields to null and
   // returns the new record.
 
-  omniExHandlers* find(omniObject* p);
+  omniExHandlers* find(omniObjRef* p);
   // Locate the omniExHandlers for this object
   // Return 0 if not found.
 
-  void remove(omniObject* p);
+  void remove(omniObjRef* p);
   // Locate the omniExHandlers for this object, if found, delete the record
 
 };
+
 
 #endif // __EXCEPTHANDLER_H__

@@ -29,8 +29,6 @@
 #ifndef __ANYP_H__
 #define __ANYP_H__
 
-
-#include <omniORB2/CORBA.h>
 #include <tcParser.h>
 
 

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // ir.cc                      Created on: 12/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -28,43 +28,30 @@
 //   the Interface Repository stubs have been compiled in.
 //
 
-#include <omniORB2/CORBA.h>
-#include <bootstrap_i.h>
+#define ENABLE_CLIENT_IR_SUPPORT
+#include <omniORB3/CORBA.h>
+#include <initRefs.h>
+#include <exceptiondefs.h>
 
 
 CORBA::InterfaceDef_ptr
 CORBA::
 Object::_get_interface()
 {
-  if ( !PR_is_valid(this) ) 
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( _NP_is_nil() )  _CORBA_invoked_nil_objref();
+  if( !_PR_is_valid(this) )  OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
-  if( !pd_obj )  _CORBA_invoked_nil_pseudo_ref();
+  //?? No - we ought to contact the implementation first, and only
+  // if that fails to provide an answer should we try to go direct
+  // to the repository.
 
-  CORBA::Object_var o = omniInitialReferences::singleton()
-    ->get("InterfaceRepository");
+  CORBA::Object_var o(omniInitialReferences::resolve("InterfaceRepository"));
   CORBA::Repository_ptr repository = CORBA::Repository::_narrow(o);
+
   if( CORBA::is_nil(repository) )
-    throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INTF_REPOS,0, CORBA::COMPLETED_NO);
 
   CORBA::Contained_ptr interf =
-    repository->lookup_id(pd_obj->NP_IRRepositoryId());
+    repository->lookup_id(pd_obj->_mostDerivedRepoId());
   return CORBA::InterfaceDef::_narrow(interf);
 }
-
-
-#if 0
-
-
-CORBA::InterfaceDef_ptr
-CORBA::
-Object::_get_interface()
-{
-  throw NO_IMPLEMENT(0, COMPLETED_NO);
-#ifdef NEED_DUMMY_RETURN
-  return 0;
-#endif
-}
-
-
-#endif

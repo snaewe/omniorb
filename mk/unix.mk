@@ -134,64 +134,72 @@ endif
 # CORBA stuff
 #
 
-lib_depend := $(patsubst %,$(LibPattern),omniORB2)
+OMNIORB_VERSION = 3.0.0
+OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
+OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
+OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+
+lib_depend := $(patsubst %,$(LibPattern),omniORB3)
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
-lib_depend := $(patsubst %,$(LibPattern),omniDynamic2)
+lib_depend := $(patsubst %,$(LibPattern),omniDynamic3)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
+OMNIORB_IDL_ONLY = omniidl -bcxx
+OMNIORB_IDL_ANY_FLAGS = -Wba
+OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
+OMNIORB_CPPFLAGS = -D__OMNIORB3__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 
-OMNIORB2_IDL_ONLY = omniidl2
-OMNIORB2_IDL_ANY_FLAGS = -a
-OMNIORB2_IDL = $(OMNIORB2_IDL_ONLY) $(OMNIORB2_IDL_ANY_FLAGS)
-OMNIORB2_CPPFLAGS = -D__OMNIORB2__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
-
-OMNIORB2_LIB = $(patsubst %,$(LibSearchPattern),omniORB2) \
-		$(patsubst %,$(LibSearchPattern),omniDynamic2) \
+OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
+		$(patsubst %,$(LibSearchPattern),omniDynamic3) \
 		$(OMNITHREAD_LIB) $(SOCKET_LIB)
-OMNIORB2_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB2) \
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
 		$(OMNITHREAD_LIB) $(SOCKET_LIB)
 
-OMNIORB2_LIB_NODYN_DEPEND = $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND)
-OMNIORB2_LIB_DEPEND = $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND) \
+OMNIORB_LIB_NODYN_DEPEND = $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND)
+OMNIORB_LIB_DEPEND = $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND) \
 		$(omniDynamic_lib_depend)
 
-OMNIORB2_STATIC_STUB_OBJS = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.o)
-OMNIORB2_STATIC_STUB_SRCS = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.cc)
-OMNIORB2_DYN_STUB_OBJS = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%DynSK.o)
-OMNIORB2_DYN_STUB_SRCS = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%DynSK.cc)
+OMNIORB_STATIC_STUB_OBJS = \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.o)
+OMNIORB_STATIC_STUB_SRCS = \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.cc)
+OMNIORB_DYN_STUB_OBJS = \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%DynSK.o)
+OMNIORB_DYN_STUB_SRCS = \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%DynSK.cc)
 
-OMNIORB2_STUB_SRCS = $(OMNIORB2_STATIC_STUB_SRCS) $(OMNIORB2_DYN_STUB_SRCS)
-OMNIORB2_STUB_OBJS = $(OMNIORB2_STATIC_STUB_OBJS) $(OMNIORB2_DYN_STUB_OBJS)
+OMNIORB_STUB_SRCS = $(OMNIORB_STATIC_STUB_SRCS) $(OMNIORB_DYN_STUB_SRCS)
+OMNIORB_STUB_OBJS = $(OMNIORB_STATIC_STUB_OBJS) $(OMNIORB_DYN_STUB_OBJS)
 
-OMNIORB2_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%SK.cc
-OMNIORB2_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%SK.o
-OMNIORB2_DYN_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%DynSK.cc
-OMNIORB2_DYN_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%DynSK.o
-OMNIORB2_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
+OMNIORB_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%SK.cc
+OMNIORB_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%SK.o
+OMNIORB_DYN_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%DynSK.cc
+OMNIORB_DYN_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%DynSK.o
+OMNIORB_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
 
 
-# omniORB2 access control policy modules
+# omniORB access control policy modules
 
-OMNIORB2_DUMMYGK_LIB = $(patsubst %,$(LibSearchPattern),omniGK_stub)
+OMNIORB_DUMMYGK_LIB = $(patsubst %,$(LibSearchPattern),omniGK_stub)
 lib_depend := $(patsubst %,$(LibPattern),omniGK_stub)
-OMNIORB2_DUMMYGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+OMNIORB_DUMMYGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
-OMNIORB2_TCPWRAPGK_LIB = $(patsubst %,$(LibSearchPattern),tcpwrapGK)
+OMNIORB_TCPWRAPGK_LIB = $(patsubst %,$(LibSearchPattern),tcpwrapGK)
 lib_depend := $(patsubst %,$(LibPattern),tcpwrapGK)
-OMNIORB2_TCPWRAPGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+OMNIORB_TCPWRAPGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
-omniORB2GatekeeperImplementation = OMNIORB2_DUMMYGK
+omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
 
-OMNIORB2_LIB += $($(omniORB2GatekeeperImplementation)_LIB)
-OMNIORB2_LIB_NODYN += $($(omniORB2GatekeeperImplementation)_LIB)
-OMNIORB2_LIB_DEPEND += $($(omniORB2GatekeeperImplementation)_LIB_DEPEND)
-OMNIORB2_LIB_NODYN_DEPEND += $($(omniORB2GatekeeperImplementation)_LIB_DEPEND)
+OMNIORB_LIB += $($(omniORBGatekeeperImplementation)_LIB)
+OMNIORB_LIB_NODYN += $($(omniORBGatekeeperImplementation)_LIB)
+OMNIORB_LIB_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
+OMNIORB_LIB_NODYN_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
 
 
 # LifeCycle stuff
 
-OMNIORB2_IDL_LC_FLAGS = -l
-OMNIORB2_LC_LIB = $(patsubst %,$(LibSearchPattern),omniLC)
+OMNIORB_IDL_LC_FLAGS = -l
+OMNIORB_LC_LIB = $(patsubst %,$(LibSearchPattern),omniLC)
 
 #
 # Tcl stuff

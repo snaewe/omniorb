@@ -6,10 +6,19 @@ HPUX = 1
 HppaProcessor = 1
 
 #
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = /usr/local/bin/python
+
+
+#
 # Include general unix things
 #
 
 include $(THIS_IMPORT_TREE)/mk/unix.mk
+
 
 #
 # Replacements for implicit rules
@@ -39,9 +48,8 @@ IMPORT_CPPFLAGS += -D__hppa__ -D__hpux__ -D__OSVERSION__=11
 AR = ar cq
 RANLIB = ranlib
 MKDIRHIER = mkdir -p
-INSTALL		= cp -f
-INSTLIBFLAGS	= 
-INSTEXEFLAGS	= 
+INSTALL         = $(TOP)/bin/scripts/install-sh -c
+INSTLIBFLAGS    = -m 0755    # shared library must have executable flag set.
 
 CPP = /lib/cpp
 
@@ -54,7 +62,10 @@ CPP = /lib/cpp
 CXX = aCC
 CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus
 CXXDEBUGFLAGS = -O
-CXXOPTIONS   += -w -I /opt/aCC/include +inst_v +DAportable
+CXXOPTIONS   += -w +inst_v +DAportable \
+                       -D_THREAD_SAFE \
+                       -DRWSTD_MULTI_THREAD \
+                     -DRW_MULTI_THREAD 
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -Wl,+s
 
@@ -118,9 +129,9 @@ THREAD_LIB =
 #
 # CORBA stuff
 #
-#omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-omniORB2GatekeeperImplementation = OMNIORB2_DUMMYGK
-CorbaImplementation = OMNIORB2
+#omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
+CorbaImplementation = OMNIORB
 
 #
 # OMNI thread stuff
@@ -130,9 +141,7 @@ CorbaImplementation = OMNIORB2
 ThreadSystem = Posix
 
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10
-OMNITHREAD_CPPFLAGS = -DRWSTD_MULTI_THREAD \
-		      -DRW_MULTI_THREAD \
-		      -D_HPUX_SOURCE \
+OMNITHREAD_CPPFLAGS = -D_HPUX_SOURCE \
 		      -D_POSIX_C_SOURCE=199506L
 HPTHREADLIBS = -lpthread
 OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) $(HPTHREADLIBS)
@@ -140,7 +149,7 @@ OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) $(HPTHREADLIBS)
 lib_depend := $(patsubst %,$(LibPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
 OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg

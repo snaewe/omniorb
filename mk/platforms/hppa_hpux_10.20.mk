@@ -6,6 +6,14 @@ HPUX = 1
 HppaProcessor = 1
 
 #
+# Python set-up
+#
+# You must set a path to a Python 1.5.2 interpreter.
+
+#PYTHON = /usr/local/bin/python
+
+
+#
 # Include general unix things
 #
 
@@ -119,9 +127,9 @@ THREAD_LIB =
 #
 # CORBA stuff
 #
-#omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-omniORB2GatekeeperImplementation = OMNIORB2_DUMMYGK
-CorbaImplementation = OMNIORB2
+#omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
+CorbaImplementation = OMNIORB
 
 #
 # OMNI thread stuff
@@ -155,7 +163,7 @@ OMNIPARTCL_LIB = $(patsubst %,$(LibSearchPattern),omniParTcl) $(TCLTK_LIB) \
 lib_depend := $(patsubst %,$(LibPattern),omniParTcl)
 OMNIPARTCL_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
 OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg

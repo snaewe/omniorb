@@ -16,6 +16,12 @@ OBJS = nt.o
 DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS) -D "_WINSTATIC"
 endif
 
+ifeq ($(ThreadSystem),NTPosix)
+CXXSRCS = posix.cc
+OBJS = posix.o
+DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS) -D "_WINSTATIC"
+endif
+
 ifeq ($(ThreadSystem),Mach)
 CXXSRCS = mach.cc
 OBJS = mach.o

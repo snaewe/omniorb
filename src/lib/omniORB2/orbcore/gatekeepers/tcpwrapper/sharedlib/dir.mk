@@ -6,8 +6,6 @@
 # The Version number is constructed as follows:
 #    <major version no.>.<minor version no.>.<micro version no.>
 #
-# The <major version no.> is always 2 for omniORB2.
-#
 # The <minor version no.> changes when:
 #   1. Public interfaces have been extended but remains backward compatible
 #      with earlier minor version.
@@ -18,7 +16,7 @@
 # corresponds to a pure bug fix release.
 #
 # 
-VERSION = 1.1.0
+VERSION = 1.2.0
 #
 #
 #
@@ -87,11 +85,6 @@ micro_version = $(word 3,$(subst ., ,$(VERSION)))
 #############################################################################
 
 ifdef SunOS
-
-libname = libtcpwrapGK.so
-soname  = $(libname).$(minor_version)
-lib = $(soname).$(micro_version)
-
 ifeq ($(notdir $(CXX)),CC)
 
 CXXOPTIONS += -Kpic
@@ -102,6 +95,9 @@ else
 COPTIONS += -Kpic
 endif
 
+libname = libtcpwrapGK.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
 
 all:: $(lib)
 
@@ -130,7 +126,14 @@ endif
 
 ifeq ($(notdir $(CXX)),g++)
 
-DIR_CPPFLAGS += -fpic
+CXXOPTIONS += -fpic
+COPTIONS   += -fpic
+
+libname = libtcpwrapGK.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+all:: $(lib)
 
 $(lib): $(OBJS) $(CXXOBJS)
 	(set -x; \
@@ -138,8 +141,6 @@ $(lib): $(OBJS) $(CXXOBJS)
         $(CXX) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
        )
-
-all:: $(lib)
 
 clean::
 	$(RM) $(lib)
@@ -155,7 +156,6 @@ export:: $(lib)
          )
 
 endif
-
 endif
 
 #############################################################################

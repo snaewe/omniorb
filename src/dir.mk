@@ -1,3 +1,11 @@
+# Check for Python, and complain early.
+ifndef PYTHON
+all::
+	@$(NoPythonError)
+export::
+	@$(NoPythonError)
+endif
+
 SUBDIRS += tool
 
 SUBDIRS += lib appl

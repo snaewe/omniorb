@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // corbaOrb.cc                Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,41 +29,80 @@
 
 /*
   $Log$
-  Revision 1.32  2000/01/07 15:46:12  djr
-  Update from omni2_8_develop
+  Revision 1.33  2000/07/04 15:22:58  dpg1
+  Merge from omni3_develop.
 
-  Revision 1.29.2.3  2000/01/05 17:19:03  djr
-  Added check for reinitialisation in ORB_init and BOA_init.
+  Revision 1.29.6.19  2000/06/22 10:40:14  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
 
-  Revision 1.29.2.2  1999/09/22 18:43:58  sll
-  Updated documentation
+  Revision 1.29.6.18  2000/06/19 14:18:33  dpg1
+  Explicit cast to (const char*) when using String_var with logger.
 
-  Revision 1.29.2.1  1999/09/21 20:37:16  sll
-  -Simplified the scavenger code and the mechanism in which connections
-   are shutdown. Now only one scavenger thread scans both incoming
-   and outgoing connections. A separate thread do the actual shutdown.
-  -omniORB::scanGranularity() now takes only one argument as there is
-   only one scan period parameter instead of 2.
-  -Trace messages in various modules have been updated to use the logger
-   class.
-  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
-                                 -ORBscanIncomingPeriod.
+  Revision 1.29.6.17  2000/06/02 14:17:05  dpg1
+  Add static install() method to initialiser so extra initialisers /
+  deinitialisers can be added at run time (needed by omniORBpy).
 
-  Revision 1.29  1999/09/01 13:17:11  djr
-  Update to use new logging support.
+  Revision 1.29.6.16  2000/05/24 17:19:41  dpg1
+  Add documented but non-existent -ORBobjectTableSize and
+  -ORBno_bootstrap_agent arguments
+
+  Revision 1.29.6.15  2000/04/27 10:46:30  dpg1
+  Interoperable Naming Service
+
+  Add initialisers for URI and initRefs modules.
+  object_to_string() and string_to_object() use omniURI:: functions.
+  resolve_initial_references() replaced with omniInitialReferences::resolve().
+  Add -ORBInitRef and -ORBDefaultInitRef command-line options.
+
+  Revision 1.29.6.14  2000/02/04 18:11:01  djr
+  Minor mods for IRIX (casting pointers to ulong instead of int).
+
+  Revision 1.29.6.13  2000/01/27 10:55:45  djr
+  Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
+  fqname for base class constructor for some compilers.
+
+  Revision 1.29.6.12  2000/01/22 16:46:04  djr
+  Added -ORBtraceInvocations to option help summary.
+
+  Revision 1.29.6.11  2000/01/20 11:51:34  djr
+  (Most) Pseudo objects now used omni::poRcLock for ref counting.
+  New assertion check OMNI_USER_CHECK.
+
+  Revision 1.29.6.10  2000/01/07 14:51:13  djr
+  Call timeouts are now disabled by default.
+
+  Revision 1.29.6.9  2000/01/05 17:59:45  djr
+  Added check for reinitialisation in ORB_init.
+
+  Revision 1.29.6.8  1999/11/02 17:47:01  djr
+  Removed obsolete references to rope factories.
+
+  Revision 1.29.6.7  1999/10/29 13:18:17  djr
+  Changes to ensure mutexes are constructed when accessed.
+
+  Revision 1.29.6.6  1999/10/14 16:22:06  djr
+  Implemented logging when system exceptions are thrown.
+
+  Revision 1.29.6.5  1999/10/04 17:08:32  djr
+  Some more fixes/MSVC work-arounds.
+
+  Revision 1.29.6.4  1999/09/24 17:11:11  djr
+  New option -ORBtraceInvocations and omniORB::traceInvocations.
+
+  Revision 1.29.6.3  1999/09/24 15:01:33  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
+  Revision 1.29.6.2  1999/09/24 10:27:30  djr
+  Improvements to ORB and BOA options.
+
+  Revision 1.29.6.1  1999/09/22 14:26:45  djr
+  Major rewrite of orbcore to support POA.
 
   Revision 1.28  1999/08/30 16:53:04  sll
   Added new options -ORBclientCallTimeOutPeriod, -ORBserverCallTimeOutPeriod
   -ORBscanOutgoingPeriod, -ORBscanIncomingPeriod and -ORBhelp.
 
-// Revision 1.27  1999/08/16  20:27:26  sll
-// *** empty log message ***
-//
-// Revision 1.26  1999/08/16  19:21:38  sll
-// Use per-compilation unit initialiser object to perform initialisation
-// and cleanup.
-// New member function CORBA::ORB::NP_destory().
-//
   Revision 1.25  1999/06/26 18:05:36  sll
   New options -ORBabortOnInternalError, -ORBverifyObjectExistsAndType.
 
@@ -139,66 +178,40 @@
 //
  */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <bootstrap_i.h>
+#include <corbaOrb.h>
+#include <initRefs.h>
+#include <omniORB3/omniObjRef.h>
+#include <poaimpl.h>
+#include <initialiser.h>
+#include <dynamicLib.h>
+#include <exceptiondefs.h>
+#include <omniORB3/omniURI.h>
+
 #ifdef _HAS_SIGNAL
 #include <signal.h>
 #include <errno.h>
 #endif
+#include <stdio.h>
 
 
-// Globals defined in class omniORB
-#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
-// MSVC++ does not give the variables external linkage otherwise. Its a bug.
-namespace omniORB {
-
-int                      traceLevel = 1;
-CORBA::Boolean           strictIIOP = 1;
-char*                    serverName = 0;
-CORBA::Boolean           tcAliasExpand = 0;
-unsigned int             maxTcpConnectionPerServer = 5;
-CORBA::Boolean           diiThrowsSysExceptions = 1;
-CORBA::Boolean           useTypeCodeIndirections = 1;
-CORBA::Boolean           acceptMisalignedTcIndirections = 0;
-CORBA::Boolean           verifyObjectExistsAndType = 1;
-CORBA::Boolean           abortOnInternalError = 0;
-}
-
-#else
-int                             omniORB::traceLevel = 1;
-CORBA::Boolean                  omniORB::strictIIOP = 1;
-#if defined(HAS_Cplusplus_Namespace)
-char*                           omniORB::serverName = 0;
-#else
-CORBA::String_var		omniORB::serverName((const char*) "unknown");
-#endif
-CORBA::Boolean                  omniORB::tcAliasExpand = 0;
-unsigned int                    omniORB::maxTcpConnectionPerServer = 5;
-CORBA::Boolean                  omniORB::diiThrowsSysExceptions = 1;
-CORBA::Boolean                  omniORB::useTypeCodeIndirections = 1;
-CORBA::Boolean                  omniORB::acceptMisalignedTcIndirections = 0;
-CORBA::Boolean                  omniORB::verifyObjectExistsAndType = 1;
-CORBA::Boolean                  omniORB::abortOnInternalError = 0;
-#endif
-
-_CORBA_Unbounded_Sequence_Octet omni::myPrincipalID;
+#define MY_ORB_ID           "omniORB3"
+#define OLD_ORB_ID          "omniORB2"
 
 
+static omniOrbORB*          the_orb              = 0;
+static int                  orb_destroyed        = 0;
+static omni_tracedmutex     orb_lock;
+static omni_tracedcondition orb_signal(&orb_lock);
+static volatile int         orb_n_blocked_in_run = 0;
 
-static const char*       myORBId          = "omniORB2";
-static CORBA::ORB_ptr    orb              = 0;
-static int               orb_destroyed    = 0;
-static omni_mutex        internalLock;
-
-static const char*       bootstrapAgentHostname = 0;
-static CORBA::UShort     bootstrapAgentPort     = 900;
+static char*             bootstrapAgentHostname  = 0;
+static CORBA::UShort     bootstrapAgentPort      = 900;
 
 
 #ifdef __SINIX__
@@ -211,225 +224,413 @@ extern "C" int sigaction(int, const struct sigaction *, struct sigaction *);
 ///////////////////////////////////////////////////////////////////////
 //          Per module initialisers.
 //
+extern omniInitialiser& omni_uri_initialiser_;
 extern omniInitialiser& omni_corbaOrb_initialiser_;
 extern omniInitialiser& omni_ropeFactory_initialiser_;
-extern omniInitialiser& omni_objectRef_initialiser_;
+extern omniInitialiser& omni_omniInternal_initialiser_;
 extern omniInitialiser& omni_initFile_initialiser_;
-extern omniInitialiser& omni_bootstrap_i_initialiser_;
+extern omniInitialiser& omni_initRefs_initialiser_;
 extern omniInitialiser& omni_strand_initialiser_;
 extern omniInitialiser& omni_scavenger_initialiser_;
+extern omniInitialiser& omni_hooked_initialiser_;
 
-static
-CORBA::Boolean
-parse_ORB_args(int &argc,char **argv,const char *orb_identifier);
+static CORBA::Boolean
+parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
 
+//////////////////////////////////////////////////////////////////////
+///////////////////////////// CORBA::ORB /////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
-CORBA::
-ORB::ORB()
-{
-  pd_magic = CORBA::ORB::PR_magic;
-}
+CORBA::ORB::~ORB()  {}
 
-CORBA::
-ORB::~ORB()
-{
-  pd_magic = 0;
-}
 
 CORBA::ORB_ptr
-CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
+CORBA::ORB::_duplicate(CORBA::ORB_ptr obj)
 {
-  omni_mutex_lock sync(internalLock);
+  if( !CORBA::is_nil(obj) )  obj->_NP_incrRefCount();
+
+  return obj;
+}
+
+
+CORBA::ORB_ptr
+CORBA::ORB::_narrow(CORBA::Object_ptr obj)
+{
+  if( CORBA::is_nil(obj) || !obj->_NP_is_pseudo() )  return _nil();
+
+  ORB_ptr p = (ORB_ptr) obj->_ptrToObjRef(_PD_repoId);
+
+  if( p )  p->_NP_incrRefCount();
+
+  return p ? p : _nil();
+}
+
+
+CORBA::ORB_ptr
+CORBA::ORB::_nil()
+{
+  static omniOrbORB* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbORB(1 /* is nil */);
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
+}
+
+
+const char*
+CORBA::ORB::_PD_repoId = "IDL:omg.org/CORBA/ORB:1.0";
+
+
+CORBA::ORB_ptr
+CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
+{
+  omni_tracedmutex_lock sync(orb_lock);
 
   if( orb_destroyed ) {
     omniORB::logs(1, "The ORB cannot be re-initialised!");
-    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER, 0, CORBA::COMPLETED_NO);
   }
 
-  if (!parse_ORB_args(argc,argv,orb_identifier)) {
-    throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
-  }
-  if (orb)
-    return CORBA::ORB::_duplicate(orb);
+  // URI initialiser must be called before args are parsed
+  omni_uri_initialiser_.attach();
 
-  if ((char*)omniORB::serverName == 0) {
+  if( !parse_ORB_args(argc,argv,orb_identifier) ) {
+    OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+  }
+  if( the_orb ) {
+    the_orb->_NP_incrRefCount();
+    return the_orb;
+  }
+
+  if( (char*) omniORB::serverName == 0 )
     omniORB::serverName = CORBA::string_dup("unknown");
-  }
-
-  omniORB::seed.hi = omniORB::seed.med = 0;
 
   try {
-
     // Call attach method of each initialiser object.
     // The order of these calls must take into account of the dependency
-    // amount the modules.
+    // among the modules.
+    omni_omniInternal_initialiser_.attach();
     omni_corbaOrb_initialiser_.attach();
     omni_strand_initialiser_.attach();
     omni_scavenger_initialiser_.attach();
     omni_ropeFactory_initialiser_.attach();
-    omni_objectRef_initialiser_.attach();
     omni_initFile_initialiser_.attach();
-    omni_bootstrap_i_initialiser_.attach();
+    omni_initRefs_initialiser_.attach();
+    omni_hooked_initialiser_.attach();
 
-    if (bootstrapAgentHostname) {
+    if( bootstrapAgentHostname ) {
       // The command-line option -ORBInitialHost has been specified.
       // Override any previous NamesService object reference
       // that may have been read from the configuration file.
-      omniInitialReferences::singleton()->set("NameService",
-					      CORBA::Object::_nil());
-      omniInitialReferences::singleton()->set("InterfaceRepository",
-					      CORBA::Object::_nil());
-      omniInitialReferences::singleton()
-	->initialise_bootstrap_agent(bootstrapAgentHostname,
-				     bootstrapAgentPort);
+      omniInitialReferences::remFromFile("NameService");
+      omniInitialReferences::remFromFile("InterfaceRepository");
+      omniInitialReferences::initialise_bootstrap_agent(bootstrapAgentHostname,
+							bootstrapAgentPort);
     }
+
+    // Attach the dynamic library hook, and initialise.
+    if( omniDynamicLib::hook )
+      omniDynamicLib::ops = omniDynamicLib::hook;
+    omniDynamicLib::ops->init();
   }
-  catch (const CORBA::INITIALIZE &ex) {
+  catch (CORBA::INITIALIZE &ex) {
     throw;
   }
   catch (...) {
-    throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
 
-  orb = new CORBA::ORB;
-  return orb;
+  the_orb = new omniOrbORB(0);
+  the_orb->_NP_incrRefCount();
+  return the_orb;
 }
 
-CORBA::Object_ptr
-CORBA::
-ORB::resolve_initial_references(const char* identifier)
+//////////////////////////////////////////////////////////////////////
+///////////////////////////// omniOrbORB /////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+#define CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED()  \
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();  \
+  if( pd_destroyed )  OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);  \
+  if( pd_shutdown  )  throw CORBA::BAD_INV_ORDER(CORBA::OMGVMCID | 4,  \
+						 CORBA::COMPLETED_NO);  \
+
+
+omniOrbORB::~omniOrbORB()  {}
+
+
+omniOrbORB::omniOrbORB(int nil)
+  : OMNIORB_BASE_CTOR(CORBA::)ORB(nil),
+    pd_refCount(1),
+    pd_destroyed(0),
+    pd_shutdown(0),
+    pd_shutdown_in_progress(0)
 {
-  if (!identifier) throw CORBA::ORB::InvalidName();
-
-  CORBA::Object_ptr obj = omniInitialReferences::singleton()->get(identifier);
-
-  if (!CORBA::is_nil(obj)) {
-    return obj;
-  }
-  else {
-    // Resource not found. 
-    if (strcmp(identifier,"InterfaceRepository") == 0) {
-      // No Interface Repository
-      throw CORBA::INTF_REPOS(0,CORBA::COMPLETED_NO);
-    }
-    else if (strcmp(identifier,"NameService") == 0) {
-      throw CORBA::NO_RESOURCES(0,CORBA::COMPLETED_NO);
-    }
-    else {
-      // No further ObjectIds are defined
-      throw CORBA::ORB::InvalidName();
-    }
-  }
-#ifdef NEED_DUMMY_RETURN
-  return CORBA::Object::_nil(); // dummy return to keep some compilers happy
-#endif
-}
-
-
-CORBA::ORB::ObjectIdList*
-CORBA::
-ORB::list_initial_services()
-{
-  CORBA_InitialReferences::ObjIdList_var v;
-  v = omniInitialReferences::singleton()->list();
-  CORBA::ORB::ObjectIdList* result = new CORBA::ORB::ObjectIdList;
-  result->length(v->length());
-  for (CORBA::ULong index = 0; index < v->length(); index++) {
-    (*result)[index] = v[index];
-  }
-  return result;
 }
 
 
 char*
-CORBA::
-ORB::object_to_string(CORBA::Object_ptr p)
+omniOrbORB::object_to_string(CORBA::Object_ptr obj)
 {
-  if (!CORBA::Object::PR_is_valid(p))
-    // throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-    throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
-
-  if (CORBA::is_nil(p))
-    return omni::objectToString(0);
-  else 
-    return omni::objectToString(p->PR_getobj());
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+  return omniURI::objectToString(obj);
 }
 
 
 CORBA::Object_ptr
-CORBA::
-ORB::string_to_object(const char *m)
+omniOrbORB::string_to_object(const char* uri)
 {
-  if (!m || strlen(m) == 0) 
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-    
-  try {
-    omniObject *objptr = omni::stringToObject(m);
-    if (objptr)
-      return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
-    else
-      return CORBA::Object::_nil();
-  }
-  catch(...) {
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-  }
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+  return omniURI::stringToObject(uri);
 }
 
 
-CORBA::ORB_ptr
-CORBA::
-ORB::_duplicate(CORBA::ORB_ptr p)
+CORBA::ORB::ObjectIdList*
+omniOrbORB::list_initial_services()
 {
-  if (!PR_is_valid(p)) throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-  return p;
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+
+  CORBA::ORB::ObjectIdList* ids = omniInitialReferences::list();
+  CORBA::ORB::ObjectIdList& idl = *ids;
+
+  CORBA::ULong len = idl.length();
+  idl.length(len + 2);
+  idl[len++] = CORBA::string_dup("RootPOA");
+  idl[len++] = CORBA::string_dup("POACurrent");
+  
+  return ids;
 }
 
 
-CORBA::ORB_ptr
-CORBA::
-ORB::_nil()
+CORBA::Object_ptr
+omniOrbORB::resolve_initial_references(const char* id)
 {
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+  return omniInitialReferences::resolve(id);
+}
+
+
+CORBA::Boolean
+omniOrbORB::work_pending()
+{
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+
   return 0;
 }
 
 
 void
-CORBA::release(ORB_ptr p)
+omniOrbORB::perform_work()
 {
-  return;
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+
+  // No-op.
+}
+
+
+void
+omniOrbORB::run()
+{
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+
+  // It is possible for there to be multiple threads stuck in
+  // here -- so we need to be sure that shutdown wakes 'em all up!
+
+  orb_lock.lock();
+
+  orb_n_blocked_in_run++;
+  while( !pd_shutdown )  orb_signal.wait();
+  orb_n_blocked_in_run--;
+
+  orb_lock.unlock();
+}
+
+
+void
+omniOrbORB::shutdown(CORBA::Boolean wait_for_completion)
+{
+  omni_tracedmutex_lock sync(orb_lock);
+
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+
+  if( wait_for_completion && 0 /*?? in context of invocation */ )
+    OMNIORB_THROW(BAD_INV_ORDER,CORBA::OMGVMCID | 3, CORBA::COMPLETED_NO);
+
+  do_shutdown(wait_for_completion);
+}
+
+
+void
+omniOrbORB::destroy()
+{
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
+
+  omniOrbORB* orb;
+  {
+    omni_tracedmutex_lock sync(orb_lock);
+
+    if( pd_destroyed )  OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
+
+    if( 0 /*?? in context of invocation */ )
+      OMNIORB_THROW(BAD_INV_ORDER,CORBA::OMGVMCID | 3, CORBA::COMPLETED_NO);
+
+    if( !pd_shutdown )  do_shutdown(1);
+
+    pd_destroyed = 1;
+    orb = the_orb;
+    the_orb = 0;
+    orb_destroyed = 1;
+  }
+  CORBA::release(orb);
 }
 
 
 CORBA::Boolean
-CORBA::is_nil(ORB_ptr p)
+omniOrbORB::_non_existent()
 {
-  if (!CORBA::ORB::PR_is_valid(p))
-    return 0;
-  else
-    return ((p == 0) ? 1 : 0);
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+
+  orb_lock.lock();
+  CORBA::Boolean ret = pd_destroyed ? 1 : 0;
+  orb_lock.unlock();
+
+  return ret;
 }
 
-void
-CORBA::
-ORB::NP_destroy()
-{
-  assert(this == orb);
 
-  omni_mutex_lock sync(internalLock);
+void*
+omniOrbORB::_ptrToObjRef(const char* repoId)
+{
+  OMNIORB_ASSERT(repoId);
+
+  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
+  if( !strcmp(repoId, CORBA::ORB::_PD_repoId) )
+    return (CORBA::ORB_ptr) this;
+
+  return 0;
+}
+
+
+void
+omniOrbORB::_NP_incrRefCount()
+{
+  omni::poRcLock->lock();
+  pd_refCount++;
+  omni::poRcLock->unlock();
+}
+
+
+void
+omniOrbORB::_NP_decrRefCount()
+{
+  omni::poRcLock->lock();
+  int done = --pd_refCount > 0;
+  omni::poRcLock->unlock();
+  if( done )  return;
+
+  OMNIORB_USER_CHECK(pd_destroyed);
+  OMNIORB_USER_CHECK(pd_refCount == 0);
+  // If either of these fails then the application has released the
+  // ORB reference too many times.
+
+  omniORB::logs(15, "No more references to the ORB -- deleted.");
+
+  delete this;
+}
+
+
+void
+omniOrbORB::actual_shutdown()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(orb_lock, 1);
+  OMNIORB_ASSERT(pd_shutdown_in_progress);
+
+  // Deinitialise the dynamic library.
+  omniDynamicLib::ops->deinit();
+
+  // Shutdown object adapters.  When this returns all
+  // outstanding requests have completed.
+  omniOrbPOA::shutdown();
+
+  // Shutdown incoming connections.
+  omniObjAdapter::shutdown();
 
   // Call detach method of the initialisers in reverse order.
-  omni_bootstrap_i_initialiser_.detach();
+  omni_hooked_initialiser_.detach();
+  omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
-  omni_objectRef_initialiser_.detach();
   omni_ropeFactory_initialiser_.detach();
   omni_scavenger_initialiser_.detach();
   omni_strand_initialiser_.detach();
   omni_corbaOrb_initialiser_.detach();
+  omni_omniInternal_initialiser_.detach();
+  omni_uri_initialiser_.detach();
 
-  delete orb;
-  orb = 0;
-  orb_destroyed = 1;
+  proxyObjectFactory::shutdown();
+
+  omniORB::logs(10, "ORB shutdown is complete.");
+
+  pd_shutdown = 1;
+
+  // Wake up everyone stuck in run().
+  orb_signal.broadcast();
 }
+
+
+static void
+shutdown_thread_fn(void* arg)
+{
+  OMNIORB_ASSERT(arg);
+
+  omniORB::logs(15, "ORB shutdown thread started.");
+
+  omni_tracedmutex_lock sync(orb_lock);
+  ((omniOrbORB*) arg)->actual_shutdown();
+}
+
+
+void
+omniOrbORB::do_shutdown(CORBA::Boolean wait_for_completion)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(orb_lock, 1);
+
+  if( pd_shutdown )  return;
+
+  if( pd_shutdown_in_progress ) {
+    if( wait_for_completion ) {
+      omniORB::logs(15, "ORB shutdown already in progress -- waiting.");
+      orb_n_blocked_in_run++;
+      while( !pd_shutdown )  orb_signal.wait();
+      orb_n_blocked_in_run--;
+    }
+    return;
+  }
+
+  omniORB::logs(10, "Preparing to shutdown ORB.");
+
+  pd_shutdown_in_progress = 1;
+
+  if( wait_for_completion ) {
+    actual_shutdown();
+  }
+  else {
+    // If wait_for_completion is zero we need to pass this to another
+    // thread. This is needed to support shutting down the orb from
+    // a method invocation -- otherwise we would deadlock waiting for
+    // the method invocation to complete.
+
+    omniORB::logs(15, "Starting an ORB shutdown thread.");
+
+    (new omni_thread(shutdown_thread_fn, (omniOrbORB*) this))->start();
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 static
 void
@@ -444,20 +645,26 @@ move_args(int& argc,char **argv,int idx,int nargs)
     }
 }
 
+
 static
 CORBA::Boolean
-parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
+parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 {
   CORBA::Boolean orbId_match = 0;
 
-  if (orb_identifier && strcmp(orb_identifier,myORBId)!=0) {
+  if( orb_identifier && strcmp(orb_identifier, MY_ORB_ID)
+                     && strcmp(orb_identifier, OLD_ORB_ID) ) {
     if( omniORB::trace(1) ) {
       omniORB::logger l;
-      l << "CORBA::ORB_init failed -- the ORBid (" << orb_identifier << ")\n"
-	" is not " << myORBId << "\n";
+      l << "CORBA::ORB_init failed -- the ORBid (" << orb_identifier << ")"
+	" is not " << MY_ORB_ID << "\n";
     }
     return 0;
   }
+  if( orb_identifier && omniORB::trace(1) &&
+      !strcmp(orb_identifier, OLD_ORB_ID) )
+    omniORB::logs(1, "WARNING -- using ORBid " OLD_ORB_ID
+		  " (should be " MY_ORB_ID ").");
 
   if (argc > 0) {
     // Using argv[0] as the serverName implicitly assumes that the
@@ -468,7 +675,7 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
     //
     // XXX Should we trim this to a leafname?
 #ifdef HAS_Cplusplus_Namespace
-    if (omniORB::serverName) CORBA::string_free(omniORB::serverName);
+    if (omniORB::serverName) omni::freeString(omniORB::serverName);
 #endif
     omniORB::serverName = CORBA::string_dup(argv[0]);
   }
@@ -485,27 +692,80 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  continue;
 	}
 
+      //
+      // Standard options
+      //
 
       // -ORBid <id>
       if (strcmp(argv[idx],"-ORBid") == 0) {
 	if ((idx+1) >= argc) {
-	  omniORB::logs(1,
-			"CORBA::ORB_init failed: missing -ORBid parameter.");
+	  omniORB::logs(1,"CORBA::ORB_init failed: missing -ORBid parameter.");
 	  return 0;
 	}
-	if (strcmp(argv[idx+1],myORBId) != 0)
+	if( strcmp(argv[idx+1], MY_ORB_ID) && strcmp(argv[idx+1], OLD_ORB_ID) )
 	  {
 	    if( omniORB::trace(1) ) {
 	      omniORB::logger l;
 	      l << "CORBA::ORB_init failed -- the ORBid (" <<
-		argv[idx+1] << ") is not " << myORBId << "\n";
+		argv[idx+1] << ") is not " << MY_ORB_ID << "\n";
 	    }
 	    return 0;
 	  }
+	if( !strcmp(argv[idx + 1], OLD_ORB_ID) )
+	  omniORB::logs(1, "WARNING -- using ORBid " OLD_ORB_ID
+			" (should be " MY_ORB_ID ").");
 	orbId_match = 1;
 	move_args(argc,argv,idx,2);
 	continue;
       }
+
+      // -ORBInitRef <ObjectId>=<ObjectURI>
+      if (strcmp(argv[idx],"-ORBInitRef") == 0) {
+	if ((idx+1) >= argc) {
+	  omniORB::logs(1,"CORBA::ORB_init failed: "
+			"missing -ORBInitRef parameter.");
+	  return 0;
+	}
+	{
+	  unsigned int slen = strlen(argv[idx+1]) + 1;
+	  CORBA::String_var id  = CORBA::string_alloc(slen);
+	  CORBA::String_var uri = CORBA::string_alloc(slen);
+	  if (sscanf(argv[idx+1], "%[^=]=%s", (char*)id, (char*)uri) != 2) {
+	    if (omniORB::trace(1)) {
+	      omniORB::logger l;
+	      l << "CORBA::ORB_init failed: invalid -ORBInitRef parameter `"
+		<< argv[idx+1] << "'.\n";
+	    }
+	    return 0;
+	  }
+	  if (!omniInitialReferences::setFromArgs(id, uri)) {
+	    if (omniORB::trace(1)) {
+	      omniORB::logger l;
+	      l << "CORBA::ORB_init failed: syntactically incorrect URI `"
+		<< (const char*)uri << "'\n";
+	    }
+	    return 0;
+	  }
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBDefaultInitRef <default>
+      if (strcmp(argv[idx],"-ORBDefaultInitRef") == 0) {
+	if ((idx+1) >= argc) {
+	  omniORB::logs(1,"CORBA::ORB_init failed: "
+			"missing -ORBDefaultInitRef parameter.");
+	  return 0;
+	}
+	omniInitialReferences::setDefaultInitRefFromArgs(argv[idx+1]);
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      //
+      // omniORB specific options
+      //
 
       // -ORBtraceLevel
       if (strcmp(argv[idx],"-ORBtraceLevel") == 0) {
@@ -521,6 +781,13 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  return 0;
 	}
 	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBtraceInvocations
+      if (strcmp(argv[idx],"-ORBtraceInvocations") == 0) {
+	omniORB::traceInvocations = 1;
+	move_args(argc,argv,idx,1);
 	continue;
       }
 
@@ -582,6 +849,28 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	continue;
       }
 
+      // -ORBobjectTableSize
+      if (strcmp(argv[idx],"-ORBobjectTableSize") == 0) {
+	if((idx+1) >= argc) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing "
+			"-ORBobjectTableSize parameter.");
+	  return 0;
+	}
+	CORBA::ULong sz;
+#if SIZEOF_LONG == 4
+	if (sscanf(argv[idx+1],"%lu",&sz) != 1) {
+#else
+	if (sscanf(argv[idx+1],"%u",&sz) != 1) {
+#endif
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBobjectTableSize parameter.");
+	  return 0;
+	}
+	omniORB::objectTableSize = sz;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+	
       // -ORBserverName
       if (strcmp(argv[idx],"-ORBserverName") == 0) {
 	if((idx+1) >= argc) {
@@ -590,7 +879,7 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  return 0;
 	}
 #ifdef HAS_Cplusplus_Namespace
-	if (omniORB::serverName) CORBA::string_free(omniORB::serverName);
+	if (omniORB::serverName) omni::freeString(omniORB::serverName);
 #endif
 	omniORB::serverName = CORBA::string_dup(argv[idx+1]);
 	move_args(argc,argv,idx,2);
@@ -784,14 +1073,23 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	omniORB::logger l;
 	l <<
 	  "Valid -ORB<options> are:\n"
-	  "    -ORBid omniORB2\n"
+	  "\n"
+	  "  Standard options:\n"
+	  "    -ORBid omniORB3\n"
+	  "    -ORBInitRef <ObjectID>=<ObjectURI>\n"
+	  "    -ORBDefaultInitRef <Default URI>\n"
+	  "\n"
+	  "  omniORB specific options:\n"
 	  "    -ORBtraceLevel <n>\n"
+	  "    -ORBtraceInvocations\n"
 	  "    -ORBstrictIIOP <0|1>\n"
 	  "    -ORBtcAliasExpand <0|1>\n"
 	  "    -ORBgiopMaxMsgSize <n bytes>\n"
+	  "    -ORBobjectTableSize <n entries>\n"
 	  "    -ORBserverName <name>\n"
 	  "    -ORBInitialHost <name>\n"
 	  "    -ORBInitialPort <1-65535>\n"
+	  "    -ORBno_bootstrap_agent\n"
 	  "    -ORBdiiThrowsSysExceptions <0|1>\n"
 	  "    -ORBabortOnInternalError <0|1>\n"
 	  "    -ORBverifyObjectExistsAndType <0|1>\n"
@@ -800,7 +1098,90 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  "    -ORBclientCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBscanGranularity <n seconds>\n"
-	  "    -ORBlcdMode\n";
+	  "    -ORBlcdMode\n"
+	  "    -ORBpoa_iiop_port <port no.>\n"
+	  "    -ORBpoa_iiop_name_port <hostname[:port no.]>\n";
+	move_args(argc,argv,idx,1);
+	continue;
+      }
+
+
+      // -ORBlcdMode
+      if( strcmp(argv[idx],"-ORBlcdMode") == 0 ) {
+	omniORB::enableLcdMode();
+	move_args(argc,argv,idx,1);
+	continue;
+      }
+
+
+      // -ORBpoa_iiop_port  -- I think this wants a better name.
+      if( strcmp(argv[idx],"-ORBpoa_iiop_port") == 0 ) {
+	if( (idx+1) >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed -- missing "
+			"-ORBpoa_iiop_port parameter.");
+	  return 0;
+	}
+        unsigned port;
+	if( sscanf(argv[idx+1], "%u", &port) != 1 ||
+            (port == 0 || port >= 65536) ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed -- invalid "
+			"-ORBpoa_iiop_port parameter.");
+	  return 0;
+	}
+
+	omniObjAdapter::options.
+	  incomingPorts.push_back(omniObjAdapter::ListenPort("", port));
+
+	move_args(argc, argv, idx, 2);
+	continue;
+      }
+
+
+      // -ORBpoa_iiop_name_port <hostname[:port number]>
+      if( strcmp(argv[idx], "-ORBpoa_iiop_name_port") == 0 ) {
+        if( (idx+1) >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed -- missing "
+			"-ORBpoa_iiop_name_port parameter.");
+          return 0;
+        }
+
+        // Copy the hostname part of the argument (including :port).
+        char hostname[255+1];
+        strncpy(hostname, argv[idx+1], 255);
+	hostname[255] = '\0';
+
+        // Find the :port part of the argument.  If the port is
+	// not specified, we default to 0 which lets the OS pick
+	// a number.
+        int port = 0;
+        char* port_str = strchr(hostname, ':');
+        if( port_str != 0 ) {
+	  // if the port-number is not specified, fall back to port=0
+	  if( port_str[1] == '\0' )  port = 0;
+	  else if( sscanf(port_str+1, "%u", &port) != 1 ||
+		   (port < 0 || port >= 65536) ) {
+	    if ( omniORB::trace(1) ) {
+	      omniORB::logger l;
+	      l << "CORBA::ORB_init failed -- invalid -ORBpoa_iiop_name_port\n"
+		" parameter.  Port number out of range: " << port << ".\n";
+	    }
+	    return 0;
+	  }
+
+	  // null terminate and isolate hostname argument
+	  *port_str = 0;
+        }
+
+	omniObjAdapter::options.
+	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
+
+        move_args(argc, argv, idx, 2);
+        continue;
+      }
+
+      // -ORBno_bootstrap_agent
+      if (strcmp(argv[idx],"-ORBno_bootstrap_agent") == 0) {
+	omniObjAdapter::options.noBootstrapAgent = 1;
 	move_args(argc,argv,idx,1);
 	continue;
       }
@@ -823,23 +1204,60 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 }
 
 
+/////////////////////////////////////////////////////////////////////////////
+//            Hooked initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_hooked_initialiser : public omniInitialiser {
+public:
+
+  omni_hooked_initialiser() : pd_head(0), pd_tail(0) {}
+
+  void attach() {
+    for (initHolder* ih = pd_head; ih; ih = ih->next)
+      ih->init->attach();
+  }
+
+  void detach() {
+    initHolder *ih, *nih;
+    for (ih = pd_head; ih; ih = nih) {
+      ih->init->detach();
+      nih = ih->next;
+      delete ih;
+    }
+  }
+
+  void install(omniInitialiser* init) {
+    initHolder* ih = new initHolder(init);
+    if (pd_tail)
+      pd_tail->next = ih;
+    else
+      pd_head = ih;
+    pd_tail = ih;
+  }
+
+private:
+  struct initHolder {
+    initHolder(omniInitialiser* i) : init(i), next(0) {}
+
+    omniInitialiser* init;
+    initHolder*      next;
+  };
+
+  initHolder* pd_head;
+  initHolder* pd_tail;
+};
+
+static omni_hooked_initialiser hinitialiser;
+omniInitialiser& omni_hooked_initialiser_ = hinitialiser;
+
 void
-omniORB::enableLcdMode()
+omniInitialiser::
+install(omniInitialiser* init)
 {
-  omniORB::strictIIOP = 0;
-  omniORB::tcAliasExpand = 1;
-  omniORB::idleConnectionScanPeriod(omniORB::idleIncoming, 0);
-  omniORB::idleConnectionScanPeriod(omniORB::idleOutgoing, 0);
-  omniORB::useTypeCodeIndirections = 0;
-  omniORB::acceptMisalignedTcIndirections = 1;
+  hinitialiser.install(init);
 }
 
-omniORB::
-fatalException::fatalException(const char *file,int line,const char *errmsg)
-  : pd_file(file), pd_line(line), pd_errmsg(errmsg)
-{
-  if (omniORB::abortOnInternalError) abort();
-}
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -916,7 +1334,7 @@ public:
     if (rc != 0)
       {
 	// Couldn't find a usable DLL.
-	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
       }
 
     // Confirm that the returned Windows Sockets DLL supports 1.1
@@ -926,7 +1344,7 @@ public:
       {
 	// Couldn't find a usable DLL
 	WSACleanup();
-	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
       }
 
 #endif

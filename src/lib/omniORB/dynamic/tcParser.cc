@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // tcParser.cc                Created on: 8/1998
 //                            Author1   : James Weatherall (jnw)
 //                            Author2   : David Riddoch (djr)
@@ -27,6 +27,12 @@
 // Description:
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <tcParser.h>
 #include <typecode.h>
 
@@ -37,12 +43,6 @@
 #ifndef FALSE
 #define FALSE 0
 #endif
-
-
-#define OMNIORB_ASSERT(e)  \
-  do{ if( !(e) )  throw omniORB::fatalException(__FILE__, __LINE__,  \
-	"Internal assertion failed (probably omniORB bug)"); }while(0)
-
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////// Internal Implementation //////////////////////
@@ -94,7 +94,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	  }
 
 	case CORBA::tk_objref:
-	  { CORBA::Object_member d; d <<= ibuf; d >>= obuf; break; }
+	  { CORBA::Object_Member d; d <<= ibuf; d >>= obuf; break; }
 
 	case CORBA::tk_TypeCode:
 	  { CORBA::TypeCode_member d; d <<= ibuf; d >>= obuf; break; }
@@ -250,7 +250,7 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
       }
 
     case CORBA::tk_objref:
-      { CORBA::Object_member d; d <<= ibuf; d >>= obuf; return; }
+      { CORBA::Object_Member d; d <<= ibuf; d >>= obuf; return; }
 
     case CORBA::tk_TypeCode:
       { CORBA::TypeCode_member d; d <<= ibuf; d >>= obuf; return; }
@@ -383,7 +383,7 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	  }
 
 	case CORBA::tk_objref:
-	  { CORBA::Object_member d; d <<= buf; break; }
+	  { CORBA::Object_Member d; d <<= buf; break; }
 
 	case CORBA::tk_TypeCode:
 	  { CORBA::TypeCode_member d; d <<= buf; break; }
@@ -689,10 +689,10 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
   case CORBA::tk_string:
     {
-      if (*tcdata.p_string) {
-	CORBA::ULong len = strlen(*tcdata.p_string) + 1;
+      if (*tcdata.p_string.ptr) {
+	CORBA::ULong len = strlen(*tcdata.p_string.ptr) + 1;
 	len >>= pd_mbuf;
-	pd_mbuf.put_char_array((unsigned char*) *tcdata.p_string, len);
+	pd_mbuf.put_char_array((unsigned char*) *tcdata.p_string.ptr, len);
       }
       else {
 	CORBA::ULong len = 1;
@@ -791,13 +791,31 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
       for (CORBA::ULong i=0; i < max; i++)
 	{
 	  tcDescriptor desc;
+	  CORBA::ULong contiguous = 0;
 
 	  // Get a descriptor for the sequence element.
-	  if( !tcdata.p_sequence.getElementDesc(&tcdata.p_sequence, i, desc) )
+	  if( !tcdata.p_sequence.getElementDesc(&tcdata.p_sequence, i,
+						desc, contiguous) )
 	    OMNIORB_ASSERT(0);
 
-	  // Append the element to the mbuf.
-	  appendItem(tctmp, desc);
+	  if (contiguous <= 1) {
+	    appendItem(tctmp, desc);
+	  } else {
+	    const TypeCode_alignTable& alignTable = tctmp->alignmentTable();
+	    
+	    // Elements are in a contiguous block - fast copy them
+	    // This assumes:
+	    // - Element type is simple & has simple alignment
+	    // - Element type preserves its own alignment
+	    // - Byteorder matches between RAM and MemBuff
+	    // - Pointer to initial element is stored in same
+	    //   place as p_streamdata by the compiler (see tcDescriptor)
+	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
+	    pd_mbuf.put_char_array((CORBA::Char*)desc.p_streamdata,
+				   contiguous * (alignTable[0].simple.size),
+				   alignTable[0].simple.alignment);
+	    i += contiguous;
+	  }
 	}
       break;
     }
@@ -810,13 +828,32 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
       for (CORBA::ULong i=0; i < max; i++)
 	{
 	  tcDescriptor desc;
+	  CORBA::ULong contiguous = 0;
 
 	  // Get a descriptor for the array element.
-	  if( !tcdata.p_array.getElementDesc(&tcdata.p_array, i, desc) )
+	  if( !tcdata.p_array.getElementDesc(&tcdata.p_array, i,
+					     desc, contiguous) )
 	    OMNIORB_ASSERT(0);
 
 	  // Append the element to the mbuf.
-	  appendItem(tctmp, desc);
+	  if (contiguous <= 1) {
+	    appendItem(tctmp, desc);
+	  } else {
+	    const TypeCode_alignTable& alignTable = tctmp->alignmentTable();
+	    
+	    // Elements are in a contiguous block - fast copy them
+	    // This assumes:
+	    // - Element type is simple & has simple alignment
+	    // - Element type preserves its own alignment
+	    // - Byteorder matches between RAM and MemBuff
+	    // - Pointer to initial element is stored in same
+	    //   place as p_streamdata by the compiler (see tcDescriptor)
+	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
+	    pd_mbuf.get_char_array((CORBA::Char*)desc.p_streamdata,
+				   contiguous * (alignTable[0].simple.size),
+				   alignTable[0].simple.alignment);
+	    i += contiguous;
+	  }
 	}
       break;
     }
@@ -929,18 +966,16 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
   case CORBA::tk_string:
     {
-      if (*tcdata.p_string) {
-	CORBA::string_free(*tcdata.p_string);
-	*tcdata.p_string = 0;
-      }
+      if(tcdata.p_string.release )
+	omni::freeString(*tcdata.p_string.ptr);
       CORBA::ULong len;
       len <<= pd_mbuf;
-      if (len) {
-	*tcdata.p_string = CORBA::string_alloc(len-1);
-	pd_mbuf.get_char_array((unsigned char*)*tcdata.p_string,len);
+      if( len ) {
+	*tcdata.p_string.ptr = omni::allocString(len - 1);
+	pd_mbuf.get_char_array((unsigned char*) *tcdata.p_string.ptr, len);
       }
       else {
-	*tcdata.p_string = CORBA::string_dup((const char*)"");
+	*tcdata.p_string.ptr = (char*) omni::empty_string;
       }
       break;
     }
@@ -1061,11 +1096,31 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       for (CORBA::ULong i=0; i < nelem; i++)
 	{
 	  tcDescriptor desc;
+	  CORBA::ULong contiguous = 0;
 
-	  if( !tcdata.p_sequence.getElementDesc(&tcdata.p_sequence, i, desc) )
+	  if(!tcdata.p_sequence.getElementDesc(&tcdata.p_sequence, i,
+						desc, contiguous) )
 	    OMNIORB_ASSERT(0);
 
-	  fetchItem(tctmp, desc);
+	  if (contiguous <= 1) {
+	    fetchItem(tctmp, desc);
+	  } else {
+	    const TypeCode_alignTable& alignTable = tctmp->alignmentTable();
+	   
+	    // Elements are in a contiguous block - fast copy them
+	    // This assumes:
+	    // - Element type is simple & has simple alignment
+	    // - Element type preserves its own alignment
+	    // - Byteorder matches between RAM and MemBuff
+	    // - Pointer to initial element is stored in same
+	    //   place as p_streamdata by the compiler (see tcDescriptor)
+	    // - Contiguous buffer is large enough & suitably aligned
+	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
+	    pd_mbuf.get_char_array((CORBA::Char*)desc.p_streamdata,
+				   contiguous * (alignTable[0].simple.size),
+				   alignTable[0].simple.alignment);
+	    i += contiguous;
+	  }
 	}
       break;
     }
@@ -1078,11 +1133,31 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       for (CORBA::ULong i=0; i < length; i++)
 	{
 	  tcDescriptor desc;
+	  CORBA::ULong contiguous = 0;
 	    
-	  if( !tcdata.p_array.getElementDesc(&tcdata.p_array, i, desc) )
+	  if( !tcdata.p_array.getElementDesc(&tcdata.p_array, i,
+					     desc, contiguous) )
 	    OMNIORB_ASSERT(0);
 
-	  fetchItem(tctmp, desc);
+	  if (contiguous <= 1) {
+	    fetchItem(tctmp, desc);
+	  } else {
+	    const TypeCode_alignTable& alignTable = tctmp->alignmentTable();
+	   
+	    // Elements are in a contiguous block - fast copy them
+	    // This assumes:
+	    // - Element type is simple & has simple alignment
+	    // - Element type preserves its own alignment
+	    // - Byteorder matches between RAM and MemBuff
+	    // - Pointer to initial element is stored in same
+	    //   place as p_streamdata by the compiler (see tcDescriptor)
+	    // - Contiguous buffer is large enough & suitably aligned
+	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
+	    pd_mbuf.get_char_array((CORBA::Char*)desc.p_streamdata,
+				   contiguous * (alignTable[0].simple.size),
+				   alignTable[0].simple.alignment);
+	    i += contiguous;
+	  }
 	}
       break;
     }
@@ -1127,7 +1202,7 @@ tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
 	  {
 	    CORBA::Any tmp;
 	    tmp <<= pd_mbuf;
-	    offset = tmp.NP_alignedSize(offset);
+	    offset = tmp._NP_alignedSize(offset);
 	    break;
 	  }
 
@@ -1143,9 +1218,9 @@ tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
 
 	case CORBA::tk_objref:
 	  {
-	    CORBA::Object_member tmp;
+	    CORBA::Object_Member tmp;
 	    tmp <<= pd_mbuf;
-	    offset = tmp.NP_alignedSize(offset);
+	    offset = tmp._NP_alignedSize(offset);
 	    break;
 	  }
 
@@ -1153,7 +1228,7 @@ tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
 	  {
 	    CORBA::TypeCode_member tmp;
 	    tmp <<= pd_mbuf;
-	    offset = tmp.NP_alignedSize(offset);
+	    offset = tmp._NP_alignedSize(offset);
 	    break;
 	  }
 
@@ -1280,17 +1355,3 @@ _0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc)
   return *((CORBA::Object_ptr*)desc->opq_objref);
 }
 
-#if 0
-void
-_0RL_tcParser_objref2_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
-{
-  *((_CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>*)desc->opq_objref) = ptr;
-}
-
-
-CORBA::Object_ptr
-_0RL_tcParser_objref2_getObjectPtr(tcObjrefDesc* desc)
-{
-  return (CORBA::Object_ptr) ((_CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>*)desc->opq_objref)->_ptr;
-}
-#endif

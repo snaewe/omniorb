@@ -1,48 +1,67 @@
 // eg2_clt.cc - This is the source code of example 2 used in Chapter 2
-//              "The Basics" of the omniORB2 user guide.
+//              "The Basics" of the omniORB user guide.
 //
 //              This is the client. The object reference is given as a
 //              stringified IOR on the command line.
 //
 // Usage: eg2_clt <object reference>
 //
+
 #include <iostream.h>
-#include "echo.hh"
+#include <echo.hh>
 
-#include "greeting.cc"
 
-extern void hello(CORBA::Object_ptr obj);
-
-int
-main (int argc, char **argv) 
+static void hello(Echo_ptr e)
 {
-  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+  CORBA::String_var src = (const char*) "Hello!";
 
-  if (argc < 2) {
-    cerr << "usage: eg2_clt <object reference>" << endl;
-    return 1;
-  }
+  CORBA::String_var dest = e->echoString(src);
 
+  cerr << "I said, \"" << (char*)src << "\"." << endl
+       << "The Echo object replied, \"" << (char*)dest <<"\"." << endl;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+int main(int argc, char** argv)
+{
   try {
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+
+    if( argc != 2 ) {
+      cerr << "usage:  eg2_clt <object reference>" << endl;
+      return 1;
+    }
+
     CORBA::Object_var obj = orb->string_to_object(argv[1]);
-    hello(obj);
+    Echo_var echoref = Echo::_narrow(obj);
+    if( CORBA::is_nil(echoref) ) {
+      cerr << "Can't narrow reference to type Echo (or it was nil)." << endl;
+      return 1;
+    }
+    hello(echoref);
+
+    orb->destroy();
   }
   catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE, unable to contact the "
+    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
          << "object." << endl;
   }
-  catch(omniORB::fatalException& ex) {
-    cerr << "Caught omniORB2 fatalException. This indicates a bug is caught "
-         << "within omniORB2.\nPlease send a bug report.\n"
-         << "The exception was thrown in file: " << ex.file() << "\n"
-         << "                            line: " << ex.line() << "\n"
-         << "The error message is: " << ex.errmsg() << endl;
+  catch(CORBA::SystemException&) {
+    cerr << "Caught a CORBA::SystemException." << endl;
+  }
+  catch(CORBA::Exception&) {
+    cerr << "Caught CORBA::Exception." << endl;
+  }
+  catch(omniORB::fatalException& fe) {
+    cerr << "Caught omniORB::fatalException:" << endl;
+    cerr << "  file: " << fe.file() << endl;
+    cerr << "  line: " << fe.line() << endl;
+    cerr << "  mesg: " << fe.errmsg() << endl;
   }
   catch(...) {
-    cerr << "Caught a system exception." << endl;
+    cerr << "Caught unknown exception." << endl;
   }
-
-  orb->NP_destroy();
 
   return 0;
 }

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // context.h                  Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -28,6 +28,12 @@
 
 /*
  $Log$
+ Revision 1.5  2000/07/04 15:23:16  dpg1
+ Merge from omni3_develop.
+
+ Revision 1.4.6.1  1999/09/22 14:26:29  djr
+ Major rewrite of orbcore to support POA.
+
  Revision 1.4  1999/05/25 17:48:50  sll
  Now use _CORBA_PseudoValue_Sequence.
 
@@ -38,10 +44,6 @@
 
 #ifndef __CONTEXT_H__
 #define __CONTEXT_H__
-
-#ifndef __CORBA_H__
-#include <omniORB2/CORBA.h>
-#endif
 
 
 class ContextImpl : public CORBA::Context {

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // mbufferedStream.cc         Created on: 6/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,19 @@
 
 /*
   $Log$
+  Revision 1.10  2000/07/04 15:22:55  dpg1
+  Merge from omni3_develop.
+
+  Revision 1.9.6.3  2000/06/22 10:40:15  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
+  Revision 1.9.6.2  1999/10/14 16:22:12  djr
+  Implemented logging when system exceptions are thrown.
+
+  Revision 1.9.6.1  1999/09/22 14:26:54  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.9  1999/05/10 16:36:04  djr
   Fixed bug in constructors for read-only streams.
 
@@ -50,7 +63,13 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
+#include <exceptiondefs.h>
 #include <limits.h>
 
 
@@ -303,7 +322,7 @@ MemBufferedStream::skip(CORBA::ULong size)
 void
 MemBufferedStream::overrun_error()
 {
-  throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
 }
 
 

@@ -30,113 +30,49 @@
 #ifndef __DYNAMICIMPLEMENTATION_H__
 #define __DYNAMICIMPLEMENTATION_H__
 
-#include <omniORB2/CORBA.h>
-
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// ServerRequest ////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class ServerRequestImpl : public CORBA::ServerRequest {
+class omniServerRequest : public CORBA::ServerRequest {
 public:
-  ServerRequestImpl(const char* op, GIOP_S* giopS,
-		    CORBA::Boolean responseExpected)
-    : pd_state(SR_READY), pd_opName(op), pd_giopS(giopS),
-      pd_responseExpected(responseExpected) {}
+  virtual ~omniServerRequest();
+  omniServerRequest(GIOP_S& giopS)
+    : pd_state(SR_READY), pd_giop_s(giopS) {}
 
-  virtual const char* op_name();
-  virtual CORBA::OperationDef_ptr op_def();
+  virtual const char* operation();
+  virtual void arguments(CORBA::NVList_ptr&);
   virtual CORBA::Context_ptr ctx();
-  virtual void params(CORBA::NVList_ptr parameters);
-  virtual void result(CORBA::Any* value);
-  virtual void exception(CORBA::Any* value);
+  virtual void set_result(const CORBA::Any&);
+  virtual void set_exception(const CORBA::Any&);
 
   enum State {
-    SR_READY,        // initial state.
-    SR_GOT_PARAMS,   // user has retrieved params.
-    SR_GOT_CTX,      // user has retrieved params and context.
-    SR_GOT_RESULT,   // user has given a result value.
-    SR_EXCEPTION,    // user has set an exception.
-    SR_ERROR         // usage error or MARSHAL occurred.
+    SR_READY,        // initial state
+    SR_GOT_PARAMS,   // user has retrieved params
+    SR_GOT_CTX,      // user has retrieved params and context
+    SR_GOT_RESULT,   // user has given a result value
+    SR_EXCEPTION,    // user has set an exception
+    SR_DSI_ERROR,    // usage error
+    SR_ERROR         // MARSHAL or other error
   };
 
   //////////////////////
   // omniORB internal //
   //////////////////////
-  State             state()     { return pd_state;                  }
-  CORBA::NVList_ptr params()    { return pd_params;                 }
-  CORBA::Any*       result()    { return pd_result.operator->();    }
-  CORBA::Any*       exception() { return pd_exception.operator->(); }
+  State             state()     { return pd_state;     }
+  CORBA::NVList_ptr params()    { return pd_params;    }
+  CORBA::Any&       result()    { return pd_result;    }
+  CORBA::Any&       exception() { return pd_exception; }
 
 private:
   State              pd_state;             // to check proper invocation order
-  const char*        pd_opName;            // we don't own
-  GIOP_S*            pd_giopS;             // we don't own
-  CORBA::Boolean     pd_responseExpected;
+  GIOP_S&            pd_giop_s;            // we don't own
   CORBA::Context_var pd_context;           // we own (if non-0)
   CORBA::NVList_var  pd_params;            // _nil() until set by DIR,
                                            //  then we own.
-  CORBA::Any_var     pd_result;            // 0 until set by DIR, then we own
-  CORBA::Any_var     pd_exception;         // 0 until set by DIR, then we own
-};
-
-//////////////////////////////////////////////////////////////////////
-////////////////////////////// DsiObject /////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-//
-// This is a CORBA object which implements the dynamic skeleton
-// interface. It has an associated DynamicImplementation which
-// is provided by the user to supply the actual implementation.
-//  This object is registered with the BOA, and so is assigned
-// an object key, and placed in the object table as per usual.
-//
-
-class DsiObject;
-typedef DsiObject* DsiObject_ptr;
-
-class DsiObject : public virtual omniObject, public virtual CORBA::Object {
-public:
-  DsiObject(CORBA::BOA::DynamicImplementation_ptr dynImpl,
-	    const char* intfRepoId);
-
-  DsiObject() : pd_dynImpl(0) {}
-  // This constructor is used for DsiObject::_nil()
-
-  virtual ~DsiObject();
-
-  virtual CORBA::Boolean dispatch(GIOP_S& s,const char *op,
-				  CORBA::Boolean response_expected);
-
-  virtual void* _widenFromTheMostDerivedIntf(const char* type_id,
-                                             _CORBA_Boolean is_cxx_type_id=0);
-  // Overrides omniObject.
-
-  CORBA::Object_ptr _this() {
-    CORBA::Object::_duplicate(this);
-    return this;
-  }
-
-private:
-  DsiObject(const DsiObject&);
-  const DsiObject& operator= (const DsiObject&);
-
-  CORBA::BOA::DynamicImplementation_ptr pd_dynImpl;
-};
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-//
-// The internal state of DynamicImplementation.
-//
-
-struct DynamicImplementation_pd {
-  // These are both 0 until the DynamicImplementation
-  // has been registered with the BOA.
-  DsiObject_ptr  object;
-  CORBA::BOA_ptr boa;
+  CORBA::Any         pd_result;
+  CORBA::Any         pd_exception;
 };
 
 

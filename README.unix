@@ -6,7 +6,8 @@ omniNames at the end of this note.
 
 Unless specified otherwise, the information applies to all Unix
 platforms. Linux users should also consult the file README.Linux.
-Users intended to use egcs or gcc should also read README.egcs and README.gcc
+Users intended to use egcs or gcc should also read README.egcs and
+README.gcc
 
 omniORB2 has been tested on the following Unix platforms:
 
@@ -14,20 +15,20 @@ omniORB2 has been tested on the following Unix platforms:
   o Windows NT / Windows 95 / Visual C++ version 5.0 (and also version 6.0)
   o Linux 2.0 (x86)/ GNU C++ compiler version 2.7.2 /libc-5/ Linuxthreads 0.5
   o Linux 2.0 (x86)/gcc-2.95/binutils-2.9.1.0.14/GNU Libc version 2
-  o Digital Unix 3.2/ DEC C++ compiler version 5.5
-  o Digital Unix 4.0D/ DEC C++ compiler version 6.0
+  o HPUX 11.00/ aC++
+  o SGI Irix 6.x/SGI C++ compiler 7.2
 
 It has also been tested by external contributors on the following platforms:
 
   o IBM AIX 4.2/ IBM C Set++ 3.1.4
   o HPUX 10.20/ aC++ (B3910 A.01.04)
-  o HPUX 11.00/ aC++
   o NextStep 3.3/ gcc-2.7.2
   o Reliant Unix 5.43/CDS++
   o SCO OpenServer 5/g++
   o SCO Unixware 7
-  o SGI Irix 6.x/SGI C++ compiler 7.2
   o Linux 2.x powerpc/Debian
+  o Digital Unix 3.2/ DEC C++ compiler version 5.5
+  o Digital Unix 4.0D/ DEC C++ compiler version 6.0
 
 Roadmap
 =======
@@ -42,7 +43,7 @@ The directory structure of this distribution looks as follows:
 ./src                             : source files
 ./src/lib/omnithread              : source files for the omnithread library
 ./src/lib/omniORB2                : source files for the ORB runtime library
-./src/tool/omniidl2               : source files for the IDL compiler
+./src/tool/omniidl                : source files for the IDL compiler
 ./src/appl/omniNames              : source files for the COS Naming service
 ./src/appl/utils                  : source files for utilities
 ./src/examples                    : source files for examples
@@ -57,7 +58,7 @@ following directories:
 Configuration
 =============
  
-  1. select the appropriate platform configuration file
+  1. Select the appropriate platform configuration file
   ------------------------------------------------------
 
   Edit ./config/config.mk to select the appropriate platform file
@@ -66,34 +67,64 @@ Configuration
       
             platform = sun4_sosV_5.5
 
-   All the platform files are in ./mk/platforms.
+  All the platform files are in ./mk/platforms.
 
-   If you are using gcc or the default compiler for your platform is
-   gcc, it is most likely that you have to edit the CXX and CC make
-   variables in the platform file. Moreover, only the most recent versions
-   of gcc, i.e. egcs-1.1.2 and gcc-2.95 has proper support for multithreaded
-   exception handling. Moreover, the gcc compiler has to be configured with
-   the --enable-threads option or else the code generated would not work
-   reliably. The default version of gcc compiler that comes with your
-   platform may not be the right version. 
+  If you are using gcc or the default compiler for your platform is
+  gcc, it is most likely that you have to edit the CXX and CC make
+  variables in the platform file. Moreover, only the most recent
+  versions of gcc, i.e. egcs-1.1.2 and gcc-2.95 has proper support for
+  multithreaded exception handling. Moreover, the gcc compiler has to
+  be configured with the --enable-threads option or else the code
+  generated would not work reliably. The default version of gcc
+  compiler that comes with your platform may not be the right version.
 
- 
-  2. Building and installing
+
+  2. Set the location of a Python 1.5.2 interpreter
+  -------------------------------------------------
+
+  Edit ./mk/platforms/<platform>.mk, where <platform> is the platform
+  name you set in config.mk.
+
+  Uncomment the 'PYTHON =' line, and set it to the path of your Python
+  interpreter.
+
+  If you do not have Python 1.5.2, you can download the full source
+  distribution from
+
+    http://www.python.org/download/
+
+  or
+
+    ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.tgz
+
+  Alternatively, on Solaris and Linux (and Windows, but this is
+  README.unix!) you can download a minimal version of Python which
+  contains just the functionality required by omniidl. Download it
+  from
+
+    ftp://ftp.uk.research.att.com/pub/omniORB/python/
+
+  Unpack the archive at the top of the omniORB tree. It places files
+  in the bin, lib and include directories.
+
+
+  3. Building and installing
   --------------------------
 
-  The makefiles in this distribution only works with GNUmake. Make sure
-  that you have the program installed and invokes it directly.
+  The makefiles in this distribution only work with GNUmake. Make sure
+  that you have the program installed and invoke it directly.
 
-  You can skip this step if this is a pre-compiled binary distribution.
-  To build and install everything, go into the directory ./src and type 
-  'make export'. If all goes well, the libraries and executables will be
-  installed into ./lib/<platform>/ and ./bin/<platform>/.
+  You can skip this step if this is a pre-compiled binary
+  distribution.  To build and install everything, go into the
+  directory ./src and type 'make export'. If all goes well, the
+  libraries and executables will be installed into ./lib/<platform>/
+  and ./bin/<platform>/.
 
 
-  3. add omniORB2 libraries to search path
+  4. Add omniORB2 libraries to search path
   ----------------------------------------
 
-  Since the shared libraries libomniORB2.so and libomnithread.so are not in
+  Since the shared libraries libomniORB3.so and libomnithread.so are not in
   the directories searched by the dynamic loader by default, you must add 
   the library directory to the search path. For example:
  
@@ -102,15 +133,15 @@ Configuration
        $ export LD_LIBRARY_PATH
  
 
-  4. configure the naming service
+  5. Configure the Naming service
   -------------------------------
 
   If you are upgrading from 2.2.0, please read the important information about
   omniNames at the end of this note.
  
-  You also have to configure the omniORB2 runtime and the naming service,
-  consult the user guides in ./doc for details. For a quick start, follow
-  these steps:
+  You also have to configure the omniORB3 runtime and the naming
+  service, consult the user guides in ./doc for details. For a quick
+  start, follow these steps:
 
     o Set the environment variable OMNINAMES_LOGDIR to a directory where
       the naming service omniNames can store its data. For example:
@@ -209,7 +240,7 @@ platforms, you can figure it out.
 
 IDL stubs can be compiled like this:
 
-  omniidl2 echo.idl
+  omniidl -bcxx echo.idl
 
 The product is the files: echo.hh and echoSK.cc
 

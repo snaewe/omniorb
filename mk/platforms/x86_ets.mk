@@ -50,6 +50,6 @@ endif
 #
 IMPORT_CPPFLAGS += -D__x86__ -D_WINSTATIC -D__ETS_KERNEL__
 
-# Default location of the omniORB2 configuration file.
+# Default location of the omniORB configuration file.
 #
 CONFIG_DEFAULT_LOCATION = C:\\OMNIORB.CFG

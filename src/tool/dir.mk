@@ -1,9 +1,17 @@
+# Check for Python and complain early
+ifndef PYTHON
+all::
+	@$(NoPythonError)
+export::
+	@$(NoPythonError)
+endif
+
 ifdef UnixPlatform
-SUBDIRS = omkdepend omniidl2
+SUBDIRS = omkdepend omniidl
 endif
 
 ifdef Win32Platform
-SUBDIRS = omniidl2
+SUBDIRS = omniidl
 endif
 
 

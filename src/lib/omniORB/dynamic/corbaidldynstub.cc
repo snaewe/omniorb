@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // corbaidldynstub.cc         Created on: 12/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,6 +27,6 @@
 //
 
 #define ENABLE_CLIENT_IR_SUPPORT
-# include <omniORB2/CORBA.h>
-# include <omniORB2/tcDescriptor.h>
-# include <../corbaidlDynSK.cc>
+# include <omniORB3/CORBA.h>
+# include <omniORB3/tcDescriptor.h>
+# include <omniORB3/corbaidlDynSK.cc>

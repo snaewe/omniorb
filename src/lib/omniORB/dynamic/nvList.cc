@@ -27,8 +27,14 @@
 //   Implementation of CORBA::NVList.
 //
 
-#define ENABLE_CLIENT_IR_SUPPORT
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <pseudo.h>
+#include <exceptiondefs.h>
 
 
 #define INIT_MAX_SEQ_LENGTH  6
@@ -173,7 +179,7 @@ NVListImpl::NP_duplicate()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilNVList : public CORBA::NVList {
+class omniNilNVList : public CORBA::NVList {
 public:
   virtual CORBA::ULong count() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -217,8 +223,6 @@ public:
   }
 };
 
-static NilNVList _nilNVList;
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -231,7 +235,7 @@ CORBA::
 NVList::_duplicate(NVList_ptr p)
 {
   if (!PR_is_valid(p))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
@@ -241,7 +245,13 @@ CORBA::NVList_ptr
 CORBA::
 NVList::_nil()
 {
-  return &_nilNVList;
+  static omniNilNVList* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilNVList;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -257,11 +267,10 @@ CORBA::release(NVList_ptr p)
 
 
 CORBA::Status
-CORBA::
-ORB::create_list(Long count, NVList_out new_list)
+CORBA::ORB::create_list(Long count, NVList_out new_list)
 {
   if (count < 0)
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
 
   new_list = new NVListImpl();
 
@@ -273,10 +282,9 @@ ORB::create_list(Long count, NVList_out new_list)
 
 
 CORBA::Status
-CORBA::
-ORB::create_operation_list(OperationDef_ptr p, NVList_out new_list)
+CORBA::ORB::create_operation_list(_objref_OperationDef* p, NVList_out new_list)
 {
-  new_list = NVList::_nil();
+  new_list = CORBA::NVList::_nil();
 
   throw NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
 

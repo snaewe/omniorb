@@ -13,4 +13,4 @@ export:: $(nameclt)
 	@$(ExportExecutable)
 
 $(nameclt): nameclt.o $(CORBA_LIB_DEPEND)
-	@(libs="$(CORBA_LIB)"; $(CXXExecutable))
+	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))

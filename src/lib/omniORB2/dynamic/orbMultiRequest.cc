@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // orbMultiRequest.cc         Created on: 17/2/1999
 //                            Author    : David Riddoch (djr)
 //
@@ -27,7 +27,7 @@
 //   Implementation of CORBA::ORB::send_multiple_requests_... etc.
 //
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 #include <request.h>
 
 

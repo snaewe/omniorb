@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // environment.cc             Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,7 +27,15 @@
 //   Implementation of CORBA::Environment.
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <pseudo.h>
+#include <exceptiondefs.h>
+
 
 // The correct way of creating an environment object is to use
 // the ORB::create_environment() method. The environment objects
@@ -79,7 +87,7 @@ CORBA::
 Environment::exception(CORBA::Exception* e)
 {
   if (!CORBA::Exception::PR_is_valid(e))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( pd_exception )  delete pd_exception;
   pd_exception = e;
 }
@@ -120,7 +128,7 @@ Environment::NP_duplicate()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilEnv : public CORBA::Environment {
+class omniNilEnv : public CORBA::Environment {
 public:
   virtual void exception(CORBA::Exception*) {
     _CORBA_invoked_nil_pseudo_ref();
@@ -139,8 +147,6 @@ public:
     return _nil();
   }
 };
-
-static NilEnv _nilEnvironment;
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -175,7 +181,7 @@ CORBA::
 Environment::_duplicate(CORBA::Environment_ptr p)
 {
   if (!PR_is_valid(p))
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
@@ -185,7 +191,13 @@ CORBA::Environment_ptr
 CORBA::
 Environment::_nil()
 {
-  return &_nilEnvironment;
+  static omniNilEnv* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilEnv;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 void
