@@ -1,3 +1,11 @@
+Wed May 29 15:25:04 BST 2002 dgrisby
+====================================
+
+- Bug using identity after deletion in BOA. Reported by Tihomir Sokcevic.
+
+src/lib/omniORB/orbcore/corbaBoa.cc
+
+
 Tue May 28 22:52:49 BST 2002 dgrisby
 ====================================
 
