@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.13  2000/06/22 09:01:29  djr
+  Fixed assertion failure (locking bug).
+
   Revision 1.13.6.12  2000/06/02 14:20:15  dpg1
   Using boa_lock for the nil BOA's condition variable caused an
   assertion failure on exit.
@@ -388,23 +391,31 @@ omniOrbBOA::destroy()
     omni::deactivateObject(id->key(), id->keysize());
     id = id->nextInOAObjList();
   }
-  omni::internalLock->unlock();
 
   // We need to kick anyone stuck in synchronise_request(),
   // or impl_is_ready().
   pd_state_signal->broadcast();
 
   // Wait until outstanding invocations have completed.
-  waitForAllRequestsToComplete(0);
+  waitForAllRequestsToComplete(1);
 
   // Delete the identities, but not the servant itself.
   // (See user's guide 5.4).
   {
     omniLocalIdentity* id = obj_list;
+
     while( id ) {
-      omniLocalIdentity* next = id->nextInOAObjList();
       id->deactivate();
       OMNIORB_ASSERT(id->is_idle());
+      id = id->nextInOAObjList();
+    }
+
+    omni::internalLock->unlock();
+
+    id = obj_list;
+
+    while( id ) {
+      omniLocalIdentity* next = id->nextInOAObjList();
       id->die();
       id = next;
     }

@@ -1,3 +1,12 @@
+
+Thu Jun 22 09:59:43 BST 2000 djr
+================================
+
+- Fixed assertion failure (locking bug).
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+
+
 Tue Jun 20 14:51:11 BST 2000 dpg1
 =================================
 
