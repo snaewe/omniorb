@@ -1,3 +1,27 @@
+Thu Jun  3 18:06:58 BST 1999 sll
+================================
+
+- Update mapping to conform to CORBA 2.2
+- Added a new -c flag to omniidl2. This flag causes the compiler to add
+  the '_' prefix to identifiers that clashes with C++ reserved words. This
+  was the old default. The default now is to use the '_cxx_' prefix.
+
+include/omniORB2/templatedecls.h
+include/omniORB2/templatedefns.h
+include/omniORB2/CORBA.h
+include/omniORB2/stringtypes.h
+
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_struct.cc
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+src/tool/omniidl2/omniORB2_be/o2be_enum.cc
+src/tool/omniidl2/omniORB2_be/o2be_name.cc
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+src/tool/omniidl2/include/idl_defines.hh
+
 Wed Jun  2 17:49:13 BST 1999 sll
 ================================
 
