@@ -1,3 +1,14 @@
+Thu Sep 13 17:13:41 BST 2001 sll
+================================
+
+- Make ssl example compiles again
+
+external_merge/mk/win32.mk
+external_merge/mk/unix.mk
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/examples/ssl_echo/dir.mk
+src/examples/ssl_echo/eg2_impl.cc
+
 Thu Sep 13 16:33:00 BST 2001 sll
 ================================
 

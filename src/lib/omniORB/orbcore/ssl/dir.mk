@@ -22,7 +22,7 @@ SHARED_ONLY_OBJS = msvcdllstub.o
 endif
 
 LIB_NAME     := omnisslTP
-LIB_VERSION  := $(OMNIORB_VERSION)
+LIB_VERSION  := $(OMNIORB_SSL_VERSION)
 LIB_OBJS     := $(SSL_OBJS)
 LIB_IMPORTS  := $(patsubst %,$(LibPathPattern),../shared) \
                 $(OMNIORB_DLL_NAME) \
