@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.23  1999/05/26 12:46:38  sll
+  *** empty log message ***
+
   Revision 1.22  1999/05/26 12:14:40  sll
   Added -Y <cpp location> flag.
 
@@ -327,9 +330,11 @@ BE_parse_args(int argc, char **argv)
 					IDL_CF_VERSION);
 	  return;
         case 'Y':
-	  char* cpploc = new char[strlen(optarg)+1];
-	  strcpy(cpploc,optarg);
-	  idl_global->set_cpp_location(cpploc);
+	  {
+	    char* cpploc = new char[strlen(optarg)+1];
+	    strcpy(cpploc,optarg);
+	    idl_global->set_cpp_location(cpploc);
+	  }
 	  break;
 	case 'h':
 	  o2be_global::set_hdrsuffix(optarg);
