@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.11.2.17  2002/12/18 15:59:14  dgrisby
+   Proper clean-up of recursive TypeCodes.
+
    Revision 1.11.2.16  2002/02/11 14:46:20  dpg1
    Remove unnecessary ##s in macro.
 
@@ -415,7 +418,7 @@ DynAnyImpl::equal(DynamicAny::DynAny_ptr dyn_any)
   if (!tc()->equivalent(ib->tc()))
     return 0;
 
-  switch (actualTc()->NP_kind()) {
+  switch (actualTc()->kind()) {
   case CORBA::tk_any:
     {
       DynamicAny::DynAny_var a = get_dyn_any();
@@ -933,7 +936,7 @@ DynAnyImpl::NP_nodetype() const
 void
 DynAnyImpl::set_to_initial_value()
 {
-  switch (actualTc()->NP_kind()) {
+  switch (actualTc()->kind()) {
   case CORBA::tk_null:
   case CORBA::tk_void:
     ToDynAnyImpl(this)->setValid();
@@ -2112,7 +2115,7 @@ DynamicAny::DynAny_ptr
 DynAnyConstrBase::current_component()
 {
   CHECK_NOT_DESTROYED;
-  if( pd_n_components == 0 && actualTc()->NP_kind() != CORBA::tk_sequence )
+  if( pd_n_components == 0 && actualTc()->kind() != CORBA::tk_sequence )
     throw DynamicAny::DynAny::TypeMismatch();
 
   if( pd_curr_index < 0 )
@@ -2425,7 +2428,7 @@ DynStructImpl::current_member_kind()
   if( pd_n_components == 0 ) throw DynamicAny::DynAny::TypeMismatch();    
   if( pd_curr_index < 0 )    throw DynamicAny::DynAny::InvalidValue();
 
-  return actualTc()->NP_member_type(pd_curr_index)->NP_kind();
+  return actualTc()->NP_member_type(pd_curr_index)->kind();
 }
 
 
@@ -3056,7 +3059,7 @@ DynUnionImpl::DynUnionImpl(TypeCode_base* tc, CORBA::Boolean is_root)
     CORBA::TypeCode::_duplicate(actualTc()->NP_discriminator_type());
   pd_disc = internal_create_dyn_any_discriminator(ToTcBase(tcdup), this);
   pd_disc_type = ToTcBase(tcdup);
-  pd_disc_kind = pd_disc_type->NP_kind();
+  pd_disc_kind = pd_disc_type->kind();
   pd_disc_index = -1;
 
   pd_member = 0;
@@ -4194,7 +4197,7 @@ DynSequenceImpl::prepareSequenceWrite(CORBA::TCKind kind, CORBA::ULong len)
   ctc = TypeCode_base::NP_expand(tc->NP_content_type());
   CORBA::TCKind k = ctc->NP_kind();
 
-  if (ctc->NP_kind() == kind) {
+  if (k == kind) {
     if (pd_bound && len > pd_bound)
       throw DynamicAny::DynAny::InvalidValue();
 
@@ -4233,7 +4236,7 @@ DynSequenceImpl::prepareSequenceRead(CORBA::TCKind kind)
   ctc = TypeCode_base::NP_expand(tc->NP_content_type());
   CORBA::TCKind k = ctc->NP_kind();
 
-  if (ctc->NP_kind() == kind)
+  if (k == kind)
     return SEQ_HERE;
 
   if (pd_curr_index < 0)
@@ -4853,7 +4856,7 @@ DynAnyFactoryImpl::create_dyn_any(const CORBA::Any& value)
 }
 
 DynamicAny::DynAny_ptr
-DynAnyFactoryImpl::create_dyn_any_from_type_code(const CORBA::TypeCode_ptr t)
+DynAnyFactoryImpl::create_dyn_any_from_type_code(CORBA::TypeCode_ptr t)
 {
   return factory_create_dyn_any_from_type_code(t);
 }

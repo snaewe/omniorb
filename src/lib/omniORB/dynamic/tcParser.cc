@@ -57,6 +57,10 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
   // This can only be used if both streams have the same
   // byte order.
 
+  // Follow any TypeCode_indirect objects created by
+  // ORB::create_recursive_tc().
+  tc = TypeCode_indirect::strip(tc);
+
   const TypeCode_alignTable& alignTbl = tc->alignmentTable();
   unsigned i = 0;  // don't even ask ... just accept it.
 
@@ -187,6 +191,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	    if( !length )  break;
 
 	    TypeCode_base* elem_tc = tc->NP_content_type();
+	    elem_tc = TypeCode_indirect::strip(elem_tc);
 	    const TypeCode_alignTable& eat = elem_tc->alignmentTable();
 
 	    if( eat.is_simple() ) {
@@ -267,11 +272,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 
 void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 {
-  // Follow any TypeCode_indirect objects created by
-  // ORB::create_recursive_tc().
-  while (tc->NP_kind() == 0xffffffff) {
-    tc = ((TypeCode_indirect*)tc)->NP_resolved();
-  }
+  tc = TypeCode_indirect::strip(tc);
 
   // How to marshal the data depends entirely on the TypeCode
   switch (tc->NP_kind())
@@ -470,11 +471,7 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 
 void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 {
-  // Follow any TypeCode_indirect objects created by
-  // ORB::create_recursive_tc().
-  while (tc->NP_kind() == 0xffffffff) {
-    tc = ((TypeCode_indirect*)tc)->NP_resolved();
-  }
+  tc = TypeCode_indirect::strip(tc);
 
   CORBA::Char dummy;
   const TypeCode_alignTable& alignTbl = tc->alignmentTable();
@@ -553,6 +550,7 @@ void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 	    if( !length )  break;
 
 	    TypeCode_base* elem_tc = tc->NP_content_type();
+	    elem_tc = TypeCode_indirect::strip(elem_tc);
 	    const TypeCode_alignTable& eat = elem_tc->alignmentTable();
 
 	    if( eat.is_simple() ) {
@@ -757,11 +755,7 @@ void appendSimpleItem(CORBA::TCKind tck, const tcDescriptor &tcdata, cdrStream& 
 
 void appendItem(const TypeCode_base* tc, const tcDescriptor& tcdata, cdrStream& buf)
 {
-  // Follow any TypeCode_indirect objects created by
-  // ORB::create_recursive_tc().
-  while (tc->NP_kind() == 0xffffffff) {
-    tc = ((TypeCode_indirect*)tc)->NP_resolved();
-  }
+  tc = TypeCode_indirect::strip(tc);
 
   // How to marshal the data depends entirely on the TypeCode
   switch (tc->NP_kind()) {
@@ -847,7 +841,7 @@ void appendItem(const TypeCode_base* tc, const tcDescriptor& tcdata, cdrStream& 
       // Get a descriptor for the discriminator, and marshal it
       // into the buffer.
       tcdata.p_union.getDiscriminator(&tcdata.p_union, disc_desc, discrim);
-      appendSimpleItem(tc->NP_discriminator_type()->NP_kind(), disc_desc, buf);
+      appendSimpleItem(tc->NP_discriminator_type()->kind(), disc_desc, buf);
 
       // Determine the index of the selected member.
       CORBA::Long index =
@@ -915,6 +909,7 @@ void appendItem(const TypeCode_base* tc, const tcDescriptor& tcdata, cdrStream& 
     {
       CORBA::ULong max = tcdata.p_sequence.getElementCount(&tcdata.p_sequence);
       TypeCode_base* tctmp = tc->NP_content_type();
+      tctmp = TypeCode_indirect::strip(tctmp);
 
       // Save the length of the sequence.
       max >>= buf;
@@ -956,6 +951,7 @@ void appendItem(const TypeCode_base* tc, const tcDescriptor& tcdata, cdrStream& 
     {
       CORBA::ULong max = tc->NP_length();
       TypeCode_base* tctmp = tc->NP_content_type();
+      tctmp = TypeCode_indirect::strip(tctmp);
 
       for (CORBA::ULong i=0; i < max; i++)
 	{
@@ -1067,11 +1063,7 @@ void fetchSimpleItem(CORBA::TCKind tck, cdrStream &src, tcDescriptor &tcdata)
 
 void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
 {
-  // Follow any TypeCode_indirect objects created by
-  // ORB::create_recursive_tc().
-  while (tc->NP_kind() == 0xffffffff) {
-    tc = ((TypeCode_indirect*)tc)->NP_resolved();
-  }
+  tc = TypeCode_indirect::strip(tc);
 
   // How to unmarshal the data depends entirely on the TypeCode
   switch( tc->NP_kind() ) {
@@ -1160,13 +1152,14 @@ void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
       // Allocate some space to load the discriminator into.
       tcUnionDiscriminatorType disc_val;
       tcDescriptor             disc_desc;
+      CORBA::TCKind            disc_kind = tc->NP_discriminator_type()->kind();
 
       disc_desc.p_char = (CORBA::Char*) &disc_val;
-      fetchSimpleItem(tc->NP_discriminator_type()->NP_kind(), src, disc_desc);
+      fetchSimpleItem(disc_kind, src, disc_desc);
 
       // Determine the discriminator value.
       CORBA::PR_unionDiscriminator discrim = 0;
-      switch( tc->NP_discriminator_type()->NP_kind() ) {
+      switch( disc_kind ) {
       case CORBA::tk_char:
 	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_char;
 	break;
@@ -1266,6 +1259,7 @@ void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
   case CORBA::tk_sequence:
     {
       TypeCode_base* tctmp = tc->NP_content_type();
+      tctmp = TypeCode_indirect::strip(tctmp);
 
       // Get the sequence length
       CORBA::ULong nelem;
@@ -1311,6 +1305,7 @@ void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
     {
       CORBA::ULong length = tc->NP_length();
       TypeCode_base* tctmp = tc->NP_content_type();
+      tctmp = TypeCode_indirect::strip(tctmp);
 
       for (CORBA::ULong i=0; i < length; i++)
 	{

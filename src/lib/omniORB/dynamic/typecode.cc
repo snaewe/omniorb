@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.28  2002/12/18 15:59:15  dgrisby
+ * Proper clean-up of recursive TypeCodes.
+ *
  * Revision 1.38.2.27  2002/12/10 17:17:07  dgrisby
  * Yet another indirection problem.
  *
@@ -288,23 +291,6 @@ OMNI_USING_NAMESPACE(omni)
 // CORBA::BAD_TYPECODE if a _nil() value is encountered.
 
 
-static inline const TypeCode_base*
-stripIndirections(const TypeCode_base* tc)
-{
-  while (tc->NP_kind() == CORBA::_np_tk_indirect)
-    tc = ((TypeCode_indirect*)tc)->NP_resolved();
-  return tc;
-}
-
-static inline TypeCode_base*
-stripIndirections(TypeCode_base* tc)
-{
-  while (tc->NP_kind() == CORBA::_np_tk_indirect)
-    tc = ((TypeCode_indirect*)tc)->NP_resolved();
-  return tc;
-}
-
-
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// CORBA::TypeCode //////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -325,8 +311,7 @@ CORBA::TypeCode::~TypeCode() {
 CORBA::TCKind
 CORBA::TypeCode::kind() const
 {
-  const TypeCode_base* tc = stripIndirections(ToConstTcBase_Checked(this));
-  return tc->NP_kind();
+  return TypeCode_indirect::strip(ToConstTcBase_Checked(this))->NP_kind();
 }
 
 CORBA::Boolean
@@ -1095,9 +1080,9 @@ TypeCode_base::NP_equal(const TypeCode_base* TCp,
 			const TypeCode_pairlist* tcpl) const
 {
   if (NP_kind() == CORBA::_np_tk_indirect)
-    return stripIndirections(this)->NP_equal(TCp, is_equivalent, tcpl);
+    return TypeCode_indirect::strip(this)->NP_equal(TCp, is_equivalent, tcpl);
 
-  TCp = stripIndirections(TCp);
+  TCp = TypeCode_indirect::strip(TCp);
 
   // Check for trivial pointer-based equality
   if (this == TCp) return 1;
@@ -1845,7 +1830,7 @@ TypeCode_alias::NP_name() const
 TypeCode_base*
 TypeCode_alias::NP_content_type() const
 {
-  return stripIndirections(ToTcBase(pd_content));
+  return ToTcBase(pd_content);
 }
 
 
@@ -1958,7 +1943,7 @@ TypeCode_sequence::TypeCode_sequence()
 }
 
 
-TypeCode_sequence::~TypeCode_sequence() {}
+TypeCode_sequence::~TypeCode_sequence() { }
 
 
 void
@@ -2031,8 +2016,10 @@ TypeCode_sequence::NP_complete_recursive_sequences(TypeCode_base*  tc,
 CORBA::Boolean
 TypeCode_sequence::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
 {
-  if (!pd_complete && !CORBA::is_nil(pd_content))
+  if (!pd_complete && !CORBA::is_nil(pd_content)) {
     pd_complete = ToTcBase(pd_content)->NP_complete_recursive(tc, repoId);
+    TypeCode_collector::markLoopMembers(tc);
+  }
   return pd_complete;
 }
 
@@ -2069,7 +2056,7 @@ TypeCode_sequence::NP_content_type() const
 {
   // Sanity check that recursive sequences have been properly completed
   OMNIORB_ASSERT(!CORBA::is_nil(pd_content));
-  return stripIndirections(ToTcBase(pd_content));
+  return ToTcBase(pd_content);
 }
 
 
@@ -2258,7 +2245,7 @@ TypeCode_array::NP_length() const
 TypeCode_base*
 TypeCode_array::NP_content_type() const
 {
-  return stripIndirections(ToTcBase(pd_content));
+  return ToTcBase(pd_content);
 }
 
 
@@ -2550,7 +2537,7 @@ TypeCode_base*
 TypeCode_struct::NP_member_type(CORBA::ULong index) const
 {
   if( index >= pd_nmembers )  throw CORBA::TypeCode::Bounds();
-  return stripIndirections(ToTcBase(pd_members[index].type));
+  return ToTcBase(pd_members[index].type);
 }
 
 
@@ -2919,7 +2906,7 @@ TypeCode_base*
 TypeCode_except::NP_member_type(CORBA::ULong index) const
 {
   if( index >= pd_nmembers )  throw CORBA::TypeCode::Bounds();
-  return stripIndirections(ToTcBase(pd_members[index].type));
+  return ToTcBase(pd_members[index].type);
 }
 
 
@@ -3625,7 +3612,7 @@ TypeCode_union::NP_member_type(CORBA::ULong index) const
   if (pd_members.length() <= index)
     throw CORBA::TypeCode::Bounds();
 
-  return stripIndirections(ToTcBase(pd_members[index].atype));
+  return ToTcBase(pd_members[index].atype);
 }
 
 
@@ -4677,6 +4664,7 @@ TypeCode_collector::releaseRef(TypeCode_base* tc)
 	  {
 	    // Yes, so are the references to it real or because of the loop?
 	    countInternalRefs(tc);
+
 	    if (checkInternalRefs(tc, 0))
 	      {
 		node_can_be_freed = 1;
@@ -4721,7 +4709,7 @@ TypeCode_collector::markLoopMembers(TypeCode_base* tc)
 // Given a typecode and an initial depth count (usually zero), markloops will
 // follow the TypeCode tree to establish where it contains loops.
 
-inline CORBA::ULong _minimum(CORBA::ULong a, CORBA::ULong b)
+static inline CORBA::ULong _minimum(CORBA::ULong a, CORBA::ULong b)
 {
   return a < b ? a : b;
 }
@@ -4730,7 +4718,11 @@ CORBA::ULong
 TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 {
   // Have we visited this node before?
-  if (!tc->pd_mark)
+  if (tc->pd_mark)
+    {
+      return tc->pd_internal_depth - 1;
+    }
+  else
     {
       // No, so mark that we have and set an initial value for the depth count
       tc->pd_mark = 1;
@@ -4760,10 +4752,17 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 	  for( CORBA::ULong i = 0; i < memberCount; i++ )
 	    {
 	      tc->pd_internal_depth = _minimum(tc->pd_internal_depth,
-					  markLoops(tc->NP_member_type(i),
-						    depth+1));
+					       markLoops(tc->NP_member_type(i),
+							 depth+1));
 	    }
 
+	  break;
+	}
+
+      case CORBA::_np_tk_indirect:
+	{
+	  tc->pd_internal_depth =
+	    markLoops(((TypeCode_indirect*)tc)->NP_resolved(), depth+1);
 	  break;
 	}
 
@@ -4772,8 +4771,9 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
       };
 
       // Now check whether or not we're part of a loop
-      if (tc->pd_internal_depth <= depth)
+      if (tc->pd_internal_depth <= depth) {
 	tc->pd_loop_member = 1;
+      }
       else
 	tc->pd_loop_member = 0;
 
@@ -4824,6 +4824,12 @@ TypeCode_collector::countInternalRefs(TypeCode_base* tc)
 	  break;
 	}
 
+      case CORBA::_np_tk_indirect:
+	{
+	  countInternalRefs(((TypeCode_indirect*)tc)->NP_resolved());
+	  break;
+	}
+
       default:
 	break;
       }
@@ -4856,7 +4862,7 @@ TypeCode_collector::checkInternalRefs(TypeCode_base* tc, CORBA::ULong depth)
 
       // Clear the mark & internal ref count & set the depth value
       tc->pd_mark = 0;
-      tc->pd_internal_depth = depth+1;
+      tc->pd_internal_depth = depth;
       tc->pd_internal_ref_count = 0;
 
       // Now *think* of the children!
@@ -4921,6 +4927,32 @@ TypeCode_collector::checkInternalRefs(TypeCode_base* tc, CORBA::ULong depth)
 		      if (internal_ref_count < tc->pd_ref_count)
 			loop_can_be_freed = 0;
 		    }
+		}
+	    }
+
+	  break;
+	}
+
+      case CORBA::_np_tk_indirect:
+	{
+	  TypeCode_base* child = ((TypeCode_indirect*)tc)->NP_resolved();
+	  CORBA::Boolean child_can_be_freed =
+	    checkInternalRefs(child, depth+1);
+
+	  tc->pd_internal_depth = child->pd_internal_depth;
+
+	  // Is this node part of a loop involving the child node?
+	  if (child->pd_internal_depth <= depth)
+	    {
+	      // Yes, so if the child node can't be freed then neither can we
+	      if (!child_can_be_freed)
+		loop_can_be_freed = 0;
+	      else
+		{
+		  // Child can be freed, so we should check our internal
+		  // references to see if we can be, too.
+		  if (internal_ref_count < tc->pd_ref_count)
+		    loop_can_be_freed = 0;
 		}
 	    }
 
