@@ -39,10 +39,6 @@
 # include <arpa/inet.h>
 # include <netdb.h>
 
-#if defined(__sunos__)
-#  include <sysent.h>
-#endif //__sunos__
-
 #include <unistd.h>
 
 #endif // __WIN32__

@@ -169,13 +169,14 @@ CXXSRCS = $(ORB2_SRCS) $(LOG_SRCS)
 #############################################################################
 
 ifdef SunOS
-ifeq ($(notdir $(CXX)),CC)
-
-DIR_CPPFLAGS += -Kpic
 
 libname = libomniORB$(major_version).so
 soname  = $(libname).$(minor_version)
 lib = $(soname).$(micro_version)
+
+ifeq ($(notdir $(CXX)),CC)
+
+DIR_CPPFLAGS += -Kpic
 
 all:: $(lib)
 
@@ -202,6 +203,35 @@ export:: $(lib)
          )
 
 endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+DIR_CPPFLAGS += -fPIC
+
+all:: $(lib)
+
+$(lib): $(ORB2_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
+       )
+
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+endif
+
 endif
 
 #############################################################################

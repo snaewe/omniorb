@@ -1,3 +1,22 @@
+Wed Sep 22 15:16:55 BST 1999 sll
+================================
+
+- updated for Solaris and IRIX 6.x
+- now built shared library under Solaris with gcc
+
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
+external_merge/config/config.mk
+external_merge/mk/platforms/mips_irix_6.3_n32.mk
+external_merge/mk/platforms/mips_irix_6.4_64.mk
+external_merge/mk/platforms/mips_irix_6.4_n32.mk
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc
+
+
 Wed Sep 22 14:40:39 BST 1999 sll
 ================================
 

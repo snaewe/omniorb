@@ -20,10 +20,10 @@
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
 #  i586_linux_2.0_glibc      x86 Redhat linux 5.1,egcs-980302 or later snapshot
 #  alpha_linux_2.0           alpha Redhat linux 5.1, egcs-1.1 (when released)
-#  powerpc_aix_4.2_egcs      power PC AIX 4.2, egcs-1.0+eh_path
 #  m68k_nextstep_3.3         NextStep 3.3, gcc-2.7.2
 #  mips_sinux_5.43           Reliant UNIX from Siemens-Nixdorf (SNI)
 #  mips_irix_6.2_n32         SGI Irix 6.2 - 32bit mode
+#  mips_irix_6.3_n32         SGI Irix 6.3 - 32bit mode
 #  mips_irix_6.4_n32         SGI Irix 6.4 - 32bit mode
 #  mips_irix_6.4_64          SGI Irix 6.4 - 64bit mode - not yet tested
 #  mips_irix_6.5_n32         SGI Irix 6.5 - 32bit mode
@@ -36,27 +36,27 @@
 #platform = sun4_sosV_5.5
 #platform = sun4_sosV_5.6
 #platform = sun4_sosV_5.7
-#platform = i586_linux_2.0
 #platform = alpha_osf1_3.2
 #platform = alpha_osf1_4.0
 #platform = powerpc_aix_4.2
+#platform = powerpc_aix_4.3
 #platform = hppa_hpux_10.20
 #platform = hppa_hpux_11.00
 #platform = x86_nt_3.5
 #platform = x86_nt_4.0
 #platform = x86_win95
 #platform = alpha_nt_4.0
+#platform = i586_linux_2.0
 #platform = i586_linux_2.0_glibc
 #platform = alpha_linux_2.0
-#platform = powerpc_aix_4.2_egcs
 #platform = m68k_nextstep_3.3
 #platform = mips_sinux_5.43
 #platform = mips_irix_6.2_n32
+#platform = mips_irix_6.3_n32
 #platform = mips_irix_6.4_n32
 #platform = mips_irix_6.4_64
 #platform = mips_irix_6.5_n32
 #platform = mips_irix_6.5_64
-
 #platform = x86_ets
 #platform = x86_sco5
 #platform = x86_uw7

@@ -171,9 +171,6 @@ CXXSRCS = $(DYN2_SRCS)
 #############################################################################
 
 ifdef SunOS
-ifeq ($(notdir $(CXX)),CC)
-
-DIR_CPPFLAGS += -KPIC
 
 libname = libomniORB$(major_version).so
 soname  = $(libname).$(minor_version)
@@ -183,6 +180,10 @@ dynlibname = libomniDynamic$(major_version).so
 dynsoname  = $(dynlibname).$(minor_version)
 dynlib = $(dynsoname).$(micro_version)
 
+
+ifeq ($(notdir $(CXX)),CC)
+
+DIR_CPPFLAGS += -KPIC
 
 all:: $(dynlib)
 
@@ -210,6 +211,37 @@ export:: $(dynlib)
          )
 
 endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+DIR_CPPFLAGS += -fPIC
+
+all:: $(dynlib)
+
+$(dynlib): $(DYN2_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-h,$(dynsoname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
+         ../../orbcore/sharedlib/$(lib); \
+       )
+
+
+clean::
+	$(RM) $(dynlib)
+
+export:: $(dynlib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(dynsoname); \
+          ln -s $(dynlib) $(dynsoname); \
+          $(RM) $(dynlibname); \
+          ln -s $(dynsoname) $(dynlibname); \
+         )
+
+endif
+
 endif
 
 #############################################################################
