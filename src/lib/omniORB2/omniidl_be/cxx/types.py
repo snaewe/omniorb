@@ -735,13 +735,16 @@ class Type:
 
         if d_T.objref() or d_T.typecode():
             return "CORBA::release(" + thing + ");"
-        if d_T.string():   return "CORBA::String_free(" + thing + ");"
+        if d_T.string():   return "CORBA::string_free(" + thing + ");"
 
         if d_T.struct() or d_T.union() or d_T.exception() or \
            d_T.sequence() or d_T.any():
-            return "delete " + thing + ";"
+            if d_T.variable():
+                return "delete " + thing + ";"
+            return "" # stored by value
 
-        if d_T.enum() or d_T.void() or (d_T.kind() in basic_map.keys()): return
+        if d_T.enum() or d_T.void() or (d_T.kind() in basic_map.keys()):
+            return ""
 
         raise "Don't know how to free type, kind = " + str(d_T.kind())
 
@@ -769,7 +772,9 @@ class Type:
         if d_T.struct() or d_T.union() or d_T.exception() or d_T.sequence():
             name = id.Name(self.type().decl().scopedName()).\
                    unambiguous(environment)
-            return dest + " = new " + name + "(" + src + ");"
+            if d_T.variable():
+                return dest + " = new " + name + "(" + src + ");"
+            return dest + " = " + src + ";"
         
         if d_T.enum() or (d_T.kind() in basic_map.keys()):
             return dest + " = " + src + ";"
