@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/11/20 11:59:43  dpg1
+  API to configure code sets.
+
   Revision 1.1.2.2  2000/11/15 19:16:06  sll
   Changed default native wchar from UCS-4 to UTF-16.
 
@@ -41,6 +44,7 @@
 #include <omniORB4/omniInterceptors.h>
 #include <initialiser.h>
 #include <giopStreamImpl.h>
+#include <exceptiondefs.h>
 #include <stdio.h>
 
 omniCodeSet::NCS_C* cdrStream::ncs_c = 0;
@@ -433,6 +437,89 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
 
 
 /////////////////////////////////////////////////////////////////////////////
+//            omniORB API functions                                        //
+/////////////////////////////////////////////////////////////////////////////
+
+void
+omniORB::nativeCharCodeSet(const char* name)
+{
+  if (cdrStream::ncs_c) OMNIORB_THROW(BAD_INV_ORDER, 0, CORBA::COMPLETED_NO);
+
+  omniCodeSet::NCS_C* ncs = omniCodeSet::getNCS_C(name);
+  if (!ncs) OMNIORB_THROW(NO_RESOURCES, 0, CORBA::COMPLETED_NO);
+
+  cdrStream::ncs_c = ncs;
+}
+
+void
+omniORB::nativeWCharCodeSet(const char* name)
+{
+  if (cdrStream::ncs_w) OMNIORB_THROW(BAD_INV_ORDER, 0, CORBA::COMPLETED_NO);
+
+  omniCodeSet::NCS_W* ncs = omniCodeSet::getNCS_W(name);
+  if (!ncs) OMNIORB_THROW(NO_RESOURCES, 0, CORBA::COMPLETED_NO);
+
+  cdrStream::ncs_w = ncs;
+}
+
+void
+omniORB::anyCharCodeSet(const char* name)
+{
+  if (cdrMemoryStream::default_tcs_c)
+    OMNIORB_THROW(BAD_INV_ORDER, 0, CORBA::COMPLETED_NO);
+
+  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+  omniCodeSet::TCS_C* tcs = omniCodeSet::getTCS_C(name, ver);
+  if (!tcs) OMNIORB_THROW(NO_RESOURCES, 0, CORBA::COMPLETED_NO);
+
+  cdrMemoryStream::default_tcs_c = tcs;
+}
+
+void
+omniORB::anyWCharCodeSet(const char* name)
+{
+  if (cdrMemoryStream::default_tcs_w)
+    OMNIORB_THROW(BAD_INV_ORDER, 0, CORBA::COMPLETED_NO);
+
+  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+  omniCodeSet::TCS_W* tcs = omniCodeSet::getTCS_W(name, ver);
+  if (!tcs) OMNIORB_THROW(NO_RESOURCES, 0, CORBA::COMPLETED_NO);
+
+  cdrMemoryStream::default_tcs_w = tcs;
+}
+
+const char*
+omniORB::nativeCharCodeSet()
+{
+  if (cdrStream::ncs_c) return cdrStream::ncs_c->name();
+  return 0;
+}
+
+const char*
+omniORB::nativeWCharCodeSet()
+{
+  if (cdrStream::ncs_w) return cdrStream::ncs_w->name();
+  return 0;
+}
+
+const char*
+omniORB::anyCharCodeSet()
+{
+  if (cdrMemoryStream::default_tcs_c)
+    return cdrMemoryStream::default_tcs_c->name();
+  return 0;
+}
+
+const char*
+omniORB::anyWCharCodeSet()
+{
+  if (cdrMemoryStream::default_tcs_w)
+    return cdrMemoryStream::default_tcs_w->name();
+  return 0;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -440,13 +527,21 @@ class omni_cdrStream_initialiser : public omniInitialiser {
 public:
   void attach() {
 
-    cdrStream::ncs_c = omniCodeSet::getNCS_C(omniCodeSet::ID_8859_1);
-    cdrStream::ncs_w = omniCodeSet::getNCS_W(omniCodeSet::ID_UTF_16);
+    if (!cdrStream::ncs_c)
+      cdrStream::ncs_c = omniCodeSet::getNCS_C(omniCodeSet::ID_8859_1);
+
+    if (!cdrStream::ncs_w)
+      cdrStream::ncs_w = omniCodeSet::getNCS_W(omniCodeSet::ID_UTF_16);
 
     GIOP::Version ver = giopStreamImpl::maxVersion()->version();
 
-    cdrMemoryStream::default_tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
-    cdrMemoryStream::default_tcs_w = omniCodeSet::getTCS_W(omniCodeSet::ID_UTF_16,ver);
+    if (!cdrMemoryStream::default_tcs_c)
+      cdrMemoryStream::default_tcs_c =
+	omniCodeSet::getTCS_C(cdrStream::ncs_c->id(), ver);
+
+    if (!cdrMemoryStream::default_tcs_w)
+      cdrMemoryStream::default_tcs_w =
+	omniCodeSet::getTCS_W(cdrStream::ncs_w->id(), ver);
 
     // Create the tagged component for all IORs created by this ORB.
     initialise_my_code_set();

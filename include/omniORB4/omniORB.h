@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2000/11/20 11:59:43  dpg1
+  API to configure code sets.
+
   Revision 1.2.2.3  2000/11/03 18:58:47  sll
   Unbounded sequence of octet got a new type name.
 
@@ -763,6 +766,41 @@ _CORBA_MODULE_BEG
   //   Calling this function before ORB_init() will result in a system  //
   //   exception.
   _CORBA_MODULE_FN omniInterceptors* getInterceptors();
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // nativeCharCodeSet()                                                //
+  //   set or get the native code set for char and string               //
+  //                                                                    //
+  // nativeWCharCodeSet()                                               //
+  //   set or get the native code set for wchar and wstring             //
+  //                                                                    //
+  // anyCharCodeSet()                                                   //
+  //   set or get the preferred code set for char data inside anys      //
+  //                                                                    //
+  // anyWCharCodeSet()                                                  //
+  //   set or get the preferred code set for wchar data inside anys     //
+  //                                                                    //
+  // Code sets may only be set once, before ORB_init(). Attempts to set //
+  // them more than once, or after ORB_init(), throw BAD_INV_ORDER.     //
+  // If the requested code set is not available, throw NO_RESOURCES.    //
+  //                                                                    //
+  // Set functions are NOT thread-safe.                                 //
+  //                                                                    //
+  // Command line equivalents are -ORBnativeCharCodeSet, etc.           //
+  //                                                                    //
+  // Get functions return null if no code set is configured.            //
+  //                                                                    //
+  _CORBA_MODULE_FN void nativeCharCodeSet (const char* name);
+  _CORBA_MODULE_FN void nativeWCharCodeSet(const char* name);
+  _CORBA_MODULE_FN void anyCharCodeSet    (const char* name);
+  _CORBA_MODULE_FN void anyWCharCodeSet   (const char* name);
+
+  _CORBA_MODULE_FN const char* nativeCharCodeSet();
+  _CORBA_MODULE_FN const char* nativeWCharCodeSet();
+  _CORBA_MODULE_FN const char* anyCharCodeSet();
+  _CORBA_MODULE_FN const char* anyWCharCodeSet();
   ////////////////////////////////////////////////////////////////////////
 
   // Internal configuration variables. Do not use!

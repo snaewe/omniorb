@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.8  2000/11/20 11:59:44  dpg1
+  API to configure code sets.
+
   Revision 1.33.2.7  2000/11/15 17:19:07  sll
   Added initialiser for cdrStream.
 
@@ -217,6 +220,7 @@
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
 #include <omniORB4/omniURI.h>
+#include <giopStreamImpl.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -342,7 +346,6 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
   }
 
   // URI initialiser must be called before args are parsed
-  omni_omniIOR_initialiser_.attach();
   omni_uri_initialiser_.attach();
 
   if( !parse_ORB_args(argc,argv,orb_identifier) ) {
@@ -367,6 +370,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_ropeFactory_initialiser_.attach();
     omni_giopStreamImpl_initialiser_.attach();
     omni_interceptor_initialiser_.attach();
+    omni_omniIOR_initialiser_.attach();
     omni_ior_initialiser_.attach();
     omni_codeSet_initialiser_.attach();
     omni_cdrStream_initialiser_.attach();
@@ -630,6 +634,7 @@ omniOrbORB::actual_shutdown()
   omni_codeSet_initialiser_.detach();
   omni_cdrStream_initialiser_.detach();
   omni_ior_initialiser_.detach();
+  omni_omniIOR_initialiser_.attach();
   omni_interceptor_initialiser_.detach();
   omni_giopStreamImpl_initialiser_.detach();
   omni_ropeFactory_initialiser_.detach();
@@ -638,7 +643,6 @@ omniOrbORB::actual_shutdown()
   omni_corbaOrb_initialiser_.detach();
   omni_omniInternal_initialiser_.detach();
   omni_uri_initialiser_.detach();
-  omni_omniIOR_initialiser_.attach();
 
   proxyObjectFactory::shutdown();
 
@@ -1165,52 +1169,6 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	continue;
       }
 
-      // -ORBhelp
-      if( strcmp(argv[idx],"-ORBhelp") == 0 ) {
-	omniORB::logger l;
-	l <<
-	  "Valid -ORB<options> are:\n"
-	  "\n"
-	  "  Standard options:\n"
-	  "    -ORBid omniORB4\n"
-	  "    -ORBInitRef <ObjectID>=<ObjectURI>\n"
-	  "    -ORBDefaultInitRef <Default URI>\n"
-	  "\n"
-	  "  omniORB specific options:\n"
-	  "    -ORBtraceLevel <n>\n"
-	  "    -ORBtraceInvocations\n"
-	  "    -ORBstrictIIOP <0|1>\n"
-	  "    -ORBtcAliasExpand <0|1>\n"
-	  "    -ORBgiopMaxMsgSize <n bytes>\n"
-	  "    -ORBobjectTableSize <n entries>\n"
-	  "    -ORBserverName <name>\n"
-	  "    -ORBInitialHost <name>\n"
-	  "    -ORBInitialPort <1-65535>\n"
-	  "    -ORBno_bootstrap_agent\n"
-	  "    -ORBdiiThrowsSysExceptions <0|1>\n"
-	  "    -ORBabortOnInternalError <0|1>\n"
-	  "    -ORBverifyObjectExistsAndType <0|1>\n"
-	  "    -ORBinConScanPeriod <n seconds>\n"
-	  "    -ORBoutConScanPeriod <n seconds>\n"
-	  "    -ORBclientCallTimeOutPeriod <n seconds>\n"
-	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
-	  "    -ORBscanGranularity <n seconds>\n"
-	  "    -ORBlcdMode\n"
-	  "    -ORBpoa_iiop_port <port no.>\n"
-	  "    -ORBpoa_iiop_name_port <hostname[:port no.]>\n";
-	move_args(argc,argv,idx,1);
-	continue;
-      }
-
-
-      // -ORBlcdMode
-      if( strcmp(argv[idx],"-ORBlcdMode") == 0 ) {
-	omniORB::enableLcdMode();
-	move_args(argc,argv,idx,1);
-	continue;
-      }
-
-
       // -ORBpoa_iiop_port  -- I think this wants a better name.
       if( strcmp(argv[idx],"-ORBpoa_iiop_port") == 0 ) {
 	if( (idx+1) >= argc ) {
@@ -1305,6 +1263,112 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	move_args(argc,argv,idx,2);
 	continue;
       }
+
+      // -ORBnativeCharCodeSet
+      if (strcmp(argv[idx],"-ORBnativeCharCodeSet") == 0) {
+	if (idx +1 >= argc) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBnativeCharCodeSet parameter.");
+	}
+	cdrStream::ncs_c = omniCodeSet::getNCS_C(argv[idx+1]);
+	if (!cdrStream::ncs_c) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: unknown char code set.");
+	  return 0;
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBnativeWCharCodeSet
+      if (strcmp(argv[idx],"-ORBnativeWCharCodeSet") == 0) {
+	if (idx +1 >= argc) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBnativeWCharCodeSet parameter.");
+	}
+	cdrStream::ncs_w = omniCodeSet::getNCS_W(argv[idx+1]);
+	if (!cdrStream::ncs_w) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: unknown wchar code set.");
+	  return 0;
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBanyCharCodeSet
+      if (strcmp(argv[idx],"-ORBanyCharCodeSet") == 0) {
+	if (idx +1 >= argc) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBanyCharCodeSet parameter.");
+	}
+	GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+	cdrMemoryStream::default_tcs_c = omniCodeSet::getTCS_C(argv[idx+1],
+							       ver);
+	if (!cdrMemoryStream::default_tcs_c) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: unknown char code set.");
+	  return 0;
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBanyWCharCodeSet
+      if (strcmp(argv[idx],"-ORBanyWCharCodeSet") == 0) {
+	if (idx +1 >= argc) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBanyWCharCodeSet parameter.");
+	}
+	GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+	cdrMemoryStream::default_tcs_w = omniCodeSet::getTCS_W(argv[idx+1],
+							       ver);
+	if (!cdrMemoryStream::default_tcs_w) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: unknown wchar code set.");
+	  return 0;
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBhelp
+      if( strcmp(argv[idx],"-ORBhelp") == 0 ) {
+	omniORB::logger l;
+	l <<
+	  "Valid -ORB<options> are:\n"
+	  "\n"
+	  "  Standard options:\n"
+	  "    -ORBid omniORB4\n"
+	  "    -ORBInitRef <ObjectID>=<ObjectURI>\n"
+	  "    -ORBDefaultInitRef <Default URI>\n"
+	  "\n"
+	  "  omniORB specific options:\n"
+	  "    -ORBtraceLevel <n>\n"
+	  "    -ORBtraceInvocations\n"
+	  "    -ORBstrictIIOP <0|1>\n"
+	  "    -ORBtcAliasExpand <0|1>\n"
+	  "    -ORBgiopMaxMsgSize <n bytes>\n"
+	  "    -ORBobjectTableSize <n entries>\n"
+	  "    -ORBserverName <name>\n"
+	  "    -ORBInitialHost <name>\n"
+	  "    -ORBInitialPort <1-65535>\n"
+	  "    -ORBno_bootstrap_agent\n"
+	  "    -ORBdiiThrowsSysExceptions <0|1>\n"
+	  "    -ORBabortOnInternalError <0|1>\n"
+	  "    -ORBverifyObjectExistsAndType <0|1>\n"
+	  "    -ORBinConScanPeriod <n seconds>\n"
+	  "    -ORBoutConScanPeriod <n seconds>\n"
+	  "    -ORBclientCallTimeOutPeriod <n seconds>\n"
+	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
+	  "    -ORBscanGranularity <n seconds>\n"
+	  "    -ORBlcdMode\n"
+	  "    -ORBpoa_iiop_port <port no.>\n"
+	  "    -ORBpoa_iiop_name_port <hostname[:port no.]>\n"
+	  "    -ORBnativeCharCodeSet <code set>\n"
+	  "    -ORBnativeWCharCodeSet <code set>\n"
+	  "    -ORBanyCharCodeSet <code set>\n"
+	  "    -ORBanyWCharCodeSet <code set>\n";
+	move_args(argc,argv,idx,1);
+	continue;
+      }
+
 
       // Reach here only if the argument in this form: -ORBxxxxx
       // is not recognised.
