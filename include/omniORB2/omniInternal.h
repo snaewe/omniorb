@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10  1997/08/26 15:25:26  sll
+  Removed initFile.h include.
+
   Revision 1.9  1997/05/06 16:09:13  sll
   Public release.
 
@@ -327,6 +330,5 @@ private:
 #include <omniORB2/rope.h>
 #include <omniORB2/bufferedStream.h>
 #include <omniORB2/giopDriver.h>
-#include <omniORB2/initFile.h>
 
 #endif // __OMNIINTERNAL_H__
