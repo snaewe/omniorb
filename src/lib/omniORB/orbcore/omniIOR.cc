@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/05/01 17:39:09  sll
+  Reading uninitialised variable in ~IORInfo().
+
   Revision 1.1.2.5  2001/04/18 18:18:07  sll
   Big checkin with the brand new internal APIs.
 
@@ -349,7 +352,7 @@ omniIOR::IORInfo::~IORInfo() {
     delete (*i);
     (*i) = 0;
   }
-  for (CORBA::ULong index; index < pd_extra_info.length(); index++) {
+  for (CORBA::ULong index=0; index < pd_extra_info.length(); index++) {
     delete pd_extra_info[index];
     pd_extra_info[index] = 0;
   }
