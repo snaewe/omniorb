@@ -1,5 +1,5 @@
 //				Package : omnithread
-// omnithread/os2.h    		Created : 6/95 tjr
+// omnithread/os2_impl.h	Created : 6/95 tjr
 //                              Ported  : 6/01 DLS
 //
 //    Copyright (C) 1995, 1996, 1997 Olivetti & Oracle Research Laboratory
@@ -27,8 +27,8 @@
 // using gcc/pgcc/emx.  This was shamelessly stolen and translated from
 // the NT (and a little of the posix) implementation.
 
-#ifndef __omnithread_os2_h_
-#define __omnithread_os2_h_
+#ifndef __omnithread_os2_impl_h_
+#define __omnithread_os2_impl_h_
 
 #include <os2.h>
 

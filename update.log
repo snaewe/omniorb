@@ -1,3 +1,13 @@
+Fri Jun 29 15:14:28 BST 2001 dpg1
+=================================
+
+- Rename os2.h to os2_impl.h to avoid conflict with system header.
+
+include/omnithread.h
+include/omnithread/os2.h        -- DELETED
+include/omnithread/os2_impl.h   -- NEW
+
+
 Tue Jun 26 10:45:03 BST 2001 dpg1
 =================================
 

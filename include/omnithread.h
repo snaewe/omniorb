@@ -158,7 +158,7 @@ class omni_thread;
 #include <omnithread/posix.h>
 
 #elif defined(__os2__)
-#include <omnithread/os2.h>
+#include <omnithread/os2_impl.h>
 
 #else
 #error "No implementation header file"
