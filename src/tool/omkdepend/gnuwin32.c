@@ -51,6 +51,14 @@ char *TranslateFileNameD2U(char *in, int offset)
   int i;
   char *out = NULL;
 
+  /* make a copy, make sure that all \ are translated back to / */
+  char *tmp = malloc(strlen(in)+1);
+  strcpy(tmp,in);
+  for (i = 0; i < strlen(tmp); i++) {
+    if (tmp[i] == '\\') tmp[i] = '/';
+  }
+  in = tmp;
+
   for (i = 0; i < nmounts; i++) {
     char *upath = unix[index[i]];
     char *dpath = dos[index[i]];
@@ -85,6 +93,7 @@ char *TranslateFileNameD2U(char *in, int offset)
     strcat(newout,out+2);
     out = newout;
   }
+  free(tmp);
   return out;
 }
 
