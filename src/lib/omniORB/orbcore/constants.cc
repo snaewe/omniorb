@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15.2.3  2000/11/03 19:10:24  sll
+  Use OMNIORB_FOR_EACH_SYS_EXCEPTION to define repository IDs.
+
   Revision 1.15.2.2  2000/09/27 17:51:58  sll
   New constants defined in the GIOP and IIOP modules.
 
@@ -275,134 +278,22 @@ const CORBA::ULong
       GIOP_Basetypes::SysExceptRepoID::maxIDLen = 
            omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen;
 
-const CORBA::Char *
-      GIOP_Basetypes::SysExceptRepoID::version = ((CORBA::Char *)":1.0");
+const char *
+      GIOP_Basetypes::SysExceptRepoID::version = (":1.0");
 
 const CORBA::ULong 
       GIOP_Basetypes::SysExceptRepoID::versionLen = 
-             strlen((const char *)GIOP_Basetypes::
-                                     SysExceptRepoID::version);
+             strlen(GIOP_Basetypes::SysExceptRepoID::version);
 
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::UNKNOWN ((CORBA::Char *)
-						"IDL:omg.org/CORBA/UNKNOWN");
 
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::BAD_PARAM ((CORBA::Char *)
-					  "IDL:omg.org/CORBA/BAD_PARAM");
+#define OMNIORB_DEFINE_SYS_EXCEPTION_REPOID(name) \
+const GIOP_Basetypes::_SysExceptRepoID \
+      GIOP_Basetypes::SysExceptRepoID::name ("IDL:omg.org/CORBA/"#name);
 
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::NO_MEMORY ((CORBA::Char *)
-					  "IDL:omg.org/CORBA/NO_MEMORY");
 
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::IMP_LIMIT ((CORBA::Char *)
-					  "IDL:omg.org/CORBA/IMP_LIMIT");
+OMNIORB_FOR_EACH_SYS_EXCEPTION(OMNIORB_DEFINE_SYS_EXCEPTION_REPOID)
 
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::COMM_FAILURE ((CORBA::Char *)
-					     "IDL:omg.org/CORBA/COMM_FAILURE");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::INV_OBJREF ((CORBA::Char *)
-					   "IDL:omg.org/CORBA/INV_OBJREF");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::OBJECT_NOT_EXIST ((CORBA::Char *)
-					 "IDL:omg.org/CORBA/OBJECT_NOT_EXIST");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::NO_PERMISSION ((CORBA::Char *)
-				      "IDL:omg.org/CORBA/NO_PERMISSION");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::INTERNAL ((CORBA::Char *)
-						 "IDL:omg.org/CORBA/INTERNAL");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::MARSHAL ((CORBA::Char *)
-						"IDL:omg.org/CORBA/MARSHAL");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::INITIALIZE ((CORBA::Char *)
-					   "IDL:omg.org/CORBA/INITIALIZE");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::NO_IMPLEMENT ((CORBA::Char *)
-					     "IDL:omg.org/CORBA/NO_IMPLEMENT");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::BAD_TYPECODE ((CORBA::Char *)
-					     "IDL:omg.org/CORBA/BAD_TYPECODE");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::BAD_OPERATION ((CORBA::Char *)
-				      "IDL:omg.org/CORBA/BAD_OPERATION");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::NO_RESOURCES ((CORBA::Char *)
-					     "IDL:omg.org/CORBA/NO_RESOURCES");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::NO_RESPONSE ((CORBA::Char *)
-					    "IDL:omg.org/CORBA/NO_RESPONSE");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::PERSIST_STORE ((CORBA::Char *)
-				      "IDL:omg.org/CORBA/PERSIST_STORE");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::BAD_INV_ORDER ((CORBA::Char *)
-				      "IDL:omg.org/CORBA/BAD_INV_ORDER");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::TRANSIENT ((CORBA::Char *)
-					  "IDL:omg.org/CORBA/TRANSIENT");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::FREE_MEM ((CORBA::Char *)
-						 "IDL:omg.org/CORBA/FREE_MEM");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::INV_IDENT ((CORBA::Char *)
-					  "IDL:omg.org/CORBA/INV_IDENT");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::INV_FLAG ((CORBA::Char *)
-						 "IDL:omg.org/CORBA/INV_FLAG");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::INTF_REPOS ((CORBA::Char *)
-					   "IDL:omg.org/CORBA/INTF_REPOS");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::BAD_CONTEXT ((CORBA::Char *)
-					    "IDL:omg.org/CORBA/BAD_CONTEXT");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::OBJ_ADAPTER ((CORBA::Char *)
-					    "IDL:omg.org/CORBA/OBJ_ADAPTER");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::DATA_CONVERSION ((CORBA::Char *)
-					"IDL:omg.org/CORBA/DATA_CONVERSION");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::TRANSACTION_REQUIRED ((CORBA::Char *)
-				     "IDL:omg.org/CORBA/TRANSACTION_REQUIRED");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::TRANSACTION_ROLLEDBACK ((CORBA::Char *)
-			       "IDL:omg.org/CORBA/TRANSACTION_ROLLEDBACK");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::INVALID_TRANSACTION ((CORBA::Char *)
-				    "IDL:omg.org/CORBA/INVALID_TRANSACTION");
-
-const GIOP_Basetypes::_SysExceptRepoID 
-      GIOP_Basetypes::SysExceptRepoID::WRONG_TRANSACTION ((CORBA::Char *)
-				  "IDL:omg.org/CORBA/WRONG_TRANSACTION");
-
+#undef OMNIORB_DEFINE_SYS_EXCEPTION_REPOID
 
 //////////////////////////////////////////////////////////////////////
 // Each pseudo object type must be assigned a magic number.
