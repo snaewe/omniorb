@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/12 17:17:45  djs
+# Creates output files rather than using stdout
+# Utility functions useful for skeleton generation added
+#
 # Revision 1.2  1999/11/10 20:19:30  djs
 # Option to emulate scope bug in old backend
 # Array struct element fix
@@ -83,6 +87,10 @@ def opers_fragment_suffix():
 # suffix to be added to basename to get the filename of the operators fragment file
 def poa_fragment_suffix():
     return "_poa"
+
+# prefix to be added to avoid occasional name clashes
+def name_prefix():
+    return "_0RL"
     
 # list of all files #included in the IDL
 def include_file_names():

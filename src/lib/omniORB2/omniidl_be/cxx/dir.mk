@@ -1,6 +1,6 @@
 PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl/be/cxx
 
-SUBDIRS = header
+SUBDIRS = header skel dynskel
 
 all::
 	@$(MakeSubdirs)

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/11/12 17:17:46  djs
+# Creates output files rather than using stdout
+# Utility functions useful for skeleton generation added
+#
 # Revision 1.6  1999/11/10 20:19:31  djs
 # Option to emulate scope bug in old backend
 # Array struct element fix
@@ -329,7 +333,9 @@ def typeDims(type):
 
 def guardName(scopedName):
     def escapeNonAlphanumChars(text):
-        return re.sub(r"\W","_",text)
+        # escape all escapes
+        text = re.sub(r"_", "__", text)
+        return re.sub(r"\W", "_", text)
     scopedName = map(escapeNonAlphanumChars, scopedName)
 
     # all but the identifier have _m appended (signifies a module?)
@@ -360,19 +366,30 @@ def operationArgumentType(type, environment, virtualFn = 0):
     
     param_type = environment.principalID(type)
     isVariable = isVariableType(type)
+    type_dims = typeDims(type)
+    is_array = type_dims != []
+    
     deref_type = deref(type)
 
-#    print "[[[ type = " + repr(type) + " scope = " + repr(scope) + "]]]"
-#    print "[[[ param_type = "+ repr(param_type) + "]]]"
-#    print "[[[ isVariable = " + repr(isVariable) + "]]]"
-
+    if is_array and isVariable:
+        return [ param_type + "_slice*",
+                 "const " + param_type,
+                 param_type + "_out",
+                 param_type ]
+    if is_array and not(isVariable):
+        return [ param_type + "_slice*",
+                 "const " + param_type,
+                 param_type,
+                 param_type ]        
+        
     if virtualFn:
-        if isinstance(type, idltype.String):
+        if isinstance(deref_type, idltype.String):
             return [ "char *",
                      "const char* ",
                      "CORBA::String_out ",
-                     "char*& " ]            
-        elif type.kind() == idltype.tk_objref:
+                     "char*& " ]
+        elif isObjRef(deref_type):
+            param_type = environment.principalID(deref_type)
             return [ param_type + "_ptr",
                      param_type + "_ptr",
                      "_CORBA_ObjRef_OUT_arg<_objref_" + param_type + "," + \
@@ -381,7 +398,8 @@ def operationArgumentType(type, environment, virtualFn = 0):
         else:
             pass
             # same as the other kind
-    if isinstance(type, idltype.String):
+            
+    if isinstance(deref_type, idltype.String):
         return [ "char *",
                  "const char* ",
                  "CORBA::String_out ",
@@ -401,6 +419,7 @@ def operationArgumentType(type, environment, virtualFn = 0):
                  "_CORBA_ObjRef_INOUT_arg<_objref_" + param_type + "," + \
                  param_type + "_Helper >" ,
                  param_type + "_Helper >" ]                 
+                 #param_type + "_ptr&" ]
     elif isVariable:
  #       param_type =principalID(deref_type, scope)
         return [ param_type + "*",
@@ -604,10 +623,163 @@ def valueString(type, value, environment):
 # ------------------------------------------------------------------
 
 
-def dimsToString(dims):
+def dimsToString(dims, prefix = ""):
+    new_dims = []
+    for x in dims:
+        new_dims.append("[" + prefix + repr(x) + "]")
     append = lambda x,y: x + y
-    return reduce(append,
-                  map(lambda x: "["+repr(x)+"]", dims), "")
+    return reduce(append, new_dims, "")
+
+
+# ------------------------------------------------------------------
+
+def sizeCalculation(environment, type, decl, sizevar, argname):
+    #o2be_operation::produceSizeCalculation
+    assert isinstance(type, idltype.Type)
+    assert isinstance(decl, idlast.Declarator)
+
+    deref_type = deref(type)
+
+    dims = decl.sizes()
+    type_dims = typeDims(type)
+    full_dims = dims + type_dims
+
+    anonymous_array = dims      != []
+    is_array        = full_dims != []
+    alias_array     = type_dims != []
+
+    num_elements = reduce(lambda x,y:x*y, full_dims, 1)
+
+    isVariable = isVariableType(type)
+
+    string = util.StringStream()
+
+    if not(is_array):
+        if typeSizeAlignMap.has_key(type.kind()):
+            size = typeSizeAlignMap[type.kind()]
+            
+            if size == 1:
+                string.out("""\
+@sizevar@ += 1""", sizevar = sizevar)
+                return str(string)
+
+            string.out("""\
+@sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_@n@) + @n@""",
+                       sizevar = sizevar, n = str(size))
+            return str(string)
+
+        # FIXME:
+        if 0:
+            if isString(deref_type):
+                string.out("""\
+@sizevar@ = omni::align_to(@sizevar, omni::ALIGN_4) + 4;
+@sizevar@ += ((const char*) @argname@) + 1 : 1""",
+                           sizevar = sizevar, argname = argname)
+                return str(string)
+
+        # FIXME:
+        # this corresponds to case tObjref in the old BE
+        # what is the difference between tObjrefMember and tObjref?
+        if 0:
+            if isObjRef(deref_type):
+                name = environment.principalID(deref_type)
+                string.out("""\
+@sizevar@ = @name@_Helper::NP_alignedSize(@argname@, @sizevar@)""",
+                           sizevar = sizevar, name = name, argname = argname)
+                return str(string)
+
+        # typecodes may be an exception here
+        string.out("""\
+@sizevar@ = @argname@._NP_alignedSize(@sizevar@)""",
+                   sizevar = sizevar, argname = argname)
+        return str(string)
+
+    def begin_loop(string = string, full_dims = full_dims):
+        string.out("{")
+        string.inc_indent()
+        index = 0
+        indexing_string = ""
+        for dim in full_dims:
+            string.out("""\
+for (CORBA::ULong _i@n@ = 0;_i < @dim@;_i@n@++) {""",
+                       n = str(index), dim = str(dim))
+            string.inc_indent()
+            indexing_string = indexing_string + "[_i" + str(index) + "]"
+            index = index + 1
+
+        return indexing_string
+
+    def end_loop(string = string, full_dims = full_dims):
+        for dim in full_dims:
+            string.dec_indent()
+            string.out("}")
+            
+        string.dec_indent()
+        string.out("}")
+        
+
+    # thing is an array
+    if not(isVariable):
+        if typeSizeAlignMap.has_key(type.kind()):
+            size = typeSizeAlignMap[type.kind()]
+
+            if size == 1:
+                string.out("""\
+@sizevar@ += @num_elements@""", num_elements = num_elements)
+                return str(string)
+
+            string.out("""\
+@sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_@n@);
+@sizevar@ += @num_elements@ * @n@""",
+                       sizevar = sizevar,
+                       n = size,
+                       num_elements = num_elements)
+            return str(string)
+
+        # must be an array of fixed structs or unions
+        indexing_string = begin_loop()
+
+        # do the actual calculation
+        string.out("""\
+  @sizevar@ = @argname@@indexing_string@._NP_alignedSize(@sizevar@);""",
+                   sizevar = sizevar, argname = argname,
+                   indexing_string = indexing_string)
+
+        end_loop()
+
+        return str(string)
+
+
+    # thing is an array of variable sized elements
+    indexing_string = begin_loop()
+
+    if isString(deref_type):
+        string.out("""\
+@sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_4);
+@sizevar@ += 4 + (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);""",
+                   sizevar = sizevar, argname = argname,
+                   indexing_string = indexing_string)
+        
+
+    elif isObjRef(deref_type):
+        name = environment.principalID(deref_type)
+        string.out("""\
+@sizevar@ = @name@_Helper::NP_alignedSize(@argname@@indexing_string@._ptr,@sizevar@);""",
+                   sizevar = sizevar, name = name, argname = argname,
+                   indexing_string = indexing_string)
+
+    else:
+        # typecodes may be an exception here
+        string.out("""\
+@sizevar@ = @argname@@indexing_string@._NP_alignedSize(@sizevar@);""",
+                   sizevar = sizevar, argname = argname,
+                   indexing_string = indexing_string)
+               
+
+    end_loop()
+
+    return str(string)
+    
 
 
 # ------------------------------------------------------------------

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/11/12 17:17:45  djs
+# Creates output files rather than using stdout
+# Utility functions useful for skeleton generation added
+#
 # Revision 1.4  1999/11/08 19:28:56  djs
 # Rewrite of sequence template code
 # Fixed lots of typedef problems
@@ -46,6 +50,7 @@
 # -----------------------------
 # Output generation functions
 from omniidl.be.cxx import header
+from omniidl.be.cxx import skel
 
 import re
 
@@ -54,20 +59,18 @@ cpp_args = ["-D__OMNIIDL_CXX__"]
 def run(tree, args):
     """Entrypoint to the C++ backend"""
 
-#    print "C++ Backend called with tree = " + repr(tree)
-#    print "                   and  args = " + repr(args)
-#    print "Better do something!"
-
-#    print "I know, I'll generate the header."
-
 
     filename = tree.file()
-    regex = re.compile(r"\.idl")
-    if regex.search(filename):
-        chopped = regex.sub("", filename)
-        config.setBasename(chopped)
+    regex = re.compile(r"(.*/|)(.+)\.idl")
+    match = regex.search(filename)
+    if match:
+        config.setBasename(match.group(2))
+    else:
+        raise "Unable to work out basename of input file"
             
     header.run(tree)
+    
+    skel.run(tree)
 
     #stream = util.Stream(sys.stdout, 2)
 
