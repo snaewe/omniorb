@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.8  1997/12/09 17:37:15  sll
+  Updated to use the new rope and strand interface.
+  Now unmarshal context properly.
+
   Revision 1.7  1997/08/21 21:56:40  sll
   Added system exception TRANSACTION_REQUIRED, TRANSACTION_ROLLEDBACK,
   INVALID_TRANSACTION, WRONG_TRANSACTION.
@@ -64,7 +68,7 @@ GIOP_C::~GIOP_C()
     return;
   }
   if (pd_state != GIOP_C::Idle) {
-    setStrandDying();
+    setStrandIsDying();
   }
   pd_state = GIOP_C::Zombie;
   return;
@@ -127,7 +131,7 @@ GIOP_C::InitialiseRequest(const void          *objkey,
   // Marshall the GIOP Message Header
   WrMessageSize(msgsize);
   put_char_array((CORBA::Char *)MessageHeader::Request,
-		 sizeof(MessageHeader::Request));
+		 sizeof(MessageHeader::Request),1,!oneway);
   
   operator>>= ((CORBA::ULong)bodysize,*this);
 
@@ -171,7 +175,7 @@ GIOP_C::ReceiveReply()
        "GIOP_C::ReceiveReply() reported wrong request message size.");
 
   pd_state = GIOP_C::WaitingForReply;
-  flush();
+  flush(1);
 
  if (!pd_response_expected) {
     pd_state = GIOP_C::ReplyIsBeingProcessed;
@@ -181,7 +185,7 @@ GIOP_C::ReceiveReply()
   RdMessageSize(0,omni::myByteOrder);
 
   MessageHeader::HeaderType hdr;
-  get_char_array((CORBA::Char *)hdr,sizeof(MessageHeader::HeaderType));
+  get_char_array((CORBA::Char *)hdr,sizeof(MessageHeader::HeaderType),1);
 
   pd_state = GIOP_C::ReplyIsBeingProcessed;
 
@@ -194,7 +198,7 @@ GIOP_C::ReceiveReply()
       hdr[7] != MessageHeader::Reply[7])
     {
       // Wrong header
-      setStrandDying();
+      setStrandIsDying();
       throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
     }
 
@@ -209,7 +213,7 @@ GIOP_C::ReceiveReply()
 
   if (msgsize > MaxMessageSize()) {
     // message size has exceeded the limit
-    setStrandDying();
+    setStrandIsDying();
     throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
   }
 
@@ -217,15 +221,21 @@ GIOP_C::ReceiveReply()
 
   // XXX Do not support any service context yet, 
   // XXX For the moment, skips the service context
+  CORBA::ULong svcccount;
+  CORBA::ULong svcctag;
   CORBA::ULong svcctxtsize;
-  svcctxtsize <<= *this;
-  skip(svcctxtsize);
+  svcccount <<= *this;
+  while (svcccount-- > 0) {
+    svcctag <<= *this;
+    svcctxtsize <<= *this;
+    skip(svcctxtsize);
+  };
 
   CORBA::ULong req_id;
   req_id <<= *this;
   if (req_id != pd_request_id) {
     // Not the expected reply, skip the entire message
-    skip(RdMessageUnRead());
+    skip(RdMessageUnRead(),1);
     pd_state = GIOP_C::RequestInProgress;
     return this->ReceiveReply();
   }
@@ -246,7 +256,7 @@ GIOP_C::ReceiveReply()
   default:
     // Should never receive anything other that the above
     // Same treatment as wrong header
-    setStrandDying();
+    setStrandIsDying();
     throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
     break;
   }
@@ -261,7 +271,7 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip_msg)
       "GIOP_C::RequestCompleted() entered with the wrong state.");
   if (skip_msg)
     {
-      skip(RdMessageUnRead());
+      skip(RdMessageUnRead(),1);
     }
   else
     {
@@ -288,15 +298,17 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip_msg)
 	    cerr << "GIOP_C::RequestCompleted: garbage left at the end of message." << endl;
 	  }
 	  if (!omniORB::strictIIOP) {
-	    skip(RdMessageUnRead());
+	    skip(RdMessageUnRead(),1);
 	  }
 	  else {
-	    setStrandDying();
+	    setStrandIsDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
 	  }
 	}
+      else {
+	skip(0,1);
+      }
     }
-
   pd_state = GIOP_C::Idle;
   return;
 }
@@ -321,7 +333,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
 
   WrMessageSize(msgsize);
   put_char_array((CORBA::Char *)MessageHeader::LocateRequest,
-		 sizeof(MessageHeader::LocateRequest));
+		 sizeof(MessageHeader::LocateRequest),1,1);
   operator>>= ((CORBA::ULong)bodysize,*this);
 
   operator>>= (pd_request_id,*this);
@@ -330,13 +342,13 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
   put_char_array((CORBA::Char *) objkey,objkeysize);
 
   pd_state = GIOP_C::WaitingForReply;
-  flush();
+  flush(1);
 
   do {
     RdMessageSize(0,omni::myByteOrder);
 
     MessageHeader::HeaderType hdr;
-    get_char_array((CORBA::Char *)hdr,sizeof(MessageHeader::HeaderType));
+    get_char_array((CORBA::Char *)hdr,sizeof(MessageHeader::HeaderType),1);
 
     pd_state = GIOP_C::ReplyIsBeingProcessed;
 
@@ -349,7 +361,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
 	hdr[7] != MessageHeader::LocateReply[7])
       {
 	// Wrong header
-	setStrandDying();
+	setStrandIsDying();
 	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
       }
 
@@ -364,7 +376,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
 
     if (msgsize > MaxMessageSize()) {
       // message size has exceeded the limit
-      setStrandDying();
+      setStrandIsDying();
       throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
     }
 
@@ -374,7 +386,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
     req_id <<= *this;
     if (req_id != pd_request_id) {
       // Not the expected reply, skip the entire message
-      skip(RdMessageUnRead());
+      skip(RdMessageUnRead(),1);
       pd_state = GIOP_C::RequestInProgress;
       continue;
     }
@@ -391,7 +403,7 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
   default:
     // Should never receive anything other that the above
     // Same treatment as wrong header
-    setStrandDying();
+    setStrandIsDying();
     throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
     break;
   }
@@ -406,10 +418,10 @@ GIOP_C::UnMarshallSystemException()
 
 #define CHECK_AND_IF_MATCH_THROW_SYSTEM_EXCEPTION(_ex) \
   if (strncmp((const char *)repoid,(const char *) \
-	      GIOP_Basetypes::SysExceptRepoID::##_ex##.id, \
-	      GIOP_Basetypes::SysExceptRepoID::##_ex##.len)==0) \
+	      GIOP_Basetypes::SysExceptRepoID:: _ex .id, \
+	      GIOP_Basetypes::SysExceptRepoID:: _ex .len)==0) \
     { \
-      CORBA::##_ex ex(m,(CORBA::CompletionStatus)s); \
+      CORBA:: _ex ex(m,(CORBA::CompletionStatus)s); \
       throw ex; \
     }
 
