@@ -53,7 +53,7 @@ IMPORT_CPPFLAGS += -D__hppa__ -D__hpux__ -D__OSVERSION__=11
 AR = ar cq
 RANLIB = ranlib
 MKDIRHIER = mkdir -p
-INSTALL         = $(TOP)/bin/scripts/install-sh -c
+INSTALL         = $(BASE_OMNI_TREE)/bin/scripts/install-sh -c
 INSTLIBFLAGS    = -m 0755    # shared library must have executable flag set.
 
 CPP = /lib/cpp
@@ -65,7 +65,7 @@ CPP = /lib/cpp
 #        HP aC++ B3913DB
 #
 CXX = aCC
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus
+CXXMAKEDEPEND += -D__cplusplus
 CXXDEBUGFLAGS = -O
 CXXOPTIONS   += -w +inst_v +DAportable \
                        -D_THREAD_SAFE \
@@ -75,7 +75,6 @@ CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -Wl,+s
 
 CC                = cc
-CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend
 CDEBUGFLAGS       = -O
 COPTIONS	  = -w -Aa -D_HPUX_SOURCE +DAportable
 CLINKOPTIONS      = -Wl,+s
@@ -97,7 +96,7 @@ endef
 # To use gcc uncomment the following lines:                                #
 ############################################################################
 #CXX = g++
-#CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+#CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 #CXXDEBUGFLAGS = 
 # -D_CMA_NOWRAPPERS_ is needed otherwise linking omniNames results in
 #                    /opt/aCC/lbin/ld: Unsatisfied symbols:
@@ -116,7 +115,7 @@ endef
 #			 -show-directory=yes -show-pc=yes -show-pc-offset=yes
 #
 #CC                = gcc
-#CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend __GNUC__
+#CMAKEDEPEND       +=  __GNUC__
 #CDEBUGFLAGS       = -O
 #COPTIONS          = $(CDEBUGFLAGS) $(COPTIONS) \
 #              $(patsubst %,-Wl$(comma)-rpath$(comma)%,$(IMPORT_LIBRARY_DIRS))
@@ -161,3 +160,23 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
+
+
+#
+# Shared Library support.     
+#
+# Platform specific customerisation.
+# everything else is default from unix.mk
+#
+SHAREDLIB_SUFFIX   = sl
+
+ifeq ($(notdir $(CXX)),aCC)
+
+BuildSharedLibrary = 1
+
+SHAREDLIB_CPPFLAGS += +Z
+
+SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname
+# May need  $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS))
+
+endif

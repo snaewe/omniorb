@@ -35,12 +35,13 @@ IMPORT_CPPFLAGS += -D__x86__ -D__sunos__ -D__OSVERSION__=5
 AR = ar cq
 
 MKDIRHIER = mkdirhier
+INSTALL           = $(BASE_OMNI_TREE)/bin/scripts/install-sh -c 
 
 CPP = /usr/ccs/lib/cpp
 
 CXX = CC
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__SUNPRO_CC -D__cplusplus
-CXXDEBUGFLAGS = -O2 -fsimple
+CXXMAKEDEPEND += -D__SUNPRO_CC -D__cplusplus
+CXXDEBUGFLAGS = -O2
 CXXMTFLAG     = -mt
 
 CXXLINK		= $(CXX)
@@ -56,7 +57,7 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 #CPP = gcc
 #
 #CXX = g++
-#CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+#CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 #CXXDEBUGFLAGS = 
 #CXXOPTIONS    =  -fhandle-exceptions -Wall -Wno-unused
 #CXXMTFLAG     =
@@ -69,7 +70,7 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 # record the pathname of the shared libraries in the executable.
 
 CC                = gcc
-CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND       += -D__GNUC__
 CDEBUGFLAGS       = -O
 COPTIONS	  = -fpcc-struct-return
 
@@ -121,3 +122,29 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
+
+#
+# Shared Library support.     
+#
+# Platform specific customerisation.
+# everything else is default from unix.mk
+#
+ifeq ($(notdir $(CXX)),CC)
+
+BuildSharedLibrary = 1       # Enable
+
+SHAREDLIB_CPPFLAGS = -KPIC
+
+SharedLibraryPlatformLinkFlagsTemplate = -G -h $$soname
+
+endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+BuildSharedLibrary = 1       # Enable
+
+SHAREDLIB_CPPFLAGS = -fPIC
+
+SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-h,$$soname
+
+endif

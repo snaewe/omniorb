@@ -36,14 +36,14 @@ AR = ar cq
 RANLIB = true
 
 MKDIRHIER = mkdirhier
-INSTALL   = $(TOP)/bin/scripts/install-sh -c
+INSTALL   = $(BASE_OMNI_TREE)/bin/scripts/install-sh -c
 
 CPP = 'CC -E'
 
 # The cc/CC version 7.2 (mips)
 #
 CXX = CC
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__SGI_CC -D__cplusplus
+CXXMAKEDEPEND += -D__SGI_CC -D__cplusplus
 CXXDEBUGFLAGS = 
 CXXWOFFOPTIONS =  -woff 3303,1110,1182
 CXXOPTIONS     =  -n32 -float -ansi -LANG:exceptions=ON $(CXXWOFFOPTIONS)
@@ -53,7 +53,6 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 CC                = cc
 COPTIONS          = -n32
 CLINKOPTIONS      = $(COPTIONS)
-CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend
 CLINK             = $(CC)
 
 #
@@ -112,3 +111,28 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
+
+#
+# Shared Library support.     
+#
+# Platform specific customerisation.
+# everything else is default from unix.mk
+#
+ifeq ($(notdir $(CXX)),CC)
+
+BuildSharedLibrary = 1       # Enable
+
+SHAREDLIB_CPPFLAGS = -KPIC
+
+define MakeCXXSharedLibrary
+ $(ParseNameSpec); \
+ soname=$(SharedLibrarySoNameTemplate); \
+ libname=$(SharedLibraryLibNameTemplate); \
+ set -x; \
+ $(RM) $@; \
+ $(LINK.cc) -KPIC -shared -Wl,-h,$$libname -Wl,-set_version,$$soname -o $@ \
+ $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) \
+ $$extralibs $(LDLIBS); \
+endef
+
+endif

@@ -36,7 +36,7 @@ AR = ar cq
 CPP = /usr/bin/cpp
 
 CXX = /usr/local/egcs/bin/g++
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = -O2 
 
 CXXLINK		= $(CXX)
@@ -48,7 +48,7 @@ EgcsMajorVersion = 1
 EgcsMinorVersion = 1        # This is actually a post-1.0 egcs snapshot.
 
 CC           = /usr/local/egcs/bin/gcc
-CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND  += -D__GNUC__
 CDEBUGFLAGS  = -O
 
 CLINK        = $(CC)
@@ -96,3 +96,12 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
+
+#
+# Shared Library support.     
+#
+BuildSharedLibrary = 1       # Enable
+SHAREDLIB_CPPFLAGS = -fPIC   # compiler flag
+#
+# everything else is default from unix.mk
+

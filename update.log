@@ -1,3 +1,12 @@
+Tue Aug 15 15:56:04 BST 2000 sll
+================================
+
+Merged make rules overhaul from omni3_develop 
+
+external_merge/mk/*
+mk/*
+
+
 Mon Jul 17 11:05:49 BST 2000 sll
 ================================
 

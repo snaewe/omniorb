@@ -39,7 +39,7 @@ AR = ar cq
 CPP = CC
 
 CXX = CC
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus
+CXXMAKEDEPEND += -D__cplusplus
 CXXDEBUGFLAGS = -g
 
 CXXLINK		= $(CXX)
@@ -49,7 +49,7 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) \
 
 
 CC           = cc
-CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND  += -D__GNUC__
 CDEBUGFLAGS  = -g
 
 CLINK        = $(CC)

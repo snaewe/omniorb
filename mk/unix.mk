@@ -22,28 +22,19 @@ INSTEXEFLAGS	= -m 0755
 CP		= cp
 MV		= mv -f
 CPP		= /lib/cpp
+OMKDEPEND	= $(BASE_OMNI_TREE)/$(BINDIR)/omkdepend
+RMDIRHIER	= rm -rf
 
-
-#
-# Replacements for implicit rules
-#
-
-%.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-
-%.o: %.cc
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
-
+CXXMAKEDEPEND   = $(OMKDEPEND)
+CMAKEDEPEND     = $(OMKDEPEND)
 
 #
 # General rules for cleaning.
 #
 
 define CleanRule
-$(RM) *.o *.a *.class
+$(RM) *.o *.a 
 endef
-
-# XXX VeryCleanRule should delete Java stubs too.
 
 define VeryCleanRule
 $(RM) *.d
@@ -54,7 +45,8 @@ endef
 #
 # Patterns for various file types
 #
-
+LibNoDebugPattern = lib%.a
+LibDebugPattern = lib%.a
 LibPattern = lib%.a
 LibSuffixPattern = %.a
 LibSearchPattern = -l%
@@ -144,20 +136,19 @@ omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
 lib_depend := $(patsubst %,$(LibPattern),omniDynamic3)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
-OMNIORB_IDL_ONLY = omniidl -bcxx
+
+OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/omniidl -bcxx
 OMNIORB_IDL_ANY_FLAGS = -Wba
 OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB3__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
+OMNIORB_IDL_OUTPUTDIR_PATTERN = -C%
 
 OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
-		$(patsubst %,$(LibSearchPattern),omniDynamic3) \
-		$(OMNITHREAD_LIB) $(SOCKET_LIB)
-OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
-		$(OMNITHREAD_LIB) $(SOCKET_LIB)
+		$(patsubst %,$(LibSearchPattern),omniDynamic3)
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3)
 
-OMNIORB_LIB_NODYN_DEPEND = $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND)
-OMNIORB_LIB_DEPEND = $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND) \
-		$(omniDynamic_lib_depend)
+OMNIORB_LIB_NODYN_DEPEND = $(omniORB_lib_depend)
+OMNIORB_LIB_DEPEND = $(omniORB_lib_depend) $(omniDynamic_lib_depend)
 
 OMNIORB_STATIC_STUB_OBJS = \
 	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.o)
@@ -195,6 +186,14 @@ OMNIORB_LIB_NODYN += $($(omniORBGatekeeperImplementation)_LIB)
 OMNIORB_LIB_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
 OMNIORB_LIB_NODYN_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
 
+# thread libraries required by omniORB. Make sure this is the last in
+# the list of omniORB related libraries
+
+OMNIORB_LIB += $(OMNITHREAD_LIB) $(SOCKET_LIB)
+OMNIORB_LIB_NODYN += $(OMNITHREAD_LIB) $(SOCKET_LIB)
+OMNIORB_LIB_DEPEND += $(OMNITHREAD_LIB_DEPEND)
+OMNIORB_LIB_NODYN_DEPEND += $(OMNITHREAD_LIB_DEPEND)
+
 
 # LifeCycle stuff
 
@@ -229,3 +228,102 @@ define TclScriptExecutable
  chmod a+x $@; \
 )
 endef
+
+
+##########################################################################
+#
+# Shared library support stuff
+#
+# Default setup. Work for most platforms. For those exceptions, override
+# the rules in their platform files.
+#
+SHAREDLIB_SUFFIX = so
+
+SharedLibraryFullNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
+SharedLibrarySoNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3
+SharedLibraryLibNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX)
+
+SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-soname,$$soname
+
+define SharedLibraryFullName
+fn() { \
+if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi ; \
+echo $(SharedLibraryFullNameTemplate); \
+}; fn
+endef
+
+define ParseNameSpec
+set $$namespec ; \
+if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi
+endef
+
+# MakeCXXSharedLibrary- Build shared library
+#  Expect shell variable:
+#  namespec = <library name> <major ver. no.> <minor ver. no.> <micro ver. no>
+#  extralibs = <libraries to add to the link line>
+#
+#  e.g. namespec="COS 3 0 0" --> shared library libCOS3.so.0.0
+#       extralibs="$(OMNIORB_LIB)"
+#
+define MakeCXXSharedLibrary
+ $(ParseNameSpec); \
+ soname=$(SharedLibrarySoNameTemplate); \
+ set -x; \
+ $(RM) $@; \
+ $(CXX) $(SharedLibraryPlatformLinkFlagsTemplate) -o $@ \
+ $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs;
+endef
+
+# ExportSharedLibrary- export sharedlibrary
+#  Expect shell variable:
+#  namespec = <library name> <major ver. no.> <minor ver. no.> <micro ver. no>
+#  e.g. namespec = "COS 3 0 0" --> shared library libCOS3.so.0.0
+#
+define ExportSharedLibrary
+ $(ExportLibrary); \
+ $(ParseNameSpec); \
+ soname=$(SharedLibrarySoNameTemplate); \
+ libname=$(SharedLibraryLibNameTemplate); \
+ set -x; \
+ cd $(EXPORT_TREE)/$(LIBDIR); \
+ $(RM) $$soname; \
+ ln -s $(<F) $$soname; \
+ $(RM) $$libname; \
+ ln -s $$soname $$libname;
+endef
+
+define CleanSharedLibrary
+( set -x; \
+$(RM) $${dir:-.}/*.$(SHAREDLIB_SUFFIX).* )
+endef
+
+
+# Pattern rules to build  objects files for static and shared library.
+# The convention is to build the static library in the subdirectoy "static" and
+# the shared library in the subdirectory "shared".
+# The pattern rules below ensured that the right compiler flags are used
+# to compile the source for the library.
+
+static/%.o: %.cc
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+shared/%.o: %.cc
+	$(CXX) -c $(SHAREDLIB_CPPFLAGS) $(CXXFLAGS)  -o $@ $<
+
+static/%.o: %.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+shared/%.o: %.c
+	$(CC) -c $(SHAREDLIB_CPPFLAGS) $(CFLAGS)  -o $@ $<
+
+#
+# Replacements for implicit rules
+#
+
+%.o: %.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+%.o: %.cc
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+
