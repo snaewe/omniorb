@@ -1,0 +1,221 @@
+/* include/omniORB4/acconfig.h.in.  Generated from configure.ac by autoheader.  */
+
+/* define if gettimeofday() takes a timezone argument */
+#undef GETTIMEOFDAY_TIMEZONE
+
+/* define if bool is a built-in type */
+#undef HAVE_BOOL
+
+/* define if the compiler can catch exceptions by base class */
+#undef HAVE_CATCH_BY_BASE
+
+/* define if the compiler supports const_cast<> */
+#undef HAVE_CONST_CAST
+
+/* define if the compiler supports dynamic_cast<> */
+#undef HAVE_DYNAMIC_CAST
+
+/* Define to 1 if you have the <errno.h> header file. */
+#undef HAVE_ERRNO_H
+
+/* define if the compiler supports exceptions */
+#undef HAVE_EXCEPTIONS
+
+/* Define to 1 if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+
+/* Define to 1 if you have the `gethostname' function. */
+#undef HAVE_GETHOSTNAME
+
+/* Define to 1 if you have the `getopt' function. */
+#undef HAVE_GETOPT
+
+/* Define to 1 if you have the `getpid' function. */
+#undef HAVE_GETPID
+
+/* Define to 1 if you have the `gettimeofday' function. */
+#undef HAVE_GETTIMEOFDAY
+
+/* Define to 1 if you have the `insinff' function. */
+#undef HAVE_INSINFF
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `isinf' function. */
+#undef HAVE_ISINF
+
+/* Define to 1 if you have the `isinfl' function. */
+#undef HAVE_ISINFL
+
+/* Define if you have the `IsNANorINF' function */
+#undef HAVE_ISNANORINF
+
+/* define if the compiler supports member constants */
+#undef HAVE_MEMBER_CONSTANTS
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* define if the compiler implements namespaces */
+#undef HAVE_NAMESPACES
+
+/* Define to 1 if you have the `nanosleep' function. */
+#undef HAVE_NANOSLEEP
+
+/* Define to 1 if you have the <nan.h> header file. */
+#undef HAVE_NAN_H
+
+/* Define to 1 if you have the <netdb.h> header file. */
+#undef HAVE_NETDB_H
+
+/* Define to 1 if you have the `sigaction' function. */
+#undef HAVE_SIGACTION
+
+/* Define to 1 if you have the <signal.h> header file. */
+#undef HAVE_SIGNAL_H
+
+/* Define to 1 if you have the `sigvec' function. */
+#undef HAVE_SIGVEC
+
+/* define if SIG_IGN is available */
+#undef HAVE_SIG_IGN
+
+/* Define to 1 if you have the `snprintf' function. */
+#undef HAVE_SNPRINTF
+
+/* define if the compiler supports ISO C++ standard library */
+#undef HAVE_STD
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the `strcasecmp' function. */
+#undef HAVE_STRCASECMP
+
+/* Define to 1 if you have the `strdup' function. */
+#undef HAVE_STRDUP
+
+/* Define to 1 if you have the `strerror' function. */
+#undef HAVE_STRERROR
+
+/* Define to 1 if you have the `stricmp' function. */
+#undef HAVE_STRICMP
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strncasecmp' function. */
+#undef HAVE_STRNCASECMP
+
+/* Define to 1 if you have the `strtoul' function. */
+#undef HAVE_STRTOUL
+
+/* Define to 1 if you have the `strtoull' function. */
+#undef HAVE_STRTOULL
+
+/* Define to 1 if you have the `strtouq' function. */
+#undef HAVE_STRTOUQ
+
+/* Define to 1 if you have the <sys/if.h> header file. */
+#undef HAVE_SYS_IF_H
+
+/* Define to 1 if you have the <sys/ioctl.h> header file. */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define to 1 if you have the <sys/param.h> header file. */
+#undef HAVE_SYS_PARAM_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the `uname' function. */
+#undef HAVE_UNAME
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `vsnprintf' function. */
+#undef HAVE_VSNPRINTF
+
+/* define if you want mutexes to be traced */
+#undef OMNIORB_ENABLE_LOCK_TRACES
+
+/* define if long is the same type as int */
+#undef OMNI_LONG_IS_INT
+
+/* define if base constructors have to be fully qualified */
+#undef OMNI_REQUIRES_FQ_BASE_CTOR
+
+/* Define to the type of getsockname's third argument */
+#undef OMNI_SOCKNAME_SIZE_T
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* The size of a `char', as computed by sizeof. */
+#undef SIZEOF_CHAR
+
+/* The size of a `double', as computed by sizeof. */
+#undef SIZEOF_DOUBLE
+
+/* The size of a `float', as computed by sizeof. */
+#undef SIZEOF_FLOAT
+
+/* The size of a `int', as computed by sizeof. */
+#undef SIZEOF_INT
+
+/* The size of a `long', as computed by sizeof. */
+#undef SIZEOF_LONG
+
+/* The size of a `long double', as computed by sizeof. */
+#undef SIZEOF_LONG_DOUBLE
+
+/* The size of a `long long', as computed by sizeof. */
+#undef SIZEOF_LONG_LONG
+
+/* The size of a `short', as computed by sizeof. */
+#undef SIZEOF_SHORT
+
+/* The size of a `unsigned char', as computed by sizeof. */
+#undef SIZEOF_UNSIGNED_CHAR
+
+/* The size of a `void*', as computed by sizeof. */
+#undef SIZEOF_VOIDP
+
+/* The size of a `wchar_t', as computed by sizeof. */
+#undef SIZEOF_WCHAR_T
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+#undef TIME_WITH_SYS_TIME
+
+/* Define to 1 if your processor stores words with the most significant byte
+   first (like Motorola and SPARC, unlike Intel and VAX). */
+#undef WORDS_BIGENDIAN

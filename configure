@@ -1312,7 +1312,7 @@ host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 
 
 
-ac_config_headers="$ac_config_headers include/omniconfig.h"
+ac_config_headers="$ac_config_headers include/omniORB4/acconfig.h"
 
 
 
@@ -9385,7 +9385,7 @@ ac_config_files="$ac_config_files src/tool/omniidl/python/scripts/omniidl"
 ac_config_files="$ac_config_files src/appl/GNUmakefile src/appl/omniMapper/GNUmakefile src/appl/omniNames/GNUmakefile src/appl/utils/catior/GNUmakefile src/appl/utils/convertior/GNUmakefile src/appl/utils/GNUmakefile src/appl/utils/genior/GNUmakefile src/appl/utils/nameclt/GNUmakefile src/GNUmakefile src/examples/anyExample/GNUmakefile src/examples/boa/GNUmakefile src/examples/call_back/GNUmakefile src/examples/dii/GNUmakefile src/examples/GNUmakefile src/examples/dsi/GNUmakefile src/examples/echo/GNUmakefile src/examples/partcl/GNUmakefile src/examples/poa/GNUmakefile src/examples/poa/implicit_activation/GNUmakefile src/examples/poa/persistent_objref/GNUmakefile src/examples/poa/servant_manager/GNUmakefile src/examples/poa/threading/GNUmakefile src/examples/ssl_echo/GNUmakefile src/examples/thread/GNUmakefile src/lib/GNUmakefile src/lib/omniORB/codesets/GNUmakefile src/lib/omniORB/GNUmakefile src/lib/omniORB/dynamic/GNUmakefile src/lib/omniORB/omniidl_be/cxx/GNUmakefile src/lib/omniORB/omniidl_be/cxx/dynskel/GNUmakefile src/lib/omniORB/omniidl_be/cxx/header/GNUmakefile src/lib/omniORB/omniidl_be/cxx/impl/GNUmakefile src/lib/omniORB/omniidl_be/cxx/skel/GNUmakefile src/lib/omniORB/omniidl_be/GNUmakefile src/lib/omniORB/orbcore/GNUmakefile src/lib/omniORB/orbcore/ssl/GNUmakefile src/lib/omnithread/GNUmakefile src/services/GNUmakefile src/services/mklib/GNUmakefile src/services/mklib/mkBOAlib/GNUmakefile src/tool/GNUmakefile src/tool/omkdepend/GNUmakefile src/tool/omniidl/cxx/cccp/GNUmakefile src/tool/omniidl/cxx/GNUmakefile src/tool/omniidl/GNUmakefile src/tool/omniidl/python/GNUmakefile src/tool/omniidl/python/omniidl_be/GNUmakefile src/tool/omniidl/python/omniidl/GNUmakefile src/tool/omniidl/python/scripts/GNUmakefile"
 
 
-ac_config_files="$ac_config_files include/GNUmakefile include/omnithread/GNUmakefile include/omniORB4/GNUmakefile include/omniORB4/internal/GNUmakefile"
+ac_config_files="$ac_config_files include/GNUmakefile include/omniconfig.h include/omnithread/GNUmakefile include/omniORB4/GNUmakefile include/omniORB4/internal/GNUmakefile"
 
 
 ac_config_files="$ac_config_files idl/GNUmakefile idl/COS/GNUmakefile"
@@ -9916,12 +9916,13 @@ do
   "src/tool/omniidl/python/omniidl/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES src/tool/omniidl/python/omniidl/GNUmakefile" ;;
   "src/tool/omniidl/python/scripts/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES src/tool/omniidl/python/scripts/GNUmakefile" ;;
   "include/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/GNUmakefile" ;;
+  "include/omniconfig.h" ) CONFIG_FILES="$CONFIG_FILES include/omniconfig.h" ;;
   "include/omnithread/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/omnithread/GNUmakefile" ;;
   "include/omniORB4/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/omniORB4/GNUmakefile" ;;
   "include/omniORB4/internal/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/omniORB4/internal/GNUmakefile" ;;
   "idl/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES idl/GNUmakefile" ;;
   "idl/COS/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES idl/COS/GNUmakefile" ;;
-  "include/omniconfig.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/omniconfig.h" ;;
+  "include/omniORB4/acconfig.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/omniORB4/acconfig.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;

@@ -6,7 +6,7 @@ INSTALL=@INSTALL@
 
 INSTALLDIR = $(INSTALLINCDIR)/omniORB4
 
-HEADERS = BiDirPolicy.h CORBA.h CORBA_Any.h CORBA_Any_vartypes.h	    \
+HEADERS = acconfig.h BiDirPolicy.h CORBA.h CORBA_Any.h CORBA_Any_vartypes.h \
           CORBA_BOA.h CORBA_Context.h CORBA_Current.h CORBA_DomainManager.h \
           CORBA_Environment.h CORBA_Exception.h CORBA_ExceptionList.h	    \
           CORBA_Fixed.h CORBA_NamedValue.h CORBA_ORB.h CORBA_Object.h	    \

@@ -8,7 +8,7 @@ AC_CONFIG_AUX_DIR(bin/scripts)
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
-AC_CONFIG_HEADERS(include/omniconfig.h)
+AC_CONFIG_HEADERS(include/omniORB4/acconfig.h)
 
 
 dnl ** Programs
@@ -227,6 +227,7 @@ AC_CONFIG_FILES(src/appl/GNUmakefile
                )
 
 AC_CONFIG_FILES(include/GNUmakefile
+		include/omniconfig.h
                 include/omnithread/GNUmakefile
                 include/omniORB4/GNUmakefile
                 include/omniORB4/internal/GNUmakefile)
