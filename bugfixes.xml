@@ -8,6 +8,19 @@
 
 <buglist version="3.0.3">
 
+<bug id="7" date="Tue May 29 12:14:54 BST 2001" user="sll">
+
+  <summary>System clock change causes the scavenger thread to consume lots of CPU cycles</summary>
+  <reported>Peter Rönnquist</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-05/0195.html"/>
+  <text>
+  Scavenger now get the real time after each scan. This is to cope with
+  the system clock set backward by a large amount. Seems to happen a lot to
+  some system..
+  </text>
+</bug>
+
 <bug id="6" date="Fri Apr 27 11:58:25 BST 2001" user="dpg1">
 
   <summary>Incorrect namespaces for MSVC++ constant
