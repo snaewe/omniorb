@@ -122,10 +122,14 @@ imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
 dynimps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
          $(OMNIORB_LIB))
 else
+ifdef AIX
+imps := $(OMNIORB_LIB)
+dynimps := $(OMNIORB_LIB)
+else
 imps := $(OMNIORB_LIB_NODYN)
 dynimps := $(OMNIORB_LIB)
 endif
-
+endif
 
 mkshared::
 	@(dir=shared; $(CreateDir))
