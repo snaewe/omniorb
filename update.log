@@ -1,3 +1,10 @@
+Wed Jan 21 12:30:56 GMT 1998 sll
+================================
+
+- corrected typo that affects only hpux
+
+src/lib/omniORB2/libcWrapper.cc
+
 Wed Jan 21 12:09:24 GMT 1998 sll
 ================================
 
