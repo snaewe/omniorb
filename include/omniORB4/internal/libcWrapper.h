@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2003/07/25 16:00:51  dgrisby
+  Avoid linker warnings on Windows.
+
   Revision 1.1.4.8  2003/01/06 11:11:55  dgrisby
   New AddrInfo instead of gethostbyname.
 
@@ -151,10 +154,14 @@ public:
 OMNI_NAMESPACE_END(omni)
 
 #if defined(_MSC_VER)
-#  if defined(_OMNIORB_LIBRARY)
+#  if defined(_OMNIORB_DYNAMIC_LIBRARY)
 #    define _NT_DLL_ATTR __declspec(dllexport)
-#  else
+#  elif !defined(_WINSTATIC)
 #    define _NT_DLL_ATTR __declspec(dllimport)
+#  elif defined(_OMNIORB_LIBRARY)
+#    define _NT_DLL_ATTR
+#  else
+#    define _NT_DLL_ATTR
 #  endif
 #else
 #  define _NT_DLL_ATTR
