@@ -5,7 +5,9 @@
 
 #Shared library only available on Unix at the moment:
 ifdef UnixArchitecture
+ifndef LinuxArchitecture
 SUBDIRS = sharedlib
+endif
 endif
 
 ifdef UnixArchitecture
@@ -14,7 +16,7 @@ ifdef UnixArchitecture
 CONFIG_DEFAULT_LOCATION = \"/project/omni/var/omniORB.cfg\"
 NETLIBSRCS = tcpSocket_UNIX.cc
 NETLIBOBJS = tcpSocket_UNIX.o
-DIR_CPPFLAGS = -DUnixArchitecture 
+DIR_CPPFLAGS = -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
 endif
 
@@ -54,30 +56,33 @@ ORB2_SRCS = constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
             corbaString.cc \
           exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
           libcWrapper.cc mbufferedStream.cc nbufferedStream.cc $(NAMINGSRC) \
-          object.cc objectRef.cc orb.cc strand.cc $(NETLIBSRCS)
+          object.cc objectKey.cc objectRef.cc orb.cc strand.cc $(NETLIBSRCS)
 
 ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             corbaString.o \
             exception.o giopClient.o giopServer.o initFile.o ior.o \
             libcWrapper.o mbufferedStream.o nbufferedStream.o $(NAMINGOBJ) \
-            object.o objectRef.o orb.o strand.o $(NETLIBOBJS)
+            object.o objectRef.o objectKey.o orb.o strand.o $(NETLIBOBJS)
 
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -I./..
+DIR_CPPFLAGS += -D__OMNIORB__
 
 ifeq ($(CXX),g++)
 CXXDEBUGFLAGS = -g
-DIR_CPPFLAGS += -D__OMNIORB__ -fhandle-exceptions -Wall -Wno-unused 
-else 
-DIR_CPPFLAGS += -D__OMNIORB__
+DIR_CPPFLAGS += -fhandle-exceptions -Wall -Wno-unused
 endif
 
 ifeq ($(CXX),CC)
-CXXDEBUGFLAGS = -fast
+CXXDEBUGFLAGS = -g
+endif
+
+ifeq ($(CXX),/usr/bin/cxx)
+CXXDEBUGFLAGS = -g
 endif
 
 ifeq ($(platform),arm_atmos_4.0/atb)
-CXXDEBUGFLAGS = -g
+CXXDEBUGFLAGS =
 DIR_CPPFLAGS +=  -I/project/atmos/release4.0/atb/ip \
 	-D__cplusplus -fhandle-exceptions -Wall -Wno-unused
 endif
