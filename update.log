@@ -1,3 +1,11 @@
+Wed Mar  5 15:47:06 GMT 2003 dgrisby
+====================================
+
+- Missed an AIX change.
+
+src/tool/omniidl/cxx/dir.mk
+
+
 Wed Mar  5 15:20:36 GMT 2003 dgrisby
 ====================================
 
