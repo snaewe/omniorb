@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.4  2004/02/16 10:10:30  dgrisby
+# More valuetype, including value boxes. C++ mapping updates.
+#
 # Revision 1.20.2.3  2003/10/23 11:25:54  dgrisby
 # More valuetype support.
 #
@@ -189,15 +192,15 @@ def marshall(to, environment, type, decl, argname, to_where,
     if dims != []:
         n_elements = reduce(lambda x,y:x*y, dims, 1)
         array_marshal_helpers = {
-          idltype.tk_octet:   ("omni::ALIGN_1",1),
-          idltype.tk_boolean: ("omni::ALIGN_1",1),
-          idltype.tk_short:   ("omni::ALIGN_2",2),
-          idltype.tk_long:    ("omni::ALIGN_4",4),
-          idltype.tk_ushort:  ("omni::ALIGN_2",2),
-          idltype.tk_ulong:   ("omni::ALIGN_4",4),
-          idltype.tk_float:   ("omni::ALIGN_4",4),
-          idltype.tk_double:  ("omni::ALIGN_8",8),
-          idltype.tk_longlong: ("omni::ALIGN_8",8),
+          idltype.tk_octet:     ("omni::ALIGN_1",1),
+          idltype.tk_boolean:   ("omni::ALIGN_1",1),
+          idltype.tk_short:     ("omni::ALIGN_2",2),
+          idltype.tk_long:      ("omni::ALIGN_4",4),
+          idltype.tk_ushort:    ("omni::ALIGN_2",2),
+          idltype.tk_ulong:     ("omni::ALIGN_4",4),
+          idltype.tk_float:     ("omni::ALIGN_4",4),
+          idltype.tk_double:    ("omni::ALIGN_8",8),
+          idltype.tk_longlong:  ("omni::ALIGN_8",8),
           idltype.tk_ulonglong: ("omni::ALIGN_8",8)
         }
         if array_marshal_helpers.has_key(d_type.type().kind()):

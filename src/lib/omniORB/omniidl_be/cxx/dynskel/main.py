@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.16.2.3  2004/02/16 10:10:31  dgrisby
+# More valuetype, including value boxes. C++ mapping updates.
+#
 # Revision 1.16.2.2  2003/10/23 11:25:55  dgrisby
 # More valuetype support.
 #
@@ -1134,3 +1137,6 @@ def visitException(node):
 
 def visitValue(node):
     print "*** visitValue dynskel main"
+
+def visitValueBox(node):
+    print "*** visitValueBox dynskel main"

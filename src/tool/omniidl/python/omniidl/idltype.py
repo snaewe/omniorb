@@ -293,6 +293,9 @@ def containsValueType(t):
         if isinstance(d, idlast.Value):
             return 1
 
+        if isinstance(d, idlast.Interface) and d.abstract():
+            return 1
+
     return 0
 
 

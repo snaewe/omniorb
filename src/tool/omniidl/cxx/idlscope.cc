@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.18.2.2  2004/02/16 10:10:33  dgrisby
+// More valuetype, including value boxes. C++ mapping updates.
+//
 // Revision 1.18.2.1  2003/03/23 21:01:44  dgrisby
 // Start of omniORB 4.1.x development branch.
 //
@@ -785,7 +788,7 @@ findRelativeScope(const ScopedName::Fragment* from,
     result = findRelativeScope(from->next(), to->next(), fromScope, target);
   }
 
-  if (!result) {
+  if (!result && fromScope) {
     ScopedName*         test = new ScopedName(to, 0);
     const Scope::Entry* find = fromScope->findScopedName(test);
 

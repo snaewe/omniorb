@@ -435,7 +435,7 @@ class Type:
             if self.sequence():
                 return d_type.sequenceTemplate(environment, gscope=gscope)
 
-            if self.value():
+            if self.value() or self.valuebox():
                 m = self.base(environment) + "_member"
                 if gscope: m = "::" + m
                 return m

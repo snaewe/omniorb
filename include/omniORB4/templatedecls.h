@@ -30,6 +30,9 @@
 #define __TEMPLATEDECLS_H__
 
 
+// Empty class to prevent illegal objref _var widening
+class _CORBA_ObjRef_Var_base {};
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////// _CORBA_PseudoObj_Var ////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -38,7 +41,7 @@ template <class T, class T_var> class _CORBA_PseudoObj_Member;
 template <class T, class T_var> class _CORBA_PseudoObj_Out;
 
 template <class T>
-class _CORBA_PseudoObj_Var {
+class _CORBA_PseudoObj_Var : public _CORBA_ObjRef_Var_base {
 public:
   typedef T* T_ptr;
   typedef _CORBA_PseudoObj_Var<T> T_var;
@@ -68,6 +71,11 @@ public:
 
 protected:
   T_ptr pd_data;
+
+private:
+  // Not implemented
+  _CORBA_PseudoObj_Var(const _CORBA_ObjRef_Var_base&);
+  T_var& operator= (const _CORBA_ObjRef_Var_base&);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -93,6 +101,11 @@ public:
   inline operator T_ptr () const  { return _ptr; }
 
   T_ptr _ptr;
+
+private:
+  // Not implemented
+  _CORBA_PseudoObj_Member(const _CORBA_ObjRef_Var_base&);
+  T_member& operator= (const _CORBA_ObjRef_Var_base&);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -372,13 +385,13 @@ template <class T,class T_Helper>
 class _CORBA_ObjRef_tcDesc_arg;
 
 template <class T, class T_Helper>
-class _CORBA_ObjRef_Var {
+class _CORBA_ObjRef_Var : public _CORBA_ObjRef_Var_base {
 public:
   typedef T* ptr_t;
   typedef T* T_ptr;
-  typedef _CORBA_ObjRef_Member<T,T_Helper> T_member;
+  typedef _CORBA_ObjRef_Member<T,T_Helper>  T_member;
   typedef _CORBA_ObjRef_Element<T,T_Helper> T_element;
-  typedef _CORBA_ObjRef_Var<T,T_Helper>    T_var;
+  typedef _CORBA_ObjRef_Var<T,T_Helper>     T_var;
 
   inline _CORBA_ObjRef_Var() : pd_objref(T_Helper::_nil()) {}
   inline _CORBA_ObjRef_Var(T_ptr p) : pd_objref(p) {}
@@ -436,6 +449,10 @@ public:
 
 private:
   T_ptr pd_objref;
+
+  // Not implemented
+  _CORBA_ObjRef_Var(const _CORBA_ObjRef_Var_base&);
+  T_var& operator= (const _CORBA_ObjRef_Var_base&);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -446,9 +463,9 @@ template <class T,class T_Helper>
 class _CORBA_ObjRef_Member {
 public:
   typedef T* T_ptr;
-  typedef _CORBA_ObjRef_Member<T,T_Helper> T_member;
+  typedef _CORBA_ObjRef_Member<T,T_Helper>  T_member;
   typedef _CORBA_ObjRef_Element<T,T_Helper> T_element;
-  typedef _CORBA_ObjRef_Var<T,T_Helper>    T_var;
+  typedef _CORBA_ObjRef_Var<T,T_Helper>     T_var;
 
   inline _CORBA_ObjRef_Member() { 
     _ptr = T_Helper::_nil();
@@ -523,6 +540,11 @@ inline ~_CORBA_ObjRef_Member() {
   }
 
   T_ptr          _ptr;
+
+private:
+  // Not implemented
+  _CORBA_ObjRef_Member(const _CORBA_ObjRef_Var_base&);
+  T_member& operator= (const _CORBA_ObjRef_Var_base&);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -612,6 +634,11 @@ public:
 
   _CORBA_Boolean pd_rel;
   T_ptr&         pd_data;
+
+private:
+  // Not implemented
+  _CORBA_ObjRef_Element(const _CORBA_ObjRef_Var_base&);
+  T_element& operator= (const _CORBA_ObjRef_Var_base&);
 };
 
 //////////////////////////////////////////////////////////////////////

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.3  2004/02/16 10:10:33  dgrisby
+// More valuetype, including value boxes. C++ mapping updates.
+//
 // Revision 1.15.2.2  2003/09/04 14:00:24  dgrisby
 // ValueType IDL updates.
 //
@@ -1153,6 +1156,7 @@ public:
 private:
   IdlType*       boxedType_;
   IDL_Boolean    constrType_;
+  IDL_Boolean    delType_;
   IdlType*       thisType_;
 };
 

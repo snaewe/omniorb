@@ -489,3 +489,12 @@ class WalkTree(idlvisitor.AstVisitor):
         self.__leave()
 
         self.__cache(node)
+
+    def visitValueBox(self, node):
+        if node.constrType():
+            node.boxedType().decl().accept(self)
+
+        name = node.identifier()
+        self.__add(name)
+
+        self.__cache(node)

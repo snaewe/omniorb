@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2004/02/16 10:10:28  dgrisby
+  More valuetype, including value boxes. C++ mapping updates.
+
   Revision 1.4.2.1  2003/03/23 21:04:06  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -672,9 +675,11 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ThreadPolicyValue;
     virtual void _add_ref();
     virtual void _remove_ref();
 
+    virtual CORBA::ULong _refcount_value();
+
   protected:
-    inline ServantBase() {}
-    inline ServantBase(const ServantBase&) {}
+    inline ServantBase() : _pd_refCount(1) {}
+    inline ServantBase(const ServantBase&) : _pd_refCount (1) {}
     inline ServantBase& operator = (const ServantBase&) { return *this; }
 
     void* _do_this(const char* repoId);
@@ -683,70 +688,90 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ThreadPolicyValue;
     virtual omniObjRef* _do_get_interface();
     virtual void* _downcast();
     // Overrides omniServant.
+
+    int _pd_refCount;
   };
 
   //////////////////////////////////////////////////////////////////////
   ///////////////////////// RefCountServantBase ////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  class RefCountServantBase : public virtual ServantBase {
-  public:
-    virtual ~RefCountServantBase();
+  struct RefCountServantBase {};
+  // Deprecated.
 
-    virtual void _add_ref();
-    virtual void _remove_ref();
+
+  //////////////////////////////////////////////////////////////////////
+  ///////////////////////// ValueRefCountBase //////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  class ValueRefCountBase
+    : public virtual CORBA::ValueBase,
+      public virtual ServantBase
+  {
+  public:
+    ValueRefCountBase();
+
+    virtual void  _add_ref();
+    virtual void  _remove_ref();
+    virtual CORBA::ULong _refcount_value();
 
   protected:
-    inline RefCountServantBase() : pd_refCount(1) {}
-    inline RefCountServantBase(const RefCountServantBase&) : pd_refCount(1) {}
-    inline RefCountServantBase& operator = (const RefCountServantBase&)
-      { return *this; }
+    virtual ~ValueRefCountBase();
+    ValueRefCountBase(const ValueRefCountBase&);
 
   private:
-    int pd_refCount;
+    ValueRefCountBase& operator= (const ValueRefCountBase&);
+    // Not implemented
   };
 
+
   //////////////////////////////////////////////////////////////////////
-  /////////////////////////// ServantBase_var //////////////////////////
+  /////////////////////////// Servant_var //////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  class ServantBase_var {
+  template <typename T>
+  class Servant_var {
   public:
-    typedef ServantBase*    T_ptr;
-    typedef ServantBase_var T_var;
-
-    inline ServantBase_var() : pd_data(0) {}
-    inline ServantBase_var(T_ptr p) : pd_data(p) {}
-    inline ServantBase_var(const T_var& v) : pd_data(v.pd_data)
+    inline Servant_var() : pd_data(0) {}
+    inline Servant_var(T* p) : pd_data(p) {}
+    inline Servant_var(const Servant_var& v) : pd_data(v.pd_data)
       { if( pd_data )  pd_data->_add_ref(); }
 
-    inline ~ServantBase_var() { if( pd_data )  pd_data->_remove_ref(); }
+    inline ~Servant_var() { if( pd_data )  pd_data->_remove_ref(); }
 
-    inline T_var& operator = (T_ptr p) {
+    inline Servant_var& operator= (T* p) {
       if( pd_data )  pd_data->_remove_ref();
       pd_data = p;
       return *this;
     }
-    inline T_var& operator = (T_var v) {
+    inline Servant_var& operator= (const Servant_var& v) {
       if( pd_data )  pd_data->_remove_ref();
       if( (pd_data = v.pd_data) )  pd_data->_add_ref();
       return *this;
     }
 
-    inline operator T_ptr () const    { return pd_data; }
-    inline T_ptr operator -> () const { return pd_data; }
+    inline operator T* () const    { return pd_data; }
+    inline T* operator -> () const { return pd_data; }
 
-    inline T_ptr in() const { return pd_data; }
-    inline T_ptr& inout() { return pd_data; }
-    inline T_ptr& out() {
+    inline T* in() const { return pd_data; }
+    inline T*& inout() { return pd_data; }
+    inline T*& out() {
       if( pd_data ) { pd_data->_remove_ref();  pd_data = 0; }
       return pd_data;
     }
-    inline T_ptr _retn() { T_ptr tmp = pd_data;  pd_data = 0;  return tmp; }
+    inline T* _retn() { T* tmp = pd_data;  pd_data = 0;  return tmp; }
 
   private:
-    T_ptr pd_data;
+    T* pd_data;
   };
+
+
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////////// ServantBase_var //////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  typedef Servant_var<ServantBase> ServantBase_var;
+
 
   //////////////////////////////////////////////////////////////////////
   //////////////////////// DynamicImplementation ///////////////////////

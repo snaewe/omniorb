@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.4  2004/02/16 10:10:31  dgrisby
+# More valuetype, including value boxes. C++ mapping updates.
+#
 # Revision 1.36.2.3  2003/11/06 11:56:56  dgrisby
 # Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 #
@@ -650,8 +653,6 @@ def visitTypedef(node):
                 d_seqType = seqType.deref()
                 bounded = d_type.type().bound()
                 
-                seq_dims = seqType.dims()
-
                 templateName = d_type.sequenceTemplate(environment)
                 
                 if d_seqType.structforward() or d_seqType.unionforward():
@@ -684,39 +685,29 @@ def visitTypedef(node):
                 else:
                     # Normal case using a template class.
 
-                    if d_seqType.string():
-                        element = "_CORBA_String_element"
-                        element_IN = "char *"
-                    elif d_seqType.wstring():
-                        element = "_CORBA_WString_element"
-                        element_IN = "CORBA::WChar *"
-                    elif d_seqType.objref():
-                        element = seqType.base(environment)
-                        element_IN = element
-                    # only if an anonymous sequence
-                    elif seqType.sequence():
-                        element = d_seqType.sequenceTemplate(environment)
-                        element_IN = element
-                    else:
-                        element = seqType.base(environment)
-                        element_IN = element
-
-                    element_ptr = element_IN
-                    if d_seqType.string() and not seqType.array():
-                        element_ptr = "char*"
-                    elif d_seqType.wstring() and not seqType.array():
-                        element_ptr = "CORBA::WChar*"
-                    elif d_seqType.objref() and not seqType.array():
+                    if seqType.array():
+                        element = "*** INVALID"
                         element_ptr = seqType.base(environment)
-                    # only if an anonymous sequence
-                    elif seqType.sequence() and not seqType.array():
-                        element_ptr = element
-                    elif d_seqType.typecode():
-                        element_ptr = "CORBA::TypeCode_member"
-                        element = element_ptr
-                        element_IN = element_ptr
                     else:
-                        element_ptr = seqType.base(environment)
+                        if d_seqType.string():
+                            element = "_CORBA_String_element"
+                            element_ptr = "char*"
+                        elif d_seqType.wstring():
+                            element = "_CORBA_WString_element"
+                            element_ptr = "CORBA::WChar*"
+                        elif d_seqType.objref():
+                            element = seqType.base(environment)
+                            element_ptr = element
+                        # only if an anonymous sequence
+                        elif seqType.sequence():
+                            element = d_seqType.sequenceTemplate(environment)
+                            element_ptr = element
+                        elif d_seqType.typecode():
+                            element = "CORBA::TypeCode_member"
+                            element_ptr = element
+                        else:
+                            element = seqType.base(environment)
+                            element_ptr = element
 
                     # enums are a special case
                     # from o2be_sequence.cc:795:
@@ -739,7 +730,6 @@ def visitTypedef(node):
 
                     # derivedName is the new type identifier
                     # element is the name of the basic element type
-                    # seq_dims contains dimensions if a sequence of arrays
                     # templateName contains the template instantiation
 
                     def bounds(bounded = bounded, derivedName = derivedName,
@@ -762,7 +752,7 @@ def visitTypedef(node):
                 
 
                 # start building the _var and _out types
-                element_reference = ""
+                element_reference = "*** INVALID"
                 if not aliasType.array():
                     if d_seqType.string():
                         # special case alert
@@ -778,10 +768,12 @@ def visitTypedef(node):
                         element_reference = d_seqType.sequenceTemplate(environment) + "&"
                     else:
                         element_reference = element + "&"
+
                 def subscript_operator_var(stream = stream,
                                            is_array = seqType.array(),
                                            element_ptr = element_ptr,
                                            element_ref = element_reference):
+
                     if is_array:
                         stream.out(template.sequence_var_array_subscript,
                                    element = element_ptr)
@@ -918,10 +910,19 @@ def visitStruct(node):
                                memtype = memtype,
                                cxx_id = cxx_id)
                 else:
+                    dims_string = cxx.dimsToString(decl_dims)
+                    if is_array_declarator:
+                        stream.out(template.struct_array_declarator,
+                                   memtype = memtype,
+                                   cxx_id = cxx_id,
+                                   dims = dims_string,
+                                   tail_dims = cxx.dimsToString(d.sizes()[1:]),
+                                   prefix = config.state['Private Prefix'])
+
                     stream.out(template.struct_normal_member,
                                memtype = memtype,
                                cxx_id = cxx_id,
-                               dims = cxx.dimsToString(decl_dims))
+                               dims = dims_string)
             
     # Output the structure itself
     if types.variableDecl(node):
@@ -1002,6 +1003,7 @@ def visitException(node):
                                memtype = memtype,
                                cxx_id = cxx_id,
                                dims = dims_string,
+                               tail_dims = cxx.dimsToString(d.sizes()[1:]),
                                private_prefix = config.state['Private Prefix'])
 
                 stream.out(template.exception_member,
@@ -1507,7 +1509,7 @@ def visitUnion(node):
                                discrimvalue = discrimvalue)
 
                 elif caseType.typedef() or d_caseType.struct() or \
-                     d_caseType.union():
+                     d_caseType.union() or d_caseType.fixed():
                     stream.out(template.union_constructed,
                                type = memtype,
                                name = member,
@@ -1522,8 +1524,16 @@ def visitUnion(node):
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
 
-                elif d_caseType.value():
-                    # *** HERE
+                elif d_caseType.value() or d_caseType.valuebox():
+                    scopedName = d_caseType.type().decl().scopedName()
+                    name = id.Name(scopedName)
+                    type = name.unambiguous(environment)
+
+                    stream.out(template.union_value,
+                               member=member,
+                               type=type,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue)
                     pass
 
                 else:

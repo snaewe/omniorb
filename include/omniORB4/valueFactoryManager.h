@@ -28,6 +28,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.2  2004/02/16 10:10:29  dgrisby
+// More valuetype, including value boxes. C++ mapping updates.
+//
 // Revision 1.1.2.1  2003/09/26 16:12:53  dgrisby
 // Start of valuetype support.
 //
@@ -40,7 +43,7 @@ public:
   
   static CORBA::ValueFactory
   register_factory(const char* id, CORBA::ULong hashval,
-		   CORBA::ValueFactory factory);
+		   CORBA::ValueFactory factory, CORBA::Boolean internal);
   // Register factory, replacing existing one if there is one. Returns
   // the old one if there was one, zero otherwise.
 

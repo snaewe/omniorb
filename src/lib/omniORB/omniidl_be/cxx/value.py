@@ -39,8 +39,9 @@ value_forward = """\
 #define __@guard@__
 
 class @name@;
-typedef _CORBA_Value_Var<@name@>    @name@_var;
-typedef _CORBA_Value_Member<@name@> @name@_member;
+typedef _CORBA_Value_Var<@name@>     @name@_var;
+typedef _CORBA_Value_Member<@name@>  @name@_member;
+typedef _CORBA_Value_OUT_arg<@name@> @name@_out;
 
 #endif // __@guard@__
 """
@@ -92,7 +93,7 @@ public:
   virtual void _PR_unmarshal_state(cdrStream&);
   virtual void _PR_copy_state(@name@*);
 
-  static _dyn_attr const char* _PD_repoId;
+  static _core_attr const char* _PD_repoId;
 
 protected:
   @name@();
@@ -348,18 +349,20 @@ valuefactory_create_for_unmarshal = """\
 CORBA::ValueBase*
 @fqname@_init::create_for_unmarshal()
 {
-  // return new OBV_@fqname@();
-
-  //?? The standard C++ mapping requires the above code, but
-  // it is invalid because the reference counting functions in
-  // CORBA::ValueBase are not implemented.
-
-  return 0;
+  return new OBV_@fqname@();
 }
 """
 
 statemember_copy = """\
 @name@(_v->@name@());"""
+
+statemember_copy_value = """\
+#ifdef OMNI_HAVE_COVARIANT_RETURNS
+@name@(_v->@name@()->_copy_value());
+#else
+CORBA::ValueBase* _0v_@name@ = _v->@name@()->_copy_value();
+@name@(@type@::_downcast(_0v_@name@);
+#endif"""
 
 statemember_init = """\
 _pd_@name@ = _@name@;"""
@@ -736,6 +739,1098 @@ _@name@ = @type@::_NP_unmarshal(_0s);
 @name@(_@name@);
 """
 
+valuebox_class = """\
+class @name@ :
+  public CORBA::DefaultValueRefCountBase
+{
+public:
+  typedef @name@_var _var_type;
+
+  @member_funcs@
+
+  static @name@* _downcast(ValueBase*);
+
+#ifdef OMNI_HAVE_COVARIANT_RETURNS
+  virtual @name@* _copy_value();
+#else
+  virtual CORBA::ValueBase* _copy_value();
+#endif
+
+  // omniORB internal
+  virtual const char* _NP_repositoryId() const;
+  virtual const char* _NP_repositoryId(CORBA::ULong& _hashval) const;
+
+  virtual const _omni_ValueIds* _NP_truncatableIds() const;
+
+  virtual CORBA::Boolean _NP_custom() const;
+
+  virtual void* _ptrToValue(const char* id);
+
+  static void _NP_marshal(const @name@*, cdrStream&);
+  static @name@* _NP_unmarshal(cdrStream&);
+
+  virtual void _PR_marshal_state(cdrStream&) const;
+  virtual void _PR_unmarshal_state(cdrStream&);
+  virtual void _PR_copy_state(@name@*);
+
+  static _core_attr const char* _PD_repoId;
+
+protected:
+  ~@name@();
+private:
+  void operator=(const @name@&);
+
+  @boxed_member@ _pd_boxed;
+};
+"""
+
+valuebox_member_funcs_basic = """\
+inline @name@() {}
+inline @name@(@boxedtype@ _v) : _pd_boxed(_v) {}
+inline @name@(const @name@& _v) : _pd_boxed(_v._pd_boxed) {}
+
+inline @name@& operator=(@boxedtype@ _v) {
+  _pd_boxed = _v;
+  return *this;
+}
+
+inline @boxedtype@ _value() const {
+  return _pd_boxed;
+}
+inline void _value(@boxedtype@ _v) {
+  _pd_boxed = _v;
+}
+
+inline @boxedtype@ _boxed_in() const {
+  return _pd_boxed;
+}
+inline @boxedtype@& _boxed_inout() {
+  return _pd_boxed;
+}
+inline @boxedtype@& _boxed_out() {
+  return _pd_boxed;
+}
+"""
+
+valuebox_member_funcs_string = """\
+inline @name@()
+  : _pd_boxed(OMNI_CONST_CAST(char*,_CORBA_String_helper::empty_string))
+{}
+inline @name@(const @name@& _v) {
+  if (_v._pd_boxed) _pd_boxed = _CORBA_String_helper::dup(_v._pd_boxed);
+  else _pd_boxed = 0;
+}
+inline @name@(char* _v) {
+  _pd_boxed = _v;
+}
+inline @name@(const char* _v) {
+  if (_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline @name@(const CORBA::String_var& _v) {
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline @name@(const CORBA::String_member& _v) {
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline @name@(const _CORBA_String_element& _v) {
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+
+inline @name@& operator=(char* _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  _pd_boxed = _v;
+  return *this;
+}
+inline @name@& operator=(const char* _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  if (_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+  return *this;
+}
+inline @name@& operator=(const CORBA::String_var& _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+  return *this;
+}
+inline @name@& operator=(const CORBA::String_member& _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+  return *this;
+}
+inline @name@& operator=(const _CORBA_String_element& _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+  return *this;
+}
+
+inline const char* _value() const {
+  return _pd_boxed;
+}
+inline void _value(char* _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  _pd_boxed = _v;
+}
+inline void _value(const char* _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  if (_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline void _value(const CORBA::String_var& _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline void _value(const CORBA::String_member& _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline void _value(const _CORBA_String_element& _v) {
+  _CORBA_String_helper::free(_pd_boxed);
+  if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+
+inline char& operator[] (_CORBA_ULong _i) {
+  if (!_pd_boxed) {
+    _CORBA_bound_check_error();	// never return
+  }
+  return _pd_boxed[_i];
+}
+inline char operator[] (_CORBA_ULong _i) const {
+  if (!_pd_boxed) {
+    _CORBA_bound_check_error();	// never return
+  }
+  return _pd_boxed[_i];
+}
+
+inline const char* _boxed_in() const {
+  return _pd_boxed;
+}
+inline char*& _boxed_inout() {
+  return _pd_boxed;
+}
+inline char*& _boxed_out() {
+  return _pd_boxed;
+}
+"""
+
+valuebox_member_funcs_wstring = """\
+inline @name@()
+  : _pd_boxed(OMNI_CONST_CAST(CORBA::WChar*,_CORBA_WString_helper::empty_wstring))
+{}
+inline @name@(const @name@& _v) {
+  if (_v._pd_boxed) _pd_boxed = _CORBA_WString_helper::dup(_v._pd_boxed);
+  else _pd_boxed = 0;
+}
+inline @name@(CORBA::WChar* _v) {
+  _pd_boxed = _v;
+}
+inline @name@(const CORBA::WChar* _v) {
+  if (_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline @name@(const CORBA::WString_var& _v) {
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline @name@(const CORBA::WString_member& _v) {
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline @name@(const _CORBA_WString_element& _v) {
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+
+inline @name@& operator=(CORBA::WChar* _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  _pd_boxed = _v;
+  return *this;
+}
+inline @name@& operator=(const CORBA::WChar* _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  if (_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+  return *this;
+}
+inline @name@& operator=(const CORBA::WString_var& _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+  return *this;
+}
+inline @name@& operator=(const CORBA::WString_member& _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+  return *this;
+}
+inline @name@& operator=(const _CORBA_WString_element& _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+  return *this;
+}
+
+inline const CORBA::WChar* _value() const {
+  return _pd_boxed;
+}
+inline void _value(CORBA::WChar* _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  _pd_boxed = _v;
+}
+inline void _value(const CORBA::WChar* _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  if (_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline void _value(const CORBA::WString_var& _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline void _value(const CORBA::WString_member& _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+inline void _value(const _CORBA_WString_element& _v) {
+  _CORBA_WString_helper::free(_pd_boxed);
+  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  else _pd_boxed = 0;
+}
+
+inline CORBA::WChar& operator[] (_CORBA_ULong _i) {
+  if (!_pd_boxed) {
+    _CORBA_bound_check_error();	// never return
+  }
+  return _pd_boxed[_i];
+}
+inline CORBA::WChar operator[] (_CORBA_ULong _i) const {
+  if (!_pd_boxed) {
+    _CORBA_bound_check_error();	// never return
+  }
+  return _pd_boxed[_i];
+}
+
+inline const CORBA::WChar* _boxed_in() const {
+  return _pd_boxed;
+}
+inline CORBA::WChar*& _boxed_inout() {
+  return _pd_boxed;
+}
+inline CORBA::WChar*& _boxed_out() {
+  return _pd_boxed;
+}
+"""
+
+valuebox_member_funcs_objref = """\
+inline @name@() {}
+inline @name@(@boxedif@_ptr _v) {
+  _pd_boxed = @boxedif@::_duplicate(_v);
+}
+inline @name@(const @name@& _v) {
+  _pd_boxed = @boxedif@::_duplicate(_v._value());
+}
+inline @name@& operator=(@boxedif@_ptr _v) {
+  _pd_boxed = @boxedif@::_duplicate(_v);
+  return *this;
+}
+
+inline @boxedif@_ptr _value() const {
+  return _pd_boxed.in();
+}
+inline void _value(@boxedif@_ptr _v) {
+  _pd_boxed = @boxedif@::_duplicate(_v);
+}
+
+inline @boxedif@_ptr _boxed_in() const {
+  return _pd_boxed.in();
+}
+inline @boxedif@_ptr& _boxed_inout() {
+  return _pd_boxed.inout();
+}
+inline @boxedif@_ptr& _boxed_out() {
+  return _pd_boxed.out();
+}
+"""
+
+valuebox_member_funcs_any = """\
+inline @name@() {}
+inline @name@(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+}
+inline @name@(const @name@& _v) {
+  _pd_boxed = new @boxedtype@(_v._pd_boxed.in());
+}
+inline @name@(CORBA::TypeCode_ptr tc, void* value, Boolean release = 0) {
+  _pd_boxed = new @boxedtype@(tc, value, release);
+}
+
+inline @name@& operator=(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+  return *this;
+}
+
+inline const @boxedtype@& _value() const {
+  return _pd_boxed.inout();
+}
+inline @boxedtype@& _value() {
+  return _pd_boxed.inout();
+}
+inline void _value(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+}
+
+inline const @boxedtype@& _boxed_in() const {
+  return _pd_boxed.in();
+}
+inline @boxedtype@& _boxed_inout() {
+  return _pd_boxed.inout();
+}
+inline @boxedtype@_out _boxed_out() {
+  return _pd_boxed.out();
+}
+
+CORBA::TypeCode_ptr type() const {
+  return _pd_boxed->type();
+}
+void type(CORBA::TypeCode_ptr _t) {
+  _pd_boxed->type(t);
+}
+"""
+
+valuebox_member_funcs_sequence = """\
+inline @name@() {}
+inline @name@(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+}
+inline @name@(const @name@& _v) {
+  _pd_boxed = new @boxedtype@(_v._pd_boxed.in());
+}
+@sequence_constructors@
+
+inline @name@& operator=(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+  return *this;
+}
+
+inline const @boxedtype@& _value() const {
+  return _pd_boxed.inout();
+}
+inline @boxedtype@& _value() {
+  return _pd_boxed.inout();
+}
+inline void _value(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+}
+
+inline const @boxedtype@& _boxed_in() const {
+  return _pd_boxed.in();
+}
+inline @boxedtype@& _boxed_inout() {
+  return _pd_boxed.inout();
+}
+inline @boxedtype@_out _boxed_out() {
+  return _pd_boxed.out();
+}
+
+inline CORBA::ULong maximum() const {
+  return _pd_boxed->maximum();
+}
+inline CORBA::ULong length() const {
+  return _pd_boxed->length();
+}
+inline void length(CORBA::ULong _len) {
+  _pd_boxed->length(_len);
+}
+
+inline @subscript_element@ operator[](CORBA::ULong _i) {
+  return _pd_boxed[_i];
+}
+"""
+
+valuebox_sequence_constructors_unbounded = """\
+inline @name@(CORBA::ULong _max) {
+  _pd_boxed = new @boxedtype@(_max);
+}
+inline @name@(CORBA::ULong _max, CORBA::ULong _len, @element@* _val, CORBA::Boolean _rel=0) {
+  _pd_boxed = new @boxedtype@(_max, _len, _val, _rel);
+}
+"""
+
+valuebox_sequence_constructors_bounded = """\
+inline @name@(CORBA::ULong _len, @element@* _val, CORBA::Boolean _rel=0) {
+  _pd_boxed = new @boxedtype@(_len, _val, _rel);
+}
+"""
+
+valuebox_member_funcs_fixed = """\
+inline @name@(const @boxedtype@& _v) {}
+inline @name@(const @name@& _v) {
+  _pd_boxed = _v._pd_boxed;
+}
+
+inline @name@(int _v = 0)           : _pd_boxed(_v) {}
+inline @name@(unsigned _v)          : _pd_boxed(_v) {}
+
+#ifndef OMNI_LONG_IS_INT
+inline @name@(CORBA::Long _v)       : _pd_boxed(_v) {}
+inline @name@(CORBA::ULong _v)      : _pd_boxed(_v) {}
+#endif
+#ifdef HAS_LongLong
+inline @name@(CORBA::LongLong _v)   : _pd_boxed(_v) {}
+inline @name@(CORBA::ULongLong _v)  : _pd_boxed(_v) {}
+#endif
+#ifndef NO_FLOAT
+inline @name@(CORBA::Double _v)     : _pd_boxed(_v) {}
+#endif
+#ifdef HAS_LongDouble
+inline @name@(CORBA::LongDouble _v) : _pd_boxed(_v) {}
+#endif
+inline @name@(const char* _v)       : _pd_boxed(_v) {}
+
+inline @name@& operator=(const @boxedtype@& _v) {
+  _pd_boxed = _v;
+  return *this;
+}
+
+inline const @boxedtype@& _value() const {
+  return _pd_boxed;
+}
+inline @boxedtype@& _value() {
+  return _pd_boxed;
+}
+inline void _value(const @boxedtype@& _v) {
+  _pd_boxed = _v;
+}
+
+inline const @boxedtype@& _boxed_in() const {
+  return _pd_boxed;
+}
+inline @boxedtype@& _boxed_inout() {
+  return _pd_boxed;
+}
+inline @boxedtype@_out _boxed_out() {
+  return _pd_boxed;
+}
+
+CORBA::Fixed round   (CORBA::UShort scale) const {
+  return _pd_boxed.round(scale);
+}
+CORBA::Fixed truncate(CORBA::UShort scale) const {
+  return _pd_boxed.truncate(scale);
+}
+CORBA::UShort fixed_digits() const {
+  return pd_boxed.fixed_digits();
+}
+CORBA::UShort fixed_scale() const {
+  return pd_boxed.fixed_scale();
+}
+char* to_string() const {
+  return pd_boxed.to_string();
+}
+"""
+
+
+valuebox_member_funcs_array = """\
+inline @name@() {
+  _pd_boxed = 0;
+}
+inline @name@(const @boxedtype@ _v) {
+  _pd_boxed = @helper@::dup(_v);
+  if (!_pd_boxed) _CORBA_new_operator_return_null();
+}
+inline @name@(const @name@& _v) {
+  if (!_v._pd_boxed) {
+    _pd_boxed = 0;
+  }
+  else {
+    _pd_boxed = @helper@::dup(_v._pd_boxed);
+    if (!_pd_boxed) _CORBA_new_operator_return_null();
+  }
+}
+
+inline @name@& operator=(const @boxedtype@ _v) {
+  if (_pd_boxed)
+    @helper@::free(_pd_boxed);
+  _pd_boxed = @helper@::dup(_v);
+  if (!_pd_boxed) _CORBA_new_operator_return_null();
+  return *this;
+}
+
+inline const @slice@* _value() const {
+  return (const @slice@*)_pd_boxed;
+}
+inline @slice@* _value() {
+  return _pd_boxed;
+}
+
+inline void _value(const @boxedtype@ _v) {
+  if (_pd_boxed)
+    @helper@::free(_pd_boxed);
+  _pd_boxed = @helper@::dup(_v);
+  if (!_pd_boxed) _CORBA_new_operator_return_null();
+}
+
+inline @slice@& operator[] (_CORBA_ULong index_) {
+  return *(_pd_boxed + index_);
+}
+inline const @slice@& operator[] (_CORBA_ULong index_) const {
+  return *((const @slice@*) (_pd_boxed + index_));
+}
+
+const @slice@* _boxed_in() const {
+  return (const @slice@*)_pd_boxed;
+}
+@slice@* _boxed_inout() {
+  return _pd_boxed;
+}
+"""
+
+valuebox_member_funcs_array_fixed_out = """\
+@slice@* _boxed_out() {
+  return _pd_boxed;
+}
+"""
+
+valuebox_member_funcs_array_variable_out = """\
+@slice@*& _boxed_out() {
+  if (_pd_boxed) { 
+    @helper@::free(_pd_boxed); 
+    _pd_boxed = 0; 
+  } 
+  return _pd_boxed; 
+}
+"""
+
+valuebox_member_funcs_struct_union = """\
+inline @name@() {
+  _pd_boxed = new @boxedtype@();
+};
+inline @name@(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+};
+inline @name@(const @name@& _v) {
+  _pd_boxed = new @boxedtype@(_v._pd_boxed.in());
+};
+
+inline @name@& operator=(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+  return *this;
+}
+
+inline const @boxedtype@& _value() const {
+  return _pd_boxed.inout();
+}
+inline @boxedtype@& _value() {
+  return _pd_boxed.inout();
+}
+inline void _value(const @boxedtype@& _v) {
+  _pd_boxed = new @boxedtype@(_v);
+}
+
+inline const @boxedtype@& _boxed_in() const {
+  return _pd_boxed.in();
+}
+inline @boxedtype@& _boxed_inout() {
+  return _pd_boxed.inout();
+}
+inline @boxedtype@_out _boxed_out() {
+  return _pd_boxed.out();
+}
+
+// Member accessors
+@accessor_funcs@
+"""
+
+# Member accessors for boxed structs
+
+valuebox_structmember_array = """\
+inline const @memtype@_slice* @name@ () const
+{
+  return _pd_boxed->@name@;
+}
+inline @memtype@_slice* @name@ ()
+{
+  return _pd_boxed->@name@;
+}
+inline void @name@ (const @const_type@ _value)
+{
+  @array_copy@
+}
+"""
+
+valuebox_structmember_any = """\
+inline const @type@& @name@ () const
+{
+  return _pd_boxed->@name@;
+}
+inline @type@& @name@()
+{
+  return _pd_boxed->@name@;
+}
+inline void @name@(const @type@& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+valuebox_structmember_typecode = """\
+inline CORBA::TypeCode_ptr @name@() const
+{
+  return _pd_boxed->@name@.in();
+}
+inline void @name@(CORBA::TypeCode_ptr _value)
+{
+  _pd_boxed->@name@ = CORBA::TypeCode::_duplicate(_value);
+}
+inline void @name@(CORBA::TypeCode_var& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+inline void @name@(CORBA::TypeCode_member& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+valuebox_structmember_basic = """\
+inline @type@ @name@() const
+{
+  return _pd_boxed->@name@;
+}
+inline void @name@(@type@ _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+valuebox_structmember_string = """\
+inline const char* @name@() const
+{
+  return _pd_boxed->@name@;
+}
+inline void @name@(char* _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+inline void @name@(const char* _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+inline void @name@(const CORBA::String_var& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+valuebox_structmember_wstring = """\
+inline const CORBA::WChar* @name@() const
+{
+  return _pd_boxed->@name@;
+}
+inline void @name@(CORBA::WChar* _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+inline void @name@(const CORBA::WChar* _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+inline void @name@(const CORBA::WString_var& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+valuebox_structmember_objref = """\
+inline @ptr_type@ @name@() const
+{
+  return _pd_boxed->@name@.in();
+}
+inline void @name@(@ptr_type@ _value)
+{
+  _pd_boxed->@name@ = @type@::_duplicate(_value);
+}
+inline void @name@(const @var_type@& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+inline void @name@(const @memtype@& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+valuebox_structmember_constructed = """\
+inline const @type@& @name@() const
+{
+  return _pd_boxed->@name@;
+}
+inline @type@& @name@()
+{
+  return _pd_boxed->@name@;
+}
+inline void @name@(const @type@& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+valuebox_structmember_sequence = """\
+inline const _@name@_seq& @name@() const
+{
+  return _pd_boxed->@name@;
+}
+inline _@name@_seq& @name@()
+{
+  return _pd_boxed->@name@;
+}
+inline void @name@(const _@name@_seq& _value)
+{
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+valuebox_structmember_value = """\
+virtual @type@* @name@() const
+{
+  return _pd_boxed->@name@.in();
+}
+virtual void @name@(@type@* _value)
+{
+  CORBA::add_ref(_value);
+  _pd_boxed->@name@ = _value;
+}
+"""
+
+# Member accessors for boxed unions
+
+valuebox_union_discriminant = """\
+inline @switchtype@ _d() const
+{
+  return _pd_boxed->_d();
+}
+inline void _d(@switchtype@ _value)
+{
+  _pd_boxed->_d(_value);
+}
+"""
+
+valuebox_unionmember_array = """\
+inline const @memtype@_slice* @name@ () const
+{
+  return _pd_boxed->@name@();
+}
+inline @memtype@_slice* @name@ ()
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@ (const @const_type@ _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_any = """\
+inline const @type@& @name@ () const
+{
+  return _pd_boxed->@name@();
+}
+inline @type@& @name@()
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@(const @type@& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_typecode = """\
+inline CORBA::TypeCode_ptr @name@() const
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@(CORBA::TypeCode_ptr _value)
+{
+  _pd_boxed->@name@(_value);
+}
+inline void @name@(CORBA::TypeCode_member& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+inline void @name@(CORBA::TypeCode_var& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_basic = """\
+inline @type@ @name@() const
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@(@type@ _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_string = """\
+inline const char* @name@() const
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@(char* _value)
+{
+  _pd_boxed->@name@(_value);
+}
+inline void @name@(const char* _value)
+{
+  _pd_boxed->@name@(_value);
+}
+inline void @name@(const CORBA::String_var& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_wstring = """\
+inline const CORBA::WChar* @name@() const
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@(CORBA::WChar* _value)
+{
+  _pd_boxed->@name@(_value);
+}
+inline void @name@(const CORBA::WChar* _value)
+{
+  _pd_boxed->@name@(_value);
+}
+inline void @name@(const CORBA::WString_var& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_objref = """\
+inline @ptr_type@ @name@() const
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@(@ptr_type@ _value)
+{
+  _pd_boxed->@name@(_value);
+}
+inline void @name@(const @var_type@& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+inline void @name@(const @memtype@& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_constructed = """\
+inline const @type@& @name@() const
+{
+  return _pd_boxed->@name@();
+}
+inline @type@& @name@()
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@(const @type@& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_sequence = """\
+inline const _@name@_seq& @name@() const
+{
+  return _pd_boxed->@name@();
+}
+inline _@name@_seq& @name@()
+{
+  return _pd_boxed->@name@();
+}
+inline void @name@(const _@name@_seq& _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+valuebox_unionmember_value = """\
+virtual @type@* @name@() const
+{
+  return _pd_boxed->@name@();
+}
+virtual void @name@(@type@* _value)
+{
+  _pd_boxed->@name@(_value);
+}
+"""
+
+
+valuebox_functions = """\
+// value box @name@
+
+@fqname@*
+@fqname@::_downcast(CORBA::ValueBase* _b)
+{
+  return _b ? (@fqname@*)_b->_ptrToValue(_PD_repoId) : 0;
+}
+
+const char* @fqname@::_PD_repoId = "@repoId@";
+
+const char*
+@fqname@::_NP_repositoryId() const
+{
+  return _PD_repoId;
+}
+
+const char*
+@fqname@::_NP_repositoryId(CORBA::ULong& hash) const
+{
+  hash = @idhash@U;
+  return _PD_repoId;
+}
+
+const _omni_ValueIds*
+@fqname@::_NP_truncatableIds() const
+{
+  return 0;
+}
+
+CORBA::Boolean
+@fqname@::_NP_custom() const
+{
+  return 0;
+}
+
+void*
+@fqname@::_ptrToValue(const char* _id)
+{
+  if (_id == ::@fqname@::_PD_repoId)
+    return (::@fqname@*) this;
+  
+  if (_id == CORBA::ValueBase::_PD_repoId)
+    return (CORBA::ValueBase*) this;
+  
+  if (omni::strMatch(_id, ::@fqname@::_PD_repoId))
+    return (::@fqname@*) this;
+  
+  if (omni::strMatch(_id, CORBA::ValueBase::_PD_repoId))
+    return (CORBA::ValueBase*) this;
+
+  return 0;
+}
+
+void
+@fqname@::_NP_marshal(const @fqname@* _v, cdrStream& _0s)
+{
+  omniValueType::marshal(_v, @fqname@::_PD_repoId, _0s);
+}
+
+@fqname@*
+@fqname@::_NP_unmarshal(cdrStream& _0s)
+{
+  CORBA::ValueBase* _b = omniValueType::unmarshal(@fqname@::_PD_repoId,
+						  @idhash@U, _0s);
+  @fqname@* _d = @fqname@::_downcast(_b);
+  if (_b && !_d) {
+    CORBA::remove_ref(_b);
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure,
+		  (CORBA::CompletionStatus)_0s.completion());
+  }
+  return _d;
+}
+
+void
+@fqname@::_PR_marshal_state(cdrStream& _0s) const
+{
+  @marshal_content@
+}
+
+void
+@fqname@::_PR_unmarshal_state(cdrStream& _0s)
+{
+  @unmarshal_content@
+}
+
+#ifdef OMNI_HAVE_COVARIANT_RETURNS
+@fqname@*
+#else
+CORBA::ValueBase*
+#endif
+@fqname@::_copy_value()
+{
+  CORBA::ValueBase* _b;
+  _b = _omni_ValueFactoryManager::create_for_unmarshal(_PD_repoId, @idhash@U);
+  @fqname@* _v = @fqname@::_downcast(_b);
+  if (!_v) {
+    CORBA::remove_ref(_b);
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure,
+		  CORBA::COMPLETED_NO);
+  }
+  _v->_PR_copy_state(this);
+  return _v;
+}
+
+void
+@fqname@::_PR_copy_state(@fqname@* _v)
+{
+  @copy_content@
+}
+
+@fqname@::~@name@()
+{
+  @destructor@
+}
+
+// ValueFactory for value box
+class _0RL_@flatname@_init : public CORBA::ValueFactoryBase
+{
+public:
+  _0RL_@flatname@_init() {}
+  virtual ~_0RL_@flatname@_init() {}
+
+  virtual CORBA::ValueBase* create_for_unmarshal();
+};
+
+CORBA::ValueBase*
+_0RL_@flatname@_init::create_for_unmarshal()
+{
+  return new @fqname@();
+}
+
+class _0RL_@flatname@_install {
+public:
+  _0RL_@flatname@_install() {
+    CORBA::ValueFactoryBase* vf = new _0RL_@flatname@_init();
+    _omni_ValueFactoryManager::register_factory(@fqname@::_PD_repoId, @idhash@, vf, 1);
+    vf->_remove_ref();
+  }
+};
+
+static _0RL_@flatname@_install _0RL_@flatname@_install_;
+"""
+
+
+
 
 def getValueType(node):
     try:
@@ -840,7 +1935,7 @@ class ValueType (mapping.Decl):
         init_s      = output.StringStream()  # Initialise member
         impl_s      = output.StringStream()  # Member implementations
 
-        mType = types.Type(mtype)
+        mType   = types.Type(mtype)
         d_mType = mType.deref()
 
         decl_dims = decl.sizes()
@@ -1050,6 +2145,7 @@ class ValueType (mapping.Decl):
                        ptr_type = ptr_type,
                        helper = helper)
 
+            # *** HERE: is this right?  What if ptr_type is relative?
             if ptr_type[:2] != "::":
                 ptr_type = "::" + ptr_type
             if var_type[:2] != "::":
@@ -1075,7 +2171,9 @@ class ValueType (mapping.Decl):
             decl._cxx_holder   = omemtype + " _pd_" + member + ";"
             decl._cxx_init_arg = ptr_type + " _" + member
 
-        elif mType.typedef() or d_mType.struct() or d_mType.union():
+        elif (mType.typedef() or d_mType.struct()
+              or d_mType.union() or d_mType.fixed()):
+
             base_s.out(statemember_constructed_sig,
                        type = bmemtype,
                        name = member,
@@ -1125,7 +2223,7 @@ class ValueType (mapping.Decl):
             decl._cxx_holder   = omemtype + " _pd_" + member + ";"
             decl._cxx_init_arg = member + "_seq& _" + member
 
-        elif d_mType.value():
+        elif d_mType.value() or d_mType.valuebox():
             otype = mType.base()
 
             base_s.out(statemember_value_sig,
@@ -1138,7 +2236,7 @@ class ValueType (mapping.Decl):
                       type = otype,
                       abs = "")
 
-            copy_s.out(statemember_copy, name=member)
+            copy_s.out(statemember_copy_value, name=member,type=otype)
             marshal_s.out(statemember_value_marshal, name=member, type=otype)
             unmarshal_s.out(statemember_value_unmarshal,
                             name=member, type=otype)
@@ -1294,6 +2392,25 @@ class ValueType (mapping.Decl):
 
             inheritl.append("public virtual " + iname)
 
+        if not (astdecl.inherits() or
+                astdecl._cxx_has_callables or
+                astdecl._cxx_has_factories):
+
+            # *** Section 1.17.10.3 of the C++ mapping, version 1.1 says
+            #
+            #   "For valuetypes that have no operations or
+            #   initializers, a concrete type-specific factory class
+            #   is generated whose implementation of the
+            #   create_for_unmarshal function simply constructs an
+            #   instance of the OBV_ class for the valuetype using new
+            #   and the default constructor.
+            #
+            # Unfortunately, that requires the generation of invalid
+            # C++, since the OBV_ class is abstract. To avoid that, we
+            # inherit from DefaultValueRefCountBase.
+
+            inheritl.append("public virtual CORBA::DefaultValueRefCountBase")
+
         inherits = string.join(inheritl, ",\n")
 
         if (astdecl.inherits() and
@@ -1444,11 +2561,6 @@ class ValueType (mapping.Decl):
             stream.out(valuefactory_create_for_unmarshal, fqname=value_name)
 
 
-class ValueBox (mapping.Decl):
-
-    pass
-
-
 class FactoryWrapper (idlast.Operation):
     """
     Wrapper around an idlast.Factory object that makes it look like an
@@ -1476,3 +2588,413 @@ class FactoryWrapper (idlast.Operation):
     def contexts(self):
         return []
 
+
+
+class ValueBox (mapping.Decl):
+
+    """Deals with boxed valuetypes"""
+
+    def __init__(self, astdecl):
+        mapping.Decl.__init__(self, astdecl)
+
+        outer_environment = id.lookup(astdecl)
+        self._environment = outer_environment
+        self._fullname    = id.Name(astdecl.scopedName())
+        value_name        = self._fullname.fullyQualify()
+
+    # Methods to make this look enough like a cxx.Class to make
+    # cxx.Method happy.
+    
+    def environment(self):
+        return self._environment
+
+    def name(self):
+        return self._fullname
+
+    def module_decls(self, stream, visitor):
+        astdecl  = self._astdecl
+        name     = astdecl.identifier()
+        cxx_name = id.mapID(name)
+        fullname = self._fullname
+        guard    = fullname.guard()
+
+        environment = self._environment
+
+        if astdecl.constrType():
+            astdecl.boxedType().decl().accept(visitor)
+
+        member_funcs = output.StringStream()
+
+        boxedType   = types.Type(astdecl.boxedType())
+        d_boxedType = boxedType.deref()
+
+        if boxedType.dims():
+            btype = boxedType.member(environment)
+            slice = btype + "_slice"
+            helper = btype + "_copyHelper"
+            boxed_member = slice + "*"
+            member_funcs.out(valuebox_member_funcs_array,
+                             name=cxx_name, boxedtype=btype,
+                             slice=slice, helper=helper)
+
+            if boxedType.variable():
+                member_funcs.out(valuebox_member_funcs_array_variable_out,
+                                 slice=slice, helper=helper)
+            else:
+                member_funcs.out(valuebox_member_funcs_array_fixed_out,
+                                 slice=slice)
+
+        elif d_boxedType.any():
+            btype = boxedType.member(environment)
+            boxed_member = boxedType._var(environment)
+            member_funcs.out(valuebox_member_funcs_any,
+                             name=cxx_name, boxedtype=btype)
+
+        elif d_boxedType.typecode():
+            boxed_member = "CORBA::TypeCode_var"
+            member_funcs.out(valuebox_member_funcs_objref, name=cxx_name,
+                             boxedif="CORBA::TypeCode")
+
+        elif (isinstance(d_boxedType.type(), idltype.Base) or
+              d_boxedType.enum()):
+
+            btype = boxedType.member(environment)
+            boxed_member = btype
+            member_funcs.out(valuebox_member_funcs_basic,
+                             name=cxx_name, boxedtype=btype)
+
+        elif d_boxedType.string():
+            boxed_member = "char*"
+            member_funcs.out(valuebox_member_funcs_string, name=cxx_name)
+        
+        elif d_boxedType.wstring():
+            boxed_member = "CORBA::WChar*"
+            member_funcs.out(valuebox_member_funcs_wstring, name=cxx_name)
+
+        elif d_boxedType.objref():
+            scopedName   = d_boxedType.type().decl().scopedName()
+            name         = id.Name(scopedName)
+            boxedif      = name.unambiguous(environment)
+            boxed_member = d_boxedType.member(environment)
+
+            member_funcs.out(valuebox_member_funcs_objref, name=cxx_name,
+                             boxedif=boxedif)
+
+        elif d_boxedType.struct():
+            btype = boxedType.member(environment)
+            boxed_member = boxedType._var(environment)
+            members = d_boxedType.type().decl().members()
+            accessor_funcs = self._struct_accessor_funcs(members)
+            member_funcs.out(valuebox_member_funcs_struct_union,
+                             name=cxx_name, boxedtype=btype,
+                             accessor_funcs = accessor_funcs)
+
+        elif d_boxedType.union():
+            btype = boxedType.member(environment)
+            boxed_member = boxedType._var(environment)
+            udecl = d_boxedType.type().decl()
+            cases = udecl.cases()
+            switchtype = types.Type(udecl.switchType())
+            accessor_funcs = self._union_accessor_funcs(cases, switchtype)
+            member_funcs.out(valuebox_member_funcs_struct_union,
+                             name=cxx_name, boxedtype=btype,
+                             accessor_funcs = accessor_funcs)
+
+        elif d_boxedType.sequence():
+            btype        = boxedType.member(environment)
+            boxed_member = boxedType._var(environment)
+            seqType      = types.Type(d_boxedType.type().seqType())
+            d_seqType    = seqType.deref()
+            bounded      = d_boxedType.type().bound()
+
+            if seqType.array():
+                element = "INVALID"
+                element_ptr = seqType.base(environment)
+            else:
+                if d_seqType.string():
+                    element = "_CORBA_String_element"
+                    element_ptr = "char*"
+                elif d_seqType.wstring():
+                    element = "_CORBA_WString_element"
+                    element_ptr = "CORBA::WChar*"
+                elif d_seqType.objref():
+                    element = seqType.base(environment)
+                    element_ptr = element
+                elif seqType.sequence():
+                    element = d_seqType.sequenceTemplate(environment)
+                    element_ptr = element
+                elif d_seqType.typecode():
+                    element = "CORBA::TypeCode_member"
+                    element_ptr = element
+                else:
+                    element = seqType.base(environment)
+                    element_ptr = element
+
+            element_reference = "INVALID"
+            if not boxedType.array():
+                if d_seqType.string():
+                    # special case alert
+                    element_reference = element
+                elif d_seqType.wstring():
+                    # special case alert
+                    element_reference = element
+                elif d_seqType.objref():
+                    element_reference = d_seqType.objRefTemplate("Element",
+                                                                 environment)
+                # only if an anonymous sequence
+                elif seqType.sequence():
+                    element_reference = d_seqType.\
+                                        sequenceTemplate(environment) + "&"
+                else:
+                    element_reference = element + "&"
+
+            constructors = output.StringStream()
+            if bounded:
+                constructor_template = valuebox_sequence_constructors_bounded
+            else:
+                constructor_template = valuebox_sequence_constructors_unbounded
+
+            constructors.out(constructor_template,
+                             name=cxx_name, boxedtype=btype,
+                             element=element_ptr)
+                
+            if seqType.array():
+                subscript_element = element_ptr + "_slice*"
+            else:
+                subscript_element = element_reference
+
+            member_funcs.out(valuebox_member_funcs_sequence,
+                             name=cxx_name, boxedtype=btype,
+                             subscript_element=subscript_element,
+                             sequence_constructors=constructors)
+
+
+        elif d_boxedType.fixed():
+            btype = boxedType.member(environment)
+            boxed_member = btype
+            member_funcs.out(valuebox_member_funcs_fixed,
+                             name=cxx_name, boxedtype=btype)
+
+        else:
+            util.fatalError("Unknown boxed type encountered")
+
+        stream.out(value_forward, name=cxx_name, guard=guard)
+        stream.out(valuebox_class, name=cxx_name,
+                   member_funcs=member_funcs,
+                   boxed_member=boxed_member)
+
+
+    def _struct_accessor_funcs(self, members):
+        stream = output.StringStream()
+
+        for m in members:
+            mType = types.Type(m.memberType())
+            d_mType = mType.deref()
+
+            bmemtype = mType.member(self._environment)
+
+            for decl in m.declarators():
+                decl_dims = decl.sizes()
+                full_dims = decl_dims + mType.dims()
+                member = id.mapID(decl.identifier())
+
+                if full_dims:
+                    # Array
+                    if decl_dims:
+                        # Anonymous array
+                        prefix = config.state['Private Prefix']
+                        bconst_type_str = prefix + "_" + member
+                        bmemtype = "_" + member
+                    else:
+                        bconst_type_str = bmemtype
+
+                    array_copy = output.StringStream()
+                    loop = cxx.For(array_copy, full_dims)
+                    array_copy.out("_pd_boxed->@name@@index@ = _value@index@;",
+                                   name=member, index=loop.index())
+                    loop.end()
+
+                    stream.out(valuebox_structmember_array,
+                               name=member, memtype=bmemtype,
+                               const_type = bconst_type_str,
+                               array_copy = array_copy)
+
+                elif d_mType.any():
+                    stream.out(valuebox_structmember_any,
+                               name=member, type=bmemtype)
+
+                elif d_mType.typecode():
+                    stream.out(valuebox_structmember_typecode, name=member)
+
+                elif (isinstance(d_mType.type(), idltype.Base) or
+                      d_mType.enum()):
+
+                    # Basic type
+                    stream.out(valuebox_structmember_basic,
+                               name=member, type=bmemtype)
+
+                elif d_mType.string():
+                    stream.out(valuebox_structmember_string, name=member)
+
+                elif d_mType.wstring():
+                    stream.out(valuebox_structmember_wstring, name=member)
+
+                elif d_mType.objref():
+                    scopedName = d_mType.type().decl().scopedName()
+
+                    env      = self._environment
+                    name     = id.Name(scopedName)
+                    type     = name.unambiguous(env)
+                    ptr_type = name.suffix("_ptr").unambiguous(env)
+                    var_type = name.suffix("_var").unambiguous(env)
+                    
+                    stream.out(valuebox_structmember_objref,
+                               name=member, type=type, ptr_type=ptr_type,
+                               var_type=var_type, memtype=bmemtype)
+
+                elif (mType.typedef() or d_mType.struct()
+                      or d_mType.union() or d_mType.fixed()):
+
+                    stream.out(valuebox_structmember_constructed,
+                               name=member, type=bmemtype)
+
+                elif d_mType.sequence():
+                    stream.out(valuebox_structmember_sequence, name=member)
+
+                elif d_mType.value():
+                    stream.out(valuebox_structmember_value,
+                               name=member, type=bmemtype)
+
+                else:
+                    util.fatalError("Unknown struct member type encountered")
+
+        return stream
+
+    def _union_accessor_funcs(self, cases, switchtype):
+        stream = output.StringStream()
+
+        stream.out(valuebox_union_discriminant,
+                   switchtype = switchtype.member(self._environment))
+
+        for c in cases:
+            mType = types.Type(c.caseType())
+            d_mType = mType.deref()
+
+            bmemtype = mType.member(self._environment)
+
+            decl = c.declarator()
+
+            decl_dims = decl.sizes()
+            full_dims = decl_dims + mType.dims()
+            member = id.mapID(decl.identifier())
+
+            if full_dims:
+                # Array
+                if decl_dims:
+                    # Anonymous array
+                    prefix = config.state['Private Prefix']
+                    bconst_type_str = prefix + "_" + member
+                    bmemtype = "_" + member
+                else:
+                    bconst_type_str = bmemtype
+
+                stream.out(valuebox_unionmember_array,
+                           name=member, memtype=bmemtype,
+                           const_type = bconst_type_str)
+
+            elif d_mType.any():
+                stream.out(valuebox_unionmember_any,
+                           name=member, type=bmemtype)
+
+            elif d_mType.typecode():
+                stream.out(valuebox_unionmember_typecode, name=member)
+
+            elif (isinstance(d_mType.type(), idltype.Base) or
+                  d_mType.enum()):
+
+                # Basic type
+                stream.out(valuebox_unionmember_basic,
+                           name=member, type=bmemtype)
+
+            elif d_mType.string():
+                stream.out(valuebox_unionmember_string, name=member)
+
+            elif d_mType.wstring():
+                stream.out(valuebox_unionmember_wstring, name=member)
+
+            elif d_mType.objref():
+                scopedName = d_mType.type().decl().scopedName()
+
+                env      = self._environment
+                name     = id.Name(scopedName)
+                type     = name.unambiguous(env)
+                ptr_type = name.suffix("_ptr").unambiguous(env)
+                var_type = name.suffix("_var").unambiguous(env)
+
+                stream.out(valuebox_unionmember_objref,
+                           name=member, type=type, ptr_type=ptr_type,
+                           var_type=var_type, memtype=bmemtype)
+
+            elif (mType.typedef() or d_mType.struct()
+                  or d_mType.union() or d_mType.fixed()):
+
+                stream.out(valuebox_unionmember_constructed,
+                           name=member, type=bmemtype)
+
+            elif d_mType.sequence():
+                stream.out(valuebox_unionmember_sequence, name=member)
+
+            elif d_mType.value():
+                stream.out(valuebox_unionmember_value,
+                           name=member, type=bmemtype)
+
+            else:
+                util.fatalError("Unknown struct member type encountered")
+
+        return stream
+
+    def skel_defs(self, stream, visitor):
+        astdecl  = self._astdecl
+        name     = astdecl.identifier()
+        cxx_name = id.mapID(name)
+        flatname = string.join(astdecl.scopedName(), "_")
+
+        value_name = self._fullname.fullyQualify()
+
+        repoId = astdecl.repoId()
+        idhash = hashval(repoId)
+
+        boxedType   = types.Type(astdecl.boxedType())
+        d_boxedType = boxedType.deref()
+
+        marshal_content = output.StringStream()
+        skutil.marshall(marshal_content, None, boxedType,
+                        None, "_pd_boxed", "_0s")
+
+        unmarshal_content = output.StringStream()
+        skutil.unmarshall(unmarshal_content, None, boxedType,
+                          None, "_pd_boxed", "_0s")
+
+        copy_content = "_pd_boxed = _v->_pd_boxed;"
+        destructor = ""
+
+        if boxedType.dims():
+            btype = boxedType.member(self._environment)
+            copy_content = ("_pd_boxed = "
+                            + btype + "_copyHelper::dup(_v._pd_boxed);")
+            destructor = btype + "_copyHelper::free(_pd_boxed);"
+
+        elif d_boxedType.string():
+            copy_content = "_pd_boxed = _CORBA_String_helper::dup(_v->_pd_boxed);"
+            destructor = "_CORBA_String_helper::free(_pd_boxed);"
+
+        elif d_boxedType.wstring():
+            copy_content = "_pd_boxed = _CORBA_WString_helper::dup(_v->_pd_boxed);"
+            destructor = "_CORBA_WString_helper::free(_pd_boxed);"
+
+        stream.out(valuebox_functions,
+                   fqname=value_name, name=cxx_name, repoId=repoId,
+                   idhash=idhash, marshal_content=marshal_content,
+                   unmarshal_content=unmarshal_content,
+                   copy_content=copy_content, destructor=destructor,
+                   flatname=flatname)

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.19.2.3  2004/02/16 10:10:31  dgrisby
+# More valuetype, including value boxes. C++ mapping updates.
+#
 # Revision 1.19.2.2  2003/10/23 11:25:55  dgrisby
 # More valuetype support.
 #
@@ -892,3 +895,5 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_exception_tc("@r
 def visitValue(node):
     print "*** value typecode"
 
+def visitValueBox(node):
+    print "*** valuebox typecode"
