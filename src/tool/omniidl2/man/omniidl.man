@@ -25,8 +25,6 @@ perform remote invocations. At the moment, the IDL primitive types:
 .B float
 ,
 .B double
-and
-.B any
 are not supported by the runtime. By default, the compiler will generate an
 error message and abort if it encounters any of these types in the input
 file. Support for these types can be enabled by command line options (see
@@ -37,6 +35,9 @@ parsed by the compiler.
 
 .SH OPTIONS
 .TP 15
+.B \-A
+Generate support for use of IDL type any. This new option replaces -a.
+.TP
 .B \-B
 enables support for BOAImpl approach
 .TP
