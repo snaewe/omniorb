@@ -1,3 +1,13 @@
+Thu Mar 16 11:06:51 GMT 2000 dpg1
+=================================
+
+- Extra error reporting in omniidl. Redundant code removed from
+  omniidl script.
+
+src/tool/omniidl/python/omniidl/main.py
+src/tool/omniidl/python/scripts/omniidl
+
+
 Wed Mar 15 20:46:00 GMT 2000 djs
 ================================
 
