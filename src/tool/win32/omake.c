@@ -33,6 +33,7 @@ int main(int argc, char **argv)
   if ((argc >= 2) && (strcmp(argv[1],"-quiet") == 0)) {
     quiet = 1;
     argv++;
+    argc--;
   }
 
   getcwd(currentAbsolute,FILENAME_MAX);
