@@ -1,3 +1,21 @@
+Wed May 20 19:21:21 BST 1998 sll
+================================
+
+- Added new flag -t to omniidl2 to enable the generation
+  of tie implementation template
+
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_module.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+src/tool/omniidl2/include/idl_defines.hh
+
+src/examples/echo/dir.mk
+src/examples/echo/echoexamples.module
+src/examples/echo/eg3_tieimpl.cc   NEW
+
+
 Wed Apr 22 16:17:07 BST 1998 sll
 ================================
 
