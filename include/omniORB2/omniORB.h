@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.1  1997/03/10 11:41:57  sll
-  Initial revision
+  Revision 1.2  1997/03/11 19:56:43  sll
+  keyToOctetSequence and octetSequenceToKey should be static. Fixed.
 
+ * Revision 1.1  1997/03/10  11:41:57  sll
+ * Initial revision
+ *
  */
 
 #ifndef __OMNIORB_H__
@@ -76,12 +79,12 @@ public:
   //                                                                    //
   typedef _CORBA_Unbounded_Sequence_Octet seqOctets;                    //
   // Convert a key to a sequence of octets.                             //
-  seqOctets* keyToOctetSequence(const objectKey &k1);                   //
+  static seqOctets* keyToOctetSequence(const objectKey &k1);            //
   //                                                                    //
   // Convert a sequence of octets back to an object key.                //
   // This function may throw a CORBA::MARSHAL exception if the sequence //
   // is not an object key.                                              //
-  objectKey octetSequenceToKey(const seqOctets& seq);                   //
+  static objectKey octetSequenceToKey(const seqOctets& seq);             //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
