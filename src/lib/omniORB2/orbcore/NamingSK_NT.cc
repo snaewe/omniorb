@@ -1788,8 +1788,9 @@ CosNaming::NamingContext::_narrow(CORBA::Object_ptr obj)
 }
 
 void *
-CosNaming::NamingContext::_widenFromTheMostDerivedIntf(const char *repoId)
+CosNaming::NamingContext::_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id)
 {
+  if (is_cxx_type_id) return 0;
   if (!repoId)
     return (void *)((CORBA::Object_ptr)this);
   if (strcmp(CosNaming_NamingContext_IntfRepoID,repoId) == 0)
@@ -2196,8 +2197,9 @@ CosNaming::BindingIterator::_narrow(CORBA::Object_ptr obj)
 }
 
 void *
-CosNaming::BindingIterator::_widenFromTheMostDerivedIntf(const char *repoId)
+CosNaming::BindingIterator::_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id)
 {
+  if (is_cxx_type_id) return 0;
   if (!repoId)
     return (void *)((CORBA::Object_ptr)this);
   if (strcmp(CosNaming_BindingIterator_IntfRepoID,repoId) == 0)
