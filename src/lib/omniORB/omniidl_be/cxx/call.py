@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.11  2001/11/27 14:35:08  dpg1
+# Context, DII fixes.
+#
 # Revision 1.1.4.10  2001/11/06 15:41:37  dpg1
 # Reimplement Context. Remove CORBA::Status. Tidying up.
 #
@@ -287,8 +290,8 @@ class CallDescriptor:
         else:
             result_string = ""
         
-        if self.__contexts != []:
-            impl_args.append("tcd->ctxt")
+        if self.__contexts:
+            impl_args.append("ctxt")
 
         # If we have no return value and no arguments at all then we don't
         # need to fetch the call descriptor. This suppresses a warning in gcc
@@ -301,14 +304,20 @@ class CallDescriptor:
         impl_call = output.StringStream()
         catch = output.StringStream()
 
+        # Deal with context
+        if self.__contexts:
+            impl_call.out(template.interface_callback_context,
+                          cname = self.__context_name,
+                          count = str(len(self.__contexts)))
+
+        # Deal with user exceptions
         raises = self.__exceptions
-        raises_sorted = skutil.sort_exceptions(raises)
-        has_user_exceptions = raises != []
-        if has_user_exceptions:
+        if raises:
             for exception in raises:
                 ex_scopedName = id.Name(exception.scopedName())
                 catch.out(template.interface_operation_catch_exn,
                           exname = ex_scopedName.fullyQualify())
+
             impl_call.out(template.interface_callback_tryblock,
                           result = result_string,
                           cxx_operation_name = operation,

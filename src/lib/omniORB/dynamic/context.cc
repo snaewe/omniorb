@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.12.2.12  2001/11/27 14:35:07  dpg1
+ Context, DII fixes.
+
  Revision 1.12.2.11  2001/11/06 15:41:35  dpg1
  Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -117,6 +120,8 @@
 
 OMNI_NAMESPACE_BEGIN(omni)
 
+static ContextImpl* default_context = 0;
+
 ContextImpl::ContextImpl(const char* name, CORBA::Context_ptr parent)
 {
   if( !name )  name = "";
@@ -142,6 +147,9 @@ ContextImpl::~ContextImpl()
     throw omniORB::fatalException(__FILE__, __LINE__,
 		  "Application deleted a CORBA::Context explicitly");
 
+  OMNIORB_USER_CHECK(this != default_context);
+  // This fails if the application releases the default context too many times.
+
   // <pd_name> freed by String_var.
   // We don't own <pd_parent>.
 
@@ -152,6 +160,17 @@ ContextImpl::~ContextImpl()
 
   if( !CORBA::is_nil(pd_parent) )
     ((ContextImpl*)pd_parent)->loseChild(this);
+}
+
+void
+ContextImpl::releaseDefault()
+{
+  if (default_context) {
+    ContextImpl* d = default_context;
+    default_context = 0;
+    d->decrRefCount();
+    omniORB::logs(15, "Released default Context");
+  }
 }
 
 
@@ -692,6 +711,49 @@ CORBA::Context::unmarshalContext(cdrStream& s)
   return c;
 }
 
+CORBA::Context_ptr
+CORBA::Context::filterContext(CORBA::Context_ptr ctxt,
+			      const char*const* which,
+			      int whichlen)
+{
+  ContextImpl* ret = new ContextImpl("", CORBA::Context::_nil());
+
+  if (CORBA::is_nil(ctxt))
+    return ret;
+
+  if (!PR_is_valid(ctxt))
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidContext, CORBA::COMPLETED_NO);
+
+  ContextImpl* c = (ContextImpl*)ctxt;
+
+  do {
+    omni_tracedmutex_lock sync(c->pd_lock);
+    int i;
+    CORBA::ULong top, bottom, j, z1, z2;
+
+    for (i=0; i < whichlen; i++) {
+
+      if (c->matchPattern(which[i], bottom, top)) {
+	for (; bottom < top; bottom++) {
+	  ContextImpl::Entry* e = &(c->pd_entries[bottom]);
+
+	  // See if already added
+	  if (ret->matchPattern(e->name, z1, z2))
+	    continue;
+
+	  ret->insert_single_consume(CORBA::string_dup(e->name),
+				     CORBA::string_dup(e->value));
+	}
+      }
+    }
+    if (CORBA::is_nil(c->pd_parent)) break;
+    c = (ContextImpl*)c->pd_parent;
+  } while(1);
+
+  return ret;
+}
+
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////// CORBA ///////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -703,8 +765,6 @@ CORBA::release(CORBA::Context_ptr p)
     ((ContextImpl*)p)->decrRefCount();
 }
 
-
-static ContextImpl* default_context = 0;
 
 void
 CORBA::ORB::get_default_context(CORBA::Context_out context_out)

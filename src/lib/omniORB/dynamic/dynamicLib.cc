@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/11/27 14:35:08  dpg1
+  Context, DII fixes.
+
   Revision 1.2.2.7  2001/11/06 15:41:36  dpg1
   Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -62,6 +65,7 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
 #include <dynamicLib.h>
+#include <context.h>
 #include <omniORB4/linkHacks.h>
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(dynamicLib);
@@ -100,6 +104,7 @@ static void
 deinit()
 {
   omniORB::logs(5, "Deinitialising omniDynamic library.");
+  ContextImpl::releaseDefault();
 }
 
 

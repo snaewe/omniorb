@@ -87,11 +87,14 @@ public:
   void unmarshalResults(cdrStream&);
   CORBA::Boolean unmarshalUserException(cdrStream&, const char* repoId);
 
+  void deferred_invoke();
+
 private:
   enum State {
-    RS_READY,
-    RS_DONE,
-    RS_DEFERRED
+    RS_READY,       // Not used yet
+    RS_DONE,        // Result got
+    RS_DEFERRED,    // Sent deferred
+    RS_POLLED_DONE  // Found to be done by poll_response() but not yet got
   };
 
   CORBA::Object_var        pd_target;

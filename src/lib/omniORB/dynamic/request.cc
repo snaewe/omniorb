@@ -161,7 +161,7 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation,
 
 RequestImpl::~RequestImpl()
 {
-  if( pd_deferredRequest && omniORB::traceLevel > 0 ){
+  if( (pd_state == RS_DEFERRED) && omniORB::traceLevel > 0 ){
     omniORB::logger log;
     log <<
       "omniORB: WARNING -- The application has not collected the reponse of\n"
@@ -253,7 +253,7 @@ RequestImpl::ctx(CORBA::Context_ptr context)
 		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
 		  CORBA::COMPLETED_NO);
 
-  pd_context = context;
+  pd_context = CORBA::Context::_duplicate(context);
 }
 
 
@@ -388,10 +388,36 @@ private:
 void
 RequestImpl::invoke()
 {
-  if( pd_state != RS_READY && pd_state != RS_DEFERRED )
+  if( pd_state != RS_READY )
     OMNIORB_THROW(BAD_INV_ORDER,
 		  BAD_INV_ORDER_RequestAlreadySent,
 		  CORBA::COMPLETED_NO);
+  try {
+
+    CORBA::ULong operation_len = strlen(pd_operation) + 1;
+    omniObjRef* o = pd_target->_PR_getobj();
+
+    omni_RequestImpl_callDesc call_desc(pd_operation,operation_len,0,*this);
+
+    o->_invoke(call_desc);
+  }
+  // Either throw system exceptions, or store in pd_environment.
+  catch(CORBA::SystemException& ex){
+    INVOKE_DONE();
+    if( orbParameters::diiThrowsSysExceptions ) {
+      pd_sysExceptionToThrow = CORBA::Exception::_duplicate(&ex);
+      throw;
+    } else
+      pd_environment->exception(CORBA::Exception::_duplicate(&ex));
+  }
+  INVOKE_DONE();
+}
+
+
+void
+RequestImpl::deferred_invoke()
+{
+  OMNIORB_ASSERT(pd_state == RS_DEFERRED);
   try {
 
     CORBA::ULong operation_len = strlen(pd_operation) + 1;
@@ -459,19 +485,27 @@ RequestImpl::send_deferred()
 void
 RequestImpl::get_response()
 {
-  if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
+  if( pd_state == RS_READY )
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestNotSentYet,
+		  CORBA::COMPLETED_NO);
 
-  if( pd_state == RS_DONE ) return;
-
-  if( pd_state != RS_DEFERRED || !pd_deferredRequest )
+  if( !pd_deferredRequest )
     OMNIORB_THROW(BAD_INV_ORDER,
 		  BAD_INV_ORDER_RequestIsSynchronous,
 		  CORBA::COMPLETED_NO);
 
+  if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
+
+  if( pd_state == RS_POLLED_DONE ) pd_state = RS_DONE;
+
+  if( pd_state == RS_DONE ) return;
+
+  OMNIORB_ASSERT(pd_state == RS_DEFERRED);
+
   pd_deferredRequest->get_response();
   pd_sysExceptionToThrow = pd_deferredRequest->get_exception();
   pd_deferredRequest->die();
-  pd_deferredRequest = 0;
   pd_state = RS_DONE;
   if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
 }
@@ -480,20 +514,31 @@ RequestImpl::get_response()
 CORBA::Boolean
 RequestImpl::poll_response()
 {
-  if( pd_state == RS_DONE )  return CORBA::Boolean(1);
+  if( pd_state == RS_READY )
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestNotSentYet,
+		  CORBA::COMPLETED_NO);
 
-  if( pd_state != RS_DEFERRED || !pd_deferredRequest )
+  if( !pd_deferredRequest )
     OMNIORB_THROW(BAD_INV_ORDER,
 		  BAD_INV_ORDER_RequestIsSynchronous,
 		  CORBA::COMPLETED_NO);
+
+  if( pd_state == RS_DONE )
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_ResultAlreadyReceived,
+		  CORBA::COMPLETED_NO);
+
+  if( pd_state == RS_POLLED_DONE )  return CORBA::Boolean(1);
+
+  OMNIORB_ASSERT(pd_state == RS_DEFERRED);
 
   CORBA::Boolean result = pd_deferredRequest->poll_response();
 
   if( result ) {
     pd_sysExceptionToThrow = pd_deferredRequest->get_exception();
     pd_deferredRequest->die();
-    pd_deferredRequest = 0;
-    pd_state = RS_DONE;
+    pd_state = RS_POLLED_DONE;
 
     // XXX Opengroup vsOrb tests for poll_response to raise an
     //     exception when the invocation results in a system exception.

@@ -32,13 +32,15 @@
 #define __DEFERREDREQUEST_H__
 
 #include <omniORB4/CORBA.h>
+#include <request.h>
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 
 class DeferredRequest : public omni_thread {
 
 public:
-  DeferredRequest(CORBA::Request_ptr request);
+  DeferredRequest(RequestImpl* request);
   // Spawns off a new thread which invokes the operation
   // given in the request.
 
@@ -71,7 +73,7 @@ protected:
 private:
   virtual void* run_undetached(void* arg);
 
-  CORBA::Request_ptr      pd_request;
+  RequestImpl*            pd_request;
   CORBA::Boolean          pd_ready;
   omni_mutex              pd_readyMutex;
   omni_condition          pd_readyCondition;

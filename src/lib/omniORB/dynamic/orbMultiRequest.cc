@@ -118,6 +118,10 @@ CORBA::ORB::poll_next_response()
 
   if( incoming_q )  return 1;
 
+  if( !outgoing_q )
+    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_RequestNotSentYet,
+		  CORBA::COMPLETED_NO);
+
   RequestLink** rlp = &outgoing_q;
   RequestLink*  rlp_1 = 0;
 
@@ -166,12 +170,10 @@ CORBA::ORB::get_next_response(Request_out req_out)
   {
     omni_mutex_lock sync(q_lock);
 
-    // We need to block until we can grab something off one of the
-    // queues.
-    while( !(outgoing_q || incoming_q) ) {
-      queue_waiters++;
-      q_cv.wait();
-      queue_waiters--;
+    // Complain if there's nothing pending
+    if( !(outgoing_q || incoming_q) ) {
+      OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_RequestNotSentYet,
+		    CORBA::COMPLETED_NO);
     }
 
     // If we've received any replies, return one of those.

@@ -33,7 +33,7 @@
 
 OMNI_NAMESPACE_BEGIN(omni)
 
-DeferredRequest::DeferredRequest(CORBA::Request_ptr request)
+DeferredRequest::DeferredRequest(RequestImpl* request)
   : pd_readyCondition(&pd_readyMutex)
 {
   if( CORBA::is_nil(request) )
@@ -62,7 +62,7 @@ DeferredRequest::run_undetached(void* arg)
 
   try{
     try{
-      pd_request->invoke();
+      pd_request->deferred_invoke();
     }
     catch(CORBA::SystemException& ex){
       if( orbParameters::diiThrowsSysExceptions )
@@ -72,7 +72,7 @@ DeferredRequest::run_undetached(void* arg)
 	if( omniORB::traceLevel > 0 ){
 	  omniORB::logger log;
 	  log <<
-	    "omniORB: BUG: file <" << __FILE__ << ">, line <" << __LINE__ <<
+	    "omniORB: BUG: file <" << __FILE__ << ">, line " << __LINE__ <<
 	    "\n Request->invoke() raised a system exception.\n"
 	    " omni::diiThrowsSysExceptions = " <<
 	    orbParameters::diiThrowsSysExceptions << ".\n";
