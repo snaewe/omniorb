@@ -555,8 +555,8 @@ public:
 
 private:
 
-    virtual void run(void* arg) {}
-    virtual void* run_undetached(void* arg) { return NULL; }
+    virtual void run(void* /*arg*/) {}
+    virtual void* run_undetached(void* /*arg*/) { return NULL; }
 	// can be overridden in a derived class.  When constructed using the
 	// the constructor omni_thread(void*, priority_t), these functions are
 	// called by start() and start_undetached() respectively.
