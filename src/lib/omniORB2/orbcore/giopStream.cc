@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  1999/11/04 20:20:19  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.1.2.4  1999/10/05 20:35:33  sll
   Added support to GIOP 1.2 to recognise all TargetAddress mode.
   Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
@@ -67,8 +72,8 @@
 
 #define LOGMESSAGE(level,prefix,message) do {\
    if (omniORB::trace(level)) {\
-     omniORB::logger log("omniORB: giopStream " ## prefix ## ": ");\
-	log << message ## "\n";\
+     omniORB::logger log;\
+	log << " giopStream " ## prefix ## ": " ## message ## "\n";\
    }\
 } while (0)
 
@@ -131,6 +136,8 @@ giopStream::acquire(Rope* r, GIOP::Version v)
     throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
   }
 
+  p->pd_output_body_marshaller = 0;
+
   return p;
 }
 
@@ -158,6 +165,9 @@ giopStream::acquire(Strand* s)
   p->pd_impl = giopStreamImpl::maxVersion();
   p->pd_state = InputIdle;
   p->pd_clicks = INT_MAX;
+
+  p->pd_output_body_marshaller = 0;
+
   return p;
 }
 
@@ -227,7 +237,8 @@ giopStream::giopStream(Strand* s) : Strand::Sync(s),
 				    pd_output_msgsent_size(0),
 				    pd_output_hdr_end(0),
 				    pd_output_at_most_once(0),
-				    pd_marshaller(0),
+				    pd_output_header_marshaller(0),
+				    pd_output_body_marshaller(0),
 				    pd_request_id(0),
 				    pd_state(UnUsed)
 {
@@ -614,6 +625,8 @@ giopStream::outputMessageEnd()
 
   pd_impl->outputMessageEnd(this);
 
+  pd_output_body_marshaller = 0;
+
   {
     omni_mutex_lock sync(Strand::Sync::getMutex(pd_strand));
 
@@ -664,6 +677,19 @@ giopStream::SendMsgErrorMessage()
     // Release exclusive write access to the strand
     STRAND_WRITE_UNLOCK();
   }
+}
+
+void
+giopStream::outputMessageBodyMarshaller(giopMarshaller& m)
+{
+#ifdef PARANOID
+  if (pd_state != OutputIdle &&
+      pd_state != InputRequestCompleted) {
+    throw omniORB::fatalException(__FILE__,__LINE__,
+				  "giopStream::outputMessageBodyMarshaller() entered with the wrong state.");
+  }
+#endif
+  pd_output_body_marshaller = &m;
 }
 
 GIOP::MsgType

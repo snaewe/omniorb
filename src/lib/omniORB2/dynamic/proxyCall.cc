@@ -35,6 +35,11 @@
 
 /*
  $Log$
+ Revision 1.7.4.4  1999/11/04 20:20:16  sll
+ GIOP engines can now do callback to the higher layer to calculate total
+ message size if necessary.
+ Where applicable, changed to use the new server side descriptor-based stub.
+
  Revision 1.7.4.3  1999/10/05 20:35:32  sll
  Added support to GIOP 1.2 to recognise all TargetAddress mode.
  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
@@ -82,6 +87,36 @@
 //////////////////////////////////////////////////////////////////////
 //////////////////////// OmniProxyCallWrapper ////////////////////////
 //////////////////////////////////////////////////////////////////////
+class OmniProxyCallWCArgumentsMarshaller : public giopMarshaller {
+public:
+  OmniProxyCallWCArgumentsMarshaller(giopStream& s,
+				     OmniProxyCallDescWithContext& desc) : 
+    pd_s(s), pd_desc(desc) {}
+
+  void marshalData() {
+    pd_desc.marshalArguments(pd_s);
+    if( pd_desc.contexts_expected() )
+      CORBA::Context::marshalContext(pd_desc.context(),
+				     pd_desc.contexts_expected(),
+				     pd_desc.num_contexts_expected(),
+				     pd_s);
+  }
+
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    pd_desc.marshalArguments(s);
+    if( pd_desc.contexts_expected() )
+      CORBA::Context::marshalContext(pd_desc.context(),
+				     pd_desc.contexts_expected(),
+				     pd_desc.num_contexts_expected(),
+				     s);
+    return s.total();
+  }
+
+private:
+  giopStream&     pd_s;
+  OmniProxyCallDescWithContext& pd_desc;
+};
 
 void
 OmniProxyCallWrapper::invoke(omniObject* o, 
@@ -102,16 +137,10 @@ OmniProxyCallWrapper::invoke(omniObject* o,
 
       call_desc.initialise((cdrStream&)giop_client);
 
-      giop_client.InitialiseRequest(call_desc.operation(),
-				    call_desc.operation_len(),0,1);
+      OmniProxyCallWCArgumentsMarshaller m((giopStream&)giop_client,call_desc);
 
-      // Marshal the arguments to the operation.
-      call_desc.marshalArguments((cdrStream&)giop_client);
-      if( call_desc.contexts_expected() )
-	CORBA::Context::marshalContext(call_desc.context(),
-				       call_desc.contexts_expected(),
-				       call_desc.num_contexts_expected(),
-				       giop_client);
+      giop_client.InitialiseRequest(call_desc.operation(),
+				    call_desc.operation_len(),0,1,m);
 
       // Wait for the reply.
       GIOP::ReplyStatusType rc;
@@ -218,6 +247,37 @@ OmniProxyCallWrapper::invoke(omniObject* o,
   }
 }
 
+class OmniOWProxyCallWCArgumentsMarshaller : public giopMarshaller {
+public:
+  OmniOWProxyCallWCArgumentsMarshaller(giopStream& s,
+				       OmniOWProxyCallDescWithContext& desc) : 
+    pd_s(s), pd_desc(desc) {}
+
+  void marshalData() {
+    pd_desc.marshalArguments(pd_s);
+    if( pd_desc.contexts_expected() )
+      CORBA::Context::marshalContext(pd_desc.context(),
+				     pd_desc.contexts_expected(),
+				     pd_desc.num_contexts_expected(),
+				     pd_s);
+  }
+
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    pd_desc.marshalArguments(s);
+    if( pd_desc.contexts_expected() )
+      CORBA::Context::marshalContext(pd_desc.context(),
+				     pd_desc.contexts_expected(),
+				     pd_desc.num_contexts_expected(),
+				     s);
+    return s.total();
+  }
+
+private:
+  giopStream&     pd_s;
+  OmniOWProxyCallDescWithContext& pd_desc;
+};
+
 void
 OmniProxyCallWrapper::one_way(omniObject* o,
 			      OmniOWProxyCallDescWithContext& call_desc)
@@ -237,17 +297,11 @@ OmniProxyCallWrapper::one_way(omniObject* o,
 
       call_desc.initialise((cdrStream&)giop_client);
 
+      OmniOWProxyCallWCArgumentsMarshaller m((giopStream&)giop_client,call_desc);
+
       giop_client.InitialiseRequest(call_desc.operation(),
 				    call_desc.operation_len(),
-				    1,0);
-
-      // Marshal the arguments to the operation.
-      call_desc.marshalArguments((cdrStream&)giop_client);
-      if( call_desc.contexts_expected() )
-	CORBA::Context::marshalContext(call_desc.context(),
-				       call_desc.contexts_expected(),
-				       call_desc.num_contexts_expected(),
-				       giop_client);
+				    1,0,m);
 
       // Wait for the reply.
       switch(giop_client.ReceiveReply()){

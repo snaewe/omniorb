@@ -122,6 +122,27 @@ private:
   const DsiObject& operator= (const DsiObject&);
 
   CORBA::BOA::DynamicImplementation_ptr pd_dynImpl;
+
+  class resultsMarshaller : public giopMarshaller {
+  public:
+    resultsMarshaller(giopStream&,ServerRequestImpl&);
+    void marshalData();
+    size_t dataSize(size_t);
+  private:
+    giopStream&        pd_s;
+    ServerRequestImpl& pd_i;
+  };
+
+  class exceptionMarshaller : public giopMarshaller {
+  public:
+    exceptionMarshaller(giopStream&,ServerRequestImpl&);
+    void marshalData();
+    size_t dataSize(size_t);
+  private:
+    giopStream&        pd_s;
+    ServerRequestImpl& pd_i;
+  };
+
 };
 
 //////////////////////////////////////////////////////////////////////

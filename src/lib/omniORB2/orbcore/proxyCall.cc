@@ -35,6 +35,11 @@
 
 /*
   $Log$
+  Revision 1.7.4.4  1999/11/04 20:20:22  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.7.4.3  1999/10/05 20:35:36  sll
   Added support to GIOP 1.2 to recognise all TargetAddress mode.
   Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
@@ -58,8 +63,8 @@
 
 #define LOGMESSAGE(level,prefix,message) do {\
    if (omniORB::trace(level)) {\
-     omniORB::logger log("omniORB: ");\
-	log << prefix ## ": " ## message ## "\n";\
+     omniORB::logger log;\
+	log << " " ## prefix ## ": " ## message ## "\n";\
    }\
 } while (0)
 
@@ -67,6 +72,28 @@
 //////////////////////////////////////////////////////////////////////
 //////////////////////// OmniProxyCallWrapper ////////////////////////
 //////////////////////////////////////////////////////////////////////
+
+class OmniProxyCallArgumentsMarshaller : public giopMarshaller {
+public:
+  OmniProxyCallArgumentsMarshaller(giopStream& s,OmniProxyCallDesc& desc) : 
+    pd_s(s), pd_desc(desc) {}
+
+  void marshalData() {
+    pd_desc.marshalArguments(pd_s);
+  }
+
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    pd_desc.marshalArguments(s);
+    return s.total();
+  }
+
+private:
+  giopStream&     pd_s;
+  OmniProxyCallDesc& pd_desc;
+};
+
+
 
 void
 OmniProxyCallWrapper::invoke(omniObject* o, OmniProxyCallDesc& call_desc)
@@ -86,11 +113,10 @@ OmniProxyCallWrapper::invoke(omniObject* o, OmniProxyCallDesc& call_desc)
 
       call_desc.initialise((cdrStream&)giop_client);
 
-      giop_client.InitialiseRequest(call_desc.operation(),
-				    call_desc.operation_len(),0,1);
+      OmniProxyCallArgumentsMarshaller m((giopStream&)giop_client,call_desc);
 
-      // Marshal the arguments to the operation.
-      call_desc.marshalArguments((cdrStream&)giop_client);
+      giop_client.InitialiseRequest(call_desc.operation(),
+				    call_desc.operation_len(),0,1,m);
 
       // Wait for the reply.
       GIOP::ReplyStatusType rc;
@@ -197,6 +223,25 @@ OmniProxyCallWrapper::invoke(omniObject* o, OmniProxyCallDesc& call_desc)
   }
 }
 
+class OmniOWProxyCallArgumentsMarshaller : public giopMarshaller {
+public:
+  OmniOWProxyCallArgumentsMarshaller(giopStream& s,OmniOWProxyCallDesc& desc) : 
+    pd_s(s), pd_desc(desc) {}
+
+  void marshalData() {
+    pd_desc.marshalArguments(pd_s);
+  }
+
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    pd_desc.marshalArguments(s);
+    return s.total();
+  }
+
+private:
+  giopStream&     pd_s;
+  OmniOWProxyCallDesc& pd_desc;
+};
 
 void
 OmniProxyCallWrapper::one_way(omniObject* o, OmniOWProxyCallDesc& call_desc)
@@ -216,12 +261,11 @@ OmniProxyCallWrapper::one_way(omniObject* o, OmniOWProxyCallDesc& call_desc)
 
       call_desc.initialise((cdrStream&)giop_client);
 
+      OmniOWProxyCallArgumentsMarshaller m((giopStream&)giop_client,call_desc);
+
       giop_client.InitialiseRequest(call_desc.operation(),
 				    call_desc.operation_len(),
-				    1,0);
-
-      // Marshal the arguments to the operation.
-      call_desc.marshalArguments((cdrStream&)giop_client);
+				    1,0,m);
 
       // Wait for the reply.
       switch(giop_client.ReceiveReply()){
@@ -314,4 +358,110 @@ void
 OmniOWProxyCallDesc::marshalArguments(cdrStream&)
 {
   // no-op
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+void
+OmniUpCallDesc::unmarshalArguments(cdrStream&) {
+}
+
+void
+OmniUpCallDesc::marshalReturnedValues(cdrStream&) {
+}
+
+CORBA::Boolean
+OmniUpCallDesc::marshalUserException(cdrStream& s) {
+  return 0;
+}
+
+class OmniUpCallReturnedValuesMarshaller : public giopMarshaller {
+public:
+  OmniUpCallReturnedValuesMarshaller(giopStream& s,OmniUpCallDesc& desc) : 
+    pd_s(s), pd_desc(desc) {}
+
+  void marshalData() {
+    pd_desc.marshalReturnedValues(pd_s);
+  }
+
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    pd_desc.marshalReturnedValues(s);
+    return s.total();
+  }
+
+private:
+  giopStream&     pd_s;
+  OmniUpCallDesc& pd_desc;
+};
+
+class OmniUpCallUserExceptionMarshaller : public giopMarshaller {
+public:
+  OmniUpCallUserExceptionMarshaller(giopStream& s, OmniUpCallDesc& desc) : 
+    pd_s(s), pd_desc(desc) {}
+
+  void marshalData() {
+    pd_desc.marshalUserException(pd_s);
+  }
+
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    (void) pd_desc.marshalUserException(s);
+    return s.total();
+  }
+
+private:
+  giopStream&     pd_s;
+  OmniUpCallDesc& pd_desc;
+};
+
+
+
+static
+void
+doNoUserExceptionUpCall(GIOP_S& giop_s, OmniUpCallDesc& desc)
+{
+  cdrStream& s = (cdrStream&)giop_s;
+  desc.unmarshalArguments(s);
+  giop_s.RequestReceived();
+  desc.doUpCall();
+  if (!desc.is_oneway()) {
+    OmniUpCallReturnedValuesMarshaller m((giopStream&)giop_s,desc);
+    giop_s.InitialiseReply(GIOP::NO_EXCEPTION,m);
+  }
+  giop_s.ReplyCompleted();
+}
+
+
+void
+OmniUpCallWrapper::upcall(GIOP_S& giop_s, OmniUpCallDesc& desc)
+{
+  if (desc.has_user_exceptions()) {
+    try {
+      doNoUserExceptionUpCall(giop_s,desc);
+    }
+    catch (CORBA::UserException& ex) {
+
+      desc.setUserException(ex);
+
+      cdrCountingStream c;
+      if (desc.marshalUserException(c)) {
+	OmniUpCallUserExceptionMarshaller m((giopStream&)giop_s,desc);
+	giop_s.InitialiseReply(GIOP::USER_EXCEPTION,m);
+	giop_s.ReplyCompleted();	
+      }
+      else {
+	throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+      }
+    }
+  }
+  else {
+    doNoUserExceptionUpCall(giop_s,desc);
+  }
 }

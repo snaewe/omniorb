@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.21.4.3  1999/11/04 20:20:19  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.21.4.2  1999/10/05 20:35:33  sll
   Added support to GIOP 1.2 to recognise all TargetAddress mode.
   Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
@@ -173,7 +178,7 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
 }
 
 void
-GIOP_S::InitialiseReply(GIOP::ReplyStatusType status)
+GIOP_S::InitialiseReply(GIOP::ReplyStatusType status, giopMarshaller& m)
 {
   if (!pd_invokeInfo.response_expected())
     throw terminateProcessing();
@@ -184,8 +189,22 @@ GIOP_S::InitialiseReply(GIOP::ReplyStatusType status)
 
   pd_state = GIOP_S::ReplyIsBeingComposed;
 
+  // Setup callback in case the giopStream have to calculate the
+  // message body size.
+  pd_cdrStream->outputMessageBodyMarshaller(m);
+
+  // Marshal reply header
   pd_cdrStream->outputReplyMessageBegin(pd_invokeInfo,status);
+
+  // Marshal reply body 
+  m.marshalData();
 }
+
+class GIOP_S_null_marshaller : public giopMarshaller {
+public:
+  void marshalData() {}
+  size_t dataSize(size_t initialoffset) {}
+};
 
 void
 GIOP_S::ReplyCompleted()
@@ -201,7 +220,8 @@ GIOP_S::ReplyCompleted()
   else if (pd_state == GIOP_S::WaitingForReply) {
     // The call is a oneway but the remote end expect a response.
     // The stub is not supplying one. We make one here.
-    InitialiseReply(GIOP::NO_EXCEPTION);
+    GIOP_S_null_marshaller m;
+    InitialiseReply(GIOP::NO_EXCEPTION,m);
   }
 
   if (pd_state != GIOP_S::ReplyIsBeingComposed)
@@ -242,6 +262,27 @@ GIOP_S::dispatcher(Strand *s)
     }
   }
 }
+
+class GIOP_S_LocationForward_Marshaller : public giopMarshaller {
+public:
+  GIOP_S_LocationForward_Marshaller(giopStream& s,
+				    CORBA::Object_var& d)
+    : pd_s(s), pd_d(d) {}
+
+  void marshalData() {
+    CORBA::Object::marshalObjRef(pd_d,pd_s);
+  }
+  
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    CORBA::Object::marshalObjRef(pd_d,s);
+    return s.total();
+  }
+
+private:
+  giopStream& pd_s;
+  CORBA::Object_var& pd_d;
+};
 
 #define CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION(exrepoid,exvar) do {\
     if (!pd_cdrStream->terminalError() && \
@@ -357,8 +398,8 @@ GIOP_S::HandleRequest()
 	  RequestReceived(1); 
 	
 	  // Build and send the location forward message...
-	  InitialiseReply(GIOP::LOCATION_FORWARD);
-	  CORBA::Object::marshalObjRef(newDestination, (cdrStream&)*this);
+	  GIOP_S_LocationForward_Marshaller m((giopStream&)*this,newDestination);
+	  InitialiseReply(GIOP::LOCATION_FORWARD,m);
 	
 	  // All done...
 	  ReplyCompleted(); return;
@@ -552,6 +593,7 @@ GIOP_S::HandleLocateRequest()
 
 	    pd_state = GIOP_S::ReplyIsBeingComposed;
 
+	    // XXX Should be changed to use giopMarshaller
 	    pd_cdrStream->outputLocateReplyMessageBegin(pd_invokeInfo,status);
 	    CORBA::Object::marshalObjRef(newDestination,*pd_cdrStream);
 	    pd_cdrStream->outputMessageEnd();
@@ -574,6 +616,7 @@ GIOP_S::HandleLocateRequest()
 
     pd_state = GIOP_S::ReplyIsBeingComposed;
 
+    // XXX Should be changed to use giopMarshaller
     pd_cdrStream->outputLocateReplyMessageBegin(pd_invokeInfo,status);
     pd_cdrStream->outputMessageEnd();
 
@@ -590,25 +633,56 @@ GIOP_S::HandleCancelRequest()
   pd_state = GIOP_S::Idle;
 }
 
+
+class GIOP_S_SystemException_Marshaller : public giopMarshaller {
+public:
+  GIOP_S_SystemException_Marshaller(giopStream& s,
+				    const GIOP_Basetypes::_SysExceptRepoID &id,
+				    const CORBA::SystemException &ex)
+    : pd_s(s), pd_id(id), pd_ex(ex) {}
+
+  void marshalData() {
+    CORBA::ULong exsize = pd_id.len + 
+      GIOP_Basetypes::SysExceptRepoID::versionLen + 1;
+
+    exsize >>= pd_s;
+    pd_s.put_char_array(pd_id.id, pd_id.len);
+    pd_s.put_char_array((CORBA::Char*)
+			GIOP_Basetypes::SysExceptRepoID::version,
+			GIOP_Basetypes::SysExceptRepoID::versionLen + 1);
+    pd_ex.minor() >>= pd_s;
+    operator>>= ((CORBA::ULong)pd_ex.completed(),pd_s);
+  }
+  
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    CORBA::ULong exsize = pd_id.len + 
+      GIOP_Basetypes::SysExceptRepoID::versionLen + 1;
+
+    exsize >>= s;
+    s.put_char_array(pd_id.id, pd_id.len);
+    s.put_char_array((CORBA::Char*)
+		     GIOP_Basetypes::SysExceptRepoID::version,
+		     GIOP_Basetypes::SysExceptRepoID::versionLen + 1);
+    pd_ex.minor() >>= s;
+    operator>>= ((CORBA::ULong)pd_ex.completed(),s);
+    return s.total();
+  }
+
+private:
+  giopStream& pd_s;
+  const GIOP_Basetypes::_SysExceptRepoID& pd_id;
+  const CORBA::SystemException& pd_ex;
+};
+
 static
 void 
 MarshallSystemException(GIOP_S *s,
 			const GIOP_Basetypes::_SysExceptRepoID &id,
 			const CORBA::SystemException &ex)
 {
-  s->InitialiseReply(GIOP::SYSTEM_EXCEPTION);
-
-  CORBA::ULong exsize = id.len + 
-    GIOP_Basetypes::SysExceptRepoID::versionLen + 1;
-
-  cdrStream& m = (cdrStream&)*s;
-  exsize >>= m;
-  m.put_char_array(id.id, id.len);
-  m.put_char_array((CORBA::Char*)
-		   GIOP_Basetypes::SysExceptRepoID::version,
-		   GIOP_Basetypes::SysExceptRepoID::versionLen + 1);
-  ex.minor() >>= m;
-  operator>>= ((CORBA::ULong)ex.completed(),m);
+  GIOP_S_SystemException_Marshaller m((giopStream&)*s,id,ex);
+  s->InitialiseReply(GIOP::SYSTEM_EXCEPTION,m);
   s->ReplyCompleted();
   return;
 }

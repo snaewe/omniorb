@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.12.4.3  1999/11/04 20:20:18  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.12.4.2  1999/10/05 20:35:32  sll
   Added support to GIOP 1.2 to recognise all TargetAddress mode.
   Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
@@ -94,7 +99,8 @@ void
 GIOP_C::InitialiseRequest(const char     *opname,
 			  size_t         opnamesize,
 			  CORBA::Boolean oneway,
-			  CORBA::Boolean response_expected)
+			  CORBA::Boolean response_expected,
+			  giopMarshaller& m)
 {
   if (pd_state != GIOP_C::Idle)
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -103,11 +109,18 @@ GIOP_C::InitialiseRequest(const char     *opname,
 
   pd_response_expected = response_expected;
 
+  // Setup callback in case the giopStream have to calculate the
+  // message body size.
+  pd_cdrStream->outputMessageBodyMarshaller(m);
+
+  // Marshal request header
   pd_request_id = pd_cdrStream->outputRequestMessageBegin(pd_invokeInfo,
 							  opname,
 							  opnamesize,
 							  oneway,
 							  response_expected);
+  // Marshal request body
+  m.marshalData();
 }
 
 GIOP::ReplyStatusType 
@@ -174,6 +187,7 @@ GIOP_C::IssueLocateRequest()
 
   pd_state = GIOP_C::RequestInProgress;
 
+  // XXX Should rewite to use giopMarshaller
   pd_request_id = pd_cdrStream->outputLocateMessageBegin(pd_invokeInfo);
 
   pd_cdrStream->outputMessageEnd();

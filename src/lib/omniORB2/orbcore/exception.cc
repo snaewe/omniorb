@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.9.4.2  1999/11/04 20:20:18  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.9.4.1  1999/10/02 18:24:32  sll
   Reformatted trace messages.
 
@@ -115,8 +120,8 @@ omniExHandlers::TableLock;
 
 #define LOGMESSAGE(level,prefix,message) do {\
    if (omniORB::trace(level)) {\
-     omniORB::logger log("omniORB: ");\
-	log << prefix ## ": " ## message ## "\n";\
+     omniORB::logger log;\
+	log << " " ## prefix ## ": " ## message ## "\n";\
    }\
 } while (0)
 

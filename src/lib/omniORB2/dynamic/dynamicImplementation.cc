@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.5.4.2  1999/11/04 20:20:16  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.5.4.1  1999/09/15 20:18:23  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -65,6 +70,83 @@ DsiObject::~DsiObject()
 }
 
 
+////////////////////////////////////////////////////////////////////////
+DsiObject::
+resultsMarshaller::resultsMarshaller(giopStream& s,ServerRequestImpl& i) :
+  pd_s(s), pd_i(i) {}
+
+void
+DsiObject::
+resultsMarshaller::marshalData()
+{
+  // Marshal the result and OUT/INOUT parameters.
+  if( pd_i.result() )
+    pd_i.result()->NP_marshalDataOnly(pd_s);
+  CORBA::ULong num_args = pd_i.params()->count();
+  for( CORBA::ULong j = 0; j < num_args; j++ ){
+    CORBA::NamedValue_ptr arg = pd_i.params()->item(j);
+    if( arg->flags() & CORBA::ARG_OUT ||
+	arg->flags() & CORBA::ARG_INOUT )
+      arg->value()->NP_marshalDataOnly(pd_s);
+  }
+}
+					    
+size_t
+DsiObject::
+resultsMarshaller::dataSize(size_t initialoffset)
+{
+  cdrCountingStream s(initialoffset);
+
+  // Marshal the result and OUT/INOUT parameters.
+  if( pd_i.result() )
+    pd_i.result()->NP_marshalDataOnly(s);
+  CORBA::ULong num_args = pd_i.params()->count();
+  for( CORBA::ULong j = 0; j < num_args; j++ ){
+    CORBA::NamedValue_ptr arg = pd_i.params()->item(j);
+    if( arg->flags() & CORBA::ARG_OUT ||
+	arg->flags() & CORBA::ARG_INOUT )
+      arg->value()->NP_marshalDataOnly(s);
+  }
+
+  return s.total();
+}
+
+////////////////////////////////////////////////////////////////////////
+DsiObject::
+exceptionMarshaller::exceptionMarshaller(giopStream& s,ServerRequestImpl& i) :
+  pd_s(s), pd_i(i) {}
+
+void
+DsiObject::
+exceptionMarshaller::marshalData()
+{
+  CORBA::TypeCode_var tc = pd_i.exception()->type();
+  // Exception TypeCodes are guarenteed to have a non-empty id().
+  const char* intfRepoId = tc->id();
+  CORBA::ULong len = strlen(intfRepoId) + 1;
+  len >>= pd_s;
+  pd_s.put_char_array((CORBA::Char*)intfRepoId, len);
+  pd_i.exception()->NP_marshalDataOnly(pd_s);
+}
+					    
+size_t
+DsiObject::
+exceptionMarshaller::dataSize(size_t initialoffset)
+{
+  cdrCountingStream s(initialoffset);
+
+  CORBA::TypeCode_var tc = pd_i.exception()->type();
+  // Exception TypeCodes are guarenteed to have a non-empty id().
+  const char* intfRepoId = tc->id();
+  CORBA::ULong len = strlen(intfRepoId) + 1;
+  len >>= s;
+  s.put_char_array((CORBA::Char*)intfRepoId, len);
+  pd_i.exception()->NP_marshalDataOnly(s);
+
+  return s.total();
+}
+
+////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 DsiObject::dispatch(GIOP_S& giop_s,const char *op, CORBA::Boolean response_expected)
 {
@@ -121,39 +203,21 @@ DsiObject::dispatch(GIOP_S& giop_s,const char *op, CORBA::Boolean response_expec
     case ServerRequestImpl::SR_GOT_CTX:
     case ServerRequestImpl::SR_GOT_RESULT:
       {
-	giop_s.InitialiseReply(GIOP::NO_EXCEPTION);
-
-	// Marshal the result and OUT/INOUT parameters.
-	if( server_request.result() )
-	  server_request.result()->NP_marshalDataOnly(s);
-	CORBA::ULong num_args = server_request.params()->count();
-	for( CORBA::ULong j = 0; j < num_args; j++ ){
-	  CORBA::NamedValue_ptr arg = server_request.params()->item(j);
-	  if( arg->flags() & CORBA::ARG_OUT ||
-	      arg->flags() & CORBA::ARG_INOUT )
-	    arg->value()->NP_marshalDataOnly(s);
-	}
+	resultsMarshaller m((giopStream&)giop_s,server_request);
+	giop_s.InitialiseReply(GIOP::NO_EXCEPTION,m);
 	break;
       }
 
     case ServerRequestImpl::SR_EXCEPTION:  // User & System exception
       {
-	CORBA::TypeCode_var tc = server_request.exception()->type();
-
-	// Exception TypeCodes are guarenteed to have a non-empty id().
-	const char* intfRepoId = tc->id();
-	CORBA::ULong len = strlen(intfRepoId) + 1;
+	exceptionMarshaller m((giopStream&)giop_s,server_request);
 
 	if (isaSystemException(server_request.exception())) {
-	  giop_s.InitialiseReply(GIOP::SYSTEM_EXCEPTION);
+	  giop_s.InitialiseReply(GIOP::SYSTEM_EXCEPTION,m);
 	}
 	else {
-	  giop_s.InitialiseReply(GIOP::USER_EXCEPTION);
+	  giop_s.InitialiseReply(GIOP::USER_EXCEPTION,m);
 	}
-
-	len >>= s;
-	s.put_char_array((CORBA::Char*)intfRepoId, len);
-	server_request.exception()->NP_marshalDataOnly(s);
 	break;
       }
 

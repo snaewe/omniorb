@@ -30,6 +30,11 @@
 
 /*
   $Log$
+  Revision 1.8.4.2  1999/11/04 20:20:17  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.8.4.1  1999/09/15 20:18:23  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -329,6 +334,50 @@ RequestImpl::return_value()
   return *(pd_result->value());
 }
 
+RequestImpl::
+argumentsMarshaller::argumentsMarshaller(giopStream& s,RequestImpl& i) :
+  pd_s(s), pd_i(i) {}
+
+void
+RequestImpl::
+argumentsMarshaller::marshalData()
+{
+  // Marshal the arguments to the operation.
+  pd_i.marshalArgs(pd_s);
+
+  // If context strings are supplied, marshal them.
+  ContextListImpl* context_list = 0;
+  if( !CORBA::is_nil(pd_i.pd_contexts) )
+    context_list = (ContextListImpl*)(CORBA::ContextList_ptr)pd_i.pd_contexts;
+
+  if( context_list )
+    CORBA::Context::marshalContext(pd_i.pd_context,
+				   context_list->NP_list(),
+				   context_list->count(),
+				   pd_s);
+}
+					    
+size_t
+RequestImpl::
+argumentsMarshaller::dataSize(size_t initialoffset)
+{
+  cdrCountingStream s(initialoffset);
+
+  // Marshal the arguments to the operation.
+  pd_i.marshalArgs(s);
+
+  // If context strings are supplied, marshal them.
+  ContextListImpl* context_list = 0;
+  if( !CORBA::is_nil(pd_i.pd_contexts) )
+    context_list = (ContextListImpl*)(CORBA::ContextList_ptr)pd_i.pd_contexts;
+
+  if( context_list )
+    CORBA::Context::marshalContext(pd_i.pd_context,
+				   context_list->NP_list(),
+				   context_list->count(),
+				   s);
+  return s.total();
+}
 
 CORBA::Status
 RequestImpl::invoke()
@@ -354,22 +403,9 @@ RequestImpl::invoke()
 
 	cdrStream& s = giop_client;
 
-	giop_client.InitialiseRequest(pd_operation, operation_len,0,1);
+	argumentsMarshaller m((giopStream&)giop_client,*this);
 
-	// Marshal the arguments to the operation.
-	marshalArgs(s);
-
-	// If context strings are supplied, marshal them.
-	ContextListImpl* context_list = 0;
-	if( !CORBA::is_nil(pd_contexts) )
-	  context_list = (ContextListImpl*)(CORBA::ContextList_ptr)pd_contexts;
-
-	if( context_list )
-	  CORBA::Context::marshalContext(pd_context,
-					 context_list->NP_list(),
-					 context_list->count(),
-					 s);
-
+	giop_client.InitialiseRequest(pd_operation, operation_len,0,1,m);
 
 	// Wait for the reply.
 	GIOP::ReplyStatusType rc;
@@ -539,22 +575,11 @@ RequestImpl::send_oneway()
 
 	cdrStream& s = giop_client;
 
+	argumentsMarshaller m((giopStream&)giop_client,*this);
+
 	giop_client.InitialiseRequest(pd_operation,
 				      operation_len,
-				      1,0);
-
-	// Marshal the arguments to the operation.
-	marshalArgs(s);
-
-	// If context strings are supplied, marshal them.
-	ContextListImpl* context_list = 0;
-	if( !CORBA::is_nil(pd_contexts) )
-	  context_list = (ContextListImpl*)(CORBA::ContextList_ptr)pd_contexts;
-	if( context_list )
-	  CORBA::Context::marshalContext(pd_context,
-					 context_list->NP_list(),
-					 context_list->count(),
-					 s);
+				      1,0,m);
 
 	// Wait for the reply.
 	switch(giop_client.ReceiveReply()){

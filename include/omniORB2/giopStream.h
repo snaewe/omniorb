@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/11/04 20:20:15  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.1.2.2  1999/10/05 20:35:32  sll
   Added support to GIOP 1.2 to recognise all TargetAddress mode.
   Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
@@ -110,6 +115,30 @@ public:
 
   void SendMsgErrorMessage();
   // Write a GIOP MessageError message.
+  // Pre-condition:
+  //     The caller should not have called output*MessageBegin()s.
+
+  void outputMessageBodyMarshaller(giopMarshaller& m);
+  // Register the marshaller object that will marshal the message
+  // body. If the giopStream implementation requires to calculate
+  // the message body size, it will call m.dataSize().
+  // Notice that registering the marshaller does not mean that the
+  // giopStream implementation will call its m.marshalData() method
+  // automatically. On the contrary, the caller should call
+  // m.marshalData() after it has called one of the output*MessageBegin()
+  // function.
+  // A subsequent call to outputMessageEnd() or release() automatically
+  // unregister the marshaller.
+  //
+  // Typical usage is as follows:
+  //     giopStream& s; 
+  //     giopMarshaller& m; /* m contains info to marshal data into s */
+  //      ...
+  //     s.outputMessageBodyMarshaller(m);
+  //     s.outputReplyMessageBegin(f,GIOP::NO_EXCEPTION);
+  //     m.marshalData();  /* This member marshal data into s */
+  //     s.outputMessageEnd();
+  //
   // Pre-condition:
   //     The caller should not have called output*MessageBegin()s.
 
@@ -399,8 +428,11 @@ private:
 
   _CORBA_Boolean   pd_output_at_most_once;
 
-  giopMarshaller*  pd_marshaller;
-  // Call back object to calculate the message size
+  giopMarshaller*  pd_output_header_marshaller;
+  // Call back object to calculate the message header size
+
+  giopMarshaller*  pd_output_body_marshaller;
+  // Call back object to calculate the message body size
 
   _CORBA_ULong      pd_request_id;
 

@@ -27,6 +27,11 @@
 //	
 
 /* $Log$
+/* Revision 1.1.2.2  1999/11/04 20:20:23  sll
+/* GIOP engines can now do callback to the higher layer to calculate total
+/* message size if necessary.
+/* Where applicable, changed to use the new server side descriptor-based stub.
+/*
 /* Revision 1.1.2.1  1999/10/02 18:21:31  sll
 /* Added support to decode optional tagged components in the IIOP profile.
 /* Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -42,8 +47,8 @@
 
 #define LOGMESSAGE(level,prefix,message) do {\
    if (omniORB::trace(level)) {\
-     omniORB::logger log("omniORB: ");\
-	log << prefix ## ": " ## message ## "\n";\
+     omniORB::logger log;\
+	log << " " ## prefix ## ": " ## message ## "\n";\
    }\
 } while (0)
 

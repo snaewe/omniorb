@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  1999/11/04 20:20:20  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.1.2.3  1999/10/05 20:35:34  sll
   Added support to GIOP 1.2 to recognise all TargetAddress mode.
   Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
@@ -81,8 +86,8 @@ static const char fragmentHeader[8] = {
 
 #define LOGMESSAGE(level,prefix,message) do {\
    if (omniORB::trace(level)) {\
-     omniORB::logger log("omniORB: giop 1.2 " ## prefix ## ": ");\
-	log << message ## "\n";\
+     omniORB::logger log;\
+	log << " giop 1.2 " ## prefix ## ": " message ## "\n";\
    }\
 } while (0)
 
@@ -350,7 +355,7 @@ private:
 
     g->pd_output_msgsent_size = 0;
 
-    g->pd_marshaller = marshalhdr;
+    g->pd_output_header_marshaller = marshalhdr;
 
     if (marshalhdr) marshalhdr->marshalData();
 
@@ -370,7 +375,7 @@ private:
       ::operator>>=(g->pd_request_id,(cdrStream&)*g);
     }
 
-    g->pd_marshaller = 0;
+    g->pd_output_header_marshaller = 0;
   }
 
 public:
@@ -389,10 +394,10 @@ public:
 
       g->pd_output_msgsent_size -= 12; // subtract the header
 
-      if (g->pd_marshaller) {
+      if (g->pd_output_header_marshaller) {
 	// We are given a callback object to work out the size of the
 	// message. We call this method to determine the size.
-	g->pd_output_msgfrag_size  = g->pd_marshaller->dataSize(12);
+	g->pd_output_msgfrag_size  = g->pd_output_header_marshaller->dataSize(12);
       }
       endFragment(g,g->pd_output_msgfrag_size,0);
     }
@@ -467,10 +472,10 @@ public:
       // Work out the fragment size and write the value to the header
       CORBA::ULong fragsz;
 
-      if (g->pd_marshaller) {
+      if (g->pd_output_header_marshaller) {
 	// Now we are given a callback object to work out the size of the
 	// message. We call this method to determine the size.
-	g->pd_output_msgfrag_size = fragsz = g->pd_marshaller->dataSize(12);
+	g->pd_output_msgfrag_size = fragsz = g->pd_output_header_marshaller->dataSize(12);
       }
       else {
 	fragsz = (omni::ptr_arith_t)g->pd_outb_mkr -

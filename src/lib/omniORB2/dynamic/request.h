@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.4.4.2  1999/11/04 20:20:17  sll
+  GIOP engines can now do callback to the higher layer to calculate total
+  message size if necessary.
+  Where applicable, changed to use the new server side descriptor-based stub.
+
   Revision 1.4.4.1  1999/09/15 20:18:22  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -98,6 +103,18 @@ public:
 private:
   void marshalArgs(cdrStream& giop_client);
   void unmarshalArgs(cdrStream& giop_client);
+
+  class argumentsMarshaller : public giopMarshaller {
+  public:
+    argumentsMarshaller(giopStream&, RequestImpl&);
+    void marshalData();
+    size_t dataSize(size_t);
+  private:
+    giopStream&  pd_s;
+    RequestImpl& pd_i;
+  };
+
+  friend class argumentsMarshaller;
 
   enum State {
     RS_READY,
