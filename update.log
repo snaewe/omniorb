@@ -1,3 +1,11 @@
+Thu Apr 25 21:31:41 BST 2002 dpg1
+=================================
+
+- Better job of looking for omnicpp.
+
+src/tool/omniidl/python/omniidl/main.py
+
+
 Tue Apr 16 13:42:39 BST 2002 dpg1
 =================================
 

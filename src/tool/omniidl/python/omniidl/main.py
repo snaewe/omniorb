@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.8  2002/04/25 20:33:20  dgrisby
+# Better job of looking for omnicpp.
+#
 # Revision 1.17.2.7  2002/03/13 17:41:42  dpg1
 # omniidl had problems finding omnicpp on Windows.
 #
@@ -120,13 +123,9 @@ To see options specific to C++, use:
   omniidl -bcxx -u
 """
 
+preprocessor_name = "omnicpp"
 preprocessor_args = []
 preprocessor_only = 0
-
-if hasattr(_omniidl, "__file__"):
-    preprocessor_path = os.path.dirname(_omniidl.__file__)
-else:
-    preprocessor_path = os.path.dirname(sys.argv[0])
 
 if sys.platform == "win32":
     exe_suffix = ".exe"
@@ -134,14 +133,27 @@ else:
     exe_suffix = ""
 
 if sys.platform != "OpenVMS":
-    preprocessor = os.path.join(preprocessor_path, "omnicpp")
-    if not os.path.isfile(preprocessor + exe_suffix):
-        # Try getting omnicpp from the PATH
-        preprocessor = "omnicpp"
-        
+    preprocessor_paths = []
+    if hasattr(_omniidl, "__file__"):
+        preprocessor_paths.append(os.path.dirname(_omniidl.__file__))
+
+    preprocessor_paths.append(os.path.dirname(sys.argv[0]))
+
+    preprocessor = preprocessor_name
+    for preprocessor_path in preprocessor_paths:
+        if os.path.isfile(os.path.join(preprocessor_path,
+                                       preprocessor_name + exe_suffix)):
+            preprocessor = os.path.join(preprocessor_path, preprocessor_name)
+            break
+
     preprocessor_cmd  = preprocessor + " -lang-c++ -undef -D__OMNIIDL__=" + \
 			_omniidl.version
-else:    
+else:
+    if hasattr(_omniidl, "__file__"):
+        preprocessor_path = os.path.dirname(_omniidl.__file__)
+    else:
+        preprocessor_path = os.path.dirname(sys.argv[0])
+
     names = string.split(preprocessor_path, "/")
     preprocessor_cmd = \
  	'''mcr %s:[%s]omnicpp -lang-c++ -undef "-D__OMNIIDL__=%s"'''\
