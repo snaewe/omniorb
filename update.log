@@ -1,3 +1,16 @@
+Wed Jul 19 18:21:28 BST 2000 dpg1
+=================================
+
+- Thread tracing turned off.
+
+include/omniORB3/tracedthread.h
+
+- omniidl complains if a name which differs only in case is found
+  during name look-up
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Tue Jul 18 16:46:09 BST 2000 dpg1
 =================================
 

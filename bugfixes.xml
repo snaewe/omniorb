@@ -8,6 +8,35 @@
 
 <buglist>
 
+<bug id="5" date="Wed Jul 19 18:03:11 BST 2000" user="dpg1">
+
+  <summary>Thread tracing accidentally left on</summary>
+  <text>
+  <p>Tracing of mutexes and condition variables was accidentally left
+  turned on in include/omniORB3/tracedthread.h. Turning it off gives a
+  significant performance improvement, especially for local calls.</p>
+
+  <p>All omniORB libraries need to be rebuilt to make this change; the
+  make rules should do this automatically. The libraries remain
+  compatible with user code, so it does not need to be recompiled. If
+  you have omniORBpy installed, you must also recompile that.
+  Unfortunately, its make rules do not realise that a recompile is
+  necessary (I don't know why), so you must explicitly "<code>make
+  clean</code>" before "<code>make export</code>".
+  </text>
+
+</bug>
+
+<bug id="4" date="Wed Jul 19 17:22:34 BST 2000" user="dpg1">
+
+  <summary>omniidl name look-up is more strict</summary>
+  <text>
+  When looking-up a name, omniidl now raises an error if a name which
+  differs only in case is found along the look-up path. Before, it
+  would ignore the name and continue until an exact match was found.
+  </text>
+</bug>
+
 <bug id="3" date="Mon Jul 17 15:20:18 BST 2000" user="dpg1">
 
   <summary>OpenVMS patches from Bruce Visscher</summary>
