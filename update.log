@@ -1,3 +1,68 @@
+Sat Oct  2 19:23:30 BST 1999 sll
+================================
+
+- Added support to decode optional tagged components in the IIOP profile.
+- Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+- Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
+idl/Firewall.idl NEW
+idl/IOP.idl      NEW
+
+include/omniORB2/IOP.h 
+include/omniORB2/omniORB.h 
+
+src/appl/utils/catior/catior.cc 
+src/lib/omniORB2/dir.mk 
+src/lib/omniORB2/dynamic/dir.mk 
+
+src/lib/omniORB2/dynamic/sharedlib/dir.mk 
+src/lib/omniORB2/orbcore/bootstrap_i.cc 
+src/lib/omniORB2/orbcore/constants.cc 
+src/lib/omniORB2/orbcore/corbaObject.cc 
+
+src/lib/omniORB2/orbcore/dir.mk 
+src/lib/omniORB2/orbcore/firewallProxy.cc  NEW
+src/lib/omniORB2/orbcore/firewallProxy.h   NEW
+src/lib/omniORB2/orbcore/giopObjectInfo.h 
+src/lib/omniORB2/orbcore/initFile.cc 
+src/lib/omniORB2/orbcore/object.cc 
+src/lib/omniORB2/orbcore/objectRef.cc 
+src/lib/omniORB2/orbcore/ropeFactory.cc 
+src/lib/omniORB2/orbcore/ropeFactory.h 
+src/lib/omniORB2/orbcore/tcpSocket.cc 
+src/lib/omniORB2/orbcore/tcpSocket.h 
+src/lib/omniORB2/orbcore/tcpSocketAux.cc         NEW
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc 
+
+src/lib/omniORB2/orbcore/sharedlib/dir.mk 
+
+- Reformatted trace messages
+
+src/lib/omniORB2/dynamic/proxyCall.cc
+src/lib/omniORB2/orbcore/exception.cc
+src/lib/omniORB2/orbcore/giopStream.cc
+src/lib/omniORB2/orbcore/giopStream12.cc
+src/lib/omniORB2/orbcore/proxyCall.cc
+src/lib/omniORB2/dynamic/proxyCall.cc
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/gatekeeper.cc
+src/lib/omniORB2/orbcore/strand.cc
+
+- Reformatted trace messages.
+- Changed signature of BOA::getBOA to accept an optionally argument to
+  inhibit the function to raise an exception when the BOA has not been
+  initialised.
+
+include/omniORB2/CORBA.h
+src/lib/omniORB2/orbcore/corbaBoa.cc
+
+- New internal function internal_init_BOA().
+- New constant to identify omniORB in the TAG_ORB_TYPE component of an IOR.
+
+include/omniORB2/omniInternal.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
 Sat Sep 25 17:57:57 BST 1999 sll
 ================================
 
