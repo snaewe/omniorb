@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.6  2000/05/18 15:57:33  djs
+# Added missing T* data constructor for bounded sequence types
+#
 # Revision 1.3.2.5  2000/03/20 11:50:20  djs
 # Removed excess buffering- output templates have code attached which is
 # lazily evaluated when required.
@@ -487,11 +490,16 @@ public:
 };
 """
 
-sequence_type_bounds = """\
+sequence_unbounded_ctors = """\
 inline @name@(_CORBA_ULong _max)
   : @derived@(_max) {}
 inline @name@(_CORBA_ULong _max, _CORBA_ULong _len, @element@* _val, _CORBA_Boolean _rel=0)
   : @derived@(_max, _len, _val, _rel) {}
+"""
+
+sequence_bounded_ctors = """\
+inline @name@(_CORBA_ULong _len, @element@* _val, _CORBA_Boolean _rel=0)
+  : @derived@(_len, _val, _rel) {}
 """
 
 sequence_var_array_subscript = """\
