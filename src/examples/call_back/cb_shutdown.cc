@@ -12,15 +12,18 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    CORBA::Object_var obj = orb->string_to_object(argv[1]);
-    cb::Server_var server = cb::Server::_narrow(obj);
 
-    if( CORBA::is_nil(server) ) {
-      cerr << "cb_shutdown: The server reference is nil!" << endl;
-      return 1;
+    {
+      CORBA::Object_var obj = orb->string_to_object(argv[1]);
+      cb::Server_var server = cb::Server::_narrow(obj);
+
+      if( CORBA::is_nil(server) ) {
+	cerr << "cb_shutdown: The server reference is nil!" << endl;
+	return 1;
+      }
+
+      server->shutdown();
     }
-
-    server->shutdown();
 
     orb->destroy();
   }

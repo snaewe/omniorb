@@ -2,7 +2,7 @@
 #include <echo_callback.hh>
 
 
-static CORBA::ORB_var orb;
+static CORBA::ORB_ptr orb;
 static int            dying = 0;
 static int            num_active_servers = 0;
 static omni_mutex     mu;
@@ -138,19 +138,21 @@ int main(int argc, char** argv)
   try {
     orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
-    PortableServer::POAManager_var pman = poa->the_POAManager();
-    pman->activate();
+    {
+      CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+      PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+      PortableServer::POAManager_var pman = poa->the_POAManager();
+      pman->activate();
 
-    server_i* myserver = new server_i();
-    obj = myserver->_this();             // *implicit activation*
-    myserver->_remove_ref();
+      server_i* myserver = new server_i();
+      obj = myserver->_this();             // *implicit activation*
+      myserver->_remove_ref();
 
-    CORBA::String_var sior(orb->object_to_string(obj));
-    cerr << "'" << (char*) sior << "'" << endl;
+      CORBA::String_var sior(orb->object_to_string(obj));
+      cerr << "'" << (char*) sior << "'" << endl;
+      orb->run();
+    }
 
-    orb->run();
     cerr << "cb_server: Returned from orb->run()." << endl;
     orb->destroy();
   }
