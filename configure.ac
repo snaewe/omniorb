@@ -129,7 +129,7 @@ else
   *-*-irix*)
     compiler_name="Compiler_SGI"
   ;;
-  *-*-irix*)
+  *-*-aix*)
     compiler_name="Compiler_xlC"
   ;;
   esac
