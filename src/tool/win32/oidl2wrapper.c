@@ -1,18 +1,21 @@
 /*
- * clwrapper.c - wrapper around Visual C++'s "CL" program to perform
+ * oidl2wrapper.c - wrapper round omniidl2 to perform
  * file name translation (from unix-like to dos-like names).
  *
  * Both GNUWIN32 and OpenNT file names are supported - the first argument
  * to this program specifies which.
  *
- * Compile this program with "cl clwrapper.c advapi32.lib".
+ * Compile this program with "cl oidl2wrapper.c advapi32.lib".
  */
 
 #include <windows.h>
 #include <stdio.h>
 #include <process.h>
 #include <string.h>
+#include <assert.h>
 
+#define WRAPPEREXE "oidl2wrapper.exe"
+#define UNWRAPPED  "omniidl2"
 #define MAX_MOUNTS 256
 
 void GetGnuwin32Mounts(void);
@@ -26,6 +29,8 @@ int main(int argc, char **argv)
 {
   int rc;
   int i;
+  char *newprog;
+  char *tprog;
 
   if (argc > 1 && strcmp(argv[1], "-gnuwin32") == 0) {
     GetGnuwin32Mounts();
@@ -40,12 +45,27 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  /* Make sure we use the omniidl2 next to this wrapper rather than
+     a random one on PATH */
+  tprog = TranslateFileName(argv[0], 0);
+  newprog = UNWRAPPED; /* lookup on PATH by default */
+
+  assert (sizeof(WRAPPEREXE) > sizeof(UNWRAPPED));
+
+  if (strlen(tprog) > strlen(WRAPPEREXE)) {
+      char *tail = tprog + strlen(tprog) - strlen(WRAPPEREXE);
+      if (stricmp (tail, WRAPPEREXE) == 0) {
+	  strcpy (tail, UNWRAPPED);
+	  newprog = tprog;
+      }
+  }
+
   argv++;
   argc--;
 
-  argv[0] = "cl";
+  argv[0] = newprog;
 
-  printf("cl");
+  printf(newprog);
 
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
@@ -53,12 +73,6 @@ int main(int argc, char **argv)
 
       case 'I':
 	argv[i] = TranslateFileName(argv[i],2);
-	break;
-
-      case 'F':
-	if (argv[i][2] == 'o') {
-	  argv[i] = TranslateFileName(argv[i],3);
-	}
 	break;
 
       default:
@@ -69,19 +83,8 @@ int main(int argc, char **argv)
     } else {
 
       /* just a file argument */
+      argv[i] = TranslateFileName(argv[i],0);
 
-      int len = strlen(argv[i]);
-
-      if ((len >= 4) && (strcmp(&argv[i][len - 3], ".cc") == 0)) {
-	char *tmp = malloc(len + 4);
-	sprintf(tmp, "-Tp%s", argv[i]);
-	argv[i] = TranslateFileName(tmp,3);
-
-      } else {
-
-	argv[i] = TranslateFileName(argv[i],0);
-
-      }
     }
 
     if (strchr(argv[i], '"')) {
@@ -134,7 +137,7 @@ char *TranslateFileName(char *in, int offset)
   for (i = 0; i < nmounts; i++) {
     if (strncmp(unix[i], &in[offset], strlen(unix[i])) == 0) {
       out = malloc(strlen(in) - strlen(unix[i]) + strlen(dos[i]) + 1);
-      strncpy(out, in, offset);
+      strncpy(out, in, offset); /* NB. does NOT nul-terminate "out" */
       strcpy(out + offset, dos[i]);
       strcat(out, &in[offset + strlen(unix[i])]);
       break;

@@ -1,4 +1,62 @@
 
+Thu Jan 27 15:01:18 GMT 2000 djr
+================================
+
+- Fixed bug in _CORBA_String_member.  Default constructor now initialises
+  with an empty string (not zero pointer).
+
+include/omniORB2/stringtypes.h
+
+
+Tue Jan 25 15:41:11 GMT 2000 sll
+================================
+
+- Added new platform file for Redhat 6.1, i.e. glibc-2.1 systems
+- The compiler used by this platform is /usr/bin/{g++,gcc} and
+  not the /usr/local/gcc-2.95 compiler. 
+
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+
+
+Wed Jan 19 10:40:23 GMT 2000 dme
+================================
+
+- update compiled wrapper .exes in external_merge/
+
+external_merge/bin/x86_win32/bin/x86_win32/clwrapper.exe
+external_merge/bin/x86_win32/bin/x86_win32/libwrapper.exe
+external_merge/bin/x86_win32/bin/x86_win32/linkwrapper.exe
+external_merge/bin/x86_win32/bin/x86_win32/oidl2wrapper.exe
+external_merge/bin/x86_win32/bin/x86_win32/oidlwrapper.exe
+
+Tue Jan 18 14:54:30 GMT 2000 dme
+================================
+
+- new DIR_IDLFLAGS, DIR_STUBS_CPPFLAGS make it possible to compile
+  interfaces and stubs that depend on idl from import trees without
+  generating headers and stubs for those imported idls locally.  This is
+  useful when the import tree supplies the headers and stubs itself,
+  usually as part of some library.
+
+- Win32 now uses filename-translating wrappers for omniidl[2].exe, allowing
+  fearless use of "-I" etc.
+- fixed strncpy()-related bug in all Win32 wrappers
+
+mk/afterdir.mk
+mk/beforedir.mk
+mk/win32.mk
+
+src/tool/win32/bccwrapper.c
+src/tool/win32/clwrapper.c
+src/tool/win32/dir.mk
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/tlibwrapper.c
+src/tool/win32/tlinkwrapper.c
+src/tool/win32/oidl2wrapper.c
+src/tool/win32/oidlwrapper.c
+
+
 Fri Jan  7 14:47:08 GMT 2000 djr
 ================================
 

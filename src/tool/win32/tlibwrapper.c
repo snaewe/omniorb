@@ -71,7 +71,7 @@ char *TranslateFileName(char *in, int offset)
     if (strncmp(unix[i], &in[offset], strlen(unix[i])) == 0) {
       out = malloc(strlen(in) - strlen(unix[i]) + strlen(dos[i]) + 1);
       strncpy(out, in, offset);
-      strcat(out, dos[i]);
+      strcpy(out + offset, dos[i]);
       strcat(out, &in[offset + strlen(unix[i])]);
       break;
     }
