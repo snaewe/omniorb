@@ -157,7 +157,7 @@ DRV_cpp_init()
   // If this is gcc, we need to put in a -x c flag to stop it from
   // guessing from the file extension what language this file is
   char *p = strrchr(idl_global->cpp_location(),'g');
-  if (p != NULL && strcmp(p,"gcc") == 0) {
+  if (p != NULL && (strcmp(p,"gcc") == 0 || strcmp(p,"g++") == 0)) {
     DRV_cpp_putarg("-xc++");
     copy_src = I_FALSE;
   }
