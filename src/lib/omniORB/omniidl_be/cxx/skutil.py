@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/11/29 15:26:04  djs
+# Marshalling bugfixes.
+#
 # Revision 1.5  1999/11/26 18:52:06  djs
 # Bugfixes and refinements
 #
@@ -282,7 +285,8 @@ CdrStreamHelper_unmarshalArray@suffix@(@from_where@, ((@type@*) @argname@@dims_s
         raise "Don't know how to marshall type: " + repr(deref_type) +\
               "(kind = " + str(deref_type.kind()) + ") array"
 
-    if tyutil.isObjRef(deref_type) or not(is_array):
+    if not(is_array):
+    #if tyutil.isObjRef(deref_type) or not(is_array):
         indexing_string = ""
     else:
         indexing_string = begin_loop(string, full_dims)
@@ -327,7 +331,8 @@ CdrStreamHelper_unmarshalArray@suffix@(@from_where@, ((@type@*) @argname@@dims_s
                    name = argname, indexing_string = indexing_string,
                    from_where = from_where)
 
-    if not(tyutil.isObjRef(deref_type)) and(is_array):
+    if is_array:
+    #if not(tyutil.isObjRef(deref_type)) and(is_array):
         end_loop(string, full_dims)
 
     
@@ -795,6 +800,9 @@ def attribute_read_dispatch(attribute, environment, id, stream):
         attrib_type_name = "CORBA::String_var"
 
     elif tyutil.isVariableType(attrType):
+        if tyutil.isObjRef(deref_attrType):
+            attrib_type_name = environment.principalID(deref_attrType)
+        
         attrib_type_name = attrib_type_name + "_var"
         result_name = "(result.operator->())"
         if tyutil.isStruct(deref_attrType) or \
@@ -850,6 +858,7 @@ def attribute_write_dispatch(attribute, environment, id, stream):
         attrib_type_name = "CORBA::String_var"
 
     elif tyutil.isObjRef(deref_attrType):
+        attrib_type_name = environment.principalID(deref_attrType)
         attrib_type_name = attrib_type_name + "_var"
 
     elif tyutil.isSequence(deref_attrType):
