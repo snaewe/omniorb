@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.2  1999/12/26 16:43:53  djs
+# Fix for (not) generating tie templates of #included .idl
+#
 # Revision 1.1  1999/12/14 11:54:43  djs
 # Restructured generation of tie templates
 #
@@ -246,6 +249,9 @@ private:
                callables = str(where))
     
 def visitInterface(node):
+    if not(node.mainFile()):
+        return
+    
     template(self.__environment, node)
 
 def visitEnum(node):
