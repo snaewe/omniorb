@@ -63,9 +63,11 @@ CLINK           = xlC_r
 # Get the compiler version
 XLCVERSION := $(shell echo "__xlC__" > /tmp/testAIXCompilerVersion.C )
 XLCVERSION := $(shell $(CXX) -+ -E /tmp/testAIXCompilerVersion.C | tail -1')
-  
+
+#'
+
 MAKECPPSHAREDLIB= /usr/ibmcxx/bin/makeC++SharedLib_r
- 
+
 ifeq ($(XLCVERSION),0x0301)
     MAKECPPSHAREDLIB = /usr/lpp/xlC/bin/makeC++SharedLib_r
 endif

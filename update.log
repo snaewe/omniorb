@@ -1,3 +1,17 @@
+Wed Jan 16 12:33:52 GMT 2002 dpg1
+=================================
+
+- omniMapper used -ORBendpoint instead of -ORBendPoint.
+
+src/appl/omniMapper/omniMapper.cc
+
+- Platform tweaks.
+
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_darwin_1.3.mk
+src/tool/omniidl/cxx/dir.mk
+
+
 Wed Jan 16 11:29:02 GMT 2002 dpg1
 =================================
 
