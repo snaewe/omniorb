@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2002/08/23 14:15:02  dgrisby
+  Avoid exception with bidir when no POA.
+
   Revision 1.1.2.12  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -403,10 +406,10 @@ BiDirServerRope::acquireClient(const omniIOR* ior,
 
   OMNIORB_ASSERT(s->state() == giopStrand::ACTIVE);
 
-  // We do not check what GIOP version(s) the strand has been used for previously.
-  // If ever we have 2 calls using 2 different versions (and both are 1.2 or 
-  // above), we allow this to happen. Contrast this with the algorithm in
-  // giopRope::acquireClient.
+  // We do not check what GIOP version(s) the strand has been used for
+  // previously.  If ever we have 2 calls using 2 different versions
+  // (and both are 1.2 or above), we allow this to happen. Contrast
+  // this with the algorithm in giopRope::acquireClient.
 
   GIOP_C* g;
   if (!giopStreamList::is_empty(s->clients)) {
