@@ -20,6 +20,7 @@
 #  x86_win95                 Windows 95, MS VC++ 5.0
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
 #  i586_linux_2.0_glibc      x86 Redhat linux 5.1,egcs-980302 or later snapshot
+#  i586_linux_2.0_glibc2.1   x86 Redhat linux 6, etc
 #  alpha_linux_2.0           alpha linux (compiler problem,still doesn't work)
 #  m68k_nextstep_3.3         NextStep 3.3, gcc-2.7.2
 #  x86_nextstep_3.3          NextStep 3.3, x86
@@ -53,6 +54,7 @@
 #platform = alpha_nt_4.0
 #platform = i586_linux_2.0
 #platform = i586_linux_2.0_glibc
+#platform = i586_linux_2.0_glibc2.1
 #platform = powerpc_linux_2.2_glibc
 #platform = m68k_nextstep_3.3
 #platform = x86_nextstep_3.3
