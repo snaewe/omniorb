@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.12  2001/06/21 11:35:17  sll
+ Define size of wchar_t for freebsd and darwin.
+
  Revision 1.2.2.11  2001/06/20 18:39:03  sll
  On solaris with gcc 3.0, there is no need to provide a prototype for
  gethostname.
@@ -462,7 +465,7 @@
 #ifndef _CORBA_WCHAR_DECL
 #  define _CORBA_WCHAR_DECL wchar_t
    // Wide character size
-#  if defined(__linux__) || defined(__sunos__)
+#  if defined(__linux__) || defined(__sunos__) || defined(__freebsd__) || defined(__darwin__)
 #    define SIZEOF_WCHAR 4
 #  elif defined(__WIN32__)
 #    define SIZEOF_WCHAR 2
