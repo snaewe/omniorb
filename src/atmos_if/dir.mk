@@ -4,5 +4,4 @@ all::
 	@echo
 
 export::
-	@(packages="omniORB diner calc"; \
-	  $(ExportATMosInterfaceFiles))
+	@$(ExportATMosInterface)
