@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.26  1999/06/19 15:57:05  sll
+  *** empty log message ***
+
   Revision 1.25  1999/06/18 20:45:59  sll
   Updated to support CORBA 2.3 mapping.
 
@@ -348,7 +351,7 @@ o2be_union::produce_hdr(std::fstream& s)
   IND(s); s << "typedef _CORBA_ConstrType_"
 	    << ((isVariable())?"Variable":"Fix")
 	    << "_Var<" << uqname() << "> " 
-	      << uqname() << "_var_type;\n";
+	      << "_var_type;\n";
 #endif
 
   o2be_nested_typedef::produce_hdr(s,this);
