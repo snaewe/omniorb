@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.17  1999/06/18 20:47:00  sll
+  Updated to replace _LC_attr with _core_attr and _dyn_attr.
+
   Revision 1.16  1999/06/03 17:12:09  sll
   Updated to CORBA 2.2.
 
@@ -1176,5 +1179,5 @@ char const* o2be_name::variable_qualifier() {
   else if( defined_in()->scope_node_type() == AST_Decl::NT_module )
     return "_CORBA_MODULE_VAR";
   else
-    return "static _LC_attr";
+    return "static";
 }
