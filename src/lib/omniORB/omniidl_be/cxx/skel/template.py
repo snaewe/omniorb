@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.27  2004/07/01 19:13:32  dgrisby
+# Suppress compiler warnings on void methods. Thanks Peter Klotz.
+#
 # Revision 1.3.2.26  2004/04/19 09:25:26  dgrisby
 # Nil object references are bound to the lifetime of the skeleton file
 # if OMNI_UNLOADABLE_STUBS is defined.
@@ -337,7 +340,7 @@ interface_shortcut_inh = """\
 interface_callback = """\
 // Local call call-back function.
 static void
-@local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
+@local_call_descriptor@(omniCallDescriptor*@cd@, omniServant* svnt)
 {
   @get_call_descriptor@
   @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);

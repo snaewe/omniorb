@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.14  2004/07/01 19:13:32  dgrisby
+# Suppress compiler warnings on void methods. Thanks Peter Klotz.
+#
 # Revision 1.1.4.13  2003/01/14 11:48:16  dgrisby
 # Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
 #
@@ -335,8 +338,13 @@ class CallDescriptor:
                           cxx_operation_name = operation,
                           operation_arguments = string.join(impl_args, ", "))
 
+        if get_cd != "":
+            cd_argument = " cd"
+        else:
+            cd_argument = ""
         stream.out(template.interface_callback,
                    local_call_descriptor = function_name,
+                   cd = cd_argument,
                    get_call_descriptor = get_cd,
                    impl_fqname =interface_name.prefix("_impl_").fullyQualify(),
                    name = interface_name.fullyQualify(),
