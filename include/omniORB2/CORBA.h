@@ -29,6 +29,13 @@
 
 /*
  $Log$
+ Revision 1.41  1999/06/27 16:44:42  sll
+ enclose Any extraction operator for string with test for macro
+ _NO_ANY_STRING_EXTRACTION_. Define this macro as compiler option would
+ remove the operators from the declaration. This make it easier to
+ find the code in the source where the operators are used. Hence make it
+ easier to fix old code which uses the pre-2.8.0 semantics.
+
  Revision 1.40  1999/06/25 13:54:17  sll
  Removed Any::operator>>=(Object_ptr&) const.
 
@@ -370,7 +377,9 @@ _CORBA_MODULE_BEG
     Boolean operator>>=(TypeCode_ptr& tc) const;
 
     Boolean operator>>=(const char*& s) const;
+#ifndef _NO_ANY_STRING_EXTRACTION_
     Boolean operator>>=(char*& s) const; // deprecated
+#endif
 
     struct to_boolean {
       to_boolean(Boolean& b) : ref(b) {}
@@ -406,7 +415,9 @@ _CORBA_MODULE_BEG
 
     Boolean operator>>=(to_octet o) const;
 
+#ifndef _NO_ANY_STRING_EXTRACTION_
     Boolean operator>>=(to_string s) const;
+#endif
 
     Boolean operator>>=(to_object o) const;
 
@@ -608,9 +619,11 @@ _CORBA_MODULE_BEG
       return (*pd_data >>= s);
     }
 
+#ifndef _NO_ANY_STRING_EXTRACTION_
     inline Boolean operator>>=(char*& s) const {
       return (*pd_data >>= s);
     }
+#endif
 
     inline Boolean operator>>=(Any::to_boolean b) const {
       return (*pd_data >>= b);
@@ -624,9 +637,11 @@ _CORBA_MODULE_BEG
       return (*pd_data >>= o);
     }
 
+#ifndef _NO_ANY_STRING_EXTRACTION_
     inline Boolean operator>>=(Any::to_string s) const {
       return (*pd_data >>= s);
     }
+#endif
 
     inline Boolean operator>>=(Any::to_object o) const {
       return (*pd_data >>= o);
