@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.3  2000/10/06 16:36:51  sll
+ Removed inline definition of the marshal method in the client and server
+ marshallers.
+
  Revision 1.2.2.2  2000/09/27 17:50:28  sll
  Updated to use the new cdrStream abstraction.
  Added extra members for use in the upcalls on the server side.
@@ -62,6 +66,7 @@
 
 #include <omniORB4/callDescriptor.h>
 #include <exceptiondefs.h>
+#include <dynamicLib.h>
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// omniCallDescriptor /////////////////////////
@@ -160,3 +165,29 @@ void omniLocalOnlyCallDescriptor::marshalArguments(cdrStream&)
 {
   OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
 }
+
+//////////////////////////////////////////////////////////////////////
+///////////////////// omniClientCallMarshaller    ////////////////////
+//////////////////////////////////////////////////////////////////////
+
+void
+omniClientCallMarshaller::marshal(cdrStream& s) {
+  pd_descriptor.marshalArguments(s);
+  const omniCallDescriptor::ContextInfo* cinfo = pd_descriptor.context_info();
+  if (cinfo) {
+    omniDynamicLib::ops->marshal_context(s, cinfo->context,
+					 cinfo->expected,
+					 cinfo->num_expected);
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////
+///////////////////// omniServerCallMarshaller    ////////////////////
+//////////////////////////////////////////////////////////////////////
+
+void
+omniServerCallMarshaller::marshal(cdrStream& s) {
+  pd_descriptor.marshalReturnedValues(s);
+}
+
