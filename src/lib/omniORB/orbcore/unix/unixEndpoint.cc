@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/11/28 20:33:43  dpg1
+  Minor Unix transport bugs.
+
   Revision 1.1.2.5  2001/08/23 10:11:16  sll
   Use AF_UNIX if AF_LOCAL is not defined.
 
@@ -152,7 +155,7 @@ unixEndpoint::Bind() {
 void
 unixEndpoint::Poke() {
 
-  unixAddress* target = new unixAddress(pd_address_string);
+  unixAddress* target = new unixAddress(pd_filename);
   giopActiveConnection* conn;
   if ((conn = target->Connect()) == 0) {
     if (omniORB::trace(1)) {

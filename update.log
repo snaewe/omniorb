@@ -1,3 +1,12 @@
+Wed Nov 28 20:29:55 GMT 2001 dpg1
+=================================
+
+- Minor Unix transport bugs.
+
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+
+
 Tue Nov 27 14:28:24 GMT 2001 dpg1
 =================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/11/28 20:33:43  dpg1
+  Minor Unix transport bugs.
+
   Revision 1.1.2.3  2001/08/24 15:56:45  sll
   Fixed code which made the wrong assumption about the semantics of
   do { ...; continue; } while(0)
@@ -243,7 +246,7 @@ unixConnection::unixConnection(SocketHandle_t sock,
   static CORBA::ULong suffix = 0;
 
   CORBA::String_var filename_1;
-  filename_1 = CORBA::string_alloc(strlen(filename)+8);
+  filename_1 = CORBA::string_alloc(strlen(filename)+12);
   sprintf(filename_1,"%s %08x",filename,(unsigned int)++suffix);
 
   if (isActive) {
