@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.6  2001/08/03 17:47:45  sll
+ Removed obsoluted code.
+
  Revision 1.2.2.5  2000/11/22 14:37:59  dpg1
  Code set marshalling functions now take a string length argument.
 
@@ -112,13 +115,6 @@ static inline char* dup(const char* s) {
   return r;
 }
 // As CORBA::string_dup().
-
-static void unmarshal_zero_length_string();
-// Marshalling code calls this if we receive a zero length string. All
-// strings should be at least length 1 because they contain a
-// terminating null. Logs an error message, and throws MARSHAL if
-// strict IIOP, otherwise the marshalling code treats it as an empty
-// string.
 
 };
 
