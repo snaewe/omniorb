@@ -35,6 +35,10 @@
 
 /*
  $Log$
+ Revision 1.6  1999/06/26 18:03:51  sll
+ Added check for verifyObjectExistsAndType setting before doing
+ assertObjectExistent().
+
  Revision 1.5  1999/05/20 18:37:34  sll
  These proxyCall functions support context. This is separated from
  the equivalent version in the orbcore library. The orbcore version
@@ -64,7 +68,8 @@ _again:
 #else
   while(1) {
 #endif
-    o->assertObjectExistent();
+    if (omniORB::verifyObjectExistsAndType)
+      o->assertObjectExistent();
     omniRopeAndKey ropeAndKey;
     CORBA::Boolean fwd = o->getRopeAndKey(ropeAndKey);
     CORBA::Boolean reuse = 0;
