@@ -1,0 +1,16 @@
+// some types used for testing
+
+#ifndef _RDITestTypes_IDL_
+#define _RDITestTypes_IDL_
+
+#pragma prefix "research.att.com"
+
+module RDITestTypes {
+
+  typedef sequence<string> StringSeq;
+  typedef sequence<double> DoubleSeq;
+
+};
+
+#endif
+
