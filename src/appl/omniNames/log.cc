@@ -125,7 +125,7 @@ timestamp ts;
 // Then the main program initialises the ORB and the BOA and calls init().
 //
 
-log::log(int& p) : port(p)
+log::log(int& p,char* logdir) : port(p)
 {
   startingUp = 1;
   checkpointNeeded = 1;
@@ -137,9 +137,7 @@ log::log(int& p) : port(p)
   struct stat sb;
 #endif
 
-  char* logdir;
-
-  if ((logdir = getenv(LOGDIR_ENV_VAR)) == NULL)
+  if (!logdir && (logdir = getenv(LOGDIR_ENV_VAR)) == NULL)
     logdir = strdup(DEFAULT_LOGDIR);
 
 #if !defined(__WIN32__) && !defined(__VMS)

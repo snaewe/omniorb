@@ -97,7 +97,7 @@ public:
   class IOError {};
   class ParseError {};
 
-  log(int& port);
+  log(int& port,char* logdir=0);
 
   void init(CORBA::ORB_ptr o, CORBA::BOA_ptr b);
 
