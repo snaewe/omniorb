@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10  1999/06/26 18:05:03  sll
+  New option -BOAiiop_name_port.
+
   Revision 1.9  1999/05/25 17:17:41  sll
   Added check for invalid argument in static member functions.
 
@@ -557,6 +560,74 @@ parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
 	}
 	move_args(argc,argv,idx,2);
 	continue;
+      }
+
+      // -BOAiiop_name_port <hostname[:port number]>
+      if (strcmp(argv[idx],"-BOAiiop_name_port") == 0) {
+        if ((idx+1) >= argc) {
+          if (omniORB::traceLevel > 0) {
+            omniORB::log << "BOA_init failed: missing -BOAiiop_name_port parameter.\n";
+	    omniORB::log << "usage: -BOAiiop_name_port <hostname[:port number]>+\n";
+            omniORB::log.flush();
+          }
+          return 0;
+        }
+
+        // copy the hostname part of the argument (including :port)
+        char hostname[255+1];
+        strncpy(hostname, argv[idx+1],255);
+	hostname[255] = '\0';
+
+        // find the :port part of the argument
+        // if the port is not specified, we default to 0 which lets the OS pick a number
+        int port = 0;
+        char *port_str = strchr(hostname, ':');
+        if (port_str != 0) {
+           // if the port-number is not specified, fall back to port=0
+           if (port_str[1] == '\0')
+              port = 0;
+           else if (sscanf(port_str+1,"%u",&port) != 1 || (port < 0 || port >= 65536)) {
+              if (omniORB::traceLevel > 0) {
+                 omniORB::log << "BOA_init failed: invalid -BOAiiop_name_port parameter. "
+                              << "Portnumber out of range : " << port << ".\n";
+                 omniORB::log.flush();
+              }
+              return 0;
+           }
+
+           // null terminate and isolate hostname argument
+           *port_str = 0;
+        }
+
+        try {
+          _tcpEndpoint e ((CORBA::Char*)hostname,(CORBA::UShort)port);
+          ropeFactory_iterator iter(*rootObjectManager->incomingRopeFactories());
+          incomingRopeFactory* factory;
+          while ((factory = (incomingRopeFactory*)iter())) {
+            if (factory->getType()->is_protocol( _tcpEndpoint ::protocol_name)) {
+              if (!factory->isIncoming(&e)) {
+                // This port has not been instantiated
+                factory->instantiateIncoming(&e,1);
+                if (omniORB::traceLevel >= 2) {
+                  omniORB::log << "Accept IIOP calls on port " << e.port()
+                               << "\n";
+                  omniORB::log.flush();
+                }
+              }
+              break;
+            }
+          }
+        }
+        catch (...) {
+          if (omniORB::traceLevel > 0) {
+            omniORB::log << "BOA_init falied: cannot use port " << port
+                         << " to accept incoming IIOP calls.\n";
+            omniORB::log.flush();
+          }
+          return 0;
+        }
+        move_args(argc,argv,idx,2);
+        continue;
       }
 
       // -BOAno_bootstrap_agent
