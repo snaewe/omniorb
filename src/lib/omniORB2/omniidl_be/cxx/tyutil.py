@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  1999/11/17 20:37:09  djs
+# General util functions
+#
 # Revision 1.8  1999/11/15 19:10:55  djs
 # Added module for utility functions specific to generating skeletons
 # Union skeletons working
@@ -60,7 +63,7 @@
 
 """Type utility functions specific to the C++ backend"""
 
-# Contents list:
+# Contents list: (out of date)
 #
 # deref : type -> type
 #   Returns the most dereferenced type (ie recurses along chains
@@ -365,9 +368,11 @@ def objRefTemplate(type, suffix, environment):
 # ------------------------------------------------------------------
 
 def operationArgumentType(type, environment, virtualFn = 0):
-    outer_env = environment.leaveScope()
-    environment = outer_env
-    
+    try:
+        outer_env = environment.leaveScope()
+        environment = outer_env
+    except AttributeError:
+        pass
     param_type = environment.principalID(type)
     isVariable = isVariableType(type)
     type_dims = typeDims(type)
@@ -450,7 +455,8 @@ typeSizeAlignMap = {
     idltype.tk_ulong:   (4, 4),
     idltype.tk_float:   (4, 4),
     idltype.tk_enum:    (4, 4),
-    idltype.tk_double:  (8, 8)
+    idltype.tk_double:  (8, 8),
+    idltype.tk_octet:   (1, 1)
     }
 
 # converts a hash of template properties into a template instance

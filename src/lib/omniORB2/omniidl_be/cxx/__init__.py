@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/11/17 20:37:09  djs
+# General util functions
+#
 # Revision 1.6  1999/11/15 19:10:54  djs
 # Added module for utility functions specific to generating skeletons
 # Union skeletons working
@@ -50,6 +53,13 @@
 # General module renaming
 #
 
+# From http://www-i3.informatik.rwth-aachen.de/funny/babbage.html:
+# ...
+# C. A. R. Hoare, in his 1980 ACM Turing Award lecture, told of two
+# ways of constructing a software design: "One way is to make it so
+# simple that there are obviously no deficiencies and the other way
+# is to make it so complicated that there are no obvious deficiencies." 
+#
 
 # -----------------------------
 # Output generation functions

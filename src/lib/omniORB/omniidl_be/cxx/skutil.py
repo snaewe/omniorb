@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/17 20:37:09  djs
+# General util functions
+#
 # Revision 1.1  1999/11/15 19:10:55  djs
 # Added module for utility functions specific to generating skeletons
 # Union skeletons working
@@ -61,15 +64,37 @@ def end_loop(string, full_dims):
             
     string.dec_indent()
     string.out("}")
+
+def marshall_struct_union(string, environment, type, decl, argname, to="_n"):
+    assert isinstance(type, idltype.Type)
+    if decl:
+        assert isinstance(decl, idlast.Declarator)
+        dims = decl.sizes()
+    else:
+        dims = []
+    type_dims = tyutil.typeDims(type)
+    full_dims = dims + type_dims
+    is_array        = full_dims != []
+
+    if not(is_array):
+        # marshall the simple way
+        string.out("""\
+   @name@ >>= @to@;""", name = argname, to = to)
+    else:
+        # do it the normal way
+        marshall(string, environment, type, decl, argname, to)
         
 
-def marshall(string, environment, type, decl, argname):
+def marshall(string, environment, type, decl, argname, to="_n"):
     assert isinstance(type, idltype.Type)
-    assert isinstance(decl, idlast.Declarator)
-    
+    if decl:
+        assert isinstance(decl, idlast.Declarator)
+        dims = decl.sizes()
+    else:
+        dims = []
+        
     deref_type = tyutil.deref(type)
 
-    dims = decl.sizes()
     type_dims = tyutil.typeDims(type)
     full_dims = dims + type_dims
 
@@ -81,91 +106,93 @@ def marshall(string, environment, type, decl, argname):
 
     type_name = environment.principalID(deref_type)
 
-    if not(is_array):
-        string.out("""\
-@argname@ >>= _n;""", argname = argname)
-        return
-
     # marshall an array of basic things
-    # (octet separate because it doesnt have an entry in typeSizeAlignMap
-    # - changing this might affect the behaviour of sequenceTemplate)
-    if tyutil.isOctet(deref_type):
-        num_bytes = 1 * num_elements
-        string.out("""\
-_n.put_char_array((const _CORBA_Char*) ((const @type@*) @argname@), @size@);""",
-                   type = type_name, argname = argname,
-                   size = str(num_bytes))
-        return
-    
-    if tyutil.typeSizeAlignMap.has_key(deref_type.kind()):
-        (size, align) = tyutil.typeSizeAlignMap[deref_type.kind()]
-        num_bytes = size * num_elements
-        if align != 1:
-            align_str = ", omni::ALIGN_" + str(align)
-        else:
-            align_str = ""
-        
-        string.out("""\
-_n.put_char_array((const _CORBA_Char*) ((const @type@*) @argname@), @size@@align@);""",
-                   type = type_name, argname = argname,
-                   size = str(num_bytes), align = align_str)
-        return
+    if is_array:
+        if tyutil.typeSizeAlignMap.has_key(deref_type.kind()):
+            (size, align) = tyutil.typeSizeAlignMap[deref_type.kind()]
+            num_bytes = size * num_elements
+            if align != 1:
+                align_str = ", omni::ALIGN_" + str(align)
+            else:
+                align_str = ""
+                
+                string.out("""\
+@to@.put_char_array((const _CORBA_Char*) ((const @type@*) @argname@), @size@@align@);""",
+                           type = type_name, argname = argname,
+                           size = str(num_bytes), align = align_str, to = to)
+            return
 
-    # marshall an array of strings
     if tyutil.isString(deref_type):
-
         indexing_string = begin_loop(string, full_dims)
-
         string.out("""\
     CORBA::ULong _len = (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);
-    _len >>= _n;
+    _len >>= @to@;
     if (_len > 1)
-      _n.put_char_array((const CORBA::Char *)((const char*)@argname@@indexing_string@),_len);
+      @to@.put_char_array((const CORBA::Char *)((const char*)@argname@@indexing_string@),_len);
     else {
       if ((const char*) @argname@@indexing_string@ == 0 && omniORB::traceLevel > 1)
         _CORBA_null_string_ptr(0);
-        
-      CORBA::Char('\\0') >>= _n;
+      CORBA::Char('\\0') >>= @to@;
     }""",
-                   argname = argname, indexing_string = indexing_string)
-
+                   argname = argname,
+                   indexing_string = indexing_string,
+                   to = to)
         end_loop(string, full_dims)
-
-        return
-
-    # marshall an array of object references
-    if tyutil.isObjRef(deref_type):
+    elif tyutil.isObjRef(deref_type):
         indexing_string = begin_loop(string, full_dims)
-
         string.out("""\
-    @type_name@_Helper::marshalObjRef(@argname@@indexing_string@._ptr,_n);""",
+    @type_name@_Helper::marshalObjRef(@argname@@indexing_string@._ptr,@to@);""",
                    type_name = type_name,
                    argname = argname,
-                   indexing_string = indexing_string)
-        
+                   indexing_string = indexing_string,
+                   to = to)
         end_loop(string, full_dims)
-
-        return
-
-    # marshall struct and union types
-    indexing_string = begin_loop(string, full_dims)
-
-    string.out("""\
-    @argname@@indexing_string@ >>= _n;""",
-               argname = argname, indexing_string = indexing_string)
-    
-    end_loop(string, full_dims)
+    else:
+        if is_array:
+            indexing_string = begin_loop(string, full_dims)
+        else:
+            indexing_string = ""
+        string.out("""\
+    @argname@@indexing_string@ >>= @to@;""",
+                   argname = argname, indexing_string = indexing_string,
+                   to = to)
+        if is_array:
+            end_loop(string, full_dims)
     
     return
 
-def unmarshall(string, environment, type, decl, argname,
-               can_throw_marshall):
+def unmarshall_struct_union(string, environment, type, decl, argname,
+                            can_throw_marshall, from_where="_n"):
     assert isinstance(type, idltype.Type)
-    assert isinstance(decl, idlast.Declarator)
+    if decl:
+        assert isinstance(decl, idlast.Declarator)
+        dims = decl.sizes()
+    else:
+        dims = []
+    type_dims = tyutil.typeDims(type)
+    full_dims = dims + type_dims
+    is_array        = full_dims != []
+
+    if not(is_array):
+        # unmarshall the simple way
+        string.out("""\
+   @name@ <<= @from_where@;""", name = argname, from_where = from_where)
+    else:
+        # do it the normal way
+        unmarshall(string, environment, type, decl, argname, from_where)
+
+
+def unmarshall(string, environment, type, decl, argname,
+               can_throw_marshall, from_where = "_n"):
+    assert isinstance(type, idltype.Type)
+    if decl:
+        assert isinstance(decl, idlast.Declarator)
+        dims = decl.sizes()
+    else:
+        dims = []
     
     deref_type = tyutil.deref(type)
 
-    dims = decl.sizes()
     type_dims = tyutil.typeDims(type)
     full_dims = dims + type_dims
 
@@ -179,16 +206,16 @@ def unmarshall(string, environment, type, decl, argname,
     
     if not(is_array):
         string.out("""\
-@argname@ <<= _n;""", argname = argname)
+@argname@ <<= @from_where@;""", argname = argname, from_where = from_where)
         return
 
     # unmarshall an array of basic things
     #   octet and chars are handled directly
     if tyutil.isOctet(deref_type) or tyutil.isChar(deref_type):
         string.out("""\
-_n.get_char_array((_CORBA_Char*) ((@type@*) @argname@), @num@);""",
+@from_where@.get_char_array((_CORBA_Char*) ((@type@*) @argname@), @num@);""",
                    argname = argname, type = type_name,
-                   num = str(num_elements))
+                   num = str(num_elements), from_where = from_where)
         return
     #   other basic types are handled here
     array_helper_suffix = {
@@ -202,11 +229,12 @@ _n.get_char_array((_CORBA_Char*) ((@type@*) @argname@), @num@);""",
     if isinstance(deref_type, idltype.Base):
         if array_helper_suffix.has_key(deref_type.kind()):
             string.out("""\
-CdrStreamHelper_unmarshalArray@suffix@(_n, ((@type@*) @argname@), @num@);""",
+CdrStreamHelper_unmarshalArray@suffix@(@from_where@, ((@type@*) @argname@), @num@);""",
                        suffix = array_helper_suffix[deref_type.kind()],
                        type = type_name,
                        argname = argname,
-                       num = str(num_elements))
+                       num = str(num_elements),
+                       from_where = from_where)
             return
         # basic type (boolean, any, tc, princ, ll, ull, ld, wc)
         raise "Don't know how to marshall type: " + basic_type + " array"
@@ -216,37 +244,42 @@ CdrStreamHelper_unmarshalArray@suffix@(_n, ((@type@*) @argname@), @num@);""",
     if tyutil.isString(deref_type):
         string.out("""\
   CORBA::ULong _len;
-  _len <<= _n;
+  _len <<= @from_where@;
   if (!_len) {
     if (omniORB::traceLevel > 1)
       _CORBA_null_string_ptr(1);
     _len = 1;
-  }""", name = argname, indexing_string = indexing_string)
+  }""", name = argname, indexing_string = indexing_string,
+                   from_where = from_where)
         if can_throw_marshall:
             string.out("""\
-  else if ( _n.RdMessageUnRead() < _len)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);""")
+  else if ( @from_where@.RdMessageUnRead() < _len)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);""",
+                       from_where = from_where)
             string.dec_indent()
         string.out("""\
   if (!(char*)(@name@@indexing_string@ = CORBA::string_alloc(_len-1)))
     throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
   if (_len > 1)
-    _n.get_char_array((CORBA::Char *)((char *)@name@@indexing_string@),_len);
+    @from_where@.get_char_array((CORBA::Char *)((char *)@name@@indexing_string@),_len);
   else
-    *((CORBA::Char*)((char*) @name@@indexing_string@)) <<= _n ;""",
-                   name = argname, indexing_string = indexing_string)
+    *((CORBA::Char*)((char*) @name@@indexing_string@)) <<= @from_where@ ;""",
+                   name = argname, indexing_string = indexing_string,
+                   from_where = from_where)
         string.dec_indent()
     elif tyutil.isObjRef(deref_type):
         string.out("""\
-  @name@@indexing_string@ = @type@_Helper::unmarshalObjRef(_n);""",
+  @name@@indexing_string@ = @type@_Helper::unmarshalObjRef(@from_where@);""",
                    type = type_name,
                    name = argname,
-                   indexing_string = indexing_string)
+                   indexing_string = indexing_string,
+                   from_where = from_where)
 
     else:
         string.out("""\
-  @name@@indexing_string@ <<= _n;""",
-                   name = argname, indexing_string = indexing_string)
+  @name@@indexing_string@ <<= @from_where@;""",
+                   name = argname, indexing_string = indexing_string,
+                   from_where = from_where)
 
     end_loop(string, full_dims)
 
