@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:07:07  sll
+  Updated to include definitions for GIOP 1.1 and 1.2.
+
   Revision 1.2.2.1  2000/07/17 10:35:33  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -51,9 +54,9 @@
 #ifndef __OMNIORB_GIOP_H__
 #define __OMNIORB_GIOP_H__
 
-#include <omniORB3/CORBA_sysdep.h>
-#include <omniORB3/CORBA_basetypes.h>
-#include <omniORB3/IOP.h>
+#include <omniORB4/CORBA_sysdep.h>
+#include <omniORB4/CORBA_basetypes.h>
+#include <omniORB4/IOP.h>
 
 
 class GIOP {
@@ -65,7 +68,8 @@ public:
     LocateRequest = 3,                       // by client
     LocateReply = 4,                         // by server
     CloseConnection = 5,                     // by server
-    MessageError = 6                         // by both
+    MessageError = 6,                        // by both
+    Fragment = 7                             // by both
   };
 
   struct Version {
@@ -81,6 +85,17 @@ public:
     _CORBA_ULong     message_size;
   };
 
+  typedef _CORBA_Short AddressingDisposition;
+  static _core_attr const AddressingDisposition KeyAddr;
+  static _core_attr const AddressingDisposition ProfileAddr;
+  static _core_attr const AddressingDisposition ReferenceAddr;
+
+  struct IORAddressingInfo {
+    _CORBA_ULong  selected_profile_index;
+    IOP::IOR      ior;
+  };
+
+
   class RequestHeader {
   public:
     IOP::ServiceContextList	service_context;
@@ -95,7 +110,9 @@ public:
     NO_EXCEPTION,
     USER_EXCEPTION,
     SYSTEM_EXCEPTION,
-    LOCATION_FORWARD
+    LOCATION_FORWARD,
+    LOCATION_FORWARD_PERM,   // GIOP 1.2
+    NEEDS_ADDRESSING_MODE    // GIOP 1.2 
   };
 
   class ReplyHeader {
@@ -118,7 +135,10 @@ public:
   enum LocateStatusType {
     UNKNOWN_OBJECT,
     OBJECT_HERE,
-    OBJECT_FORWARD
+    OBJECT_FORWARD,
+    OBJECT_FORWARD_PERM,      // GIOP 1.2
+    LOC_SYSTEM_EXCEPTION,     // GIOP 1.2
+    LOC_NEEDS_ADDRESSING_MODE // GIOP 1.2
   };
 
   struct LocateReplyHeader {
