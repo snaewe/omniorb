@@ -1,3 +1,13 @@
+Wed Mar 12 16:51:05 GMT 2003 dgrisby
+====================================
+
+- GCC 3.3 needs check for vprintf.
+
+configure
+configure.ac
+include/omniORB4/acconfig.h.in
+
+
 Wed Mar 12 13:57:22 GMT 2003 dgrisby
 ====================================
 

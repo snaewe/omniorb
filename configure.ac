@@ -82,7 +82,7 @@ AC_LANG(C)
 AC_CHECK_FUNCS(getaddrinfo gethostname getopt getpid gettimeofday)
 AC_CHECK_FUNCS(isinf insinff isinfl nanosleep sigaction sigvec snprintf)
 AC_CHECK_FUNCS(strcasecmp strdup strerror stricmp strncasecmp strtoul)
-AC_CHECK_FUNCS(strtoull strtouq uname vsnprintf)
+AC_CHECK_FUNCS(strtoull strtouq uname vprintf vsnprintf)
 AC_LANG(C++)
 
 OMNI_HAVE_ISNANORINF
