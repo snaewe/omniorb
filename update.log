@@ -1,3 +1,34 @@
+Wed Dec 10 11:31:59 GMT 1997 sll
+================================
+
+- Updated life cycle service runtime and stubs
+
+mk/atmos.mk
+
+tool/omniidl2/omniORB2_be/o2be_attribute.cc
+tool/omniidl2/omniORB2_be/o2be_interface.cc
+tool/omniidl2/omniORB2_be/o2be_operation.cc
+tool/omniidl2/omniORB2_be/o2be_root.cc
+
+lib/omniORB2/objectRef.cc
+lib/omniORB2/omniLifeCycle.cc
+lib/omniORB2/reDirect.cc
+
+examples/lifecycle/dir.mk
+examples/lifecycle/echolag.idl
+examples/lifecycle/lcclient.cc
+examples/lifecycle/lcserver.cc
+examples/lifecycle/lcremove.cc
+examples/lifecycle/lcexamples.module          NEW
+
+include/omniORB2/omniInternal.h
+include/omniORB2/omniLC.h
+include/omniORB2/reDirect.h                    DELETED
+include/omniORB2/omniLifeCycle.h               DELETED
+
+doc/tex/lchowto.pdf
+doc/tex/lchowto.ps
+
 Tue Dec  9 12:08:44 GMT 1997 sll
 ================================
 
