@@ -437,21 +437,29 @@ OMNIORB_DEBUG_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniO
 OMNIORB_DYNAMIC_DLL_NAME = $(shell $(SharedLibraryFullName) $(subst ., ,omniDynamic.$(OMNIORB_VERSION)))
 OMNIORB_DEBUG_DYNAMIC_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniDynamic.$(OMNIORB_VERSION)))
 
+OMNIORB_CODESETS_DLL_NAME = $(shell $(SharedLibraryFullName) $(subst ., ,omniCodeSets.$(OMNIORB_VERSION)))
+OMNIORB_DEBUG_CODESETS_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniCodeSets.$(OMNIORB_VERSION)))
+
+
 ifndef BuildDebugBinary
 
 omniorb_dll_name := $(OMNIORB_DLL_NAME)
 omnidynamic_dll_name := $(OMNIORB_DYNAMIC_DLL_NAME)
+omnicodesets_dll_name := $(OMNIORB_CODESETS_DLL_NAME)
 
 else
 
 omniorb_dll_name := $(OMNIORB_DEBUG_DLL_NAME)
 omnidynamic_dll_name := $(OMNIORB_DEBUG_DYNAMIC_DLL_NAME)
+omnicodesets_dll_name := $(OMNIORB_DEBUG_CODESETS_DLL_NAME)
 endif
 
 lib_depend := $(omniorb_dll_name)
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
 lib_depend := $(omnidynamic_dll_name)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
+lib_depend := $(omnicodesets_dll_name)
+omniCodeSets_lib_depend := $(GENERATE_LIB_DEPEND)
 
 OMNIIDL = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/oidlwrapper.exe $(XLN)
 OMNIORB_IDL_ONLY = $(OMNIIDL) -T -bcxx -Wbh=.hh -Wbs=SK.cc
@@ -474,6 +482,12 @@ OMNIORB_LIB_NODYN_DEPEND := $(omniORB_lib_depend) \
 OMNIORB_LIB_DEPEND := $(omniORB_lib_depend) \
                       $(OMNITHREAD_LIB_DEPEND) \
 		      $(omniDynamic_lib_depend)
+
+# CodeSets library
+OMNIORB_CODESETS_LIB = $(omnicodesets_dll_name)
+OMNIORB_CODESETS_LIB_DEPEND := $(omniCodeSets_lib_depend)
+
+
 
 OMNIORB_STATIC_STUB_OBJS = \
 	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.o)
@@ -518,12 +532,6 @@ lib_depend := $(patsubst %,$(DLLPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 OMNITHREAD_PLATFORM_LIB =
-
-
-# CodeSets library
-OMNIORB_CODESETS_LIB = $(patsubst %,$(LibSearchPattern),omniCodeSets$(OMNIORB_MAJOR_VERSION))
-lib_depend := $(patsubst %,$(LibPattern),omniCodeSets$(OMNIORB_MAJOR_VERSION))
-OMNIORB_CODESETS_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 
 # omniORB SSL transport

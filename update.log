@@ -1,3 +1,11 @@
+Fri Sep  6 23:21:54 BST 2002 dgrisby
+====================================
+
+- Fix inevitable Windows problems.
+
+mk/win32.mk
+
+
 Fri Sep  6 22:58:42 BST 2002 dgrisby
 ====================================
 
