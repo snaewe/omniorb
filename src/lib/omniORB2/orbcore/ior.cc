@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.9.6.4  2000/04/27 10:50:30  dpg1
+  Interoperable Naming Service
+
+  IOR: prefix is not case sensitive.
+
   Revision 1.9.6.3  1999/10/14 16:22:11  djr
   Implemented logging when system exceptions are thrown.
 
@@ -152,10 +157,10 @@ IOP::EncapStrToIor(const CORBA::Char* str,
   if (s<4)
     OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
   const char *p = (const char *) str;
-  if (p[0] != 'I' ||
-      p[1] != 'O' ||
-      p[2] != 'R' ||
-      p[3] != ':')
+  if ((p[0] != 'I' && p[0] != 'i') ||
+      (p[1] != 'O' && p[1] != 'o') ||
+      (p[2] != 'R' && p[2] != 'r') ||
+      (p[3] != ':'))
     OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
   s = (s-4)/2;  // how many octets are there in the string
