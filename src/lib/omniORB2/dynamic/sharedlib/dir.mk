@@ -718,3 +718,44 @@ export:: $(dynlib)
          )
 
 endif
+
+#############################################################################
+#   Make rules for Darwin                                                   #
+#############################################################################
+
+ifdef Darwin
+
+DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
+
+libname = libomniORB$(major_version).dylib
+soname  = libomniORB$(major_version).$(minor_version).dylib
+lib     = libomniORB$(major_version).$(minor_version).$(micro_version).dylib
+
+dynlibname = libomniDynamic$(major_version).dylib
+dynsoname  = libomniDynamic$(major_version).$(minor_version).dylib
+dynlib     = libomniDynamic$(major_version).$(minor_version).$(micro_version).dylib
+
+all:: $(dynlib)
+
+$(dynlib): $(DYN_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -dynamiclib -undefined suppress -o $@ \
+         $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
+        )
+
+clean::
+	$(RM) $(dynlib)
+
+export:: $(dynlib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(dynsoname); \
+          ln -s $(dynlib) $(dynsoname); \
+          $(RM) $(dynlibname); \
+          ln -s $(dynsoname) $(dynlibname); \
+         )
+
+endif

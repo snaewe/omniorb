@@ -31,6 +31,9 @@
 #elif defined(__nextstep__)
 #include "config-nextstep.h"
 
+#elif defined(__darwin__)
+#include "config-darwin.h"
+
 #else
 #error "You must create a cccp config file for your platform"
 

@@ -805,6 +805,15 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 	usleep(secs * 1000000 + (nanosecs / 1000));
     }
 
+#elif defined(__darwin__)
+
+    // Single UNIX Specification says argument of usleep() must be
+    // less than 1,000,000.
+    secs += nanosecs / 1000000000;
+    nanosecs %= 1000000000;
+    while ((secs = ::sleep(secs))) ;
+    usleep(nanosecs / 1000);
+
 #else
 
     throw omni_thread_invalid();
@@ -829,7 +838,7 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 
 #else
 
-#if defined(__linux__) || defined(__aix__) || defined(__SCO_VERSION__)
+#if defined(__linux__) || defined(__aix__) || defined(__SCO_VERSION__) || defined(__darwin__)
 
     struct timeval tv;
     gettimeofday(&tv, NULL); 
