@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/11/12 13:47:09  dpg1
+  Minor fixes.
+
   Revision 1.1.2.1  2001/08/17 13:39:47  dpg1
   Split CORBA.h into separate bits.
 
@@ -86,11 +89,90 @@ typedef _CORBA_PseudoObj_Var<Policy> Policy_var;
 typedef _CORBA_PseudoObj_Member<Policy, Policy_var> Policy_member;
 
 typedef _CORBA_Pseudo_Unbounded_Sequence<Policy, Policy_member> PolicyList;
-typedef PolicyList* PolicyList_var;  //??
 
 typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_ULong,4,4> PolicyTypeSeq;
 
+class PolicyList_var {
+public:
+  inline PolicyList_var() : _pd_seq(0) {}
+  inline PolicyList_var(PolicyList* _s) : _pd_seq(_s) {}
+  inline PolicyList_var(const PolicyList_var& _s) {
+    if( _s._pd_seq )  _pd_seq = new PolicyList(*_s._pd_seq);
+    else              _pd_seq = 0;
+  }
+  inline ~PolicyList_var() { if( _pd_seq )  delete _pd_seq; }
+    
+  inline PolicyList_var& operator = (PolicyList* _s) {
+    if( _pd_seq )  delete _pd_seq;
+    _pd_seq = _s;
+    return *this;
+  }
+  inline PolicyList_var& operator = (const PolicyList_var& _s) {
+    if( _s._pd_seq ) {
+      if( !_pd_seq )  _pd_seq = new PolicyList;
+      *_pd_seq = *_s._pd_seq;
+    } else if( _pd_seq ) {
+      delete _pd_seq;
+      _pd_seq = 0;
+    }
+    return *this;
+  }
+  inline Policy* operator [] (_CORBA_ULong _s) {
+    return (*_pd_seq)[_s];
+  }
+  inline PolicyList* operator -> () { return _pd_seq; }
+#if defined(__GNUG__)
+  inline operator PolicyList& () const { return *_pd_seq; }
+#else
+  inline operator const PolicyList& () const { return *_pd_seq; }
+  inline operator PolicyList& () { return *_pd_seq; }
+#endif
+    
+  inline const PolicyList& in() const { return *_pd_seq; }
+  inline PolicyList&       inout()    { return *_pd_seq; }
+  inline PolicyList*&      out() {
+    if( _pd_seq ) { delete _pd_seq; _pd_seq = 0; }
+    return _pd_seq;
+  }
+  inline PolicyList* _retn() { PolicyList* tmp = _pd_seq; _pd_seq = 0; return tmp; }
+    
+  friend class PolicyList_out;
   
+private:
+  PolicyList* _pd_seq;
+};
+
+class PolicyList_out {
+public:
+  inline PolicyList_out(PolicyList*& _s) : _data(_s) { _data = 0; }
+  inline PolicyList_out(PolicyList_var& _s)
+    : _data(_s._pd_seq) { _s = (PolicyList*) 0; }
+  inline PolicyList_out(const PolicyList_out& _s) : _data(_s._data) {}
+  inline PolicyList_out& operator = (const PolicyList_out& _s) {
+    _data = _s._data;
+    return *this;
+  }
+  inline PolicyList_out& operator = (PolicyList* _s) {
+    _data = _s;
+    return *this;
+  }
+  inline operator PolicyList*&()  { return _data; }
+  inline PolicyList*& ptr()       { return _data; }
+  inline PolicyList* operator->() { return _data; }
+
+  inline Policy* operator [] (_CORBA_ULong _i) {
+    return (*_data)[_i];
+  }
+
+  PolicyList*& _data;
+
+private:
+  PolicyList_out();
+  PolicyList_out& operator=(const PolicyList_var&);
+};
+  
+
+
 
 #ifdef OMNIORB_DECLARE_POLICY_OBJECT
 #error OMNIORB_DECLARE_POLICY_OBJECT is already defined!

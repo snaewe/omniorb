@@ -68,7 +68,7 @@ Profiles:
        ORB where the SSL endpoint is. Notice that the ORB does not
        create a plain tcp endpoint as the port number in the IOR is 0.
        You can ask the ORB to create the tcp endpoint as well by specifying
-       the argument -ORBendpoint giop:tcp::
+       the argument -ORBendPoint giop:tcp::
 
 
     b) eg2_clt is the ssl client, use it to talk to eg2_impl
@@ -95,7 +95,7 @@ Profiles:
 
     d) On the server side, you have to tell the ORB, via ORB_init, to
        instantiate a SSL endpoint, this is done using the -ORBendpoint option.
-       e.g. -ORBendpoint giop:ssl::      (let the ORB pick a port number) 
-            -ORBendpoint giop:ssl::12345 (at port 12345)
-            -ORBendpoint giop:ssl:foo:12345 (at port 12345 and use hostname foo)
+       e.g. -ORBendPoint giop:ssl::      (let the ORB pick a port number) 
+            -ORBendPoint giop:ssl::12345 (at port 12345)
+            -ORBendPoint giop:ssl:foo:12345 (at port 12345 and use hostname foo)
 

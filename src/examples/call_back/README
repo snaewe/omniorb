@@ -29,9 +29,9 @@ To run a client, cut and paste the IOR from the server:
 
 In this example the server invokes the call-back object in the client
 before returning.  You observe the CORBA calls as they occur in the ORB
-by passing the -ORBtraceInvocations flag to your applications:
+by passing the -ORBtraceInvocations 1 flag to your applications:
 
-  $ ./cb_client 'IOR:3456098456.......345604598' -ORBtraceInvocations
+  $ ./cb_client 'IOR:3456098456.......345604598' -ORBtraceInvocations 1
   cb_client: server->one_time(call_back, "Hello!")
   omniORB: Invoke 'one_time' on remote: root<0>
   omniORB: Dispatching remote call 'call_back' to: root<0>

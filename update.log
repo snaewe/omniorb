@@ -1,3 +1,22 @@
+Mon Nov 12 13:43:43 GMT 2001 dpg1
+=================================
+
+- _unchecked_narrow, improved _narrow.
+
+include/omniORB4/CORBA_Object.h
+include/omniORB4/omniObjRef.h
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+- Minor fixes.
+
+include/omniORB4/CORBA_Policy.h
+src/examples/call_back/README
+src/examples/ssl_echo/README
+src/lib/omniORB/orbcore/GIOP_S.cc
+
+
 Fri Nov  9 16:12:19 GMT 2001 dpg1
 =================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2001/11/12 13:47:09  dpg1
+  Minor fixes.
+
   Revision 1.1.4.15  2001/10/17 16:33:27  dpg1
   New downcast mechanism for cdrStreams.
 
@@ -569,7 +572,8 @@ GIOP_S::ReceiveRequest(omniCallDescriptor& desc) {
   // If so check if the servant's POA policy allows this.
   giopStrand& g = (giopStrand&)((giopStream&)(*this));
   if (g.biDir && g.isClient()) {
-    if (!pd_calldescriptor->poa()->acceptBiDirectional()) {
+    if (!(pd_calldescriptor->poa() &&
+	  pd_calldescriptor->poa()->acceptBiDirectional())) {
       OMNIORB_THROW(OBJ_ADAPTER,OBJ_ADAPTER_BiDirNotAllowed,
 		    CORBA::COMPLETED_NO);
     }
