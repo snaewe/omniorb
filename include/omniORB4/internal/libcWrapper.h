@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/08/24 16:43:25  sll
+  Switch to use Winsock 2. Removed reference to winsock.h. Let the pre-processor
+  define _WIN32_WINNT=0x0400 to select the right header.
+
   Revision 1.1.4.2  2001/06/13 20:11:37  sll
   Minor update to make the ORB compiles with MSVC++.
 
@@ -63,9 +67,7 @@
 #define _HAS_NETDB_
 
 
-#ifdef __WIN32__
-#include <winsock.h>
-#else
+#if !defined(__WIN32__)
 #include <netdb.h>
 #endif
 

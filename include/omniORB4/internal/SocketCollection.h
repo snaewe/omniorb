@@ -19,16 +19,20 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/24 16:43:25  sll
+  Switch to use Winsock 2. Removed reference to winsock.h. Let the pre-processor
+  define _WIN32_WINNT=0x0400 to select the right header.
+
   Revision 1.1.2.3  2001/08/23 16:03:29  sll
   Corrected typo __win32__, should be __WIN32__.
 
@@ -81,7 +85,6 @@
 //
 #if defined(__WIN32__)
 
-#include <winsock.h>
 #include <sys/types.h>
 #include <libcWrapper.h>
 
@@ -261,7 +264,7 @@ public:
   // Remove the socket from this collection. Return the socket which has
   // been removed. Return 0 if the socket is not found.
 
-  SocketLink* findSocket(SocketHandle_t sock, 
+  SocketLink* findSocket(SocketHandle_t sock,
 			 CORBA::Boolean hold_lock=0);
   // Returns the connection that is associated with this socket.
   // Return 0 if this socket cannot be found in the hash table.
@@ -285,7 +288,7 @@ private:
   unsigned long     pd_abs_nsec;
 
 protected:
-  SocketLink**      pd_hash_table;      
+  SocketLink**      pd_hash_table;
 
 };
 
