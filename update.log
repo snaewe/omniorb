@@ -1,3 +1,15 @@
+Mon Apr 29 12:38:55 BST 2002 dgrisby
+====================================
+
+- More fixes for FreeBSD, Darwin, Windows.
+
+mk/beforeauto.mk.in
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Mon Apr 29 02:14:20 BST 2002 dgrisby
 ====================================
 

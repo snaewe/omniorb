@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2002/04/29 11:52:51  dgrisby
+  More fixes for FreeBSD, Darwin, Windows.
+
   Revision 1.1.4.5  2002/03/18 15:13:08  dpg1
   Fix bug with old-style ORBInitRef in config file; look for
   -ORBtraceLevel arg before anything else; update Windows registry
@@ -508,7 +511,7 @@ public:
       if (omniORB::trace(25)) {
 	GIOP::Version v = giopStreamImpl::maxVersion()->version();
 	omniORB::logger log;
-	log << " Maximum supported GIOP version is " << (int)v.major 
+	log << "Maximum supported GIOP version is " << (int)v.major 
 	    << "." << (int)v.minor << "\n";
       }
     }

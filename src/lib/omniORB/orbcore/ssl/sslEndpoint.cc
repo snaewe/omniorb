@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2002/04/29 11:52:51  dgrisby
+  More fixes for FreeBSD, Darwin, Windows.
+
   Revision 1.1.2.10  2002/04/16 12:44:27  dpg1
   Fix SSL accept bug, clean up logging.
 
@@ -206,30 +209,47 @@ sslEndpoint::Bind() {
 
   if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
 
-    // Find the first interface that isn't the loopback
+    // Try to find the first interface that isn't the loopback
+
+    const char* selected_hostname;
+    char self[64];
 
     const omnivector<const char*>* ifaddrs
       = giopTransportImpl::getInterfaceAddress("giop:ssl");
 
-    if (!ifaddrs || ifaddrs->empty()) {
-      omniORB::logs(1, "Cannot get the address of this host");
-      CLOSESOCKET(pd_socket);
-      return 0;
+    if (ifaddrs && !ifaddrs->empty()) {
+      // SSL transport successfully gave us a list of interface addresses
+
+      omnivector<const char*>::const_iterator i;
+      for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
+	if (strcmp(*i, "127.0.0.1"))
+	  break;
+      }
+      if (i == ifaddrs->end()) {
+	// Only interface was the loopback -- we'll have to use that
+	i = ifaddrs->begin();
+      }
+      pd_address.host = CORBA::string_dup(*i);
+      selected_hostname = pd_address.host;
     }
-    omnivector<const char*>::const_iterator i;
-    for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
-      if (strcmp(*i, "127.0.0.1"))
-	break;
+    else {
+      omniORB::logs(5, "No list of interface addresses; fall back to "
+		    "system hostname.");
+
+      if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;
+	  log << "Cannot get the name of this host\n";
+	}
+	CLOSESOCKET(pd_socket);
+	return 0;
+      }
+      selected_hostname = self;
     }
-    if (i == ifaddrs->end()) {
-      // Only interface was the loopback -- we'll have to use that
-      i = ifaddrs->begin();
-    }
-    pd_address.host = CORBA::string_dup(*i);
 
     LibcWrapper::hostent_var h;
     int rc;
-    if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
+    if (LibcWrapper::gethostbyname(selected_hostname,h,rc) < 0) {
       if (omniORB::trace(1)) {
 	omniORB::logger log;
 	log << "Cannot get the address of host " << pd_address.host << "\n";
@@ -240,6 +260,9 @@ sslEndpoint::Bind() {
     memcpy((void *)&addr.sin_addr,
 	   (void *)h.hostent()->h_addr_list[0],
 	   sizeof(addr.sin_addr));
+  }
+  if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
+    pd_address.host = tcpConnection::ip4ToString(addr.sin_addr.s_addr);
   }
   if (omniORB::trace(1) && strcmp(pd_address.host,"127.0.0.1") == 0) {
     omniORB::logger log;
