@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13  1999/08/30 18:55:29  sll
+  Added ENABLE_CLIENT_IR_SUPPORT.
+
   Revision 1.12  1999/08/30 16:53:16  sll
   New option -BOAhelp.
 
@@ -66,6 +69,7 @@
 //
  */
 
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB2/CORBA.h>
 
 #ifdef HAS_pch

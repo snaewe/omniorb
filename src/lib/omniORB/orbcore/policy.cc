@@ -30,11 +30,15 @@
 
 /*
  $Log$
+ Revision 1.2  1999/08/30 18:56:52  sll
+ Added ENABLE_CLIENT_IR_SUPPORT.
+
  Revision 1.1  1999/05/25 17:04:02  sll
  Initial revision
 
 */
 
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB2/CORBA.h>
 
 _init_in_def_( const CORBA::ULong CORBA::SecConstruction = 1;)
