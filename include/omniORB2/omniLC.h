@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.7  1999/06/26 17:56:03  sll
+   Corrected macros to import from lifecycle win32 DLL.
+
    Revision 1.6  1999/06/18 21:15:53  sll
    Updated copyright notice.
 
@@ -57,10 +60,24 @@
 #ifndef _omniLC_h_
 #define _omniLC_h_
 
-#ifndef USE_stub_in_nt_dll
-#define USE_stub_in_nt_dll
+#if !defined(_OMNIORB2_LC_LIBRARY)
+#ifndef USE_core_stub_in_nt_dll
+#define USE_core_stub_in_nt_dll
+#define USE_core_stub_in_nt_dll_NOT_DEFINED
+#endif
+#ifndef USE_dyn_stub_in_nt_dll
+#define USE_dyn_stub_in_nt_dll
+#define USE_dyn_stub_in_nt_dll_NOT_DEFINED
+#endif
 #include <omniORB2/omniLifeCycle.hh>
-#undef  USE_stub_in_nt_dll
+#ifdef  USE_core_stub_in_nt_dll_NOT_DEFINED
+#undef  USE_core_stub_in_nt_dll
+#undef  USE_core_stub_in_nt_dll_NOT_DEFINED
+#endif
+#ifdef  USE_dyn_stub_in_nt_dll_NOT_DEFINED
+#undef  USE_dyn_stub_in_nt_dll
+#undef  USE_dyn_stub_in_nt_dll_NOT_DEFINED
+#endif
 #else
 #include <omniORB2/omniLifeCycle.hh>
 #endif
