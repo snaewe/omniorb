@@ -27,10 +27,13 @@
 
 /*
   $Log$
-  Revision 1.10  1998/03/09 17:14:39  ewc
-  Use new _Forany function to get to underlying array slice. Avoid
-  explicit operator call that caused problems for aC++ on HPUX
+  Revision 1.11  1998/04/07 18:39:39  sll
+  Use std::fstream instead of fstream.
 
+// Revision 1.10  1998/03/09  17:14:39  ewc
+// Use new _Forany function to get to underlying array slice. Avoid
+// explicit operator call that caused problems for aC++ on HPUX
+//
 // Revision 1.9  1998/01/27  16:33:34  ewc
 //  Added support for type any and TypeCode
 //
@@ -259,7 +262,7 @@ dim_iterator::operator() ()
 }
 
 void
-o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
+o2be_array::produce_hdr (std::fstream &s, o2be_typedef *tdef)
 {
   AST_Decl *decl = base_type();
 
@@ -469,12 +472,12 @@ o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
       // Produce declarations of Any insertion and extraction operator.
       // Note that unlike most other types, insertion operator is not inline,
       // but is defined in skeleton file.
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "void operator<<=(CORBA::Any& _a, const " 
+      IND(s); s << FriendToken(*this)
+		<< " void operator<<=(CORBA::Any& _a, const " 
 		<< tdef->uqname() 
 		<< "_forany& _s);\n";
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+      IND(s); s << FriendToken(*this)
+		<< " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 		<< tdef->uqname() << "_forany& _s);\n\n";
     }
     else set_recursive_seq(I_TRUE);
@@ -482,7 +485,7 @@ o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
 }
 
 void
-o2be_array::produce_skel (fstream &s, o2be_typedef *tdef)
+o2be_array::produce_skel (std::fstream &s, o2be_typedef *tdef)
 {
   if (defined_in() == idl_global->root())
     {
@@ -645,7 +648,7 @@ o2be_array::produce_skel (fstream &s, o2be_typedef *tdef)
 }
 
 void
-o2be_array::produce_typecode_skel(fstream &s)
+o2be_array::produce_typecode_skel(std::fstream &s)
 {
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // All array TypeCodes are generated in-place when they are used.
@@ -659,7 +662,7 @@ o2be_array::produce_typecode_skel(fstream &s)
 }
 
 void 
-o2be_array::produce_typecode_member(fstream &s, idl_bool new_ptr)
+o2be_array::produce_typecode_member(std::fstream &s, idl_bool new_ptr)
 {
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     if (new_ptr) s << "new ";
@@ -705,7 +708,7 @@ o2be_array::check_recursive_seq()
 }
 
 void
-o2be_array::produce_typedef_hdr(fstream &s, o2be_typedef *tdef1,
+o2be_array::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef1,
 				o2be_typedef *tdef2)
 {
   IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
@@ -750,7 +753,7 @@ o2be_array::produce_typedef_hdr(fstream &s, o2be_typedef *tdef1,
 }
 
 void
-o2be_array::produce_typedef_skel(fstream &s, o2be_typedef *tdef1,
+o2be_array::produce_typedef_skel(std::fstream &s, o2be_typedef *tdef1,
 				 o2be_typedef *tdef2)
 {
   if (tdef1->defined_in() == idl_global->root()) {
@@ -779,7 +782,7 @@ o2be_array::produce_typedef_skel(fstream &s, o2be_typedef *tdef1,
 }
 
 void
-o2be_array::_produce_member_decl (fstream &s, char *varname,AST_Decl* used_in)
+o2be_array::_produce_member_decl (std::fstream &s, char *varname,AST_Decl* used_in)
 {
   AST_Decl *decl = base_type();
 
@@ -843,7 +846,7 @@ o2be_array::_produce_member_decl (fstream &s, char *varname,AST_Decl* used_in)
 }
 
 void
-o2be_array::produce_struct_member_decl (fstream &s, AST_Decl *fieldtype,
+o2be_array::produce_struct_member_decl (std::fstream &s, AST_Decl *fieldtype,
 					AST_Decl* used_in)
 {
   _produce_member_decl(s,o2be_name::narrow_and_produce_uqname(fieldtype),
@@ -851,7 +854,7 @@ o2be_array::produce_struct_member_decl (fstream &s, AST_Decl *fieldtype,
 }
 
 void
-o2be_array::produce_union_member_decl (fstream &s, AST_Decl *fieldtype,
+o2be_array::produce_union_member_decl (std::fstream &s, AST_Decl *fieldtype,
 				       AST_Decl* used_in)
 {
   char * varname = new char[strlen("pd_")+strlen(o2be_name::narrow_and_produce_uqname(fieldtype))+1];
@@ -862,7 +865,7 @@ o2be_array::produce_union_member_decl (fstream &s, AST_Decl *fieldtype,
 }
 
 void
-o2be_array::produce_typedef_in_union(fstream &s, const char *tname,
+o2be_array::produce_typedef_in_union(std::fstream &s, const char *tname,
 				     AST_Decl* used_in)
 {
   AST_Decl *decl = base_type();
