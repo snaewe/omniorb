@@ -7,17 +7,19 @@
 #   Make variables common to all platforms                                  #
 #############################################################################
 
-ORB2_SRCS = constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
+ORB2_SRCS = bootstrap_i.cc bootstrapSK.cc \
+            constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
             corbaString.cc \
-          exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
-          libcWrapper.cc mbufferedStream.cc nbufferedStream.cc NamingSK.cc \
-          object.cc objectKey.cc objectRef.cc ropeFactory.cc \
-          strand.cc scavenger.cc \
-	  typecode.cc any.cc tcParseEngine.cc \
-          dynAny.cc dynAnyP.cc \
-          $(NETLIBSRCS) $(LOG_SRCS)
+            exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
+            libcWrapper.cc mbufferedStream.cc nbufferedStream.cc NamingSK.cc \
+            object.cc objectKey.cc objectRef.cc ropeFactory.cc \
+            strand.cc scavenger.cc \
+	    typecode.cc any.cc tcParseEngine.cc \
+            dynAny.cc dynAnyP.cc \
+            $(NETLIBSRCS) $(LOG_SRCS)
 
-ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
+ORB2_OBJS = bootstrap_i.o bootstrapSK.o \
+            constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             corbaString.o \
             exception.o giopClient.o giopServer.o initFile.o ior.o \
             libcWrapper.o mbufferedStream.o nbufferedStream.o NamingSK.o \
@@ -37,7 +39,6 @@ DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS) -I. -I./..
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
 
 CXXSRCS = $(ORB2_SRCS) $(LC_SRCS)
-
 
 #############################################################################
 #   Make variables for Unix platforms                                       #
@@ -216,6 +217,10 @@ omniLifeCycle.hh omniLifeCycleSK.cc: omniLifeCycle.idl
 	-if [ "$^" != omniLifeCycle.idl ]; then $(CP) $^ . ; fi
 	$(OMNIORB2_IDL_FPATH) omniLifeCycle.idl
 
+bootstrap.hh bootstrapSK.cc: bootstrap.idl
+	-if [ "$^" != bootstrap.idl ]; then $(CP) $^ . ; fi
+	$(OMNIORB2_IDL_FPATH) bootstrap.idl
+
 export:: Naming.hh
 	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
 
@@ -226,7 +231,7 @@ export:: omniLifeCycle.hh
 endif
 
 clean::
-	$(RM) $(lib) NamingSK.cc omniLifeCycleSK.cc
+	$(RM) $(lib) NamingSK.cc omniLifeCycleSK.cc bootstrapSK.cc
 
 export:: $(lib)
 	@$(ExportLibrary)
