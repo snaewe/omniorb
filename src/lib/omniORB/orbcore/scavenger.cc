@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.5  1999/02/11 17:54:19  djr
+  Added class OutScavengerThreadKiller which kills the out scavenger
+  when global destructors are called.
+
   Revision 1.4  1998/08/14 13:51:58  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -354,3 +358,18 @@ omniORB::idleConnectionScanPeriod(omniORB::idleConnType direction)
     }
 }
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+// Kill the out scavenger thread.
+
+class OutScavengerThreadKiller {
+public:
+  ~OutScavengerThreadKiller() {
+    StrandScavenger::killOutScavenger();
+  }
+  static OutScavengerThreadKiller theInstance;
+};
+
+OutScavengerThreadKiller OutScavengerThreadKiller::theInstance;
