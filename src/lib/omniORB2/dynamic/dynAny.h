@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.2.8.3  1999/10/26 20:18:20  sll
+ DynAny no longer do alias expansion on the typecode. In other words, all
+ aliases in the typecode are preserved.
+
  Revision 1.2.8.2  1999/09/22 16:15:59  djr
  Removed MT locking.
 
@@ -137,7 +141,16 @@ public:
   // Must not hold DynAnyImplBase::refCountLock.
 
   TypeCode_base* tc() const    { return pd_tc;            }
-  CORBA::TCKind tckind() const { return pd_tc->NP_kind(); }
+
+  TypeCode_base* actualTc() const { 
+    return (TypeCode_base*)TypeCode_base::NP_expand(pd_tc);
+  }
+  // Return the typecode. If the typecode is an alias, return the content
+  // type.
+
+  CORBA::TCKind tckind() const { return actualTc()->NP_kind();}
+  // Return the TCKind. If the typecode is an alias, return the TCKind of
+  // the content type.
 
 
   MemBufferedStream pd_buf;
@@ -275,8 +288,8 @@ public:
   /***********
   * internal *
   ***********/
-  TypeCode_enum* tc() const {
-    return (TypeCode_enum*) DynAnyImplBase::tc();
+  TypeCode_enum* actualTc() const {
+    return (TypeCode_enum*) DynAnyImplBase::actualTc();
   }
 };
 
@@ -648,8 +661,8 @@ public:
   virtual void set_value(TypeCode_union::Discriminator v);
   // Must NOT hold DynAnyImplBase::lock.
 
-  TypeCode_enum* tc() const {
-    return (TypeCode_enum*) DynAnyImplBase::tc();
+  TypeCode_enum* actualTc() const {
+    return (TypeCode_enum*) DynAnyImplBase::actualTc();
   }
 };
 
@@ -737,8 +750,8 @@ public:
   }
 
 private:
-  TypeCode_union* tc() const {
-    return (TypeCode_union*) DynAnyImplBase::tc();
+  TypeCode_union* actualTc() const {
+    return (TypeCode_union*) DynAnyImplBase::actualTc();
   }
 
   MemBufferedStream& writeCurrent(CORBA::TCKind kind) {
