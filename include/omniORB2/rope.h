@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.10  1999/07/02 19:17:33  sll
+  Removed inlined virtual dtor. Some compilers generate a copy of the
+  dtor per compilation unit.
+
   Revision 1.9  1999/06/18 21:17:31  sll
   Updated copyright notice.
 
@@ -576,10 +580,7 @@ public:
     return *this;
   }
 
-  virtual ~Endpoint() {
-    delete [] pd_protocolname;
-    return;
-  }
+  virtual ~Endpoint();
 
   _CORBA_Boolean is_protocol(const _CORBA_Char *name) const {
     if (strcmp((const char *)name,(char *)pd_protocolname) == 0) {
