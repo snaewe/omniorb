@@ -1,3 +1,11 @@
+Wed Feb  2 00:20:01 GMT 2005 dgrisby
+====================================
+
+- Memory leak with CloseConnection or error received in a queued message.
+
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Sat Jan 29 17:23:44 GMT 2005 dgrisby
 ====================================
 
