@@ -1,3 +1,10 @@
+Fri Mar 10 11:00:51 GMT 2000 dpg1
+=================================
+
+- Fix to omniidl for VFAT drives in Windows (case sentivity problem)
+
+src/tool/omniidl/cxx/idlpython.cc
+
 
 Tue Mar  7 18:04:04 GMT 2000 djr
 ================================
