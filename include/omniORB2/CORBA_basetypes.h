@@ -6,9 +6,13 @@
 // Copyright (C) Olivetti Research Limited, 1996
 //
 // Description:
+//	*** PROPRIETORY INTERFACE ***
 
 /*
  $Log$
+ Revision 1.2  1997/03/09 12:47:01  sll
+ Minor cleanup.
+
  Revision 1.1  1997/01/08 17:28:30  sll
  Initial revision
 
