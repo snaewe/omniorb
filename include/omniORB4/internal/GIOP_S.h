@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/05/02 14:22:05  sll
+  Cannot rely on the calldescriptor still being there when a user exception
+  is raised.
+
   Revision 1.1.4.2  2001/05/01 16:07:32  sll
   All GIOP implementations should now work with fragmentation and abitrary
   sizes non-copy transfer.
@@ -182,6 +186,8 @@ private:
   IOP_S::State             pd_state;
   giopServer*              pd_server;
   omniCallDescriptor*      pd_calldescriptor;
+  const char* const*       pd_user_excns;
+  int                      pd_n_user_excns;
   GIOP::MsgType            pd_requestType;
 
   omniObjKey               pd_key;

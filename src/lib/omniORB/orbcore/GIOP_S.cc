@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/05/02 14:22:05  sll
+  Cannot rely on the calldescriptor still being there when a user exception
+  is raised.
+
   Revision 1.1.4.2  2001/05/01 16:07:32  sll
   All GIOP implementations should now work with fragmentation and abitrary
   sizes non-copy transfer.
@@ -232,18 +236,16 @@ GIOP_S::handleRequest() {
       OMNIORB_ASSERT(calldescriptor() != 0); \
       int i, repoid_size;  \
       const char* repoid = ex._NP_repoId(&repoid_size); \
-      const char*const* user_exns = calldescriptor()->user_excns(); \
-      int n_user_exns = calldescriptor()->n_user_excns(); \
-      for( i = 0; i < n_user_exns; i++ ) \
-	if( !strcmp(user_exns[i], repoid) ) { \
+      for( i = 0; i < pd_n_user_excns; i++ ) \
+	if( !strcmp(pd_user_excns[i], repoid) ) { \
 	  impl()->sendUserException(this,ex); \
 	  break; \
 	} \
-      if( i == n_user_exns ) { \
+      if( i == pd_n_user_excns ) { \
 	if( omniORB::trace(1) ) { \
 	  omniORB::logger l; \
 	  l << "WARNING -- method \'" << operation() \
-	    << "\' on: " << key() \
+	    << "\' on: " << pd_key \
 	    << "\n raised the exception: " << repoid << '\n'; \
 	} \
 	CORBA::UNKNOWN sex(UNKNOWN_UserException, \
@@ -431,6 +433,15 @@ GIOP_S::ReceiveRequest(omniCallDescriptor& desc) {
   OMNIORB_ASSERT(pd_state == RequestIsBeingProcessed);
 
   calldescriptor(&desc);
+
+  // When a user exception is throw by the stub code, the
+  // call descriptor could have been deallocated before the
+  // catch frame for the user exception is reached. Therefore
+  // we store the user exception signatures inside our own
+  // private states.
+  pd_n_user_excns = desc.n_user_excns();
+  pd_user_excns = desc.user_excns();
+
   cdrStream& s = (cdrStream&)*this;
   desc.unmarshalArguments(s);
   pd_state = WaitingForReply;
