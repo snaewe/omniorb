@@ -1,3 +1,18 @@
+Tue Nov 18 15:35:06 GMT 1997 sll
+================================
+
+Removed unnessary link library flag.
+
+mk/win32.mk
+
+Mon Nov 17 16:15:20 GMT 1997 sll
+================================
+
+Default to use mkdirhier instead of omkdirhier.
+
+mk/unix.mk
+mk/platforms/sun4_sosV_5.5.mk
+
 
 Fri Nov 14 17:29:16 GMT 1997 tjr
 ================================
