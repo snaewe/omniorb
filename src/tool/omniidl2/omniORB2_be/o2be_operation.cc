@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.29  1999/06/18 20:47:28  sll
+  Updated to use _dyn_attr.
+
   Revision 1.28  1999/05/26 11:05:24  sll
   Added code to support context.
   Added code to generate typecode constant for anonymous bounded string
@@ -2823,7 +2826,7 @@ o2be_operation::check_and_produce_unnamed_argument_tc_decl(std::fstream&s,
       << o2be_string::narrow_from_decl(d)->tcname()
       << "__\n";
     IND(s); s << o2be_global::root()->variable_qualifier()
-	      << " const CORBA::TypeCode_ptr " 
+	      << " _dyn_attr const CORBA::TypeCode_ptr " 
 	      << o2be_string::narrow_from_decl(d)->tcname() << ";\n";
     s << "#endif\n\n";
   }

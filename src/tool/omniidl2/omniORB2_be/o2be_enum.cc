@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.14  1999/06/18 20:47:12  sll
+  Updated to use _dyn_attr.
+
   Revision 1.13  1999/06/03 17:12:01  sll
   Updated to CORBA 2.2.
 
@@ -105,7 +108,7 @@ o2be_enum::produce_hdr(std::fstream &s)
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
     IND(s); s << variable_qualifier()
-	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+	      << " _dyn_attr const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
   }
 
   produce_seq_hdr_if_defined(s);

@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.13  1999/06/18 20:47:44  sll
+  Updated to use _dyn_attr.
+
   Revision 1.12  1999/03/11 16:26:08  djr
   Updated copyright notice
 
@@ -139,7 +142,7 @@ o2be_typedef::produce_hdr(std::fstream &s)
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
     IND(s); s << variable_qualifier()
-	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n";
+	      << " _dyn_attr const CORBA::TypeCode_ptr " << tcname() << ";\n";
   }
 
   switch (decl->node_type())
