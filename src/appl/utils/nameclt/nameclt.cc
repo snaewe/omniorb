@@ -25,11 +25,10 @@
 #include <iostream.h>
 #include <stdlib.h>
 #include <omniORB3/Naming.hh>
+#include <omniORB3/omniURI.h>
 
 static int advanced = 0;
 static const char* command;
-
-static void StringToCosNamingName(const char* arg, CosNaming::Name& name);
 
 static void
 usage(const char* progname)
@@ -139,7 +138,19 @@ main(int argc, char **argv)
     }
   }
 
-  rootContext = CosNaming::NamingContext::_narrow(initServ);
+  try {
+    rootContext = CosNaming::NamingContext::_narrow(initServ);
+  }
+  catch (CORBA::COMM_FAILURE& ex) {
+    cerr << "Caught a COMM_FAILURE when trying to validate the type of the "
+	 << "NamingContext." << endl;
+    exit(1);
+  }
+  catch(...) {
+    cerr << "Unexpected error when trying to narrow the NamingContext."
+	 << endl;
+    exit(1);
+  }
   if (CORBA::is_nil(rootContext)) {
     cerr << "NameService object reference was not a NamingContext." << endl;
     exit(1);
@@ -169,10 +180,9 @@ main(int argc, char **argv)
 
       case 1:
 	{
-	  CosNaming::Name name;
-	  StringToCosNamingName(argv[n], name);
+	  CosNaming::Name_var name = omniURI::stringToName(argv[n]);
 
-	  if (name.length() == 0) {
+	  if (name->length() == 0) {
 	    context = rootContext;
 	  } else {
 	    CORBA::Object_var obj = rootContext->resolve(name);
@@ -201,13 +211,13 @@ main(int argc, char **argv)
 
       while (bi->next_one(b)) {
 
-	cout << (char*)b->binding_name[0].id;
-	if (strcmp(b->binding_name[0].kind, "") != 0) {
-	  cout << "." << (char*)b->binding_name[0].kind;
-	}
-	if (b->binding_type == CosNaming::ncontext) {
+	CORBA::String_var sname = omniURI::nameToString(b->binding_name);
+
+	cout << sname;
+
+	if (b->binding_type == CosNaming::ncontext)
 	  cout << "/";
-	}
+
 	cout << endl;
       }
 
@@ -229,8 +239,7 @@ main(int argc, char **argv)
 	exit(1);
       }
 
-      CosNaming::Name name;
-      StringToCosNamingName(argv[n], name);
+      CosNaming::Name_var name = omniURI::stringToName(argv[n]);
 
       CosNaming::NamingContext_var context
 	= rootContext->bind_new_context(name);
@@ -256,8 +265,7 @@ main(int argc, char **argv)
 	exit(1);
       }
 
-      CosNaming::Name name;
-      StringToCosNamingName(argv[n], name);
+      CosNaming::Name_var name = omniURI::stringToName(argv[n]);
 
       CORBA::Object_var obj = rootContext->resolve(name);
 
@@ -289,8 +297,7 @@ main(int argc, char **argv)
 	exit(1);
       }
 
-      CosNaming::Name name;
-      StringToCosNamingName(argv[n++], name);
+      CosNaming::Name_var name = omniURI::stringToName(argv[n++]);
 
       CORBA::Object_var obj;
 
@@ -320,8 +327,7 @@ main(int argc, char **argv)
 	exit(1);
       }
 
-      CosNaming::Name name;
-      StringToCosNamingName(argv[n], name);
+      CosNaming::Name_var name = omniURI::stringToName(argv[n]);
 
       if (advanced) {
 
@@ -337,12 +343,12 @@ main(int argc, char **argv)
       //
 
       CosNaming::NamingContext_var context;
-      int len = name.length();
+      int len = name->length();
       CORBA::String_var id = name[len-1].id;
       CORBA::String_var kind = name[len-1].kind;
 
       if (len > 1) {
-	name.length(len-1);
+	name->length(len-1);
 
 	CORBA::Object_var obj = rootContext->resolve(name);
 
@@ -401,8 +407,7 @@ main(int argc, char **argv)
 	exit(1);
       }
 
-      CosNaming::Name name;
-      StringToCosNamingName(argv[n], name);
+      CosNaming::Name_var name = omniURI::stringToName(argv[n]);
 
       CORBA::Object_var obj = rootContext->resolve(name);
 
@@ -435,8 +440,7 @@ main(int argc, char **argv)
 	exit(1);
       }
 
-      CosNaming::Name name;
-      StringToCosNamingName(argv[n++], name);
+      CosNaming::Name_var name = omniURI::stringToName(argv[n++]);
 
       CORBA::Object_var obj;
 
@@ -474,8 +478,7 @@ main(int argc, char **argv)
 	exit(1);
       }
 
-      CosNaming::Name name;
-      StringToCosNamingName(argv[n++], name);
+      CosNaming::Name_var name = omniURI::stringToName(argv[n++]);
 
       CORBA::Object_var obj;
 
@@ -505,8 +508,7 @@ main(int argc, char **argv)
 	exit(1);
       }
 
-      CosNaming::Name name;
-      StringToCosNamingName(argv[n++], name);
+      CosNaming::Name_var name = omniURI::stringToName(argv[n++]);
 
       CORBA::Object_var obj;
 
@@ -623,54 +625,4 @@ main(int argc, char **argv)
  done:
   orb->destroy();
   return 0;
-}
-
-
-//
-// StringToCosNamingName() turns a string into a CosNaming::Name.
-// Name components are separated by '/', the id from the kind by '.'.  A '\'
-// quotes the next character.  An extra '/' at the beginning or end is ignored.
-// An empty string denotes a name with no components - use "//" if you want a
-// name component with both id and kind empty.
-//
-
-static void
-StringToCosNamingName(const char* arg, CosNaming::Name& name)
-{
-  int n = 0;
-  char* str = CORBA::string_dup(arg);
-  int len = strlen(str);
-  char* id = str;
-  char* kind = "";
-
-  for (int i = 0; i < len; i++) {
-    if (str[i] == '\\') {
-      memmove(&str[i], &str[i+1], len-i);
-      len--;
-
-    } else if (str[i] == '.') {
-      str[i] = '\0';
-      kind = &str[i+1];
-
-    } else if (str[i] == '/') {
-      str[i] = '\0';
-      if (i != 0) {
-	name.length(n+1);
-	name[n].id   = (const char*) id;
-	name[n].kind = (const char*) kind;
-	n++;
-      }
-      id = &str[i+1];
-      kind = "";
-    }
-  }
-
-  if (id[0] != '\0' || kind[0] != '\0') {
-    name.length(n+1);
-    name[n].id   = (const char*) id;
-    name[n].kind = (const char*) kind;
-    n++;
-  }
-
-  CORBA::string_free(str);
 }
