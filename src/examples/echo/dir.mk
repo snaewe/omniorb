@@ -3,7 +3,11 @@ CXXSRCS = eg1.cc eg2_impl.cc eg2_clt.cc eg3_impl.cc eg3_clt.cc
 
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
-CORBA_INTERFACES = echo
+#CORBA_INTERFACES = echo
+CXXSRCS += echoSK.cc
+
+NoTieExample = 1
+CORBA_STATIC_STUB_OBJS = echoSK.o
 
 ifdef OSF1
 ifeq ($(notdir $(CXX)),cxx)
