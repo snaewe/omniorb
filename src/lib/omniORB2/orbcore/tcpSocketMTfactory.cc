@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.20  1999/06/28 17:38:01  sll
+  Added packet dump routines in ll_send and ll_recv. Enabled at traceLevel 25.
+  Added openvms change.
+
   Revision 1.19  1999/06/26 18:10:52  sll
   Use WSAGetLastError() on win32 to get the errno correctly.
 
@@ -168,6 +172,16 @@
 
 #if defined(NEED_GETHOSTNAME_PROTOTYPE)
 extern "C" int gethostname(char *name, int namelen);
+#endif
+
+#if defined(__VMS) && defined(USE_tcpSocketVaxRoutines)
+#include "tcpSocketVaxRoutines.h"
+#undef accept
+#undef recv
+#undef send
+#define accept(a,b,c) tcpSocketVaxAccept(a,b,c)
+#define recv(a,b,c,d) tcpSocketVaxRecv(a,b,c,d)
+#define send(a,b,c,d) tcpSocketVaxSend(a,b,c,d)
 #endif
 
 class tcpSocketRendezvouser : public omni_thread {
@@ -714,6 +728,31 @@ tcpSocketStrand::~tcpSocketStrand()
   pd_delay_connect = 0;
 }
 
+static omni_mutex dumplock;
+static void dumpbuf(unsigned char* buf, size_t sz)
+{
+  omni_mutex_lock sync(dumplock);
+  // Dumping buffer
+  unsigned int i, k, j = 0;
+  for (i=0; i < ((sz < 16) ? sz : 16); i+=2, j+=2)
+    fprintf(stderr,"%02x%02x ", buf[i], buf[i+1]);
+  for (; i < sz; i+=2) {
+    if (j % 16 == 0) {
+      for (k=i-16; k<i; k++)
+	fprintf(stderr,"%c", (buf[k] < 32 || buf[k] > 126) ? '.' : buf[k]);
+      fprintf(stderr,"\n");
+    }
+    fprintf(stderr,"%02x%02x ", buf[i], buf[i+1]);
+    j+=2;
+  }
+  if (j % 16 || j==16) {
+    for (k=(j%16); k < 16; k+=2) fprintf(stderr,"     ");
+    for (k=i-((j==16)? 0: (j%16)); k<i; k++)
+      fprintf(stderr,"%c", (buf[k] < 32 || buf[k] > 126) ? '.' : buf[k]);
+  }
+  fprintf(stderr,"\n");
+}
+
 size_t
 tcpSocketStrand::ll_recv(void* buf, size_t sz)
 {
@@ -759,6 +798,10 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
       }
     break;
   }
+  if (omniORB::traceLevel >= 25) {
+      fprintf(stderr,"ll_recv: %d bytes\n",rx);
+      ::dumpbuf((unsigned char*)buf,rx);
+  }
   return (size_t)rx;
 }
 
@@ -783,6 +826,12 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
 
   int tx;
   char *p = (char *)buf;
+
+  if (omniORB::traceLevel >= 25) {
+      fprintf(stderr,"ll_send: %d bytes\n",sz);
+      ::dumpbuf((unsigned char*)buf,sz);
+  }
+
   while (sz) {
     if ((tx = ::send(pd_socket,p,sz,0)) == RC_SOCKET_ERROR) {
 #ifndef __WIN32__
