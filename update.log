@@ -1,3 +1,13 @@
+Tue Mar 19 15:40:33 GMT 2002 dpg1
+=================================
+
+- Use list of IP addresses to pick a non-loopback interface if there is one.
+
+include/omniORB4/giopEndpoint.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Mon Mar 18 16:46:35 GMT 2002 dpg1
 =================================
 

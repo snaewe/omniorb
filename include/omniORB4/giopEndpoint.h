@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2002/03/19 15:42:03  dpg1
+  Use list of IP addresses to pick a non-loopback interface if there is one.
+
   Revision 1.1.4.6  2001/12/03 13:39:54  dpg1
   Explicit socket shutdown flag for Windows.
 
@@ -350,10 +353,7 @@ public:
 
   virtual const omnivector<const char*>* getInterfaceAddress() = 0;
   // Get the addresses of all the interfaces that can be used to talk to
-  // this host. Return the list only if <type> identifies this transport type.
-  // e.g. type == "giop:tcp" causes the tcp transport implementation to
-  // returns the IP address of all the network interfaces of this host.
-  // If <type> does not match, returns 0.
+  // this host using this transport.
 
   virtual void initialise();
   // Initialise the transport implementation. Called once the 1st time
@@ -366,7 +366,7 @@ public:
   // returns the IP address of all the network interfaces of this host.
   // If <type> does not match returns 0.
 
-  const char*     type;
+  const char*        type;
   giopTransportImpl* next;
 
   giopTransportImpl(const char* t);

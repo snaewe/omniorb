@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/03/19 15:42:04  dpg1
+  Use list of IP addresses to pick a non-loopback interface if there is one.
+
   Revision 1.1.2.8  2002/03/13 16:05:40  dpg1
   Transport shutdown fixes. Reference count SocketCollections to avoid
   connections using them after they are deleted. Properly close
@@ -146,17 +149,22 @@ tcpEndpoint::Bind() {
     LibcWrapper::hostent_var h;
     int rc;
 
+    if (omniORB::trace(25)) {
+      omniORB::logger log;
+      log << "Explicit bind to host " << pd_address.host << "\n";
+    }
+
     if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
       if (omniORB::trace(1)) {
-       omniORB::logger log;
-       log << "Cannot get the address of this host\n";
+	omniORB::logger log;
+	log << "Cannot get the address of host " << pd_address.host << "\n";
       }
       CLOSESOCKET(pd_socket);
       return 0;
     }
     memcpy((void *)&addr.sin_addr,
-          (void *)h.hostent()->h_addr_list[0],
-          sizeof(addr.sin_addr));
+	   (void *)h.hostent()->h_addr_list[0],
+	   sizeof(addr.sin_addr));
   }
   
   if (addr.sin_port) {
@@ -189,24 +197,35 @@ tcpEndpoint::Bind() {
   }
   pd_address.port = ntohs(addr.sin_port);
 
-  {
-    char self[64];
-    if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
-      if (omniORB::trace(1)) {
-	omniORB::logger log;
-	log << "Cannot get the name of this host\n";
-      }
+  if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
+
+    // Find the first interface that isn't the loopback
+
+    const omnivector<const char*>* ifaddrs
+      = giopTransportImpl::getInterfaceAddress("giop:tcp");
+
+    if (!ifaddrs || ifaddrs->empty()) {
+      omniORB::logs(1, "Cannot get the address of this host");
       CLOSESOCKET(pd_socket);
       return 0;
     }
+    omnivector<const char*>::const_iterator i;
+    for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
+      if (strcmp(*i, "127.0.0.1"))
+	break;
+    }
+    if (i == ifaddrs->end()) {
+      // Only interface was the loopback -- we'll have to use that
+      i = ifaddrs->begin();
+    }
+    pd_address.host = CORBA::string_dup(*i);
 
     LibcWrapper::hostent_var h;
     int rc;
-
-    if (LibcWrapper::gethostbyname(self,h,rc) < 0) {
+    if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
       if (omniORB::trace(1)) {
 	omniORB::logger log;
-	log << "Cannot get the address of this host\n";
+	log << "Cannot get the address of host " << pd_address.host << "\n";
       }
       CLOSESOCKET(pd_socket);
       return 0;
@@ -215,17 +234,16 @@ tcpEndpoint::Bind() {
 	   (void *)h.hostent()->h_addr_list[0],
 	   sizeof(addr.sin_addr));
   }
-  if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
-    pd_address.host = tcpConnection::ip4ToString(addr.sin_addr.s_addr);
-  }
   if (omniORB::trace(1) && strcmp(pd_address.host,"127.0.0.1") == 0) {
     omniORB::logger log;
-    log << "Warning: the local loop back interface (127.0.0.1) is used as this server's address.\n";
-    log << "Warning: only clients on this machine can talk to this server.\n";
+    log << "Warning: the local loop back interface (127.0.0.1) is used as\n"
+	<< "this server's address. Only clients on this machine can talk to\n"
+	<< "this server.\n";
   }
 
   const char* format = "giop:tcp:%s:%d";
-  pd_address_string = CORBA::string_alloc(strlen(pd_address.host)+strlen(format)+6);
+  pd_address_string = CORBA::string_alloc(strlen(pd_address.host) +
+					  strlen(format)+6);
   sprintf((char*)pd_address_string,format,
 	  (const char*)pd_address.host,(int)pd_address.port);
 
