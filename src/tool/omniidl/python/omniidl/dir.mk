@@ -44,5 +44,5 @@ export:: idlvisitor.py
 export:: output.py
 	@(file="output.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
-export::
-	$(PAR) -r $(PYLIBROOT)/omni.par $(PYLIBS)
+# export::
+# 	$(PAR) -r $(PYLIBROOT)/omni.par $(PYLIBS)
