@@ -1,4 +1,13 @@
 
+Tue Dec  7 18:08:27 GMT 1999 djr
+================================
+
+- Fixed bug in omniidl2, involving typedef of sequence of objref
+  in the objrefs definition.
+
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+
+
 Mon Dec  6 13:59:32 GMT 1999 djr
 ================================
 
