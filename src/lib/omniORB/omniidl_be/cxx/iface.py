@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.3  2003/11/06 11:56:56  dgrisby
+# Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+#
 # Revision 1.1.6.2  2003/10/23 11:25:54  dgrisby
 # More valuetype support.
 #
@@ -220,7 +223,7 @@ class _objref_Method(cxx.Method):
 
       # Special ugly case. If the IDL says something like (in foo::bar
       # bar), the parameter name may be the same as the relative type
-      # name. We mangly the parameter name if this happens.
+      # name. We mangle the parameter name if this happens.
 
       typeBase = pType.base(environment)
       ident    = id.mapID(p.identifier())

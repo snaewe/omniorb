@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2003/11/06 11:56:56  dgrisby
+  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
   Revision 1.1.6.2  2003/05/20 16:53:15  dgrisby
   Valuetype marshalling support.
 
@@ -76,7 +79,6 @@
 #include <exceptiondefs.h>
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/minorCode.h>
-#include <valueTracker.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -149,10 +151,7 @@ GIOP_C::InitialiseRequest() {
   impl()->outputMessageBegin(this,impl()->marshalRequestHeader);
   calldescriptor()->marshalArguments(*this);
   impl()->outputMessageEnd(this);
-  if (valueTracker()) {
-    delete valueTracker();
-    valueTracker(0);
-  }
+  clearValueTracker();
   pd_state = IOP_C::WaitingForReply;
 }
 
@@ -185,10 +184,7 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip) {
 
   OMNIORB_ASSERT(pd_state == IOP_C::ReplyIsBeingProcessed);
 
-  if (valueTracker()) {
-    delete valueTracker();
-    valueTracker(0);
-  }
+  clearValueTracker();
 
   if (!calldescriptor() || !calldescriptor()->is_oneway()) {
     impl()->inputMessageEnd(this,skip);
@@ -241,10 +237,7 @@ GIOP_C::UnMarshallSystemException()
   minorcode <<= s;
   status <<= s;
 
-  if (valueTracker()) {
-    delete valueTracker();
-    valueTracker(0);
-  }
+  clearValueTracker();
 
   impl()->inputMessageEnd(this,0);
   pd_strand->first_use = 0;

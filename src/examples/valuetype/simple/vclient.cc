@@ -24,18 +24,24 @@ int main(int argc, char** argv)
   One_i* one = new One_i("hello", 12345);
   One_i* two = new One_i("hello again", 88888);
 
-  ValueTest::One* ret = test->op1(one, two);
+  ValueTest::One_var ret;
+
+  ret = test->op1(one, two);
   
-  if (ret) {
+  if (ret.in()) {
     cout << "String: " << ret->s() << ", long: " << ret->l() << endl;
   }
   else {
     cout << "nil" << endl;
   }
 
+  ret = test->op1(one, one);
+  ret = test->op1(one, 0);
+  ret = test->op1(0, one);
+  ret = test->op1(0, 0);
+
   CORBA::remove_ref(one);
   CORBA::remove_ref(two);
-  CORBA::remove_ref(ret);
   onef->_remove_ref();
 
   orb->destroy();

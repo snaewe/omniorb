@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2003/11/06 11:56:55  dgrisby
+  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
   Revision 1.1.4.1  2003/03/23 21:03:43  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -130,13 +133,20 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean      lcdMode;
 //  Valid values = 0 or 1
 //
 
-
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportCurrent;
 //  If the value of this variable is TRUE, per-thread information is
 //  made available through the Current interfaces, e.g.
 //  PortableServer::Current. If you do not need this information, you
 //  can set the value to 0, resulting in a small performance
 //  improvement.
+
+_CORBA_MODULE_VAR _core_attr CORBA::Boolean copyValuesInLocalCalls;
+//  Valuetypes passed as parameters in local calls should be copied.
+//  Since values can be shared by separate parameters, the whole
+//  argument list must be copied in one go. We do this by marshalling
+//  via a temporary memory buffer. If this parameter is set false, the
+//  copy is not performed, so the call is faster but the semantics are
+//  non-standard.
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean strictIIOP;
 //   Enable vigorous check on incoming IIOP messages

@@ -263,6 +263,39 @@ Functions:
     def name(self):       return self.__scopedName[-1]
 
 
+def containsValueType(t):
+    """Returns true if the type contains valuetypes"""
+
+    import idlast
+
+    if isinstance(t, Sequence):
+        return containsValueType(t.seqType())
+
+    if isinstance(t, Declared):
+        d = t.decl()
+
+        if isinstance(d, idlast.Typedef):
+            return containsValueType(d.aliasType())
+
+        if isinstance(d, idlast.Struct):
+            for m in d.members():
+                if containsValueType(m.memberType()):
+                    return 1
+
+        if isinstance(d, idlast.Union):
+            for c in d.cases():
+                if containsValueType(c.caseType()):
+                    return 1
+
+        if isinstance(d, idlast.ValueAbs):
+            return 1
+
+        if isinstance(d, idlast.Value):
+            return 1
+
+    return 0
+
+
 # Map of singleton Base Type objects
 baseTypeMap = {
     tk_null:       Base(tk_null),

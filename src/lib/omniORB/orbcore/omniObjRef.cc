@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2003/11/06 11:56:57  dgrisby
+  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
   Revision 1.4.2.1  2003/03/23 21:02:09  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -191,6 +194,16 @@ CORBA::Boolean orbParameters::verifyObjectExistsAndType = 1;
 //  LOCATE_REQUEST. 
 //
 //  Valid values = 0 or 1
+
+CORBA::Boolean orbParameters::copyValuesInLocalCalls = 1;
+//  If the value of this variable is TRUE, valuetypes used in local
+//  calls are properly copied, to retain local/remote transparency.
+//  This involves copying all operation parameters / return values,
+//  and it thus quite time consuming. If this parameter is set to
+//  FALSE, valuetypes in local calls are not copied.
+//
+//  Valid values = 0 or 1
+
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1168,6 +1181,36 @@ static verifyObjectExistsAndTypeHandler verifyObjectExistsAndTypeHandler_;
 
 
 /////////////////////////////////////////////////////////////////////////////
+class copyValuesInLocalCallsHandler : public orbOptions::Handler {
+public:
+
+  copyValuesInLocalCallsHandler() : 
+    orbOptions::Handler("copyValuesInLocalCalls",
+			"copyValuesInLocalCalls = 0 or 1",
+			1,
+			"-ORBcopyValuesInLocalCalls < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::copyValuesInLocalCalls = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::copyValuesInLocalCalls,
+			     result);
+  }
+};
+
+static copyValuesInLocalCallsHandler copyValuesInLocalCallsHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 class omni_ObjRef_initialiser : public omniInitialiser {
@@ -1175,6 +1218,7 @@ public:
 
   omni_ObjRef_initialiser() {
     orbOptions::singleton().registerHandler(verifyObjectExistsAndTypeHandler_);
+    orbOptions::singleton().registerHandler(copyValuesInLocalCallsHandler_);
   }
 
   void attach() { }

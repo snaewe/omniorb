@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.5  2003/11/06 11:56:57  dgrisby
+# Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+#
 # Revision 1.20.2.4  2003/09/04 14:00:35  dgrisby
 # ValueType IDL updates.
 #
@@ -872,7 +875,8 @@ class Factory (Decl):
 Functions:
 
   identifier() -- string.
-  parameters() -- list of Parameter objects."""
+  parameters() -- list of Parameter objects.
+  raises()     -- list of Exception objects."""
 
     def __init__(self, file, line, mainFile, pragmas, comments,
                  identifier, parameters, raises):
@@ -885,9 +889,9 @@ Functions:
 
     def accept(self, visitor): visitor.visitFactory(self)
 
-    def identifier(): return self.__identifier
-    def parameters(): return self.__parameters
-    def raises(self): return self.__raises
+    def identifier(self): return self.__identifier
+    def parameters(self): return self.__parameters
+    def raises(self):     return self.__raises
 
 
 class ValueForward (Decl, DeclRepoId):

@@ -762,6 +762,17 @@ REGEDIT4
 "supportCurrent" = "1"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; copyValuesInLocalCalls
+;
+;   If the value of this variable is TRUE, valuetypes used in local
+;   calls are properly copied, to retain local/remote transparency.
+;   This involves copying all operation parameters / return values,
+;   and it thus quite time consuming. If this parameter is set to
+;   FALSE, valuetypes in local calls are not copied.
+;
+"copyValuesInLocalCalls" = "1"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; objectTableSize
 ;
 ;   Hash table size of the Active Object Map. If this is zero, the ORB

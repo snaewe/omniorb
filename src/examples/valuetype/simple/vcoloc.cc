@@ -36,6 +36,7 @@ Test_i::op1(ValueTest::One* a, ValueTest::One* b)
   return a;
 }
 
+
 int main(int argc, char** argv)
 {
   CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
@@ -48,16 +49,37 @@ int main(int argc, char** argv)
 
   Test_i* servant = new Test_i();
 
-  obj = servant->_this();
-  CORBA::String_var sior(orb->object_to_string(obj));
-  cerr << "'" << (char*)sior << "'" << endl;
+  ValueTest::Test_var test = servant->_this();
 
   servant->_remove_ref();
 
   PortableServer::POAManager_var pman = poa->the_POAManager();
   pman->activate();
 
-  orb->run();
+  One_i* one = new One_i("hello", 12345);
+  One_i* two = new One_i("hello again", 88888);
+
+  ValueTest::One_var ret;
+
+  ret = test->op1(one, two);
+  
+  if (ret.in()) {
+    cout << "String: " << ret->s() << ", long: " << ret->l() << endl;
+  }
+  else {
+    cout << "nil" << endl;
+  }
+
+  ret = test->op1(one, one);
+  ret = test->op1(one, 0);
+  ret = test->op1(0, one);
+  ret = test->op1(0, 0);
+
+  CORBA::remove_ref(one);
+  CORBA::remove_ref(two);
+  onef->_remove_ref();
+
+  orb->destroy();
 
   return 0;
 }

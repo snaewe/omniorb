@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.4.2.2  2003/11/06 11:56:55  dgrisby
+ Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
  Revision 1.4.2.1  2003/03/23 21:04:17  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -115,11 +118,12 @@ public:
 			    int n_user_excns_,
                             _CORBA_Boolean is_upcall_)
     : pd_localCall(lcfn),
-      pd_is_oneway(oneway),
       pd_op(op_), pd_oplen(op_len_),
       pd_user_excns(user_excns_),
       pd_n_user_excns(n_user_excns_),
+      pd_is_oneway(oneway),
       pd_is_upcall(is_upcall_),
+      pd_contains_values(0),
       pd_first_address_used(0),
       pd_current_address(0),
       pd_current(0),
@@ -203,7 +207,21 @@ public:
     pd_deadline_secs = secs;
     pd_deadline_nanosecs = nanosecs;
   }
-  
+
+  inline void containsValues(_CORBA_Boolean v) {
+    pd_contains_values = v;
+  }
+  inline _CORBA_Boolean containsValues() {
+    return pd_contains_values;
+  }
+  // If pd_contains_values is true, the arguments / return values
+  // contain valuetypes. The spec requires that values are always
+  // passed by value, so local calls must make copies. Since values
+  // can be shared by separate arguments, the whole argument list must
+  // be copied in a single operation. We do this by marshalling via a
+  // temprary memory buffer. This is slow, so it can be turned off by
+  // setting the copyValuesInLocalCalls parameter to false.
+
 
   /////////////////////
   // Current support //
@@ -218,12 +236,13 @@ public:
 
 private:
   LocalCallFn                  pd_localCall;
-  _CORBA_Boolean               pd_is_oneway;
   const char*                  pd_op;
   size_t                       pd_oplen;
   const char*const*            pd_user_excns;
   int                          pd_n_user_excns;
+  _CORBA_Boolean               pd_is_oneway;
   _CORBA_Boolean               pd_is_upcall;
+  _CORBA_Boolean               pd_contains_values;
 
   const _OMNI_NS(giopAddress)* pd_first_address_used;
   const _OMNI_NS(giopAddress)* pd_current_address;

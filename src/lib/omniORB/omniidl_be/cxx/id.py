@@ -478,3 +478,14 @@ class WalkTree(idlvisitor.AstVisitor):
         self.__leave()
 
         self.__cache(node)
+
+    def visitValueAbs(self, node):
+        name = node.identifier()
+        self.__add(name, allow_already_exists = 1)
+        
+        self.__enter(name)
+        for n in node.declarations():
+            n.accept(self)
+        self.__leave()
+
+        self.__cache(node)

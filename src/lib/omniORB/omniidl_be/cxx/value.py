@@ -105,6 +105,36 @@ private:
 };
 """
 
+valuefactory_class_initialisers = """\
+class @name@_init : public CORBA::ValueFactoryBase
+{
+public:
+  virtual ~@name@_init();
+
+  @factory_funcs@
+
+  static @name@_init* _downcast(CORBA::ValueFactory _v);
+  virtual void* _ptrToFactory(const char* _id);
+protected:
+  @name@_init();
+};
+"""
+
+valuefactory_class_no_operations = """\
+class @name@_init : public CORBA::ValueFactoryBase
+{
+public:
+  @name@_init();
+  virtual ~@name@_init();
+
+  virtual CORBA::ValueBase* create_for_unmarshal();
+
+  static @name@_init* _downcast(CORBA::ValueFactory _v);
+  virtual void* _ptrToFactory(const char* _id);
+};
+"""
+
+
 value_obv_class = """\
 class @obv_name@ :
   @inherits@
@@ -237,7 +267,9 @@ void
 
 @fqname@::@name@()  {}
 @fqname@::~@name@() {}
+"""
 
+value_obv_functions = """\
 OBV_@fqname@::@name@() {}
 OBV_@fqname@::~@name@() {}
 OBV_@fqname@::@name@(@init_params@)
@@ -280,6 +312,49 @@ const _omni_ValueIds*
 @fqname@::_NP_truncatableIds() const
 {
   return &_0RL_@flatname@_bases;
+}
+"""
+
+valuefactory_functions = """\
+@fqname@_init::@name@_init()  {}
+@fqname@_init::~@name@_init() {}
+
+@fqname@_init*
+@fqname@_init::_downcast(CORBA::ValueFactory _v)
+{
+  return _v ? (::@fqname@_init*)_v->_ptrToFactory(::@fqname@::_PD_repoId) : 0;
+}
+
+void*
+@fqname@_init::_ptrToFactory(const char* _id)
+{
+  if (_id == ::@fqname@::_PD_repoId)
+    return (::@fqname@_init*) this;
+  
+  if (_id == CORBA::ValueBase::_PD_repoId)
+    return (CORBA::ValueFactoryBase*) this;
+  
+  if (omni::strMatch(_id, ::@fqname@::_PD_repoId))
+    return (::@fqname@_init*) this;
+  
+  if (omni::strMatch(_id, CORBA::ValueBase::_PD_repoId))
+    return (CORBA::ValueFactoryBase*) this;
+
+  return 0;
+}
+"""
+
+valuefactory_create_for_unmarshal = """\
+CORBA::ValueBase*
+@fqname@_init::create_for_unmarshal()
+{
+  // return new OBV_@fqname@();
+
+  //?? The standard C++ mapping requires the above code, but
+  // it is invalid because the reference counting functions in
+  // CORBA::ValueBase are not implemented.
+
+  return 0;
 }
 """
 
@@ -666,9 +741,23 @@ def getValueType(node):
     try:
         return node.__valueType
     except AttributeError:
+        pass
+
+    if isinstance(node, idlast.Value) or isinstance(node, idlast.ValueAbs):
         v = ValueType(node)
-        node.__valueType = v
-        return v
+
+    elif isinstance(node, idlast.ValueForward):
+        v = ValueForward(node)
+
+    elif isinstance(node, idlast.ValueBox):
+        v = ValueBox(node)
+
+    else:
+        util.fatalError("Unexpected node in getValueType: %s" % node)
+    
+    node.__valueType = v
+    return v
+
 
 def hashval(id):
     h = 0L
@@ -691,7 +780,24 @@ def hashlist(ids):
 
 
 
+class ValueForward (mapping.Decl):
+
+    def __init__(self, astdecl):
+        mapping.Decl.__init__(self, astdecl)
+
+    def module_decls(self, stream, visitor):
+        astdecl  = self._astdecl
+        name     = astdecl.identifier()
+        cxx_name = id.mapID(name)
+        fullname = id.Name(astdecl.scopedName())
+        guard    = fullname.guard()
+
+        stream.out(value_forward, name=cxx_name, guard=guard)
+
+
 class ValueType (mapping.Decl):
+
+    """Deals with valuetype and abstract valuetype"""
 
     def __init__(self, astdecl):
         mapping.Decl.__init__(self, astdecl)
@@ -701,11 +807,17 @@ class ValueType (mapping.Decl):
         self._fullname    = id.Name(astdecl.scopedName())
         value_name        = self._fullname.fullyQualify()
 
-        for s in astdecl.statemembers():
-            mtype = s.memberType()
-            for d in s.declarators():
-                self._gen_statemember_code(value_name, mtype,
-                                           d, self._environment)
+        if isinstance(astdecl, idlast.ValueAbs):
+            self._abstract = 1
+        else:
+            self._abstract = 0
+
+        if not self._abstract:
+            for s in astdecl.statemembers():
+                mtype = s.memberType()
+                for d in s.declarators():
+                    self._gen_statemember_code(value_name, mtype,
+                                               d, self._environment)
 
     # Methods to make this look enough like a cxx.Class to make
     # cxx.Method happy.
@@ -1065,8 +1177,13 @@ class ValueType (mapping.Decl):
                 n.accept(visitor)
 
         has_callables = 0
+        has_factories = 0
+
         if astdecl.callables():
             has_callables = 1
+
+        if astdecl.factories():
+            has_factories = 1
 
         inheritl = []
         for v in astdecl.inherits():
@@ -1075,6 +1192,8 @@ class ValueType (mapping.Decl):
             inheritl.append("public virtual " + uname)
             if v._cxx_has_callables:
                 has_callables = 1
+            if v._cxx_has_factories:
+                has_factories = 1
 
         if not inheritl:
             inheritl.append("public virtual CORBA::ValueBase")
@@ -1082,19 +1201,21 @@ class ValueType (mapping.Decl):
         inherits = string.join(inheritl, ",\n")
 
         astdecl._cxx_has_callables = has_callables
+        astdecl._cxx_has_factories = has_factories
 
         public_accessors  = output.StringStream()
         private_accessors = output.StringStream()
 
-        for s in astdecl.statemembers():
-            if s.memberAccess() == 0:
-                # Public
-                for d in s.declarators():
-                    public_accessors.out(d._cxx_base_sig)
-            else:
-                # Private
-                for d in s.declarators():
-                    private_accessors.out(d._cxx_base_sig)
+        if not self._abstract:
+            for s in astdecl.statemembers():
+                if s.memberAccess() == 0:
+                    # Public
+                    for d in s.declarators():
+                        public_accessors.out(d._cxx_base_sig)
+                else:
+                    # Private
+                    for d in s.declarators():
+                        private_accessors.out(d._cxx_base_sig)
 
         operationl = []
         for c in astdecl.callables():
@@ -1120,14 +1241,35 @@ class ValueType (mapping.Decl):
                    private_accessors=private_accessors,
                    operations=operations, other_idl=gen_other_idl)
 
-        # *** Make a valuefactory if necessary
+        if astdecl.factories():
+            funcs = []
+
+            valtype = idltype.Declared(astdecl, astdecl.scopedName(),
+                                       idltype.tk_value, 0)
+
+            for f in astdecl.factories():
+                wrapper = FactoryWrapper(f, valtype)
+                op = call.operation(self, wrapper)
+                method = iface._impl_Method(op, self)
+                funcs.append(method.hh(1,1))
+                
+            factory_funcs = string.join(funcs, "\n")
+
+            stream.out(valuefactory_class_initialisers,
+                       name=cxx_name, factory_funcs=factory_funcs)
+
+        if not (has_callables or has_factories):
+            stream.out(valuefactory_class_no_operations, name=cxx_name)
 
 
     def poa_module_decls(self, stream, visitor):
-        # *** POA module defs
+        # *** POA module defs if supports an interface
         pass
 
     def obv_module_decls(self, stream, visitor):
+        if self._abstract:
+            return
+
         astdecl    = self._astdecl
         name       = astdecl.identifier()
         cxx_name   = id.mapID(name)
@@ -1206,7 +1348,7 @@ class ValueType (mapping.Decl):
         repoId = astdecl.repoId()
         idhash = hashval(repoId)
 
-        if astdecl.custom():
+        if not self._abstract and astdecl.custom():
             custom = "1"
         else:
             custom = "0"
@@ -1239,25 +1381,29 @@ class ValueType (mapping.Decl):
         else:
             base_init = ""
 
-        for s in astdecl.statemembers():
-            for d in s.declarators():
-                copy_members.out(d._cxx_copy_impl)
-                marshal_members.out(d._cxx_marshal_impl)
-                unmarshal_members.out(d._cxx_unmarshal_impl)
-                member_initialisers.out(d._cxx_init_impl)
+        if not self._abstract:
+            for s in astdecl.statemembers():
+                for d in s.declarators():
+                    copy_members.out(d._cxx_copy_impl)
+                    marshal_members.out(d._cxx_marshal_impl)
+                    unmarshal_members.out(d._cxx_unmarshal_impl)
+                    member_initialisers.out(d._cxx_init_impl)
 
-        init_params = string.join(astdecl._cxx_init_paraml, ", ")
+            init_params = string.join(astdecl._cxx_init_paraml, ", ")
 
         stream.out(value_functions, fqname=value_name, name=cxx_name,
                    idhash=idhash, copy_members=copy_members,
                    repoId=repoId, custom=custom,
                    ptrToValuePtr=ptrToValuePtr, ptrToValueStr=ptrToValueStr,
                    marshal_members=marshal_members,
-                   unmarshal_members=unmarshal_members,
-                   init_params=init_params, base_init=base_init,
-                   member_initialisers=member_initialisers)
+                   unmarshal_members=unmarshal_members)
 
-        if astdecl.truncatable():
+        if not self._abstract:
+            stream.out(value_obv_functions, fqname=value_name, name=cxx_name,
+                       init_params=init_params, base_init=base_init,
+                       member_initialisers=member_initialisers)
+
+        if not self._abstract and astdecl.truncatable():
             flatname  = string.join(astdecl.scopedName(), "_")
             baseidl   = []
 
@@ -1283,6 +1429,50 @@ class ValueType (mapping.Decl):
         else:
             stream.out(value_no_truncatable_bases, fqname=value_name)
 
-        for s in astdecl.statemembers():
-            for d in s.declarators():
-                stream.out(d._cxx_impl)
+        if not self._abstract:
+            for s in astdecl.statemembers():
+                for d in s.declarators():
+                    stream.out(d._cxx_impl)
+
+        if astdecl.factories():
+            stream.out(valuefactory_functions, fqname=value_name,
+                       name=cxx_name)
+
+        if not (astdecl._cxx_has_callables or astdecl._cxx_has_factories):
+            stream.out(valuefactory_functions, fqname=value_name,
+                       name=cxx_name)
+            stream.out(valuefactory_create_for_unmarshal, fqname=value_name)
+
+
+class ValueBox (mapping.Decl):
+
+    pass
+
+
+class FactoryWrapper (idlast.Operation):
+    """
+    Wrapper around an idlast.Factory object that makes it look like an
+    Operation object.
+    """
+    def __init__(self, factory, valtype):
+        self._factory = factory
+        self._valtype = valtype
+
+    def oneway(self):
+        return 0
+
+    def identifier(self):
+        return self._factory.identifier()
+
+    def returnType(self):
+        return self._valtype
+
+    def parameters(self):
+        return self._factory.parameters()
+
+    def raises(self):
+        return self._factory.raises()
+
+    def contexts(self):
+        return []
+

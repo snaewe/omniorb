@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.10.2.3  2003/11/06 11:56:55  dgrisby
+ Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
  Revision 1.10.2.2  2003/05/20 16:53:14  dgrisby
  Valuetype marshalling support.
 
@@ -103,7 +106,6 @@
 #include <context.h>
 #include <exceptiondefs.h>
 #include <poacurrentimpl.h>
-#include <valueTracker.h>
 
 
 CORBA::ServerRequest::~ServerRequest()  {}

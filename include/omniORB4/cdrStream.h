@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2003/11/06 11:56:55  dgrisby
+  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
   Revision 1.1.4.3  2003/07/10 21:52:31  dgrisby
   Value chunks should start after URL / repoids.
 
@@ -148,7 +151,10 @@ class cdrStreamAdapter;
 class cdrValueChunkStream;
 
 OMNI_NAMESPACE_BEGIN(omni)
-  class ValueIndirectionTracker;
+  class ValueIndirectionTracker {
+  public:
+    virtual ~ValueIndirectionTracker();
+  };
 OMNI_NAMESPACE_END(omni)
 
 
@@ -686,6 +692,12 @@ public:
   }
   inline void valueTracker(_OMNI_NS(ValueIndirectionTracker)* v) {
     pd_valueTracker = v;
+  }
+  inline void clearValueTracker() {
+    if (pd_valueTracker) {
+      delete pd_valueTracker;
+      pd_valueTracker = 0;
+    }
   }
 
   inline void declareArrayLength(omni::alignment_t align,

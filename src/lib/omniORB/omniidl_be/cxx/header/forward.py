@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.10.2.3  2003/11/06 11:56:56  dgrisby
+# Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+#
 # Revision 1.10.2.2  2003/10/23 11:25:55  dgrisby
 # More valuetype support.
 #
@@ -176,5 +179,11 @@ def visitConst(node):
 def visitDeclarator(node):
     pass
 
+def visitValueForward(node):
+    pass
 def visitValue(node):
+    pass
+def visitValueAbs(node):
+    pass
+def visitValueBox(node):
     pass

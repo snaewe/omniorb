@@ -28,12 +28,14 @@
 //
 
 // $Log$
+// Revision 1.1.2.2  2003/11/06 11:56:55  dgrisby
+// Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+//
 // Revision 1.1.2.1  2003/09/26 16:12:54  dgrisby
 // Start of valuetype support.
 //
 
 #include <omniORB4/CORBA.h>
-#include "valueTracker.h"
 
 #ifdef _dyn_attr
 # error "A local CPP macro _dyn_attr has already been defined."

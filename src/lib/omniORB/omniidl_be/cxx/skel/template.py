@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.2  2003/11/06 11:56:56  dgrisby
+# Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+#
 # Revision 1.6.2.1  2003/03/23 21:02:34  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -366,7 +369,10 @@ class @call_descriptor@
 {
 public:
   inline @call_descriptor@(@ctor_args@):
-     @base_ctor@ {}
+     @base_ctor@
+  {
+    @contains_values@
+  }
   
   @in_arguments_decl@
   @out_arguments_decl@  

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2003/11/06 11:56:55  dgrisby
+  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
   Revision 1.1.2.1  2003/09/26 16:12:53  dgrisby
   Start of valuetype support.
 
@@ -216,7 +219,7 @@ public:
 	_pd_val->_remove_ref();
 
       _pd_val = p._pd_val;
-      _pd_val->_add_ref();
+      if (_pd_val) _pd_val->_add_ref();
     }
     else
       _pd_val = p._pd_val;
@@ -228,7 +231,7 @@ public:
       if (_pd_val)
 	_pd_val->_remove_ref();
 
-      p._pd_val->_add_ref();
+      if (p._pd_val) p._pd_val->_add_ref();
     }
     _pd_val = (T*) p;
     return *this;
@@ -239,7 +242,7 @@ public:
       if (_pd_val)
 	_pd_val->_remove_ref();
 
-      p._pd_val->_add_ref();
+      if (p._pd_val) p._pd_val->_add_ref();
     }
     _pd_val = (T*)p;
     return *this;

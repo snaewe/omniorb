@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2003/11/06 11:56:55  dgrisby
+  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
   Revision 1.1.2.1  2003/09/26 16:12:53  dgrisby
   Start of valuetype support.
 
@@ -169,5 +172,12 @@ private:
   virtual ValueBase* create_for_unmarshal() = 0;
   ULong _pd_refCount;
 
+  //////////////////////
+  // omniORB internal //
+  //////////////////////
+
   friend class _omni_ValueFactoryManager;
+
+public:
+  virtual void* _ptrToFactory(const char* repoId);
 };

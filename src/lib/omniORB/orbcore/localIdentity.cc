@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2003/11/06 11:56:57  dgrisby
+  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
   Revision 1.4.2.1  2003/03/23 21:02:12  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -88,6 +91,7 @@
 #include <omniORB4/callHandle.h>
 #include <objectAdapter.h>
 #include <exceptiondefs.h>
+#include <orbParameters.h>
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -154,6 +158,18 @@ omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
     omniIdentity* id = omni::createInProcessIdentity(key(), keysize());
     call_desc.objref()->_setIdentity(id);
     id->dispatch(call_desc);
+    return;
+  }
+
+  if (call_desc.containsValues() && orbParameters::copyValuesInLocalCalls) {
+    // Must use a call handle to call via a memory stream.
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Local call on " << this << " involves valuetypes; call via a "
+	<< "memory buffer.\n";
+    }
+    omniCallHandle call_handle(&call_desc, 0);
+    dispatch(call_handle);
     return;
   }
 

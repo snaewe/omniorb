@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2003/11/06 11:56:56  dgrisby
+  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
+
   Revision 1.1.2.1  2003/09/26 16:12:54  dgrisby
   Start of valuetype support.
 
@@ -148,4 +151,13 @@ CORBA::ValueFactory
 CORBA::ValueFactoryBase::_downcast(CORBA::ValueFactory vf)
 {
   return (ValueFactory)vf;
+}
+
+void*
+CORBA::ValueFactoryBase::_ptrToFactory(const char* repoId)
+{
+  if (omni::ptrStrMatch(repoId, CORBA::ValueBase::_PD_repoId))
+    return (CORBA::ValueBase*)this;
+
+  return 0;
 }
