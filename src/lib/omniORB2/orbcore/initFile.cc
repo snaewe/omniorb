@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.30.4.3  2000/03/27 17:32:44  sll
+  Do explict casting instead of using the [] operator for String_var. The
+  original code confused MSVC++ 5.
+
   Revision 1.30.4.2  1999/10/02 18:21:28  sll
   Added support to decode optional tagged components in the IIOP profile.
   Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -370,7 +374,7 @@ void initFile::initialize()
 	    s.put_char_array((CORBA::Char*)profile.bufPtr(),len);
 	  }
 	  {
-	    CORBA::Octet* p; CORBA::ULong max, len;
+	    _CORBA_Octet* p; CORBA::ULong max, len;
 	    s.getOctetStream(p,max,len);
 	    v.component_data.replace(max,len,p,1);
 	  }
@@ -512,7 +516,7 @@ int initFile::getnextentry(CORBA::String_var& entryname,
 
   entryname = CORBA::string_alloc((currpos-startpos) + 1);
   strncpy((char*)(const char*)entryname,(fData+startpos),(currpos-startpos));
-  entryname[currpos-startpos] = '\0';
+  ((char*)entryname)[currpos-startpos] = '\0';
 
 
   // Skip whitespace between keyword and data:
@@ -543,7 +547,7 @@ int initFile::getnextentry(CORBA::String_var& entryname,
 
   data = CORBA::string_alloc((currpos - startpos)+1);
   strncpy((char*)((const char*)data),(fData+startpos),(currpos-startpos));
-  data[currpos-startpos] = '\0';
+  ((char*)data)[currpos-startpos] = '\0';
 
   return 1;
 }
@@ -669,7 +673,7 @@ void initFile::noValsFound()
 }
 
 
-void initFile::formaterr(char* entryname)
+void initFile::formaterr(const char* entryname)
 {
   if (omniORB::traceLevel > 0) {
     omniORB::log << "Configuration error: Data for value " << entryname 

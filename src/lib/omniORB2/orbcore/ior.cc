@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.9.4.3  2000/03/27 17:32:26  sll
+  Do explict casting instead of using the [] operator for String_var. The
+  original code confused MSVC++ 5.
+
   Revision 1.9.4.2  1999/10/05 20:35:34  sll
   Added support to GIOP 1.2 to recognise all TargetAddress mode.
   Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
@@ -213,21 +217,21 @@ IOP::EncapStrToIor(const char *str,
     // We quietly accept it here. Turn this off by defining
     //   NO_SLOPPY_NIL_REFERENCE
     repoID = CORBA::string_alloc(1);
-    repoID[0] = '\0';
+    ((char*)repoID)[0] = '\0';
 #endif	
     break;
 
   case 1:
     repoID = CORBA::string_alloc(1);
     buf.get_char_array((CORBA::Char*)((const char*)repoID),1);
-    if (repoID[0] != '\0')
+    if (((char*)repoID)[0] != '\0')
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
     break;
 
   default:
     repoID = CORBA::string_alloc(l);
     buf.get_char_array((CORBA::Char*)((const char*)repoID),l);
-    if( repoID[l - 1] != '\0' )
+    if( ((char*)repoID)[l - 1] != '\0' )
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   }
 
@@ -303,14 +307,14 @@ IOP::IOR::unmarshaltype_id(cdrStream& s) {
     // We quietly accept it here. Turn this off by defining
     //   NO_SLOPPY_NIL_REFERENCE
     id = CORBA::string_alloc(1);
-    id[0] = '\0';
+    ((char*)id)[0] = '\0';
 #endif	
     break;
 
   case 1:
     id = CORBA::string_alloc(1);
-    ::operator<<=((CORBA::Char&)id[0],s);
-    if (id[0] != '\0')
+    ::operator<<=((CORBA::Char&)((char*)id)[0],s);
+    if (((char*)id)[0] != '\0')
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     idlen = 0;
     break;
@@ -318,7 +322,7 @@ IOP::IOR::unmarshaltype_id(cdrStream& s) {
   default:
     id = CORBA::string_alloc(idlen);
     s.get_char_array((CORBA::Char*)((const char*)id), idlen);
-    if( id[idlen - 1] != '\0' )
+    if( ((char*)id)[idlen - 1] != '\0' )
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     break;
   }
