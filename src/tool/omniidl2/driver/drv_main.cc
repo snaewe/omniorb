@@ -62,8 +62,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
  */
 
-#pragma ident "%@(#)drv_main.cc	1.16% %92/06/10% Sun Microsystems"
-
 /*
 ** drv_main.cc - Main program for IDL compiler driver
 **
@@ -86,7 +84,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 static void
 DRV_version()
 {
-  cerr << "Omniidl 2.2.0\n"
+  cerr << "Omniidl 2.4.0\n"
        << "Copyright (C) 1996, 1997 Olivetti & Oracle Research Laborartory, Cambridge, UK.\n"
        << "Omniidl comes with ABSOLUTELY NO WARRANTY.\n"
        << endl;
@@ -144,7 +142,7 @@ DRV_drive(char *s)
   (*DRV_FE_yyparse)();
 
 
-#ifdef __NT__
+#ifdef __WIN32__
 
   /* Remove the temporary file [containing the preprocessor output. */
  
@@ -250,7 +248,7 @@ main(int argc, char **argv)
    */
   if (DRV_nfiles > 1) {
 
-#ifdef __NT__
+#ifdef __WIN32__
 
 	  cerr << idl_global->prog_name()
 		   << ": Only one IDL file may be specified at the command line."
