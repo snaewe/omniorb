@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:43:55  sll
+  Updated to match the changes in the proxyFactory class.
+
   Revision 1.2.2.1  2000/07/17 10:35:50  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -44,7 +47,7 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -79,11 +82,10 @@ omniAnonObjRef_pof::~omniAnonObjRef_pof() {}
 
 
 omniObjRef*
-omniAnonObjRef_pof::newObjRef(const char* mostDerivedTypeId,
-			      IOP::TaggedProfileList* profiles,
+omniAnonObjRef_pof::newObjRef(omniIOR* ior,
 			      omniIdentity* id, omniLocalIdentity* lid)
 {
-  return new omniAnonObjRef(mostDerivedTypeId, profiles, id, lid);
+  return new omniAnonObjRef(ior, id, lid);
 }
 
 

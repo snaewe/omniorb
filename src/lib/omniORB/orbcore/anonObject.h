@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:43:55  sll
+  Updated to match the changes in the proxyFactory class.
+
   Revision 1.2.2.1  2000/07/17 10:35:50  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -50,11 +53,6 @@
 #ifndef __ANONOBJECT_H__
 #define __ANONOBJECT_H__
 
-#ifndef __OMNIOBJREF_H__
-#include <omniORB3/omniObjRef.h>
-#endif
-
-
 //
 // An omniAnonObjRef is used as a proxyObject when no proxyObjectFactory
 // class for a give interface repository ID is found.
@@ -71,11 +69,9 @@ class omniAnonObjRef : public virtual omniObjRef,
 		       public virtual CORBA::Object
 {
 public:
-  inline omniAnonObjRef(const char* mostDerivedTypeId,
-			IOP::TaggedProfileList* profiles,
+  inline omniAnonObjRef(omniIOR* ior,
 			omniIdentity* id, omniLocalIdentity* lid)
-  : omniObjRef(CORBA::Object::_PD_repoId, mostDerivedTypeId,
-	       profiles, id, lid)
+    : omniObjRef(CORBA::Object::_PD_repoId, ior, id, lid)
     { _PR_setobj(this); }
 
 protected:
@@ -97,8 +93,7 @@ public:
   inline omniAnonObjRef_pof()
     : proxyObjectFactory(CORBA::Object::_PD_repoId) {}
 
-  virtual omniObjRef* newObjRef(const char* mostDerivedTypeId,
-				IOP::TaggedProfileList* profiles,
+  virtual omniObjRef* newObjRef(omniIOR* ior,
 				omniIdentity* id, omniLocalIdentity* lid);
   virtual CORBA::Boolean is_a(const char* base_repoId) const;
 };
