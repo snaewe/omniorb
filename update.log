@@ -1,3 +1,12 @@
+Tue Oct 26 20:34:57 BST 1999 sll
+================================
+
+- DynAny no longer do alias expand on the typecode. In other words, all
+  aliases are preserved in the typecode.
+
+src/lib/omniORB2/dynamic/dynAny.h
+src/lib/omniORB2/dynamic/dynAny.cc
+src/lib/omniORB2/dynamic/typecode.cc
 
 Wed Oct 13 16:40:34 BST 1999 djr
 ================================

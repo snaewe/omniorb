@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.33.2.1  1999/10/26 19:38:23  sll
+ * DynAny no longer do alias expansion on the typecode. In other words, all
+ * aliases in the typecode are preserved.
+ *
  * Revision 1.33  1999/08/24 12:37:28  djr
  * TypeCode_struct and TypeCode_except modified to use 'const char*' properly.
  *
@@ -4880,7 +4884,9 @@ template <class buf_t>
 inline TypeCode_union::Discriminator
 internal_unmarshalLabel(CORBA::TypeCode_ptr tc, buf_t& s)
 {
-  switch( tc->kind() ) {
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
+
+  switch( aetc->kind() ) {
   case CORBA::tk_char:
     {
       CORBA::Char c;
