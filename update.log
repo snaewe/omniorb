@@ -1,3 +1,13 @@
+Thu Jul  6 17:20:28 BST 2000 sll
+================================
+
+- Further openVMS merge
+
+external_merge/README.openvms
+external_merge/etc/openvms.zip
+external_merge/patches/dec_CXX_5.6.patch
+idl/ir.idl
+
 Thu Jul  6 10:26:43 BST 2000 dpg1
 =================================
 
