@@ -1,4 +1,14 @@
 
+Thu Jan 27 10:45:38 GMT 2000 djr
+================================
+
+- Updated the anyExample.
+
+src/examples/anyExample/anyExample_clt.cc
+src/examples/anyExample/anyExample_impl.cc
+src/examples/anyExample/dir.mk
+
+
 Wed Jan 26 15:29:24 GMT 2000 djr
 ================================
 
