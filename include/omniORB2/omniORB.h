@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.12  1998/04/07 19:52:31  sll
+  Updated to use namespace if available.
+  New class logStream to log all error messages.
+
   Revision 1.11  1998/03/04 14:48:47  sll
   Added omniORB::giopServerThreadWrapper.
 
@@ -57,9 +61,15 @@
 #ifndef __OMNIORB_H__
 #define __OMNIORB_H__
 
-class _OMNIORB2_NTDLL_ omniORB {
+#ifdef _LC_attr
+#error "A local CPP macro _LC_attr has already been defined."
+#else
+#define _LC_attr _OMNIORB_NTDLL_IMPORT
+#endif
 
-public:
+_CORBA_MODULE omniORB
+
+_CORBA_MODULE_BEG
 
   ////////////////////////////////////////////////////////////////////////
   // serverName								//
@@ -70,7 +80,11 @@ public:
   // gatekeeper.                                                        //
   //                                                                    //
   //									//
-  static CORBA::String_var serverName;					//
+#ifndef HAS_Cplusplus_Namespace                                         //
+  static CORBA::String_var serverName;		                        //
+#else                                                                   //
+  _CORBA_MODULE_VAR char* serverName;                            //
+#endif                                                                  //
   ////////////////////////////////////////////////////////////////////////
 
   ///////////////////////////////////////////////////////////////////////
@@ -82,7 +96,7 @@ public:
   //               communication socket shutdown                       //
   //     level 10 - the above plus execution trace messages            //
   //     ...                                                           //
-  static CORBA::ULong   traceLevel;                                    //
+  _CORBA_MODULE_VAR CORBA::ULong   traceLevel;                  //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtraceLevel <n>, or by direct assignment to this   //
@@ -110,7 +124,7 @@ public:
   // the strand as it tries to read more data from it. In this case the//
   // sender won't send anymore as it thinks it has marshalled in all   //
   // the data.							       //
-  static CORBA::Boolean   strictIIOP;                                  //
+  _CORBA_MODULE_VAR CORBA::Boolean   strictIIOP;                //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBstrictIIOP <0|1>, or by direct assignment to this //
@@ -136,7 +150,7 @@ public:
   //              used (i.e. when the replace() member function or     //
   //              non - type-safe Any constructor is used. )           //
   ///////////////////////////////////////////////////////////////////////
-  static CORBA::Boolean tcAliasExpand;                                 //
+  _CORBA_MODULE_VAR CORBA::Boolean tcAliasExpand;               //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtcAliasExpand <0|1>, or by direct assignment to   //
   //     this variable.                                                //
@@ -153,38 +167,40 @@ public:
   typedef omniObjectKey objectKey;                                      //
   //                                                                    //
   //  size of the hash table used by hash().                            //
-  static const unsigned int hash_table_size;                            //
+  _CORBA_MODULE_VAR const unsigned int hash_table_size;          //
   //                                                                    //
   //  hash()                                                            //
   //    return the hash value of this key. The return value             //
   //    is between 0 - (hash_table_size - 1);                           //
-  static int hash(objectKey& k);                                        //
+  _CORBA_MODULE_FN int hash(objectKey& k);                          //
   //                                                                    //
   // generateNewKey()                                                   //
   //   generate a new key. The key is guaranteed to be temporally       //
   //   unique. On OSs that provide unique process IDs, e.g. unices,     //
   //   the key is guaranteed to be unique among all keys ever generated //
   //   on the same machine.                                             //
-  static void generateNewKey(objectKey &k);                             //
+  _CORBA_MODULE_FN void generateNewKey(objectKey &k);               //
   //                                                                    //
   // Return a fixed key value that always hash to 0.                    //
-  static objectKey nullkey();                                           //
+  _CORBA_MODULE_FN objectKey nullkey();                             //
   //                                                                    //
   // Return non-zero if the keys are the same                           //
-  friend int operator==(const objectKey &k1,const objectKey &k2);       //
+  _CORBA_MODULE_OP int operator==(const objectKey &k1,              //
+                                      const objectKey &k2);             //
   //                                                                    //
   // Return non-zero if the keys are different                          //
-  friend int operator!=(const objectKey &k1,const objectKey &k2);       //
+  _CORBA_MODULE_OP int operator!=(const objectKey &k1,              //
+                                      const objectKey &k2);             //
   //                                                                    //
   //                                                                    //
   typedef _CORBA_Unbounded_Sequence_Octet seqOctets;                    //
   // Convert a key to a sequence of octets.                             //
-  static seqOctets* keyToOctetSequence(const objectKey &k1);            //
+  _CORBA_MODULE_FN seqOctets* keyToOctetSequence(const objectKey &k1);//
   //                                                                    //
   // Convert a sequence of octets back to an object key.                //
   // This function may throw a CORBA::MARSHAL exception if the sequence //
   // is not an object key.                                              //
-  static objectKey octetSequenceToKey(const seqOctets& seq);            //
+  _CORBA_MODULE_FN objectKey octetSequenceToKey(const seqOctets& seq);//
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -193,7 +209,7 @@ public:
   // returns the ORB-wide limit on the size of GIOP message (excluding  //
   // the header).                                                       //
   //                                                                    //
-  static size_t MaxMessageSize();                                       //
+  _CORBA_MODULE_FN size_t MaxMessageSize();                         //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -202,7 +218,7 @@ public:
   // Set the ORB-wide limit on the size of GIOP message (excluding      //
   // the header).                                                       //
   //                                                                    //
-  static void MaxMessageSize(size_t newvalue);                          //
+  _CORBA_MODULE_FN void MaxMessageSize(size_t newvalue);            //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -216,14 +232,14 @@ public:
   // void idleConnectionScanPeriod() sets the scan period. The argument //
   // is in number of seconds. If the argument is zero, the scan for idle//
   // connection is disabled.                                            //
-  static void idleConnectionScanPeriod(idleConnType direction,          //
+  _CORBA_MODULE_FN void idleConnectionScanPeriod(idleConnType direction,//
 				       CORBA::ULong sec);               //
   // Note: This function is *non-thread safe*!!! The behaviour of       //
   //       concurrent calls to this function is undefined.              //
   //                                                                    //
   // CORBA::ULong idleConnectionScanPeriod()                            //
   //   Returns the current scan period                                  //
-  static CORBA::ULong idleConnectionScanPeriod(idleConnType direction); //
+  _CORBA_MODULE_FN CORBA::ULong idleConnectionScanPeriod(idleConnType direction);//
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -263,15 +279,15 @@ public:
 			 		      CORBA::ULong n_retries, 	//
                                               const CORBA::TRANSIENT& ex);
   //								       	//
-  static void installTransientExceptionHandler(void* cookie,		//
+  _CORBA_MODULE_FN void installTransientExceptionHandler(void* cookie, //
 					       transientExceptionHandler_t fn);
   //									//
-  static void installTransientExceptionHandler(CORBA::Object_ptr obj,   //
+  _CORBA_MODULE_FN void installTransientExceptionHandler(CORBA::Object_ptr obj,//
 					       void* cookie,            //
         				       transientExceptionHandler_t fn);
   //									//
-  static CORBA::ULong defaultTransientRetryDelayIncrement;		//
-  static CORBA::ULong defaultTransientRetryDelayMaximum;		//
+  _CORBA_MODULE_VAR CORBA::ULong defaultTransientRetryDelayIncrement;//
+  _CORBA_MODULE_VAR CORBA::ULong defaultTransientRetryDelayMaximum;//
   ////////////////////////////////////////////////////////////////////////
 
 
@@ -293,10 +309,10 @@ public:
 						CORBA::ULong n_retries, //
 						const CORBA::COMM_FAILURE& ex);
   //									//
-  static void installCommFailureExceptionHandler(void* cookie,		//
+  _CORBA_MODULE_FN void installCommFailureExceptionHandler(void* cookie,//
 						 commFailureExceptionHandler_t fn);
   //									//
-  static void installCommFailureExceptionHandler(CORBA::Object_ptr obj,	//
+  _CORBA_MODULE_FN void installCommFailureExceptionHandler(CORBA::Object_ptr obj,//
 						 void* cookie,		//
 						 commFailureExceptionHandler_t fn);
   ////////////////////////////////////////////////////////////////////////
@@ -325,10 +341,10 @@ public:
 					   CORBA::ULong n_retries, 	//
 					   const CORBA::SystemException& ex);
   //									//
-  static void installSystemExceptionHandler(void* cookie,		//
+  _CORBA_MODULE_FN void installSystemExceptionHandler(void* cookie,	//
 					    systemExceptionHandler_t fn);
   //									//
-  static void installSystemExceptionHandler(CORBA::Object_ptr obj,	//
+  _CORBA_MODULE_FN void installSystemExceptionHandler(CORBA::Object_ptr obj,//
 					    void* cookie,		//
 					    systemExceptionHandler_t fn);
   ////////////////////////////////////////////////////////////////////////
@@ -455,10 +471,51 @@ public:
   };                                                                    //
   ////////////////////////////////////////////////////////////////////////
 
+
+  class logStream {
+  public:
+    logStream();
+    ~logStream();
+    logStream& operator<<(char c);
+    logStream& operator<<(unsigned char c) { return (*this) << (char)c; }
+    logStream& operator<<(signed char c) { return (*this) << (char)c; }
+    logStream& operator<<(const char *s);
+    logStream& operator<<(const unsigned char *s) { 
+      return (*this) << (const char*)s; 
+    }
+    logStream& operator<<(const signed char *s) { 
+      return (*this) << (const char*)s; 
+    }
+    logStream& operator<<(const void *p);
+    logStream& operator<<(int n);
+    logStream& operator<<(unsigned int n);
+    logStream& operator<<(long n);
+    logStream& operator<<(unsigned long n);
+    logStream& operator<<(short n) {return operator<<((int)n);}
+    logStream& operator<<(unsigned short n) {return operator<<((unsigned int)n);}
+#ifdef HAS_Cplusplus_Bool
+    logStream& operator<<(bool b) { return operator<<((int)b); }
+#endif
+#ifndef NO_FLOAT
+    logStream& operator<<(double n);
+    logStream& operator<<(float n) { return operator<<((double)n); }
+#endif
+    logStream& flush();
+  private:
+    void* pd_state;
+  };
+
+  _CORBA_MODULE_VAR logStream& log;
+
+#ifndef HAS_Cplusplus_Namespace
   friend class omni;
   friend class CORBA;
 private:
-    static objectKey seed;
-};
+#endif
+  _CORBA_MODULE_VAR objectKey seed;
+
+_CORBA_MODULE_END
+
+#undef _LC_attr
 
 #endif // __OMNIORB_H__
