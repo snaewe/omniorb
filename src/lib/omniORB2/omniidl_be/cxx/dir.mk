@@ -31,5 +31,6 @@ export:: config.py
 
 export::
 	@(set -x; \
-	python -c 'import compileall; compileall.compile_dir("$(PYLIBDIR)")'; \
+	cd $(PYLIBDIR); \
+	python -c 'import compileall; compileall.compile_dir(".")'; \
 	)
