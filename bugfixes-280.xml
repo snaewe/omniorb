@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xsl" href="bugfixes-280.xsl"?>
+
+<!-- The following bugs have been fixed since the omniORB 2.8.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="2.8.0">
+
+<bug id="12" date="Wed Nov 29 14:29:25 GMT 2000" user="sll">
+  <summary>Hanging during boa->destroy()</summary>
+  <reported>Tom Gerke</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-11/0197.html"/>
+  <text>
+  I have a number of co-located CORBA servers which my application is
+  using. I call boa->impl_shutdown() and then boa->destroy().  This
+  boa->destroy() call hangs up for about 3 minutes before exiting.  No
+  exception iws thrown, and when it comes out, my application proceeds to
+  exit normally. 
+
+  Remark: this fix is back ported from omniORB 3.0.
+  </text>
+</bug>
+
+<bug id="11" date="Fri Nov 3 10:28:33 GMT 2000" user="sll">
+  <summary>Race condition in object deletion</summary>
+  <reported>Dmitry Dolinsky</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-10/0206.html"/>
+  <text>
+   In a heavily concurrent server, deletion of a CORBA object may trigger
+   a race condition that results in invalid object reference exception
+   being thrown by the ORB.
+  </text>
+</bug>
+
+<bug id="10" date="Wed Jun  7 16:33:11 BST 2000" user="dpg1">
+  <summary>Cookie was not passed to global exception handlers</summary>
+  <reported>Duncan Grisby</reported>
+</bug>
+
+<bug id="9" date="Tue Mar  7 11:27:46 GMT 2000" user="dpg1">
+  <summary>Fixed interoperability problem with Naming service IORs</summary>
+  <reported>Duncan Grisby</reported>
+  <text>
+  omniORB does not allow you to specify a naming service IOR which is
+  derived from CosNaming::NamingContext in its configuration file.
+  </text>
+</bug>
+
+
+<bug id="8" date="Tue Feb 15 11:01:09 GMT 2000" user="djr">
+  <summary>create_union_tc failed if the discriminator type was an alias</summary>
+  <reported>David Riddoch</reported>
+</bug>
+
+
+<bug id="7" date="Fri Jan  7 14:47:08 GMT 2000" user="djr">
+  <summary>Server and client call timeouts are now disabled by default</summary>
+  <reported>David Riddoch</reported>
+</bug>
+
+<bug id="6" date="Fri Dec 17 17:58:57 GMT 1999" user="dpg1">
+  <summary>Name lookup error in inherited interfaces</summary>
+  <reported>Francis Michel</reported>
+  <link href="http://www.uk.research.att.com/omniORB/bugs/60.html"/>
+
+</bug>
+
+
+<bug id="5" date="Fri Dec 17 13:27:16 GMT 1999" user="djr">
+  <summary>Applied performance improvement for Any</summary>
+  <reported>David Riddoch</reported>
+</bug>
+
+<bug id="4" date="Tue Dec  7 18:08:27 GMT 1999" user="djr">
+  <summary>Incorrect typecode for recursive sequence of objref</summary>
+  <reported>David Evers</reported>
+  <link href="http://www.uk.research.att.com/omniORB/bugs/59.html"/>
+
+</bug>
+
+<bug id="3" date="Thu Dec  2 19:01:41 GMT 1999" user="djr">
+  <summary>Bug in marshalling/unmarshalling of arrays</summary>
+  <reported>David Riddoch</reported>
+</bug>
+
+
+<bug id="2" date="Wed Oct 27 19:06:02 BST 1999" user="sll">
+  <summary>Assertion failure when the ORB cannot spawn
+  a thread to serve a new connection.</summary>
+  <reported>Sai-Lai Lo</reported>
+</bug>
+
+<bug id="1" date="Tue Oct 26 20:34:57 BST 1999" user="sll">
+  <summary>DynAny no longer do alias expand on the typecode</summary>
+  <reported>Sai-Lai Lo</reported>
+  <text>
+  In other words, all aliases are preserved in the typecode.
+  </text>
+</bug>
+
+</buglist>
