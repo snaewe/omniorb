@@ -48,13 +48,16 @@ def Interface_defs(node):
     # (they get referenced in the new sendc_ objref methods)
     stream.out("""\
 class @replyhandler@;
+class @poller@;
 class _objref_@replyhandler@;
 typedef _objref_@replyhandler@* @replyhandler@_ptr;
 class @interface@;
 class _objref_@interface@;
 typedef _objref_@interface@* @interface@_ptr;
 class @I_Helper@;
-""", replyhandler = ami_name.simple(), interface = node_name.simple(),
+""", poller = id.Name(node.Poller.scopedName()).simple(),
+               replyhandler = ami_name.simple(),
+               interface = node_name.simple(),
                I_Helper = node_name.suffix("_Helper").simple())
     
     # This uses the Type Specific ExceptionHolder and the Type Specific

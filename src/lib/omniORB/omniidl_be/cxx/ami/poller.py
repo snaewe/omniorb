@@ -48,6 +48,7 @@ class_t = """\
 class @name@: public Messaging::Poller{
 protected:
   @target_ptr@ pd_target;
+public:
   @exceptionholder@ *exholder;
 
 public:
@@ -93,8 +94,9 @@ specific_t = """\
 // Operation specific AMI Poller valuetype
 class @name@: public @inherits@{
 protected:
-  @arg_storage@
 public:
+  @arg_storage@
+
   @name@(@target_ptr@ _target): @inherits@(_target){ }
   @methods@
 };
@@ -104,7 +106,7 @@ operation_t = """\
 void @op@(@args@) 
 {
   if (!is_ready(timeout)) throw CORBA::TIMEOUT();
-  if (exholder != NULL) exholder->@op@();
+  if (exholder != NULL) exholder->@raise_fn@();
   {
     @return_arguments@
   }
@@ -166,11 +168,6 @@ class Poller(iface.Class):
                    target_ptr = target.simple() + "_ptr",
                    target = target.simple())
 
-        # output an operation specific poller
-        for callable in self.interface().callables():
-            specific = PollerOpSpecific(self.interface(), callable)
-            specific.cc(stream)
-
         return
     
 
@@ -212,16 +209,20 @@ class PollerOpSpecific(iface.Class):
 
         # the specific operation
         methods.out(operation_t,
-                    op = exholder.callable_raise_name(self._callable),
+                    op = self._callable.method_name(),
+                    raise_fn = exholder.callable_raise_name(self._callable),
                     args = string.join(args, ", "),
                     return_arguments = copy)
         
         # the operation name
         methods.out(operation_name_t,
                     op_name = self._callable.operation_name())
-        
+
+        poller_descriptor = ami.poller_descriptor(self.interface()._node,
+                                                  self._callable)
+
         stream.out(specific_t,
-                   name = self.name().simple(),
+                   name = poller_descriptor,
                    target_ptr = self.interface().name().fullyQualify()+ "_ptr",
                    inherits = self._poller.fullyQualify(),
                    arg_storage = arg_storage,
@@ -235,13 +236,13 @@ class PollerOpSpecific(iface.Class):
 # when things happen.
 ReplyHandler_t = """\
 // Poller valuetype contains an internal callback replyhandler.
-class @poller@_internal_servant: public @poa_replyhandler@,
+class @servant@: public @poa_replyhandler@,
                                  public PortableServer::RefCountServantBase{
 protected:
-  @poller@ *pd_poller;
+  @poller_base@ *pd_poller;
 public:
-  @poller@_internal_servant(@poller@ *poller): pd_poller(poller) { }
-  virtual ~@poller@_internal_servant() { }
+  @servant@(@poller_base@ *poller): pd_poller(poller) { }
+  virtual ~@servant@() { }
 
   @methods@
 };
@@ -260,6 +261,7 @@ void @op@(@args@){
       return;
     }
   }
+  @ts_poller@ *poller = (@ts_poller@*)pd_poller;
   @copy_args_to_poller@
   pd_poller->reply_received = 1;
   pd_poller->pd_state_cond.signal();
@@ -277,7 +279,7 @@ void @op@_excep(const struct @exceptionholder@ &excep_holder){
     realhandler->@op@_excep(excep_holder);
     return;
   }
-  pd_poller->exholder = &excep_holder;
+  pd_poller->exholder = new @exceptionholder@(excep_holder);
   pd_poller->reply_received = 1;
   pd_poller->pd_state_cond.signal();
 }
@@ -287,9 +289,10 @@ class Poller_internal_servant(iface.Class):
     def __init__(self, interface):
         iface.Class.__init__(self, interface)
 
-        self._rhname = id.Name(self._node.ReplyHandler.scopedName())
-        self._ehname = id.Name(self._node.ExceptionHolder.scopedName())
-        self._name = id.Name(self._node.Poller.scopedName())
+        node = self.interface()._node
+        self._rhname = id.Name(node.ReplyHandler.scopedName())
+        self._ehname = id.Name(node.ExceptionHolder.scopedName())
+        self._name = id.Name(node.Poller.scopedName())
 
     def hh(self, stream):
         return
@@ -303,10 +306,9 @@ class Poller_internal_servant(iface.Class):
             args = []
             arglist = []
             if not(rType.void()):
-                copy.out(rType.copy("pd_poller->ami_return_val",
-                                    "ami_return_val", self._environment))
-                args.append(rType.op(types.OUT, self._environment) +\
-                            " ami_return_val")
+                copy.out(rType.copy("ami_return_val",
+                                    "poller->ami_return_val"))
+                args.append(rType.op(types.IN) + " ami_return_val")
                 arglist.append("ami_return_val")
                 
 
@@ -314,25 +316,32 @@ class Poller_internal_servant(iface.Class):
                 if parameter.is_out():
                     ident = parameter.identifier()
                     pType = types.Type(parameter.paramType())
-                    copy.out(pType.copy("pd_poller->" + ident, ident,
-                                        self._environment))
-                    args.append(pType.op(types.OUT, self._environment) + " " +\
-                                ident)
+                    copy.out(pType.copy(ident, "poller->" + ident,))
+                    args.append(pType.op(types.IN) + " " + ident)
                     arglist.append(ident)
-                    
+
+            tsname = self._name.suffix("_" + callable.operation_name())
+
+            descriptor = ami.poller_descriptor(self.interface()._node,
+                                               callable)
+            
             methods.out(ReplyHandler_op_t,
-                        op = callable.method_name(),
+                        op = id.mapID(callable.operation_name()),
+                        ts_poller = descriptor,
                         args = string.join(args, ", "),
-                        replyhandler = self._rhname.simple(),
+                        replyhandler = self._rhname.fullyQualify(),
                         arglist = string.join(arglist, ", "),
                         copy_args_to_poller = copy)
             methods.out(ReplyHandler_op_excep_t,
-                        op = callable.method_name(),
-                        exceptionholder = self._ehname.simple(),
-                        replyhandler = self._rhname.simple())
+                        op = callable.operation_name(),
+                        exceptionholder = self._ehname.fullyQualify(),
+                        replyhandler = self._rhname.fullyQualify())
+
+        descriptor = ami.servant(self.interface()._node)
 
         stream.out(ReplyHandler_t,
-                   poller = self.name().simple(),
+                   poller_base = self.name().fullyQualify(),
+                   servant = descriptor,
                    poa_replyhandler = "POA_" + self._rhname.fullyQualify(),
                    methods = methods)
                    

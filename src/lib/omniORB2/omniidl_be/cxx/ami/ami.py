@@ -80,12 +80,23 @@ class ExceptionHolder(PseudoDecl, PseudoDeclRepoId, idlast.Struct):
     def accept(self, visitor): pass
 
 
-class Poller(PseudoDecl, PseudoDeclRepoId):
+# Pretend the Poller is a variable-length struct
+class Poller(PseudoDecl, PseudoDeclRepoId, idlast.Struct):
     def __init__(self, interface):
         PseudoDecl.__init__(self, interface)
         PseudoDeclRepoId.__init__(self, interface, "Poller")
+        idlast.Struct.__init__(self, self.file(), self.line(),
+                               self.mainFile(), self.pragmas(),
+                               self.comments(), self.identifier(),
+                               self.scopedName(), self.repoId(), 0)
+        # Placing an exceptionholder inside will do the trick!
+        # (contents not important, their variable-ness is)
+        eh_members= idlast.findDecl(["Messaging", "ExceptionHolder"]).members()
+        self._setMembers(eh_members)
 
-    def accept(self, visitor): pass
+    def accept(self, visitor):
+        if hasattr(visitor, "visitDeclRepoId"):
+            visitor.visitDeclRepoId(self)
 
 
 class ReplyHandler(PseudoDecl, PseudoDeclRepoId, idlast.Interface):
@@ -217,8 +228,22 @@ def list_exceptions(node):
 # Return an internal name for an AMI call descriptor
 def call_descriptor(iface, opname, sig):
     iname = id.Name(iface.scopedName())
-    return config.state["Private Prefix"] + "_ami_" +\
+    return config.state["Private Prefix"] + "_amicd_" +\
            descriptor.get_interface_operation_descriptor(iname, opname, sig)
+
+
+def poller_descriptor(iface, callable):
+    iname = id.Name(iface.scopedName())
+    opname = callable.operation_name()
+    sig = callable.signature()
+    return  config.state["Private Prefix"] + "_amipoller_" +\
+           descriptor.get_interface_operation_descriptor(iname, opname, sig)
+
+def servant(iface):
+    name = string.join(iface.scopedName(), "_")
+    return config.state["Private Prefix"] + "_amisvt_" +\
+           descriptor.get_signature_descriptor(name)
+
 
 def operation_argument(type, direction, ident):
     d_type = type.deref()
@@ -244,20 +269,4 @@ def parameter(parameter):
 def copy_to_OUT(pType, src, dest):
     out_type = operation_argument(pType, types.RET, src)
     return dest + " = " + out_type + ";"
-
-#def copy_to_OUT(type, src, dest):
-#    d_type = type.deref()
-#
-#    use_out_method = dest + " = " + src + ".out();"
-#
-#    if not(type.array()):
-#        if d_type.typecode() or d_type.objref() or d_type.string():
-#            return use_out_method
-#        
-#    if not(type.op_is_pointer(types.OUT)):
-#        # a straight assign will probably do
-#        return dest + " = " + src + ";"
-#
-#    return use_out_method
-
 
