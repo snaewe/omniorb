@@ -47,9 +47,22 @@ endif
 
 endif
 
+
+ifdef NTArchitecture
+# Note the use of -W0 in CXXOPTIONS - this is used to stop pragma warning 
+# messages - should replace with a warning(disable,4068) pragma in the source
+# code
+CPP_LOCATION = CL
+DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH)) \
+               -D"IDL_CFE_VERSION=\\\\\"$(IDL_CFE_VERSION)\\\\\"" \
+               -D"CPP_LOCATION=\\\\\"$(CPP_LOCATION)\\\\\""
+DIR_CPPFLAGS += -D "NDEBUG" -D "_WINDOWS" -D "_X86_" -D "NTArchitecture" 
+CXXOPTIONS = -ML -W0 -GX -O2 
+else
 DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH)) \
                -DIDL_CFE_VERSION=$(IDL_CFE_VERSION) \
                -DCPP_LOCATION=\"$(CPP_LOCATION)\"
+endif
 
 lib = $(patsubst %,$(LibPattern),drv)
 
