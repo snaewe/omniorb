@@ -50,6 +50,8 @@ export::
 # Make rules for stubs.                                              #
 ######################################################################
 
+
+
 ifndef OMNIORB2_IDL_FPATH
 OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
 endif
@@ -58,26 +60,39 @@ ifndef OMNIORB2_IDL_ONLY_FPATH
 OMNIORB2_IDL_ONLY_FPATH = $(OMNIORB2_IDL_ONLY)
 endif
 
-OMNIORB2_IDL_FPATH += $(patsubst %,-I%/idl,$(IMPORT_TREES))
-OMNIORB2_IDL_ONLY_FPATH += $(patsubst %,-I%/idl,$(IMPORT_TREES))
+ifndef Win32Platform
+
+define GENERATE_IDL_STUBS
+extraoptions=$(patsubst %,-I%/idl,$(IMPORT_TREES)); \
+$(OMNIORB2_IDL_ONLY_FPATH) $$idlflags $$extraoptions $^
+endef
+
+else
+
+define GENERATE_IDL_STUBS
+args="$(patsubst %,-I%/idl,$(IMPORT_TREES)) $^"; \
+$(OMNIORB2_IDL_ONLY_FPATH) $$idlflags `echo $$args | sed 's/\/\/\([^/]*\)\//\1:\//g'`
+endef
+
+endif
 
 Naming.hh NamingSK.cc NamingDynSK.cc: Naming.idl
-	$(OMNIORB2_IDL_FPATH) $^
+	@(idlflags=-a; $(GENERATE_IDL_STUBS);)
 
 bootstrap.hh bootstrapSK.cc: bootstrap.idl
-	$(OMNIORB2_IDL_ONLY_FPATH) $^
+	@($(GENERATE_IDL_STUBS);)
 
 ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc: ir.idl
-	$(OMNIORB2_IDL_FPATH) -m -F $(patsubst %.idl,%.idl,$^)
+	@(idlflags='-a -m -F'; $(GENERATE_IDL_STUBS);)
 
 corbaidl_defs.hh corbaidl_operators.hh corbaidlSK.cc corbaidlDynSK.cc: corbaidl.idl
-	$(OMNIORB2_IDL_FPATH) -m -F $^
+	@(idlflags='-a -m -F'; $(GENERATE_IDL_STUBS);)
 
 omniLifeCycle.hh omniLifeCycleSK.cc omniLifeCycleDynSK.cc: omniLifeCycle.idl
-	$(OMNIORB2_IDL_FPATH) -m $^
+	@(idlflags='-a -m'; $(GENERATE_IDL_STUBS);)
 
 Firewall.hh FirewallSK.cc: Firewall.idl
-	$(OMNIORB2_IDL_ONLY_FPATH) -m -t $^
+	@(idlflags='-m -t'; $(GENERATE_IDL_STUBS);)
 
 
 ciao:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh Firewall.hh
