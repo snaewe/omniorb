@@ -177,13 +177,17 @@ $(lib): $(ORB2_OBJS)
 $(lclib): $(LC_OBJS)
 	@$(StaticLinkLibrary)
 
+ifndef OMNIORB2_IDL_FPATH
+OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
+endif
+
 Naming.hh NamingSK.cc:	Naming.idl
 	-$(CP) $^ .
-	$(OMNIORB2_IDL) $(notdir $^)
+	$(OMNIORB2_IDL_FPATH) $(notdir $^)
 
 omniLifeCycle.hh omniLifeCycleSK.cc: omniLifeCycle.idl
 	-$(CP) $^ .
-	$(OMNIORB2_IDL) $(notdir $^)
+	$(OMNIORB2_IDL_FPATH) $(notdir $^)
 
 clean::
 	$(RM) $(lib) NamingSK.cc omniLifeCycleSK.cc
