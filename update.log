@@ -1,3 +1,38 @@
+Mon Oct  9 17:18:38 BST 2000 sll
+================================
+
+- DSI and DII examples now work.
+- nameclt, omniNames and omniMapper now work.
+
+src/appl/omniMapper/omniMapper.cc
+
+src/appl/omniNames/INSMapper.h
+src/appl/omniNames/NamingContext_i.cc
+src/appl/omniNames/NamingContext_i.h
+src/appl/omniNames/log.cc
+src/appl/omniNames/log.h
+src/appl/utils/nameclt/nameclt.cc
+
+src/examples/dii/echo_diiclt.cc
+src/examples/dsi/echo_dsiimpl.cc
+
+src/lib/omniORB/exceptiondefs.h
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/dynamicImplementation.h
+src/lib/omniORB/dynamic/dynamicLib.cc
+src/lib/omniORB/dynamic/ir.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/request.h
+src/lib/omniORB/dynamic/serverRequest.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/tcParser.h
+
+src/lib/omniORB/orbcore/exceptn.cc
+src/lib/omniORB/orbcore/giopClient.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Fri Oct  6 17:33:16 BST 2000 sll
 ================================
 
