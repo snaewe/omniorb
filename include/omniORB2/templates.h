@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.10  1997/12/23 19:37:57  sll
+  Removed const T* conversion operator in _CORBA_Array_Var as it is causing
+  conversion ambiguity.
+  Demote workarounds for older DEC C++ compiler as the bug has been fixed.
+
   Revision 1.9  1997/12/09 20:41:02  sll
   Updated sequence array templates.
 
@@ -62,7 +67,7 @@ public:
   inline _CORBA_ObjRef_Var() { pd_objref = T_Helper::_nil(); }
   inline _CORBA_ObjRef_Var(T *p) { pd_objref = p; }
   inline ~_CORBA_ObjRef_Var() { 
-#ifndef __DECCXX
+#if !defined(__DECCXX) || (__DECCXX_VER >= 50500000)
     if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref);
 #else
     if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
@@ -97,7 +102,7 @@ public:
   inline _CORBA_ObjRef_Member(T *p) { _ptr = p; }
   inline _CORBA_ObjRef_Member(const _CORBA_ObjRef_Member<T,T_Helper> &p);
   inline ~_CORBA_ObjRef_Member() { 
-#ifndef __DECCXX
+#if !defined(__DECCXX) || (__DECCXX_VER >= 50500000)
     if (!T_Helper::is_nil(_ptr)) T_Helper::release(_ptr);
 #else
     if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
@@ -354,7 +359,11 @@ public:
   inline T& operator[] (_CORBA_ULong index) { return *(pd_data + index); }
   inline const T& operator[] (_CORBA_ULong index) const { return *(pd_data + index);  }
   inline operator T* () const { return pd_data; }
-  inline operator const T* () const { return pd_data; }
+  // Define the const T* operator() causes conversion operator ambiguity with 
+  // some compilers. Should be alright to leave this operator out. If not,
+  // reinstate it and #ifdef it with the right compiler specific macro.
+  //
+  //  inline operator const T* () const { return pd_data; }
 
   friend class _CORBA_Array_OUT_arg<T, _CORBA_Array_Var<T_Helper,T> >;
 
