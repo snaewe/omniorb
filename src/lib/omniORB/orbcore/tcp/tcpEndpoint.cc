@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.20  2003/05/04 11:22:14  dgrisby
+  Set the poked flag in the right place.
+
   Revision 1.1.2.19  2003/05/02 09:58:13  dgrisby
   Ensure shutdown happens even if the TCP stack has broken.
 
@@ -315,8 +318,8 @@ tcpEndpoint::Poke() {
       omniORB::logger log;
       log << "Warning: fail to connect to myself ("
 	  << (const char*) pd_address_string << ") via tcp.\n";
-      pd_poked = 1;
     }
+    pd_poked = 1;
   }
   else {
     delete conn;
