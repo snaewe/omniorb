@@ -1,3 +1,10 @@
+Wed Jun 13 18:22:22 BST 2001 sll
+================================
+
+- Minor fix to correct a regression introduced by the last omni3_develop merge.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+
 Wed Jun 13 12:26:02 BST 2001 dpg1
 =================================
 
