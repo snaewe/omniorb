@@ -110,9 +110,9 @@ omni_condition::omni_condition(omni_mutex* m) : mutex(m)
 omni_condition::~omni_condition(void)
 {
     DeleteCriticalSection(&crit);
-    if (waiting_head != NULL) {
+    DB( if (waiting_head != NULL) {
 	cerr << "omni_condition::~omni_condition: list of waiting threads "
-	     << "is not empty\n";
+	     << "is not empty\n" );
     }
 }
 
@@ -282,18 +282,20 @@ omni_semaphore::omni_semaphore(unsigned int initial)
     nt_sem = CreateSemaphore(NULL, initial, SEMAPHORE_MAX, NULL);
 
     if (nt_sem == NULL) {
-	cerr << "omni_semaphore::omni_semaphore: CreateSemaphore error "
-	     << GetLastError() << endl;
+      DB( cerr << "omni_semaphore::omni_semaphore: CreateSemaphore error "
+	     << GetLastError() << endl );
+      throw omni_thread_fatal(GetLastError());
     }
 }
 
 
 omni_semaphore::~omni_semaphore(void)
 {
-    if (!CloseHandle(nt_sem)) {
-	cerr << "omni_semaphore::~omni_semaphore: CloseHandle error "
-	     << GetLastError() << endl;
-    }
+  if (!CloseHandle(nt_sem)) {
+    DB( cerr << "omni_semaphore::~omni_semaphore: CloseHandle error "
+	     << GetLastError() << endl );
+    throw omni_thread_fatal(GetLastError());
+  }
 }
 
 
