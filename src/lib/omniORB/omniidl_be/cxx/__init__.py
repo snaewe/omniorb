@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/03 17:35:06  djs
+# Brought more of the old tmp_omniidl code into the new tree
+#
 # Revision 1.1  1999/11/03 11:09:49  djs
 # General module renaming
 #
@@ -36,16 +39,8 @@
 # -----------------------------
 # Output generation functions
 from omniidl.be.cxx import header
-import omniidl.be.cxx.header.defs
 
-# -----------------------------
-# Utility functions
-from omniidl import output
-
-# -----------------------------
-# System functions
-import sys
-
+import re
 
 def run(tree, args):
     """Entrypoint to the C++ backend"""
@@ -54,10 +49,20 @@ def run(tree, args):
     print "                   and  args = " + repr(args)
     print "Better do something!"
 
-    stream = output.Stream(sys.stdout, 2)
+    print "I know, I'll generate the header."
 
-    defs = header.defs.__init__(stream)
-    tree.accept(defs)
+    filename = tree.file()
+    regex = re.compile(r"\.idl")
+    if regex.search(filename):
+        chopped = regex.sub("", filename)
+        config.setBasename(chopped)
+            
+    header.run(tree)
+
+    #stream = util.Stream(sys.stdout, 2)
+
+    #defs = header.defs.__init__(stream)
+    #tree.accept(defs)
     
     
     #global main_idl_file, imported_files

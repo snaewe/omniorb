@@ -28,11 +28,16 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/03 17:35:07  djs
+# Brought more of the old tmp_omniidl code into the new tree
+#
 # Revision 1.1  1999/11/03 11:09:50  djs
 # General module renaming
 #
 
 """General utility functions used by the C++ backend"""
+
+import re, string
 
 # ------------------------------------------------------------------
 # Generic formatting functions
@@ -42,3 +47,128 @@ def delimitedlist(list, delimiter=", "):
     if len(list) == 0: return ""
     if len(list) == 1: return "" + list[0]
     return list[0] + delimiter + (delimitedlist(list[1:], delimiter))
+
+# ------------------------------------------------------------------
+# Generic output utilities
+
+#   (modified from dpg1s to keep track of output indent level
+#    semi-automatically)
+#   
+# Doesnt have a stack of preceeding whitespace length as python does, instead
+# interprets an increase as a single inc_indent() and a decrease as a
+# dec_indent() First output line within a Stream.out() call sets the origin
+# for the successive lines. An @...@ expansion which becomes multiple lines
+# is output at a contant indent.
+
+import re, string
+
+class Stream:
+    """IDL Compiler output stream."""
+    def __init__(self, file, indent_size = 4):
+        self.indent  = 0
+        self.file    = file
+        self.istring = " " * indent_size
+        #
+        self.__wsregex = re.compile(r"^\s*")
+ 
+    regex = re.compile(r"@([^@]*)@")
+
+    def inc_indent(self): self.indent = self.indent + 1
+    def dec_indent(self): self.indent = self.indent - 1
+
+    def __wscount(self, text):
+        match = self.__wsregex.match(text)
+        if (match):
+            return match.end(0)
+        return 0
+
+    def __wsstrip(self, text):
+        match = self.__wsregex.match(text)
+        if (match):
+            return text[match.end(0):]
+        return text
+
+    def write(self, text):
+        self.file.write(text + "\n")
+
+    def out(self, text, ldict={}, **dict):
+        """Output a multi-line string with indentation and @@ substitution."""
+
+        dict.update(ldict)
+
+        def doSub(self, text, dict=dict):
+            # doSub: Stream * string -> string list
+            #
+            def replace(match, dict=dict):
+                if match.group(1) == "": return "@"
+                return eval(match.group(1), globals(), dict)
+            # remove leading whitespace, but keep a note of how much
+            wsCount = self.__wscount(text)
+            strippedText = self.__wsstrip(text)
+            lines = string.split(self.regex.sub(replace, strippedText), "\n")
+            # lines now contains a list of strings (most of the time
+            # a single element list)
+            indentedLines = []
+            for line in lines:
+#                print "[[[ line = " + line + "]]]"
+#                if (line != ""):
+                indentedLines.append(" "*wsCount + line)
+            return indentedLines
+
+        rawLines = string.split(text, "\n")
+        lines = []
+        for line in rawLines:
+#            print "rawLine = ["+line+"]"
+            afterSubs = doSub(self, line)
+#            for l in afterSubs:
+#                print "processedLine = ["+l+"]"
+            lines = lines + afterSubs
+            
+        #lines = doSub(self, text)
+        # count the preceeding whitespace
+        whitespace = self.__wscount(lines[0])
+        
+        for l in lines:
+            new_whitespace = self.__wscount(l)
+            if (new_whitespace > whitespace):
+                self.inc_indent()
+            elif (new_whitespace < whitespace):
+                self.dec_indent()
+            whitespace = new_whitespace
+            
+            self.write(self.istring * self.indent + self.__wsstrip(l))
+
+    def niout(self, text, ldict={}, **dict):
+        """Output a multi-line string without indentation."""
+
+        oldIndent = self.indent
+        self.indent = 0
+        self.out(text, ldict) # FIXME
+        self.indent = oldIndent
+        
+        #dict.update(ldict)
+
+        #def replace(match, dict=dict):
+        #    if match.group(1) == "": return "@"
+        #    return eval(match.group(1), globals(), dict)
+
+        #for l in string.split(self.regex.sub(replace, text), "\n"):
+        #    self.write(l)
+        #    self.write("\n")
+
+class StringStream(Stream):
+    """Writes to a string buffer rather than a file."""
+    def __init__(self, indent_size = 4):
+        Stream.__init__(self, None, indent_size)
+        self.__buffer = ""
+
+    def write(self, text):
+        if (self.__buffer != ""):
+            self.__buffer = self.__buffer + "\n"
+        self.__buffer = self.__buffer + text
+
+    def __str__(self):
+        return self.__buffer
+
+    def __add__(self, other):
+        return self.__buffer + str(other)
