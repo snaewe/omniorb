@@ -55,6 +55,7 @@ private:
   omni_condition pd_cond;   // so can wait for mutex to unlock
   omni_thread*   pd_holder; // the thread holding pd_m, or 0
   int            pd_depth;  // number of recursive calls by locking thread
+  int            pd_dummy;  // true if a dummy thread was created
 };
 
 
