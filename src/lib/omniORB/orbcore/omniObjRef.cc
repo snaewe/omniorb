@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2000/10/06 16:37:48  sll
+  _invoke() can now cope with a call descriptor with no local call function.
+
   Revision 1.2.2.3  2000/10/03 17:37:08  sll
   Changed omniIOR synchronisation mutex from omni::internalLock to its own
   mutex.
@@ -459,7 +462,25 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
       omni::internalLock->lock();
       fwd = pd_flags.forward_location;
-      _identity()->dispatch(call_desc);
+      omniIdentity* id = _identity();
+
+      if (!call_desc.haslocalCallFn() && _localId()) {
+	// This is a local object so a call to id->dispatch will cause
+	// the local call function in the call descriptor to be invoked.
+	// But we do not have a local call function! We have to create
+	// a remoteIdentity with the loop back transport to dispatch the call.
+	// The remoteIdentity will be deleted automatically when the
+	// call finishes.
+	//
+	// This is not the normal case but could happen in rare circumstance,
+	// such as a DII call descriptor invoking on a local object.
+	Rope* rope = omniObjAdapter::defaultLoopBack();
+	rope->incrRefCount();
+	omniIOR* ior = _getIOR();
+	id = new omniRemoteIdentity(ior, rope);
+      }
+
+      id->dispatch(call_desc);
       return;
 
     }
@@ -612,13 +633,13 @@ omniObjRef::_fromString(const char* str)
 {
   size_t s = (str ? strlen(str) : 0);
   if (s<4)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
   const char *p = str;
   if (p[0] != 'I' ||
       p[1] != 'O' ||
       p[2] != 'R' ||
       p[3] != ':')
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
   s = (s-4)/2;  // how many octets are there in the string
   p += 4;
@@ -639,7 +660,7 @@ omniObjRef::_fromString(const char* str)
       v = ((p[j] - 'A' + 10) << 4);
     }
     else
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
     if (p[j+1] >= '0' && p[j+1] <= '9') {
       v += (p[j+1] - '0');
@@ -651,7 +672,7 @@ omniObjRef::_fromString(const char* str)
       v += (p[j+1] - 'A' + 10);
     }
     else
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
     v >>= buf;
   }
 
