@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.34.4.5  2000/03/27 17:25:00  sll
+  Make the stub code compiles again on win32.
+
   Revision 1.34.4.4  1999/11/05 17:35:32  sll
   Updated server Upcall function to remove a SUN Pro compiler warning.
 
@@ -901,7 +904,7 @@ o2be_operation::produce_server_skel_aux(std::fstream& s)
   s << "obj->";
   if (has_variable_out_arg() || has_pointer_inout_arg()) {
     // Use the indirection function in the base class
-    s << intf->fqname() << "::";
+    s << intf->uqname() << "::";
   }
   s << uqname() << "(";
   {
