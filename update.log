@@ -1,4 +1,13 @@
 
+Wed Jul 30 13:52:15 BST 1997 tjr
+================================
+
+src/tool/win32/clwrapper.c	- fix to use b18 mounts
+src/tool/win32/libwrapper.c	- fix to use b18 mounts
+src/tool/win32/linkwrapper.c	- fix to use b18 mounts
+src/tool/omkdepend/gnuwin32.c	- fix to use b18 mounts
+
+
 Thu Jul 24 18:06:29 BST 1997 tjr
 ================================
 
