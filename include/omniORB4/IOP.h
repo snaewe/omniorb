@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2000/11/15 17:00:55  sll
+  Added marshalling operators for ServiceContext.
+
   Revision 1.2.2.4  2000/11/03 18:58:46  sll
   Unbounded sequence of octet got a new type name.
 
@@ -311,7 +314,7 @@ public:
     _CORBA_Unbounded_Sequence_Octet context_data;
 
     // the following are omniORB private functions
-    void operator>>= (cdrStream &s);
+    void operator>>= (cdrStream &s) const;
     void operator<<= (cdrStream &s);
   };
 
