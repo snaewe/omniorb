@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2000/11/03 19:00:26  sll
+ Removed Suppress_Spurious_gcc_Warnings cpp macro.
+
  Revision 1.2.2.3  2000/10/27 15:42:03  dpg1
  Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -237,9 +240,6 @@
 #  define _CORBA_LONGDOUBLE_DECL long double 
 #  define _CORBA_LONGLONG_CONST(x) (x##LL)
 
-// XXX Temporary define to be removed in final release.
-#define Suppress_Spurious_gcc_Warnings
-
 #elif defined(__DECCXX)
 // DEC C++ compiler
 
@@ -336,6 +336,9 @@
 #define _HAS_NOT_GOT_strcasecmp
 #define _HAS_NOT_GOT_strncasecmp
 
+// No current version of MSVC++ can catch exceptions by base class
+#undef HAS_Cplusplus_catch_exception_by_base
+
 #define HAS_LongLong
 #define _CORBA_LONGLONG_DECL   __int64
 #define _CORBA_ULONGLONG_DECL  unsigned __int64
@@ -412,7 +415,6 @@
 // To remove this error, make sure that the offending header file is included
 // after omniORB2/CORBA.h.
 #endif
-
 
 // Default flag values if not already overridden above
 

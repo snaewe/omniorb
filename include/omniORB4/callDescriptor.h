@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2000/11/03 19:00:26  sll
+ Removed Suppress_Spurious_gcc_Warnings cpp macro.
+
  Revision 1.2.2.3  2000/10/06 16:47:26  sll
  Removed inline marshal function from the client and server marshaller.
 
@@ -78,7 +81,9 @@ public:
       pd_n_user_excns(n_user_excns),
       pd_is_upcall(is_upcall) {}
 
-#if defined(__GNUG__) && defined(Suppress_Spurious_gcc_Warnings)
+#if defined(__GNUG__)
+  // gcc is rather anal and insists on a class with virtual functions must
+  // have a virtual dtor.
   virtual ~omniCallDescriptor() {}
 #endif
 
