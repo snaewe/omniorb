@@ -243,6 +243,7 @@ Functions:
            kind != tk_except             and \
            kind != tk_value              and \
            kind != tk_value_box          and \
+           kind != tk_native             and \
            kind != tk_abstract_interface:
             raise Error("Attempt to create Declared type with invalid kind.")
 
