@@ -31,6 +31,10 @@
 #include <time.h>
 #include "omnithread.h"
 
+#ifdef __linux__
+#include <pthread/mit/sys/timers.h>
+#endif
+
 #define DB(x) // x
 
 
@@ -251,9 +255,11 @@ int omni_thread::next_id = 0;
 
 static pthread_key_t self_key;
 
+#ifdef PthreadSupportThreadPriority
 static int lowest_priority;
 static int normal_priority;
 static int highest_priority;
+#endif
 
 
 //
@@ -294,6 +300,8 @@ omni_thread::init_t::init_t(void)
 
 #endif
 
+#ifdef PthreadSupportThreadPriority
+
 #if defined(__osf1__) && defined(__alpha__)
 
     lowest_priority = PRI_OTHER_MIN;
@@ -324,6 +332,8 @@ omni_thread::init_t::init_t(void)
 	normal_priority = lowest_priority + 1;
 	break;
     }
+
+#endif   /* PthreadSupportThreadPriority */
 
     next_id_mutex = new omni_mutex;
 
@@ -869,13 +879,13 @@ omni_thread* omni_thread::self(void)
 
 void omni_thread::yield(void)
 {
-#if (PthreadDraftVersion == 4)
+#if (PthreadDraftVersion == 6)
 
-    pthread_yield();
+    pthread_yield(NULL);
 
 #elif (PthreadDraftVersion < 9)
 
-    pthread_yield(NULL);
+    pthread_yield();
 
 #else
 
@@ -899,6 +909,12 @@ int omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 #if defined(__osf1__) && defined(__alpha__)
     if (pthread_delay_np(&rqts) != 0)
 	return errno;
+#elif defined(__linux__)
+    if (secs > 2000) {
+	sleep(secs);
+    } else {
+	usleep(secs * 1000000 + (nanosecs / 1000));
+    }
 #else
     cerr << "Fatal: omni_thread::sleep is not supported." << endl;
     ::exit(1);
@@ -918,7 +934,14 @@ int omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
     rc = ERRNO(pthread_get_expiration_np(&rel, &abs));
 #else
     timespec abs;
+#ifdef __linux__
+    struct timeval tv;
+    gettimeofday(&tv, NULL); 
+    abs.tv_sec = tv.tv_sec;
+    abs.tv_nsec = tv.tv_usec * 1000;
+#else
     clock_gettime(CLOCK_REALTIME, &abs);
+#endif
     abs.tv_nsec += rel_nsec;
     abs.tv_sec += rel_sec + abs.tv_nsec / 1000000000;
     abs.tv_nsec = abs.tv_nsec % 1000000000;
@@ -933,6 +956,8 @@ int omni_thread::posix_priority(priority_t pri)
 {
     switch (pri) {
 
+#ifdef PthreadSupportThreadPriority
+
     case PRIORITY_LOW:
 	return lowest_priority;
 
@@ -941,6 +966,8 @@ int omni_thread::posix_priority(priority_t pri)
 
     case PRIORITY_HIGH:
 	return highest_priority;
+
+#endif
 
     default:
 	return -1;
@@ -955,6 +982,10 @@ int omni_thread::posix_priority(priority_t pri)
 
 int omni_thread::cancel(void)
 {
+#ifdef __linux__
+    cerr << "omni_thread::cancel: no pthread_cancel on this platform\n";
+    return ENOSYS;
+#else
     if (this == self()) {
 	DB(cerr << "omni_thread::cancel: can't cancel self\n");
 	return EINVAL;
@@ -971,4 +1002,5 @@ int omni_thread::cancel(void)
     }
 
     return 0;
+#endif
 }
