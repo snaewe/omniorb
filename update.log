@@ -1,3 +1,17 @@
+Fri Feb 27 14:00:36 GMT 1998 sll
+================================
+
+- Changed manager() to _objectManager() in class omniObject to avoid
+  potential name clash with application code.
+- _is_equivalent() now returns the correct answer when a proxy object
+  is tested against its colocated object implmentation. This situation will
+  only occur if the proxy object is created before the object implementation.
+
+src/lib/omniORB2/corbaObject.cc
+src/lib/omniORB2/object.cc
+include/omniORB2/omniInternal.h
+
+
 Thu Feb 26 17:27:34 GMT 1998 sll
 ================================
 
