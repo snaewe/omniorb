@@ -1,3 +1,9 @@
+Mon Jun 15 17:08:16 BST 1998 tjr
+================================
+
+bin/scripts/obuildtree		- fix relative path for source tree
+
+
 Wed May 20 19:21:21 BST 1998 sll
 ================================
 
