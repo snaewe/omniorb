@@ -15,6 +15,8 @@ eg2_clt    = $(patsubst %,$(BinPattern),eg2_clt)
 
 all:: $(eg2_impl) $(eg2_clt)
 
+export:: $(eg2_impl) $(eg2_clt)
+
 clean::
 	$(RM) $(eg2_impl) $(eg2_clt)
 

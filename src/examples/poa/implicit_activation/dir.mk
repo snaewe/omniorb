@@ -11,6 +11,8 @@ eg1 = $(patsubst %,$(BinPattern), eg1)
 
 all:: $(eg1)
 
+export:: $(eg1)
+
 clean::
 	$(RM) $(eg1)
 

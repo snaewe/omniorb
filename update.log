@@ -1,4 +1,13 @@
 
+Thu Oct 21 12:00:31 BST 1999 djr
+================================
+
+- Added export rule.
+
+src/examples/boa/dir.mk
+src/examples/poa/implicit_activation/dir.mk
+
+
 Mon Oct 18 18:24:41 BST 1999 djr
 ================================
 
