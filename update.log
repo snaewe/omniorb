@@ -1,3 +1,16 @@
+Tue Nov 12 16:39:14 GMT 2002 dgrisby
+====================================
+
+- Fix incorrect delete.
+
+src/lib/omniORB/orbcore/giopStream.cc
+
+- AIX patch.
+
+patches/README
+patches/aix_xlC_5.0.patch
+
+
 Fri Nov  8 17:17:14 GMT 2002 dgrisby
 ====================================
 

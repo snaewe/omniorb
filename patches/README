@@ -1,13 +1,16 @@
 This directory contains patches to the source to work around bugs in some
-old compilers.
+old / broken compilers.
 
-These patches are against omniORB 3.0, so they will not work with
-omniORB 4.0. They should give you a hint about what needs to be done
-to omniORB 4.0, though. If you successfully compile omniORB on one of
-these platforms, please send an up to date patch to the omniORB
-mailing list.
+This patch is for VisualAge C++ 5 on AIX. It works-around an inline
+function issue, and some build issues.
 
-The patches are:
+  aix_xlC_5.0.patch
 
-  dec_CXX_5.6.patch  - patch to apply to work around bugs in Dec C++ 5.6.
-  aix_xlC_5.0.patch  - patch to work around problems with VisualAge C++ 5.0.
+
+This patch is for Dec C++ 5.6 on Tru64. It is against omniORB 3.0, so
+it will not work with omniORB 4.0. It should give you a hint about
+what needs to be done to omniORB 4.0, though. If you successfully
+compile omniORB on this platform, please send an up to date patch to
+the omniORB mailing list.
+
+  dec_CXX_5.6.patch
