@@ -97,6 +97,15 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include	<sys/wait.h>		// POSIX definition of wait()
 #endif		// defined(hpux) || defined(__hpux)
 
+#if defined(__aix__)
+#include        <unistd.h>              // POSIX standard types
+#include        <sys/wait.h>            // POSIX definition of wait()
+#endif
+
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+#include <unistd.h>                     // POSIX standard types
+#include <wait.h>                       // POSIX definition of wait()
+#endif
 
 #ifndef __NT__
 
