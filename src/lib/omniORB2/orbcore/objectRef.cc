@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.28  1999/08/30 17:10:24  sll
+  omniObject::wrappedObjectTable initialiser fixed for MSVC++.
+
   Revision 1.27  1999/08/16 19:26:36  sll
   Replace static variable dtor with initialiser object to enumerate the
   list of remaining proxy objects on shutdown.
@@ -945,8 +948,7 @@ public:
     for (i=0; i<omniORB::hash_table_size; i++)
       omniObject::localPyObjectTable[i] = 0;
 
-    omniObject::wrappedObjectTable = (void**)
-      (new void *[omniORB::hash_table_size]);
+    omniObject::wrappedObjectTable = new void*[omniORB::hash_table_size];
 
     for (i=0; i<omniORB::hash_table_size; i++)
       omniObject::wrappedObjectTable[i] = 0;
