@@ -1,3 +1,13 @@
+Mon Mar 18 16:46:35 GMT 2002 dpg1
+=================================
+
+- New threadPoolWatchConnection parameter.
+
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Mon Mar 18 15:07:36 GMT 2002 dpg1
 =================================
 

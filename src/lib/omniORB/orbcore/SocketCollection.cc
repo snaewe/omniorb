@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/03/18 16:50:18  dpg1
+  New threadPoolWatchConnection parameter.
+
   Revision 1.1.2.8  2002/03/14 12:21:49  dpg1
   Undo accidental scavenger period change, remove invalid assertion.
 
@@ -234,7 +237,7 @@ SocketCollection::Select() {
 
     omni_thread::get_time(&pd_abs_sec,&pd_abs_nsec,
 			  scan_interval_sec,scan_interval_nsec);
-    timeout.tv_sec = scan_interval_sec;
+    timeout.tv_sec  = scan_interval_sec;
     timeout.tv_usec = scan_interval_nsec / 1000;
 
     omni_tracedmutex_lock sync(pd_fdset_lock);
@@ -373,9 +376,10 @@ SocketCollection::Peek(SocketHandle_t sock) {
   // select on the socket for half the time of scan_interval, if no request
   // arrives in this interval, we just let AcceptAndMonitor take care
   // of it.
-  timeout.tv_sec = scan_interval_sec / 2;
+  timeout.tv_sec  = scan_interval_sec / 2;
   timeout.tv_usec = scan_interval_nsec / 1000 / 2;
-  fd_set         rfds;
+  if (scan_interval_sec % 2) timeout.tv_usec += 500000;
+  fd_set rfds;
 
   do {
     FD_ZERO(&rfds);

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/03/18 16:50:17  dpg1
+  New threadPoolWatchConnection parameter.
+
   Revision 1.1.2.2  2001/08/21 11:02:12  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -360,6 +363,15 @@ _CORBA_MODULE_VAR _core_attr CORBA::ULong   maxServerThreadPoolSize;
 //   per connection when the threadPerConnectionPolicy is in effect
 //
 //   Valid values = (n >= 1) 
+
+_CORBA_MODULE_VAR _core_attr CORBA::Boolean threadPoolWatchConnection;
+//   1 means that after dispatching an upcall in thread pool mode, the
+//   thread should watch the connection for a short time before
+//   returning to the pool. This leads to less thread switching for
+//   series of calls from a single client, but is less fair if there
+//   are concurrent clients.
+//
+//  Valid values = 0 or 1
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean acceptBiDirectionalGIOP;
 //   Applies to the server side. Set to 1 to indicates that the
