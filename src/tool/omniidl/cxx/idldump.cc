@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.8  1999/11/17 18:07:23  dpg1
+// Tiny change to enum printing.
+//
 // Revision 1.7  1999/11/17 18:05:16  dpg1
 // Tiny change to enum printing.
 //
@@ -377,7 +380,7 @@ visitEnum(Enum* e)
   ++indent_;
   for (Enumerator* n = e->enumerators(); n; n = (Enumerator*)n->next()) {
     printIndent();
-    printf("%s,\n", n->identifier());
+    printf("%s%s\n", n->identifier(), n->next() ? "," : "");
   }
   --indent_;
   printIndent();
