@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2002/10/14 15:09:58  dgrisby
+  Cope with platforms where sizeof(bool) != 1.
+
   Revision 1.1.2.3  2002/03/13 16:05:38  dpg1
   Transport shutdown fixes. Reference count SocketCollections to avoid
   connections using them after they are deleted. Properly close
@@ -379,6 +382,10 @@
 //
 // Default flag values if not already overridden above
 //
+
+#ifndef SIZEOF_BOOL
+#define SIZEOF_BOOL 1
+#endif
 
 #ifndef SIZEOF_LONG
 #define SIZEOF_LONG 4

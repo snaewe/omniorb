@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2002/10/14 15:10:09  dgrisby
+  Cope with platforms where sizeof(bool) != 1.
+
   Revision 1.1.2.7  2001/08/03 17:41:16  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -289,7 +292,12 @@ _CORBA_Sequence_Boolean::operator>>= (cdrStream& s) const
   _CORBA_ULong l = Base_T_seq::length();
   l >>= s;
   if (l==0) return;
+# if (SIZEOF_BOOL == 1)
   s.put_octet_array((_CORBA_Octet*)pd_buf,l);
+# else
+  for ( _CORBA_ULong i = 0; i < l; i++ )
+    s.marshalBoolean(pd_buf[i]);
+# endif
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -305,7 +313,12 @@ _CORBA_Sequence_Boolean::operator<<= (cdrStream& s)
   }
   length(l);
   if (l==0) return;
+# if (SIZEOF_BOOL == 1)
   s.get_octet_array((_CORBA_Octet*)pd_buf,l);
+# else
+  for ( _CORBA_ULong i = 0; i < l; i++ )
+    pd_buf[i] = s.unmarshalBoolean();
+# endif
 }
 
 //////////////////////////////////////////////////////////////////////

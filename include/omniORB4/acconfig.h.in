@@ -183,6 +183,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* The size of a `bool', as computed by sizeof. */
+#undef SIZEOF_BOOL
+
 /* The size of a `char', as computed by sizeof. */
 #undef SIZEOF_CHAR
 
