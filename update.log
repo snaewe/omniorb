@@ -1,3 +1,13 @@
+Tue Nov 24 14:52:49 GMT 1998 sll
+================================
+
+- Added workaround in omnithread to cope with a bug in some versions of
+  glibc 2.0.x. This workaround makes debugging omnithread programs under
+  gdb on linux Redhat 5.2 or later possible.
+
+src/lib/omnithread/posix.cc
+
+
 Fri Nov 20 19:05:29 GMT 1998 sll
 ================================
 
