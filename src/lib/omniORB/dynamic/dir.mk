@@ -14,6 +14,7 @@ ORB2_SRCS = constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
           object.cc objectKey.cc objectRef.cc ropeFactory.cc \
           strand.cc scavenger.cc \
 	  typecode.cc any.cc tcParseEngine.cc \
+          dynAny.cc dynAnyP.cc \
           $(NETLIBSRCS) $(LOG_SRCS)
 
 ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
@@ -23,6 +24,7 @@ ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             object.o objectRef.o objectKey.o ropeFactory.o \
 	    strand.o scavenger.o \
 	    typecode.o any.o tcParseEngine.o \
+            dynAny.o dynAnyP.o \
             $(NETLIBOBJS) $(LOG_OBJS)
 
 LC_SRCS = omniLifeCycle.cc reDirect.cc omniLifeCycleSK.cc
@@ -226,6 +228,7 @@ ifdef Win32Platform
 # to be resolved when the DLL is build. For the moment, just workaround the
 # problem by building the stub directly into the library.
 #
+
 gatekeeper.o: gatekeepers/dummystub/gatekeeper.cc
 	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
 
