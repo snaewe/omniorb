@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.11  1999/06/26 17:55:19  sll
+  Added new exception return type terminateProcessing.
+
   Revision 1.10  1999/06/18 21:14:44  sll
   Updated copyright notice.
 
@@ -373,6 +376,14 @@ public:
   //
   // If an outgoing message exceeds this limit, the CORBA::MARSHAL exception
   // will be raised.
+
+  class terminateProcessing {
+  public:
+    // This exception is thrown when the processing of the current giop
+    // request should terminte.
+    terminateProcessing() {}
+    ~terminateProcessing() {}
+  };
 
 private:
   State pd_state;
