@@ -29,6 +29,12 @@
 
 /*
  $Log$
+ Revision 1.34  1999/05/25 13:37:44  sll
+ Added missing CORBA 2.1 definitions.
+ Added pd_magic field, PR_is_valid() static member functions to pseudo
+ objects so that at runtime static member functions of these objects
+ can check if the argument pointer is valid.
+
  Revision 1.33  1999/04/21 15:23:51  djr
  CORBA::ORB::ObjectIdList corrected to use new string sequence class.
 
@@ -592,8 +598,14 @@ _CORBA_MODULE_BEG
     static Exception* _duplicate(Exception* e);
     static Exception* _NP_is_a(Exception* e, const char* typeId);
 
+    static inline _CORBA_Boolean PR_is_valid(Exception* p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
   protected:
-    Exception() {}
+    Exception() { pd_magic = PR_magic; }
 
   private:
     virtual Exception* _NP_duplicate() const;
@@ -604,11 +616,13 @@ _CORBA_MODULE_BEG
     // Returns a type identifier in the form of a string. The format is
     // internal to omniORB2. This is used to support the _narrow()
     // operation. Must be overriden by all descendants.
+
+    _CORBA_ULong pd_magic;
   };
 
 
   enum CompletionStatus { COMPLETED_YES, COMPLETED_NO, COMPLETED_MAYBE };
-
+  enum exception_type { NO_EXCEPTION, USER_EXCEPTION, SYSTEM_EXCEPTION };
 
   class SystemException : public Exception {
   public:
@@ -728,6 +742,15 @@ _CORBA_MODULE_BEG
     Any* pd_exception;
   };
 
+  class WrongTransaction : public CORBA::UserException {
+  public:
+    virtual ~WrongTransaction() {};
+
+    virtual void _raise();
+    virtual Exception* _NP_duplicate() const;
+    virtual const char* _NP_mostDerivedTypeId() const;
+    static WrongTransaction* _narrow(Exception*);
+  };
 
   //////////////////////////////////////////////////////////////////////
   ///////////////////////////// Environment ////////////////////////////
@@ -740,25 +763,36 @@ _CORBA_MODULE_BEG
   typedef _CORBA_PseudoObj_Out<Environment,Environment_var> Environment_out;
 
   class Environment {
-  protected:
-    Environment() {}
-
   public:
+    Environment();     // Allows Environment instance to be created on
+                       // stack or by x = new Environment().
     virtual ~Environment();
 
-    virtual void exception(Exception*) = 0;
-    virtual Exception* exception() const = 0;
-    virtual void clear() = 0;
+    virtual void exception(Exception*);
+    virtual Exception* exception() const;
+    virtual void clear();
 
-    virtual Boolean NP_is_nil() const = 0;
-    virtual Environment_ptr NP_duplicate() = 0;
+    virtual Boolean NP_is_nil() const;
+    virtual Environment_ptr NP_duplicate();
 
     static Environment_ptr _duplicate(Environment_ptr);
     static Environment_ptr _nil();
 
+    static inline _CORBA_Boolean PR_is_valid(Environment_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
   private:
+    CORBA::Exception* pd_exception;
+    _CORBA_ULong      pd_magic;
+
     Environment(const Environment&);
     Environment& operator=(const Environment&);
+
+  public:
+    CORBA::Boolean pd_is_pseudo;
   };
 
 
@@ -766,7 +800,7 @@ _CORBA_MODULE_BEG
   ///////////////////////////// NamedValue /////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  enum Flags {
+  enum _Flags {
     ARG_IN              = 0x1,
     ARG_OUT             = 0x2,
     ARG_INOUT           = 0x4,
@@ -774,6 +808,8 @@ _CORBA_MODULE_BEG
     OUT_LIST_MEMORY     = 0x10,
     IN_COPY_VALUE       = 0x20
   };
+
+  typedef ULong Flags;
 
   class NamedValue;
   typedef NamedValue* NamedValue_ptr;
@@ -799,10 +835,18 @@ _CORBA_MODULE_BEG
     static NamedValue_ptr _duplicate(NamedValue_ptr);
     static NamedValue_ptr _nil();
 
+    static inline _CORBA_Boolean PR_is_valid(NamedValue_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
   protected:
-    NamedValue() {}
+    NamedValue() { pd_magic = PR_magic; }
 
   private:
+    _CORBA_ULong pd_magic;
+
     NamedValue(const NamedValue&);
     NamedValue& operator=(const NamedValue&);
   };
@@ -837,10 +881,30 @@ _CORBA_MODULE_BEG
     static NVList_ptr _duplicate(NVList_ptr);
     static NVList_ptr _nil();
 
+    // OMG Interface:
+
+    class Bounds : public UserException {
+    public:
+      virtual ~Bounds();
+      virtual void _raise();
+      static Bounds* _narrow(Exception* e);
+    private:
+      virtual Exception* _NP_duplicate() const;
+      virtual const char* _NP_mostDerivedTypeId() const;
+    };
+
+    static inline _CORBA_Boolean PR_is_valid(NVList_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
   protected:
-    NVList() {}
+    NVList() { pd_magic = PR_magic; }
 
   private:
+    _CORBA_ULong pd_magic;
+
     NVList(const NVList& nvl);
     NVList& operator=(const NVList&);
   };
@@ -889,10 +953,18 @@ _CORBA_MODULE_BEG
     static Context_ptr unmarshalContext(NetBufferedStream& s);
     static Context_ptr unmarshalContext(MemBufferedStream& s);
 
+    static inline _CORBA_Boolean PR_is_valid(Context_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
   protected:
-    Context() {}
+    Context() { pd_magic = PR_magic; }
 
   private:
+    _CORBA_ULong pd_magic;
+
     Context(const Context&);
     Context& operator=(const Context&);
   };
@@ -928,10 +1000,30 @@ _CORBA_MODULE_BEG
     static ContextList_ptr _duplicate(ContextList_ptr);
     static ContextList_ptr _nil();
 
+    // OMG Interface:
+
+    class Bounds : public UserException {
+    public:
+      virtual ~Bounds();
+      virtual void _raise();
+      static Bounds* _narrow(Exception* e);
+    private:
+      virtual Exception* _NP_duplicate() const;
+      virtual const char* _NP_mostDerivedTypeId() const;
+    };
+
+    static inline _CORBA_Boolean PR_is_valid(ContextList_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
   protected:
-    ContextList() {}
+    ContextList() { pd_magic = PR_magic; }
 
   private:
+    _CORBA_ULong pd_magic;
+
     ContextList(const ContextList&);
     ContextList& operator=(const ContextList&);
   };
@@ -947,7 +1039,20 @@ _CORBA_MODULE_BEG
   //typedef _CORBA_PseudoObj_Var<Principal> Principal_var;
   //typedef _CORBA_PseudoObj_Out<Principal,Principal_var> Principal_out;
 
-  typedef _CORBA_Unbounded_Sequence_Octet PrincipalID;
+  class PrincipalID : public _CORBA_Unbounded_Sequence__Octet {
+  public:
+    inline PrincipalID() {}
+    inline PrincipalID(const PrincipalID& seq)
+      : _CORBA_Unbounded_Sequence__Octet(seq) {}
+    inline PrincipalID(CORBA::ULong max)
+      : _CORBA_Unbounded_Sequence__Octet(max) {}
+    inline PrincipalID(CORBA::ULong max, CORBA::ULong len, CORBA::Octet* val, CORBA::Boolean rel=0)
+      : _CORBA_Unbounded_Sequence__Octet(max, len, val, rel) {}
+    inline PrincipalID& operator = (const PrincipalID& seq) {
+      _CORBA_Unbounded_Sequence__Octet::operator=(seq);
+      return *this;
+    };
+  };
 
   class Principal {
   public:
@@ -988,10 +1093,30 @@ _CORBA_MODULE_BEG
     static ExceptionList_ptr _duplicate(ExceptionList_ptr);
     static ExceptionList_ptr _nil();
 
+    // OMG Interface:
+
+    class Bounds : public UserException {
+    public:
+      virtual ~Bounds();
+      virtual void _raise();
+      static Bounds* _narrow(Exception* e);
+    private:
+      virtual Exception* _NP_duplicate() const;
+      virtual const char* _NP_mostDerivedTypeId() const;
+    };
+
+    static inline _CORBA_Boolean PR_is_valid(ExceptionList_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
   protected:
-    ExceptionList() {}
+    ExceptionList() { pd_magic = PR_magic; }
 
   private:
+    _CORBA_ULong pd_magic;
+
     ExceptionList(const ExceptionList& el);
     ExceptionList& operator=(const ExceptionList&);
   };
@@ -1086,7 +1211,95 @@ _CORBA_MODULE_BEG
     IDLType_member type_def;
   };
   typedef _CORBA_ConstrType_Variable_Var<StructMember> StructMember_var;
-  typedef _CORBA_Pseudo_Unbounded_Sequence<StructMember> StructMemberSeq;
+
+  class StructMemberSeq : public _CORBA_Unbounded_Sequence<StructMember > {
+  public:
+    inline StructMemberSeq() {}
+    inline StructMemberSeq(const StructMemberSeq& seq)
+      : _CORBA_Unbounded_Sequence<StructMember >(seq) {}
+    inline StructMemberSeq(CORBA::ULong max)
+      : _CORBA_Unbounded_Sequence<StructMember >(max) {}
+    inline StructMemberSeq(CORBA::ULong max, CORBA::ULong len, StructMember* val, CORBA::Boolean rel=0)
+      : _CORBA_Unbounded_Sequence<StructMember >(max, len, val, rel) {}
+    inline StructMemberSeq& operator = (const StructMemberSeq& seq) {
+      _CORBA_Unbounded_Sequence<StructMember >::operator=(seq);
+      return *this;
+    };
+  };
+
+  class StructMemberSeq_out;
+
+  class StructMemberSeq_var {
+  public:
+    typedef StructMemberSeq _T;
+    typedef StructMemberSeq_var _T_var;
+
+    inline StructMemberSeq_var() : pd_seq(0) {}
+    inline StructMemberSeq_var(_T* s) : pd_seq(s) {}
+    inline StructMemberSeq_var(const _T_var& sv) {
+      if( sv.pd_seq ) {
+	pd_seq = new _T;
+	*pd_seq = *sv.pd_seq;
+      } else
+	pd_seq = 0;
+    }
+    inline ~StructMemberSeq_var() {
+      if( pd_seq )  delete pd_seq;
+    }
+
+    inline _T_var& operator = (_T* s) {
+      if( pd_seq )  delete pd_seq;
+      pd_seq = s;
+      return *this;
+    }
+    inline _T_var& operator = (const _T_var& sv) {
+      if( sv.pd_seq ) {
+	if( !pd_seq )  pd_seq = new _T;
+	*pd_seq = *sv.pd_seq;
+      } else if( pd_seq ) {
+	delete pd_seq;
+	pd_seq = 0;
+      }
+      return *this;
+    }
+
+    inline StructMember& operator [] (_CORBA_ULong i) {
+      return (*pd_seq)[i];
+    }
+    inline _T* operator -> () { return pd_seq; }
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+    inline operator _T& () const { return *pd_seq; }
+#else
+    inline operator const _T& () const { return *pd_seq; }
+    inline operator _T& () { return *pd_seq; }
+#endif
+
+    inline const _T& in() const { return *pd_seq; }
+    inline _T& inout() { return *pd_seq; }
+    inline _T*& out() { return pd_seq; }
+    inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
+
+    friend class StructMemberSeq_out;
+
+  private:
+    _T* pd_seq;
+  };
+
+  class StructMemberSeq_out {
+  public:
+    typedef StructMemberSeq _T;
+    typedef StructMemberSeq_var _T_var;
+
+    inline StructMemberSeq_out(_T*& s) : _data(s) {}
+    inline StructMemberSeq_out(_T_var& sv)
+      : _data(sv.pd_seq) { sv = (_T*) 0; }
+
+    _T*& _data;
+
+  private:
+    StructMemberSeq_out();
+  };
+
 
   struct UnionMember {
     String_member name;
@@ -1095,9 +1308,183 @@ _CORBA_MODULE_BEG
     IDLType_member type_def;
   };
   typedef _CORBA_ConstrType_Variable_Var<UnionMember> UnionMember_var;
-  typedef _CORBA_Pseudo_Unbounded_Sequence<UnionMember> UnionMemberSeq;
 
-  typedef _CORBA_Unbounded_Sequence__String EnumMemberSeq;
+  class UnionMemberSeq : public _CORBA_Unbounded_Sequence<UnionMember > {
+  public:
+    inline UnionMemberSeq() {}
+    inline UnionMemberSeq(const UnionMemberSeq& seq)
+      : _CORBA_Unbounded_Sequence<UnionMember >(seq) {}
+    inline UnionMemberSeq(CORBA::ULong max)
+      : _CORBA_Unbounded_Sequence<UnionMember >(max) {}
+    inline UnionMemberSeq(CORBA::ULong max, CORBA::ULong len, UnionMember* val, CORBA::Boolean rel=0)
+      : _CORBA_Unbounded_Sequence<UnionMember >(max, len, val, rel) {}
+    inline UnionMemberSeq& operator = (const UnionMemberSeq& seq) {
+      _CORBA_Unbounded_Sequence<UnionMember >::operator=(seq);
+      return *this;
+    };
+  };
+
+  class UnionMemberSeq_out;
+
+  class UnionMemberSeq_var {
+  public:
+    typedef UnionMemberSeq _T;
+    typedef UnionMemberSeq_var _T_var;
+
+    inline UnionMemberSeq_var() : pd_seq(0) {}
+    inline UnionMemberSeq_var(_T* s) : pd_seq(s) {}
+    inline UnionMemberSeq_var(const _T_var& sv) {
+      if( sv.pd_seq ) {
+	pd_seq = new _T;
+	*pd_seq = *sv.pd_seq;
+      } else
+	pd_seq = 0;
+    }
+    inline ~UnionMemberSeq_var() {
+      if( pd_seq )  delete pd_seq;
+    }
+
+    inline _T_var& operator = (_T* s) {
+      if( pd_seq )  delete pd_seq;
+      pd_seq = s;
+      return *this;
+    }
+    inline _T_var& operator = (const _T_var& sv) {
+      if( sv.pd_seq ) {
+	if( !pd_seq )  pd_seq = new _T;
+	*pd_seq = *sv.pd_seq;
+      } else if( pd_seq ) {
+	delete pd_seq;
+	pd_seq = 0;
+      }
+      return *this;
+    }
+
+    inline UnionMember& operator [] (_CORBA_ULong i) {
+      return (*pd_seq)[i];
+    }
+    inline _T* operator -> () { return pd_seq; }
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+    inline operator _T& () const { return *pd_seq; }
+#else
+    inline operator const _T& () const { return *pd_seq; }
+    inline operator _T& () { return *pd_seq; }
+#endif
+
+    inline const _T& in() const { return *pd_seq; }
+    inline _T& inout() { return *pd_seq; }
+    inline _T*& out() { return pd_seq; }
+    inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
+
+    friend class UnionMemberSeq_out;
+
+  private:
+    _T* pd_seq;
+  };
+
+  class UnionMemberSeq_out {
+  public:
+    typedef UnionMemberSeq _T;
+    typedef UnionMemberSeq_var _T_var;
+
+    inline UnionMemberSeq_out(_T*& s) : _data(s) {}
+    inline UnionMemberSeq_out(_T_var& sv)
+      : _data(sv.pd_seq) { sv = (_T*) 0; }
+
+    _T*& _data;
+
+  private:
+    UnionMemberSeq_out();
+  };
+
+  class EnumMemberSeq : public _CORBA_Unbounded_Sequence__String {
+  public:
+    inline EnumMemberSeq() {}
+    inline EnumMemberSeq(const EnumMemberSeq& seq)
+      : _CORBA_Unbounded_Sequence__String(seq) {}
+    inline EnumMemberSeq(CORBA::ULong max)
+      : _CORBA_Unbounded_Sequence__String(max) {}
+    inline EnumMemberSeq(CORBA::ULong max, CORBA::ULong len, char** val, CORBA::Boolean rel=0)
+      : _CORBA_Unbounded_Sequence__String(max, len, val, rel) {}
+    inline EnumMemberSeq& operator = (const EnumMemberSeq& seq) {
+      _CORBA_Unbounded_Sequence__String::operator=(seq);
+      return *this;
+    };
+  };
+
+  class EnumMemberSeq_out;
+
+  class EnumMemberSeq_var {
+  public:
+    typedef EnumMemberSeq _T;
+    typedef EnumMemberSeq_var _T_var;
+
+    inline EnumMemberSeq_var() : pd_seq(0) {}
+    inline EnumMemberSeq_var(_T* s) : pd_seq(s) {}
+    inline EnumMemberSeq_var(const _T_var& sv) {
+      if( sv.pd_seq ) {
+	pd_seq = new _T;
+	*pd_seq = *sv.pd_seq;
+      } else
+	pd_seq = 0;
+    }
+    inline ~EnumMemberSeq_var() {
+      if( pd_seq )  delete pd_seq;
+    }
+
+    inline _T_var& operator = (_T* s) {
+      if( pd_seq )  delete pd_seq;
+      pd_seq = s;
+      return *this;
+    }
+    inline _T_var& operator = (const _T_var& sv) {
+      if( sv.pd_seq ) {
+	if( !pd_seq )  pd_seq = new _T;
+	*pd_seq = *sv.pd_seq;
+      } else if( pd_seq ) {
+	delete pd_seq;
+	pd_seq = 0;
+      }
+      return *this;
+    }
+
+    inline _CORBA_String_member& operator [] (_CORBA_ULong i) {
+      return (*pd_seq)[i];
+    }
+    inline _T* operator -> () { return pd_seq; }
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+    inline operator _T& () const { return *pd_seq; }
+#else
+    inline operator const _T& () const { return *pd_seq; }
+    inline operator _T& () { return *pd_seq; }
+#endif
+
+    inline const _T& in() const { return *pd_seq; }
+    inline _T& inout() { return *pd_seq; }
+    inline _T*& out() { return pd_seq; }
+    inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
+
+    friend class EnumMemberSeq_out;
+
+  private:
+    _T* pd_seq;
+  };
+
+  class EnumMemberSeq_out {
+  public:
+    typedef EnumMemberSeq _T;
+    typedef EnumMemberSeq_var _T_var;
+
+    inline EnumMemberSeq_out(_T*& s) : _data(s) {}
+    inline EnumMemberSeq_out(_T_var& sv)
+      : _data(sv.pd_seq) { sv = (_T*) 0; }
+
+    _T*& _data;
+
+  private:
+    EnumMemberSeq_out();
+  };
+
 
   class ImplementationDef {};
   typedef ImplementationDef* ImplementationDef_ptr;
@@ -1185,8 +1572,15 @@ _CORBA_MODULE_BEG
     static Object CORBA_Object_nil;
     static const _CORBA_Char* repositoryID;
 
+    static inline _CORBA_Boolean PR_is_valid(Object_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const CORBA::ULong PR_magic;
+
   private:
-    omniObject* pd_obj;
+    omniObject*  pd_obj;
+    _CORBA_ULong pd_magic;
   };
 
 
@@ -1241,7 +1635,7 @@ _CORBA_MODULE_BEG
 
     TCKind kind() const;
 
-    Boolean equal(TypeCode_ptr TCp, Boolean langEquiv=1) const;
+    Boolean equal(TypeCode_ptr TCp, Boolean langEquiv=0) const;
     // omniORB extension - langEquiv indicates whether typecodes should
     // be tested for being equivalent(1) or for being identical(0)
     // Equivalence allows for expansion of tk_alias typecodes prior to
@@ -1370,11 +1764,18 @@ _CORBA_MODULE_BEG
     size_t NP_alignedSize(size_t initialoffset) const;
     virtual CORBA::Boolean NP_is_nil() const;
 
+    static inline _CORBA_Boolean PR_is_valid(TypeCode_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+    static const CORBA::ULong PR_magic;
+
   protected:
     // These operators are placed here to avoid them being used externally
     TypeCode(const TypeCode& tc);
     TypeCode& operator=(const TypeCode& tc);
-    TypeCode() {};
+    TypeCode() { pd_magic = PR_magic; };
+
+    _CORBA_ULong pd_magic;
   };
 
 
@@ -1398,7 +1799,7 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_VAR TypeCode_ptr _tc_Principal;
   _CORBA_MODULE_VAR TypeCode_ptr _tc_Object;
   _CORBA_MODULE_VAR TypeCode_ptr _tc_string;
-
+  _CORBA_MODULE_VAR TypeCode_ptr _tc_NamedValue;
 
   //////////////////////////////////////////////////////////////////////
   ////////////////////////// DynAny Interface //////////////////////////
@@ -1529,10 +1930,17 @@ _CORBA_MODULE_BEG
     virtual int NP_nodetype() const = 0;
     virtual void* NP_narrow() = 0;
 
+    static inline _CORBA_Boolean PR_is_valid(DynAny_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
   protected:
-    DynAny() {}
+    DynAny();
 
   private:
+    _CORBA_ULong pd_magic;
+
     DynAny(const DynAny&);
     DynAny& operator=(const DynAny&);
   };
@@ -1599,7 +2007,7 @@ _CORBA_MODULE_BEG
   };
 
   typedef _CORBA_ConstrType_Variable_Var<NameValuePair> NameValuePair_var;
-  typedef _CORBA_Pseudo_Unbounded_Sequence<NameValuePair> NameValuePairSeq;
+  typedef _CORBA_PseudoValue_Sequence<NameValuePair> NameValuePairSeq;
 
   class DynStruct :  public virtual DynAny {
   public:
@@ -1656,7 +2064,7 @@ _CORBA_MODULE_BEG
   ///////////////////////////// DynSequence ////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  typedef _CORBA_Pseudo_Unbounded_Sequence<Any> AnySeq;
+  typedef _CORBA_PseudoValue_Sequence<Any> AnySeq;
 
   class DynSequence :  public virtual DynAny {
   public:
@@ -1719,7 +2127,7 @@ _CORBA_MODULE_BEG
     virtual Environment_ptr   env() = 0;
     virtual ExceptionList_ptr exceptions() = 0;
     virtual ContextList_ptr   contexts() = 0;
-    virtual Context_ptr       ctxt() const = 0;
+    virtual Context_ptr       ctx() const = 0;
     virtual void              ctx(Context_ptr) = 0;
 
     virtual Any& add_in_arg() = 0;
@@ -1744,10 +2152,18 @@ _CORBA_MODULE_BEG
     static Request_ptr _duplicate(Request_ptr);
     static Request_ptr _nil();
 
+    static inline _CORBA_Boolean PR_is_valid(Request_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
   protected:
-    Request() {}
+    Request() { pd_magic = PR_magic; }
 
   private:
+    _CORBA_ULong pd_magic;
+
     Request(const Request&);
     Request& operator=(const Request&);
   };
@@ -1790,7 +2206,21 @@ _CORBA_MODULE_BEG
   typedef class BOA* BOA_ptr;
   typedef BOA_ptr BOARef;
 
-  typedef _CORBA_Unbounded_Sequence_Octet ReferenceData;
+  class ReferenceData : public _CORBA_Unbounded_Sequence__Octet {
+  public:
+    inline ReferenceData() {}
+    inline ReferenceData(const ReferenceData& seq)
+      : _CORBA_Unbounded_Sequence__Octet(seq) {}
+    inline ReferenceData(CORBA::ULong max)
+      : _CORBA_Unbounded_Sequence__Octet(max) {}
+    inline ReferenceData(CORBA::ULong max, CORBA::ULong len, CORBA::Octet* val, CORBA::Boolean rel=0)
+      : _CORBA_Unbounded_Sequence__Octet(max, len, val, rel) {}
+    inline ReferenceData& operator = (const ReferenceData& seq) {
+      _CORBA_Unbounded_Sequence__Octet::operator=(seq);
+      return *this;
+    };
+  };
+
 
   class BOA {
   public:
@@ -1851,6 +2281,12 @@ _CORBA_MODULE_BEG
     // omniORB2 specific. Must be called after BOA_init is called.
     // Otherwise a CORBA::OBJ_ADAPTOR exception is raised.
 
+    static inline _CORBA_Boolean PR_is_valid(BOA_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+
+    static const _CORBA_ULong PR_magic;
+
     BOA();
     ~BOA();
 
@@ -1891,7 +2327,122 @@ _CORBA_MODULE_BEG
     // <delete> on it when it is destroyed. To receive operation
     // invocations the object must first be registered with the BOA by
     // calling obj_is_ready().
+  private:
+      _CORBA_ULong pd_magic;
+
   };
+
+  //////////////////////////////////////////////////////////////////////
+  ///////////////////////////// Service ////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  typedef UShort ServiceType;
+  typedef ULong  ServiceOption;
+  typedef ULong  ServiceDetailType;
+
+  _CORBA_MODULE_VARINT const ServiceType Security _init_in_decl_( = 1);
+
+  struct ServiceDetail {
+    ServiceDetailType service_detail_type;
+    _CORBA_Unbounded_Sequence_Octet service_detail;
+  };
+
+  struct ServiceInformation {
+    _CORBA_Unbounded_Sequence<ServiceOption> service_options;
+    _CORBA_Unbounded_Sequence<ServiceDetail> service_details;
+  };
+
+  //////////////////////////////////////////////////////////////////////
+  ///////////////////////////// Current ////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  class Current;
+  typedef class Current* Current_ptr;
+  typedef Current_ptr CurrentRef;
+
+  class Current {
+  public:
+    static Current_ptr _duplicate(Current_ptr p);
+    static Current_ptr _nil();
+  private:
+    Current();
+  };
+  _CORBA_MODULE_FN Boolean is_nil(Current_ptr p);
+  _CORBA_MODULE_FN void release(Current_ptr);
+
+  typedef _CORBA_PseudoObj_Var<Current> Current_var;
+
+  //////////////////////////////////////////////////////////////////////
+  ///////////////////////////// Policy  ////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  typedef ULong PolicyType;
+
+  class Policy;
+  typedef class Policy* Policy_ptr;
+  typedef Policy_ptr PolicyRef;
+
+  class Policy {
+  public:
+    PolicyType policy_type();
+    Policy_ptr copy();
+    void       destroy();
+
+    static Policy_ptr _duplicate(Policy_ptr p);
+    static Policy_ptr _nil();
+  private:
+    Policy();
+  };
+  _CORBA_MODULE_FN Boolean is_nil(Policy_ptr p);
+  _CORBA_MODULE_FN void release(Policy_ptr);
+
+  typedef _CORBA_PseudoObj_Var<Policy> Policy_var;
+  typedef _CORBA_PseudoObj_Member<Policy,Policy_var> Policy_member;
+
+  typedef _CORBA_Pseudo_Unbounded_Sequence<Policy,Policy_member> PolicyList;
+
+  _CORBA_MODULE_VARINT const PolicyType SecConstruction _init_in_decl_( = 11);
+
+  class ConstructionPolicy;
+  typedef class ConstructionPolicy* ConstructionPolicy_ptr;
+  typedef ConstructionPolicy_ptr ConstructionPolicyRef;
+
+  class ConstructionPolicy : public Policy {
+  public:
+    void make_domain_manager(InterfaceDef_ptr object_type,
+			     Boolean constr_policy);
+
+    static ConstructionPolicy_ptr _duplicate(ConstructionPolicy_ptr p);
+    static ConstructionPolicy_ptr _nil();
+  private:
+    ConstructionPolicy();
+  };
+  _CORBA_MODULE_FN Boolean is_nil(ConstructionPolicy_ptr p);
+  _CORBA_MODULE_FN void release(ConstructionPolicy_ptr);
+
+  typedef _CORBA_PseudoObj_Var<ConstructionPolicy> ConstructionPolicy_var;
+
+  //////////////////////////////////////////////////////////////////////
+  ///////////////////////////// Domain Manager  ////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  class DomainManager;
+  typedef class DomainManager* DomainManager_ptr;
+  typedef DomainManager_ptr DomainManagerRef;
+
+  class DomainManager {
+  public:
+    Policy_ptr get_domain_policy(PolicyType policy_type);
+
+    static DomainManager_ptr _duplicate(DomainManager_ptr p);
+    static DomainManager_ptr _nil();
+  private:
+    DomainManager();
+  };
+  _CORBA_MODULE_FN Boolean is_nil(DomainManager_ptr p);
+  _CORBA_MODULE_FN void release(DomainManager_ptr);
+
+  typedef _CORBA_PseudoObj_Var<DomainManager> DomainManager_var;
+  typedef _CORBA_PseudoObj_Member<DomainManager,DomainManager_var> DomainManager_member;
+
+  typedef _CORBA_Pseudo_Unbounded_Sequence<DomainManager,DomainManager_member> DomainManagerList;
+
 
   //////////////////////////////////////////////////////////////////////
   ///////////////////////////////// ORB ////////////////////////////////
@@ -1908,7 +2459,7 @@ _CORBA_MODULE_BEG
     Object_ptr string_to_object(const char*);
     char* object_to_string(DynAny_ptr);
 
-    typedef _CORBA_Pseudo_Unbounded_Sequence<Request_member> RequestSeq;
+    typedef _CORBA_Pseudo_Unbounded_Sequence<Request,Request_member> RequestSeq;
 
     Status create_list(Long, NVList_out);
     Status create_operation_list(OperationDef_ptr, NVList_out);
@@ -1936,77 +2487,92 @@ _CORBA_MODULE_BEG
     typedef char* ObjectId;
     typedef String_var ObjectId_var;
 
-    typedef _CORBA_Unbounded_Sequence__String ObjectIdList;
+    class ObjectIdList : public _CORBA_Unbounded_Sequence__String {
+    public:
+      inline ObjectIdList() {}
+      inline ObjectIdList(const ObjectIdList& seq)
+	: _CORBA_Unbounded_Sequence__String(seq) {}
+      inline ObjectIdList(CORBA::ULong max)
+	: _CORBA_Unbounded_Sequence__String(max) {}
+      inline ObjectIdList(CORBA::ULong max, CORBA::ULong len, char** val, CORBA::Boolean rel=0)
+	: _CORBA_Unbounded_Sequence__String(max, len, val, rel) {}
+      inline ObjectIdList& operator = (const ObjectIdList& seq) {
+	_CORBA_Unbounded_Sequence__String::operator=(seq);
+	return *this;
+      };
+    };
 
-    class ObjectIdList_OUT_arg;
+    class ObjectIdList_out;
 
     class ObjectIdList_var {
     public:
-      typedef ObjectIdList* ptr_t;
-      inline ObjectIdList_var() { pd_data = 0; }
-      inline ObjectIdList_var(ObjectIdList* p) { pd_data = p; }
-      inline ObjectIdList_var(const ObjectIdList_var& p) {
-	if (!p.pd_data) {
-	  pd_data = 0;
-	  return;
-	}
-	else {
-	  pd_data = new ObjectIdList;
-	  if (!pd_data) {
-	    _CORBA_new_operator_return_null();
-	    // never reach here
-	  }
-	  *pd_data = *p.pd_data;
-	}
-      }
-      inline ~ObjectIdList_var() {  if (pd_data) delete pd_data; }
-      inline ObjectIdList_var& operator= (ObjectIdList* p) {
-	if (pd_data) delete pd_data;
-	pd_data = p;
-	return *this;
-      }
-      inline ObjectIdList_var& operator= (const ObjectIdList_var& p) {
-	if (p.pd_data) {
-	  if (!pd_data) {
-	    pd_data = new ObjectIdList;
-	    if (!pd_data) {
-	      _CORBA_new_operator_return_null();
-	      // never reach here
-	    }
-	  }
-	  *pd_data = *p.pd_data;
-	}
-	else {
-	  if (pd_data) delete pd_data;
-	  pd_data = 0;
-	}
-	return *this;
-      }
-      inline ObjectIdList* operator->() const { return pd_data; }
+      typedef ObjectIdList _T;
+      typedef ObjectIdList_var _T_var;
 
+      inline ObjectIdList_var() : pd_seq(0) {}
+      inline ObjectIdList_var(_T* s) : pd_seq(s) {}
+      inline ObjectIdList_var(const _T_var& sv) {
+	if( sv.pd_seq ) {
+	  pd_seq = new _T;
+	  *pd_seq = *sv.pd_seq;
+	} else
+	  pd_seq = 0;
+      }
+      inline ~ObjectIdList_var() {
+	if( pd_seq )  delete pd_seq;
+      }
+
+      inline _T_var& operator = (_T* s) {
+	if( pd_seq )  delete pd_seq;
+	pd_seq = s;
+	return *this;
+      }
+      inline _T_var& operator = (const _T_var& sv) {
+	if( sv.pd_seq ) {
+	  if( !pd_seq )  pd_seq = new _T;
+	  *pd_seq = *sv.pd_seq;
+	} else if( pd_seq ) {
+	  delete pd_seq;
+	  pd_seq = 0;
+	}
+	return *this;
+      }
+
+      inline _CORBA_String_member& operator [] (_CORBA_ULong i) {
+	return (*pd_seq)[i];
+      }
+      inline _T* operator -> () { return pd_seq; }
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-      inline operator ObjectIdList& () const { return *pd_data; }
+      inline operator _T& () const { return *pd_seq; }
 #else
-      inline operator const ObjectIdList& () const { return *pd_data; }
-      inline operator ObjectIdList& () { return *pd_data; }
+      inline operator const _T& () const { return *pd_seq; }
+      inline operator _T& () { return *pd_seq; }
 #endif
 
-      friend class ObjectIdList_OUT_arg;
-
+      inline const _T& in() const { return *pd_seq; }
+      inline _T& inout() { return *pd_seq; }
+      inline _T*& out() { return pd_seq; }
+      inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
+      
+      friend class ObjectIdList_out;
+      
     private:
-      ObjectIdList* pd_data;
+      _T* pd_seq;
     };
 
-    // omniORB2 private class
-    class ObjectIdList_OUT_arg {
+    class ObjectIdList_out {
     public:
-      inline ObjectIdList_OUT_arg(ObjectIdList*& p) : _data(p) {}
-      inline ObjectIdList_OUT_arg(ObjectIdList_var& p) : _data(p.pd_data) {
-	p = (ObjectIdList*)0;
-      }
-      ObjectIdList*& _data;
+      typedef ObjectIdList _T;
+      typedef ObjectIdList_var _T_var;
+
+      inline ObjectIdList_out(_T*& s) : _data(s) {}
+      inline ObjectIdList_out(_T_var& sv)
+	: _data(sv.pd_seq) { sv = (_T*) 0; }
+
+      _T*& _data;
+
     private:
-      ObjectIdList_OUT_arg();
+      ObjectIdList_out();
     };
 
     class InvalidName : public UserException {
@@ -2076,11 +2642,21 @@ _CORBA_MODULE_BEG
     DynFixed_ptr create_dyn_fixed(TypeCode_ptr tc);
 #endif
 
+    Boolean get_service_information(ServiceType service_type,
+				    ServiceInformation*& service_information);
+
     static ORB_ptr _duplicate(ORB_ptr p);
     static ORB_ptr _nil();
 
+    static inline _CORBA_Boolean PR_is_valid(ORB_ptr p ) {
+      return ((p) ? (p->pd_magic == PR_magic) : 1);
+    }
+    static const CORBA::ULong PR_magic;
+
     ORB();
     ~ORB();
+  private:
+    _CORBA_ULong pd_magic;
   };
 
   typedef char *ORBid;
@@ -2092,16 +2668,24 @@ _CORBA_MODULE_BEG
   //////////////////////////////////////////////////////////////////////
 
   _CORBA_MODULE_FN inline Boolean is_nil(Environment_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("Environment");
+    if (!Environment::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("Environment"));
   }
   _CORBA_MODULE_FN inline Boolean is_nil(Context_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("Context");
+    if (!Context::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("Context"));
   }
   _CORBA_MODULE_FN Boolean is_nil(Principal_ptr);
   _CORBA_MODULE_FN inline Boolean is_nil(Object_ptr o) {
-    if (o)
+    if (!Object::PR_is_valid(o)) 
+      return 0;
+    else if (o)
       return o->NP_is_nil();
     else {
       // omniORB2 does not use a nil pointer to represent a nil object
@@ -2116,32 +2700,53 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN Boolean is_nil(BOA_ptr p);
   _CORBA_MODULE_FN Boolean is_nil(ORB_ptr p);
   _CORBA_MODULE_FN inline Boolean is_nil(NamedValue_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("NamedValue");
+    if (!NamedValue::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("NamedValue"));
   }
   _CORBA_MODULE_FN inline Boolean is_nil(NVList_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("NVList");
+    if (!NVList::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("NVList"));
   }
   _CORBA_MODULE_FN inline Boolean is_nil(Request_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("Request");
+    if (!Request::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("Request"));
   }
   _CORBA_MODULE_FN inline Boolean is_nil(ExceptionList_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("ExceptionList");
+    if (!ExceptionList::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("ExceptionList"));
   }
   _CORBA_MODULE_FN inline Boolean is_nil(ContextList_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("ContextList");
+    if (!ContextList::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("ContextList"));
   }
   _CORBA_MODULE_FN inline Boolean is_nil(TypeCode_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("TypeCode");
+    if (!TypeCode::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("TypeCode"));
   }
   _CORBA_MODULE_FN inline Boolean is_nil(DynAny_ptr p) {
-    return p ? p->NP_is_nil() :
-      _CORBA_use_nil_ptr_as_nil_pseudo_objref("DynAny");
+    if (!DynAny::PR_is_valid(p)) 
+      return 0;
+    else
+      return (p ? p->NP_is_nil() :
+	      _CORBA_use_nil_ptr_as_nil_pseudo_objref("DynAny"));
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -2153,7 +2758,7 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN void release(Principal_ptr);
   _CORBA_MODULE_FN inline void release(Object_ptr o) {
     // see also omni::objectRelease()
-    if (!CORBA::is_nil(o))
+    if (CORBA::Object::PR_is_valid(o) && !CORBA::is_nil(o))
       o->NP_release();
     return;
   }
