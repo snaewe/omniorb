@@ -1,5 +1,5 @@
 ifndef ATMosArchitecture 
-SUBDIRS = genior catior nameclt
+SUBDIRS = genior catior convertior nameclt
 endif
 
 all::
