@@ -1,3 +1,55 @@
+Fri Jul 13 16:03:52 BST 2001 sll
+================================
+
+- Support for the thread-pool as well as the thread-per-connection policy
+- Support for serving multiple incoming calls on the same connection
+  simultaneously.
+- Previously, a deeply nested call between a non-omniORB client and a
+  omniORB server will result in a deadlock if the client multiplex all
+  the calls on one connection. This problem is now fixed.
+
+- New ORB initialisation parameters to control the threading policies
+
+      -ORBoneCallPerConnection <0|1>
+      -ORBthreadPerConnectionPolicy <0|1>
+      -ORBmaxServerThreadPerConnection <n threads>
+      -ORBmaxInterleavedCallsPerConnection <n requests>
+      -ORBmaxServerThreadPoolSize <n threads>
+      -ORBthreadPerConnectionLowerLimit <n connections>
+      -ORBthreadPerConnectionUpperLimit <n connections>
+
+include/omniORB4/giopEndpoint.h
+include/omniORB4/omniORB.h
+src/lib/omniORB/include/GIOP_S.h
+src/lib/omniORB/include/giopRendezvouser.h
+src/lib/omniORB/include/giopServer.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/include/giopWorker.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopRendezvouser.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopWorker.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.h
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.h
+
+
 Tue Jul  3 12:58:19 BST 2001 dpg1
 =================================
 
