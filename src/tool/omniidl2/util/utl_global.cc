@@ -251,6 +251,18 @@ IDL_GlobalData::set_stripped_filename(String *nm)
   pd_stripped_filename = nm;
 }
 
+// Get or set temporary file name
+String *
+IDL_GlobalData::temp_filename()
+{
+  return pd_temp_filename;
+}
+void
+IDL_GlobalData::set_temp_filename(String *nm)
+{
+  pd_temp_filename = nm;
+}
+
 // Get or set cache value for argv[0]
 char *
 IDL_GlobalData::prog_name()
