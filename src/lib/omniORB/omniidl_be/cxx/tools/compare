@@ -5,11 +5,17 @@
 
 die("compare <file1> <file2>") unless ($#ARGV == 1);
     
+my $temp = ".tmp";    
+my $filter = "/home/djs/src/omni/cvs/src/omniidl/python/be/cxx/tools/filter";
 
 my $a = $ARGV[0];
 my $b = $ARGV[1];
 
-@changes = `diff --ignore-all-space --ignore-space-change --ignore-blank-lines $a $b`;
+# Preprocess input files by running an external filter
+system("cat $a | $filter > $a$temp");
+system("cat $b | $filter > $b$temp");
+
+@changes = `diff --ignore-all-space --ignore-space-change --ignore-blank-lines $a$temp $b$temp`;
 
 while (@changes){
     $line = shift @changes;

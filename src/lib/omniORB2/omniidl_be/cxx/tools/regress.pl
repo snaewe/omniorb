@@ -33,7 +33,8 @@ $test_suite = "/home/djs/src/idl-test-suite";
 $tests = [ ["", "", ""],
 #	   ["-tp",  "-Wbtp", "Tie Templates"],
 #           ["-tf",  "-Wbtf", "Flattened tie templates"],
-           ["-a",   "-Wba",  "TypeCode and Any"] ];
+           ["-a",   "-Wba",  "TypeCode and Any"] 
+];
 
 
 # ------------------------------------------------------
@@ -200,7 +201,11 @@ foreach $idl (@sorted_test_idl){
 	chdir("$test_suite");
 	foreach $suffix (".hh", "SK.cc", "DynSK.cc"){
 	    my $failures = getFailList($suffix);
-	    if ((!-e "old/$basename$suffix")or(!-e "new/$basename$suffix")){
+	    if (!-e "old/$basename$suffix"){
+		# the old system didn't do anything, this is ok :)
+		print jright("", 30);
+		next;
+	    }elsif (!-e "new/$basename$suffix"){
 		print jright("[ ".$YELLOW.$suffix.$RESET." ]", 30);
 		
 	    #if (!member($idl, @failures)){

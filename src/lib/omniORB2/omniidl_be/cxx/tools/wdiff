@@ -8,7 +8,9 @@
 use strict;
 
 die("wdiff <file1> <file2>") unless ($#ARGV == 1);
-    
+
+my $temp = ".tmp";    
+my $filter = "/home/djs/src/omni/cvs/src/omniidl/python/be/cxx/tools/filter";
 
 my $a = $ARGV[0];
 my $b = $ARGV[1];
@@ -16,7 +18,11 @@ my $b = $ARGV[1];
 die("File <$a> not found: $!") if (! (-e $a));
 die("File <$b> not found: $!") if (! (-e $b));
 
-my @changes = `diff -u --ignore-all-space $a $b`;
+# Preprocess input files by running an external filter
+system("cat $a | $filter > $a$temp");
+system("cat $b | $filter > $b$temp");
+
+my @changes = `diff -u --ignore-all-space $a$temp $b$temp`;
 
 # first 2 lines are header
 my $header = "";

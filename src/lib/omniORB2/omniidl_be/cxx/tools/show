@@ -1,0 +1,5 @@
+#!/bin/sh
+
+TOOLS=/home/djs/src/omni/cvs/src/omniidl/python/be/cxx/tools
+
+$TOOLS/wdiff old/$1DynSK.cc new/$1DynSK.cc
