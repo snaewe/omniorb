@@ -32,7 +32,7 @@ REGEDIT4
 ;
 ;     Valid values = (n >= 0)
 ;
-"traceLevel" = "1"
+;"traceLevel" = "1"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Trace Invocations
@@ -369,7 +369,7 @@ REGEDIT4
 ; outConScanPeriod
 ;
 ;   Idle connections shutdown. The ORB periodically scans all the
-;   incoming connections to detect if they are idle.
+;   outgoing connections to detect if they are idle.
 ;   If no operation has passed through a connection for a scan period,
 ;   the ORB would treat this connection idle and shut it down.
 ;
@@ -642,7 +642,7 @@ REGEDIT4
 ; inConScanPeriod
 ;
 ;   Idle connections shutdown. The ORB periodically scans all the
-;   outgoing connections to detect if they are idle.
+;   incoming connections to detect if they are idle.
 ;   If no operation has passed through a connection for a scan period,
 ;   the ORB would treat this connection idle and shut it down.
 ;
@@ -718,6 +718,18 @@ REGEDIT4
 ;   Valid values = (n >= 1 && n < threadPerConnectionUpperLimit) 
 ;
 "threadPerConnectionLowerLimit" = "9000"
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; threadPoolWatchConnection
+;
+;   1 means that after dispatching an upcall in thread pool mode, the
+;   thread should watch the connection for a short time before
+;   returning to the pool. This leads to less thread switching for
+;   series of calls from a single client, but is less fair if there
+;   are concurrent clients.
+
+"threadPoolWatchConnection" = "1"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
