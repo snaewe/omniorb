@@ -24,10 +24,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <string.h>
 #include <iostream.h>
 #include <omnithread.h>
 #include <NamingContext_i.h>
+
+#ifdef __WIN32__
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 
 // Minimum idle period before we take a checkpoint (15 mins)
@@ -37,11 +46,16 @@
 void
 usage()
 {
-  cerr << "\nusage: omniNames [-start <port>] [<omniORB2-options>...]" << endl;
+  cerr << "\nusage: omniNames [-start <port>]\n"
+       <<   "                 [-logdir <directory name>]\n"
+       <<   "                 [-errlog <file name>]\n"
+       <<   "                 [<omniORB2-options>...]" << endl;
   cerr << "\nUse -start option to start omniNames for the first time."
        << endl;
-  cerr << "\nYou can set the environment variable " << LOGDIR_ENV_VAR
-       << " to specify the\ndirectory where the log files are kept.\n"
+  cerr << "\nUse -logdir option to specify the directory where the log/data files are kept.\n";
+  cerr << "\nUse -errlog option to specify where standard error output is redirected.\n";
+  cerr << "\nYou can also set the environment variable " << LOGDIR_ENV_VAR
+       << " to specify the\ndirectory where the log/data files are kept.\n"
        << endl;
   exit(1);
 }
@@ -86,25 +100,48 @@ main(int argc, char **argv)
   //
 
   int port = 0;
+  char* logdir = 0;
 
-  if (argc > 1) {
+  while (argc > 1) {
     if (strcmp(argv[1], "-start") == 0) {
       if (argc < 3) usage();
       port = atoi(argv[2]);
       removeArgs(argc, argv, 1, 2);
-    } else if ((strncmp(argv[1], "-BOA", 4) != 0) &&
-	       (strncmp(argv[1], "-ORB", 4) != 0)) {
+    }
+    else if (strcmp(argv[1], "-logdir") == 0) {
+      if (argc < 3) usage();
+      logdir = argv[2];
+      removeArgs(argc, argv, 1, 2);
+    }
+    else if (strcmp(argv[1], "-errlog") == 0) {
+      if (argc < 3) usage();
+#ifdef __WIN32__
+      int fd = _open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
+      if (fd < 0 || _dup2(fd,2)) {
+#else
+      int fd = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
+      if (fd < 0 || dup2(fd,2) < 0) {
+#endif
+	cerr << "Cannot open error log file: " << argv[2] << endl;
+	usage();
+      }
+      removeArgs(argc, argv, 1, 2);
+    }
+    else if ((strncmp(argv[1], "-BOA", 4) != 0) &&
+	     (strncmp(argv[1], "-ORB", 4) != 0)) {
       usage();
     }
+    else {
+      break;
+    }
   }
-
 
   //
   // Set up an instance of class log.  This also gives us back the port
   // number from the log file if "-start" wasn't specified.
   //
 
-  log l(port);
+  log l(port,logdir);
 
 
   //
