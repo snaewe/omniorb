@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  2000/01/12 17:48:28  djs
+# Added option to create BOA compatible skeletons (same as -BBOA in omniidl3)
+#
 # Revision 1.6  2000/01/11 11:35:36  djs
 # Added support for fragment generation (-F) mode
 #
@@ -108,6 +111,14 @@ def setFragmentFlag(flag):
 def FragmentFlag():
     global __fragment
     return __fragment
+
+# generate boa compatible skeletons
+def setBOAFlag(flag):
+    global __BOA
+    __BOA = flag
+def BOAFlag():
+    global __BOA
+    return __BOA
     
 # suffix added to basename to get header filename
 def hdrsuffix():

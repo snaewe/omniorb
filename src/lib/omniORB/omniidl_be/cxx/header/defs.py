@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.24  2000/01/12 17:48:31  djs
+# Added option to create BOA compatible skeletons (same as -BBOA in omniidl3)
+#
 # Revision 1.23  2000/01/11 14:13:15  djs
 # Updated array mapping to include NAME_copy(to, from) as per 2.3 spec
 #
@@ -411,6 +414,24 @@ private:
                name = cxx_name,
                virtual_operations = virtual_operations_str,
                virtual_attributes = virtual_attributes_str)
+
+    # Generate BOA compatible skeletons?
+    if config.BOAFlag():
+        stream.out("""\
+class _sk_@name@ :
+  public virtual _impl_@name@,
+  public virtual omniOrbBoaServant
+{
+public:
+  virtual ~_sk_@name@();
+  inline @name@::_ptr_type _this() {
+    return (@name@::_ptr_type) omniOrbBoaServant::_this(@name@::_PD_repoId);
+  }
+  inline void _obj_is_ready(CORBA::BOA_ptr) { omniOrbBoaServant::_obj_is_ready(); }
+  inline CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }
+};""",
+                   name = cxx_name)
+        
 
     self.__insideInterface = insideInterface
     self.__insideClass = insideClass
