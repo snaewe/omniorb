@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2001/02/20 16:51:12  dpg1
+  A couple more AIX updates.
+
   Revision 1.1.2.12  2000/10/18 16:07:45  djr
   Moved call to _default_POA() in _do_this().
 
@@ -220,7 +223,7 @@ PortableServer::ServantBase::_do_this(const char* repoId)
   if( 0 /*?? in context of invocation on this servant */ ) {
 
     // Return a reference to the object being invoked.
-#if defined(__DECCXX) && __DECCXX_VER >= 60000000
+#if (defined(__DECCXX) && __DECCXX_VER >= 60000000) || defined(__xlC__)
     // Compaq C++ 6.2 warns about this even though this code 
     // cannot ever execute
     return 0;
