@@ -20,7 +20,7 @@
 \vfill
 
 { \Huge
-The omniORB2 version 2.7.1\\[4mm]
+The omniORB2 version 2.8\\[4mm]
 User's Guide
 }
 
@@ -37,12 +37,33 @@ AT\&T Laboratories Cambridge\\
 
 \vfill
 \vfill
-22nd February, 1999
+1st July, 1999
 \vfill
 
 \end{center}
 
 \pagebreak
+
+{\Large \bf \sf Changes and Additions, 1st July 1999}
+
+\begin{itemize}
+\item Chapter 1 - updates to features and setup information 
+\item Chapter 3 - added notes on incompatibility with pre-omniORB 2.8.0
+releases.
+\item Chapter 4 - updates to command-line options and configuration
+variables.
+\item Chapter 5 - new command-line option
+\item Chapter 9 - updates on the new Any and TypeCode behaviour and added
+notes on incompatibility with pre-omniORB 2.8.0 releases.
+\item Chapter 10 - added note to indicate that the implementation has not
+been updated to CORBA 2.3 yet.
+\item Chapter 11 - added note on the change in the default value of
+{\tt CORBA::diiThrowsSysExceptions}.
+\item Chapter 12 - added note to indicate that the implementation has not
+been updated to CORBA 2.3 yet. Added note on new way to pass system
+exception back in the {\tt invoke()} method.
+\end{itemize}
+
 
 {\Large \bf \sf Changes and Additions, 8th June 1999}
 
@@ -51,6 +72,23 @@ AT\&T Laboratories Cambridge\\
 \item Chapter 11 - correction, usage of CORBA::ORB::create\_foo()
 \end{itemize}
 
+{\Large \bf \sf Changes and Additions, 22nd February 1999}
+
+\begin{itemize}
+\item Chapter 11 - expanded and updated
+\end{itemize}
+
+{\Large \bf \sf Changes and Additions, 30 Sept 1998}
+
+\begin{itemize}
+\item Chapter 1 - updates to features and setup information 
+\item Chapter 2 - new example on tie implementation templates
+\item Chapter 4 - updates to command-line options and a new section on
+initial object reference bootstrapping.
+\item Chapter 5 - new section on-demand object loading
+\item Chapter 7 - new runtime configuration variable {\tt omniORB::maxTcpConnectionPerServer}.
+\item New chapter - Dynamic Management of Any Values
+\end{itemize}
 
 \cleardoublepage
 \tableofcontents
@@ -66,12 +104,16 @@ AT\&T Laboratories Cambridge\\
 \chapter{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-OmniORB2 is an Object Request Broker (ORB) that implements the 2.0
+OmniORB2 is an Object Request Broker (ORB) that implements the 2.3
 specification of the Common Object Request Broker Architecture
-(CORBA)~\cite{corba2-spec}\footnote{The DynAny implmentation introduced in
-version 2.6.0 implements the facility in the 2.2 specification. Other parts
-of the 2.2 specification are also implemented where they do not clash
-with the 2.0 specification.}.
+(CORBA)~\cite{corba2-spec}\footnote{Most of the 2.3 features have been
+implemented. The features still missing in this release is listed
+in~\ref{missing}. Where possible, backward compatibility has been
+maintained up to specification 2.0.}. It has passed the Open Group CORBA
+compliant testsuite and is one of the three ORBs to have been granted the
+CORBA brand in June 1999\footnote{More information can be found at {\em
+http://www.opengroup.org/press/7jun99\_b.htm}}.
+
 This user guide tells you how to use omniORB2 to develop CORBA applications.
 It assumes a basic understanding of CORBA. 
 
@@ -90,7 +132,9 @@ residing in different address spaces. Moreover, the IDL to C++ language
 mapping provided by omniORB2 conforms to the latest revision of the CORBA
 specification. Type Any and TypeCode are now supported (introduced in version
 2.5.0). DynAny is supported since 2.6.0. The Dynamic Invocation Interface
-and Dynamic Skeleton Interface are supported since 2.7.0.
+and Dynamic Skeleton Interface are supported since 2.7.0. The C++ mapping
+has been updated to the CORBA 2.3 specification since 2.8.0.
+
 
 \subsection{Multithreading}
 
@@ -136,15 +180,24 @@ omnithread to any platform that either supports the POSIX thread standard
 or has a thread package that supports similar capabilities.
 
 \subsection{Missing features}
+\label{missing}
 
-OmniORB2 is not (yet) a complete implementation of the CORBA core. 
+OmniORB2 is not (yet) a complete implementation of the CORBA 2.3 core. 
 The following is a list of the missing features. 
 
 \begin{itemize}
 
 \item The BOA only support the persistent server activation policy. Other
 dynamic activation and deactivation policies are not supported.
-\item OmniORB2 does not has its own Interface Repository.
+
+\item OmniORB2 does not has its own Interface Repository. However, it can
+act as a client to an IR.
+
+\item The POA is currently under development.
+
+\item The IDL types wchar, wstring, fixed, valuetype and native are not
+      supported in this release.
+
 \end{itemize}
 
 \sloppy{These features may be implemented in the short to medium term. It is
@@ -229,6 +282,8 @@ Digital Unix 3.2 & \verb|__alpha__  __osf1__   __OSVERSION__=3| \\
 \hline
 HPUX 10.x & \verb|__hppa__  __hpux__   __OSVERSION__=10| \\
 \hline
+HPUX 11.x & \verb|__hppa__  __hpux__   __OSVERSION__=11| \\
+\hline
 IBM AIX 4.x & \verb|__aix__  __powerpc__   __OSVERSION__=4| \\
 \hline
 Linux 2.0 (x86)  & \verb|__x86__    __linux__  __OSVERSION__=2| \\
@@ -245,7 +300,7 @@ OpenVMS 6.x (alpha) & \verb|__alpha__    __vms     __OSVERSION__=6 | \\
 \hline
 OpenVMS 6.x (vax)   & \verb|__vax__    __vms     __OSVERSION__=6 | \\
 \hline
-SGI Irix 6.2 & \verb|__mips__    __irix__     __OSVERSION__=6 | \\
+SGI Irix 6.x & \verb|__mips__    __irix__     __OSVERSION__=6 | \\
 \hline
 Reliant Unix 5.43 & \verb|__mips__    __SINIX__     __OSVERSION__=5 | \\
 \hline
@@ -1874,6 +1929,38 @@ in detail in~\cite{corba2-spec}. If you have not done so, you should obtain
 a copy of the document and use that as the programming guide to
 omniORB2.
 
+The specification is not an easy read. The alternative is to use one of the
+books on CORBA programming that has begun to appear. For instance, the
+``Advanced CORBA Programming with C++'' by Michi Henning and Steve Vinoski
+includes many example code bits to illustrate how to use the CORBA 2.3
+C++ mapping.
+
+\section{Incompatibilities with pre-2.8.0 releases}
+
+Before 2.8.0, omniORB2 implements the CORBA 2.0 C++ mapping. Since 2.8.0,
+the mapping has been updated to CORBA 2.3. Unfortunately, to comply with
+the CORBA 2.3 specification, it is necessary to change the semantics of
+a few APIs in a way that is incompatible with older omniORB2 releases.
+The incompatible changes are limited to:
+
+\begin{enumerate}
+\item the extraction of string, object reference and typecode from an Any. 
+\item the DII interface now defaults to report a system exception by
+raising a C++ exception instead of returning the exception as an
+environment value.
+\end{enumerate}
+
+The changes are minor and requires minimal changes to the application
+source code. {\bf However, it is not possible to detect the old usage at
+compile time. In particular, unmodified code that use the affected Any
+extraction operators would most certainly cause runtime errors to occur.}
+
+To smooth the transition from the old usage to the new, an ORB configuration
+variable {\tt omniORB::omniORB\_27\_CompatibleAnyExtraction} can be set to
+revert the any extraction operators to the old semantics. More information
+can be found in chapter~\ref{ch_any}.
+
+
 %\input{api.tex}
 
 
@@ -1908,6 +1995,9 @@ C++ compiler does not support the namespace keyword.}.
 \item[\tt -ORBdiiThrowsSysExceptions <0 or 1>] See section~\ref{dii_invoke}.
 \item[\tt -ORBinConScanPeriod <0-65535>] See section~\ref{sec_shut}.
 \item[\tt -ORBoutConScanPeriod <0-65535>] See section~\ref{sec_shut}.
+\item[\tt -ORBverifyObjectExistsAndType <0 or 1>] See section~\ref{sec_lcd}.
+\item[\tt -ORBlcdMode] See secion~\ref{sec_lcd}
+\item[\tt -ORBabortOnInternalError <0 or 1>] See section~\ref{sec_fatal}.
 \end{description}
 
 {\tt BOA\_init} accepts the following command-line arguments:
@@ -1919,6 +2009,9 @@ C++ compiler does not support the namespace keyword.}.
 TCP/IP port to use to accept IIOP calls. If this option is not specified,
 the BOA will use an arbitrary port assigned by the operating system.
 \item[\tt -BOAno\_bootstrap\_agent] See section~\ref{bootstrap}.
+\item[\tt -BOAiiop\_name\_port <hostname{[:port number]}>] This options
+tells the BOA the hostname and optionally the port number to use. See below
+for details.
 \end{description}
 
 By default, the BOA can work out the IP address of the host machine. This
@@ -1926,9 +2019,9 @@ address is recorded in the object references of the local objects.
 However, when the host has multiple network interfaces and multiple IP
 addresses, it may be desirable for the application to control what address
 the BOA should use. This can be done by defining the environment variable
-{\tt OMNIORB\_USEHOSTNAME} to contain the preferred host name or IP
-address in dot-numeric form.
-
+{\tt OMNIORB\_USEHOSTNAME} to contain the preferred host name or IP address
+in dot-numeric form. Alternatively, the same can be acheived using the {\tt
+-BOAiiop\_name\_port} option.
 
 As defined in the CORBA specification, any command-line arguments
 understood by the ORB/BOA will be removed from {\tt argv} when the
@@ -1959,7 +2052,8 @@ At the moment, the following trace levels are defined:
 \item[level 5] the above plus notifications when server threads are created
 or communication endpoints are shutdown
 \item[level 10-20] the above plus execution traces
-
+\item[level 25] the above plus hex dump of all data sent and received by
+the ORB via its network connections.
 \end{description}
 
 The variable can be changed by assignment inside your applications. It can
@@ -1973,6 +2067,7 @@ $ eg2_impl -ORBtraceLevel 5
 }
 
 %$
+
 
 \section{Server Name}
 \label{sec_servername}
@@ -2173,8 +2268,28 @@ Alternatively, the command line options can be used, for example:
 
 {\tt \$ eg3\_clt -ORBInitialHost wobble -ORBInitialPort 1234}
 
+\section{GIOP Lowest Common Denominator Mode}
+\label{sec_lcd}
+
+Sometimes, to cope with bugs in another ORB, it is necessary to disable
+various GIOP and IIOP features in order to achieve interoperability. If the
+command line option {\tt -ORBlcdMode} or the function {\tt
+omniORB::enableLcdMode()} is called, the ORB enters the so-called ``lowest
+common denominator mode''. It bends over backwards to cope with bugs in the
+ORB at the other end. This is purely a transitional measure. The long term
+solution is to report the bugs to the other vendors and ask them to fix
+them expediently.
+
+By default, omniORB2 uses GIOP LOCATE\_REQUEST message to verify the
+existence of an object prior to the first invocation. If another vendor's
+ORB is known not to be able to handle this GIOP message, set the variable
+{\tt omniORB::verifyObjectExistsAndType} to 0 would disable this feature,
+and hence achieve interoperability. The option can also be set via the
+command line option {\tt -ORBverifyObjectExistsAndType}.
+
 
 \section{Trapping omniORB2 Internal Errors}
+\label{sec_fatal}
 
 {\small
 \begin{verbatim}
@@ -2196,6 +2311,10 @@ is best to exit the program immediately. The exception structure carries by
 and the line number) where the exception is raised. You are strongly
 encourage to file a bug report and point out the location.
 
+It may help to cause a core-dump and look at the stack trace to locate
+where the exception was thrown. This can be done by setting the variable 
+{\tt omniORB::abortOnInternalError} to 1. The variable can also be set
+via the command line option {\tt -ORBabortOnInternalError}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{The Basic Object Adaptor (BOA)}
@@ -2262,6 +2381,9 @@ line and the BOA would be initialised to listen on all of the ports.
 
 \item[-BOAid {\tt <id (string)>}] If this option is used the id must be
 ``omniORB2\_BOA''. 
+
+\item[-BOAiiop\_name\_port {\tt <hostname{[:port number]}>}] Similar to {\tt
+{-BOAiiop\_port}}, this options tells the BOA the hostname and optionally the port number to use.
 
 \end{description}
 
@@ -3218,13 +3340,13 @@ change the behaviour of proxy objects.
 \subsection{Background}
 
 For each interface A, its stub contains a proxy factory class- {\tt
-A\_proxyObjectFactory}. This class is derived from {\tt proxyObjectFactory}
+A\_proxyObjectFactory}. This class is derived from {\tt CORBA::proxyObjectFactory}
 and implements three virtual functions:
 
 {\small
 \begin{verbatim}
 
-class A_proxyObjectFactory : public virtual proxyObjectFactory {
+class A_proxyObjectFactory : public virtual CORBA::proxyObjectFactory {
 public:
 
   virtual const char *irRepoId() const;
@@ -3416,6 +3538,19 @@ CORBA 2 specification~\cite{corba2-spec}, and for more information on
 TypeCode, refer to the Interface Repository chapter in the CORBA core section 
 of the CORBA 2 specification. 
 
+{\bf WARNING: } Since 2.8.0, omniORB2 has been updated to CORBA 2.3. In
+order to comply with the 2.3 specification, it is necessary to change the
+semantics of {\em the extraction of string, object reference and typecode
+from an Any}. The memory of the extracted values of these types now belong
+to the Any value. The storage is freed when the Any value is
+deallocated. Previously the extracted value is a copy and the application
+is responsible to release the storage. It is not possible to detect the old
+usage at compile time. In particular, unmodified code that uses the
+affected Any extraction operators would most certainly cause runtime errors
+to occur.  To smooth the transition from the old usage to the new, an ORB
+configuration variable {\tt omniORB::omniORB\_27\_CompatibleAnyExtraction}
+can be set to revert the any extraction operators to the old semantics.
+
 \section{Example using type Any}
 
 Before going through this example, you should make sure that you have read 
@@ -3521,7 +3656,6 @@ made to extract a value from an Any when it contains a different value (e.g.
 an attempt to extract a long from an Any containing a double), the overloaded 
 {\tt >>= }operator will return False; otherwise it will return True. Thus, a 
 common tactic to extract values from an Any is as follows:
-\pagebreak
 
 {\small
 \begin{verbatim}
@@ -3531,7 +3665,8 @@ common tactic to extract values from an Any is as follows:
 
 CORBA::Long l;
 CORBA::Double d;
-char* str;
+const char* str;     // From CORBA 2.3 onwards, uses const char*
+                     // instead of char*. 
 
 if (an_any >>= l) {
     cout << "Long: " << l << endl;
@@ -3541,6 +3676,9 @@ else if (an_any >>= d) {
 }
 else if (an_any >>= str) {
     cout << "String: " << str << endl;
+    // Since 2.8.0 the storage of the extracted string is still
+    // owned by the any.
+    // In pre-omniORB 2.8.0 releases, the string returned is a copy.
 }
 else {
     cout << "Unknown value." << endl;
@@ -3583,7 +3721,7 @@ operators are generated:
 \begin{enumerate}
 \item {\tt void operator<<=(CORBA::Any\&, const testStruct\& ) }
 \item {\tt void operator<<=(CORBA::Any\&, testStruct* ) }
-\item {\tt CORBA::Boolean operator>>=(const CORBA::Any\&, testStruct*\&) }
+\item {\tt CORBA::Boolean operator>>=(const CORBA::Any\&, const testStruct*\&) }
 \end{enumerate}
 
 Operators of this form are generated for all constructed types, and for 
@@ -3618,7 +3756,8 @@ from the Any, and can be used as follows:
 {\small
 \begin{verbatim}
 
-testStruct* tp;
+const testStruct* tp;   // From CORBA 2.3 onwards, use 
+                        // const testStruct* instead of testStruct*
 
 if (an_any >>= tp) {
     cout << "testStruct: l: " << tp->l << endl;
@@ -3631,27 +3770,36 @@ else {
 \end{verbatim}
 }
 
-As with basic types, if an attempt is made to extract a type
-from an Any that does not contain a value of that type, the extraction 
-operator returns False. If the Any does contain that type, the extraction
-operator returns True. If the extraction is successful, the caller's pointer 
-will point to memory managed by the Any. The caller must not delete or 
-otherwise change this storage, and should not use this storage after the
-contents of the Any are replaced (either by insertion or assignment), or
-after the Any has been destroyed \footnote{It is unclear in the CORBA 
-specification whether or not object references should be managed by an Any. 
-The omniORB2 implementation leaves management of an extracted object reference
-to the caller. Therefore, the programmer should release object references and 
-TypeCodes that have been extracted from an Any.}. In particular, management of
-the pointer should not be assigned to a {\tt \_var} type.
+As with basic types, if an attempt is made to extract a type from an Any
+that does not contain a value of that type, the extraction operator returns
+False. If the Any does contain that type, the extraction operator returns
+True. If the extraction is successful, the caller's pointer will point to
+memory managed by the Any. The caller must not delete or otherwise change
+this storage, and should not use this storage after the contents of the Any
+are replaced (either by insertion or assignment), or after the Any has been
+destroyed. In particular, management of the pointer should not be assigned
+to a {\tt\_var} type. 
+
+{\bf WARNING!!!} In pre-omniORB 2.8.0 releases, it is unclear in the CORBA
+specification whether or not object references should be managed by an Any.
+The omniORB2 implementation leaves management of an extracted object
+reference to the caller. Therefore, the programmer should release object
+references and TypeCodes that have been extracted from an Any. The same
+also applies to string extraction. CORBA 2.3 has clarified this issue and
+decreed that the management of an extracted object reference still belongs
+to the Any! Since 2.8.0, the omniORB2 implementation conforms to the CORBA
+2.3 specification. For backward compatibility, the runtime variable {\tt
+omniORB::omniORB\_27\_CompatibleAnyExtraction} can be set to 1 to get back
+the old behaviour. Notice that this should be used as a transitional
+measure and in the long run, applications should be written to use the new
+behaviour.
 
 If the extraction fails, the caller's pointer will be set to point to null.
 
-Note that there are special rules for inserting and extracting arrays (using 
-{\tt \_forany} types), and for inserting and extracting booleans, octets,
-chars, and bounded strings. Please refer to section 16.14 of the C++ Mapping 
-section of the CORBA 2 specification~\cite{corba2-spec} for further 
-information. 
+Note that there are special rules for inserting and extracting arrays
+(using {\tt \_forany} types), and for inserting and extracting booleans,
+octets, chars, and bounded strings. Please refer to the C++ Mapping chapter
+of the CORBA 2 specification~\cite{corba2-spec} for further information.
 
 
 \section{Type Any in omniORB2}
@@ -3666,10 +3814,15 @@ types and interfaces, the {\tt -a }command line flag should be specified when
 running {\tt omniidl2}. 
 
 \paragraph*{TypeCode comparison when extracting from an Any.}
-When an attempt is made to extract a type from an Any, the TypeCode of the 
-type is checked for equality with the TypeCode of the type stored by the 
-Any. omniORB2 will ignore any alias TypeCodes ({\tt tk\_alias}) when 
-making this comparison. Examples:
+When an attempt is made to extract a type from an Any, the TypeCode of the
+type is checked for {\bf equivalence} with the TypeCode of the type stored
+by the Any. The equivalent() test in the TypeCode interface is used for this
+purpose\footnote{In pre-omniORB 2.8.0 releases, omniORB2 performs an
+equality test and will ignore any alias TypeCodes ({\tt tk\_alias}) when
+making this comparison. The semantics is similar to the equivalent() test
+in the TypeCode interface of CORBA 2.3.}.
+
+ Examples:
 
 {\small
 \begin{verbatim}
@@ -3702,24 +3855,33 @@ Any containing the {\tt Test1 }defined in IDL 2, this will succeed (and
 vice-versa), as the two types differ only by an alias. 
 
 \paragraph*{Object references.}
-Note that type Any does not manage object reference types - it is unclear in 
-the CORBA specification whether this is required or not. Therefore, the 
-programmer should release object references and pseudo-objects (such as 
-TypeCode) that have been extracted from an Any. Type Any will, however, manage
-constructed types (as per the CORBA 2 specification) - constructed types
-extracted from an Any should not be deleted, as they will be deleted by the 
-Any when it is destroyed.
+{\bf WARNING!!} In pre-omniORB 2.8.0 releases, the type Any does not manage
+object reference types - it was unclear in the pre-2.3 CORBA specification
+whether this is required or not. Therefore, the programmer should release
+object references and pseudo-objects (such as TypeCode) that have been
+extracted from an Any. Type Any will, however, manage constructed types (as
+per the CORBA 2 specification) - constructed types extracted from an Any
+should not be deleted, as they will be deleted by the Any when it is
+destroyed. CORBA 2.3 has clarified this issue and decreed that the
+management of an extracted object reference still belongs to the Any! Since
+2.8.0, the omniORB2 implementation conforms to the CORBA 2.3
+specification. For backward compatibility, the runtime variable {\tt
+omniORB::omniORB\_27\_CompatibleAnyExtraction} can be set to 1 to get back
+the old behaviour.
 
 \paragraph*{Top-level aliases.}
-When a type is inserted into an Any, the Any stores both the value of the type
-and the TypeCode for that type. If there are any top-level {\tt tk\_alias} 
-TypeCodes in the TypeCode, they will be removed from the TypeCode stored in 
-the Any. Note that this does not affect the {\tt \_tc\_ }TypeCode generated to 
-represent the type (see section on TypeCode, below). This behaviour is 
-necessary, as two types that differ only by a top-level alias can use the 
-same insertion and extraction operators. If the {\tt tk\_alias} is not 
-removed, one of the types could be transmitted with an incorrect 
-{\tt tk\_alias} TypeCode. Example:
+When a type is inserted into an Any, the Any stores both the value of the
+type and the TypeCode for that type. The treatment of top-level aliases
+from omniORB 2.8.0 onwards is different from pre-omniORB 2.8.0 releases.
+
+In pre-omniORB 2.8.0 releases, if there are any top-level {\tt tk\_alias}
+TypeCodes in the TypeCode, they will be removed from the TypeCode stored in
+the Any. Note that this does not affect the {\tt \_tc\_ }TypeCode generated
+to represent the type (see section on TypeCode, below). This behaviour is
+necessary, as two types that differ only by a top-level alias can use the
+same insertion and extraction operators. If the {\tt tk\_alias} is not
+removed, one of the types could be transmitted with an incorrect {\tt
+tk\_alias} TypeCode. Example:
 
 {\small
 \begin{verbatim}
@@ -3728,13 +3890,25 @@ removed, one of the types could be transmitted with an incorrect
 
 typedef sequence<double> seqDouble1;
 typedef sequence<double> seqDouble2;
+typedef seqDouble2       seqDouble3;
 
 \end{verbatim}
 }
 
-If either seqDouble1 or seqDouble2 is inserted into a TypeCode, the TypeCode
+If either seqDouble1 or seqDouble2 is inserted into an Any, the TypeCode
 stored will be for a {\tt sequence<double>}, and not for an alias to a 
-{\tt sequence<double>}.
+{\tt sequence<double>}. 
+
+From omniORB 2.8.0 onwards, there are two changes. Firstly, in the example,
+seqDouble1 and seqDouble2 are now distinct types and therefore each has its
+own set of C++ operators for Any insertion and extraction. Secondly, the
+top level aliases are not removed. For example, if seqDouble3 is inserted
+into an Any, the insertion operator for seqDouble2 is invoked (because 
+seqDouble3 is just a C++ typedef of seqDouble2). Therefore, the typecode in
+the Any would be that of seqDouble2. If this is not desirable, one can use
+the new member function 'void type(TypeCode\_ptr)' of the Any interface to
+explicitly set the typecode to the correct one.
+
 
 \paragraph*{Removing aliases from TypeCodes.}
 Some ORBs (e.g. Orbix) will not accept TypeCodes containing {\tt tk\_alias} 
@@ -3742,12 +3916,10 @@ TypeCodes. When using type Any while interoperating with these ORBs, it is
 necessary to remove {\tt tk\_alias} TypeCodes from throughout the TypeCode 
 representing a constructed type. 
 
-While omniORB2 will always remove top-level aliases, it doesn't remove aliases 
-contained in a constructed type (for example, {\tt Double1} in the struct 
-{\tt Test1} in example 1, above). To remove all {\tt tk\_alias} 
-TypeCodes from TypeCodes stored in Anys, supply the {\tt -ORBtcAliasExpand 1 }
-command-line flag when running an omniORB2 executable. There will be some 
-(small) performance penalty when inserting values into an Any. 
+To remove all {\tt tk\_alias} TypeCodes from TypeCodes stored in Anys,
+supply the {\tt -ORBtcAliasExpand 1 } command-line flag when running an
+omniORB2 executable. There will be some (small) performance penalty when
+inserting values into an Any.
 
 Note that the {\tt \_tc\_ }TypeCodes generated for all constructed types will 
 contain the complete TypeCode for the type (including any {\tt tk\_alias} 
@@ -3845,20 +4017,35 @@ query the TypeCode about the type it represents.
 
 
 \paragraph*{TypeCode equality.}
-The {\tt CORBA::TypeCode::equal()} member function will return true only if 
-the two TypeCodes are exactly the same. {\tt tk\_alias} TypeCodes are included
-in this comparison, unlike the comparison made when values are extracted from 
-an Any (see section on Any, above). 
 
-If one of the TypeCodes being checked is a {\tt tk\_struct}, {\tt tk\_union},
-{\tt tk\_enum}, or {\tt tk\_alias}, and has an empty repository ID parameter,
-then the repository ID parameter will be ignored when checking for equality. 
-Similarly, if the {\tt name }or {\tt member\_name }parameters of a TypeCode are
-empty strings, they will be ignored for equality checking purposes. This is 
-because a CORBA 2 ORB does not have to include these parameters in a TypeCode 
-(see section 12.3.4 of the Interoperability section of the CORBA 2 
-specification~\cite{corba2-spec}). Note that these (optional) parameters are 
-included in TypeCodes generated by omniORB2.
+The behaviour of {\tt CORBA::TypeCode::equal()} member function from
+omniORB 2.8.0 onwards is different from pre-omniORB 2.8.0 releases.
+In summary, the pre-omniORB 2.8.0 is close to the semantics of the new {\tt
+CORBA::TypeCode::equivalent()} member function. Details are as follows:
+
+The {\tt CORBA::TypeCode::equal()} member function will return true only if
+the two TypeCodes are {\bf exactly} the same. {\tt tk\_alias} TypeCodes are
+included in this comparison, unlike the comparison made when values are
+extracted from an Any (see section on Any, above).
+
+In pre-omniORB 2.8.0 releases, equality test would ignore the optional
+fields when one of the fields in the two typecodes is empty. For example,
+if one of the TypeCodes being checked is a {\tt tk\_struct}, {\tt
+tk\_union}, {\tt tk\_enum}, or {\tt tk\_alias}, and has an empty repository
+ID parameter, then the repository ID parameter will be ignored when
+checking for equality.  Similarly, if the {\tt name }or {\tt member\_name
+}parameters of a TypeCode are empty strings, they will be ignored for
+equality checking purposes. This is because a CORBA 2 ORB does not have to
+include these parameters in a TypeCode (see the Interoperability section of
+the CORBA 2 specification~\cite{corba2-spec}). Note that these (optional)
+parameters are included in TypeCodes generated by omniORB2.
+
+Since CORBA 2.3, the issue of typecode equality has been clarified. There
+is now a new member {\tt CORBA::TypeCode::equivalent()} which provides the
+semantics of the {\tt CORBA::TypeCode::equal()} as implemented in
+pre-omniORB 2.8.0 releases. So from omniORB 2.8.0 onwards, the {\tt
+CORBA::TypeCode::equal()} function has been changed to enforce strict equality.
+The pre-2.8.0 behaviour can be obtained with {\tt equivalent()}.
 
 
 \newpage
@@ -3912,9 +4099,11 @@ anyExample_i::testOp(const CORBA::Any& a) {
 #endif
 
   CORBA::Long l;
-  char* str;
+  const char* str;      // From CORBA 2.3 onwards, uses const char*
+                        // instead of char*. 
 
-  testStruct* tp;
+  const testStruct* tp;   // From CORBA 2.3 onwards, use 
+                          // const testStruct* instead of testStruct*
 
 
   if (a >>= l) {
@@ -3927,6 +4116,9 @@ anyExample_i::testOp(const CORBA::Any& a) {
 #endif
   else if (a >>= str) {
     cout << "String: " << str << endl;
+    // Since 2.8.0 the storage of the extracted string is still
+    // owned by the any.
+    // In pre-omniORB 2.8.0 releases, the string returned is a copy.
   }
   else if (a >>= tp) {
     cout << "testStruct: l: " << tp->l << endl;
@@ -4300,6 +4492,11 @@ resolved, it is possible that a different implementation may choose to
 intepret the specification differently. This chapter provides
 clarifications to the specification, explains the interpretation used and
 offers some advice and warnings on potential portability problems.
+
+Notice that the {\bf DynAny} interface has been changed in CORBA 2.3,
+particularly with the addition of the support for the IDL type {\tt valuetype}.
+Future releases of omniORB will be updated to implement the interface as
+defined in CORBA 2.3.
 
 \section{C++ mapping}
 
@@ -5597,7 +5794,11 @@ public:
   Any& exception();
 
   virtual void _raise();
-  static UnknownUserException* _narrow(Exception*);
+  static const UnknownUserException* _downcast(const Exception*);
+  static UnknownUserException* _downcast(Exception*);
+  static UnknownUserException* _narrow(Exception*); 
+  // _narrow is a deprecated function from CORBA 2.2, 
+  // use _downcast instead.
 };
 \end{verbatim}}
 
@@ -5730,7 +5931,8 @@ namespace omniORB {
   ...
 };
 \end{verbatim}}
-By default this is FALSE, and the application should call the {\tt env()}
+
+If this is FALSE, and the application should call the {\tt env()}
 method of the request to retrieve an exception (it returns 0 (nil) if no
 exception was generated). If it is TRUE then system exceptions will be thrown
 out of {\tt invoke()}. User-defined exceptions are always passed via
@@ -5739,6 +5941,10 @@ out of {\tt invoke()}. User-defined exceptions are always passed via
 The application can determine which type of exception was returned by
 {\tt env()}
 by calling the {\tt \_narrow()} method defined for each exception type.
+
+{\bf WARNING!!} In pre-omniORB 2.8.0 releases, the default value of {\tt
+diiThrowsSysExceptions} is FALSE. From omniORB 2.8.0 onwards, the default
+value is TRUE.
 
 After determining that no exception was thrown the application may retrieve
 any returned values by calling {\tt return\_value()} and {\tt arguments()}.
@@ -5761,15 +5967,16 @@ request's methods in the meantime.
 \item {\tt poll\_response()} returns TRUE if the reply has been received,
       and FALSE if not. It does not block.
 \end{itemize}
-Once {\tt poll\_response()} has returned TRUE, or {\tt get\_response()}
-has been called and returned, the application may test for an exception
-and retrieve returned values as above. If {\tt diiThrowsSysExceptions} is
-true, then a system exception may be thrown from {\tt get\_response()}.
-It is guaranteed that {\tt poll\_response()} will not raise an
-exception, so if polling, the application must also call another method
-to give the request an opportunity to raise the exception. This can be
-one of the methods to retrieve values from the request, or
-{\tt get\_response()}.
+Once {\tt poll\_response()} has returned TRUE, or {\tt get\_response()} has
+been called and returned, the application may test for an exception and
+retrieve returned values as above. If {\tt diiThrowsSysExceptions} is true,
+then a system exception may be thrown from {\tt get\_response()}.  From
+omniORB 2.8.0 onwards, {\tt poll\_response()} will raise a system exception
+if one has occured during the invocation. Previously, {\tt
+poll\_response()} will not raise an exception, so if polling, the
+application must also call another method to give the request an
+opportunity to raise the exception. This can be one of the methods to
+retrieve values from the request, or {\tt get\_response()}.
 
 
 \section{Multiple Requests}
@@ -5841,6 +6048,8 @@ the {\tt <top>/src/examples/dsi} directory.
 For further information refer to the Dynamic Skeleton Interface
 and C++ Mapping sections of the CORBA 2 specification~\cite{corba2-spec}.
 
+The DSI interface has changed in CORBA 2.3. The implementation described
+below conforms to CORBA 2.1 or 2.2.
 
 \section{Overview}
 
@@ -5942,11 +6151,13 @@ This method must behave as follows:
 \item It may be called concurrently by multiple threads of execution, and
 so must be thread-safe.
 \item It may not throw any exceptions. User-defined exceptions are passed
-in a value of type Any and given to
-{\tt ServerRequest::exception()}, and system exceptions may be
-passed via the {\tt env} parameter. Since the methods provided by
-{\tt ServerRequest} may throw system exceptions, the application must catch
-any such exception, duplicate it and place the value in {\tt env}.
+in a value of type Any and given to {\tt ServerRequest::exception()}. In
+pre-omniORB 2.8.0 releases, system exceptions may be passed via the {\tt
+env} parameter. From omniORB 2.8.0 onwards, system exceptions can be
+inserted into an Any and given to {\tt ServerRequest::exception()} in the
+same way as user-defined exceptions. Since the methods provided by {\tt
+ServerRequest} may throw system exceptions, the application must catch any
+such exception, passed it via {\tt ServerRequest::exception()}.
 \item The operations on the {\tt ServerRequest} object must be carried out
 in the correct order, as described below.
 \end{itemize}
@@ -5980,8 +6191,7 @@ return value (unless an exception is thrown). The value passed should be
 an Any allocated with {\tt new}, and will be freed by the ORB.
 
 At any point in the above sequence {\tt exception()} may be called to set
-a user-defined exception, or a system exception may be inserted into
-the {\tt env} parameter of the {\tt invoke()} method. If this happens then no
+a user-defined exception or a system exception. If this happens then no
 further operations should be invoked on the {\tt ServerRequest} object, and
 the {\tt invoke()} method should return.
 
@@ -6059,9 +6269,15 @@ MyDynImpl::invoke(CORBA::ServerRequest_ptr request, CORBA::Environment& env)
     *result <<= CORBA::Any::from_string(input._retn(), 0);
     request->result(result);
   }
-  catch(CORBA::SystemException& ex){
-    env.exception(CORBA::Exception::_duplicate(&ex));
+  catch(CORBA::Exception& ex) {
+    CORBA::Any* v = new CORBA::Any;
+    ::operator<<=(*v,ex);
+    request->exception(v);
   }
+  // In pre-omniORB 2.8.0, one has to do this:
+  //  catch(CORBA::SystemException& ex){
+  //  env.exception(CORBA::Exception::_duplicate(&ex));
+  //  }
   catch(...){
     cout << "echo_dsiimpl: MyDynImpl::invoke - caught an"
         " unknown exception." << endl;
@@ -6502,14 +6718,14 @@ Den Dolech 2, P.O. Box 513,\\
 
 \begin{thebibliography}{tjr96}
 
-\bibitem[OMG96a]{corba2-spec} 
+\bibitem[OMG99a]{corba2-spec} 
 {\em The Common Object Request Broker: Architecture and
   Specification}, 
-Revision 2.0, 
+Revision 2.3, 
 OMG,
-Updated July 1996.
+Final publication expected in 1999.
 
-\bibitem[OMG96b]{corbaservices} 
+\bibitem[OMG99b]{corbaservices} 
 {\em CORBAservices: Common Object Services Specification},
 OMG,
 Updated July 1996.
