@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.3  1999/08/30 16:47:46  sll
+  New member functions.
+
   Revision 1.2  1999/03/11 16:25:56  djr
   Updated copyright notice
 
@@ -45,14 +48,38 @@ public:
   static void initInScavenger();
   static void pokeInScavenger();
   static void killInScavenger();
-  static CORBA::ULong inScavengerScanPeriod();
-  static void inScavengerScanPeriod(CORBA::ULong sec);
 
   static void initOutScavenger();
   static void pokeOutScavenger();
   static void killOutScavenger();
-  static CORBA::ULong outScavengerScanPeriod();
-  static void outScavengerScanPeriod(CORBA::ULong sec);
+
+  static int clientCallTimeLimit();
+  // This number determines how long the ORB is prepare to wait before
+  // giving up on a remove call on the client side and throws a
+  // COMM_FAILURE exception.
+  // The period starts from the moment the client thread starts marshalling
+  // the call argments to the time all the result values have been
+  // unmarshalled.
+
+  static int serverCallTimeLimit();  // in no. of scan period
+  // This number determines how long the ORB is prepare to wait before
+  // giving up on procssing a remote call on the server side. When this
+  // time limit has exceeded, the connection is simply terminated and the
+  // remote end sees an adnormal connection termination and should raise
+  // a COMM_FAILURE exception.
+  //
+  // The period starts from the moment the server thread starts unmarshalling
+  // the call argments to the time all the result values have been
+  // marshalled.
+  //
+  // The value of this variable is used to initialise the per-strand
+  // variable at the beginning of processing the call. The per-strand variable
+  // is scanned and decremented per scan-period by the inScavenger. When the
+
+  static int outIdleTimeLimit();
+
+  static int inIdleTimeLimit();
+
   // Concurrency contol:
   //   None. All of these functions should be considered *non-thread safe*.
   //   The behaviour of concurrent calls to the same or different functions 
