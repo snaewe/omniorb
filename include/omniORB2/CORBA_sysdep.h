@@ -14,9 +14,12 @@
 
 /*
  $Log$
- Revision 1.4  1997/03/09 14:35:59  sll
- Minor cleanup.
+ Revision 1.5  1997/03/14 10:19:10  sll
+ Use namespace instead of class for modules if the compiler supports it.
 
+ * Revision 1.4  1997/03/09  14:35:59  sll
+ * Minor cleanup.
+ *
  * Revision 1.3  1997/02/19  11:13:32  ewc
  * Added support for Windows NT.
  *
@@ -53,6 +56,10 @@
 #elif defined(__SUNPRO_CC)
 // SUN C++ compiler
 
+#elif defined(_MSC_VER)
+
+#define _CORBA_MODULE namespace
+#define _CORBA_MODULE_PUBLIC
 #endif
 
 #if defined(arm)
@@ -78,6 +85,14 @@
 
 #ifndef SIZEOF_PTR
 #define SIZEOF_PTR  4
+#endif
+
+#ifndef _CORBA_MODULE
+#define _CORBA_MODULE class
+#endif
+
+#ifndef _CORBA_MODULE_PUBLIC
+#define _CORBA_MODULE_PUBLIC public:
 #endif
 
 #if defined(__arm__) && defined(__atmos__)
