@@ -1,4 +1,17 @@
 
+Mon Feb  8 18:53:46 GMT 1999 djr
+================================
+
+- Fixed bug in marshalling of TypeCodes for sequences. The sequence bound
+  and the content TypeCode were marshalled in the wrong order.
+- Added new functions to build TypeCode descriptors for types which are
+  typedef'd from CORBA::Object.
+
+src/lib/omniORB2/dynamic/typecode.cc
+include/omniORB2/tcDescriptor.h
+src/lib/omniORB2/dynamic/tcParser.cc
+
+
 Mon Feb  1 14:34:42 GMT 1999 djr
 ================================
 
