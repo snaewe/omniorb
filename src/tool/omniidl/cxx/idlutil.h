@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/11/09 12:41:40  dpg1
+// strcasecmp changes for NT, AIX.
+//
 // Revision 1.2  1999/11/04 17:16:54  dpg1
 // Changes for NT.
 //
@@ -55,7 +58,7 @@ typedef _CORBA_Double IdlFloatLiteral;
 #endif
 
 // Version of strdup which uses new
-char* idl_strdup(const char* s);
+char*         idl_strdup(const char* s);
 _CORBA_WChar* idl_wstrdup(const _CORBA_WChar* s);
 
 // strlen, strcpy and strcat for wstring

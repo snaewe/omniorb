@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/11/09 12:41:40  dpg1
+// strcasecmp changes for NT, AIX.
+//
 // Revision 1.1  1999/11/05 09:43:01  dpg1
 // Changes for NT.
 //
@@ -40,10 +43,13 @@
 #include <CORBA_basetypes.h> // ***
 
 
+// As usual, Windows manages to be different...
 #ifdef __WIN32__
 #define DLL_EXPORT _declspec(dllexport)
+#define strcasecmp(X,Y) stricmp(X,Y)
 #else
 #define DLL_EXPORT
+#include <strings.h>
 #endif
 
 #endif // _idlsysdep_h_
