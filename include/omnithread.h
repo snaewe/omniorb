@@ -68,10 +68,10 @@ class omni_thread;
 #if defined(__arm__) && defined(__atmos__)
 #include <omnithread/posix.h>
 
-#elif defined(__alpha__) && defined(__osf1__)
+#elif defined(__osf1__)
 #include <omnithread/posix.h>
 
-#elif defined(__powerpc__) && defined(__aix__)
+#elif defined(__aix__)
 #include <omnithread/posix.h>
 
 #elif defined(__hpux__)
