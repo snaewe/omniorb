@@ -1,3 +1,14 @@
+Fri Jan  8 11:26:43 GMT 1999 djr
+================================
+
+- Moved idl files from the src directory tree into the idl directory.
+
+idl/Naming.idl
+idl/bootstrap.idl
+idl/corbaidl.idl
+idl/ir.idl
+
+
 Fri Jan  8 11:06:35 GMT 1999 pjs
 ================================
 
@@ -7,6 +18,7 @@ Fri Jan  8 11:06:35 GMT 1999 pjs
   corba interfaces in a make rule.
 
 mk/beforedir.mk
+
 
 Fri Jan  8 10:09:01 GMT 1999 djr
 ================================
