@@ -25,6 +25,7 @@
 // Lists contents of an IOR.
 
 #include <iostream.h>
+#include <iomanip.h>
 #include <stdlib.h>
 
 #include <omniORB4/CORBA.h>
@@ -434,7 +435,8 @@ int main(int argc, char* argv[])
     if (ms)
       cerr << "(CORBA::MARSHAL: minor = " << ms << ")" << endl;
     else
-      cerr << "(CORBA::MARSHAL: minor = " << ex.minor() << ")" << endl;
+      cerr << "(CORBA::MARSHAL: minor = 0x" << hex << ex.minor() << ")"
+	   << endl;
     return 1;
   }
   catch(...) {
