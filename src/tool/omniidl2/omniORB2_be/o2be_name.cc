@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.14  1999/05/26 10:30:01  sll
+  Added keyword bool.
+  Minor bug fix.
+
   Revision 1.13  1999/03/11 16:26:07  djr
   Updated copyright notice
 
@@ -508,7 +512,7 @@ internal_produce_scope_name(UTL_ScopedName *n,char *separator)
 // reserved words are the keywords of C++ minus the keywords of CORBA IDL.
 static char *reserved_words[] = {
   "and", "and_eq", "asm", "auto", 
-  "bitand", "bitor", "break", 
+  "bool", "bitand", "bitor", "break", 
   "catch",  "class", "compl", "const_cast", "continue",
   "delete", "do", "dynamic_cast",
   "else", "explicit", "extern",
@@ -1155,7 +1159,8 @@ o2be_name::produce_typecode_member(AST_Decl *decl, std::fstream& s)
 
 
 char const* o2be_name::variable_qualifier() {
-  if( defined_in() == idl_global->root() )
+  if (this == (o2be_name*)o2be_global::root() ||
+      defined_in() == idl_global->root() )
     return "_CORBA_GLOBAL_VAR";
   else if( defined_in()->scope_node_type() == AST_Decl::NT_module )
     return "_CORBA_MODULE_VAR";
