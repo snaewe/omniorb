@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13  1999/04/15 11:01:27  djr
+  Updated version variable to omniORB_2_8
+
   Revision 1.12  1999/03/11 16:25:51  djr
   Updated copyright notice
 
@@ -64,7 +67,7 @@
 
 
 // See the description of this variable in omniInternal.h
-const char* omniORB_2_7 = "omniORB version 2.7.x";
+const char* omniORB_2_8 = "omniORB version 2.8.x";
 
 
 const IOP::ProfileId       IOP::TAG_INTERNET_IOP = 0;
