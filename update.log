@@ -1,4 +1,13 @@
 
+Thu Mar 18 11:47:36 GMT 1999 djr
+================================
+
+- Bug in NT omni_thread implementation. omni_thread::priority_t not converted
+  to NT value before being passed to SetThreadPriority().
+
+src/lib/omnithread/nt.cc
+
+
 Wed Mar 17 12:43:57 GMT 1999 djr
 ================================
 
