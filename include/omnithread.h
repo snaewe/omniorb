@@ -55,7 +55,6 @@ class omni_thread;
 #define OMNI_THREAD_EXPOSE private
 #endif
 
-
 //
 // Include implementation-specific header file.
 //
@@ -108,7 +107,14 @@ class omni_thread;
 #endif
  // _MSC_VER
  
-#elif defined(__sunos__) && (__OSVERSION__ == 5)
+#elif defined(__sunos__)
+#if __OSVERSION__ != 5
+// XXX Workaround for SUN C++ compiler (seen on 4.2) Template.DB code
+//     regeneration bug. See omniORB2/CORBA_sysdep.h for details.
+#if !defined(__SUNPRO_CC) || __OSVERSION__ != '5'
+#error "Only SunOS 5.x or later is supported."
+#endif
+#endif
 #ifdef UsePthread
 #include <omnithread/posix.h>
 #else
