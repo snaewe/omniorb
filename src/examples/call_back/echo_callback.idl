@@ -1,0 +1,34 @@
+#ifndef __ECHO_CALLBACK_IDL__
+#define __ECHO_CALLBACK_IDL__
+
+
+module cb {
+
+  interface CallBack {
+
+    void call_back(in string mesg);
+
+  };
+
+
+  interface Server {
+
+    // Server calls back to client just once in a
+    // recursive call before returning.
+    void one_time(in CallBack cb, in string mesg);
+
+    // Server remembers the client's reference, and
+    // will call the call-back periodically.  It stops
+    // only when shutdown, or a call to the client fails.
+    void register(in CallBack cb, in string mesg,
+		  in unsigned short period_secs);
+
+    // Shuts down the server.
+    void shutdown();
+
+  };
+
+};
+
+
+#endif 
