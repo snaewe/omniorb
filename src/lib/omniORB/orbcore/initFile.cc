@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14  1997/12/09 18:21:46  sll
+  Fixed memory leaks.
+
   Revision 1.13  1997/08/27 10:19:52  sll
   Removed static variables inside functions.
 
@@ -51,9 +54,18 @@
 #include <kernel.h>
 #endif
 
-#ifdef __NT__
+#ifdef __WIN32__
 #include <windows.h>
 #include <winreg.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
+#ifdef UnixArchitecture
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #include <omniORB2/CORBA.h>
@@ -73,18 +85,24 @@
 #define INIT_MAX_CONFIG 10   
                      // Maximum number of entries in configuration 
 
-initFile::initFile() : fData(0), fsize(0), currpos(0), NameService(0)
+static const CosNaming::NamingContext_proxyObjectFactory CosNaming_NamingContext_proxyObjectFactory1; // To ensure that Naming Stubs are linked.
+
+
+initFile::initFile() : fData(0), fsize(0), currpos(0)
 {
-#ifdef __NT__
+#ifdef __WIN32__
   use_registry = 0;
   curr_index = 0;
 #endif
+  _NameService = CORBA::Object::_nil();
 }
 
 
 initFile::~initFile()
 {
-
+  if (fData) {
+    delete [] fData;
+  }
 }
 
 
@@ -92,7 +110,7 @@ void initFile::initialize()
 {
   // Note: Using standard C file functions for compatibility with ATMos
 
-  char* config_fname;
+  CORBA::String_var config_fname;
 
 // Get filename:
 
@@ -103,7 +121,7 @@ void initFile::initialize()
   if ((tmp_fname = getenv(INIT_ENV_VAR)) == NULL)
     {
 #if defined(UnixArchitecture)
-      config_fname = strdup(CONFIG_DEFAULT_LOCATION);
+      config_fname = CORBA::string_dup(CONFIG_DEFAULT_LOCATION);
 #elif defined(NTArchitecture)
 
       // Can't find configuration file using the
@@ -141,16 +159,16 @@ void initFile::initialize()
     }
   else
     {
-      config_fname = strdup(tmp_fname);
+      config_fname = CORBA::string_dup(tmp_fname);
     }
   
 #elif defined(ATMosArchitecture)
   
-  config_fname = strdup("//isfs/omniORB.cfg");
+  config_fname = CORBA::string_dup("//isfs/omniORB.cfg");
 
 #endif
 
-#ifdef __NT__
+#ifdef __WIN32__
   if (!use_registry) 
     {
 #endif
@@ -160,57 +178,53 @@ void initFile::initialize()
 	  // Don't throw exception, as information in file 
 	  // may not be used - fail only when a call that requires
 	  // the information is made.
-	  
-	  free(config_fname);
 	  return;
 	}
-      free(config_fname);
-#ifdef __NT__
+#ifdef __WIN32__
     }
 #endif
 
   // Get configuration data:
 
-  char* entryname;
-  char* data;
+  CORBA::String_var entryname;
+  CORBA::String_var data;
   int multcheck[INIT_MAX_CONFIG] = { 0 }; 
   
   while(getnextentry(entryname,data))
     {
       if (strcmp(entryname,"NAMESERVICE") == 0)
 	{
-	  if (multcheck[0] == 1) multerr(entryname);
-	  else multcheck[0] = 1;
+	  if (multcheck[0] == 1)
+	    multerr(entryname);
+	  else 
+	    multcheck[0] = 1;
 	  
-	  omniObject* objptr;
-
 	  try
 	    {
-	      objptr = omni::stringToObject(data);
+	      omniObject* objptr = omni::stringToObject(data);
+	      _NameService = (CORBA::Object_ptr) 
+		                objptr->_widenFromTheMostDerivedIntf(0);
+	      
 	    }
-	  catch(CORBA::MARSHAL& ex)
+	  catch(const CORBA::MARSHAL&)
 	    {
 	      invref(entryname);
 	    }
 
-	  if (objptr)
-	    {
-	      if((objptr->_widenFromTheMostDerivedIntf(
+	  if((_NameService->PR_getobj()->_widenFromTheMostDerivedIntf(
 				  CosNaming_NamingContext_IntfRepoID)) == 0)
-		{
-		  // The object reference supplied is not for the NamingService
-		  invref(entryname);
-		}    
-	      else NameService = objptr;
-	    }
-	  else invref(entryname);
-
+	    {
+	      // The object reference supplied is not for the NamingService
+	      
+	      invref(entryname);
+	    }    
 	}
       else
 	{
 	  if (omniORB::traceLevel > 0) {
 #ifndef __atmos__
-	    cerr << "Configuration error:  Unknown field (" << entryname << ") "
+	    cerr << "Configuration error:  Unknown field (" 
+		 << (const char*) entryname << ") "
 		 << " found in configuration." << endl;
 #else
 	    kprintf("Configuration error:  ");
@@ -219,32 +233,47 @@ void initFile::initialize()
 	  }
 	 throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 	}
-
-      delete[] entryname;
-      delete[] data;
     }
-  
-#ifdef __NT__
-  if (!use_registry)
-    {
-#endif
-
-      delete[] fData;
-
-#ifdef __NT__
-    }
-#endif
-
   return;
 }
 
 
 int initFile::read_file(char* config_fname)
 {
-  // Read the configuration file:
+  // Test if the specified file exists and is not a directory
+#ifdef UnixArchitecture
+  {
+    struct stat stbuf;
+    if (stat(config_fname,&stbuf) < 0 || !S_ISREG(stbuf.st_mode)) {
+      if (omniORB::traceLevel >= 2) {
+	cerr << "omniORB configuration file: "
+	     << config_fname << " either does not exist or is not a file."
+	     << endl;
+      }
+      return -1;
+    }
+  }
+#endif
 
+#ifdef __WIN32__
+  {
+    struct _stat stbuf;
+    if (_stat(config_fname,&stbuf) != 0 || ! (_S_IFREG && stbuf.st_mode)) {
+      if (omniORB::traceLevel >= 2) {
+	cerr << "omniORB configuration file: "
+	     << config_fname << " either does not exist or is not a file."
+	     << endl;
+      }
+      return -1;
+    }
+  }
+#endif
+
+
+  // Read the configuration file:
   FILE* iFile;
-  if ((iFile = fopen(config_fname,"r")) == NULL) return -1;
+  if ((iFile = fopen(config_fname,"r")) == NULL) 
+    return -1;
 
   fsize = 0;
   fseek(iFile,0L,SEEK_END);
@@ -252,12 +281,14 @@ int initFile::read_file(char* config_fname)
   rewind(iFile);
 
   fData = new char[fsize+1];
-  if (fData == NULL) throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+  if (fData == NULL) 
+    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
 
   fread((void*) fData,1,fsize,iFile);
   fclose(iFile);
 
-#ifdef __NT__
+  fData[fsize] = '\0';
+#ifdef __WIN32__
   // If file contains CRs, fsize will not be true length of string
   fsize = strlen(fData);
 #endif
@@ -267,14 +298,15 @@ int initFile::read_file(char* config_fname)
 
 
 
-int initFile::getnextentry(char*& entryname, char*& data)
+int initFile::getnextentry(CORBA::String_var& entryname,
+			   CORBA::String_var& data)
 {
   // Get next entry in config file, and associated data
 
-#ifdef __NT__
+#ifdef __WIN32__
   // Use registry for NT if environment variable for config file not set:
   if (use_registry)
-    return getRegistryEntry(entryname, data);
+    return getRegistryEntry(entryname,data);
 #endif
 
 // Skip initial whitespace:
@@ -306,18 +338,20 @@ int initFile::getnextentry(char*& entryname, char*& data)
     }
   while (!isspace(fData[currpos]));
 
-  entryname = new char[(currpos-startpos) + 1];
-
+  entryname = CORBA::string_alloc((currpos-startpos) + 1);
   strncpy(entryname,(fData+startpos),(currpos-startpos));
-  entryname[currpos-startpos] = '\0';
+  ((char*)entryname)[currpos-startpos] = '\0';
 
 
   // Skip whitespace between keyword and data:
 
-  while  (isspace(fData[currpos]))
+  while (isspace(fData[currpos]))
     {
-      if(currpos == fsize) parseerr();
-      else if (fData[currpos] == '\n') dataerr(entryname);
+      if (currpos == fsize) 
+	parseerr();
+      else 
+	if (fData[currpos] == '\n') 
+	  dataerr(entryname);
       currpos++;
     }
 
@@ -327,39 +361,41 @@ int initFile::getnextentry(char*& entryname, char*& data)
 
   while (!isspace(fData[currpos]))
     {
-      if (currpos == fsize) break;
+      if (currpos == fsize)
+	break;
       currpos++;
     }
 
-  if (startpos == currpos) parseerr();
+  if (startpos == currpos)
+    parseerr();
 
-  data = new char[(currpos - startpos)+1];
-
+  data = CORBA::string_alloc((currpos - startpos)+1);
   strncpy(data,(fData+startpos),(currpos-startpos));
-  data[currpos-startpos] = '\0';
+  ((char*)data)[currpos-startpos] = '\0';
 
   return 1;
 }
 
 
 
-#ifdef __NT__
+#ifdef __WIN32__
 
 // NT member function to use registry:
 
-int initFile::getRegistryEntry(char*& entryname, char*& data)
+int initFile::getRegistryEntry(CORBA::String_var& entryname,
+			       CORBA::String_var& data)
 {
   DWORD dataType;
   DWORD init_ValLen = init_maxValLen+1;
   DWORD init_DataLen = init_maxDataLen+1;
-  entryname = new char[init_ValLen];
-  data = new char[init_DataLen];
+  entryname = CORBA::string_alloc(init_ValLen);
+  data      = CORBA::string_alloc(init_DataLen);
 
-  if (RegEnumValue(init_hkey,curr_index++,(LPTSTR) entryname,&init_ValLen,NULL,
-		   &dataType,(LPBYTE) data, &init_DataLen) != ERROR_SUCCESS)
+  if (RegEnumValue(init_hkey,curr_index++,(LPTSTR) ((char*)entryname),
+		   &init_ValLen,NULL,
+		   &dataType,(LPBYTE) ((char*)data), 
+		   &init_DataLen) != ERROR_SUCCESS)
     {
-      delete[] entryname;
-      delete[] data;
       return 0;
     }
 
@@ -437,7 +473,7 @@ void initFile::invref(char* entryname)
 }
 
 
-#ifdef __NT__
+#ifdef __WIN32__
 
 // NT-specific error reporting functions:
 
