@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/08/23 16:00:50  sll
+  Added method in giopTransportImpl to return the addresses of the host
+  interfaces.
+
   Revision 1.1.2.9  2001/08/21 11:02:14  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -251,6 +255,25 @@ giopConnection::decrRefCount(CORBA::Boolean forced) {
   return rc;
 }
 
+////////////////////////////////////////////////////////////////////////
+const omnivector<const char*>*
+giopTransportImpl::getInterfaceAddress(const char* t) {
+
+  giopTransportImpl* impl = implHead();
+
+  while (impl) {
+    if ( strcmp(t,impl->type) == 0 )
+      return impl->getInterfaceAddress();
+    impl = impl->next;
+  }
+  return 0;
+}
+
+////////////////////////////////////////////////////////////////////////
+void
+giopTransportImpl::initialise() {
+}
+
 ////////////////////////////////////////////////////////////////////////////
 //             Configuration options                                      //
 ////////////////////////////////////////////////////////////////////////////
@@ -358,7 +381,16 @@ public:
     orbOptions::singleton().registerHandler(unixTransportPermissionHandler_);
   }
 
-  void attach() { }
+  void attach() { 
+    static CORBA::Boolean once = 0;
+    if (once) return;
+
+    giopTransportImpl* impl = implHead();
+    while (impl) {
+      impl->initialise();
+      impl = impl->next;
+    }
+  }
   void detach() { }
 };
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/08/23 16:00:34  sll
+  Added method in giopTransportImpl to return the addresses of the host
+  interfaces.
+
   Revision 1.1.4.4  2001/07/31 16:16:27  sll
   New transport interface to support the monitoring of active connections.
 
@@ -157,7 +161,9 @@ public:
   // Given a string, returns an instance that can be used to connect to
   // the address.
   // The format of the address string is as follows:
-  //     giop:<transport identifier>:[<transport specific fields]+
+  //     giop:<transport name>:[<transport specific fields]+
+  //     ^^^^^^^^^^^^^^^^^^^^^
+  //        transport identifier
   //
   // The format of the following transports are defined (but may not be
   // implemented yet):
@@ -170,7 +176,7 @@ public:
   // Returns 0 if no suitable endpoint can be created.
 
   virtual const char* type() const = 0;
-  // return the transport identifier
+  // return the transport identifier, e.g. "giop:tcp","giop:ssl", etc.
 
   virtual const char* address() const = 0;
   // return the string that describe this remote address.
@@ -206,7 +212,9 @@ public:
   static giopEndpoint* str2Endpoint(const char* endpoint);
   // Given a string, returns an instance that represent the endpoint
   // The format of an endpoint string is as follows:
-  //     <transport identifier>/[<transport specific fields]+
+  //     giop:<transport name>:[<transport specific fields]+
+  //     ^^^^^^^^^^^^^^^^^^^^^
+  //        transport identifier
   //
   // The format of the following transports are defined (but may not be
   // implemented yet):
@@ -324,9 +332,36 @@ class giopTransportImpl {
 public:
 
   virtual giopEndpoint* toEndpoint(const char* param) = 0;
+  // Returns the endpoint object for this endpoint if it is recognised by
+  // this transport.
+
   virtual giopAddress*   toAddress(const char* param) = 0;
+  // Returns the address object for this address if it is recognised by
+  // this transport.
+
   virtual _CORBA_Boolean isValid(const char* param) = 0;
+  // Returns 1 if the address/endpoint is recognised by this transport
+
   virtual _CORBA_Boolean addToIOR(const char* param) = 0;
+  // Make this endpoint part of the IORs created by this ORB.
+
+  virtual const omnivector<const char*>* getInterfaceAddress() = 0;
+  // Get the addresses of all the interfaces that can be used to talk to
+  // this host. Return the list only if <type> identifies this transport type.
+  // e.g. type == "giop:tcp" causes the tcp transport implementation to
+  // returns the IP address of all the network interfaces of this host.
+  // If <type> does not match, returns 0.
+
+  virtual void initialise();
+  // Initialise the transport implementation. Called once the 1st time
+  // ORB_init() is called.
+
+  static const omnivector<const char*>* getInterfaceAddress(const char* type);
+  // Get the addresses of all the interfaces that belongs to the transport
+  // type <type>. These addresses can be used to talk to this host.
+  // e.g. type == "giop:tcp" causes the tcp transport implementation to
+  // returns the IP address of all the network interfaces of this host.
+  // If <type> does not match returns 0.
 
   const char*     type;
   giopTransportImpl* next;
