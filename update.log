@@ -1,3 +1,15 @@
+Sun Oct 20 21:13:53 BST 2002 dgrisby
+====================================
+
+- Minor readme tweak.
+
+readmes/README.openvms
+
+- Fix reference to omniORB 3.
+
+src/lib/omniORB/omniidl_be/cxx/impl/template.py
+
+
 Wed Oct 16 00:19:33 BST 2002 dgrisby
 ====================================
 
