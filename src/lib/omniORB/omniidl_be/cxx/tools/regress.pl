@@ -1,8 +1,40 @@
 #!/usr/bin/env perl
 
+# -------------------------------------------------------
 # Regression tester for the new IDL compiler
 #
+# Takes a set of input files and compares the output of
+# the old (trusted) compiler with that of the new 
+# (untrusted) compiler.
 
+
+
+# -------------------------------------------------------
+# CONFIGURATION DATA
+# -------------------------------------------------------
+
+# Location of the trusted old compiler binary
+$old_compiler = "/mnt/scratch/djs/cvs/build/i586_linux_2.0_glibc/".
+    "omni/src/tool/omniidl2/omniidl3";
+$old_args = "";
+
+# Location of the untrusted new compiler binary
+$new_compiler = "/home/djs/src/omni/cvs/bin/scripts/omniidl";
+$new_args = "-bcxx";
+
+# Output compare command
+$compare_program = "/home/djs/src/omni/cvs/src".
+    "/omniidl/python/be/cxx/tools/compare";
+
+# Default location of idl test data. Overridable with -idldir
+# command line option
+$test_suite = "/home/djs/src/idl-test-suite";
+
+
+
+# ------------------------------------------------------
+# Don't need to edit anything below this line
+#
 
 sub usage(){
     print <<EOT;
@@ -19,9 +51,8 @@ EOT
 }
 
 my $numTests = -1;
-# directory contains lots of lovely .idl files
-$test_suite = "/home/djs/src/idl-test-suite";
 
+# grab the -idldir argument if available
 my @args = @ARGV;
 for ($i = 0; $i <= $#ARGV; $i++){
     if ($ARGV[$i] eq "-idldir"){
@@ -37,15 +68,6 @@ for ($i = 0; $i <= $#ARGV; $i++){
 }
 
 
-#$old_compiler = "/home/djs/src/omniidl2/bin/i586_linux_2.0_glibc/omniidl3";
-# omni3 develop cvs one:
-$old_compiler = "/mnt/scratch/djs/cvs/build/i586_linux_2.0_glibc/omni/src/tool/omniidl2/omniidl3";
-#$old_compiler = "/home/djs/src/omni/cvs/build/i586_linux_2.0_glibc/omni/src/tool/omniidl2/omniidl2";
-$new_compiler = "/home/djs/src/omni/cvs/bin/scripts/omniidl";
-
-# comparison command. Doesn't need to be overly whitespace sensitive
-$compare_program = "/home/djs/src/omni/cvs/src/omniidl/python/be/cxx/tools/compare";
-#$compare_program = "diff --ignore-all-space --ignore-blank-lines -u";
 
 opendir(DIR, $test_suite) or die("Couldn't find the test suite directory: $!");
 @contents = readdir DIR;
@@ -102,7 +124,24 @@ sub jright{
     return " "x($space - length($text)) . $text;
 }
 
+sub member{
+    my $x = shift;
+    my @list = @_;
+    foreach $y (@list){
+	return 1 if ($x eq $y);
+    }
+    return 0;
+}
+
 chdir($test_suite);
+if (!-e "$test_suite/old") { mkdir("$test_suite/old", 0775); }
+if (!-e "$test_suite/new") { mkdir("$test_suite/new", 0775); }
+
+my $RED = "\033[01;31m";
+my $GREEN = "\033[01;32m";
+my $YELLOW = "\033[01;33m";
+my $RESET = "\033[0m";
+
 @failed = ();
 foreach $idl (@sorted_test_idl){
     last if ($numTests == 0);
@@ -111,29 +150,38 @@ foreach $idl (@sorted_test_idl){
     print padto("\nFile: $idl",40);
     $idl =~ /(.+)\.idl$/;
     $basename = $1;
-    # old compiler makes .hh etc files in cwd
-    # FIXME: catch errors
+
+    chdir("$test_suite/old");
     print jright("OLD",10);
-    if (system("$old_compiler $idl 2>/dev/null") != 0){
+    if (system("$old_compiler $old_args ../$idl 2>/dev/null") != 0){
 	push @failed, $idl;
-	print jright("[ \033[01;31mFAIL\033[0m ]",50);
+	print jright("[ ".$RED."FAIL".$RESET." ]",20);
 	next;
     }
+
+    chdir("$test_suite/new");
     print jright("NEW",10);
-    if (system("$new_compiler -bcxx $idl > $basename.hh.new\n") != 0){
+    if (system("$new_compiler $new_args ../$idl 2>/dev/null") != 0){
 	push @failed, $idl;
-	print jright("[ \033[01;31mFAIL\033[0m ]",40);
+	print jright("[ ".$RED."FAIL".$RESET." ]",25);
 	next;
     }
-    print jright("COMPARE", 10);
-    $results = `$compare_program $basename.hh $basename.hh.new`;
-    if ($results){
-	# boo
-	print jright("[ \033[01;31mFAIL\033[0m ]",30);
-	push @failed, $idl;
-    }else{
-	# hooray
-	print jright("[ \033[01;32mPASS\033[0m ]",30);
+
+    chdir("$test_suite");
+    foreach $suffix (".hh", "SK.cc", "DynSK.cc"){
+	if ((!-e "old/$basename$suffix")or(!-e "new/$basename$suffix")){
+	    print jright("[ ".$YELLOW.$suffix.$RESET." ]", 30);
+	    if (!member($idl, @failed)){
+		push @failed, $idl;
+	    }
+	    next;
+	}
+	if (`$compare_program old/$basename$suffix new/$basename$suffix`){
+	    print jright("[ ".$RED.$suffix.$RESET." ]", 30);
+	    push @failed, $idl;
+	}else{
+	    print jright("[ ".$GREEN.$suffix.$RESET." ]", 30);
+	}
     }
 }
 
