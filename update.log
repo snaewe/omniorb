@@ -1,3 +1,13 @@
+Wed Nov 10 13:46:30 GMT 1999 sll
+================================
+
+- Do not throw marshal exception even if an incoming non-fragmented
+  request message with no message body (because the operation takes no
+  argument) has been padded with extra bytes at the end to make the
+  end of the request message aligned on multiple of 8.
+
+src/lib/omniORB2/orbcore/giopStream12.cc
+
 Mon Nov  8 14:37:18 GMT 1999 sll
 ================================
 

@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  1999/11/10 14:02:45  sll
+  When omniORB::strictIIOP is not set, do not throw marshal exception even if
+  an incoming non-fragmented request message with no message body (because
+  the operation takes no argument) has been padded with extra bytes at the
+  end to make the end of the request message aligned on multiple of 8.
+
   Revision 1.1.2.4  1999/11/04 20:20:20  sll
   GIOP engines can now do callback to the higher layer to calculate total
   message size if necessary.
@@ -709,6 +715,16 @@ public:
     if (avail >= (padding+reqsize)) return;
 
     skipInputData(g,padding);
+
+    if (!omniORB::strictIIOP && reqsize == 0) return;
+    // There is no reason for the upper level to call this function, even
+    // when reqsize == 0, *unless* it is expecting more data to come.
+    // If we do not return here, we just let the code below to do a
+    // check on whether there are more data to come. And if not, throws
+    // a marshal exception. 
+    // Now that we return here if reqsize == 0, we are letting sloppy
+    // implementation to slip through undetected!
+    // Only do so if strictIIOP is not set!
 
   again:
     if (g->pd_input_msgfrag_to_come) {
@@ -1686,6 +1702,16 @@ public:
     if (avail >= (padding+reqsize)) return;
 
     skipInputData(g,padding);
+
+    if (!omniORB::strictIIOP && reqsize == 0) return;
+    // There is no reason for the upper level to call this function, even
+    // when reqsize == 0, *unless* it is expecting more data to come.
+    // If we do not return here, we just let the code below to do a
+    // check on whether there are more data to come. And if not, throws
+    // a marshal exception. 
+    // Now that we return here if reqsize == 0, we are letting sloppy
+    // implementation to slip through undetected!
+    // Only do so if strictIIOP is not set!
 
     avail = (omni::ptr_arith_t) g->pd_inb_end - 
             (omni::ptr_arith_t) g->pd_inb_mkr;
