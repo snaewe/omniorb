@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.9  2000/01/05 17:59:45  djr
+  Added check for reinitialisation in ORB_init.
+
   Revision 1.29.6.8  1999/11/02 17:47:01  djr
   Removed obsolete references to rope factories.
 
@@ -158,6 +161,7 @@
 
 
 static omniOrbORB*          the_orb              = 0;
+static int                  orb_destroyed        = 0;
 static omni_tracedmutex     orb_lock;
 static omni_tracedcondition orb_signal(&orb_lock);
 static volatile int         orb_n_blocked_in_run = 0;
@@ -238,6 +242,11 @@ CORBA::ORB_ptr
 CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
 {
   omni_tracedmutex_lock sync(orb_lock);
+
+  if( orb_destroyed ) {
+    omniORB::logs(1, "The ORB cannot be re-initialised!");
+    OMNIORB_THROW(BAD_INV_ORDER, 0, CORBA::COMPLETED_NO);
+  }
 
   if( !parse_ORB_args(argc,argv,orb_identifier) ) {
     OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
@@ -466,6 +475,7 @@ omniOrbORB::destroy()
     pd_destroyed = 1;
     orb = the_orb;
     the_orb = 0;
+    orb_destroyed = 1;
   }
   CORBA::release(orb);
 }

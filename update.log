@@ -1,4 +1,13 @@
 
+Wed Jan  5 17:54:30 GMT 2000 djr
+================================
+
+- Added check for re-initialisation of the ORB.  Now prints out a message
+  and throws BAD_INV_ORDER (rather than failing an assertion).
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
 Mon Jan  3 18:42:05 GMT 2000 djr
 ================================
 
