@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.7  2000/05/30 15:59:25  djs
+# Removed inheritance ambiguity in generated BOA _sk_ and POA_ classes
+#
 # Revision 1.3.2.6  2000/05/18 15:57:33  djs
 # Added missing T* data constructor for bounded sequence types
 #
@@ -177,7 +180,7 @@ _CORBA_MODULE_END
 POA_interface = """\
 class @POA_name@ :
   public virtual @impl_scopedID@,
-  public virtual PortableServer::ServantBase
+  @inherits@
 {
 public:
   virtual ~@POA_name@();
@@ -317,7 +320,7 @@ private:
 interface_sk = """\
 class _sk_@name@ :
   public virtual _impl_@name@,
-  public virtual omniOrbBoaServant
+  @sk_inherits@
 {
 public:
   virtual ~_sk_@name@();

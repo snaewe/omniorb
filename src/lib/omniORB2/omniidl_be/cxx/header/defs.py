@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.9  2000/05/30 15:59:23  djs
+# Removed inheritance ambiguity in generated BOA _sk_ and POA_ classes
+#
 # Revision 1.31.2.8  2000/05/18 15:57:32  djs
 # Added missing T* data constructor for bounded sequence types
 #
@@ -351,6 +354,7 @@ def visitInterface(node):
     # deal with inheritance
     objref_inherits = []
     impl_inherits = []
+    sk_inherits = []
     for i in node.inherits():
 
         name = id.Name(i.scopedName())
@@ -359,11 +363,14 @@ def visitInterface(node):
 
         objref_scopedName = name.prefix("_objref_")
         impl_scopedName   = name.prefix("_impl_")
+        sk_scopedName     = name.prefix("_sk_")
         objref_string     = objref_scopedName.unambiguous(environment)
         impl_string       = impl_scopedName.unambiguous(environment)
+        sk_string         = sk_scopedName.unambiguous(environment)
 
         objref_inherits.append("public virtual " + objref_string)
         impl_inherits.append("public virtual " + impl_string)
+        sk_inherits.append("public virtual " + sk_string)
 
     # if already inheriting, the base classes will be present
     # (transitivity of the inherits-from relation)
@@ -371,9 +378,11 @@ def visitInterface(node):
         objref_inherits = [ "public virtual CORBA::Object, " + \
                             "public virtual omniObjRef" ]
         impl_inherits   = [ "public virtual omniServant" ]
+        sk_inherits     = [ "public virtual omniOrbBoaServant" ]
             
     objref_inherits = string.join(objref_inherits, ",\n")
     impl_inherits = string.join(impl_inherits, ", \n")
+    sk_inherits = string.join(sk_inherits, ", \n")
 
     # Output the _objref_ class definition
     stream.out(template.interface_objref,
@@ -396,7 +405,8 @@ def visitInterface(node):
     # Generate BOA compatible skeletons?
     if config.BOAFlag():
         stream.out(template.interface_sk,
-                   name = cxx_name)
+                   name = cxx_name,
+                   sk_inherits = sk_inherits)
 
     # pop self.__insideInterface
     # pop self.__insideClass
