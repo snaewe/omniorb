@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.10  1999/11/11 15:55:19  dpg1
+// Python back-end interface now supports valuetype declarations.
+// Back-ends still don't support them, though.
+//
 // Revision 1.9  1999/11/08 11:43:34  dpg1
 // Changes for NT support.
 //
@@ -433,12 +437,12 @@ visitTypedef(Typedef* t)
     d->accept(*this);
     PyList_SetItem(pydeclarators, i, result_);
   }
-  ASSERT_RESULT;
   result_ = PyObject_CallMethod(idlast_, "Typedef", "siiNNiN",
 				t->file(), t->line(), (int)t->mainFile(),
 				pragmasToList(t->pragmas()),
 				pyaliasType, (int)t->constrType(),
 				pydeclarators);
+  ASSERT_RESULT;
 
   // Give each Declarator a reference to the Typedef. This creates a
   // loop which Python's GC won't collect :-(
@@ -763,49 +767,230 @@ void
 PythonVisitor::
 visitNative(Native* n)
 {
-  printf("native %s\n", n->identifier());
+  result_ = PyObject_CallMethod(idlast_, "Native", "siiNsNs",
+				n->file(), n->line(), (int)n->mainFile(),
+				pragmasToList(n->pragmas()),
+				n->identifier(),
+				scopedNameToList(n->scopedName()),
+				n->repoId());
+  ASSERT_RESULT;
+  registerPyDecl(n->scopedName(), result_);
 }
 
 void
 PythonVisitor::
 visitStateMember(StateMember* s)
 {
-  printf("StateMember\n");
+  if (s->constrType()) {
+    ((DeclaredType*)s->memberType())->decl()->accept(*this);
+    Py_DECREF(result_);
+  }
+  s->memberType()->accept(*this);
+  PyObject* pymemberType = result_;
+
+  Declarator* d;
+  int         i;
+
+  for (i=0, d = s->declarators(); d; d = (Declarator*)d->next(), ++i);
+  PyObject* pydeclarators = PyList_New(i);
+
+  for (i=0, d = s->declarators(); d; d = (Declarator*)d->next(), ++i) {
+    d->accept(*this);
+    PyList_SetItem(pydeclarators, i, result_);
+  }
+  result_ = PyObject_CallMethod(idlast_, "StateMember", "siiNiNiN",
+				s->file(), s->line(), (int)s->mainFile(),
+				pragmasToList(s->pragmas()),
+				s->memberAccess(), pymemberType,
+				(int)s->constrType(), pydeclarators);
+  ASSERT_RESULT;
 }
 
 void
 PythonVisitor::
 visitFactory(Factory* f)
 {
-  printf("Factory\n");
+  Parameter* p;
+  int        i;
+  for (i=0, p = f->parameters(); p; p = (Parameter*)p->next(), ++i);
+  PyObject* pyparameters = PyList_New(i);
+
+  for (i=0, p = f->parameters(); p; p = (Parameter*)p->next(), ++i) {
+    p->accept(*this);
+    PyList_SetItem(pyparameters, i, result_);
+  }
+  result_ = PyObject_CallMethod(idlast_, "Factory", "siiNsN",
+				f->file(), f->line(), (int)f->mainFile(),
+				pragmasToList(f->pragmas()),
+				f->identifier(), pyparameters);
+  ASSERT_RESULT;
 }
 
 void
 PythonVisitor::
 visitValueForward(ValueForward* f)
 {
-  printf("ValueForward\n");
+  result_ = PyObject_CallMethod(idlast_, "ValueForward", "siiNsNsi",
+				f->file(), f->line(), (int)f->mainFile(),
+				pragmasToList(f->pragmas()),
+				f->identifier(),
+				scopedNameToList(f->scopedName()),
+				f->repoId(),
+				(int)f->abstract());
+  ASSERT_RESULT;
+  registerPyDecl(f->scopedName(), result_);
 }
 
 void
 PythonVisitor::
 visitValueBox(ValueBox* b)
 {
-  printf("ValueBox\n");
+  if (b->constrType()) {
+    ((DeclaredType*)b->boxedType())->decl()->accept(*this);
+    Py_DECREF(result_);
+  }
+  b->boxedType()->accept(*this);
+  PyObject* pyboxedType = result_;
+
+  result_ = PyObject_CallMethod(idlast_, "ValueBox", "siiNsNsNi",
+				b->file(), b->line(), (int)b->mainFile(),
+				pragmasToList(b->pragmas()),
+				b->identifier(),
+				scopedNameToList(b->scopedName()),
+				b->repoId(),
+				pyboxedType, (int)b->constrType());
+  ASSERT_RESULT;
+  registerPyDecl(b->scopedName(), result_);
 }
 
 void
 PythonVisitor::
 visitValueAbs(ValueAbs* a)
 {
-  printf("ValueAbs\n");
+  int       l;
+  PyObject* pyobj;
+  Decl*     d;
+
+  // Inherited values and interfaces
+  InheritSpec*      inh;
+  ValueInheritSpec* vinh;
+
+  for (l=0, vinh = a->inherits(); vinh; vinh = vinh->next(), ++l);
+  PyObject* pyinherits = PyList_New(l);
+
+  for (l=0, vinh = a->inherits(); vinh; vinh = vinh->next(), ++l) {
+    d = vinh->decl();
+    if (d->kind() == Decl::D_VALUEABS)
+      pyobj = findPyDecl(((ValueAbs*)d)->scopedName());
+    else if (d->kind() == Decl::D_DECLARATOR)
+      pyobj = findPyDecl(((Declarator*)d)->scopedName());
+    else
+      assert(0);
+    PyList_SetItem(pyinherits, l, pyobj);
+  }
+  for (l=0, inh = a->supports(); inh; inh = inh->next(), ++l);
+  PyObject* pysupports = PyList_New(l);
+
+  for (l=0, inh = a->supports(); inh; inh = inh->next(), ++l) {
+    d = inh->decl();
+    if (d->kind() == Decl::D_INTERFACE)
+      pyobj = findPyDecl(((Interface*)d)->scopedName());
+    else if (d->kind() == Decl::D_DECLARATOR)
+      pyobj = findPyDecl(((Declarator*)d)->scopedName());
+    else
+      assert(0);
+    PyList_SetItem(pysupports, l, pyobj);
+  }
+
+  PyObject* pyvalue =
+    PyObject_CallMethod(idlast_, "ValueAbs", "siiNsNsNN",
+			a->file(), a->line(), (int)a->mainFile(),
+			pragmasToList(a->pragmas()),
+			a->identifier(),
+			scopedNameToList(a->scopedName()),
+			a->repoId(),
+			pyinherits, pysupports);
+  ASSERT_PYOBJ(pyvalue);
+  registerPyDecl(a->scopedName(), pyvalue);
+
+  // Contents
+  for (l=0, d = a->contents(); d; d = d->next(), ++l);
+  PyObject* pycontents = PyList_New(l);
+
+  for (l=0, d = a->contents(); d; d = d->next(), ++l) {
+    d->accept(*this);
+    PyList_SetItem(pycontents, l, result_);
+  }
+  PyObject* r = PyObject_CallMethod(pyvalue, "_setContents", "N", pycontents);
+  ASSERT_PYOBJ(r); Py_DECREF(r);
+  result_ = pyvalue;
 }
 
 void
 PythonVisitor::
 visitValue(Value* v)
 {
-  printf("Value\n");
+  int       l;
+  PyObject* pyobj;
+  Decl*     d;
+
+  // Inherited values and interfaces
+  InheritSpec*      inh;
+  ValueInheritSpec* vinh;
+  int               truncatable = 0;
+
+  if (v->inherits()) truncatable = v->inherits()->truncatable();
+
+  for (l=0, vinh = v->inherits(); vinh; vinh = vinh->next(), ++l);
+  PyObject* pyinherits = PyList_New(l);
+
+  for (l=0, vinh = v->inherits(); vinh; vinh = vinh->next(), ++l) {
+    d = vinh->decl();
+    if (d->kind() == Decl::D_VALUEABS)
+      pyobj = findPyDecl(((ValueAbs*)d)->scopedName());
+    else if (d->kind() == Decl::D_DECLARATOR)
+      pyobj = findPyDecl(((Declarator*)d)->scopedName());
+    else
+      assert(0);
+    PyList_SetItem(pyinherits, l, pyobj);
+  }
+  for (l=0, inh = v->supports(); inh; inh = inh->next(), ++l);
+  PyObject* pysupports = PyList_New(l);
+
+  for (l=0, inh = v->supports(); inh; inh = inh->next(), ++l) {
+    d = inh->decl();
+    if (d->kind() == Decl::D_INTERFACE)
+      pyobj = findPyDecl(((Interface*)d)->scopedName());
+    else if (d->kind() == Decl::D_DECLARATOR)
+      pyobj = findPyDecl(((Declarator*)d)->scopedName());
+    else
+      assert(0);
+    PyList_SetItem(pysupports, l, pyobj);
+  }
+
+  PyObject* pyvalue =
+    PyObject_CallMethod(idlast_, "Value", "siiNsNsiNiN",
+			v->file(), v->line(), (int)v->mainFile(),
+			pragmasToList(v->pragmas()),
+			v->identifier(),
+			scopedNameToList(v->scopedName()),
+			v->repoId(),
+			(int)v->custom(), pyinherits,
+			truncatable, pysupports);
+  ASSERT_PYOBJ(pyvalue);
+  registerPyDecl(v->scopedName(), pyvalue);
+
+  // Contents
+  for (l=0, d = v->contents(); d; d = d->next(), ++l);
+  PyObject* pycontents = PyList_New(l);
+
+  for (l=0, d = v->contents(); d; d = d->next(), ++l) {
+    d->accept(*this);
+    PyList_SetItem(pycontents, l, result_);
+  }
+  PyObject* r = PyObject_CallMethod(pyvalue, "_setContents", "N", pycontents);
+  ASSERT_PYOBJ(r); Py_DECREF(r);
+  result_ = pyvalue;
 }
 
 // Types

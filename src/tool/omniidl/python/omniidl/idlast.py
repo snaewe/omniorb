@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/11/11 15:55:30  dpg1
+# Python back-end interface now supports valuetype declarations.
+# Back-ends still don't support them, though.
+#
 # Revision 1.7  1999/11/02 17:07:24  dpg1
 # Changes to compile on Solaris.
 #
@@ -178,13 +182,13 @@ class Forward (Decl, DeclRepoId):
         Decl.__init__(self, file, line, mainFile, pragmas)
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
-        self.__abstract   = abstract
+        self.__abstract = abstract
         #print line, "Forward init:", identifier
 
     def accept(self, visitor): visitor.visitForward(self)
 
     # Abstract?
-    def abstract(self):     return self.__abstract
+    def abstract(self): return self.__abstract
 
 
 # Constant
@@ -485,6 +489,163 @@ class Operation (Decl):
     def parameters(self): return self.__parameters
     def raises(self):     return self.__raises
     def contexts(self):   return self.__contexts
+
+
+class Native (Decl, DeclRepoId):
+    def __init__(self, file, line, mainFile, pragmas,
+                 identifier, scopedName, repoId):
+
+        Decl.__init__(self, file, line, mainFile, pragmas)
+        DeclRepoId.__init__(self, identifier, scopedName, repoId)
+
+    def accept(self, visitor): visitor.visitNative(self)
+
+
+class StateMember (Decl):
+    def __init__(self, file, line, mainFile, pragmas,
+                 memberAccess, memberType, constrType, declarators):
+
+        Decl.__init__(self, file, line, mainFile, pragmas)
+
+        self.__memberAccess = memberAccess
+        self.__memberType   = memberType
+        self.__constrType   = constrType
+        self.__declarators  = declarators
+
+    def accept(self, visitor): visitor.visitStateMember(self)
+
+    # Access specifier: 0 for public, 1 for private
+    def memberAccess(self): return self.__memberAccess
+    def memberType(self):   return self.__memberType
+    def constrType(self):   return self.__constrType
+    def declarators(self):  return self.__declarators
+    
+
+class Factory (Decl):
+    def __init__(self, file, line, mainFile, pragmas,
+                 identifier, parameters):
+
+        Decl.__init__(self, file, line, mainFile, pragmas)
+
+        self.__identifier = identifier
+        self.__parameters = parameters
+
+    def accept(self, visitor): visitor.visitFactory(self)
+
+    def identifier(): return self.__identifier
+    def parameters(): return self.__parameters
+
+
+class ValueForward (Decl, DeclRepoId):
+    def __init__(self, file, line, mainFile, pragmas,
+                 identifier, scopedName, repoId,
+                 abstract):
+
+        Decl.__init__(self, file, line, mainFile, pragmas)
+        DeclRepoId.__init__(self, identifier, scopedName, repoId)
+
+        self.__abstract = abstract
+
+    def accept(self, visitor): visitor.visitValueForward(self)
+
+    def abstract(self): return self.__abstract
+
+
+class ValueBox (Decl, DeclRepoId):
+    def __init__(self, file, line, mainFile, pragmas,
+                 identifier, scopedName, repoId,
+                 boxedType, constrType):
+
+        Decl.__init__(self, file, line, mainFile, pragmas)
+        DeclRepoId.__init__(self, identifier, scopedName, repoId)
+
+        self.__boxedType  = boxedType
+        self.__constrType = constrType
+
+    def accept(self, visitor): visitor.visitValueBox(self)
+
+    def boxedType(self):  return self.__boxedType
+    def constrType(self): return self.__constrType
+
+
+class ValueAbs (Decl, DeclRepoId):
+    def __init__(self, file, line, mainFile, pragmas,
+                 identifier, scopedName, repoId,
+                 inherits, supports):
+
+        Decl.__init__(self, file, line, mainFile, pragmas)
+        DeclRepoId.__init__(self, identifier, scopedName, repoId)
+
+        self.__inherits     = inherits
+        self.__supports     = supports
+        self.__contents     = []
+        self.__declarations = []
+        self.__callables    = []
+
+    def _setContents(self, contents):
+        self.__contents     = contents
+        self.__declarations = filter(lambda c: not \
+                                     (isinstance(c, Attribute) or
+                                      isinstance(c, Operation)),
+                                     contents)
+        self.__callables    = filter(lambda c: \
+                                     (isinstance(c, Attribute) or
+                                      isinstance(c, Operation)),
+                                     contents)
+
+    def accept(self, visitor): visitor.visitValueAbs(self)
+
+    def inherits(self):     return self.__inherits
+    def supports(self):     return self.__supports
+    def contents(self):     return self.__contents
+    def declarations(self): return self.__declarations
+    def callables(self):    return self.__callables
+
+
+class Value (Decl, DeclRepoId):
+    def __init__(self, file, line, mainFile, pragmas,
+                 identifier, scopedName, repoId,
+                 custom, inherits, truncatable, supports):
+
+        Decl.__init__(self, file, line, mainFile, pragmas)
+        DeclRepoId.__init__(self, identifier, scopedName, repoId)
+
+        self.__custom       = custom
+        self.__inherits     = inherits
+        self.__truncatable  = truncatable
+        self.__supports     = supports
+        self.__contents     = []
+        self.__declarations = []
+        self.__callables    = []
+
+    def _setContents(self, contents):
+        self.__contents     = contents
+        self.__declarations = filter(lambda c: not \
+                                     (isinstance(c, Attribute) or
+                                      isinstance(c, Operation) or
+                                      isinstance(c, StateMember) or
+                                      isinstance(c, Factory)),
+                                     contents)
+        self.__callables    = filter(lambda c: \
+                                     (isinstance(c, Attribute) or
+                                      isinstance(c, Operation) or
+                                      isinstance(c, StateMember) or
+                                      isinstance(c, Factory)),
+                                     contents)
+
+    def accept(self, visitor): visitor.visitValueAbs(self)
+
+    def custom(self):       return self.__custom
+    def inherits(self):     return self.__inherits
+    def truncatable(self):  return self.__truncatable
+    def supports(self):     return self.__supports
+    def contents(self):     return self.__contents
+    def declarations(self): return self.__declarations
+
+    # StateMembers count as callables, so callables isn't really the
+    # right name. It's this way for consistency with Interfaces.
+    def callables(self):    return self.__callables
+
 
 
 # Map of Decl objects, indexed by stringified scoped name, and

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/11/11 15:55:29  dpg1
+# Python back-end interface now supports valuetype declarations.
+# Back-ends still don't support them, though.
+#
 # Revision 1.5  1999/11/02 17:07:23  dpg1
 # Changes to compile on Solaris.
 #
@@ -302,6 +306,11 @@ enum @id@ {@enums@};""",
                
                oneway=oneway, rtype=rtype, id=node.identifier(),
                params=params, raises=raises)
+
+    def visitNative(self, node):
+        self.st.out("""\
+native @id@;""",
+                    id=node.identifier())
 
 
     def visitDeclarator(self, node):
