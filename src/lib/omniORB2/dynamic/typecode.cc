@@ -30,8 +30,11 @@
 
 /* 
  * $Log$
- * Revision 1.40  2000/10/02 17:21:27  dpg1
- * Merge for 3.0.2 release
+ * Revision 1.41  2001/02/21 14:12:18  dpg1
+ * Merge from omni3_develop for 3.0.3 release.
+ *
+ * Revision 1.33.6.12  2000/11/27 18:58:29  dpg1
+ * jnw's fix for bug with multiply-recursive TypeCode.
  *
  * Revision 1.33.6.11  2000/08/30 14:57:12  sll
  * Fixed a bug in the unmarshal code of a typecode of kind tk_objref. The
@@ -4514,12 +4517,12 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 	tc->pd_loop_member = 1;
       else
 	tc->pd_loop_member = 0;
+
+      // Clear the mark
+      tc->pd_mark = 0;
     }
 
-  // Clear the mark
-  tc->pd_mark = 0;
-
-  // And return the least-deep accessible node
+  // Return the least-deep accessible node
   return tc->pd_internal_depth;
 }
 

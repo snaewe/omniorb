@@ -180,7 +180,7 @@ Function:
   bound() -- bound of bounded wstring. 0 for unbounded."""
 
     def __init__(self, bound):
-        Type.__init__(self, tk_string)
+        Type.__init__(self, tk_wstring)
         self.__bound = bound
 
     def accept(self, visitor): visitor.visitWStringType(self)

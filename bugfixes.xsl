@@ -1,12 +1,16 @@
 <?xml version="1.0"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:output method="html"/>
 
 <!-- This style sheet formats buglist.xml for inclusion on the omniORB -->
 <!-- web pages. The html output assumes that it lives at               -->
 <!-- http://www.uk.research.att.com/omniORB/omniORBbug.html.           -->
 
-
 <xsl:template match="/">
+    <xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="buglist">
   <html>
   <head>
   <title>omniORB bugs</title>
@@ -19,7 +23,7 @@
   <tr>
     <td width="15%"><img src="images/omniORB3logo.gif"/></td>
     <td align="center" bgcolor="#000000"><h1 class="banner">
-        <font color="#FFFFFF"><em>omniORB 3.0.2 Bug List</em></font></h1>
+        <font color="#FFFFFF"><em>omniORB <xsl:value-of select="@version"/> Bug List</em></font></h1>
     </td>
 
     <td width="15%"><p align="center">
@@ -70,8 +74,9 @@
         <tr><td>
 
 	  <p>
-	  The following bugs in omniORB 3.0.2 have been fixed. You can
-	  get the fixes in three ways:</p>
+	  The following bugs in omniORB <xsl:value-of
+	  select="@version"/> have been fixed. You can get the fixes
+	  in three ways:</p>
 
           <ul><li>Update from <a href="cvs.html">CVS</a> in the
                   <code>"omni3_develop"</code> branch.</li>
@@ -86,11 +91,13 @@
           </ul>
 
           <p>
-          The bugs page for earlier versions can be found here:
-          <ul> 
+          The bugs pages for earlier versions can be found here:
+          <ul>
+              <li><a href="bug302.html">3.0.2</a></li>
               <li><a href="bug301.html">3.0.1</a></li>
               <li><a href="bug300.html">3.0.0</a></li>
-	      <li><a href="omniORBbug_old.html">for 2.8.0 and earlier</a></li>
+              <li><a href="bug280.html">2.8.0</a></li>
+	      <li><a href="omniORBbug_old.html">for 2.7.1 and earlier</a></li>
           </ul>
 
           </p>
@@ -122,8 +129,10 @@
   </html>
 </xsl:template>
 
-<xsl:template match="buglist">
-    <xsl:apply-templates/>
+<xsl:template match="nobugs">
+
+    <tr><td>No bugs yet.</td></tr>
+
 </xsl:template>
 
 

@@ -29,8 +29,19 @@
 
 /*
   $Log$
-  Revision 1.3  2000/07/13 15:25:56  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.4  2001/02/21 14:12:12  dpg1
+  Merge from omni3_develop for 3.0.3 release.
+
+  Revision 1.1.2.24  2000/12/05 12:10:30  dpg1
+  Fix bug with ServantLocator postinvoke() when operation name is >32
+  characters.
+
+  Revision 1.1.2.23  2000/11/13 12:03:24  djr
+  ServantLocator::preinvoke() and ServantActivator::incarnate() did not
+  pass SystemExceptions on to the client.
+
+  Revision 1.1.2.22  2000/10/13 09:26:09  djr
+  Fixed race between object-deactivation and completion of last invocation.
 
   Revision 1.1.2.21  2000/06/22 10:40:16  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some
@@ -1414,10 +1425,15 @@ omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
 
   PortableServer::ServantActivator_ptr sa = 0;
 
+  // This lock _could_ go inside the body of the 'if' below, but I want
+  // to ensure that we take this lock no matter what.  The reason is to
+  // ensure that detached_object() is called (in deactivate_object())
+  // before met_detached_object() (below).  Otherwise we get a nasty
+  // race ...
+  pd_lock.lock();
+
   if( (pd_policy.req_processing == RPP_SERVANT_MANAGER &&
        pd_policy.retain_servants) || pd_dying ) {
-
-    pd_lock.lock();
 
     // The omniLocalIdentity still holds a reference to us, and
     // we hold a reference to the servant activator, so we don't
@@ -1430,9 +1446,9 @@ omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
       // Wait for apparent destruction.
       while( !pd_destroyed )  pd_deathSignal.wait();
     }
-
-    pd_lock.unlock();
   }
+
+  pd_lock.unlock();
 
   PortableServer::Servant servant = DOWNCAST(id->servant());
 
@@ -2395,6 +2411,22 @@ omniOrbPOA::dispatch_to_sa(GIOP_S& giop_s, const CORBA::Octet* key,
     throw omniORB::LOCATION_FORWARD(
 			    CORBA::Object::_duplicate(fr.forward_reference));
   }
+#ifndef HAS_Cplusplus_catch_exception_by_base
+#define RETHROW_EXCEPTION(name)  \
+  catch (CORBA::name& ex) {  \
+    servant_activator_lock.unlock();  \
+    exitAdapter();  \
+    throw;  \
+  }
+  OMNIORB_FOR_EACH_SYS_EXCEPTION(RETHROW_EXCEPTION)
+#undef RETHROW_EXCEPTION
+#else
+  catch(CORBA::SystemException&) {
+    servant_activator_lock.unlock();
+    exitAdapter();
+    throw;
+  }
+#endif
   catch(...) {
     servant_activator_lock.unlock();
     exitAdapter();
@@ -2484,6 +2516,16 @@ omniOrbPOA::dispatch_to_sl(GIOP_S& giop_s, const CORBA::Octet* key,
   try {
     servant = sl->preinvoke(oid, this, giop_s.operation(), cookie);
   }
+#ifndef HAS_Cplusplus_catch_exception_by_base
+#define RETHROW_EXCEPTION(name) catch(CORBA::name&) { exitAdapter(); throw; }
+  OMNIORB_FOR_EACH_SYS_EXCEPTION(RETHROW_EXCEPTION)
+#undef RETHROW_EXCEPTION
+#else
+  catch(CORBA::SystemException&) {
+    exitAdapter();
+    throw;
+  }
+#endif
   catch(PortableServer::ForwardRequest& fr) {
     exitAdapter();
     throw omniORB::LOCATION_FORWARD(
@@ -2503,15 +2545,21 @@ omniOrbPOA::dispatch_to_sl(GIOP_S& giop_s, const CORBA::Octet* key,
   omniLocalIdentity the_id(key, keysize);
   the_id.setServant((PortableServer::Servant) servant, this);
 
+  // If the operation string stored in the GIOP_S is longer than the
+  // GIOP_S's internal buffer, it will be deleted at the end of the
+  // dispatch() call. We must therefore make a copy of it here, to
+  // pass to postinvoke().
+  CORBA::String_var operation(giop_s.operation());
+
   omni::internalLock->lock();
   try {
     the_id.dispatch(giop_s);
   }
   catch(...) {
-    call_postinvoke(sl, oid, giop_s.operation(), cookie, servant);
+    call_postinvoke(sl, oid, operation, cookie, servant);
     throw;
   }
-  call_postinvoke(sl, oid, giop_s.operation(), cookie, servant);
+  call_postinvoke(sl, oid, operation, cookie, servant);
 }
 
 

@@ -13,8 +13,11 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
-# Revision 1.3  2000/10/02 17:21:29  dpg1
-# Merge for 3.0.2 release
+# Revision 1.4  2001/02/21 14:12:24  dpg1
+# Merge from omni3_develop for 3.0.3 release.
+#
+# Revision 1.1.2.4  2000/10/02 16:35:41  dpg1
+# Updates for 3.0.2 release
 #
 # Revision 1.1.2.3  2000/08/18 11:15:43  sll
 # Make current tree into omniORB 3.0.1 release.

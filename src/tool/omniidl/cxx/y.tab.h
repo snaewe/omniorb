@@ -1,7 +1,7 @@
 typedef union {
   char*                    id_val;
   int                      int_val;
-  _CORBA_ULong             ulong_val;
+  IDL_ULong                ulong_val;
   IdlIntLiteral            int_literal_val;
 #ifndef __VMS
   IdlFloatLiteral          float_literal_val;
@@ -10,9 +10,9 @@ typedef union {
 #endif
   char                     char_val;
   char*                    string_val;
-  _CORBA_WChar             wchar_val;
-  _CORBA_WChar*            wstring_val;
-  _CORBA_Boolean           boolean_val;
+  IDL_WChar                wchar_val;
+  IDL_WChar*               wstring_val;
+  IDL_Boolean              boolean_val;
   int                      fixed_val; // ***
   IdlType*                 type_val;
   TypeSpec*                type_spec_val;

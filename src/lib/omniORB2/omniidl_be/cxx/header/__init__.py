@@ -28,11 +28,8 @@
 
 # $Id$
 # $Log$
-# Revision 1.16  2000/08/18 14:09:14  dpg1
-# Merge from omni3_develop for 3.0.1 release.
-#
-# Revision 1.15  2000/07/13 15:26:00  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.17  2001/02/21 14:12:17  dpg1
+# Merge from omni3_develop for 3.0.3 release.
 #
 # Revision 1.12.2.8  2000/08/10 10:38:23  sll
 # Support new pragma hh in the cxx omniidl backend.  Added CPP macro guards

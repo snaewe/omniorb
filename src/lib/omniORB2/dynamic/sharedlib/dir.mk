@@ -354,7 +354,7 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(dynlib): $(DYN_OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib_r \
+	$(MAKECPPSHAREDLIB) \
              -o $(dynsoname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
          -L../../orbcore/sharedlib -l$(libcorename) -p 40; \
@@ -676,4 +676,45 @@ export:: $(dynlib)
          )
 
 endif
+endif
+
+#############################################################################
+#   Make rules for KAI C++ on multiple platforms, (Linux, HP-UX)            #
+#############################################################################
+ifdef KCC
+
+DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
+
+libname = libomniORB$(major_version).$(SHAREDLIB_SUFFIX)
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+dynlibname = libomniDynamic$(major_version).$(SHAREDLIB_SUFFIX)
+dynsoname  = $(dynlibname).$(minor_version)
+dynlib = $(dynsoname).$(micro_version)
+
+
+all:: $(dynlib)
+
+$(dynlib): $(DYN_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) --thread_safe --soname $(dynsoname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
+       )
+
+
+clean::
+	$(RM) $(dynlib)
+
+export:: $(dynlib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(dynsoname); \
+          ln -s $(dynlib) $(dynsoname); \
+          $(RM) $(dynlibname); \
+          ln -s $(dynsoname) $(dynlibname); \
+         )
+
 endif

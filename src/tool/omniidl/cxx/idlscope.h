@@ -28,8 +28,12 @@
 
 // $Id$
 // $Log$
-// Revision 1.7  2000/10/02 17:21:25  dpg1
-// Merge for 3.0.2 release
+// Revision 1.8  2001/02/21 14:12:08  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.3.2.3  2000/10/24 09:53:30  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.3.2.2  2000/09/19 09:14:26  dpg1
 // Scope::Entry::Kind renamed to Scope::Entry::EntryKind to avoid
@@ -81,11 +85,11 @@ public:
     friend class ScopedName;
   };
 
-  ScopedName(const char* identifier, _CORBA_Boolean absolute);
+  ScopedName(const char* identifier, IDL_Boolean absolute);
 
   // Copy constructors
   ScopedName(const ScopedName* sn);
-  ScopedName(const Fragment*   frags, _CORBA_Boolean absolute);
+  ScopedName(const Fragment*   frags, IDL_Boolean absolute);
 
   ~ScopedName();
 
@@ -93,12 +97,12 @@ public:
   Fragment* scopeList() const { return scopeList_; }
 
   // Is the name absolute (i.e. ::A::... rather than A::...)
-  _CORBA_Boolean absolute() const { return absolute_; }
+  IDL_Boolean absolute() const { return absolute_; }
 
   // toString() returns a new string containing the stringified
   // name. The caller is responsible for deleting it.
   char*          toString() const;
-  _CORBA_Boolean equal(const ScopedName* sn) const;
+  IDL_Boolean equal(const ScopedName* sn) const;
 
   // Append a new fragment
   void append(const char* identifier);
@@ -106,7 +110,7 @@ public:
 private:
   Fragment*      scopeList_;
   Fragment*      last_;
-  _CORBA_Boolean absolute_;
+  IDL_Boolean    absolute_;
 };
 
 
@@ -154,10 +158,10 @@ public:
   // this scope. This is true for scopes created by interfaces and
   // valuetypes, but not those created by modules. If the parent scope
   // has nestedUse true, this scope sets it too.
-  Scope(Scope* parent, Kind k, _CORBA_Boolean nestedUse,
+  Scope(Scope* parent, Kind k, IDL_Boolean nestedUse,
 	const char* file, int line);
   Scope(Scope* parent, const char* identifier,
-	Kind k, _CORBA_Boolean nestedUse,
+	Kind k, IDL_Boolean nestedUse,
 	const char* file, int line);
 
   ~Scope();
@@ -173,7 +177,7 @@ public:
   Kind              kind()       const { return kind_; }
   const char*       identifier() const { return identifier_; }
   const ScopedName* scopedName() const { return scopedName_; }
-  _CORBA_Boolean    nestedUse()  const { return nestedUse_; }
+  IDL_Boolean       nestedUse()  const { return nestedUse_; }
   Entry*            entries()    const { return entries_; }
 
   // Functions to lookup and add entries to the scope, reporting any
@@ -325,7 +329,7 @@ private:
   Kind              kind_;
   char*             identifier_;
   ScopedName*       scopedName_;
-  _CORBA_Boolean    nestedUse_;
+  IDL_Boolean       nestedUse_;
   Entry*            entries_;
   Entry*            last_;
   InheritSpec*      inherited_;
@@ -335,8 +339,8 @@ private:
   static Scope*     current_;
 
   void appendEntry(Entry* e);
-  _CORBA_Boolean keywordClash(const char* identifier,
-			      const char* file, int line);
+  IDL_Boolean keywordClash(const char* identifier,
+			   const char* file, int line);
 };
 
 #endif // _idlscope_h_

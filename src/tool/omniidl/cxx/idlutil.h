@@ -28,11 +28,12 @@
 
 // $Id$
 // $Log$
-// Revision 1.7  2000/08/18 14:09:06  dpg1
-// Merge from omni3_develop for 3.0.1 release.
+// Revision 1.8  2001/02/21 14:12:07  dpg1
+// Merge from omni3_develop for 3.0.3 release.
 //
-// Revision 1.6  2000/07/13 15:25:52  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.3.2.2  2000/10/24 09:53:31  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.3.2.1  2000/08/07 15:34:37  dpg1
 // Partial back-port of long long from omni3_1_develop.
@@ -55,25 +56,25 @@
 #include <idlsysdep.h>
 
 #ifdef HAS_LongLong
-typedef _CORBA_ULongLong IdlIntLiteral;
+typedef IDL_ULongLong IdlIntLiteral;
 #else
-typedef _CORBA_ULong IdlIntLiteral;
+typedef IDL_ULong IdlIntLiteral;
 #endif
 
 #ifdef HAS_LongDouble
-typedef _CORBA_LongDouble IdlFloatLiteral;
+typedef IDL_LongDouble IdlFloatLiteral;
 #else
-typedef _CORBA_Double IdlFloatLiteral;
+typedef IDL_Double IdlFloatLiteral;
 #endif
 
 // Version of strdup which uses new
-char*         idl_strdup(const char* s);
-_CORBA_WChar* idl_wstrdup(const _CORBA_WChar* s);
+char*      idl_strdup(const char* s);
+IDL_WChar* idl_wstrdup(const IDL_WChar* s);
 
 // strlen, strcpy and strcat for wstring
-int           idl_wstrlen(const _CORBA_WChar* s);
-_CORBA_WChar* idl_wstrcpy(_CORBA_WChar* a, const _CORBA_WChar* b);
-_CORBA_WChar* idl_wstrcat(_CORBA_WChar* a, const _CORBA_WChar* b);
+int        idl_wstrlen(const IDL_WChar* s);
+IDL_WChar* idl_wstrcpy(IDL_WChar* a, const IDL_WChar* b);
+IDL_WChar* idl_wstrcat(IDL_WChar* a, const IDL_WChar* b);
 
 #ifdef NO_STRCASECMP
 int strcasecmp(const char* s1, const char* s2);

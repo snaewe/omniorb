@@ -27,13 +27,16 @@
 #   General utility functions designed for the C++ backend
 
 # $Id$
-# $Id$
 # $Log$
-# Revision 1.34  2000/08/18 14:09:14  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.35  2001/02/21 14:12:17  dpg1
+# Merge from omni3_develop for 3.0.3 release.
 #
-# Revision 1.33  2000/07/13 15:26:01  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.30.2.11  2001/01/16 11:51:49  dpg1
+# Yesterday's C++ back-end bug fix missed a case.
+#
+# Revision 1.30.2.10  2001/01/15 15:57:53  dpg1
+# Bug in omniidl C++ back-end when an interface is inherited from a
+# typedef to a forward-declared interface.
 #
 # Revision 1.30.2.9  2000/08/07 15:34:34  dpg1
 # Partial back-port of long long from omni3_1_develop.
@@ -742,14 +745,20 @@ def const_qualifier(insideModule, insideClass):
         return "_CORBA_MODULE_VAR"
 
 # Return the base AST node after following all the typedef chains
-def remove_ast_typedefs_(node, recurse):
-    if isinstance(node, idlast.Declarator):
-        typedef = node.alias()
-        return recurse(typedef.aliasType().decl(), recurse)
+def remove_ast_typedefs(node):
+    while isinstance(node, idlast.Declarator):
+        node = node.alias().aliasType().decl()
+
     return node
 
-def remove_ast_typedefs(node, chain = remove_ast_typedefs_):
-    return chain(node, chain)
+def remove_ast_typedefs_and_forwards(node):
+    while isinstance(node, idlast.Declarator):
+        node = node.alias().aliasType().decl()
+
+    if isinstance(node, idlast.Forward):
+        node = node.fullDecl()
+
+    return node
 
 
 def allInherits(interface):
@@ -763,18 +772,18 @@ def allInherits(interface):
     # typedef nodes. These need to be removed...
     
     # breadth first search
-    def bfs(current, bfs, remove_typedefs = remove_ast_typedefs):
+    def bfs(current, bfs):
         if current == []:
             return []
         
         # extend search one level deeper than current
         next = []
-        for c in map(remove_typedefs, current):
-            next = next + c.inherits()
+        for c in current:
+            next = next + map(remove_ast_typedefs_and_forwards, c.inherits())
 
         return next + bfs(next, bfs)
 
-    start = map(remove_ast_typedefs, interface.inherits())
+    start = map(remove_ast_typedefs_and_forwards, interface.inherits())
     list = start + bfs(start, bfs)
 
     return util.setify(list)

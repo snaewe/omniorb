@@ -28,8 +28,19 @@
 
 // $Id$
 // $Log$
-// Revision 1.16  2000/10/02 17:21:25  dpg1
-// Merge for 3.0.2 release
+// Revision 1.17  2001/02/21 14:12:08  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.11.2.9  2001/02/20 11:25:12  dpg1
+// Changes for Digital Unix 4.0E.
+//
+// Revision 1.11.2.8  2000/11/30 11:40:48  dpg1
+// Add -nc option to omniidl to accept invalid IDL with identifiers
+// differing only by case.
+//
+// Revision 1.11.2.7  2000/10/24 09:53:30  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.11.2.6  2000/09/19 09:14:26  dpg1
 // Scope::Entry::Kind renamed to Scope::Entry::EntryKind to avoid
@@ -93,6 +104,7 @@
 #include <idlast.h>
 #include <idlerr.h>
 #include <idlutil.h>
+#include <idlconfig.h>
 
 #include <string.h>
 
@@ -102,7 +114,7 @@ Scope* Scope::current_ = 0;
 
 // ScopedName implementation
 ScopedName::
-ScopedName(const char* identifier, _CORBA_Boolean absolute) :
+ScopedName(const char* identifier, IDL_Boolean absolute) :
   absolute_(absolute)
 {
   Fragment* f = new Fragment(identifier);
@@ -121,7 +133,7 @@ ScopedName(const ScopedName* sn) :
 }
 
 ScopedName::
-ScopedName(const ScopedName::Fragment* frags, _CORBA_Boolean absolute) :
+ScopedName(const ScopedName::Fragment* frags, IDL_Boolean absolute) :
   scopeList_(0), last_(0), absolute_(absolute)
 {
   const Fragment *f;
@@ -178,7 +190,7 @@ toString() const
   return str;
 }
 
-_CORBA_Boolean
+IDL_Boolean
 ScopedName::
 equal(const ScopedName* sn) const
 {
@@ -257,7 +269,7 @@ EntryList::
 merge(Scope::EntryList* ml)
 {
   EntryList*     l;
-  _CORBA_Boolean add;
+  IDL_Boolean add;
 
   for (; ml; ml = ml->tail()) {
     add = 1;
@@ -275,7 +287,7 @@ merge(Scope::EntryList* ml)
 
 
 Scope::
-Scope(Scope* parent, Scope::Kind k, _CORBA_Boolean nestedUse,
+Scope(Scope* parent, Scope::Kind k, IDL_Boolean nestedUse,
       const char* file, int line)
 
   : parent_(parent), kind_(k), identifier_(0), scopedName_(0),
@@ -288,7 +300,7 @@ Scope(Scope* parent, Scope::Kind k, _CORBA_Boolean nestedUse,
 
 Scope::
 Scope(Scope* parent, const char* identifier, Scope::Kind k,
-      _CORBA_Boolean nestedUse,
+      IDL_Boolean nestedUse,
       const char* file, int line)
 
   : parent_(parent), kind_(k), nestedUse_(nestedUse),
@@ -335,7 +347,7 @@ init()
 {
   const char* file = "<built in>";
 
-  assert(!global_);
+  assert(global_ == 0);
 
   global_  = new Scope(0, Scope::S_GLOBAL, 0, file, 0);
   Scope* s = global_->newModuleScope("CORBA", file, 1);
@@ -351,7 +363,7 @@ void
 Scope::
 clear()
 {
-  assert(global_);
+  assert(global_ != 0);
   delete global_;
   global_ = 0;
 }
@@ -432,9 +444,9 @@ void
 Scope::
 endScope()
 {
-  assert(current_);
+  assert(current_ != 0);
   current_ = current_->parent();
-  assert(current_);
+  assert(current_ != 0);
 }
 
 // Scope creation functions
@@ -529,8 +541,14 @@ iFind(const char* identifier) const
   Entry* e;
   if (identifier[0] == '_') ++identifier;
   for (e = entries_; e; e = e->next()) {
-    if (!(strcasecmp(identifier, e->identifier())))
-      return e;
+    if (Config::caseSensitive) {
+      if (!(strcmp(identifier, e->identifier())))
+	return e;
+    }
+    else {
+      if (!(strcasecmp(identifier, e->identifier())))
+	return e;
+    }
   }
   return 0;
 }
@@ -648,7 +666,7 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
   ScopedName::Fragment* f = sn->scopeList();
   const char*           fid;
 
-  _CORBA_Boolean top_component = 1;
+  IDL_Boolean top_component = 1;
 
   while (f) {
     fid = f->identifier();
@@ -1249,7 +1267,7 @@ remEntry(Scope::Entry* re)
   else {
     Entry *e;
     for (e = entries_; e && (e->next() != re); e = e->next());
-    assert(e);
+    assert(e != 0);
     e->next_ = re->next();
     if (!e->next_) last_ = e;
   }
@@ -1258,7 +1276,7 @@ remEntry(Scope::Entry* re)
 }
 
 
-_CORBA_Boolean
+IDL_Boolean
 Scope::
 keywordClash(const char* identifier, const char* file, int line)
 {
@@ -1274,10 +1292,19 @@ keywordClash(const char* identifier, const char* file, int line)
   };
 
   for (const char** k = keywords; *k; k++) {
-    if (!strcasecmp(*k, identifier)) {
-      IdlError(file, line, "Identifier `%s' clashes with keyword `%s'",
-	       identifier, *k);
-      return 1;
+    if (Config::caseSensitive) {
+      if (!strcmp(*k, identifier)) {
+	IdlError(file, line, "Identifier `%s' is identical to keyword `%s'",
+		 identifier, *k);
+	return 1;
+      }
+    }
+    else {
+      if (!strcasecmp(*k, identifier)) {
+	IdlError(file, line, "Identifier `%s' clashes with keyword `%s'",
+		 identifier, *k);
+	return 1;
+      }
     }
   }
   return 0;

@@ -28,8 +28,8 @@
 
 // $Id$
 // $Log$
-// Revision 1.5  2000/07/13 15:25:52  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.6  2001/02/21 14:12:07  dpg1
+// Merge from omni3_develop for 3.0.3 release.
 //
 // Revision 1.2.2.1  2000/03/06 15:03:47  dpg1
 // Minor bug fixes to omniidl. New -nf and -k flags.

@@ -28,8 +28,12 @@
 
 // $Id$
 // $Log$
-// Revision 1.7  2000/10/02 17:21:25  dpg1
-// Merge for 3.0.2 release
+// Revision 1.8  2001/02/21 14:12:08  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.3.2.2  2000/10/24 09:53:30  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.3.2.1  2000/08/29 10:20:27  dpg1
 // Operations and attributes now have repository ids.
@@ -60,7 +64,7 @@ extern char* currentFile;
 Prefix* Prefix::current_ = 0;
 
 Prefix::
-Prefix(char* str, _CORBA_Boolean isfile) :
+Prefix(char* str, IDL_Boolean isfile) :
   str_(str), parent_(current_), isfile_(isfile)
 {
   current_ = this;
@@ -161,7 +165,7 @@ set(const char* setTo)
   str_ = str;
 }
 
-_CORBA_Boolean
+IDL_Boolean
 Prefix::
 isfile()
 {
@@ -232,7 +236,7 @@ setRepoId(const char* repoId, const char* file, int line)
 
 void
 DeclRepoId::
-setVersion(_CORBA_Short maj, _CORBA_Short min, const char* file, int line)
+setVersion(IDL_Short maj, IDL_Short min, const char* file, int line)
 {
   if (set_) {
     IdlError(file, line, "Cannot set version of `%s' to `%d.%d'",
@@ -321,7 +325,7 @@ setRepoId(Decl* d, const char* repoId, const char* file, int line)
 class SetVersionVisitor : public AstVisitor {
 public:
 
-  SetVersionVisitor(_CORBA_Short maj, _CORBA_Short min,
+  SetVersionVisitor(IDL_Short maj, IDL_Short min,
 		    const char* file, int line)
     : a_(maj), i_(min), f_(file), l_(line) {}
   virtual ~SetVersionVisitor() {}
@@ -349,8 +353,8 @@ public:
   void visitFactory      (Factory* d)      { error(d); }
 
 private:
-  _CORBA_Short a_;
-  _CORBA_Short i_;
+  IDL_Short a_;
+  IDL_Short i_;
   const char*  f_;
   int          l_;
   void error(Decl* d) {
@@ -360,7 +364,7 @@ private:
 
 void
 DeclRepoId::
-setVersion(Decl* d, _CORBA_Short maj, _CORBA_Short min,
+setVersion(Decl* d, IDL_Short maj, IDL_Short min,
 	   const char* file, int line)
 {
   SetVersionVisitor v(maj, min, file, line);

@@ -29,8 +29,12 @@
 
 // $Id$
 // $Log$
-// Revision 1.5  2000/07/13 15:25:53  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.6  2001/02/21 14:12:08  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.2.2.1  2000/10/24 09:53:29  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.2  1999/10/29 15:43:44  dpg1
 // Error counts now reset when Report...() is called.
@@ -57,6 +61,6 @@ void IdlSyntaxError(const char* file, int line, const char* mesg);
 void IdlWarning(const char* file, int line, const char* fmt ...);
 void IdlWarningCont(const char* file, int line, const char* fmt ...);
 
-_CORBA_Boolean IdlReportErrors();
+IDL_Boolean IdlReportErrors();
 
 #endif // _idlerr_h_

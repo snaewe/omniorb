@@ -175,9 +175,17 @@ main(int argc, char **argv)
   // Initialize the ORB and the object adapter.
   //
 
-  CORBA::ORB_ptr orb = CORBA::ORB_init(argc, argv, "omniORB3");
+  CORBA::ORB_ptr orb;
 
-  {
+  try {
+    orb = CORBA::ORB_init(argc, argv, "omniORB3");
+  }
+  catch (CORBA::INITIALIZE& ex) {
+    cerr << "Failed to initialise the ORB." << endl;
+    return 1;
+  }
+
+  try {
     CORBA::Object_var poaref = orb->resolve_initial_references("RootPOA");
     PortableServer::POA_var poa = PortableServer::POA::_narrow(poaref);
 
@@ -196,13 +204,17 @@ main(int argc, char **argv)
     pman        = the_ins_poa->the_POAManager();
     pman->activate();
   }
+  catch (CORBA::INITIALIZE& ex) {
+    cerr << "Failed to initialise the POAs. "
+	 << "Is omniNames is already running?" << endl;
+    return 1;
+  }
 
   //
   // Read the log file and set up all the naming contexts described in it.
   //
 
   l.init(orb, the_poa, the_ins_poa);
-
 
   //
   // Now this thread has nothing much to do.  Simply take a checkpoint once
@@ -216,7 +228,7 @@ main(int argc, char **argv)
 
   omni_mutex m;
   omni_condition c(&m);
-
+  
   m.lock();
   while (1) {
     l.checkpoint();

@@ -17,8 +17,8 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
-# Revision 1.2  2000/08/18 14:09:33  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.3  2001/02/21 14:12:24  dpg1
+# Merge from omni3_develop for 3.0.3 release.
 #
 # Revision 1.1.2.1  2000/08/17 15:37:51  sll
 # Merged RTEMS port.

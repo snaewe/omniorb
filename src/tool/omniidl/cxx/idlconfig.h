@@ -28,8 +28,16 @@
 
 // $Id$
 // $Log$
-// Revision 1.3  2000/07/13 15:25:53  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.4  2001/02/21 14:12:08  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.1.2.4  2000/11/30 11:40:47  dpg1
+// Add -nc option to omniidl to accept invalid IDL with identifiers
+// differing only by case.
+//
+// Revision 1.1.2.3  2000/10/24 09:53:29  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.1.2.2  2000/06/05 18:13:27  dpg1
 // Comments can be attached to subsequent declarations (with -K). Better
@@ -47,10 +55,12 @@
 
 class Config {
 public:
-  static _CORBA_Boolean quiet;           // Don't make any output
-  static _CORBA_Boolean forwardWarning;  // Warn about unresolved forwards
-  static _CORBA_Boolean keepComments;    // Keep comments from source
-  static _CORBA_Boolean commentsFirst;   // Comments come before declarations
+  static IDL_Boolean quiet;           // Don't make any output
+  static IDL_Boolean forwardWarning;  // Warn about unresolved forwards
+  static IDL_Boolean keepComments;    // Keep comments from source
+  static IDL_Boolean commentsFirst;   // Comments come before declarations
+  static IDL_Boolean caseSensitive;   // Do not treat identifiers differing
+                                      //  only in case as errors
 };
 
 

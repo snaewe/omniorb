@@ -153,7 +153,7 @@ $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) $(CXXOPTIONS) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
-         $(filter-out $(LibSuffixPattern),$^) -lpthread -posix4; \
+         $(filter-out $(LibSuffixPattern),$^) -lpthread -lposix4; \
        )
 
 all:: $(lib)
@@ -525,4 +525,41 @@ export:: $(lib)
          )
 
 endif
+endif
+
+#############################################################################
+#   Make rules for KAI C++ on multiple platforms, (Linux, HP-UX)            #
+#############################################################################
+ifdef KCC
+
+DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
+
+libname = libomnithread.$(SHAREDLIB_SUFFIX)
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+
+all:: $(lib)
+
+$(lib): $(OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) --thread_safe --soname $(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^); \
+       )
+
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
 endif

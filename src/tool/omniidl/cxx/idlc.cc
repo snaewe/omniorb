@@ -28,8 +28,12 @@
 
 // $Id$
 // $Log$
-// Revision 1.4  2000/07/13 15:25:53  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.5  2001/02/21 14:12:09  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.1.2.1  2000/10/24 09:53:28  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.1  1999/10/27 14:05:59  dpg1
 // *** empty log message ***
@@ -73,7 +77,7 @@ int main(int argc, char** argv)
     f    = stdin;
   }
 
-  _CORBA_Boolean success = AST::process(f, name);
+  IDL_Boolean success = AST::process(f, name);
 
   fclose(f);
 

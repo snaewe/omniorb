@@ -28,8 +28,15 @@
 
 // $Id$
 // $Log$
-// Revision 1.19  2000/10/02 17:21:25  dpg1
-// Merge for 3.0.2 release
+// Revision 1.20  2001/02/21 14:12:09  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.14.2.11  2001/02/20 11:25:12  dpg1
+// Changes for Digital Unix 4.0E.
+//
+// Revision 1.14.2.10  2000/10/24 09:53:28  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.14.2.9  2000/08/29 10:20:26  dpg1
 // Operations and attributes now have repository ids.
@@ -171,7 +178,7 @@ Comment::
 append(const char* commentText)
 {
   if (Config::keepComments) {
-    assert(mostRecent_);
+    assert(mostRecent_ != 0);
     char* newText = new char[(strlen(mostRecent_->commentText_) +
 			      strlen(commentText) + 1)];
     strcpy(newText, mostRecent_->commentText_);
@@ -233,11 +240,11 @@ AST::
 tree()
 {
   if (!tree_) tree_ = new AST();
-  assert(tree_);
+  assert(tree_ != 0);
   return tree_;
 }
 
-_CORBA_Boolean
+IDL_Boolean
 AST::
 process(FILE* f, const char* name)
 {
@@ -287,7 +294,7 @@ void
 AST::
 setDeclarations(Decl* d)
 {
-  assert(!declarations_);
+  assert(declarations_ == 0);
   declarations_ = d;
 
   // Validate the declarations
@@ -298,7 +305,7 @@ setDeclarations(Decl* d)
 
 // Base Decl
 Decl::
-Decl(Kind kind, const char* file, int line, _CORBA_Boolean mainFile)
+Decl(Kind kind, const char* file, int line, IDL_Boolean mainFile)
 
   : kind_(kind), file_(idl_strdup(file)), line_(line),
     mainFile_(mainFile), inScope_(Scope::current()),
@@ -377,7 +384,7 @@ addComment(const char* commentText, const char* file, int line)
 
 // Module
 Module::
-Module(const char* file, int line, _CORBA_Boolean mainFile,
+Module(const char* file, int line, IDL_Boolean mainFile,
        const char* identifier)
 
   : Decl(D_MODULE, file, line, mainFile),
@@ -505,8 +512,8 @@ append(InheritSpec* is, const char* file, int line)
 }
 
 Interface::
-Interface(const char* file, int line, _CORBA_Boolean mainFile,
-	  const char* identifier, _CORBA_Boolean abstract,
+Interface(const char* file, int line, IDL_Boolean mainFile,
+	  const char* identifier, IDL_Boolean abstract,
 	  InheritSpec* inherits)
 
   : Decl(D_INTERFACE, file, line, mainFile),
@@ -602,8 +609,8 @@ finishConstruction(Decl* decls)
 
 // Forward
 Forward::
-Forward(const char* file, int line, _CORBA_Boolean mainFile,
-	const char* identifier, _CORBA_Boolean abstract)
+Forward(const char* file, int line, IDL_Boolean mainFile,
+	const char* identifier, IDL_Boolean abstract)
 
   : Decl(D_FORWARD, file, line, mainFile),
     DeclRepoId(identifier),
@@ -612,8 +619,8 @@ Forward(const char* file, int line, _CORBA_Boolean mainFile,
     firstForward_(0),
     thisType_(0)
 {
-  Scope::Entry*  se  = Scope::current()->find(identifier);
-  _CORBA_Boolean reg = 1;
+  Scope::Entry* se  = Scope::current()->find(identifier);
+  IDL_Boolean   reg = 1;
 
   if (se && se->kind() == Scope::Entry::E_DECL) {
 
@@ -723,7 +730,7 @@ setDefinition(Interface* defn)
 // Const
 
 Const::
-Const(const char* file, int line, _CORBA_Boolean mainFile,
+Const(const char* file, int line, IDL_Boolean mainFile,
       IdlType* constType, const char* identifier, IdlExpr* expr)
 
   : Decl(D_CONST, file, line, mainFile),
@@ -760,8 +767,8 @@ Const(const char* file, int line, _CORBA_Boolean mainFile,
   case IdlType::tk_octet:      v_.octet_      = expr->evalAsOctet();     break;
   case IdlType::tk_string:
     {
-      v_.string_         = idl_strdup(expr->evalAsString());
-      _CORBA_ULong bound = ((StringType*)t)->bound();
+      v_.string_      = idl_strdup(expr->evalAsString());
+      IDL_ULong bound = ((StringType*)t)->bound();
 
       if (bound && strlen(v_.string_) > bound) {
 	IdlError(file, line,
@@ -779,8 +786,8 @@ Const(const char* file, int line, _CORBA_Boolean mainFile,
   case IdlType::tk_wchar:      v_.wchar_      = expr->evalAsWChar();     break;
   case IdlType::tk_wstring:
     {
-      v_.wstring_        = idl_wstrdup(expr->evalAsWString());
-      _CORBA_ULong bound = ((WStringType*)t)->bound();
+      v_.wstring_     = idl_wstrdup(expr->evalAsWString());
+      IDL_ULong bound = ((WStringType*)t)->bound();
 
       if (bound && (unsigned)idl_wstrlen(v_.wstring_) > bound) {
 	IdlError(file, line,
@@ -816,32 +823,32 @@ rt Const::op() const { \
   return v_.un; \
 }
 
-CONST_AS(_CORBA_Short,        constAsShort,      tk_short,      short_)
-CONST_AS(_CORBA_Long,         constAsLong,       tk_long,       long_)
-CONST_AS(_CORBA_UShort,       constAsUShort,     tk_ushort,     ushort_)
-CONST_AS(_CORBA_ULong,        constAsULong,      tk_ulong,      ulong_)
-CONST_AS(_CORBA_Float,        constAsFloat,      tk_float,      float_)
-CONST_AS(_CORBA_Double,       constAsDouble,     tk_double,     double_)
-CONST_AS(_CORBA_Boolean,      constAsBoolean,    tk_boolean,    boolean_)
-CONST_AS(_CORBA_Char,         constAsChar,       tk_char,       char_)
-CONST_AS(_CORBA_Octet,        constAsOctet,      tk_octet,      octet_)
-CONST_AS(const char*,         constAsString,     tk_string,     string_)
+CONST_AS(IDL_Short,        constAsShort,      tk_short,      short_)
+CONST_AS(IDL_Long,         constAsLong,       tk_long,       long_)
+CONST_AS(IDL_UShort,       constAsUShort,     tk_ushort,     ushort_)
+CONST_AS(IDL_ULong,        constAsULong,      tk_ulong,      ulong_)
+CONST_AS(IDL_Float,        constAsFloat,      tk_float,      float_)
+CONST_AS(IDL_Double,       constAsDouble,     tk_double,     double_)
+CONST_AS(IDL_Boolean,      constAsBoolean,    tk_boolean,    boolean_)
+CONST_AS(IDL_Char,         constAsChar,       tk_char,       char_)
+CONST_AS(IDL_Octet,        constAsOctet,      tk_octet,      octet_)
+CONST_AS(const char*,      constAsString,     tk_string,     string_)
 #ifdef HAS_LongLong
-CONST_AS(_CORBA_LongLong,     constAsLongLong,   tk_longlong,   longlong_)
-CONST_AS(_CORBA_ULongLong,    constAsULongLong,  tk_ulonglong,  ulonglong_)
+CONST_AS(IDL_LongLong,     constAsLongLong,   tk_longlong,   longlong_)
+CONST_AS(IDL_ULongLong,    constAsULongLong,  tk_ulonglong,  ulonglong_)
 #endif
 #ifdef HAS_LongDouble
-CONST_AS(_CORBA_LongDouble,   constAsLongDouble, tk_longdouble, longdouble_)
+CONST_AS(IDL_LongDouble,   constAsLongDouble, tk_longdouble, longdouble_)
 #endif
-CONST_AS(_CORBA_WChar,        constAsWChar,      tk_wchar,      wchar_)
-CONST_AS(const _CORBA_WChar*, constAsWString,    tk_wstring,    wstring_)
-CONST_AS(_CORBA_Fixed,        constAsFixed,      tk_fixed,      fixed_)
-CONST_AS(Enumerator*,         constAsEnumerator, tk_enum,       enumerator_)
+CONST_AS(IDL_WChar,        constAsWChar,      tk_wchar,      wchar_)
+CONST_AS(const IDL_WChar*, constAsWString,    tk_wstring,    wstring_)
+CONST_AS(IDL_Fixed,        constAsFixed,      tk_fixed,      fixed_)
+CONST_AS(Enumerator*,      constAsEnumerator, tk_enum,       enumerator_)
 
 
 // Declarator
 Declarator::
-Declarator(const char* file, int line, _CORBA_Boolean mainFile,
+Declarator(const char* file, int line, IDL_Boolean mainFile,
 	   const char* identifier, ArraySize* sizes)
 
   : Decl(D_DECLARATOR, file, line, mainFile),
@@ -886,8 +893,8 @@ setAttribute(Attribute* at)
 
 // Typedef
 Typedef::
-Typedef(const char* file, int line, _CORBA_Boolean mainFile,
-	IdlType* aliasType, _CORBA_Boolean constrType,
+Typedef(const char* file, int line, IDL_Boolean mainFile,
+	IdlType* aliasType, IDL_Boolean constrType,
 	Declarator* declarators)
 
   : Decl(D_TYPEDEF, file, line, mainFile),
@@ -915,8 +922,8 @@ Typedef::
 
 // Member
 Member::
-Member(const char* file, int line, _CORBA_Boolean mainFile,
-       IdlType* memberType, _CORBA_Boolean constrType,
+Member(const char* file, int line, IDL_Boolean mainFile,
+       IdlType* memberType, IDL_Boolean constrType,
        Declarator* declarators)
 
   : Decl(D_MEMBER, file, line, mainFile),
@@ -977,7 +984,7 @@ Member::
 
 // Struct
 Struct::
-Struct(const char* file, int line, _CORBA_Boolean mainFile,
+Struct(const char* file, int line, IDL_Boolean mainFile,
        const char* identifier)
 
   : Decl(D_STRUCT, file, line, mainFile),
@@ -1014,7 +1021,7 @@ finishConstruction(Member* members)
 
 // Exception
 Exception::
-Exception(const char* file, int line, _CORBA_Boolean mainFile,
+Exception(const char* file, int line, IDL_Boolean mainFile,
 	  const char* identifier)
 
   : Decl(D_EXCEPTION, file, line, mainFile),
@@ -1046,7 +1053,7 @@ finishConstruction(Member* members)
 
 // Case label
 CaseLabel::
-CaseLabel(const char* file, int line, _CORBA_Boolean mainFile,
+CaseLabel(const char* file, int line, IDL_Boolean mainFile,
 	  IdlExpr* value)
 
   : Decl(D_CASELABEL, file, line, mainFile),
@@ -1099,24 +1106,24 @@ rt CaseLabel::op() const { \
   return v_.un; \
 }
 
-LABEL_AS(_CORBA_Short,        labelAsShort,      tk_short,      short_)
-LABEL_AS(_CORBA_Long,         labelAsLong,       tk_long,       long_)
-LABEL_AS(_CORBA_UShort,       labelAsUShort,     tk_ushort,     ushort_)
-LABEL_AS(_CORBA_ULong,        labelAsULong,      tk_ulong,      ulong_)
-LABEL_AS(_CORBA_Boolean,      labelAsBoolean,    tk_boolean,    boolean_)
-LABEL_AS(_CORBA_Char,         labelAsChar,       tk_char,       char_)
+LABEL_AS(IDL_Short,        labelAsShort,      tk_short,      short_)
+LABEL_AS(IDL_Long,         labelAsLong,       tk_long,       long_)
+LABEL_AS(IDL_UShort,       labelAsUShort,     tk_ushort,     ushort_)
+LABEL_AS(IDL_ULong,        labelAsULong,      tk_ulong,      ulong_)
+LABEL_AS(IDL_Boolean,      labelAsBoolean,    tk_boolean,    boolean_)
+LABEL_AS(IDL_Char,         labelAsChar,       tk_char,       char_)
 #ifdef HAS_LongLong
-LABEL_AS(_CORBA_LongLong,     labelAsLongLong,   tk_longlong,   longlong_)
-LABEL_AS(_CORBA_ULongLong,    labelAsULongLong,  tk_ulonglong,  ulonglong_)
+LABEL_AS(IDL_LongLong,     labelAsLongLong,   tk_longlong,   longlong_)
+LABEL_AS(IDL_ULongLong,    labelAsULongLong,  tk_ulonglong,  ulonglong_)
 #endif
-LABEL_AS(_CORBA_WChar,        labelAsWChar,      tk_wchar,      wchar_)
-LABEL_AS(Enumerator*,         labelAsEnumerator, tk_enum,       enumerator_)
+LABEL_AS(IDL_WChar,        labelAsWChar,      tk_wchar,      wchar_)
+LABEL_AS(Enumerator*,      labelAsEnumerator, tk_enum,       enumerator_)
 
 
 // UnionCase
 UnionCase::
-UnionCase(const char* file, int line, _CORBA_Boolean mainFile,
-	  IdlType* caseType, _CORBA_Boolean constrType,
+UnionCase(const char* file, int line, IDL_Boolean mainFile,
+	  IdlType* caseType, IDL_Boolean constrType,
 	  Declarator* declarator)
 
   : Decl(D_UNIONCASE, file, line, mainFile),
@@ -1187,7 +1194,7 @@ finishConstruction(CaseLabel* labels)
 
 // Union
 Union::
-Union(const char* file, int line, _CORBA_Boolean mainFile,
+Union(const char* file, int line, IDL_Boolean mainFile,
       const char* identifier)
 
   : Decl(D_UNION, file, line, mainFile),
@@ -1256,7 +1263,7 @@ Union::
 
 void
 Union::
-finishConstruction(IdlType* switchType, _CORBA_Boolean constrType,
+finishConstruction(IdlType* switchType, IDL_Boolean constrType,
 		   UnionCase* cases)
 {
   if (!switchType) return;
@@ -1276,37 +1283,37 @@ finishConstruction(IdlType* switchType, _CORBA_Boolean constrType,
     Scope::endScope();
     return;
   }
-  UnionCase      *c, *d;
-  CaseLabel      *l, *m, *defLabel = 0;
-  IdlType::Kind  k     = t->kind();
-  int            clash = 0;
-  _CORBA_Boolean foundDef = 0;
+  UnionCase     *c, *d;
+  CaseLabel     *l, *m, *defLabel = 0;
+  IdlType::Kind k     = t->kind();
+  int           clash = 0;
+  IDL_Boolean   foundDef = 0;
 
   switch (k) {
   case IdlType::tk_short:
-    UNION_SWITCH(_CORBA_Short, Short, -0x8000, defVal==0x7fff, ++defVal)
+    UNION_SWITCH(IDL_Short, Short, -0x8000, defVal==0x7fff, ++defVal)
   case IdlType::tk_long:
-    UNION_SWITCH(_CORBA_Long, Long, -0x80000000, defVal==0x7fffffff, ++defVal)
+    UNION_SWITCH(IDL_Long, Long, -0x80000000, defVal==0x7fffffff, ++defVal)
   case IdlType::tk_ushort:
-    UNION_SWITCH(_CORBA_UShort, UShort, 0xffff, defVal==0, --defVal)
+    UNION_SWITCH(IDL_UShort, UShort, 0xffff, defVal==0, --defVal)
   case IdlType::tk_ulong:
-    UNION_SWITCH(_CORBA_ULong, ULong, 0xffffffff, defVal==0, --defVal)
+    UNION_SWITCH(IDL_ULong, ULong, 0xffffffff, defVal==0, --defVal)
   case IdlType::tk_boolean:
-    UNION_SWITCH(_CORBA_Boolean, Boolean, 0, defVal==1, defVal=1)
+    UNION_SWITCH(IDL_Boolean, Boolean, 0, defVal==1, defVal=1)
   case IdlType::tk_char:
-    UNION_SWITCH(_CORBA_Char, Char, 0xff, defVal==0, --defVal)
+    UNION_SWITCH(IDL_Char, Char, 0xff, defVal==0, --defVal)
 #ifdef HAS_LongLong
   case IdlType::tk_longlong:
-    UNION_SWITCH(_CORBA_LongLong, LongLong,
+    UNION_SWITCH(IDL_LongLong, LongLong,
 		 _CORBA_LONGLONG_CONST(-0x8000000000000000),
 		 defVal==_CORBA_LONGLONG_CONST(0x7fffffffffffffff), ++defVal)
   case IdlType::tk_ulonglong:
-    UNION_SWITCH(_CORBA_ULongLong, ULongLong,
+    UNION_SWITCH(IDL_ULongLong, ULongLong,
 		 _CORBA_LONGLONG_CONST(0xffffffffffffffff),
 		 defVal==_CORBA_LONGLONG_CONST(0), --defVal)
 #endif
   case IdlType::tk_wchar:
-    UNION_SWITCH(_CORBA_WChar, WChar, 0xffff, defVal==0, --defVal)
+    UNION_SWITCH(IDL_WChar, WChar, 0xffff, defVal==0, --defVal)
 
   case IdlType::tk_enum:
     {
@@ -1337,7 +1344,7 @@ finishConstruction(IdlType* switchType, _CORBA_Boolean constrType,
 // Enum
 
 Enumerator::
-Enumerator(const char* file, int line, _CORBA_Boolean mainFile,
+Enumerator(const char* file, int line, IDL_Boolean mainFile,
 	   const char* identifier)
 
   : Decl(D_ENUMERATOR, file, line, mainFile),
@@ -1360,7 +1367,7 @@ finishConstruction(Enum* container)
 }
 
 Enum::
-Enum(const char* file, int line, _CORBA_Boolean mainFile,
+Enum(const char* file, int line, IDL_Boolean mainFile,
      const char* identifier)
 
   : Decl(D_ENUM, file, line, mainFile),
@@ -1392,8 +1399,8 @@ finishConstruction(Enumerator* enumerators)
 
 // Attribute
 Attribute::
-Attribute(const char* file, int line, _CORBA_Boolean mainFile,
-	  _CORBA_Boolean readonly, IdlType* attrType,
+Attribute(const char* file, int line, IDL_Boolean mainFile,
+	  IDL_Boolean readonly, IdlType* attrType,
 	  Declarator* declarators)
 
   : Decl(D_ATTRIBUTE, file, line, mainFile),
@@ -1405,7 +1412,7 @@ Attribute(const char* file, int line, _CORBA_Boolean mainFile,
   else          delType_ = 0;
 
   for (Declarator* d = declarators; d; d = (Declarator*)d->next()) {
-    assert(!d->sizes()); // Enforced by grammar
+    assert(d->sizes() == 0); // Enforced by grammar
     d->setAttribute(this);
     Scope::current()->addCallable(d->eidentifier(), 0, d, file, line);
   }
@@ -1422,7 +1429,7 @@ Attribute::
 // Operation
 
 Parameter::
-Parameter(const char* file, int line, _CORBA_Boolean mainFile,
+Parameter(const char* file, int line, IDL_Boolean mainFile,
 	  int direction, IdlType* paramType, const char* identifier)
 
   : Decl(D_PARAMETER, file, line, mainFile),
@@ -1488,7 +1495,7 @@ ContextSpec(const char* c, const char* file, int line)
 {
   last_ = this;
 
-  _CORBA_Boolean bad = 0;
+  IDL_Boolean bad = 0;
 
   if (!isalpha(*c++))
     bad = 1;
@@ -1514,8 +1521,8 @@ ContextSpec::
 
 
 Operation::
-Operation(const char* file, int line, _CORBA_Boolean mainFile,
-	  _CORBA_Boolean oneway, IdlType* returnType,
+Operation(const char* file, int line, IDL_Boolean mainFile,
+	  IDL_Boolean oneway, IdlType* returnType,
 	  const char* identifier)
 
   : Decl(D_OPERATION, file, line, mainFile),
@@ -1591,7 +1598,7 @@ finishConstruction(Parameter* parameters, RaisesSpec* raises,
 
 // Native
 Native::
-Native(const char* file, int line, _CORBA_Boolean mainFile,
+Native(const char* file, int line, IDL_Boolean mainFile,
        const char* identifier)
 
   : Decl(D_NATIVE, file, line, mainFile),
@@ -1610,9 +1617,9 @@ Native::
 // ValueType
 
 StateMember::
-StateMember(const char* file, int line, _CORBA_Boolean mainFile,
+StateMember(const char* file, int line, IDL_Boolean mainFile,
 	    int memberAccess, IdlType* memberType,
-	    _CORBA_Boolean constrType, Declarator* declarators)
+	    IDL_Boolean constrType, Declarator* declarators)
 
   : Decl(D_STATEMEMBER, file, line, mainFile),
     memberAccess_(memberAccess),
@@ -1637,7 +1644,7 @@ StateMember::
 
 
 Factory::
-Factory(const char* file, int line, _CORBA_Boolean mainFile,
+Factory(const char* file, int line, IDL_Boolean mainFile,
 	const char* identifier)
 
   : Decl(D_FACTORY, file, line, mainFile)
@@ -1677,7 +1684,7 @@ finishConstruction(Parameter* parameters)
 }
 
 ValueBase::
-ValueBase(Decl::Kind k, const char* file, int line, _CORBA_Boolean mainFile,
+ValueBase(Decl::Kind k, const char* file, int line, IDL_Boolean mainFile,
 	  const char* identifier)
 
   : Decl(k, file, line, mainFile),
@@ -1691,8 +1698,8 @@ ValueBase::
 }
 
 ValueForward::
-ValueForward(const char* file, int line, _CORBA_Boolean mainFile,
-	     _CORBA_Boolean abstract, const char* identifier)
+ValueForward(const char* file, int line, IDL_Boolean mainFile,
+	     IDL_Boolean abstract, const char* identifier)
 
   : ValueBase(D_VALUEFORWARD, file, line, mainFile, identifier),
     abstract_(abstract),
@@ -1700,7 +1707,7 @@ ValueForward(const char* file, int line, _CORBA_Boolean mainFile,
     firstForward_(0)
 {
   Scope::Entry*  se  = Scope::current()->find(identifier);
-  _CORBA_Boolean reg = 1;
+  IDL_Boolean reg = 1;
 
   if (se && se->kind() == Scope::Entry::E_DECL) {
 
@@ -1816,9 +1823,9 @@ setDefinition(ValueBase* defn)
 }
 
 ValueBox::
-ValueBox(const char* file, int line, _CORBA_Boolean mainFile,
+ValueBox(const char* file, int line, IDL_Boolean mainFile,
 	 const char* identifier, IdlType* boxedType,
-	 _CORBA_Boolean constrType)
+	 IDL_Boolean constrType)
 
   : ValueBase(D_VALUEBOX, file, line, mainFile, identifier),
     boxedType_(boxedType),
@@ -1934,7 +1941,7 @@ append(ValueInheritSpec* is, const char* file, int line)
 }
 
 ValueAbs::
-ValueAbs(const char* file, int line, _CORBA_Boolean mainFile,
+ValueAbs(const char* file, int line, IDL_Boolean mainFile,
 	 const char* identifier, ValueInheritSpec* inherits,
 	 InheritSpec* supports)
 
@@ -2016,8 +2023,8 @@ finishConstruction(Decl* contents)
 }
 
 Value::
-Value(const char* file, int line, _CORBA_Boolean mainFile,
-      _CORBA_Boolean custom, const char* identifier,
+Value(const char* file, int line, IDL_Boolean mainFile,
+      IDL_Boolean custom, const char* identifier,
       ValueInheritSpec* inherits, InheritSpec* supports)
 
   : ValueBase(D_VALUE, file, line, mainFile, identifier),

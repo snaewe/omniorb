@@ -28,8 +28,15 @@
 
 # $Id$
 # $Log$
-# Revision 1.6  2000/10/02 17:21:26  dpg1
-# Merge for 3.0.2 release
+# Revision 1.7  2001/02/21 14:12:15  dpg1
+# Merge from omni3_develop for 3.0.3 release.
+#
+# Revision 1.1.2.10  2001/01/29 10:52:47  djs
+# In order to fix interface inheritance name ambiguity problem the
+# call-base-class-by-typedef (rather than direct) MSVC workaround was
+# extended. A lot of the time a base class A::B::C is now referred to by a
+# typedef _A_B_C instead of with the scoped name.
+# Hopefully the OMNI_BASE_CTOR macro is nolonger needed.
 #
 # Revision 1.1.2.9  2000/08/30 10:14:39  dpg1
 # BOA constructor with object key failed to set the key in the servant.
@@ -294,12 +301,9 @@ if( !strcmp(id, @inherited@::_PD_repoId) )
 """
 
 interface_ALIAS = """\
-#ifndef __@guard_name@__ALIAS__
-#define __@guard_name@__ALIAS__
 typedef @fqname@ @flat_fqname@;
 typedef @impl_fqname@ @impl_flat_fqname@;
 typedef @objref_fqname@ @objref_flat_fqname@;
-#endif
 """
 
 interface_impl = """\

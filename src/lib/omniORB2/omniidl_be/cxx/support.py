@@ -202,8 +202,6 @@ class SupportedTypeVisitor(idlvisitor.TypeVisitor):
 
         not_supported = { idltype.tk_null:       "null",
                           idltype.tk_Principal:  "CORBA::Principal",
-                          idltype.tk_longlong:   "long long",
-                          idltype.tk_ulonglong:  "unsigned long long",
                           idltype.tk_longdouble: "long double",
                           idltype.tk_wchar:      "wchar" }
 

@@ -29,11 +29,8 @@
 
 /*
   $Log$
-  Revision 1.4  2000/08/18 14:09:20  dpg1
-  Merge from omni3_develop for 3.0.1 release.
-
-  Revision 1.3  2000/07/13 15:26:04  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.5  2001/02/21 14:12:21  dpg1
+  Merge from omni3_develop for 3.0.3 release.
 
   Revision 1.1.2.3  2000/07/19 17:25:14  dpg1
   Thread tracing turned off.
@@ -50,8 +47,11 @@
 #ifndef __OMNI_TRACEDTHREAD_H__
 #define __OMNI_TRACEDTHREAD_H__
 
+
 // Uncomment the following line to turn mutex/condition variable tracing on:
+
 //#define OMNIORB_ENABLE_LOCK_TRACES
+
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// omni_tracedmutex //////////////////////////

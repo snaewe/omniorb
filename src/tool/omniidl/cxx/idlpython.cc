@@ -28,8 +28,22 @@
 
 // $Id$
 // $Log$
-// Revision 1.20  2000/10/02 17:21:25  dpg1
-// Merge for 3.0.2 release
+// Revision 1.21  2001/02/21 14:12:08  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.15.2.19  2001/02/20 11:25:12  dpg1
+// Changes for Digital Unix 4.0E.
+//
+// Revision 1.15.2.18  2001/01/05 16:04:17  dpg1
+// Error in import exception handling when omniidl is an executable.
+//
+// Revision 1.15.2.17  2000/11/30 11:40:47  dpg1
+// Add -nc option to omniidl to accept invalid IDL with identifiers
+// differing only by case.
+//
+// Revision 1.15.2.16  2000/10/24 09:53:29  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.15.2.15  2000/09/06 11:20:50  dpg1
 // Support for Python 1.6 and 2.0b1.
@@ -158,12 +172,12 @@
 
 // Don't know when it was fixed -- certainly in 2.0.0
 
-static inline PyObject* MyPyLong_FromLongLong(_CORBA_LongLong ll)
+static inline PyObject* MyPyLong_FromLongLong(IDL_LongLong ll)
 {
   if (ll >= 0) // Positive numbers work OK
     return PyLong_FromLongLong(ll);
   else {
-    _CORBA_ULongLong ull = (~ll) + 1; // Hope integers are 2's complement...
+    IDL_ULongLong ull = (~ll) + 1; // Hope integers are 2's complement...
     PyObject* p = PyLong_FromUnsignedLongLong(ull);
     PyObject* n = PyNumber_Negative(p);
     Py_DECREF(p);
@@ -176,8 +190,8 @@ static inline PyObject* MyPyLong_FromLongLong(_CORBA_LongLong ll)
 #endif
 
 
-#define ASSERT_RESULT     if (!result_) PyErr_Print(); assert(result_)
-#define ASSERT_PYOBJ(pyo) if (!pyo)     PyErr_Print(); assert(pyo)
+#define ASSERT_RESULT     if (result_ == 0) PyErr_Print(); assert(result_ != 0)
+#define ASSERT_PYOBJ(pyo) if (pyo == 0)     PyErr_Print(); assert(pyo != 0)
 
 class PythonVisitor : public AstVisitor, public TypeVisitor {
 public:
@@ -220,7 +234,7 @@ public:
   PyObject* result() { return result_; }
 
   static PyObject* scopedNameToList(const ScopedName* sn);
-  static PyObject* wstringToList(const _CORBA_WChar* ws);
+  static PyObject* wstringToList(const IDL_WChar* ws);
 
 private:
   PyObject* pragmasToList(const Pragma* ps);
@@ -337,10 +351,10 @@ findPyDecl(const ScopedName* sn)
 
 PyObject*
 PythonVisitor::
-wstringToList(const _CORBA_WChar* ws)
+wstringToList(const IDL_WChar* ws)
 {
   int i;
-  const _CORBA_WChar* wc;
+  const IDL_WChar* wc;
 
   for (i=0, wc=ws; *wc; ++wc, ++i);
   PyObject* pyl = PyList_New(i);
@@ -1212,7 +1226,7 @@ void
 PythonVisitor::
 visitFixedType(FixedType* t)
 {
-  result_ = PyObject_CallMethod(idltype_, (char*)"fixedType", (char*)"i",
+  result_ = PyObject_CallMethod(idltype_, (char*)"fixedType", (char*)"ii",
 				t->digits(), t->scale());
   ASSERT_RESULT;
 }
@@ -1257,7 +1271,7 @@ extern "C" {
     PyObject*   pyname = PyFile_Name(pyfile);
     const char* name   = PyString_AsString(pyname);
 
-    _CORBA_Boolean success = AST::process(file, name);
+    IDL_Boolean success = AST::process(file, name);
 
     PyObject* result;
 
@@ -1294,7 +1308,7 @@ extern "C" {
     PyObject*   pyname = PyFile_Name(pyfile);
     const char* name   = PyString_AsString(pyname);
 
-    _CORBA_Boolean success = AST::process(file, name);
+    IDL_Boolean success = AST::process(file, name);
 
     if (success) {
       DumpVisitor v;
@@ -1405,6 +1419,13 @@ extern "C" {
     return Py_None;
   }
 
+  static PyObject* IdlPyCaseSensitive(PyObject* self, PyObject* args)
+  {
+    if (!PyArg_ParseTuple(args, (char*)"")) return 0;
+    Config::caseSensitive = 1;
+    Py_INCREF(Py_None); return Py_None;
+  }
+
   static PyMethodDef omniidl_methods[] = {
     {(char*)"compile",            IdlPyCompile,            METH_VARARGS},
     {(char*)"clear",              IdlPyClear,              METH_VARARGS},
@@ -1414,6 +1435,7 @@ extern "C" {
     {(char*)"keepComments",       IdlPyKeepComments,       METH_VARARGS},
     {(char*)"relativeScopedName", IdlPyRelativeScopedName, METH_VARARGS},
     {(char*)"runInteractiveLoop", IdlPyRunInteractiveLoop, METH_VARARGS},
+    {(char*)"caseSensitive",      IdlPyCaseSensitive,      METH_VARARGS},
     {NULL, NULL}
   };
 
@@ -1456,7 +1478,7 @@ main(int argc, char** argv)
 "\n"
 "try:\n"
 "    import omniidl.main\n"
-"except ImportError:\n"
+"except ImportError, msg:\n"
 "    sys.stderr.write('\\n\\n')\n"
 "    sys.stderr.write('omniidl: ERROR!\\n\\n')\n"
 "    sys.stderr.write('omniidl: Could not open Python files for IDL compiler\\n')\n"

@@ -28,8 +28,8 @@
 
 /*
   $Log$
-  Revision 1.4  2000/10/02 17:21:28  dpg1
-  Merge for 3.0.2 release
+  Revision 1.5  2001/02/21 14:12:21  dpg1
+  Merge from omni3_develop for 3.0.3 release.
 
   Revision 1.1.2.8  2000/09/25 11:03:28  dpg1
   Remove use of _T as a template class name

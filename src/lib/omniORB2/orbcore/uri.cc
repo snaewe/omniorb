@@ -30,8 +30,16 @@
 
 // $Id$
 // $Log$
-// Revision 1.4  2000/10/02 17:21:26  dpg1
-// Merge for 3.0.2 release
+// Revision 1.5  2001/02/21 14:12:10  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.1.2.9  2000/11/21 12:24:44  dpg1
+// corbaloc URIs accept an empty object address, to mean localhost on the
+// default port.
+//
+// Revision 1.1.2.8  2000/11/21 10:59:27  dpg1
+// Poperly throw INV_OBJREF for object references containing no profiles
+// we understand.
 //
 // Revision 1.1.2.7  2000/09/13 11:45:05  dpg1
 // Minor cut-and-paste error in URI handling meant that ior: was not
@@ -245,10 +253,10 @@ iorURIHandler::toObject(const char* sior, unsigned int cycles)
 					  profiles, 1, 0);
   delete[] repoId;
 
-  if (objref)
-    return (CORBA::Object_ptr)objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
-  else
-    return CORBA::Object::_nil();
+  if (!objref)
+    OMNIORB_THROW(INV_OBJREF, 0, CORBA::COMPLETED_NO);
+
+  return (CORBA::Object_ptr)objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
 }
 
 CORBA::Boolean
@@ -470,6 +478,15 @@ ParseVersionNumber(const char*& c, CORBA::Char& majver, CORBA::Char& minver)
 
 corbalocURIHandler::IiopObjAddr::IiopObjAddr(const char*& c)
 {
+  if (*c == '\0' || *c == ',' || *c == '/' || *c == '#') {
+    // Empty host name -- use localhost, default port
+    host_   = CORBA::string_dup("localhost");
+    port_   = IIOP::DEFAULT_CORBALOC_PORT;
+    majver_ = 1;
+    minver_ = 0;
+    return;
+  }
+
   const char* p;
   ParseVersionNumber(c, majver_, minver_);
 
@@ -478,6 +495,7 @@ corbalocURIHandler::IiopObjAddr::IiopObjAddr(const char*& c)
   if (p == c) OMNIORB_THROW(BAD_PARAM,
 			    MINOR_BAD_SCHEME_SPECIFIC_PART,
 			    CORBA::COMPLETED_NO);
+
   host_ = CORBA::string_alloc(1 + p - c);
   char* h = (char*)host_;
   if (!h) OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
@@ -654,11 +672,9 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
     }
     omniObjRef* objref = omni::createObjRef("", CORBA::Object::_PD_repoId,
 					    profiles, 1, 0);
-    if (objref) {
-      return (CORBA::Object_ptr)objref->
-	                           _ptrToObjRef(CORBA::Object::_PD_repoId);
-    }
-    else return CORBA::Object::_nil();
+    OMNIORB_ASSERT(objref);
+
+    return (CORBA::Object_ptr)objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
   }
   OMNIORB_ASSERT(0);
   return 0;

@@ -260,7 +260,7 @@ $(lib): $(OBJS) $(PYOBJS)
        $(RM) $@; \
        $(CXXLINK) $(CXXLINKOPTIONS) -shared -o $@ -Wl,-soname,$(soname) \
        $(IMPORT_LIBRARY_FLAGS) \
-       $(filter-out $(LibSuffixPattern),$^) $(LIBS)\
+       $(filter-out $(LibSuffixPattern),$^) $(LIBS) -lgcc\
        )
 
 export:: $(lib)

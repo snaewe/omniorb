@@ -29,11 +29,18 @@
 
 /*
   $Log$
-  Revision 1.31  2000/08/18 14:09:12  dpg1
-  Merge from omni3_develop for 3.0.1 release.
+  Revision 1.32  2001/02/21 14:12:10  dpg1
+  Merge from omni3_develop for 3.0.3 release.
 
-  Revision 1.30  2000/07/13 15:25:54  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.22.6.21  2001/02/19 17:16:43  sll
+  poll() on HPUX 10.20 is broken. The performance is terrible. Switch to use
+  select().
+
+  Revision 1.22.6.20  2001/02/05 12:22:35  dpg1
+  Failed to properly cope with an interrupted recv() call on Windows.
+
+  Revision 1.22.6.19  2000/10/20 16:39:13  sll
+  Typo bug fix to poll() call. Only has an effect on HPUX.
 
   Revision 1.22.6.18  2000/08/17 15:37:52  sll
   Merged RTEMS port.
@@ -289,8 +296,12 @@
 
 
 #if defined(__hpux__)
-#include <poll.h>
-#define USE_POLL_ON_RECV
+#  if __OSVERSION__ >= 11
+#    include <poll.h>
+#    define USE_POLL_ON_RECV
+#  else
+#    define USE_SELECT_ON_RECV
+#  endif
 #endif
 
 #if !defined(__VMS)
@@ -1008,7 +1019,7 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
     fds.fd = pd_socket;
     fds.events = POLLIN;
 
-    while (!(rx = poll(&fds,1,omniORB::scanGranularity()*1000) > 0)) {
+    while ((rx = poll(&fds,1,omniORB::scanGranularity()*1000)) <= 0) {
       if (rx == RC_SOCKET_ERROR && errno != EINTR) 
 	break;
     }
@@ -1044,28 +1055,32 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
 # endif
     
     if ((rx = ::recv(pd_socket,(char*)buf,sz,0)) == RC_SOCKET_ERROR) {
+#ifndef __WIN32__
       if (errno == EINTR)
 	continue;
-      else
-	{
-	  _setStrandIsDying();
-#       ifndef __WIN32__
-	  OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
-#       else
-	  OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
-					  CORBA::COMPLETED_NO);
-#       endif
-	}
+      else {
+	_setStrandIsDying();
+	OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
+      }
+#else
+      if (::WSAGetLastError() == WSAEINTR)
+	continue;
+      else {
+	_setStrandIsDying();
+	OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
+					CORBA::COMPLETED_NO);
+      }
+#endif
     }
     else
       if (rx == 0) {
 	_setStrandIsDying();
-#     ifndef __WIN32__
+#ifndef __WIN32__
 	OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
-#     else
+#else
 	OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
 					CORBA::COMPLETED_NO);
-#     endif
+#endif
       }
     break;
   }

@@ -28,8 +28,8 @@
 
 /*
  $Log$
- Revision 1.12  2000/07/13 15:25:55  dpg1
- Merge from omni3_develop for 3.0 release.
+ Revision 1.13  2001/02/21 14:12:11  dpg1
+ Merge from omni3_develop for 3.0.3 release.
 
  Revision 1.9.6.3  2000/06/27 15:40:58  sll
  Workaround for Cygnus gcc's inability to recognise _CORBA_Octet*& and

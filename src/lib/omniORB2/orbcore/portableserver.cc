@@ -29,8 +29,14 @@
 
 /*
   $Log$
-  Revision 1.4  2000/10/02 17:21:26  dpg1
-  Merge for 3.0.2 release
+  Revision 1.5  2001/02/21 14:12:11  dpg1
+  Merge from omni3_develop for 3.0.3 release.
+
+  Revision 1.1.2.13  2001/02/20 16:51:12  dpg1
+  A couple more AIX updates.
+
+  Revision 1.1.2.12  2000/10/18 16:07:45  djr
+  Moved call to _default_POA() in _do_this().
 
   Revision 1.1.2.11  2000/09/21 11:08:18  dpg1
   Add a user check to RefCountServantBase::_add_ref() which complains if
@@ -220,7 +226,7 @@ PortableServer::ServantBase::_do_this(const char* repoId)
   if( 0 /*?? in context of invocation on this servant */ ) {
 
     // Return a reference to the object being invoked.
-#if defined(__DECCXX) && __DECCXX_VER >= 60000000
+#if (defined(__DECCXX) && __DECCXX_VER >= 60000000) || defined(__xlC__)
     // Compaq C++ 6.2 warns about this even though this code 
     // cannot ever execute
     return 0;
@@ -228,21 +234,20 @@ PortableServer::ServantBase::_do_this(const char* repoId)
   }
   else {
 
-    PortableServer::POA_var poa = this->_default_POA();
-
     {
       omni_tracedmutex_lock sync(*omni::internalLock);
 
       omniLocalIdentity* id = _identities();
 
       if( id && !id->servantsNextIdentity() ) {
-	// We only have a single activation -- return a
-	// reference to it.
+	// We only have a single activation -- return a reference to it.
 	omniObjRef* ref = omni::createObjRef(_mostDerivedRepoId(), repoId, id);
 	OMNIORB_ASSERT(ref);
 	return ref->_ptrToObjRef(repoId);
       }
     }
+
+    PortableServer::POA_var poa = this->_default_POA();
 
     if( CORBA::is_nil(poa) )
       OMNIORB_THROW(OBJ_ADAPTER,0, CORBA::COMPLETED_NO);

@@ -229,7 +229,7 @@ void omniExHelper::omniConnectionBroken(const char* file, int line,
 {
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "throw omniConnectionBroken from "
+    l << "throw omniConnectionBroken (minor " << minor << ") from "
       << strip(file) << ":" << line << '\n';
   }
   throw ::omniConnectionBroken(minor, status);

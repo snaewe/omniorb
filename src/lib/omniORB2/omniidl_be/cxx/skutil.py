@@ -28,8 +28,8 @@
 
 # $Id$
 # $Log$
-# Revision 1.20  2000/10/02 17:21:27  dpg1
-# Merge for 3.0.2 release
+# Revision 1.21  2001/02/21 14:12:17  dpg1
+# Merge from omni3_develop for 3.0.3 release.
 #
 # Revision 1.15.2.6  2000/08/23 15:46:27  djs
 # MSVC5/6 workaround when marshalling a return value which is a

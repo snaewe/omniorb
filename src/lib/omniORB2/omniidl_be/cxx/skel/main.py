@@ -28,11 +28,15 @@
 
 # $Id$
 # $Log$
-# Revision 1.31  2000/08/18 14:09:13  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.32  2001/02/21 14:12:15  dpg1
+# Merge from omni3_develop for 3.0.3 release.
 #
-# Revision 1.30  2000/07/13 15:25:59  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.27.2.13  2001/01/29 10:52:45  djs
+# In order to fix interface inheritance name ambiguity problem the
+# call-base-class-by-typedef (rather than direct) MSVC workaround was
+# extended. A lot of the time a base class A::B::C is now referred to by a
+# typedef _A_B_C instead of with the scoped name.
+# Hopefully the OMNI_BASE_CTOR macro is nolonger needed.
 #
 # Revision 1.27.2.12  2000/07/24 16:32:18  djs
 # Fixed typo in previous BOA skeleton bugfix.
@@ -193,6 +197,11 @@ def __init__(stream):
     # To keep track of our depth with the AST
     self.__insideInterface = 0
     self.__insideModule = 0
+
+    # An entry in this hash indicates a flattened typedef already exists
+    # for this interface. See comments later for explanation.
+    self.__flattened_interfaces = {}
+    
     return self
 
 # ------------------------------------
@@ -230,64 +239,74 @@ def visitInterface(node):
 
     self.__insideInterface = insideInterface
 
-    # we need to generate several useful classes for object
-    # references
-    node_name = id.Name(node.scopedName())
+    # MSVC {4.2,5.0} cannot deal with a call to a virtual member
+    # of a base class using the member function's fully/partially
+    # scoped name. Have to use an alias for the base class in the
+    # global scope to refer to the virtual member function instead.
+    # (originally from o2be_interface.cc in omniidl2)
+    #
+    # Previously we could work out exactly which set of classes needed the
+    # typedefs. This seems to have become too complex; it is easier to always
+    # generate the aliases and use them often.
+    #
+    # For every class ::A::B::C we generate a typedef ::_A_B_C.
+    #
+    # As a bonus, it should no longer be necessary to use the OMNI_BASE_CTOR
+    # hack (which was previously used to conditionally remove parts of the
+    # classname for some architectures).
+    #
+
+    # Turn [A,B,C] -> _A_B_C
+    def flatName(name):
+        return "_" + string.join(name.fullName(), "_")
+
+    for i in tyutil.allInherits(node):
+        # Make sure we only generate one set of typedefs max, otherwise the
+        # compiler will rightly complain about the redefinition
+        if self.__flattened_interfaces.has_key(i): continue
+        self.__flattened_interfaces[i] = 1
+        
+        i_name = id.Name(i.scopedName())
+        objref_name = i_name.prefix("_objref_")
+        impl_name   = i_name.prefix("_impl_")
+
+        stream.out(template.interface_ALIAS,
+                   fqname = i_name.fullyQualify(),
+                   flat_fqname = flatName(i_name),
+                   impl_fqname = impl_name.fullyQualify(),
+                   impl_flat_fqname = flatName(impl_name),
+                   objref_fqname = objref_name.fullyQualify(),
+                   objref_flat_fqname = flatName(objref_name))
+
+    node_name   = id.Name(node.scopedName())
     objref_name = node_name.prefix("_objref_")
     sk_name     = node_name.prefix("_sk_")
     impl_name   = node_name.prefix("_impl_")
     
-    # build the helper class methods
+    # build the _Helper class methods
     stream.out(template.interface_Helper,
                name = node_name.fullyQualify())
-
+    
     # the class itself
     stream.out(template.interface_class,
                name = node_name.fullyQualify(),
                objref_name = objref_name.unambiguous(environment),
                repoID = node.repoId())
 
-    # comment copied from src/tool/omniidl2/omniORB2_be/o2be_interface.cc:
-
-    # MSVC {4.2,5.0} cannot deal with a call to a virtual member
-    # of a base class using the member function's fully/partially
-    # scoped name. Have to use the alias for the base class in the
-    # global scope to refer to the virtual member function instead.
-    #
-    # We scan all the base interfaces to see if any of them has to
-    # be referred to by their fully/partially qualified names. If
-    # that is necessary, we generate a typedef to define an alias for
-    # this base interface. This alias is used in the stub generated below
-    #
-    # FIXME: is this a solution to the OMNI_BASE_CTOR stuff below?
-    #
-    def flatName(name):
-        return string.join(name.fullName(), "_")
+    # Returns true when the smallest "unambiguous" name had scope qualifiers
+    # ("::") inside. This used to correspond with the cases where we had to
+    # use the flattened aliased names. We need this more often now-- this could
+    # perhaps be phased out soon.
     def needFlatName(name, environment = environment):
-        # does the name have scope :: qualifiers
-        return len(name.relName(environment)) > 1
+        # relName is the shortest partially scoped name [A, B, C] for an
+        # IDL name or None if the name must be fully qualified from the root
+        # (eg ::A::B::C)
+        relName = name.relName(environment) # partially scoped name
+
+        # We use the flattened name workaround if the relName has "::"s
+        # ie
+        return (relName == None) or (len(relName) > 1)
     
-    for i in tyutil.allInherits(node):
-        inherits_name = id.Name(i.scopedName())
-        if needFlatName(inherits_name):
-            guard_name = inherits_name.guard()
-            flat_fqname = string.join(i.scopedName(), "_")
-            inherits_impl_name = inherits_name.prefix("_impl_")
-            inherits_objref_name = inherits_name.prefix("_objref_")
-
-            impl_flat_fqname = flatName(inherits_impl_name)
-            objref_flat_fqname = flatName(inherits_objref_name)
-            
-            stream.out(template.interface_ALIAS,
-                       guard_name = guard_name,
-                       fqname = inherits_name.fullyQualify(),
-                       flat_fqname = flat_fqname,
-                       impl_fqname = inherits_impl_name.fullyQualify(),
-                       impl_flat_fqname = impl_flat_fqname,
-                       objref_fqname = inherits_objref_name.fullyQualify(),
-                       objref_flat_fqname = objref_flat_fqname)
-          
-
 
     # gather information for possible interface inheritance
     # (needs to use the transitive closure of inheritance)
@@ -295,7 +314,8 @@ def visitInterface(node):
     inherits_str = ""
     inherited_repoIDs = ""
     for i in all_inherits:
-        inherits_fqname = id.Name(i.scopedName()).fullyQualify()
+        # We don't seem to need to use the flattened name workaround here?
+        inherits_fqname = id.Name(i.scopedName()).unambiguous(environment)
         inherited_repoIDs = inherited_repoIDs + "\
 if( !strcmp(id, " + inherits_fqname + "::_PD_repoId) )\n\
   return (" + inherits_fqname + "_ptr) this;\n"
@@ -304,25 +324,10 @@ if( !strcmp(id, " + inherits_fqname + "::_PD_repoId) )\n\
         inherits_name = id.Name(i.scopedName())
         inherits_objref_name = inherits_name.prefix("_objref_")
 
-        inherits_objref_str = inherits_objref_name.unambiguous(environment)
-        if needFlatName(inherits_name):
-            inherits_objref_str = flatName(inherits_objref_name)
+        inherits_objref_str = flatName(inherits_objref_name)
             
         this_inherits_str = inherits_objref_str + "(mdri, p, id, lid),\n"
 
-        # The powerpc-aix OMNIORB_BASE_CTOR workaround still works here
-        # (in precendence to the flattened base name) but lacking a
-        # powerpc-aix test machine I can't properly test it
-        if inherits_objref_name.relName(environment) != i.scopedName():
-            prefix = []
-            for x in inherits_objref_name.fullName():
-                if x == "_objref_" + inherits_objref_name.relName(environment)[0]:
-                    break
-                prefix.append(x)
-            inherits_scope_prefix = string.join(prefix, "::") + "::"
-            this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix +\
-                                ")" + this_inherits_str
-            
         inherits_str = inherits_str + this_inherits_str
         
 
@@ -552,7 +557,7 @@ _call_desc.set_context_info(&_ctxt_info);""",
     # build the inheritance list
     inherits_repoIDs = util.StringStream()
     for i in all_inherits:
-        ancestor = id.Name(i.scopedName()).fullyQualify()
+        ancestor = id.Name(i.scopedName()).unambiguous(environment)
         inherits_repoIDs.out(template.interface_pof_repoID,
                              inherited = ancestor)
     stream.out(template.interface_pof,
@@ -600,10 +605,6 @@ _call_desc.set_context_info(&_ctxt_info);""",
             # The MSVC workaround might be needed here again
             if needFlatName(inherited_name):
                 impl_inherits = flatName(inherited_name)
-            #relName = inherited_name.relName(environment)
-            ## does this name have scope :: qualifiers?
-            #if len(relName) > 1:
-            #    impl_inherits = string.join(inherited_name.fullName(), "_")
           
             stream.out(template.interface_impl_inherit_dispatch,
                        impl_inherited_name = impl_inherits)
@@ -614,12 +615,12 @@ _call_desc.set_context_info(&_ctxt_info);""",
                       flatName = flatName):
         for i in all_inherits:
             inherited_name = id.Name(i.scopedName())
-            inherited_str = inherited_name.unambiguous(environment)
+
             impl_inherited_name = inherited_name.prefix("_impl_")
-            impl_str = impl_inherited_name.unambiguous(environment)
-            if needFlatName(inherited_name):
-                inherited_str = flatName(inherited_name)
-                impl_str = flatName(impl_inherited_name)
+            impl_str = flatName(impl_inherited_name)
+
+            inherited_str = flatName(inherited_name)
+
             stream.out(template.interface_impl_repoID,
                        inherited_name = inherited_str,
                        impl_inherited_name = impl_str)

@@ -28,8 +28,8 @@
 
 // $Id$
 // $Log$
-// Revision 1.14  2000/10/02 17:21:25  dpg1
-// Merge for 3.0.2 release
+// Revision 1.15  2001/02/21 14:12:08  dpg1
+// Merge from omni3_develop for 3.0.3 release.
 //
 // Revision 1.9.2.2  2000/08/29 10:20:26  dpg1
 // Operations and attributes now have repository ids.

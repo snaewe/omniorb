@@ -29,11 +29,12 @@
 
 /*
   $Log$
-  Revision 1.4  2000/08/18 14:09:12  dpg1
-  Merge from omni3_develop for 3.0.1 release.
+  Revision 1.5  2001/02/21 14:12:11  dpg1
+  Merge from omni3_develop for 3.0.3 release.
 
-  Revision 1.3  2000/07/13 15:25:55  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.1.2.3  2000/11/06 17:14:59  dpg1
+  Crash less likely when attempting to find a proxy factory during ORB
+  shutdown.
 
   Revision 1.1.2.2  2000/08/18 12:14:20  dme
   Allow replacement of proxyObjectFactories
@@ -119,9 +120,9 @@ proxyObjectFactory::proxyObjectFactory(const char* repoId)
 void
 proxyObjectFactory::shutdown()
 {
-  delete[] ofl;
   ofl_size = 0;
   ofl_len = 0;
+  delete[] ofl;
 }
 
 
@@ -129,8 +130,11 @@ proxyObjectFactory*
 proxyObjectFactory::lookup(const char* repoId)
 {
   // Factories should all be registered before the ORB is initialised,
-  // so at this point the list is read-only -- so concurrent reads
-  // are safe.
+  // so at this point the list is read-only. Concurrent accesses are
+  // safe, except that the list is deleted when the ORB is shutdown.
+  // There is a very small possibility that we will segfault below,
+  // but that can only happen if the application is creating an object
+  // reference at the same time as they are shutting down the ORB.
 
   OMNIORB_ASSERT(repoId);
 

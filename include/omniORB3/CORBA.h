@@ -29,11 +29,11 @@
 
 /*
  $Log$
- Revision 1.4  2000/08/18 14:09:20  dpg1
- Merge from omni3_develop for 3.0.1 release.
+ Revision 1.5  2001/02/21 14:12:22  dpg1
+ Merge from omni3_develop for 3.0.3 release.
 
- Revision 1.3  2000/07/13 15:26:06  dpg1
- Merge from omni3_develop for 3.0 release.
+ Revision 1.1.2.14  2000/12/11 10:16:37  dpg1
+ CORBA::Object::_narrow() failed to increment reference count.
 
  Revision 1.1.2.13  2000/08/11 13:50:08  sll
  Added external guard in CORBA.h to ensure that any idl that include
@@ -1498,7 +1498,7 @@ _CORBA_MODULE_BEG
     ULong           _hash(ULong maximum);
 
     static _ptr_type        _duplicate(_ptr_type);
-    static inline _ptr_type _narrow(Object_ptr o) { return o; }
+    static inline _ptr_type _narrow(Object_ptr o) { return _duplicate(o); }
     static _ptr_type        _nil();
 
     //////////////////////

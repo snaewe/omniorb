@@ -6,7 +6,7 @@ static CORBA::ORB_var orb;
 static int            dying = 0;
 static int            num_active_servers = 0;
 static omni_mutex     mu;
-static omni_condition signal(&mu);
+static omni_condition sigobj(&mu);
 
 //////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,7 @@ server_thread::run(void* arg)
   mu.lock();
   int do_signal = --num_active_servers == 0;
   mu.unlock();
-  if( do_signal )  signal.signal();
+  if( do_signal )  sigobj.signal();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -123,7 +123,7 @@ server_i::shutdown()
     // Tell the servers to exit, and wait for them to do so.
     dying = 1;
 
-    while( num_active_servers > 0 )  signal.wait();
+    while( num_active_servers > 0 )  sigobj.wait();
 
     // Shutdown the ORB (but do not wait for completion).  This also
     // causes the main thread to unblock from CORBA::ORB::run().

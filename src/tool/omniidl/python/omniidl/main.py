@@ -29,8 +29,12 @@
 
 # $Id$
 # $Log$
-# Revision 1.19  2000/10/02 17:21:24  dpg1
-# Merge for 3.0.2 release
+# Revision 1.20  2001/02/21 14:12:04  dpg1
+# Merge from omni3_develop for 3.0.3 release.
+#
+# Revision 1.15.2.18  2000/11/30 11:40:48  dpg1
+# Add -nc option to omniidl to accept invalid IDL with identifiers
+# differing only by case.
 #
 # Revision 1.15.2.17  2000/09/11 14:36:50  dpg1
 # New -T option to work around Win98 pipe problems.
@@ -42,16 +46,8 @@
 # New relativeScope() function. New -i flag to enter interactive loop
 # after parsing
 #
-# Revision 1.15.2.14  2000/07/06 09:40:44  dpg1
-# Spelling mistake :-(
-#
-# Revision 1.15.2.13  2000/07/06 09:30:20  dpg1
-# Clarify omniidl usage in documentation and omniidl -u
-#
-# Revision 1.15.2.12  2000/06/27 16:23:26  sll
-# Merged OpenVMS port.
-#
 # [...truncated...]
+#
 
 """IDL Compiler front-end main function"""
 
@@ -94,6 +90,7 @@ The supported flags are:
   -bback_end      Select a back-end to be used. More than one permitted
   -Wbarg[,arg...] Send args to the back-end
   -nf             Do not warn about unresolved forward declarations
+  -nc             Do not treat identifiers differing only in case as an error
   -k              Comments after declarations are kept for the back-ends
   -K              Comments before declarations are kept for the back-ends
   -Cdir           Change directory to dir before writing output
@@ -211,9 +208,15 @@ def parseArgs(args):
         elif o == "-n":
             if a == "f":
                 _omniidl.noForwardWarning()
+            elif a == "c":
+                sys.stderr.write(cmdname + \
+                                 ": Warning: -nc option means omniidl will " \
+                                 "silently accept invalid IDL.\n")
+                _omniidl.caseSensitive()
             else:
                 if not quiet:
-                    sys.stderr.write(cmdname + ": unknown warning option `" + \
+                    sys.stderr.write(cmdname + \
+                                     ": unknown error suppresion option `" + \
                                      a + "'\n")
                     sys.stderr.write("Use " + cmdname + " -u for usage\n")
                 sys.exit(1)

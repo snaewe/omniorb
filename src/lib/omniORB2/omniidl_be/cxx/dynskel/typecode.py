@@ -28,11 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.18  2000/08/18 14:09:14  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.19  2001/02/21 14:12:17  dpg1
+# Merge from omni3_develop for 3.0.3 release.
 #
-# Revision 1.17  2000/07/13 15:26:00  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.14.2.11  2001/01/24 13:47:58  sll
+# omniidl cxx backend bug fix.
 #
 # Revision 1.14.2.10  2000/08/18 09:42:44  djs
 # Fixed silly typo in last fix (fix == s/definied/defined/)
@@ -542,6 +542,8 @@ def visitUnion(node):
     oldbottomhalf = self.bottomhalf
     self.bottomhalf = util.StringStream()
 
+    insideModule = self.__immediatelyInsideModule
+    self.__immediatelyInsideModule = 0
     
     # need to build a static array of node members in a similar fashion
     # to structs
@@ -624,6 +626,8 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_union_tc("@repoI
     
     defineName(unionmember_mangled_name)
     defineName(mangled_name)
+
+    self.__immediatelyInsideModule = insideModule
     
     external_linkage(node)
 

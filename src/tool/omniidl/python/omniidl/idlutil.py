@@ -28,8 +28,12 @@
 
 # $Id$
 # $Log$
-# Revision 1.7  2000/10/02 17:21:24  dpg1
-# Merge for 3.0.2 release
+# Revision 1.8  2001/02/21 14:12:04  dpg1
+# Merge from omni3_develop for 3.0.3 release.
+#
+# Revision 1.3.2.2  2001/02/19 17:44:34  dpg1
+# Defer import of _omniidl in idlutil.py, so programs can use saved
+# AST trees without running in omniidl.
 #
 # Revision 1.3.2.1  2000/08/29 15:20:29  dpg1
 # New relativeScope() function. New -i flag to enter interactive loop
@@ -55,7 +59,6 @@ pruneScope()     -- remove common prefix from a scoped name.
 relativeScope()  -- give a minimal name for one scope relative to another."""
 
 import string
-import _omniidl
 
 def slashName(scopedName, our_scope=[]):
     """slashName(list, [list]) -> string
@@ -157,4 +160,5 @@ relativeScope(["P", "O", "J"], ["O", "C"]) -> [None, "O", "C"]
 
 If either scoped name does not exist, returns None."""
 
+    import _omniidl
     return _omniidl.relativeScopedName(fromScope, destScope)

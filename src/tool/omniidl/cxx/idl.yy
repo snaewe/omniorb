@@ -28,11 +28,15 @@
 
 // $Id$
 // $Log$
-// Revision 1.13  2000/08/18 14:09:09  dpg1
-// Merge from omni3_develop for 3.0.1 release.
+// Revision 1.14  2001/02/21 14:12:09  dpg1
+// Merge from omni3_develop for 3.0.3 release.
 //
-// Revision 1.12  2000/07/13 15:25:54  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.9.2.7  2000/11/30 11:41:52  dpg1
+// Enable support for fixed point type. Constants still not supported.
+//
+// Revision 1.9.2.6  2000/10/24 09:53:28  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.9.2.5  2000/08/01 11:27:45  dpg1
 // Comments were incorrectly attached to struct members.
@@ -95,9 +99,9 @@
 #define YYDEBUG 1
 
 // Globals from lexer
-extern int            yylineno;
-extern char*          currentFile;
-extern _CORBA_Boolean mainFile;
+extern int         yylineno;
+extern char*       currentFile;
+extern IDL_Boolean mainFile;
 
 void yyerror(char *s) {
 }
@@ -122,7 +126,7 @@ ValueAbs* valueabs_hack = 0;
 %union {
   char*                    id_val;
   int                      int_val;
-  _CORBA_ULong             ulong_val;
+  IDL_ULong                ulong_val;
   IdlIntLiteral            int_literal_val;
 #ifndef __VMS
   IdlFloatLiteral          float_literal_val;
@@ -131,9 +135,9 @@ ValueAbs* valueabs_hack = 0;
 #endif
   char                     char_val;
   char*                    string_val;
-  _CORBA_WChar             wchar_val;
-  _CORBA_WChar*            wstring_val;
-  _CORBA_Boolean           boolean_val;
+  IDL_WChar                wchar_val;
+  IDL_WChar*               wstring_val;
+  IDL_Boolean              boolean_val;
   int                      fixed_val; // ***
   IdlType*                 type_val;
   TypeSpec*                type_spec_val;
@@ -882,7 +886,7 @@ string_literal_plus:
 wide_string_literal_plus:
     WIDE_STRING_LITERAL { $$ = $1; }
   | wide_string_literal_plus WIDE_STRING_LITERAL {
-      $$ = new _CORBA_WChar [idl_wstrlen($1) + idl_wstrlen($2) + 1];
+      $$ = new IDL_WChar [idl_wstrlen($1) + idl_wstrlen($2) + 1];
       idl_wstrcpy($$, $1);
       idl_wstrcat($$, $2);
       delete [] $1;
@@ -1403,15 +1407,26 @@ param_type_spec:
     ;
 
 fixed_pt_type:
-    FIXED '<' positive_int_const ',' positive_int_const '>' {
-      IdlError(currentFile, yylineno, "Fixed is not supported yet");
-      $$ = 0;
+    FIXED '<' positive_int_const ',' const_exp '>' {
+      IDL_ULong scale = $5->evalAsULong();
+
+      if ($3 > 31) {
+	IdlError(currentFile, yylineno,
+		 "Fixed point values may not have more than 31 digits");
+      }
+      if (scale > $3) {
+	IdlError(currentFile, yylineno,
+		 "Fixed point scale factor is greater than "
+		 "the number of digits");
+      }
+      $$ = new FixedType($3, scale);
     }
     ;
 
 fixed_pt_const_type:
     FIXED {
-      IdlError(currentFile, yylineno, "Fixed is not supported yet");
+      IdlError(currentFile, yylineno,
+	       "Fixed point constants are not supported yet");
       $$ = 0;
     }
     ;

@@ -28,11 +28,12 @@
 
 # $Id$
 # $Log$
-# Revision 1.19  2000/08/18 14:09:14  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.20  2001/02/21 14:12:16  dpg1
+# Merge from omni3_develop for 3.0.3 release.
 #
-# Revision 1.18  2000/07/13 15:26:00  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.15.2.10  2001/01/29 10:49:42  djs
+# Bug generating C++ names in the following IDL:
+#   interface I{}; module M{ interface I: ::I{}; };
 #
 # Revision 1.15.2.9  2000/07/17 09:36:40  djs
 # Now handles the case where an interface inherits from a typedef to another
@@ -209,9 +210,14 @@ def visitInterface(node):
     for i in map(tyutil.remove_ast_typedefs, node.inherits()):
         name = id.Name(i.scopedName())
         i_POA_name = name.unambiguous(environment)
-        
-        if name.relName(environment) == i.scopedName():
-            # fully qualified POA name has a POA_ on the front
+
+        if name.relName(environment) == None:
+            # we need to fully qualify from the root
+            i_POA_name = "::POA_" + name.fullyQualify(environment)
+            
+        elif name.relName(environment) == i.scopedName():
+            # fully qualified (but not from root) POA name has a POA_ on the
+            # front
             i_POA_name = "POA_" + i_POA_name
             
         inherits.append("public virtual " + i_POA_name)

@@ -24,8 +24,8 @@
 
 // $Id$
 // $Log$
-// Revision 1.3  2000/07/13 15:26:03  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.4  2001/02/21 14:12:20  dpg1
+// Merge from omni3_develop for 3.0.3 release.
 //
 // Revision 1.1.2.1  2000/05/24 17:13:07  dpg1
 // omniNames now creates a forwarding agent with object key `NameService'

@@ -1,3 +1,470 @@
+Wed Feb 21 14:10:25 GMT 2001 dpg1
+=================================
+
+- 3.0.3 release.
+
+
+Wed Feb 21 10:14:15 GMT 2001 dpg1
+=================================
+
+- AIX patch doesn't understand unified diffs. Changed to context diff.
+
+external_merge/patches/aix_xlC_5.0.patch
+
+
+Tue Feb 20 17:38:06 GMT 2001 dpg1
+=================================
+
+- Will the AIX updates ever end?
+
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+
+- And a FreeBSD one too -- use strtouq instead of strtoull.
+
+src/tool/omniidl/cxx/idlutil.cc
+
+
+Tue Feb 20 16:47:01 GMT 2001 dpg1
+=================================
+
+- A couple more AIX updates.
+
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/portableserver.cc
+
+
+Tue Feb 20 12:31:41 GMT 2001 dpg1
+=================================
+
+- Yet another update for 3.0.3. Update AIX patch for long long.
+
+external_merge/patches/aix_xlC_5.0.patch
+
+
+Tue Feb 20 11:22:12 GMT 2001 dpg1
+=================================
+
+- More updates for 3.0.3 release -- changes for Digital Unix 4.0E.
+
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+src/examples/thread/prio.cc
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlscope.cc
+
+
+Tue Feb 20 10:19:23 GMT 2001 dpg1
+=================================
+
+- Updates for 3.0.3 release.
+
+bugfixes-302.xml                        -- new
+bugfixes.xml
+bugfixes.xsl
+external_merge/ReleaseNote_omniORB_302  -- deleted
+external_merge/ReleaseNote_omniORB_303  -- new
+external_merge/THIS_IS_omniORB_3_0_2    -- deleted
+external_merge/THIS_IS_omniORB_3_0_3    -- new
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak
+
+
+Mon Feb 19 17:42:05 GMT 2001 dpg1
+=================================
+
+- Defer import of _omniidl in idlutil.py, so programs can use saved
+  AST trees without running in omniidl.
+
+src/tool/omniidl/python/omniidl/idlutil.py
+
+
+Mon Feb 19 17:14:38 GMT 2001 sll
+================================
+
+- poll() on HPUX 10.20 is broken. The performance is terrible.
+  Switch to use select() instead.
+
+src/lib/omniORB2/orbcore/tcpSocketMTFactory.cc
+
+
+Mon Feb  5 12:12:14 GMT 2001 dpg1
+=================================
+
+- Failed to properly cope with an interrupted recv() call on Windows.
+
+src/lib/omniORB2/orbcore/tcpSocketMTFactory.cc
+
+
+Sun Jan 28 15:30:10 GMT 2001 djs
+================================
+
+- omniIDL/C++ name mapping error triggered by IDL like the following:
+
+  interface I {};
+  module M{
+    interface I: ::I {};   // caused bad things to happen
+    interface J: I {};     // caused worse things to happen
+  };
+
+  Problem could be solved by fully scoping all names, but this is known to
+  cause problems on some compilers.
+  Instead an existing workaround has been extended-- instead of referring
+  to a fully scoped name (eg ::M::I) we refer to a flat typedef global in
+  the SK.cc file.
+
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+Wed Jan 24 13:45:48 GMT 2001 sll
+================================
+
+- omniidl C++ back-end bug fix. Only affects MSVC++ and with IDLs that
+  contains a struct definition inside a union inside a namespace.
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
+Tue Jan 16 12:52:13 GMT 2001 dpg1
+=================================
+
+- omniNames and omniMapper now complain if they cannot open the
+  requested port, rather than dying with an uncaught exception.
+
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/omniNames.cc
+
+
+Tue Jan 16 11:49:14 GMT 2001 dpg1
+=================================
+
+- Yesterday's C++ back-end bug fix missed a case.
+
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+
+- The potential bug wasn't a potential bug after all.
+
+src/tool/omniidl/python/omniidl/idlast.py
+
+
+Mon Jan 15 15:49:43 GMT 2001 dpg1
+=================================
+
+- Bug in omniidl C++ back-end when an interface is inherited from a
+  typedef to a forward-declared interface.
+
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+
+- Potential bug in forward-declared AST nodes.
+
+src/tool/omniidl/python/omniidl/idlast.py
+
+
+Wed Jan 10 15:21:47 GMT 2001 dpg1
+=================================
+
+- Print minor code when tracing omniConnectionBroken exception.
+
+src/lib/omniORB2/orbcore/exceptn.cc
+
+- Propagate omniConnectionBroken out of HandleRequest().
+
+src/lib/omniORB2/orbcore/giopServer.cc
+
+
+Fri Jan  5 16:02:23 GMT 2001 dpg1
+=================================
+
+- Error in import exception handling when omniidl is an executable.
+
+src/tool/omniidl/idlpython.cc
+
+
+Mon Dec 11 09:51:35 GMT 2000 dpg1
+=================================
+
+- CORBA::Object::_narrow() failed to increment reference count.
+
+include/omniORB3/CORBA.h
+
+
+Tue Dec  5 11:57:03 GMT 2000 dpg1
+=================================
+
+- Fix bug with ServantLocator postinvoke() when operation name is >32
+  characters.
+
+src/lib/omniORB2/orbcore/poa.cc
+
+- Typo in Solaris gcc makerule: -posix4 instead of -lposix4.
+
+src/lib/omnithread/sharedlib/dir.mk
+
+
+Mon Dec  4 13:44:48 GMT 2000 dpg1
+=================================
+
+- Support PowerPC Linux.
+
+external_merge/mk/platforms/powerpc_linux_2.2_glibc.mk     NEW
+include/omniORB3/CORBA_sysdep.h
+src/tool/omniidl/cxx/cccp/config-linux.h
+
+
+Thu Nov 30 11:39:00 GMT 2000 dpg1
+=================================
+
+- Add -nc option to omniidl to accept invalid IDL with identifiers
+  differing only by case.
+
+src/tool/omniidl/cxx/idlconfig.cc
+src/tool/omniidl/cxx/idlconfig.h
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlscope.cc
+
+- Enable omniidl support for fixed point type. Constants still not
+  supported.
+
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+
+- omniidl on FreeBSD apparently needs -lgcc with some gcc versions.
+
+src/tool/omniidl/cxx/dir.mk
+
+
+Wed Nov 29 15:19:28 GMT 2000 sll
+================================
+
+- Added reference to 2.8.0 bug page.
+
+bugfixes.xsl
+
+Mon Nov 27 18:48:52 GMT 2000 dpg1
+=================================
+
+- jnw's fix for bug with multiply-recursive TypeCode.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
+Mon Nov 27 16:32:22 GMT 2000 sll
+================================
+
+- Corrected tricky #if introduced by previous checkin
+
+src/appl/omniNames/log.cc
+
+Thu Nov 23 13:02:35 GMT 2000 sll
+===============================
+
+- Added support for KAI C++ 4.0. Works for HPUX 11.00 and Linux glibc2.1
+
+external_merge/README.KAI_C++   NEW
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk
+include/omniORB3/CORBA_sysdep.h
+src/appl/omniNames/log.cc
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
+
+- Avoided using signal as a variable name
+
+src/examples/call_back/cb_server.cc
+
+
+Thu Nov 23 11:17:25 GMT 2000 sll
+================================
+
+- Digital Unix bug fix. Clear the buffer before passing it to gethostbyname_r.
+- Added new platform file for Tru64 5.0
+- omkdepend needs varargs on DU/Tru64.
+
+external_merge/config/config.mk
+external_merge/mk/platforms/alpha_osf1_5.0.mk
+src/lib/omniORB2/orbcore/libcWrapper.cc
+src/tool/omkdepend/def.h
+
+Tue Nov 21 12:20:18 GMT 2000 dpg1
+=================================
+
+- corbaloc URIs accept an empty object address, to mean localhost on
+  the default port.
+
+src/lib/omniORB2/orbcore/uri.cc
+
+
+Tue Nov 21 10:46:54 GMT 2000 dpg1
+=================================
+
+- Poperly throw INV_OBJREF for object references containing no
+  profiles we understand.
+
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/uri.cc
+
+
+Mon Nov 13 11:47:35 GMT 2000 djr
+================================
+
+- ServantLocator::preinvoke() and ServantActivator::incarnate() did not
+  allow system exceptions through to client.  (NB. This fix does not work
+  for platforms that do not catch exceptions by base class).
+
+src/lib/omniORB2/orbcore/poa.cc
+
+
+Tue Nov  7 15:31:24 GMT 2000 dpg1
+=================================
+
+- Add -T flag to omniidl use in nmake dir.mak files.
+
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak
+
+
+Mon Nov  6 17:12:36 GMT 2000 dpg1
+=================================
+
+- Change assertion failure message.
+
+src/lib/omniORB2/orbcore/omniInternal.cc
+
+- Crash less likely when attempting to find a proxy factory during ORB
+  shutdown.
+
+src/lib/omniORB2/orbcore/proxyFactory.cc
+
+
+Wed Nov  1 11:20:52 GMT 2000 dpg1
+=================================
+
+- Cut-and-paste error in wstring type creation
+
+src/tool/omniidl/python/omniidl/idltype.py
+
+
+Tue Oct 24 10:44:08 BST 2000 dpg1
+=================================
+
+- Clean up omniidl system dependencies. Replace use of _CORBA_ types
+  with IDL_ types.
+
+src/tool/omniidl/cxx/CORBA_basetypes.h  -- deleted
+src/tool/omniidl/cxx/CORBA_sysdep.h     -- deleted
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idlc.cc
+src/tool/omniidl/cxx/idlconfig.cc
+src/tool/omniidl/cxx/idlconfig.h
+src/tool/omniidl/cxx/idlerr.cc
+src/tool/omniidl/cxx/idlerr.h
+src/tool/omniidl/cxx/idlexpr.cc
+src/tool/omniidl/cxx/idlexpr.h
+src/tool/omniidl/cxx/idlmath.h
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+src/tool/omniidl/cxx/idlrepoId.h
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlscope.h
+src/tool/omniidl/cxx/idlsysdep.h
+src/tool/omniidl/cxx/idltype.cc
+src/tool/omniidl/cxx/idltype.h
+src/tool/omniidl/cxx/idlutil.cc
+src/tool/omniidl/cxx/idlutil.h
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/cxx/y.tab.h
+
+
+Fri Oct 20 17:34:24 BST 2000 sll
+================================
+
+- Fixed typo bug which only has an effect on HPUX
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
+Wed Oct 18 16:54:10 BST 2000 djr
+================================
+
+- Minor change to PortableServer::ServantBase::_do_this(), to avoid call
+  to _default_POA() unless it is necassary.
+
+src/lib/omniORB/orbcore/portableserver.cc
+
+- Added call_back to list of subdirs.
+
+src/examples/dir.mk
+
+
+Mon Oct 16 18:56:53 BST 2000 djs
+================================
+
+- omniIDL/C++ backend tie template operation mapping error with inout types
+  (bug #3)
+
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py
+
+
+Mon Oct 16 14:11:48 BST 2000 sll
+================================
+
+- New platform file for Solaris 8
+
+external_merge/mk/platforms/sun4_sosV_5.8.mk
+mk/platforms/sun4_sosV_5.8.mk
+
+
+Fri Oct 13 10:24:46 BST 2000 djr
+================================
+
+- Fixed race between object-deactivation and completion of last invocation.
+
+src/lib/omniORB2/orbcore/poa.cc
+
+
+Fri Oct  6 09:58:55 BST 2000 dpg1
+=================================
+
+- Long long _is_ supported.
+
+src/lib/omniORB2/omniidl_be/cxx/support.py
+
+
+Thu Oct  5 12:13:05 BST 2000 dpg1
+=================================
+
+- Minor tweaks to XML things for the bugfixes. It now (almost) works
+  natively in Mozilla.
+
+bugfixes-300.xml
+bugfixes-301.xml
+bugfixes.xml
+bugfixes.xsl
+
+
 Mon Oct  2 17:30:13 BST 2000 dpg1
 =================================
 

@@ -10,6 +10,10 @@ AlphaProcessor = 1
 #
 # Python set-up
 #
+# WARNING: Python's configure put a "#define inline __inline" into
+# -------  /usr/local/include/python2.0/config.h!
+#          This macro has to be suppressed!
+#
 # You must set a path to a Python 1.5.2 interpreter.
 
 #PYTHON = /usr/local/bin/python
@@ -28,19 +32,24 @@ include $(THIS_IMPORT_TREE)/mk/unix.mk
 
 IMPORT_CPPFLAGS += -D__alpha__ -D__osf1__ -D__OSVERSION__=4
 
-
 #
 # Standard programs
 #
 
 AR = ar clq
 
-CXX = /usr/bin/cxx
-# For DEC C++ 6.0
-CXXOPTIONS = -ptr $(TOP)/cxx_respository
+#
+# Use DIGITAL C++ V6.1-029 on DIGITAL UNIX V4.0E (Rev. 1091)
 #
 DecCxxMajorVersion = 6
-DecCxxMinorVersion = 0
+DecCxxMinorVersion = 1
+
+CXX         = cxx
+CXXOPTIONS  = -ptr $(TOP)/cxx_respository
+#
+# Let us allways generate thread save code (-pthread includes -D_REENTRANT)
+#
+CXXOPTIONS += -pthread
 #
 # For DEC C++ 6.0
 # Uncommment the following line to speed up the compilation, but may require
@@ -50,16 +59,27 @@ DecCxxMinorVersion = 0
 # CXXOPTIONS += -ttimestamp -pch
 
 CXXMAKEDEPEND += -D__DECCXX -D__cplusplus
-CXXDEBUGFLAGS = -O
+CXXDEBUGFLAGS  = -O
 
-CXXLINK		= $(CXX)
-CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -call_shared
+CXXLINK	       = $(CXX)
+CXXLINKOPTIONS = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -call_shared
 
-CC = gcc
-CMAKEDEPEND += -D__GNUC__
-CDEBUGFLAGS = -O
+#
+# Use DEC C V5.8-009 on Digital UNIX V4.0E (Rev. 1091)
+#
+CC           = cc
+CMAKEDEPEND += -D__DECC
+CDEBUGFLAGS  = -O
+#
+# The following is needed for src/tool/omkdepend/omkdepend to avoid SIGSEGV
+#
+COPTIONS     = -DNeedVarargsPrototypes
+#
+# Let us allways generate thread save code (-pthread includes -D_REENTRANT)
+#
+COPTIONS    += -pthread
 
-CLINK = $(CC)
+CLINK        = $(CC)
 
 
 #
@@ -116,8 +136,10 @@ CorbaImplementation = OMNIORB
 ThreadSystem = Posix
 
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 -DNoNanoSleep
-OMNITHREAD_CPPFLAGS = -D_REENTRANT -pthread
-
+OMNITHREAD_CPPFLAGS       = -pthread
+#
+# Note: -pthread includes -D_REENTRANT
+#
 # The pthread package before 4.0 was POSIX 1003.4a draft 4. If for some
 # reason it is necessary to run the same binaries on 4.0 and older systems
 # (e.g. 3.2), use the following make variables instead.

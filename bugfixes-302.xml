@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xsl" href="bugfixes.xsl"?>
+
+<!-- The following bugs have been fixed since the omniORB 3.0.2     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="3.0.2">
+
+<bug id="16" date="Mon Feb  5 12:12:14 GMT 2001" user="dpg1">
+
+  <summary>Incorrect connection closure on Windows</summary>
+  <reported>Victor Joukov</reported>
+  <text>
+  In extremely rare cases, a recv() could be interrupted on Windows,
+  causing a connection closure, rather than the proper retry.
+  </text>
+</bug>
+
+<bug id="15" date="Sun Jan 28 15:30:10 GMT 2001" user="djs">
+
+  <summary>omniIDL/C++ backend interface inheritance errors</summary>
+  <reported>Gnana</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2000-12/0157.html"/>
+  <text>
+  The C++ backend failed to map the names of some interfaces to unambiguous
+  C++ class names in some circumstances. Example IDL:
+    <pre>
+    interface I{};
+    module M{
+      interface I : ::I{};
+      interface J : I{};
+    };
+    </pre>
+  </text>
+</bug>
+
+<bug id="14" date="Wed Jan 24 13:28:27 GMT 2001" user="sll">
+
+  <summary>Bug in omniidl C++ back-end with struct member within a union which in turn is within a namespace. Only causes compilation problem with MSVC++.</summary>
+  <reported>Lars Immisch</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2001-01/0145.html"/>
+  <text>
+  IDL like the following would cause invalid code be generated for MSVC++:
+
+    <pre>
+     namespace A {
+       union B switch(long) {
+         case 0:
+              struct C {
+                  string op;
+              } ex;
+         default:
+              long digit;
+       };
+    };
+    </pre>
+  </text>
+</bug>
+
+<bug id="13" date="Mon Jan 15 15:49:43 GMT 2001" user="dpg1">
+
+  <summary>Bug in omniidl C++ back-end with unusual
+  inheritance</summary>
+  <reported>Daniel von Tabouillot</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2001-01/0100.html"/>
+  <text>
+  IDL like the following would cause an internal error in the omniidl
+  C++ back-end:
+
+    <pre>
+    interface A;
+    typedef A B;
+    interface A {};
+    interface C : B {};
+    </pre>
+  </text>
+</bug>
+
+<bug id="12" date="Mon Dec 11 09:51:35 GMT 2000" user="dpg1">
+
+  <summary>CORBA::Object::_narrow() does not increment the reference
+  count.</summary>
+  <reported>Kevin Bailey</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-12/0048.html"/>
+</bug>
+
+<bug id="11" date="Tue Dec  5 11:57:03 GMT 2000" user="dpg1">
+
+  <summary>Invalid string in postinvoke() with long operation names</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-12/0029.html"/>
+  <text>
+  If the operation name is longer than 32 characters, postinvoke()
+  would be called with an invalid operation name string.
+  </text>
+</bug>
+
+<bug id="10" date="Mon Nov 27 18:48:52 GMT 2000" user="jnw/dpg1">
+
+  <summary>Bug with multiply-recursive TypeCode</summary>
+  <reported>Walter Stroebel</reported>
+  <text>
+  A recursive type in which more than one member recursed to the same
+  type could cause an infinite recursion, leading to a stack overflow.
+  </text>
+</bug>
+
+<bug id="9" date="Thu Nov 23 11:22:57 GMT 2000" user="sll">
+  <summary>New platform file for Tru64 5.0</summary>
+  <reported>dek_ml@konerding</reported>
+  <text>
+  Also fixed a problem with omkdepend when compiled with native cc.
+  </text>
+</bug>
+
+<bug id="8" date="Thu Nov 23 11:22:57 GMT 2000" user="sll">
+
+  <summary>On Digital Unix/Tru64, gethostbyname_r() is not used properly</summary>
+  <reported>Neeraj Bhatia</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-05/0064.html"/>
+  <text>
+  This bug causes intermittent problems and causes a crash in gethostbyname_r.
+  </text>
+</bug>
+
+<bug id="7" date="Tue Nov 21 10:46:54 GMT 2000" user="dpg1">
+
+  <summary>Invalid object references handled incorrectly</summary>
+  <reported>Nick Belshaw</reported>
+  <text>
+  An IOR containing no recognised profiles (e.g. from ORBit with
+  default settings) would be treated as nil by string_to_object, and a
+  MARSHAL exception by the unmarshalling code. The correct exception
+  is INV_OBJREF.
+  </text>
+</bug>
+
+<bug id="6" date="Mon Nov 13 11:47:35 GMT 2000" user="djr">
+
+  <summary>System exceptions not forwarded from incarnate() and preinvoke()</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-11/0083.html"/>
+  <text>
+  System exceptions thrown from a ServantLocator's preinvoke() method, or a
+  ServantActivator's incarnate() method are silently converted into an
+  OBJ_ADAPTER exception.  They should be passed on to the client without
+  change.
+  </text>
+</bug>
+
+<bug id="5" date="Tue Nov  7 15:31:24 GMT 2000" user="dpg1">
+
+  <summary>Examples fail to build with nmake on Windows 9x</summary>
+  <text>
+  As explained in 3.0.1's <a href="bug301.html#bug9">bug 9</a>, some
+  Windows 98 machines (but not all) fail to cope with the pipe between
+  the C pre-processor and omniidl. The work-around is to use the -T
+  flag. The dir.mak files in the examples now use this flag.
+  </text>
+</bug>
+
+<bug id="4" date="Tue Oct 24 10:44:08 BST 2000" user="dpg1">
+
+  <summary>omniidl system dependency clean-up</summary>
+  <text>
+  Not really a bug, but some long-standing ugliness in omniidl's
+  system dependencies has been cleaned up. It's listed here because
+  any code which uses omniidl's C++ interface may need to be slightly
+  modified.
+  </text>
+</bug>
+
+<bug id="3" date="Mon Oct 16 18:56:53 BST 2000" user="djs">
+
+  <summary>omniIDL/C++ backend tie template operation mapping error</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-10/0071.html"/>
+  <text>
+  The tie template code used the _objref argument mapping rather than the 
+  _impl mapping.
+  </text>
+</bug>
+
+<bug id="2" date="Fri Oct 13 09:56:03 BST 2000" user="djr">
+
+  <summary>Race condition in POA triggers assertion failure</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-10/0055.html"/>
+  <text>
+  There is a race condition in the POA between deactivating an object
+  and it being etherealised, which can trigger an assertion failure
+  (which in turn throws an omniORB::fatalException()).
+  </text>
+</bug>
+
+<bug id="1" date="Fri Oct  6 09:58:55 BST 2000" user="dpg1">
+
+  <summary>C++ back-end claims that it does not support long long</summary>
+  <reported>Chris Knight</reported>
+  <text>
+  A new check added to the C++ back-end incorrectly reported that long
+  long is not supported, even though it is. Note that long long is not
+  currently supported in Any.
+  </text>
+</bug>
+
+</buglist>

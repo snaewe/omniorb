@@ -28,8 +28,14 @@
 
 # $Id$
 # $Log$
-# Revision 1.17  2000/10/02 17:21:24  dpg1
-# Merge for 3.0.2 release
+# Revision 1.18  2001/02/21 14:12:04  dpg1
+# Merge from omni3_develop for 3.0.3 release.
+#
+# Revision 1.13.2.6  2001/01/16 11:50:51  dpg1
+# The potential bug wasn't a potential bug after all.
+#
+# Revision 1.13.2.5  2001/01/15 15:56:06  dpg1
+# Potential bug in forward-declared AST nodes.
 #
 # Revision 1.13.2.4  2000/08/29 10:20:29  dpg1
 # Operations and attributes now have repository ids.
@@ -1033,7 +1039,7 @@ strings. Raises DeclNotFound if the name is not recognised."""
     sname = idlutil.slashName(scopedName)
     if not declMap.has_key(sname):
         raise DeclNotFound(scopedName)
-    
+
     return declMap[sname]
 
 

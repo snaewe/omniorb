@@ -29,11 +29,11 @@
  
 /*
   $Log$
-  Revision 1.4  2000/08/18 14:09:12  dpg1
-  Merge from omni3_develop for 3.0.1 release.
+  Revision 1.5  2001/02/21 14:12:12  dpg1
+  Merge from omni3_develop for 3.0.3 release.
 
-  Revision 1.3  2000/07/13 15:25:56  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.1.2.17  2000/11/06 17:14:47  dpg1
+  Change assertion failure message.
 
   Revision 1.1.2.16  2000/07/21 15:35:47  dpg1
   Incorrectly rejected object references with incompatible target and
@@ -639,6 +639,10 @@ omni::createObjRef(const char* mostDerivedRepoId,
   if( !pof ) {
     pof = proxyObjectFactory::lookup(targetRepoId);
     OMNIORB_ASSERT(pof);
+    // The assertion above will fail if your application attempts to
+    // create an object reference while another thread is shutting
+    // down the ORB.
+
     if( strcmp(targetRepoId, CORBA::Object::_PD_repoId) )
       target_intf_not_confirmed = 1;
   }
@@ -744,6 +748,10 @@ omni::createObjRef(const char* mostDerivedRepoId,
   if( !pof ) {
     pof = proxyObjectFactory::lookup(targetRepoId);
     OMNIORB_ASSERT(pof);
+    // The assertion above will fail if your application attempts to
+    // create an object reference while another thread is shutting
+    // down the ORB.
+
     target_intf_not_confirmed = 1;
   }
 
@@ -969,7 +977,9 @@ omni::assertFail(const char* file, int line, const char* expr)
 {
   if( omniORB::trace(1) ) {
     omniORB::logger l;
-    l << "Assertion failed.  This indicates a bug in omniORB.\n"
+    l << "Assertion failed.  This indicates a bug in the application using\n"
+      "omniORB, or maybe in omniORB itself. e.g. using the ORB after it has\n"
+      "been shut down.\n"
       " file: " << file << "\n"
       " line: " << line << "\n"
       " info: " << expr << '\n';

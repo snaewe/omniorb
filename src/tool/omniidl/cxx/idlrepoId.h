@@ -28,8 +28,12 @@
 
 // $Id$
 // $Log$
-// Revision 1.5  2000/07/13 15:25:53  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.6  2001/02/21 14:12:08  dpg1
+// Merge from omni3_develop for 3.0.3 release.
+//
+// Revision 1.2.2.1  2000/10/24 09:53:30  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.2  1999/11/02 17:07:25  dpg1
 // Changes to compile on Solaris.
@@ -63,18 +67,18 @@ public:
 
 
 protected:
-  Prefix(char* str, _CORBA_Boolean isfile);
+  Prefix(char* str, IDL_Boolean isfile);
   ~Prefix();
 
   // Get/set operations on this prefix node
   const char*    get();
   void           set(const char* setTo);
-  _CORBA_Boolean isfile();
+  IDL_Boolean    isfile();
 
 private:
   char*          str_;		// Prefix string
   Prefix*        parent_;	// Previous prefix
-  _CORBA_Boolean isfile_;	// True if prefix is at file scope
+  IDL_Boolean    isfile_;	// True if prefix is at file scope
 
   static Prefix* current_;
 };
