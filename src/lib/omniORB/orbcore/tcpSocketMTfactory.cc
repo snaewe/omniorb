@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.9  1998/04/22 16:39:50  sll
+  Added try-catch loop to guard against exception raised by the thread library
+  when it cannot create a new thread for tcpSocketWorker.
+
   Revision 1.8  1998/04/08 16:06:49  sll
   Added support for Reliant UNIX 5.43
 
@@ -921,7 +925,13 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	omniORB::log.flush();
       }
 
-      if (!(newthr = new tcpSocketWorker(newSt))) {
+      try {
+	newthr = new tcpSocketWorker(newSt);
+      }
+      catch(...) {
+	newthr = 0;
+      }
+      if (!newthr) {
 	// Cannot create a new thread to serve the strand
 	// We have no choice but to shutdown the strand.
 	// The long term solutions are:  start multiplexing the new strand
