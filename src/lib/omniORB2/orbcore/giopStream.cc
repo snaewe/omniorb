@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2000/02/14 18:06:45  sll
+  Support GIOP 1.2 fragment interleaving. This requires minor access control
+  changes to the relevant classes.
+
   Revision 1.1.2.7  1999/11/05 19:00:14  sll
   giopStream::is_unused() and giopStream::garbageCollect() should not
   delete the stream object if pd_nwaiting is not zero.
@@ -169,10 +173,45 @@ giopStream::acquire(Strand* s)
   omni_mutex_lock sync(Strand::Sync::getMutex(s));
 
   giopStream* p = (giopStream*) Strand::Sync::getSync(s);
-  if (!p || p->pd_state != UnUsed) {
-    p = new giopStream(s);
+
+  if (p) {
+    // Now check if any of the existing giopStream is partially
+    // or fully buffered. If so, use this thread to service it.
+    giopStream* fp = 0;
+    giopStream* pp = 0;
+    while (p) {
+      switch (p->pd_state) {
+      case InputFullyBuffered:
+	if (!fp) fp = p;
+	break;
+      case InputPartiallyBuffered:
+	if (!pp) pp = p;
+	break;
+      default:
+	break;
+      }
+      p = (giopStream*) p->pd_next;
+    }
+    if (fp) {
+      p = fp;
+    }
+    //    else if (pp && !((giopStream*)Strand::Sync::getSync(s))->pd_next) {
+    else if (pp) {
+      // Only deal with a partially buffered giopStream if this
+      // is the only giopStream object.
+      p = pp;
+    }
+    else {
+      p = (giopStream*) Strand::Sync::getSync(s);
+      p->pd_impl = giopStreamImpl::maxVersion();
+    }
   }
-  p->pd_impl = giopStreamImpl::maxVersion();
+
+  if (!p) {
+    p = new giopStream(s);
+    p->pd_impl = giopStreamImpl::maxVersion();
+  }
+
   p->pd_state = InputIdle;
   p->pd_clicks = INT_MAX;
 

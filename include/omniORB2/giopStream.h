@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/02/14 18:06:44  sll
+  Support GIOP 1.2 fragment interleaving. This requires minor access control
+  changes to the relevant classes.
+
   Revision 1.1.2.3  1999/11/04 20:20:15  sll
   GIOP engines can now do callback to the higher layer to calculate total
   message size if necessary.
@@ -447,7 +451,9 @@ private:
 	 InputRequest,
 	 InputReply,
 	 InputLocateReply,
-         InputRequestCompleted } pd_state;
+         InputRequestCompleted,
+         InputPartiallyBuffered,
+         InputFullyBuffered } pd_state;
 	       
 public:
   // The following implement the abstract functions defined in cdrStream

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2000/02/14 18:06:45  sll
+  Support GIOP 1.2 fragment interleaving. This requires minor access control
+  changes to the relevant classes.
+
   Revision 1.1.2.5  1999/11/10 14:02:45  sll
   When omniORB::strictIIOP is not set, do not throw marshal exception even if
   an incoming non-fragmented request message with no message body (because
@@ -907,6 +911,10 @@ public:
 	     (omni::ptr_arith_t) g->pd_inb_begin));
   }
 
+private:
+
+  CORBA::Boolean saveInterleaveFragment(giopStream* g, CORBA::ULong reqid);
+
 protected:
 
   void inputCheckFragmentHeader(giopStream* g,
@@ -914,6 +922,7 @@ protected:
 				CORBA::Boolean headerInBuffer,
 				CORBA::Boolean expectFragment)
   {
+  again:
     if (!headerInBuffer) {
       assert(g->pd_inb_end == g->pd_inb_mkr);
 
@@ -926,6 +935,7 @@ protected:
     unsigned char* hdr = (unsigned char*) g->pd_inb_mkr;
     CORBA::Boolean bswap = (((hdr[6] & 0x1) == _OMNIORB_HOST_BYTE_ORDER_)
 			    ? 0 : 1 );
+    CORBA::ULong reqid;
 
     if (hdr[0] != 'G' || hdr[1] != 'I' || hdr[2] != 'O' || hdr[3] != 'P' ||
 	hdr[4] != 1   || hdr[5] > 2 || (hdr[5] != 2 && giop12only)) {
@@ -956,7 +966,7 @@ protected:
 	  g->pd_inb_end = (void *) ((omni::ptr_arith_t)g->pd_inb_mkr + b.size);
 	  hdr = (unsigned char*) g->pd_inb_mkr;
 	}
-	CORBA::ULong reqid = *(CORBA::ULong*)(hdr + 12);
+	reqid = *(CORBA::ULong*)(hdr + 12);
 	if (bswap) {
 	  CORBA::ULong t = reqid;
 	  reqid = ((((t) & 0xff000000) >> 24) |
@@ -1003,6 +1013,22 @@ protected:
       {
 	if (expectFragment) {
 	  // We expect a fragment and this isn't.
+	  {
+	    g->pd_strand->giveback_received(12);
+	    Strand::sbuf b;
+	    b = g->pd_strand->receive(16,1,omni::max_alignment,1);
+	    g->pd_inb_begin = g->pd_inb_mkr = b.buffer;
+	    g->pd_inb_end = (void *) ((omni::ptr_arith_t)g->pd_inb_mkr + b.size);
+	    hdr = (unsigned char*) g->pd_inb_mkr;
+	  }
+	  reqid = *(CORBA::ULong*)(hdr + 12);
+	  if (bswap) {
+	    CORBA::ULong t = reqid;
+	    reqid = ((((t) & 0xff000000) >> 24) |
+		     (((t) & 0x00ff0000) >> 8)  |
+		     (((t) & 0x0000ff00) << 8)  |
+		     (((t) & 0x000000ff) << 24));
+	  }
 	  goto demux;
 	}
       }
@@ -1019,9 +1045,25 @@ protected:
     // header of the next fragment. This process repeats until we've
     // encountered the fragment we expect.
 
+    // Reach here:
+    //  reqid = Request ID of this fragment
+    //  hdr   = points to the start of the header
+    //  bswap = TRUE(1) if byte swap is necessary
+
+#if 0
     // XXX Temp. solution does not support fragment interleaving.
     PTRACE("inputCheckFragmentHeader","MessageError (Fragment multiplexing unsupported)");
     goto bail_out;
+#else
+
+    if (saveInterleaveFragment(g,reqid)) {
+      headerInBuffer = 0;
+      goto again;
+    }
+    else
+      goto bail_out;
+
+#endif
 
   bail_out:
     if (hdr[7] != (unsigned char) GIOP::MessageError &&
@@ -1871,7 +1913,7 @@ public:
 #endif
 
 
-    // XXX Here we should check if the same of all fragments has
+    // XXX Here we should check if the sum of all fragments has
     //     exceeded the input message size limit. If that is the
     //     case, we do not buffer the data. Instead, we just
     //     allocate an internalBuffer to store the header and
@@ -2195,6 +2237,81 @@ giop_1_2_Impl::copyMessageBodyFrom(giopStream*g, giopStream& s)
     // We use the giop_1_2_buffered_Impl to do the copy because
     // it can deal with both a buffered and non-buffered source.
     giop_1_2_buffered_singleton->copyMessageBodyFrom(g,s);
+}
+
+CORBA::Boolean 
+giop_1_2_Impl::saveInterleaveFragment(giopStream* g, CORBA::ULong reqid)
+{
+  {
+    if (omniORB::trace(25)) {
+      omniORB::logger log;
+      log << " giop 1.2 saveInterleaveFragment " 
+	  << reqid << "\n";
+    }
+  }
+
+  // Seach the list of giopStream of this strand to see if there is 
+  // already one with the same request ID. If not, allocate a 
+  // new giopStream.
+  //
+  unsigned char* hdr = (unsigned char*) g->pd_inb_mkr;
+  giopStream* p;
+  {
+    omni_mutex_lock sync(Strand::Sync::getMutex(g->pd_strand));
+    p = (giopStream*) Strand::Sync::getSync(g->pd_strand);
+    while (p) {
+      if (p->pd_request_id == reqid) break;
+      p = (giopStream*) p->pd_next;
+    }
+
+    switch ((GIOP::MsgType)hdr[7]) {
+    case GIOP::Fragment:
+
+      if (!p || p->pd_state == giopStream::InputFullyBuffered) {
+	// On the wire protocol error. We got a fragment but either:
+	//     1. haven't got the 1st request message or
+	//     2. a complete request message with the same request id is
+	//        already in the buffer.
+	PTRACE("saveInterleaveFragment",
+	       "MessageError (unexpected interleave fragment)");
+	return 0;
+      }
+      break;
+
+    default:
+
+      if (p) {
+	// On the wire protocol error, this is the 1st message but
+	// we already have another one with the same request id in the
+	// buffer.
+	PTRACE("saveInterleaveFragment",
+	       "MessageError (message reuse the same request ID)");
+	return 0;
+      }
+      break;
+    }
+
+    if (!p) {
+      p = new giopStream(g->pd_strand);
+      p->pd_impl = giop_1_2_buffered_singleton;
+      p->pd_state = giopStream::InputPartiallyBuffered;
+      p->pd_request_id = reqid;
+    }
+  }
+  CORBA::Boolean fragmented = ((hdr[6] & 0x2) ? 1 : 0);
+  if (!fragmented) {
+    PTRACE("saveInterleaveFragment",
+	   "end of fragment received");
+    p->pd_state = giopStream::InputFullyBuffered;
+  }
+  
+  g->pd_strand->giveback_received((omni::ptr_arith_t)g->pd_inb_end -
+				  (omni::ptr_arith_t)g->pd_inb_mkr);
+  g->pd_inb_end = g->pd_inb_mkr;
+
+  giop_1_2_buffered_singleton->fetchFragment(p);
+
+  return 1;
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.11.4.3  2000/02/14 18:06:45  sll
+  Support GIOP 1.2 fragment interleaving. This requires minor access control
+  changes to the relevant classes.
+
   Revision 1.11.4.2  1999/09/25 17:00:11  sll
   Merged changes from omni2_8_develop branch.
 
@@ -507,9 +511,10 @@ public:
 
     static void        setStrandIsDying(Strand*);
 
+    static omni_mutex& getMutex(Strand*);
+
   protected:
 
-    static omni_mutex& getMutex(Strand*);
     static omni_mutex& getMutex(Rope*);
     static Strand*     getStrand(Rope*);
 
