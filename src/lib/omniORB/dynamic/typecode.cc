@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.28  1999/06/22 15:02:07  sll
+ * Corrected bug in TypeCode_alias::NP_extendedEqual.
+ *
  * Revision 1.27  1999/06/18 21:00:22  sll
  * Updated to CORBA 2.3 mapping.
  *
@@ -1349,7 +1352,8 @@ TypeCode_alias::NP_extendedEqual(const TypeCode_base*  TCp,
       return 0;
   }
 
-  return (NP_equal(TCp->NP_content_type(),is_equivalent, tcpl));
+  return (NP_content_type()->NP_equal(TCp->NP_content_type(),is_equivalent,
+				      tcpl));
 }
 
 
