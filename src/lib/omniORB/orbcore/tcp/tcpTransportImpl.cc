@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/08/24 16:46:36  sll
+  Use WSAIoctl SIO_ADDRESS_LIST_QUERY to get the address of the
+  IP address of all network interfaces.
+
   Revision 1.1.2.5  2001/08/23 16:02:58  sll
   Implement getInterfaceAddress().
 
@@ -204,7 +208,7 @@ const tcpTransportImpl _the_tcpTransportImpl;
 /////////////////////////////////////////////////////////////////////////
 #if   defined(UnixArchitecture)
 
-static 
+static
 void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
 
   SocketHandle_t sock;
@@ -213,7 +217,7 @@ void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
 
   int lastlen = 0;
   int len = 100 * sizeof(struct ifreq);
-  struct ifconf ifc;         
+  struct ifconf ifc;
   // struct ifconf and ifreq are defined in net/if.h
 
   while ( 1 ) {
@@ -277,6 +281,65 @@ void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
 static
 void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
 
+  SocketHandle_t sock;
+
+  sock = socket(INETSOCKET,SOCK_STREAM,0);
+
+  DWORD lastlen = 0;
+  DWORD len = sizeof(SOCKET_ADDRESS_LIST) + 99 * sizeof(SOCKET_ADDRESS);
+  SOCKET_ADDRESS_LIST* ifr;
+
+  while ( 1 ) {
+    // There is no way to know for sure the buffer is big enough to get
+    // the info for all the interfaces. We work around this by calling
+    // the ioctl 2 times and increases the buffer size in the 2nd call.
+    ifr = (SOCKET_ADDRESS_LIST*) malloc(len);
+    DWORD retlen;
+
+    if ( WSAIoctl(sock,SIO_ADDRESS_LIST_QUERY,
+                  NULL,0,
+                  (LPVOID)ifr,(DWORD)len,(LPDWORD)&retlen,
+                  NULL,NULL) == SOCKET_ERROR ) {
+
+      if ( WSAGetLastError() != WSAEFAULT || lastlen != 0 ) {
+				if ( omniORB::trace(1) ) {
+					omniORB::logger log;
+					log << "Warning: WSAIoctl SIO_ADDRESS_LIST_QUERY failed. Unable to obtain the list of all interface addresses.\n";
+					return;
+			  }
+      }
+    }
+    else {
+      if ( retlen == lastlen ) break; // Success, len has not changed.
+      lastlen = retlen;
+    }
+    len += 10 * sizeof(SOCKET_ADDRESS);
+    free(ifr);
+  }
+  CLOSESOCKET(sock);
+
+  int total = ifr->iAddressCount;
+  for (int i = 0; i < total; i++) {
+
+    if ( ifr->Address[i].lpSockaddr->sa_family == INETSOCKET ) {
+      struct sockaddr_in* iaddr = (struct sockaddr_in*)ifr->Address[i].lpSockaddr;
+      CORBA::String_var s;
+      s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+      ifaddrs.push_back(s._retn());
+    }
+  }
+  free(ifr);
+
+  if ( orbParameters::dumpConfiguration || omniORB::trace(20) ) {
+    omniORB::logger log;
+    omnivector<const char*>::iterator i = ifaddrs.begin();
+    omnivector<const char*>::iterator last = ifaddrs.end();
+    log << "My addresses are: \n";
+    while ( i != last ) {
+      log << "omniORB: " << (const char*)(*i) << "\n";
+      i++;
+    }
+  }
 }
 
 #endif

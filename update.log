@@ -1,3 +1,20 @@
+Fri Aug 24 17:33:35 BST 2001 sll
+================================
+
+- Switch to use Winsock 2. Have to define -D_WIN32_WINNT=0x400.
+  Use WSAIoctl SIO_ADDRESS_LIST_QUERY to get the address of the
+  IP address of all network interfaces.
+
+external_merge/mk/platforms/x86_nt_4.0.mk
+external_merge/mk/win32.mk
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omniORB/include/SocketCollection.h
+src/lib/omniORB/include/libcWrapper.h
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/orbcore/corbaOrb.cc
+
 Fri Aug 24 16:53:28 BST 2001 sll
 ================================
 
