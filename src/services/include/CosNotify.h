@@ -7,8 +7,8 @@
 // x of module M (we use M_x instead).  This is needed to deal with
 // compilers that do not support namespaces. 
 
-#ifndef _COS_NOTIFY_SHORTHANDS_H_
-#define _COS_NOTIFY_SHORTHANDS_H_
+#ifndef _COS_NOTIFY_H_
+#define _COS_NOTIFY_H_
 
 #ifndef COS_USES_BOA
 #include "COS/TimeBase.hh"
