@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.4  2001/03/26 11:11:54  dpg1
+# Python clean-ups. Output routine optimised.
+#
 # Revision 1.14.2.3  2001/01/25 13:09:11  sll
 # Fixed up cxx backend to stop it from dying when a relative
 # path name is given to the -p option of omniidl.
@@ -123,7 +126,7 @@ def header(stream, filename):
     stream.out(template.header,
                program = config.state['Program Name'],
                library = config.state['Library Version'],
-               guard = filename)
+               guard   = filename)
 
 def footer(stream):
     stream.out(template.footer)
@@ -189,6 +192,7 @@ def monolithic(stream, tree):
             cxx_direct_include.append(pragma.text()[len(directive)+1:])
     
     includes = output.StringStream()
+
     # produce #includes for all files included by the IDL
     for include in ast.includes():
         # skip the main file

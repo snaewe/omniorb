@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.4  2001/03/26 11:11:54  dpg1
+# Python clean-ups. Output routine optimised.
+#
 # Revision 1.1.4.3  2001/03/13 10:34:01  dpg1
 # Minor Python clean-ups
 #
@@ -59,44 +62,54 @@ from omniidl_be.cxx import util
 
 import string, re
 
-import ast
-self = ast
-
-self.__initialised = 0
+# Global values used by functions in this module
+_initialised = 0
+_ast         = None
+_includes    = None
 
 def __init__(tree):
     assert isinstance(tree, idlast.AST)
-    self.__initialised = 1
-    self.__ast = tree
+    global _initialised, _ast
+
+    _initialised = 1
+    _ast         = tree
+
     walker = WalkTreeForIncludes()
     tree.accept(walker)
 
 # Returns the main IDL filename
 def mainFile():
-    assert(self.__initialised)
-    return self.__ast.file()
+    assert(_initialised)
+    return _ast.file()
 
 # Returns a list of all IDL files included from this one
 def includes():
-    assert(self.__initialised)
-    return ast._includes
+    assert(_initialised)
+    return _includes
 
 # Traverses the tree making a list of all IDL files declarations have come
 # from.
 class WalkTreeForIncludes(idlvisitor.AstVisitor):
+
     def __init__(self):
-        ast._includes = []
+        global _includes
+        _includes = []
+
     def add(self, node):
+        global _includes
         file = node.file()
-        if not(file in ast._includes) and (file != "<built in>"):
-            ast._includes.append(file)
+
+        if file not in _includes and file != "<built in>":
+            _includes.append(file)
 
     def visitAST(self, node):
         self.add(node)
         for d in node.declarations(): d.accept(self)
+
     def visitModule(self, node):
         self.add(node)
         for d in node.definitions(): d.accept(self)
+
     def visitInterface(self, node): self.add(node)
     def visitForward(self, node):   self.add(node)
     def visitConst(self, node):     self.add(node)
@@ -110,17 +123,17 @@ class WalkTreeForIncludes(idlvisitor.AstVisitor):
 # have an explicit value)
 def allCaseLabels(union):
     assert isinstance(union, idlast.Union)
-    list = []
+    lst = []
     for case in union.cases():
         for label in case.labels():
             if not(label.default()):
-                list.append(label)
-    return list
+                lst.append(label)
+    return lst
 
 # Returns the list of all case label values
 def allCaseLabelValues(union):
     labels = allCaseLabels(union)
-    return map(lambda x:x.value(), labels)
+    return map(lambda x: x.value(), labels)
 
 # Returns the default case of a union or None if it doesn't exist
 def defaultCase(union):
@@ -149,30 +162,27 @@ def defaultLabel(case):
         if label.default(): return label
     assert(0)
 
-# raise x to the power of y (integer only)
-def power(x, y):
-    return long(x) ** y
 
 # from CORBA 2.3 spec 3.10.1.1 Integer types
-SHORT_MIN     = - power(2, (16 - 1))
-SHORT_MAX     =   power(2, (16 - 1)) - 1
-USHORT_MAX    =   power(2, 16) - 1
+SHORT_MIN     = - 2L ** 15
+SHORT_MAX     =   2L ** 15 - 1
+USHORT_MAX    =   2L ** 16 - 1
 
-LONG_MIN      = - power(2, (32 - 1)) 
-LONG_MAX      =   power(2, (32 - 1)) - 1
-ULONG_MAX     =   power(2, 32) - 1
+LONG_MIN      = - 2L ** 31
+LONG_MAX      =   2L ** 31 - 1
+ULONG_MAX     =   2L ** 32 - 1
 
-LONGLONG_MIN  = - power(2, (64 - 1))
-LONGLONG_MAX  =   power(2, (64 - 1)) - 1
-ULONGLONG_MAX =   power(2, 64) - 1
+LONGLONG_MIN  = - 2L ** 63
+LONGLONG_MAX  =   2L ** 63 - 1
+ULONGLONG_MAX =   2L ** 64 - 1
 
 integer_type_ranges = {
-    idltype.tk_short:     (SHORT_MIN, SHORT_MAX),
-    idltype.tk_ushort:    (0, USHORT_MAX),
-    idltype.tk_long:      (LONG_MIN, LONG_MAX),
-    idltype.tk_ulong:     (0, ULONG_MAX),
+    idltype.tk_short:     (SHORT_MIN,    SHORT_MAX),
+    idltype.tk_ushort:    (0,            USHORT_MAX),
+    idltype.tk_long:      (LONG_MIN,     LONG_MAX),
+    idltype.tk_ulong:     (0,            ULONG_MAX),
     idltype.tk_longlong:  (LONGLONG_MIN, LONGLONG_MAX),
-    idltype.tk_ulonglong: (0, ULONGLONG_MAX)
+    idltype.tk_ulonglong: (0,            ULONGLONG_MAX)
     }
 
 # Returns true if the case values represent all the possible values for

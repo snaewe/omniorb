@@ -47,12 +47,15 @@ reservedWords = [
     "typedef", "typeid", "typename", "union", "unsigned", "using",
     "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq" ]
 
+rwdict = {}
+for w in reservedWords:
+    rwdict[w] = None
+
 def mapID(identifier):
     """id.mapID(identifier string): string
        Returns the identifier with an escape if it is a C++ keyword"""
-    for i in reservedWords:
-        if i == identifier:
-            return config.state['Reserved Prefix'] + identifier
+    if rwdict.has_key(identifier):
+        return config.state['Reserved Prefix'] + identifier
     return identifier
 
 class Name:
@@ -64,6 +67,7 @@ class Name:
         self.__scopedName = scopedName
         self.__prefix = ""
         self.__suffix = ""
+
 
     def __cmp__(self, other):
         if not(isinstance(other, Name)): return 1
@@ -112,6 +116,7 @@ class Name:
     def __map_cxx(self):
         # __map_cxx(id.Name): string list
         # Maps an IDL name into a cxx one with proper escaping
+
         return map(mapID, self.__scopedName)
     
     def fullyQualify(self, cxx = 1):

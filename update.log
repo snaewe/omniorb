@@ -1,3 +1,17 @@
+Mon Mar 26 12:08:06 BST 2001 dpg1
+=================================
+
+- Python clean-ups. Output routine optimised.
+
+src/lib/omniORB/omniidl_be/cxx/ast.py
+src/lib/omniORB/omniidl_be/cxx/descriptor.py
+src/lib/omniORB/omniidl_be/cxx/id.py
+src/lib/omniORB/omniidl_be/cxx/output.py
+src/lib/omniORB/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB/omniidl_be/cxx/header/forward.py
+src/tool/omniidl/python/omniidl/output.py
+
+
 Tue Mar 13 10:13:19 GMT 2001 dpg1
 =================================
 

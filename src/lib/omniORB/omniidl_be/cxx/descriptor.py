@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.3  2001/03/26 11:11:54  dpg1
+# Python clean-ups. Output routine optimised.
+#
 # Revision 1.1.4.2  2001/03/13 10:34:01  dpg1
 # Minor Python clean-ups
 #
@@ -59,19 +62,19 @@ import string
 #    call descriptors.
 #  o Interface & operation dependent eg local callback functions
 
-import descriptor
-self = descriptor
 
 def __init__(ast):
-    self.prefix  = ""
-    self.counter = 0
+    global prefix, counter, signature_descriptors, iface_descriptors
+
+    prefix  = ""
+    counter = 0
 
     # Descriptors keyed by signature alone
-    self.signature_descriptors = {}
+    signature_descriptors = {}
 
     # Descriptors keyed by interface and operation name (a two level
     # hashtable)
-    self.iface_descriptors = {}
+    iface_descriptors = {}
 
     # initialise the prefix
     HV = HashVisitor()
@@ -95,45 +98,40 @@ private_prefix = config.state['Private Prefix']
 
 # Walks over the AST, finds the first callable and creates the prefix hash
 class HashVisitor(idlvisitor.AstVisitor):
+
     def __init__(self):
         self.base_initialised = 0
     
     def visitAST(self, node):
-        for declaration in node.declarations(): declaration.accept(self)
+        for declaration in node.declarations():
+            if self.base_initialised:
+                return
+            declaration.accept(self)
+
     def visitModule(self, node):
-        for definition in node.definitions(): definition.accept(self)
+        for definition in node.definitions():
+            if self.base_initialised:
+                return
+            definition.accept(self)
+
     def visitInterface(self, node):
         if not(node.mainFile()): return
         
         if node.callables() != []:
-            # Use the first callable?
-            #self.initialise_with_callable(node, node.callables()[0])
+            name = node.scopedName()
 
-            # Use an op first if avail?
-            ops = filter(lambda x:isinstance(x, idlast.Operation),
-                         node.callables())
-            attrs = filter(lambda x:isinstance(x, idlast.Attribute),
-                         node.callables())
-            if (ops != []): self.initialise_with_callable(node, ops[0])
-            if (attrs != []): self.initialise_with_callable(node, attrs[0])
+            # Use an op first if available
+            for c in node.callables():
+                if isinstance(c, idlast.Operation):
+                    self.initialise_base(name + [c.identifier()])
+                    return
 
-
-    def initialise_with_callable(self, interface, callable):
-        name = interface.scopedName()
-        if isinstance(callable, idlast.Operation):
-            name = name + [callable.identifier()]
-            self.initialise_base(name)
-            return
-        
-        name = name + [callable.identifiers()[0]]
-        self.initialise_base(name)
-        return
-        
+            # Use first attribute
+            self.initialise_base(name + [node.callables()[0].identifiers()[0]])
 
     # Knuth-style string -> int hash
     def initialise_base(self, name):
-        if self.base_initialised:
-            return
+        if self.base_initialised: return
         self.base_initialised = 1
         
         string_seed = id.Name(name).guard()
@@ -143,7 +141,7 @@ class HashVisitor(idlvisitor.AstVisitor):
         def rshift(x, distance):
             sign_bit = x & 0x80000000
             # remove the sign bit to make it unsigned
-            x = x & (0xffffffff ^ sign_bit)
+            x = x & 0x7fffffff
             # perform shift (thinks number is unsigned, no extension)
             x = x >> distance
             # add sign bit back in
@@ -157,7 +155,7 @@ class HashVisitor(idlvisitor.AstVisitor):
 
         (high, low) = (0, 0)
         for char in string_seed:
-            tmp = rshift((high & 0xfe000000), 25)
+            tmp  = rshift((high & 0xfe000000), 25)
             high = (lshift(high, 7)) ^ (rshift((low & 0xfe000000), 25))
             low  = lshift(low, 7) ^ tmp
             low  = low ^ (ord(char))
@@ -168,32 +166,40 @@ class HashVisitor(idlvisitor.AstVisitor):
         high.reverse()
         low.reverse()
         
-        descriptor.prefix = string.join(high + low, "")
+        global prefix
+        prefix = string.join(high + low, "")
+
 
 # Return a unique PREFIX + BASE
 def unique():
-    counter = list(hex_word(descriptor.counter))
-    counter.reverse()
+    global counter
+    clist = list(hex_word(counter))
+    clist.reverse()
 
-    name = descriptor.prefix + "_" + string.join( counter, "" )
-    descriptor.counter = descriptor.counter + 1
+    name = prefix + "_" + string.join(clist, "")
+    counter = counter + 1
     
     return name
-    
+
 
 def get_signature_descriptor(signature):
-    if not(self.signature_descriptors.has_key(signature)):
-        self.signature_descriptors[signature] = unique()
+    global signature_descriptors
+    
+    if not(signature_descriptors.has_key(signature)):
+        signature_descriptors[signature] = unique()
 
-    return self.signature_descriptors[signature]
+    return signature_descriptors[signature]
 
 def get_interface_operation_descriptor(iname, operation_name, signature):
-    assert isinstance(iname, id.Name)
-    key = iname.hash()
-    if not(self.iface_descriptors.has_key(key)):
-        self.iface_descriptors[key] = {}
+    global iface_descriptors
 
-    iface_table = self.iface_descriptors[key]
+    assert isinstance(iname, id.Name)
+
+    key = iname.hash()
+    if not(iface_descriptors.has_key(key)):
+        iface_descriptors[key] = {}
+
+    iface_table = iface_descriptors[key]
     
     key = signature + "/" + operation_name
     if iface_table.has_key(key):

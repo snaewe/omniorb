@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.3  2001/03/26 11:11:55  dpg1
+# Python clean-ups. Output routine optimised.
+#
 # Revision 1.8.2.2  2000/10/12 15:37:51  sll
 # Updated from omni3_1_develop.
 #
@@ -85,7 +88,6 @@ from omniidl_be.cxx import config, id
 from omniidl_be.cxx.header import template
 
 import forward
-
 self = forward
 
 def __init__(stream):

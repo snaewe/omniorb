@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.3  2001/03/26 11:11:54  dpg1
+# Python clean-ups. Output routine optimised.
+#
 # Revision 1.1.4.2  2001/03/13 10:34:01  dpg1
 # Minor Python clean-ups
 #
@@ -40,21 +43,20 @@
 
 """Routines for managing output"""
 
-import output
-self = output
+import string
 
 # Wrapper around the standard library file opening routines, keeps track of
 # which files have been created by the backend so they can be cleaned up on
 # error.
-self.createdFiles = []
+createdFiles = []
 
 def createFile(filename):
     file = open(filename, "w")
-    self.createdFiles.append(filename)
+    createdFiles.append(filename)
     return file
 
 def listAllCreatedFiles():
-    return self.createdFiles
+    return createdFiles
 
 
 # Stream is a wrapper around a python file stream
@@ -83,157 +85,153 @@ def listAllCreatedFiles():
 # empty lines in the output. For aesthetic effect, runs of more than 1 empty
 # line are removed.
 
-import re, string
-import output
+def dummy(): pass
 
-
-# dummy function which exists to get a handle on its type
-def fn():
-    pass
-
+StringType = type("")
+FuncType   = type(dummy)
 
 class Stream:
     def __init__(self, file, indent_size = 2):
+        self.file        = file
+        self.indent_size = indent_size
+        self.indent      = 0
+        self.do_indent   = 1
+
+    def inc_indent(self):   self.indent = self.indent + self.indent_size
+    def dec_indent(self):   self.indent = self.indent - self.indent_size
+    def reset_indent(self):
         self.indent = 0
-        self.istring = " " * indent_size
-        self.file = file
 
-        self.pre_indent = ""
-        self.line_buffer = ""
-
-        self.last_line_empty = self.false
-
-    function_type = type(output.fn)
-    integer_type = type(1)
-    string_type = type("foo")
-    true = 1 == 1
-    false = 1 == 0
-
-    regex = re.compile(r"@([^@]*)@")
-
-    def inc_indent(self): self.indent = self.indent + 1
-    def dec_indent(self): self.indent = self.indent - 1
-    def reset_indent(self): self.indent = 0
     def out(self, text, ldict={}, **dict):
         """Output a multi-line string with indentation and @@ substitution."""
 
         dict.update(ldict)
 
-        def replace(match, dict=dict):
-            if match.group(1) == "": return "@"
-            return eval(match.group(1), globals(), dict)
+        pos    = 0
+        tlist  = string.split(text, "@")
+        ltlist = len(tlist)
+        i      = 0
+        while i < ltlist:
 
-        for l in string.split(text, "\n"):
-            is_literal_text = 1 == 0
-            tokens = string.split(l, "@")
-            if tokens == []: continue
+            # Output plain text
+            pos = self.olines(pos, self.indent, tlist[i])
 
-            pre_indent = self.istring * self.indent
-            if string.lstrip(tokens[0]) == "":
-                pre_indent = pre_indent + tokens[0]
-                is_literal_text = not(is_literal_text)
-                tokens = tokens[1:]
+            i = i + 1
+            if i == ltlist: break
 
-            start_of_line = self.true
-            for token in tokens:
-                is_literal_text = not(is_literal_text)
-
-                
-                if is_literal_text:
-                    if start_of_line:
-                        self.write(self.pre_indent + pre_indent)
-                    self.write(token)    
+            # Evaluate @ expression
+            try:
+                expr = dict[tlist[i]]
+            except:
+                # If a straight look-up failed, try evaluating it
+                if tlist[i] == "":
+                    expr = "@"
                 else:
-                    thing = eval(token, globals(), dict)
+                    expr = eval(tlist[i], globals(), dict)
 
-                    expanded = ""
-                    if isinstance(thing, self.string_type):
-                        expanded = thing
-                    elif isinstance(thing, StringStream):
-                        expanded = str(thing)
-                    elif isinstance(thing, self.function_type):
-                        old_indent_str = self.pre_indent
-                        old_indent_level = self.indent
-                        self.indent = 0
-                        self.pre_indent = self.pre_indent + pre_indent
-                        apply(thing)
-                        self.pre_indent = old_indent_str
-                        self.indent = old_indent_level
-                        continue
-                    elif isinstance(thing, self.integer_type) or \
-                         hasattr(thing, "__str__"):
-                        expanded = str(thing)
-                    else:
-                        raise "What kind of type is " + repr(thing)
+            if type(expr) is StringType:
+                pos = self.olines(pos, pos, expr)
+            elif type(expr) is FuncType:
+                oindent = self.indent
+                self.indent = pos
+                apply(expr)
+                self.indent = oindent
+            else:
+                pos = self.olines(pos, pos, str(expr))
 
-                    lines = string.split(expanded, "\n")
-                    for n in range(0, len(lines)):
-                        if start_of_line:
-                            self.write(self.pre_indent + pre_indent)
+            i = i + 1
 
-                        start_of_line = self.false
-
-                        self.write(lines[n])
-                        if n < (len(lines) - 1):
-                            self.write("\n")
-                            start_of_line = self.true
-
-                start_of_line = self.false
-                
-            self.write("\n")
+        self.odone()
 
     def niout(self, text, ldict={}, **dict):
         """Output a multi-line string without indentation."""
 
         dict.update(ldict)
 
-        def replace(match, dict=dict):
-            if match.group(1) == "": return "@"
-            return eval(match.group(1), globals(), dict)
+        pos    = 0
+        tlist  = string.split(text, "@")
+        ltlist = len(tlist)
+        i      = 0
+        while i < ltlist:
 
-        for l in string.split(self.regex.sub(replace, text), "\n"):
-            self.write(l)
-            self.write("\n")
+            # Output plain text
+            pos = self.olines(pos, 0, tlist[i])
 
-    def preproc(self):
-        lstrip = string.lstrip(self.line_buffer)
-        if (lstrip != "") and (lstrip[0] == "#"):
-            self.line_buffer = lstrip
-        
-    def write(self, text):
-        if text == "\n":
-            self.preproc()
+            i = i + 1
+            if i == ltlist: break
 
-            this_line_empty = string.lstrip(self.line_buffer) == ""
-            if not(self.last_line_empty and this_line_empty):
-                self.writeln()
+            # Evaluate @ expression
+            try:
+                expr = dict[tlist[i]]
+            except:
+                # If a straight look-up failed, try evaluating it
+                if tlist[i] == "":
+                    expr = "@"
+                else:
+                    expr = eval(tlist[i], globals(), dict)
+
+            if type(expr) is StringType:
+                pos = self.olines(pos, pos, expr)
+            elif type(expr) is FuncType:
+                oindent = self.indent
+                self.indent = pos
+                apply(expr)
+                self.indent = oindent
             else:
-               self.line_buffer = ""
-            self.last_line_empty = this_line_empty
-            
-            return
-        self.line_buffer = self.line_buffer + text
+                pos = self.olines(pos, pos, str(expr))
 
-    def writeln(self):
-        self.file.write(self.line_buffer)
+            i = i + 1
+
+        self.odone()
+
+    def olines(self, pos, indent, text):
+        istr  = " " * indent
+        write = self.file.write
+
+        stext = string.split(text, "\n")
+        lines = len(stext)
+        line  = stext[0]
+
+        if self.do_indent:
+            if line and line[0] == "#":
+                pos = 0
+            else:
+                pos = indent
+                write(istr)
+
+        write(line)
+
+        for i in range(1, lines):
+            line = stext[i]
+            write("\n")
+            if line:
+                if line[0] == "#":
+                    pos = 0
+                else:
+                    pos = indent
+                    write(istr)
+                write(line)
+
+        if lines > 1 and not line: # Newline at end of text
+            self.do_indent = 1
+            return 0
+
+        self.do_indent = 0
+        return pos + len(line)
+
+    def odone(self):
         self.file.write("\n")
-        self.line_buffer = ""
+        self.do_indent = 1
 
 
 class StringStream(Stream):
     """Writes to a string buffer rather than a file."""
     def __init__(self, indent_size = 2):
-        Stream.__init__(self, None, indent_size)
-        self.__buffer = ""
+        Stream.__init__(self, self, indent_size)
+        self.buffer = []
 
-    def writeln(self):
-        self.__buffer = self.__buffer + self.line_buffer + "\n"
-        self.line_buffer = ""
+    def write(self, text):
+        self.buffer.append(text)
 
     def __str__(self):
-        return self.__buffer
-
-    def __add__(self, other):
-        return self.__buffer + str(other)
-
-
+        return string.join(self.buffer, "")
