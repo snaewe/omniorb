@@ -28,8 +28,8 @@
 
 /*
   $Log$
-  Revision 1.5  1997/05/06 14:07:43  sll
-  Public release.
+  Revision 1.4  1997/05/06 14:06:16  sll
+  *** empty log message ***
 
   */
 
