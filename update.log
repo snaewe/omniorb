@@ -1,4 +1,18 @@
 
+Wed Jan 20 11:38:36 GMT 1999 tjr
+================================
+
+- Removed pjs's CORBA_UNIQUE_INTERFACES stuff for the time being (screws up
+  interdependent IDL files).  Added sort to CORBA_STUB_OBJS rule to remove
+  duplicates.
+
+mk/beforedir.mk
+mk/afterdir.mk
+mk/unix.mk
+mk/win32.mk
+mk/java.mk
+
+
 Mon Jan 18 13:49:31 GMT 1999 djr
 ================================
 
