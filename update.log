@@ -1,3 +1,11 @@
+Wed May 23 11:45:31 BST 2001 dpg1
+=================================
+
+- Long long defines for SGI.
+
+include/omniORB3/CORBA_sysdep.h
+
+
 Tue May 22 10:43:13 BST 2001 dpg1
 =================================
 
