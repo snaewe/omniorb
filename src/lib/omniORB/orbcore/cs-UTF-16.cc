@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/08/03 17:41:20  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.1.2.9  2001/07/31 09:01:12  dpg1
   Allocated one too few characters in WString unmarshal.
 
@@ -149,12 +153,16 @@ NCS_W_UTF_16::marshalWChar(cdrStream& stream,
 			   omniCodeSet::TCS_W* tcs,
 			   _CORBA_WChar wc)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
+  if (!tcs) OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown,
+			  (CORBA::CompletionStatus)stream.completion());
+
   if (tcs->fastMarshalWChar(stream, this, wc)) return;
 
 #if (SIZEOF_WCHAR == 4)
   if (wc > 0xffff)
-    OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_WCharOutOfRange, 
+		  (CORBA::CompletionStatus)stream.completion());
+
 #endif
   tcs->marshalWChar(stream, wc);
 }
@@ -166,11 +174,15 @@ NCS_W_UTF_16::marshalWString(cdrStream&          stream,
 			     _CORBA_ULong        len,
 			     const _CORBA_WChar* ws)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
+  if (!tcs) OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown,
+			  (CORBA::CompletionStatus)stream.completion());
+
   if (tcs->fastMarshalWString(stream, this, bound, len, ws)) return;
 
   if (bound && len > bound)
-    OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		  (CORBA::CompletionStatus)stream.completion());
+
 
 #if (SIZEOF_WCHAR == 2)
   tcs->marshalWString(stream, len, ws);
@@ -181,7 +193,10 @@ NCS_W_UTF_16::marshalWString(cdrStream&          stream,
 
   for (_CORBA_ULong i=0; i<=len; i++) {
     wc = ws[i];
-    if (wc > 0xffff) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+    if (wc > 0xffff)
+      OMNIORB_THROW(BAD_PARAM, BAD_PARAM_WCharOutOfRange, 
+		    (CORBA::CompletionStatus)stream.completion());
+
     us[i] = wc;
   }
   tcs->marshalWString(stream, len, us);
@@ -192,7 +207,9 @@ _CORBA_WChar
 NCS_W_UTF_16::unmarshalWChar(cdrStream& stream,
 			     omniCodeSet::TCS_W* tcs)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
+  if (!tcs) OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown,
+			  (CORBA::CompletionStatus)stream.completion());
+
   _CORBA_WChar wc;
   if (tcs->fastUnmarshalWChar(stream, this, wc)) return wc;
 
@@ -205,7 +222,9 @@ NCS_W_UTF_16::unmarshalWString(cdrStream& stream,
 			       _CORBA_ULong bound,
 			       _CORBA_WChar*& ws)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
+  if (!tcs) OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown,
+			  (CORBA::CompletionStatus)stream.completion());
+
   _CORBA_ULong len;
   if (tcs->fastUnmarshalWString(stream, this, bound, len, ws)) return len;
 
@@ -312,10 +331,12 @@ TCS_W_UTF_16::unmarshalWChar(cdrStream& stream)
       return uc;
     }
     else {
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharOutOfRange,
+		    (CORBA::CompletionStatus)stream.completion());
     }
   }
-  OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(MARSHAL, MARSHAL_InvalidWCharSize,
+		(CORBA::CompletionStatus)stream.completion());
   return 0; // For broken compilers
 }
 
@@ -331,12 +352,15 @@ TCS_W_UTF_16::unmarshalWString(cdrStream& stream,
   _CORBA_ULong mlen; mlen <<= stream;
 
   if (mlen % 2)
-    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL, MARSHAL_InvalidWCharSize,
+		  (CORBA::CompletionStatus)stream.completion());
 
   _CORBA_ULong len = mlen / 2; // Note no terminating null in marshalled form
 
   if (!stream.checkInputOverrun(1, mlen))
-    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		  (CORBA::CompletionStatus)stream.completion());
+
 
   // If there is a BOM, this will allocate one character too many, but
   // never mind.
@@ -352,7 +376,8 @@ TCS_W_UTF_16::unmarshalWString(cdrStream& stream,
     len--;
 
     if (bound && len > bound)
-      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		    (CORBA::CompletionStatus)stream.completion());
 
     stream.unmarshalArrayUShort((_CORBA_UShort*)us, len);
   }
@@ -361,7 +386,8 @@ TCS_W_UTF_16::unmarshalWString(cdrStream& stream,
     len--;
 
     if (bound && len > bound)
-      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		    (CORBA::CompletionStatus)stream.completion());
 
     stream.get_octet_array((_CORBA_Octet*)us, len*2, omni::ALIGN_2);
 
@@ -380,7 +406,8 @@ TCS_W_UTF_16::unmarshalWString(cdrStream& stream,
     }
 
     if (bound && len > bound)
-      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		    (CORBA::CompletionStatus)stream.completion());
 
     // If we swapped the first wchar getting it out of the stream,
     // swap it back. Might be a waste of time, but it makes things

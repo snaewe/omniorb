@@ -33,6 +33,7 @@
 #pragma hdrstop
 #endif
 
+#include <omniORB4/minorCode.h>
 #include <exceptiondefs.h>
 #include <string.h>
 #include <stdlib.h>
@@ -210,7 +211,14 @@ _OMNI_NS(omniExHelper)::strip(const char* fn)
     if( omniORB::trace(10) ) { \
       omniORB::logger l; \
       l << "throw " #name << " from " << strip(file) << ":" << line \
-        << " (" << omniORB::logger::exceptionStatus(status,minor) << ")\n"; \
+        << " ("; \
+      const char* description = _OMNI_NS(minorCode2String)(_OMNI_NS(name##_LookupTable),minor); \
+      if (description) { \
+        l << omniORB::logger::exceptionStatus(status,description) << ")\n"; \
+      } \
+      else { \
+	l << omniORB::logger::exceptionStatus(status,minor) << ")\n"; \
+      } \
     } \
     throw CORBA::name(minor,status); \
   }

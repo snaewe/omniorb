@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2001/08/03 17:41:17  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.1.4.9  2001/07/31 16:28:01  sll
   Added GIOP BiDir support.
 
@@ -207,7 +211,8 @@ GIOP_S::handleRequest() {
 
     // Can we find the object in the local object table?
     if (keysize() < 0)
-      OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
+		    CORBA::COMPLETED_NO);
 
     CORBA::ULong hash = omni::hash(key(), keysize());
 
@@ -239,7 +244,8 @@ GIOP_S::handleRequest() {
 
     // Oh dear.
 
-    OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
+		  CORBA::COMPLETED_NO);
 
   }
   catch(omniORB::LOCATION_FORWARD& ex) {
@@ -590,6 +596,9 @@ GIOP_S::notifyCommFailure(CORBA::ULong& minor,
   else if (pd_state == ReplyIsBeingComposed) {
     minor = COMM_FAILURE_MarshalResults;
   }
+  else {
+    minor = TRANSIENT_ConnectionClosed;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -626,7 +635,8 @@ GIOP_S::unmarshalIORAddressingInfo() {
   if (vp == GIOP::KeyAddr) {
     vl <<= s;
     if (!s.checkInputOverrun(1,vl)) {
-      throw CORBA::MARSHAL(0,(CORBA::CompletionStatus)completion());
+      OMNIORB_THROW(MARSHAL,MARSHAL_SequenceIsTooLong,
+		    (CORBA::CompletionStatus)completion());
     }
     keysize((int)vl);
     s.get_octet_array(key(),vl);
@@ -652,7 +662,8 @@ GIOP_S::unmarshalIORAddressingInfo() {
 	l << "unmarshal corrupted targetAddress at "
 	  << __FILE__ << " line no. " << __LINE__ << "\n";
       }
-      throw CORBA::MARSHAL(0,(CORBA::CompletionStatus)completion());
+      OMNIORB_THROW(BAD_PARAM,BAD_PARAM_IndexOutOfRange,
+		    (CORBA::CompletionStatus)completion());
     }
 
     IIOP::ProfileBody decodedBody;

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2001/08/03 17:41:22  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.2.2.5  2001/06/07 16:24:10  dpg1
   PortableServer::Current support.
 
@@ -146,7 +150,7 @@ omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
       l << "WARNING -- method \'" << call_desc.op() << "\' raised an unknown\n"
 	" exception (not a legal CORBA exception).\n";
     }
-    OMNIORB_THROW(UNKNOWN,0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(UNKNOWN,UNKNOWN_UserException, CORBA::COMPLETED_MAYBE);
   }
 #endif
 }

@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.7  2001/08/03 17:41:17  sll
+ System exception minor code overhaul. When a system exeception is raised,
+ a meaning minor code is provided.
+
  Revision 1.2.2.6  2001/06/07 16:24:09  dpg1
  PortableServer::Current support.
 
@@ -73,6 +77,7 @@
 #pragma hdrstop
 #endif
 
+#include <omniORB4/minorCode.h>
 #include <omniORB4/IOP_C.h>
 #include <omniORB4/callDescriptor.h>
 #include <exceptiondefs.h>
@@ -123,7 +128,8 @@ omniCallDescriptor::userException(IOP_C& iop_c, const char* repoId)
   }
 
   iop_c.RequestCompleted(1);
-  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
+  OMNIORB_THROW(UNKNOWN,UNKNOWN_UserException,
+		(CORBA::CompletionStatus)iop_c.getStream().completion());
 }
 
 void
@@ -174,8 +180,9 @@ void omniStdCallDesc::_cCORBA_mObject_i_cstring::marshalReturnedValues(cdrStream
 ///////////////////// omniLocalOnlyCallDescriptor ////////////////////
 //////////////////////////////////////////////////////////////////////
 
-void omniLocalOnlyCallDescriptor::marshalArguments(cdrStream&)
+void omniLocalOnlyCallDescriptor::marshalArguments(cdrStream& s)
 {
-  OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INV_OBJREF,INV_OBJREF_TryToInvokePseudoRemotely,
+		(CORBA::CompletionStatus)s.completion());
 }
 

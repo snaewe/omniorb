@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/03 17:41:25  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.1.2.3  2001/07/26 16:37:21  dpg1
   Make sure static initialisers always run.
 
@@ -54,6 +58,8 @@
 #include <omniORB4/linkHacks.h>
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(sslContext);
+
+OMNI_USING_NAMESPACE(omni)
 
 static void report_error();
 
@@ -87,7 +93,8 @@ sslContext::internal_initialise() {
   pd_ctx = SSL_CTX_new(set_method());
   if (!pd_ctx) {
     report_error();
-    OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
+		  CORBA::COMPLETED_NO);
   }
 
   seed_PRNG();
@@ -114,13 +121,14 @@ sslContext::set_CA() {
       omniORB::logger log;
       log << "Error: sslContext CA file is not set "
 	  << "or cannot be found\n";
-      OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+      OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
+		    CORBA::COMPLETED_NO);
     }
   }
 
   if (!(SSL_CTX_load_verify_locations(pd_ctx,pd_cafile,0))) {
     report_error();
-    OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
 
   SSL_CTX_set_verify_depth(pd_ctx,1);
@@ -136,13 +144,13 @@ sslContext::set_certificate() {
       omniORB::logger log;
       log << "Error: sslContext certificate file is not set "
 	  << "or cannot be found\n";
-      OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+      OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
     }
   }
 
   if(!(SSL_CTX_use_certificate_file(pd_ctx,pd_keyfile,SSL_FILETYPE_PEM))) {
     report_error();
-    OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
 }
 
@@ -172,14 +180,14 @@ sslContext::set_privatekey() {
       omniORB::logger log;
       log << "Error: sslContext private key file is not set\n";
     }
-    OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
 
   ssl_password = pd_password;
   SSL_CTX_set_default_passwd_cb(pd_ctx,sslContext_password_cb);
   if(!(SSL_CTX_use_PrivateKey_file(pd_ctx,pd_keyfile,SSL_FILETYPE_PEM))) {
     report_error();
-    OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
 }
 
@@ -231,7 +239,7 @@ sslContext::set_DH() {
 
   DH* dh = DH_new();
   if(dh == 0) {
-    OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
 
   unsigned char dh512_p[] = {
@@ -250,7 +258,7 @@ sslContext::set_DH() {
   dh->p = BN_bin2bn(dh512_p, sizeof(dh512_p), 0);
   dh->g = BN_bin2bn(dh512_g, sizeof(dh512_g), 0);
   if( !dh->p || !dh->g) {
-    OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
 
   SSL_CTX_set_tmp_dh(pd_ctx, dh);
@@ -266,7 +274,7 @@ sslContext::set_ephemeralRSA() {
   rsa = RSA_generate_key(512,RSA_F4,NULL,NULL);
     
   if (!SSL_CTX_set_tmp_rsa(pd_ctx,rsa)) {
-    OMNIORB_THROW(INITIALIZE,_OMNI_NS(TRANSPORT_ERROR),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
   RSA_free(rsa);
 }

@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.9  2001/08/03 17:41:23  sll
+ System exception minor code overhaul. When a system exeception is raised,
+ a meaning minor code is provided.
+
  Revision 1.2.2.8  2001/07/31 16:34:53  sll
  New function listMyEndpoints(). Remove explicit instantiation of
  giopServer, do it via interceptor.
@@ -204,7 +208,8 @@ omniObjAdapter::initialise()
 		<< (const char*)(*i)->uri
 		<< "\n";
 	  }
-	  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
+			CORBA::COMPLETED_NO);
 	}
 	oa_endpoints.push_back(address);
 	if ( !(*i)->no_listen ) {
@@ -230,7 +235,8 @@ omniObjAdapter::initialise()
 	      << (const char*)estr
 	      << "\n";
 	}
-	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
+		      CORBA::COMPLETED_NO);
       }
       oa_endpoints.push_back(address);
       myendpoints.push_back(address);
@@ -245,7 +251,8 @@ omniObjAdapter::initialise()
     throw;
   }
   catch (...) {
-    OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(OBJ_ADAPTER,OBJ_ADAPTER_POANotInitialised,
+		  CORBA::COMPLETED_NO);
   }
 
   initialised = 1;
@@ -421,7 +428,8 @@ omniObjAdapter::defaultLoopBack()
   if (!oa_loopback) {
     // This is tough!!! Haven't got a loop back!
     // May be the object adaptor has been destroyed!!!
-    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
+		  CORBA::COMPLETED_NO);
   }
   return oa_loopback;
 }

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.11  2001/08/03 17:41:17  sll
+# System exception minor code overhaul. When a system exeception is raised,
+# a meaning minor code is provided.
+#
 # Revision 1.5.2.10  2001/07/31 19:25:11  sll
 #  Array _var should be separated into fixed and variable size ones.
 #
@@ -874,14 +878,16 @@ union {
 
 union_d_fn_body = """\
 // illegal to set discriminator before making a member active
-if (!_pd__initialised) throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+if (!_pd__initialised)
+  OMNIORB_THROW(BAD_PARAM,_OMNI_NS(BAD_PARAM_InvalidUnionDiscValue),CORBA::COMPLETED_NO);
 
 if (_value == _pd__d) return; // no change
 
 @switch@
 
 fail:
-throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+OMNIORB_THROW(BAD_PARAM,_OMNI_NS(BAD_PARAM_InvalidUnionDiscValue),CORBA::COMPLETED_NO);
+
 """
 
 union_constructor_implicit = """\
@@ -1182,7 +1188,8 @@ inline void operator <<= (@name@& _e, cdrStream& s) {
     _e = (@name@) @private_prefix@_e;
     break;
   default:
-    _CORBA_marshal_error();
+    OMNIORB_THROW(MARSHAL,_OMNI_NS(MARSHAL_InvalidEnumValue),
+                  (CORBA::CompletionStatus)s.completion());
   }
 }
 """

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2001/08/03 17:41:21  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.1.4.8  2001/08/01 18:12:54  sll
   In filterAndSortAddressList, use_bidir could be left uninitialised.
 
@@ -567,10 +571,21 @@ giopRope::filterAndSortAddressList(const giopAddressList& addrlist,
     // XXX in future, we will be more selective as to which addresses will
     // use bidirectional.
     use_bidir = 1;
+    // XXX A temporary, ugly and local hack to make sure that we do not
+    //     use bidir to contact our naming service even when 
+    //     offerBiDirectionalGIOP is set. This is done so that our testsuite
+    //     works when using the naming service to pass the IOR. (Our code
+    //     resolves the IOR before initialising a POA.)
+    if (!addrlist.empty() && 
+	strcmp(addrlist[0]->address(),"giop:tcp:158.124.64.61:5009") == 0) {
+      use_bidir = 0;
+    }
   }
   else {
     use_bidir = 0;
   }
+
+
 }
 
 OMNI_NAMESPACE_END(omni)

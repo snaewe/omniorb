@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2001/08/03 17:41:20  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.2.2.3  2001/04/18 18:18:08  sll
   Big checkin with the brand new internal APIs.
 
@@ -98,12 +102,13 @@ deinit()
 }
 
 static void
-marshal_context(cdrStream&, CORBA::Context_ptr cxtx,
+marshal_context(cdrStream& s, CORBA::Context_ptr cxtx,
 		const char*const* which, int how_many)
 {
   omniORB::logs(1, "Attempt to marshal context, but omniDynamic library"
 		" is not linked!");
-  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(NO_IMPLEMENT,NO_IMPLEMENT_Unsupported, 
+		(CORBA::CompletionStatus)s.completion());
 }
 
 

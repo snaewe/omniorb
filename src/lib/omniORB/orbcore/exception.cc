@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.10.2.6  2001/08/03 17:41:21  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.10.2.5  2001/07/31 16:38:05  sll
   Remove dead code.
 
@@ -425,14 +429,15 @@ _CORBA_new_operator_return_null()
 void
 _CORBA_bound_check_error()
 {
-  OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_PARAM,BAD_PARAM_IndexOutOfRange,CORBA::COMPLETED_NO);
 }
 
 
 void
-_CORBA_marshal_error()
+_CORBA_marshal_sequence_range_check_error(cdrStream& s)
 {
-  OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(MARSHAL,MARSHAL_SequenceIsTooLong,
+		(CORBA::CompletionStatus)s.completion());
 }
 
 
@@ -442,8 +447,7 @@ _CORBA_invoked_nil_pseudo_ref()
   omniORB::logs(1, "ERROR -- the application attempted to invoke an"
 		" operation\n"
 		" on a nil pseudo-object reference.");
-
-  OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INV_OBJREF,INV_OBJREF_InvokeOnNilObjRef, CORBA::COMPLETED_NO);
 }
 
 
@@ -466,7 +470,7 @@ _CORBA_invoked_nil_objref()
 		" operation\n"
 		" on a nil reference.");
 
-  OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INV_OBJREF,INV_OBJREF_InvokeOnNilObjRef, CORBA::COMPLETED_NO);
 }
 
 

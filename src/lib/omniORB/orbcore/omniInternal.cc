@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.15  2001/08/03 17:41:23  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.2.2.14  2001/08/01 10:08:21  dpg1
   Main thread policy.
 
@@ -891,7 +895,7 @@ omni::revertToOriginalProfile(omniObjRef* objref)
   omniIdentity* id = omni::createIdentity(ior, local_id,
 					  objref->_localServantTarget(), 1);
   if( !id ) {
-    OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INV_OBJREF,INV_OBJREF_CorruptedObjRef, CORBA::COMPLETED_NO);
   }
 
   // For efficiency lets just assume that it exists.  We are

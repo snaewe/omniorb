@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/08/03 17:41:18  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.1.4.5  2001/04/18 18:18:11  sll
   Big checkin with the brand new internal APIs.
 
@@ -53,6 +57,8 @@
 */
 
 #include <omniORB4/CORBA.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 // We want to ensure that the stream always starts at 8 bytes aligned.
 // Call this function with bufp would yield the correctly aligned starting
@@ -140,7 +146,8 @@ cdrMemoryStream::fetchInputData(omni::alignment_t align, size_t required)
 
   size_t avail = (char*)pd_inb_end - (char*) pd_inb_mkr;
   if (avail < required)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL,MARSHAL_PassEndOfMessage,
+		  (CORBA::CompletionStatus)completion());
 }
 
 CORBA::Boolean
@@ -162,7 +169,9 @@ CORBA::Boolean
 cdrMemoryStream::reserveOutputSpace(omni::alignment_t align,size_t required)
 {
   if (pd_readonly_and_external_buffer)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL,MARSHAL_AttemptToWriteToReadOnlyBuf,
+		  (CORBA::CompletionStatus)completion());
+
 
   required += omni::align_to((omni::ptr_arith_t)pd_outb_mkr,align) -
               (omni::ptr_arith_t)pd_outb_mkr;
@@ -394,7 +403,9 @@ cdrEncapsulationStream::cdrEncapsulationStream(const CORBA::Octet* databuffer,
 					       CORBA::Boolean useAlign4) 
   : cdrMemoryStream((void*)databuffer, bufsize)
 {
-  if (bufsize < 1) throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  if (bufsize < 1) 
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidInitialSize,
+		  (CORBA::CompletionStatus)completion());
 
   // We have to check the alignment of start of the the octet sequence buffer.
   // It should be <initialAlign>. This is normally the case but
@@ -443,7 +454,9 @@ cdrEncapsulationStream::getOctetStream(CORBA::Octet*& databuffer,
 				       CORBA::ULong& len)
 {
   if (pd_readonly_and_external_buffer) 
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL,MARSHAL_AttemptToWriteToReadOnlyBuf,
+		  (CORBA::CompletionStatus)completion());
+
 
   void* begin = ensure_align_8(pd_bufp);
   

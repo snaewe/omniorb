@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2001/08/03 17:41:21  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.1.4.13  2001/07/31 16:20:29  sll
   New primitives to acquire read lock on a connection.
 
@@ -442,9 +446,15 @@ giopStream::CommFailure::_raise(CORBA::ULong minor,
     l << "throw giopStream::CommFailure from "
       << omniExHelper::strip(filename) 	
       << ":" << linenumber 
-      << "(" << (int)retry << ","
-      << omniORB::logger::exceptionStatus(status,minor)
-      << ")\n";
+      << "(" << (int)retry << ",";
+    const char* description = minorCode2String(TRANSIENT_LookupTable,minor);
+    if (!description)
+      description = minorCode2String(COMM_FAILURE_LookupTable,minor);
+    if (description)
+      l << omniORB::logger::exceptionStatus(status,description);
+    else
+      l << omniORB::logger::exceptionStatus(status,minor);
+    l << ")\n";
   }
 #endif
   throw CommFailure(minor,status,retry,filename,linenumber);
@@ -547,7 +557,8 @@ giopStream::maybeReserveOutputSpace(omni::alignment_t align,
   OMNIORB_ASSERT(impl());
 
   if (required > 8 || ((size_t)align != required)) {
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InternalInvariant,
+		  (CORBA::CompletionStatus)completion());
   }
 
   impl()->getReserveSpace(this,align,required);

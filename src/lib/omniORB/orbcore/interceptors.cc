@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/03 17:41:22  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.1.2.3  2001/04/18 18:18:08  sll
   Big checkin with the brand new internal APIs.
 
@@ -183,7 +187,8 @@ OMNI_USING_NAMESPACE(omni)
 omniInterceptors*
 omniORB::getInterceptors() {
   if (!initialiser.pd_interceptors) 
-    OMNIORB_THROW(INITIALIZE,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_FailedLoadLibrary,
+		  CORBA::COMPLETED_NO);
 
   return initialiser.pd_interceptors;
 }

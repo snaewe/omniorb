@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.11  2001/08/03 17:41:17  sll
+# System exception minor code overhaul. When a system exeception is raised,
+# a meaning minor code is provided.
+#
 # Revision 1.3.2.10  2001/07/25 13:40:53  dpg1
 # Suppress compiler warning about unused variable in _dispatch() for
 # empty interfaces.
@@ -311,7 +315,8 @@ void @call_descriptor@::userException(_OMNI_NS(IOP_C)& iop_client, const char* r
   @exception_block@
   else {
     iop_client.RequestCompleted(1);
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(UNKNOWN,UNKNOWN_UserException,
+                  (CORBA::CompletionStatus)s.completion());
   }
 }
 """

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2001/08/03 17:41:24  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.2.2.8  2001/05/09 17:02:25  sll
   Throw omniORB::LOCATION_FORWARD with the right permanent flag.
 
@@ -244,7 +248,8 @@ omniRemoteIdentity::locateRequest()
 
   case GIOP::UNKNOWN_OBJECT:
     iop_client->RequestCompleted();
-    OMNIORB_THROW(OBJECT_NOT_EXIST,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
+		  CORBA::COMPLETED_NO);
     break;        // dummy break
 
   case GIOP::OBJECT_FORWARD:

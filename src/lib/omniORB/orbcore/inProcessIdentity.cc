@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  2001/08/03 17:41:21  sll
+ System exception minor code overhaul. When a system exeception is raised,
+ a meaning minor code is provided.
+
  Revision 1.1.2.1  2001/05/29 17:03:51  dpg1
  In process identity.
 
@@ -107,7 +111,8 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
 
     // Can we find the object in the local object table?
     if (keysize() < 0)
-      OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
+		    CORBA::COMPLETED_NO);
 
     CORBA::ULong hash = omni::hash(key(), keysize());
 
@@ -133,7 +138,8 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
 
     // Oh dear.
 
-    OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
+		  CORBA::COMPLETED_NO);
   }
 #ifdef HAS_Cplusplus_catch_exception_by_base
   catch (CORBA::Exception&) {
@@ -148,7 +154,7 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
       l << "WARNING -- method \'" << call_desc.op() << "\' raised an unknown\n"
 	" exception (not a legal CORBA exception).\n";
     }
-    OMNIORB_THROW(UNKNOWN,0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(UNKNOWN,UNKNOWN_UserException, CORBA::COMPLETED_MAYBE);
   }
 #endif
 }

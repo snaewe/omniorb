@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.32.2.5  2001/08/03 17:41:22  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.32.2.4  2001/04/18 18:18:08  sll
   Big checkin with the brand new internal APIs.
 
@@ -319,7 +323,8 @@ void initFile::initialize()
 	  l << "Configuration error: invalid ORBInitRef parameter `"
 	    << (const char*)data << "'.\n";
 	}
-	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(INITIALIZE,INITIALIZE_ConfigFileError,
+		      CORBA::COMPLETED_NO);
       }
       if (!strcmp(id, "NameService")) {
 	if (nameServiceSet) multerr("NameService");
@@ -335,7 +340,8 @@ void initFile::initialize()
 	  l << "Configuration error: syntactically incorrect URI `"
 	    << (const char*)uri << "'\n";
 	}
-	OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(INITIALIZE,INITIALIZE_ConfigFileError,
+		      CORBA::COMPLETED_NO);
       }
     }
     else if (strcmp((const char*)entryname,"ORBDefaultInitRef") == 0) {
@@ -392,7 +398,8 @@ void initFile::initialize()
 	kprintf("Unknown field (%s) found in configuration file.\n",(const char*)entryname);
 #endif
       }
-      OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(INITIALIZE,INITIALIZE_ConfigFileError,
+		    CORBA::COMPLETED_NO);
     }
   }
   if (!nameServiceSet && !interfaceRepositorySet) {
@@ -451,9 +458,6 @@ int initFile::read_file(char* config_fname)
   rewind(iFile);
 
   fData = new char[fsize+1];
-  if (fData == NULL) 
-    OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
-
   size_t result = fread((void*) fData,1,fsize,iFile);
   fclose(iFile);
 
@@ -598,7 +602,8 @@ void initFile::multerr(const char* entryname)
 	    entryname);
 #endif
   }
-  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,INITIALIZE_ConfigFileError,
+		CORBA::COMPLETED_NO);
 }
 
 
@@ -616,7 +621,8 @@ void initFile::dataerr(const char* entryname)
     kprintf(" in configuration file.\n");
 #endif
   }
-  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,INITIALIZE_ConfigFileError,
+		CORBA::COMPLETED_NO);
 }
 
 
@@ -631,7 +637,8 @@ void initFile::parseerr()
     kprintf("Configuration error: Parse error in config file.\n");
 #endif
   }
-  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,INITIALIZE_ConfigFileError,
+		CORBA::COMPLETED_NO);
 }
 
 
@@ -647,7 +654,8 @@ void initFile::invref(const char* entryname)
 	    entryname);
 #endif
   }
-  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,INITIALIZE_ConfigFileError,
+		CORBA::COMPLETED_NO);
 }
 
 
@@ -679,7 +687,8 @@ void initFile::formaterr(char* entryname)
       " is not a character string.\n";
     omniORB::log.flush();
   }
-  OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
+  OMNIORB_THROW(INITIALIZE,INITIALIZE_ConfigFileError,
+		CORBA::COMPLETED_NO);
 }
 
 #endif

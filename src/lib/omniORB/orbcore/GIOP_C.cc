@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/08/03 17:41:17  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.1.4.3  2001/07/31 16:28:01  sll
   Added GIOP BiDir support.
 
@@ -250,6 +254,7 @@ GIOP_C::notifyCommFailure(CORBA::ULong& minor,
     minor = COMM_FAILURE_UnMarshalResults;
     break;
   default:
+    minor = TRANSIENT_ConnectionClosed;
     break;
   }
 }

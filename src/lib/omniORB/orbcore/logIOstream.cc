@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.8.2.4  2001/08/03 17:41:22  sll
+  System exception minor code overhaul. When a system exeception is raised,
+  a meaning minor code is provided.
+
   Revision 1.8.2.3  2001/05/11 14:25:53  sll
   Added operator for omniORB::logger to report system exception status and
   minor code.
@@ -339,9 +343,14 @@ omniORB::logger::operator<<(const omniORB::logger::exceptionStatus& ex)
     *this << "MAYBE,";
     break;
   }
-  reserve(30);
-  sprintf(pd_p, "0x%08x", (int)ex.minor);
-  pd_p += strlen(pd_p);
+  if (ex.minor_string) {
+    *this << ex.minor_string;
+  }
+  else {
+    reserve(30);
+    sprintf(pd_p, "0x%08x", (int)ex.minor);
+    pd_p += strlen(pd_p);
+  }
   return *this;
 }
 
