@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/09/03 13:28:09  sll
+  In the calldescriptor, in addition to the first address, record the current
+  address in use.
+
   Revision 1.1.4.4  2001/08/03 17:41:17  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -221,12 +225,20 @@ GIOP_C::notifyCommFailure(CORBA::ULong& minor,
   OMNIORB_ASSERT(pd_calldescriptor);
 
   if (pd_strand->first_use) {
-    const giopAddress* addr = pd_calldescriptor->firstAddressUsed();
-    if (!addr) {
-      addr = pd_strand->address;
-      pd_calldescriptor->firstAddressUsed(addr);
+    const giopAddress* firstaddr = pd_calldescriptor->firstAddressUsed();
+    const giopAddress* currentaddr; 
+    if (!firstaddr) {
+      firstaddr = pd_strand->address;
+      pd_calldescriptor->firstAddressUsed(firstaddr);
+      currentaddr = firstaddr;
+      pd_calldescriptor->currentAddress(currentaddr);
     }
-    retry =  (pd_rope->notifyCommFailure(addr) != addr);
+    else {
+      currentaddr = pd_calldescriptor->currentAddress();
+    }
+    currentaddr = pd_rope->notifyCommFailure(currentaddr);
+    pd_calldescriptor->currentAddress(currentaddr);
+    retry =  (currentaddr != firstaddr);
   }
   else if (pd_strand->biDir && 
 	   pd_strand->isClient() && 
