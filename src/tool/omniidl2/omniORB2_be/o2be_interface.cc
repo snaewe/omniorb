@@ -27,9 +27,12 @@
 
 /*
   $Log$
-  Revision 1.17  1998/01/27 16:45:14  ewc
-  Added support for type Any and TypeCode
+  Revision 1.18  1998/03/09 14:24:33  ewc
+  Minor change - cast string literals
 
+// Revision 1.17  1998/01/27  16:45:14  ewc
+// Added support for type Any and TypeCode
+//
   Revision 1.16  1997/12/23 19:26:13  sll
   Now generate correct typedefs for typedef interfaces.
 
@@ -101,12 +104,12 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
       set_fqtcname("CORBA::_tc_Object");
       set__fqtcname("CORBA__tc_Object");
 
-      pd_objref_uqname = "CORBA::Object_ptr";
-      pd_objref_fqname = "CORBA::Object_ptr";
-      pd_fieldmem_uqname = "CORBA::Object_member";
-      pd_fieldmem_fqname = "CORBA::Object_member";
-      pd_inout_adptarg_name = "CORBA::Object_INOUT_arg";
-      pd_out_adptarg_name = "CORBA::Object_OUT_arg";
+      pd_objref_uqname = (char*) "CORBA::Object_ptr";
+      pd_objref_fqname = (char*) "CORBA::Object_ptr";
+      pd_fieldmem_uqname = (char*) "CORBA::Object_member";
+      pd_fieldmem_fqname = (char*) "CORBA::Object_member";
+      pd_inout_adptarg_name = (char*) "CORBA::Object_INOUT_arg";
+      pd_out_adptarg_name = (char*) "CORBA::Object_OUT_arg";
       return;
     }
 
