@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.6  1998/03/19 19:53:14  sll
+  Delay connect to the remote address space until the first send or recv.
+  Previously, connect was made inside the ctor of tcpSocketStrand.
+
   Revision 1.5  1998/03/04 14:44:36  sll
   Updated to use omniORB::giopServerThreadWrapper.
 
@@ -68,6 +72,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#include <sys/types.h>
+#include <fcntl.h>
+#endif
 
 #define RC_INADDR_NONE     ((CORBA::ULong)-1)
 #define RC_INVALID_SOCKET  (-1)
@@ -568,74 +577,36 @@ unsigned int
 tcpSocketStrand::buffer_size = 8192 + (int)omni::max_alignment;
 
 
+static tcpSocketHandle_t realConnect(tcpSocketEndpoint* r);
+
+
 tcpSocketStrand::tcpSocketStrand(tcpSocketOutgoingRope *rope,
 				 tcpSocketEndpoint   *r,
 				 CORBA::Boolean heapAllocated)
   : reliableStreamStrand(tcpSocketStrand::buffer_size,rope,heapAllocated),
-    pd_send_giop_closeConnection(0)
+    pd_send_giop_closeConnection(0), pd_delay_connect(0)
 {
-  struct sockaddr_in raddr;
-  LibcWrapper::hostent_var h;
-  int  rc;
+  // Do not try to connect to the remote host in this ctor.
+  // This is to avoid holding the mutex on rope->pd_lock while the connect
+  // is in progress. Holding the mutex for an extended period is bad as this 
+  // can have ***serious*** side effect. 
+  // One immediate consequence of holding the rope->pd_lock is that the
+  // outScavenger will be blocked on rope->pd_lock when it is scanning
+  // for idle strands. This in turn blockout any thread trying to lock
+  // rope->pd_anchor->pd_lock. This is really bad because no new rope
+  // can be added to the anchor.
 
-  if (! LibcWrapper::isipaddr( (char*) r->host()))
-    {
-      if (LibcWrapper::gethostbyname((char *)r->host(),h,rc) < 0) 
-	{
-	  // XXX look at rc to decide what to do or if to give up what errno
-	  // XXX to return EINVAL.
-	  //
-	  // XXX - memory leek under gcc-2.7.2
-	  // There should be no need to call the dtor explicitly but
-	  // gcc-2.7.2 does not call the dtor.
-	  throw CORBA::COMM_FAILURE(EINVAL,CORBA::COMPLETED_NO);
-	}
-      // We just pick the first address in the list, may be we should go
-      // through the list and if possible pick the one that is on the same
-      // subnet.
-      memcpy((void*)&raddr.sin_addr,
-	     (void*)h.hostent()->h_addr_list[0],
-	     sizeof(raddr.sin_addr));
-    }
-  else
-    {
-      // The machine name is already an IP address
-      CORBA::ULong ip_p;
-      if ( (ip_p = inet_addr( (char*) r->host() )) == RC_INADDR_NONE)
-	{
-	  // XXX - memory leek under gcc-2.7.2
-	  // There should be no need to call the dtor explicitly but
-	  // gcc-2.7.2 does not call the dtor.
-	  throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
-	}
-      memcpy((void*) &raddr.sin_addr, (void*) &ip_p, sizeof(raddr.sin_addr));
-    }
 
-  raddr.sin_family = INETSOCKET;
-  raddr.sin_port   = htons(r->port());
-
-  if ((pd_socket = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
-    // XXX - memory leek under gcc-2.7.2
-    // There should be no need to call the dtor explicitly but
-    // gcc-2.7.2 does not call the dtor.
-    throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
-  }
-  if (connect(pd_socket,(struct sockaddr *)&raddr,
-	      sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) 
-  {
-    CLOSESOCKET(pd_socket);
-    // XXX - memory leek under gcc-2.7.2
-    // There should be no need to call the dtor explicitly but
-    // gcc-2.7.2 does not call the dtor.
-    throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
-  }
+  pd_socket = RC_INVALID_SOCKET;
+  pd_delay_connect = new tcpSocketEndpoint(r);
+  // Do the connect on first call to ll_recv or ll_send.
 }
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketIncomingRope *r,
 				 tcpSocketHandle_t sock,
 				 CORBA::Boolean heapAllocated)
   : reliableStreamStrand(tcpSocketStrand::buffer_size,r,heapAllocated),
-    pd_socket(sock), pd_send_giop_closeConnection(1)
+    pd_socket(sock), pd_send_giop_closeConnection(1), pd_delay_connect(0)
 {
 }
 
@@ -645,14 +616,29 @@ tcpSocketStrand::~tcpSocketStrand()
   if (omniORB::traceLevel >= 5) {
     cerr << "tcpSocketStrand::~Strand() close socket no. " << pd_socket << endl;
   }
-  if (pd_socket != -1)
+  if (pd_socket != RC_INVALID_SOCKET)
     CLOSESOCKET(pd_socket);
-  pd_socket = -1;
+  pd_socket = RC_INVALID_SOCKET;
+  if (pd_delay_connect)
+    delete pd_delay_connect;
+  pd_delay_connect = 0;
 }
 
 size_t
 tcpSocketStrand::ll_recv(void* buf, size_t sz)
 {
+  if (pd_delay_connect) {
+    // We have not connect to the remote host yet. Do the connect now.
+    // Note: May block on connect for sometime if the remote host is down
+    //
+    if ((pd_socket = realConnect(pd_delay_connect)) == RC_INVALID_SOCKET) {
+      _setStrandIsDying();
+      throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+    }
+    delete pd_delay_connect;
+    pd_delay_connect = 0;
+  }
+
   int rx;
   while (1) {
     if ((rx = ::recv(pd_socket,(char*)buf,sz,0)) == RC_SOCKET_ERROR) {
@@ -677,6 +663,18 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
 void
 tcpSocketStrand::ll_send(void* buf,size_t sz) 
 {
+  if (pd_delay_connect) {
+    // We have not connect to the remote host yet. Do the connect now.
+    // Note: May block on connect for sometime if the remote host is down
+    //
+    if ((pd_socket = realConnect(pd_delay_connect)) == RC_INVALID_SOCKET) {
+      _setStrandIsDying();
+      throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+    }
+    delete pd_delay_connect;
+    pd_delay_connect = 0;
+  }
+
   int tx;
   char *p = (char *)buf;
   while (sz) {
@@ -733,6 +731,94 @@ tcpSocketStrand::shutdown()
   _setStrandIsDying();
   SHUTDOWNSOCKET(pd_socket);
   return;
+}
+
+static
+tcpSocketHandle_t
+realConnect(tcpSocketEndpoint* r)
+{
+  struct sockaddr_in raddr;
+  LibcWrapper::hostent_var h;
+  int  rc;
+  tcpSocketHandle_t sock;
+
+  if (! LibcWrapper::isipaddr( (char*) r->host()))
+    {
+      if (LibcWrapper::gethostbyname((char *)r->host(),h,rc) < 0) 
+	{
+	  // XXX look at rc to decide what to do or if to give up what errno
+	  // XXX to return EINVAL.
+	  //
+	  return RC_INVALID_SOCKET;
+	}
+      // We just pick the first address in the list, may be we should go
+      // through the list and if possible pick the one that is on the same
+      // subnet.
+      memcpy((void*)&raddr.sin_addr,
+	     (void*)h.hostent()->h_addr_list[0],
+	     sizeof(raddr.sin_addr));
+    }
+  else
+    {
+      // The machine name is already an IP address
+      CORBA::ULong ip_p;
+      if ( (ip_p = inet_addr( (char*) r->host() )) == RC_INADDR_NONE)
+	{
+	  return RC_INVALID_SOCKET;
+	}
+      memcpy((void*) &raddr.sin_addr, (void*) &ip_p, sizeof(raddr.sin_addr));
+    }
+
+  raddr.sin_family = INETSOCKET;
+  raddr.sin_port   = htons(r->port());
+
+  if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
+    return RC_INVALID_SOCKET;
+  }
+
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+  // Use non-blocking connect.
+  int fl = O_NONBLOCK;
+  if (fcntl(sock,F_SETFL,fl) < RC_SOCKET_ERROR) {
+    CLOSESOCKET(sock);
+    return RC_INVALID_SOCKET;
+  }
+  if (connect(sock,(struct sockaddr *)&raddr,
+	      sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) 
+  {
+    if (errno != EINPROGRESS) {
+      CLOSESOCKET(sock);
+      return RC_INVALID_SOCKET;
+    }
+    fd_set wrfds;
+    FD_ZERO(&wrfds);
+    FD_SET(sock,&wrfds);
+    struct timeval t = { 30,0 };
+    int rc;
+    if ((rc = select(sock+1,0,&wrfds,0,&t)) <= 0) {
+      // Timeout, do not bother trying again.
+      CLOSESOCKET(sock);
+      return RC_INVALID_SOCKET;
+    }
+    // Set the socket back to blocking
+    fl = 0;
+    if (fcntl(sock,F_SETFL,fl) < RC_SOCKET_ERROR) {
+      CLOSESOCKET(sock);
+      return RC_INVALID_SOCKET;
+    }
+  }
+
+#else
+  if (connect(sock,(struct sockaddr *)&raddr,
+	      sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) 
+  {
+    CLOSESOCKET(sock);
+    return RC_INVALID_SOCKET;
+  }
+#endif
+
+
+  return sock;
 }
 
 /////////////////////////////////////////////////////////////////////////////
