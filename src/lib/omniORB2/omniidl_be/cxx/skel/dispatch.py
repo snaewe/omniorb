@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  2000/01/11 12:02:45  djs
+# More tidying up
+#
 # Revision 1.11  2000/01/10 18:42:21  djs
 # Removed redundant code, tidied up.
 #
@@ -121,7 +124,7 @@ def argument_instance(type):
     # all object references and typecodes are _var types
     if tyutil.isObjRef(deref_type) and not(is_array):
 #        name = self.__globalScope.principalID(deref_type)
-        name = environment.principalID(deref_type, fully_scope = 0)
+        name = environment.principalID(deref_type)
         mapping = [name + "_var", name + "_var", name + "_var"]
 
         return mapping
@@ -135,7 +138,7 @@ def argument_instance(type):
     # typedefs aren't dereferenced
     if tyutil.isTypedef(type):
 #        name = self.__globalScope.principalID(type)
-        name = environment.principalID(type, fully_scope = 0)
+        name = environment.principalID(type)
         mapping[0] = name
         # out types have storage allocated here
         if is_variable:
@@ -147,7 +150,7 @@ def argument_instance(type):
         return mapping
 
 #    name = self.__globalScope.principalID(type)
-    name = environment.principalID(type, fully_scope = 0)
+    name = environment.principalID(type)
     mapping = [name, name, name]
     if is_variable:
         mapping[1] = name + "_var"
@@ -247,15 +250,13 @@ def operation(operation):
         direction = argument.direction()
         argument_type = argument.paramType()
 #        argument_type_name = self.__globalScope.principalID(argument_type)
-        argument_type_name = environment.principalID(argument_type,
-                                                     fully_scope = 0)
+        argument_type_name = environment.principalID(argument_type)
         argument_is_variable = tyutil.isVariableType(argument_type)
         argument_dims = tyutil.typeDims(argument_type)
         is_array = argument_dims != []
         deref_argument_type = tyutil.deref(argument_type)
         deref_dims_type = tyutil.derefKeepDims(argument_type)
-        deref_dims_name = environment.principalID(deref_dims_type,
-                                                  fully_scope = 0)
+        deref_dims_name = environment.principalID(deref_dims_type)
 
         argument_type_names = argument_instance(argument_type)
         # declare the argument
@@ -332,14 +333,12 @@ def operation(operation):
         result_mapping = argument_instance(return_type)[1]
         return_is_pointer = is_pointer(return_type) and not(return_is_array)
         dims_return_type = tyutil.derefKeepDims(return_type)
-        return_type_name = environment.principalID(return_type,
-                                                   fully_scope = 0)
+        return_type_name = environment.principalID(return_type)
 
         # something very strange happening with array typedefs
         if return_is_array:
             return_type = dims_return_type
-            return_type_name = environment.principalID(dims_return_type,
-                                                       fully_scope = 0)
+            return_type_name = environment.principalID(dims_return_type)
         
         # exception- arrays of fixed types use the _var mapping
         if not(return_is_variable) and return_is_array:

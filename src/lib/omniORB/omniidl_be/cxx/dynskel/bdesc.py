@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  2000/01/11 12:02:37  djs
+# More tidying up
+#
 # Revision 1.6  2000/01/11 11:33:54  djs
 # Tidied up
 #
@@ -383,7 +386,7 @@ def docast(type, decl, string):
         tail_dims_string = tyutil.dimsToString(tail_dims)
     
     deref_type = tyutil.deref(type)
-    cast_to = env.principalID(deref_type, fully_scope = 1)
+    cast_to = env.principalID(deref_type)
     if tyutil.isObjRef(deref_type):
         cast_to = tyutil.objRefTemplate(deref_type, "Member", env)
     elif tyutil.isSequence(deref_type):
@@ -533,8 +536,8 @@ def member(node, modify_for_exception = 0):
         memberType = member.memberType()
         deref_memberType = tyutil.derefKeepDims(memberType)
         memberType_cname = mangler.canonTypeName(deref_memberType)
-        deref_memberType_name = env.principalID(tyutil.deref(memberType),
-                                                fully_scope = 1)
+        deref_memberType_name = env.principalID(tyutil.deref(memberType))
+
         member_dims = tyutil.typeDims(memberType)
         is_array = member_dims != []
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14  2000/01/11 12:02:34  djs
+# More tidying up
+#
 # Revision 1.13  2000/01/07 20:31:18  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -111,8 +114,7 @@ def marshall_struct_union(string, environment, type, decl, argname, to="_n"):
         marshall(string, environment, type, decl, argname, to)
         
 
-def marshall(string, environment, type, decl, argname, to="_n",
-             fully_scope = 0):
+def marshall(string, environment, type, decl, argname, to="_n"):
     assert isinstance(type, idltype.Type)
     if decl:
         assert isinstance(decl, idlast.Declarator)
@@ -135,7 +137,7 @@ def marshall(string, environment, type, decl, argname, to="_n",
 
     num_elements = reduce(lambda x,y:x*y, full_dims, 1)
 
-    type_name = environment.principalID(deref_type, fully_scope)
+    type_name = environment.principalID(deref_type)
 
     # marshall an array of basic things
     if is_array:
@@ -244,7 +246,7 @@ def unmarshall_struct_union(string, environment, type, decl, argname,
 
 def unmarshall(to, environment, type, decl, name,
                can_throw_marshall, from_where = "_n",
-               fully_scope = 0, string_via_member = 0):
+               string_via_member = 0):
     assert isinstance(type, idltype.Type)
     if decl:
         assert isinstance(decl, idlast.Declarator)
@@ -267,8 +269,8 @@ def unmarshall(to, environment, type, decl, name,
 
     num_elements = reduce(lambda x,y:x*y, full_dims, 1)
 
-    type_name = environment.principalID(deref_type, fully_scope)
-    deref_type_name = environment.principalID(deref_type, fully_scope)
+    type_name = environment.principalID(deref_type)
+    deref_type_name = environment.principalID(deref_type)
 
     element_name = name + zero_dims_string
 
@@ -365,7 +367,7 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
                    from_where = from_where)
             to.dec_indent()
     elif tyutil.isObjRef(deref_type):
-        base_type_name = environment.principalID(deref_type, fully_scope)
+        base_type_name = environment.principalID(deref_type)
         to.out("""\
   @element_name@ = @type@_Helper::unmarshalObjRef(@from_where@);""",
                    type = base_type_name,
@@ -391,7 +393,7 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
 # argument (not a struct member)
 # (is this why tObjrefMember != tObjref in the old BE?)
 def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
-                    is_pointer = 0, fully_scope = 0):
+                    is_pointer = 0):
     #o2be_operation::produceSizeCalculation
     assert isinstance(type, idltype.Type)
     
@@ -452,7 +454,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
         # what is the difference between tObjrefMember and tObjref?
         if fixme:
             if tyutil.isObjRef(deref_type):
-                name = environment.principalID(deref_type, fully_scope)
+                name = environment.principalID(deref_type)
                 string.out("""\
 @sizevar@ = @name@_Helper::NP_alignedSize(@argname@, @sizevar@);""",
                            sizevar = sizevar, name = name, argname = argname)
@@ -518,7 +520,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
         
 
     elif tyutil.isObjRef(deref_type):
-        name = environment.principalID(deref_type, fully_scope)
+        name = environment.principalID(deref_type)
         string.out("""\
 @sizevar@ = @name@_Helper::NP_alignedSize(@argname@@indexing_string@._ptr,@sizevar@);""",
                    sizevar = sizevar, name = name, argname = argname,

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  2000/01/11 12:02:34  djs
+# More tidying up
+#
 # Revision 1.6  2000/01/10 15:39:34  djs
 # Better name and scope handling.
 #
@@ -255,10 +258,6 @@ class Environment:
         assert 0
 
     def nameToString(self, partialName):
-        # a bug in the old backend (as described above) means
-        # that names are never globally scoped (::alias)
-        if 0 and config.EMULATE_BUGS() and partialName[0] == None:
-            partialName = partialName[1:len(partialName)]
         # map the None onto an empty string
         if partialName[0] == None:
             partialName = [""] + partialName[1:len(partialName)]
@@ -268,7 +267,7 @@ class Environment:
         
         return idlutil.ccolonName(partialName)
 
-    def principalID(self, type, fully_scope = 0):
+    def principalID(self, type):
         assert isinstance(type, idltype.Type)
         # check if type is a basic type first
         if tyutil.ttsMap.has_key(type.kind()):
@@ -289,13 +288,7 @@ class Environment:
         # ----- IMPLEMENT ME -----
 
         scopedName = type.scopedName()
-        if 0 and fully_scope:
-            if config.EMULATE_BUGS():
-                relName = scopedName
-            else:
-                relName = [None] + scopedName
-        else:
-            relName = self.relName(scopedName)
+        relName = self.relName(scopedName)
         return self.nameToString(relName)
 
 

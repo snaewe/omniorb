@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17  2000/01/11 12:02:45  djs
+# More tidying up
+#
 # Revision 1.16  2000/01/10 18:42:22  djs
 # Removed redundant code, tidied up.
 #
@@ -313,8 +316,7 @@ void*
         returnType = operation.returnType()
         result_type = tyutil.operationArgumentType(returnType,
                                                    self.__globalScope,
-                                                   #environment,
-                                                   0,1)[0]
+                                                   virtualFn = 0)[0]
         has_return_value = not(tyutil.isVoid(returnType))
 
         # compute the argument mapping for the operation parameters
@@ -405,13 +407,12 @@ static void
         is_array = attr_dims != []
         
         deref_attrType = tyutil.deref(attrType)
-        attrType_name = environment.principalID(attrType, 1)
+        attrType_name = environment.principalID(attrType)
 
         # we need the type with and without its full scope
-        attrTypes = tyutil.operationArgumentType(attrType, self.__globalScope, 0,
-                                                 fully_scope = 0)
-        scoped_attrTypes = tyutil.operationArgumentType(attrType, outer_environment, 0,
-                                                 fully_scope = 0)
+        attrTypes = tyutil.operationArgumentType(attrType, self.__globalScope, 0)
+        scoped_attrTypes = tyutil.operationArgumentType(attrType, outer_environment,
+                                                        0)
         return_type = attrTypes[0]
 
         # FIXME: change to the old compiler might make this always use
@@ -634,7 +635,7 @@ def visitTypedef(node):
     aliasType = node.aliasType()
     alias_dims = tyutil.typeDims(aliasType)
 
-    fq_aliased = environment.principalID(aliasType, 1)
+    fq_aliased = environment.principalID(aliasType)
 
     for d in node.declarators():
         # record in the environment
