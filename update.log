@@ -1,3 +1,16 @@
+Mon Nov  6 17:12:36 GMT 2000 dpg1
+=================================
+
+- Change assertion failure message.
+
+src/lib/omniORB2/orbcore/omniInternal.cc
+
+- Crash less likely when attempting to find a proxy factory during ORB
+  shutdown.
+
+src/lib/omniORB2/orbcore/proxyFactory.cc
+
+
 Wed Nov  1 11:20:52 GMT 2000 dpg1
 =================================
 
