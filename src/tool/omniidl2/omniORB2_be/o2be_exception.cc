@@ -25,6 +25,10 @@
 
 /*
   $Log$
+  Revision 1.12  1999/01/07 09:47:16  djr
+  Changes to support new TypeCode/Any implementation, which is now
+  placed in a new file ...DynSK.cc (by default).
+
   Revision 1.11  1998/08/19 15:52:20  sll
   New member functions void produce_binary_operators_in_hdr and the like
   are responsible for generating binary operators <<= etc in the global
@@ -67,6 +71,7 @@
 
 #define IRREPOID_POSTFIX          "_IntfRepoID"
 
+
 o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
   : AST_Decl(AST_Decl::NT_except, n, p),
     AST_Structure(AST_Decl::NT_except, n, p),
@@ -77,8 +82,9 @@ o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
   strcpy(pd_repoid,_fqname());
   strcat(pd_repoid,IRREPOID_POSTFIX);
   pd_repoidsize = strlen(repositoryID())+1;
-  set_recursive_seq(I_FALSE);
+  pd_have_produced_typecode_skel = I_FALSE;
 }
+
 
 void
 o2be_exception::produce_hdr(std::fstream &s)
@@ -254,16 +260,12 @@ o2be_exception::produce_hdr(std::fstream &s)
   IND(s); s << "};\n\n";
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
-    if (check_recursive_seq() == I_FALSE) {
-      set_recursive_seq(I_FALSE);
-      // TypeCode_ptr declaration
-      IND(s); s << variable_qualifier()
-		<< " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
-    }
-    else 
-      set_recursive_seq(I_TRUE);
+    // TypeCode_ptr declaration
+    IND(s); s << variable_qualifier()
+	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
   }
 }
+
 
 void
 o2be_exception::produce_skel(std::fstream &s)
@@ -361,7 +363,8 @@ o2be_exception::produce_skel(std::fstream &s)
 	s << ((mapping.is_const) ? "const ":"");
 	switch (ntype) {
 	case o2be_operation::tObjref:
-	  s << o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this);
+	  s << o2be_interface::narrow_from_decl(decl)
+	    ->unambiguous_objref_name(this);
 	  break;
 	case o2be_operation::tString:
 	  s << "char* ";
@@ -722,222 +725,283 @@ o2be_exception::produce_skel(std::fstream &s)
   }
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
-
-  if ((idl_global->compile_flags() & IDL_CF_ANY) && 
-      recursive_seq() == I_FALSE) {
-    // Produce code for types any and TypeCode
-    this->produce_typecode_skel(s);
-
-    if (defined_in() != idl_global->root() &&
-	defined_in()->scope_node_type() == AST_Decl::NT_module)
-      {
-	s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
-	IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
-	AST_Decl* inscope = ScopeAsDecl(defined_in());
-	char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
-	if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
-	  {
-	    scopename = o2be_name::narrow_and_produce__fqname(inscope);
-	    IND(s); s << "namespace " << scopename << " = " 
-		      << o2be_name::narrow_and_produce_fqname(inscope)
-		      << ";\n";
-	  }
-	IND(s); s << "namespace " << scopename << " {\n";
-	INC_INDENT_LEVEL();
-	IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-	DEC_INDENT_LEVEL();
-	IND(s); s << "}\n";
-	s << "#else\n";
-	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-	s << "#endif\n";
-      }
-    else
-      {
-	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-      }
-  } 
 }
+
+
+void
+o2be_exception::produce_dynskel(std::fstream &s)
+{
+  // Produce code for types any and TypeCode
+  this->produce_typecode_skel(s);
+
+  if (defined_in() != idl_global->root() &&
+      defined_in()->scope_node_type() == AST_Decl::NT_module)
+    {
+      s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+      IND(s); s << "// MSVC++ does not give the constant external"
+		" linkage otherwise.\n";
+      AST_Decl* inscope = ScopeAsDecl(defined_in());
+      char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+      if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	{
+	  scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	  IND(s); s << "namespace " << scopename << " = " 
+		    << o2be_name::narrow_and_produce_fqname(inscope)
+		    << ";\n";
+	}
+      IND(s); s << "namespace " << scopename << " {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = " 
+		<< "_0RL_tc_" << _idname() << ";\n\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      s << "#else\n";
+      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+		<< "_0RL_tc_" << _idname() << ";\n\n";
+      s << "#endif\n";
+    }
+  else
+    {
+      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+		<< "_0RL_tc_" << _idname() << ";\n\n";
+    }
+}
+
 
 void
 o2be_exception::produce_binary_operators_in_hdr(std::fstream &s)
 {
-  if (idl_global->compile_flags() & IDL_CF_ANY) 
-    {
-      if (check_recursive_seq() == I_FALSE) 
-	{
-	  set_recursive_seq(I_FALSE);
-	  s << "\n";
-	  // any insertion and extraction operators
-	  IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
-		    << fqname() << "& _s);\n";
-	  IND(s); s << "void operator<<=(CORBA::Any& _a, " 
-		    << fqname() <<"* _sp);\n";
-	  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-		    << fqname() << "*& _sp);\n\n";
-	}
-      else 
-	set_recursive_seq(I_TRUE);
-    }
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // any insertion and extraction operators
+    IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
+	      << fqname() << "& _s);\n";
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " 
+	      << fqname() <<"* _sp);\n";
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+	      << fqname() << "*& _sp);\n\n";
+  }
 }
 
+
 void
-o2be_exception::produce_binary_operators_in_skel(std::fstream &s)
+o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
 {
-  if ((idl_global->compile_flags() & IDL_CF_ANY)&& recursive_seq() == I_FALSE) 
-    {
-      IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << fqname() << "* _0RL_t = (" << fqname() << "*) _data;\n";
-      IND(s); s << "delete _0RL_t;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////// tcDescriptor generation /////////////////////
+  //////////////////////////////////////////////////////////////////////
 
-      // any insertion and extraction operators
-      IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
-		<< fqname() << "& _s) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-      IND(s); s << fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
-      IND(s); s << "_s >>= _0RL_mbuf;\n";
-      IND(s); s << "_a.NP_replaceData(" << fqtcname() << ",_0RL_mbuf);\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+  // Ensure we have buildDesc support for all the members.
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while( !i.is_done() ) {
+      AST_Decl *d = i.item();
+      
+      if( d->node_type() == AST_Decl::NT_field ) {
+	AST_Decl* ft = o2be_field::narrow_from_decl(d)->field_type();
+	o2be_buildDesc::produce_decls(s, ft);
+      }
+      
+      i.next();
+    }
+  }
+  s << "\n";
 
-      IND(s); s << "void operator<<=(CORBA::Any& _a, " << fqname() 
-		<< "* _sp) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "_a <<= *_sp;\n";
-      IND(s); s << "delete _sp;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+  // any insertion/extraction helper functions
+  IND(s); s << "CORBA::Boolean _0RL_tcParser_getMemberDesc_" << _idname()
+	    << "(tcStructDesc *_desc, CORBA::ULong _index, "
+	    "tcDescriptor &_newdesc)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "switch( _index ) {\n";
+  {
+    unsigned long currentIndex = 0;
 
-      IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
-		<< fqname() << "*& _sp) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
-		<< ",1)) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "_sp = 0;\n";
-      IND(s); s << "return 0;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      IND(s); s << "else {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
-      IND(s); s << "if (!_0RL_data) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
-      IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
-      IND(s); s << fqname() << "* _0RL_tmp = new " << fqname() << ";\n";
-      IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
-      IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
-      IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << _fqname() 
-		<< "_delete);\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
-      IND(s); s << "_sp = (" << fqname() << "*) _0RL_data;\n";
-      IND(s); s << "return 1;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
-  }   
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	AST_Decl *d = i.item();
+	if (d->node_type() == AST_Decl::NT_field)
+	  {
+	    IND(s); s << "case " << currentIndex << ":\n";
+	    INC_INDENT_LEVEL();
+	    o2be_field* field = o2be_field::narrow_from_decl(d);
+	    char* val = new char[1 + strlen(fqname()) +
+				strlen(field->uqname()) + 25];
+	    strcpy(val, "((");
+	    strcat(val, fqname());
+	    strcat(val, "*)_desc->opq_struct)->");
+	    strcat(val, field->uqname());
+	    o2be_buildDesc::call_buildDesc(s, field->field_type(),
+					   "_newdesc", val);
+	    delete[] val;
+	    IND(s); s << "return 1;\n";
+	    DEC_INDENT_LEVEL();
+
+	    currentIndex++;
+	  }
+	i.next();
+      }
+  }
+  IND(s); s << "default:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "CORBA::ULong\n";
+  IND(s); s << "_0RL_tcParser_getMemberCount_" << _idname()
+	    << "(tcStructDesc *_desc)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return " << this->nmembers() << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  // tcParser function to build a tcDescriptor for this class
+  IND(s); s << "void _0RL_buildDesc" << canonical_name()
+	    << "(tcDescriptor &_desc, const " << fqname()
+	    << "& _data)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_desc.p_struct.getMemberDesc = "
+	    "_0RL_tcParser_getMemberDesc_" << _idname() << ";\n";
+  IND(s); s << "_desc.p_struct.getMemberCount = "
+	    "_0RL_tcParser_getMemberCount_" << _idname() << ";\n";
+  IND(s); s << "_desc.p_struct.opq_struct = (void *)&_data;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "void _0RL_delete_" << _idname() << "(void* _data) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << fqname() << "*" << " _0RL_t = (" << fqname() << "*) _data;\n";
+  IND(s); s << "delete _0RL_t;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////// Any insertion operators //////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
+	    << fqname() << "& _s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "_s");
+  IND(s); s << "_a.PR_packFrom(_0RL_tc_" << _idname()
+	    << ", &_0RL_tcdesc);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "void operator<<=(CORBA::Any& _a, " << fqname() 
+	    << "* _sp) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "*_sp");
+  IND(s); s << "_a.PR_packFrom(_0RL_tc_" << _idname()
+	    << ", &_0RL_tcdesc);\n";
+  IND(s); s << "delete _sp;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////// Any extraction operator /////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	    << fqname() << "*& _sp) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_sp = (" << fqname() << " *) _a.PR_getCachedData();\n";
+  IND(s); s << "if (_sp == 0) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  IND(s); s << "_sp = new " << fqname() << ";\n";
+  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "*_sp");
+  IND(s); s << "if (_a.PR_unpackTo(_0RL_tc_" << _idname()
+	    << ", &_0RL_tcdesc)) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "((CORBA::Any *)&_a)->PR_setCachedData(_sp, "
+	    << "_0RL_delete_" << _idname() << ");\n";
+  IND(s); s << "return 1;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "delete _sp;_sp = 0;\n";
+  IND(s); s << "return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::TypeCode_var _0RL_tctmp = _a.type();\n";
+  IND(s); s << "if (_0RL_tctmp->equal(_0RL_tc_" << _idname()
+	    << ")) return 1;\n";
+  IND(s); s << "delete _sp; _sp = 0;\n";
+  IND(s); s << "return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
 }
 
 void
 o2be_exception::produce_typecode_skel(std::fstream &s)
 {
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
-    s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
-    s << "#define " << "__01RL_" << _fqtcname() << "__\n\n";
+  if( have_produced_typecode_skel() )  return;
+  set_have_produced_typecode_skel();
 
-    {
-      // Produce static TypeCodes for members that are not
-      // defined in this file.
+  unsigned long memberCount = this->nmembers();
+
+  if (memberCount > 0) {
+
+    { // Ensure we have the typecodes of the members
       UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-      while (!i.is_done())
-	{
-	  AST_Decl *d = i.item();
-	  if (d->node_type() == AST_Decl::NT_field)
-	    {    
-	      AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	      if (!decl->in_main_file() || 
-		  decl->node_type() == AST_Decl::NT_array || 
-		  decl->node_type() == AST_Decl::NT_sequence)
-		o2be_name::narrow_and_produce_typecode_skel(decl,s);	       
-	    }
-	  i.next();
-	}
-    }
-
-    
-    unsigned long memberCount = this->nmembers();
-    
-    if (memberCount > 0)
-      {
-	IND(s); s << "static CORBA::PR_structMember _02RL_" << _fqtcname()  
-		  << "[] = {\n";
-    
-	INC_INDENT_LEVEL();
-	// Produce entries in PR_structMember for struct members
-	// (name and TypeCode_ptr)
-
-	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-	while (!i.is_done())
-	  {
-	    AST_Decl *d = i.item();
-	    if (d->node_type() == AST_Decl::NT_field)
-	      {
-		IND(s); s << "{\"" << o2be_field::narrow_from_decl(d)->uqname()
-			  << "\", ";
-		AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-		o2be_name::produce_typecode_member(decl,s);
-		s << "}";
-		i.next();
-		if (!i.is_done()) s << ",\n";    
-	      }
-	    else i.next();
-	  }
-	s << " };\n";
-	DEC_INDENT_LEVEL();
+      while( !i.is_done() ) {
+	AST_Decl* d = i.item();
+	i.next();
+	if( d->node_type() != AST_Decl::NT_field )
+	  continue;
+	d = AST_Field::narrow_from_decl(d)->field_type();
+	o2be_name::narrow_and_produce_typecode_skel(d, s);
       }
-
-    IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname() 
-	      << "(CORBA::tk_except, \"" << repositoryID() << "\", \""
-	      << uqname() << "\", ";
-    if (memberCount > 0) s << "_02RL_" << _fqtcname() << ", ";
-    else s << "(CORBA::PR_structMember*) 0, ";
-    s << memberCount << ");\n\n";
-
-    s << "#endif\n\n";
-  }   
-  return;
-}
-
-
-idl_bool 
-o2be_exception::check_recursive_seq()
-{
-  UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-  while (!i.is_done())
-    {
-      AST_Decl *d = i.item();
-      if (d->node_type() == AST_Decl::NT_field)
-	{    
-	  AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	  if (o2be_name::narrow_and_check_recursive_seq(decl) == I_TRUE)
-	    return I_TRUE;
-	}
-      i.next();
     }
-  return I_FALSE;
+
+    IND(s); s << "static CORBA::PR_structMember _0RL_structmember_"
+	      << _idname() << "[] = {\n";
+
+    INC_INDENT_LEVEL();
+    { // Produce entries in PR_structMember for struct members
+
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      while( !i.is_done() ) {
+	AST_Decl *d = i.item();
+	i.next();
+	if( d->node_type() != AST_Decl::NT_field )
+	  continue;
+
+	IND(s); s << "{\"" << o2be_field::narrow_from_decl(d)->uqname()
+		  << "\", ";
+	AST_Decl* decl = AST_Field::narrow_from_decl(d)->field_type();
+	o2be_name::produce_typecode_member(decl,s);
+	s << "}";
+	if( i.is_done() )  s << '\n';
+	else               s << ",\n";
+      }
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n";
+  }
+
+  IND(s); s << "static CORBA::TypeCode_ptr _0RL_tc_" << _idname() << " = " 
+	    << "CORBA::TypeCode::PR_exception_tc("
+	    << "\"" << repositoryID() << "\", \"" << uqname() << "\", ";
+  if (memberCount > 0) s << "_0RL_structmember_" << _idname() << ", ";
+  else s << "(CORBA::PR_structMember*) 0, ";
+  s << memberCount << ");\n\n";
 }
+
 
 IMPL_NARROW_METHODS1(o2be_exception, AST_Exception)
 IMPL_NARROW_FROM_DECL(o2be_exception)
 IMPL_NARROW_FROM_SCOPE(o2be_exception)
-

@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.26  1999/01/07 09:47:04  djr
+  Changes to support new TypeCode/Any implementation, which is now
+  placed in a new file ...DynSK.cc (by default).
+
   Revision 1.25  1998/08/26 18:28:44  sll
   Complete the previous fix for the LifeCycle support.
 
@@ -135,6 +139,7 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
       set_tcname("CORBA::_tc_Object");
       set_fqtcname("CORBA::_tc_Object");
       set__fqtcname("CORBA__tc_Object");
+      set__idname("CORBA_sObject");
 
       pd_objref_uqname = (char*) "CORBA::Object_ptr";
       pd_objref_fqname = (char*) "CORBA::Object_ptr";
@@ -144,8 +149,6 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
       pd_out_adptarg_name = (char*) "CORBA::Object_OUT_arg";
       return;
     }
-
-  set_recursive_seq(I_FALSE);
 
   pd_objref_uqname = new char[strlen(uqname())+strlen("_ptr")+1];
   strcpy(pd_objref_uqname,uqname());
@@ -334,6 +337,8 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
   strcat(pd_out_adptarg_name,fqname());
   strcat(pd_out_adptarg_name,"_Helper");
   strcat(pd_out_adptarg_name," >");
+
+  pd_have_produced_buildDesc_decls = 0;
 }
 
 o2be_interface_fwd::o2be_interface_fwd(UTL_ScopedName *n, UTL_StrList *p)
@@ -341,7 +346,7 @@ o2be_interface_fwd::o2be_interface_fwd(UTL_ScopedName *n, UTL_StrList *p)
     AST_Decl(AST_Decl::NT_interface_fwd, n, p),
     o2be_name(AST_Decl::NT_interface_fwd,n,p)
 {
-  set_recursive_seq(I_FALSE);
+  pd_have_produced_buildDesc_decls = 0;
 }
 
 idl_bool
@@ -403,8 +408,8 @@ o2be_interface::check_opname_clash(o2be_interface *p,char *opname)
 void 
 o2be_interface::produce_hdr(std::fstream &s)
 {
-  s << "#ifndef __" << _fqname() << "__\n";
-  s << "#define __" << _fqname() << "__\n";
+  s << "#ifndef __" << _idname() << "__\n";
+  s << "#define __" << _idname() << "__\n";
   IND(s); s << "class   " << uqname() << ";\n";
   IND(s); s << "typedef " << uqname() << "* " << objref_uqname() << ";\n";
   IND(s); s << "typedef " << objref_uqname() << " " << uqname() << "Ref;\n\n";
@@ -444,16 +449,16 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << "class " << uqname() << " : ";
   {
     int ni,j;
-    AST_Interface **intftable;
-    if ((ni = n_inherits()) != 0)
-      {
-	intftable = inherits();
-	for (j=0; j< ni; j++)
-	  {
-	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	    s << " public virtual " << intf->unambiguous_name(this) << ((j<(ni-1))?",":"");
-	  }
+    AST_Interface** intftable;
+    if( (ni = n_inherits()) != 0 ) {
+      intftable = inherits();
+      for (j=0; j< ni; j++) {
+	o2be_interface* intf =
+	  o2be_interface::narrow_from_decl(intftable[j]);
+	s << " public virtual " << intf->unambiguous_name(this)
+	  << ((j<(ni-1))?",":"");
       }
+    }
     else
       s << "public virtual omniObject, public virtual CORBA::Object";
     s << " {\n";
@@ -522,12 +527,12 @@ o2be_interface::produce_hdr(std::fstream &s)
 	    IND(s); s << "virtual ";
 	    o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
 	    a->produce_decl_rd(s);
-	    s << " = 0;\n";
+	    s << ' ' << a->uqname() << "() = 0;\n";
 	    if (!a->readonly())
 	      {
-		IND(s); s << "virtual ";
+		IND(s); s << "virtual void " << a->uqname() << '(';
 		a->produce_decl_wr(s);
-		s << " = 0;\n";
+		s << ") = 0;\n";
 	      }
 	  }
 	i.next();
@@ -670,12 +675,12 @@ o2be_interface::produce_hdr(std::fstream &s)
 	    IND(s); s << "virtual ";
 	    o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
 	    a->produce_decl_rd(s);
-	    s << " = 0;\n";
+	    s << ' ' << a->uqname() << "() = 0;\n";
 	    if (!a->readonly())
 	      {
-		IND(s); s << "virtual ";
+		IND(s); s << "virtual void " << a->uqname() << '(';
 		a->produce_decl_wr(s);
-		s << " = 0;\n";
+		s << ") = 0;\n";
 	      }
 	  }
 	i.next();
@@ -746,12 +751,12 @@ o2be_interface::produce_hdr(std::fstream &s)
 	    IND(s); s << "virtual ";
 	    o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
 	    a->produce_decl_rd(s);
-	    s << ";\n";
+	    s << ' ' << a->uqname() << "();\n";
 	    if (!a->readonly())
 	      {
-		IND(s); s << "virtual ";
+		IND(s); s << "virtual void " << a->uqname() << '(';
 		a->produce_decl_wr(s);
-		s << ";\n";
+		s << ");\n";
 	      }
 	  }
 	i.next();
@@ -901,12 +906,12 @@ o2be_interface::produce_hdr(std::fstream &s)
 	      IND(s); s << "virtual ";
 	      o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
 	      a->produce_decl_rd(s);
-	      s << " = 0;\n";
+	      s << ' ' << a->uqname() << "() = 0;\n";
 	      if (!a->readonly())
 		{
-		  IND(s); s << "virtual ";
+		  IND(s); s << "virtual void " << a->uqname() << '(';
 		  a->produce_decl_wr(s);
-		  s << " = 0;\n";
+		  s << ") = 0;\n";
 		}
 	    }
 	  i.next();
@@ -1161,12 +1166,12 @@ o2be_interface::produce_hdr(std::fstream &s)
 	      IND(s); s << "virtual ";
 	      o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
 	      a->produce_decl_rd(s);
-	      s << ";\n";
+	      s << ' ' << a->uqname() << "();\n";
 	      if (!a->readonly())
 		{
-		  IND(s); s << "virtual ";
+		  IND(s); s << "virtual void " << a->uqname() << '(';
 		  a->produce_decl_wr(s);
-		  s << ";\n";
+		  s << ");\n";
 		}
 	    }
 	  i.next();
@@ -1330,8 +1335,8 @@ void
 o2be_interface_fwd::produce_hdr(std::fstream &s)
 {
   o2be_interface *intf = o2be_interface::narrow_from_decl(full_definition());
-  s << "#ifndef __" << intf->_fqname() << "__\n";
-  s << "#define __" << intf->_fqname() << "__\n";
+  s << "#ifndef __" << intf->_idname() << "__\n";
+  s << "#define __" << intf->_idname() << "__\n";
   IND(s); s << "class   " << intf->uqname() << ";\n";
   IND(s); s << "typedef " << intf->uqname() << "* " 
 	    << intf->objref_uqname() << ";\n";
@@ -1379,6 +1384,32 @@ o2be_interface_fwd::produce_hdr(std::fstream &s)
 	    << "> "<< intf->uqname()<<"_var;\n\n";
     s << "#endif\n";
   return;
+}
+
+
+void
+o2be_interface_fwd::produce_skel(std::fstream &s)
+{
+}
+
+
+void
+o2be_interface_fwd::produce_dynskel(std::fstream &s)
+{
+}
+
+
+void
+o2be_interface_fwd::produce_buildDesc_decls(std::fstream& s,
+					    idl_bool even_if_in_main_file)
+{
+  if( pd_have_produced_buildDesc_decls )
+    return;
+  pd_have_produced_buildDesc_decls = 1;
+
+  s << "extern void _0RL_buildDesc" << canonical_name()
+    << "(tcDescriptor &, const " << FIELD_MEMBER_TEMPLATE
+    << '<' << fqname() << "_Helper>&);\n";
 }
 
 
@@ -1488,8 +1519,8 @@ o2be_interface::produce_skel(std::fstream &s)
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
 	  char* intf_name = intf->unambiguous_name(this);
 	  if (strcmp(intf_name,intf->uqname()) != 0) {
-	    s << "#ifndef __" << intf->_fqname() << "__ALIAS__\n";
-	    s << "#define __" << intf->_fqname() << "__ALIAS__\n";
+	    s << "#ifndef __" << intf->_idname() << "__ALIAS__\n";
+	    s << "#define __" << intf->_idname() << "__ALIAS__\n";
 	    IND(s); s << "typedef " << intf->fqname() << " " 
 		      << intf->_fqname() << ";\n";
 	    IND(s); s << "typedef " << intf->server_fqname() << " "
@@ -2582,47 +2613,84 @@ o2be_interface::produce_skel(std::fstream &s)
 
     s << "\n// *** End of LifeCycle stuff\n\n";
   }
-
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
-    // Produce code for types any and TypeCode
-    s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
-    s << "#define " << "__01RL_" << _fqtcname() << "__\n";
-    IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname() << "(\"" 
-	      << repositoryID() << "\", \"" << uqname() << "\");\n\n";
-    s << "#endif\n\n"; 
-
-    if (defined_in() != idl_global->root() &&
-	defined_in()->scope_node_type() == AST_Decl::NT_module)
-      {
-	s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
-	IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
-	AST_Decl* inscope = ScopeAsDecl(defined_in());
-	char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
-	if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
-	  {
-	    scopename = o2be_name::narrow_and_produce__fqname(inscope);
-	    IND(s); s << "namespace " << scopename << " = " 
-		      << o2be_name::narrow_and_produce_fqname(inscope)
-		      << ";\n";
-	  }
-	IND(s); s << "namespace " << scopename << " {\n";
-	INC_INDENT_LEVEL();
-	IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-	DEC_INDENT_LEVEL();
-	IND(s); s << "}\n";
-	s << "#else\n";
-	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-	s << "#endif\n";
-      }
-    else
-      {
-	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-      }
-  } 
 }
+
+
+void
+o2be_interface::produce_dynskel(std::fstream &s)
+{
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	AST_Decl *d = i.item();
+	switch(d->node_type()) {
+	case AST_Decl::NT_op:
+	case AST_Decl::NT_attr:
+	case AST_Decl::NT_enum_val:
+	  break;
+	case AST_Decl::NT_const:
+	  o2be_constant::narrow_from_decl(d)->produce_dynskel(s);
+	  break;
+	case AST_Decl::NT_enum:
+	  o2be_enum::narrow_from_decl(d)->produce_dynskel(s);
+	  break;
+	case AST_Decl::NT_except:
+	  o2be_exception::narrow_from_decl(d)->produce_dynskel(s);
+	  break;
+	case AST_Decl::NT_struct:
+	  o2be_structure::narrow_from_decl(d)->produce_dynskel(s);
+	  break;
+	case AST_Decl::NT_typedef:
+	  o2be_typedef::narrow_from_decl(d)->produce_dynskel(s);
+	  break;
+	case AST_Decl::NT_union:
+	  o2be_union::narrow_from_decl(d)->produce_dynskel(s);
+	  break;
+	default:
+	  throw o2be_internal_error(__FILE__, __LINE__,
+				    "unexpected type under interface class");
+	}
+	i.next();
+      }
+  }
+
+  if (defined_in() != idl_global->root() &&
+      defined_in()->scope_node_type() == AST_Decl::NT_module)
+    {
+      s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+      IND(s); s << "// MSVC++ does not give the constant external"
+		" linkage otherwise.\n";
+      AST_Decl* inscope = ScopeAsDecl(defined_in());
+      char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+      if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	{
+	  scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	  IND(s); s << "namespace " << scopename << " = " 
+		    << o2be_name::narrow_and_produce_fqname(inscope)
+		    << ";\n";
+	}
+      IND(s); s << "namespace " << scopename << " {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = "
+		<< "CORBA::TypeCode::PR_interface_tc(\""
+		<< repositoryID() << "\", \"" << uqname() << "\");\n\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      s << "#else\n";
+      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+		<< "CORBA::TypeCode::PR_interface_tc(\""
+		<< repositoryID() << "\", \"" << uqname() << "\");\n\n";
+      s << "#endif\n\n";
+    }
+  else
+    {
+      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+		<< "CORBA::TypeCode::PR_interface_tc(\""
+		<< repositoryID() << "\", \"" << uqname() << "\");\n\n";
+    }
+}
+
 
 void
 o2be_interface::produce_binary_operators_in_hdr(std::fstream &s)
@@ -2659,6 +2727,7 @@ o2be_interface::produce_binary_operators_in_hdr(std::fstream &s)
 	i.next();
       }
   }
+
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     s << "\n";
     // any insertion and extraction operators
@@ -2673,7 +2742,7 @@ o2be_interface::produce_binary_operators_in_hdr(std::fstream &s)
 }
 
 void
-o2be_interface::produce_binary_operators_in_skel(std::fstream &s)
+o2be_interface::produce_binary_operators_in_dynskel(std::fstream &s)
 {
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -2683,23 +2752,23 @@ o2be_interface::produce_binary_operators_in_skel(std::fstream &s)
 	switch(d->node_type()) {
 	case AST_Decl::NT_enum:
 	  o2be_enum::
-	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	    narrow_from_decl(d)->produce_binary_operators_in_dynskel(s);
 	  break;
 	case AST_Decl::NT_except:
 	  o2be_exception::
-	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	    narrow_from_decl(d)->produce_binary_operators_in_dynskel(s);
 	  break;
 	case AST_Decl::NT_struct:
 	  o2be_structure::
-	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	    narrow_from_decl(d)->produce_binary_operators_in_dynskel(s);
 	  break;
 	case AST_Decl::NT_typedef:
 	  o2be_typedef::
-	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	    narrow_from_decl(d)->produce_binary_operators_in_dynskel(s);
 	  break;
 	case AST_Decl::NT_union:
 	  o2be_union::
-	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	    narrow_from_decl(d)->produce_binary_operators_in_dynskel(s);
 	  break;
 	default:
 	  break;
@@ -2707,50 +2776,93 @@ o2be_interface::produce_binary_operators_in_skel(std::fstream &s)
 	i.next();
       }
   }
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
 
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////// tcDescriptor generation /////////////////////
+  //////////////////////////////////////////////////////////////////////
 
-    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
-	      << " _s) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-    IND(s); s << fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
-    IND(s); s << fqname() << "::marshalObjRef(_s,_0RL_mbuf);\n";
-    IND(s); s << "_a.NP_replaceData(" << fqtcname() << ",_0RL_mbuf);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
+  IND(s); s << "static void\n";
+  IND(s); s << "_0RL_tcParser_setObjectPtr_" << _idname()
+	    << "(tcObjrefDesc *_desc, CORBA::Object_ptr _ptr)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << objref_fqname() << " _p = " << fqname()
+	    << "::_narrow(_ptr);\n";
+  IND(s); s << "*((" << fieldMemberType_fqname(o2be_global::root())
+	    << "*)_desc->opq_objref) = _p;\n";
+  IND(s); s << "CORBA::release(_ptr);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
 
-    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
-	      << "* _sp) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "_a <<= *_sp;\n";
-    IND(s); s << "CORBA::release(*_sp);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
+  IND(s); s << "static CORBA::Object_ptr\n";
+  IND(s); s << "_0RL_tcParser_getObjectPtr_" << _idname()
+	    << "(tcObjrefDesc *_desc)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return (CORBA::Object_ptr)"
+	    << "((" << fieldMemberType_fqname(o2be_global::root())
+	    << "*)_desc->opq_objref)->_ptr;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
 
+  IND(s); s << "void _0RL_buildDesc" << canonical_name()
+	    << "(tcDescriptor& _desc, const "
+	    << fieldMemberType_fqname(o2be_global::root()) << "& _data)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_desc.p_objref.opq_objref = (void*) &_data;\n";
+  IND(s); s << "_desc.p_objref.setObjectPtr = _0RL_tcParser_setObjectPtr_"
+	    << _idname() << ";\n";
+  IND(s); s << "_desc.p_objref.getObjectPtr = _0RL_tcParser_getObjectPtr_"
+	    << _idname() << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
 
-    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
-	      << objref_fqname() << "& _s) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-    IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
-	      << ",1)) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "return 0;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    IND(s); s << "else {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
-    IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
-    IND(s); s << "_s = " << fqname() << "::unmarshalObjRef(_0RL_tmp_mbuf);\n";
-    IND(s); s << "return 1;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-  }
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////// Any insertion operator ///////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  IND(s); s << "void operator<<=(CORBA::Any& _a, "
+	    << objref_fqname() << " _s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  IND(s); s << fieldMemberType_fqname(o2be_global::root())
+	    << " _0RL_tmp(_s);\n";
+  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "_0RL_tmp");
+  IND(s); s << "_a.PR_packFrom(" << fqtcname() << ", &_0RL_tcdesc);\n";
+  IND(s); s << "_0RL_tmp._ptr = 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////// Any extraction operator /////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	    << objref_fqname() << "& _s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  IND(s); s << fieldMemberType_fqname(o2be_global::root())
+	    << " _0RL_tmp;\n";
+  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "_0RL_tmp");
+  IND(s); s << "if( _a.PR_unpackTo(" << fqtcname()
+	    << ", &_0RL_tcdesc) ) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_s = _0RL_tmp._ptr;\n";
+  IND(s); s << "_0RL_tmp._ptr = 0;\n";
+  IND(s); s << "return 1;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_0RL_tmp._ptr = _s = 0;\n";
+  IND(s); s << "return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
 }
+
 
 void
 o2be_interface::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
@@ -2817,13 +2929,14 @@ void internal_produce_tie_call_wrappers(o2be_interface* intf, std::fstream &s)
 	{
 	  IND(s);
 	  o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
-	  a->produce_decl_rd(s,0,I_TRUE,I_TRUE);
+	  a->produce_decl_rd(s, I_TRUE);
+	  s << ' ' << a->uqname() << "()";
 	  s << " { return pd_obj->" << a->uqname() << "(); }\n";
 	  if (!a->readonly())
 	    {
-	      IND(s);
-	      a->produce_decl_wr(s,0,I_TRUE,I_TRUE);
-	      s << " { pd_obj->" << a->uqname() << "(_value); }\n";
+	      IND(s); s << "void " << a->uqname() << '(';
+	      a->produce_decl_wr(s, I_TRUE);
+	      s << " _value)  { pd_obj->" << a->uqname() << "(_value); }\n";
 	    }
 	}
       i.next();
@@ -2842,6 +2955,7 @@ void internal_produce_tie_call_wrappers(o2be_interface* intf, std::fstream &s)
       }
   }
 }
+
 
 void
 o2be_interface::produce_tie_templates(std::fstream &s)
@@ -2872,6 +2986,21 @@ o2be_interface::produce_tie_templates(std::fstream &s)
 
 
 }
+
+
+void
+o2be_interface::produce_buildDesc_decls(std::fstream& s,
+					idl_bool even_if_in_main_file)
+{
+  if( pd_have_produced_buildDesc_decls )
+    return;
+  pd_have_produced_buildDesc_decls = 1;
+
+  s << "extern void _0RL_buildDesc" << canonical_name()
+    << "(tcDescriptor &, const "
+    << fieldMemberType_fqname(o2be_global::root()) << "&);\n";
+}
+
 
 const char*
 o2be_interface::fieldMemberType_fqname(AST_Decl* used_in) const
