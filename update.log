@@ -1,3 +1,29 @@
+Fri Jul  2 20:10:55 BST 1999 sll
+================================
+
+- Changed Any extraction for typecode to non-copy.
+  The semantics can be changed back to pre-2.8.0's by setting
+  omniORB_27_CompatibleAnyExtraction.
+
+- Removed inlined virtual destructors. Some compilers generate a copy of
+  each destructor in each compilation unit.
+
+- typedef of a typedef of a struct, union, sequence, enum and primitive
+  type now translates to a C++ typedef of the typedef instead of the
+  real base type. This change only make a real difference with sequence type.
+
+
+include/omniORB2/rope.h
+src/lib/omniORB2/orbcore/ropeFactory.h
+src/lib/omniORB2/orbcore/ropeFactory.cc
+src/lib/omniORB2/dynamic/any.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_predefined_type.cc
+src/tool/omniidl2/omniORB2_be/o2be_enum.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/omniORB2_be/o2be_struct.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
 
 Thu Jul  1 11:17:57 BST 1999 djr
 ================================
