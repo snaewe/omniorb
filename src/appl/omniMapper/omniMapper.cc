@@ -23,6 +23,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.7  2002/01/16 12:35:46  dpg1
+// omniMapper used -ORBendpoint instead of -ORBendPoint.
+//
 // Revision 1.2.2.6  2001/10/17 16:49:11  dpg1
 // Minor error message tweaks
 //
@@ -266,7 +269,7 @@ main(int argc, char** argv)
   if (port == 0) port = IIOP::DEFAULT_CORBALOC_PORT;
 
   insertArgs(argc, argv, 1, 2);
-  argv[1] = strdup("-ORBendpoint");
+  argv[1] = strdup("-ORBendPoint");
   argv[2] = new char[20];
   sprintf(argv[2], "giop:tcp::%d", port);
 
