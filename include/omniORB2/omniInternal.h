@@ -29,9 +29,13 @@
 
 /*
   $Log$
-  Revision 1.17  1998/01/27 16:06:45  ewc
-  Added support necessary for TypeCode and Any
+  Revision 1.18  1998/02/27 14:00:17  sll
+  Changed manager() to _objectManager() in class omniObject to avoid
+  potential name clash with application code.
 
+ * Revision 1.17  1998/01/27  16:06:45  ewc
+ * Added support necessary for TypeCode and Any
+ *
  * Revision 1.16  1998/01/20  16:46:18  sll
  * Removed obsolute variable omni::traceLevel.
  *
@@ -95,11 +99,11 @@ class omniObjectManager;
 //   Define this variable to trap the mismatch of the stub and the runtime
 //   library. The two digits x,y should be the same as the shared library
 //   major version number and minor version number. For example, for shared
-//   library 2.4.0 the variable number should be omniORB_2.4. Notice that
+//   library 2.5.0 the variable number should be omniORB_2.5. Notice that
 //   the variable name stays the same with compatible shared library, e.g.
-//   2.4.1.
+//   2.5.1.
 //
-extern const char* _OMNIORB2_NTDLL_ omniORB_2_4;
+extern const char* _OMNIORB2_NTDLL_ omniORB_2_5;
 
 #include <omniORB2/rope.h>
 
@@ -448,7 +452,7 @@ public:
   // to the exception handler.
   // This function is thread-safe.
 
-  omniObjectManager* manager() const { return pd_manager; }
+  omniObjectManager* _objectManager() const { return pd_manager; }
   // This function should only be called for local object.
   // Returns the object manager of this object.
   // Calling this function for a proxy object would result in undefined
