@@ -1,0 +1,504 @@
+// -*- Mode: C++; -*-
+//                            Package   : omniORB2
+// objectRef.cc               Created on: 20/5/96
+//                            Author    : Sai Lai Lo (sll)
+//
+// Copyright (C) Olivetti Research Limited, 1996
+//
+// Description:
+//	*** PROPRIETORY INTERFACE ***
+//      
+ 
+/*
+  $Log$
+  Revision 1.1  1997/01/08 17:26:01  sll
+  Initial revision
+
+  */
+
+#include <omniORB2/CORBA.h>
+#include <omniORB2/proxyFactory.h>
+
+// Since this ORB does not have an interface repository yet, its ability to
+// handle IDL interface inheritance is limited.
+//
+// The points to note are:
+//
+// 1. It only knows about the interfaces that have their stubs linked in at
+//    compile time.
+//
+//    Suppose A,B,C and D are interface types, and D inherits from C, which
+//    inherits from B, which in turn inherits from A. When an interface
+//    reference on the wire identifies itself with the interface repository
+//    ID (IRid) of D, the ORB has to rely on the compiled-in stubs to decide
+//    whether the interface can be widened to its base classes.
+//
+//    If the stubs of A,B,C and D are all linked into the executable, then
+//    the ORB is able to widen the interface to D,C,B and A.
+//
+//    On the other hand, if only the stubs of A and B are linked into the
+//    executable, then the ORB is unable to infer the inheritance relation
+//    of D,B and A. Hence its attempt to widen the interface will fail.
+//    In this case, the ORB will wrongly deduce that the interface reference
+//    is invalid. Of course, the problem will be resolved if the ORB is
+//    able to query the interface repository at runtime about D.
+//
+// 2. To avoid the problem described above, the ORB always passes down the
+//    wire the IRid of the interface type defined in the operation signature,
+//    instead of the actual IRid of the object (which may be a derived 
+//    interface). Strictly speaking, this is not CORBA compliant. For
+//    CORBA 2 section 10.6.2 specifies that "type ID is provided by the
+//    server and indicates the MOST DERIVED type at the time the reference
+//    is generated". Therefore we may experience interoperability problem with
+//    other ORBs in this area. The workaround is to make sure that all the 
+//    derived and base interfaces are compiled in. The long term solution is
+//    to add the IR support to the ORB.
+//    
+// 3. The interface information is provided by the stubs via the
+//    proxyObjectFactory class. For an interface type A, the stub of A contains
+//    a A_proxyObjectFactory class. This class is derived from the 
+//    proxyObjectFactory class. The proxyObjectFactory is an abstract class
+//    which contains 3 virtual functions that any derived classes, e.g.
+//    A_proxyObjectFactory, have to implement. The functions allow the
+//    ORB to query the IRid of the interface, to create a proxy object of the
+//    interface and to query whether a given IRid is a base interface.
+//    Exactly one instance of A_proxyObjectFactory is declared as a local
+//    constant of the stub. The instance is instantiated at runtime before the
+//    main() is called. The ctor of proxyObjectFactory links the instance
+//    to the chain headed by the local variable proxyStubs in this module.
+
+
+static omni_mutex          objectTableLock;
+static omniObject    *proxyObjectTable;
+static omniObject   **localObjectTable;
+static proxyObjectFactory *proxyStubs;
+
+proxyObjectFactory::proxyObjectFactory()
+{
+  pd_next = proxyStubs;
+  proxyStubs = this;
+  return;
+}
+
+proxyObjectFactory::~proxyObjectFactory()
+{
+}
+
+proxyObjectFactory_iterator::proxyObjectFactory_iterator()
+{
+  pd_f = proxyStubs;
+}
+
+proxyObjectFactory *
+proxyObjectFactory_iterator::operator() ()
+{
+  proxyObjectFactory *p = pd_f;
+  if (pd_f)
+    pd_f = pd_f->pd_next;
+  return p;
+}
+
+
+void
+omniORB::objectIsReady(omniObject *obj)
+{
+  objectTableLock.lock();
+  if (obj->getRefCount() != 0) {
+    objectTableLock.unlock();
+    throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+  }
+    
+  if (obj->is_proxy())
+    {
+      obj->pd_next = proxyObjectTable;
+      proxyObjectTable = obj;
+    }
+  else
+    {
+      omniObject **p = &localObjectTable[obj->pd_objkey.native.hash()];
+      omniObject **pp = p;
+      while (*p) {
+	if ((*p)->pd_objkey.native == obj->pd_objkey.native) {
+	  obj->pd_next = 0;
+	  objectTableLock.unlock();
+	  throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+	}
+	p = &((*p)->pd_next);
+      }
+      obj->pd_next = (*pp);
+      *pp = obj;
+    }
+  obj->setRefCount(obj->getRefCount()+1);
+  objectTableLock.unlock();
+  return;
+}
+
+
+void
+omniORB::objectDuplicate(omniObject *obj)
+{
+  objectTableLock.lock();
+  if (obj->getRefCount() <= 0) {
+    objectTableLock.unlock();
+    throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+  }
+  obj->setRefCount(obj->getRefCount()+1);
+  objectTableLock.unlock();
+  return;
+}
+
+void
+omniORB::objectRelease(omniObject *obj)
+{
+  objectTableLock.lock();
+  if (obj->getRefCount() <= 0) {
+    objectTableLock.unlock();
+    throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+  }
+  obj->setRefCount(obj->getRefCount()-1);
+  if (obj->getRefCount() == 0) {
+    if (obj->is_proxy()) {
+      omniObject **p = &proxyObjectTable;
+      while (*p) {
+	if (*p == obj) {
+	  *p = obj->pd_next;
+	  break;
+	}
+	p = &((*p)->pd_next);
+      }
+      delete obj;
+    }
+    else {
+      omniObject **p = &localObjectTable[obj->pd_objkey.native.hash()];
+      while (*p) {
+	if (*p == obj) {
+	  *p = obj->pd_next;
+	  break;
+	}
+	p = &((*p)->pd_next);
+      }
+      if (obj->pd_disposed)
+	delete obj;   // call dtor if BOA->disposed() has been called.
+    }
+  }
+  objectTableLock.unlock();
+  return;
+}
+
+void
+omniORB::disposeObject(omniObject *obj)
+{
+  if (obj->is_proxy())
+    return;
+  objectTableLock.lock();
+  if (obj->getRefCount() == 0) {
+    // object has already been removed from the object table
+    delete obj;
+  }
+  else {
+    obj->pd_disposed = 1;
+  }
+  objectTableLock.unlock();
+  return;
+}
+
+
+omniObject *
+omniORB::locateObject(omniObjectKey &k)
+{
+  objectTableLock.lock();
+  omniObject **p = &localObjectTable[k.hash()];
+  while (*p) {
+    if ((*p)->pd_objkey.native == k) {
+      (*p)->setRefCount((*p)->getRefCount()+1);
+      objectTableLock.unlock();
+      return *p;
+    }
+    p = &((*p)->pd_next);
+  }
+  objectTableLock.unlock();
+  throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+}
+
+
+omniObject *
+omniORB::createObjRef(const char *mostDerivedRepoId,
+		      const char *targetRepoId,
+		      IOP::TaggedProfileList *profiles,
+		      CORBA::Boolean release)
+{
+  CORBA::Octet *objkey = 0;
+
+  proxyObjectFactory *p;
+  {
+    proxyObjectFactory_iterator pnext;
+    while ((p = pnext())) {
+      if (strcmp(p->irRepoId(),mostDerivedRepoId) == 0) {
+	if (!p->is_a(targetRepoId)) {
+	    // Object ref is neither the exact interface nor a derived 
+	    // interface of the one requested.
+	    // It may well be a derived interface that we have no
+	    // stub code linked into this executable.
+	    // See the restrictions of this implementation at the beginning
+	    // of this file.
+	    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	}
+	else {
+	  break;  // got it
+	}
+      }
+    }
+    if (!p) {
+      // Hm.... We don't know about this interface.
+      // It may well be a derived interface of the one requested.
+      // See the restrictions of this implementation at the beginning
+      // of this file.
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    }
+  }
+  size_t ksize = 0;
+
+  Rope *r = omniORB::iopProfilesToRope(profiles,objkey,ksize);
+
+  try {
+    if (r) {
+      // Create a proxy object
+      if (release) {
+	CORBA::Object_ptr objptr = p->newProxyObject(r,objkey,ksize,profiles,1);
+	return objptr->PR_getobj();
+      }
+      else {
+	IOP::TaggedProfileList *localcopy = 
+	  new IOP::TaggedProfileList(*profiles);
+	if (!localcopy) {
+	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	}
+	try {
+	  CORBA::Object_ptr objptr = p->newProxyObject(r,objkey,ksize,
+						       localcopy,1);
+	  return objptr->PR_getobj();
+	}
+	catch (...) {
+	  delete localcopy;
+	  throw;
+	}
+      }
+    }
+    else {
+      // A local object
+      omniObject *objptr = omniORB::locateObject(*((omniObjectKey *)objkey));
+      delete [] objkey;
+      if (release)
+	delete profiles;
+      return objptr;
+    }
+  }
+  catch (...) {
+    if (objkey) delete [] objkey;
+    throw;
+  }
+}
+
+char *
+omniORB::objectToString(const omniObject *obj)
+{
+  if (!obj) {
+    IOP::TaggedProfileList p;
+    return (char *) IOP::iorToEncapStr((const CORBA::Char *)"",&p);
+  }
+  else {
+    return (char *) IOP::iorToEncapStr((const CORBA::Char *)
+				       obj->NP_IRRepositoryId(),
+				       obj->iopProfiles());
+  }
+}
+
+omniObject *
+omniORB::stringToObject(const char *str)
+{
+  char *repoId;
+  IOP::TaggedProfileList *profiles;
+  
+  IOP::EncapStrToIor((const CORBA::Char *)str,(CORBA::Char *&)repoId,profiles);
+  if (*repoId == '\0') {
+    // nil object reference
+    delete [] repoId;
+    delete profiles;
+    return 0;
+  }
+
+  try {
+    return omniORB::createObjRef(repoId,repoId,profiles,1);
+  }
+  catch (...) {
+    delete [] repoId;	
+    delete profiles;
+    throw;
+  }
+}
+
+void *
+omniObject::_widenFromTheMostDerivedIntf(const char *repoId) throw()
+{
+  return 0;
+}
+
+void
+objectRef_init()
+{
+  proxyObjectTable = 0;
+  localObjectTable = new omniObject * [omniObjectKey::hash_table_size];
+  unsigned int i;
+  for (i=0; i<omniObjectKey::hash_table_size; i++)
+    localObjectTable[i] = 0;
+}
+
+
+CORBA::Object_ptr
+CORBA::UnMarshalObjRef(const char *repoId,
+		       NetBufferedStream &s)
+{
+  CORBA::ULong idlen;
+  CORBA::Char  *id = 0;
+  IOP::TaggedProfileList *profiles = 0;
+
+  try {
+    idlen <<= s;
+    if (idlen == 1) {
+      // nil object reference
+      return CORBA::Object::_nil();
+    }
+    if (idlen > s.RdMessageUnRead()) {
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    }
+    id = new CORBA::Char[idlen];
+    if (!id)
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+    s.get_char_array(id,idlen);
+    if (id[idlen-1] != '\0') {
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    }
+    
+    profiles = new IOP::TaggedProfileList();
+    if (!profiles)
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+    *profiles <<= s;
+
+    omniObject *objptr = omniORB::createObjRef((const char *)id,repoId,profiles,1);
+    profiles = 0;
+    delete [] id;
+    id = 0;
+    return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
+  }
+  catch (...) {
+    if (id) delete [] id;
+    if (profiles) delete profiles;
+    throw;
+  }
+}
+
+void 
+CORBA::MarshalObjRef(CORBA::Object_ptr obj,
+		     const char *repoId,
+		     size_t repoIdSize,
+		     NetBufferedStream &s)
+{
+  if (CORBA::is_nil(obj)) {
+    // nil object reference
+    operator>>= ((CORBA::ULong)1,s);
+    operator>>= ((CORBA::Char) '\0',s);
+    operator>>= ((CORBA::ULong) 0,s);
+    return;
+  }
+
+  // non-nil object reference
+  operator>>= ((CORBA::ULong) repoIdSize,s);
+  s.put_char_array((CORBA::Char *)repoId,repoIdSize);
+  IOP::TaggedProfileList * pl = obj->PR_getobj()->iopProfiles();
+  *pl >>= s;
+  return;
+}
+
+size_t
+CORBA::AlignedObjRef(CORBA::Object_ptr obj,
+		     const char *repoId,
+		     size_t repoIdSize,
+		     size_t initialoffset)
+{
+  omniORB::ptr_arith_t msgsize = omniORB::align_to((omniORB::ptr_arith_t)
+                                                   initialoffset,
+						   omniORB::ALIGN_4);
+  if (CORBA::is_nil(obj)) {
+    return (size_t) (msgsize + 3 * sizeof(CORBA::ULong));
+  }
+  else {
+    msgsize += (omniORB::ptr_arith_t)(sizeof(CORBA::ULong)+repoIdSize);
+    IOP::TaggedProfileList *pl = obj->PR_getobj()->iopProfiles();
+    return pl->NP_alignedSize((size_t)msgsize);
+  }
+}
+
+CORBA::Object_ptr
+CORBA::UnMarshalObjRef(const char *repoId,
+		       MemBufferedStream &s)
+{
+  CORBA::ULong idlen;
+  CORBA::Char  *id = 0;
+  IOP::TaggedProfileList *profiles = 0;
+
+  try {
+    idlen <<= s;
+    if (idlen == 1) {
+      // nil object reference
+      return CORBA::Object::_nil();
+    }
+    if (idlen > s.unRead()) {
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    }
+    id = new CORBA::Char[idlen];
+    if (!id)
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+    s.get_char_array(id,idlen);
+    if (id[idlen-1] != '\0') {
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    }
+    
+    profiles = new IOP::TaggedProfileList();
+    if (!profiles)
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+    *profiles <<= s;
+
+    omniObject *objptr = omniORB::createObjRef((const char *)id,repoId,profiles,1);
+    profiles = 0;
+    delete [] id;
+    id = 0;
+    return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
+  }
+  catch (...) {
+    if (id) delete [] id;
+    if (profiles) delete profiles;
+    throw;
+  }
+}
+
+void 
+CORBA::MarshalObjRef(CORBA::Object_ptr obj,
+		     const char *repoId,
+		     size_t repoIdSize,
+		     MemBufferedStream &s)
+{
+  if (CORBA::is_nil(obj)) {
+    // nil object reference
+    operator>>= ((CORBA::ULong)1,s);
+    operator>>= ((CORBA::Char) '\0',s);
+    operator>>= ((CORBA::ULong) 0,s);
+    return;
+  }
+
+  // non-nil object reference
+  operator>>= ((CORBA::ULong) repoIdSize,s);
+  s.put_char_array((CORBA::Char *)repoId,repoIdSize);
+  IOP::TaggedProfileList * pl = obj->PR_getobj()->iopProfiles();
+  *pl >>= s;
+  return;
+}
