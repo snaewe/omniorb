@@ -1,3 +1,11 @@
+Thu Mar 20 10:18:37 GMT 2003 dgrisby
+====================================
+
+- Warn about use of CORBA 3 keywords in IDL.
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Fri Mar 14 11:27:17 GMT 2003 dgrisby
 ====================================
 
