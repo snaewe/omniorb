@@ -29,9 +29,12 @@
  
 /*
   $Log$
-  Revision 1.7  1997/05/06 15:25:34  sll
-  Public release.
+  Revision 1.8  1997/08/21 21:59:12  sll
+  ~omniObject() now delete pd_iopprofile.
 
+// Revision 1.7  1997/05/06  15:25:34  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -410,6 +413,10 @@ omniObject::~omniObject()
   if (pd_proxy && pd_objkey.foreign) {
     delete [] pd_objkey.foreign;
     pd_objkey.foreign = 0;
+  }
+  if (pd_iopprofile) {
+    delete pd_iopprofile;
+    pd_iopprofile = 0;
   }
   return;
 }
