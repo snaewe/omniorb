@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.27  1999/07/03 14:37:09  sll
+  *** empty log message ***
+
   Revision 1.26  1999/07/02 19:13:21  sll
   typedef of a typedef of a sequence now translate to a C++ typedef.
   Previously, the sequence is expanded to its real type.
@@ -769,7 +772,7 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   if (tdef->base_type()->node_type() == AST_Decl::NT_typedef) {
     o2be_typedef* decl = o2be_typedef::narrow_from_decl(tdef->base_type());
     IND(s); s << "\ntypedef " << decl->unambiguous_name(tdef) << " "
-	      << tdef->uqname() << "\n";
+	      << tdef->uqname() << ";\n";
     IND(s); s << "typedef " << decl->unambiguous_name(tdef) << "_var "
 	      << tdef->uqname() << "_var;\n";
     IND(s); s << "typedef " << decl->unambiguous_name(tdef) << "_out "
