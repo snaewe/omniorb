@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.20  2001/10/17 16:33:28  dpg1
+  New downcast mechanism for cdrStreams.
+
   Revision 1.1.4.19  2001/09/26 10:48:11  sll
   Fixed a bug which causes problems when, in a single recv(), the ORB read
   more than one GIOP messages into its buffer and the last of these messages
@@ -147,10 +150,15 @@ giopStream::~giopStream() {
 }
 
 ////////////////////////////////////////////////////////////////////////
-CORBA::Boolean
-giopStream::is_giopStream() {
-  return 1;
+void*
+giopStream::ptrToClass(int* cptr)
+{
+  if (cptr == &giopStream::_classid) return (giopStream*)this;
+  if (cptr == &cdrStream ::_classid) return (cdrStream*) this;
+
+  return 0;
 }
+int giopStream::_classid;
 
 ////////////////////////////////////////////////////////////////////////
 void

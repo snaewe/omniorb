@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/10/17 16:33:28  dpg1
+  New downcast mechanism for cdrStreams.
+
   Revision 1.1.2.9  2001/08/21 11:02:12  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -103,15 +106,19 @@ cdrStream::cdrStream() : pd_unmarshal_byte_swap(0), pd_marshal_byte_swap(0),
 			 pd_ncs_w(orbParameters::nativeWCharCodeSet) {}
 
 /////////////////////////////////////////////////////////////////////////////
+void*
+cdrStream::ptrToClass(int* cptr)
+{
+  if (cptr == &cdrStream::_classid) return (cdrStream*)this;
+  return 0;
+}
+
+int cdrStream::_classid;
+
+/////////////////////////////////////////////////////////////////////////////
 CORBA::ULong 
 cdrStream::completion() {
   return CORBA::COMPLETED_NO;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-CORBA::Boolean
-cdrStream::is_giopStream() {
-  return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////

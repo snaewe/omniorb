@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.24  2001/10/17 16:33:28  dpg1
+  New downcast mechanism for cdrStreams.
+
   Revision 1.2.2.23  2001/09/19 17:26:51  dpg1
   Full clean-up after orb->destroy().
 
@@ -591,6 +594,10 @@ void
 omniObjRef::_disable()
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  if (omniORB::trace(25)) {
+    omniORB::logger l;
+    l << "Disable ObjRef(" << pd_mostDerivedRepoId << ") " << pd_id << "\n";
+  }
   _setIdentity(omniShutdownIdentity::singleton());
   pd_flags.orb_shutdown = 1;
 }
@@ -743,8 +750,9 @@ omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
   // The reason for doing so is that if subsequently this connection is
   // broken, the callback objects would not be able to callback to us.
   // We want the application to know about this.
-  if (s.is_giopStream()) {
-    giopStrand& g = (giopStrand&)((giopStream&)s);
+  giopStream* gs = giopStream::downcast(&s);
+  if (gs) {
+    giopStrand& g = (giopStrand&)*gs;
     if (g.biDir && g.isClient()) {
       g.biDir_has_callbacks = 1;
     }
@@ -821,8 +829,9 @@ omniObjRef::_unMarshal(const char* repoId, cdrStream& s)
     // and if it ever gets adopted in a future GIOP version, the tag component
     // TAG_BI_DIR_GIOP will be embedded in the IOR and this step will be
     // redundent.
-    if (s.is_giopStream()) {
-      giopStrand& g = (giopStrand&)((giopStream&)s);
+    giopStream* gs = giopStream::downcast(&s);
+    if (gs) {
+      giopStrand& g = (giopStrand&)*gs;
       if (g.biDir && !g.isClient()) {
 	// Check the POA policy to see if the servant's POA is willing
 	// to use bidirectional on its callback objects.

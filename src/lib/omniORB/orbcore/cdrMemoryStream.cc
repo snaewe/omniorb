@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2001/10/17 16:33:27  dpg1
+  New downcast mechanism for cdrStreams.
+
   Revision 1.1.4.8  2001/08/22 13:29:48  dpg1
   Re-entrant Any marshalling.
 
@@ -98,6 +101,17 @@ cdrMemoryStream::~cdrMemoryStream()
   if (!pd_readonly_and_external_buffer && pd_bufp != pd_inline_buffer)
     delete [] (char*)pd_bufp;
 }
+
+void*
+cdrMemoryStream::ptrToClass(int* cptr)
+{
+  if (cptr == &cdrMemoryStream::_classid) return (cdrMemoryStream*)this;
+  if (cptr == &cdrStream      ::_classid) return (cdrStream*)      this;
+  return 0;
+}
+
+int cdrMemoryStream::_classid;
+
 
 void
 cdrMemoryStream::put_octet_array(const CORBA::Octet* b, int size,
@@ -467,6 +481,23 @@ cdrEncapsulationStream::cdrEncapsulationStream(cdrStream& s,
   }
 }
 
+void*
+cdrEncapsulationStream::ptrToClass(int* cptr)
+{
+  if (cptr == &cdrEncapsulationStream::_classid)
+    return (cdrEncapsulationStream*)this;
+
+  if (cptr == &cdrMemoryStream::_classid)
+    return (cdrMemoryStream*)this;
+
+  if (cptr == &cdrStream::_classid)
+    return (cdrStream*)this;
+
+  return 0;
+}
+
+int cdrEncapsulationStream::_classid;
+
 void
 cdrEncapsulationStream::getOctetStream(CORBA::Octet*& databuffer,
 				       CORBA::ULong& max,
@@ -493,6 +524,17 @@ cdrEncapsulationStream::getOctetStream(CORBA::Octet*& databuffer,
 
 
 /////////////////////////////////////////////////////////////////////////////
+void*
+cdrCountingStream::ptrToClass(int* cptr)
+{
+  if (cptr == &cdrCountingStream::_classid) return (cdrCountingStream*)this;
+  if (cptr == &cdrStream        ::_classid) return (cdrStream*)        this;
+  return 0;
+}
+
+int cdrCountingStream::_classid;
+
+
 void
 cdrCountingStream::put_octet_array(const CORBA::Octet* b, int size,
 				  omni::alignment_t align)

@@ -28,6 +28,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.4  2001/10/17 16:33:28  dpg1
+// New downcast mechanism for cdrStreams.
+//
 // Revision 1.1.2.3  2001/06/13 20:12:32  sll
 // Minor updates to make the ORB compiles with MSVC++.
 //
@@ -156,3 +159,13 @@ cdrStreamAdapter::completion()
   StreamAdapterStateCopier _c(this);
   return pd_actual.completion();
 }
+
+void*
+cdrStreamAdapter::ptrToClass(int* cptr)
+{
+  if (cptr == &cdrStreamAdapter::_classid) return (cdrStreamAdapter*)this;
+  if (cptr == &cdrStream       ::_classid) return (cdrStream*)       this;
+  return 0;
+}
+
+int cdrStreamAdapter::_classid;

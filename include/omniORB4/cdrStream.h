@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2001/10/17 16:33:27  dpg1
+  New downcast mechanism for cdrStreams.
+
   Revision 1.1.2.15  2001/09/19 17:29:04  dpg1
   Cosmetic changes.
 
@@ -660,9 +663,20 @@ public:
   // we have to live with returning a _CORBA_ULong.
 
   /////////////////////////////////////////////////////////////////////
-  virtual _CORBA_Boolean is_giopStream();
-  // Returns true if this instance is actually a giopStream.
-  // We could have used dynamic_cast<> if we have standard C++.
+  virtual void* ptrToClass(int* cptr);
+  // Yet another dynamic casting mechanism to cope with compilers
+  // without dynamic_cast<>. Each class derived from cdrStream has a
+  // static int declared in it. The address of this int is used to
+  // compare the required class with the target object. Apart from the
+  // use of the integer pointer, it works just like _ptrToInterface
+  // and _ptrToObjRef in omniObjRef etc.
+
+  static inline cdrStream* downcast(cdrStream* s) {
+    return (cdrStream*)s->ptrToClass(&_classid);
+  }
+  // Not really necessary in the base class, but here for consistency.
+
+  static _core_attr int _classid;
 
 private:
   cdrStream(const cdrStream&);
@@ -715,6 +729,12 @@ public:
   cdrMemoryStream(void* databuffer, size_t maxLen);
   // Constructors for a read-only buffered stream.
 
+  virtual void* ptrToClass(int* cptr);
+  static inline cdrMemoryStream* downcast(cdrStream* s) {
+    return (cdrMemoryStream*)s->ptrToClass(&_classid);
+  }
+  static _core_attr int _classid;
+
 protected:
   _CORBA_Boolean pd_readonly_and_external_buffer;
   _CORBA_Boolean pd_clear_memory;
@@ -763,6 +783,12 @@ public:
 
   void getOctetStream(_CORBA_Octet*& databuffer, _CORBA_ULong& max,
 		      _CORBA_ULong& len);
+
+  virtual void* ptrToClass(int* cptr);
+  static inline cdrEncapsulationStream* downcast(cdrStream* s) {
+    return (cdrEncapsulationStream*)s->ptrToClass(&_classid);
+  }
+  static _core_attr int _classid;
 };
 
 class cdrCountingStream : public cdrStream {
@@ -807,6 +833,12 @@ public:
 
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;
+
+  virtual void* ptrToClass(int* cptr);
+  static inline cdrCountingStream* downcast(cdrStream* s) {
+    return (cdrCountingStream*)s->ptrToClass(&_classid);
+  }
+  static _core_attr int _classid;
 
 private:
   size_t pd_total;
@@ -887,6 +919,12 @@ public:
     pd_actual.pd_outb_end = pd_outb_end;
     pd_actual.pd_outb_mkr = pd_outb_mkr;
   }
+
+  virtual void* ptrToClass(int* cptr);
+  static inline cdrStreamAdapter* downcast(cdrStream* s) {
+    return (cdrStreamAdapter*)s->ptrToClass(&_classid);
+  }
+  static _core_attr int _classid;
 
 private:
   cdrStream& pd_actual;
