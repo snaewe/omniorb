@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2003/02/21 15:56:09  dgrisby
+  Silence macro redefinition warnings on Windows.
+
   Revision 1.1.2.7  2003/02/17 02:03:07  dgrisby
   vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 
@@ -81,7 +84,9 @@
 #define HAVE_UNISTD_H 1
 // Unset if no unistd.h header
 
-#define HAVE_GETPID 1
+#ifndef HAVE_GETPID
+#  define HAVE_GETPID 1
+#endif
 // Unset if no getpid() function
 
 #define HAVE_GETTIMEOFDAY 1

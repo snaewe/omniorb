@@ -1,3 +1,11 @@
+Fri Feb 21 15:54:30 GMT 2003 dgrisby
+====================================
+
+- Silence macro redefinition warnings on Windows.
+
+include/omniORB4/CORBA_sysdep_trad.h
+
+
 Mon Feb 17 10:34:36 GMT 2003 dgrisby
 ====================================
 
