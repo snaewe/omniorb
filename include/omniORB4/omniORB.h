@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.20  2004/03/02 15:31:22  dgrisby
+  Support for persistent server identifier.
+
   Revision 1.2.2.19  2002/10/14 20:06:03  dgrisby
   Per objref / per thread timeouts.
 
@@ -301,6 +304,18 @@ _CORBA_MODULE_BEG
   // the header). This value is set by the ORB option giopMaxMsgSize.   //
   //                                                                    //
   _CORBA_MODULE_FN _CORBA_ULong giopMaxMsgSize();                       //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // setPersistentServerIdentifier()                                    //
+  //                                                                    //
+  // Sets an octet sequence used to persistently identify "this"        //
+  // server. Stored object references matching this identifier are      //
+  // re-written to use the current endpoint details.                    //
+  //                                                                    //
+  _CORBA_MODULE_FN void setPersistentServerIdentifier(                  //
+                            const _CORBA_Unbounded_Sequence_Octet& id); //
   ////////////////////////////////////////////////////////////////////////
 
 

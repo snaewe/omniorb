@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2004/03/02 15:31:22  dgrisby
+  Support for persistent server identifier.
+
   Revision 1.2.2.8  2001/08/06 15:49:16  sll
   Added IOP component TAG_OMNIORB_UNIX_TRANS for omniORB specific local
   transport using the unix domain socket.
@@ -221,8 +224,10 @@ public:
   static _core_attr const ComponentId TAG_PRIMARY; // FT SPEC
   static _core_attr const ComponentId TAG_HEARTBEAT_ENABLED; // FT SPEC
 
-  static _core_attr const ComponentId TAG_OMNIORB_BIDIR; // omniORB4 specific
-  static _core_attr const ComponentId TAG_OMNIORB_UNIX_TRANS; // omniORB4 specific
+  // omniORB specific:
+  static _core_attr const ComponentId TAG_OMNIORB_BIDIR;
+  static _core_attr const ComponentId TAG_OMNIORB_UNIX_TRANS;
+  static _core_attr const ComponentId TAG_OMNIORB_PERSISTENT_ID;
 
 
   static const char* ComponentIDtoName(ComponentId);

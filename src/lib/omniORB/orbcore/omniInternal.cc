@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.34  2004/03/02 15:31:22  dgrisby
+  Support for persistent server identifier.
+
   Revision 1.2.2.33  2003/08/06 20:36:49  dgrisby
   Shorten assertion failure message.
 
@@ -816,9 +819,9 @@ omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
   omniIOR_var holder(ior); // Place the ior inside a var. If ever
                            // any function we called results in an
                            // exception being thrown, the ior is released
-                           // by the var, hence fullifilling the semantics
+                           // by the var, hence fullfilling the semantics
                            // of this function.
-                           // If this function completed normally, make
+                           // If this function completes normally, make
                            // sure that _retn() is called on the var so
                            // that the ior is not released incorrectly!
 
@@ -1015,6 +1018,34 @@ omni::createObjRef(const char* targetRepoId,
     id->gainRef(objref);
   }
 
+  if (orbParameters::persistentId.length()) {
+    // Check to see if we need to re-write the IOR.
+
+    omniIOR::IORExtraInfoList& extra = ior->getIORInfo()->extraInfo();
+
+    for (CORBA::ULong index = 0; index < extra.length(); index++) {
+
+      if (extra[index]->compid == IOP::TAG_OMNIORB_PERSISTENT_ID)
+
+	if (!id->inThisAddressSpace()) {
+
+	  omniORB::logs(15, "Re-write local persistent object reference.");
+
+	  omniObjRef* new_objref;
+	  {
+	    omni_optional_lock sync(*internalLock, locked, locked);
+
+	    omniIOR* new_ior = new omniIOR(ior->repositoryID(),
+					   id->key(), id->keysize());
+
+	    new_objref = createObjRef(targetRepoId, new_ior, 1, 0);
+	  }
+	  releaseObjRef(objref);
+	  objref = new_objref;
+	}
+      break;
+    }
+  }
   return objref;
 }
 
@@ -1447,13 +1478,13 @@ OMNI_NAMESPACE_END(omni)
 //            Nil object reference list                                    //
 /////////////////////////////////////////////////////////////////////////////
 
-static omnivector<CORBA::Object_ptr>* nilObjectList() {
+static omnivector<CORBA::Object_ptr>*& nilObjectList() {
   static omnivector<CORBA::Object_ptr>* the_list = 0;
   if (!the_list) the_list = new omnivector<CORBA::Object_ptr>;
   return the_list;
 }
 
-static omnivector<omniTrackedObject*>* trackedList() {
+static omnivector<omniTrackedObject*>*& trackedList() {
   static omnivector<omniTrackedObject*>* the_list = 0;
   if (!the_list) the_list = new omnivector<omniTrackedObject*>;
   return the_list;
@@ -1503,6 +1534,7 @@ _omniFinalCleanup::~_omniFinalCleanup()
     delete *i;
 
   delete nilObjectList();
+  nilObjectList() = 0;
 
   int tracked = 0;
   omnivector<omniTrackedObject*>::iterator j = trackedList()->begin();
@@ -1510,6 +1542,7 @@ _omniFinalCleanup::~_omniFinalCleanup()
     delete *j;
 
   delete trackedList();
+  trackedList() = 0;
 
   if (omniORB::trace(15)) {
     omniORB::logger l;

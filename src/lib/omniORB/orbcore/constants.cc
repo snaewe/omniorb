@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15.2.7  2004/03/02 15:31:22  dgrisby
+  Support for persistent server identifier.
+
   Revision 1.15.2.6  2001/08/06 15:49:17  sll
   Added IOP component TAG_OMNIORB_UNIX_TRANS for omniORB specific local
   transport using the unix domain socket.
@@ -160,8 +163,9 @@ const IOP::ComponentId IOP::TAG_PRIMARY = 90002; // XXX NEED THE REAL CONSTANT!
 const IOP::ComponentId IOP::TAG_HEARTBEAT_ENABLED = 90003; 
                                                // XXX NEED THE REAL CONSTANT !
 
-const IOP::ComponentId IOP::TAG_OMNIORB_BIDIR      = 0x41545401; 
-const IOP::ComponentId IOP::TAG_OMNIORB_UNIX_TRANS = 0x41545402; 
+const IOP::ComponentId IOP::TAG_OMNIORB_BIDIR         = 0x41545401;
+const IOP::ComponentId IOP::TAG_OMNIORB_UNIX_TRANS    = 0x41545402;
+const IOP::ComponentId IOP::TAG_OMNIORB_PERSISTENT_ID = 0x41545403;
 
 
 
@@ -200,6 +204,7 @@ static struct {
   { IOP::TAG_HEARTBEAT_ENABLED, "TAG_HEARTBEAT_ENABLED" },
   { IOP::TAG_OMNIORB_BIDIR, "TAG_OMNIORB_BIDIR" },
   { IOP::TAG_OMNIORB_UNIX_TRANS, "TAG_OMNIORB_UNIX_TRANS" },
+  { IOP::TAG_OMNIORB_PERSISTENT_ID, "TAG_OMNIORB_PERSISTENT_ID" },
   { 0, 0 }
 };
 
