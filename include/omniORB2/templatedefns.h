@@ -702,24 +702,24 @@ _CORBA_Array_Var<T_Helper,T>::operator= (const _CORBA_Array_Var<T_Helper,T>& p)
 /////////////    _CORBA_Bounded_Sequence_ObjRef //////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template <class T,class ElemT, int max>
-inline _CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>&
-_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::operator= (const _CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>& s)
+template <class T,class ElemT, class T_Helper, int max>
+inline _CORBA_Bounded_Sequence_ObjRef<T,ElemT,T_Helper,max>&
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,T_Helper,max>::operator= (const _CORBA_Bounded_Sequence_ObjRef<T,ElemT,T_Helper,max>& s)
 {
-  _CORBA_Sequence_ObjRef<T,ElemT>::operator= (s);
+  _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>::operator= (s);
   return *this;
 }
 
 
-template <class T,class ElemT, int max>
+template <class T,class ElemT, class T_Helper, int max>
 inline void
-_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::length(_CORBA_ULong len)
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,T_Helper,max>::length(_CORBA_ULong len)
 {
   if (len > max) {
     _CORBA_bound_check_error();
     // never reach here
   }
-  _CORBA_Sequence_ObjRef<T,ElemT>::length(len);
+  _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>::length(len);
 }
 
 #undef __INLINE_CTOR_DEFN__
