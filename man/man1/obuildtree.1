@@ -1,0 +1,29 @@
+.TH obuildtree 1 "15.10.96" "ORL"
+.SH NAME
+obuildtree \- create an OMNI build tree
+.SH SYNOPSIS
+.B obuildtree
+.SH DESCRIPTION
+The obuildtree command creates a build tree using the OMNI development
+environment.  It prompts for information it needs about the build tree.  This
+includes the platform name, the name of the destination directory, which import
+trees it imports from, whether it has an export tree and whether it has any
+source trees.
+ 
+.SH SEE ALSO
+.BR oshadow (1)
+.BR omake (1)
+
+.SH FILES
+.TP 5
+.B <destination>/config/sources
+contains a list of the source trees
+.TP
+.B <destination>/config/config.mk
+is the makefile which
+.B omake
+will use when building inside this tree.  It pulls in make variables and rules
+from the import trees and includes the dir.mk for each directory.
+
+.SH AUTHOR
+Tristan Richardson, ORL
