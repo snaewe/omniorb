@@ -23,7 +23,7 @@ earlier versions of omniORB, and with other ORBs.<BR>
 <BR>
 The general form of an omniidl command line is:<BR>
 <BR>
-<BLOCKQUOTE> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file 1</I>&gt;<TT> </TT>&lt;<I>file 2</I>&gt;<TT> </TT>...</BLOCKQUOTE><A NAME="toc22"></A>
+<BLOCKQUOTE> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file 1</I>&gt;<TT> </TT>&lt;<I>file 2</I>&gt;<TT> </TT>...</BLOCKQUOTE><A NAME="toc23"></A>
 <H2>5.1&nbsp;&nbsp; Common options</H2>The following options are common to all back-ends:<BR>
 <BR>
 <TABLE CELLSPACING=2 CELLPADDING=0>
@@ -115,7 +115,7 @@ you have a lot of IDL with this sort of construct, you will drown
 under the warning messages. Use the <TT>-nf</TT> option to suppress
 them.<BR>
 <BR>
-<A NAME="toc23"></A>
+<A NAME="toc24"></A>
 <H2>5.2&nbsp;&nbsp; C++ back-end options</H2>When you specify the C++ back-end (with <TT>-bcxx</TT>), the
 following <TT>-Wb</TT> options are available. Note that the
 <TT>-Wb</TT> options must be specified <EM>after</EM> the
@@ -207,7 +207,31 @@ fine. For the second case, class <TT>M1::K</TT> will contain a reference
 to <TT>M2::J</TT>, which has not yet been defined; the C++ compiler will
 complain.<BR>
 <BR>
-<A NAME="toc24"></A>
+
+<H3>5.2.2&nbsp;&nbsp; Flattened tie classes</H3>Another problem with mapping IDL modules to C++ classes arises with
+tie templates. The C++ mapping says that for the interface
+<TT>M::I</TT>, the C++ tie template class should be named
+<TT>POA_M::I_tie</TT>. However, since template classes cannot be
+declared inside other classes, this naming scheme cannot be used with
+compilers without namespace support.<BR>
+<BR>
+The standard solution is to produce `flattened' tie class names, using
+the <TT>-Wbtf</TT> command line argument. With that flag, the
+template class is declared at global scope with the name
+<TT>POA_M_I_tie</TT>. i.e. all occurrences of `<TT>::</TT>' are
+replaced by `<TT>_</TT>'.<BR>
+<BR>
+
+<H3>5.2.3&nbsp;&nbsp; Generating example implementations</H3>If you use the <TT>-Wbexample</TT> flag, omniidl will generate an
+example implementation file as well as the stubs and skeletons. For
+IDL file <TT>foo.idl</TT>, the example code is written to
+<TT>foo_i.cc</TT>. The example file contains class and method
+declarations for the operations of all interfaces in the IDL file,
+along with a <TT>main()</TT> function which creates an instance of each
+object. You still have to fill in the operation implementations, of
+course.<BR>
+<BR>
+<A NAME="toc25"></A>
 <H2>5.3&nbsp;&nbsp; Examples</H2>Compile the C++ headers and stubs for a file <TT>a.idl</TT>:<BR>
 <BR>
 <BLOCKQUOTE>

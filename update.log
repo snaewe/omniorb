@@ -1,3 +1,26 @@
+Fri Jun  2 17:56:16 BST 2000 dpg1
+=================================
+
+- Sections on BOA compatibility, flattened ties, and example code
+  generation added to omniORB manual
+
+doc/tex/omniORB.tex
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniORB/index.html
+external_merge/doc/omniORB/omniORB002.html
+external_merge/doc/omniORB/omniORB003.html
+external_merge/doc/omniORB/omniORB004.html
+external_merge/doc/omniORB/omniORB005.html
+external_merge/doc/omniORB/omniORB006.html
+external_merge/doc/omniORB/omniORB007.html
+external_merge/doc/omniORB/omniORB008.html
+external_merge/doc/omniORB/omniORB009.html
+external_merge/doc/omniORB/omniORB010.html
+external_merge/doc/omniORB/omniORB011.html
+external_merge/doc/omniORB/omniORB012.html
+
+
 Fri Jun  2 17:07:20 BST 2000 dpg1
 =================================
 

@@ -45,7 +45,7 @@ to the new, an ORB configuration variable
 <TT>omniORB::omniORB_27_CompatibleAnyExtraction</TT> can be set to
 revert the any extraction operators to the old semantics.</DL><HR SIZE=2><BR>
 <BR>
-<A NAME="toc44"></A>
+<A NAME="toc45"></A>
 <H2>9.1&nbsp;&nbsp; Example using type Any</H2>Before going through this example, you should make sure that you have
 read and understood the examples in chapter&nbsp;<A HREF="omniORB002.html#ch_basic">2</A>. The
 source code for this example is included in the omniORB distribution,
@@ -255,7 +255,7 @@ to get back the old behaviour. Notice that this should be used as a
 transitional measure and in the long run, applications should be
 written to use the new behaviour.</DL><HR SIZE=2><BR>
 <BR>
-<A NAME="toc45"></A>
+<A NAME="toc46"></A>
 <H2>9.2&nbsp;&nbsp; Type Any in omniORB</H2>
 <A NAME="anyOmniORB"></A>This section contains some notes on the use and behaviour of type Any
 in omniORB.<BR>
@@ -388,7 +388,7 @@ threads) also leads to undefined behaviour. It was decided not to
 protect the Any with a mutex, as this condition should rarely arise,
 and adding a mutex would lead to performance penalties.<BR>
 <BR>
-<A NAME="toc46"></A>
+<A NAME="toc47"></A>
 <H2>9.3&nbsp;&nbsp; TypeCode in omniORB</H2>This section contains some notes on the use and behaviour of TypeCode
 in omniORB<BR>
 <BR>
@@ -458,7 +458,7 @@ onwards, the <TT>CORBA::TypeCode::equal()</TT> function has been
 changed to enforce strict equality. The pre-2.8.0 behaviour can be
 obtained with <TT>equivalent()</TT>.<BR>
 <BR>
-<A NAME="toc47"></A>
+<A NAME="toc48"></A>
 <H2>9.4&nbsp;&nbsp; Source Listing</H2>
 <H3>9.4.1&nbsp;&nbsp; anyExample_impl.cc</H3><PRE>
 // anyExample_impl.cc - This is the source code of the example used in

@@ -23,7 +23,7 @@ the sake of diagnosing the problem when there is a type violation, it
 is useful to understand the underlying mechanism in order to interpret
 the error conditions reported by the ORB.<BR>
 <BR>
-<A NAME="toc36"></A>
+<A NAME="toc37"></A>
 <H2>7.1&nbsp;&nbsp; Introduction</H2>In GIOP/IIOP, an object reference is encoded as an Interoperable
 Object Reference (IOR) when it is sent across a network connection.
 The IOR contains a Repository ID (RepoId) and one or more
@@ -67,7 +67,7 @@ real type of the object. omniORB never sends out null strings as
 RepoId. However, it may receive null RepoId from other ORBs. In that
 case, it will use the mechanism described below to ensure type safety.<BR>
 <BR>
-<A NAME="toc37"></A>
+<A NAME="toc38"></A>
 <H2>7.2&nbsp;&nbsp; Basic Interface Type Checking</H2>
 <A NAME="sec_intf"></A>The ORB is provided with the interface information by the stubs via
 the <TT>proxyObjectFactory</TT> class. For an interface <TT>A</TT>, the
@@ -138,7 +138,7 @@ There are three possible causes:<BR>
 </OL>To handle this situation, the ORB must find out the type information
 dynamically. This is explained in the next section.<BR>
 <BR>
-<A NAME="toc38"></A>
+<A NAME="toc39"></A>
 <H2>7.3&nbsp;&nbsp; Interface Inheritance</H2>When the ORB receives an IOR of interface type B when it expects the
 type to be A, it must find out if B inherits from A. When the ORB has
 no local knowledge of the type B, it must work out the type of B

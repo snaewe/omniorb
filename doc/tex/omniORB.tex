@@ -777,7 +777,8 @@ with the system were unspecified, so server-side code was not portable
 between ORBs. The POA specification rectifies that. omniORB 3 still
 supports the old omniORB 2.x BOA mapping, but you should always use
 the POA mapping for new code. BOA code and POA code can coexist within
-a single program.
+a single program. See section~\ref{sec:BOAcompat} for details of the
+BOA compatibility, and problems you may encounter.
 
 For each object interface, a \term{skeleton} class is generated.  In
 our example, the POA specification says that the skeleton class for
@@ -2298,27 +2299,105 @@ Before 2.8.0, omniORB implemented the CORBA 2.0 C++ mapping. From
 2.8.0 onwards, the mapping has been updated to CORBA 2.3.
 Unfortunately, to comply with the CORBA 2.3 specification, it has been
 necessary to change the semantics of a few APIs in a way that is
-incompatible with older omniORB releases.  The incompatible changes
-are limited to:
+incompatible with older omniORB releases. The incompatible changes are
+limited to:
 
 \begin{enumerate}
-\item the extraction of string, object reference and typecode from an Any. 
+\item The mapping for some out and inout argument types is different.
+
+\item The extraction of string, object reference and typecode from an
+Any has different ownership rules.
+
 \item the DII interface now defaults to reporting a system exception
 by raising a C++ exception, instead of returning the exception as an
 environment value.
+
 \end{enumerate}
 
 The changes are minor and require minimal changes to the application
-source code. \textbf{However, it is not possible to detect the old
-usage at compile time. In particular, unmodified code that uses the
-affected Any extraction operators would most certainly cause runtime
-errors to occur.}
+source code. The C++ compiler will complain about the first change.
+\textbf{However, it is not possible to detect the old usage for
+changes 2 and 3 at compile time. In particular, unmodified code that
+uses the affected Any extraction operators will most certainly cause
+runtime errors to occur.}
 
 To smooth the transition from the old usage to the new, an omniORB
 configuration variable
 \code{omniORB::omniORB\_27\_CompatibleAnyExtraction} can be set to
 revert the any extraction operators to the old semantics. More
 information can be found in chapter~\ref{ch_any}.
+
+
+\section{BOA compatibility}
+\label{sec:BOAcompat}
+
+If you use the \cmdline{-WbBOA} option to omniidl, it will generate
+skeleton code with the same interface as the old omniORB 2 BOA
+mapping, as well as code to be used with the POA. Note that since the
+major problem with the BOA specification was that server code was not
+portable between ORBs, it is unlikely that omniORB 3's BOA
+compatibility will help you much if you are moving from a different
+BOA-based ORB.
+
+The BOA compatibility permits the majority of BOA code to compile
+without difficulty. However, there are a number of constructs which
+relied on omniORB 2 implementation details which no longer work.
+
+\begin{itemize}
+
+\item omniORB 2 did not use distinct types for object references and
+servants, and often accepted a pointer to a servant when the CORBA
+specification says it should only accept an object reference. Such
+code will not compile under omniORB 3.
+
+\item The reverse is true for \op{BOA::obj\_is\_ready}. It now only
+works when passed a pointer to a servant object, not an object
+reference. The more commonly used mechanism of calling
+\code{\_obj\_is\_ready(boa)} on the servant object still works as
+expected.
+
+\item It used to be the case that the skeleton class for interface
+\intf{I} (\type{\_sk\_I}) was derived from class \type{I}. This meant
+that the names of any types declared in the interface were available
+in the scope of the skeleton class. This is no longer true. If you
+have an interface:
+
+\begin{idllisting}
+interface I {
+  struct S {
+    long a,b;
+  };
+  S op();
+};
+\end{idllisting}
+
+\noindent then where before the implementation code might have been:
+
+\begin{cxxlisting}
+class I_impl : public virtual _sk_I {
+  S op();  // _sk_I is derived from I
+};
+I::S I_impl::op() {
+  S ret;
+  // ...
+}
+\end{cxxlisting}
+
+\noindent it is now necessary to fully qualify all uses of \type{S}:
+
+\begin{cxxlisting}
+class I_impl : public virtual _sk_I {
+  I::S op(); // _sk_I is not derived from I
+};
+I::S I_impl::op() {
+  I::S ret;
+  // ...
+}
+\end{cxxlisting}
+
+
+
+\end{itemize}
 
 
 
@@ -3015,6 +3094,34 @@ option causes omniidl to put all of the definitions for module
 fine. For the second case, class \type{M1::K} will contain a reference
 to \type{M2::J}, which has not yet been defined; the C++ compiler will
 complain.
+
+
+\subsection{Flattened tie classes}
+
+Another problem with mapping IDL modules to C++ classes arises with
+tie templates. The C++ mapping says that for the interface
+\intf{M::I}, the C++ tie template class should be named
+\type{POA\_M::I\_tie}. However, since template classes cannot be
+declared inside other classes, this naming scheme cannot be used with
+compilers without namespace support.
+
+The standard solution is to produce `flattened' tie class names, using
+the \cmdline{-Wbtf} command line argument. With that flag, the
+template class is declared at global scope with the name
+\type{POA\_M\_I\_tie}. i.e.\ all occurrences of `\type{::}' are
+replaced by `\type{\_}'.
+
+
+\subsection{Generating example implementations}
+
+If you use the \cmdline{-Wbexample} flag, omniidl will generate an
+example implementation file as well as the stubs and skeletons. For
+IDL file \file{foo.idl}, the example code is written to
+\file{foo_i.cc}. The example file contains class and method
+declarations for the operations of all interfaces in the IDL file,
+along with a \op{main} function which creates an instance of each
+object. You still have to fill in the operation implementations, of
+course.
 
 
 

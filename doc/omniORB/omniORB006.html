@@ -23,7 +23,7 @@ portable to run unchanged on other vendors' ORBs. To make it easier to
 identify omniORB dependent code, this API is defined under the name
 space `<TT>omniORB</TT>'<A NAME="text16" HREF="#note16"><SUP><FONT SIZE=2>1</FONT></SUP></A>.<BR>
 <BR>
-<A NAME="toc25"></A>
+<A NAME="toc26"></A>
 <H2>6.1&nbsp;&nbsp; ORB initialisation options</H2>
 <A NAME="omniorbapioptions"></A><TT>CORBA::ORB_init()</TT> accepts the following standard command-line
 arguments:<BR>
@@ -122,7 +122,7 @@ arguments understood by the ORB will be removed from <TT>argv</TT> when
 the initialisation functions return. Therefore, an application is not
 required to handle any command-line arguments it does not understand.<BR>
 <BR>
-<A NAME="toc26"></A>
+<A NAME="toc27"></A>
 <H2>6.2&nbsp;&nbsp; Hostname and port</H2>
 <A NAME="sec:nameport"></A>Normally, omniORB lets the operating system pick which port number it
 should use to listen for IIOP calls. Alternatively, you can specify a
@@ -142,7 +142,7 @@ option. You can optionally specify a port number too. Again, you can
 specify more than one host name by using
 <TT>-ORBpoa_iiop_name_port</TT> more than once.<BR>
 <BR>
-<A NAME="toc27"></A>
+<A NAME="toc28"></A>
 <H2>6.3&nbsp;&nbsp; Run-time Tracing and Diagnostic Messages</H2>
 <A NAME="rttrace"></A>omniORB can output tracing and diagnostic messages to the standard
 error stream. To avoid conflicts between old-style <TT>iostream.h</TT>
@@ -187,7 +187,7 @@ $ eg2_impl -ORBtraceLevel 5
 <TT>omniORB::traceInvocations</TT> to true, or with the
 <TT>-ORBtraceInvocations</TT> command line argument.<BR>
 <BR>
-<A NAME="toc28"></A>
+<A NAME="toc29"></A>
 <H2>6.4&nbsp;&nbsp; Server Name</H2>
 <A NAME="sec_servername"></A>Applications can optionally specify a name to identify the server
 process. At the moment, this name is only used by the host-based
@@ -200,7 +200,7 @@ CORBA::String_var omniORB::serverName;
 applications. It can also be changed by specifying the command-line
 option: <TT>-ORBserverName </TT>&lt;<I>string</I>&gt;.<BR>
 <BR>
-<A NAME="toc29"></A>
+<A NAME="toc30"></A>
 <H2>6.5&nbsp;&nbsp; GIOP Message Size</H2>
 <A NAME="giopmsg"></A>omniORB sets a limit on the GIOP message size that can be sent or
 received. The value can be obtained by calling:<BR>
@@ -219,7 +219,7 @@ GIOP(IIOP) request message that contains a sequence length field set
 to 2<SUP><FONT SIZE=2>31</FONT></SUP>. With a reasonable message size limit, the server can
 reject this rogue message straight away.<BR>
 <BR>
-<A NAME="toc30"></A>
+<A NAME="toc31"></A>
 <H2>6.6&nbsp;&nbsp; Object table size</H2>
 <A NAME="sec:objtable"></A>omniORB uses a hash table to store the mapping from object keys to
 servant objects. Normally, it dynamically re-sizes the hash table when
@@ -238,7 +238,7 @@ objects active, no matter what size table you specify. If you have
 many more active objects than hash table entries, object look-up
 performance will become linear with the number of objects.<BR>
 <BR>
-<A NAME="toc31"></A>
+<A NAME="toc32"></A>
 <H2>6.7&nbsp;&nbsp; POA request holding timeout</H2>POAs can be put into the <I>holding</I> state, which means that
 incoming requests are queued until the POA is set to a different
 state. Normally, queued requests are held for ever (or until the
@@ -248,7 +248,7 @@ held requests will be cancelled after that time. When requests are
 cancelled in this way, the caller is sent a <TT>TRANSIENT</TT>
 exception.<BR>
 <BR>
-<A NAME="toc32"></A>
+<A NAME="toc33"></A>
 <H2>6.8&nbsp;&nbsp; Obsolete Initial Object Reference Bootstrapping</H2>
 <A NAME="bootstrap"></A>Starting from 2.6.0, but superseded by the Interoperable Naming
 Service in omniORB 3, a mechanism is available for the ORB runtime to
@@ -327,7 +327,7 @@ Alternatively, the command line options can be used, for example:<BR>
 <BR>
 <TT>$ eg3_impl -ORBInitialHost wobble -ORBInitialPort 1234 &amp;</TT><BR>
 <BR>
-<TT>$ eg3_clt -ORBInitialHost wobble -ORBInitialPort 1234</TT></OL><A NAME="toc33"></A>
+<TT>$ eg3_clt -ORBInitialHost wobble -ORBInitialPort 1234</TT></OL><A NAME="toc34"></A>
 <H2>6.9&nbsp;&nbsp; GIOP Lowest Common Denominator Mode</H2>
 <A NAME="sec_lcd"></A>
 <A NAME="sec:strictIIOP"></A>Sometimes, to cope with bugs in another ORB, it is necessary to
@@ -365,7 +365,7 @@ disable this feature, and hence achieve interoperability. The command
 line option <TT>-ORBverifyObjectExistsAndType</TT> has the same
 effect.<BR>
 <BR>
-<A NAME="toc34"></A>
+<A NAME="toc35"></A>
 <H2>6.10&nbsp;&nbsp; Trapping omniORB Internal Errors</H2>
 <A NAME="sec_fatal"></A><PRE>
 class fatalException {
@@ -392,7 +392,7 @@ can also be set via the command line option
 <BR>
 <BR>
 <BR>
-<A NAME="toc35"></A>
+<A NAME="toc36"></A>
 <H2>6.11&nbsp;&nbsp; System Exception Handlers</H2>By default, all system exceptions which are raised during an operation
 invocation, with the exception of <TT>CORBA::TRANSIENT</TT>, are
 propagated to the application code. Some applications may prefer to

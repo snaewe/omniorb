@@ -32,21 +32,26 @@ how to use the CORBA 2.3 C++ mapping.<BR>
 2.8.0 onwards, the mapping has been updated to CORBA 2.3.
 Unfortunately, to comply with the CORBA 2.3 specification, it has been
 necessary to change the semantics of a few APIs in a way that is
-incompatible with older omniORB releases. The incompatible changes
-are limited to:<BR>
+incompatible with older omniORB releases. The incompatible changes are
+limited to:<BR>
 <BR>
 <OL type=1>
 <LI>
- the extraction of string, object reference and typecode from an Any. 
+ The mapping for some out and inout argument types is different.<BR>
+<BR>
+
+<LI> The extraction of string, object reference and typecode from an
+Any has different ownership rules.<BR>
+<BR>
 
 <LI> the DII interface now defaults to reporting a system exception
 by raising a C++ exception, instead of returning the exception as an
-environment value.
-</OL>The changes are minor and require minimal changes to the application
-source code. <B>However, it is not possible to detect the old
-usage at compile time. In particular, unmodified code that uses the
-affected Any extraction operators would most certainly cause runtime
-errors to occur.</B><BR>
+environment value.</OL>The changes are minor and require minimal changes to the application
+source code. The C++ compiler will complain about the first change.
+<B>However, it is not possible to detect the old usage for
+changes 2 and 3 at compile time. In particular, unmodified code that
+uses the affected Any extraction operators will most certainly cause
+runtime errors to occur.</B><BR>
 <BR>
 To smooth the transition from the old usage to the new, an omniORB
 configuration variable
@@ -54,7 +59,68 @@ configuration variable
 revert the any extraction operators to the old semantics. More
 information can be found in chapter&nbsp;<A HREF="omniORB009.html#ch_any">9</A>.<BR>
 <BR>
-<HR>
+<A NAME="toc17"></A>
+<H2>3.2&nbsp;&nbsp; BOA compatibility</H2>
+<A NAME="sec:BOAcompat"></A>If you use the <TT>-WbBOA</TT> option to omniidl, it will generate
+skeleton code with the same interface as the old omniORB 2 BOA
+mapping, as well as code to be used with the POA. Note that since the
+major problem with the BOA specification was that server code was not
+portable between ORBs, it is unlikely that omniORB 3's BOA
+compatibility will help you much if you are moving from a different
+BOA-based ORB.<BR>
+<BR>
+The BOA compatibility permits the majority of BOA code to compile
+without difficulty. However, there are a number of constructs which
+relied on omniORB 2 implementation details which no longer work.<BR>
+<BR>
+<UL>
+<LI> omniORB 2 did not use distinct types for object references and
+servants, and often accepted a pointer to a servant when the CORBA
+specification says it should only accept an object reference. Such
+code will not compile under omniORB 3.<BR>
+<BR>
+
+<LI> The reverse is true for <TT>BOA::obj_is_ready()</TT>. It now only
+works when passed a pointer to a servant object, not an object
+reference. The more commonly used mechanism of calling
+<TT>_obj_is_ready(boa)</TT> on the servant object still works as
+expected.<BR>
+<BR>
+
+<LI> It used to be the case that the skeleton class for interface
+<TT>I</TT> (<TT>_sk_I</TT>) was derived from class <TT>I</TT>. This meant
+that the names of any types declared in the interface were available
+in the scope of the skeleton class. This is no longer true. If you
+have an interface:<BR>
+<BR>
+<PRE>
+interface I {
+  struct S {
+    long a,b;
+  };
+  S op();
+};
+</PRE>then where before the implementation code might have been:<BR>
+<BR>
+<PRE>
+class I_impl : public virtual _sk_I {
+  S op();  // _sk_I is derived from I
+};
+I::S I_impl::op() {
+  S ret;
+  // ...
+}
+</PRE>it is now necessary to fully qualify all uses of <TT>S</TT>:<BR>
+<BR>
+<PRE>
+class I_impl : public virtual _sk_I {
+  I::S op(); // _sk_I is not derived from I
+};
+I::S I_impl::op() {
+  I::S ret;
+  // ...
+}
+</PRE></UL><HR>
 <A HREF="omniORB002.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
 <A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
 <A HREF="omniORB004.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>

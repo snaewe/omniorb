@@ -19,7 +19,7 @@
 be part of CORBA 2.4. The following is a summary of the new facilities
 described in the INS edited chapters document&nbsp;[<A HREF="omniORB014.html#inschapters"><CITE>OMG99b</CITE></A>].<BR>
 <BR>
-<A NAME="toc17"></A>
+<A NAME="toc18"></A>
 <H2>4.1&nbsp;&nbsp; Object URIs</H2>As well as accepting IOR-format strings, <TT>ORB::string_to_object()</TT>
 now also supports two new Uniform Resource Identifier
 (URI)&nbsp;[<A HREF="omniORB014.html#rfc2396"><CITE>BLFIM98</CITE></A>] formats, which can be used to specify objects in
@@ -108,7 +108,7 @@ have been used for a look-up:<BR>
 </BLOCKQUOTE>The first of these examples is the easiest way of specifying
 the location of a naming service.<BR>
 <BR>
-<A NAME="toc18"></A>
+<A NAME="toc19"></A>
 <H2>4.2&nbsp;&nbsp; Configuring resolve_initial_references</H2>
 <A NAME="sec:insargs"></A>The INS adds two new command line arguments which provide a portable
 way of configuring <TT>ORB::resolve_initial_references()</TT>:<BR>
@@ -225,7 +225,7 @@ problem you must either specify the <TT>NameService</TT> reference on
 the command line, or put the <TT>DefaultInitRef</TT> in the
 configuration file.<BR>
 <BR>
-<A NAME="toc19"></A>
+<A NAME="toc20"></A>
 <H2>4.3&nbsp;&nbsp; omniNames</H2>
 <H3>4.3.1&nbsp;&nbsp; NamingContextExt</H3>omniNames now supports the <TT>CosNaming::NamingContextExt</TT>
 interface:<BR>
@@ -307,7 +307,7 @@ the omniNames log.<BR>
 <BR>
 The second option is to use omniMapper, as described below.<BR>
 <BR>
-<A NAME="toc20"></A>
+<A NAME="toc21"></A>
 <H2>4.4&nbsp;&nbsp; omniMapper</H2>
 omniMapper is a simple daemon which listens on port 2089 (or any other
 port), and redirects IIOP requests for configured object keys to
@@ -347,7 +347,7 @@ file could contain the line:<BR>
 <BLOCKQUOTE>
 <PRE>
 ORBDefaultInitRef corbaloc::localhost
-</PRE></BLOCKQUOTE><A NAME="toc21"></A>
+</PRE></BLOCKQUOTE><A NAME="toc22"></A>
 <H2>4.5&nbsp;&nbsp; Creating objects with simple object keys</H2>In normal use, omniORB creates object keys containing various
 information including POA names and various non-ASCII characters.
 Since object keys are supposed to be opaque, this is not usually a
