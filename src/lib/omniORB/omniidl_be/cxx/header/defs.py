@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  1999/11/19 20:08:09  djs
+# Removed references to a non-existant utility function
+#
 # Revision 1.8  1999/11/15 19:12:45  djs
 # Tidied up sequence template handling
 # Moved useful functions into separate utility module
@@ -58,6 +61,8 @@
 
 """Produce the main header definitions"""
 # similar to o2be_root::produce_hdr_defs in the old C++ BE
+
+import string
 
 from omniidl import idlast, idltype, idlutil
 
@@ -283,8 +288,8 @@ public:
 #            print "[[[ returnType = " + repr(c.returnType()) + \
 #                  "    text = " + repr(return_type) + "]]]"
             opname = tyutil.mapID(c.identifier())
-            arguments = util.delimitedlist(params, ", ")
-            virtual_arguments = util.delimitedlist(virtual_params, ", ")
+            arguments = string.join(params, ", ")
+            virtual_arguments = string.join(virtual_params, ", ")
             operations.append(return_type + " " + opname + \
                               "(" + arguments + ")")
             virtual_operations.append(return_type + " " + opname + \
@@ -292,14 +297,12 @@ public:
         else:
             raise "No code for interface member: " + repr(c)
 
-    attributes_str = util.delimitedlist(map(lambda x: x + ";\n",
-                                            attributes ),"")
-    operations_str = util.delimitedlist(map(lambda x: x + ";\n",
-                                            operations ),"")
+    attributes_str = string.join(map(lambda x: x + ";\n", attributes ),"")
+    operations_str = string.join(map(lambda x: x + ";\n", operations ),"")
         
-    virtual_attributes_str = util.delimitedlist(
+    virtual_attributes_str = string.join(
         map( lambda x: "virtual " + x + " = 0;\n", attributes ), "")
-    virtual_operations_str = util.delimitedlist(
+    virtual_operations_str = string.join(
         map( lambda x: "virtual " + x + " = 0;\n", virtual_operations ), "")
 
     # deal with inheritance
@@ -327,8 +330,8 @@ public:
                             "public virtual omniObjRef" ]
         impl_inherits   = [ "public virtual omniServant" ]
             
-    objref_inherits = util.delimitedlist(objref_inherits, ",\n")
-    impl_inherits = util.delimitedlist(impl_inherits, ", \n")
+    objref_inherits = string.join(objref_inherits, ",\n")
+    impl_inherits = string.join(impl_inherits, ", \n")
         
     stream.out("""\
     
@@ -1135,7 +1138,7 @@ def visitException(node):
             ctor_args.append(ctor_arg_type + " i_" + name)
     ctor = ""
     if ctor_args != []:
-        ctor = exname + "(" + util.delimitedlist(ctor_args) + ");"
+        ctor = exname + "(" + string.join(ctor_args, ", ") + ");"
             
     if no_members:
         inline = "inline"
@@ -1732,7 +1735,7 @@ def visitEnum(node):
     stream.out("""\
 enum @name@ { @memberlist@ };
 typedef @name@& @name@_out;
-""", name = name, memberlist = util.delimitedlist(memberlist))
+""", name = name, memberlist = string.join(memberlist, ", "))
     node.written = name
     return name
 
