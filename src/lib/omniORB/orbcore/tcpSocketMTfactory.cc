@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.13  1998/09/23 15:31:15  sll
+  Previously, tcpSocketStrand::shutdown sends an incomplete GIOP
+  CloseConnection message (the message length field is missing). Fixed.
+
   Revision 1.12  1998/09/23 08:48:34  sll
   Use config variable omniORB::maxTcpConnectionPerServer to determine the
   maximum number of outgoing per tcpSocketOutgoingRope.
@@ -729,6 +733,8 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
   return;
 }
 
+
+
 void
 tcpSocketStrand::shutdown()
 {
@@ -739,8 +745,17 @@ tcpSocketStrand::shutdown()
       // do any GIOP dependent stuff. If this a problem in future, we should 
       // perhap make it a parameter to decide whether or what to send on
       // shutdown.
-      size_t sz = sizeof(GIOP_Basetypes::MessageHeader::CloseConnection);
-      char*  p = (char*)&GIOP_Basetypes::MessageHeader::CloseConnection;
+
+      static char closeConnectionMessage[12] = {
+	   'G','I','O','P',
+	   1,0,
+	   _OMNIORB_HOST_BYTE_ORDER_,
+	   GIOP::CloseConnection,
+	   0,0,0,0
+      };
+
+      size_t sz = sizeof(closeConnectionMessage);
+      char* p = closeConnectionMessage;
       while (sz) {
 	fd_set wrfds;
 	FD_ZERO(&wrfds);
