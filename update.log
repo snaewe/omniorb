@@ -1,3 +1,12 @@
+Thu Mar 30 12:34:26 BST 2000 dpg1
+=================================
+
+- Added i586_linux_2.0_glibc2.1 platform
+
+mk/platforms/i586_linux_2.0_glibc2.1.mk                 -- new (by dme)
+external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk  -- new
+
+
 Tue Mar 28 19:19:00 GMT 2000 djs
 ================================
 
