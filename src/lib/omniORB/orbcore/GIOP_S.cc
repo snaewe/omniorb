@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.26  2004/10/17 21:48:38  dgrisby
+  Support CancelRequest better.
+
   Revision 1.1.4.25  2003/07/16 14:22:38  dgrisby
   Speed up oneway handling a little. More tracing for split messages.
 
@@ -551,9 +554,11 @@ CORBA::Boolean
 GIOP_S::handleCancelRequest() {
   // We do not have the means to asynchronously abort the execution of
   // an upcall by another thread. Therefore it is not possible to
-  // cancel a request that has already been in progress. 
-  omniORB::logs(5, "Received and ignored a CancelRequest message.");
-  pd_state = ReplyCompleted;
+  // cancel a request that has already been in progress. The best we
+  // can do is prevent the reply from happening.
+  omniORB::logs(5, "Received a CancelRequest message.");
+  pd_state = WaitingForReply;
+  response_expected(0);
   return 1;
 }
 
