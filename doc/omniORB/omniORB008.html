@@ -4,7 +4,7 @@
 <HEAD>
 
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.06">
+<META name="GENERATOR" content="hevea 1.06+1 of 2002-11-06">
 <TITLE>
  Connection and Thread Management
 </TITLE>
@@ -104,8 +104,39 @@ version 4.0, are unable to deal with concurrent calls multiplexed on a
 single connection, so they serialise the calls. It is usually best to
 keep to the default mode of opening multiple connections.<BR>
 <BR>
+
+<H3><A NAME="htoc93">8.3.1</A>&nbsp;&nbsp;Client side timeouts</H3>
+<A NAME="sec:timeoutAPI"></A>
+omniORB can associate a timeout with a call, meaning that if the call
+takes too long a <TT>TRANSIENT</TT> exception is thrown. Timeouts can be
+set for the whole process, for a specific thread, or for a specific
+object reference.<BR>
+<BR>
+Timeouts are set using this API:
+<PRE>
+namespace omniORB {
+  void setClientCallTimeout(CORBA::ULong millisecs);
+  void setClientCallTimeout(CORBA::Object_ptr obj, CORBA::ULong millisecs);
+  void setClientThreadCallTimeout(CORBA::ULong millisecs);
+};
+</PRE>
+<TT>setClientCallTimeout()</TT> sets either the global timeout or the
+timeout for a specific object reference.
+<TT>setClientThreadCallTimeout()</TT> sets the timeout for the calling
+thread. The calling thread must have an <TT>omni_thread</TT> associated
+with it. Setting any timeout value to zero disables it.<BR>
+<BR>
+Accessing per-thread state is a relatively expensive operation, so per
+thread timeouts are disabled by default. The
+<TT>supportPerThreadTimeOut</TT> parameter must be set true to enable
+them.<BR>
+<BR>
+To choose the timeout value to use for a call, the ORB first looks to
+see if there is a timeout for the object reference, then to the
+calling thread, and finally to the global timeout.<BR>
+<BR>
 <A NAME="toc39"></A>
-<H2><A NAME="htoc93">8.4</A>&nbsp;&nbsp;Server side behaviour</H2>
+<H2><A NAME="htoc94">8.4</A>&nbsp;&nbsp;Server side behaviour</H2>
 The server side has two primary modes of operation: thread per
 connection and thread pooling. It is able to dynamically transition
 between the two modes, and it supports a hybrid scheme that behaves
@@ -113,7 +144,7 @@ mostly like thread pooling, but has the same fast turn-around for
 sequences of calls as thread per connection.<BR>
 <BR>
 
-<H3><A NAME="htoc94">8.4.1</A>&nbsp;&nbsp;Thread per connection mode</H3>
+<H3><A NAME="htoc95">8.4.1</A>&nbsp;&nbsp;Thread per connection mode</H3>
 In thread per connection mode (the default, and the only option in
 omniORB versions before 4.0), each connection has a single thread
 dedicated to it. The thread blocks waiting for a request. When it
@@ -141,7 +172,7 @@ behaviour of omniORB versions before 4.0, that did not support
 multiplexed calls.<BR>
 <BR>
 
-<H3><A NAME="htoc95">8.4.2</A>&nbsp;&nbsp;Thread pool mode</H3>
+<H3><A NAME="htoc96">8.4.2</A>&nbsp;&nbsp;Thread pool mode</H3>
 <A NAME="sec:watchConn"></A>
 In thread pool mode, selected by setting the
 <TT>threadPerConnectionPolicy</TT> parameter to zero, a single thread
@@ -171,7 +202,7 @@ parameter is set to zero, connection watching is disabled and threads
 return to the pool immediately after finishing a single request.<BR>
 <BR>
 
-<H3><A NAME="htoc96">8.4.3</A>&nbsp;&nbsp;Policy transition</H3>
+<H3><A NAME="htoc97">8.4.3</A>&nbsp;&nbsp;Policy transition</H3>
 If the server is dealing with a relatively small number of
 connections, it is most efficient to use thread per connection mode.
 If the number of connections becomes too large, however, operating
@@ -201,7 +232,7 @@ of 50 again). Once again, existing connections in thread pool mode
 stay in that mode until they are closed.<BR>
 <BR>
 <A NAME="toc40"></A>
-<H2><A NAME="htoc97">8.5</A>&nbsp;&nbsp;Idle connection shutdown</H2>
+<H2><A NAME="htoc98">8.5</A>&nbsp;&nbsp;Idle connection shutdown</H2>
 <A NAME="sec:connShutdown"></A>
 It is wasteful to leave a connection open when it has been left unused
 for a considerable time. Too many idle connections could block out new
@@ -222,7 +253,7 @@ parameters respectively. The values are in seconds, and must be a
 multiple of the scan granularity.<BR>
 <BR>
 
-<H3><A NAME="htoc98">8.5.1</A>&nbsp;&nbsp;Interoperability Considerations</H3>
+<H3><A NAME="htoc99">8.5.1</A>&nbsp;&nbsp;Interoperability Considerations</H3>
 The IIOP specification allows both the client and the server to
 shutdown a connection unilaterally. When one end is about to shutdown
 a connection, it should send a CloseConnection message to the other
@@ -247,7 +278,7 @@ in the application code and retry, or to turn off the idle connection
 shutdown inside the omniORB server.<BR>
 <BR>
 <A NAME="toc41"></A>
-<H2><A NAME="htoc99">8.6</A>&nbsp;&nbsp;Transports and endpoints</H2>
+<H2><A NAME="htoc100">8.6</A>&nbsp;&nbsp;Transports and endpoints</H2>
 omniORB can support multiple network transports. All platforms
 (usually) have a TCP transport available. Unix platforms support a
 Unix domain socket transport. Platforms with the OpenSSL library
@@ -299,7 +330,7 @@ filesystem. If the filename is left blank, the ORB chooses a name
 based on the process id and a timestamp.<BR>
 <BR>
 
-<H3><A NAME="htoc100">8.6.1</A>&nbsp;&nbsp;End point publishing</H3>
+<H3><A NAME="htoc101">8.6.1</A>&nbsp;&nbsp;End point publishing</H3>
 To publish an end point in IORs, without actually listening on that
 end point, the <TT>endPointNoListen</TT> parameter can be set. This can
 be useful in fault-tolerant applications where replicas of an object
@@ -324,7 +355,7 @@ causes all the machine's non-loopback interfaces to be published in
 IORs.<BR>
 <BR>
 <A NAME="toc42"></A>
-<H2><A NAME="htoc101">8.7</A>&nbsp;&nbsp;Connection selection and acceptance</H2>
+<H2><A NAME="htoc102">8.7</A>&nbsp;&nbsp;Connection selection and acceptance</H2>
 In the face of IORs containing details about multiple different end
 points, clients have to know how to choose the one to use to connect a
 server. Similarly, servers may wish to restrict which clients can
@@ -332,7 +363,7 @@ connect to particular transports. This is achieved with
 <I>transport rules</I>.<BR>
 <BR>
 
-<H3><A NAME="htoc102">8.7.1</A>&nbsp;&nbsp;Client transport rules</H3>
+<H3><A NAME="htoc103">8.7.1</A>&nbsp;&nbsp;Client transport rules</H3>
 <A NAME="sec:clientRule"></A>
 The <TT>clientTransportRule</TT> parameter is used to filter and
 prioritise the order in which transports specified in an IOR are
@@ -377,7 +408,7 @@ The action is one or more of the following:<BR>
 <TR><TD VALIGN=top ALIGN=left NOWRAP>5.</TD>
 <TD VALIGN=top ALIGN=left NOWRAP><TT>bidir</TT></TD>
 <TD VALIGN=top ALIGN=left>Any connection to this address should be used
- bidirectionally (see section&nbsp;<A HREF="#sec:bidir">8.878Bidirectional GIOPsection.8.8</A>)</TD>
+ bidirectionally (see section&nbsp;<A HREF="#sec:bidir">8.879Bidirectional GIOPsection.8.8</A>)</TD>
 </TR></TABLE><BR>
 The transport-selecting actions form a prioritised list, so
 an action of `<TT>unix,tcp,ssl</TT>' means to use a Unix transport if
@@ -408,7 +439,7 @@ permissible transports will it raise a <TT>TRANSIENT</TT> exception to
 indicate that the connect failed.<BR>
 <BR>
 
-<H3><A NAME="htoc103">8.7.2</A>&nbsp;&nbsp;Server transport rules</H3>
+<H3><A NAME="htoc104">8.7.2</A>&nbsp;&nbsp;Server transport rules</H3>
 <A NAME="sec:serverRule"></A>
 The server transport rules gave the same format as client transport
 rules. Rather than being used to select which of a set of ways to
@@ -428,7 +459,7 @@ client is not on the intranet:
                       = *                          ssl,bidir
 </PRE>
 <A NAME="toc43"></A>
-<H2><A NAME="htoc104">8.8</A>&nbsp;&nbsp;Bidirectional GIOP</H2>
+<H2><A NAME="htoc105">8.8</A>&nbsp;&nbsp;Bidirectional GIOP</H2>
 <A NAME="sec:bidir"></A>
 omniORB supports bidirectional GIOP, which allows callbacks to be made
 using a connection opened by the original client, rather than the
@@ -453,7 +484,7 @@ On the server side, these conditions must be met:
  been created with a <TT>BidirectionalPolicy</TT> value of
  <TT>BOTH</TT>.</UL>
 <A NAME="toc44"></A>
-<H2><A NAME="htoc105">8.9</A>&nbsp;&nbsp;SSL transport</H2>
+<H2><A NAME="htoc106">8.9</A>&nbsp;&nbsp;SSL transport</H2>
 omniORB 4.0 supports an SSL transport, using OpenSSL. It is only built
 if OpenSSL is available. On platforms using Autoconf, it is
 autodetected in many locations, or its location can be given with the

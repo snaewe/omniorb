@@ -4,7 +4,7 @@
 <HEAD>
 
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.06">
+<META name="GENERATOR" content="hevea 1.06+1 of 2002-11-06">
 <TITLE>
  omniORB configuration and API
 </TITLE>
@@ -258,11 +258,20 @@ server's address. See section&nbsp;<A HREF="omniORB008.html#sec:clientRule">8.7.
 <BR>
 Call timeout in milliseconds for the client side. If a call takes
 longer than the specified number of milliseconds, the ORB closes the
-connection and raises a <TT>COMM_FAILURE</TT> exception. A value
-of zero means no timeout; calls can block for ever.<BR>
+connection and raises a <TT>TRANSIENT</TT> exception. A value of zero
+means no timeout; calls can block for ever. See
+section&nbsp;<A HREF="omniORB008.html#sec:timeoutAPI">8.3.173Client side timeoutssubsection.8.3.1</A> for more information about timeouts.<BR>
 <BR>
 <B>Note</B>: omniORB 3 had timeouts specified in seconds; omniORB
 4.0 uses milliseconds for timeouts.<BR>
+<BR>
+<TT>supportPerThreadTimeOut</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If this parameter is set true, timeouts can be set on a per thread
+basis, as well as globally and per object. Checking per-thread storage
+has a noticeable performance impact, so it is turned off by default.<BR>
 <BR>
 <TT>outConScanPeriod</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>120</TT><BR>
@@ -270,7 +279,7 @@ of zero means no timeout; calls can block for ever.<BR>
 <BR>
 Idle timeout in seconds for outgoing (i.e. client initiated)
 connections. If a connection has been idle for this amount of time,
-the ORB closes it. See section&nbsp;<A HREF="omniORB008.html#sec:connShutdown">8.574Idle connection shutdownsection.8.5</A>.<BR>
+the ORB closes it. See section&nbsp;<A HREF="omniORB008.html#sec:connShutdown">8.575Idle connection shutdownsection.8.5</A>.<BR>
 <BR>
 <TT>maxGIOPConnectionPerServer</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>5</TT><BR>
@@ -304,7 +313,7 @@ single connection.<BR>
 If set true, the client will indicate to servers that it is willing to
 accept callbacks on client-initiated connections using bidirectional
 GIOP, provided the relevant POA policies are set. See
-section&nbsp;<A HREF="omniORB008.html#sec:bidir">8.878Bidirectional GIOPsection.8.8</A>.<BR>
+section&nbsp;<A HREF="omniORB008.html#sec:bidir">8.879Bidirectional GIOPsection.8.8</A>.<BR>
 <BR>
 <TT>diiThrowsSysExceptions</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>0</TT><BR>
@@ -395,7 +404,7 @@ timeout.<BR>
 <BR>
 Idle timeout in seconds for incoming. If a connection has been idle
 for this amount of time, the ORB closes it. See
-section&nbsp;<A HREF="omniORB008.html#sec:connShutdown">8.574Idle connection shutdownsection.8.5</A>.<BR>
+section&nbsp;<A HREF="omniORB008.html#sec:connShutdown">8.575Idle connection shutdownsection.8.5</A>.<BR>
 <BR>
 <TT>threadPerConnectionPolicy</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>1</TT><BR>
@@ -447,14 +456,14 @@ should start again.<BR>
 <BR>
 If true, threads from the pool temporarily behave a bit like thread
 per connection after dispatching a call. See
-section&nbsp;<A HREF="omniORB008.html#sec:watchConn">8.4.273Thread pool modesubsection.8.4.2</A> for details.<BR>
+section&nbsp;<A HREF="omniORB008.html#sec:watchConn">8.4.274Thread pool modesubsection.8.4.2</A> for details.<BR>
 <BR>
 <TT>acceptBiDirectionalGIOP</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>0</TT><BR>
 <BR>
 <BR>
 Determines whether a server will ever accept clients' offers of
-bidirectional GIOP connections. See section&nbsp;<A HREF="omniORB008.html#sec:bidir">8.878Bidirectional GIOPsection.8.8</A>.<BR>
+bidirectional GIOP connections. See section&nbsp;<A HREF="omniORB008.html#sec:bidir">8.879Bidirectional GIOPsection.8.8</A>.<BR>
 <BR>
 <TT>unixTransportDirectory</TT> &nbsp;&nbsp; <I>default</I> =
  <TT>/tmp/omni-%u</TT><BR>
@@ -670,17 +679,16 @@ own exception handler. The API to do so is summarised below:
 <PRE>
 namespace omniORB {
   
-typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
-                                                CORBA::ULong n_retries,
-                                                const CORBA::TRANSIENT&amp; ex);
+  typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
+                                                  CORBA::ULong n_retries,
+                                                  const CORBA::TRANSIENT&amp; ex);
 
-void installTransientExceptionHandler(void* cookie,
-                                      transientExceptionHandler_t fn);
+  void installTransientExceptionHandler(void* cookie,
+                                        transientExceptionHandler_t fn);
 
-void installTransientExceptionHandler(CORBA::Object_ptr obj,
-                                      void* cookie,
-                                      transientExceptionHandler_t fn);
-  
+  void installTransientExceptionHandler(CORBA::Object_ptr obj,
+                                        void* cookie,
+                                        transientExceptionHandler_t fn);
 }
 </PRE>
 The overloaded function <TT>installTransientExceptionHandler()</TT> can be
@@ -694,14 +702,14 @@ when it calls the exception handler.<BR>
 <BR>
 An exception handler will be called by proxy objects with three
 arguments. The <TT>cookie</TT> is the opaque pointer registered by
-<TT>installTransientExceptionHandler()</TT>. The argument <TT>n_retries</TT>
-is the number of times the proxy has called this handler for the same
-invocation. The argument <TT>ex</TT> is the value of the exception
-caught. The exception handler is expected to do whatever is
-appropriate and returns a boolean value. If the return value is
-TRUE(1), the proxy object retries the operation. If the return value
-is FALSE(0), the <TT>CORBA::TRANSIENT</TT> exception is propagated into
-the application code.<BR>
+<TT>installTransientExceptionHandler()</TT>. The argument
+<TT>n_retries</TT> is the number of times the proxy has called this
+handler for the same invocation. The argument <TT>ex</TT> is the value
+of the exception caught. The exception handler is expected to do
+whatever is appropriate and returns a boolean value. If the return
+value is TRUE(1), the proxy object retries the operation. If the
+return value is FALSE(0), the <TT>CORBA::TRANSIENT</TT> exception is
+propagated into the application code.<BR>
 <BR>
 The following sample code installs a simple exception handler for all
 objects and for a specific object:
@@ -767,7 +775,7 @@ The functions are equivalent to their counterparts for
 <BR>
 
 <H3><A NAME="htoc61">4.7.4</A>&nbsp;&nbsp;CORBA::SystemException</H3>
-If a system exception that is neither <TT>CORBA::TRANISENT</TT> nor
+If a system exception other than <TT>CORBA::TRANISENT</TT> or
 <TT>CORBA::COMM_FAILURE</TT> occurs, the default behaviour of the proxy
 objects is to propagate this exception to the application.
 Applications can override the default behaviour by installing their

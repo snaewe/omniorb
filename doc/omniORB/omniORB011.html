@@ -4,7 +4,7 @@
 <HEAD>
 
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.06">
+<META name="GENERATOR" content="hevea 1.06+1 of 2002-11-06">
 <TITLE>
  Type Any and TypeCode
 </TITLE>
@@ -15,7 +15,7 @@
 <A HREF="omniORB012.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1><A NAME="htoc113">Chapter&nbsp;11</A>&nbsp;&nbsp;Type Any and TypeCode</H1>
+<H1><A NAME="htoc114">Chapter&nbsp;11</A>&nbsp;&nbsp;Type Any and TypeCode</H1>
 <A NAME="chap:any"></A>
 The CORBA specification provides for a type that can hold the value of
 any OMG IDL type. This type is known as type Any. The OMG also
@@ -47,7 +47,7 @@ revert the Any extraction operators to the old semantics.</DL>
 <HR SIZE=2><BR>
 <BR>
 <A NAME="toc50"></A>
-<H2><A NAME="htoc114">11.1</A>&nbsp;&nbsp;Example using type Any</H2>
+<H2><A NAME="htoc115">11.1</A>&nbsp;&nbsp;Example using type Any</H2>
 Before going through this example, you should make sure that you have
 read and understood the examples in chapter&nbsp;<A HREF="omniORB002.html#chap:basic">25The Basicschapter.2</A>. The
 source code for this example is included in the omniORB distribution,
@@ -55,7 +55,7 @@ in the directory <TT>src/examples/anyExample</TT>. A listing of the
 source code is provided at the end of this chapter.<BR>
 <BR>
 
-<H3><A NAME="htoc115">11.1.1</A>&nbsp;&nbsp;Type Any in IDL</H3>
+<H3><A NAME="htoc116">11.1.1</A>&nbsp;&nbsp;Type Any in IDL</H3>
 Type Any allows one to delay the decision on the type used in an
 operation until run-time. To use type any in IDL, use the keyword
 <TT>any</TT>, as in the following example:
@@ -99,7 +99,7 @@ public:
 };
 </PRE>
 
-<H3><A NAME="htoc116">11.1.2</A>&nbsp;&nbsp;Inserting and Extracting Basic Types from an Any</H3>
+<H3><A NAME="htoc117">11.1.2</A>&nbsp;&nbsp;Inserting and Extracting Basic Types from an Any</H3>
 The question now arises as to how values are inserted into and removed
 from an Any. This is achieved using two overloaded operators:
 <TT>&lt;&lt;=</TT> and <TT>&gt;&gt;=</TT>.<BR>
@@ -154,7 +154,7 @@ else {
 }
 </PRE>
 
-<H3><A NAME="htoc117">11.1.3</A>&nbsp;&nbsp;Inserting and Extracting Constructed Types from an Any</H3>
+<H3><A NAME="htoc118">11.1.3</A>&nbsp;&nbsp;Inserting and Extracting Constructed Types from an Any</H3>
 It is also possible to insert and extract constructed types and object
 references from an Any. omniidl will generate insertion and extraction
 operators for the constructed type. Note that it is necessary to
@@ -234,7 +234,7 @@ bounded strings, booleans, chars, and octets. Please refer to the C++
 Mapping specification for further information.<BR>
 <BR>
 <A NAME="toc51"></A>
-<H2><A NAME="htoc118">11.2</A>&nbsp;&nbsp;Type Any in omniORB</H2>
+<H2><A NAME="htoc119">11.2</A>&nbsp;&nbsp;Type Any in omniORB</H2>
 <A NAME="anyOmniORB"></A>
 This section contains some notes on the use and behaviour of type Any
 in omniORB.<BR>
@@ -350,7 +350,7 @@ protect the Any with a mutex, as this condition should rarely arise,
 and adding a mutex would lead to performance penalties.<BR>
 <BR>
 <A NAME="toc52"></A>
-<H2><A NAME="htoc119">11.3</A>&nbsp;&nbsp;TypeCode in omniORB</H2>
+<H2><A NAME="htoc120">11.3</A>&nbsp;&nbsp;TypeCode in omniORB</H2>
 This section contains some notes on the use and behaviour of TypeCode
 in omniORB<BR>
 <BR>
@@ -424,9 +424,9 @@ changed to enforce strict equality. The pre-2.8.0 behaviour can be
 obtained with <TT>equivalent()</TT>.<BR>
 <BR>
 <A NAME="toc53"></A>
-<H2><A NAME="htoc120">11.4</A>&nbsp;&nbsp;Source Listing</H2>
+<H2><A NAME="htoc121">11.4</A>&nbsp;&nbsp;Source Listing</H2>
 
-<H3><A NAME="htoc121">11.4.1</A>&nbsp;&nbsp;anyExample_impl.cc</H3>
+<H3><A NAME="htoc122">11.4.1</A>&nbsp;&nbsp;anyExample_impl.cc</H3>
 <PRE>
 // anyExample_impl.cc - This is the source code of the example used in
 //                      Chapter 9 "Type Any and TypeCode" of the omniORB
@@ -536,7 +536,7 @@ int main(int argc, char** argv)
 }
 </PRE>
 
-<H3><A NAME="htoc122">11.4.2</A>&nbsp;&nbsp;anyExample_clt.cc</H3>
+<H3><A NAME="htoc123">11.4.2</A>&nbsp;&nbsp;anyExample_clt.cc</H3>
 <PRE>
 // anyExample_clt.cc -  This is the source code of the example used in 
 //                      Chapter 9 "Type Any and TypeCode" of the omniORB 

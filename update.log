@@ -1,3 +1,39 @@
+Tue Nov 26 14:35:53 GMT 2002 dgrisby
+====================================
+
+- Implement missing interceptors.
+
+include/omniORB4/omniInterceptors.h
+include/omniORB4/internal/GIOP_S.h
+include/omniORB4/internal/interceptors.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/interceptors.cc
+
+- Update manual for timeouts, interceptors.
+
+doc/omniORB.pdf
+doc/omniORB.ps
+doc/omniORB/index.html
+doc/omniORB/omniORB001.html
+doc/omniORB/omniORB002.html
+doc/omniORB/omniORB003.html
+doc/omniORB/omniORB004.html
+doc/omniORB/omniORB005.html
+doc/omniORB/omniORB006.html
+doc/omniORB/omniORB007.html
+doc/omniORB/omniORB008.html
+doc/omniORB/omniORB009.html
+doc/omniORB/omniORB010.html
+doc/omniORB/omniORB011.html
+doc/omniORB/omniORB012.html
+doc/tex/omniORB.tex
+
+
 Mon Nov 25 21:02:05 GMT 2002 dgrisby
 ====================================
 

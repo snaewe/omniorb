@@ -182,12 +182,21 @@ AT\&T Laboratories Cambridge\\
 
 \vfill
 \vfill
-August 2002
+November 2002
 \vfill
 
 \end{center}
 
 \clearpage
+
+{\Large \bf Changes and Additions, November 2002}
+\begin{itemize}
+\item Per thread timeouts.
+\item Implement missing interceptors.
+\item Minor fixes.
+\end{itemize}
+
+\vspace{\baselineskip}
 
 {\Large \bf Changes and Additions, June 2002}
 \begin{itemize}
@@ -2570,13 +2579,21 @@ server's address. See section~\ref{sec:clientRule} for details.
 
 Call timeout in milliseconds for the client side. If a call takes
 longer than the specified number of milliseconds, the ORB closes the
-connection and raises a \code{COMM\_\dsc{}FAILURE} exception. A value
-of zero means no timeout; calls can block for ever.
+connection and raises a \code{TRANSIENT} exception. A value of zero
+means no timeout; calls can block for ever. See
+section~\ref{sec:timeoutAPI} for more information about timeouts.
 
 \vspace{.5\baselineskip}
 
 \noindent\textbf{Note}: omniORB 3 had timeouts specified in seconds; omniORB
 4.0 uses milliseconds for timeouts.
+
+
+\confopt{supportPerThreadTimeOut}{0}
+
+If this parameter is set true, timeouts can be set on a per thread
+basis, as well as globally and per object. Checking per-thread storage
+has a noticeable performance impact, so it is turned off by default.
 
 
 \confopt{outConScanPeriod}{120}
@@ -2982,17 +2999,16 @@ own exception handler. The API to do so is summarised below:
 \begin{cxxlisting}
 namespace omniORB {
   
-typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
-                                                CORBA::ULong n_retries,
-                                                const CORBA::TRANSIENT& ex);
+  typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
+                                                  CORBA::ULong n_retries,
+                                                  const CORBA::TRANSIENT& ex);
 
-void installTransientExceptionHandler(void* cookie,
-                                      transientExceptionHandler_t fn);
+  void installTransientExceptionHandler(void* cookie,
+                                        transientExceptionHandler_t fn);
 
-void installTransientExceptionHandler(CORBA::Object_ptr obj,
-                                      void* cookie,
-                                      transientExceptionHandler_t fn);
-  
+  void installTransientExceptionHandler(CORBA::Object_ptr obj,
+                                        void* cookie,
+                                        transientExceptionHandler_t fn);
 }
 \end{cxxlisting}
 
@@ -3007,14 +3023,14 @@ when it calls the exception handler.
 
 An exception handler will be called by proxy objects with three
 arguments. The \code{cookie} is the opaque pointer registered by
-\op{installTransientExceptionHandler}. The argument \code{n\_retries}
-is the number of times the proxy has called this handler for the same
-invocation. The argument \code{ex} is the value of the exception
-caught.  The exception handler is expected to do whatever is
-appropriate and returns a boolean value. If the return value is
-TRUE(1), the proxy object retries the operation. If the return value
-is FALSE(0), the \code{CORBA::TRANSIENT} exception is propagated into
-the application code.
+\op{installTransientException\dsc{}Handler}. The argument
+\code{n\_retries} is the number of times the proxy has called this
+handler for the same invocation. The argument \code{ex} is the value
+of the exception caught.  The exception handler is expected to do
+whatever is appropriate and returns a boolean value. If the return
+value is TRUE(1), the proxy object retries the operation. If the
+return value is FALSE(0), the \code{CORBA::TRANSIENT} exception is
+propagated into the application code.
 
 The following sample code installs a simple exception handler for all
 objects and for a specific object:
@@ -3055,7 +3071,7 @@ void installhandlers()
 If the ORB has successfully contacted an object at some point, and
 access to it subsequently fails (and the condition for
 \code{TRANSIENT} described above does not occur), the ORB raises a
-\code{CORBA::COMM\_FAILURE} exception.
+\code{CORBA::COMM\_\dsc{}FAILURE} exception.
 
 The default behaviour of the proxy objects is to propagate this
 exception to the application. Applications can override the default
@@ -3086,7 +3102,7 @@ The functions are equivalent to their counterparts for
 
 \subsection{CORBA::SystemException}
 
-If a system exception that is neither \code{CORBA::TRANISENT} nor
+If a system exception other than \code{CORBA::TRANISENT} or
 \code{CORBA::COMM\_FAILURE} occurs, the default behaviour of the proxy
 objects is to propagate this exception to the application.
 Applications can override the default behaviour by installing their
@@ -4119,6 +4135,39 @@ single connection, so they serialise the calls. It is usually best to
 keep to the default mode of opening multiple connections.
 
 
+\subsection{Client side timeouts}
+\label{sec:timeoutAPI}
+
+omniORB can associate a timeout with a call, meaning that if the call
+takes too long a \code{TRANSIENT} exception is thrown. Timeouts can be
+set for the whole process, for a specific thread, or for a specific
+object reference.
+
+Timeouts are set using this API:
+
+\begin{cxxlisting}
+namespace omniORB {
+  void setClientCallTimeout(CORBA::ULong millisecs);
+  void setClientCallTimeout(CORBA::Object_ptr obj, CORBA::ULong millisecs);
+  void setClientThreadCallTimeout(CORBA::ULong millisecs);
+};
+\end{cxxlisting}
+
+\op{setClientCallTimeout} sets either the global timeout or the
+timeout for a specific object reference.
+\op{setClientThreadCallTimeout} sets the timeout for the calling
+thread. The calling thread must have an \code{omni\_thread} associated
+with it. Setting any timeout value to zero disables it.
+
+Accessing per-thread state is a relatively expensive operation, so per
+thread timeouts are disabled by default. The
+\code{supportPerThreadTimeOut} parameter must be set true to enable
+them.
+
+To choose the timeout value to use for a call, the ORB first looks to
+see if there is a timeout for the object reference, then to the
+calling thread, and finally to the global timeout.
+
 
 \section{Server side behaviour}
 
@@ -4727,13 +4776,7 @@ application can use it to insert service contexts in the header. See
 \item[clientReceiveReply]\mbox{}\\
 %
 Called as the client receives a reply, just after unmarshalling the
-reply header. *** NOT IMPLEMENTED YET!
-
-
-\item[clientReceiveException]\mbox{}\\
-%
-Called as the client receives an exception, just after unmarshalling
-the exception reply header. *** NOT IMPLEMENTED YET!
+reply header. Called for normal replies and exceptions.
 
 
 \item[serverReceiveRequest]\mbox{}\\
@@ -4745,14 +4788,12 @@ the request header. See the \op{getCodeSetServiceContext} function in
 
 \item[serverSendReply]\mbox{}\\
 %
-Called just before the server marshals a reply header. *** NOT
-IMPLEMENTED YET!
+Called just before the server marshals a reply header.
 
 
 \item[serverSendException]\mbox{}\\
 %
-Called just before the server marshals an exception reply header. ***
-NOT IMPLEMENTED YET!
+Called just before the server marshals an exception reply header.
 
 
 \item[createIdentity]\mbox{}\\

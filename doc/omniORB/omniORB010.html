@@ -4,7 +4,7 @@
 <HEAD>
 
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.06">
+<META name="GENERATOR" content="hevea 1.06+1 of 2002-11-06">
 <TITLE>
  Interceptors
 </TITLE>
@@ -15,7 +15,7 @@
 <A HREF="omniORB011.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1><A NAME="htoc110">Chapter&nbsp;10</A>&nbsp;&nbsp;Interceptors</H1>
+<H1><A NAME="htoc111">Chapter&nbsp;10</A>&nbsp;&nbsp;Interceptors</H1>
 <A NAME="chap:interceptors"></A>
 omniORB 4.0 supports interceptors that allow the application to insert
 processing in various points along the call chain, and in various
@@ -74,7 +74,7 @@ header files within <TT>include/omniORB4</TT> and
 <TT>include/omniORB4/internal</TT>.<BR>
 <BR>
 <A NAME="toc48"></A>
-<H2><A NAME="htoc111">10.1</A>&nbsp;&nbsp;Interceptor registration</H2>
+<H2><A NAME="htoc112">10.1</A>&nbsp;&nbsp;Interceptor registration</H2>
 All the interceptor singletons are registered within another singleton
 object of class <TT>omniInterceptors</TT>. You retrieve a pointer to
 that singleton with the <TT>omniORB::getInterceptors()</TT> function,
@@ -85,7 +85,7 @@ omniInterceptors* interceptors = omniORB::getInterceptors();
 interceptors-&gt;clientSendRequest.add(myInterceptorFunc);
 </PRE>
 <A NAME="toc49"></A>
-<H2><A NAME="htoc112">10.2</A>&nbsp;&nbsp;Available interceptors</H2>
+<H2><A NAME="htoc113">10.2</A>&nbsp;&nbsp;Available interceptors</H2>
 The following interceptors are available:
 <DL COMPACT=compact><DT><B>encodeIOR</B><DD><BR>
 Called when encoding an IOR to represent an object reference. This
@@ -111,11 +111,7 @@ application can use it to insert service contexts in the header. See
 <BR>
 <DT><B>clientReceiveReply</B><DD><BR>
 Called as the client receives a reply, just after unmarshalling the
-reply header. *** NOT IMPLEMENTED YET!<BR>
-<BR>
-<DT><B>clientReceiveException</B><DD><BR>
-Called as the client receives an exception, just after unmarshalling
-the exception reply header. *** NOT IMPLEMENTED YET!<BR>
+reply header. Called for normal replies and exceptions.<BR>
 <BR>
 <DT><B>serverReceiveRequest</B><DD><BR>
 Called when the server receives a request, just after unmarshalling
@@ -123,12 +119,10 @@ the request header. See the <TT>getCodeSetServiceContext()</TT> function in
 <TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example.<BR>
 <BR>
 <DT><B>serverSendReply</B><DD><BR>
-Called just before the server marshals a reply header. *** NOT
-IMPLEMENTED YET!<BR>
+Called just before the server marshals a reply header.<BR>
 <BR>
 <DT><B>serverSendException</B><DD><BR>
-Called just before the server marshals an exception reply header. ***
-NOT IMPLEMENTED YET!<BR>
+Called just before the server marshals an exception reply header.<BR>
 <BR>
 <DT><B>createIdentity</B><DD><BR>
 Called when the ORB is about to create an `identity' object to

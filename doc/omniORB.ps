@@ -12,7 +12,7 @@
 %DVIPSWebPage: (www.radicaleye.com)
 %DVIPSCommandLine: dvips omniORB
 %DVIPSParameters: dpi=600, compressed
-%DVIPSSource:  TeX output 2002.09.11:0010
+%DVIPSSource:  TeX output 2002.11.26:1359
 %%BeginProcSet: texc.pro
 %!
 /TeXDict 300 dict def TeXDict begin/N{def}def/B{bind def}N/S{exch}N/X{S
@@ -370,15 +370,19 @@ TeXDict begin
 %%EndSetup
 %%Page: 1 1
 1 0 bop Fv 538 597 a(The) 51 b(omniORB) i(versio) n(n) f(4.0) 1077
-853 y(User) 15 b('s) 51 b(Guide) p Fu 1306 1714 a(Duncan) 28
-b(Grisby) p Ft 1118 1863 a(\() p Fs(email:) h(dgri) r(sby@apas) r(pher)
-n(e) r(.com) p Ft(\)) p Fu 1296 2125 a(Apaspher) n(e) h(Ltd.) 1441
-2499 y(Sai-Lai) e(Lo) 1304 2760 y(David) g(Riddoch) 885
-3022 y(A) -9 b(T&T) 31 b(Laboratories) f(Cambridge) p
-Ft 1455 4557 a(August) 21 b(2002) p 90 rotate dyy eop
+853 y(User) 15 b('s) 51 b(Guide) p Fu 1306 1720 a(Duncan) 28
+b(Grisby) p Ft 1118 1869 a(\() p Fs(email:) h(dgri) r(sby@apas) r(pher)
+n(e) r(.com) p Ft(\)) p Fu 1296 2131 a(Apaspher) n(e) h(Ltd.) 1441
+2505 y(Sai-Lai) e(Lo) 1304 2766 y(David) g(Riddoch) 885
+3028 y(A) -9 b(T&T) 31 b(Laboratories) f(Cambridge) p
+Ft 1390 4575 a(November) 22 b(2002) p 90 rotate dyy eop
 %%Page: 2 2
-2 1 bop Fr 362 539 a(Changes) 31 b(and) e(Additions,) h(June) g(2002) p
-Fq 358 726 a(\017) p Ft 45 w(Updated) 21 b(to) h(omniORB) h(4.0.) p
+2 1 bop Fr 362 539 a(Changes) 31 b(and) e(Additions,) h(November) g
+(2002) p Fq 358 726 a(\017) p Ft 45 w(Per) 23 b(thr) n(ead) f(timeouts)
+n(.) p Fq 358 914 a(\017) p Ft 45 w(Implement) g(missing) h(inter) n
+(cept) n(ors.) p Fq 358 1101 a(\017) p Ft 45 w(Minor) g(\002xes.) p
+Fr 362 1402 a(Changes) 31 b(and) e(Additions,) h(June) g(2002) p
+Fq 358 1590 a(\017) p Ft 45 w(Updated) 21 b(to) h(omniORB) h(4.0.) p
 90 rotate dyy eop
 %%Page: 3 3
 3 2 bop Fp 63 1204 a(Contents) p Fo 63 1743 a(1) 91 b(Introduction) 2581
@@ -538,7 +542,7 @@ b(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h
 b(44) 358 3241 y(4.5) 96 b(Server) 21 b(side) h(options) 66
 b(.) 45 b(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g
 (.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
-(.) g(.) 84 b(46) 567 3356 y(4.5.1) 110 b(Main) 23 b(thr) n(ead) f
+(.) g(.) 84 b(47) 567 3356 y(4.5.1) 110 b(Main) 23 b(thr) n(ead) f
 (selection) 85 b(.) 45 b(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
 (.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) 84
 b(49) 358 3470 y(4.6) 96 b(GIOP) 23 b(and) f(inter) n(operability) h
@@ -593,108 +597,111 @@ b(59) p 90 rotate dyy eop
 %%Page: 5 5
 5 4 bop Ft 408 539 a(5.2.4) 110 b(Generating) 22 b(example) h
 (implementations) 50 b(.) 45 b(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
-(.) g(.) g(.) g(.) h(.) 84 b(59) 199 659 y(5.3) 96 b(Examples) 35
+(.) g(.) g(.) g(.) h(.) 84 b(59) 199 656 y(5.3) 96 b(Examples) 35
 b(.) 46 b(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f
 (.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g
 (.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84 b(59) p Fo
-63 876 a(6) 91 b(Interoperable) 24 b(Naming) e(Service) 1811
-b(61) p Ft 199 997 a(6.1) 96 b(Object) 23 b(URIs) 83
+63 868 a(6) 91 b(Interoperable) 24 b(Naming) e(Service) 1811
+b(61) p Ft 199 986 a(6.1) 96 b(Object) 23 b(URIs) 83
 b(.) 45 b(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g
 (.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h
-(.) f(.) g(.) g(.) g(.) h(.) 84 b(61) 408 1118 y(6.1.1) 110
+(.) f(.) g(.) g(.) g(.) h(.) 84 b(61) 408 1104 y(6.1.1) 110
 b(corbaloc) 72 b(.) 45 b(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g
 (.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g
-(.) h(.) f(.) g(.) g(.) g(.) h(.) 84 b(61) 408 1239 y(6.1.2) 110
+(.) h(.) f(.) g(.) g(.) g(.) h(.) 84 b(61) 408 1222 y(6.1.2) 110
 b(corbaname) 34 b(.) 45 b(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g
 (.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h
-(.) f(.) g(.) g(.) g(.) h(.) 84 b(62) 199 1360 y(6.2) 96
+(.) f(.) g(.) g(.) g(.) h(.) 84 b(62) 199 1340 y(6.2) 96
 b(Con\002guring) 22 b(r) n(esolve_initial) r(_r) n(efer) n(ences) 52
 b(.) 46 b(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
-(.) g(.) g(.) g(.) h(.) 84 b(63) 408 1481 y(6.2.1) 110
+(.) g(.) g(.) g(.) h(.) 84 b(63) 408 1458 y(6.2.1) 110
 b(ORBInitRef) 82 b(.) 46 b(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g
 (.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
-(.) g(.) g(.) g(.) h(.) 84 b(63) 408 1601 y(6.2.2) 110
+(.) g(.) g(.) g(.) h(.) 84 b(63) 408 1576 y(6.2.2) 110
 b(ORBDefaultInitRef) 55 b(.) 45 b(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.)
 f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g
-(.) h(.) 84 b(63) 199 1722 y(6.3) 96 b(omniNames) 71
+(.) h(.) 84 b(63) 199 1693 y(6.3) 96 b(omniNames) 71
 b(.) 45 b(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g
 (.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h
-(.) f(.) g(.) g(.) g(.) h(.) 84 b(64) 408 1843 y(6.3.1) 110
+(.) f(.) g(.) g(.) g(.) h(.) 84 b(64) 408 1811 y(6.3.1) 110
 b(NamingContextE) n(xt) 38 b(.) 45 b(.) h(.) f(.) g(.) g(.) g(.) g(.) h
 (.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g
-(.) g(.) h(.) 84 b(64) 408 1964 y(6.3.2) 110 b(Use) 22
+(.) g(.) h(.) 84 b(64) 408 1929 y(6.3.2) 110 b(Use) 22
 b(with) g(corbaname) 60 b(.) 46 b(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.)
 g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
-(.) 84 b(65) 199 2085 y(6.4) 96 b(omniMapper) 34 b(.) 45
+(.) 84 b(65) 199 2047 y(6.4) 96 b(omniMapper) 34 b(.) 45
 b(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g
 (.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g
-(.) g(.) g(.) h(.) 84 b(65) 199 2205 y(6.5) 96 b(Cr) n(eating) 23
+(.) g(.) g(.) h(.) 84 b(65) 199 2165 y(6.5) 96 b(Cr) n(eating) 23
 b(objects) f(with) h(simple) f(object) h(key) n(s) 48
 b(.) d(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g
-(.) g(.) h(.) 84 b(65) p Fo 63 2422 a(7) 91 b(Interfa) r(ce) 23
-b(T) -8 b(ype) 22 b(Checking) 2044 b(67) p Ft 199 2543
+(.) g(.) h(.) 84 b(65) p Fo 63 2377 a(7) 91 b(Interfa) r(ce) 23
+b(T) -8 b(ype) 22 b(Checking) 2044 b(67) p Ft 199 2495
 a(7.1) 96 b(Intr) n(oduction) 56 b(.) 45 b(.) g(.) g(.) g(.) h(.) f(.) g
 (.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
 (.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(67) 199 2664 y(7.2) 96 b(Interface) 22 b(Inheritance) 75
+b(67) 199 2613 y(7.2) 96 b(Interface) 22 b(Inheritance) 75
 b(.) 45 b(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g
 (.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
-(.) 84 b(68) p Fo 63 2881 a(8) 91 b(Conn) n(ecti) r(on) 21
-b(and) i(Thread) f(Management) 1515 b(71) p Ft 199 3002
+(.) 84 b(68) p Fo 63 2825 a(8) 91 b(Conn) n(ecti) r(on) 21
+b(and) i(Thread) f(Management) 1515 b(71) p Ft 199 2943
 a(8.1) 96 b(Backgr) n(ound) 73 b(.) 45 b(.) g(.) g(.) g(.) h(.) f(.) g
 (.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
 (.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(71) 199 3123 y(8.2) 96 b(The) 22 b(model) 65 b(.) 45
+b(71) 199 3060 y(8.2) 96 b(The) 22 b(model) 65 b(.) 45
 b(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g
 (.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
-(.) g(.) g(.) g(.) h(.) 84 b(72) 199 3244 y(8.3) 96 b(Client) 23
+(.) g(.) g(.) g(.) h(.) 84 b(72) 199 3178 y(8.3) 96 b(Client) 23
 b(side) f(behaviour) 42 b(.) j(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g
 (.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
-(.) g(.) g(.) g(.) h(.) 84 b(72) 199 3364 y(8.4) 96 b(Server) 22
+(.) g(.) g(.) g(.) h(.) 84 b(72) 408 3296 y(8.3.1) 110
+b(Client) 23 b(side) f(timeouts) 79 b(.) 46 b(.) f(.) g(.) g(.) g(.) g
+(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g
+(.) g(.) g(.) h(.) 84 b(73) 199 3414 y(8.4) 96 b(Server) 22
 b(side) g(behaviour) 27 b(.) 45 b(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.)
 g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
-(.) g(.) g(.) g(.) h(.) 84 b(73) 408 3485 y(8.4.1) 110
+(.) g(.) g(.) g(.) h(.) 84 b(73) 408 3532 y(8.4.1) 110
 b(Thr) n(ead) 22 b(per) g(connection) g(mode) 69 b(.) 45
 b(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g
-(.) g(.) g(.) h(.) 84 b(73) 408 3606 y(8.4.2) 110 b(Thr) n(ead) 22
+(.) g(.) g(.) h(.) 84 b(73) 408 3650 y(8.4.2) 110 b(Thr) n(ead) 22
 b(pool) g(mode) 75 b(.) 45 b(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.)
 g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
-(.) 84 b(73) 408 3727 y(8.4.3) 110 b(Policy) 23 b(transition) g(.) 45
+(.) 84 b(74) 408 3767 y(8.4.3) 110 b(Policy) 23 b(transition) g(.) 45
 b(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
 (.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(74) 199 3848 y(8.5) 96 b(Idle) 22 b(connection) g(shutdo) n(wn) 59
+b(74) 199 3885 y(8.5) 96 b(Idle) 22 b(connection) g(shutdo) n(wn) 59
 b(.) 45 b(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
 (.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(74) 408 3969 y(8.5.1) 110 b(Inter) n(op) n(erabili) r(ty) 22
+b(75) 408 4003 y(8.5.1) 110 b(Inter) n(op) n(erabili) r(ty) 22
 b(Considerations) 31 b(.) 46 b(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g
 (.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84 b(75) 199
-4089 y(8.6) 96 b(T) -8 b(ransport) n(s) 23 b(and) f(endpo) n(ints) 77
+4121 y(8.6) 96 b(T) -8 b(ransport) n(s) 23 b(and) f(endpo) n(ints) 77
 b(.) 45 b(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
 (.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(75) 408 4210 y(8.6.1) 110 b(End) 22 b(point) g(publishing) 29
+b(76) 408 4239 y(8.6.1) 110 b(End) 22 b(point) g(publishing) 29
 b(.) 46 b(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f
 (.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(76) 199 4331 y(8.7) 96 b(Connection) 22 b(selection) g(and) h
+b(77) 199 4357 y(8.7) 96 b(Connection) 22 b(selection) g(and) h
 (acceptance) 46 b(.) f(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g
-(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84 b(76) 408 4452
+(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84 b(77) 408 4475
 y(8.7.1) 110 b(Client) 23 b(transport) e(r) o(ules) 26
 b(.) 46 b(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f
 (.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(77) 408 4573 y(8.7.2) 110 b(Server) 22 b(transpo) n(rt) h(r) o(ules)
+b(77) 408 4592 y(8.7.2) 110 b(Server) 22 b(transpo) n(rt) h(r) o(ules)
 80 b(.) 45 b(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g
 (.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84 b(78) 199
-4693 y(8.8) 96 b(Bidir) n(ectional) 24 b(GIOP) 74 b(.) 46
+4710 y(8.8) 96 b(Bidir) n(ectional) 24 b(GIOP) 74 b(.) 46
 b(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g
 (.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(78) 199 4814 y(8.9) 96 b(SSL) 22 b(transpor) n(t) 86
+b(79) 199 4828 y(8.9) 96 b(SSL) 22 b(transpor) n(t) 86
 b(.) 45 b(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g
 (.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f
-(.) g(.) g(.) g(.) h(.) 84 b(79) p Fo 63 5031 a(9) 91
-b(Code) 22 b(set) i(conversion) 2228 b(81) p Ft 199 5152
+(.) g(.) g(.) g(.) h(.) 84 b(79) p Fo 63 5040 a(9) 91
+b(Code) 22 b(set) i(conversion) 2228 b(81) p Ft 199 5158
 a(9.1) 96 b(Native) 23 b(code) f(set) n(s) 43 b(.) i(.) g(.) h(.) f(.) g
 (.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h
 (.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) 84
-b(81) 199 5273 y(9.2) 96 b(Code) 22 b(set) f(lib) r(rary) 58
+b(81) 199 5276 y(9.2) 96 b(Code) 22 b(set) f(lib) r(rary) 58
 b(.) 45 b(.) g(.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g
 (.) h(.) f(.) g(.) g(.) g(.) h(.) f(.) g(.) g(.) g(.) g(.) h(.) f(.) g
 (.) g(.) g(.) h(.) 84 b(81) 199 5394 y(9.3) 96 b(Implementing) 22
@@ -3152,7 +3159,7 @@ h(object) g(r) n(efer) n(ence) f(URI,) f(as) i(de-) 63
 23 w(none) p Ft 63 1063 a(Specify) 38 b(the) g(default) h(URI) f(pr) n
 (e\002x) h(for) p Fg 39 w(res) n(olve) n(_init) n(ial_) n(refe) n
 (rence) n(s\(\)) p Ft(,) j(as) d(ex-) 63 1176 y(plained) 22
-b(in) h(chapter) g(6.) p Fg 63 1403 a(cli) n(entT) n(ransp) n(ortR) n
+b(in) h(chapter) g(6.) p Fg 63 1402 a(cli) n(entT) n(ransp) n(ortR) n
 (ule) p Fs 90 w(default) p Ft 24 w(=) p Fg 23 w(*) 54
 b(unix) n(,tcp) n(,ssl) p Ft 63 1587 a(Use) n(d) 35 b(to) f(spe) n
 (cify) h(the) f(way) h(the) e(cli) r(ent) g(contacts) h(a) i(serve) n
@@ -3160,594 +3167,602 @@ b(unix) n(,tcp) n(,ssl) p Ft 63 1587 a(Use) n(d) 35 b(to) f(spe) n
 b('s) 63 1700 y(addr) n(ess) n(.) 28 b(See) 22 b(section) f(8.7.1) j
 (for) e(details.) p Fg 63 1927 a(cli) n(entC) n(allTi) n(meOu) n(tPeri)
 n(od) p Fs 90 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(0) p
-Ft 63 2111 a(Call) j(timeout) d(in) h(mill) r(iseconds) f(for) g(the) h
-(client) g(side.) 28 b(If) 23 b(a) h(call) h(takes) d(longer) g(than) h
-(the) f(spec-) 63 2224 y(i\002ed) 30 b(number) g(of) g(mill) r
-(iseconds) n(,) i(the) e(ORB) g(closes) f(the) h(connection) g(and) g
-(raises) g(a) p Fg 31 w(COM) n(M_) 63 2337 y(FAI) n(LURE) p
-Ft 21 w(exception.) d(A) 22 b(value) i(of) e(zer) n(o) h(means) f(no) h
-(timeout;) e(call) r(s) h(can) h(block) g(for) g(ever) -7
-b(.) p Fo 63 2508 a(Note) p Ft(:) 37 b(omniORB) 27 b(3) g(had) h
-(timeout) n(s) f(speci\002ed) f(in) i(second) n(s;) h(omniORB) e(4.0) h
-(uses) e(milli) r(sec-) 63 2621 y(onds) 21 b(for) i(timeouts) n(.) p
-Fg 63 2847 a(out) n(ConS) n(canPe) n(riod) p Fs 89 w(defa) r(ult) p
-Ft 23 w(=) p Fg 22 w(120) p Ft 63 3032 a(Idle) g(timeout) f(in) i
-(seconds) e(for) i(outgo) n(ing) g(\(i.e.) f(cli) r(ent) f(initia) r
-(ted\)) h(connections.) 30 b(If) 23 b(a) h(connec-) 63
-3145 y(tion) e(has) h(been) f(idle) g(for) h(this) f(amount) h(of) f
-(time,) h(the) e(ORB) i(closes) f(it.) 28 b(See) 21 b(section) h(8.5.) p
-Fg 63 3372 a(max) n(GIOP) n(Conne) n(ctio) n(nPerS) n(erve) n(r) p
-Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(5) p Ft 63 3556
+Ft 63 2111 a(Call) h(timeout) d(in) i(mill) r(iseconds) d(for) j(the) e
+(client) i(side.) k(If) c(a) f(cal) r(l) g(takes) g(longer) f(than) h
+(the) g(spe) n(ci-) 63 2224 y(\002ed) 16 b(number) h(of) g(mill) r
+(iseconds) n(,) h(the) f(ORB) g(closes) f(the) h(connection) f(and) h
+(raises) g(a) p Fg 18 w(TRA) n(NSIEN) n(T) p Ft 63 2337
+a(except) n(ion.) 57 b(A) 32 b(value) h(of) f(zer) n(o) g(means) g(no) g
+(timeout;) k(call) r(s) c(can) h(block) f(for) g(ever) -7
+b(.) 57 b(See) 31 b(sec-) 63 2450 y(tion) 22 b(8.3.1) i(for) e(mor) n
+(e) h(information) g(about) f(timeouts.) p Fo 63 2620
+a(Note) p Ft(:) 37 b(omniORB) 27 b(3) g(had) h(timeout) n(s) f
+(speci\002ed) f(in) i(second) n(s;) h(omniORB) e(4.0) h(uses) e(milli) r
+(sec-) 63 2733 y(onds) 21 b(for) i(timeouts) n(.) p Fg
+63 2960 a(sup) n(port) n(PerTh) n(read) n(TimeO) n(ut) p
+Fs 90 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(0) p Ft 63
+3144 a(If) 29 b(this) g(parameter) f(is) i(set) e(tr) o(ue,) h
+(timeouts) f(can) i(be) f(set) f(on) h(a) h(per) e(thr) n(ead) h
+(basis,) i(as) e(well) g(as) 63 3257 y(globally) 21 b(and) g(per) f
+(object.) 27 b(Checking) 21 b(per) n(-thr) n(ead) f(sto) n(rage) h(has)
+g(a) g(noticeable) g(performance) 63 3370 y(impact,) i(so) f(it) h(is) f
+(turned) f(of) n(f) j(by) e(default.) p Fg 63 3597 a(out) n(ConS) n
+(canPe) n(riod) p Fs 89 w(defa) r(ult) p Ft 23 w(=) p
+Fg 22 w(120) p Ft 63 3781 a(Idle) h(timeout) f(in) i(seconds) e(for) i
+(outgo) n(ing) g(\(i.e.) f(cli) r(ent) f(initia) r(ted\)) h
+(connections.) 30 b(If) 23 b(a) h(connec-) 63 3894 y(tion) e(has) h
+(been) f(idle) g(for) h(this) f(amount) h(of) f(time,) h(the) e(ORB) i
+(closes) f(it.) 28 b(See) 21 b(section) h(8.5.) p Fg
+63 4121 a(max) n(GIOP) n(Conne) n(ctio) n(nPerS) n(erve) n(r) p
+Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(5) p Ft 63 4305
 a(The) 32 b(maxim) r(um) h(number) g(of) h(concurr) n(ent) f
 (connections) f(the) h(ORB) g(will) h(open) f(to) f(a) p
-Fs 34 w(single) p Ft 63 3669 a(server) -9 b(.) 37 b(If) 25
+Fs 34 w(single) p Ft 63 4418 a(server) -9 b(.) 37 b(If) 25
 b(multiple) h(thr) n(eads) f(on) g(the) f(cli) r(ent) g(cal) r(l) i
 (the) e(same) h(server) -7 b(,) 26 b(the) e(ORB) h(opens) f(addi-) 63
-3782 y(tional) e(connections) e(to) h(the) f(server) -7
+4531 y(tional) e(connections) e(to) h(the) f(server) -7
 b(,) 20 b(up) h(to) g(the) f(maxi) r(mum) h(speci\002ed) f(by) i(this) e
-(parameter) -7 b(.) 28 b(If) 63 3895 y(the) d(maximum) j(is) e(r) n
+(parameter) -7 b(.) 28 b(If) 63 4644 y(the) d(maximum) j(is) e(r) n
 (eached,) h(thr) n(eads) e(ar) n(e) i(blocked) f(until) g(a) h
-(connection) f(becomes) g(fr) n(ee) g(for) 63 4008 y(them) c(to) g
-(use.) p Fg 63 4235 a(one) n(Call) n(PerCo) n(nnec) n(tion) p
+(connection) f(becomes) g(fr) n(ee) g(for) 63 4757 y(them) c(to) g
+(use.) p Fg 63 4984 a(one) n(Call) n(PerCo) n(nnec) n(tion) p
 Fs 89 w(def) r(ault) p Ft 23 w(=) p Fg 23 w(1) p Ft 63
-4419 a(When) c(this) h(parameter) g(is) g(set) f(to) h(tr) o(ue) g
+5168 a(When) c(this) h(parameter) g(is) g(set) f(to) h(tr) o(ue) g
 (\(the) f(default\),) i(the) f(ORB) g(will) h(only) f(send) f(a) i
-(single) f(call) 63 4532 y(on) f(a) h(connection) f(at) h(a) g(time.) 26
+(single) f(call) 63 5281 y(on) f(a) h(connection) f(at) h(a) g(time.) 26
 b(If) 19 b(multiple) g(client) g(thr) n(eads) f(invoke) g(on) g(the) g
-(same) g(server) -7 b(,) 19 b(mul-) 63 4645 y(tiple) 29
+(same) g(server) -7 b(,) 19 b(mul-) 63 5394 y(tiple) 29
 b(connections) f(ar) n(e) i(open) n(ed,) g(up) f(to) g(the) f(limi) r
-(t) h(speci\002ed) f(by) p Fg 29 w(maxG) n(IOPCo) n(nnec) n(tion) 63
-4758 y(Per) n(Serv) n(er) p Ft(.) 35 b(W) -5 b(ith) 26
-b(this) f(parameter) f(set) g(to) h(false,) h(the) f(ORB) g(will) h
-(all) r(ow) e(concurr) n(ent) h(call) r(s) 63 4871 y(on) c(a) g(single)
-g(connection.) 27 b(This) 21 b(saves) g(connection) f(r) n(esour) n
-(ces,) g(but) h(r) n(equir) n(es) g(slightly) g(mor) n(e) 63
-4984 y(management) 28 b(work) g(for) h(both) g(client) h(and) f(server)
--7 b(.) 46 b(Some) 29 b(serve) n(r) n(-side) g(ORBs) g(\(including) 63
-5096 y(omniORB) 22 b(versions) g(befor) n(e) g(4.0\)) i(serialise) f
-(all) h(calls) g(on) e(a) h(single) f(connection.) p
-Fg 63 5323 a(off) n(erBi) n(Direc) n(tion) n(alGIO) n(P) p
-Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(0) p 90 rotate
-dyy eop
+(t) h(speci\002ed) f(by) p Fg 29 w(maxG) n(IOPCo) n(nnec) n(tion) p
+90 rotate dyy eop
 %%Page: 46 52
 46 51 bop Ft 221 282 a(46) p Fh 936 w(CHAPTER) 22 b(4.) 51
 b(OMNIORB) 22 b(CONFIGURA) -7 b(TION) 21 b(AND) i(API) p
-Ft 221 539 a(If) h(set) e(tr) o(ue,) h(the) g(client) h(will) h
-(indicate) f(to) f(server) n(s) h(that) f(it) h(is) f(will) r(ing) g
-(to) g(accept) h(call) r(backs) f(on) 221 652 y(client-ini) r(tiated) 28
+Fg 221 539 a(PerS) n(erver) p Ft -2 w(.) 36 b(W) -5 b(ith) 25
+b(this) g(parameter) g(set) f(to) h(false,) h(the) e(ORB) h(will) i
+(allow) f(concurr) n(ent) f(calls) 221 652 y(on) c(a) h(single) f
+(connection.) 26 b(This) 21 b(saves) g(connection) g(r) n(esour) l
+(ces,) h(but) f(r) n(equir) n(es) f(slightly) h(mor) n(e) 221
+764 y(management) 29 b(work) f(for) h(both) g(client) g(and) g(server)
+-7 b(.) 47 b(Some) 28 b(server) n(-side) g(ORBs) g(\(incl) r(uding) 221
+877 y(omniORB) 23 b(versions) f(befor) n(e) g(4.0\)) h(serialise) g
+(all) h(call) r(s) e(on) g(a) i(single) e(connection.) p
+Fg 221 1108 a(offe) n(rBiDi) n(rect) n(iona) n(lGIOP) p
+Fs 89 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(0) p Ft 221
+1297 a(If) i(set) e(tr) o(ue,) h(the) g(client) h(will) h(indicate) f
+(to) f(server) n(s) h(that) f(it) h(is) f(will) r(ing) g(to) g(accept) h
+(call) r(backs) f(on) 221 1410 y(client-ini) r(tiated) 28
 b(connections) h(using) g(bidir) n(ectional) i(GIOP) -12
 b(,) 30 b(pr) n(ovided) e(the) h(r) n(elevant) h(POA) 221
-764 y(policies) 23 b(ar) n(e) g(set.) k(See) 21 b(section) h(8.8.) p
-Fg 221 1000 a(diiT) n(hrows) n(SysE) n(xcep) n(tions) p
+1523 y(policies) 23 b(ar) n(e) g(set.) k(See) 21 b(section) h(8.8.) p
+Fg 221 1754 a(diiT) n(hrows) n(SysE) n(xcep) n(tions) p
 Fs 89 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(0) p Ft 221
-1193 a(If) c(this) g(is) g(tr) o(ue,) g(DII) g(functions) g(thr) n(ow) f
+1942 a(If) c(this) g(is) g(tr) o(ue,) g(DII) g(functions) g(thr) n(ow) f
 (syst) n(em) h(exceptions;) g(if) h(it) f(is) g(fal) r(se,) f(syste) n
-(m) i(except) n(ions) 221 1306 y(that) k(occur) f(ar) n(e) h(passed) e
+(m) i(except) n(ions) 221 2055 y(that) k(occur) f(ar) n(e) h(passed) e
 (thr) n(ough) h(the) p Fg 22 w(Env) n(iron) n(ment) p
-Ft 21 w(object.) p Fg 221 1542 a(veri) n(fyObj) n(ectE) n(xist) n
+Ft 21 w(object.) p Fg 221 2286 a(veri) n(fyObj) n(ectE) n(xist) n
 (sAndT) n(ype) p Fs 90 w(default) p Ft 24 w(=) p Fg 23
-w(1) p Ft 221 1735 a(By) j(default,) g(omniORB) h(uses) e(the) g(GIOP) p
+w(1) p Ft 221 2474 a(By) j(default,) g(omniORB) h(uses) e(the) g(GIOP) p
 Fg 26 w(LOCA) n(TE_RE) n(QUES) n(T) p Ft 25 w(message) g(to) h(verify) h
-(the) e(ex-) 221 1847 y(istence) 31 b(of) g(an) h(object) g(prior) f
+(the) e(ex-) 221 2587 y(istence) 31 b(of) g(an) h(object) g(prior) f
 (to) g(the) f(\002rst) h(invocation.) 55 b(In) 31 b(the) g(case) h
-(that) f(the) f(full) j(type) d(of) 221 1960 y(the) h(object) g(is) g
+(that) f(the) f(full) j(type) d(of) 221 2700 y(the) h(object) g(is) g
 (not) g(known,) h(it) f(instead) g(call) r(s) g(the) p
 Fg 30 w(_is_) n(a\(\)) p Ft 30 w(operation) f(to) h(check) g(the) g
-(ob-) 221 2073 y(ject's) 25 b(type) n(.) 36 b(Some) 25
+(ob-) 221 2813 y(ject's) 25 b(type) n(.) 36 b(Some) 25
 b(ORBs) f(have) i(bugs) e(that) h(mean) h(one) e(or) h(other) f(of) h
-(these) f(operations) g(fail.) 221 2186 y(Setting) d(this) i(parameter)
+(these) f(operations) g(fail.) 221 2926 y(Setting) d(this) i(parameter)
 f(false) h(pr) n(events) e(omniORB) i(fr) n(om) g(making) g(thes) n(e) g
-(calls.) p Fg 221 2422 a(giop) n(Targe) n(tAdd) n(ress) n(Mode) p
-Fs 90 w(default) p Ft 24 w(=) p Fg 23 w(0) p Ft 221 2615
+(calls.) p Fg 221 3157 a(giop) n(Targe) n(tAdd) n(ress) n(Mode) p
+Fs 90 w(default) p Ft 24 w(=) p Fg 23 w(0) p Ft 221 3345
 a(GIOP) j(1.2) f(support) n(s) g(thr) n(ee) f(addr) n(essing) g(modes) f
 (for) i(contacting) g(objects.) 35 b(This) 25 b(parameter) 221
-2728 y(selects) 34 b(the) h(mode) g(that) g(omniORB) g(uses.) 65
+3458 y(selects) 34 b(the) h(mode) g(that) g(omniORB) g(uses.) 65
 b(A) 36 b(value) g(of) f(0) h(means) p Fg 36 w(GIO) n(P::K) n(eyAdd) n
-(r) p Ft(;) 41 b(1) 221 2841 y(means) p Fg 23 w(GIO) n(P::P) n(rofil) n
+(r) p Ft(;) 41 b(1) 221 3571 y(means) p Fg 23 w(GIO) n(P::P) n(rofil) n
 (eAdd) n(r) p Ft(;) 22 b(2) i(means) p Fg 22 w(GIOP) n(::Re) n(feren) n
-(ceAd) n(dr) p Ft(.) p Fg 221 3076 a(boot) n(strap) n(Agen) n(tHos) n
+(ceAd) n(dr) p Ft(.) p Fg 221 3802 a(boot) n(strap) n(Agen) n(tHos) n
 (tname) p Fs 89 w(defa) r(ult) p Ft 22 w(=) p Fc 23 w(none) p
-Ft 221 3269 a(If) e(set,) f(this) g(parameter) h(indicates) g(the) f
+Ft 221 3990 a(If) e(set,) f(this) g(parameter) h(indicates) g(the) f
 (host) n(name) i(to) e(use) g(for) h(look-ups) e(using) i(the) f
-(obsolet) n(e) 221 3382 y(Sun) k(bootstrap) g(agent.) 36
+(obsolet) n(e) 221 4103 y(Sun) k(bootstrap) g(agent.) 36
 b(This) 25 b(mechanism) i(is) f(supe) n(rsede) n(d) g(by) f(the) g
-(inter) n(operable) g(naming) 221 3495 y(service.) p
-Fg 221 3731 a(boot) n(strap) n(Agen) n(tPor) n(t) p Fs
-91 w(default) p Ft 24 w(=) p Fg 23 w(900) p Ft 221 3924
+(inter) n(operable) g(naming) 221 4216 y(service.) p
+Fg 221 4447 a(boot) n(strap) n(Agen) n(tPor) n(t) p Fs
+91 w(default) p Ft 24 w(=) p Fg 23 w(900) p Ft 221 4636
 a(The) d(port) g(number) g(for) h(the) e(obsolete) g(Sun) i(boots) n
-(trap) g(agent.) p Fg 221 4159 a(prin) n(cipal) p Fs
-89 w(default) p Ft 24 w(=) p Fc 23 w(none) p Ft 221 4352
+(trap) g(agent.) p Fg 221 4867 a(prin) n(cipal) p Fs
+89 w(default) p Ft 24 w(=) p Fc 23 w(none) p Ft 221 5055
 a(GIOP) 33 b(1.0) g(and) f(1.1) h(have) g(a) g(r) n(eques) n(t) f
 (header) g(\002eld) g(named) g(`principal') r(,) i(which) f(contains)
-221 4465 y(a) i(sequence) e(of) i(octets) n(.) 65 b(It) 34
+221 5168 y(a) i(sequence) e(of) i(octets) n(.) 65 b(It) 34
 b(was) g(never) g(de\002ned) f(what) i(it) g(should) e(mean,) 38
-b(and) d(its) f(use) g(is) 221 4578 y(now) 27 b(depr) n(e) n(cated;) i
+b(and) d(its) f(use) g(is) 221 5281 y(now) 27 b(depr) n(e) n(cated;) i
 (GIOP) f(1.2) g(has) f(no) g(such) g(\002eld.) 42 b(Some) 26
 b(syst) n(ems) h(\(e.g.) f(Gnome\)) i(use) e(the) 221
-4691 y(principal) h(\002eld) f(as) g(a) h(primitive) f(authentication) g
-(scheme.) 37 b(This) 26 b(parameter) f(sets) g(the) g(data) 221
-4804 y(omniORB) e(uses) e(in) i(the) f(principal) i(\002eld.) j(The) 22
-b(default) h(is) f(an) i(empty) d(seque) n(nce.) p Fr
-221 5163 a(4.5) 119 b(Server) 29 b(side) h(options) p
-Ft 221 5394 a(These) 21 b(parameters) h(af) n(fect) h(server) n(-side) f
-(ope) n(rations.) p 90 rotate dyy eop
+5394 y(principal) h(\002eld) f(as) g(a) h(primitive) f(authentication) g
+(scheme.) 37 b(This) 26 b(parameter) f(sets) g(the) g(data) p
+90 rotate dyy eop
 %%Page: 47 53
 47 52 bop Fh 63 282 a(4.5.) 51 b(SER) -5 b(VE) n(R) 23
-b(SIDE) f(OPTIONS) p Ft 2012 w(47) p Fg 63 539 a(end) n(Poin) n(t) p
-Fs 582 w(default) p Ft 24 w(=) p Fg 23 w(giop) n(:tcp) n(::) 63
-652 y(end) n(Poin) n(tNoLi) n(sten) 63 764 y(end) n(Poin) n(tNoPu) n
-(blis) n(h) 63 877 y(end) n(Poin) n(tPubl) n(ishA) n(llIFs) p
-Ft 63 1112 a(Thes) n(e) j(options) f(det) n(ermine) h(the) f
-(end-points) f(the) h(ORB) h(should) f(listen) h(on,) g(and) g(the) f
-(details) 63 1225 y(that) e(should) g(be) g(published) g(in) h(IORs.) k
-(See) 22 b(chapter) g(8) h(for) g(details.) p Fg 63 1455
-a(ser) n(verT) n(ransp) n(ortR) n(ule) p Fs 90 w(default) p
-Ft 24 w(=) p Fg 23 w(*) 54 b(unix) n(,tcp) n(,ssl) p
-Ft 63 1643 a(Con\002gur) n(e) 22 b(the) g(r) o(ules) g(about) h(whethe)
-n(r) g(a) h(server) d(should) h(acc) r(ept) f(an) j(incoming) f
-(connection) 63 1756 y(fr) n(om) g(a) g(client.) 28 b(See) 22
-b(section) g(8.7.2) h(for) g(det) n(ail) r(s.) p Fg 63
-1986 a(ser) n(verC) n(allTi) n(meOu) n(tPeri) n(od) p
-Fs 90 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(0) p Ft 63
-2174 a(This) d(timeout) g(is) h(used) e(to) i(catch) g(the) f
-(situation) h(that) f(the) g(server) g(starts) g(r) n(eceiving) h(a) g
-(r) n(equest,) 63 2287 y(but) 29 b(the) f(end) g(of) h(the) g(r) n
+b(SIDE) f(OPTIONS) p Ft 2012 w(47) 63 539 y(omniORB) g(uses) g(in) h
+(the) e(principal) j(\002eld.) k(The) 22 b(default) g(is) h(an) g
+(empty) e(sequence.) p Fr 63 893 a(4.5) 119 b(Server) 29
+b(side) g(options) p Ft 63 1123 a(Thes) n(e) 23 b(parameters) e(af) n
+(f) r(ect) h(server) n(-side) f(operations.) p Fg 63
+1358 a(end) n(Poin) n(t) p Fs 582 w(default) p Ft 24
+w(=) p Fg 23 w(giop) n(:tcp) n(::) 63 1471 y(end) n(Poin) n(tNoLi) n
+(sten) 63 1584 y(end) n(Poin) n(tNoPu) n(blis) n(h) 63
+1697 y(end) n(Poin) n(tPubl) n(ishA) n(llIFs) p Ft 63
+1936 a(Thes) n(e) k(options) f(det) n(ermine) h(the) f(end-points) f
+(the) h(ORB) h(should) f(listen) h(on,) g(and) g(the) f(details) 63
+2049 y(that) e(should) g(be) g(published) g(in) h(IORs.) k(See) 22
+b(chapter) g(8) h(for) g(details.) p Fg 63 2284 a(ser) n(verT) n(ransp)
+n(ortR) n(ule) p Fs 90 w(default) p Ft 24 w(=) p Fg 23
+w(*) 54 b(unix) n(,tcp) n(,ssl) p Ft 63 2476 a(Con\002gur) n(e) 22
+b(the) g(r) o(ules) g(about) h(whethe) n(r) g(a) h(server) d(should) h
+(acc) r(ept) f(an) j(incoming) f(connection) 63 2589
+y(fr) n(om) g(a) g(client.) 28 b(See) 22 b(section) g(8.7.2) h(for) g
+(det) n(ail) r(s.) p Fg 63 2824 a(ser) n(verC) n(allTi) n(meOu) n
+(tPeri) n(od) p Fs 90 w(defa) r(ult) p Ft 22 w(=) p Fg
+23 w(0) p Ft 63 3016 a(This) d(timeout) g(is) h(used) e(to) i(catch) g
+(the) f(situation) h(that) f(the) g(server) g(starts) g(r) n(eceiving) h
+(a) g(r) n(equest,) 63 3129 y(but) 29 b(the) f(end) g(of) h(the) g(r) n
 (eques) n(t) g(never) g(comes.) 47 b(If) 29 b(a) h(calls) g(takes) e
-(longer) g(than) h(the) g(speci\002ed) 63 2400 y(number) f(of) g(milli)
+(longer) g(than) h(the) g(speci\002ed) 63 3242 y(number) f(of) g(milli)
 r(second) n(s) g(to) g(arrive,) i(the) d(ORB) h(shuts) f(the) g
 (connection.) 44 b(A) 28 b(value) g(of) h(zer) n(o) 63
-2513 y(means) 22 b(never) g(timeout.) p Fg 63 2743 a(inC) n(onSc) n
+3355 y(means) 22 b(never) g(timeout.) p Fg 63 3590 a(inC) n(onSc) n
 (anPer) n(iod) p Fs 90 w(default) p Ft 24 w(=) p Fg 23
-w(180) p Ft 63 2931 a(Idle) e(timeout) g(in) i(second) n(s) f(for) g
+w(180) p Ft 63 3782 a(Idle) e(timeout) g(in) i(second) n(s) f(for) g
 (incoming.) 28 b(If) 21 b(a) g(connection) g(has) g(been) f(idle) h
-(for) g(this) g(amount) 63 3044 y(of) h(time,) h(the) e(ORB) i(closes) f
-(it.) 28 b(See) 21 b(section) h(8.5.) p Fg 63 3274 a(thr) n(eadP) n
+(for) g(this) g(amount) 63 3895 y(of) h(time,) h(the) e(ORB) i(closes) f
+(it.) 28 b(See) 21 b(section) h(8.5.) p Fg 63 4130 a(thr) n(eadP) n
 (erCon) n(nect) n(ionPo) n(licy) p Fs 89 w(defa) r(ult) p
-Ft 22 w(=) p Fg 23 w(1) p Ft 63 3462 a(If) e(tr) o(ue) g(\(the) g
+Ft 22 w(=) p Fg 23 w(1) p Ft 63 4322 a(If) e(tr) o(ue) g(\(the) g
 (default\),) h(the) f(ORB) g(dedicates) g(one) g(serve) n(r) h(thr) n
-(ead) f(to) g(each) h(incoming) g(connec-) 63 3575 y(tion.) 27
+(ead) f(to) g(each) h(incoming) g(connec-) 63 4435 y(tion.) 27
 b(Setting) 21 b(it) i(false) g(means) g(the) e(server) h(should) g(use)
-f(a) i(thr) n(ead) g(poo) n(l.) p Fg 63 3805 a(max) n(Serv) n(erThr) n
+f(a) i(thr) n(ead) g(poo) n(l.) p Fg 63 4670 a(max) n(Serv) n(erThr) n
 (eadP) n(erCon) n(nect) n(ion) p Fs 90 w(default) p Ft
-24 w(=) p Fg 23 w(100) p Ft 63 3993 a(If) h(the) g(client) h
+24 w(=) p Fg 23 w(100) p Ft 63 4863 a(If) h(the) g(client) h
 (multiplexes) f(several) g(concurr) n(ent) g(r) n(equest) n(s) g(on) h
-(a) g(single) f(connection,) g(omni-) 63 4106 y(ORB) 31
+(a) g(single) f(connection,) g(omni-) 63 4976 y(ORB) 31
 b(uses) e(extra) i(thr) n(eads) f(to) h(service) g(them.) 53
 b(This) 31 b(parameter) g(spe) n(ci\002es) h(the) e(maximum) 63
-4219 y(number) 22 b(of) h(thr) n(eads) e(that) i(ar) n(e) g(allowed) f
+5088 y(number) 22 b(of) h(thr) n(eads) e(that) i(ar) n(e) g(allowed) f
 (to) g(service) h(a) g(single) f(connection) g(at) h(any) g(one) f
-(time.) p Fg 63 4449 a(max) n(Serv) n(erThr) n(eadP) n(oolSi) n(ze) p
-Fs 90 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(100) p Ft
-63 4637 a(The) 27 b(maximum) i(number) f(of) g(thr) n(eads) f(the) g
-(server) g(will) i(all) r(ocate) e(to) h(do) f(various) h(tasks,) g
-(in-) 63 4750 y(cluding) e(dispatching) f(call) r(s) g(in) h(the) f
-(thr) n(ead) g(pool) g(mode.) 36 b(This) 26 b(number) f(does) f(not) h
-(incl) r(ude) 63 4863 y(thr) n(eads) c(dispatched) h(unde) n(r) h(the) f
-(thr) n(ead) g(per) g(connection) g(server) f(mode.) p
-Fg 63 5093 a(thr) n(eadP) n(erCon) n(nect) n(ionUp) n(perL) n(imit) p
-Fs 89 w(defa) r(ult) p Ft 23 w(=) p Fg 22 w(10000) p
-Ft 63 5281 a(If) k(the) p Fg 24 w(threa) n(dPer) n(Conn) n(ectio) n
-(nPol) n(icy) p Ft 24 w(parameter) g(is) g(tr) o(ue,) g(the) g(ORB) g
-(can) h(automati-) 63 5394 y(cally) 19 b(transition) e(to) g(thr) n
-(ead) g(pool) g(mode) g(if) h(too) e(many) i(connections) f(arrive.) 27
-b(This) 17 b(parameter) p 90 rotate dyy eop
+(time.) p Fg 63 5323 a(max) n(Serv) n(erThr) n(eadP) n(oolSi) n(ze) p
+Fs 90 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(100) p 90 rotate
+dyy eop
 %%Page: 48 54
 48 53 bop Ft 221 282 a(48) p Fh 936 w(CHAPTER) 22 b(4.) 51
 b(OMNIORB) 22 b(CONFIGURA) -7 b(TION) 21 b(AND) i(API) p
-Ft 221 539 a(sets) i(the) h(number) g(of) h(connections) e(at) i(which)
-g(thr) n(ead) f(pooling) g(is) g(started) n(.) 40 b(The) 26
-b(default) g(of) 221 652 y(100) r(00) d(is) g(design) n(ed) f(to) g
-(mean) h(that) g(it) f(never) g(happens.) p Fg 221 885
-a(thre) n(adPer) n(Conn) n(ecti) n(onLow) n(erLi) n(mit) p
-Fs 90 w(default) p Ft 24 w(=) p Fg 23 w(9000) p Ft 221
-1076 a(If) 35 b(thr) n(ead) g(pooling) f(was) h(started) f(because) h
-(the) f(number) h(of) g(connections) f(hit) h(the) f(upper) 221
-1189 y(limi) r(t,) 22 b(this) g(parameter) g(dete) n(rmines) h(when) f
-(thr) n(ead) g(per) g(connection) g(should) f(start) h(again.) p
-Fg 221 1422 a(thre) n(adPoo) n(lWat) n(chCo) n(nnect) n(ion) p
-Fs 90 w(default) p Ft 24 w(=) p Fg 23 w(1) p Ft 221 1613
-a(If) k(tr) o(ue,) g(thr) n(eads) g(fr) n(om) g(the) g(pool) g(tempo) n
-(rarily) h(behave) g(a) g(bit) f(like) h(thr) n(ead) e(per) h
-(connection) 221 1726 y(after) d(dispatching) f(a) h(call) r(.) 28
+Ft 221 539 a(The) k(maxim) r(um) h(number) g(of) g(thr) n(eads) f(the) g
+(server) f(will) k(alloca) r(te) d(to) g(do) g(various) h(tasks,) g
+(in-) 221 652 y(cluding) e(dispatching) f(cal) r(ls) g(in) i(the) d
+(thr) n(ead) i(poo) n(l) h(mode.) 36 b(This) 25 b(number) h(does) e
+(not) h(include) 221 764 y(thr) n(eads) d(dispatched) f(under) h(the) f
+(thr) n(ead) h(per) g(connection) g(server) g(mode.) p
+Fg 221 990 a(thre) n(adPer) n(Conn) n(ecti) n(onUpp) n(erLi) n(mit) p
+Fs 90 w(default) p Ft 24 w(=) p Fg 23 w(1000) n(0) p
+Ft 221 1174 a(If) j(the) p Fg 25 w(thr) n(eadPe) n(rCon) n(necti) n
+(onPo) n(licy) p Ft 24 w(parameter) g(is) g(tr) o(ue,) g(the) f(ORB) h
+(can) h(automati-) 221 1287 y(call) r(y) 17 b(transition) g(to) g(thr) n
+(ead) g(pool) g(mode) g(if) h(too) f(many) h(connections) e(arriv) r
+(e.) 25 b(This) 18 b(parameter) 221 1400 y(sets) 25 b(the) h(number) g
+(of) h(connections) e(at) i(which) g(thr) n(ead) f(pooling) g(is) g
+(started) n(.) 40 b(The) 26 b(default) g(of) 221 1512
+y(100) r(00) d(is) g(design) n(ed) f(to) g(mean) h(that) g(it) f(never)
+g(happens.) p Fg 221 1738 a(thre) n(adPer) n(Conn) n(ecti) n(onLow) n
+(erLi) n(mit) p Fs 90 w(default) p Ft 24 w(=) p Fg 23
+w(9000) p Ft 221 1922 a(If) 35 b(thr) n(ead) g(pooling) f(was) h
+(started) f(because) h(the) f(number) h(of) g(connections) f(hit) h
+(the) f(upper) 221 2035 y(limi) r(t,) 22 b(this) g(parameter) g(dete) n
+(rmines) h(when) f(thr) n(ead) g(per) g(connection) g(should) f(start) h
+(again.) p Fg 221 2261 a(thre) n(adPoo) n(lWat) n(chCo) n(nnect) n(ion)
+p Fs 90 w(default) p Ft 24 w(=) p Fg 23 w(1) p Ft 221
+2444 a(If) k(tr) o(ue,) g(thr) n(eads) g(fr) n(om) g(the) g(pool) g
+(tempo) n(rarily) h(behave) g(a) g(bit) f(like) h(thr) n(ead) e(per) h
+(connection) 221 2557 y(after) d(dispatching) f(a) h(call) r(.) 28
 b(See) 21 b(section) h(8.4.2) i(for) e(details.) p Fg
-221 1960 a(acce) n(ptBiD) n(irec) n(tion) n(alGIO) n(P) p
-Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(0) p Ft 221 2150
+221 2783 a(acce) n(ptBiD) n(irec) n(tion) n(alGIO) n(P) p
+Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(0) p Ft 221 2966
 a(Determines) j(whethe) n(r) i(a) f(server) f(will) j(ever) d(acc) r
 (ept) g(clients') h(of) n(fers) g(of) g(bidir) n(ectional) i(GIOP) 221
-2263 y(connections.) f(See) 22 b(section) f(8.8.) p Fg
-221 2497 a(unix) n(Trans) n(port) n(Dire) n(ctory) p
+3079 y(connections.) f(See) 22 b(section) f(8.8.) p Fg
+221 3305 a(unix) n(Trans) n(port) n(Dire) n(ctory) p
 Fs 89 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(/tmp) n(/omni) n(-\045u) p
-Ft 221 2688 a(\(Unix) i(platforms) f(only\).) 28 b(Selects) 21
+Ft 221 3488 a(\(Unix) i(platforms) f(only\).) 28 b(Selects) 21
 b(the) h(location) h(used) e(to) h(sto) n(r) n(e) h(Unix) f(domain) h
-(socket) n(s.) 28 b(The) 221 2801 y(`) p Fg(\045u) p
+(socket) n(s.) 28 b(The) 221 3601 y(`) p Fg(\045u) p
 Ft(') 23 b(is) f(expanded) f(to) h(the) g(user) f(name.) p
-Fg 221 3034 a(unix) n(Trans) n(port) n(Perm) n(issio) n(n) p
+Fg 221 3827 a(unix) n(Trans) n(port) n(Perm) n(issio) n(n) p
 Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(077) n(7) p Ft
-221 3225 a(\(Unix) g(platforms) f(only\).) 27 b(Determines) 19
+221 4011 a(\(Unix) g(platforms) f(only\).) 27 b(Determines) 19
 b(the) h(octal) h(permission) e(bits) h(for) g(Unix) h(domain) g(sock-)
-221 3338 y(ets.) 27 b(By) 22 b(default,) g(all) i(users) d(can) i
+221 4123 y(ets.) 27 b(By) 22 b(default,) g(all) i(users) d(can) i
 (connect) f(to) g(a) i(server) -9 b(,) 23 b(just) f(as) h(with) f(TCP)
--12 b(.) p Fg 221 3571 a(supp) n(ortCu) n(rren) n(t) p
-Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(1) p Ft 221 3762
+-12 b(.) p Fg 221 4349 a(supp) n(ortCu) n(rren) n(t) p
+Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(1) p Ft 221 4533
 a(omniORB) 26 b(4.0) h(supp) n(orts) e(the) p Fg 25 w(Port) n(able) n
 (Serv) n(er::C) n(urre) n(nt) p Ft 25 w(interface) h(that) g(pr) n
-(ovides) 221 3875 y(thr) n(ead) 31 b(context) e(information) j(to) e(a)
+(ovides) 221 4646 y(thr) n(ead) 31 b(context) e(information) j(to) e(a)
 i(servant.) 52 b(Suppor) n(ting) 31 b(curr) n(ent) g(has) g(a) g(small)
-h(but) f(no-) 221 3988 y(ticeable) 25 b(r) o(un-time) g(over) n(head) e
+h(but) f(no-) 221 4759 y(ticeable) 25 b(r) o(un-time) g(over) n(head) e
 (due) h(to) f(acc) r(ess) n(ing) i(thr) n(ead) e(speci\002c) i(sto) n
-(rage,) f(so) g(this) g(option) 221 4101 y(all) r(ows) d(it) i(to) f
-(be) h(turne) n(d) g(of) n(f.) p Fg 221 4335 a(obje) n(ctTab) n(leSi) n
+(rage,) f(so) g(this) g(option) 221 4872 y(all) r(ows) d(it) i(to) f
+(be) h(turne) n(d) g(of) n(f.) p Fg 221 5097 a(obje) n(ctTab) n(leSi) n
 (ze) p Fs 90 w(defa) r(ult) p Ft 23 w(=) p Fg 22 w(0) p
-Ft 221 4525 a(Hash) k(table) g(size) g(of) g(the) f(Active) i(Object) f
+Ft 221 5281 a(Hash) k(table) g(size) g(of) g(the) f(Active) i(Object) f
 (Map.) 41 b(If) 27 b(this) g(is) g(zer) n(o,) h(the) e(ORB) g(uses) g
-(a) h(dynami-) 221 4638 y(call) r(y) e(r) n(esized) g(open) f(hash) i
+(a) h(dynami-) 221 5394 y(call) r(y) e(r) n(esized) g(open) f(hash) i
 (table.) 37 b(This) 25 b(is) h(normally) g(the) f(best) g(option,) g
-(but) g(it) h(leads) f(to) g(less) 221 4751 y(pr) n(edictable) f
-(performance) g(since) g(any) g(ope) n(ration) g(which) h(adds) e(or) g
-(r) n(emoves) h(a) g(table) g(entry) 221 4864 y(may) 33
-b(trigge) n(r) f(a) h(r) n(esize.) 55 b(If) 32 b(set) f(to) h(a) g
-(non-zer) n(o) g(value,) j(the) c(hash) h(table) g(has) g(the) f
-(speci\002ed) 221 4977 y(number) e(of) f(entries,) h(and) f(is) h
-(never) f(r) n(esized.) 45 b(Note) 27 b(that) h(the) g(hash) g(table) h
-(is) g(open,) g(so) e(this) 221 5090 y(does) 18 b(not) i(limit) h(the) e
-(number) h(of) g(active) h(objects,) e(just) h(how) f(ef) n
-(\002ciently) h(they) f(can) i(be) f(located.) p Fg 221
-5323 a(poaH) n(oldRe) n(ques) n(tTim) n(eout) p Fs 90
-w(default) p Ft 24 w(=) p Fg 23 w(0) p 90 rotate dyy
-eop
+(but) g(it) h(leads) f(to) g(less) p 90 rotate dyy eop
 %%Page: 49 55
 49 54 bop Fh 63 282 a(4.6.) 51 b(GIOP) 23 b(AND) f(INTEROPE) n(RABILI) n
-(TY) g(OPTIONS) p Ft 1212 w(49) 63 539 y(If) 28 b(a) g(POA) h(is) f
-(put) f(in) i(the) p Fg 27 w(HOLD) n(ING) p Ft 27 w(state,) f(call) r
-(s) f(to) h(it) g(will) h(be) f(timed) g(out) f(after) h(the) g(spe) n
-(ci-) 63 652 y(\002ed) f(number) i(of) f(mil) r(liseconds,) g(by) h
-(raising) g(a) p Fg 29 w(TRAN) n(SIEN) n(T) p Ft 28 w(exception.) 45
-b(Zer) n(o) 28 b(means) g(no) 63 764 y(timeout.) p Fg
-63 997 a(sup) n(port) n(Boots) n(trap) n(Agent) p Fs
-89 w(default) p Ft 24 w(=) p Fg 23 w(0) p Ft 63 1186
+(TY) g(OPTIONS) p Ft 1212 w(49) 63 539 y(pr) n(edictable) i
+(performance) f(since) h(any) g(operation) f(which) h(adds) f(or) h(r) n
+(emoves) f(a) i(table) f(entry) 63 652 y(may) 32 b(trigger) f(a) h(r) n
+(esize.) 56 b(If) 32 b(set) f(to) g(a) i(non-zer) n(o) e(val) r(ue,) i
+(the) e(hash) h(table) h(has) f(the) f(speci\002ed) 63
+764 y(number) d(of) h(entries) n(,) h(and) f(is) f(never) g(r) n
+(esized.) 45 b(Note) 27 b(that) i(the) e(hash) i(table) g(is) f(open,) h
+(so) f(this) 63 877 y(doe) n(s) 20 b(not) f(limi) r(t) h(the) f(number)
+g(of) h(activ) r(e) f(objects,) h(just) f(how) h(ef) n(\002ciently) g
+(they) e(can) j(be) f(located.) p Fg 63 1106 a(poa) n(Hold) n(Reque) n
+(stTi) n(meout) p Fs 89 w(default) p Ft 24 w(=) p Fg
+23 w(0) p Ft 63 1291 a(If) 28 b(a) g(POA) h(is) f(put) f(in) i(the) p
+Fg 27 w(HOLD) n(ING) p Ft 27 w(state,) f(call) r(s) f(to) h(it) g(will)
+h(be) f(timed) g(out) f(after) h(the) g(spe) n(ci-) 63
+1404 y(\002ed) f(number) i(of) f(mil) r(liseconds,) g(by) h(raising) g
+(a) p Fg 29 w(TRAN) n(SIEN) n(T) p Ft 28 w(exception.) 45
+b(Zer) n(o) 28 b(means) g(no) 63 1517 y(timeout.) p Fg
+63 1745 a(sup) n(port) n(Boots) n(trap) n(Agent) p Fs
+89 w(default) p Ft 24 w(=) p Fg 23 w(0) p Ft 63 1931
 a(If) 22 b(set) g(tr) o(ue,) f(servers) g(support) g(the) h(Sun) g
-(bootst) n(rap) h(agent) f(pr) n(otocol.) p Fl 63 1480
+(bootst) n(rap) h(agent) f(pr) n(otocol.) p Fl 63 2201
 a(4.5.1) 99 b(Main) 24 b(thread) g(selection) p Ft 63
-1669 a(Ther) n(e) k(is) h(one) g(server) n(-side) f(parameter) g(that) h
+2383 a(Ther) n(e) k(is) h(one) g(server) n(-side) f(parameter) g(that) h
 (must) g(be) g(set) f(with) h(an) h(API) e(function,) j(rather) 63
-1782 y(than) 22 b(a) h(normal) h(con\002guration) e(parameter:) p
-Ff 204 1944 a(namespa) n(ce) 50 b(omniORB) e({) 303 2044
-y(void) h(setMainThre) n(ad\(\);) 204 2144 y(};) p Ft
-63 2325 a(POAs) 29 b(with) g(the) p Fg 28 w(MAIN) n(_THR) n(EAD) p
+2496 y(than) 22 b(a) h(normal) h(con\002guration) e(parameter:) p
+Ff 204 2650 a(namespa) n(ce) 50 b(omniORB) e({) 303 2750
+y(void) h(setMainThre) n(ad\(\);) 204 2850 y(};) p Ft
+63 3020 a(POAs) 29 b(with) g(the) p Fg 28 w(MAIN) n(_THR) n(EAD) p
 Ft 28 w(policy) h(dispatch) e(cal) r(ls) h(on) g(the) f(`main') j(thr) n
-(ead.) 47 b(By) 28 b(de-) 63 2438 y(fault,) h(omniORB) f(assumes) f
+(ead.) 47 b(By) 28 b(de-) 63 3133 y(fault,) h(omniORB) f(assumes) f
 (that) h(the) f(thr) n(ead) g(that) h(initial) r(ised) f(the) g
-(omnithr) n(ead) g(lib) r(rary) g(is) 63 2551 y(the) d(`main') i(thr) n
+(omnithr) n(ead) g(lib) r(rary) g(is) 63 3246 y(the) d(`main') i(thr) n
 (ead.) 35 b(T) -8 b(o) 24 b(choose) f(a) j(dif) n(fer) n(ent) e(thr) n
 (ead,) h(call) i(this) d(function) h(fr) n(om) h(the) e(desir) n(ed) 63
-2664 y(`main') 36 b(thr) n(ead.) 62 b(The) 34 b(call) r(ing) g(thr) n
+3358 y(`main') 36 b(thr) n(ead.) 62 b(The) 34 b(call) r(ing) g(thr) n
 (ead) g(must) g(have) h(an) p Fg 34 w(omni_) n(thre) n(ad) p
-Ft 34 w(associated) f(with) 63 2777 y(it) j(\(i.e.) h(it) g(must) f
+Ft 34 w(associated) f(with) 63 3471 y(it) j(\(i.e.) h(it) g(must) f
 (have) h(been) f(cr) n(eated) g(by) g(omnithr) n(ead,) k(or) p
-Fg 38 w(omn) n(i_th) n(read:) n(:cre) n(ate_) 63 2890
+Fg 38 w(omn) n(i_th) n(read:) n(:cre) n(ate_) 63 3584
 y(dum) n(my\(\)) p Ft 33 w(must) 34 b(have) g(been) g(call) r(ed\).) 62
 b(If) 34 b(it) h(doe) n(s) f(not,) j(the) c(function) h(thr) n(ows) p
-Fg 34 w(COR) n(BA::) 63 3003 y(INI) n(TIAL) n(IZE) p
-Ft(.) 204 3122 y(Note) 17 b(that) h(cal) r(ls) g(ar) n(e) h(only) g
+Fg 34 w(COR) n(BA::) 63 3697 y(INI) n(TIAL) n(IZE) p
+Ft(.) 204 3813 y(Note) 17 b(that) h(cal) r(ls) g(ar) n(e) h(only) g
 (actually) h(dispatched) d(to) h(the) g(`main') i(thr) n(ead) e(if) p
-Fg 20 w(ORB:) n(:run) n(\(\)) p Ft 63 3235 a(or) p Fg
+Fg 20 w(ORB:) n(:run) n(\(\)) p Ft 63 3925 a(or) p Fg
 22 w(ORB:) n(:per) n(form) n(_work) n(\(\)) p Ft 22 w(is) 23
 b(called) g(fr) n(om) g(that) g(thr) n(ead.) p Fr 63
-3573 a(4.6) 119 b(GIO) n(P) 30 b(and) g(interoperabi) n(lity) g
-(options) p Ft 63 3796 a(Thes) n(e) 23 b(opt) n(ions) g(contr) n(ol) f
+4239 a(4.6) 119 b(GIO) n(P) 30 b(and) g(interoperabi) n(lity) g
+(options) p Ft 63 4455 a(Thes) n(e) 23 b(opt) n(ions) g(contr) n(ol) f
 (omniORB's) h(use) e(of) i(GIOP) -12 b(,) 23 b(and) f(cover) h(some) e
-(ar) n(eas) i(wher) n(e) f(omni-) 63 3909 y(ORB) g(can) i(work) d(ar) n
+(ar) n(eas) i(wher) n(e) f(omni-) 63 4568 y(ORB) g(can) i(work) d(ar) n
 (ound) i(buggy) e(behaviour) i(by) g(othe) n(r) g(ORBs.) p
-Fg 63 4141 a(max) n(GIOP) n(Verso) n(n) p Fs 91 w(default) p
-Ft 24 w(=) p Fg 23 w(1.2) p Ft 63 4331 a(Choose) d(the) g(maximum) j
+Fg 63 4797 a(max) n(GIOP) n(Verso) n(n) p Fs 91 w(default) p
+Ft 24 w(=) p Fg 23 w(1.2) p Ft 63 4982 a(Choose) d(the) g(maximum) j
 (GIOP) e(version) g(the) f(ORB) h(should) f(support) n(.) 28
-b(V) -8 b(alid) 21 b(values) h(ar) n(e) f(1.0,) 63 4444
-y(1.1) i(and) g(1.2.) p Fg 63 4676 a(gio) n(pMax) n(MsgSi) n(ze) p
+b(V) -8 b(alid) 21 b(values) h(ar) n(e) f(1.0,) 63 5095
+y(1.1) i(and) g(1.2.) p Fg 63 5323 a(gio) n(pMax) n(MsgSi) n(ze) p
 Fs 90 w(defa) r(ult) p Ft 22 w(=) p Fg 23 w(2097) n(152) p
-Ft 63 4865 a(The) g(lar) n(gest) g(message) n(,) h(in) h(bytes) n(,) f
-(that) g(the) f(ORB) g(will) i(send) e(or) g(r) n(eceive,) h(to) f
-(avoid) h(r) n(esour) n(ce) 63 4978 y(starvation.) 29
-b(If) 24 b(the) e(limi) r(t) h(is) g(exceede) n(d,) g(a) p
-Fg 24 w(MAR) n(SHAL) p Ft 22 w(exception) f(is) h(thr) n(own.) 29
-b(The) 23 b(size) g(must) 63 5091 y(be) f(>=) h(8192) r(.) p
-Fg 63 5323 a(str) n(ictI) n(IOP) p Fs 90 w(default) p
-Ft 24 w(=) p Fg 23 w(1) p 90 rotate dyy eop
+90 rotate dyy eop
 %%Page: 50 56
 50 55 bop Ft 221 282 a(50) p Fh 936 w(CHAPTER) 22 b(4.) 51
 b(OMNIORB) 22 b(CONFIGURA) -7 b(TION) 21 b(AND) i(API) p
-Ft 221 539 a(If) g(tr) o(ue,) f(be) g(strict) h(about) g(interpr) n(et)
-n(ation) g(of) g(the) f(IIOP) g(speci\002cation;) h(if) h(false,) f
-(permit) f(some) 221 652 y(buggy) g(behaviour) h(to) f(pass.) p
-Fg 221 877 a(lcdM) n(ode) p Fs 90 w(default) p Ft 24
-w(=) p Fg 23 w(0) p Ft 221 1061 a(If) 30 b(tr) o(ue,) g(select) e
-(`Lowest) g(Common) i(Denominator) 7 b(') 29 b(mode.) 47
-b(This) 29 b(disables) h(various) f(IIOP) 221 1173 y(and) 23
-b(GIOP) g(featur) n(es) f(that) g(ar) n(e) h(known) f(to) g(cause) g
-(pr) n(oblems) g(with) h(some) f(ORBs.) p Fg 221 1399
-a(tcAl) n(iasEx) n(pand) p Fs 89 w(defa) r(ult) p Ft
-22 w(=) p Fg 23 w(0) p Ft 221 1582 a(This) e(\003ag) g(is) h(used) d
+Ft 221 539 a(The) g(lar) n(gest) h(mess) n(age,) g(in) g(bytes,) f
+(that) g(the) g(ORB) h(will) h(send) d(or) h(r) n(eceive,) h(to) g
+(avoid) g(r) n(esour) n(ce) 221 652 y(starvation.) 30
+b(If) 23 b(the) g(limit) h(is) g(exceed) n(ed,) e(a) p
+Fg 24 w(MARS) n(HAL) p Ft 22 w(exception) g(is) i(thr) n(own.) 29
+b(The) 22 b(size) i(must) 221 764 y(be) f(>=) g(8192.) p
+Fg 221 993 a(stri) n(ctIIO) n(P) p Fs 91 w(default) p
+Ft 24 w(=) p Fg 23 w(1) p Ft 221 1178 a(If) g(tr) o(ue,) f(be) g
+(strict) h(about) g(interpr) n(et) n(ation) g(of) g(the) f(IIOP) g
+(speci\002cation;) h(if) h(false,) f(permit) f(some) 221
+1291 y(buggy) g(behaviour) h(to) f(pass.) p Fg 221 1519
+a(lcdM) n(ode) p Fs 90 w(default) p Ft 24 w(=) p Fg 23
+w(0) p Ft 221 1705 a(If) 30 b(tr) o(ue,) g(select) e(`Lowest) g(Common)
+i(Denominator) 7 b(') 29 b(mode.) 47 b(This) 29 b(disables) h(various) f
+(IIOP) 221 1818 y(and) 23 b(GIOP) g(featur) n(es) f(that) g(ar) n(e) h
+(known) f(to) g(cause) g(pr) n(oblems) g(with) h(some) f(ORBs.) p
+Fg 221 2046 a(tcAl) n(iasEx) n(pand) p Fs 89 w(defa) r(ult) p
+Ft 22 w(=) p Fg 23 w(0) p Ft 221 2231 a(This) e(\003ag) g(is) h(used) d
 (to) i(indicate) g(whether) f(T) -8 b(ype) n(Codes) 19
 b(associated) h(with) g(Anys) f(shou) n(ld) i(have) 221
-1695 y(ali) r(ases) f(r) n(emoved.) 27 b(This) 21 b(functionality) h
+2344 y(ali) r(ases) f(r) n(emoved.) 27 b(This) 21 b(functionality) h
 (is) f(incl) r(uded) f(because) h(some) f(ORBs) h(will) i(not) d(r) n
-(ecog-) 221 1808 y(nise) 25 b(an) h(Any) f(containing) h(a) g(T) -8
+(ecog-) 221 2457 y(nise) 25 b(an) h(Any) f(containing) h(a) g(T) -8
 b(ypeCod) n(e) 26 b(with) f(ali) r(ases) f(to) h(be) h(the) f(same) g
-(as) h(the) f(actual) i(typ) n(e) 221 1921 y(contained) k(in) g(the) f
+(as) h(the) f(actual) i(typ) n(e) 221 2570 y(contained) k(in) g(the) f
 (Any) -10 b(.) 52 b(Note) 30 b(that) h(omniORB) g(will) h(always) f(r) n
-(emove) g(top-level) g(alia) r(ses) n(,) 221 2034 y(but) 22
+(emove) g(top-level) g(alia) r(ses) n(,) 221 2683 y(but) 22
 b(will) h(not) e(r) n(emove) h(alia) r(ses) e(fr) n(om) j(T) -8
 b(ype) n(Codes) 21 b(that) h(ar) n(e) g(members) f(of) h(other) f(T) -8
-b(ype) n(Codes) 221 2147 y(\(e.g.) 29 b(T) -8 b(yp) n(eCodes) 28
+b(ype) n(Codes) 221 2796 y(\(e.g.) 29 b(T) -8 b(yp) n(eCodes) 28
 b(for) i(members) f(of) h(str) o(ucts) e(etc.\),) j(unless) p
 Fg 29 w(tcA) n(lias) n(Expan) n(d) p Ft 29 w(is) f(set) f(to) g(1.) 221
-2260 y(Ther) n(e) 23 b(is) h(a) h(performance) e(penalty) g(when) h
+2909 y(Ther) n(e) 23 b(is) h(a) h(performance) e(penalty) g(when) h
 (inserting) f(into) g(an) i(Any) e(if) p Fg 25 w(tcA) n(liasE) n(xpan) n
-(d) p Ft 24 w(is) 221 2373 y(set) f(to) g(1.) p Fg 221
-2599 a(useT) n(ypeCo) n(deIn) n(dire) n(ction) n(s) p
-Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(1) p Ft 221 2782
+(d) p Ft 24 w(is) 221 3022 y(set) f(to) g(1.) p Fg 221
+3250 a(useT) n(ypeCo) n(deIn) n(dire) n(ction) n(s) p
+Fs 91 w(default) p Ft 24 w(=) p Fg 23 w(1) p Ft 221 3435
 a(T) -8 b(ype) n(Code) 22 b(Indir) n(ections) f(r) n(educe) g(the) h
 (size) g(of) g(marshall) r(ed) f(T) -8 b(ype) n(Codes,) 21
-b(and) h(ar) n(e) h(ess) n(ential) 221 2895 y(for) i(r) n(ecursive) g
+b(and) h(ar) n(e) h(ess) n(ential) 221 3548 y(for) i(r) n(ecursive) g
 (types) n(,) h(but) f(some) f(ORBs) g(do) h(not) f(suppor) n(t) h
 (them.) 35 b(Setting) 24 b(this) h(\003ag) g(to) g(false) 221
-3008 y(pr) n(events) c(the) h(use) g(of) g(indir) n(ections) h(\(and,) f
+3661 y(pr) n(events) c(the) h(use) g(of) g(indir) n(ections) h(\(and,) f
 (ther) n(efor) n(e,) g(r) n(ecursive) g(T) -8 b(ype) n(Codes\).) p
-Fg 221 3233 a(acce) n(ptMis) n(alig) n(nedT) n(cIndi) n(rect) n(ions) p
+Fg 221 3889 a(acce) n(ptMis) n(alig) n(nedT) n(cIndi) n(rect) n(ions) p
 Fs 89 w(def) r(ault) p Ft 23 w(=) p Fg 23 w(0) p Ft 221
-3417 a(If) 34 b(tr) o(ue,) j(try) c(to) h(\002x) g(a) h(mis-ali) r
+4075 a(If) 34 b(tr) o(ue,) j(try) c(to) h(\002x) g(a) h(mis-ali) r
 (gned) e(indir) n(ection) h(in) h(a) g(type) n(code.) 62
-b(This) 34 b(is) h(use) n(d) f(to) g(work) 221 3530 y(ar) n(ound) 23
+b(This) 34 b(is) h(use) n(d) f(to) g(work) 221 4188 y(ar) n(ound) 23
 b(a) g(bug) f(in) h(some) f(versions) g(of) g(V) -5 b(isibr) n(oker) 7
-b('s) 22 b(Java) i(ORB.) p Fr 221 4054 a(4.7) 119 b(System) 30
-b(Exception) g(Handlers) p Ft 221 4265 a(By) f(default,) j(all) f(syst)
+b('s) 22 b(Java) i(ORB.) p Fr 221 4726 a(4.7) 119 b(System) 30
+b(Exception) g(Handlers) p Ft 221 4942 a(By) f(default,) j(all) f(syst)
 n(em) f(exceptions) e(that) i(ar) n(e) g(raised) g(during) f(an) i(ope)
-n(ration) f(invoca) r(tion,) 221 4378 y(with) f(the) g(exception) f(of)
+n(ration) f(invoca) r(tion,) 221 5055 y(with) f(the) g(exception) f(of)
 i(some) e(cases) h(of) p Fg 29 w(CORBA) n(::TR) n(ANSIE) n(NT) p
-Ft(,) f(ar) n(e) i(pr) n(opagated) e(to) h(the) 221 4490
+Ft(,) f(ar) n(e) i(pr) n(opagated) e(to) h(the) 221 5168
 y(applica) r(tion) j(code.) 56 b(Some) 32 b(applica) r(tions) f(may) i
 (pr) n(efer) f(to) g(trap) g(these) f(exceptions) g(within) 221
-4603 y(the) 23 b(pr) n(oxy) h(objects) f(so) g(that) h(the) g
+5281 y(the) 23 b(pr) n(oxy) h(objects) f(so) g(that) h(the) g
 (application) h(logic) f(does) f(not) g(have) i(to) e(deal) h(with) g
-(the) g(err) n(or) 221 4716 y(condition.) 32 b(For) 23
+(the) g(err) n(or) 221 5394 y(condition.) 32 b(For) 23
 b(example,) i(when) e(a) p Fg 25 w(COR) n(BA::C) n(OMM_) n(FAILU) n(RE)
-p Ft 23 w(is) i(r) n(eceived,) f(an) g(applica) r(-) 221
-4829 y(tion) i(may) g(just) f(want) h(to) f(r) n(etry) g(the) g
-(invocation) i(until) f(it) g(\002nall) r(y) f(succeeds) n(.) 38
-b(This) 26 b(appr) n(oach) 221 4942 y(is) d(useful) f(for) h(objects) f
-(that) g(ar) n(e) h(persist) n(ent) f(and) h(have) g(idempot) n(ent) f
-(operations.) 362 5055 y(omniORB) 27 b(pr) n(ovides) f(a) i(set) e(of) h
-(functions) g(to) f(install) i(exception) e(handlers.) 40
-b(Once) 27 b(they) 221 5168 y(ar) n(e) c(installed,) f(pr) n(oxy) f
-(objects) h(will) i(call) g(thes) n(e) e(handlers) g(when) g(the) f
-(associated) h(sys) n(tem) g(ex-) 221 5281 y(ceptions) 29
-b(ar) n(e) g(raised) h(by) f(the) g(ORB) g(r) o(untime.) 49
-b(Handlers) 28 b(can) j(be) e(installed) h(for) p Fg
-29 w(CORB) n(A::) 221 5394 y(TRAN) n(SIENT) p Ft -2 w(,) p
-Fg 38 w(CORB) n(A::C) n(OMM_) n(FAILU) n(RE) p Ft 37
-w(and) p Fg 38 w(CORB) n(A::Sy) n(stem) n(Excep) n(tion) p
-Ft -2 w(.) 74 b(This) p 90 rotate dyy eop
+p Ft 23 w(is) i(r) n(eceived,) f(an) g(applica) r(-) p
+90 rotate dyy eop
 %%Page: 51 57
 51 56 bop Fh 63 282 a(4.7.) 51 b(SYSTE) n(M) 23 b(EXCEPTI) n(ON) g
-(HANDLER) n(S) p Ft 1576 w(51) 63 539 y(last) 30 b(handler) g(covers) g
-(all) h(syst) n(em) f(exceptions) f(other) g(than) h(the) f(two) g
-(cover) n(ed) h(by) g(the) f(\002rst) 63 652 y(two) 24
-b(handlers.) 35 b(An) 25 b(exception) f(handler) h(can) h(be) f
-(installed) g(for) g(indivi) r(dual) g(pr) n(oxy) f(objects,) 63
-764 y(or) e(it) h(can) g(be) g(installed) f(for) h(all) h(pr) n(oxy) e
-(objects) g(in) h(the) f(addr) n(ess) f(space.) p Fl
-63 1032 a(4.7.1) 99 b(Minor) 24 b(codes) p Ft 63 1213
-a(A) j(new) g(featur) n(e) g(in) g(omniORB) h(4.0) g(is) g(exte) n
-(nsive) f(use) g(of) g(exception) f(minor) i(codes) e(to) h(indi-) 63
-1326 y(cate) 17 b(the) f(speci\002c) i(cir) n(cumstances) g(surr) n
-(oun) n(ding) f(a) h(syst) n(em) f(exception.) 25 b(The) 17
-b(\002le) p Fg 17 w(incl) n(ude/) 63 1439 y(omn) n(iORB) n(4/min) n
-(orCo) n(de.h) p Ft 16 w(contains) g(de\002nitions) f(of) h(all) i(the)
-d(minor) i(codes) d(used) h(in) i(omni-) 63 1552 y(ORB,) 32
-b(covering) h(codes) f(alloca) r(ted) f(in) j(the) e(CORBA) h
-(speci\002cation,) i(and) e(ones) f(speci\002c) h(to) 63
-1664 y(omniORB.) 20 b(In) f(compilers) h(with) g(namespace) g(suppo) n
+(HANDLER) n(S) p Ft 1576 w(51) 63 539 y(tion) i(may) h(just) g(want) g
+(to) f(r) n(etry) g(the) g(invocation) h(until) h(it) f(\002nally) h
+(succeed) n(s.) 37 b(This) 26 b(appr) n(oach) 63 652
+y(is) c(useful) h(for) f(objects) g(that) g(ar) n(e) h(persiste) n(nt) g
+(and) f(have) h(idempote) n(nt) g(oper) n(ations.) 204
+764 y(omniORB) k(pr) n(ovides) f(a) i(set) d(of) i(functions) g(to) f
+(install) i(exception) e(handlers.) 40 b(Once) 28 b(they) 63
+877 y(ar) n(e) 22 b(installed,) h(pr) n(oxy) e(objects) h(will) h(call)
+h(these) d(handlers) h(when) f(the) h(associated) f(syst) n(em) i(ex-)
+63 990 y(ceptions) 28 b(ar) n(e) i(raised) f(by) g(the) g(ORB) h(r) o
+(untime.) 48 b(Handlers) 29 b(can) h(be) g(installed) f(for) p
+Fg 30 w(COR) n(BA::) 63 1103 y(TRA) n(NSIE) n(NT) p Ft(,) p
+Fg 37 w(CORBA) n(::CO) n(MM_F) n(AILUR) n(E) p Ft 38
+w(and) p Fg 38 w(COR) n(BA::S) n(yste) n(mExce) n(ptio) n(n) p
+Ft(.) 74 b(This) 63 1216 y(last) 30 b(handler) g(covers) g(all) h(syst)
+n(em) f(exceptions) f(other) g(than) h(the) f(two) g(cover) n(ed) h(by)
+g(the) f(\002rst) 63 1329 y(two) 24 b(handlers.) 35 b(An) 25
+b(exception) f(handler) h(can) h(be) f(installed) g(for) g(indivi) r
+(dual) g(pr) n(oxy) f(objects,) 63 1442 y(or) e(it) h(can) g(be) g
+(installed) f(for) h(all) h(pr) n(oxy) e(objects) g(in) h(the) f(addr) n
+(ess) f(space.) p Fl 63 1692 a(4.7.1) 99 b(Minor) 24
+b(codes) p Ft 63 1869 a(A) j(new) g(featur) n(e) g(in) g(omniORB) h
+(4.0) g(is) g(exte) n(nsive) f(use) g(of) g(exception) f(minor) i
+(codes) e(to) h(indi-) 63 1982 y(cate) 17 b(the) f(speci\002c) i(cir) n
+(cumstances) g(surr) n(oun) n(ding) f(a) h(syst) n(em) f(exception.) 25
+b(The) 17 b(\002le) p Fg 17 w(incl) n(ude/) 63 2095 y(omn) n(iORB) n
+(4/min) n(orCo) n(de.h) p Ft 16 w(contains) g(de\002nitions) f(of) h
+(all) i(the) d(minor) i(codes) d(used) h(in) i(omni-) 63
+2208 y(ORB,) 32 b(covering) h(codes) f(alloca) r(ted) f(in) j(the) e
+(CORBA) h(speci\002cation,) i(and) e(ones) f(speci\002c) h(to) 63
+2321 y(omniORB.) 20 b(In) f(compilers) h(with) g(namespace) g(suppo) n
 (rt,) g(the) f(minor) i(code) e(constants) g(appear) 63
-1777 y(in) k(namespace) p Fg 22 w(omni) p Ft -2 w(;) g(other) n(wise) g
+2434 y(in) k(namespace) p Fg 22 w(omni) p Ft -2 w(;) g(other) n(wise) g
 (they) e(ar) n(e) i(in) g(the) f(global) h(scope.) 204
-1892 y(Applications) 32 b(can) i(use) d(minor) i(codes) e(to) h(adjust)
+2547 y(Applications) 32 b(can) i(use) d(minor) i(codes) e(to) h(adjust)
 g(their) g(behaviour) h(accor) n(ding) g(to) f(the) 63
-2005 y(condition,) 22 b(e.g) n(.) p Ff 204 2159 a(try) 49
-b({) 303 2258 y(...) 204 2358 y(}) 204 2458 y(catch) g(\() o(CORBA::) o
-(TRANSIENT) o(&) g(ex\)) g({) 303 2557 y(if) h(\(ex) o(.minor) o(\(\)) g
+2659 y(condition,) 22 b(e.g) n(.) p Ff 204 2800 a(try) 49
+b({) 303 2900 y(...) 204 3000 y(}) 204 3099 y(catch) g(\() o(CORBA::) o
+(TRANSIENT) o(&) g(ex\)) g({) 303 3199 y(if) h(\(ex) o(.minor) o(\(\)) g
 (==) f(omni) o(::TRANSIEN) n(T_ConnectFa) n(iled\)) g({) p
-Fe 403 2657 a(//) g(retry) g(with) g(a) h(different) e(object) h
-(referenc) n(e...) p Ff 303 2757 a(}) 303 2856 y(else) g({) p
-Fe 403 2956 a(//) g(print) g(an) h(error) f(message) n(...) p
-Ff 303 3055 a(}) 204 3155 y(}) p Fl 63 3476 a(4.7.2) 99
-b(CORBA::TRANSIENT) 24 b(handlers) p Fg 63 3657 a(TRA) n(NSIE) n(NT) p
+Fe 403 3298 a(//) g(retry) g(with) g(a) h(different) e(object) h
+(referenc) n(e...) p Ff 303 3398 a(}) 303 3498 y(else) g({) p
+Fe 403 3597 a(//) g(print) g(an) h(error) f(message) n(...) p
+Ff 303 3697 a(}) 204 3797 y(}) p Fl 63 4088 a(4.7.2) 99
+b(CORBA::TRANSIENT) 24 b(handlers) p Fg 63 4265 a(TRA) n(NSIE) n(NT) p
 Ft 25 w(exceptions) h(can) h(occur) g(in) h(many) f(cir) n(cumstances.)
-38 b(One) 26 b(cir) n(cumstance) h(is) e(as) 63 3770
-y(follows:) 176 3993 y(1.) 46 b(The) 22 b(client) h(invokes) f(on) g
-(an) h(object) f(r) n(efer) n(ence.) 176 4189 y(2.) 46
+38 b(One) 26 b(cir) n(cumstance) h(is) e(as) 63 4378
+y(follows:) 176 4565 y(1.) 46 b(The) 22 b(client) h(invokes) f(on) g
+(an) h(object) f(r) n(efer) n(ence.) 176 4744 y(2.) 46
 b(The) 22 b(object) g(r) n(eplies) g(with) h(a) p Fg
 23 w(LOCA) n(TION_) n(FORW) n(ARD) p Ft 22 w(message) n(.) 176
-4385 y(3.) 46 b(The) 22 b(client) h(caches) g(the) f(new) g(location) h
+4923 y(3.) 46 b(The) 22 b(client) h(caches) g(the) f(new) g(location) h
 (and) g(r) n(etries) e(to) h(the) g(new) g(location.) 176
-4580 y(4.) 46 b(T) -5 b(ime) 23 b(passe) n(s...) 176
-4776 y(5.) 46 b(The) 30 b(cli) r(ent) g(tries) g(to) h(invoke) f(on) h
+5102 y(4.) 46 b(T) -5 b(ime) 23 b(passe) n(s...) 176
+5281 y(5.) 46 b(The) 30 b(cli) r(ent) g(tries) g(to) h(invoke) f(on) h
 (the) g(object) f(again,) k(using) d(the) f(cached,) j(forwar) n(ded)
-290 4889 y(location.) 176 5085 y(6.) 46 b(The) 22 b(attempt) f(to) h
-(contact) h(the) f(object) g(fai) r(ls.) 176 5281 y(7.) 46
-b(The) 24 b(ORB) g(r) o(untime) h(r) n(ese) n(ts) f(the) g(location) h
-(cache) h(and) e(thr) n(ows) g(a) p Fg 25 w(TRA) n(NSIE) n(NT) p
-Ft 24 w(excep-) 290 5394 y(tion) e(with) h(minor) g(code) p
-Fg 22 w(TRA) n(NSIE) n(NT_Fa) n(iled) n(OnFo) n(rward) n(ed) p
-Ft(.) p 90 rotate dyy eop
+290 5394 y(location.) p 90 rotate dyy eop
 %%Page: 52 58
 52 57 bop Ft 221 282 a(52) p Fh 936 w(CHAPTER) 22 b(4.) 51
 b(OMNIORB) 22 b(CONFIGURA) -7 b(TION) 21 b(AND) i(API) p
-Ft 362 539 a(In) i(this) f(situation,) h(the) f(default) p
-Fg 24 w(TRAN) n(SIEN) n(T) p Ft 25 w(except) n(ion) h(handler) g(r) n
-(etries) f(the) g(call,) i(us-) 221 652 y(ing) 17 b(the) g(object's) g
-(original) h(location.) 26 b(If) 17 b(the) g(r) n(etry) f(r) n(esults) g
-(in) i(another) p Fg 16 w(LOCA) n(TION) n(_FOR) n(WARD) p
-Ft(,) 221 764 y(to) 26 b(the) g(same) h(or) f(a) h(dif) n(fer) n(ent) g
-(location,) h(and) p Fs 26 w(that) p Ft 28 w(forwar) n(ded) e(location)
-h(fail) r(s) f(immediately) -10 b(,) 221 877 y(the) p
-Fg 28 w(TRA) n(NSIEN) n(T) p Ft 28 w(exception) 27 b(will) j(occur) f
-(again,) h(and) f(the) e(pattern) g(will) j(r) n(epeat.) 44
-b(W) -5 b(ith) 29 b(r) n(e-) 221 990 y(peated) 16 b(exceptions,) h(the)
-g(handler) h(starts) f(adding) g(delays) g(befor) n(e) h(r) n(etries) n
-(,) h(with) f(expon) n(ential) 221 1103 y(back-of) n(f) r(.) 362
-1216 y(In) 27 b(all) i(othe) n(r) e(cir) n(c) r(umstances,) g(the) f
+Ft 335 539 a(6.) 45 b(The) 22 b(attempt) g(to) g(contact) h(the) e
+(object) i(fails.) 335 729 y(7.) 45 b(The) 24 b(ORB) h(r) o(untime) f
+(r) n(esets) f(the) h(location) h(cache) g(and) g(thr) n(ows) e(a) p
+Fg 25 w(TRAN) n(SIEN) n(T) p Ft 25 w(excep-) 448 842
+y(tion) g(with) f(minor) h(code) p Fg 22 w(TRAN) n(SIEN) n(T_Fai) n
+(ledO) n(nForw) n(arde) n(d) p Ft(.) 362 1057 y(In) i(this) f
+(situation,) h(the) f(default) p Fg 24 w(TRAN) n(SIEN) n(T) p
+Ft 25 w(except) n(ion) h(handler) g(r) n(etries) f(the) g(call,) i(us-)
+221 1170 y(ing) 17 b(the) g(object's) g(original) h(location.) 26
+b(If) 17 b(the) g(r) n(etry) f(r) n(esults) g(in) i(another) p
+Fg 16 w(LOCA) n(TION) n(_FOR) n(WARD) p Ft(,) 221 1283
+y(to) 26 b(the) g(same) h(or) f(a) h(dif) n(fer) n(ent) g(location,) h
+(and) p Fs 26 w(that) p Ft 28 w(forwar) n(ded) e(location) h(fail) r(s)
+f(immediately) -10 b(,) 221 1396 y(the) p Fg 28 w(TRA) n(NSIEN) n(T) p
+Ft 28 w(exception) 27 b(will) j(occur) f(again,) h(and) f(the) e
+(pattern) g(will) j(r) n(epeat.) 44 b(W) -5 b(ith) 29
+b(r) n(e-) 221 1509 y(peated) 16 b(exceptions,) h(the) g(handler) h
+(starts) f(adding) g(delays) g(befor) n(e) h(r) n(etries) n(,) h(with) f
+(expon) n(ential) 221 1622 y(back-of) n(f) r(.) 362 1736
+y(In) 27 b(all) i(othe) n(r) e(cir) n(c) r(umstances,) g(the) f
 (default) p Fg 27 w(TRAN) n(SIEN) n(T) p Ft 27 w(handler) h(just) g
-(passe) n(s) g(the) f(ex-) 221 1329 y(ception) c(on) g(to) g(the) g
-(call) r(er) -7 b(.) 362 1442 y(Applications) 23 b(can) g(override) f
+(passe) n(s) g(the) f(ex-) 221 1848 y(ception) c(on) g(to) g(the) g
+(call) r(er) -7 b(.) 362 1962 y(Applications) 23 b(can) g(override) f
 (the) f(default) i(behaviour) g(by) f(installi) r(ng) g(their) g(own) g
-(excep-) 221 1555 y(tion) h(handler) -7 b(.) 27 b(The) 22
+(excep-) 221 2075 y(tion) h(handler) -7 b(.) 27 b(The) 22
 b(API) g(to) g(do) g(so) g(is) h(summarised) f(below:) p
-Ff 362 1696 a(namespace) 48 b(omniORB) h({) 362 1896
-y(typedef) g(CORBA) o(::) o(Boolean) g(\(*transie) n(ntExceptio) n
-(nHandler_t) o(\)\() o(void) o(*) h(cookie) o(,) 2753
-1995 y(CORBA) o(::ULong) f(n_retrie) n(s,) 2753 2095
-y(const) g(CORBA) o(::TRANSIEN) n(T&) h(ex\);) 362 2294
-y(void) f(installTra) n(nsientExcep) n(tionHandler) n(\(void) o(*) h
-(cookie) o(,) 2255 2394 y(transientE) n(xceptionHa) n(ndler_t) f(fn\);)
-362 2593 y(void) g(installTra) n(nsientExcep) n(tionHandler) n(\(CORBA)
-o(::Object_p) n(tr) h(obj) o(,) 2255 2693 y(void) o(*) g(cookie) o(,)
-2255 2792 y(transientE) n(xceptionHa) n(ndler_t) f(fn\);) 362
-2992 y(}) p Ft 362 3147 a(The) 22 b(overloaded) g(function) p
-Fg 23 w(inst) n(allT) n(rans) n(ientE) n(xcep) n(tionH) n(andl) n
-(er\(\)) p Ft 21 w(can) i(be) 221 3260 y(used) 35 b(to) h(install) h
-(the) e(exception) g(handlers) h(for) p Fg 36 w(CORBA) n(::TR) n(ANSI) n
-(ENT) p Ft(.) f(T) -8 b(wo) 36 b(forms) g(ar) n(e) 221
-3372 y(avai) r(labl) r(e:) 25 b(the) 17 b(\002rst) h(form) g(installs) h
-(an) g(except) n(ion) g(handler) f(for) g(all) i(object) e(r) n(efer) n
-(ences) f(except) 221 3485 y(for) 33 b(those) e(which) j(have) f(an) g
-(exception) f(handler) h(installed) g(by) f(the) h(second) e(form,) k
-(which) 221 3598 y(takes) 22 b(an) h(additional) g(ar) n(gument) f(to) h
-(identify) f(the) g(tar) n(get) g(object) g(r) n(efer) n(ence.) 28
-b(The) 21 b(ar) n(gument) p Fg 221 3711 a(cook) n(ie) p
+Ff 362 2226 a(namespace) 48 b(omniORB) h({) 462 2425
+y(typedef) f(CORBA) o(::Boolean) h(\(*) o(transientE) n(xceptionHan) n
+(dler_t) o(\)\(void) o(*) h(cookie) o(,) 2853 2525 y(CORBA) o(::ULong) f
+(n_retr) n(ies,) 2853 2624 y(const) g(CORBA) o(::TRANSI) n(ENT&) h(ex) o
+(\);) 462 2823 y(void) f(installT) n(ransientExc) n(eptionHandl) n
+(er\(void) o(*) h(cookie) o(,) 2355 2923 y(transien) n(tException) n
+(Handler_t) f(fn) o(\);) 462 3122 y(void) g(installT) n(ransientExc) n
+(eptionHandl) n(er\(CORBA) o(::Object) n(_ptr) g(obj,) 2355
+3222 y(void) o(*) h(cookie) o(,) 2355 3322 y(transien) n(tException) n
+(Handler_t) f(fn) o(\);) 362 3421 y(}) p Ft 362 3586
+a(The) 22 b(overloaded) g(function) p Fg 23 w(inst) n(allT) n(rans) n
+(ientE) n(xcep) n(tionH) n(andl) n(er\(\)) p Ft 21 w(can) i(be) 221
+3699 y(used) 35 b(to) h(install) h(the) e(exception) g(handlers) h(for)
+p Fg 36 w(CORBA) n(::TR) n(ANSI) n(ENT) p Ft(.) f(T) -8
+b(wo) 36 b(forms) g(ar) n(e) 221 3812 y(avai) r(labl) r(e:) 25
+b(the) 17 b(\002rst) h(form) g(installs) h(an) g(except) n(ion) g
+(handler) f(for) g(all) i(object) e(r) n(efer) n(ences) f(except) 221
+3925 y(for) 33 b(those) e(which) j(have) f(an) g(exception) f(handler) h
+(installed) g(by) f(the) h(second) e(form,) k(which) 221
+4038 y(takes) 22 b(an) h(additional) g(ar) n(gument) f(to) h(identify) f
+(the) g(tar) n(get) g(object) g(r) n(efer) n(ence.) 28
+b(The) 21 b(ar) n(gument) p Fg 221 4150 a(cook) n(ie) p
 Ft 20 w(is) g(an) g(opaque) f(pointe) n(r) h(which) g(will) h(be) e
 (passed) f(on) i(by) f(the) g(ORB) g(when) g(it) h(call) r(s) f(the) 221
-3824 y(exception) i(handler) -7 b(.) 362 3937 y(An) 19
-b(except) n(ion) g(handler) g(will) g(be) g(call) r(ed) f(by) g(pr) n
-(oxy) g(objects) g(with) h(thr) n(ee) e(ar) n(guments.) 26
-b(The) p Fg 221 4050 a(cook) n(ie) p Ft 17 w(is) 17 b(the) f(opaque) h
-(pointe) n(r) h(r) n(egiste) n(r) n(ed) f(by) p Fg 17
-w(ins) n(tallT) n(rans) n(ientE) n(xcep) n(tion) n(Handl) n(er\(\)) p
-Ft -2 w(.) 221 4163 y(The) i(ar) n(gument) p Fg 18 w(n_re) n(tries) p
-Ft 17 w(is) h(the) e(number) h(of) g(times) g(the) f(pr) n(oxy) g(has) h
-(cal) r(led) f(this) h(handler) 221 4276 y(for) g(the) f(same) h
-(invoca) r(tion.) 26 b(The) 18 b(ar) n(gument) p Fg 19
-w(ex) p Ft 18 w(is) h(the) f(val) r(ue) g(of) h(the) g(except) n(ion) g
-(caught.) 27 b(The) 221 4389 y(exception) 20 b(handler) h(is) h(expe) n
-(cted) f(to) g(do) f(whatever) h(is) g(appr) n(opriate) g(and) g(r) n
-(eturns) f(a) i(boolean) 221 4502 y(value.) 36 b(If) 26
-b(the) e(r) n(eturn) g(val) r(ue) g(is) i(TRUE) n(\(1\),) h(the) d(pr) n
-(oxy) h(object) g(r) n(etries) f(the) g(operation.) 35
-b(If) 25 b(the) 221 4614 y(r) n(eturn) 30 b(value) h(is) f(F) -7
-b(ALSE) n(\(0\),) 33 b(the) p Fg 30 w(CORB) n(A::T) n(RANSI) n(ENT) p
-Ft 29 w(exception) c(is) i(pr) n(opagate) n(d) f(into) 221
-4727 y(the) 22 b(applicati) r(on) g(code.) 362 4840 y(The) 31
-b(following) g(sample) g(code) f(installs) h(a) h(simple) f(exception) f
-(handler) g(for) h(all) i(objects) 221 4953 y(and) 23
-b(for) f(a) i(spe) n(ci\002c) g(object:) p Ff 362 5095
-a(CORBA) o(::Boolean) 48 b(my_transien) n(t_handler1) g(\(void) o(*) i
-(cookie) o(,) 2255 5194 y(CORBA) o(::ULong) f(retries) n(,) 2255
-5294 y(const) g(CORBA) o(::TRANSIE) n(NT&) h(ex) o(\)) 362
-5394 y({) p 90 rotate dyy eop
+4263 y(exception) i(handler) -7 b(.) 362 4377 y(An) 35
+b(exception) f(handler) g(will) j(be) d(cal) r(led) g(by) h(pr) n(oxy) f
+(objects) g(with) h(thr) n(ee) f(ar) n(guments.) 221
+4490 y(The) p Fg 20 w(coo) n(kie) p Ft 19 w(is) 20 b(the) g(opaque) f
+(pointer) g(r) n(egister) l(ed) h(by) p Fg 20 w(inst) n(allTr) n(ansi) n
+(entEx) n(cept) n(ion) 221 4603 y(Hand) n(ler\(\)) p
+Ft -2 w(.) 69 b(The) 36 b(ar) n(gument) p Fg 36 w(n_re) n(trie) n(s) p
+Ft 36 w(is) h(the) e(number) i(of) f(times) g(the) g(pr) n(oxy) f(has)
+221 4716 y(call) r(ed) 28 b(this) g(handler) h(for) g(the) f(same) g
+(invocation.) 47 b(The) 28 b(ar) n(gument) p Fg 29 w(ex) p
+Ft 28 w(is) h(the) f(value) h(of) g(the) 221 4829 y(exception) 19
+b(caught.) 27 b(The) 19 b(except) n(ion) h(handler) g(is) g(expecte) n
+(d) g(to) f(do) g(whatever) h(is) g(appr) n(opriate) 221
+4941 y(and) g(r) n(eturns) f(a) i(boolean) g(value.) 27
+b(If) 21 b(the) e(r) n(eturn) g(val) r(ue) g(is) i(TRUE\(1\),) f(the) g
+(pr) n(oxy) f(object) h(r) n(etries) 221 5054 y(the) i(operation.) 29
+b(If) 23 b(the) f(r) n(eturn) g(val) r(ue) g(is) i(F) -7
+b(ALS) n(E\(0\),) 24 b(the) p Fg 22 w(CORBA) n(::TR) n(ANSI) n(ENT) p
+Ft 22 w(exception) 221 5167 y(is) f(pr) n(opagated) e(into) h(the) g
+(applica) r(tion) g(code.) 362 5281 y(The) 31 b(following) g(sample) g
+(code) f(installs) h(a) h(simple) f(exception) f(handler) g(for) h(all)
+i(objects) 221 5394 y(and) 23 b(for) f(a) i(spe) n(ci\002c) g(object:) p
+90 rotate dyy eop
 %%Page: 53 59
 53 58 bop Fh 63 282 a(4.7.) 51 b(SYSTE) n(M) 23 b(EXCEPTI) n(ON) g
-(HANDLER) n(S) p Ft 1576 w(53) p Ff 353 539 a(cerr) 49
-b(<<) h("transi) n(ent) g(handler) e(1) i(called) o(.") f(<<) h(endl) o
-(;) 353 638 y(return) f(1;) p Fe 548 w(//) g(retry) g(immediat) n(ely.)
-p Ff 204 738 a(}) 204 937 y(CORBA) o(::) o(Boolean) g(my_transi) n
-(ent_handle) n(r2) h(\(void) o(*) g(cookie) n(,) 2097
-1037 y(CORBA) o(::) o(ULong) f(retries) o(,) 2097 1136
+(HANDLER) n(S) p Ft 1576 w(53) p Ff 204 539 a(CORBA) o(::) o(Boolean) 49
+b(my_transi) n(ent_handle) n(r1) h(\(void) o(*) g(cookie) n(,) 2097
+638 y(CORBA) o(::) o(ULong) f(retries) o(,) 2097 738
 y(const) g(CORBA) o(::) o(TRANSIENT) o(&) g(ex\)) 204
-1236 y({) 353 1336 y(cerr) g(<<) h("transi) n(ent) g(handler) e(2) i
-(called) o(.") f(<<) h(endl) o(;) 353 1435 y(return) f(1;) p
-Fe 548 w(//) g(retry) g(immediat) n(ely.) p Ff 204 1535
-a(}) 204 1834 y(static) f(Echo_ptr) h(myobj) o(;) 204
-2033 y(void) g(installh) n(andlers) o(\(\)) 204 2133
-y({) 353 2232 y(omniORB) o(::instal) n(lTransientE) n(xceptionHan) n
+837 y({) 353 937 y(cerr) g(<<) h("transi) n(ent) g(handler) e(1) i
+(called) o(.") f(<<) h(endl) o(;) 353 1037 y(return) f(1;) p
+Fe 548 w(//) g(retry) g(immediat) n(ely.) p Ff 204 1136
+a(}) 204 1336 y(CORBA) o(::) o(Boolean) g(my_transi) n(ent_handle) n
+(r2) h(\(void) o(*) g(cookie) n(,) 2097 1435 y(CORBA) o(::) o(ULong) f
+(retries) o(,) 2097 1535 y(const) g(CORBA) o(::) o(TRANSIENT) o(&) g
+(ex\)) 204 1634 y({) 353 1734 y(cerr) g(<<) h("transi) n(ent) g
+(handler) e(2) i(called) o(.") f(<<) h(endl) o(;) 353
+1834 y(return) f(1;) p Fe 548 w(//) g(retry) g(immediat) n(ely.) p
+Ff 204 1933 a(}) 204 2232 y(static) f(Echo_ptr) h(myobj) o(;) 204
+2431 y(void) g(installh) n(andlers) o(\(\)) 204 2531
+y({) 353 2631 y(omniORB) o(::instal) n(lTransientE) n(xceptionHan) n
 (dler\(0,) o(my_transi) n(ent_handle) n(r1\);) p Fe 353
-2332 a(//) h(All) f(proxy) g(objects) f(will) h(call) g(my_transien) n
-(t_handler1) f(from) h(now) h(on) o(.) p Ff 353 2531
+2730 a(//) h(All) f(proxy) g(objects) f(will) h(call) g(my_transien) n
+(t_handler1) f(from) h(now) h(on) o(.) p Ff 353 2930
 a(omniORB) o(::instal) n(lTransientE) n(xceptionHan) n(dler\() o(myobj)
-o(,0,my_trans) n(ient_handle) n(r2\);) p Fe 353 2631
+o(,0,my_trans) n(ient_handle) n(r2\);) p Fe 353 3029
 a(//) g(The) f(proxy) g(object) g(of) g(myobj) g(will) g(call) g
 (my_trans) n(ient_handle) n(r2) h(from) f(now) g(on.) p
-Ff 204 2730 a(}) p Fl 63 3080 a(4.7.3) 99 b(CORBA::COMM) n(_F) -5
-b(AILURE) p Ft 63 3268 a(If) 22 b(the) g(ORB) h(has) f(successfully) g
+Ff 204 3129 a(}) p Fl 63 3418 a(4.7.3) 99 b(CORBA::COMM) n(_F) -5
+b(AILURE) p Ft 63 3594 a(If) 22 b(the) g(ORB) h(has) f(successfully) g
 (contacted) g(an) h(object) f(at) h(some) f(point,) g(and) g(access) h
-(to) f(it) h(sub-) 63 3381 y(sequ) n(ently) 18 b(fai) r(ls) g(\(and) h
+(to) f(it) h(sub-) 63 3707 y(sequ) n(ently) 18 b(fai) r(ls) g(\(and) h
 (the) f(condition) g(for) p Fg 19 w(TRAN) n(SIEN) n(T) p
 Ft 19 w(des) n(cribed) h(above) g(does) e(not) h(occur\),) 63
-3494 y(the) j(ORB) i(raises) f(a) p Fg 23 w(CORB) n(A::CO) n(MM_F) n
-(AILUR) n(E) p Ft 22 w(exception.) 204 3613 y(The) f(default) i
+3820 y(the) j(ORB) i(raises) f(a) p Fg 23 w(CORB) n(A::CO) n(MM_F) n
+(AILUR) n(E) p Ft 22 w(exception.) 204 3933 y(The) f(default) i
 (behaviour) f(of) h(the) e(pr) n(oxy) h(objects) f(is) i(to) e(pr) n
-(opagate) h(this) g(except) n(ion) h(to) e(the) 63 3725
+(opagate) h(this) g(except) n(ion) h(to) e(the) 63 4046
 y(application.) 61 b(Applications) 34 b(can) g(override) f(the) g
 (default) g(behaviour) h(by) g(installing) g(their) 63
-3838 y(own) 22 b(except) n(ion) h(handlers.) k(The) 22
+4159 y(own) 22 b(except) n(ion) h(handlers.) k(The) 22
 b(API) g(to) g(do) g(so) g(is) h(summarised) f(below:) p
-Ff 204 3999 a(class) 49 b(omniORB) f({) 204 4099 y(public) o(:) 204
-4298 y(typedef) g(CORBA) o(::Boolean) h(\(*) o(commFailu) n
+Ff 204 4298 a(class) 49 b(omniORB) f({) 204 4397 y(public) o(:) 204
+4597 y(typedef) g(CORBA) o(::Boolean) h(\(*) o(commFailu) n
 (reException) n(Handler_t) o(\)\() o(void*) g(cookie) o(,) 2595
-4397 y(CORBA) o(::ULong) f(n_retries) o(,) 2595 4497
+4696 y(CORBA) o(::ULong) f(n_retries) o(,) 2595 4796
 y(const) h(CORBA) o(::) o(COMM_FAILUR) n(E&) h(ex) o(\);) 204
-4696 y(static) e(void) i(instal) n(lCommFailur) n(eExceptionH) n
-(andler) o(\(void) o(*) g(cookie) o(,) 2445 4796 y(commFailure) n
-(ExceptionH) n(andler_t) f(fn) o(\);) 204 4995 y(static) f(void) i
+4995 y(static) e(void) i(instal) n(lCommFailur) n(eExceptionH) n
+(andler) o(\(void) o(*) g(cookie) o(,) 2445 5095 y(commFailure) n
+(ExceptionH) n(andler_t) f(fn) o(\);) 204 5294 y(static) f(void) i
 (instal) n(lCommFailur) n(eExceptionH) n(andler) o(\(CORBA) o
-(::Object_) n(ptr) g(obj) o(,) 2445 5095 y(void*) f(cookie) o(,) 2445
-5194 y(commFailure) n(ExceptionH) n(andler_t) 2445 5294
-y(fn\);) 204 5394 y(}) p 90 rotate dyy eop
+(::Object_) n(ptr) g(obj) o(,) 2445 5394 y(void*) f(cookie) o(,) p
+90 rotate dyy eop
 %%Page: 54 60
 54 59 bop Ft 221 282 a(54) p Fh 936 w(CHAPTER) 22 b(4.) 51
 b(OMNIORB) 22 b(CONFIGURA) -7 b(TION) 21 b(AND) i(API) p
-Ft 362 539 a(The) f(functions) g(ar) n(e) h(equivalent) g(to) f(their) g
-(counterparts) f(for) p Fg 23 w(COR) n(BA::T) n(RANS) n(IENT) p
-Ft -2 w(.) p Fl 221 793 a(4.7.4) 99 b(CORBA::SystemException) p
-Ft 221 970 a(If) 17 b(a) h(syst) n(em) f(exception) f(that) h(is) g
-(neither) p Fg 17 w(COR) n(BA::) n(TRANI) n(SENT) p Ft
-16 w(nor) p Fg 16 w(CORBA) n(::CO) n(MM_F) n(AILUR) n(E) p
-Ft 221 1083 a(occurs,) 23 b(the) f(default) h(behaviour) h(of) f(the) f
-(pr) n(oxy) h(objects) f(is) h(to) g(pr) n(opagate) f(this) h(except) n
-(ion) h(to) 221 1196 y(the) 19 b(application.) 28 b(Applications) 19
+Ff 2604 539 a(commFail) n(ureExceptio) n(nHandler_t) 2604
+638 y(fn\);) 362 738 y(}) p Ft 362 901 a(The) f(functions) g(ar) n(e) h
+(equivalent) g(to) f(their) g(counterparts) f(for) p
+Fg 23 w(COR) n(BA::T) n(RANS) n(IENT) p Ft -2 w(.) p
+Fl 221 1155 a(4.7.4) 99 b(CORBA::SystemException) p Ft
+221 1332 a(If) 17 b(a) h(syst) n(em) f(exception) f(other) g(than) p
+Fg 17 w(CORBA) n(::TR) n(ANIS) n(ENT) p Ft 16 w(or) p
+Fg 17 w(CORB) n(A::CO) n(MM_F) n(AILU) n(RE) p Ft 221
+1445 a(occurs,) 23 b(the) f(default) h(behaviour) h(of) f(the) f(pr) n
+(oxy) h(objects) f(is) h(to) g(pr) n(opagate) f(this) h(except) n(ion) h
+(to) 221 1558 y(the) 19 b(application.) 28 b(Applications) 19
 b(can) i(override) d(the) h(default) h(behaviour) g(by) f(installing) h
-(their) 221 1309 y(own) i(exception) g(handlers.) 27
+(their) 221 1671 y(own) i(exception) g(handlers.) 27
 b(The) 22 b(API) g(to) g(do) g(so) f(is) i(summarised) f(below:) p
-Ff 362 1458 a(class) 49 b(omniORB) g({) 362 1558 y(public) o(:) 362
-1757 y(typedef) g(CORBA) o(::) o(Boolean) g(\(*systemE) n(xceptionHa) n
-(ndler_t) o(\)\(void) o(*) h(cookie) o(,) 2554 1857 y(CORBA) o(::ULong)
-f(n_retri) n(es,) 2554 1957 y(const) g(CORBA) o(::SystemE) n(xception) o
-(&) h(ex) o(\);) 362 2156 y(static) f(void) g(installSy) n(stemExcepti)
-n(onHandler) o(\() o(void*) g(cookie) o(,) 2454 2255
+Ff 362 1820 a(class) 49 b(omniORB) g({) 362 1920 y(public) o(:) 362
+2119 y(typedef) g(CORBA) o(::) o(Boolean) g(\(*systemE) n(xceptionHa) n
+(ndler_t) o(\)\(void) o(*) h(cookie) o(,) 2554 2219 y(CORBA) o(::ULong)
+f(n_retri) n(es,) 2554 2319 y(const) g(CORBA) o(::SystemE) n(xception) o
+(&) h(ex) o(\);) 362 2518 y(static) f(void) g(installSy) n(stemExcepti)
+n(onHandler) o(\() o(void*) g(cookie) o(,) 2454 2617
 y(systemExcep) n(tionHandler) n(_t) h(fn) o(\);) 362
-2455 y(static) f(void) g(installSy) n(stemExcepti) n(onHandler) o(\() o
-(CORBA::) o(Object_pt) n(r) h(obj,) 2454 2554 y(void*) f(cookie) o(,)
-2454 2654 y(systemExcep) n(tionHandler) n(_t) h(fn) o(\);) 362
-2754 y(}) p Ft 362 2916 a(The) 22 b(functions) g(ar) n(e) h(equivalent)
+2817 y(static) f(void) g(installSy) n(stemExcepti) n(onHandler) o(\() o
+(CORBA::) o(Object_pt) n(r) h(obj,) 2454 2916 y(void*) f(cookie) o(,)
+2454 3016 y(systemExcep) n(tionHandler) n(_t) h(fn) o(\);) 362
+3116 y(}) p Ft 362 3278 a(The) 22 b(functions) g(ar) n(e) h(equivalent)
 g(to) f(their) g(counterparts) f(for) p Fg 23 w(COR) n(BA::T) n(RANS) n
-(IENT) p Ft -2 w(.) p Fr 221 3215 a(4.8) 119 b(Location) 31
-b(forwa) n(rding) p Ft 221 3426 a(Any) c(CORBA) h(operation) f
+(IENT) p Ft -2 w(.) p Fr 221 3577 a(4.8) 119 b(Location) 31
+b(forwa) n(rding) p Ft 221 3788 a(Any) c(CORBA) h(operation) f
 (invocation) i(can) f(r) n(eturn) f(a) p Fg 29 w(LOC) n(ATIO) n(N_FOR) n
-(WARD) p Ft 26 w(message) g(to) 221 3539 y(the) e(cal) r(ler) -7
+(WARD) p Ft 26 w(message) g(to) 221 3901 y(the) e(cal) r(ler) -7
 b(,) 27 b(indicating) g(that) e(it) i(should) e(r) n(etry) g(the) g
 (invocation) i(on) f(a) h(new) e(object) h(r) n(efer) n(ence.) 221
-3652 y(The) 33 b(standar) n(d) h(allows) g(ServantManagers) f(to) g
+4014 y(The) 33 b(standar) n(d) h(allows) g(ServantManagers) f(to) g
 (trigger) p Fg 32 w(LOCAT) n(ION_) n(FORW) n(ARD) p Ft(s) g(by) g
-(rais-) 221 3765 y(ing) 20 b(the) p Fg 19 w(Port) n(able) n(Serve) n
+(rais-) 221 4127 y(ing) 20 b(the) p Fg 19 w(Port) n(able) n(Serve) n
 (r::F) n(orwar) n(dReq) n(uest) p Ft 18 w(exception,) f(but) h(it) g
-(does) e(not) h(pr) n(ovide) 221 3878 y(a) 38 b(simila) r(r) f
+(does) e(not) h(pr) n(ovide) 221 4240 y(a) 38 b(simila) r(r) f
 (mechanism) h(for) f(normal) h(servants.) 70 b(omniORB) 37
 b(pr) n(ovides) g(the) p Fg 36 w(omni) n(ORB:) n(:) 221
-3990 y(LOCA) n(TION_) n(FORW) n(ARD) p Ft 30 w(except) n(ion) 31
+4352 y(LOCA) n(TION_) n(FORW) n(ARD) p Ft 30 w(except) n(ion) 31
 b(for) g(this) f(purpos) n(e.) 52 b(It) 30 b(can) i(be) e(thr) n(own) g
-(by) h(any) g(ope) n(r) n(-) 221 4103 y(ation) 23 b(implementation.) p
-Ff 362 4253 a(namespace) 48 b(omniORB) h({) 462 4352
-y(class) g(LOCATIO) n(N_FORWARD) g({) 462 4452 y(public) o(:) 562
-4552 y(LOCATI) n(ON_FORWARD) o(\() o(CORBA) o(::Object_pt) n(r) h
-(objref) o(\);) 462 4651 y(};) 362 4751 y(};) p Ft 221
-4914 a(The) 22 b(exception) f(object) i(consumes) e(the) h(object) g(r)
+(by) h(any) g(ope) n(r) n(-) 221 4465 y(ation) 23 b(implementation.) p
+Ff 362 4615 a(namespace) 48 b(omniORB) h({) 462 4714
+y(class) g(LOCATIO) n(N_FORWARD) g({) 462 4814 y(public) o(:) 562
+4914 y(LOCATI) n(ON_FORWARD) o(\() o(CORBA) o(::Object_pt) n(r) h
+(objref) o(\);) 462 5013 y(};) 362 5113 y(};) p Ft 221
+5276 a(The) 22 b(exception) f(object) i(consumes) e(the) h(object) g(r)
 n(efer) n(ence) g(it) h(is) g(passed) n(.) p 90 rotate
 dyy eop
 %%Page: 55 61
@@ -4678,480 +4693,511 @@ n(e) h(version) 221 5168 y(4.0,) f(ar) n(e) f(unable) g(to) f(deal) h
 b(connections.) p 90 rotate dyy eop
 %%Page: 73 79
 73 78 bop Fh 63 282 a(8.4.) 51 b(SER) -5 b(VE) n(R) 23
-b(SIDE) f(BEH) n(A) -10 b(VIOUR) p Ft 1873 w(73) p Fr
-63 539 a(8.4) 119 b(Server) 29 b(side) g(behaviour) p
-Ft 63 755 a(The) f(server) f(side) h(has) h(two) f(primary) h(modes) e
-(of) i(ope) n(ration:) 40 b(thr) n(ead) 29 b(per) e(connection) i(and)
-63 867 y(thr) n(ead) f(pooling.) 47 b(It) 29 b(is) g(able) h(to) f
+b(SIDE) f(BEH) n(A) -10 b(VIOUR) p Ft 1873 w(73) p Fl
+63 539 a(8.3.1) 99 b(Client) 25 b(side) g(timeouts) p
+Ft 63 722 a(omniORB) 19 b(can) i(associate) e(a) h(timeout) f(with) h
+(a) g(call) r(,) g(meaning) g(that) f(if) h(the) f(cal) r(l) h(takes) e
+(too) h(long) 63 835 y(a) p Fg 25 w(TRAN) n(SIEN) n(T) p
+Ft 25 w(exception) 24 b(is) h(thr) n(own.) 34 b(T) -5
+b(imeouts) 23 b(can) j(be) f(set) f(for) g(the) g(whole) h(pr) n(ocess)
+n(,) h(for) 63 948 y(a) d(speci\002c) f(thr) n(ead,) g(or) h(for) f(a) h
+(speci\002c) g(object) f(r) n(efer) n(ence.) 204 1064
+y(T) -5 b(imeouts) 21 b(ar) n(e) i(set) f(using) g(this) g(API:) p
+Ff 204 1220 a(namespa) n(ce) 50 b(omniORB) e({) 303 1320
+y(void) h(setClientCa) n(llTimeout) o(\(CORBA) o(::) o(ULong) g
+(millisecs) n(\);) 303 1420 y(void) g(setClientCa) n(llTimeout) o
+(\(CORBA) o(::) o(Object_ptr) f(obj,) h(CORBA) o(::ULong) g(millisec) n
+(s\);) 303 1519 y(void) g(setClientTh) n(readCallTim) n(eout\() o
+(CORBA::) o(ULong) g(millisecs) n(\);) 204 1619 y(};) p
+Fg 204 1791 a(set) n(Clien) n(tCal) n(lTime) n(out\() n(\)) p
+Ft 26 w(sets) 24 b(either) h(the) h(global) h(timeout) e(or) g(the) h
+(timeout) f(for) 63 1904 y(a) i(speci\002c) g(object) g(r) n(efer) n
+(ence.) p Fg 40 w(set) n(Clien) n(tThr) n(eadCa) n(llTi) n(meou) n
+(t\(\)) p Ft 26 w(sets) e(the) h(timeout) 63 2017 y(for) g(the) f(cal) r
+(ling) i(thr) n(ead.) 38 b(The) 26 b(calli) r(ng) g(thr) n(ead) g(must)
+f(have) i(an) p Fg 27 w(omn) n(i_thr) n(ead) p Ft 25
+w(associated) 63 2130 y(with) 22 b(it.) 28 b(Setting) 21
+b(any) i(timeout) f(value) h(to) f(zer) n(o) h(disables) f(it.) 204
+2246 y(Accessing) 34 b(per) n(-thr) n(ead) f(state) h(is) h(a) g(r) n
+(elatively) h(expe) n(nsive) f(operation,) h(so) e(per) g(thr) n(ead) 63
+2359 y(timeouts) 29 b(ar) n(e) j(disabled) f(by) g(default.) 53
+b(The) p Fg 30 w(suppo) n(rtPe) n(rThr) n(eadTi) n(meOu) n(t) p
+Ft 31 w(parameter) 63 2472 y(must) 22 b(be) g(set) g(tr) o(ue) g(to) g
+(enable) g(them.) 204 2588 y(T) -8 b(o) 24 b(choose) f(the) h(timeout) g
+(value) h(to) f(use) g(for) h(a) g(call) r(,) g(the) e(ORB) i(\002rst) f
+(looks) f(to) i(see) e(if) j(ther) n(e) 63 2701 y(is) j(a) h(timeout) f
+(for) g(the) f(object) i(r) n(efer) n(ence,) g(then) e(to) h(the) g
+(calli) r(ng) g(thr) n(ead,) h(and) f(\002nall) r(y) g(to) f(the) 63
+2814 y(global) 23 b(timeout.) p Fr 63 3133 a(8.4) 119
+b(Server) 29 b(side) g(behaviour) p Ft 63 3351 a(The) f(server) f(side)
+h(has) h(two) f(primary) h(modes) e(of) i(ope) n(ration:) 40
+b(thr) n(ead) 29 b(per) e(connection) i(and) 63 3464
+y(thr) n(ead) f(pooling.) 47 b(It) 29 b(is) g(able) h(to) f
 (dynamically) h(transition) f(betwee) n(n) h(the) e(two) g(modes,) i
-(and) 63 980 y(it) e(supp) n(orts) f(a) h(hybrid) f(scheme) g(that) h
+(and) 63 3577 y(it) e(supp) n(orts) f(a) h(hybrid) f(scheme) g(that) h
 (behaves) f(mostly) g(like) h(thr) n(ead) f(pooling,) h(but) g(has) f
-(the) 63 1093 y(same) 22 b(fast) h(turn-ar) n(ound) f(for) g(sequence) n
+(the) 63 3690 y(same) 22 b(fast) h(turn-ar) n(ound) f(for) g(sequence) n
 (s) h(of) f(cal) r(ls) g(as) h(thr) n(ead) f(per) g(connection.) p
-Fl 63 1363 a(8.4.1) 99 b(Thread) 24 b(per) g(connectio) r(n) g(mode) p
-Ft 63 1545 a(In) g(thr) n(ead) g(per) f(connection) h(mode) g(\(the) g
+Fl 63 3965 a(8.4.1) 99 b(Thread) 24 b(per) g(connectio) r(n) g(mode) p
+Ft 63 4148 a(In) g(thr) n(ead) g(per) f(connection) h(mode) g(\(the) g
 (default,) g(and) g(the) g(only) g(option) g(in) g(omniORB) h(ver) n(-)
-63 1658 y(sions) j(befor) n(e) g(4.0\),) j(each) e(connection) f(has) h
+63 4261 y(sions) j(befor) n(e) g(4.0\),) j(each) e(connection) f(has) h
 (a) g(single) g(thr) n(ead) f(dedicated) g(to) g(it.) 46
-b(The) 28 b(thr) n(ead) 63 1771 y(blocks) f(waiting) i(for) f(a) g(r) n
+b(The) 28 b(thr) n(ead) 63 4374 y(blocks) f(waiting) i(for) f(a) g(r) n
 (equest) n(.) 44 b(When) 27 b(it) h(r) n(eceives) g(one,) g(it) g
-(unmarshals) h(the) e(ar) n(guments,) 63 1884 y(makes) 33
+(unmarshals) h(the) e(ar) n(guments,) 63 4487 y(makes) 33
 b(the) f(up-call) j(to) e(the) g(applica) r(tion) g(code,) i(marshals) f
 (the) f(r) n(eply) -10 b(,) 35 b(and) f(goes) e(back) i(to) 63
-1997 y(watching) 29 b(the) f(connection.) 47 b(Ther) n(e) 28
+4600 y(watching) 29 b(the) f(connection.) 47 b(Ther) n(e) 28
 b(is) h(thus) f(no) h(thr) n(ead) f(switching) h(along) g(the) g(call) i
-(chain,) 63 2109 y(meaning) 22 b(the) g(cal) r(l) h(is) f(very) h(ef) n
-(\002cient.) 204 2225 y(As) h(explained) h(above,) h(a) g(client) g
+(chain,) 63 4713 y(meaning) 22 b(the) g(cal) r(l) h(is) f(very) h(ef) n
+(\002cient.) 204 4829 y(As) h(explained) h(above,) h(a) g(client) g
 (can) g(choose) e(to) g(multiplex) i(multiple) f(concurr) n(ent) g
-(call) r(s) 63 2338 y(on) 31 b(a) h(single) g(connection,) h(so) e
+(call) r(s) 63 4942 y(on) 31 b(a) h(single) g(connection,) h(so) e
 (once) g(the) g(server) f(has) i(r) n(eceived) g(the) e(r) n(equest,) j
-(and) e(just) g(be-) 63 2451 y(for) n(e) 23 b(it) i(makes) e(the) g
+(and) e(just) g(be-) 63 5055 y(for) n(e) 23 b(it) i(makes) e(the) g
 (call) j(into) e(application) h(code,) e(it) h(marks) g(the) f
-(connection) g(as) h(`selectable',) 63 2564 y(meaning) g(that) g
+(connection) g(as) h(`selectable',) 63 5168 y(meaning) g(that) g
 (another) g(thr) n(ead) g(shou) n(ld) h(watch) g(it) f(to) g(see) f(if)
 i(any) f(other) g(r) n(eques) n(ts) g(arrive.) 34 b(If) 63
-2676 y(they) 18 b(do,) h(extra) f(thr) n(eads) h(ar) n(e) g(dispatched)
+5281 y(they) 18 b(do,) h(extra) f(thr) n(eads) h(ar) n(e) g(dispatched)
 f(to) h(handle) g(the) f(concurr) n(ent) h(call) r(s.) 26
-b(GIOP) 20 b(1.2) g(actu-) 63 2789 y(ally) 25 b(allows) f(the) f(ar) n
+b(GIOP) 20 b(1.2) g(actu-) 63 5394 y(ally) 25 b(allows) f(the) f(ar) n
 (gument) g(data) i(for) e(multiple) i(calls) g(to) e(be) h(interleaved)
-f(on) h(a) g(connection,) 63 2902 y(so) d(the) h(unmarshalli) r(ng) g
-(code) f(has) i(to) f(handle) g(that) g(too.) 27 b(As) 22
-b(soon) f(as) i(any) f(multiplexing) h(oc-) 63 3015 y(curs) i(on) g
-(the) f(connection,) i(the) e(aim) j(of) e(r) n(emoving) h(thr) n(ead) e
-(switching) i(cannot) f(be) g(met,) h(and) 63 3128 y(ther) n(e) 21
-b(is) i(inevitabl) r(e) f(inef) n(\002ciency) h(due) f(to) g(thr) n
-(ead) g(switching.) 204 3243 y(The) p Fg 38 w(maxSe) n(rver) n(Thre) n
-(adPer) n(Conn) n(ectio) n(n) p Ft 39 w(parameter) 39
-b(can) h(be) f(set) f(to) h(limit) h(the) 63 3356 y(number) 25
-b(of) g(thr) n(eads) g(that) g(can) i(be) e(alloca) r(ted) f(to) h(a) h
-(single) f(connection) g(containing) h(concur) n(-) 63
-3469 y(r) n(ent) g(call) r(s.) 41 b(Sett) n(ing) 27 b(the) f(parameter)
-h(to) f(1) i(mimic) r(s) f(the) f(behaviour) h(of) g(omniORB) h
-(versions) 63 3582 y(befor) n(e) 22 b(4.0,) h(that) f(did) h(not) f
-(supp) n(ort) g(multiplexed) g(call) r(s.) p Fl 63 3852
-a(8.4.2) 99 b(Thread) 24 b(pool) i(mode) p Ft 63 4034
-a(In) 21 b(thr) n(ead) h(pool) f(mode,) g(selected) f(by) i(sett) n
-(ing) g(the) p Fg 21 w(threa) n(dPer) n(Conne) n(ctio) n(nPol) n(icy) p
-Ft 21 w(pa-) 63 4147 y(rameter) 32 b(to) g(zer) n(o,) k(a) d(single) g
-(thr) n(ead) f(watches) h(all) h(incoming) g(connections.) 58
-b(When) 32 b(a) i(call) 63 4260 y(arrives) 25 b(on) f(one) g(of) h
-(them,) g(a) g(thr) n(ead) f(is) h(chosen) f(fr) n(om) h(a) h(pool) e
-(of) h(thr) n(eads,) f(and) h(set) e(to) i(work) 63 4373
-y(unmarshalling) 35 b(the) e(ar) n(guments) g(and) i(performing) e(the)
-g(up-call) r(.) 62 b(Ther) n(e) 33 b(is) i(ther) l(efor) n(e) f(at) 63
-4486 y(least) 22 b(one) g(thr) n(ead) g(switch) g(for) h(each) g(call) r
-(.) 204 4601 y(The) i(thr) n(ead) g(pool) g(is) g(not) g(pr) n
-(e-initial) r(ised.) 35 b(Instead,) 25 b(thr) n(eads) f(ar) n(e) i
-(started) e(on) h(demand,) 63 4714 y(and) d(idle) h(thr) n(eads) f(ar) n
-(e) h(stop) n(ped) f(after) g(a) i(period) d(of) i(inactivi) r(ty) -10
-b(.) 27 b(The) 22 b(maximum) i(number) f(of) 63 4827
-y(thr) n(eads) 16 b(that) h(can) h(be) f(started) e(in) j(the) e(pool) h
-(is) g(selected) f(with) h(the) p Fg 16 w(maxS) n(erver) n(Thre) n
-(adPo) n(ol) 63 4940 y(Siz) n(e) p Ft 23 w(parameter) -7
-b(.) 27 b(The) 22 b(default) g(is) h(100) r(.) 204 5055
-y(A) i(common) h(pattern) e(in) i(CORBA) f(applica) r(tions) g(is) g
-(for) h(a) g(client) g(to) e(make) i(several) f(call) r(s) 63
-5168 y(to) f(a) h(single) f(object) h(in) g(quick) g(succession.) 33
-b(T) -8 b(o) 24 b(handle) h(this) f(situation) g(most) g(ef) n
-(\002ciently) -10 b(,) 25 b(the) 63 5281 y(default) 35
-b(behaviour) h(is) f(to) g(not) f(r) n(eturn) h(a) g(thr) n(ead) g(to) g
-(the) f(pool) h(immediately) h(after) f(a) h(call) 63
-5394 y(is) 28 b(\002nished) n(.) 44 b(Inst) n(ead,) 29
-b(it) f(is) g(set) e(to) h(watch) h(the) f(connection) h(it) g(has) f
-(just) g(served) g(for) g(a) i(short) p 90 rotate dyy
-eop
+f(on) h(a) g(connection,) p 90 rotate dyy eop
 %%Page: 74 80
 74 79 bop Ft 221 282 a(74) p Fh 605 w(CHAPTER) 21 b(8.) 51
 b(CONNECTION) 22 b(AND) h(THRE) n(AD) g(MANAGEMEN) n(T) p
-Ft 221 539 a(while,) 18 b(mimi) r(cking) f(the) g(behaviour) g(in) h
-(thr) n(ead) f(per) f(connection) h(mode.) 25 b(If) 17
-b(a) h(new) f(call) i(comes) 221 652 y(in) 29 b(during) g(the) f
-(watching) h(period) n(,) i(the) d(call) i(is) f(dispatched) f(without)
-g(any) h(thr) n(ead) f(switch-) 221 764 y(ing,) h(just) e(as) i(in) f
-(thr) n(ead) f(per) g(connection) h(mode.) 43 b(Of) 28
-b(course,) g(if) h(the) e(server) g(is) h(suppo) n(rting) 221
-877 y(a) k(very) f(lar) n(ge) g(number) g(of) g(connections) f(\(mor) n
-(e) i(than) f(the) f(size) h(of) h(the) e(thr) n(ead) h(pool\),) h
-(this) 221 990 y(policy) 20 b(can) h(delay) e(a) h(call) i(coming) e
-(fr) n(om) g(another) f(connection.) 26 b(If) 20 b(the) p
-Fg 19 w(thr) n(eadPo) n(olWa) n(tch) 221 1103 y(Conn) n(ectio) n(n) p
-Ft 18 w(parameter) e(is) g(set) g(to) f(zer) n(o,) i(connection) f
-(watching) h(is) f(disabled) h(and) f(thr) n(eads) 221
-1216 y(r) n(eturn) k(to) g(the) g(pool) g(immediately) h(after) f
-(\002nishing) h(a) g(single) f(r) n(equest) n(.) p Fl
-221 1493 a(8.4.3) 99 b(Policy) 26 b(transition) p Ft
-221 1678 a(If) 32 b(the) e(server) h(is) h(dealing) f(with) h(a) g(r) n
-(elatively) g(small) h(number) e(of) h(connections,) g(it) g(is) g
-(most) 221 1791 y(ef) n(\002cient) 21 b(to) g(use) f(thr) n(ead) g(per)
+Ft 221 539 a(so) f(the) g(unmarshalling) h(code) f(has) g(to) g(handle)
+h(that) f(too.) 27 b(As) 22 b(soo) n(n) h(as) f(any) h(multiplexing) g
+(oc-) 221 652 y(curs) i(on) g(the) g(connection,) g(the) g(aim) h(of) g
+(r) n(emoving) f(thr) n(ead) g(switching) g(cannot) g(be) h(met,) f
+(and) 221 764 y(ther) n(e) d(is) h(inevitable) g(inef) n(\002ci) r
+(ency) f(due) f(to) h(thr) n(ead) g(switching.) 362 879
+y(The) p Fg 39 w(max) n(Serve) n(rThr) n(eadPe) n(rCon) n(nect) n(ion) p
+Ft 38 w(parameter) 39 b(can) h(be) f(set) g(to) f(limi) r(t) h(the) 221
+992 y(number) 25 b(of) h(thr) n(eads) e(that) i(can) g(be) f(all) r
+(ocated) g(to) f(a) i(single) g(connection) e(containing) i(concur) n
+(-) 221 1105 y(r) n(ent) h(calls.) 42 b(Setting) 26 b(the) g(parameter)
+h(to) f(1) i(mimics) g(the) e(behaviour) i(of) f(omniORB) g(versions)
+221 1218 y(befor) n(e) 22 b(4.0,) i(that) e(did) g(not) g(suppo) n(rt) h
+(multiplexed) f(calls.) p Fl 221 1485 a(8.4.2) 99 b(Thread) 25
+b(pool) g(mode) p Ft 221 1666 a(In) d(thr) n(ead) f(pool) h(mode,) e
+(selected) h(by) g(setting) g(the) p Fg 21 w(thre) n(adPe) n(rCon) n
+(necti) n(onPo) n(licy) p Ft 21 w(pa-) 221 1779 y(rameter) 33
+b(to) f(zer) n(o,) j(a) f(single) e(thr) n(ead) h(watches) f(all) j
+(incoming) e(connections.) 58 b(When) 33 b(a) g(call) 221
+1892 y(arrives) 25 b(on) g(one) f(of) h(them,) f(a) h(thr) n(ead) g(is)
+g(chosen) e(fr) n(om) j(a) f(pool) f(of) h(thr) n(eads,) f(and) h(set) f
+(to) g(work) 221 2004 y(unmarshalli) r(ng) 33 b(the) h(ar) n(guments) f
+(and) h(performing) f(the) h(up-call.) 64 b(Ther) n(e) 33
+b(is) h(ther) n(efor) n(e) f(at) 221 2117 y(least) 23
+b(one) e(thr) n(ead) h(switch) h(for) f(each) h(cal) r(l.) 362
+2232 y(The) i(thr) n(ead) g(pool) g(is) h(not) f(pr) n(e-initiali) r
+(sed) n(.) 37 b(Inste) n(ad,) 26 b(thr) n(eads) f(ar) n(e) h(started) e
+(on) h(demand,) 221 2345 y(and) e(idle) g(thr) n(eads) e(ar) n(e) i
+(stopp) n(ed) f(after) h(a) g(period) f(of) g(inactiv) r(ity) -10
+b(.) 27 b(The) 22 b(maxim) r(um) h(number) f(of) 221
+2458 y(thr) n(eads) 16 b(that) h(can) h(be) f(started) f(in) i(the) e
+(pool) g(is) i(selecte) n(d) f(with) g(the) p Fg 17 w(max) n(Serv) n
+(erThr) n(eadP) n(ool) 221 2571 y(Size) p Ft 21 w(parameter) -7
+b(.) 28 b(The) 22 b(default) g(is) h(100.) 362 2686 y(A) j(common) f
+(pattern) g(in) g(CORBA) h(applications) g(is) g(for) f(a) h(client) g
+(to) f(make) g(several) h(calls) 221 2799 y(to) e(a) i(single) e
+(object) g(in) i(quick) f(success) n(ion.) 35 b(T) -8
+b(o) 23 b(handle) i(this) f(situation) h(most) f(ef) n(\002ciently) -10
+b(,) 25 b(the) 221 2912 y(default) 35 b(behaviour) h(is) f(to) g(not) g
+(r) n(eturn) f(a) i(thr) n(ead) f(to) f(the) h(pool) g(immediately) g
+(after) g(a) h(call) 221 3025 y(is) 28 b(\002nished.) 42
+b(Instead,) 27 b(it) h(is) g(set) f(to) g(watch) h(the) f(connection) g
+(it) h(has) g(just) f(served) f(for) i(a) g(short) 221
+3137 y(while,) 18 b(mimi) r(cking) f(the) g(behaviour) g(in) h(thr) n
+(ead) f(per) f(connection) h(mode.) 25 b(If) 17 b(a) h(new) f(call) i
+(comes) 221 3250 y(in) 29 b(during) g(the) f(watching) h(period) n(,) i
+(the) d(call) i(is) f(dispatched) f(without) g(any) h(thr) n(ead) f
+(switch-) 221 3363 y(ing,) h(just) e(as) i(in) f(thr) n(ead) f(per) g
+(connection) h(mode.) 43 b(Of) 28 b(course,) g(if) h(the) e(server) g
+(is) h(suppo) n(rting) 221 3476 y(a) k(very) f(lar) n(ge) g(number) g
+(of) g(connections) f(\(mor) n(e) i(than) f(the) f(size) h(of) h(the) e
+(thr) n(ead) h(pool\),) h(this) 221 3589 y(policy) 20
+b(can) h(delay) e(a) h(call) i(coming) e(fr) n(om) g(another) f
+(connection.) 26 b(If) 20 b(the) p Fg 19 w(thr) n(eadPo) n(olWa) n(tch)
+221 3702 y(Conn) n(ectio) n(n) p Ft 18 w(parameter) e(is) g(set) g(to) f
+(zer) n(o,) i(connection) f(watching) h(is) f(disabled) h(and) f(thr) n
+(eads) 221 3815 y(r) n(eturn) k(to) g(the) g(pool) g(immediately) h
+(after) f(\002nishing) h(a) g(single) f(r) n(equest) n(.) p
+Fl 221 4082 a(8.4.3) 99 b(Policy) 26 b(transition) p
+Ft 221 4263 a(If) 32 b(the) e(server) h(is) h(dealing) f(with) h(a) g
+(r) n(elatively) g(small) h(number) e(of) h(connections,) g(it) g(is) g
+(most) 221 4376 y(ef) n(\002cient) 21 b(to) g(use) f(thr) n(ead) g(per)
 g(connection) h(mode.) 26 b(If) 21 b(the) f(number) h(of) g
-(connections) f(becomes) 221 1904 y(too) 28 b(lar) n(ge,) i(howe) n
+(connections) f(becomes) 221 4488 y(too) 28 b(lar) n(ge,) i(howe) n
 (ver) -7 b(,) 30 b(operating) e(sys) n(tem) g(limi) r(ts) g(on) g(the) f
-(number) i(of) f(thr) n(eads) f(may) i(cause) 221 2017
+(number) i(of) f(thr) n(eads) f(may) i(cause) 221 4601
 y(a) g(signi\002cant) g(slowdown,) g(or) f(even) g(pr) n(event) g(the) g
 (acceptance) h(of) g(new) f(connections) f(alto-) 221
-2129 y(gethe) n(r) -7 b(.) 362 2246 y(T) f(o) 36 b(give) h(the) f(most)
+4714 y(gethe) n(r) -7 b(.) 362 4829 y(T) f(o) 36 b(give) h(the) f(most)
 f(ef) n(\002cient) i(r) n(espons) n(e) g(in) g(all) h(cir) n(cum) r
-(stances,) h(omniORB) d(all) r(ows) f(a) 221 2359 y(server) f(to) g
+(stances,) h(omniORB) d(all) r(ows) f(a) 221 4942 y(server) f(to) g
 (start) h(in) g(thr) n(ead) g(per) f(connection) g(mode,) j(and) e
-(transition) g(to) f(thr) n(ead) h(pooling) 221 2472
+(transition) g(to) f(thr) n(ead) h(pooling) 221 5055
 y(if) 29 b(many) f(connections) g(arrive.) 45 b(This) 27
 b(is) i(contr) n(olled) e(with) h(the) p Fg 28 w(thr) n(eadP) n(erCon) n
-(nect) n(ion) 221 2585 y(Uppe) n(rLimi) n(t) p Ft 19
+(nect) n(ion) 221 5168 y(Uppe) n(rLimi) n(t) p Ft 19
 w(and) p Fg 19 w(thre) n(adPe) n(rConn) n(ecti) n(onLow) n(erLi) n(mit)
-p Ft 18 w(parameters.) e(The) 18 b(former) 221 2698 y(must) 23
+p Ft 18 w(parameters.) e(The) 18 b(former) 221 5281 y(must) 23
 b(alwa) r(ys) g(be) h(lar) n(ger) g(than) g(the) f(latter) -7
 b(.) 32 b(The) 23 b(uppe) n(r) h(lim) r(it) g(choose) n(s) g(the) f
-(number) h(of) g(con-) 221 2811 y(nections) 29 b(at) h(which) g(time) g
+(number) h(of) g(con-) 221 5394 y(nections) 29 b(at) h(which) g(time) g
 (the) f(ORB) h(transitions) f(to) g(thr) n(ead) g(pool) g(mode;) j(the)
-d(lower) h(limit) 221 2923 y(selects) 22 b(the) f(point) h(at) h(which)
-g(the) f(transition) g(back) i(to) e(thr) n(ead) g(per) g(connection) g
-(is) g(made.) 362 3040 y(For) d(example,) g(setting) f(the) h(uppe) n
-(r) h(limit) g(to) f(50) i(and) e(the) f(lower) h(limi) r(t) g(to) g
-(30) h(would) f(mean) 221 3153 y(that) 29 b(the) g(\002rst) f(49) i
-(connections) f(would) f(r) n(eceive) i(ded) n(ica) r(ted) e(thr) n
-(eads.) 46 b(The) 29 b(50th) h(to) e(arrive) 221 3266
-y(would) 23 b(trigger) g(thr) n(ead) g(pooling.) 31 b(All) 24
-b(futur) n(e) g(connections) f(to) g(arrive) h(would) f(make) h(use) f
-(of) 221 3379 y(thr) n(eads) d(fr) n(om) i(the) f(pool.) 27
-b(Note) 19 b(that) j(the) e(existing) g(dedicated) h(thr) n(eads) f
-(continue) h(to) f(service) 221 3492 y(their) 31 b(connections) f
-(until) i(the) f(connections) f(ar) n(e) i(closed.) 53
-b(If) 31 b(the) g(number) g(of) g(connections) 221 3605
-y(fall) r(s) e(below) h(30,) j(thr) n(ead) c(per) g(connection) g(is) h
-(r) n(eactiv) r(ated) f(and) h(new) f(connections) g(r) n(eceive) 221
-3718 y(their) 34 b(own) g(dedicated) f(thr) n(eads) h(\(up) g(to) g
-(the) f(limi) r(t) h(of) g(50) i(again\).) 64 b(Once) 35
-b(again,) j(existing) 221 3830 y(connections) 22 b(in) h(thr) n(ead) f
-(pool) g(mode) g(stay) g(in) h(that) f(mode) g(until) h(they) e(ar) n
-(e) i(closed.) p Fr 221 4152 a(8.5) 119 b(Idle) 29 b(connection) i
-(shutdown) p Ft 221 4370 a(It) e(is) g(wasteful) g(to) g(leave) h(a) g
-(connection) f(open) f(when) h(it) g(has) h(been) e(left) i(unuse) n(d)
-g(for) f(a) h(con-) 221 4483 y(siderable) 23 b(time.) 30
-b(T) -8 b(oo) 22 b(many) h(idle) h(connections) e(could) h(block) h
-(out) e(new) h(connections) f(when) 221 4596 y(it) 29
-b(r) o(uns) e(out) h(of) g(spar) n(e) g(communica) r(tion) g(channels.)
-45 b(For) 27 b(example,) i(most) f(Unix) g(platforms) 221
-4709 y(have) f(a) f(limi) r(t) f(on) h(the) f(number) h(of) g(\002le) g
-(handles) g(a) g(pr) n(ocess) f(can) h(open.) 37 b(64) 27
-b(is) f(the) f(usual) i(de-) 221 4822 y(fault) j(lim) r(it.) 49
-b(The) 29 b(value) h(can) g(be) g(incr) n(eased) f(to) g(a) h(maxim) r
-(um) f(of) h(a) g(thousand) e(or) i(mor) n(e) f(by) 221
-4935 y(changing) 23 b(the) f(`ulimi) r(t') g(in) h(the) f(shell.) 362
-5051 y(Every) k(so) g(often,) h(a) g(thr) n(ead) g(scans) f(all) j(ope)
-n(n) e(connections) f(to) g(see) g(which) h(ar) n(e) g(idle.) 41
-b(The) 221 5164 y(scanning) 30 b(period) e(\(in) j(second) n(s\)) f(is)
-f(set) g(with) g(the) p Fg 29 w(sca) n(nGra) n(nular) n(ity) p
-Ft 28 w(parameter) -7 b(.) 49 b(The) 221 5277 y(default) 23
-b(is) f(5) i(second) n(s.) 362 5394 y(Outgoing) 18 b(connections) g
-(\(initi) r(ated) g(by) h(clients\)) g(and) g(incoming) h(connections) e
-(\(initiated) p 90 rotate dyy eop
+d(lower) h(limit) p 90 rotate dyy eop
 %%Page: 75 81
-75 80 bop Fh 63 282 a(8.6.) 51 b(TRANS) n(POR) m(TS) 22
-b(AND) h(ENDPOINT) n(S) p Ft 1614 w(75) 63 539 y(by) 17
-b(servers) n(\)) h(have) f(separate) f(idle) i(timeouts) n(.) 26
-b(The) 17 b(timeouts) f(ar) n(e) h(set) f(with) i(the) p
-Fg 16 w(outC) n(onSc) n(an) 63 652 y(Per) n(iod) p Ft
-27 w(and) p Fg 29 w(inC) n(onSca) n(nPer) n(iod) p Ft
-27 w(parameters) 28 b(r) n(espe) n(ctively) -10 b(.) 46
-b(The) 27 b(val) r(ues) g(ar) n(e) i(in) g(sec-) 63 764
+75 80 bop Fh 63 282 a(8.5.) 51 b(IDLE) 22 b(CONNECTION) g(SHUTDOWN) p
+Ft 1554 w(75) 63 539 y(selects) f(the) h(point) g(at) h(which) g(the) f
+(transition) g(back) h(to) f(thr) n(ead) g(per) g(connection) g(is) h
+(made.) 204 655 y(For) 18 b(example,) i(sett) n(ing) g(the) e(upper) g
+(limi) r(t) h(to) g(50) h(and) f(the) g(lower) g(limit) h(to) f(30) i
+(would) d(mean) 63 768 y(that) 29 b(the) f(\002rst) h(49) h
+(connections) e(would) h(r) n(eceive) g(dedicated) f(thr) n(eads.) 47
+b(The) 28 b(50th) i(to) f(arrive) 63 881 y(would) 23
+b(trigge) n(r) h(thr) n(ead) g(poo) n(ling.) 32 b(All) 25
+b(futur) n(e) e(connections) g(to) g(arrive) i(would) e(make) h(use) f
+(of) 63 994 y(thr) n(eads) d(fr) n(om) i(the) e(pool.) 27
+b(Note) 20 b(that) h(the) g(existing) f(dedicated) g(thr) n(eads) g
+(continue) h(to) g(service) 63 1107 y(their) 31 b(connections) f(until)
+i(the) e(connections) g(ar) n(e) i(closed.) 53 b(If) 32
+b(the) e(number) h(of) h(connections) 63 1220 y(falls) f(below) f(30,) i
+(thr) n(ead) d(per) h(connection) f(is) h(r) n(eactivated) g(and) g
+(new) f(connections) g(r) n(eceive) 63 1332 y(their) 34
+b(own) f(dedicated) h(thr) n(eads) f(\(up) h(to) g(the) g(limit) h(of) g
+(50) g(again\).) 65 b(Once) 34 b(again,) k(existing) 63
+1445 y(connections) 21 b(in) i(thr) n(ead) f(pool) h(mode) e(stay) h
+(in) h(that) g(mode) e(until) i(they) f(ar) n(e) h(closed.) p
+Fr 63 1766 a(8.5) 119 b(Idle) 29 b(connection) h(shutdown) p
+Ft 63 1984 a(It) e(is) i(wasteful) f(to) g(leave) h(a) f(connection) g
+(open) g(when) f(it) i(has) f(been) g(left) g(unused) f(for) h(a) h
+(con-) 63 2097 y(siderable) 23 b(time.) 29 b(T) -8 b(oo) 22
+b(many) i(idle) f(connections) f(could) h(block) h(out) e(new) h
+(connections) f(when) 63 2210 y(it) 28 b(r) o(uns) g(out) f(of) i(spar)
+n(e) f(communication) h(channels.) 45 b(For) 27 b(example,) j(most) d
+(Unix) i(platforms) 63 2322 y(have) d(a) h(limit) g(on) f(the) f
+(number) g(of) h(\002le) h(handles) e(a) i(pr) n(ocess) d(can) j(open.)
+37 b(64) 27 b(is) f(the) f(usual) h(de-) 63 2435 y(fault) k(limi) r(t.)
+48 b(The) 29 b(value) h(can) h(be) e(incr) n(eased) h(to) f(a) h
+(maximum) h(of) f(a) g(thous) n(and) g(or) f(mor) n(e) h(by) 63
+2548 y(changing) 22 b(the) g(`ulim) r(it') h(in) g(the) f(shell.) 204
+2665 y(Every) k(so) g(often,) g(a) i(thr) n(ead) e(scans) h(all) h
+(open) e(connections) g(to) g(see) f(which) j(ar) n(e) f(idle.) 40
+b(The) 63 2778 y(scanning) 29 b(period) g(\(in) h(seconds) n(\)) g(is) g
+(set) e(with) h(the) p Fg 29 w(scan) n(Granu) n(lari) n(ty) p
+Ft 29 w(parameter) -7 b(.) 48 b(The) 63 2890 y(default) 22
+b(is) h(5) g(seconds) n(.) 204 3007 y(Outgoing) 18 b(connections) g
+(\(initiated) h(by) g(clients\)) g(and) g(incomi) r(ng) f(connections) g
+(\(initia) r(ted) 63 3120 y(by) f(servers) n(\)) h(have) f(separate) f
+(idle) i(timeouts) n(.) 26 b(The) 17 b(timeouts) f(ar) n(e) h(set) f
+(with) i(the) p Fg 16 w(outC) n(onSc) n(an) 63 3233 y(Per) n(iod) p
+Ft 27 w(and) p Fg 29 w(inC) n(onSca) n(nPer) n(iod) p
+Ft 27 w(parameters) 28 b(r) n(espe) n(ctively) -10 b(.) 46
+b(The) 27 b(val) r(ues) g(ar) n(e) i(in) g(sec-) 63 3346
 y(onds) n(,) 23 b(and) f(must) g(be) h(a) g(multiple) g(of) g(the) f
-(scan) h(granularity) -10 b(.) p Fl 63 1018 a(8.5.1) 99
+(scan) h(granularity) -10 b(.) p Fl 63 3622 a(8.5.1) 99
 b(Interoperab) n(ility) 26 b(Considerations) p Ft 63
-1195 a(The) 21 b(IIOP) g(speci\002cation) h(allows) g(both) f(the) g
+3806 a(The) 21 b(IIOP) g(speci\002cation) h(allows) g(both) f(the) g
 (client) h(and) f(the) g(server) g(to) g(shutd) n(own) g(a) h(connec-)
-63 1308 y(tion) g(unilaterally) -10 b(.) 29 b(When) 22
+63 3919 y(tion) g(unilaterally) -10 b(.) 29 b(When) 22
 b(one) g(end) f(is) i(about) f(to) g(shutdo) n(wn) h(a) g(connection,) f
-(it) g(should) g(send) 63 1421 y(a) 33 b(CloseConnection) f(message) f
+(it) g(should) g(send) 63 4032 y(a) 33 b(CloseConnection) f(message) f
 (to) h(the) g(other) g(end.) 57 b(It) 32 b(should) g(also) h(make) g
-(sur) n(e) f(that) g(the) 63 1534 y(message) 21 b(will) j(r) n(each) f
+(sur) n(e) f(that) g(the) 63 4145 y(message) 21 b(will) j(r) n(each) f
 (the) f(other) f(end) h(befor) n(e) g(it) h(pr) n(oceeds) e(to) h
-(shutd) n(own) g(the) g(connection.) 204 1647 y(The) 35
+(shutd) n(own) g(the) g(connection.) 204 4261 y(The) 35
 b(cli) r(ent) g(should) g(distinguish) g(between) g(an) i(or) n(derly) e
-(and) h(an) h(abnormal) g(connec-) 63 1760 y(tion) 21
+(and) h(an) h(abnormal) g(connec-) 63 4374 y(tion) 21
 b(shutdo) n(wn.) 28 b(When) 21 b(a) i(client) f(r) n(eceives) g(a) h
 (CloseConnection) e(message) f(befor) n(e) i(the) f(con-) 63
-1873 y(nection) 28 b(is) g(closed,) h(the) e(condition) h(is) h(an) g
+4487 y(nection) 28 b(is) g(closed,) h(the) e(condition) h(is) h(an) g
 (or) n(derly) e(shutdo) n(wn.) 45 b(If) 29 b(the) e(message) g(is) i
-(not) e(r) n(e-) 63 1986 y(ceived,) 34 b(the) e(condition) g(is) g(an) h
+(not) e(r) n(e-) 63 4600 y(ceived,) 34 b(the) e(condition) g(is) g(an) h
 (abnormal) h(shut) n(down.) 56 b(In) 32 b(an) h(abnormal) h(shutd) n
-(own,) g(the) 63 2099 y(ORB) c(should) f(raise) i(a) p
+(own,) g(the) 63 4713 y(ORB) c(should) f(raise) i(a) p
 Fg 31 w(COM) n(M_FAI) n(LURE) p Ft 29 w(except) n(ion) g(wher) n(eas) f
-(in) h(an) f(or) n(derly) g(shutd) n(own,) 63 2211 y(the) 19
+(in) h(an) f(or) n(derly) g(shutd) n(own,) 63 4826 y(the) 19
 b(ORB) h(should) p Fs 19 w(not) p Ft 21 w(raise) g(an) h(exception) e
 (and) h(should) g(try) f(to) h(r) n(e-establish) g(a) h(new) e(connec-)
-63 2324 y(tion) j(transpar) n(ently) -10 b(.) 204 2437
+63 4939 y(tion) j(transpar) n(ently) -10 b(.) 204 5055
 y(omniORB) 27 b(implements) g(thes) n(e) g(semantics) g(completely) -10
 b(.) 40 b(However) -7 b(,) 27 b(it) h(is) f(known) f(that) 63
-2550 y(some) 34 b(ORBs) h(ar) n(e) h(not) f(\(yet\)) g(able) i(to) e
+5168 y(some) 34 b(ORBs) h(ar) n(e) h(not) f(\(yet\)) g(able) i(to) e
 (distinguish) f(between) g(an) i(or) n(derly) f(and) h(an) g(abnor) n
-(-) 63 2663 y(mal) g(shutd) n(own.) 65 b(Usually) 35
+(-) 63 5281 y(mal) g(shutd) n(own.) 65 b(Usually) 35
 b(this) g(is) g(manif) r(est) n(ed) g(as) g(the) f(cli) r(ent) g(in) h
-(these) f(ORBs) g(seeing) g(a) p Fg 63 2776 a(COM) n(M_FA) n(ILURE) p
+(these) f(ORBs) g(seeing) g(a) p Fg 63 5394 a(COM) n(M_FA) n(ILURE) p
 Ft 27 w(occasionall) r(y) 28 b(when) f(connected) g(to) h(an) h
-(omniORB) g(server) -7 b(.) 44 b(The) 28 b(work-) 63
-2889 y(ar) n(ound) 23 b(is) g(either) g(to) f(catch) j(the) d
-(exception) g(in) i(the) f(application) h(code) f(and) g(r) n(etry) -10
-b(,) 22 b(or) h(to) g(turn) 63 3002 y(of) n(f) g(the) f(idle) g
-(connection) h(shut) n(down) f(inside) g(the) g(omniORB) h(server) -7
-b(.) p Fr 63 3300 a(8.6) 119 b(T) -13 b(ra) n(nsports) 30
-b(and) g(endpoints) p Ft 63 3511 a(omniORB) 20 b(can) h(suppo) n(rt) f
-(multiple) h(netwo) n(rk) f(transports) n(.) 27 b(All) 21
-b(platforms) f(\(usually\)) h(have) g(a) 63 3624 y(TCP) j(transport) f
-(avail) r(able.) 33 b(Unix) 25 b(platforms) f(suppo) n(rt) g(a) h(Unix)
-f(domain) h(socke) n(t) f(transport.) 63 3736 y(Platforms) e(with) h
-(the) f(OpenSSL) f(libra) r(ry) h(avai) r(lable) h(can) h(suppo) n(rt) e
-(an) i(SSL) d(transport.) 204 3849 y(Servers) 27 b(must) g(be) i
-(con\002gur) n(ed) e(in) i(two) e(ways) h(with) g(r) n(egar) n(d) g(to)
-g(transport) n(s:) 39 b(the) 28 b(trans-) 63 3962 y(port) n(s) 19
-b(and) f(interfaces) g(on) h(which) g(they) e(listen,) i(and) f(the) g
-(details) g(that) g(ar) n(e) h(published) f(in) h(IORs) 63
-4075 y(for) h(clients) g(to) f(see.) 26 b(Usually) 20
-b(the) f(published) h(det) n(ail) r(s) f(will) j(be) e(the) f(same) h
-(as) g(the) f(listening) h(de-) 63 4188 y(tails,) j(but) f(ther) n(e) g
-(ar) n(e) h(times) f(when) g(it) h(is) f(useful) h(to) f(publish) g
-(dif) n(fer) n(ent) h(information.) 204 4301 y(Details) k(ar) n(e) g
-(selecte) n(d) f(with) h(the) p Fg 25 w(endPo) n(int) p
-Ft 25 w(fami) r(ly) f(of) h(parameters.) 38 b(The) 26
-b(simplest) f(is) 63 4414 y(plain) p Fg 32 w(end) n(Poin) n(t) p
-Ft(,) 33 b(which) e(chooses) e(a) j(transpo) n(rt) f(and) g(interface) g
-(details,) h(and) f(publishes) 63 4527 y(the) h(information) h(in) h
-(IORs.) 58 b(End) 32 b(point) g(parameters) g(ar) n(e) i(in) f(the) f
-(form) h(of) g(URIs,) h(with) f(a) 63 4640 y(scheme) g(name) h(of) g(`)
-p Fg(giop) n(:) p Ft(',) i(followed) e(by) f(the) g(transport) f(name.)
-62 b(Dif) n(f) r(er) n(ent) 33 b(transpo) n(rts) 63 4753
-y(have) 23 b(dif) n(fer) n(ent) f(parameters) g(following) h(the) f
-(transpo) n(rt.) 204 4866 y(TCP) h(end) e(points) h(have) h(the) f
-(format:) p Fg 290 5073 a(giop) n(:tcp) n(:) p Fs(<host>) p
-Fg(:) p Fs(<p) r(ort>) p Ft 63 5281 a(The) 35 b(host) f(must) h(be) h
-(a) g(val) r(id) f(host) g(name) h(for) g(the) f(server) f(machi) r
-(ne.) 66 b(It) 36 b(det) n(ermines) f(the) 63 5394 y(netwo) n(rk) e
-(interface) h(on) f(which) h(the) f(server) g(listens.) 60
-b(The) 32 b(port) h(selects) f(the) h(TCP) h(port) e(to) p
-90 rotate dyy eop
+(omniORB) g(server) -7 b(.) 44 b(The) 28 b(work-) p 90 rotate
+dyy eop
 %%Page: 76 82
 76 81 bop Ft 221 282 a(76) p Fh 605 w(CHAPTER) 21 b(8.) 51
 b(CONNECTION) 22 b(AND) h(THRE) n(AD) g(MANAGEMEN) n(T) p
-Ft 221 539 a(listen) 29 b(on,) g(which) h(must) e(be) h(unoccupied.) 45
+Ft 221 539 a(ar) n(ound) g(is) h(either) e(to) h(catch) h(the) f
+(except) n(ion) h(in) g(the) e(applica) r(tion) h(code) f(and) i(r) n
+(etry) -10 b(,) 22 b(or) h(to) g(turn) 221 652 y(of) n(f) g(the) f
+(idle) h(connection) f(shutd) n(own) h(inside) f(the) g(omniORB) g
+(server) -7 b(.) p Fr 221 1010 a(8.6) 119 b(T) -13 b(ransports) 29
+b(and) h(endpoints) p Ft 221 1241 a(omniORB) 21 b(can) g(supp) n(ort) f
+(multiple) g(network) f(transpo) n(rts.) 27 b(All) 21
+b(platforms) f(\(usually\)) h(have) f(a) 221 1354 y(TCP) 25
+b(transpo) n(rt) f(avai) r(labl) r(e.) 32 b(Unix) 24
+b(platforms) g(support) f(a) h(Unix) h(domain) f(socket) f(transport) n
+(.) 221 1467 y(Platforms) g(with) g(the) e(OpenSSL) h(library) h(ava) r
+(ilabl) r(e) f(can) h(support) e(an) i(SSL) f(transpo) n(rt.) 362
+1589 y(Servers) 27 b(must) h(be) g(con\002gur) n(ed) f(in) i(two) f
+(ways) f(with) i(r) n(egar) n(d) f(to) g(transpo) n(rts:) 39
+b(the) 27 b(trans-) 221 1702 y(ports) 17 b(and) i(interfaces) f(on) g
+(which) h(they) e(listen,) i(and) g(the) e(details) i(that) f(ar) n(e) h
+(published) f(in) h(IORs) 221 1815 y(for) h(clients) g(to) g(see) n(.)
+27 b(Usually) 21 b(the) e(published) g(details) h(will) h(be) f(the) g
+(same) g(as) g(the) f(listening) h(de-) 221 1928 y(tails,) j(but) g
+(ther) n(e) e(ar) n(e) i(times) f(when) g(it) h(is) g(useful) f(to) g
+(publish) h(dif) n(fer) n(ent) f(information.) 362 2051
+y(Details) 27 b(ar) n(e) g(selected) e(with) h(the) p
+Fg 26 w(endP) n(oint) p Ft 25 w(famil) r(y) g(of) g(parameters.) 39
+b(The) 25 b(simplest) h(is) 221 2164 y(plain) p Fg 32
+w(endP) n(oint) p Ft -2 w(,) 33 b(which) f(choose) n(s) f(a) g
+(transport) e(and) i(interface) g(details,) i(and) e(publishes) 221
+2277 y(the) h(information) i(in) f(IORs.) 58 b(End) 32
+b(point) h(parameters) f(ar) n(e) h(in) g(the) g(form) g(of) g(URIs) n
+(,) j(with) c(a) 221 2390 y(scheme) h(name) h(of) g(`) p
+Fg(giop:) p Ft -2 w(',) j(followed) c(by) h(the) f(transpor) n(t) h
+(name.) 62 b(Dif) n(fer) n(ent) 34 b(transport) n(s) 221
+2502 y(have) 23 b(dif) n(fer) n(ent) g(parameters) e(following) i(the) f
+(transport) n(.) 362 2625 y(TCP) h(end) f(points) f(have) i(the) f
+(format:) p Fg 448 2887 a(giop:) n(tcp:) p Fs -2 w(<hos) r(t>) p
+Fg(:) p Fs(<port>) p Ft 221 3148 a(The) 35 b(host) g(must) g(be) h(a) g
+(vali) r(d) f(host) g(name) h(for) f(the) g(server) g(machine.) 68
+b(It) 35 b(dete) n(rmines) h(the) 221 3261 y(network) c(interface) i
+(on) f(which) h(the) f(server) f(listens.) 60 b(The) 33
+b(port) f(selects) h(the) f(TCP) i(port) f(to) 221 3374
+y(listen) c(on,) g(which) h(must) e(be) h(unoccupied.) 45
 b(Either) 28 b(the) g(host) g(or) h(port) n(,) i(or) d(both) h(can) g
-(be) g(left) 221 652 y(empty) -10 b(.) 59 b(If) 33 b(the) g(host) f(is)
-i(empty) -12 b(,) 36 b(the) d(ORB) g(published) g(the) g(IP) g(addr) n
-(es) n(s) h(of) f(the) g(\002rst) f(non-) 221 764 y(loopback) 20
-b(network) e(interface) j(it) f(can) h(\002nd) f(\(or) g(the) f
-(loopback) h(if) h(that) f(is) g(the) f(only) h(interface\),) 221
-877 y(but) 34 b(listens) e(on) p Fs 34 w(all) p Ft 34
-w(network) g(interfaces.) 60 b(If) 34 b(the) f(port) f(is) i(empty) -10
-b(,) 35 b(the) d(operating) h(sys) n(tem) 221 990 y(chooses) 21
-b(a) i(port.) 362 1106 y(Multiple) f(TCP) f(end) g(points) f(can) j(be)
-e(selected) n(,) h(either) e(to) h(specify) g(multiple) h(netwo) n(rk) f
-(in-) 221 1219 y(terfaces) h(on) g(which) h(to) e(listen,) h(or) g
-(\(less) g(usefully\)) g(to) g(select) f(multiple) i(TCP) g(ports) e
-(on) g(which) 221 1332 y(to) h(listen.) 362 1448 y(If) 34
-b(no) p Fg 33 w(endP) n(oint) p Ft 32 w(parameters) e(ar) n(e) i(set,) h
-(the) d(ORB) i(assumes) e(a) i(single) f(parameter) g(of) p
-Fg 221 1561 a(giop) n(:tcp:) n(:) p Ft(,) 18 b(meaning) g(IORs) e
+(be) g(left) 221 3487 y(empty) -10 b(.) 59 b(If) 33 b(the) g(host) f
+(is) i(empty) -12 b(,) 36 b(the) d(ORB) g(published) g(the) g(IP) g
+(addr) n(es) n(s) h(of) f(the) g(\002rst) f(non-) 221
+3600 y(loopback) 20 b(network) e(interface) j(it) f(can) h(\002nd) f
+(\(or) g(the) f(loopback) h(if) h(that) f(is) g(the) f(only) h
+(interface\),) 221 3713 y(but) 34 b(listens) e(on) p
+Fs 34 w(all) p Ft 34 w(network) g(interfaces.) 60 b(If) 34
+b(the) f(port) f(is) i(empty) -10 b(,) 35 b(the) d(operating) h(sys) n
+(tem) 221 3825 y(chooses) 21 b(a) i(port.) 362 3948 y(Multiple) f(TCP) f
+(end) g(points) f(can) j(be) e(selected) n(,) h(either) e(to) h
+(specify) g(multiple) h(netwo) n(rk) f(in-) 221 4061
+y(terfaces) h(on) g(which) h(to) e(listen,) h(or) g(\(less) g
+(usefully\)) g(to) g(select) f(multiple) i(TCP) g(ports) e(on) g(which)
+221 4174 y(to) h(listen.) 362 4297 y(If) 34 b(no) p Fg
+33 w(endP) n(oint) p Ft 32 w(parameters) e(ar) n(e) i(set,) h(the) d
+(ORB) i(assumes) e(a) i(single) f(parameter) g(of) p
+Fg 221 4410 a(giop) n(:tcp:) n(:) p Ft(,) 18 b(meaning) g(IORs) e
 (contain) i(the) f(addr) n(ess) f(of) h(the) g(\002rst) g(non-loopback)
-g(netwo) n(rk) 221 1674 y(interface,) 23 b(the) f(ORB) g(listens) g(on)
+g(netwo) n(rk) 221 4522 y(interface,) 23 b(the) f(ORB) g(listens) g(on)
 g(all) i(interfaces,) e(and) h(the) f(OS) h(choose) n(s) f(a) i(port) d
-(number) -7 b(.) 362 1790 y(SSL) 18 b(end) g(points) f(have) i(the) f
+(number) -7 b(.) 362 4645 y(SSL) 18 b(end) g(points) f(have) i(the) f
 (same) g(format) h(as) f(TCP) h(ones,) f(except) f(`) p
-Fg(tcp) p Ft(') h(is) h(r) n(eplaced) f(with) 221 1903
+Fg(tcp) p Ft(') h(is) h(r) n(eplaced) f(with) 221 4758
 y(`) p Fg(ssl) p Ft('.) 27 b(Unix) c(domain) g(socket) e(end) h(points)
-f(have) i(the) f(format:) p Fg 448 2132 a(giop:) n(unix) n(:) p
-Fs(<\002lename>) p Ft 221 2361 a(wher) n(e) h(the) g(\002lename) h(is) g
+f(have) i(the) f(format:) p Fg 448 5019 a(giop:) n(unix) n(:) p
+Fs(<\002lename>) p Ft 221 5281 a(wher) n(e) h(the) g(\002lename) h(is) g
 (the) f(name) h(of) f(the) g(socket) f(within) i(the) f(\002lesyst) n
-(em.) 31 b(If) 24 b(the) f(\002lename) 221 2474 y(is) g(left) g(blank,)
+(em.) 31 b(If) 24 b(the) f(\002lename) 221 5394 y(is) g(left) g(blank,)
 g(the) e(ORB) i(choose) n(s) g(a) g(name) g(based) f(on) g(the) g(pr) n
-(ocess) f(id) i(and) g(a) g(timestamp.) p Fl 221 2748
-a(8.6.1) 99 b(End) 25 b(point) g(publishing) p Ft 221
-2932 a(T) -8 b(o) 25 b(publish) h(an) g(end) e(point) h(in) h(IORs,) g
-(without) e(actuall) r(y) h(listening) g(on) g(that) h(end) e(point,) i
-(the) p Fg 221 3045 a(endP) n(ointN) n(oLis) n(ten) p
-Ft 33 w(parameter) 34 b(can) h(be) f(set) n(.) 63 b(This) 34
-b(can) h(be) f(useful) f(in) i(fault-tolerant) 221 3158
-y(applica) r(tions) 24 b(wher) n(e) h(r) n(eplicas) h(of) f(an) h
-(object) f(can) i(be) e(contacted) f(at) i(mor) n(e) f(than) h(one) e
-(server) -7 b(.) p Fg 221 3270 a(endP) n(ointN) n(oLis) n(ten) p
-Ft 20 w(doe) n(s) 21 b(not) f(check) g(that) g(the) g(transport) f
-(speci\002ed) h(is) g(sensible) g(for) h(the) 221 3383
-y(curr) n(ent) h(machi) r(ne,) g(so) g(it) g(all) r(ows) f(the) h(addr)
-n(ess) f(of) i(a) g(dif) n(fer) n(ent) g(machine) g(to) f(be) h
-(speci\002ed.) 362 3499 y(Simil) r(arly) -10 b(,) 24
-b(but) f(less) g(likely) h(to) f(be) h(useful,) f(it) h(is) g(poss) n
-(ible) h(to) e(ask) g(the) g(server) g(to) g(listen) g(on) 221
-3612 y(an) f(end) f(point,) g(but) g(not) g(publish) g(the) g(details) g
-(in) h(IORs,) f(using) g(the) p Fg 21 w(end) n(Poin) n(tNoPu) n(blis) n
-(h) p Ft 221 3725 a(parameter) -7 b(.) 28 b(This) 22
-b(should) p Fs 22 w(not) p Ft 23 w(be) g(used) f(for) i(security) e(by)
-i(obscurity!) 362 3841 y(If) 35 b(a) g(machine) h(has) e(multiple) h
-(TCP) g(netwo) n(rk) g(interfaces,) i(it) d(may) h(be) g(useful) f(to) g
-(pub-) 221 3954 y(lish) i(all) g(interfaces,) i(instead) c(of) i(just) e
-(the) h(\002rst) f(one.) 64 b(This) 35 b(is) h(necess) n(ary) f(if) h
-(dif) n(fer) n(ent) f(in-) 221 4067 y(terfaces) 29 b(ar) n(e) h(on) g
-(sep) n(arate) g(non-gatewaye) n(d) g(subnet) n(s,) h(for) f(example.)
-49 b(Publishing) 30 b(all) h(ad-) 221 4180 y(dr) n(esse) n(s) 25
-b(could) g(be) h(achieved) f(with) h(lots) f(of) p Fg
-25 w(endP) n(oint) p Ft 24 w(parameters,) g(but) g(a) h(short) n(-hand)
-g(is) 221 4293 y(to) j(set) f(the) p Fg 29 w(endP) n(oint) n(Publi) n
-(shAl) n(lIFs) p Ft 28 w(parameter) h(to) g(1.) 49 b(That) 29
-b(\(in) i(conjunction) e(with) 221 4406 y(a) 34 b(`) p
-Fg(giop:) n(tcp:) n(:) p Ft(') 50 b(transport) 32 b(selection) g
-(without) h(a) h(speci\002c) f(hostname\)) g(causes) g(all) i(the) 221
-4519 y(machi) r(ne's) 22 b(non-loopback) g(interfaces) g(to) g(be) h
-(published) f(in) h(IORs.) p Fr 221 4837 a(8.7) 119 b(Connection) 31
-b(selection) e(and) h(acceptance) p Ft 221 5055 a(In) e(the) g(face) h
-(of) g(IORs) e(containing) i(details) f(about) h(multiple) g(dif) n
-(fer) n(ent) f(end) f(points,) i(clients) 221 5168 y(have) d(to) g
-(know) e(how) i(to) f(choose) g(the) g(one) g(to) g(use) g(to) g
-(connect) g(a) i(server) -7 b(.) 36 b(Simil) r(arly) -10
-b(,) 27 b(serve) n(rs) 221 5281 y(may) 36 b(wish) g(to) f(r) n(estrict)
-g(which) h(clients) g(can) g(connect) f(to) g(particular) i(transpor) n
-(ts.) 67 b(This) 35 b(is) 221 5394 y(achieved) 23 b(with) p
-Fs 23 w(transpor) r(t) g(rules) p Ft(.) p 90 rotate dyy
+(ocess) f(id) i(and) g(a) g(timestamp.) p 90 rotate dyy
 eop
 %%Page: 77 83
 77 82 bop Fh 63 282 a(8.7.) 51 b(CONNECTION) 22 b(SELE) n(CTION) h(AND)
-f(ACCEPT) -7 b(ANCE) p Ft 948 w(77) p Fl 63 539 a(8.7.1) 99
-b(Client) 25 b(transport) g(rules) p Ft 63 725 a(The) p
-Fg 28 w(clie) n(ntTr) n(anspo) n(rtRu) n(le) p Ft 29
-w(parameter) j(is) i(use) n(d) f(to) g(\002lter) g(and) g(prioritise) f
-(the) h(or) n(der) 63 838 y(in) 23 b(which) g(transport) n(s) f
-(speci\002ed) g(in) h(an) g(IOR) g(ar) n(e) g(tried.) k(Each) c(r) o
-(ule) f(has) h(the) f(form:) p Fs 290 1074 a(<address) i(mask>) f
-([acti) r(on]+) p Ft 63 1310 a(The) f(addr) n(es) n(s) h(mask) f(can) i
-(be) e(one) g(of) 254 1516 y(1.) p Fg 99 w(local) n(host) p
+f(ACCEPT) -7 b(ANCE) p Ft 948 w(77) p Fl 63 539 a(8.6.1) 99
+b(End) 24 b(point) h(publishing) p Ft 63 748 a(T) -8
+b(o) 24 b(publish) i(an) g(end) f(point) g(in) h(IORs,) f(without) g
+(actually) i(listening) e(on) g(that) g(end) g(point,) g(the) p
+Fg 63 861 a(end) n(Poin) n(tNoLi) n(sten) p Ft 33 w(parameter) 33
+b(can) i(be) f(set.) 61 b(This) 34 b(can) h(be) f(useful) g(in) g
+(fault-tolerant) 63 974 y(applications) 26 b(wher) n(e) e(r) n(eplicas)
+i(of) g(an) g(object) f(can) h(be) f(contacted) g(at) g(mor) n(e) h
+(than) f(one) g(server) -9 b(.) p Fg 63 1087 a(end) n(Poin) n(tNoLi) n
+(sten) p Ft 19 w(does) 19 b(not) h(check) g(that) h(the) f(transpo) n
+(rt) h(spe) n(ci\002ed) g(is) g(sens) n(ibl) r(e) f(for) g(the) 63
+1200 y(curr) n(ent) i(machine,) h(so) f(it) h(allows) g(the) f(addr) n
+(ess) f(of) i(a) g(dif) n(fer) n(ent) f(machi) r(ne) g(to) g(be) h(spe)
+n(ci\002ed.) 204 1328 y(Simila) r(rly) -10 b(,) 23 b(but) h(less) f
+(likely) h(to) f(be) g(useful,) h(it) g(is) f(possible) g(to) g(ask) h
+(the) f(server) f(to) i(listen) f(on) 63 1441 y(an) f(end) e(point,) h
+(but) g(not) g(publish) h(the) f(det) n(ail) r(s) g(in) h(IORs,) f
+(using) f(the) p Fg 21 w(endP) n(ointN) n(oPub) n(lish) p
+Ft 63 1554 a(parameter) -7 b(.) 27 b(This) c(shou) n(ld) p
+Fs 23 w(not) p Ft 23 w(be) g(used) e(for) h(security) g(by) g
+(obscurity!) 204 1683 y(If) 34 b(a) i(machine) f(has) g(multiple) g
+(TCP) f(network) f(interfaces,) k(it) e(may) g(be) f(useful) g(to) g
+(pub-) 63 1796 y(lish) h(all) i(interfaces,) h(instead) c(of) h(just) g
+(the) f(\002rst) g(one.) 65 b(This) 35 b(is) g(necessary) f(if) i(dif) n
+(fer) n(ent) f(in-) 63 1909 y(terfaces) 29 b(ar) n(e) h(on) f(separate)
+g(non-gate) n(wayed) g(subnets) n(,) j(for) d(example.) 49
+b(Publishing) 30 b(all) h(ad-) 63 2022 y(dr) n(ess) n(es) 25
+b(could) g(be) g(achieved) h(with) f(lots) g(of) p Fg
+25 w(endPo) n(int) p Ft 24 w(parameters,) g(but) g(a) h(short-hand) e
+(is) 63 2135 y(to) 29 b(set) f(the) p Fg 29 w(end) n(Poin) n(tPubl) n
+(ishA) n(llIF) n(s) p Ft 30 w(parameter) h(to) g(1.) 49
+b(That) 29 b(\(in) h(conjunction) g(with) 63 2248 y(a) k(`) p
+Fg(giop) n(:tcp) n(::) p Ft(') 49 b(transport) 32 b(selection) h
+(without) f(a) i(speci\002c) g(hostname\)) f(causes) f(all) j(the) 63
+2361 y(machine's) 23 b(non-loopback) g(interfaces) f(to) g(be) g
+(published) g(in) h(IORs.) p Fr 63 2757 a(8.7) 119 b(Connection) 30
+b(selection) g(and) g(acceptance) p Ft 63 3001 a(In) e(the) f(face) j
+(of) e(IORs) g(containing) h(det) n(ail) r(s) f(about) g(multiple) h
+(dif) n(fer) n(ent) f(end) g(points,) h(clients) 63 3114
+y(have) d(to) f(know) g(how) g(to) h(choose) e(the) h(one) g(to) g(use)
+g(to) h(connect) f(a) h(server) -7 b(.) 37 b(Simila) r(rly) -10
+b(,) 26 b(servers) 63 3227 y(may) 36 b(wish) f(to) g(r) n(estrict) g
+(which) h(cli) r(ents) e(can) i(connect) g(to) f(particular) h
+(transports) n(.) 67 b(This) 35 b(is) 63 3340 y(achieved) 23
+b(with) p Fs 22 w(transpo) r(rt) g(rules) p Ft(.) p Fl
+63 3693 a(8.7.1) 99 b(Client) 25 b(transport) g(rules) p
+Ft 63 3902 a(The) p Fg 28 w(clie) n(ntTr) n(anspo) n(rtRu) n(le) p
+Ft 29 w(parameter) j(is) i(use) n(d) f(to) g(\002lter) g(and) g
+(prioritise) f(the) h(or) n(der) 63 4015 y(in) 23 b(which) g(transport)
+n(s) f(speci\002ed) g(in) h(an) g(IOR) g(ar) n(e) g(tried.) k(Each) c
+(r) o(ule) f(has) h(the) f(form:) p Fs 290 4307 a(<address) i(mask>) f
+([acti) r(on]+) p Ft 63 4600 a(The) f(addr) n(es) n(s) h(mask) f(can) i
+(be) e(one) g(of) 254 4818 y(1.) p Fg 99 w(local) n(host) p
 Ft 451 w(The) g(addr) n(ess) f(of) i(this) f(machi) r(ne) 254
-1629 y(2.) p Fs 99 w(w) -5 b(.x.y) m(.z) p Fg(/) p Fs(m1.m2.m3.m4) p
+4931 y(2.) p Fs 99 w(w) -5 b(.x.y) m(.z) p Fg(/) p Fs(m1.m2.m3.m4) p
 Ft 99 w(An) 21 b(IPv4) h(addr) n(ess) e(with) h(the) f(bits) h
-(selected) f(by) 1365 1742 y(the) i(mask,) g(e.g.) g(172.16) r
-(.0.0/255.2) r(40.0.0.) 254 1855 y(3.) p Fg 99 w(*) p
+(selected) f(by) 1365 5044 y(the) i(mask,) g(e.g.) g(172.16) r
+(.0.0/255.2) r(40.0.0.) 254 5157 y(3.) p Fg 99 w(*) p
 Ft 889 w(W) -5 b(ildcar) n(d) 24 b(that) e(matches) h(any) f(addr) n
-(ess) 63 2081 y(The) g(action) h(is) f(one) g(or) h(mor) n(e) f(of) h
-(the) e(following:) 254 2311 y(1.) p Fg 99 w(none) p
-Ft 153 w(Do) h(not) g(use) g(this) g(addr) n(ess) 254
-2424 y(2.) p Fg 99 w(tcp) p Ft 208 w(Use) f(a) i(TCP) g(transport) 254
-2537 y(3.) p Fg 99 w(ssl) p Ft 208 w(Use) e(an) i(SSL) f(transport) 254
-2650 y(4.) p Fg 99 w(unix) p Ft 153 w(Use) f(a) i(Unix) g(socket) e
-(transport) 254 2763 y(5.) p Fg 99 w(bidir) p Ft 98 w(Any) e
-(connection) h(to) g(this) f(addr) n(ess) g(should) g(be) 794
-2876 y(used) i(bidir) n(ectionall) r(y) h(\(see) g(section) g(8.8\)) 63
-3101 y(The) 16 b(transport) n(-selecting) h(actions) g(form) h(a) f
-(prioritised) f(list,) i(so) f(an) h(action) f(of) g(`) p
-Fg(unix,) n(tcp,s) n(sl) p Ft(') 63 3214 y(means) 27
-b(to) f(use) h(a) g(Unix) h(transpo) n(rt) f(if) h(ther) n(e) f(is) g
-(one,) g(fail) r(ing) g(that) g(a) h(TCP) f(transport,) g(fail) r(ing) p
-Fs 63 3327 a(that) p Ft 29 w(an) i(SSL) f(transpo) n(rt.) 45
-b(In) 28 b(the) g(absence) g(of) g(any) h(explicit) f(r) o(ules,) i
-(the) d(client) i(uses) e(the) g(im-) 63 3440 y(plicit) c(r) o(ule) g
-(of) g(`) p Fg(*) 54 b(unix) n(,tcp) n(,ssl) p Ft('.) 204
-3558 y(If) 35 b(mor) n(e) g(than) h(one) e(r) o(ule) i(is) f
-(speci\002ed,) i(they) d(ar) n(e) i(prioritised) e(in) i(the) f(or) n
-(der) f(they) g(ar) n(e) 63 3671 y(spe) n(ci\002ed.) 28
-b(For) 22 b(example,) g(the) g(con\002guration) g(\002le) h(might) f
-(contain:) p Fg 172 3911 a(cli) n(entTr) n(ansp) n(ortR) n(ule) 54
-b(=) g(192) n(.168.) n(1.0/) n(255.) n(255.2) n(55.0) 107
-b(unix,) n(tcp) 172 4024 y(cli) n(entTr) n(ansp) n(ortR) n(ule) 54
-b(=) g(172) n(.16.0) n(.0/2) n(55.2) n(40.0.) n(0) 272
-b(unix,) n(tcp) 1263 4137 y(=) 381 b(*) 1090 b(none) p
-Ft 63 4373 a(This) 24 b(would) h(be) g(useful) g(if) g(ther) n(e) g(is)
-g(a) g(fast) h(netw) n(ork) f(\(192.1) r(68.1.0\)) h(which) g(should) e
-(be) h(used) 63 4486 y(in) k(pr) n(efer) n(ence) f(to) h(another) f
-(netwo) n(rk) h(\(172) r(.16.0.0\),) i(and) f(connections) e(to) g
-(other) g(netwo) n(rks) 63 4599 y(ar) n(e) 23 b(not) f(permitte) n(d) g
-(at) h(all) r(.) 204 4716 y(In) e(general,) g(the) g(r) n(esult) g(of) h
-(\002ltering) f(the) g(end) g(point) g(spe) n(ci\002c) r(ations) g(in) h
-(an) g(IOR) g(with) f(the) 63 4829 y(client) 32 b(transpor) n(t) g(r) o
-(ule) g(will) h(be) f(a) g(prioritised) e(list) i(of) g(transport) n(s)
-g(and) g(netw) n(orks.) 54 b(\(If) 32 b(the) 63 4942
-y(transpo) n(rt) 25 b(r) o(ules) f(ar) n(e) h(do) g(not) f(prioritise) g
-(one) g(end) g(point) g(over) g(another) -7 b(,) 25 b(the) f(or) n(der)
-f(the) h(end) 63 5055 y(points) 30 b(ar) n(e) h(listed) f(in) i(the) e
-(IOR) h(is) g(used.) n(\)) 54 b(When) 31 b(trying) f(to) g(contact) h
-(an) h(object,) g(the) f(ORB) 63 5168 y(tries) 22 b(its) h(possible) g
-(end) f(points) h(in) h(turn,) e(until) i(it) g(\002nds) e(one) h(with)
-g(which) h(it) g(can) g(contact) f(the) 63 5281 y(object.) 31
-b(Only) 24 b(after) g(it) g(has) g(unsuccess) n(fully) h(tried) e(all) i
-(permissible) f(transpo) n(rts) f(will) j(it) e(raise) 63
-5394 y(a) p Fg 23 w(TRA) n(NSIEN) n(T) p Ft 22 w(exception) e(to) g
-(indicate) h(that) f(the) g(connect) g(fail) r(ed.) p
-90 rotate dyy eop
+(ess) 63 5394 y(The) g(action) h(is) f(one) g(or) h(mor) n(e) f(of) h
+(the) e(following:) p 90 rotate dyy eop
 %%Page: 78 84
 78 83 bop Ft 221 282 a(78) p Fh 605 w(CHAPTER) 21 b(8.) 51
 b(CONNECTION) 22 b(AND) h(THRE) n(AD) g(MANAGEMEN) n(T) p
-Fl 221 539 a(8.7.2) 99 b(Server) 24 b(transport) h(rules) p
-Ft 221 726 a(The) j(server) f(transpo) n(rt) h(r) o(ules) g(gave) g
-(the) g(same) g(format) g(as) g(cli) r(ent) f(transport) g(r) o(ules.)
-44 b(Rather) 221 839 y(than) 20 b(being) g(used) f(to) h(select) f
-(which) i(of) f(a) g(set) f(of) i(ways) e(to) h(contact) g(a) h
-(machine,) g(they) e(ar) n(e) h(used) 221 952 y(to) 26
-b(dete) n(rmine) h(whether) e(or) i(not) f(to) g(accept) g(connections)
-g(fr) n(om) h(particular) h(clients.) 40 b(In) 26 b(this) 221
-1065 y(example,) c(we) h(only) f(allow) h(connections) f(fr) n(om) h
-(our) f(intranet:) p Fg 330 1310 a(serv) n(erTra) n(nspo) n(rtRul) n(e)
-54 b(=) g(loca) n(lhost) 980 b(unix) n(,tcp) n(,ssl) 1421
-1423 y(=) 54 b(172.) n(16.0.) n(0/25) n(5.240) n(.0.0) 271
-b(tcp,) n(ssl) 1421 1536 y(=) 54 b(*) 1418 b(none) p
-Ft 221 1776 a(And) 22 b(in) h(this) f(one,) g(we) g(only) g(acc) r(ept)
-f(SSL) h(connections) f(if) j(the) e(client) h(is) f(not) g(on) h(the) e
-(intranet:) p Fg 330 2021 a(serv) n(erTra) n(nspo) n(rtRul) n(e) 54
+Ft 412 526 a(1.) p Fg 100 w(none) p Ft 152 w(Do) g(not) f(use) g(this) g
+(addr) n(ess) 412 639 y(2.) p Fg 100 w(tcp) p Ft 207
+w(Use) g(a) h(TCP) g(transpor) n(t) 412 752 y(3.) p Fg
+100 w(ssl) p Ft 207 w(Use) f(an) h(SSL) f(transpo) n(rt) 412
+865 y(4.) p Fg 100 w(unix) p Ft 152 w(Use) g(a) h(Unix) g(socke) n(t) g
+(transpo) n(rt) 412 978 y(5.) p Fg 100 w(bidi) n(r) p
+Ft 99 w(Any) d(connection) f(to) h(this) g(addr) n(ess) f(should) g(be)
+952 1091 y(used) i(bidir) n(ectional) r(ly) i(\(see) e(section) h
+(8.8\)) 221 1312 y(The) 17 b(transpo) n(rt-selecting) f(actions) i
+(form) f(a) h(prioritised) e(list,) i(so) e(an) i(action) g(of) f(`) p
+Fg(unix) n(,tcp,) n(ssl) p Ft(') 221 1425 y(means) 27
+b(to) g(use) f(a) i(Unix) f(transport) f(if) i(ther) n(e) e(is) i(one,)
+f(faili) r(ng) g(that) g(a) g(TCP) h(transport) n(,) g(fai) r(ling) p
+Fs 221 1538 a(that) p Ft 30 w(an) h(SSL) e(transport.) 44
+b(In) 28 b(the) f(absence) h(of) h(any) f(explicit) h(r) o(ules,) g
+(the) f(client) g(uses) f(the) h(im-) 221 1650 y(plici) r(t) 22
+b(r) o(ule) h(of) f(`) p Fg(*) 55 b(uni) n(x,tc) n(p,ssl) p
+Ft -2 w('.) 362 1763 y(If) 36 b(mor) n(e) f(than) g(one) g(r) o(ule) g
+(is) h(spe) n(ci\002ed,) j(they) 34 b(ar) n(e) i(prioritised) e(in) i
+(the) e(or) n(der) h(they) f(ar) n(e) 221 1876 y(speci\002ed.) 27
+b(For) 22 b(example,) g(the) g(con\002guration) g(\002le) g(might) h
+(contain:) p Fg 330 2085 a(clie) n(ntTra) n(nspo) n(rtRul) n(e) 54
+b(=) g(192.) n(168.1) n(.0/2) n(55.25) n(5.25) n(5.0) 108
+b(unix) n(,tcp) 330 2198 y(clie) n(ntTra) n(nspo) n(rtRul) n(e) 54
+b(=) g(172.) n(16.0.) n(0/25) n(5.240) n(.0.0) 271 b(unix) n(,tcp) 1421
+2311 y(=) 382 b(*) 1090 b(none) p Ft 221 2519 a(This) 25
+b(would) f(be) h(useful) g(if) h(ther) n(e) e(is) h(a) h(fast) f
+(networ) n(k) g(\(192) r(.168.1.0\)) i(which) e(should) f(be) h(used)
+221 2632 y(in) 30 b(pr) n(efer) n(ence) e(to) g(another) g(network) g
+(\(172.16) r(.0.0\),) j(and) e(connections) f(to) h(othe) n(r) g
+(network) n(s) 221 2745 y(ar) n(e) 23 b(not) f(permitted) f(at) i(all.)
+362 2858 y(In) f(gene) n(ral,) h(the) e(r) n(esult) g(of) g
+(\002ltering) g(the) g(end) g(point) g(speci\002cations) g(in) i(an) f
+(IOR) f(with) h(the) 221 2971 y(client) 32 b(transport) e(r) o(ule) i
+(will) h(be) f(a) g(prioritised) f(list) h(of) g(transpo) n(rts) f(and)
+h(networ) n(ks.) 55 b(\(If) 32 b(the) 221 3084 y(transport) 23
+b(r) o(ules) i(ar) n(e) g(do) f(not) g(prioritise) g(one) g(end) g
+(point) g(over) h(another) -7 b(,) 24 b(the) g(or) n(der) g(the) g(end)
+221 3197 y(points) 30 b(ar) n(e) i(listed) e(in) h(the) g(IOR) g(is) g
+(used) n(.\)) 54 b(When) 30 b(trying) g(to) h(contact) g(an) g(object,)
+i(the) d(ORB) 221 3310 y(tries) 23 b(its) g(poss) n(ible) h(end) f
+(points) f(in) i(turn,) f(until) h(it) f(\002nds) g(one) f(with) i
+(which) g(it) f(can) h(contact) g(the) 221 3423 y(object.) 31
+b(Only) 25 b(after) e(it) h(has) g(unsuccessfully) f(tried) g(all) j
+(permiss) n(ibl) r(e) d(transport) n(s) h(will) h(it) f(raise) 221
+3536 y(a) p Fg 23 w(TRANS) n(IENT) p Ft 21 w(exception) d(to) h(indica)
+r(te) f(that) i(the) f(connect) g(failed.) p Fl 221 3790
+a(8.7.2) 99 b(Server) 24 b(transport) h(rules) p Ft 221
+3967 a(The) j(server) f(transpo) n(rt) h(r) o(ules) g(gave) g(the) g
+(same) g(format) g(as) g(cli) r(ent) f(transport) g(r) o(ules.) 44
+b(Rather) 221 4080 y(than) 20 b(being) g(used) f(to) h(select) f(which)
+i(of) f(a) g(set) f(of) i(ways) e(to) h(contact) g(a) h(machine,) g
+(they) e(ar) n(e) h(used) 221 4192 y(to) 26 b(dete) n(rmine) h(whether)
+e(or) i(not) f(to) g(accept) g(connections) g(fr) n(om) h(particular) h
+(clients.) 40 b(In) 26 b(this) 221 4305 y(example,) c(we) h(only) f
+(allow) h(connections) f(fr) n(om) h(our) f(intranet:) p
+Fg 330 4514 a(serv) n(erTra) n(nspo) n(rtRul) n(e) 54
 b(=) g(loca) n(lhost) 980 b(unix) n(,tcp) n(,ssl) 1421
-2134 y(=) 54 b(172.) n(16.0.) n(0/25) n(5.240) n(.0.0) 271
-b(tcp,) n(ssl) 1421 2247 y(=) 54 b(*) 1418 b(ssl,) n(bidi) n(r) p
-Fr 221 2579 a(8.8) 119 b(Bidirectional) 29 b(GIO) n(P) p
-Ft 221 2801 a(omniORB) 23 b(supp) n(orts) f(bidir) n(ectional) i(GIOP)
--12 b(,) 23 b(which) g(allows) g(call) r(backs) g(to) f(be) g(made) h
-(using) e(a) 221 2914 y(connection) j(opene) n(d) g(by) h(the) e
-(original) j(client,) f(rather) f(than) g(the) g(normal) h(model) f
-(wher) n(e) g(the) 221 3027 y(server) i(opens) f(a) j(new) e
-(connection) g(for) h(the) f(call) r(back.) 41 b(This) 27
-b(is) g(important) f(for) h(negot) n(iating) 221 3140
-y(\002r) n(ewalls,) c(since) g(they) e(tend) g(not) h(to) g(all) r(ow) g
-(connections) f(bac) r(k) h(on) g(arbitrary) h(ports.) 362
-3258 y(Ther) n(e) f(ar) n(e) g(several) g(steps) f(r) n(equir) n(ed) g
-(for) i(bidir) n(ectional) g(GIOP) g(to) f(be) g(enabled) g(for) g(a) h
-(call) r(-) 221 3371 y(back.) 43 b(Both) 27 b(the) g(client) h(and) f
-(server) g(must) f(be) i(con\002gur) n(ed) e(corr) n(ectly) -10
-b(.) 42 b(On) 28 b(the) f(client) h(side,) 221 3484 y(these) 21
-b(conditions) h(must) g(be) g(met:) p Fq 358 3724 a(\017) p
-Ft 45 w(The) p Fg 22 w(offer) n(BiDi) n(rect) n(ional) n(GIOP) p
-Ft 21 w(parameter) g(must) g(be) h(set) e(to) h(tr) o(ue.) p
-Fq 358 3933 a(\017) p Ft 45 w(The) g(client) h(transpo) n(rt) f(r) o
-(ule) g(for) g(the) g(tar) n(get) f(server) g(must) h(contain) g(the) p
-Fg 22 w(bid) n(ir) p Ft 22 w(action.) p Fq 358 4142 a(\017) p
-Ft 45 w(The) 27 b(POA) g(containing) h(the) e(cal) r(lback) i(object) f
-(\(or) g(objects\)) g(must) f(have) i(been) f(cr) n(eated) 448
-4255 y(with) c(a) p Fg 23 w(Bidi) n(recti) n(onal) n(Poli) n(cy) p
-Ft 22 w(val) r(ue) f(of) p Fg 22 w(BOTH) p Ft -2 w(.) 221
-4495 y(On) h(the) f(server) g(side,) f(these) g(conditions) h(must) g
-(be) g(met:) p Fq 358 4735 a(\017) p Ft 45 w(The) p Fg
-22 w(accep) n(tBiD) n(irec) n(tiona) n(lGIO) n(P) p Ft
-23 w(parameter) g(must) g(be) g(set) g(to) g(tr) o(ue.) p
-Fq 358 4944 a(\017) p Ft 45 w(The) 31 b(server) f(transpo) n(rt) h(r) o
-(ule) g(for) g(the) f(r) n(equesting) g(client) h(must) g(contain) g
-(the) p Fg 30 w(bidi) n(r) p Ft 448 5057 a(action.) p
-Fq 358 5267 a(\017) p Ft 45 w(The) d(POA) g(hosting) f(the) g(object) h
-(contacted) f(by) h(the) g(client) g(must) g(have) g(been) g(cr) n
-(eated) 448 5379 y(with) 23 b(a) p Fg 23 w(Bidi) n(recti) n(onal) n
-(Poli) n(cy) p Ft 22 w(val) r(ue) f(of) p Fg 22 w(BOTH) p
-Ft -2 w(.) p 90 rotate dyy eop
+4627 y(=) 54 b(172.) n(16.0.) n(0/25) n(5.240) n(.0.0) 271
+b(tcp,) n(ssl) 1421 4740 y(=) 54 b(*) 1418 b(none) p
+Ft 221 4949 a(And) 22 b(in) h(this) f(one,) g(we) g(only) g(acc) r(ept)
+f(SSL) h(connections) f(if) j(the) e(client) h(is) f(not) g(on) h(the) e
+(intranet:) p Fg 330 5157 a(serv) n(erTra) n(nspo) n(rtRul) n(e) 54
+b(=) g(loca) n(lhost) 980 b(unix) n(,tcp) n(,ssl) 1421
+5270 y(=) 54 b(172.) n(16.0.) n(0/25) n(5.240) n(.0.0) 271
+b(tcp,) n(ssl) 1421 5383 y(=) 54 b(*) 1418 b(ssl,) n(bidi) n(r) p
+90 rotate dyy eop
 %%Page: 79 85
-79 84 bop Fh 63 282 a(8.9.) 51 b(SSL) 22 b(TRAN) n(SPOR) m(T) p
-Ft 2287 w(79) p Fr 63 539 a(8.9) 119 b(SSL) 30 b(transport) p
-Ft 63 750 a(omniORB) 18 b(4.0) g(suppor) n(ts) g(an) g(SSL) f
+79 84 bop Fh 63 282 a(8.8.) 51 b(BIDIRE) n(CTIONAL) 22
+b(GIOP) p Ft 2035 w(79) p Fr 63 539 a(8.8) 119 b(Bidire) n(ctional) 30
+b(GIOP) p Ft 63 750 a(omniORB) 22 b(suppor) n(ts) g(bidir) n(ectional) i
+(GIOP) -12 b(,) 23 b(which) h(allows) f(callb) r(acks) f(to) g(be) h
+(made) f(using) g(a) 63 862 y(connection) i(ope) n(ned) g(by) g(the) g
+(original) h(cli) r(ent,) e(rather) h(than) h(the) e(normal) j(model) e
+(wher) n(e) f(the) 63 975 y(server) i(opens) h(a) h(new) f(connection) h
+(for) g(the) f(callb) r(ack.) 41 b(This) 26 b(is) h(important) g(for) g
+(nego) n(tiating) 63 1088 y(\002r) n(ewalls,) c(since) f(they) g(tend) f
+(not) h(to) g(allow) h(connections) f(back) h(on) g(arbitrary) g(ports)
+n(.) 204 1201 y(Ther) n(e) e(ar) n(e) i(several) f(step) n(s) g(r) n
+(equir) n(ed) g(for) g(bidir) n(ectional) i(GIOP) f(to) e(be) h
+(enabled) g(for) h(a) f(cal) r(l-) 63 1314 y(back.) 43
+b(Both) 26 b(the) h(client) h(and) g(serve) n(r) g(must) f(be) g
+(con\002gur) n(ed) g(corr) n(ectly) -10 b(.) 42 b(On) 28
+b(the) f(client) h(side,) 63 1427 y(thes) n(e) 23 b(conditions) e(must)
+h(be) h(met:) p Fq 199 1640 a(\017) p Ft 46 w(The) p
+Fg 22 w(off) n(erBiD) n(irec) n(tiona) n(lGIO) n(P) p
+Ft 23 w(parameter) f(must) g(be) g(set) g(to) g(tr) o(ue.) p
+Fq 199 1827 a(\017) p Ft 46 w(The) f(cli) r(ent) g(transport) g(r) o
+(ule) h(for) g(the) f(tar) n(get) h(server) f(must) g(contain) i(the) p
+Fg 21 w(bidi) n(r) p Ft 22 w(action.) p Fq 199 2015 a(\017) p
+Ft 46 w(The) j(POA) i(containing) f(the) g(callb) r(ack) g(object) g
+(\(or) h(objects\)) e(must) h(have) h(been) e(cr) n(eated) 290
+2128 y(with) c(a) p Fg 24 w(Bid) n(irec) n(tiona) n(lPol) n(icy) p
+Ft 22 w(value) h(of) p Fg 23 w(BOT) n(H) p Ft(.) 63 2340
+y(On) g(the) f(serve) n(r) h(side,) f(thes) n(e) h(conditions) e(must) h
+(be) h(met:) p Fq 199 2553 a(\017) p Ft 46 w(The) p Fg
+22 w(acc) n(eptBi) n(Dire) n(ction) n(alGI) n(OP) p Ft
+22 w(parameter) f(must) g(be) h(set) e(to) h(tr) o(ue.) p
+Fq 199 2740 a(\017) p Ft 46 w(The) 30 b(server) g(transport) g(r) o
+(ule) h(for) g(the) f(r) n(eques) n(ting) h(client) h(must) e(contain) i
+(the) p Fg 30 w(bid) n(ir) p Ft 290 2853 a(action.) p
+Fq 199 3041 a(\017) p Ft 46 w(The) 27 b(POA) i(host) n(ing) f(the) g
+(object) g(contacted) f(by) h(the) f(client) i(must) e(have) i(been) e
+(cr) n(eated) 290 3154 y(with) 22 b(a) p Fg 24 w(Bid) n(irec) n(tiona) n
+(lPol) n(icy) p Ft 22 w(value) h(of) p Fg 23 w(BOT) n(H) p
+Ft(.) p Fr 63 3453 a(8.9) 119 b(SSL) 30 b(transport) p
+Ft 63 3664 a(omniORB) 18 b(4.0) g(suppor) n(ts) g(an) g(SSL) f
 (transport) n(,) i(using) e(OpenSSL.) g(It) g(is) h(only) g(built) g
-(if) h(OpenSSL) 63 862 y(is) k(avail) r(able.) 30 b(On) 23
+(if) h(OpenSSL) 63 3776 y(is) k(avail) r(able.) 30 b(On) 23
 b(platforms) g(using) f(Autoconf,) g(it) h(is) g(autodete) n(cted) f
-(in) i(many) f(locations,) g(or) 63 975 y(its) 30 b(location) g(can) h
+(in) i(many) f(locations,) g(or) 63 3889 y(its) 30 b(location) g(can) h
 (be) f(given) h(with) f(the) p Fg 29 w(--wi) n(th-o) n(penss) n(l=) p
 Ft 30 w(ar) n(gument) f(to) p Fg 30 w(con) n(figur) n(e) p
-Ft(.) 63 1088 y(On) h(othe) n(r) g(platforms,) h(the) p
+Ft(.) 63 4002 y(On) h(othe) n(r) g(platforms,) h(the) p
 Fg 29 w(OPEN) n(_SSL) n(_ROOT) p Ft 28 w(make) e(vari) r(able) h(must) f
-(be) h(set) e(in) i(the) f(plat-) 63 1201 y(form) 22
-b(\002le.) 204 1314 y(T) -8 b(o) 22 b(use) h(the) f(SSL) h(transpor) n
+(be) h(set) e(in) i(the) f(plat-) 63 4115 y(form) 22
+b(\002le.) 204 4228 y(T) -8 b(o) 22 b(use) h(the) f(SSL) h(transpor) n
 (t,) g(you) g(must) g(link) h(your) e(applicati) r(on) h(with) g(the) p
-Fg 23 w(omn) n(issl) n(TP) p Ft 63 1427 a(library) -10
+Fg 23 w(omn) n(issl) n(TP) p Ft 63 4341 a(library) -10
 b(,) 21 b(and) g(corr) n(ectly) f(set) f(up) h(certi\002cates.) 26
 b(See) 20 b(the) p Fg 19 w(src/) n(exam) n(ples/) n(ssl_) n(echo) p
-Ft 19 w(dir) n(ec-) 63 1540 y(tory) h(for) i(an) g(example.) k(That) c
+Ft 19 w(dir) n(ec-) 63 4454 y(tory) h(for) i(an) g(example.) k(That) c
 (dir) n(ectory) f(contains) g(a) p Fg 23 w(READM) n(E) p
 Ft 22 w(\002le) h(with) g(mor) n(e) f(details.) p 90 rotate
 dyy eop
@@ -5412,98 +5458,94 @@ Ft 38 w(for) 39 b(an) g(ex-) 290 990 y(ample) 23 b(of) g(its) f(use.) p
 Fo 63 1177 a(clientRece) r(iveReply) p Ft 290 1290 a(Call) r(ed) c(as) i
 (the) e(cli) r(ent) g(r) n(eceives) h(a) h(r) n(eply) -10
 b(,) 19 b(just) g(after) g(unmarshall) r(ing) g(the) g(r) n(eply) g
-(header) -9 b(.) 290 1403 y(***) 24 b(NOT) e(IMPLEME) n(NTED) g(YET!) p
-Fo 63 1591 a(clientRece) r(iveException) p Ft 290 1703
-a(Call) r(ed) e(as) i(the) e(cli) r(ent) g(r) n(eceives) h(an) h
-(exception,) e(just) h(after) g(unmarshalli) r(ng) g(the) f(excep-) 290
-1816 y(tion) i(r) n(eply) g(header) -7 b(.) 28 b(***) 23
-b(NOT) g(IMPLE) n(MENTED) f(YET!) p Fo 63 2004 a(serverRec) r
-(eiveRequest) p Ft 290 2116 a(Call) r(ed) 32 b(when) f(the) h(server) g
+(header) -9 b(.) 290 1403 y(Call) r(ed) 22 b(for) g(normal) h(r) n
+(eplies) g(and) f(exceptions) n(.) p Fo 63 1591 a(serverRec) r
+(eiveRequest) p Ft 290 1703 a(Call) r(ed) 32 b(when) f(the) h(server) g
 (r) n(eceives) g(a) h(r) n(equest) n(,) i(just) d(after) h
-(unmarshalling) h(the) d(r) n(e-) 290 2229 y(quest) e(header) -7
+(unmarshalling) h(the) d(r) n(e-) 290 1816 y(quest) e(header) -7
 b(.) 52 b(See) 29 b(the) p Fg 30 w(getC) n(odeSe) n(tSer) n(vice) n
 (Conte) n(xt\(\)) p Ft 29 w(function) i(in) p Fg 31 w(src/) 290
-2342 y(lib/) n(omni) n(ORB/) n(orbco) n(re/c) n(drStr) n(eam.) n(cc) p
-Ft 22 w(for) 23 b(an) g(example.) p Fo 63 2530 a(serverSendReply) p
-Ft 290 2642 a(Call) r(ed) 16 b(just) h(befor) n(e) f(the) h(server) f
-(marshals) i(a) f(r) n(eply) g(header) -7 b(.) 25 b(***) 19
-b(NOT) e(IMPLE) n(MENTED) 290 2755 y(YET!) p Fo 63 2943
-a(serverSendException) p Ft 290 3056 a(Call) r(ed) 30
-b(just) h(befor) n(e) g(the) f(server) h(marshals) g(an) h(exception) e
-(r) n(eply) h(header) -7 b(.) 53 b(***) 33 b(NOT) 290
-3168 y(IMPLEME) n(NTED) 22 b(YET!) p Fo 63 3356 a(creat) r(eIdentity) p
-Ft 290 3469 a(Call) r(ed) 34 b(when) g(the) f(ORB) i(is) g(about) f(to)
-g(cr) n(eate) h(an) g(`identity') f(object) g(to) g(r) n(epr) n(esent) f
-(a) 290 3581 y(CORBA) 24 b(object.) 32 b(It) 23 b(allows) i
-(application) g(code) e(to) g(pr) n(ovide) h(its) g(own) f(identity) g
-(imple-) 290 3694 y(mentations.) k(It) 22 b(is) h(very) f(unlikely) g
-(that) g(an) i(application) f(will) h(need) e(to) g(do) f(this.) p
-Fo 63 3882 a(creat) r(eORBServer) p Ft 290 3995 a(Used) k(internally) i
-(by) f(the) g(ORB) g(to) g(r) n(egister) f(dif) n(fer) n(ent) i(kinds) e
-(of) i(server) -7 b(.) 39 b(At) 26 b(pr) n(ese) n(nt,) 290
-4107 y(only) 21 b(a) g(GIOP) h(server) e(is) h(r) n(egiste) n(r) n(ed.)
-27 b(It) 21 b(is) g(very) f(unlikely) h(that) g(application) h(code) e
-(will) 290 4220 y(need) h(to) h(do) g(this.) p Fo 63
-4408 a(creat) r(eThread) p Ft 290 4520 a(Call) r(ed) j(whenever) h(the)
+1929 y(lib/) n(omni) n(ORB/) n(orbco) n(re/c) n(drStr) n(eam.) n(cc) p
+Ft 22 w(for) 23 b(an) g(example.) p Fo 63 2116 a(serverSendReply) p
+Ft 290 2229 a(Call) r(ed) f(just) g(befor) n(e) g(the) g(server) f
+(marshals) i(a) h(r) n(eply) e(header) -7 b(.) p Fo 63
+2417 a(serverSendException) p Ft 290 2530 a(Call) r(ed) 22
+b(just) g(befor) n(e) g(the) g(server) f(marshals) i(an) h(except) n
+(ion) f(r) n(eply) f(header) -7 b(.) p Fo 63 2717 a(creat) r(eIdentity)
+p Ft 290 2830 a(Call) r(ed) 34 b(when) g(the) f(ORB) i(is) g(about) f
+(to) g(cr) n(eate) h(an) g(`identity') f(object) g(to) g(r) n(epr) n
+(esent) f(a) 290 2943 y(CORBA) 24 b(object.) 32 b(It) 23
+b(allows) i(application) g(code) e(to) g(pr) n(ovide) h(its) g(own) f
+(identity) g(imple-) 290 3056 y(mentations.) k(It) 22
+b(is) h(very) f(unlikely) g(that) g(an) i(application) f(will) h(need) e
+(to) g(do) f(this.) p Fo 63 3243 a(creat) r(eORBServer) p
+Ft 290 3356 a(Used) k(internally) i(by) f(the) g(ORB) g(to) g(r) n
+(egister) f(dif) n(fer) n(ent) i(kinds) e(of) i(server) -7
+b(.) 39 b(At) 26 b(pr) n(ese) n(nt,) 290 3469 y(only) 21
+b(a) g(GIOP) h(server) e(is) h(r) n(egiste) n(r) n(ed.) 27
+b(It) 21 b(is) g(very) f(unlikely) h(that) g(application) h(code) e
+(will) 290 3581 y(need) h(to) h(do) g(this.) p Fo 63
+3769 a(creat) r(eThread) p Ft 290 3882 a(Call) r(ed) j(whenever) h(the)
 f(ORB) h(cr) n(eates) g(a) h(thr) n(ead.) 39 b(The) p
 Fg 26 w(info) n(_T) p Ft 26 w(class) 27 b(for) f(this) g(inter) n(-) 290
-4633 y(ceptor) 21 b(is) p Ff 489 4782 a(class) 49 b(info_T) g({) 489
-4882 y(public) o(:) 589 4982 y(virtual) f(void) h(run\(\)) g(=) h(0;)
-489 5081 y(};) p Ft 290 5281 a(The) 24 b(inter) n(ceptor) g(function) g
+3995 y(ceptor) 21 b(is) p Ff 489 4144 a(class) 49 b(info_T) g({) 489
+4243 y(public) o(:) 589 4343 y(virtual) f(void) h(run\(\)) g(=) h(0;)
+489 4442 y(};) p Ft 290 4642 a(The) 24 b(inter) n(ceptor) g(function) g
 (is) h(cal) r(led) f(in) h(the) f(context) g(of) h(the) f(newly) g(cr) n
-(eated) g(thr) n(ead.) 290 5394 y(The) 30 b(function) p
+(eated) g(thr) n(ead.) 290 4755 y(The) 30 b(function) p
 Fs 32 w(must) p Ft 31 w(call) j(the) p Fg 30 w(info_) n(T) p
 Ft('s) p Fg 31 w(run) n(\(\)) p Ft 31 w(method) n(,) h(to) c(pass) h
-(contr) n(ol) g(to) f(the) p 90 rotate dyy eop
+(contr) n(ol) g(to) f(the) 290 4868 y(thr) n(ead) f(body) -10
+b(.) p Fg 48 w(run\(\)) p Ft 28 w(r) n(eturns) 29 b(just) g(befor) n(e)
+g(the) g(thr) n(ead) g(exits.) 49 b(This) 29 b(arrangement) 290
+4981 y(allows) 35 b(the) f(inter) n(ceptor) g(to) g(initial) r(ise) g
+(some) g(per) n(-thr) n(ead) g(state) g(befor) n(e) g(the) g(thr) n
+(ead) 290 5094 y(body) 22 b(r) o(uns,) g(then) f(r) n(elease) h(it) h
+(just) f(befor) n(e) g(the) g(thr) n(ead) g(exits.) p
+Fo 63 5281 a(assignUpcallThread) p Ft 290 5394 a(The) 34
+b(ORB) g(maintai) r(ns) g(a) h(gene) n(ral) h(thr) n(ead) e(pool,) i
+(fr) n(om) f(which) g(thr) n(eads) f(ar) n(e) h(drawn) p
+90 rotate dyy eop
 %%Page: 86 92
 86 91 bop Ft 221 282 a(86) p Fh 1887 w(CHAPTER) 21 b(10.) 52
-b(INTE) n(RCEPT) n(ORS) p Ft 448 539 a(thr) n(ead) 30
-b(body) -10 b(.) p Fg 48 w(run\() n(\)) p Ft 30 w(r) n(eturns) 28
-b(just) h(befor) n(e) h(the) f(thr) n(ead) g(exits.) 48
-b(This) 30 b(arrangement) 448 652 y(all) r(ows) k(the) g(inter) n
-(cepto) n(r) h(to) f(initia) r(lise) h(some) e(per) n(-thr) n(ead) h
-(state) g(befor) n(e) h(the) f(thr) n(ead) 448 764 y(body) 22
-b(r) o(uns,) g(then) g(r) n(elease) g(it) h(just) f(befor) n(e) g(the) g
-(thr) n(ead) g(exits.) p Fo 221 952 a(assi) r(gnU) n(pcallThrea) r(d) p
-Ft 448 1065 a(The) 34 b(ORB) h(maintains) g(a) g(general) f(thr) n(ead)
-g(pool,) j(fr) n(om) e(which) g(thr) n(eads) e(ar) n(e) i(drawn) 448
-1178 y(for) 28 b(various) g(purpo) n(ses.) 42 b(One) 27
-b(purpos) n(e) h(is) f(for) h(performing) f(upcalls) h(to) f
-(application) 448 1291 y(code,) g(in) h(r) n(espons) n(e) f(to) f
-(incoming) i(CORBA) f(call) r(s.) 40 b(The) 27 b(assignUpcallThr) n
-(ead) g(inter) n(-) 448 1404 y(ceptor) f(is) h(cal) r(led) f(when) h(a)
-g(thr) n(ead) g(is) g(assigned) e(to) i(perform) f(upcalls.) 42
-b(In) 26 b(the) h(thr) n(ead) 448 1517 y(per) 32 b(connection) g
-(model,) i(the) e(thr) n(ead) f(stays) h(assigned) f(to) g(performing) h
-(upcalls) h(for) 448 1630 y(the) 26 b(entir) n(e) g(lif) r(etime) g(of)
-h(the) e(underlying) h(netwo) n(rk) h(connection;) g(in) h(the) d(thr) n
-(ead) i(poo) n(l) 448 1742 y(model,) 22 b(thr) n(eads) f(ar) n(e) h
-(assigned) f(for) h(upcalls) g(on) g(a) g(per) g(call) h(basis,) g(so) e
-(this) g(inter) n(ceptor) 448 1855 y(is) 29 b(trigger) n(ed) e(for) i
-(every) f(incoming) h(call) p Fm 1887 1822 a(1) p Ft
-1924 1855 a(.) 46 b(As) 29 b(with) f(the) g(cr) n(eateThr) n(ead) g
-(inter) n(ceptor) -7 b(,) 448 1968 y(the) 25 b(inter) n(ceptor) g
-(function) h(must) f(call) j(the) p Fg 24 w(info_) n(T) p
-Ft('s) p Fg 25 w(run\(\)) p Ft 24 w(method) d(to) g(pass) g(con-) 448
-2081 y(tr) n(ol) e(to) f(the) g(upcall.) 448 2231 y(When) h(a) h(thr) n
-(ead) f(\002nishes) g(its) g(assignment) f(of) i(pr) n(ocess) n(ing) g
-(upcalls,) g(it) g(r) n(eturns) e(to) h(the) 448 2344
-y(pool) k(\(even) g(in) h(thr) n(ead) e(per) h(connection) f(mode\),) i
-(so) e(the) h(same) g(thr) n(ead) g(can) h(be) f(r) n(eas-) 448
-2457 y(signed) 22 b(to) g(perform) g(mor) n(e) g(upcalls,) h(or) f(r) n
-(eused) f(for) i(a) g(dif) n(fer) n(ent) g(purpo) n(se.) 448
-2608 y(Unlike) h(the) f(other) f(inter) n(ceptors) n(,) i(the) f(inter)
-n(ceptor) g(functions) g(for) h(cr) n(eateThr) n(ead) f(and) 448
-2720 y(assignUpcallThr) n(ead) f(have) g(no) f(r) n(eturn) g(value.) 28
-b(Inter) n(cept) n(or) 21 b(chai) r(ning) g(is) h(performe) n(d) 448
-2833 y(by) j(calls) g(thr) n(ough) f(the) p Fg 23 w(info) n(_T::) n
-(run\(\)) p Ft 23 w(method) n(,) h(rather) e(than) i(by) f(visiting) h
-(inter) n(-) 448 2946 y(ceptor) d(functions) g(in) h(turn.) p
-221 5215 1316 4 v Fk 327 5271 a(1) p Fj 356 5302 a(Except) 17
-b(that) j(with) f(the) f(thr) o(eadPoolW) -7 b(atchConn) r(ection) 18
-b(parameter) g(set) g(tr) o(ue,) g(a) g(thr) o(ead) g(can) h(perfor) n
-(m) f(mul-) 221 5394 y(tiple) g(upcalls) h(even) g(when) g(thr) o(ead) g
-(pool) f(mode) g(is) g(active.) p 90 rotate dyy eop
+b(INTE) n(RCEPT) n(ORS) p Ft 448 539 a(for) 28 b(various) g(purpo) n
+(ses.) 42 b(One) 27 b(purpos) n(e) h(is) f(for) h(performing) f
+(upcalls) h(to) f(application) 448 652 y(code,) g(in) h(r) n(espons) n
+(e) f(to) f(incoming) i(CORBA) f(call) r(s.) 40 b(The) 27
+b(assignUpcallThr) n(ead) g(inter) n(-) 448 764 y(ceptor) f(is) h(cal) r
+(led) f(when) h(a) g(thr) n(ead) g(is) g(assigned) e(to) i(perform) f
+(upcalls.) 42 b(In) 26 b(the) h(thr) n(ead) 448 877 y(per) 32
+b(connection) g(model,) i(the) e(thr) n(ead) f(stays) h(assigned) f(to)
+g(performing) h(upcalls) h(for) 448 990 y(the) 26 b(entir) n(e) g(lif) r
+(etime) g(of) h(the) e(underlying) h(netwo) n(rk) h(connection;) g(in) h
+(the) d(thr) n(ead) i(poo) n(l) 448 1103 y(model,) 22
+b(thr) n(eads) f(ar) n(e) h(assigned) f(for) h(upcalls) g(on) g(a) g
+(per) g(call) h(basis,) g(so) e(this) g(inter) n(ceptor) 448
+1216 y(is) 29 b(trigger) n(ed) e(for) i(every) f(incoming) h(call) p
+Fm 1887 1183 a(1) p Ft 1924 1216 a(.) 46 b(As) 29 b(with) f(the) g(cr) n
+(eateThr) n(ead) g(inter) n(ceptor) -7 b(,) 448 1329
+y(the) 25 b(inter) n(ceptor) g(function) h(must) f(call) j(the) p
+Fg 24 w(info_) n(T) p Ft('s) p Fg 25 w(run\(\)) p Ft
+24 w(method) d(to) g(pass) g(con-) 448 1442 y(tr) n(ol) e(to) f(the) g
+(upcall.) 448 1592 y(When) h(a) h(thr) n(ead) f(\002nishes) g(its) g
+(assignment) f(of) i(pr) n(ocess) n(ing) g(upcalls,) g(it) g(r) n
+(eturns) e(to) h(the) 448 1705 y(pool) k(\(even) g(in) h(thr) n(ead) e
+(per) h(connection) f(mode\),) i(so) e(the) h(same) g(thr) n(ead) g
+(can) h(be) f(r) n(eas-) 448 1818 y(signed) 22 b(to) g(perform) g(mor) n
+(e) g(upcalls,) h(or) f(r) n(eused) f(for) i(a) g(dif) n(fer) n(ent) g
+(purpo) n(se.) 448 1968 y(Unlike) h(the) f(other) f(inter) n(ceptors) n
+(,) i(the) f(inter) n(ceptor) g(functions) g(for) h(cr) n(eateThr) n
+(ead) f(and) 448 2081 y(assignUpcallThr) n(ead) f(have) g(no) f(r) n
+(eturn) g(value.) 28 b(Inter) n(cept) n(or) 21 b(chai) r(ning) g(is) h
+(performe) n(d) 448 2194 y(by) j(calls) g(thr) n(ough) f(the) p
+Fg 23 w(info) n(_T::) n(run\(\)) p Ft 23 w(method) n(,) h(rather) e
+(than) i(by) f(visiting) h(inter) n(-) 448 2307 y(ceptor) d(functions) g
+(in) h(turn.) p 221 5215 1316 4 v Fk 327 5271 a(1) p
+Fj 356 5302 a(Except) 17 b(that) j(with) f(the) f(thr) o(eadPoolW) -7
+b(atchConn) r(ection) 18 b(parameter) g(set) g(tr) o(ue,) g(a) g(thr) o
+(ead) g(can) h(perfor) n(m) f(mul-) 221 5394 y(tiple) g(upcalls) h
+(even) g(when) g(thr) o(ead) g(pool) f(mode) g(is) g(active.) p
+90 rotate dyy eop
 %%Page: 87 93
 87 92 bop Fn 63 1164 a(Chapter) 44 b(1) -6 b(1) p Fp
 63 1581 a(T) -19 b(ype) 52 b(Any) f(and) i(T) -19 b(ypeCode) p
