@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.3  2000/11/03 19:23:53  sll
+# Replace the old set of marshalling operators in the generated code with
+# a couple of unified operators for cdrStream. Changed template to correspond
+# to the new callDescriptor structure and the new way to dispatch a call on
+# the server side.
+#
 # Revision 1.3.2.2  2000/10/12 15:37:53  sll
 # Updated from omni3_1_develop.
 #
@@ -107,23 +113,11 @@ void @name@_Helper::duplicate(@name@_ptr p) {
   if( p && !p->_NP_is_nil() )  omni::duplicateObjRef(p);
 }
 
-size_t @name@_Helper::NP_alignedSize(@name@_ptr obj, size_t offset) {
-  return @name@::_alignedSize(obj, offset);
-}
-
-void @name@_Helper::marshalObjRef(@name@_ptr obj, NetBufferedStream& s) {
+void @name@_Helper::marshalObjRef(@name@_ptr obj, cdrStream& s) {
   @name@::_marshalObjRef(obj, s);
 }
 
-@name@_ptr @name@_Helper::unmarshalObjRef(NetBufferedStream& s) {
-  return @name@::_unmarshalObjRef(s);
-}
-
-void @name@_Helper::marshalObjRef(@name@_ptr obj, MemBufferedStream& s) {
-  @name@::_marshalObjRef(obj, s);
-}
-
-@name@_ptr @name@_Helper::unmarshalObjRef(MemBufferedStream& s) {
+@name@_ptr @name@_Helper::unmarshalObjRef(cdrStream& s) {
   return @name@::_unmarshalObjRef(s);
 }
 """
@@ -168,10 +162,9 @@ interface_objref = """\
 @fq_objref_name@::~@objref_name@() {}
 
 
-@fq_objref_name@::@objref_name@(const char* mdri,
-   IOP::TaggedProfileList* p, omniIdentity* id, omniLocalIdentity* lid) :
+@fq_objref_name@::@objref_name@(omniIOR* ior, omniIdentity* id, omniLocalIdentity* lid) :
    @inherits_str@
-   omniObjRef(@name@::_PD_repoId, mdri, p, id, lid)
+   omniObjRef(@name@::_PD_repoId, ior, id, lid)
 {
   _PR_setobj(this);
 }
@@ -213,8 +206,27 @@ static void
 {
   @get_call_descriptor@
   @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
-  @result@impl->@cxx_operation_name@(@operation_arguments@);
+@impl_call@
 }
+"""
+
+interface_callback_invoke = """\
+  @result@impl->@cxx_operation_name@(@operation_arguments@);
+"""
+
+interface_callback_tryblock = """\
+#ifdef HAS_Cplusplus_catch_exception_by_base
+  @result@impl->@cxx_operation_name@(@operation_arguments@);
+#else
+  if (!is_upcall())
+    @result@impl->@cxx_operation_name@(@operation_arguments@);
+  else {
+    try {
+      @result@impl->@cxx_operation_name@(@operation_arguments@);
+    }
+    @catch@
+  }
+#endif
 """
 
 interface_proxy_class = """\
@@ -225,44 +237,52 @@ class @call_descriptor@
 {
 public:
   inline @call_descriptor@(@ctor_args@):
-     @inherits_list@ {}
+     @base_ctor@ {}
   
-  @marshal_arguments_decl@
-  @unmarshal_arguments_decl@  
+  @in_arguments_decl@
+  @out_arguments_decl@  
   @user_exceptions_decl@
-  @result_member_function@
   @member_data@
-  @result_member_data@
 };
 """
 
-interface_proxy_unmarshal = """\
-void @call_descriptor@::unmarshalReturnedValues(GIOP_C& giop_client)
-{
-  @pre_decls@
-  @unmarshal_block@
-  @post_assign@
-}
-"""
-
-interface_proxy_marshal = """\
-void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
+interface_proxy_marshal_arguments = """\
+void @call_descriptor@::marshalArguments(cdrStream& _n)
 {
   @marshal_block@
 }
 """
 
-interface_proxy_alignment = """\
-CORBA::ULong @call_descriptor@::alignedSize(CORBA::ULong msgsize)
+interface_proxy_unmarshal_arguments = """\
+void @call_descriptor@::unmarshalArguments(cdrStream& _n)
 {
-  @size_calculation@
-  return msgsize;
+  @marshal_block@
 }
 """
 
+interface_proxy_marshal_returnedvalues = """\
+void @call_descriptor@::marshalReturnedValues(cdrStream& _n)
+{
+  @marshal_block@
+}
+"""
+
+interface_proxy_unmarshal_returnedvalues = """\
+void @call_descriptor@::unmarshalReturnedValues(cdrStream& _n)
+{
+  @marshal_block@
+}
+"""
+
+
 interface_proxy_exn = """\
+const char* const @call_descriptor@::_user_exns[] = {
+  @exception_namelist@
+};
+
 void @call_descriptor@::userException(GIOP_C& giop_client, const char* repoId)
 {
+  cdrStream& s = (cdrStream&) giop_client;
   @exception_block@
   else {
     giop_client.RequestCompleted(1);
@@ -274,8 +294,9 @@ void @call_descriptor@::userException(GIOP_C& giop_client, const char* repoId)
 interface_operation = """\
 @call_descriptor@ _call_desc(@call_desc_args@);
 @context@
+@assign_args@
 _invoke(_call_desc);
-@return_string@
+@assign_res@
 """
 
 
@@ -284,10 +305,10 @@ interface_pof = """\
 
 
 omniObjRef*
-@pof_name@::newObjRef(const char* mdri, IOP::TaggedProfileList* p,
+@pof_name@::newObjRef(omniIOR* ior,
                omniIdentity* id, omniLocalIdentity* lid)
 {
-  return new @objref_fqname@(mdri, p, id, lid);
+  return new @objref_fqname@(ior, id, lid);
 }
 
 
@@ -322,8 +343,10 @@ interface_impl = """\
 
 
 CORBA::Boolean
-@impl_fqname@::_dispatch(GIOP_S& giop_s)
+@impl_fqname@::_dispatch(GIOP_S& _giop_s)
 {
+  const char* op = _giop_s.invokeInfo().operation();
+
   @dispatch@
   return 0;
 }
@@ -347,7 +370,7 @@ const char*
 """
 
 interface_impl_inherit_dispatch = """\
-if( @impl_inherited_name@::_dispatch(giop_s) ) {
+if( @impl_inherited_name@::_dispatch(_giop_s) ) {
   return 1;
 }
 """
@@ -358,35 +381,13 @@ if( !strcmp(id, @inherited_name@::_PD_repoId) )
 """
 
 interface_sk = """\
-@sk_fqname@::@sk_name@(const omniOrbBoaKey& k): omniOrbBoaServant(k) {}
-
 @sk_fqname@::~@sk_name@() {}
 """
 
-interface_operation_exn = """\
-static const char* const _user_exns[] = {
-  @repoID_list@
-};
-giop_s.set_user_exceptions(_user_exns, @n@);
-"""
-
-interface_operation_try = """\
-#ifndef HAS_Cplusplus_catch_exception_by_base
-try {
-#endif
-"""
-
-interface_operation_catch_start = """\
-#ifndef HAS_Cplusplus_catch_exception_by_base
-}
-"""
 interface_operation_catch_exn = """\
 catch(@exname@& ex) {
   throw omniORB::StubUserException(ex._NP_duplicate());
 }
-"""
-interface_operation_catch_end = """\
-#endif
 """
 
 interface_operation_context = """\
@@ -395,54 +396,12 @@ _ctxt = CORBA::Context::unmarshalContext(giop_s);
 """
 
 interface_operation_dispatch = """\
-if( !strcmp(giop_s.operation(), \"@idl_operation_name@\") ) {
-  @exception_decls@
-  @get_arguments@
-  @get_context@
-  giop_s.RequestReceived();
-  @decl_result@
-  @try_@
-  @result_assignment@this->@operation_name@(@argument_list@);
-  @catch@
-  if( giop_s.response_expected() ) {
-    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-    @size_calculation_results@
-    @size_calculation_arguments@
-    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-    @put_results@
-    @put_arguments@
-  }
-  giop_s.ReplyCompleted();
-  return 1;
-}
-"""
+if( !strcmp(op, \"@idl_operation_name@\") ) {
 
-interface_attribute_read_dispatch= """\
-if( !strcmp(giop_s.operation(), \"_get_@attrib_name@\") ) {    
-  giop_s.RequestReceived();
-  @attrib_type@ result = this->@cxx_attrib_name@();
-  if( giop_s.response_expected() ) {
-    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-    @size_calculation@
-    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-    @marshall_result@
-  }
-  giop_s.ReplyCompleted();
-  return 1;
-}
-"""
-
-interface_attribute_write_dispatch = """\
-if( !strcmp(giop_s.operation(), \"_set_@attrib_name@\") ) {
-  @attrib_type@ value;
-  @unmarshall_value@
-  giop_s.RequestReceived();
-  this->@cxx_attrib_name@(value);
-  if( giop_s.response_expected() ) {
-    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-  }
-  giop_s.ReplyCompleted();
+  @call_descriptor@ _call_desc(@call_desc_args@);
+  @context@
+  @prepare_out_args@
+  _upcall(_giop_s,_call_desc);
   return 1;
 }
 """
@@ -497,73 +456,22 @@ void @fq_derived@_free( @fq_derived@_slice* p) {
 ## Struct
 ##
 struct = """\
-size_t
-@name@::_NP_alignedSize(size_t _initialoffset) const
-{
-  CORBA::ULong _msgsize = _initialoffset;
-  @size_calculation@
-  return _msgsize;
-}
-
 void
-@name@::operator>>= (NetBufferedStream &_n) const
+@name@::operator>>= (cdrStream &_n) const
 {
   @marshall_code@
 }
 
 void
-@name@::operator<<= (NetBufferedStream &_n)
+@name@::operator<<= (cdrStream &_n)
 {
-  @net_unmarshall_code@
-}
-
-void
-@name@::operator>>= (MemBufferedStream &_n) const
-{
-  @marshall_code@
-}
-
-void
-@name@::operator<<= (MemBufferedStream &_n)
-{
-  @mem_unmarshall_code@
+  @unmarshall_code@
 }
 """
 
 ##
 ## Unions
 ##
-
-union_align_nonexhaustive = """\
-if (_pd__default) {
-  @size_calc@
-}
-else {
-  switch(_pd__d){
-    @cases@
-  }
-}
-"""
-
-union_align_exhaustive = """\
-switch(_pd__d){
-  @cases@
-}
-"""
-
-union = """\
-size_t
-@name@::_NP_alignedSize(size_t initialoffset) const
-{
-  CORBA::ULong _msgsize = initialoffset;
-  @discriminator_size_calc@
-
-  @switch@
-
-  return _msgsize;
-}
-"""
-
 
 union_default_bool = """\
 #ifndef HAS_Cplusplus_Bool
@@ -577,32 +485,16 @@ default: break;
 
 union_operators = """\
 void
-@name@::operator>>= (NetBufferedStream& _n) const
+@name@::operator>>= (cdrStream& _n) const
 {
-  _pd__d >>= _n;
+  @marshal_discriminator@
   @marshal_cases@
 }
 
 void
-@name@::operator<<= (NetBufferedStream& _n)
+@name@::operator<<= (cdrStream& _n)
 {
-  _pd__d <<= _n;
-  switch(_pd__d) {
-    @unmarshal_cases@
-  }
-}
-
-void
-@name@::operator>>= (MemBufferedStream& _n) const
-{
-  _pd__d >>= _n;
-  @marshal_cases@
-}
-
-void
-@name@::operator<<= (MemBufferedStream& _n)
-{
-  _pd__d <<= _n;
+  @unmarshal_discriminator@
   switch(_pd__d) {
     @unmarshal_cases@
   }
@@ -689,11 +581,7 @@ const char* @scoped_name@::_NP_repoId(int* _size) const {
   return \"@repoID@\";
 }
  
-void @scoped_name@::_NP_marshal(NetBufferedStream& _s) const {
-  *this >>= _s;
-}
-
-void @scoped_name@::_NP_marshal(MemBufferedStream& _s) const {
+void @scoped_name@::_NP_marshal(cdrStream& _s) const {
   *this >>= _s;
 }
 """
@@ -708,46 +596,16 @@ exception_default_ctor = """\
 """
 
 exception_operators = """\
-size_t
-@scoped_name@::_NP_alignedSize(size_t _msgsize) const
+void
+@scoped_name@::operator>>= (cdrStream& _n) const
 {
-  @aligned_size@
-  return _msgsize;
+  @marshal@
 }
 
 void
-@scoped_name@::operator>>= (NetBufferedStream& _n) const
+@scoped_name@::operator<<= (cdrStream& _n)
 {
-  @net_marshal@
-}
-
-void
-@scoped_name@::operator<<= (NetBufferedStream& _n)
-{
-  @net_unmarshal@
-}
-
-void
-@scoped_name@::operator>>= (MemBufferedStream& _n) const
-{
-  @mem_marshal@
-}
-
-void
-@scoped_name@::operator<<= (MemBufferedStream& _n)
-{
-  @mem_unmarshal@
+  @unmarshal@
 }
 """
 
-##
-## Marshalling/ Unmarshalling types
-##
-unmarshal_string_tmp = """\
-{
-  CORBA::String_member @private_prefix@_str_tmp;
-  @private_prefix@_str_tmp <<= giop_s;
-  @item_name@ = @private_prefix@_str_tmp._ptr;
-  @private_prefix@_str_tmp._ptr = 0;
-}
-"""
