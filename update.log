@@ -1,3 +1,13 @@
+Mon Mar  2 14:31:42 GMT 1998 ewc
+================================
+
+- Applied patches to fix classes generated from IDL unions containing 
+  structs containing floats or doubles on OpenVMS.
+
+include/omniORB2/CORBA_basetypes.h
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+
+
 Fri Feb 27 17:25:57 GMT 1998 bjh
 ================================
 - Added an attempt at OrbixWeb 3 and OmniBroker for Java support to
