@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.9  2001/10/17 16:48:32  dpg1
+// Minor error message tweaks
+//
 // Revision 1.16.2.8  2001/08/29 11:55:22  dpg1
 // Enumerator nodes record their value.
 //
@@ -156,10 +159,10 @@ checkNotForward(const char* file, int line, IdlType* t)
     if (!f->definition()) {
       char* ssn = f->scopedName()->toString();
       IdlError(file, line,
-	       "Cannot use forward-declared struct `%s' before it is "
+	       "Cannot use forward-declared struct '%s' before it is "
 	       "fully defined", ssn);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward-declared here)", f->identifier());
+		   "('%s' forward-declared here)", f->identifier());
       delete [] ssn;
     }
   }
@@ -169,10 +172,10 @@ checkNotForward(const char* file, int line, IdlType* t)
     if (!f->definition()) {
       char* ssn = f->scopedName()->toString();
       IdlError(file, line,
-	       "Cannot use forward-declared union `%s' before it is "
+	       "Cannot use forward-declared union '%s' before it is "
 	       "fully defined", ssn);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward-declared here)", f->identifier());
+		   "('%s' forward-declared here)", f->identifier());
       delete [] ssn;
     }
   }
@@ -408,8 +411,8 @@ scopedNameToDecl(const char* file, int line, const ScopedName* sn)
     default:
       {
 	char* ssn = sn->toString();
-	IdlError(file, line, "`%s' is not a declaration", ssn);
-	IdlErrorCont(se->file(), se->line(), "(`%s' created here)", ssn);
+	IdlError(file, line, "'%s' is not a declaration", ssn);
+	IdlErrorCont(se->file(), se->line(), "('%s' created here)", ssn);
 	delete [] ssn;
       }
     }
@@ -501,7 +504,7 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
 	  char* ssn = sn->toString();
 	  IdlError(file, line, "Cannot inherit from CORBA::Object");
 	  IdlErrorCont(se->file(), se->line(),
-		       "(accessed through typedef `%s')", ssn);
+		       "(accessed through typedef '%s')", ssn);
 	  delete [] ssn;
 	  return;
 	}
@@ -520,17 +523,17 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
 	  else {
 	    char* ssn = ((Forward*)d)->scopedName()->toString();
 	    IdlError(file, line,
-		     "Inherited interface `%s' must be fully defined", ssn);
+		     "Inherited interface '%s' must be fully defined", ssn);
 
 	    if (decl_ != d) {
 	      char* tssn = sn->toString();
 	      IdlErrorCont(se->file(), se->line(),
-			   "(`%s' reached through typedef `%s')",
+			   "('%s' reached through typedef '%s')",
 			   ssn, tssn);
 	      delete [] tssn;
 	    }
 	    IdlErrorCont(d->file(), d->line(),
-			 "(`%s' forward declared here)", ssn);
+			 "('%s' forward declared here)", ssn);
 	    delete [] ssn;
 	    return;
 	  }
@@ -539,9 +542,9 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
     }
     char* ssn = sn->toString();
     IdlError(file, line,
-	     "`%s' used in inheritance specification is not an interface",
+	     "'%s' used in inheritance specification is not an interface",
 	     ssn);
-    IdlErrorCont(se->file(), se->line(), "(`%s' declared here)", ssn);
+    IdlErrorCont(se->file(), se->line(), "('%s' declared here)", ssn);
     delete [] ssn;
   }
 }
@@ -558,7 +561,7 @@ append(InheritSpec* is, const char* file, int line)
       if (is->interface() == i->interface()) {
 	char* ssn = is->interface()->scopedName()->toString();
 	IdlError(file, line,
-		 "Cannot specify `%s' as a direct base interface "
+		 "Cannot specify '%s' as a direct base interface "
 		 "more than once", ssn);
 	delete [] ssn;
 	delete is;
@@ -593,41 +596,41 @@ Interface(const char* file, int line, IDL_Boolean mainFile,
     if (strcmp(f->prefix(), prefix())) {
 
       IdlError(file, line,
-	       "In declaration of interface `%s', repository id "
-	       "prefix `%s' differs from that of forward declaration",
+	       "In declaration of interface '%s', repository id "
+	       "prefix '%s' differs from that of forward declaration",
 	       identifier, prefix());
 
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared here with prefix `%s')",
+		   "('%s' forward declared here with prefix '%s')",
 		   f->identifier(), f->prefix());
     }
     if (abstract && !f->abstract()) {
       IdlError(file, line,
-	       "Declaration of abstract interface `%s' conflicts with "
+	       "Declaration of abstract interface '%s' conflicts with "
 	       "forward declaration as non-abstract", identifier);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared as non-abstract here)");
+		   "('%s' forward declared as non-abstract here)");
     }
     else if (!abstract && f->abstract()) {
       IdlError(file, line,
-	       "Declaration of non-abstract interface `%s' conflicts with "
+	       "Declaration of non-abstract interface '%s' conflicts with "
 	       "forward declaration as abstract", identifier);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared as abstract here)");
+		   "('%s' forward declared as abstract here)");
     }
     if (local && !f->local()) {
       IdlError(file, line,
-	       "Declaration of local interface `%s' conflicts with "
+	       "Declaration of local interface '%s' conflicts with "
 	       "forward declaration as unconstrained", identifier);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared as unconstrained here)");
+		   "('%s' forward declared as unconstrained here)");
     }
     else if (!local && f->local()) {
       IdlError(file, line,
-	       "Declaration of unconstrained interface `%s' conflicts with "
+	       "Declaration of unconstrained interface '%s' conflicts with "
 	       "forward declaration as local", identifier);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared as local here)");
+		   "('%s' forward declared as local here)");
     }
     if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
 
@@ -644,8 +647,8 @@ Interface(const char* file, int line, IDL_Boolean mainFile,
       if (!inh->interface()->abstract()) {
 	char* ssn = inh->scope()->scopedName()->toString();
 	IdlError(file, line,
-		 "In declaration of abstract interface `%s', inherited "
-		 "interface `%s' is not abstract", identifier, ssn);
+		 "In declaration of abstract interface '%s', inherited "
+		 "interface '%s' is not abstract", identifier, ssn);
 	IdlErrorCont(inh->interface()->file(), inh->interface()->line(),
 		     "(%s declared here)", ssn);
 	delete [] ssn;
@@ -664,8 +667,8 @@ Interface(const char* file, int line, IDL_Boolean mainFile,
       if (inh->interface() && inh->interface()->local()) {
 	char* ssn = inh->scope()->scopedName()->toString();
 	IdlError(file, line,
-		 "In declaration of unconstrained interface `%s', inherited "
-		 "interface `%s' is local", identifier, ssn);
+		 "In declaration of unconstrained interface '%s', inherited "
+		 "interface '%s' is local", identifier, ssn);
 	IdlErrorCont(inh->interface()->file(), inh->interface()->line(),
 		     "(%s declared here)", ssn);
 	delete [] ssn;
@@ -707,8 +710,8 @@ finishConstruction(Decl* decls)
 	  char* ssn = dt->declRepoId()->scopedName()->toString();
 
 	  IdlError(a->file(), a->line(),
-		   "In unconstrained interface `%s', attribute `%s' has "
-		   "local type `%s'",
+		   "In unconstrained interface '%s', attribute '%s' has "
+		   "local type '%s'",
 		   identifier(), a->declarators()->identifier(), ssn);
 	  IdlErrorCont(dt->decl()->file(), dt->decl()->line(),
 		       "(%s declared here)", ssn);
@@ -724,8 +727,8 @@ finishConstruction(Decl* decls)
 	  char* ssn = dt->declRepoId()->scopedName()->toString();
 
 	  IdlError(o->file(), o->line(),
-		   "In unconstrained interface `%s', operation `%s' has "
-		   "local return type `%s'",
+		   "In unconstrained interface '%s', operation '%s' has "
+		   "local return type '%s'",
 		   identifier(), o->identifier(), ssn);
 	  IdlErrorCont(dt->decl()->file(), dt->decl()->line(),
 		       "(%s declared here)", ssn);
@@ -738,8 +741,8 @@ finishConstruction(Decl* decls)
 	    char* ssn = dt->declRepoId()->scopedName()->toString();
 
 	    IdlError(p->file(), p->line(),
-		     "In unconstrained interface `%s', operation `%s' has "
-		     "parameter `%s' with local type `%s'",
+		     "In unconstrained interface '%s', operation '%s' has "
+		     "parameter '%s' with local type '%s'",
 		     identifier(), o->identifier(), p->identifier(), ssn);
 	    IdlErrorCont(dt->decl()->file(), dt->decl()->line(),
 			 "(%s declared here)", ssn);
@@ -751,8 +754,8 @@ finishConstruction(Decl* decls)
 	    char* ssn = r->exception()->scopedName()->toString();
 
 	    IdlError(o->file(), o->line(),
-		     "In unconstrained interface `%s', operation `%s' raises "
-		     "local exception `%s'", identifier(),
+		     "In unconstrained interface '%s', operation '%s' raises "
+		     "local exception '%s'", identifier(),
 		     o->identifier(), ssn);
 	    IdlErrorCont(r->exception()->file(), r->exception()->line(),
 			 "(%s declared here)", ssn);
@@ -790,45 +793,45 @@ Forward(const char* file, int line, IDL_Boolean mainFile,
       if (strcmp(i->prefix(), prefix())) {
 
 	IdlError(file, line,
-		 "In forward declaration of interface `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of interface '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(i->file(), i->line(),
-		     "(`%s' fully declared here with prefix `%s')",
+		     "('%s' fully declared here with prefix '%s')",
 		     i->identifier(), i->prefix());
       }
       if (abstract && !i->abstract()) {
 	IdlError(file, line,
-		 "Forward declaration of abstract interface `%s' conflicts "
+		 "Forward declaration of abstract interface '%s' conflicts "
 		 "with earlier full declaration as non-abstract",
 		 identifier);
 	IdlErrorCont(i->file(), i->line(),
-		     "(`%s' declared as non-abstract here)");
+		     "('%s' declared as non-abstract here)");
       }
       else if (!abstract && i->abstract()) {
 	IdlError(file, line,
-		 "Forward declaration of non-abstract interface `%s' "
+		 "Forward declaration of non-abstract interface '%s' "
 		 "conflicts with earlier full declaration as abstract",
 		 identifier);
 	IdlErrorCont(i->file(), i->line(),
-		     "(`%s' declared as abstract here)");
+		     "('%s' declared as abstract here)");
       }
       if (local && !i->local()) {
 	IdlError(file, line,
-		 "Forward declaration of local interface `%s' conflicts "
+		 "Forward declaration of local interface '%s' conflicts "
 		 "with earlier full declaration as unconstrained",
 		 identifier);
 	IdlErrorCont(i->file(), i->line(),
-		     "(`%s' declared as unconstrained here)");
+		     "('%s' declared as unconstrained here)");
       }
       else if (!local && i->local()) {
 	IdlError(file, line,
-		 "Forward declaration of unconstrained interface `%s' "
+		 "Forward declaration of unconstrained interface '%s' "
 		 "conflicts with earlier full declaration as local",
 		 identifier);
 	IdlErrorCont(i->file(), i->line(),
-		     "(`%s' declared as abstract here)");
+		     "('%s' declared as abstract here)");
       }
       reg = 0;
     }
@@ -838,45 +841,45 @@ Forward(const char* file, int line, IDL_Boolean mainFile,
 
       if (strcmp(f->prefix(), prefix())) {
 	IdlError(file, line,
-		 "In forward declaration of interface `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of interface '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward declared here with prefix `%s')",
+		     "('%s' forward declared here with prefix '%s')",
 		     f->identifier(), f->prefix());
       }
       if (abstract && !f->abstract()) {
 	IdlError(file, line,
-		 "Forward declaration of abstract interface `%s' conflicts "
+		 "Forward declaration of abstract interface '%s' conflicts "
 		 "with earlier forward declaration as non-abstract",
 		 identifier);
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward declared as non-abstract here)");
+		     "('%s' forward declared as non-abstract here)");
       }
       else if (!abstract && f->abstract()) {
 	IdlError(file, line,
-		 "Forward declaration of non-abstract interface `%s' "
+		 "Forward declaration of non-abstract interface '%s' "
 		 "conflicts  with earlier forward declaration as abstract",
 		 identifier);
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward declared as abstract here)");
+		     "('%s' forward declared as abstract here)");
       }
       if (local && !f->local()) {
 	IdlError(file, line,
-		 "Forward declaration of local interface `%s' conflicts "
+		 "Forward declaration of local interface '%s' conflicts "
 		 "with earlier forward declaration as unconstrained",
 		 identifier);
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward declared as unconstrained here)");
+		     "('%s' forward declared as unconstrained here)");
       }
       else if (!local && f->local()) {
 	IdlError(file, line,
-		 "Forward declaration of unconstrained interface `%s' "
+		 "Forward declaration of unconstrained interface '%s' "
 		 "conflicts  with earlier forward declaration as local",
 		 identifier);
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward declared as local here)");
+		     "('%s' forward declared as local here)");
       }
       //***?      if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
       reg = 0;
@@ -1169,7 +1172,7 @@ Member(const char* file, int line, IDL_Boolean mainFile,
     Struct* s = (Struct*)((DeclaredType*)bareType)->decl();
     if (!s->finished()) {
       IdlError(file, line,
-	       "Cannot create an instance of struct `%s' inside "
+	       "Cannot create an instance of struct '%s' inside "
 	       "its own definition", s->identifier());
     }
   }
@@ -1177,7 +1180,7 @@ Member(const char* file, int line, IDL_Boolean mainFile,
     Union* u = (Union*)((DeclaredType*)bareType)->decl();
     if (!u->finished()) {
       IdlError(file, line,
-	       "Cannot create an instance of union `%s' inside "
+	       "Cannot create an instance of union '%s' inside "
 	       "its own definition", u->identifier());
     }
   }
@@ -1219,10 +1222,10 @@ Member(const char* file, int line, IDL_Boolean mainFile,
       else {
 	char* ssn = f->scopedName()->toString();
 	IdlError(file, line,
-		 "Cannot use sequence of forward-declared struct `%s' "
+		 "Cannot use sequence of forward-declared struct '%s' "
 		 "before it is fully defined", ssn);
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward-declared here)", f->identifier());
+		     "('%s' forward-declared here)", f->identifier());
 	delete [] ssn;
       }
     }
@@ -1236,10 +1239,10 @@ Member(const char* file, int line, IDL_Boolean mainFile,
       else {
 	char* ssn = f->scopedName()->toString();
 	IdlError(file, line,
-		 "Cannot use sequence of forward-declared union `%s' "
+		 "Cannot use sequence of forward-declared union '%s' "
 		 "before it is fully defined", ssn);
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward-declared here)", f->identifier());
+		     "('%s' forward-declared here)", f->identifier());
 	delete [] ssn;
       }
     }
@@ -1279,19 +1282,19 @@ Struct(const char* file, int line, IDL_Boolean mainFile,
 
     if (strcmp(f->file(), file)) {
       IdlError(file, line,
-	       "Struct `%s' defined in different source file to "
+	       "Struct '%s' defined in different source file to "
 	       "its forward declaration", identifier);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared here)", identifier);
+		   "('%s' forward declared here)", identifier);
     }
     if (strcmp(f->prefix(), prefix())) {
       IdlError(file, line,
-	       "In declaration of struct `%s', repository id "
-	       "prefix `%s' differs from that of forward declaration",
+	       "In declaration of struct '%s', repository id "
+	       "prefix '%s' differs from that of forward declaration",
 	       identifier, prefix());
 
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared here with prefix `%s')",
+		   "('%s' forward declared here with prefix '%s')",
 		   f->identifier(), f->prefix());
     }
     if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
@@ -1351,19 +1354,19 @@ StructForward(const char* file, int line, IDL_Boolean mainFile,
 
       if (strcmp(s->file(), file)) {
 	IdlError(file, line,
-		 "Struct `%s' forward declared in different source file to "
+		 "Struct '%s' forward declared in different source file to "
 		 "its definition", identifier);
 	IdlErrorCont(s->file(), s->line(),
-		     "(`%s' defined here)", identifier);
+		     "('%s' defined here)", identifier);
       }
       if (strcmp(s->prefix(), prefix())) {
 	IdlError(file, line,
-		 "In forward declaration of struct `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of struct '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(s->file(), s->line(),
-		     "(`%s' fully declared here with prefix `%s')",
+		     "('%s' fully declared here with prefix '%s')",
 		     s->identifier(), s->prefix());
       }
       reg = 0;
@@ -1374,19 +1377,19 @@ StructForward(const char* file, int line, IDL_Boolean mainFile,
 
       if (strcmp(s->file(), file)) {
 	IdlError(file, line,
-		 "Struct `%s' forward declared in more than one "
+		 "Struct '%s' forward declared in more than one "
 		 "source file", identifier);
 	IdlErrorCont(s->file(), s->line(),
-		     "(`%s' also forward declared here)", identifier);
+		     "('%s' also forward declared here)", identifier);
       }
       if (strcmp(s->prefix(), prefix())) {
 	IdlError(file, line,
-		 "In forward declaration of struct `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of struct '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(s->file(), s->line(),
-		     "(`%s' forward declared here with prefix `%s')",
+		     "('%s' forward declared here with prefix '%s')",
 		     s->identifier(), s->prefix());
       }
       reg = 0;
@@ -1557,7 +1560,7 @@ UnionCase(const char* file, int line, IDL_Boolean mainFile,
     Struct* s = (Struct*)((DeclaredType*)bareType)->decl();
     if (!s->finished()) {
       IdlError(file, line,
-	       "Cannot create an instance of struct `%s' inside "
+	       "Cannot create an instance of struct '%s' inside "
 	       "its own definition", s->identifier());
     }
   }
@@ -1565,7 +1568,7 @@ UnionCase(const char* file, int line, IDL_Boolean mainFile,
     Union* u = (Union*)((DeclaredType*)bareType)->decl();
     if (!u->finished()) {
       IdlError(file, line,
-	       "Cannot create an instance of union `%s' inside "
+	       "Cannot create an instance of union '%s' inside "
 	       "its own definition", u->identifier());
     }
   }
@@ -1607,10 +1610,10 @@ UnionCase(const char* file, int line, IDL_Boolean mainFile,
       else {
 	char* ssn = f->scopedName()->toString();
 	IdlError(file, line,
-		 "Cannot use sequence of forward-declared struct `%s' "
+		 "Cannot use sequence of forward-declared struct '%s' "
 		 "before it is fully defined", ssn);
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward-declared here)", f->identifier());
+		     "('%s' forward-declared here)", f->identifier());
 	delete [] ssn;
       }
     }
@@ -1624,10 +1627,10 @@ UnionCase(const char* file, int line, IDL_Boolean mainFile,
       else {
 	char* ssn = f->scopedName()->toString();
 	IdlError(file, line,
-		 "Cannot use sequence of forward-declared union `%s' "
+		 "Cannot use sequence of forward-declared union '%s' "
 		 "before it is fully defined", ssn);
 	IdlErrorCont(f->file(), f->line(),
-		     "(`%s' forward-declared here)", f->identifier());
+		     "('%s' forward-declared here)", f->identifier());
 	delete [] ssn;
       }
     }
@@ -1678,19 +1681,19 @@ Union(const char* file, int line, IDL_Boolean mainFile,
 
     if (strcmp(f->file(), file)) {
       IdlError(file, line,
-	       "Union `%s' defined in different source file to "
+	       "Union '%s' defined in different source file to "
 	       "its forward declaration", identifier);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared here)", identifier);
+		   "('%s' forward declared here)", identifier);
     }
     if (strcmp(f->prefix(), prefix())) {
       IdlError(file, line,
-	       "In declaration of union `%s', repository id "
-	       "prefix `%s' differs from that of forward declaration",
+	       "In declaration of union '%s', repository id "
+	       "prefix '%s' differs from that of forward declaration",
 	       identifier, prefix());
 
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared here with prefix `%s')",
+		   "('%s' forward declared here with prefix '%s')",
 		   f->identifier(), f->prefix());
     }
     if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
@@ -1824,12 +1827,12 @@ finishConstruction(IdlType* switchType, IDL_Boolean constrType,
   }
 
   if (clash)
-    IdlError(file(), line(), "Error in union `%s': %d repeated union label%s",
+    IdlError(file(), line(), "Error in union '%s': %d repeated union label%s",
 	     identifier(), clash, clash == 1 ? "" : "s");
 
   if (defLabel && !foundDef)
     IdlError(defLabel->file(), defLabel->line(),
-	     "Error in union `%s': cannot declare default case since "
+	     "Error in union '%s': cannot declare default case since "
 	     "all cases are explicitly listed", identifier());
 
   Prefix::endScope();
@@ -1859,19 +1862,19 @@ UnionForward(const char* file, int line, IDL_Boolean mainFile,
 
       if (strcmp(u->file(), file)) {
 	IdlError(file, line,
-		 "Union `%s' forward declared in different source file to "
+		 "Union '%s' forward declared in different source file to "
 		 "its definition", identifier);
 	IdlErrorCont(u->file(), u->line(),
-		     "(`%s' defined here)", identifier);
+		     "('%s' defined here)", identifier);
       }
       if (strcmp(u->prefix(), prefix())) {
 	IdlError(file, line,
-		 "In forward declaration of union `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of union '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(u->file(), u->line(),
-		     "(`%s' fully declared here with prefix `%s')",
+		     "('%s' fully declared here with prefix '%s')",
 		     u->identifier(), u->prefix());
       }
       reg = 0;
@@ -1882,19 +1885,19 @@ UnionForward(const char* file, int line, IDL_Boolean mainFile,
 
       if (strcmp(u->file(), file)) {
 	IdlError(file, line,
-		 "Union `%s' forward declared in more than one "
+		 "Union '%s' forward declared in more than one "
 		 "source file", identifier);
 	IdlErrorCont(u->file(), u->line(),
-		     "(`%s' also forward declared here)", identifier);
+		     "('%s' also forward declared here)", identifier);
       }
       if (strcmp(u->prefix(), prefix())) {
 	IdlError(file, line,
-		 "In forward declaration of union `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of union '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(u->file(), u->line(),
-		     "(`%s' forward declared here with prefix `%s')",
+		     "('%s' forward declared here with prefix '%s')",
 		     u->identifier(), u->prefix());
       }
       reg = 0;
@@ -2072,9 +2075,9 @@ RaisesSpec(const ScopedName* sn, const char* file, int line)
     else {
       char* ssn = sn->toString();
       IdlError(file, line,
-	       "`%s' used in raises expression is not an exception",
+	       "'%s' used in raises expression is not an exception",
 	       ssn);
-      IdlErrorCont(se->file(), se->line(), "(`%s' declared here)", ssn);
+      IdlErrorCont(se->file(), se->line(), "('%s' declared here)", ssn);
       delete [] ssn;
     }
   }
@@ -2173,26 +2176,26 @@ finishConstruction(Parameter* parameters, RaisesSpec* raises,
 
   if (oneway_) {
     if (returnType_ && returnType_->kind() != IdlType::tk_void) {
-      IdlError(file(), line(), "Oneway operation `%s' does not return void",
+      IdlError(file(), line(), "Oneway operation '%s' does not return void",
 	       identifier());
     }
     for (Parameter* p = parameters; p; p = (Parameter*)p->next()) {
       if (p->direction() == 1) {
 	IdlError(p->file(), p->line(),
-		 "In oneway operation `%s': out parameter `%s' "
+		 "In oneway operation '%s': out parameter '%s' "
 		 "is not permitted",
 		 identifier(), p->identifier());
       }
       else if (p->direction() == 2) {
 	IdlError(p->file(), p->line(),
-		 "In oneway operation `%s': inout parameter `%s' "
+		 "In oneway operation '%s': inout parameter '%s' "
 		 "is not permitted",
 		 identifier(), p->identifier());
       }
     }
     if (raises_) {
       IdlError(file(), line(),
-	       "Oneway operation `%s' is not permitted to have "
+	       "Oneway operation '%s' is not permitted to have "
 	       "a raises expression", identifier());
     }
   }
@@ -2241,14 +2244,14 @@ StateMember(const char* file, int line, IDL_Boolean mainFile,
 	assert(dt->declRepoId());
 	char* ssn = dt->declRepoId()->scopedName()->toString();
 
-	IdlError(file, line, "State member `%s' has local type `%s'",
+	IdlError(file, line, "State member '%s' has local type '%s'",
 		 declarators->identifier(), ssn);
 	IdlErrorCont(dt->decl()->file(), dt->decl()->line(),
 		     "(%s declared here)", ssn);
 	delete [] ssn;
       }
       else {
-	IdlError(file, line, "State member `%s' has local type",
+	IdlError(file, line, "State member '%s' has local type",
 		 declarators->identifier());
       }
     }
@@ -2345,22 +2348,22 @@ ValueForward(const char* file, int line, IDL_Boolean mainFile,
 
       if (strcmp(v->prefix(), prefix())) {
 	IdlError(file, line,
-		 "In forward declaration of valuetype `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of valuetype '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(v->file(), v->line(),
-		     "(`%s' fully declared here with prefix `%s')",
+		     "('%s' fully declared here with prefix '%s')",
 		     v->identifier(), v->prefix());
 	reg = 0;
       }
       if (!abstract) {
 	IdlError(file, line,
-		 "Forward declaration of non-abstract valuetype `%s' "
+		 "Forward declaration of non-abstract valuetype '%s' "
 		 "conflicts with earlier full declaration as abstract",
 		 identifier);
 	IdlErrorCont(v->file(), v->line(),
-		     "(`%s' declared as abstract here)");
+		     "('%s' declared as abstract here)");
       }
     }
     else if (se->decl()->kind() == D_VALUE) {
@@ -2369,22 +2372,22 @@ ValueForward(const char* file, int line, IDL_Boolean mainFile,
 
       if (strcmp(v->prefix(), prefix())) {
 	IdlError(file, line,
-		 "In forward declaration of valuetype `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of valuetype '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(v->file(), v->line(),
-		     "(`%s' fully declared here with prefix `%s')",
+		     "('%s' fully declared here with prefix '%s')",
 		     v->identifier(), v->prefix());
 	reg = 0;
       }
       if (abstract) {
 	IdlError(file, line,
-		 "Forward declaration of abstract valuetype `%s' "
+		 "Forward declaration of abstract valuetype '%s' "
 		 "conflicts with earlier full declaration as non-abstract",
 		 identifier);
 	IdlErrorCont(v->file(), v->line(),
-		     "(`%s' declared as non-abstract here)");
+		     "('%s' declared as non-abstract here)");
       }
     }
     else if (se->decl()->kind() == D_VALUEFORWARD) {
@@ -2393,29 +2396,29 @@ ValueForward(const char* file, int line, IDL_Boolean mainFile,
 
       if (strcmp(v->prefix(), prefix())) {
 	IdlError(file, line,
-		 "In forward declaration of interface `%s', repository "
-		 "id prefix `%s' differs from that of earlier declaration",
+		 "In forward declaration of interface '%s', repository "
+		 "id prefix '%s' differs from that of earlier declaration",
 		 identifier, prefix());
 
 	IdlErrorCont(v->file(), v->line(),
-		     "(`%s' forward declared here with prefix `%s')",
+		     "('%s' forward declared here with prefix '%s')",
 		     v->identifier(), v->prefix());
       }
       if (abstract && !v->abstract()) {
 	IdlError(file, line,
-		 "Forward declaration of abstract valuetype `%s' conflicts "
+		 "Forward declaration of abstract valuetype '%s' conflicts "
 		 "with earlier forward declaration as non-abstract",
 		 identifier);
 	IdlErrorCont(v->file(), v->line(),
-		     "(`%s' forward declared as non-abstract here)");
+		     "('%s' forward declared as non-abstract here)");
       }
       else if (!abstract && v->abstract()) {
 	IdlError(file, line,
-		 "Forward declaration of non-abstract valuetype `%s' "
+		 "Forward declaration of non-abstract valuetype '%s' "
 		 "conflicts  with earlier forward declaration as abstract",
 		 identifier);
 	IdlErrorCont(v->file(), v->line(),
-		     "(`%s' forward declared as abstract here)");
+		     "('%s' forward declared as abstract here)");
       }
       if (v->repoIdSet()) setRepoId(v->repoId(), v->rifile(), v->riline());
     }
@@ -2525,17 +2528,17 @@ ValueInheritSpec(ScopedName* sn, const char* file, int line)
 	  else {
 	    char* ssn = ((ValueForward*)d)->scopedName()->toString();
 	    IdlError(file, line,
-		     "Inherited valuetype `%s' must be fully defined", ssn);
+		     "Inherited valuetype '%s' must be fully defined", ssn);
 
 	    if (decl_ != d) {
 	      char* tssn = sn->toString();
 	      IdlErrorCont(se->file(), se->line(),
-			   "(`%s' reached through typedef `%s')",
+			   "('%s' reached through typedef '%s')",
 			   ssn, tssn);
 	      delete [] tssn;
 	    }
 	    IdlErrorCont(d->file(), d->line(),
-			 "(`%s' forward declared here)", ssn);
+			 "('%s' forward declared here)", ssn);
 	    delete [] ssn;
 	    return;
 	  }
@@ -2544,9 +2547,9 @@ ValueInheritSpec(ScopedName* sn, const char* file, int line)
     }
     char* ssn = sn->toString();
     IdlError(file, line,
-	     "`%s' used in inheritance specification is not a valuetype",
+	     "'%s' used in inheritance specification is not a valuetype",
 	     ssn);
-    IdlErrorCont(se->file(), se->line(), "(`%s' declared here)", ssn);
+    IdlErrorCont(se->file(), se->line(), "('%s' declared here)", ssn);
     delete [] ssn;
   }
 }
@@ -2563,7 +2566,7 @@ append(ValueInheritSpec* is, const char* file, int line)
     if (is->value() == i->value()) {
       char* ssn = is->value()->scopedName()->toString();
       IdlError(file, line,
-	       "Cannot specify `%s' as a direct base valuetype "
+	       "Cannot specify '%s' as a direct base valuetype "
 	       "more than once", ssn);
       delete [] ssn;
       delete is;
@@ -2595,20 +2598,20 @@ ValueAbs(const char* file, int line, IDL_Boolean mainFile,
     if (strcmp(f->prefix(), prefix())) {
 
       IdlError(file, line,
-	       "In declaration of valuetype `%s', repository id "
-	       "prefix `%s' differs from that of forward declaration",
+	       "In declaration of valuetype '%s', repository id "
+	       "prefix '%s' differs from that of forward declaration",
 	       identifier, prefix());
 
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared here with prefix `%s')",
+		   "('%s' forward declared here with prefix '%s')",
 		   f->identifier(), f->prefix());
     }
     if (!f->abstract()) {
       IdlError(file, line,
-	       "Declaration of abstract valuetype `%s' conflicts with "
+	       "Declaration of abstract valuetype '%s' conflicts with "
 	       "forward declaration as non-abstract", identifier);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared as non-abstract here)");
+		   "('%s' forward declared as non-abstract here)");
     }
     if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
 
@@ -2623,8 +2626,8 @@ ValueAbs(const char* file, int line, IDL_Boolean mainFile,
     if (vinh->value()->kind() == D_VALUE) {
       char* ssn = vinh->scope()->scopedName()->toString();
       IdlError(file, line,
-	       "In declaration of abstract valuetype `%s', inherited "
-	       "valuetype `%s' is not abstract", identifier, ssn);
+	       "In declaration of abstract valuetype '%s', inherited "
+	       "valuetype '%s' is not abstract", identifier, ssn);
       IdlErrorCont(vinh->value()->file(), vinh->value()->line(),
 		   "(%s declared here)", ssn);
       delete [] ssn;
@@ -2678,20 +2681,20 @@ Value(const char* file, int line, IDL_Boolean mainFile,
     if (strcmp(f->prefix(), prefix())) {
 
       IdlError(file, line,
-	       "In declaration of valuetype `%s', repository id "
-	       "prefix `%s' differs from that of forward declaration",
+	       "In declaration of valuetype '%s', repository id "
+	       "prefix '%s' differs from that of forward declaration",
 	       identifier, prefix());
 
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared here with prefix `%s')",
+		   "('%s' forward declared here with prefix '%s')",
 		   f->identifier(), f->prefix());
     }
     if (f->abstract()) {
       IdlError(file, line,
-	       "Declaration of non-abstract valuetype `%s' conflicts with "
+	       "Declaration of non-abstract valuetype '%s' conflicts with "
 	       "forward declaration as abstract", identifier);
       IdlErrorCont(f->file(), f->line(),
-		   "(`%s' forward declared as abstract here)");
+		   "('%s' forward declared as abstract here)");
     }
     if (f->repoIdSet()) setRepoId(f->repoId(), f->rifile(), f->riline());
 
@@ -2706,7 +2709,7 @@ Value(const char* file, int line, IDL_Boolean mainFile,
     if (custom) {
       if (inherits->truncatable()) {
 	IdlError(file, line,
-		 "`truncatable' may not be specified for a custom valuetype");
+		 "'truncatable' may not be specified for a custom valuetype");
       }
     }
     else {
@@ -2714,8 +2717,8 @@ Value(const char* file, int line, IDL_Boolean mainFile,
 	if (((Value*)inherits->value())->custom()) {
 	  char* ssn = inherits->scope()->scopedName()->toString();
 	  IdlError(file, line,
-		   "In declaration of non-custom valuetype `%s', inherited "
-		   "valuetype `%s' is custom", identifier, ssn);
+		   "In declaration of non-custom valuetype '%s', inherited "
+		   "valuetype '%s' is custom", identifier, ssn);
 	  IdlErrorCont(inherits->value()->file(), inherits->value()->line(),
 		       "(%s declared here)", ssn);
 	  delete [] ssn;
@@ -2729,8 +2732,8 @@ Value(const char* file, int line, IDL_Boolean mainFile,
       if (vinh->value()->kind() == D_VALUE) {
 	char* ssn = vinh->scope()->scopedName()->toString();
 	IdlError(file, line,
-		 "In declaration of valuetype `%s', inherited valuetype "
-		 "`%s' is non-abstract but is not specified first",
+		 "In declaration of valuetype '%s', inherited valuetype "
+		 "'%s' is non-abstract but is not specified first",
 		 identifier, ssn);
 	IdlErrorCont(vinh->value()->file(), vinh->value()->line(),
 		     "(%s declared here)", ssn);
@@ -2745,8 +2748,8 @@ Value(const char* file, int line, IDL_Boolean mainFile,
       if (!inh->interface()->abstract()) {
 	char* ssn = inh->scope()->scopedName()->toString();
 	IdlError(file, line,
-		 "In declaration of valuetype `%s', supported interface "
-		 "`%s' is non-abstract but is not specified first",
+		 "In declaration of valuetype '%s', supported interface "
+		 "'%s' is non-abstract but is not specified first",
 		 identifier, ssn);
 	IdlErrorCont(inh->interface()->file(), inh->interface()->line(),
 		     "(%s declared here)", ssn);

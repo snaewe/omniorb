@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6.2.6  2001/10/17 16:48:33  dpg1
+// Minor error message tweaks
+//
 // Revision 1.6.2.5  2001/08/29 11:54:20  dpg1
 // Clean up const handling in IDL compiler.
 //
@@ -204,8 +207,8 @@ scopedNameToExpr(const char* file, int line, ScopedName* sn)
     }
     else {
       char* ssn = sn->toString();
-      IdlError(file, line, "`%s' is not valid in an expression", ssn);
-      IdlErrorCont(se->file(), se->line(), "(`%s' declared here)", ssn);
+      IdlError(file, line, "'%s' is not valid in an expression", ssn);
+      IdlErrorCont(se->file(), se->line(), "('%s' declared here)", ssn);
       delete [] ssn;
     }
   }
@@ -295,12 +298,12 @@ Enumerator* EnumExpr::evalAsEnumerator(const Enum* target) {
   if (value_->container() != target) {
     char* vssn = value_->scopedName()->toString();
     char* essn  = target->scopedName()->toString();
-    IdlError(file(), line(), "Enumerator `%s' does not belong to enum `%s'",
+    IdlError(file(), line(), "Enumerator '%s' does not belong to enum '%s'",
 	     vssn, essn);
     delete [] essn;
     essn = value_->container()->scopedName()->toString();
     IdlErrorCont(value_->file(), value_->line(),
-		 "(Enumerator `%s' declared in `%s' here)",
+		 "(Enumerator '%s' declared in '%s' here)",
 		 vssn, essn);
     delete [] essn;
     delete [] vssn;
@@ -340,7 +343,7 @@ IdlLongVal ConstExpr::evalAsLongV() {
     {
       char* ssn = scopedName_->toString();
       IdlError(file(), line(),
-	       "Cannot interpret constant `%s' as an integer", ssn);
+	       "Cannot interpret constant '%s' as an integer", ssn);
       IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
       delete [] ssn;
       return IdlLongVal((IDL_ULong)1);
@@ -349,7 +352,7 @@ IdlLongVal ConstExpr::evalAsLongV() {
  precision_error:
   char* ssn = scopedName_->toString();
   IdlError(file(), line(),
-	   "Value of constant `%s' exceeds precision of target", ssn);
+	   "Value of constant '%s' exceeds precision of target", ssn);
   IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
   delete [] ssn;
   return IdlLongVal(IDL_ULong(1));
@@ -385,7 +388,7 @@ IdlLongLongVal ConstExpr::evalAsLongLongV() {
     {
       char* ssn = scopedName_->toString();
       IdlError(file(), line(),
-	       "Cannot interpret constant `%s' as an integer", ssn);
+	       "Cannot interpret constant '%s' as an integer", ssn);
       IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
       delete [] ssn;
       return IdlLongLongVal((IDL_ULongLong)1);
@@ -411,13 +414,13 @@ IDL_Float ConstExpr::evalAsFloat() {
   default:
     r = 1.0;
     char* ssn = scopedName_->toString();
-    IdlError(file(), line(), "Cannot interpret constant `%s' as float", ssn);
+    IdlError(file(), line(), "Cannot interpret constant '%s' as float", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (IdlFPOverflow(r)) {
     char* ssn = scopedName_->toString();
-    IdlError(file(), line(), "Value of constant `%s' overflows float", ssn);
+    IdlError(file(), line(), "Value of constant '%s' overflows float", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
@@ -440,13 +443,13 @@ IDL_Double ConstExpr::evalAsDouble() {
   default:
     r = 1.0;
     char* ssn = scopedName_->toString();
-    IdlError(file(), line(), "Cannot interpret constant `%s' as double", ssn);
+    IdlError(file(), line(), "Cannot interpret constant '%s' as double", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (IdlFPOverflow(r)) {
     char* ssn = scopedName_->toString();
-    IdlError(file(), line(), "Value of constant `%s' overflows double", ssn);
+    IdlError(file(), line(), "Value of constant '%s' overflows double", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
@@ -465,14 +468,14 @@ IDL_LongDouble ConstExpr::evalAsLongDouble() {
     r = 1.0;
     char* ssn = scopedName_->toString();
     IdlError(file(), line(),
-	     "Cannot interpret constant `%s' as long double", ssn);
+	     "Cannot interpret constant '%s' as long double", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (IdlFPOverflow(r)) { // Don't see how this could happen...
     char* ssn = scopedName_->toString();
     IdlError(file(), line(),
-	     "Value of constant `%s' overflows long double", ssn);
+	     "Value of constant '%s' overflows long double", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
@@ -488,7 +491,7 @@ rt ConstExpr::eop() { \
   else { \
     char* ssn = scopedName_->toString(); \
     IdlError(file(), line(), \
-	     "Cannot interpret constant `%s' as " str, ssn); \
+	     "Cannot interpret constant '%s' as " str, ssn); \
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn); \
     delete [] ssn; \
   } \
@@ -514,12 +517,12 @@ Enumerator* ConstExpr::evalAsEnumerator(const Enum* target) {
     Enumerator* e = c_->constAsEnumerator();
     if (e->container() != target) {
       char* ssn = target->scopedName()->toString();
-      IdlError(file(), line(), "Enumerator `%s' does not belong to enum `%s'",
+      IdlError(file(), line(), "Enumerator '%s' does not belong to enum '%s'",
 	       e->identifier(), ssn);
       delete [] ssn;
       ssn = e->container()->scopedName()->toString();
       IdlErrorCont(e->file(), e->line(),
-		   "(Enumerator `%s' declared in `%s' here)",
+		   "(Enumerator '%s' declared in '%s' here)",
 		   e->identifier(), ssn);
       delete [] ssn;
     }
@@ -528,7 +531,7 @@ Enumerator* ConstExpr::evalAsEnumerator(const Enum* target) {
   else {
     char* ssn = scopedName_->toString();
     IdlError(file(), line(),
-	     "Cannot interpret constant `%s' as enumerator", ssn);
+	     "Cannot interpret constant '%s' as enumerator", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }

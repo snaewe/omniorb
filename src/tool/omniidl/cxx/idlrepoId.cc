@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.5  2001/10/17 16:48:33  dpg1
+// Minor error message tweaks
+//
 // Revision 1.5.2.4  2000/11/03 12:20:58  dpg1
 // #pragma ID can now be declared more than once for a type, as long as
 // the id is the same.
@@ -217,10 +220,10 @@ setRepoId(const char* repoId, const char* file, int line)
 {
   if (set_) {
     if (strcmp(repoId, repoId_)) {
-      IdlError(file, line, "Cannot set repository id of `%s' to `%s'",
+      IdlError(file, line, "Cannot set repository id of '%s' to '%s'",
 	       identifier_, repoId);
       IdlErrorCont(rifile_, riline_,
-		   "Repository id previously set to `%s' here", repoId_);
+		   "Repository id previously set to '%s' here", repoId_);
     }
   }
   else {
@@ -233,7 +236,7 @@ setRepoId(const char* repoId, const char* file, int line)
     for (; *repoId && *repoId != ':'; ++repoId);
     if (*repoId == '\0') {
       IdlWarning(file, line,
-		 "Repository id of `%s' set to invalid string `%s'",
+		 "Repository id of '%s' set to invalid string '%s'",
 		 identifier_, repoId_);
     }
   }
@@ -244,10 +247,10 @@ DeclRepoId::
 setVersion(IDL_Short maj, IDL_Short min, const char* file, int line)
 {
   if (set_) {
-    IdlError(file, line, "Cannot set version of `%s' to `%d.%d'",
+    IdlError(file, line, "Cannot set version of '%s' to '%d.%d'",
 	     identifier_, maj, min);
     IdlErrorCont(rifile_, riline_,
-		 "Repository id previously set to `%s' here", repoId_);
+		 "Repository id previously set to '%s' here", repoId_);
   }
   else {
     delete [] repoId_;

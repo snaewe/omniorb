@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.4  2001/10/17 16:48:34  dpg1
+// Minor error message tweaks
+//
 // Revision 1.7.2.3  2000/11/01 12:45:57  dpg1
 // Update to CORBA 2.4 specification.
 //
@@ -134,8 +137,8 @@ scopedNameToType(const char* file, int line, const ScopedName* sn)
       if (t) return t;
     }
     char* ssn = sn->toString();
-    IdlError(file, line, "`%s' is not a type", ssn);
-    IdlErrorCont(se->file(), se->line(), "(`%s' declared here)", ssn);
+    IdlError(file, line, "'%s' is not a type", ssn);
+    IdlErrorCont(se->file(), se->line(), "('%s' declared here)", ssn);
     delete [] ssn;
   }
   return 0;

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.17.2.11  2001/10/17 16:48:33  dpg1
+// Minor error message tweaks
+//
 // Revision 1.17.2.10  2001/08/29 11:55:23  dpg1
 // Enumerator nodes record their value.
 //
@@ -1510,7 +1513,7 @@ extern "C" {
 extern "C" int PyVMS_init(int* pvi_argc, char*** pvi_argv);
 #endif
 
-// It's awkward to make a command named `omniidl' on NT which runs
+// It's awkward to make a command named 'omniidl' on NT which runs
 // Python, so we make the front-end a Python executable which always
 // runs omniidl.main.
 
@@ -1543,7 +1546,7 @@ main(int argc, char** argv)
 "                     (pylibdir or binarchdir) + '\\n')\n"
 "    sys.stderr.write('omniidl: (or set the PYTHONPATH environment variable)\\n')\n"
 "    sys.stderr.write('\\n')\n"
-"    sys.stderr.write('omniidl: (The error was `' + str(msg) + '\\')\\n')\n"
+"    sys.stderr.write('omniidl: (The error was \\'' + str(msg) + '\\')\\n')\n"
 "    sys.stderr.write('\\n\\n')\n"
 "    sys.stderr.flush()\n"
 "    sys.exit(1)\n"

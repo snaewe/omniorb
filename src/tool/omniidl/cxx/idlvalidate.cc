@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.3  2001/10/17 16:48:34  dpg1
+// Minor error message tweaks
+//
 // Revision 1.4.2.2  2000/11/01 15:44:56  dpg1
 // Support for forward-declared structs and unions
 //
@@ -84,7 +87,7 @@ visitForward(Forward* f)
     if (f->isFirst() && !f->definition()) {
       char* ssn = f->scopedName()->toString();
       IdlWarning(f->file(), f->line(),
-		 "Forward declared interface `%s' was never fully defined",
+		 "Forward declared interface '%s' was never fully defined",
 		 ssn);
       delete [] ssn;
     }
@@ -99,7 +102,7 @@ visitValueForward(ValueForward* f)
     if (f->isFirst() && !f->definition()) {
       char* ssn = f->scopedName()->toString();
       IdlWarning(f->file(), f->line(),
-		 "Forward declared valuetype `%s' was never fully defined",
+		 "Forward declared valuetype '%s' was never fully defined",
 		 ssn);
       delete [] ssn;
     }
@@ -113,7 +116,7 @@ visitStructForward(StructForward* f)
   if (f->isFirst() && !f->definition()) {
     char* ssn = f->scopedName()->toString();
     IdlError(f->file(), f->line(),
-	     "Forward declared struct `%s' was never fully defined", ssn);
+	     "Forward declared struct '%s' was never fully defined", ssn);
     delete [] ssn;
   }
 }
@@ -125,7 +128,7 @@ visitUnionForward(UnionForward* f)
   if (f->isFirst() && !f->definition()) {
     char* ssn = f->scopedName()->toString();
     IdlError(f->file(), f->line(),
-	     "Forward declared union `%s' was never fully defined", ssn);
+	     "Forward declared union '%s' was never fully defined", ssn);
     delete [] ssn;
   }
 }

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.13.2.6  2001/10/17 16:48:33  dpg1
+// Minor error message tweaks
+//
 // Revision 1.13.2.5  2001/06/08 17:12:23  dpg1
 // Merge all the bug fixes from omni3_develop.
 //
@@ -681,13 +684,13 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
 	  // Error -- ambiguous
 	  if (file) {
 	    char* ssn = sn->toString();
-	    IdlError(file, line, "Ambiguous name `%s':", ssn);
+	    IdlError(file, line, "Ambiguous name '%s':", ssn);
 	    delete [] ssn;
 
 	    for (; el; el = el->tail()) {
 	      char* ssn = el->head()->container()->scopedName()->toString();
 	      IdlErrorCont(el->head()->file(), el->head()->line(),
-			   "(`%s' defined in `%s')",
+			   "('%s' defined in '%s')",
 			   el->head()->identifier(), ssn);
 	      delete [] ssn;
 	    }
@@ -704,7 +707,7 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
     if (!e) {
       if (file) {
 	char* ssn = sn->toString();
-	IdlError(file, line, "Error in look-up of `%s': `%s' not found",
+	IdlError(file, line, "Error in look-up of '%s': '%s' not found",
 		 ssn, fid);
 	delete [] ssn;
       }
@@ -715,11 +718,11 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
       // Case clash
       if (file) {
 	char* ssn = sn->toString();
-	IdlError(file, line, "Error in look-up of `%s': `%s' differs in case",
+	IdlError(file, line, "Error in look-up of '%s': '%s' differs in case",
 		 ssn, fid);
 	delete [] ssn;
 	ssn = e->scopedName()->toString();
-	IdlErrorCont(e->file(), e->line(), "from `%s' declared here", ssn);
+	IdlErrorCont(e->file(), e->line(), "from '%s' declared here", ssn);
 	delete [] ssn;
       }
       return 0;
@@ -733,9 +736,9 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
 	if (file) {
 	  char* ssn = sn->toString();
 	  IdlError(file, line,
-		   "Error in look-up of `%s': `%s' does not form a scope",
+		   "Error in look-up of '%s': '%s' does not form a scope",
 		   ssn, e->identifier());
-	  IdlErrorCont(e->file(), e->line(), "(`%s' defined here)",
+	  IdlErrorCont(e->file(), e->line(), "('%s' defined here)",
 		       e->identifier());
 	  delete [] ssn;
 	}
@@ -834,9 +837,9 @@ addUse(const ScopedName* sn, const char* file, int line)
     if (clash) {
       if (strcmp(id, clash->identifier())) {
 	char* ssn = sn->toString();
-	IdlError(file, line, "Use of `%s' clashes with identifier `%s'",
+	IdlError(file, line, "Use of '%s' clashes with identifier '%s'",
 		 ssn, clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(`%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "('%s' declared here)",
 		     clash->identifier());
 	delete [] ssn;
       }
@@ -872,19 +875,19 @@ addModule(const char* identifier, Scope* scope, Decl* decl,
 	  return; // Reopening the module
 	}
 	IdlError(file, line,
-		 "Declaration of module `%s' clashes with declaration "
-		 "of module `%s'", identifier, clash->identifier());
+		 "Declaration of module '%s' clashes with declaration "
+		 "of module '%s'", identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(module `%s' declared here)", clash->identifier());
+		     "(module '%s' declared here)", clash->identifier());
 	break;
       }
     case Entry::E_DECL:
       {
 	IdlError(file, line,
-		 "Declaration of module `%s' clashes with declaration "
-		 "of %s `%s'", identifier, clash->decl()->kindAsString(),
+		 "Declaration of module '%s' clashes with declaration "
+		 "of %s '%s'", identifier, clash->decl()->kindAsString(),
 		 clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "(%s '%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
 	break;
       }
@@ -898,10 +901,10 @@ addModule(const char* identifier, Scope* scope, Decl* decl,
     case Entry::E_PARENT:
       {
 	IdlError(file, line,
-		 "Declaration of module `%s' clashes with name of "
-		 "enclosing module `%s'", identifier, clash->identifier());
+		 "Declaration of module '%s' clashes with name of "
+		 "enclosing module '%s'", identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(module `%s' declared here)", clash->identifier());
+		     "(module '%s' declared here)", clash->identifier());
 	break;
       }
     }
@@ -929,43 +932,43 @@ addDecl(const char* identifier, Scope* scope, Decl* decl, IdlType* idltype,
     case Entry::E_MODULE:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with declaration "
-		 "of module `%s'", decl->kindAsString(),
+		 "Declaration of %s '%s' clashes with declaration "
+		 "of module '%s'", decl->kindAsString(),
 		 identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(module `%s' declared here)", clash->identifier());
+		     "(module '%s' declared here)", clash->identifier());
 	break;
       }
     case Entry::E_DECL:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with earlier declaration "
-		 "of %s `%s'", decl->kindAsString(), identifier,
+		 "Declaration of %s '%s' clashes with earlier declaration "
+		 "of %s '%s'", decl->kindAsString(), identifier,
 		 clash->decl()->kindAsString(), clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "(%s '%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
 	break;
       }
     case Entry::E_CALLABLE:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with %s `%s'",
+		 "Declaration of %s '%s' clashes with %s '%s'",
 		 decl->kindAsString(), identifier,
 		 clash->decl()->kindAsString(), clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "(%s '%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
 	break;
       }
     case Entry::E_INHERITED:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with inherited %s `%s'",
+		 "Declaration of %s '%s' clashes with inherited %s '%s'",
 		 decl->kindAsString(), identifier,
 		 clash->decl()->kindAsString(), clash->identifier());
 	char* inhfrom =
 	  clash->inh_from()->container()->scopedName()->toString();
 	IdlErrorCont(clash->inh_from()->file(), clash->inh_from()->line(),
-		     "(`%s' declared in %s here)",
+		     "('%s' declared in %s here)",
 		     clash->identifier(), inhfrom);
 	delete [] inhfrom;
 	break;
@@ -973,29 +976,29 @@ addDecl(const char* identifier, Scope* scope, Decl* decl, IdlType* idltype,
     case Entry::E_INSTANCE:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with instance `%s'",
+		 "Declaration of %s '%s' clashes with instance '%s'",
 		 decl->kindAsString(), identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' declared here)", clash->identifier());
+		     "('%s' declared here)", clash->identifier());
 	break;
       }
     case Entry::E_USE:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with use of "
-		 "identifier `%s'", decl->kindAsString(),
+		 "Declaration of %s '%s' clashes with use of "
+		 "identifier '%s'", decl->kindAsString(),
 		 identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' used here)", clash->identifier());
+		     "('%s' used here)", clash->identifier());
 	break;
       }
     case Entry::E_PARENT:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with name of "
-		 "enclosing scope `%s'", decl->kindAsString(),
+		 "Declaration of %s '%s' clashes with name of "
+		 "enclosing scope '%s'", decl->kindAsString(),
 		 identifier, clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(`%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "('%s' declared here)",
 		     clash->identifier());
 	break;
       }
@@ -1024,43 +1027,43 @@ addCallable(const char* identifier, Scope* scope, Decl* decl,
     case Entry::E_MODULE:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with declaration "
-		 "of module `%s'", decl->kindAsString(),
+		 "Declaration of %s '%s' clashes with declaration "
+		 "of module '%s'", decl->kindAsString(),
 		 identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(module `%s' declared here)", clash->identifier());
+		     "(module '%s' declared here)", clash->identifier());
 	break;
       }
     case Entry::E_DECL:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with earlier declaration "
-		 "of %s `%s'", decl->kindAsString(), identifier,
+		 "Declaration of %s '%s' clashes with earlier declaration "
+		 "of %s '%s'", decl->kindAsString(), identifier,
 		 clash->decl()->kindAsString(), clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "(%s '%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
 	break;
       }
     case Entry::E_CALLABLE:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with %s `%s'",
+		 "Declaration of %s '%s' clashes with %s '%s'",
 		 decl->kindAsString(), identifier,
 		 clash->decl()->kindAsString(), clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "(%s '%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
 	break;
       }
     case Entry::E_INHERITED:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with inherited %s `%s'",
+		 "Declaration of %s '%s' clashes with inherited %s '%s'",
 		 decl->kindAsString(), identifier,
 		 clash->decl()->kindAsString(), clash->identifier());
 	char* inhfrom =
 	  clash->inh_from()->container()->scopedName()->toString();
 	IdlErrorCont(clash->inh_from()->file(), clash->inh_from()->line(),
-		     "(`%s' declared in %s here)",
+		     "('%s' declared in %s here)",
 		     clash->identifier(), inhfrom);
 	delete [] inhfrom;
 	break;
@@ -1068,29 +1071,29 @@ addCallable(const char* identifier, Scope* scope, Decl* decl,
     case Entry::E_INSTANCE:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with instance `%s'",
+		 "Declaration of %s '%s' clashes with instance '%s'",
 		 decl->kindAsString(), identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' declared here)", clash->identifier());
+		     "('%s' declared here)", clash->identifier());
 	break;
       }
     case Entry::E_USE:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with use of "
-		 "identifier `%s'", decl->kindAsString(),
+		 "Declaration of %s '%s' clashes with use of "
+		 "identifier '%s'", decl->kindAsString(),
 		 identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' used here)", clash->identifier());
+		     "('%s' used here)", clash->identifier());
 	break;
       }
     case Entry::E_PARENT:
       {
 	IdlError(file, line,
-		 "Declaration of %s `%s' clashes with name of "
-		 "enclosing scope `%s'", decl->kindAsString(),
+		 "Declaration of %s '%s' clashes with name of "
+		 "enclosing scope '%s'", decl->kindAsString(),
 		 identifier, clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(`%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "('%s' declared here)",
 		     clash->identifier());
 	break;
       }
@@ -1124,18 +1127,18 @@ addInherited(const char* id, Scope* scope, Decl* decl,
     case Entry::E_INHERITED:
       {
 	if (inh_from != clash->inh_from()) {
-	  IdlError(file, line, "In definition of `%s': clash between "
-		   "inherited identifiers `%s' and `%s'",
+	  IdlError(file, line, "In definition of '%s': clash between "
+		   "inherited identifiers '%s' and '%s'",
 		   identifier(), id, clash->identifier());
 	  char* inhfrom =
 	    inh_from->container()->scopedName()->toString();
 	  IdlErrorCont(inh_from->file(), inh_from->line(),
-		       "(%s `%s' declared in %s here)",
+		       "(%s '%s' declared in %s here)",
 		       decl->kindAsString(), id, inhfrom);
 	  delete [] inhfrom;
 	  inhfrom = clash->inh_from()->container()->scopedName()->toString();
 	  IdlErrorCont(clash->inh_from()->file(), clash->inh_from()->line(),
-		       "(%s `%s' declared in %s here)",
+		       "(%s '%s' declared in %s here)",
 		       clash->decl()->kindAsString(),
 		       clash->identifier(), inhfrom);
 	  delete [] inhfrom;
@@ -1148,10 +1151,10 @@ addInherited(const char* id, Scope* scope, Decl* decl,
 	// it's definitely illegal
 
 //  	IdlWarning(file, line,
-//  		   "Inherited %s `%s' clashes with interface name `%s'",
+//  		   "Inherited %s '%s' clashes with interface name '%s'",
 //  		   decl->kindAsString(), id, clash->identifier());
 //  	IdlWarningCont(decl->file(), decl->line(),
-//  		       "(%s `%s' declared here)", decl->kindAsString(), id);
+//  		       "(%s '%s' declared here)", decl->kindAsString(), id);
 	break;
       }
     }
@@ -1179,42 +1182,42 @@ addInstance(const char* identifier, Decl* decl, IdlType* idltype,
     case Entry::E_MODULE:
       {
 	IdlError(file, line,
-		 "Instance identifier `%s' clashes with declaration "
-		 "of module `%s'", identifier, clash->identifier());
+		 "Instance identifier '%s' clashes with declaration "
+		 "of module '%s'", identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(module `%s' declared here)", clash->identifier());
+		     "(module '%s' declared here)", clash->identifier());
 	break;
       }
     case Entry::E_DECL:
       {
 	IdlError(file, line,
-		 "Instance identifier `%s' clashes with declaration "
-		 "of %s `%s'", identifier, clash->decl()->kindAsString(),
+		 "Instance identifier '%s' clashes with declaration "
+		 "of %s '%s'", identifier, clash->decl()->kindAsString(),
 		 clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "(%s '%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
 	break;
       }
     case Entry::E_CALLABLE:
       {
 	IdlError(file, line,
-		 "Instance identifier `%s' clashes with %s `%s'",
+		 "Instance identifier '%s' clashes with %s '%s'",
 		 identifier, clash->decl()->kindAsString(),
 		 clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
+	IdlErrorCont(clash->file(), clash->line(), "(%s '%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
 	break;
       }
     case Entry::E_INHERITED:
       {
 	IdlError(file, line,
-		 "Instance identifier `%s' clashes with inherited %s `%s'",
+		 "Instance identifier '%s' clashes with inherited %s '%s'",
 		 identifier, clash->decl()->kindAsString(),
 		 clash->identifier());
 	char* inhfrom =
 	  clash->inh_from()->container()->scopedName()->toString();
 	IdlErrorCont(clash->inh_from()->file(), clash->inh_from()->line(),
-		     "(`%s' declared in %s here)",
+		     "('%s' declared in %s here)",
 		     clash->identifier(), inhfrom);
 	delete [] inhfrom;
 	break;
@@ -1222,27 +1225,27 @@ addInstance(const char* identifier, Decl* decl, IdlType* idltype,
     case Entry::E_INSTANCE:
       {
 	IdlError(file, line,
-		 "Instance identifier `%s' clashes with instance `%s'",
+		 "Instance identifier '%s' clashes with instance '%s'",
 		 identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' declared here)", clash->identifier());
+		     "('%s' declared here)", clash->identifier());
 	break;
       }
     case Entry::E_USE:
       {
 	IdlError(file, line,
-		 "Instance identifier `%s' clashes with use of "
-		 "identifier `%s'", identifier, clash->identifier());
+		 "Instance identifier '%s' clashes with use of "
+		 "identifier '%s'", identifier, clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' used here)", clash->identifier());
+		     "('%s' used here)", clash->identifier());
 	break;
       }
     case Entry::E_PARENT:
       {
 	IdlError(file, line,
-		 "Instance identifier `%s' clashes with name of "
-		 "enclosing scope `%s'", identifier, clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(), "(`%s' declared here)",
+		 "Instance identifier '%s' clashes with name of "
+		 "enclosing scope '%s'", identifier, clash->identifier());
+	IdlErrorCont(clash->file(), clash->line(), "('%s' declared here)",
 		     clash->identifier());
 	break;
       }
@@ -1292,14 +1295,14 @@ keywordClash(const char* identifier, const char* file, int line)
   for (const char** k = keywords; *k; k++) {
     if (Config::caseSensitive) {
       if (!strcmp(*k, identifier)) {
-	IdlError(file, line, "Identifier `%s' is identical to keyword `%s'",
+	IdlError(file, line, "Identifier '%s' is identical to keyword '%s'",
 		 identifier, *k);
 	return 1;
       }
     }
     else {
       if (!strcasecmp(*k, identifier)) {
-	IdlError(file, line, "Identifier `%s' clashes with keyword `%s'",
+	IdlError(file, line, "Identifier '%s' clashes with keyword '%s'",
 		 identifier, *k);
 	return 1;
       }
