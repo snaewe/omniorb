@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2000/01/20 11:51:36  djr
+  (Most) Pseudo objects now used omni::poRcLock for ref counting.
+  New assertion check OMNI_USER_CHECK.
+
   Revision 1.1.2.11  2000/01/03 20:35:09  djr
   Added check for POA being CORBA::release()d too many times.
 
@@ -397,11 +401,11 @@ omniOrbPOA::create_POA(const char* adapter_name,
 
   // Need to ensure state is not changed from HOLDING if POA is
   // being created by an adapter activator.  So in this case do
-  // not attach ourselves to the manager.
+  // not attach the new poa to the manager.
   if( !is_adapteractivating_child(adapter_name) )
     ((omniOrbPOAManager*) manager)->gain_poa(poa);
 
-  poa->pd_refCount++;
+  poa->incrRefCount();
   return poa;
 }
 
@@ -417,7 +421,7 @@ omniOrbPOA::find_POA(const char* adapter_name, CORBA::Boolean activate_it)
   omniOrbPOA* poa = find_child(adapter_name);
 
   if( poa && !poa->pd_dying ) {
-    poa->pd_refCount++;
+    poa->incrRefCount();
     return poa;
   }
 
@@ -522,7 +526,7 @@ omniOrbPOA::the_children()
   poa_lock.lock();
   childer->length(pd_children.length());
   for( CORBA::ULong i = 0; i < pd_children.length(); i++ ) {
-    pd_children[i]->pd_refCount++;
+    pd_children[i]->incrRefCount();
     (*childer)[i] = pd_children[i];
   }
   poa_lock.unlock();
@@ -1199,9 +1203,9 @@ void
 omniOrbPOA::_NP_incrRefCount()
 {
   // Should be identical to incrRefCount().
-  poa_lock.lock();
+  omni::poRcLock->lock();
   pd_refCount++;
-  poa_lock.unlock();
+  omni::poRcLock->unlock();
 }
 
 
@@ -1218,39 +1222,24 @@ omniOrbPOA::_NP_decrRefCount()
 void
 omniOrbPOA::incrRefCount()
 {
-  poa_lock.lock();
+  omni::poRcLock->lock();
   pd_refCount++;
-  poa_lock.unlock();
+  omni::poRcLock->unlock();
 }
 
 
 void
 omniOrbPOA::decrRefCount()
 {
-  poa_lock.lock();
+  omni::poRcLock->lock();
   int done = --pd_refCount > 0;
-  poa_lock.unlock();
+  omni::poRcLock->unlock();
   if( done )  return;
 
-  if( pd_refCount < 0 ) {
-    omniORB::logs(1, "ERROR -- POA has negative ref count!"
-		  " 'CORBA::release()'ed too many times?");
-    return;
-  }
-  if( pd_destroyed != 2 ) {
-    if( omniORB::trace(1) ) {
-      omniORB::logger l;
-      l << "ERROR -- POA(" << (char*) pd_name << ") has been released"
-	" too many times!\n";
-    }
-    pd_refCount = 1;  // attempt recovery!
-    return;
-  }
-
-  if( omniORB::trace(15) ) {
-    omniORB::logger l;
-    l << "POA(" << (char*) pd_name << ") ref count is zero -- deleted.\n";
-  }
+  OMNIORB_USER_CHECK(pd_destroyed == 2);
+  OMNIORB_USER_CHECK(pd_refCount == 0);
+  // If either of these fails then the application has released the
+  // POA reference too many times.
 
   CORBA::release(pd_manager);
   if( pd_adapterActivator )  CORBA::release(pd_adapterActivator);
@@ -1782,7 +1771,7 @@ omniOrbPOA::rootPOA(int init_if_none)
     ::initialise_poa();
   }
 
-  theRootPOA->pd_refCount++;
+  theRootPOA->incrRefCount();
   return theRootPOA;
 }
 
@@ -1792,7 +1781,7 @@ omniOrbPOA::shutdown()
 {
   poa_lock.lock();
   omniOrbPOA* rp = theRootPOA;
-  if( rp )  rp->pd_refCount++;
+  if( rp )  rp->incrRefCount();
   poa_lock.unlock();
 
   try {
@@ -1861,7 +1850,7 @@ omniOrbPOA::getAdapter(const _CORBA_Octet* key, int keysize)
   }
   if( *k )  return 0;
 
-  poa->pd_refCount++;
+  poa->incrRefCount();
   return poa;
 }
 

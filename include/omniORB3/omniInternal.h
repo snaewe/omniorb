@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/01/20 11:51:33  djr
+  (Most) Pseudo objects now used omni::poRcLock for ref counting.
+  New assertion check OMNI_USER_CHECK.
+
   Revision 1.1.2.4  1999/10/29 13:18:09  djr
   Changes to ensure mutexes are constructed when accessed.
 
@@ -176,12 +180,19 @@ public:
 
   static _core_attr const _CORBA_Char                myByteOrder;
   static _core_attr omni_tracedmutex*                internalLock;
+
+  static _core_attr omni_tracedmutex*                poRcLock;
+  // Psuedo-object ref count lock.
+
   static _core_attr _CORBA_Unbounded_Sequence__Octet myPrincipalID;
   static _core_attr const alignment_t                max_alignment;
   // Maximum value of alignment_t
 
   static _core_attr int                              remoteInvocationCount;
   static _core_attr int                              localInvocationCount;
+  // These are updated whilst internalLock is held.  However it is
+  // suggested that they may be read without locking, since integer
+  // reads are likely to be atomic.
 
 
   static inline ptr_arith_t align_to(ptr_arith_t p, alignment_t align) {
@@ -313,6 +324,7 @@ public:
   //  Does not throw any exceptions.
 
   static void assertFail(const char* file, int line, const char* exp);
+  static void ucheckFail(const char* file, int line, const char* exp);
 
 };
 
@@ -353,10 +365,16 @@ private:
 //////////////////////////////////////////////////////////////////////
 
 #if 1
-#define OMNIORB_ASSERT(e)  \
-  if( !(e) )  omni::assertFail(__FILE__,__LINE__, #e)
+
+# define OMNIORB_ASSERT(e)  \
+  do{ if( !(e) )  omni::assertFail(__FILE__,__LINE__, #e); }while(0)
+
+# define OMNIORB_USER_CHECK(e)  \
+  do{ if( !(e) )  omni::ucheckFail(__FILE__,__LINE__, #e); }while(0)
+
 #else
-#define OMNIORB_ASSERT(e)
+# define OMNIORB_ASSERT(e)
+# define OMNIORB_USER_CHECK(e)
 #endif
 
 //////////////////////////////////////////////////////////////////////

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/01/20 11:51:34  djr
+  (Most) Pseudo objects now used omni::poRcLock for ref counting.
+  New assertion check OMNI_USER_CHECK.
+
   Revision 1.1.2.1  1999/09/22 14:26:46  djr
   Major rewrite of orbcore to support POA.
 
@@ -66,13 +70,12 @@ public:
 
   void actual_shutdown();
 
-  inline void incrRefCount() { pd_refCount++; }
-  // Must hold <orb_lock>.
-
 private:
   void do_shutdown(CORBA::Boolean wait_for_completion);
 
   int pd_refCount;
+  // Protected by <omni::poRcLock>.
+
   int pd_destroyed;
   int pd_shutdown;
   int pd_shutdown_in_progress;

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/01/20 11:51:37  djr
+  (Most) Pseudo objects now used omni::poRcLock for ref counting.
+  New assertion check OMNI_USER_CHECK.
+
   Revision 1.1.2.4  1999/10/29 13:18:19  djr
   Changes to ensure mutexes are constructed when accessed.
 
@@ -111,7 +115,7 @@ const char* PortableServer::POAManager::_PD_repoId =
   if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref()
 
 
-static omni_mutex pm_lock;
+static omni_tracedmutex pm_lock;
 
 
 omniOrbPOAManager::~omniOrbPOAManager() {}
@@ -122,7 +126,7 @@ omniOrbPOAManager::activate()
 {
   CHECK_NOT_NIL();
 
-  omni_mutex_lock sync(pm_lock);
+  omni_tracedmutex_lock sync(pm_lock);
 
   if( pd_state == INACTIVE )  throw AdapterInactive();
   if( pd_state == ACTIVE   )  return;
@@ -144,7 +148,7 @@ omniOrbPOAManager::hold_requests(CORBA::Boolean wait_for_completion)
 
   POASeq poas;
   {
-    omni_mutex_lock sync(pm_lock);
+    omni_tracedmutex_lock sync(pm_lock);
 
     if( pd_state == INACTIVE )  throw AdapterInactive();
     if( pd_state == HOLDING  )  return;
@@ -179,7 +183,7 @@ omniOrbPOAManager::discard_requests(CORBA::Boolean wait_for_completion)
 
   POASeq poas;
   {
-    omni_mutex_lock sync(pm_lock);
+    omni_tracedmutex_lock sync(pm_lock);
 
     if( pd_state == INACTIVE   )  throw AdapterInactive();
     if( pd_state == DISCARDING )  return;
@@ -236,7 +240,7 @@ omniOrbPOAManager::deactivate(CORBA::Boolean etherealize_objects,
   POASeq* ppoas = new POASeq;
   POASeq& poas = *ppoas;
   {
-    omni_mutex_lock sync(pm_lock);
+    omni_tracedmutex_lock sync(pm_lock);
 
     if( pd_state == INACTIVE   )  throw AdapterInactive();
 
@@ -264,7 +268,7 @@ omniOrbPOAManager::deactivate(CORBA::Boolean etherealize_objects,
 PortableServer::POAManager::State
 omniOrbPOAManager::get_state()
 {
-  omni_mutex_lock sync(pm_lock);
+  omni_tracedmutex_lock sync(pm_lock);
   return pd_state;
 }
 
@@ -289,32 +293,24 @@ omniOrbPOAManager::_ptrToObjRef(const char* repoId)
 void
 omniOrbPOAManager::_NP_incrRefCount()
 {
-  pm_lock.lock();
+  omni::poRcLock->lock();
   pd_refCount++;
-  pm_lock.unlock();
+  omni::poRcLock->unlock();
 }
 
 
 void
 omniOrbPOAManager::_NP_decrRefCount()
 {
-  pm_lock.lock();
-  if( --pd_refCount > 0 ) {
-    pm_lock.unlock();
-    return;
-  }
+  omni::poRcLock->lock();
+  int done = --pd_refCount > 0;
+  omni::poRcLock->unlock();
+  if( done )  return;
 
-  if( pd_poas.length() ) {
-    pm_lock.unlock();
-    omniORB::logs(1,
-		  "The application has released a reference to a POAManager\n"
-		  " too many times.  This is a serious application error!");
-    return;
-  }
-
-  pm_lock.unlock();
-
-  omniORB::logs(15, "POAManager ref count is zero -- deleted.");
+  OMNIORB_USER_CHECK(pd_poas.length() == 0);
+  OMNIORB_USER_CHECK(pd_refCount == 0);
+  // If either of these fails then the application has released a
+  // POAManager reference too many times.
 
   delete this;
 }
@@ -326,7 +322,7 @@ omniOrbPOAManager::_NP_decrRefCount()
 void
 omniOrbPOAManager::gain_poa(omniOrbPOA* poa)
 {
-  omni_mutex_lock sync(pm_lock);
+  omni_tracedmutex_lock sync(pm_lock);
 
   pd_poas.length(pd_poas.length() + 1);
   pd_poas[pd_poas.length() - 1] = poa;
@@ -344,7 +340,7 @@ omniOrbPOAManager::gain_poa(omniOrbPOA* poa)
 void
 omniOrbPOAManager::lose_poa(omniOrbPOA* poa)
 {
-  omni_mutex_lock sync(pm_lock);
+  omni_tracedmutex_lock sync(pm_lock);
 
   CORBA::ULong i, len = pd_poas.length();
 

@@ -1,4 +1,30 @@
 
+Thu Jan 20 11:42:59 GMT 2000 djr
+================================
+
+- Pseudo objects should now use omni::poRcLock for reference counting.
+  It is never destroyed, and so should prevent any problems when
+  _var types are destroyed at static de-initialisation.
+
+  NB. Not all yet do!  Eg. TypeCode, DynAny etc.
+
+- New assertion type OMNI_USER_CHECK that detects errors that are likely
+  to be caused by the application (eg. release a reference too many times).
+  It throws up a standard message and points to a comment in the source.
+
+- Fixed deadlock bug for CORBA::ORB.  The <orb_lock> mutex is held when
+  it is destroyed, but a CORBA::ORB_ptr could be released during this
+  process.  Ref counting is now done with a different mutex.
+
+include/omniORB3/omniInternal.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/corbaOrb.h
+src/lib/omniORB2/orbcore/omniInternal.cc
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poamanager.cc
+src/lib/omniORB2/orbcore/policy.cc
+
+
 Fri Jan  7 16:19:24 GMT 2000 djr
 ================================
 

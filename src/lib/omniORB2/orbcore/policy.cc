@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.2.6.7  2000/01/20 11:51:38  djr
+  (Most) Pseudo objects now used omni::poRcLock for ref counting.
+  New assertion check OMNI_USER_CHECK.
+
   Revision 1.2.6.6  1999/11/25 11:32:34  djr
   CORBA::Policy::destroy() no longer throws an exception.
 
@@ -157,18 +161,23 @@ CORBA::Policy::_NP_incrRefCount()
 {
   OMNIORB_ASSERT(!_NP_is_nil());
 
-  omni_mutex_lock sync(ref_count_lock);
+  omni::poRcLock->lock();
   pd_refCount++;
+  omni::poRcLock->unlock();
 }
 
 
 void
 CORBA::Policy::_NP_decrRefCount()
 {
-  {
-    omni_mutex_lock sync(ref_count_lock);
-    if( --pd_refCount > 0 )  return;
-  }
+  omni::poRcLock->lock();
+  int done = --pd_refCount > 0;
+  omni::poRcLock->unlock();
+  if( done )  return;
+
+  OMNIORB_USER_CHECK(pd_refCount == 0);
+  // If this fails then the application has released a Policy
+  // reference too many times.
 
   delete this;
 }
