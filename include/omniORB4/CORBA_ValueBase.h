@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2005/01/17 18:08:41  dgrisby
+  Small tweaks to compile with Sun CC.
+
   Revision 1.1.2.4  2005/01/06 16:39:23  dgrisby
   DynValue and DynValueBox implementations; misc small fixes.
 
@@ -184,8 +187,8 @@ private:
   // omniORB internal //
   //////////////////////
 
-  friend class _omni_ValueFactoryManager;
-
 public:
+  friend class ::_omni_ValueFactoryManager;
+
   virtual void* _ptrToFactory(const char* repoId);
 };

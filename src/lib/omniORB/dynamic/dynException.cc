@@ -389,9 +389,9 @@ static void _0RL_CORBA_##name##_marshal_fn(cdrStream& _s, void* _v) \
 { \
   const CORBA::name* e = (const CORBA::name*)_v; \
   CORBA::ULong m = e->minor(); \
-  CORBA::CompletionStatus c = e->completed(); \
+  CORBA::ULong c = (CORBA::ULong)e->completed(); \
   m >>= _s; \
-  (CORBA::ULong)c >>= _s; \
+  c >>= _s; \
 } \
 static void _0RL_CORBA_##name##_unmarshal_fn(cdrStream& _s, void*& _v) \
 { \
