@@ -1,3 +1,13 @@
+
+Fri Oct  9 12:25:13 BST 1998 tjr
+================================
+
+- Use / and . to separate name components and id/kind.  Also fix problem
+  with unbinding non-existent objects.
+
+src/appl/utils/nameclt/nameclt.cc
+
+
 Thu Oct  8 18:58:11 BST 1998 sll
 ================================
 
