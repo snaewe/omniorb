@@ -32,6 +32,11 @@
 
 /*
  $Log$
+ Revision 1.23  1998/08/19 16:03:43  sll
+ Updated section for DEC C++ and MSVC++ to remove NO_Koenig_Lookup because
+ this is no longer necessary with the new way of generating binary
+ operators <<= and >>=.
+
  Revision 1.22  1998/08/15 14:23:26  sll
  Added macro No_Koenig_Lookup to MSVC++ and DEC C++ 6.0
  Remove NEED_DUMMY_RETURN if the compiler is DEC C++ > 5.7
@@ -109,8 +114,12 @@
 #     endif
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
-#     define NO_Koenig_Lookup
 #     define HAS_pch
+// Uncomment the following lines to enable the use of namespace with cxx v 5.6
+// Notice that the source code may have to be patched to compile.
+//#  elif __DECCXX_VER >= 50600000
+//#     define HAS_Cplusplus_Namespace
+//#     define NEED_DUMMY_RETURN
 #  else
 #     define NEED_DUMMY_RETURN
 #  endif
@@ -130,7 +139,6 @@
 #  endif
 #define HAS_Cplusplus_Namespace
 #define HAS_Std_Namespace
-#define NO_Koenig_Lookup
 #endif
 
 #elif defined(__BCPLUSPLUS__)
