@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.9.2.3  2000/06/08 14:58:19  dpg1
+// Line numbers for #pragmas and // comments were off by one
+//
 // Revision 1.9.2.2  2000/06/08 14:36:19  dpg1
 // Comments and pragmas are now objects rather than plain strings, so
 // they can have file,line associated with them.
@@ -1451,7 +1454,7 @@ pragma_version:
 
 unknown_pragma:
     PRAGMA unknown_pragma_body_plus END_PRAGMA {
-      Pragma::add($2, currentFile, yylineno);
+      Pragma::add($2, currentFile, yylineno-1);
     }
     ;
 

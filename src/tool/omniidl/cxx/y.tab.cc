@@ -3001,7 +3001,7 @@ case 297:
 case 298:
 #line 1449 "/home/dpg1/omni/cvs/ins/omni/src/tool/omniidl/cxx/idl.yy"
 {
-      Pragma::add(yyvsp[-1].string_val, currentFile, yylineno);
+      Pragma::add(yyvsp[-1].string_val, currentFile, yylineno-1);
     ;
     break;}
 case 299:
