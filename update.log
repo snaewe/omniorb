@@ -1,3 +1,12 @@
+
+Fri Dec 18 17:48:28 GMT 1998 tjr
+================================
+
+- fix bug in nameclt when unbinding an object in the root context
+
+src/appl/utils/nameclt/nameclt.cc
+
+
 Mon Dec 14 11:08:37 GMT 1998 sll
 ================================
 
