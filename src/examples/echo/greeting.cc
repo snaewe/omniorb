@@ -16,7 +16,11 @@ hello(CORBA::Object_ptr obj)
     return;
   }
 
-  CORBA::String_var src = (const char*) "Hello!";  
+  CORBA::String_var src = (const char*) "Hello!"; // String literals are not
+                                                  // const char*. Must do
+                                                  // explicit casting to 
+                                                  // force the use of the copy
+                                                  // operator=(). 
   CORBA::String_var dest;
 
   dest = e->echoString(src);
