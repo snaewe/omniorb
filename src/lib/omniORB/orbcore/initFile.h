@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.7  1998/08/11 17:58:10  sll
+  Do not use registry if the platform is Phar Lap ETS Kernel.
+
   Revision 1.6  1997/12/09 18:23:18  sll
   Updated interface to avoid memory leaks.
 
@@ -77,7 +80,7 @@ private:
   int read_file(char* config_fname);
   int getnextentry(CORBA::String_var& entryname,CORBA::String_var& data);
  
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__ETS_KERNEL__)
   int use_registry;
  
   HKEY init_hkey;
