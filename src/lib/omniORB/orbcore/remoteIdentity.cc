@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/05/09 17:02:25  sll
+  Throw omniORB::LOCATION_FORWARD with the right permanent flag.
+
   Revision 1.2.2.7  2001/04/18 18:18:04  sll
   Big checkin with the brand new internal APIs.
 
@@ -170,7 +173,7 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
       CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(s));
       iop_client->RequestCompleted();
       throw omniORB::LOCATION_FORWARD(obj._retn(),
-			       (rc == GIOP::LOCATION_FORWARD_PERM) ? 0 : 1);
+			       (rc == GIOP::LOCATION_FORWARD_PERM) ? 1 : 0);
     }
 
   case GIOP::NEEDS_ADDRESSING_MODE:
@@ -250,7 +253,7 @@ omniRemoteIdentity::locateRequest()
       CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(s));
       iop_client->RequestCompleted();
       throw omniORB::LOCATION_FORWARD(obj._retn(),
-			       (rc == GIOP::OBJECT_FORWARD_PERM) ? 0 : 1);
+			       (rc == GIOP::OBJECT_FORWARD_PERM) ? 1 : 0);
     }
 
   case GIOP::LOC_NEEDS_ADDRESSING_MODE:
