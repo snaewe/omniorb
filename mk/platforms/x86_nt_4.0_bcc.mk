@@ -111,9 +111,9 @@ define StaticLinkLibrary
 endef
 
 
-OMNIORB2_LIB = $(patsubst %,$(LibSearchPattern),omniORB2) $(OMNITHREAD_LIB)
-lib_depend := $(patsubst %,$(LibPattern),omniORB2)
-OMNIORB2_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
+OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) $(OMNITHREAD_LIB)
+lib_depend := $(patsubst %,$(LibPattern),omniORB3)
+OMNIORB_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
 
 OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread)
 lib_depend := $(patsubst %,$(LibPattern),omnithread)

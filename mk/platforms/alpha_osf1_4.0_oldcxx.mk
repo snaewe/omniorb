@@ -109,8 +109,8 @@ ORBIX2_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%S.cc
 ORBIX2_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%S.o
 ORBIX2_EXTRA_STUB_FILES = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%C.cc)
 
-omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
-CorbaImplementation = OMNIORB2
+omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+CorbaImplementation = OMNIORB
 
 #
 # OMNI thread stuff
