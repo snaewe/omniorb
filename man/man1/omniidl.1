@@ -1,0 +1,175 @@
+.TH omniidl 1 "2001" "AT&T Laboratories, Cambridge"
+.SH NAME
+omniidl \- omniORB idl compiler
+.SH SYNOPSIS
+.B omniidl
+[options] -b<back-end> [back-end options] file
+.SH DESCRIPTION
+omniidl is the omniORB IDL compiler front end. If a back-end is not
+specified, it checks the input IDL file for validity, and produces no
+output. Usually, a language mapping back-end is specified, so stubs
+and skeletons in the target language are produced.
+
+The input files are processed by the C preprocessor before they are
+parsed by the compiler.
+
+.SH COMMON OPTIONS
+.TP 15
+.B \-b<backend>
+Run the specified back-end (e.g., -bcxx = C++, -bpython = Python)
+.TP
+.B \-D<name>=<value>
+Define <name> for the C preprocessor.
+.TP
+.B \-U<name>
+Undefine <name> for the C preprocessor.
+.TP
+.B \-I<dir>
+Include <dir> in the C preprocessor search path.
+.TP
+.B \-E
+Only run the C preprocessor, sending its output to stdout.
+.TP
+.B \-Y<cmd>
+Use <cmd> as the preprocessor instead of the default.
+.TP
+.B \-N
+Do not run the C preprocessor.
+.TP
+.B \-Wp<arg>
+Send <arg> to the C preprocessor.
+.TP
+.B \-Wb<arg>
+Send <arg> to the back-end.
+.TP
+.B \-nf
+Do not warn about unresolved forward declarations.
+.TP
+.B \-k
+Keep comments after declarations, to be used by some back-ends.
+.TP
+.B \-K
+Keep comments before declarations, to be used by some back-ends.
+.TP
+.B \-C<dir>
+Change directory to <dir> before writing output files.
+.TP
+.B \-d
+Dump the parsed IDL then exit, without running a back-end.
+.TP
+.B \-p<dir>
+Use <dir> as a path to find omniidl back-ends.
+.TP
+.B \-V
+Print version information then exit.
+.TP
+.B \-u
+Print usage information.
+.TP
+.B \-v
+Verbose: trace compilation stages.
+
+.SH C++ BACK-END
+
+Choose the C++ back-end with
+.B \-bcxx.
+The C++ back-end is only available when you have omniORB for C++
+installed.
+
+The C++ back-end produces two output files: a header and a
+stub/skeleton file. By default they are named by appending suffixes
+.B .hh
+and
+.B SK.cc
+to the base name of the input IDL file.
+
+If the
+.B \-Wba
+option is specified, then a third file is generated (with default
+suffix
+.B DynSK.cc
+), containing code for TypeCode and Any.
+
+
+.SH C++ BACK-END OPTIONS
+
+.TP 15
+.B \-Wbh=<suffix>
+Use <suffix> instead of .hh
+.TP
+.B \-Wbs=<suffix>
+Use <suffix> instead of SK.cc
+.TP
+.B \-Wbd=<suffix>
+Use <suffix> instead of DynSK.cc. If the same suffix is specified for
+.B \-Wbs
+and
+.B \-Wbd
+then a single skeleton file containing all the definitions is output.
+.TP
+.B \-Wba
+Generate definitions for TypeCode and Any.
+.TP
+.B \-Wbinline
+Output stubs for #included IDL files in line with the main file.
+.TP
+.B \-Wbtp
+Generate tie implementation skeletons.
+.TP
+.B \-Wbtf
+Generate flattened tie implementation skeletons.
+.TP
+.B \-Wbsplice-modules
+Splice together multiply-opened modules into one.
+.TP
+.B \-Wbexample
+Generate example implementation code.
+.TP
+.B \-WbBOA
+Generate BOA compatible skeletons.
+.TP
+.B \-Wbkeep_inc_path
+Preserve IDL #include paths in generated #include directives.
+.TP
+.B \-Wbuse_quotes
+Use quotes in #include directives (e.g. "foo" rather than <foo>).
+
+
+.SH PYTHON BACK-END
+
+Choose the Python back-end with
+.B \-bpython.
+The Python back-end produces Python packages according to the standard
+IDL to Python mapping, to be used with omniORBpy. The Python back-end
+is only available when you have omniORBpy installed.
+
+The Python back-end generates Python package directories named after
+the modules declared in IDL, as required by the IDL to Python
+mapping. It also creates separate stub files that are imported by the
+packages.
+
+.SH PYTHON BACK-END OPTIONS
+
+.TP 15
+.B \-Wbinline
+Output stubs for #included IDL files in line with the main file.
+.TP
+.B \-Wbglobal=<name>
+Use <name> as the name for the global IDL scope (default _GlobalIDL).
+.TP
+.B \-Wbpackage=<name>
+Put both Python modules and stub files in package <name>.
+.TP
+.B \-Wbmodules=<name>
+Put Python modules in package <name>
+.TP
+.B \-Wbstubs=<name>
+Put stub files in package <name>
+
+.SH SEE ALSO
+
+See the omniORB or omniORBpy manual for full details of
+.B omniidl.
+
+.SH AUTHOR
+Duncan Grisby
