@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.8  1999/01/07 18:20:05  djr
+  Replaced _OMNIORB_NTDLL_IMPORT with _LC_attr.
+
   Revision 1.7  1998/04/07 19:57:16  sll
   Replace _OMNIORB2_NTDLL_ specification on class IIOP with
   _OMNIORB_NTDLL_IMPORT on static member constants.
@@ -49,19 +52,19 @@
 #ifndef __IIOP_H__
 #define __IIOP_H__
 
-class IIOP {
 
-  public:
- 
+class IIOP {
+public:
+
   struct Version { 
     _CORBA_Char major;
     _CORBA_Char minor; 
   };
- 
+
   // Current IIOP Protocol version
-  static _OMNIORB_NTDLL_IMPORT const _CORBA_Char current_major;
-  static _OMNIORB_NTDLL_IMPORT const _CORBA_Char current_minor;
- 
+  static _LC_attr const _CORBA_Char current_major;
+  static _LC_attr const _CORBA_Char current_minor;
+
   struct ProfileBody {
     Version                 iiop_version;
     _CORBA_Char*            host;       // deleted by dtor

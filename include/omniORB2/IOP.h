@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.5  1999/01/07 18:22:25  djr
+  Replaced _OMNIORB_NTDLL_IMPORT with _LC_attr.
+
   Revision 1.4  1998/04/07 19:59:00  sll
    Replace _OMNIORB2_NTDLL_ specification on class IOP with
   _OMNIORB_NTDLL_IMPORT on static member constants.
@@ -46,11 +49,12 @@
 #ifndef __IOP_H__
 #define __IOP_H__
 
+
 class IOP {
 public:
   typedef _CORBA_ULong ProfileId;
-  static _OMNIORB_NTDLL_IMPORT const   ProfileId    TAG_INTERNET_IOP;
-  static _OMNIORB_NTDLL_IMPORT const   ProfileId    TAG_MULTIPLE_COMPONENTS;
+  static _LC_attr const   ProfileId    TAG_INTERNET_IOP;
+  static _LC_attr const   ProfileId    TAG_MULTIPLE_COMPONENTS;
 
   struct TaggedProfile {
     ProfileId tag;
@@ -162,7 +166,7 @@ public:
 
   typedef _CORBA_Unbounded_Sequence<ServiceContext> ServiceContextList;
 
-  static _OMNIORB_NTDLL_IMPORT const ServiceID TransactionService;
+  static _LC_attr const ServiceID TransactionService;
 
 
   // omniORB2 private function
@@ -181,5 +185,6 @@ public:
   // (ref CORBA 2 spec. 10.6.5)
 
 };
+
 
 #endif // __IOP_H__
