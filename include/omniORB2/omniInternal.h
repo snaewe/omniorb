@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.29.4.3  1999/11/05 17:41:49  sll
+  Added _core_attr to object table pointers and mutexes, so omniORBpy
+  can get at them.
+
   Revision 1.29.4.2  1999/10/02 18:28:58  sll
   New internal function internal_init_BOA().
   New constant to identify omniORB in the TAG_ORB_TYPE component of an IOR.
@@ -451,12 +455,12 @@ public:
   // This function instructs the ORB to skip the existence test performed
   // in assertObjectExistent().
 
-  static omni_mutex          objectTableLock;
-  static omniObject*         proxyObjectTable;
-  static omniObject**        localObjectTable;
-  static omniObject**        localPyObjectTable;
-  static omni_mutex          wrappedObjectTableLock;
-  static void**              wrappedObjectTable;
+  static _core_attr omni_mutex          objectTableLock;
+  static _core_attr omniObject*         proxyObjectTable;
+  static _core_attr omniObject**        localObjectTable;
+  static _core_attr omniObject**        localPyObjectTable;
+  static _core_attr omni_mutex          wrappedObjectTableLock;
+  static _core_attr void**              wrappedObjectTable;
 
   // This function is not thread-safe and should be called once only.
 
