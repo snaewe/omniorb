@@ -1,3 +1,13 @@
+Tue Aug 11 12:42:56 BST 1998 sll
+================================
+
+- Merged VMS patches
+
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/CORBA_basetypes.h
+src/lib/omniORB2/corbaFloat.cc           NEW (only for VMS)
+
+
 Mon Aug 10 19:02:33 BST 1998 sll
 ================================
 
