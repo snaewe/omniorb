@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2001/07/03 12:01:16  dpg1
+  Minor correction to log message for platforms without C++ bool.
+
   Revision 1.1.4.10  2001/06/20 18:35:17  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -317,7 +320,7 @@ giopStream::CommFailure::_raise(CORBA::ULong minor,
     l << "throw giopStream::CommFailure from "
       << omniExHelper::strip(filename) 	
       << ":" << linenumber 
-      << "(" << retry << ","
+      << "(" << (int)retry << ","
       << omniORB::logger::exceptionStatus(status,minor)
       << ")\n";
   }
