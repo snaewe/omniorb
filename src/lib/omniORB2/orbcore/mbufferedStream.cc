@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.6  1998/08/26 11:11:55  sll
+  Minor update to remove warnings when compiled with standard C++ compiler.
+
   Revision 1.5  1998/01/27 15:34:47  ewc
   Added support for TypeCode and type any
 
@@ -284,5 +287,7 @@ MemBufferedStream::skip(CORBA::ULong size,omni::alignment_t align)
 void *
 MemBufferedStream::overrun_error() {
   throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+#ifdef NEED_DUMMY_RETURN
   return 0;
+#endif
 }
