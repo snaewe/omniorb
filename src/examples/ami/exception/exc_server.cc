@@ -5,6 +5,8 @@
 #include <iostream.h>
 #include <exc.hh>
 
+typedef const char* in_payload;
+
 //
 // Example class implementing IDL interface I
 //
@@ -19,15 +21,15 @@ public:
   I_i() {}
 
   // methods corresponding to defined IDL attributes and operations
-  void op(const char* arg);
-  
+  void op(in_payload arg);
+
 };
 
 //
 // Example implementational code for IDL interface I
 //
-void I_i::op(const char* arg){
-  StringException e(CORBA::string_dup(arg));
+void I_i::op(in_payload arg){
+  CustomException e(arg);
   throw e;
 }
 

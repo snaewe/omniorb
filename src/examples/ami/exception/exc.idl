@@ -1,8 +1,11 @@
 
-exception StringException{
-  string message;
+//typedef long payload;
+typedef string payload;
+
+exception CustomException{
+  payload message;
 };
 
 interface I{
-  void op(in string arg) raises (StringException);
+  void op(in payload arg) raises (CustomException);
 };

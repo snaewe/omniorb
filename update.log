@@ -1,3 +1,36 @@
+Wed Sep 20 14:20:14 BST 2000 djs
+================================
+
+- Changed Queue implementation to use a doubly-linked list rather than
+  a dynamic array.
+
+include/queue.h
+
+- Messaging::ExceptionHolder has a destructor to properly deallocate 
+  local cached exception object
+
+include/omniORB3/Messaging.h
+src/lib/omniORB2/orbcore/Messaging.cc
+
+- Added omniAMICall_var to make sure call storage will be deallocated
+
+include/omniORB3/omniAMI.h
+src/lib/omniORB2/orbcore/omniAMI.cc
+
+- Improved example code a little
+
+src/examples/ami/echo.cc
+src/examples/ami/exception/exc.idl
+src/examples/ami/exception/exc_client.cc
+src/examples/ami/exception/exc_server.cc
+
+- AMI Call descriptor holds ExceptionHolder storage through _var type
+- Removed two ObjRef duplicates from Call Descriptor
+
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+src/lib/omniORB2/omniidl_be/cxx/ami/exholder.py
+
+
 Thu Sep 14 16:01:20 BST 2000 djs
 ================================
 

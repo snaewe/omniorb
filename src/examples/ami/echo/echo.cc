@@ -10,6 +10,9 @@
 
 
 CORBA::ORB_var orb;
+
+unsigned long int nInvocations = 0;
+
 //
 // Example class implementing IDL interface AMI_EchoHandler
 //
@@ -19,13 +22,21 @@ private:
   // Make sure all instances are built on the heap by making the
   // destructor non-public
   virtual ~AMI_EchoHandler_i() {}
+
+  unsigned long int nReceived;
 public:
-  AMI_EchoHandler_i() {}
+  AMI_EchoHandler_i(): nReceived(0) {}
 
   // methods corresponding to defined IDL attributes and operations
   void echoString(const char* ami_return_val){
-    cout << "The server said, \"" << ami_return_val << "\"." << endl;
-    finish();
+    nReceived ++;
+    if (nReceived == nInvocations){
+      cout << "The server said, \"" << ami_return_val << "\"";
+      if (nInvocations > 1)
+	cout << " " << nInvocations << " times";
+      cout << "." << endl;
+      finish();
+    }
   }
   void echoString_excep(const struct AMI_EchoExceptionHolder &excep_holder){
     cout << "Received ExceptionHolder from server" << endl;
@@ -54,13 +65,15 @@ int main(int argc, char** argv)
   try {
     orb = CORBA::ORB_init(argc, argv, "omniORB3");
     
-    if (argc != 2){
-      cerr << "usage:  " << argv[0] << " <echo IOR>" << endl;
+    if (argc != 3){
+      cerr << "usage:  " << argv[0] << "<nInvocations> <echo IOR>" << endl;
       return 1;
     }
-    
+    // Grab the number of Invocations
+    sscanf(argv[1], "%lu", &nInvocations);
+
     // Grab the Echo server IOR
-    CORBA::Object_var obj = orb->string_to_object(argv[1]);
+    CORBA::Object_var obj = orb->string_to_object(argv[2]);
     Echo_var echoref = Echo::_narrow(obj);
     if( CORBA::is_nil(echoref) ) {
       cerr << "Can't narrow reference to type Echo (or it was nil)." << endl;
@@ -81,10 +94,18 @@ int main(int argc, char** argv)
 
     // Make the async request
     CORBA::String_var message = (const char*)"Hello there";
-    echoref->sendc_echoString(handler_ref, message);
-    cout << "I said, \"" << message << "\"." << endl;
+    for (unsigned long int x = 0; x < nInvocations; x++)
+      echoref->sendc_echoString(handler_ref, message);
+    cout << "I said, \"" << message << "\"";
+    if (nInvocations > 1)
+      cout << " " << nInvocations << " times";
+    cout << "." << endl;
 
     orb->run();
+
+    cout << "Shutting down..." << endl;
+    sleep(20000);
+
   }
   catch(CORBA::SystemException&) {
     cerr << "Caught CORBA::SystemException." << endl;

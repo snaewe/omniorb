@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <exc.hh>
 
+#define STRING
 
 CORBA::ORB_var orb;
 unsigned long int nInvocations;
@@ -34,10 +35,10 @@ public:
   }
   void op_excep(const struct AMI_IExceptionHolder &excep_holder){
     try{
-      AMI_IExceptionHolder _e = excep_holder;
-      _e.raise_op();
+      //AMI_IExceptionHolder _e = excep_holder;
+      //_e.raise_op();
 
-    } catch (StringException &e){
+    } catch (CustomException &e){
       omni_mutex_lock lock(state_lock);
       nReceived ++;
       if (nReceived == nInvocations){
@@ -94,7 +95,11 @@ int main(int argc, char** argv)
     pman->activate();
 
     // Make the async request
+#ifdef STRING
     CORBA::String_var message = (const char*)"Hello there";
+#else
+    CORBA::ULong message = 4;
+#endif
     for (unsigned int i = 0 ; i < nInvocations; i++)
       Iref->sendc_op(handler_ref, message);
     cout << "I said";
