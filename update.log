@@ -1,3 +1,21 @@
+Tue Mar  2 15:35:27 GMT 2004 dgrisby
+====================================
+
+- Support for persistent server identifier.
+
+include/omniORB4/IOP.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniORB.h
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+
+- Fix locking in connection shutdown.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Fri Feb 27 12:41:54 GMT 2004 dgrisby
 ====================================
 

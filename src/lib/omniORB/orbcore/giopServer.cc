@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.29  2004/03/02 15:32:07  dgrisby
+  Fix locking in connection shutdown.
+
   Revision 1.22.2.28  2004/02/27 12:40:09  dgrisby
   Fix race conditions in connection shutdown. Thanks Serguei Kolos.
 
@@ -1008,6 +1011,7 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
     }
 
     // Worker is no longer needed.
+    CORBA::Boolean dying = 0;
     {
       omni_tracedmutex_lock sync(pd_lock);
 
@@ -1016,26 +1020,26 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 	  // Connection is dying. Go round again so this thread spots
 	  // the condition.
 	  omniORB::logs(25, "Last worker sees connection is dying.");
-	  conn->setSelectable(1);
-	  return 1;
+	  dying = 1;
 	}
 	if (pd_state == INFLUX) {
 	  // In flux. Go around again.
 	  omniORB::logs(25, "Last worker sees server state in flux.");
-	  conn->setSelectable(1);
-	  return 1;
+	  dying = 1;
 	}
       }
-      w->remove();
-      delete w;
-      conn->pd_n_workers--;
-      pd_n_temporary_workers--;
+      if (!dying) {
+	w->remove();
+	delete w;
+	conn->pd_n_workers--;
+	pd_n_temporary_workers--;
+      }
     }
 
     // Connection is selectable now
     conn->setSelectable(1);
 
-    return 0;
+    return dying ? 1 : 0;
   }
   // Never reach here
   OMNIORB_ASSERT(0);
