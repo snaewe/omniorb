@@ -40,6 +40,34 @@ module RDITestTypes {
   };
 #endif
 
+  // no 'special' fieldd
+  struct StructExample1 {
+    double d;
+  };
+
+  // this has an event_name member
+  struct StructExample2 {
+    string event_name;
+    double d;
+  };
+
+  // this has domain_name, type_name,
+  // and filterable_data members, where
+  // the filterable_data is not of the usual type
+  struct StructExample3 {
+    string domain_name;
+    string type_name;
+    string filterable_data;
+    double d;
+  };
+
+  // a struct containing structs
+  struct StructExample4 {
+    StructExample1 part1;
+    StructExample2 part2;
+    StructExample3 part3;
+  };
+
 };
 
 #endif
