@@ -55,6 +55,10 @@
   \vspace{.5\baselineskip}%
   \end{minipage}}
 
+% Itemize with no itemsep:
+\newenvironment{nsitemize}%
+ {\begin{itemize}\setlength{\itemsep}{0pt}}%
+ {\end{itemize}}
 
 % URL-like things:
 \usepackage[T1]{url}
@@ -549,26 +553,34 @@ Given the IDL file, omniidl produces two stub files: a C++ header file
 and a C++ source file. For example, from the file \file{echo.idl}, the
 following files are produced:
 
-\begin{itemize}
+\begin{nsitemize}
 \item\file{echo.hh}
 \item\file{echoSK.cc}
-\end{itemize}
+\end{nsitemize}
 
-If you are using ODE, you don't need to invoke omniidl explicitly. In
-the example file \file{dir.mk}, we have the following line:
+\noindent omniidl must be invoked with the \cmdline{-bcxx} argument to
+tell it to generate C++ stubs. The following command line generates
+the stubs for \file{echo.idl}:
+
+\begin{makelisting}
+omniidl -bcxx echo.idl
+\end{makelisting}
+
+\noindent If you are using our make environment (ODE), you don't need
+to invoke omniidl explicitly. In the example file \file{dir.mk}, we
+have the following line:
 
 \begin{makelisting}
 CORBA_INTERFACES = echo
 \end{makelisting}
 
-That is all we need to instruct ODE to generate the stubs. Remember,
-you won't find the stubs in your working directory because all stubs
-are written into the \file{stub} directory at the top level of your
-build tree.
+\noindent That is all we need to instruct ODE to generate the stubs.
+Remember, you won't find the stubs in your working directory because
+all stubs are written into the \file{stub} directory at the top level
+of your build tree.
 
-If you are not using ODE, you must invoke omniidl manually, or write
-your own make rules, with the correct command line arguments.
-omniidl's arguments are detailed in chapter~\ref{chap:omniidl}.
+The full arguments to omniidl are detailed in
+chapter~\ref{chap:omniidl}.
 
 
 \section{Object References and Servants}

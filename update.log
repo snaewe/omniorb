@@ -1,3 +1,15 @@
+Thu Jul  6 10:26:43 BST 2000 dpg1
+=================================
+
+- Clarify omniidl usage in documentation and omniidl -u
+
+doc/tex/omniORB.tex
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniORB/omniORB002.html
+src/tool/omniidl/python/omniidl/main.py
+
+
 Wed Jul  5 12:08:06 BST 2000 dpg1
 =================================
 

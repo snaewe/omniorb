@@ -11,7 +11,7 @@
 %DVIPSWebPage: (www.radicaleye.com)
 %DVIPSCommandLine: dvips omniORB
 %DVIPSParameters: dpi=600, compressed
-%DVIPSSource:  TeX output 2000.06.27:1522
+%DVIPSSource:  TeX output 2000.07.06:1019
 %%BeginProcSet: texc.pro
 %!
 /TeXDict 300 dict def TeXDict begin/N{def}def/B{bind def}N/S{exch}N/X{S
@@ -1082,64 +1082,65 @@ b([Ric96a)r(])g(is)g(also)g(included.)p 63 5215 1316
 b(THE)22 b(BASICS)221 539 y Fq(2.2)119 b(Specifying)30
 b(the)g(Echo)g(interface)e(in)i(IDL)221 750 y Fs(W)-8
 b(e)22 b(de\002ne)f(an)i(object)g(interface,)f(called)i
-Ff(Echo)p Fs(,)c(as)j(follows:)362 898 y Fe(interface)48
-b(Echo)h({)562 998 y(string)f(echoString)n(\(in)i(string)e(mesg\);)362
-1097 y(};)362 1259 y Fs(If)18 b(you)g(ar)n(e)g(new)g(to)f(IDL,)h(you)f
+Ff(Echo)p Fs(,)c(as)j(follows:)362 886 y Fe(interface)48
+b(Echo)h({)562 985 y(string)f(echoString)n(\(in)i(string)e(mesg\);)362
+1085 y(};)362 1234 y Fs(If)18 b(you)g(ar)n(e)g(new)g(to)f(IDL,)h(you)f
 (can)i(learn)g(about)f(its)g(syntax)f(in)i(Chapter)f(3)g(of)h(the)e
-(CORBA)221 1372 y(speci\002cation)28 b(2.3)g([OMG99a)r(].)42
+(CORBA)221 1347 y(speci\002cation)28 b(2.3)g([OMG99a)r(].)42
 b(For)27 b(the)g(moment,)g(you)g(only)g(need)f(to)g(know)h(that)g(the)f
-(in-)221 1485 y(terface)i(consists)e(of)i(a)g(single)f(operation,)h
+(in-)221 1460 y(terface)i(consists)e(of)i(a)g(single)f(operation,)h
 Ff(echoString\(\))p Fs(,)23 b(which)28 b(takes)f(a)h(string)f(as)h(an)
-221 1598 y(ar)n(gument)22 b(and)h(r)n(eturns)e(a)j(copy)d(of)i(the)f
-(same)g(string.)362 1711 y(The)33 b(interface)h(is)f(written)g(in)g(a)h
+221 1573 y(ar)n(gument)22 b(and)h(r)n(eturns)e(a)j(copy)d(of)i(the)f
+(same)g(string.)362 1686 y(The)33 b(interface)h(is)f(written)g(in)g(a)h
 (\002le,)i(called)f Ff(echo.idl)p Fs(.)56 b(It)33 b(is)h(part)f(of)g
-(the)g(CORBA)221 1824 y(standar)n(d)c(that)g(all)h(IDL)f(\002les)g
+(the)g(CORBA)221 1799 y(standar)n(d)c(that)g(all)h(IDL)f(\002les)g
 (should)f(have)h(the)g(extension)e(`)p Ff(.idl)p Fs(',)i(although)g
-(omniORB)221 1936 y(does)34 b(not)g(enfor)n(ce)h(this.)65
+(omniORB)221 1912 y(does)34 b(not)g(enfor)n(ce)h(this.)65
 b(If)35 b(you)f(ar)n(e)i(using)e(ODE,)h(the)g(IDL)f(\002les)h(should)f
-(be)h(placed)h(in)221 2049 y(the)30 b Ff(idl)e Fs(dir)n(ectory)i(of)g
+(be)h(placed)h(in)221 2025 y(the)30 b Ff(idl)e Fs(dir)n(ectory)i(of)g
 (your)f(export)f(tr)n(ee.)50 b(This)30 b(is)g(done)f(so)h(that)f(the)h
-(stub)f(code)h(will)h(be)221 2162 y(generated)21 b(automatically)j(and)
+(stub)f(code)h(will)h(be)221 2138 y(generated)21 b(automatically)j(and)
 e(kept)g(up-to-date)f(with)h(your)g(IDL)g(\002le.)362
-2275 y(For)d(simplicity)-10 b(,)20 b(the)f(interface)g(is)h(de\002ned)d
+2251 y(For)d(simplicity)-10 b(,)20 b(the)f(interface)g(is)h(de\002ned)d
 (in)j(the)e(global)i(IDL)f(namespace.)27 b(Y)-8 b(ou)18
-b(should)221 2388 y(avoid)k(this)e(practice)i(for)f(the)f(sake)g(of)h
+b(should)221 2363 y(avoid)k(this)e(practice)i(for)f(the)f(sake)g(of)h
 (object)g(r)n(eusability)-10 b(.)27 b(If)21 b(every)f(CORBA)h
-(developer)f(de-)221 2501 y(\002nes)e(their)g(interfaces)g(in)g(the)g
+(developer)f(de-)221 2476 y(\002nes)e(their)g(interfaces)g(in)g(the)g
 (global)h(IDL)f(namespace,)h(ther)n(e)e(is)i(a)g(danger)e(of)h(name)h
-(clashes)221 2614 y(between)32 b(two)g(independently)f(de\002ned)g
+(clashes)221 2589 y(between)32 b(two)g(independently)f(de\002ned)g
 (interfaces.)59 b(Ther)n(efor)n(e,)35 b(it)e(is)h(better)d(to)i
-(qualify)221 2727 y(your)27 b(interfaces)h(by)h(de\002ning)e(them)h
+(qualify)221 2702 y(your)27 b(interfaces)h(by)h(de\002ning)e(them)h
 (inside)g Ff(module)d Fs(names.)45 b(Of)29 b(course,)f(this)g(does)f
-(not)221 2840 y(eliminate)k(the)f(chance)h(of)f(a)h(name)g(clash)g
+(not)221 2815 y(eliminate)k(the)f(chance)h(of)f(a)h(name)g(clash)g
 (unless)e(some)g(form)i(of)f(naming)h(convention)f(is)221
-2953 y(agr)n(eed)22 b(globally)-10 b(.)28 b(Nevertheless,)20
+2928 y(agr)n(eed)22 b(globally)-10 b(.)28 b(Nevertheless,)20
 b(a)j(well-chosen)f(module)g(name)h(can)h(help)e(a)h(lot.)221
-3251 y Fq(2.3)119 b(Generating)29 b(the)g(C++)i(stubs)221
-3462 y Fs(Fr)n(om)g(the)f(IDL)g(\002le,)i(we)f(use)e(the)h(IDL)g
+3220 y Fq(2.3)119 b(Generating)29 b(the)g(C++)i(stubs)221
+3431 y Fs(Fr)n(om)g(the)f(IDL)g(\002le,)i(we)f(use)e(the)h(IDL)g
 (compiler)i(to)e(pr)n(oduce)f(the)h(C++)h(mapping)g(of)g(the)221
-3575 y(interface.)54 b(The)31 b(IDL)g(compiler)g(for)g(omniORB)h(is)f
+3544 y(interface.)54 b(The)31 b(IDL)g(compiler)g(for)g(omniORB)h(is)f
 (called)h(omniidl.)55 b(Given)32 b(the)e(IDL)h(\002le,)221
-3688 y(omniidl)36 b(pr)n(oduces)e(two)g(stub)h(\002les:)53
+3657 y(omniidl)36 b(pr)n(oduces)e(two)g(stub)h(\002les:)53
 b(a)36 b(C++)g(header)e(\002le)h(and)h(a)f(C++)h(sour)n(ce)f(\002le.)66
-b(For)221 3800 y(example,)22 b(fr)n(om)i(the)d(\002le)i
+b(For)221 3769 y(example,)22 b(fr)n(om)i(the)d(\002le)i
 Ff(echo.idl)p Fs(,)c(the)j(following)h(\002les)f(ar)n(e)h(pr)n(oduced:)
-358 4010 y Fp(\017)45 b Ff(echo.hh)358 4197 y Fp(\017)g
-Ff(echoSK.cc)362 4406 y Fs(If)29 b(you)e(ar)n(e)i(using)f(ODE,)g(you)g
-(don't)f(need)g(to)h(invoke)g(omniidl)h(explicitly)-10
-b(.)46 b(In)28 b(the)f(ex-)221 4519 y(ample)c(\002le)g
-Ff(dir.mk)p Fs(,)d(we)i(have)h(the)f(following)g(line:)362
-4667 y Fe(CORBA_INTERFACES)47 b(=)j(echo)362 4829 y Fs(That)19
-b(is)g(all)h(we)f(need)e(to)h(instr)o(uct)h(ODE)g(to)f(generate)f(the)h
-(stubs.)26 b(Remember)-7 b(,)19 b(you)f(won't)221 4942
-y(\002nd)g(the)g(stubs)g(in)h(your)f(working)f(dir)n(ectory)h(because)g
-(all)i(stubs)e(ar)n(e)h(written)f(into)g(the)g Ff(stub)221
-5055 y Fs(dir)n(ectory)k(at)h(the)e(top)h(level)h(of)g(your)e(build)j
-(tr)n(ee.)362 5168 y(If)31 b(you)e(ar)n(e)i(not)f(using)g(ODE,)h(you)e
-(must)h(invoke)g(omniidl)h(manually)-10 b(,)34 b(or)c(write)g(your)221
-5281 y(own)25 b(make)g(r)o(ules,)h(with)f(the)g(corr)n(ect)g(command)h
-(line)g(ar)n(guments.)35 b(omniidl's)26 b(ar)n(guments)221
-5394 y(ar)n(e)d(detailed)f(in)h(chapter)f(5.)p eop
+358 3942 y Fp(\017)45 b Ff(echo.hh)358 4086 y Fp(\017)g
+Ff(echoSK.cc)221 4258 y Fs(omniidl)20 b(must)f(be)h(invoked)e(with)i
+(the)e Ff(-bcxx)g Fs(ar)n(gument)h(to)f(tell)i(it)g(to)f(generate)e
+(C++)j(stubs.)221 4371 y(The)i(following)h(command)g(line)g(generates)e
+(the)g(stubs)h(for)g Ff(echo.idl)p Fs(:)362 4507 y Fe(omniidl)49
+b(-bcxx)g(echo.idl)221 4657 y Fs(If)26 b(you)e(ar)n(e)i(using)f(our)g
+(make)h(envir)n(onment)f(\(ODE\),)h(you)e(don't)h(need)f(to)h(invoke)g
+(omniidl)221 4769 y(explicitly)-10 b(.)28 b(In)23 b(the)f(example)g
+(\002le)h Ff(dir.mk)p Fs(,)c(we)k(have)g(the)e(following)i(line:)362
+4906 y Fe(CORBA_INTERFACES)47 b(=)j(echo)221 5055 y Fs(That)28
+b(is)h(all)g(we)f(need)f(to)h(instr)o(uct)g(ODE)g(to)g(generate)e(the)i
+(stubs.)43 b(Remember)-7 b(,)29 b(you)f(won't)221 5168
+y(\002nd)18 b(the)g(stubs)g(in)h(your)f(working)f(dir)n(ectory)h
+(because)g(all)i(stubs)e(ar)n(e)h(written)f(into)g(the)g
+Ff(stub)221 5281 y Fs(dir)n(ectory)k(at)h(the)e(top)h(level)h(of)g
+(your)e(build)j(tr)n(ee.)362 5394 y(The)e(full)i(ar)n(guments)e(to)g
+(omniidl)h(ar)n(e)g(detailed)f(in)h(chapter)f(5.)p eop
 %%Page: 9 17
 9 16 bop 63 282 a Fg(2.4.)51 b(OBJECT)23 b(REFERENCES)c(AND)k(SER)-5
 b(V)-10 b(ANTS)1389 b Fs(9)63 539 y Fq(2.4)119 b(Object)29
