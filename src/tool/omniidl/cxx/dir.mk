@@ -48,6 +48,9 @@ idlc = $(patsubst %,$(BinPattern),idlc)
 
 ifdef UnixPlatform
 CXXDEBUGFLAGS = -g
+PYPREFIX := $(shell python -c 'import sys; print sys.prefix')
+PYINCDIR := $(PYPREFIX)/include
+DIR_CPPFLAGS += -I$(PYINCDIR)
 endif
 
 
