@@ -1,3 +1,11 @@
+Mon Jul 10 11:48:04 BST 2000 sll
+================================
+
+- Minor rearrangement to keep DEC C++ 5.6 happy.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
 Mon Jul 10 11:43:51 BST 2000 dpg1
 =================================
 
