@@ -1,3 +1,24 @@
+Mon May 31 14:59:03 BST 1999 sll
+================================
+
+- Added support for SUN C++ v5.0 on Solaris 7.
+  NOTE: there are bugs in the compiler which mess up exception handling when
+        compiled with -O2. The compiler flag is set to '-O2 -g' by default.
+        This seems to work.
+        The last compiler patch applied is 107311-03. Re-test this when
+        another compiler patch is applied.
+
+mk/platforms/sun4_sosV_5.7.mk
+
+include/omniORB2/CORBA_sysdep.h
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/appl/omniNames/log.h
+src/appl/omniNames/NamingContext_i.h
+src/appl/omniNames/omniNames.cc
+src/appl/omniNames/NamingContext_i.cc
+src/appl/omniNames/log.cc
+
 Thu May 27 21:28:03 BST 1999 sll
 ================================
 
