@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.17  1998/10/14 14:13:28  sll
+  Do not put fixed-size struct inside the anonymous union data member in a
+  union.
+
   Revision 1.16  1998/08/19 15:54:50  sll
   New member functions void produce_binary_operators_in_hdr and the like
   are responsible for generating binary operators <<= etc in the global
@@ -513,6 +517,7 @@ o2be_union::produce_hdr(std::fstream &s)
 
 	    if (ntype != o2be_operation::tString &&
 		ntype != o2be_operation::tObjref &&
+		ntype != o2be_operation::tStructFixed &&
 		ntype != o2be_operation::tStructVariable &&
 		ntype != o2be_operation::tUnionVariable &&
 		ntype != o2be_operation::tUnionFixed &&
@@ -1110,9 +1115,15 @@ o2be_union::produce_hdr(std::fstream &s)
 				       o2be_operation::wResult,mapping);
 	    switch (ntype)
 	      {
+		// For o2be_operation::tStructFixed, do not generate data 
+		// member inside the anonymous union. This is because even if
+		// all the elements are fixed size, it may contain union
+		// elements directly or indirectly. This is not allowed because
+		// anonymous union does not allow user defined ctor and dtor.
+		// We could check whether the struct has a union element.
+		// For simplicity, we just play it safe here.
 	      case o2be_operation::tFloat:
 	      case o2be_operation::tDouble:
-	      case o2be_operation::tStructFixed:
 		s << "#ifndef USING_PROXY_FLOAT\n";
 		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " pd_" << f->uqname() << ";\n";
@@ -1208,12 +1219,14 @@ o2be_union::produce_hdr(std::fstream &s)
 		break;
               case o2be_operation::tFloat:
               case o2be_operation::tDouble:
-	      case o2be_operation::tStructFixed:
 		s << "#ifdef USING_PROXY_FLOAT\n";
 		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " pd_" << f->uqname() << ";\n";
 		s << "#endif\n";
 		break;
+	      case o2be_operation::tStructFixed:
+		// See comment above on why we do not generate this data member
+		// inside the anonymous union.
 	      case o2be_operation::tStructVariable:
 	      case o2be_operation::tUnionFixed:
 	      case o2be_operation::tUnionVariable:
