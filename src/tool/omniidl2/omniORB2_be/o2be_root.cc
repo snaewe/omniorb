@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.19  1999/04/12 09:07:04  djr
+  Updated version.
+
   Revision 1.18  1999/03/11 16:26:09  djr
   Updated copyright notice
 
@@ -103,7 +106,7 @@
 
 // Do not forget to update the version number in omniORB_x_y below.
 // The variable is defined in omniInternal.h.
-#define OMNIORB_LIBRARY_VERSION    "omniORB_2_7"
+#define OMNIORB_LIBRARY_VERSION    "omniORB_2_8"
 
 
 o2be_root::o2be_root(UTL_ScopedName *n, UTL_StrList *p)

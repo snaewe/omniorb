@@ -101,7 +101,7 @@ static void
 DRV_version()
 {
   std::cerr <<
-    "Omniidl 2.7.1\n"
+    "Omniidl 2.8.0\n"
     "Copyright (C) 1996-1999 AT&T Laboratories Cambridge, UK\n"
     "Omniidl comes with ABSOLUTELY NO WARRANTY.\n\n";
 }
