@@ -2,8 +2,13 @@
 #define _NamingContext_i_h_
 
 #include "ReadersWritersLock.h"
-#include "omniORB2/Naming.hh"
 #include "log.h"
+
+#ifdef __NT__
+#include "omniORB2/Naming_NT.hh"
+#else
+#include "omniORB2/Naming.hh"
+#endif
 
 class NamingContext_i : public virtual CosNaming::_sk_NamingContext {
 
