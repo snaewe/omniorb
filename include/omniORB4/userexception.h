@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.3  2000/11/03 19:05:30  sll
+ Added INV_POLICY and CODESET_INCOMPATIBLE.
+
  Revision 1.2.2.2  2000/09/27 16:58:07  sll
  Replaced marshalling operators for MemBufferedStream and NetBufferedStream
  with just one type for cdrStream.
@@ -151,7 +154,6 @@ doit (NO_MEMORY) \
 doit (IMP_LIMIT) \
 doit (COMM_FAILURE) \
 doit (INV_OBJREF) \
-doit (OBJECT_NOT_EXIST) \
 doit (NO_PERMISSION) \
 doit (INTERNAL) \
 doit (MARSHAL) \
@@ -171,10 +173,13 @@ doit (INTF_REPOS) \
 doit (BAD_CONTEXT) \
 doit (OBJ_ADAPTER) \
 doit (DATA_CONVERSION) \
+doit (OBJECT_NOT_EXIST) \
 doit (TRANSACTION_REQUIRED) \
 doit (TRANSACTION_ROLLEDBACK) \
 doit (INVALID_TRANSACTION) \
 doit (WRONG_TRANSACTION) \
+doit (INV_POLICY) \
+doit (CODESET_INCOMPATIBLE)
 
 
 #endif // __OMNIORB_USEREXCEPTION_H__
