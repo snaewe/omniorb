@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/11/16 12:33:44  dpg1
+  Minor fixes to permit use of UShort as WChar.
+
   Revision 1.1.2.3  2000/11/10 15:41:36  dpg1
   Native code sets throw BAD_PARAM if they are given a null transmission
   code set.
@@ -75,7 +78,7 @@ public:
   // Unicode based marshalling
   void marshalChar  (cdrStream& stream, omniCodeSet::UniChar uc);
   void marshalString(cdrStream& stream,
-		     _CORBA_ULong len, omniCodeSet::UniChar* us);
+		     _CORBA_ULong len, const omniCodeSet::UniChar* us);
 
   omniCodeSet::UniChar unmarshalChar(cdrStream& stream);
 
@@ -366,7 +369,8 @@ TCS_C_UTF_8::marshalChar(cdrStream& stream, omniCodeSet::UniChar uc)
 
 void
 TCS_C_UTF_8::marshalString(cdrStream& stream,
-			   _CORBA_ULong len, omniCodeSet::UniChar* us)
+			   _CORBA_ULong len,
+			   const omniCodeSet::UniChar* us)
 {
   omniCodeSetUtil::BufferC b;
   omniCodeSet::UniChar     uc;
