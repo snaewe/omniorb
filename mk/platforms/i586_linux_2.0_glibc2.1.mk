@@ -128,3 +128,17 @@ endif
 #
 # everything else is default from unix.mk
 
+
+# Add the location of the Open SSL library
+
+# To build the SSL transport, OPEN_SSL_ROOT must be defined and points to
+# the top level directory of the openssl library. The default is to disable
+# the build.
+#
+#OPEN_SSL_ROOT = /usr/local/openssl
+#
+
+OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include
+OPEN_SSL_LIB = -L$(OPEN_SSL_ROOT)/lib -lssl -lcrypto
+OMNIORB_SSL_LIB += $(OPEN_SSL_LIB)
+OMNIORB_SSL_CPPFLAGS += $(OPEN_SSL_CPPFLAGS)
