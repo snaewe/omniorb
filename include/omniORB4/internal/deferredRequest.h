@@ -24,8 +24,8 @@
 //
 //
 // Description:
-//  A thread class (derived from omni_thread) used to implement
-//  deferred requests for the Dynamic Invocation Interface.
+//  An invoker task used to implement deferred requests for the
+//  Dynamic Invocation Interface.
 //
 
 #ifndef __DEFERREDREQUEST_H__
@@ -37,21 +37,20 @@
 
 OMNI_NAMESPACE_BEGIN(omni)
 
-class DeferredRequest : public omni_thread {
+class DeferredRequest : public omniTask {
 
 public:
   DeferredRequest(RequestImpl* request);
-  // Spawns off a new thread which invokes the operation
-  // given in the request.
+  // Inserts task in the ORB invoker as an AnyTime task.
 
   inline CORBA::Boolean poll_response() {
-    omni_mutex_lock lock(pd_readyMutex);
+    omni_tracedmutex_lock lock(pd_readyMutex);
     return pd_ready;
   }
   // Returns true if the operation has completed, false otherwise.
 
   inline void get_response() {
-    omni_mutex_lock lock(pd_readyMutex);
+    omni_tracedmutex_lock lock(pd_readyMutex);
     while( !pd_ready )  pd_readyCondition.wait();
   }
   // Blocks until the operation has completed.
@@ -64,19 +63,17 @@ public:
   // If there is one, transfer ownership of a stored
   // exception to the caller.
 
-  inline void die() { this->join(0); }
-  // Kill the thread, and release the storage (deletes this).
+  inline void die() { OMNIORB_ASSERT(pd_ready); delete this; }
+
+  virtual void execute();
 
 protected:
   virtual ~DeferredRequest();
 
-private:
-  virtual void* run_undetached(void* arg);
-
   RequestImpl*            pd_request;
   CORBA::Boolean          pd_ready;
-  omni_mutex              pd_readyMutex;
-  omni_condition          pd_readyCondition;
+  omni_tracedmutex        pd_readyMutex;
+  omni_tracedcondition    pd_readyCondition;
   CORBA::Exception*       pd_exception;
 };
 

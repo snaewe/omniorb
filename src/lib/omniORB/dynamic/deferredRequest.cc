@@ -30,11 +30,12 @@
 
 #include <deferredRequest.h>
 #include <orbParameters.h>
+#include <invoker.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
 DeferredRequest::DeferredRequest(RequestImpl* request)
-  : pd_readyCondition(&pd_readyMutex)
+  : omniTask(omniTask::AnyTime), pd_readyCondition(&pd_readyMutex)
 {
   if( CORBA::is_nil(request) )
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -43,7 +44,7 @@ DeferredRequest::DeferredRequest(RequestImpl* request)
   pd_request = request;
   pd_ready = 0;
   pd_exception = 0;
-  start_undetached();
+  orbAsyncInvoker->insert(this);
 }
 
 
@@ -53,8 +54,8 @@ DeferredRequest::~DeferredRequest()
 }
 
 
-void*
-DeferredRequest::run_undetached(void* arg)
+void
+DeferredRequest::execute()
 {
   // Invoke the requested operation. If a (system) exception is
   // thrown, it is saved so that it can be thrown to the thread
@@ -87,12 +88,10 @@ DeferredRequest::run_undetached(void* arg)
   }
 
   {
-    omni_mutex_lock lock(pd_readyMutex);
+    omni_tracedmutex_lock lock(pd_readyMutex);
     pd_ready = 1;
   }
   pd_readyCondition.signal();
-
-  return 0;
 }
 
 OMNI_NAMESPACE_END(omni)
