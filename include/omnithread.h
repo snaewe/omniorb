@@ -1,3 +1,4 @@
+// -*- Mode: C++; -*-
 //				Package : omnithread
 // omnithread.h			Created : 7/94 tjr
 //
@@ -162,9 +163,11 @@ class omni_thread;
 #define _OMNITHREAD_NTDLL_
 #endif
 
-#if (!defined(OMNI_MUTEX_IMPLEMENTATION) || \
-     !defined(OMNI_CONDITION_IMPLEMENTATION) || \
-     !defined(OMNI_SEMAPHORE_IMPLEMENTATION) || \
+#if (!defined(OMNI_MUTEX_IMPLEMENTATION)        || \
+     !defined(OMNI_MUTEX_LOCK_IMPLEMENTATION)   || \
+     !defined(OMNI_MUTEX_UNLOCK_IMPLEMENTATION) || \
+     !defined(OMNI_CONDITION_IMPLEMENTATION)    || \
+     !defined(OMNI_SEMAPHORE_IMPLEMENTATION)    || \
      !defined(OMNI_THREAD_IMPLEMENTATION))
 #error "Implementation header file incomplete"
 #endif
@@ -201,10 +204,10 @@ public:
     omni_mutex(void);
     ~omni_mutex(void);
 
-    void lock(void);
-    void unlock(void);
-    void acquire(void) { lock(); }
-    void release(void) { unlock(); }
+    inline void lock(void)    { OMNI_MUTEX_LOCK_IMPLEMENTATION   }
+    inline void unlock(void)  { OMNI_MUTEX_UNLOCK_IMPLEMENTATION }
+    inline void acquire(void) { lock(); }
+    inline void release(void) { unlock(); }
 	// the names lock and unlock are preferred over acquire and release
 	// since we are attempting to be as POSIX-like as possible.
 

@@ -52,18 +52,6 @@ omni_mutex::~omni_mutex(void)
     DeleteCriticalSection(&crit);
 }
 
-void
-omni_mutex::lock(void)
-{
-    EnterCriticalSection(&crit);
-}
-
-void
-omni_mutex::unlock(void)
-{
-    LeaveCriticalSection(&crit);
-}
-
 
 
 ///////////////////////////////////////////////////////////////////////////

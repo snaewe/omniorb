@@ -106,19 +106,6 @@ omni_mutex::~omni_mutex(void)
     THROW_ERRORS(pthread_mutex_destroy(&posix_mutex));
 }
 
-void
-omni_mutex::lock(void)
-{
-    THROW_ERRORS(pthread_mutex_lock(&posix_mutex));
-}
-
-void
-omni_mutex::unlock(void)
-{
-    THROW_ERRORS(pthread_mutex_unlock(&posix_mutex));
-}
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 //

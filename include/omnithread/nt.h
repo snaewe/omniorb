@@ -42,6 +42,12 @@ extern "C" OMNI_THREAD_WRAPPER;
 #define OMNI_MUTEX_IMPLEMENTATION			\
     CRITICAL_SECTION crit;
 
+#define OMNI_MUTEX_LOCK_IMPLEMENTATION                  \
+    EnterCriticalSection(&crit);
+
+#define OMNI_MUTEX_UNLOCK_IMPLEMENTATION                \
+    LeaveCriticalSection(&crit);
+
 #define OMNI_CONDITION_IMPLEMENTATION			\
     CRITICAL_SECTION crit;				\
     omni_thread* waiting_head;				\
