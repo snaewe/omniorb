@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2  1998/08/25 19:01:35  sll
+  Moved auto-variable declaration in set() to make it acceptable to old
+  and new compilers.
+
   Revision 1.1  1998/08/21 19:28:16  sll
   Initial revision
 
@@ -56,7 +60,8 @@ omniInitialReferences::set(const char* identifier, CORBA::Object_ptr obj)
 {
   omni_mutex_lock sync(lock);
 
-  for (CORBA::ULong index=0; index < pd_serviceList.length(); index++) {
+  CORBA::ULong index;
+  for (index=0; index < pd_serviceList.length(); index++) {
     if (strcmp((const char*)pd_serviceList[index].id,identifier) == 0)
       break;
   }
@@ -133,6 +138,8 @@ omniInitialReferences::list()
   for (CORBA::ULong index=0; index < pd_serviceList.length(); index++) {
     (*result)[index] = CORBA::string_dup(pd_serviceList[index].id);
   }
+
+  // XXX Should we go out to find the listing from the boot agent?
 
   return result;
 }
