@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.22  1998/08/15 14:23:26  sll
+ Added macro No_Koenig_Lookup to MSVC++ and DEC C++ 6.0
+ Remove NEED_DUMMY_RETURN if the compiler is DEC C++ > 5.7
+
  Revision 1.21  1998/08/14 13:56:21  sll
  Added HAS_pch if the compiler is DEC C++ v6.0
 
@@ -93,7 +97,6 @@
 
 #elif defined(__DECCXX)
 // DEC C++ compiler
-#define NEED_DUMMY_RETURN
 
 #  if defined(__alpha) && !defined(__VMS)
 #     define SIZEOF_LONG 8
@@ -106,7 +109,10 @@
 #     endif
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
+#     define NO_Koenig_Lookup
 #     define HAS_pch
+#  else
+#     define NEED_DUMMY_RETURN
 #  endif
 
 #elif defined(__SUNPRO_CC) 
@@ -124,6 +130,7 @@
 #  endif
 #define HAS_Cplusplus_Namespace
 #define HAS_Std_Namespace
+#define NO_Koenig_Lookup
 #endif
 
 #elif defined(__BCPLUSPLUS__)
