@@ -1,3 +1,12 @@
+Wed Sep 13 12:37:42 BST 2000 dpg1
+=================================
+
+- Minor cut-and-paste error in URI handling meant that ior: was not
+  accepted as a URI format.
+
+src/lib/omniORB2/orbcore/uri.cc
+
+
 Wed Sep 13 10:09:43 BST 2000 djs
 ================================
 
@@ -6,7 +15,6 @@ Wed Sep 13 10:09:43 BST 2000 djs
   -- bug number 10
 
 src/lib/omniORB2/omniidl_be/cxx/header/defs.py
-
 
 
 Mon Sep 11 15:12:38 BST 2000 dpg1
