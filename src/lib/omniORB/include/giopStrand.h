@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/08/03 17:43:19  sll
+  Make sure dll import spec for win32 is properly done.
+
   Revision 1.1.4.4  2001/07/31 16:28:01  sll
   Added GIOP BiDir support.
 
@@ -49,15 +52,18 @@
 #ifndef __GIOPSTRAND_H__
 #define __GIOPSTRAND_H__
 
-#if !defined(_core_attr)
-# if defined(_OMNIORB_LIBRARY)
-#   define _core_attr
-# else
-#   define _core_attr _OMNIORB_NTDLL_IMPORT
-# endif
+#include <omniORB4/omniTransport.h>
+
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
 #endif
 
-#include <omniORB4/omniTransport.h>
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
+#endif
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -374,5 +380,7 @@ private:
 };
 
 OMNI_NAMESPACE_END(omni)
+
+#undef _core_attr
 
 #endif // __GIOPSTRAND_H__

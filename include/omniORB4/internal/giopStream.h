@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/08/03 17:43:19  sll
+  Make sure dll import spec for win32 is properly done.
+
   Revision 1.1.4.3  2001/07/31 16:20:30  sll
   New primitives to acquire read lock on a connection.
 
@@ -48,12 +51,14 @@
 #ifndef __GIOPSTREAM_H__
 #define __GIOPSTREAM_H__
 
-#if !defined(_core_attr)
-# if defined(_OMNIORB_LIBRARY)
-#   define _core_attr
-# else
-#   define _core_attr _OMNIORB_NTDLL_IMPORT
-# endif
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
+#endif
+
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
 #endif
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -499,5 +504,7 @@ protected:
 
 
 OMNI_NAMESPACE_END(omni)
+
+#undef _core_attr
 
 #endif // __GIOPSTREAM_H__

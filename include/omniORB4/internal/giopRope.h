@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/08/03 17:43:19  sll
+  Make sure dll import spec for win32 is properly done.
+
   Revision 1.1.4.3  2001/07/31 16:24:23  sll
   Moved filtering and sorting of available addresses into a separate
   function. Make acquireClient, decrRefCount and notifyCommFailure virtual.
@@ -48,15 +51,17 @@
 #ifndef __GIOPROPE_H__
 #define __GIOPROPE_H__
 
-#if !defined(_core_attr)
-# if defined(_OMNIORB_LIBRARY)
-#   define _core_attr
-# else
-#   define _core_attr _OMNIORB_NTDLL_IMPORT
-# endif
+#include <omniORB4/omniTransport.h>
+
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
 #endif
 
-#include <omniORB4/omniTransport.h>
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
+#endif
 
 class omniIOR;
 
@@ -235,5 +240,7 @@ class giopRope : public Rope, public RopeLink {
 };
 
 OMNI_NAMESPACE_END(omni)
+
+#undef _core_attr
 
 #endif // __GIOPROPE_H__
