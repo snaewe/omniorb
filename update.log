@@ -1,7 +1,7 @@
 Tue Jul 11 21:04:36 BST 2000 sll
 ================================
 
-- Fixed a bug in dir.mk caused by a recent change that omnit gatekeeper.o
+- Fixed a bug in dir.mk caused by a recent change that omit gatekeeper.o
   from those platforms that are built with no gatekeeper support.
   The affected platforms are HPUX, AIX and SINIX.
 
