@@ -530,7 +530,7 @@ all:: $(lib)
 $(lib): $(ORB_OBJS)
 	(set -x; \
          $(RM) $@; \
-         aCC -b -Wl,+h$(soname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
+         aCC -b -Wl,+h$(soname) -Wl,+s -o $@  $(IMPORT_LIBRARY_FLAGS) \
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
            $(HPTHREADLIBS) ; \

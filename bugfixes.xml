@@ -8,6 +8,17 @@
 
 <buglist version="3.0.4">
 
+<bug id="2" date="Mon Jul 16 11:25:55 BST 2001" user="sll">
+
+  <summary>HPUX 11.00 shared libraries are not build with -Wl,+s</summary>
+  <reported>David Tiller</reported>
+  <text>
+  HPUX 11.00 shared libraries are not build with -Wl,+s which enable 
+  SHLIB_PATH searching at runtime.
+  </text>
+</bug>
+
+
 <bug id="1" date="Fri Jul  6 14:30:35 BST 2001" user="dpg1">
 
   <summary>nameclt fails when passed a nil BindingIterator</summary>

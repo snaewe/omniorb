@@ -1,3 +1,14 @@
+Mon Jul 16 11:21:55 BST 2001 sll
+================================
+
+- Added the command line option -Wl,+s for HPUX when a shared library is built.
+
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
+
 Fri Jul  6 14:30:35 BST 2001 dpg1
 =================================
 

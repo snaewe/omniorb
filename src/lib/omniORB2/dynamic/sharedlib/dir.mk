@@ -514,7 +514,7 @@ all:: $(dynlib)
 $(dynlib): $(DYN_OBJS)
 	(set -x; \
          $(RM) $@; \
-         aCC -b -Wl,+h$(dynsoname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
+         aCC -b -Wl,+h$(dynsoname) -Wl,+s -o $@  $(IMPORT_LIBRARY_FLAGS) \
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
            -lomniORB$(major_version) \
