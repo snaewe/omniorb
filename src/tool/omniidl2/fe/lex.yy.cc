@@ -75,12 +75,14 @@ extern char *yysptr, yysbuf[];
 int yytchar;
 FILE *yyin = {stdin}, *yyout = {stdout};
 extern int yylineno;
+#ifndef __DECCXX
 struct yysvf { 
 	struct yywork *yystoff;
 	struct yysvf *yyother;
 	int *yystops;};
 struct yysvf *yyestate;
 extern struct yysvf yysvec[], *yybgin;
+#endif
 
 # line 4 "idl.ll"
 /*
@@ -1866,6 +1868,16 @@ struct yywork { YYTYPE verify, advance; } yycrank[] = {
 265,265,	265,265,	265,265,	265,265,	
 265,265,	265,265,	265,265,	265,265,	
 0,0};
+
+#ifdef __DECCXX
+struct yysvf { 
+	struct yywork *yystoff;
+	struct yysvf *yyother;
+	int *yystops;};
+struct yysvf *yyestate;
+extern struct yysvf yysvec[], *yybgin;
+#endif
+
 struct yysvf yysvec[] = {
 0,	0,	0,
 yycrank+-1,	0,		yyvstop+1,
