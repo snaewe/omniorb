@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.12  2001/09/03 13:28:59  sll
+  Changed locateRequest to honour the same retry rule as normal invocation.
+
   Revision 1.2.2.11  2001/08/17 13:42:49  dpg1
   callDescriptor::userException() no longer has to throw an exception.
 
@@ -102,6 +105,7 @@
 #include <omniORB4/callDescriptor.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
+#include <giopStream.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -244,49 +248,66 @@ omniRemoteIdentity::locateRequest()
   }
 
   omniCallDescriptor dummy_calldesc(0,0,0,0,0,0,0);
-  IOP_C_Holder iop_client(pd_ior,key(),keysize(),pd_rope,&dummy_calldesc);
-  cdrStream& s = ((IOP_C&)iop_client).getStream();
 
-  GIOP::LocateStatusType rc;
+  while (1) {
 
- again:
-  switch( (rc = iop_client->IssueLocateRequest()) ) {
-  case GIOP::OBJECT_HERE:
-    iop_client->RequestCompleted();
-    break;
+    CORBA::Boolean retry = 0;
 
-  case GIOP::UNKNOWN_OBJECT:
-    iop_client->RequestCompleted();
-    OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
-		  CORBA::COMPLETED_NO);
-    break;        // dummy break
+    try {
+      IOP_C_Holder iop_client(pd_ior,key(),keysize(),pd_rope,&dummy_calldesc);
+      cdrStream& s = ((IOP_C&)iop_client).getStream();
 
-  case GIOP::OBJECT_FORWARD:
-  case GIOP::OBJECT_FORWARD_PERM:
-    {
-      CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(s));
-      iop_client->RequestCompleted();
-      throw omniORB::LOCATION_FORWARD(obj._retn(),
-			       (rc == GIOP::OBJECT_FORWARD_PERM) ? 1 : 0);
-    }
+      GIOP::LocateStatusType rc;
 
-  case GIOP::LOC_NEEDS_ADDRESSING_MODE:
-    {
-      GIOP::AddressingDisposition v;
-      v <<= s;
-      pd_ior->addr_mode(v);
-      iop_client->RequestCompleted();
-      if (omniORB::trace(10)) {
-	omniORB::logger log;
-	log << "Remote locatRequest: GIOP::NEEDS_ADDRESSING_MODE: "
-	    << (int) v << " retry request.\n";
+    again:
+      switch( (rc = iop_client->IssueLocateRequest()) ) {
+      case GIOP::OBJECT_HERE:
+	iop_client->RequestCompleted();
+	break;
+
+      case GIOP::UNKNOWN_OBJECT:
+	iop_client->RequestCompleted();
+	OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
+		      CORBA::COMPLETED_NO);
+	break;        // dummy break
+
+      case GIOP::OBJECT_FORWARD:
+      case GIOP::OBJECT_FORWARD_PERM:
+	{
+	  CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(s));
+	  iop_client->RequestCompleted();
+	  throw omniORB::LOCATION_FORWARD(obj._retn(),
+					  (rc == GIOP::OBJECT_FORWARD_PERM) ? 1 : 0);
+	}
+
+      case GIOP::LOC_NEEDS_ADDRESSING_MODE:
+	{
+	  GIOP::AddressingDisposition v;
+	  v <<= s;
+	  pd_ior->addr_mode(v);
+	  iop_client->RequestCompleted();
+	  if (omniORB::trace(10)) {
+	    omniORB::logger log;
+	    log << "Remote locatRequest: GIOP::NEEDS_ADDRESSING_MODE: "
+		<< (int) v << " retry request.\n";
+	  }
+	  goto again;
+	}
+
+      case GIOP::LOC_SYSTEM_EXCEPTION:
+	OMNIORB_ASSERT(0);
+	break;
       }
-      goto again;
     }
-
-  case GIOP::LOC_SYSTEM_EXCEPTION:
-    OMNIORB_ASSERT(0);
-    break;
+    catch(const giopStream::CommFailure& ex) {
+      if (ex.retry()) {
+	retry = 1;
+      }
+      else {
+	throw;
+      }
+    }
+    if (!retry) break;
   }
 }
 
