@@ -1,0 +1,274 @@
+// -*- Mode: C++; -*-
+//                            Package   : omniORB2
+// nvList.cc                  Created on: 9/1998
+//                            Author    : David Riddoch (djr)
+//
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
+//
+// Description:
+//   Implementation of CORBA::NVList.
+//
+
+#include <pseudo.h>
+
+
+#define INIT_MAX_SEQ_LENGTH  6
+
+
+NVListImpl::NVListImpl()
+{
+  pd_list.length(INIT_MAX_SEQ_LENGTH);
+  pd_list.length(0);
+}
+
+
+NVListImpl::~NVListImpl()
+{
+  for( CORBA::ULong i=0; i < pd_list.length(); i++ )
+    CORBA::release(pd_list[i]);
+}
+
+
+CORBA::ULong
+NVListImpl::count() const
+{
+  return pd_list.length();
+}
+
+
+CORBA::NamedValue_ptr
+NVListImpl::add(CORBA::Flags flags)
+{
+  CORBA::ULong len = pd_list.length();
+
+  if( len == pd_list.maximum() )
+    // allocate new space in decent chunks
+    pd_list.length(len * 6 / 5 + 1);
+
+  pd_list.length(len + 1);
+  pd_list[len] = new NamedValueImpl(flags);
+  return pd_list[len];
+}
+
+
+CORBA::NamedValue_ptr
+NVListImpl::add_item(const char* name, CORBA::Flags flags)
+{
+  CORBA::ULong len = pd_list.length();
+
+  if( len == pd_list.maximum() )
+    pd_list.length(len * 6 / 5 + 1);
+
+  pd_list.length(len + 1);
+  pd_list[len] = new NamedValueImpl(name, flags);
+  return pd_list[len];
+}
+
+
+CORBA::NamedValue_ptr
+NVListImpl::add_value(const char* name, const CORBA::Any& value,
+		      CORBA::Flags flags)
+{
+  CORBA::ULong len = pd_list.length();
+
+  if( len == pd_list.maximum() )
+    pd_list.length(len * 6 / 5 + 1);
+
+  pd_list.length(len + 1);
+  pd_list[len] = new NamedValueImpl(name, value, flags);
+  return pd_list[len];
+}
+
+
+CORBA::NamedValue_ptr
+NVListImpl::add_item_consume(char* name, CORBA::Flags flags)
+{
+  CORBA::ULong len = pd_list.length();
+
+  if( len == pd_list.maximum() )
+    pd_list.length(len * 6 / 5 + 1);
+
+  pd_list.length(len + 1);
+  pd_list[len] = new NamedValueImpl(name, flags);
+  return pd_list[len];
+}
+
+
+CORBA::NamedValue_ptr
+NVListImpl::add_value_consume(char* name, CORBA::Any* value,
+			      CORBA::Flags flags)
+{
+  CORBA::ULong len = pd_list.length();
+
+  if( len == pd_list.maximum() )
+    pd_list.length(len * 6 / 5 + 1);
+
+  pd_list.length(len + 1);
+  pd_list[len] = new NamedValueImpl(name, value, flags);
+  return pd_list[len];
+}
+
+
+CORBA::NamedValue_ptr
+NVListImpl::item(CORBA::ULong index)
+{
+  return pd_list[index];
+}
+
+
+CORBA::Status
+NVListImpl::remove(CORBA::ULong index)
+{
+  // operator[] on the sequence will do the bounds check for us here
+  CORBA::release(pd_list[index]);
+
+  for( CORBA::ULong i = index; i < pd_list.length() - 1; i++ )
+    pd_list[i] = pd_list[i + 1];
+
+  pd_list.length(pd_list.length() - 1);
+  RETURN_CORBA_STATUS;
+}
+
+
+CORBA::Boolean
+NVListImpl::NP_is_nil() const
+{
+  return 0;
+}
+
+
+CORBA::NVList_ptr
+NVListImpl::NP_duplicate()
+{
+  incrRefCount();
+  return this;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class NilNVList : public CORBA::NVList {
+public:
+  virtual CORBA::ULong count() const {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::NamedValue_ptr add(CORBA::Flags) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return CORBA::NamedValue::_nil();
+  }
+  virtual CORBA::NamedValue_ptr add_item(const char*, CORBA::Flags) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return CORBA::NamedValue::_nil();
+  }
+  virtual CORBA::NamedValue_ptr add_value(const char*, const CORBA::Any&,
+					  CORBA::Flags) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return CORBA::NamedValue::_nil();
+  }
+  virtual CORBA::NamedValue_ptr add_item_consume(char*, CORBA::Flags) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return CORBA::NamedValue::_nil();
+  }
+  virtual CORBA::NamedValue_ptr add_value_consume(char*, CORBA::Any*,
+						  CORBA::Flags) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return CORBA::NamedValue::_nil();
+  }
+  virtual CORBA::NamedValue_ptr item(CORBA::ULong) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return CORBA::NamedValue::_nil();
+  }
+  virtual CORBA::Status remove(CORBA::ULong) {
+    _CORBA_invoked_nil_pseudo_ref();
+    RETURN_CORBA_STATUS;
+  }
+  virtual CORBA::Boolean NP_is_nil() const {
+    return 1;
+  }
+  virtual CORBA::NVList_ptr NP_duplicate() {
+    return _nil();
+  }
+};
+
+static NilNVList _nilNVList;
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+CORBA::NVList::~NVList() {}
+
+
+CORBA::NVList_ptr
+CORBA::
+NVList::_duplicate(NVList_ptr p)
+{
+  if( p )  return p->NP_duplicate();
+  else     return _nil();
+}
+
+
+CORBA::NVList_ptr
+CORBA::
+NVList::_nil()
+{
+  return &_nilNVList;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+void
+CORBA::release(NVList_ptr p)
+{
+  if( !p->NP_is_nil() )
+    ((NVListImpl*)p)->decrRefCount();
+}
+
+
+CORBA::Status
+CORBA::
+ORB::create_list(Long count, NVList_out new_list)
+{
+  new_list = new NVListImpl();
+
+  for( Long i = 0; i < count; i++ )
+    new_list._data->add(CORBA::Flags(0));
+
+  RETURN_CORBA_STATUS;
+}
+
+
+CORBA::Status
+CORBA::
+ORB::create_operation_list(OperationDef_ptr p, NVList_out new_list)
+{
+  new_list = NVList::_nil();
+
+  throw NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
+
+#ifdef NEED_DUMMY_RETURN
+  RETURN_CORBA_STATUS;
+#endif
+}
