@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2005/01/25 16:43:37  dgrisby
+  Properly handle data_in_buffer indicator.
+
   Revision 1.1.4.4  2005/01/17 14:46:19  dgrisby
   Windows SocketCollection implementation.
 
@@ -510,19 +513,19 @@ SocketHolder::setSelectable(CORBA::Boolean now,
     pd_belong_to->pd_pollfd_n = index + 1;
   }
 
-  pd_selectable     = 1;
-  pd_data_in_buffer = data_in_buffer;
+  pd_selectable      = 1;
+  pd_data_in_buffer |= data_in_buffer;
 
   pd_belong_to->pd_changed = 1;
 
-  if (data_in_buffer) {
+  if (pd_data_in_buffer) {
     // Force Select() to scan through the connections right away
     pd_belong_to->pd_abs_sec = pd_belong_to->pd_abs_nsec = 0;
   }
 
 #ifdef UnixArchitecture
   if (!hold_lock &&
-      (now || data_in_buffer || pd_belong_to->pd_idle_count == 0)) {
+      (now || pd_data_in_buffer || pd_belong_to->pd_idle_count == 0)) {
 
     // Wake up the Select thread by writing to the pipe.
     if (pd_belong_to->pd_pipe_write >= 0 && !pd_belong_to->pd_pipe_full) {
@@ -563,6 +566,11 @@ SocketHolder::Peek()
     }
     return 0;
   }
+  if (pd_data_in_buffer) {
+    pd_data_in_buffer = 0;
+    return 1;
+  }
+
   int timeout = (SocketCollection::scan_interval_sec * 1000 +
 		 SocketCollection::scan_interval_nsec / 1000000) / 2;
 
@@ -791,12 +799,12 @@ SocketHolder::setSelectable(CORBA::Boolean now,
     }
   }
 
-  pd_selectable     = 1;
-  pd_data_in_buffer = data_in_buffer;
+  pd_selectable      = 1;
+  pd_data_in_buffer |= data_in_buffer;
 
   pd_belong_to->pd_changed = 1;
 
-  if (data_in_buffer) {
+  if (pd_data_in_buffer) {
     // Force Select() to scan through the connections right away
     pd_belong_to->pd_abs_sec = pd_belong_to->pd_abs_nsec = 0;
   }
@@ -820,6 +828,11 @@ SocketHolder::Peek()
       l << "Socket " << (int)pd_socket << " in Peek() is not selectable.\n";
     }
     return 0;
+  }
+
+  if (pd_data_in_buffer) {
+    pd_data_in_buffer = 0;
+    return 1;
   }
 
   struct timeval timeout;
@@ -1045,19 +1058,19 @@ SocketHolder::setSelectable(CORBA::Boolean now,
     }
   }
 
-  pd_selectable     = 1;
-  pd_data_in_buffer = data_in_buffer;
+  pd_selectable      = 1;
+  pd_data_in_buffer |= data_in_buffer;
 
   pd_belong_to->pd_changed = 1;
 
-  if (data_in_buffer) {
+  if (pd_data_in_buffer) {
     // Force Select() to scan through the connections right away
     pd_belong_to->pd_abs_sec = pd_belong_to->pd_abs_nsec = 0;
   }
 
 #ifdef UnixArchitecture
   if (!hold_lock &&
-      (now || data_in_buffer || pd_belong_to->pd_idle_count == 0)) {
+      (now || pd_data_in_buffer || pd_belong_to->pd_idle_count == 0)) {
 
     // Wake up the Select thread by writing to the pipe.
     if (pd_belong_to->pd_pipe_write >= 0 && !pd_belong_to->pd_pipe_full) {
@@ -1098,6 +1111,11 @@ SocketHolder::Peek()
       l << "Socket " << (int)pd_socket << " in Peek() is not selectable.\n";
     }
     return 0;
+  }
+
+  if (pd_data_in_buffer) {
+    pd_data_in_buffer = 0;
+    return 1;
   }
 
   struct timeval timeout;
