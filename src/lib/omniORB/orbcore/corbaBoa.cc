@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.19  2003/07/25 16:05:42  dgrisby
+  BOA locking bug.
+
   Revision 1.16.2.18  2003/07/02 11:01:05  dgrisby
   Race condition in POA destruction.
 
@@ -514,6 +517,8 @@ omniOrbBOA::destroy()
     entry->setDead();
     entry = next;
   }
+
+  omni::internalLock->unlock();
 
   // Wait for objects which have been detached to complete
   // their etherealisations.
