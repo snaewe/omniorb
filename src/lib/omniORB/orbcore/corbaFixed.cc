@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.12  2003/02/25 12:35:20  dgrisby
+// Typo in assertion.
+//
 // Revision 1.1.2.11  2002/11/25 21:07:25  dgrisby
 // Add new to_string() function to Fixed.
 //
@@ -798,7 +801,7 @@ realSub(const CORBA::Fixed& a, const CORBA::Fixed& b, CORBA::Boolean negative)
     else carry = 0;
     work[wi++] = v;
   }
-  OMNIORB_ASSERT(bi = b.fixed_digits());
+  OMNIORB_ASSERT(bi == b.fixed_digits());
   OMNIORB_ASSERT(carry == 0);
 
   int digits = wi;
