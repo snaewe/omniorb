@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.25  2000/01/19 11:21:52  djs
+# *** empty log message ***
+#
 # Revision 1.24  2000/01/17 17:05:38  djs
 # Marshalling and constructed types fixes
 #
@@ -948,7 +951,7 @@ def visitUnion(node):
     deref_switchType = tyutil.deref(switchType)
 
     exhaustive = tyutil.exhaustiveMatch(switchType,
-                                        tyutil.allCaseValues(node))
+                                        tyutil.allCases(node))
     defaultCase = tyutil.getDefaultCaseAndMark(node)
     if defaultCase:
         defaultLabel = tyutil.getDefaultLabel(defaultCase)

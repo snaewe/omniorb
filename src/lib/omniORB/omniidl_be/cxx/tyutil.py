@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.30  2000/01/19 11:21:35  djs
+# *** empty log message ***
+#
 # Revision 1.29  2000/01/18 13:05:57  djs
 # Nice new memberType function
 #
@@ -900,6 +903,7 @@ def valueString(type, value, environment):
             # use the octal representation
             octal_string = str(oct(ord(value)))
             return "0" * (4 - len(octal_string)) + octal_string
+            #return "'\\" + "0" * (3 - len(octal_string)) + octal_string + "'" 
             #return r"'\00" + str(ord(value)) + r"'"
         if value in need_escaping:
             return "'\\" + str(value) + "'"
@@ -1046,7 +1050,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
 # ------------------------------------------------------------------
 
 
-def allCaseValues(node):
+def allCases(node):
     assert isinstance(node, idlast.Union)
     list = []
     for n in node.cases():

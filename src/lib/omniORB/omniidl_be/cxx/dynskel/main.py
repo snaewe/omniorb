@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  2000/01/19 11:23:48  djs
+# *** empty log message ***
+#
 # Revision 1.10  2000/01/17 17:06:56  djs
 # Better handling of recursive and constructed types
 #
@@ -517,7 +520,7 @@ def visitUnion(node):
     discrim_cname = mangler.canonTypeName(switchType)
     discrim_type = env.principalID(deref_switchType)
 
-    allCaseValues = tyutil.allCaseValues(node)
+    allCaseValues = tyutil.allCases(node)
     isExhaustive = tyutil.exhaustiveMatch(switchType, allCaseValues)
 
     default_case = None
