@@ -1,3 +1,19 @@
+Fri Feb  1 09:57:31 GMT 2002 dpg1
+=================================
+
+- Silly bug in string_to_object wil nil objref.
+
+src/lib/omniORB/orbcore/uri.cc
+
+- Add a ^L to comments.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+- strcasecmp/stricmp redefinition on Windows.
+
+src/tool/omniidl/cxx/idlsysdep.h
+
+
 Thu Jan 31 10:10:46 GMT 2002 dpg1
 =================================
 
