@@ -209,7 +209,7 @@ DIR_CPPFLAGS += -fPIC
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
@@ -666,7 +666,7 @@ lib = $(soname).$(micro_version)
 
 all:: $(lib)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
