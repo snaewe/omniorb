@@ -84,13 +84,14 @@ done
 
 #
 # Find the last argument to omake (the target) and cope with spaces, quotes,
-# etc inside arguments.
+# etc inside arguments.  Also we need to cope with an argument "-n" (which
+# echo likes to swallow).
 #
 
 while [ "$1" != "" ]; do
-  quotedArg=`echo $1 | sed "s/'/'\\\\\''/g"`
+  quotedArg=`echo x$1 | sed "s/^x//; s/'/'\\\\\''/g"`
   allArgs="$allArgs${allArgs+ }'$quotedArg'"
-  target=$1
+  target='$quotedArg'
   shift
 done
 
