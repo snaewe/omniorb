@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/12 17:15:35  dpg1
+# Verbose messages now written to stderr.
+#
 # Revision 1.3  1999/11/12 15:53:48  dpg1
 # New functions omniORB.importIDL() and omniORB.importIDLString().
 #
@@ -179,7 +182,8 @@ def main(argv=None):
     bemodules = []
     for backend in backends:
         if verbose:
-            print cmdname + ": Importing back-end `" + backend + "'"
+            sys.stderr.write(cmdname + ": Importing back-end `" +\
+                             backend + "'\n")
 
         try:
             be = __import__("omniidl.be." + backend,
@@ -209,8 +213,8 @@ def main(argv=None):
 
         if not no_preprocessor:
             if verbose:
-                print cmdname + ": Preprocessing `" + file + "' with `" + \
-                      preproc_cmd + "'"
+                sys.stderr.write(cmdname + ": Preprocessing `" +\
+                                 file + "' with `" + preproc_cmd + "'\n")
 
             if preprocessor_only:
                 err = os.system(preproc_cmd)
@@ -225,11 +229,11 @@ def main(argv=None):
         else:
             file = open(file, "r")
 
-        if verbose: print cmdname + ": Running front end"
+        if verbose: sys.stderr.write(cmdname + ": Running front end\n")
 
         if dump_only:
             if verbose:
-                print cmdname + ": Dumping"
+                sys.stderr.write(cmdname + ": Dumping\n")
             _omniidl.dump(file)
         else:
             tree = _omniidl.compile(file)
@@ -246,7 +250,8 @@ def main(argv=None):
             i = 0
             for backend in backends:
                 if verbose:
-                    print cmdname + ": Running back-end `" + backend + "'"
+                    sys.stderr.write(cmdname + ": Running back-end `" +\
+                                     backend + "'\n")
 
                 bemodules[i].run(tree, backends_args[i])
                 i = i + 1
