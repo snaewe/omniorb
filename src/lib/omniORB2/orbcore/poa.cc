@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2000/04/27 10:51:39  dpg1
+  Interoperable Naming Service
+
+  Add magic INS POA.
+
   Revision 1.1.2.15  2000/03/01 12:28:36  dpg1
   find_POA() now correctly throws AdapterNonExistent if an
   AdapterActivator fails to activate the POA.
@@ -347,6 +352,7 @@ static omni_tracedcondition adapteractivator_signal(&poa_lock);
 // to create a child POA.
 
 static omniOrbPOA* theRootPOA = 0;
+static omniOrbPOA* theINSPOA  = 0;
 // Protected by <poa_lock>.
 
 
@@ -925,7 +931,8 @@ omniOrbPOA::servant_to_id(PortableServer::Servant p_servant)
     while( id && id->adapter() != this )  id = id->servantsNextIdentity();
 
     if( id ) {
-      OMNIORB_ASSERT(!strcmp((const char*) pd_poaId, (const char*) id->key()));
+      OMNIORB_ASSERT(pd_poaIdSize == 0 ||
+		     !strcmp((const char*) pd_poaId, (const char*) id->key()));
       int idsize = id->keysize() - pd_poaIdSize;
       OMNIORB_ASSERT(idsize >= 0);
       PortableServer::ObjectId* ret = new PortableServer::ObjectId(idsize);
@@ -993,7 +1000,8 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
     while( id && id->adapter() != this )  id = id->servantsNextIdentity();
 
     if( id ) {
-      OMNIORB_ASSERT(!strcmp(pd_poaId, (const char*) id->key()));
+      OMNIORB_ASSERT(pd_poaIdSize == 0 ||
+		     !strcmp(pd_poaId, (const char*) id->key()));
       omniObjRef* objref = omni::createObjRef(p_servant->_mostDerivedRepoId(),
 					      CORBA::Object::_PD_repoId, id);
       OMNIORB_ASSERT(objref);
@@ -1449,7 +1457,22 @@ omniOrbPOA::omniOrbPOA(const char* name,
   pd_name = name;
   pd_manager = manager;
 
-  if( pd_parent ) {
+  if (pd_parent == (omniOrbPOA*)1) {
+    // This is the magic INS POA
+    OMNIORB_ASSERT(theRootPOA);
+    theRootPOA->incrRefCount();
+    pd_parent = theRootPOA;
+
+    int fnlen   = strlen(pd_parent->pd_fullname) + strlen(name) + 1;
+    pd_fullname = omni::allocString(fnlen);
+    strcpy(pd_fullname, pd_parent->pd_fullname);
+    strcat(pd_fullname, POA_NAME_SEP_STR);
+    strcat(pd_fullname, name);
+    
+    pd_poaIdSize = 0;
+    pd_poaId     = (const char*)"";
+  }
+  else if( pd_parent ) {
     int fnlen = strlen(parent->pd_fullname) + strlen(name) + 1;
     pd_fullname = omni::allocString(fnlen);
     strcpy(pd_fullname, parent->pd_fullname);
@@ -1592,6 +1615,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   if( pd_parent ) {
     pd_parent->lose_child(this);
     pd_parent = 0;
+    if (theINSPOA == this) theINSPOA = 0;
   } else {
     OMNIORB_ASSERT(theRootPOA == this);
     theRootPOA = 0;
@@ -1707,7 +1731,8 @@ omniOrbPOA::servant__this(PortableServer::Servant p_servant,
     while( id && id->adapter() != this )  id = id->servantsNextIdentity();
 
     if( id ) {
-      OMNIORB_ASSERT(!strcmp(pd_poaId, (const char*) id->key()));
+      OMNIORB_ASSERT(pd_poaIdSize == 0 ||
+		     !strcmp(pd_poaId, (const char*) id->key()));
       omniObjRef* objref = omni::createObjRef(p_servant->_mostDerivedRepoId(),
 					      repoId, id);
       OMNIORB_ASSERT(objref);
@@ -1786,6 +1811,43 @@ omniOrbPOA::rootPOA(int init_if_none)
 
   theRootPOA->incrRefCount();
   return theRootPOA;
+}
+
+
+PortableServer::POA_ptr
+omniOrbPOA::omniINSPOA()
+{
+  omni_tracedmutex_lock sync(poa_lock);
+
+  if (!theINSPOA) {
+    if (!theRootPOA)
+      ::initialise_poa();
+
+    omniOrbPOA::Policies policy;
+    policy.single_threaded     = 0;
+    policy.transient           = 0;
+    policy.multiple_id         = 0;
+    policy.user_assigned_id    = 1;
+    policy.retain_servants     = 1;
+    policy.req_processing      = omniOrbPOA::RPP_ACTIVE_OBJ_MAP;
+    policy.implicit_activation = 1;
+
+    omni_tracedmutex_lock sync2(theRootPOA->pd_lock);
+
+    if (theRootPOA->pd_dying)
+      OMNIORB_THROW(OBJ_ADAPTER, 0, CORBA::COMPLETED_NO);
+
+    omniOrbPOAManager* manager = new omniOrbPOAManager();
+
+    theINSPOA = new omniOrbPOA("omniINSPOA", manager, policy, (omniOrbPOA*)1);
+
+    theRootPOA->insert_child(theINSPOA);
+
+    manager->gain_poa(theINSPOA);
+    theINSPOA->adapterActive();
+  }
+  theINSPOA->incrRefCount();
+  return theINSPOA;
 }
 
 
