@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/01 16:39:29  dpg1
+# Small fixes.
+#
 # Revision 1.3  1999/11/01 10:05:51  dpg1
 # Various clean-ups.
 #
@@ -181,10 +184,11 @@ def main(argv):
 
             try:
                 exec "import be." + backend
-                exec "be." + backend + ".run(tree, backend_args)"
             except ImportError:
                 sys.stderr.write(omniidl + ": Could not import back-end `" + \
                                  backend + "'\n")
                 sys.exit(1)
+
+            exec "be." + backend + ".run(tree, backend_args)"
 
 main(sys.argv)
