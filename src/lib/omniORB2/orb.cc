@@ -11,6 +11,9 @@
  
 /*
   $Log$
+  Revision 1.5  1997/02/19 11:03:29  ewc
+  Added support for NT
+
   Revision 1.4  1997/01/23 16:53:35  sll
   Changed to use the static member variables defined in the class omniORB etc.
   Previously they were local static variables.
@@ -42,8 +45,15 @@
 #include "tcpSocket_UNIX.h"
 #elif defined(ATMosArchitecture)
 #include "tcpSocket_ATMos.h"
+#elif defined(NTArchitecture)
+#include "tcpSocket_NT.h"
 #else
 #error "No tcpSocket.h header for this architecture."
+#endif
+
+#ifdef __atmos__
+#include <kernel.h>
+#include <timelib.h>
 #endif
 
 // XXX Some work needs to be done to either remove the explicit reference
@@ -103,9 +113,47 @@ omniORB::init(int &argc,char **argv,const char *orb_identifier)
 
   objectRef_init();
 
+
+#ifdef __NT__
+
+  // Initialize WinSock:
+  
+  WORD versionReq;  
+  WSADATA wData; 
+  versionReq = MAKEWORD(1, 1);  // Nothing specific to releases > 1.1 used
+ 
+  int rc = WSAStartup(versionReq, &wData); 
+ 
+  if (rc != 0) 
+    {
+	// Couldn't find a usable DLL.
+      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);	
+    }
+ 
+  // Confirm that the returned Windows Sockets DLL supports 1.1
+ 
+  if ( LOBYTE( wData.wVersion ) != 1 || 
+           HIBYTE( wData.wVersion ) != 1 ) 
+    { 
+      // Couldn't find a usable DLL
+      WSACleanup(); 
+      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+    }
+
+  // Get configuration information:
+  // XXXXX: To be replaced by System Registry functions
+
+  configFile = new initFile;
+  configFile->initialize();
+  
+#else
+
   // Get configuration information:
   configFile = new initFile;
   configFile->initialize();
+
+#endif
+
 
   CORBA::ULong l = strlen("nobody")+1;
   CORBA::Octet *p = (CORBA::Octet *) "nobody";

@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.3  1997/01/22 14:33:51  ewc
-  Small bug fix to file read.
+  Revision 1.4  1997/02/19 11:01:59  ewc
+  Added support for NT
 
+// Revision 1.3  1997/01/22  14:33:51  ewc
+// Small bug fix to file read.
+//
 // Revision 1.2  1997/01/21  15:05:43  ewc
 // Minor change: Moved #defines to header files.
 //
@@ -30,6 +33,14 @@
 #include <kernel.h>
 #endif
 
+#ifdef  __NT__
+
+#ifndef CONFIG_DEFAULT_LOCATION
+// MSVC++ 4.2 through ODE doesn't like specifying this on command line:
+#define CONFIG_DEFAULT_LOCATION  "\\\\shallot\\omni\\var\\omniorb.cfg"
+#endif
+
+#endif
 
 #include <omniORB2/CORBA.h>
 
@@ -54,13 +65,20 @@ char* config_fname;
 
 // Get filename:
 
-#if defined(UnixArchitecture)
+#if defined(UnixArchitecture) || defined(NTArchitecture)
+
+// XXXXXX
+// Eventually, use system registry for Windows NT
 
 char* tmp_fname;
 
 if ((tmp_fname = getenv("OMNIORB_CONFIG")) == NULL)
   {
-    config_fname = strdup("/etc/omniORB.cfg");
+#if defined(UnixArchitecture)
+    config_fname = strdup(CONFIG_DEFAULT_LOCATION);
+#elif defined(NTArchitecture)
+    config_fname = strdup(CONFIG_DEFAULT_LOCATION);
+#endif
   }
 else
   {
@@ -152,7 +170,7 @@ while(getnextentry(entryname,data))
 	kprintf("Configuration error:  ");
 	kprintf("Unknown field (%s) found in configutation file.\n",entryname);
 #endif
-	exit(-1);
+	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
       }
 
     delete[] entryname;
@@ -248,7 +266,7 @@ kprintf("Multiple entries found for field %s in configuration file.\n",
 	                                                       entryname);
 #endif
 
-exit(-1);
+throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 }
 
 
@@ -262,7 +280,7 @@ kprintf("Configuration error: No data found for field %s",entryname);
 kprintf(" in configuration file.\n");
 #endif
 
-exit(-1);
+throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 }
 
 
@@ -274,7 +292,7 @@ cerr << "Configuration error: Parse error in config file." << endl;
 kprintf("Configuration error: Parse error in config file.\n");
 #endif
 
-exit(-1);
+throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 }
 
 
@@ -288,6 +306,6 @@ kprintf("Configuration error: Invalid object reference supplied for %s.\n",
 	entryname);
 #endif
 
-exit(-1);
+throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 }
 
