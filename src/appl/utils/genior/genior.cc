@@ -262,7 +262,7 @@ genRef(const char* IRTypeId, const char* hostname, int port,
 	if (curr >= '0' && curr <= '9')
 	  hi = ((curr - '0') << 4);
 	else if (curr >= 'a' && curr <='f')
-	  hi = ((curr - 'a') << 4);
+	  hi = ((curr - 'a' + 10) << 4);
 	else {
 	  cerr << "Hexadecimal key is corrupted." << endl;
 	  return 0;
@@ -271,7 +271,7 @@ genRef(const char* IRTypeId, const char* hostname, int port,
 	if (curr >= '0' && curr <= '9')
 	  lo = curr - '0';
 	else if (curr >= 'a' && curr <='f')
-	  lo = curr - 'a';
+	  lo = curr - 'a' + 10;
 	else {
 	  cerr << "Hexadecimal key is corrupted." << endl;
 	  return 0;
