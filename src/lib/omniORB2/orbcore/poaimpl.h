@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  1999/09/30 11:52:32  djr
+  Implemented use of AdapterActivators in POAs.
+
   Revision 1.1.2.3  1999/09/28 10:54:35  djr
   Removed pretty-printing of object keys from object adapters.
 
@@ -290,6 +293,31 @@ private:
   // Calls the ServantLocator::postinvoke() method.  Used by
   // dispatch_to_sl() above.
 
+  omniOrbPOA* attempt_to_activate_adapter(const char* name);
+  // Attempts to activate a child POA by invoking the AdapterActivator.
+  // Returns 0 on failure, or the new child on sucess.  Does not
+  // increment the ref count of the returned POA.  If another thread is
+  // already doing so, then waits until it has finished, and returns
+  // the result of that attempt.
+  //  Should only be called if we have an adapter activator, and the
+  // child does not currently exist (or is dying).
+  //  Must hold <poa_lock>.  It is still held on return, but is
+  // released during the execution of this method.
+
+  int start_adapteractivating_child_or_block(const char* name);
+  // If we are already attempting to activate a child with this name,
+  // block until we finish, and return 0.  Otherwise record the fact
+  // that we are starting, and return 1.
+  //  Must hold <poa_lock>.
+
+  void finish_adapteractivating_child(const char* name);
+  //  Must hold <poa_lock>.
+
+  int is_adapteractivating_child(const char* name);
+  // Returns true if this POA is in the process of invoking an
+  // AdapterActivator to create the child <name>.
+  //  Must hold <poa_lock>.
+
 
   class Etherealiser : public omniTaskQueue::Task {
   public:
@@ -344,7 +372,7 @@ private:
   // We don't own a reference to the parent -- it holds a
   // reference to us.  This is nil only for a POA which has
   // been destroyed, and the root poa.
-  //  Mutable.  Protected by <pd_lock>.
+  //  Mutable.  Protected by <poa_lock>.
 
   omniOrbPOAManager*                   pd_manager;
   // We hold a reference to this.
@@ -352,7 +380,12 @@ private:
 
   PortableServer::AdapterActivator_ptr pd_adapterActivator;
   // May be 0.
-  //  Mutable.  Protected by <pd_lock>.
+  //  Mutable.  Protected by <poa_lock>.
+
+  omnivector<const char*>              pd_adptrActvtnsInProgress;
+  // List of names of child POAs which we are in the process
+  // of activating using AdapterActivators.  This is likely to
+  // be empty most of the time!
 
   PortableServer::ServantActivator_ptr pd_servantActivator;
   PortableServer::ServantLocator_ptr   pd_servantLocator;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  1999/09/30 11:52:32  djr
+  Implemented use of AdapterActivators in POAs.
+
   Revision 1.1.2.4  1999/09/28 10:54:34  djr
   Removed pretty-printing of object keys from object adapters.
 
@@ -303,6 +306,10 @@ static omni_tracedmutex     servant_activator_lock;
 // comes before all other locks in the partial order -- since
 // it is held whilst making an upcall into application code.
 
+static omni_tracedcondition adapteractivator_signal(&poa_lock);
+// Used to signal between threads when using an AdapterActivator
+// to create a child POA.
+
 static omniOrbPOA* theRootPOA = 0;
 // Protected by <poa_lock>.
 
@@ -365,11 +372,15 @@ omniOrbPOA::create_POA(const char* adapter_name,
   omniOrbPOA* poa = new omniOrbPOA(adapter_name, (omniOrbPOAManager*) manager,
 				   policy, this);
 
-  ((omniOrbPOAManager*) manager)->gain_poa(poa);
-
   insert_child(poa);
 
   poa->adapterActive();
+
+  // Need to ensure state is not changed from HOLDING if POA is
+  // being created by an adapter activator.  So in this case do
+  // not attach ourselves to the manager.
+  if( !is_adapteractivating_child(adapter_name) )
+    ((omniOrbPOAManager*) manager)->gain_poa(poa);
 
   poa->pd_refCount++;
   return poa;
@@ -393,9 +404,9 @@ omniOrbPOA::find_POA(const char* adapter_name, CORBA::Boolean activate_it)
 
   if( !activate_it || !pd_adapterActivator )  throw AdapterNonExistent();
 
-  OMNIORB_ASSERT(/*?? Activate the POA NYI */ 0);
+  poa = attempt_to_activate_adapter(adapter_name);
 
-  return 0;
+  return poa;
 }
 
 
@@ -474,7 +485,7 @@ PortableServer::POA_ptr
 omniOrbPOA::the_parent()
 {
   CHECK_NOT_NIL();
-  omni_tracedmutex_lock sync(pd_lock);
+  omni_tracedmutex_lock sync(poa_lock);
   CHECK_NOT_DESTROYED();
 
   return pd_parent ? PortableServer::POA::_duplicate(pd_parent)
@@ -515,11 +526,11 @@ omniOrbPOA::the_activator()
 {
   CHECK_NOT_NIL_OR_DESTROYED();
 
-  pd_lock.lock();
+  poa_lock.lock();
   PortableServer::AdapterActivator_ptr ret = pd_adapterActivator ?
     PortableServer::AdapterActivator::_duplicate(pd_adapterActivator) :
     PortableServer::AdapterActivator::_nil();
-  pd_lock.unlock();
+  poa_lock.unlock();
 
   return ret;
 }
@@ -530,13 +541,16 @@ omniOrbPOA::the_activator(PortableServer::AdapterActivator_ptr aa)
 {
   CHECK_NOT_NIL_OR_DESTROYED();
 
-  PortableServer::AdapterActivator_ptr tmp =
+  PortableServer::AdapterActivator_ptr neww =
     PortableServer::AdapterActivator::_duplicate(aa);
+  if( CORBA::is_nil(neww) )  neww = 0;
 
-  pd_lock.lock();
-  if( pd_adapterActivator )  CORBA::release(pd_adapterActivator);
-  pd_adapterActivator = tmp;
-  pd_lock.unlock();
+  poa_lock.lock();
+  PortableServer::AdapterActivator_ptr old = pd_adapterActivator;
+  pd_adapterActivator = neww;
+  poa_lock.unlock();
+
+  if( old )  CORBA::release(old);
 }
 
 
@@ -1393,6 +1407,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
     pd_servantActivator(0),
     pd_servantLocator(0),
     pd_defaultServant(0),
+    pd_rq_state(PortableServer::POAManager::HOLDING),
     pd_call_lock(0),
     pd_deathSignal(&pd_lock),
     pd_oidIndex(0),
@@ -1403,9 +1418,6 @@ omniOrbPOA::omniOrbPOA(const char* name,
 
   pd_name = name;
   pd_manager = manager;
-  // Who ever called us calls gain_poa() on the manager.
-
-  pd_rq_state = pd_manager->get_state();
 
   if( pd_parent ) {
     int fnlen = strlen(parent->pd_fullname) + strlen(name) + 1;
@@ -1472,16 +1484,10 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   ASSERT_OMNI_TRACEDMUTEX_HELD(poa_lock, 0);
   OMNIORB_ASSERT(pd_dying);
 
-#if 1
   while( pd_children.length() ) {
     try { pd_children[0]->destroy(etherealize_objects, 1); }
     catch(...) {}
   }
-#else
-  //??
-  for( CORBA::ULong i = 0; i < pd_children.length(); i++ )
-    pd_children[i]->destroy(etherealize_objects, 1);
-#endif
 
   OMNIORB_ASSERT(pd_children.length() == 0);
 
@@ -1625,8 +1631,8 @@ omniOrbPOA::pm_deactivate(_CORBA_Boolean etherealize_objects)
   if( pd_activeObjList )  pd_activeObjList->reRootOAObjList(&obj_list);
   PortableServer::ServantActivator_ptr sa = pd_servantActivator;
 
-  // We pretend to detach an object here, so that if someone
-  // tries to destroy this POA, they will have to block
+  // We pretend to detach an object here, so that if some other
+  // thread tries to destroy this POA, they will have to block
   // until we've finished etherealising these objects.
   if( obj_list )  detached_object();
   pd_lock.unlock();
@@ -1796,10 +1802,17 @@ omniOrbPOA::getAdapter(const _CORBA_Octet* key, int keysize)
 
     if( !child || child->pd_dying ) {
       if( poa->pd_adapterActivator ) {
-	//?? Attempt to activate the adapter ...
-	OMNIORB_ASSERT(0);
+	// We need to extract the name properly here.
+	int namelen = k - name;
+	char* thename = new char[namelen + 1];
+	memcpy(thename, name, namelen);
+	thename[namelen] = '\0';
+
+	if( !(child = poa->attempt_to_activate_adapter(thename)) )
+	  return 0;
       }
-      return 0;
+      else
+	return 0;
     }
 
     poa = child;
@@ -1847,10 +1860,17 @@ omniOrbPOA::create_new_key(omniObjKey& key_out, const CORBA::Octet** id,
   key_out.set_size(pd_poaIdSize + SYS_ASSIGNED_ID_SIZE);
   CORBA::Octet* k = key_out.write_key();
 
+  _CORBA_ULong idx = pd_oidIndex;
+  if (omni::myByteOrder) {
+    idx = (((idx & 0xff000000) >> 24) |
+	   ((idx & 0x00ff0000) >> 8 ) |
+	   ((idx & 0x0000ff00) << 8 ) |
+	   ((idx & 0x000000ff) << 24));
+  }
+
   memcpy(k, (const char*) pd_poaId, pd_poaIdSize);
-  memcpy(k + pd_poaIdSize, (const CORBA::Octet*) &pd_oidIndex,
+  memcpy(k + pd_poaIdSize, (const CORBA::Octet*) &idx,
 	 SYS_ASSIGNED_ID_SIZE);
-  //?? not 64-bit clean.  + want it to be always little-endian.
 
   pd_oidIndex++;
 
@@ -2371,6 +2391,108 @@ omniOrbPOA::call_postinvoke(PortableServer::ServantLocator_ptr sl,
   }
   if( pd_policy.single_threaded )  pd_call_lock->unlock();
   exitAdapter();
+}
+
+
+omniOrbPOA*
+omniOrbPOA::attempt_to_activate_adapter(const char* name)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(poa_lock, 1);
+  OMNIORB_ASSERT(name);
+  OMNIORB_ASSERT(pd_adapterActivator);
+
+  // Record the fact that we are activating a child with
+  // this name, so that when it is created it will be
+  // put in the HOLDING state (regardless of what its
+  // POAManager says).
+  //  Check that some other thread isn't trying to activate
+  // said POA.  If so wait until it is finished, and if it
+  // suceeded, return that POA or fail if it failed.
+  if( !start_adapteractivating_child_or_block(name) )
+    return find_child(name);
+
+  poa_lock.unlock();
+
+  if( omniORB::trace(10) )
+    omniORB::logf("Attempting to activate POA '%s' using an AdapterActivator",
+		  name);
+
+  CORBA::Boolean ret = 0;
+
+  try {
+    ret = pd_adapterActivator->unknown_adapter(this, name);
+  }
+  catch(...) {
+    omniORB::logs(5,
+		  "AdapterActivator::unknown_adapter() raised an exception!");
+  }
+
+  poa_lock.lock();
+
+  finish_adapteractivating_child(name);
+
+  if( ret == 0 )  return 0;
+  omniOrbPOA* p = find_child(name);
+  if( !p )  return 0;
+
+  // <p> was not attached to its manager at creation time (to
+  // prevent state changes before initialisation was complete),
+  // so we do it here.
+  p->pd_manager->gain_poa(p);
+
+  return p;
+}
+
+
+int
+omniOrbPOA::start_adapteractivating_child_or_block(const char* name)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(poa_lock, 1);
+
+  if( is_adapteractivating_child(name) ) {
+    do {
+      adapteractivator_signal.wait();
+    } while( is_adapteractivating_child(name) );
+    return 0;
+  }
+
+  pd_adptrActvtnsInProgress.push_back(name);
+
+  return 1;
+}
+
+
+void
+omniOrbPOA::finish_adapteractivating_child(const char* name)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(poa_lock, 1);
+
+  omnivector<const char*>::iterator i, last;
+  i = pd_adptrActvtnsInProgress.begin();
+  last = pd_adptrActvtnsInProgress.end();
+
+  while( i != last && strcmp(*i, name) )  i++;
+
+  OMNIORB_ASSERT(i != last);
+
+  pd_adptrActvtnsInProgress.erase(i);
+
+  adapteractivator_signal.broadcast();
+}
+
+
+int
+omniOrbPOA::is_adapteractivating_child(const char* name)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(poa_lock, 1);
+
+  omnivector<const char*>::iterator i, last;
+  i = pd_adptrActvtnsInProgress.begin();
+  last = pd_adptrActvtnsInProgress.end();
+
+  while( i != last && strcmp(*i, name) )  i++;
+
+  return i != last;
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/30 11:52:33  djr
+  Implemented use of AdapterActivators in POAs.
+
   Revision 1.1.2.1  1999/09/22 14:27:02  djr
   Major rewrite of orbcore to support POA.
 
@@ -75,7 +78,11 @@ public:
   // Internal //
   //////////////
   void gain_poa(omniOrbPOA* poa);
+  // Adds <poa> to our list of POAs, and if our state is not
+  // HOLDING, updates the POAs state to match our own.
+
   void lose_poa(omniOrbPOA* poa);
+
 
   typedef _CORBA_Pseudo_Unbounded_Sequence<omniOrbPOA*,omniOrbPOA*> POASeq;
 

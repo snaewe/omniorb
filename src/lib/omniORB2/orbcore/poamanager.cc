@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/30 11:52:33  djr
+  Implemented use of AdapterActivators in POAs.
+
   Revision 1.1.2.1  1999/09/22 14:27:02  djr
   Major rewrite of orbcore to support POA.
 
@@ -294,8 +297,8 @@ omniOrbPOAManager::_NP_decrRefCount()
 
   if( pd_poas.length() ) {
     pm_lock.unlock();
-    omniORB::logs(1, "The application has released a reference to a "
-		  "POAManager\n"
+    omniORB::logs(1,
+		  "The application has released a reference to a POAManager\n"
 		  " too many times.  This is a serious application error!");
     return;
   }
@@ -318,6 +321,14 @@ omniOrbPOAManager::gain_poa(omniOrbPOA* poa)
 
   pd_poas.length(pd_poas.length() + 1);
   pd_poas[pd_poas.length() - 1] = poa;
+
+  switch( pd_state ) {
+  case HOLDING:
+    break;
+  default:
+    poa->pm_change_state(pd_state);
+    break;
+  }
 }
 
 
