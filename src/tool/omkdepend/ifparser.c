@@ -99,13 +99,7 @@ parse_number (g, cp, valp)
     if (!isdigit(*cp))
 	return CALLFUNC(g, handle_error) (g, cp, "number");
 
-#ifdef WIN32
     *valp = strtol(cp, &cp, 0);
-#else
-    *valp = atoi (cp);
-    /* EMPTY */
-    for (cp++; (isxdigit(*cp) || (*cp == 'x')); cp++) ;
-#endif
     return cp;
 }
 
@@ -208,8 +202,6 @@ parse_product (g, cp, valp)
 	break;
 
       case '/':
-	if (cp[1] == '/')
-	    break;
 	DO (cp = parse_product (g, cp + 1, &rightval));
 	*valp = (*valp / rightval);
 	break;
