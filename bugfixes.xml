@@ -8,6 +8,17 @@
 
 <buglist>
 
+<bug id="4" date="Wed Aug 23 16:44:36 BST 2000" user="djs">
+
+  <summary>MSVC5/6 marshalling multidimensional arrays of basic types</summary>
+  <reported>dme</reported>
+  <text>MSVC5/6 fail to resolve the correct operator[] when marshalling
+        a multidimensional array of basic types, only in the return case
+        (not when using an out type)
+  </text>
+</bug>
+
+
 <bug id="3" date="Tue Aug 22 15:48:11 BST 2000" user="sll">
 
   <summary>"Unexpected" exception at initialization</summary>

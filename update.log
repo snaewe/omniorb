@@ -1,3 +1,13 @@
+Wed Aug 23 16:44:36 BST 2000 djs
+================================
+
+- MSVC5/6 bug workaround when marshalling a multidimensional array
+  of basic things (only as a return type, not as an out type)
+  -- bug number 4
+
+src/lib/omniORB2/omniidl_be/cxx/skutil.py
+
+
 Tue Aug 22 15:53:40 BST 2000 sll
 ================================
 
