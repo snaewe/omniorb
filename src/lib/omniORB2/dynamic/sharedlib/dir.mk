@@ -141,7 +141,7 @@ DYN2_SRCS = bootstrapDynSK.cc NamingDynSK.cc \
 	    dynAny.cc dynAnyNil.cc \
 	    namedValue.cc nvList.cc exceptionList.cc contextList.cc \
 	    environment.cc context.cc deferredRequest.cc unknownUserExn.cc \
-            proxyCall.o wrongTranExn.cc \
+            proxyCall.cc wrongTranExn.cc \
 	    request.cc serverRequest.cc dynamicImplementation.cc \
 	    pseudoBase.cc dynException.cc ir.cc \
 	    irstub.cc irdynstub.cc corbaidlstub.cc corbaidldynstub.cc \
