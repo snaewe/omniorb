@@ -8,6 +8,16 @@
 
 <buglist>
 
+<bug id="11" date="Tue Sep 19 10:08:31 BST 2000" user="dpg1">
+
+  <summary>Bug when assigning a String_var to itself</summary>
+  <reported>Stefan Engelhardt</reported>
+  <text>
+  Assigning a String_var to itself would incorrectly delete the string
+  contents.
+  </text>
+</bug>
+
 <bug id="10" date="Wed Sep 13 10:09:43 BST 2000" user="djs">
 
   <summary>omniidl/C++ bug with unions with implicit default members</summary>

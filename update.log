@@ -1,3 +1,34 @@
+Tue Sep 19 10:08:31 BST 2000 dpg1
+=================================
+
+- String_var, _member, _element operator= now check for
+  self-assignment.
+
+include/omniORB3/stringtypes.h
+
+- Explicit private declarations for inheritance from omniNilDynAny. Is
+  this correct? ***
+
+src/lib/omniORB2/dynamic/dynAnyNil.cc
+
+- Standard C++ does not permit type definitions in anonymous unions
+
+src/lib/omniORB2/dynamic/typecode.h
+
+- Cast to wrong type in _ptrToObjRef()
+
+src/lib/omniORB2/orbcore/poamanager.cc
+
+- Dodgy-looking line in rules for Digital Unix
+
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+
+- Scope::Entry::Kind renamed to Scope::Entry::EntryKind to avoid
+  problems with over-keen compilers
+
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlscope.h
+
 
 Wed Sep 13 14:55:26 BST 2000 djr
 ================================
