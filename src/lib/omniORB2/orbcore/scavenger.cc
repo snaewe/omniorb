@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.10.2.5  2001/05/29 11:09:15  sll
+  Updated scavenger code.
+
   Revision 1.10.2.4  2000/01/07 15:44:57  djr
   Call timeouts are now disabled by default.
 
@@ -319,10 +322,7 @@ omniORB_Scavenger::run_undetached(void*)
   LOGMESSAGE(15,"","start.");
 
   unsigned long abs_sec,abs_nsec;
-  omni_thread::get_time(&abs_sec,&abs_nsec);
-
-  if (ScanPeriod)
-    abs_sec += ScanPeriod;
+  omni_thread::get_time(&abs_sec,&abs_nsec,ScanPeriod);
 
   omni_mutex_lock sync(pd_mutex);
 
@@ -333,14 +333,13 @@ omniORB_Scavenger::run_undetached(void*)
       poke = pd_cond.timedwait(abs_sec,abs_nsec);
       if (poke) {
 	LOGMESSAGE(15,"","woken by poke()");
-	omni_thread::get_time(&abs_sec,&abs_nsec);	
-	abs_sec += ScanPeriod;
+	omni_thread::get_time(&abs_sec,&abs_nsec,ScanPeriod);
       }
     }
     else {
       // inScanPeriod == 0 implies stop the scan. Block here indefinitely.
       pd_cond.wait();
-      omni_thread::get_time(&abs_sec,&abs_nsec);	
+      omni_thread::get_time(&abs_sec,&abs_nsec);
     }
 
     if (poke || pd_isdying) continue;
@@ -370,7 +369,7 @@ omniORB_Scavenger::run_undetached(void*)
       }
     }
 
-    abs_sec += ScanPeriod;
+    omni_thread::get_time(&abs_sec,&abs_nsec,ScanPeriod);
   }
 
   LOGMESSAGE(15,"","exit.");
