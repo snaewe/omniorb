@@ -81,8 +81,8 @@
           <ul><li>Update from <a href="cvs.html">CVS</a> in the
                   <code>"omni3_develop"</code> branch.</li>
 
-              <li>Apply <a href="ftp://ftp.uk.research.att.com/pub/omniORB/omniORB3/omniORB_302_bugfixes.patch">this
-                  patch</a> to the omniORB 3.0.2 distribution.</li>
+              <li>Apply <a href="ftp://ftp.uk.research.att.com/pub/omniORB/omniORB3/omniORB_303_bugfixes.patch">this
+                  patch</a> to the omniORB 3.0.3 distribution.</li>
 
               <li>Download the latest <a
               href="ftp://ftp.uk.research.att.com/pub/omniORB/omniORB_3_snapshots/">source

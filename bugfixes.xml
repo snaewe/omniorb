@@ -8,6 +8,34 @@
 
 <buglist version="3.0.3">
 
-<nobugs/>
+<bug id="2" date="Tue Mar 20 16:55:07 GMT 2001" user="dpg1">
+
+  <summary>Incorrect DynSK stubs for some recursive types</summary>
+  <reported>Lars Immisch</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-03/0101.html"/>
+  <text>
+  The IDL compiler C++ back-end would generate incorrect TypeCode
+  constants for IDL like <p/>
+  <pre>
+    struct S {
+      sequence &lt;sequence &lt;S&gt; &gt; a;
+    };
+  </pre>
+  </text>
+</bug>
+
+<bug id="1" date="Tue Mar 20 16:55:07 GMT 2001" user="dpg1">
+
+  <summary>Memory corruption when initialising multiply-recursive
+  structures</summary>
+  <reported>Marcus Bullingham</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-02/0259.html"/>
+  <text>
+  IDL types where there was more than one recursion to the same type
+  would corrupt memory, sometimes leading to a crash.
+  </text>
+</bug>
 
 </buglist>

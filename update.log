@@ -1,3 +1,15 @@
+Tue Mar 20 16:55:07 GMT 2001 dpg1
+=================================
+
+- Memory corruption with multiply-recursive TypeCode.
+
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+
+- Incorrect TypeCode constants for some recursive sequences.
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
 
 Wed Mar  7 12:27:05 GMT 2001 djr
 ================================
