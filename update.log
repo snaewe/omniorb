@@ -1,3 +1,10 @@
+Fri Dec 19 10:57:44 GMT 1997 sll
+================================
+
+- New platform file to use egcs-1.0 with thread-safe exception handling.
+
+mk/platforms/i586_linux_2.0_egcs.mk   NEW
+
 Thu Dec 18 18:43:44 GMT 1997 bjh
 ================================
 
