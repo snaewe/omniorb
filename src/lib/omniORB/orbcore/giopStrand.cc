@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2001/09/10 17:51:46  sll
+  Scavenger now manages passive connections as well.
+  Send CloseConnection message when a scavenger close a connection.
+
   Revision 1.1.4.10  2001/09/03 16:56:09  sll
   Make sure that the deadline is set to 0.
 
@@ -131,8 +135,9 @@ private:
 ////////////////////////////////////////////////////////////////////////
 giopStrand::giopStrand(const giopAddress* addr) :
   pd_safelyDeleted(0),
+  idlebeats(-1),
   biDir(0), address(addr), connection(0), server(0),
-  gatekeeper_checked(0),first_use(1), 
+  gatekeeper_checked(0),first_use(1),orderly_closed(0),
   biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
   rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
@@ -140,7 +145,6 @@ giopStrand::giopStrand(const giopAddress* addr) :
   seqNumber(0), head(0), spare(0), pd_state(ACTIVE)
 {
   version.major = version.minor = 0;
-  resetIdleCounter(idleOutgoingBeats);
   Scavenger::notify();
   // Call scavenger::notify() to cause the scavenger thread to be
   // created if it hasn't been created already.
@@ -149,8 +153,9 @@ giopStrand::giopStrand(const giopAddress* addr) :
 ////////////////////////////////////////////////////////////////////////
 giopStrand::giopStrand(giopConnection* conn, giopServer* serv) :
   pd_safelyDeleted(0),
+  idlebeats(-1),
   biDir(0), address(0), connection(conn), server(serv),
-  gatekeeper_checked(0),first_use(0), 
+  gatekeeper_checked(0),first_use(0),orderly_closed(0),
   biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
   rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
@@ -158,9 +163,9 @@ giopStrand::giopStrand(giopConnection* conn, giopServer* serv) :
   seqNumber(1), head(0), spare(0), pd_state(ACTIVE)
 {
   version.major = version.minor = 0;
-  resetIdleCounter(idleIncomingBeats);
-  // Do not call scavenger::notify() because passive strands are not
-  // looked after by the scavenger.
+  Scavenger::notify();
+  // Call scavenger::notify() to cause the scavenger thread to be
+  // created if it hasn't been created already.
 
   if (omniORB::trace(20)) {
     omniORB::logger log;
@@ -451,21 +456,21 @@ giopStrand::releaseServer(IOP_S* iop_s)
 
   giop_s->rdUnLock();
   giop_s->wrUnLock();
-
-  giopStrand* s = &((giopStrand&)(*(giopStream*)giop_s));
   giop_s->giopStreamList::remove();
 
   CORBA::Boolean remove = 0;
+  CORBA::Boolean restart_idle = 1;
 
-  if ( s->state() == giopStrand::DYING ) {
+  if ( state() == giopStrand::DYING ) {
     remove = 1;
+    restart_idle = 0;
 
     // We have to go through the GIOP_S list and delete any ones
     // that are in the Unused and InputFullyBuffered states.
     // We can also delete the ones in InputPartiallyBuffered state
     // if no one is holding the Read lock. See the "theory of operation"
     // in acquireServer() for more info.
-    CORBA::Boolean remove_partial = !giopStream::RdLockIsHeld(s);
+    CORBA::Boolean remove_partial = !giopStream::RdLockIsHeld(this);
     giopStreamList* p = servers.next;
     while (p != &servers) {
       GIOP_S* sp = (GIOP_S*)p;
@@ -485,18 +490,30 @@ giopStrand::releaseServer(IOP_S* iop_s)
       p = p->next;
     }
 
-    s->safeDelete();
+    safeDelete();
   }
-  else if ( !giopStreamList::is_empty(s->servers) ) {
+  else if ( !giopStreamList::is_empty(servers) ) {
     remove = 1;
+    giopStreamList* p = servers.next;
+    while (p != &servers) {
+      GIOP_S* sp = (GIOP_S*)p;
+      if (sp->state() > IOP_S::WaitForRequestHeader) {
+	restart_idle = 0;
+      }
+      p = p->next;
+    }
   }
   else {
     giop_s->state(IOP_S::UnUsed);
-    giop_s->giopStreamList::insert(s->servers);
-    s->resetIdleCounter(idleIncomingBeats);
+    giop_s->giopStreamList::insert(servers);
   }
 
   if (remove) delete giop_s;
+
+  if (restart_idle && !biDir) {
+    CORBA::Boolean success = startIdleCounter();
+    OMNIORB_ASSERT(success);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -528,6 +545,38 @@ CORBA::ULong giopStrand::idleIncomingBeats = 36;
 CORBA::ULong giopStrand::idleOutgoingBeats = 24;
 
 ////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopStrand::startIdleCounter() {
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+
+  if (idlebeats >= 0) 
+    // The idle counter is already active or has already expired.
+    return 0;
+  
+  if (isClient()) {
+    idlebeats = (idleOutgoingBeats) ? (CORBA::Long)idleOutgoingBeats : -1;
+  }
+  else {
+    idlebeats = (idleIncomingBeats) ? (CORBA::Long)idleIncomingBeats : -1;
+  }
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopStrand::stopIdleCounter() {
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+
+  if (idlebeats == 0)
+    // The idle counter has already expired.
+    return 0;
+
+  idlebeats = -1;
+  return 1;
+}
+
+
+////////////////////////////////////////////////////////////////////////
 void
 Scavenger::removeIdle(StrandList& src,StrandList& dest,
 		      CORBA::Boolean skip_bidir)
@@ -535,18 +584,23 @@ Scavenger::removeIdle(StrandList& src,StrandList& dest,
   StrandList* p = src.next;
   while (p != &src) {
     giopStrand* s = (giopStrand*)p;
-    if ( (!s->biDir || !skip_bidir) && 
-	  ( giopStreamList::is_empty(s->clients) ||
-	    ((GIOP_C*)s->clients.next)->state() == IOP_C::UnUsed ) )
-      {
-	if (--(s->idlebeats) <= 0) {
-	  p = p->next;
-	  s->StrandList::remove();
-	  s->RopeLink::remove();
-	  s->StrandList::insert(dest);
-	  continue;
-	}
+
+    if ( s->idlebeats >= 0 ) {
+
+      if (omniORB::trace(30)) {
+	omniORB::logger log;
+	log << "Scavenger reduce idle count for strand "
+	    << (void*)s << " to " << (s->idlebeats - 1) << "\n";
       }
+      if (--(s->idlebeats) <= 0) {
+	p = p->next;
+	s->StrandList::remove();
+	s->RopeLink::remove();
+	s->StrandList::insert(dest);
+	continue;
+      }
+    }
+
     p = p->next;
   }
 }
@@ -570,11 +624,12 @@ Scavenger::execute()
 
     if (omniORB::trace(30)) {
       omniORB::logger log;
-      log << "Scan for idle outgoing connections ("
+      log << "Scan for idle connections ("
 	  << abs_sec << "," << abs_nsec << ")\n";
     }
 
-    StrandList shutdown_list;
+    StrandList client_shutdown_list;
+    StrandList server_shutdown_list;
     {
       // Collect all the strands that should be removed
       // We want to minimise the time we hold the omniTransportLock.
@@ -585,29 +640,70 @@ Scavenger::execute()
 
       // Notice that only those strands that have no other threads touching
       // them will be scanned and may be removed.
-      removeIdle(giopStrand::active_timedout,shutdown_list,0);
-      removeIdle(giopStrand::active,shutdown_list,1);
+      removeIdle(giopStrand::active_timedout,client_shutdown_list,0);
+      removeIdle(giopStrand::active,client_shutdown_list,1);
+      removeIdle(giopStrand::passive,server_shutdown_list,0);
     }
 
+    // Now goes through the list to delete them all
     {
-      // Now goes through the list to delete them all
-      StrandList* p = shutdown_list.next;
-      while ( p != &shutdown_list ) {
+      StrandList* p = client_shutdown_list.next;
+      while ( p != &client_shutdown_list ) {
 	giopStrand* s = (giopStrand*)p;
 	p = p->next;
 	s->StrandList::remove();
 	s->state(giopStrand::DYING);
 	if (omniORB::trace(30)) {
 	  omniORB::logger log;
-	  log << "Close connection to " << s->address->address() << "\n";
+	  log << "Scavenger close connection to " << s->address->address() << "\n";
+	}
+	if ( s->version.minor >= 2 ) {
+	  // GIOP 1.2 or above requires the client send a closeconnection
+	  // message.
+	  char hdr[12];
+	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+	  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
+	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+	  hdr[7] = (char)GIOP::CloseConnection;
+	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+	  s->connection->Send(hdr,12);
 	}
 	s->safeDelete(1);
       }
     }
 
+    {
+      omni_tracedmutex_lock sync(*omniTransportLock);
+
+      StrandList* p = server_shutdown_list.next;
+      while ( p != &server_shutdown_list ) {
+	giopStrand* s = (giopStrand*)p;
+	p = p->next;
+	s->StrandList::remove();
+	s->state(giopStrand::DYING);
+	if (omniORB::trace(30)) {
+	  omniORB::logger log;
+	  log << "Scavenger close connection from " 
+	      << s->connection->peeraddress() << "\n";
+	}	
+	{
+	  // Send close connection message.
+	  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+	  char hdr[12];
+	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+	  hdr[4] = ver.major;   hdr[5] = ver.minor;
+	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+	  hdr[7] = (char)GIOP::CloseConnection;
+	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+	  s->connection->Send(hdr,12);
+	}
+	s->connection->Shutdown();
+      }
+    }
+
     if (omniORB::trace(30)) {
       omniORB::logger log;
-      log << "Scan for idle outgoing connections done ("
+      log << "Scan for idle connections done ("
 	  << abs_sec << "," << abs_nsec << ").\n";
     }
   }
@@ -779,7 +875,7 @@ public:
       }
     }
     else {
-      giopStrand::idleOutgoingBeats = INT_MAX;
+      giopStrand::idleOutgoingBeats = 0;
     }
     if (orbParameters::inConScanPeriod && orbParameters::scanGranularity) {
       if (orbParameters::inConScanPeriod <= orbParameters::scanGranularity) {
@@ -791,7 +887,7 @@ public:
       }
     }
     else {
-      giopStrand::idleIncomingBeats = INT_MAX;
+      giopStrand::idleIncomingBeats = 0;
     }
 
     Scavenger::initialise();
