@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/11/26 18:51:13  djs
+# Now uses proxy module for most proxy generation
+#
 # Revision 1.5  1999/11/23 18:48:25  djs
 # Bugfixes, more interface operations and attributes code
 #
@@ -54,6 +57,8 @@ from omniidl import idlast, idltype, idlutil
 from omniidl.be.cxx import tyutil, util, name, config, skutil
 
 from omniidl.be.cxx.skel import mangler
+from omniidl.be.cxx.skel import dispatch
+from omniidl.be.cxx.skel import proxy
 #import omniidl.be.cxx.skel.util
 #skutil = omniidl.be.cxx.skel.util
 
@@ -265,21 +270,26 @@ void*
     attributes = filter(lambda x:isinstance(x, idlast.Attribute), callables)
     operations = filter(lambda x:isinstance(x, idlast.Operation), callables)
     scopedName = node.scopedName()
-    
+
+    Proxy = proxy.__init__(environment, stream)
 
     for operation in operations:
         operationName = operation.identifier()
         
         seed = scopedName + [operation.identifier()]
         mangled_signature = mangler.produce_operation_signature(operation)
-        
-        try:
-            descriptor = mangler.operation_descriptor_name(operation)
-            need_proxies = 0
-        except KeyError:
-            mangler.generate_descriptors(operation, seed)
-            descriptor = mangler.operation_descriptor_name(operation)
-            need_proxies = 1
+
+        # try the all new proxy code!
+        Proxy.operation(operation, seed)
+        need_proxies = 0
+        descriptor = mangler.operation_descriptor_name(operation)
+        #try:
+        #    descriptor = mangler.operation_descriptor_name(operation)
+        #    need_proxies = 0
+        #except KeyError:
+        #    mangler.generate_descriptors(operation, seed)
+        #    descriptor = mangler.operation_descriptor_name(operation)
+        #    need_proxies = 1
 
         parameters = operation.parameters()
         parameters_in  = filter(lambda x:x.is_in(),  parameters)
@@ -316,7 +326,7 @@ void*
                 parameter_vargmapping.append("char*&")
             elif tyutil.isObjRef(deref_paramType) and parameter.is_out():
                 parameter_vargmapping.append(paramType_name + "_ptr&")
-            elif tyutil.isSequence(deref_paramType) and \
+            elif tyutil.isVariableType(deref_paramType) and \
                  parameter.direction() == 1:
                 # out only
                 parameter_vargmapping.append(paramType_name + "*&")
@@ -506,7 +516,8 @@ void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
                         start.out("""\
 pd_result = @item_type_name@_alloc();""",
                               item_type_name = item_type_name)
-                    if tyutil.isVariableType(item_type):
+                    if tyutil.isVariableType(item_type) and \
+                       not(tyutil.isString(item_type)):
                         start.out("""\
 pd_result = new @item_type_name@;""", item_type_name = item_type_name)
 
@@ -602,8 +613,8 @@ CORBA::string_free(@item_name@);
                                       None, item_name, 0, "giop_client")
             
                     
-            
-            stream.out("""\
+            if need_proxies:
+                stream.out("""\
 void @call_descriptor@::unmarshalReturnedValues(GIOP_C& giop_client)
 {
   @unmarshall_start@
@@ -612,11 +623,11 @@ void @call_descriptor@::unmarshalReturnedValues(GIOP_C& giop_client)
 }
 
 """,
-                       call_descriptor = descriptor,
-                       unmarshall_start = str(start),
-                       unmarshall_middle = str(middle),
-                       unmarshall_end = str(end),
-                       unmarshall = str(unmarshall))
+                           call_descriptor = descriptor,
+                           unmarshall_start = str(start),
+                           unmarshall_middle = str(middle),
+                           unmarshall_end = str(end),
+                           unmarshall = str(unmarshall))
 
         # static call back function
         local_call_descriptor = mangler.generate_unique_name(mangler.LCALL_DESC_PREFIX)
@@ -934,6 +945,9 @@ CORBA::Boolean
 @impl_fqname@::_dispatch(GIOP_S& giop_s)
 {""", impl_fqname = impl_fqname, uname = u_name)
     stream.inc_indent()
+
+    dispatcher = dispatch.__init__(environment, stream)
+    
     for callable in node.callables():
         if isinstance(callable, idlast.Operation):
             identifiers = [callable.identifier()]
@@ -944,9 +958,9 @@ CORBA::Boolean
         for id in identifiers:
             id_name = tyutil.mapID(id)
             if isinstance(callable, idlast.Operation):
-
-                skutil.operation_dispatch(callable, interface_environment,
-                                          stream)
+                dispatcher.operation(callable)
+                #skutil.operation_dispatch(callable, interface_environment,
+                #                          stream)
 
             elif isinstance(callable, idlast.Attribute):
                 
