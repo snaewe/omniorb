@@ -98,7 +98,7 @@ struct tcArrayDesc;
 // tcObjref //
 //////////////
 
-typedef void (*tcObjrefSetReferenceFn)(tcObjrefDesc*, CORBA::Object_ptr);
+typedef void (*tcObjrefSetReferenceFn)(const tcObjrefDesc*, CORBA::Object_ptr);
 
 typedef CORBA::Object_ptr (*tcObjrefGetReferenceFn)(const tcObjrefDesc*);
 
