@@ -29,6 +29,21 @@
 
 #include <omniORB2/CORBA.h>
 
+#ifndef Swap16
+#define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
+#else
+#error "Swap16 has already been defined"
+#endif
+
+#ifndef Swap32
+#define Swap32(l) ((((l) & 0xff000000) >> 24) | \
+		   (((l) & 0x00ff0000) >> 8)  | \
+		   (((l) & 0x0000ff00) << 8)  | \
+		   (((l) & 0x000000ff) << 24))
+#else
+#error "Swap32 has already been defined"
+#endif
+
 
 
 static void usage(char* progname)
@@ -39,9 +54,9 @@ static void usage(char* progname)
 }
 
 
-#ifdef __NT__
+#ifdef __WIN32__
 
-// NT doesn't have an implementation of getopt() - 
+// WIN32 doesn't have an implementation of getopt() - 
 // supply a getopt() for this program:
 
 char* optarg;
@@ -103,6 +118,106 @@ getopt(int num_args, char* const* args, const char* optstring)
 #endif
 
 
+static
+void
+EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &s,
+			   IIOP::ProfileBody &p)
+{
+  CORBA::ULong begin = 0;
+  CORBA::ULong end = 0;
+
+  // s[0] - byteorder
+  end += 1;
+  if (s.length() <= end)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+  CORBA::Boolean byteswap = ((s[begin] == omni::myByteOrder) ? 0 : 1);
+
+  // s[1] - iiop_version.major
+  // s[2] - iiop_version.minor
+  begin = end;
+  end = begin + 2;
+  if (s.length() <= end)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  p.iiop_version.major = s[begin];
+  p.iiop_version.minor = s[begin+1];
+  if (p.iiop_version.major != IIOP::current_major ||
+      p.iiop_version.minor != IIOP::current_minor)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+  // s[3] - padding
+  // s[4] - s[7] host string length
+  begin = end + 1;
+  end = begin + 4;
+  if (s.length() <= end)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  {
+    CORBA::ULong len;
+    if (!byteswap) {
+      len = ((CORBA::ULong &) s[begin]);
+    }
+    else {
+      CORBA::ULong t = ((CORBA::ULong &) s[begin]);
+      len = Swap32(t);
+    }
+
+    // s[8] - s[8+len-1] host string
+    begin = end;
+    end = begin + len;
+    if (s.length() <= end)
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+    // Is this string null terminated?
+    if (((char)s[end-1]) != '\0')
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+    p.host = new CORBA::Char[len];
+    if (!p.host)
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+    memcpy((void *)p.host,(void *)&(s[begin]),len);
+  }
+    
+  // align to CORBA::UShort
+  begin = (end + 1) & ~(1);
+  // s[begin] port number
+  end = begin + 2;
+  if (s.length() <= end)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  if (!byteswap) {
+    p.port = ((CORBA::UShort &) s[begin]);
+  }
+  else {
+    CORBA::UShort t = ((CORBA::UShort &) s[begin]);
+    p.port = Swap16(t);
+  }
+
+  // align to CORBA::ULong
+  begin = (end + 3) & ~(3);
+  // s[begin]  object key length
+  end = begin + 4;
+  if (s.length() <= end)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  {
+    CORBA::ULong len;
+    if (!byteswap) {
+      len = ((CORBA::ULong &) s[begin]);
+    }
+    else {
+      CORBA::ULong t = ((CORBA::ULong &) s[begin]);
+      len = Swap32(t);
+    }
+
+    begin = end;
+    end = begin + len;
+    if (s.length() < end)
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+    // extract object key
+    p.object_key.length(len);
+    memcpy((void *)&p.object_key[0],(void *)&(s[begin]),len);
+  }
+  return;
+}
 
 
 
@@ -117,7 +232,7 @@ int main(int argc, char* argv[])
 
   // Get options:
 
-#ifndef __NT__
+#ifndef __WIN32__
   extern char* optarg;
   extern int optind;
 #endif
@@ -156,7 +271,7 @@ int main(int argc, char* argv[])
   try
     {
       IOP::EncapStrToIor((CORBA::Char*) str_ior, repoID, profiles);
-      if (*repoID == '\0')
+      if (*repoID == '\0' && profiles->length() == 0)
 	{
 	  cerr << "IOR is a nil object reference." << endl;
 	}
@@ -172,7 +287,7 @@ int main(int argc, char* argv[])
 	      if ((*profiles)[count].tag == IOP::TAG_INTERNET_IOP)
 		  {
 		    IIOP::ProfileBody pBody;
-		    IIOP::EncapStreamToProfile((*profiles)[count].profile_data,pBody);
+		    EncapStreamToProfile((*profiles)[count].profile_data,pBody);
 		    cout << "IIOP " << (int) pBody.iiop_version.major << "."
 			 << (int) pBody.iiop_version.minor << " ";
 		    cout << (char*) pBody.host << " " << pBody.port << " ";
