@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/11/15 17:06:49  sll
+  Added tcs_c and tcs_w in omniIOR to record what code set convertor to use
+  for this IOR.
+  Added declarations for handlers of the tagged components used by the ORB.
+
   Revision 1.1.2.2  2000/10/03 17:37:07  sll
   Changed omniIOR synchronisation mutex from omni::internalLock to its own
   mutex.
@@ -60,9 +65,8 @@ public:
   GIOP::AddressingDisposition        addr_mode;
   _CORBA_ULong                       addr_selected_profile_index;
   _CORBA_ULong                       orb_type;
-
-
-
+  omniCodeSet::TCS_C*                tcs_c;
+  omniCodeSet::TCS_W*                tcs_w;
 
   // Extra info decoded from tag_components_ are storied as
   // opaque data accessible by the relevant modules.
@@ -134,6 +138,16 @@ public:
   // On return, the only valid fields are:
   //    repositoryID, iopProfiles and decoded.
   // 
+
+
+  // Handlers for each of the tagged component used by the ORB
+  static void  add_TAG_ORB_TYPE(IOP::TaggedComponent&, const omniIOR*);
+  static void  unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent&, omniIOR*);
+  static char* dump_TAG_ORB_TYPE(const IOP::TaggedComponent&);
+
+  static void  add_TAG_CODE_SETS(IOP::TaggedComponent&, const omniIOR*);
+  static void  unmarshal_TAG_CODE_SETS(const IOP::TaggedComponent&, omniIOR*);
+  static char* dump_TAG_CODE_SETS(const IOP::TaggedComponent&);
 
 };
 
