@@ -307,6 +307,7 @@ _StructuredEvent* StructuredPullSupplier_i::pull_structured_event()
   event->header.variable_header.length(0);
   event->filterable_data.length(0);
   event->remainder_of_body <<= ++num_events;
+  cout << "StructuredPullSupplier_i: pull_structured_event() called" << endl;
   return event;
 }
 
@@ -321,6 +322,7 @@ _StructuredEvent* StructuredPullSupplier_i::try_pull_structured_event(
   event->filterable_data.length(0);
   event->remainder_of_body <<= ++num_events;
   has_event = 1;
+  cout << "StructuredPullSupplier_i: try_pull_structured_event() called"<< endl;
   return event;
 }
 
@@ -509,6 +511,7 @@ _EventBatch* SequencePullSupplier_i::pull_structured_events(
   event.remainder_of_body <<= ++num_events;
   batch->length(1);
   (*batch)[0] = event;
+  cout << "SequencePullSupplier_i: pull_structured_events() called" << endl;
   return batch;
 }
 
@@ -527,6 +530,7 @@ _EventBatch* SequencePullSupplier_i::try_pull_structured_events(
   batch->length(1);
   (*batch)[0] = event;
   has_event = 1;
+  cout << "SequencePullSupplier_i: try_pull_structured_events() called" << endl;
   return batch;
 }
 
