@@ -2466,28 +2466,41 @@ idl_parse_line_and_file_NT(char *buf)
   if (*h == '\0')
     idl_global->set_filename(new String("standard input"));
   else
+    {
+#ifdef __VMS
+      // kill version
+      char* v(r);
+      for(--v; v != h && *v != ';'; --v);
+      if (*v==';') *v = 0;
+      else v = r;
+      // kill device/directory:
+      for(r=v; r != h && *r != ']' && *r != ':'; --r) {
+	if(isalpha(*r)) *r = tolower(*r);
+      }
+      if (*r==']' || *r==':') h = r+1;
+      idl_global->set_filename(new String(h));
+#else
+      /* Get around the NT include problem: */
+      
+      j = new char[strlen(h)+1];
+      
+      int nflag = 0;
+      for (count = 0; count < strlen(h); count++)
 	{
-	/* Get around the NT include problem: */
-
-	  j = new char[strlen(h)+1];
-
-  	  int nflag = 0;
-	  for (count = 0; count < strlen(h); count++)
-		{
-		  if (h[count] == 92 && h[count+1] == 92 && nflag == 0) 
-			{
-			nflag = 1;
-			continue;
-			}
-		  nflag = 0;
-		  j[jcount] = h[count];
-		  jcount++;
-		}
-   	  j[jcount] = 0;	
-	  idl_global->set_filename(new String(j));
-	  delete[] j;
+	  if (h[count] == 92 && h[count+1] == 92 && nflag == 0) 
+	    {
+	      nflag = 1;
+	      continue;
+	    }
+	  nflag = 0;
+	  j[jcount] = h[count];
+	  jcount++;
 	}
-	 
+      j[jcount] = 0;	
+      idl_global->set_filename(new String(j));
+      delete[] j;
+#endif	
+    }
 
   idl_global->set_in_main_file(
     (idl_global->filename()->compare(idl_global->real_filename())) ?
