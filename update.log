@@ -3,6 +3,7 @@ Thu Dec  5 12:16:33 GMT 2002 dgrisby
 
 - More indirection problems.
 
+bugfixes.xml
 src/lib/omniORB/dynamic/typecode.cc
 
 

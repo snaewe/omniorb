@@ -8,6 +8,15 @@
 
 <buglist version="4.0.0">
 
+<bug id="8" date="Thu Dec  5 12:16:33 GMT 2002" user="dgrisby">
+  <summary>Various problems with recursive TypeCodes</summary>
+  <reported>Clemens Fischer</reported>
+  <text>
+  Some things would fail when using recursive TypeCodes generated with
+  orb->create_recursive_tc().
+  </text>
+</bug>
+
 <bug id="7" date="Thu Nov 21 15:48:26 GMT 2002" user="dgrisby">
   <summary>Call descriptor clash with oneways</summary>
   <reported>Ilya Kreyer</reported>
