@@ -62,8 +62,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
  */
 
-#pragma ident "%@(#)drv_fork.cc	1.7% %92/06/10% Sun Microsystems"
-
 /*
  * DRV_fork.cc - Fork a process for each file to be processed, wait for
  *		 status from the child process
@@ -92,10 +90,10 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include	<wait.h>		// POSIX definition of wait()
 #endif
 
-#if defined(hpux) || defined(__hpux)
+#if defined(__hpux__)
 #include	<sys/unistd.h>		// POSIX standard types
 #include	<sys/wait.h>		// POSIX definition of wait()
-#endif		// defined(hpux) || defined(__hpux)
+#endif
 
 #if defined(__aix__)
 #include        <unistd.h>              // POSIX standard types
@@ -107,7 +105,12 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include <wait.h>                       // POSIX definition of wait()
 #endif
 
-#ifndef __NT__
+#if defined(__nextstep__)
+#include <unistd.h>
+#include <wait.h>
+#endif
+
+#ifndef __WIN32__
 
 // Note that Windows NT version can only handle one file on command line.
 
