@@ -42,7 +42,7 @@ ifdef UnixPlatform
 CONFIG_DEFAULT_LOCATION = \"/project/omni/var/omniORB_NEW.cfg\"
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
 NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
-DIR_CPPFLAGS = -DUnixArchitecture
+DIR_CPPFLAGS += -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
 
 lib = $(patsubst %,$(LibPattern),omniORB2)
