@@ -14,8 +14,8 @@
 
 /*
  $Log$
- Revision 1.7  1997/03/26 17:33:48  ewc
-  Runtime converted to Win32 DLL
+ Revision 1.8  1997/03/26 18:06:21  ewc
+ Small bug fix.
 
  Revision 1.5  1997/03/14 10:19:10  sll
  Use namespace instead of class for modules if the compiler supports it.
@@ -59,10 +59,9 @@
 #elif defined(__SUNPRO_CC)
 // SUN C++ compiler
 
-#endif
-
 #elif defined(_MSC_VER)
 //  Microsoft Visual C++ compiler
+ 
 #endif
 
 #if defined(arm)
