@@ -1,3 +1,33 @@
+Mon Jan 17 14:31:16 GMT 2005 dgrisby
+====================================
+
+- Standard StringValue and WStringValue typedefs.
+
+idl/GNUmakefile.in
+idl/boxes.idl                      -- new
+include/omniORB4/CORBA.h
+src/lib/omniORB/dir.mk
+src/lib/omniORB/dynamic/boxes.cc   -- new
+src/lib/omniORB/dynamic/dir.mk
+
+- Heap allocate value refcount lock so it is not deallocated too early.
+
+src/lib/omniORB/dynamic/valueBase.cc
+
+- Surprisingly few changes to compile on Windows.
+
+include/omniORB4/internal/unknownValue.h
+include/omniORB4/internal/valueTrackerImpl.h
+src/lib/omniORB/dynamic/abstractBase.cc
+src/lib/omniORB/dynamic/omniTypedefs.cc
+src/lib/omniORB/dynamic/valueTracker.cc
+
+- Windows SocketCollection implementation.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Thu Jan 13 21:50:54 GMT 2005 dgrisby
 ====================================
 

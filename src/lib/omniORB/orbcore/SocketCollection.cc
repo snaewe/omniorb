@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/01/17 14:46:19  dgrisby
+  Windows SocketCollection implementation.
+
   Revision 1.1.4.3  2005/01/13 21:09:59  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -286,7 +289,6 @@ static void closePipe(int pipe_read, int pipe_write)
 
 SocketCollection::SocketCollection()
   : pd_refcount(1),
-    pd_select_cond(&pd_collection_lock),
     pd_abs_sec(0), pd_abs_nsec(0),
     pd_pipe_full(0),
     pd_idle_count(idle_scans),
@@ -594,13 +596,265 @@ SocketHolder::Peek()
 }
 
 
-
-#elif defined(__WIN32__XXX)
+#elif defined(__WIN32__)
 
 /////////////////////////////////////////////////////////////////////////
 // Windows select() based implementation
 
+// On Windows, fd_set is not a bit mask like on Unix platforms.
+// Instead, it is a struct containing an array of fds. Adding an fd to
+// select with FD_SET is O(n) on the number of items already in the
+// set, meaning that adding n fds to an empty set is O(n^2).
+//
+// To avoid that overhead, we directly access the array inside the
+// fd_set. This is risky since one day the implementation might
+// change, but it makes a big difference to the performance with large
+// sets.
 
+SocketCollection::SocketCollection()
+  : pd_refcount(1),
+    pd_select_cond(&pd_collection_lock),
+    pd_abs_sec(0), pd_abs_nsec(0),
+    pd_pipe_full(0),
+    pd_idle_count(idle_scans),
+    pd_collection(0),
+    pd_changed(0)
+{
+  FD_ZERO(&pd_fd_set);
+}
+
+SocketCollection::~SocketCollection()
+{
+  pd_refcount = -1;
+}
+
+CORBA::Boolean
+SocketCollection::isSelectable(SocketHandle_t sock)
+{
+  return 1;
+}
+
+CORBA::Boolean
+SocketCollection::Select() {
+
+  struct timeval  timeout;
+  int count;
+  unsigned index;
+
+  // (pd_abs_sec,pd_abs_nsec) defines the absolute time at which we
+  // process the socket list.
+  SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
+
+  if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
+
+    // Time to scan the socket list...
+
+    omni_thread::get_time(&pd_abs_sec,&pd_abs_nsec,
+			  scan_interval_sec,scan_interval_nsec);
+    timeout.tv_sec  = scan_interval_sec;
+    timeout.tv_usec = scan_interval_nsec / 1000;
+
+    {
+      omni_tracedmutex_lock sync(pd_collection_lock);
+      if (pd_changed) {
+
+	FD_ZERO(&pd_fd_set);
+
+	// Add all the selectable sockets
+	for (SocketHolder* s = pd_collection; s; s = s->pd_next) {
+	  if (s->pd_selectable) {
+	    if (s->pd_data_in_buffer) {
+	      // Socket is readable now
+	      s->pd_selectable = s->pd_data_in_buffer = 0;
+	      notifyReadable(s);
+	    }
+	    else {
+	      // Add to the fd_set
+	      if (pd_fd_set.fd_count == FD_SETSIZE) {
+		omniORB::logs(1, "Reached the limit of selectable file "
+			      "descriptors. Some connections may be ignored.");
+		break;
+	      }
+	      s->pd_selected = 1;
+	      s->pd_fd_index = pd_fd_set.fd_count;
+	      pd_fd_set.fd_array[pd_fd_set.fd_count] = s->pd_socket;
+	      pd_fd_sockets[pd_fd_set.fd_count] = s;
+	      pd_fd_set.fd_count++;
+	    }
+	  }
+	}
+	pd_changed = 0;
+      }
+    }
+  }
+
+  fd_set rfds = pd_fd_set;
+
+  if (rfds.fd_count) {
+    // Windows select() ignores its first argument.
+    count = select(0, &rfds, 0, 0, &timeout);
+  }
+  else {
+    // Windows doesn't let us select on an empty fd_set, so we sleep
+    // on a condition variable instead.
+    omni_tracedmutex_lock sync(pd_collection_lock);
+    pd_select_cond.timedwait(pd_abs_sec,pd_abs_nsec);
+    count = 0;
+  }
+
+  if (count > 0) {
+    // Some sockets are readable
+    omni_tracedmutex_lock sync(pd_collection_lock);
+
+    pd_idle_count = idle_scans;
+
+    for (SocketHolder* s = pd_collection; s && count; s = s->pd_next) {
+
+      if (s->pd_selectable) {
+
+	// The call the FD_ISSET here is a linear search through all
+	// the readable sockets, but that should usually be a
+	// reasonably small number, so it's probably OK.
+	if (FD_ISSET(s->pd_socket, &rfds)) {
+	  s->pd_selectable = s->pd_data_in_buffer = s->pd_selected = 0;
+
+	  OMNIORB_ASSERT(s->pd_fd_index >= 0);
+
+	  // Remove socket from pd_fd_set by swapping last item.
+	  // We don't use FD_CLR since that is incredibly inefficient
+	  // with large sets.
+	  int to_i   = s->pd_fd_index;
+	  int from_i = --pd_fd_set.fd_count;
+	  
+	  pd_fd_set.fd_array[to_i] = pd_fd_set.fd_array[from_i];
+	  pd_fd_sockets[to_i] = pd_fd_sockets[from_i];
+	  pd_fd_sockets[to_i]->pd_fd_index = to_i;
+
+	  s->pd_fd_index = -1;
+
+	  notifyReadable(s);
+	  count--;
+	}
+      }
+    }
+  }
+  else if (count == 0) {
+    // Nothing to read.
+    omni_tracedmutex_lock sync(pd_collection_lock);
+    if (pd_idle_count > 0)
+      pd_idle_count--;
+  }
+  else {
+    // Negative return means error
+    if (ERRNO == RC_EBADF) {
+      omniORB::logs(20, "select() returned EBADF.");
+      pd_abs_sec = pd_abs_nsec = 0; // Force a list scan next time
+    }
+    else if (ERRNO != RC_EINTR) {
+      if (omniORB::trace(1)) {
+	omniORB::logger l;
+	l << "Error return from select(). errno = " << (int)ERRNO << "\n";
+      }
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void
+SocketHolder::setSelectable(CORBA::Boolean now,
+			    CORBA::Boolean data_in_buffer,
+			    CORBA::Boolean hold_lock)
+{
+  OMNIORB_ASSERT(pd_belong_to);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_belong_to->pd_collection_lock, hold_lock);
+
+  omni_optional_lock l(pd_belong_to->pd_collection_lock, hold_lock, hold_lock);
+
+  if (now && !pd_selected) {
+    // Add socket to the fd_set
+    if (pd_belong_to->pd_fd_set.fd_count == FD_SETSIZE) {
+      omniORB::logs(1, "Reached the limit of selectable file "
+		    "descriptors. Some connections may be ignored.");
+    }
+    else {
+      OMNIORB_ASSERT(pd_fd_index == -1);
+      pd_selected = 1;
+      pd_fd_index = pd_belong_to->pd_fd_set.fd_count;
+      pd_belong_to->pd_fd_set.fd_array[pd_fd_index] = pd_socket;
+      pd_belong_to->pd_fd_sockets[pd_fd_index] = this;
+
+      if (!hold_lock && pd_belong_to->pd_fd_set.fd_count++ == 0) {
+	// Select() thread may be waiting on the condition variable.
+	pd_belong_to->pd_select_cond.signal();
+      }
+    }
+  }
+
+  pd_selectable     = 1;
+  pd_data_in_buffer = data_in_buffer;
+
+  pd_belong_to->pd_changed = 1;
+
+  if (data_in_buffer) {
+    // Force Select() to scan through the connections right away
+    pd_belong_to->pd_abs_sec = pd_belong_to->pd_abs_nsec = 0;
+  }
+}
+
+void
+SocketHolder::clearSelectable()
+{
+  OMNIORB_ASSERT(pd_belong_to);
+  omni_tracedmutex_lock l(pd_belong_to->pd_collection_lock);
+  pd_selectable = 0;
+}
+
+
+CORBA::Boolean
+SocketHolder::Peek()
+{
+  if (!pd_selectable) {
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Socket " << (int)pd_socket << " in Peek() is not selectable.\n";
+    }
+    return 0;
+  }
+
+  struct timeval timeout;
+  timeout.tv_sec  = SocketCollection::scan_interval_sec / 2;
+  timeout.tv_usec = SocketCollection::scan_interval_nsec / 1000 / 2;
+  if (SocketCollection::scan_interval_sec % 2) timeout.tv_usec += 500000;
+  fd_set rfds;
+
+  while (1) {
+    FD_ZERO(&rfds);
+    FD_SET(pd_socket, &rfds);
+
+    int r = select(pd_socket + 1, &rfds, 0, 0, &timeout);
+
+    if (r > 0) {
+      if (FD_ISSET(pd_socket, &rfds)) {
+	if (pd_selectable) {
+	  // Still selectable?
+	  return 1;
+	}
+	else {
+	  return 0;
+	}
+      }
+    }
+    else if (r == 0) {
+      // Timed out
+      return 0;
+    }
+    else {
+      if (ERRNO != RC_EINTR)
+	return 0;
+    }
+  }
+}
 
 #else
 
@@ -609,7 +863,6 @@ SocketHolder::Peek()
 
 SocketCollection::SocketCollection()
   : pd_refcount(1),
-    pd_select_cond(&pd_collection_lock),
     pd_abs_sec(0), pd_abs_nsec(0),
     pd_pipe_full(0),
     pd_idle_count(idle_scans),
@@ -730,7 +983,6 @@ SocketCollection::Select() {
       read(pd_pipe_read, &data, 1);
       pd_pipe_full = 0;
       pd_fd_set_n = pd_pipe_read + 1;
-      count--;
     }
 #endif
 
@@ -742,7 +994,6 @@ SocketCollection::Select() {
 	  FD_CLR(s->pd_socket, &pd_fd_set);
 
 	  notifyReadable(s);
-	  count--;
 	}
 	else if (pd_fd_set_n <= s->pd_socket) {
 	  pd_fd_set_n = s->pd_socket + 1;
@@ -882,7 +1133,6 @@ SocketHolder::Peek()
     }
   }
 }
-
 
 #endif
 
