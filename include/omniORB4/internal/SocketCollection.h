@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2002/09/08 22:12:22  dgrisby
+  Last checkin broke it.
+
   Revision 1.1.2.13  2002/09/08 21:58:49  dgrisby
   Support for MSVC 7. (Untested.)
 
@@ -121,12 +124,6 @@
 //             win32 API
 //
 #if defined(__WIN32__)
-
-#  if !defined(__ETS_KERNEL__)
-#    include <winsock2.h>
-#  else
-#    include <winsock.h>
-#  endif
 
 #  include <sys/types.h>
 #  include <libcWrapper.h>
