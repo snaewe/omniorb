@@ -723,7 +723,7 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
     if (pthread_delay_np(&rqts) != 0)
 	throw omni_thread_fatal(errno);
 
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__aix__)
 
     if (secs > 2000) {
 	sleep(secs);
@@ -755,18 +755,18 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 
 #else
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__aix__)
 
     struct timeval tv;
     gettimeofday(&tv, NULL); 
     abs.tv_sec = tv.tv_sec;
     abs.tv_nsec = tv.tv_usec * 1000;
 
-#else	/* __linux__ */
+#else	/* __linux__ || __aix__ */
 
     clock_gettime(CLOCK_REALTIME, &abs);
 
-#endif	/* __linux__ */
+#endif	/* __linux__ || __aix__ */
 
     abs.tv_nsec += rel_nsec;
     abs.tv_sec += rel_sec + abs.tv_nsec / 1000000000;
