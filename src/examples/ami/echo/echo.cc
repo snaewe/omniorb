@@ -1,3 +1,9 @@
+// echo.cc - Creates a ReplyHandler servant and sends an async request to
+//           an echo object.
+//
+// Usage:
+//   echo_ami <IOR of echo server>
+//
 
 #include <iostream.h>
 #include <echo_ami.hh>
@@ -19,7 +25,7 @@ public:
   // methods corresponding to defined IDL attributes and operations
   void echoString(const char* ami_return_val){
     cout << "The server said, \"" << ami_return_val << "\"." << endl;
-    //orb->shutdown(0);
+    finish();
   }
   void echoString_excep(const struct AMI_EchoExceptionHolder &excep_holder){
     cout << "Received ExceptionHolder from server" << endl;
@@ -36,7 +42,10 @@ public:
     } catch (...){
       cout << "Caught an unknown exception type" << endl;
     }
-    //orb->shutdown(0);
+    finish();
+  }
+  void finish(){
+    orb->shutdown(0);
   }
 };
 

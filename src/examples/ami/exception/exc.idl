@@ -1,0 +1,8 @@
+
+exception StringException{
+  string message;
+};
+
+interface I{
+  void op(in string arg) raises (StringException);
+};
