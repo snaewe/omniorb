@@ -10,7 +10,7 @@
 
 <bug id="3" date="Tue Aug 22 15:48:11 BST 2000" user="sll">
 
-  <summary>Unexpected" exception at initialization</summary>
+  <summary>"Unexpected" exception at initialization</summary>
   <reported>Chris Newbold</reported>
   <link href="http://www.uk.research.att.com/omniORB/archives/2000-08/0066.html"/>
   <text>When the port specified via -ORBpoa_iiop_port happens to be in use,
