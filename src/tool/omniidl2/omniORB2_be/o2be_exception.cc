@@ -8,6 +8,10 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/13 15:43:11  sll
+  If the exception has no member, do not generate the ctor where each
+  member is an argument.
+
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -34,7 +38,7 @@ o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
 void
 o2be_exception::produce_hdr(fstream &s)
 {
-  IND(s); s << "#define " << repoIdConstName() <<" \""<< repositoryID() << "\"\n\n";
+  s << "#define " << repoIdConstName() <<" \""<< repositoryID() << "\"\n\n";
   IND(s); s << "class " << uqname() << " : public CORBA::UserException {\n";
   IND(s); s << "public:\n\n";
   INC_INDENT_LEVEL();
@@ -73,11 +77,15 @@ o2be_exception::produce_hdr(fstream &s)
   IND(s); s << "\n";
   IND(s); s << uqname() << "() {};\n";
   IND(s); s << uqname() << "(const " << uqname() << " &);\n";
-  IND(s); s << uqname() << "(";
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    idl_bool first = I_TRUE;
     while (!i.is_done())
       {
+	if (first) {
+	  IND(s); s << uqname() << "(";
+	  first = I_FALSE;
+	}
 	AST_Decl *d = i.item();
 	AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
 	o2be_operation::argMapping mapping;
@@ -103,8 +111,10 @@ o2be_exception::produce_hdr(fstream &s)
 	i.next();
 	s << ((!i.is_done()) ? ", " : "");
       }
+    if (!first) {
+      s << ");\n";
+    };
   }
-  s << ");\n";
   IND(s); s << uqname() << " & operator=(const " << uqname() << " &);\n";
   IND(s); s << "virtual ~" << uqname() << "() {};\n";
   IND(s); s << "size_t NP_alignedSize(size_t initialoffset);\n";
@@ -135,12 +145,15 @@ o2be_exception::produce_skel(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << fqname() << "::" << uqname()
-	    << "(";
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    idl_bool first = I_TRUE;
     while (!i.is_done())
       {
+	if (first) {
+	  IND(s); s << fqname() << "::" << uqname() << "(";
+	  first = I_FALSE;
+	}
 	AST_Decl *d = i.item();
 	AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
 	o2be_operation::argMapping mapping;
@@ -166,21 +179,23 @@ o2be_exception::produce_skel(fstream &s)
 	i.next();
 	s << ((!i.is_done()) ? ", " : "");
       }
-  }
-  s << ")\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
+    if (!first) {
+      s << ")\n";
+      IND(s); s << "{\n";
+      INC_INDENT_LEVEL();
       {
-	o2be_field *d = o2be_field::narrow_from_decl(i.item());
-	IND(s); s << d->uqname() << " = _" << d->uqname() << ";\n";
-	i.next();
+	UTL_ScopeActiveIterator ii(this,UTL_Scope::IK_decls);
+	while (!ii.is_done())
+	  {
+	    o2be_field *dd = o2be_field::narrow_from_decl(ii.item());
+	    IND(s); s << dd->uqname() << " = _" << dd->uqname() << ";\n";
+	    ii.next();
+	  }
       }
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+    }
   }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
 
   IND(s); s << fqname() << " & " << fqname() 
 	    << "::operator=(const " << fqname() << " &_s)\n";
