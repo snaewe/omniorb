@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.13  1998/08/26 21:50:22  sll
+  Added omniORB::maxTcpConnectionPerServer to customise the maximum no. of
+  outgoing connections per server.
+
   Revision 1.12  1998/04/07 19:52:31  sll
   Updated to use namespace if available.
   New class logStream to log all error messages.
@@ -438,7 +442,7 @@ _CORBA_MODULE_BEG
   // runtime. This function is not thread-safe and *SHOULD NOT* be used //
   // when the BOA::impl_is_ready() has been called.                     //
   // If the argument <p> is nil, the call will be siliently ignored.    //
-  // 
+  //
     static void setGiopServerThreadWrapper(giopServerThreadWrapper* p);	//
     static giopServerThreadWrapper* getGiopServerThreadWrapper();       //
   };									//
@@ -471,6 +475,20 @@ _CORBA_MODULE_BEG
   };                                                                    //
   ////////////////////////////////////////////////////////////////////////
 
+  ////////////////////////////////////////////////////////////////////////
+  // maxTcpConnectionPerServer                                          //
+  //   The ORB could open more than one TCP connections to a server     //
+  // depending on the number of concurrent invocations to the same      //
+  // server. This variable decide what is the maximum number of	        //
+  // connections to use per server. This variable is read only once     //
+  // at ORB_init. If the number of concurrent invocations exceed this   //
+  // number, the extra invocations would be blocked until the  	       	//
+  // the outstanding ones return. (The default value is 5.)    	       	//
+  //   	       	       	       	       	       	       	       	       	//
+  _CORBA_MODULE_VAR  unsigned int maxTcpConnectionPerServer;            //
+  ////////////////////////////////////////////////////////////////////////
+
+
 
   class logStream {
   public:
@@ -480,11 +498,11 @@ _CORBA_MODULE_BEG
     logStream& operator<<(unsigned char c) { return (*this) << (char)c; }
     logStream& operator<<(signed char c) { return (*this) << (char)c; }
     logStream& operator<<(const char *s);
-    logStream& operator<<(const unsigned char *s) { 
-      return (*this) << (const char*)s; 
+    logStream& operator<<(const unsigned char *s) {
+      return (*this) << (const char*)s;
     }
-    logStream& operator<<(const signed char *s) { 
-      return (*this) << (const char*)s; 
+    logStream& operator<<(const signed char *s) {
+      return (*this) << (const char*)s;
     }
     logStream& operator<<(const void *p);
     logStream& operator<<(int n);
