@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  2000/01/12 19:54:47  djs
+# Added option to generate old CORBA 2.1 signatures for skeletons
+#
 # Revision 1.7  2000/01/12 17:48:28  djs
 # Added option to create BOA compatible skeletons (same as -BBOA in omniidl3)
 #
@@ -119,6 +122,14 @@ def setBOAFlag(flag):
 def BOAFlag():
     global __BOA
     return __BOA
+
+# generate old CORBA 2.1 signatures for skeletons
+def setOldFlag(flag):
+    global __old
+    __old = flag
+def OldFlag():
+    global __old
+    return __old
     
 # suffix added to basename to get header filename
 def hdrsuffix():

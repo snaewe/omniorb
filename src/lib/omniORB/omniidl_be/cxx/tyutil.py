@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.25  2000/01/12 19:54:47  djs
+# Added option to generate old CORBA 2.1 signatures for skeletons
+#
 # Revision 1.24  2000/01/11 12:02:34  djs
 # More tidying up
 #
@@ -180,7 +183,7 @@
 #
 from omniidl import idlutil, idltype, idlast
 
-from omniidl.be.cxx import util
+from omniidl.be.cxx import util, config
 
 import string, re
 
@@ -447,55 +450,88 @@ def operationArgumentType(type, environment, virtualFn = 0):
     deref_type = deref(type)
 
     if is_array and isVariable:
-        return [ param_type + "_slice*",
-                 "const " + param_type,
-                 param_type + "_out",
-                 param_type ]
+        if config.OldFlag() and virtualFn:
+            return [ param_type + "_slice*",
+                     "const " + param_type,
+                     param_type + "_slice*&",
+                     param_type ]
+        else:
+            return [ param_type + "_slice*",
+                     "const " + param_type,
+                     param_type + "_out",
+                     param_type ]
+
     if is_array and not(isVariable):
-        return [ param_type + "_slice*",
+
+            return [ param_type + "_slice*",
                  "const " + param_type,
                  param_type,
-                 param_type ]        
+                 param_type ]
+
         
     if virtualFn:
         if isinstance(deref_type, idltype.String):
-            return [ "char *",
-                     "const char* ",
-                     "CORBA::String_out ",
-                     "char*& " ]
+            if config.OldFlag():
+                return [ "char *",
+                         "const char* ",
+                         "char*& ",
+                         "char*& " ]
+            else:
+                return [ "char *",
+                         "const char* ",
+                         "CORBA::String_out ",
+                         "char*& " ]
         elif isObjRef(deref_type):
             scopedName = deref_type.scopedName()
             if scopedName == ["CORBA", "Object"]:
-                return [ "CORBA::Object_ptr",
-                         "CORBA::Object_ptr",
-                         "CORBA::Object_OUT_arg",
-                         "CORBA::Object_ptr&" ]
-            
+                if config.OldFlag():
+                    return [ "CORBA::Object_ptr",
+                             "CORBA::Object_ptr",
+                             "CORBA::Object_ptr&",
+                             "CORBA::Object_ptr&" ]
+                else:
+                    return [ "CORBA::Object_ptr",
+                             "CORBA::Object_ptr",
+                             "CORBA::Object_OUT_arg",
+                             "CORBA::Object_ptr&" ]
+            param_type = environment.principalID(deref_type)
+            if config.OldFlag():
                 return [ param_type + "_ptr",
                          param_type + "_ptr",
-                         "CORBA::Object_OUT_arg",
+                         param_type + "_ptr&",
                          param_type + "_ptr&" ]
-            param_type = environment.principalID(deref_type)
             return [ param_type + "_ptr",
                      param_type + "_ptr",
                      "_CORBA_ObjRef_OUT_arg<_objref_" + param_type + "," + \
                      param_type + "_Helper >",
                      param_type + "_ptr&" ]
         elif deref_type.kind() == idltype.tk_TypeCode:
-            return [ "CORBA::TypeCode_ptr",
-                     "CORBA::TypeCode_ptr",
-                     "CORBA::TypeCode_OUT_arg",
-                     "CORBA::TypeCode_ptr&" ]
+            if config.OldFlag():
+                return [ "CORBA::TypeCode_ptr",
+                         "CORBA::TypeCode_ptr",
+                         "CORBA::TypeCode_ptr&",
+                         "CORBA::TypeCode_ptr&" ]
+            else:
+                return [ "CORBA::TypeCode_ptr",
+                         "CORBA::TypeCode_ptr",
+                         "CORBA::TypeCode_OUT_arg",
+                         "CORBA::TypeCode_ptr&" ]
         else:
             pass
             # same as the other kind
 
     # typedefs to Anys are a little strange
     if isTypedef(type) and isAny(deref_type):
-        return [ param_type + "*",
-                 "const " + param_type + "&",
-                 "CORBA::Any_OUT_arg",
-                 param_type + "&" ]
+        if config.OldFlag() and virtualFn:
+            return [ param_type + "*",
+                     "const " + param_type + "&",
+                     param_type + "*&",
+                     param_type + "&" ]
+        else:
+            return [ param_type + "*",
+                     "const " + param_type + "&",
+                     "CORBA::Any_OUT_arg",
+                     param_type + "&" ]
             
     if isinstance(deref_type, idltype.String):
         return [ "char *",
@@ -503,10 +539,16 @@ def operationArgumentType(type, environment, virtualFn = 0):
                  "CORBA::String_out ",
                  "CORBA::String_INOUT_arg " ]
     elif deref_type.kind() == idltype.tk_any:
-        return [ "CORBA::Any*",
-                 "const CORBA::Any&",
-                 "CORBA::Any_OUT_arg",
-                 "CORBA::Any&" ]
+        if config.OldFlag() and virtualFn:
+            return [ "CORBA::Any*",
+                     "const CORBA::Any&",
+                     "CORBA::Any*&",
+                     "CORBA::Any&" ]
+        else:
+            return [ "CORBA::Any*",
+                     "const CORBA::Any&",
+                     "CORBA::Any_OUT_arg",
+                     "CORBA::Any&" ]
     elif deref_type.kind() == idltype.tk_TypeCode:
         return [ "CORBA::TypeCode_ptr",
                  "CORBA::TypeCode_ptr",
@@ -538,13 +580,20 @@ def operationArgumentType(type, environment, virtualFn = 0):
     if isVariable:
         # Strangeness: if actually a typedef to a struct or union, the _out
         # type is dereferenced, whilst the others aren't?
-        if isTypedef(type) and (isStruct(deref_type) or isUnion(deref_type)):
+        if isTypedef(type) and (isStruct(deref_type) or isUnion(deref_type)) and\
+           not(config.OldFlag() and virtualFn):
             out_base_type = environment.principalID(deref_type)
 
-        return [ param_type + "*",
-                 "const " + param_type + "& ",
-                 out_base_type + "_out ",
-                 param_type + "& "]
+        if config.OldFlag() and virtualFn:
+            return [ param_type + "*",
+                     "const " + param_type + "& ",
+                     out_base_type + "*& ",
+                     param_type + "&"]
+        else:
+            return [ param_type + "*",
+                     "const " + param_type + "& ",
+                     out_base_type + "_out ",
+                     param_type + "& "]
     else:
         return [ param_type,
                  "const " + param_type + "& ",
