@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/12/12 14:02:47  djs
+# Support for tie-templates added.
+#
 # Revision 1.2  1999/11/10 20:19:43  djs
 # Array struct element fix
 # Union sequence element fix
@@ -38,9 +41,11 @@
 
 """Produce the main header POA definitions for the C++ backend"""
 
+import string
+
 from omniidl import idlast, idltype, idlutil
 
-from omniidl.be.cxx import tyutil, name
+from omniidl.be.cxx import tyutil, name, config, util
 
 import poa
 
@@ -106,29 +111,170 @@ _CORBA_MODULE_END
     leave()
 
 def visitInterface(node):
-    name = tyutil.mapID(node.identifier())
+    iname = tyutil.mapID(node.identifier())
 #    enter(name)
     scope = currentScope()
-    
-    scopedID = idlutil.ccolonName(scope + [name])
-    scopedImplID = idlutil.ccolonName(scope + ["_impl_" + name])
+    env = self.__environment
+
+    scopedName = scope + [iname]
+    scopedID = idlutil.ccolonName(scopedName)
+    impl_scopedID = name.prefixName(scopedName, "_impl_")
+
+    POA_name = POA_prefix() + iname
+
+    # build the normal POA class first
     stream.out("""\
-class @POA_prefix@@name@ :
-  public virtual @scopedImplID@,
+class @POA_name@ :
+  public virtual @impl_scopedID@,
   public virtual PortableServer::ServantBase
 {
 public:
-  virtual ~@POA_prefix@@name@();
+  virtual ~@POA_name@();
 
   inline @scopedID@_ptr _this() {
     return (@scopedID@_ptr) _do_this(@scopedID@::_PD_repoId);
   }
 };
 """,
-               name = name,
+               POA_name = POA_name,
                scopedID = scopedID,
-               scopedImplID = scopedImplID,
-               POA_prefix = POA_prefix())
+               impl_scopedID = impl_scopedID)
+
+
+    if config.TieFlag():
+        POA_tie_name = POA_name + "_tie"
+        # FIXME: hack because operationArgumentType strips off outermost
+        # scope
+        env = env.enterScope("dummy")
+
+        # build methods which bind the interface operations and attributes
+        # note that this includes inherited callables since tie
+        # templates are outside the normal inheritance structure
+        where = util.StringStream()
+
+        def buildCallables(interface, where, env, continuation):
+            callables = interface.callables()
+            operations = filter(lambda x:isinstance(x, idlast.Operation),
+                                callables)
+            for operation in operations:
+                returnType = operation.returnType()
+                identifier = operation.identifier()
+                parameters = operation.parameters()
+                has_return_value = not(tyutil.isVoid(returnType))
+                # FIXME: return types are fully scoped but argument types
+                # arent?
+                returnType_name = tyutil.operationArgumentType(returnType, env,
+                                                               fully_scope = 1)[0]
+                operation_name = tyutil.mapID(identifier)
+            
+                signature = []
+                call = []
+
+                for parameter in parameters:
+                    paramType = parameter.paramType()
+                    dir = parameter.direction() + 1
+                    argtypes = tyutil.operationArgumentType(paramType, env,
+                                                            fully_scope = 0,
+                                                            virtualFn = 1)
+                    param_type_name = argtypes[dir]
+                    param_id = tyutil.mapID(parameter.identifier())
+                    signature.append(param_type_name + " " + param_id)
+                    call.append(param_id)
+
+                if has_return_value:
+                    return_str = "return "
+                else:
+                    return_str = ""
+                
+                where.out("""\
+  @return_type_name@ @operation_name@(@signature@) { @return_str@pd_obj->@operation_name@(@call@); }""", return_type_name = returnType_name,
+                           operation_name = operation_name,
+                           return_str = return_str,
+                           signature = string.join(signature, ", "),
+                           call = string.join(call, ", "))
+                    
+            attributes = filter(lambda x:isinstance(x, idlast.Attribute),
+                                callables)
+            for attribute in attributes:
+                identifiers = attribute.identifiers()
+                attrType = attribute.attrType()
+                attrType_names = tyutil.operationArgumentType(attrType, env,
+                                                              fully_scope = 1)
+                attrType_name_RET = attrType_names[0]
+                attrType_name_IN = attrType_names[1]
+
+                for identifier in identifiers:
+                    id = tyutil.mapID(identifier)
+                    where.out("""\
+  @attr_type_ret_name@ @attribute_name@() { return pd_obj->@attribute_name@(); }""", attr_type_ret_name = attrType_name_RET,
+                           attribute_name = id)
+                    if not(attribute.readonly()):
+                        where.out("""\
+  void @attribute_name@(@attr_type_in_name@ _value) { pd_obj->@attribute_name@(_value); }""", attribute_name = id,
+                               attr_type_in_name = attrType_name_IN)                    
+            # do the recursive bit
+            for i in interface.inherits():
+                continuation(i, where, env, continuation)
+
+            # done
+            return
+
+        buildCallables(node, where, env, buildCallables)
+                
+        
+        stream.out("""\
+template <class T>
+class @POA_tie_name@ : public virtual @POA_name@
+{
+public:
+  @POA_tie_name@(T& t)
+    : pd_obj(&t), pd_poa(0), pd_rel(0) {}
+  @POA_tie_name@(T& t, PortableServer::POA_ptr p)
+    : pd_obj(&t), pd_poa(p), pd_rel(0) {}
+  @POA_tie_name@(T* t, CORBA::Boolean r=1)
+    : pd_obj(t), pd_poa(0), pd_rel(r) {}
+  @POA_tie_name@(T* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
+    : pd_obj(t), pd_poa(p), pd_rel(r) {}
+  ~@POA_tie_name@() {
+    if( pd_poa )  CORBA::release(pd_poa);
+    if( pd_rel )  delete pd_obj;
+  }
+
+  T* _tied_object() { return pd_obj; }
+
+  void _tied_object(T& t) {
+    if( pd_rel )  delete pd_obj;
+    pd_obj = &t;
+    pd_rel = 0;
+  }
+
+  void _tied_object(T* t, CORBA::Boolean r=1) {
+    if( pd_rel )  delete pd_obj;
+    pd_obj = t;
+    pd_rel = r;
+  }
+
+  CORBA::Boolean _is_owner()        { return pd_rel; }
+  void _is_owner(CORBA::Boolean io) { pd_rel = io;   }
+
+  PortableServer::POA_ptr _default_POA() {
+    if( !pd_poa )  return PortableServer::POA::_the_root_poa();
+    else           return PortableServer::POA::_duplicate(pd_poa);
+  }
+
+  @callables@
+
+private:
+  T*                      pd_obj;
+  PortableServer::POA_ptr pd_poa;
+  CORBA::Boolean          pd_rel;
+};
+""",
+                   POA_tie_name = POA_tie_name,
+                   POA_name = POA_name,
+                   callables = str(where))
+
+    
 #    leave()
 
 def visitTypedef(node):
