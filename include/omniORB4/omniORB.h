@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // omniORB.h                  Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.14  2001/08/17 17:03:23  sll
+  Moved configuration parameters to orbParameters. Move old compatibility API
+  to omniORBcompat.h.
+
   Revision 1.2.2.13  2001/08/16 16:11:48  sll
   Removed duplicate offerBidirectionalGIOP.
 
@@ -165,10 +169,6 @@
 #define __OMNIORB_H__
 
 
-//////////////////////////////////////////////////////////////////////
-//////////////////////////// omniOrbBoaKey ///////////////////////////
-//////////////////////////////////////////////////////////////////////
-
 struct omniOrbBoaKey {
   _CORBA_ULong hi;
   _CORBA_ULong med;
@@ -183,21 +183,6 @@ _CORBA_MODULE omniORB
 
 _CORBA_MODULE_BEG
 
-  ////////////////////////////////////////////////////////////////////////
-  // serverName								//
-  //									//
-  // omniORB2's idea of the name of the server.  Set to argv[0] by      //
-  // ORB_init or changed by command-line option -ORBserverName <name>.  //
-  // This name is used in the host-based access control of the IIOP     //
-  // gatekeeper.                                                        //
-  //                                                                    //
-  //									//
-#ifndef HAS_Cplusplus_Namespace                                         //
-  static _core_attr CORBA::String_var serverName;		        //
-#else                                                                   //
-  _CORBA_MODULE_VAR _core_attr char* serverName;                        //
-#endif                                                                  //
-  ////////////////////////////////////////////////////////////////////////
 
   ///////////////////////////////////////////////////////////////////////
   // Tracing level                                                     //
@@ -207,14 +192,18 @@ _CORBA_MODULE_BEG
   //     level 5 - the above plus report server thread creation and    //
   //               communication socket shutdown                       //
   //     level 10 - the above plus execution trace messages            //
-  //     ...                                                           //
-  _CORBA_MODULE_VAR _core_attr int   traceLevel;                       //
+  //     level 25 - output trace message per send or receive giop message
+  //     level 30 - dump up to 128 bytes of a giop message             //
+  //     level 40 - dump the complete giop message                     //
+  //                                                                   //
+  //    Valid values = (n >= 0)                                        //
+  _CORBA_MODULE_VAR _core_attr _CORBA_ULong   traceLevel;              //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtraceLevel <n>, or by direct assignment to this   //
   //     variable.                                                     //
   //                                                                   //
-  _CORBA_MODULE_VAR _core_attr int   traceInvocations;                 //
+  _CORBA_MODULE_VAR _core_attr _CORBA_Boolean traceInvocations;        //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtraceInvocations, or by direct assignment to this //
@@ -222,186 +211,124 @@ _CORBA_MODULE_BEG
   //     will generate a trace message.                                //
   ///////////////////////////////////////////////////////////////////////
 
-  ///////////////////////////////////////////////////////////////////////
-  // strictIIOP flag                                                   //
-  //   Enable vigorous check on incoming IIOP messages                 //
-  //                                                                   //
-  // In some (sloppy) IIOP implementations, the message size value in  //
-  // the header can be larger than the actual body size, i.e. there is //
-  // garbage at the end. As the spec does not say the message size     //
-  // must match the body size exactly, this is not a clear violation   //
-  // of the spec.                                                      //
-  //                                                                   //
-  // If this flag is non-zero, the incoming message is expected to     //
-  // be well behaved. Any messages that have garbage at the end will   //
-  // be rejected.                                                      //
-  //                                                                   //
-  // The default value of this flag is true, so invalid messages are   //
-  // rejected. If you set it to zero, the ORB will silently skip the   //
-  // unread part. The problem with this behaviour is that the header   //
-  // message size may actually be garbage, caused by a bug in the      //
-  // sender's code. The receiving thread may forever block on the      //
-  // strand as it tries to read more data from it. In this case the    //
-  // sender won't send any more as it thinks it has marshalled in all  //
-  // the data.							       //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean   strictIIOP;            //
-  //                                                                   //
-  //     This value can be changed at runtime either by command-line   //
-  //     option: -ORBstrictIIOP <0|1>, or by direct assignment to this //
-  //     variable.                                                     //
-  ///////////////////////////////////////////////////////////////////////
-
-  ///////////////////////////////////////////////////////////////////////
-  //  tcAliasExpand flag is used to indicate whether TypeCodes         //
-  //              associated with anys should have aliases removed.This//
-  //              functionality is included because some ORBs will not //
-  //              recognise an Any containing a TypeCode containing    //
-  //              aliases to be the same as the actual type contained  //
-  //              in the Any. Note that omniORB will always remove     //
-  //              top-level aliases, but will not remove aliases from  //
-  //              TypeCodes that are members of other TypeCodes (e.g.  //
-  //              TypeCodes for members of structs etc.), unless       //
-  //              tcAliasExpand is set to 1. There is a performance    //
-  //              penalty when inserting into an Any if tcAliasExpand  //
-  //              is set to 1. The default value is 0 (i.e. aliases of //
-  //              member TypeCodes are not expanded).                  //
-  //              Note that aliases won't be expanded when one of the  //
-  //              non - type-safe methods of inserting into an Any is  //
-  //              used (i.e. when the replace() member function or     //
-  //              non - type-safe Any constructor is used. )           //
-  //                                                                   //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean tcAliasExpand;           //
-  //     This value can be changed at runtime either by command-line   //
-  //     option: -ORBtcAliasExpand <0|1>, or by direct assignment to   //
-  //     this variable.                                                //
-  ///////////////////////////////////////////////////////////////////////
-
   ////////////////////////////////////////////////////////////////////////
   //                                                                    //
-  // This section is only for omniORB 2.x compatibility. Do not use for //
-  // new code.                                                          //
-  //                                                                    //
-  // objectKey is a data type that uniquely identify each object        //
-  //           implementation in the same address space. Its actual     //
-  //           implmentation is not public. The data type should only   //
-  //           be processed in an application by the following utility  //
-  //           functions.                                               //
-  //                                                                    //
-  //                                                                    //
-  typedef omniOrbBoaKey objectKey;                                      //
-  //                                                                    //
-  // generateNewKey()                                                   //
-  //   generate a new key. The key is guaranteed to be temporally       //
-  //   unique. On OSs that provide unique process IDs, e.g. unices,     //
-  //   the key is guaranteed to be unique among all keys ever generated //
-  //   on the same machine.                                             //
-  _CORBA_MODULE_FN void generateNewKey(objectKey &k);                   //
-  //                                                                    //
-  // Return a fixed key value that always hash to 0.                    //
-  _CORBA_MODULE_FN objectKey nullkey();                                 //
-  //                                                                    //
-  // Return non-zero if the keys are the same                           //
-  _CORBA_MODULE_OP int operator==(const objectKey &k1,                  //
-                                      const objectKey &k2);             //
-  //                                                                    //
-  // Return non-zero if the keys are different                          //
-  _CORBA_MODULE_OP int operator!=(const objectKey &k1,                  //
-                                      const objectKey &k2);             //
-  //                                                                    //
-  //                                                                    //
-  typedef _CORBA_Unbounded_Sequence_Octet seqOctets;                    //
-  // Convert a key to a sequence of octets.                             //
-  _CORBA_MODULE_FN seqOctets* keyToOctetSequence(const objectKey &k1);  //
-  //                                                                    //
-  // Convert a sequence of octets back to an object key.                //
-  // This function may throw a CORBA::MARSHAL exception if the sequence //
-  // is not an object key.                                              //
-  _CORBA_MODULE_FN objectKey octetSequenceToKey(const seqOctets& seq);  //
+  // getInterceptors()                                                  //
+  //   Only call this function after ORB_init().                        //
+  //   The returned object contains all the ORB processing points where //
+  //   interception functions can be added.                             //
+  //   Calling this function before ORB_init() will result in a system  //
+  //   exception.                                                       //
+  _CORBA_MODULE_FN _OMNI_NS(omniInterceptors)* getInterceptors();       //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
-  // MaxMessageSize()                                                   //
   //                                                                    //
-  // returns the ORB-wide limit on the size of GIOP message (excluding  //
-  // the header).                                                       //
+  // setMainThread()                                                    //
   //                                                                    //
-  _CORBA_MODULE_FN size_t MaxMessageSize();                             //
+  // POAs with the MAIN_THREAD policy dispatch calls on the "main"      //
+  // thread. By default, omniORB assumes that the thread which          //
+  // initialised the omnithread library is the "main" thread. To choose //
+  // a different thread, call this function from the desired "main"     //
+  // thread. The calling thread must have an omni_thread associated     //
+  // with it. If it does not, throws CORBA::INITIALIZE.                 //
+  //                                                                    //
+  // Note that calls are only actually dispatched to the "main" thread  //
+  // if ORB::run() or ORB::perform_work() is called from that thread.   //
+  //                                                                    //
+  _CORBA_MODULE_FN void setMainThread();                                //
   ////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////
-  // void MaxMessageSize(size_t newvalue)                               //
-  //                                                                    //
-  // Set the ORB-wide limit on the size of GIOP message (excluding      //
-  // the header).                                                       //
-  //                                                                    //
-  _CORBA_MODULE_FN void MaxMessageSize(size_t newvalue);                //
-  ////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////////// omniORB::logger //////////////////////////
+  //////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////
-  enum callTimeOutType { clientSide, serverSide };                      //
-  // Call timeout. On the client side, if a remote call takes longer    //
-  // than the timeout value, the ORB will shutdown the connection and   //
-  // raise a TRANSIENT.                                                 //
-  // On the server side, if the ORB cannot completely unmarshal a       //
-  // call's arguments in the defined timeout, it shutdown the           //
-  // connection.
-  //                                                                    //
-  // void callTimeOutPeriod() sets the per-call timeout period.         //
-  // If the time argument is zero, calls never timeout. This is the     //
-  // default.                                                           //
-  _CORBA_MODULE_FN void callTimeOutPeriod(callTimeOutType direction,    //
-					  CORBA::ULong sec,             //
-					  CORBA::ULong nanosec);        //
-  // Note: This function is *non-thread safe*!!! The behaviour of       //
-  //       concurrent calls to this function is undefined.              //
-  //                                                                    //
-  // CORBA::ULong callTimeOutPeriod       ()                            //
-  //   Returns the current timeout value                                //
-  _CORBA_MODULE_FN CORBA::ULong callTimeOutPeriod(                      //
-					     callTimeOutType direction, //
-                                             CORBA::ULong* nanosec);    //
-  ////////////////////////////////////////////////////////////////////////
+  static inline int trace(_CORBA_ULong tl) { return traceLevel >= tl; }
 
 
-  ////////////////////////////////////////////////////////////////////////
-  enum idleConnType { idleIncoming, idleOutgoing };                     //
-  // Idle connections shutdown. The ORB periodically scans all the      //
-  // incoming and outgoing connections to detect if they are idle.      //
-  // If no operation has passed through a connection for a scan period, //
-  // the ORB would treat this connection idle and shut it down.         //
-  //                                                                    //
-  // void idleConnectionScanPeriod() sets the scan period. The argument //
-  // is in number of seconds. If the argument is zero, the scan for idle//
-  // connection is disabled.                                            //
-  _CORBA_MODULE_FN void idleConnectionScanPeriod(idleConnType direction,//
-				       CORBA::ULong sec);               //
-  // Note: This function is *non-thread safe*!!! The behaviour of       //
-  //       concurrent calls to this function is undefined.              //
-  //                                                                    //
-  // CORBA::ULong idleConnectionScanPeriod()                            //
-  //   Returns the current scan period                                  //
-  _CORBA_MODULE_FN CORBA::ULong idleConnectionScanPeriod(               //
-					 idleConnType direction);       //
-  ////////////////////////////////////////////////////////////////////////
+  class logger {
+  public:
+    logger(const char* prefix = 0);  // prefix defaults to "omniORB: "
+    ~logger();
+    // The destructor flushes the message.
 
-  ////////////////////////////////////////////////////////////////////////
-  // The granularity at which the ORB scan for idle connections or	//
-  // stuck remote calls can be changed by scanGranularity().            //
-  // This value determines the minimum value that      	       	        //
-  // idleConnectionScanPeriod() can                                     //
-  // be implemented. The default value is 5 sec.                        //
-  // Setting the value to zero disable scanning altogether. This means  //
-  // both scan for idle connections or stuck remote calls are disabled  //
-  // as well.                                                           //
-  //                                                                    //
-  _CORBA_MODULE_FN void scanGranularity(CORBA::ULong sec);              //
-  // Note: This function is *non-thread safe*!!! The behaviour of       //
-  //       concurrent calls to this function is undefined.              //
-  //                                                                    //
-  // CORBA::ULong scanGranularity()                                     //
-  //   Returns the current timeout value                                //
-  _CORBA_MODULE_FN CORBA::ULong scanGranularity();                      //
-  ////////////////////////////////////////////////////////////////////////
+    logger& operator<<(char c);
+    logger& operator<<(unsigned char c) { return (*this) << (char)c; }
+    logger& operator<<(signed char c) { return (*this) << (char)c; }
+    logger& operator<<(const char *s);
+    logger& operator<<(const unsigned char *s) {
+      return (*this) << (const char*)s;
+    }
+    logger& operator<<(const signed char *s) {
+      return (*this) << (const char*)s;
+    }
+    logger& operator<<(const void *p);
+    logger& operator<<(int n);
+    logger& operator<<(unsigned int n);
+    logger& operator<<(long n);
+    logger& operator<<(unsigned long n);
+    logger& operator<<(short n) {return operator<<((int)n);}
+    logger& operator<<(unsigned short n) {return operator<<((unsigned int)n);}
+#ifdef HAS_Cplusplus_Bool
+    logger& operator<<(bool b) { return operator<<((int)b); }
+#endif
+#ifndef NO_FLOAT
+    logger& operator<<(double n);
+    logger& operator<<(float n) { return operator<<((double)n); }
+#endif
+    logger& operator<<(omniLocalIdentity*);
+    logger& operator<<(omniIdentity*);
+    logger& operator<<(omniObjKey&);
+
+    logger& operator<<(const CORBA::SystemException&);
+
+    class exceptionStatus {
+    public:
+      exceptionStatus(CORBA::CompletionStatus s, CORBA::ULong m) :
+	status(s), minor(m), minor_string(0) {}
+
+      exceptionStatus(CORBA::CompletionStatus s, const char* description) :
+	status(s), minor(0), minor_string(description) {}
+
+      CORBA::CompletionStatus status;
+      CORBA::ULong            minor;
+      const char*             minor_string;
+    private:
+      exceptionStatus();
+    };
+
+    logger& operator<<(const exceptionStatus&);
+
+    void flush();
+    // Flushes the logger -- it can then be re-used for another
+    // message.
+
+  private:
+    logger(const logger&);
+    logger& operator=(const logger&);
+
+    inline void reserve(int n) { if( pd_end - pd_p - 1 < n )  more(n); }
+    void more(int n);
+
+    const char* pd_prefix;
+    char*       pd_buf;
+    char*       pd_p;      // assert(*pd_p == '\0')
+    char*       pd_end;    // assert(pd_p < pd_end)
+  };
+
+
+  _CORBA_MODULE_FN void logf(const char* fmt ...);
+  // Writes log message with prefix, and appends '\n'.
+
+  _CORBA_MODULE_FN void do_logs(const char* msg);
+  // internal
+
+  _CORBA_MODULE_FN inline void logs(_CORBA_ULong tl, const char* msg) {
+    if( traceLevel >= tl )  do_logs(msg);
+  }
+  // Writes log message with prefix, and appends '\n'.
+
+
 
   ////////////////////////////////////////////////////////////////////////
   // When an operation is invoked via an object reference, a            //
@@ -513,103 +440,6 @@ _CORBA_MODULE_BEG
 				    systemExceptionHandler_t fn);       //
   ////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////
-  //                                                                    //
-  // This section is only for omniORB 2.x compatibility. Do not use for //
-  // new code.                                                          //
-  //                                                                    //
-  // An application can register a handler for loading objects          //
-  // dynamically. The handler should have the signature:                //
-  //                                                                    //
-  //          omniORB::loader::mapKeyToObject_t                         //
-  //                                                                    //
-  // When the ORB cannot locate the target object in this address space,//
-  // it calls the handler with the object key of the target.            //
-  // The handler is expected to instantiate the object, either in       //
-  // this address space or in another address space, and returns the    //
-  // object reference to the newly instantiated object. The ORB will    //
-  // then reply with a LOCATION_FORWARD message to instruct the client  //
-  // to retry using the object reference returned by the handler.       //
-  // When the handler returns, the ORB assumes ownership of the         //
-  // returned value. It will call CORBA::release() on the returned      //
-  // value when it has finished with it.                                //
-  //                                                                    //
-  // The handler may be called concurrently by multi-threads. Hence it  //
-  // must be thread-safe.                                               //
-  //                                                                    //
-  // If the handler cannot load the target object, it should return     //
-  // CORBA::Object::_nil(). The object will be treated as non-existing. //
-  //                                                                    //
-  // The application registers the handler with the ORB at runtime      //
-  // using omniORB::loader::set(). This function is not thread-safe.    //
-  // Calling this function again will replace the old handler with      //
-  // the new one.                                                       //
-  //                                                                    //
-  class loader {                                                        //
-  public:                                                               //
-    typedef CORBA::Object_ptr (*mapKeyToObject_t) (                     //
-                                       const objectKey& key);           //
-                                                                        //
-    static void set(mapKeyToObject_t NewKeyToObject);                   //
-  };                                                                    //
-  ////////////////////////////////////////////////////////////////////////
-
-
-  ////////////////////////////////////////////////////////////////////////
-  // class giopServerThreadWrapper                                      //
-  //                                                                    //
-  // At any time, a single instance of this class (a singleton) is      //
-  // registered with the runtime.                                       //
-  //                                                                    //
-  // What is the function of this class?                                //
-  //   The runtime uses a number of threads internally to process       //
-  //   requests from other address spaces. Each thread starts by        //
-  //   calling the run() method of the singleton. The thread            //
-  //   will exit when run() returns. The run() method takes two         //
-  //   arguments: a callback function <fn> and its argument <arg>.      //
-  //   The run() method *MUST* call fn(arg) to pass the control back    //
-  //   the runtime at some point. When fn() returns, the run() method   //
-  //   should cleanup and returns asap.                                 //
-  //                                                                    //
-  //   Application can modify the behaviour of run() by installing      //
-  //   another singleton using setGiopServerThreadWrapper(). The        //
-  //   singleton should be an instance of a derived class of            //
-  //   giopServerThreadWrapper. The derived class should overload the   //
-  //   virtual function run() to customise its behaviour.               //
-  //                                                                    //
-  //   For example, to insert the fault handler code for ObjectStore    //
-  //   a derived class ObjectStoreThreadWrapper is defined as follows:  //
-  //									//
-  //   class ObjectStoreThreadWrapper : omniORB::giopServerThreadWrapper//
-  //   {								//
-  //     public:							//
-  //       void run(void (*fn)(void*),void* arg) {			//
-  //         /* Setup the context to clean up the state attached by	//
-  //            ObjectStore to this thread */				//
-  //         OS_PSE_ESTABLISH_FAULT_HANDLER				//
-  //         fn(arg);							//
-  //         OS_PSE_END_FAILUT_HANDLER					//
-  //       }								//
-  //  }									//
-  //									//
-  //  And in the main()							//
-  // 									//
-  //  omniORB::setgiopServerThreadWrapper(new ObjectStoreThreadWrapper);//
-  //									//
-  class giopServerThreadWrapper {                                       //
-  public:								//
-    virtual void run(void (*fn)(void*), void* arg) { fn(arg); }		//
-    virtual ~giopServerThreadWrapper() {}                               //
-									//
-  // Install a new singleton. The old singleton will be deleted by the  //
-  // runtime. This function is not thread-safe and *SHOULD NOT* be used //
-  // when the BOA::impl_is_ready() has been called.                     //
-  // If the argument <p> is nil, the call will be siliently ignored.    //
-  //                                                                    //
-    static void setGiopServerThreadWrapper(giopServerThreadWrapper* p);	//
-    static giopServerThreadWrapper* getGiopServerThreadWrapper();       //
-  };									//
-  ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
   // class fatalException                                               //
@@ -632,240 +462,6 @@ _CORBA_MODULE_BEG
                                                                         //
     fatalException();                                                   //
   };                                                                    //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // maxTcpConnectionPerServer                                          //
-  //   The ORB could open more than one TCP connections to a server     //
-  // depending on the number of concurrent invocations to the same      //
-  // server. This variable decide what is the maximum number of	        //
-  // connections to use per server. This variable is read only once     //
-  // at ORB_init. If the number of concurrent invocations exceed this   //
-  // number, the extra invocations would be blocked until the  	       	//
-  // the outstanding ones return. (The default value is 5.)    	       	//
-  //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_VAR _core_attr unsigned int maxTcpConnectionPerServer;  //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // oneCallPerConnection                                               //
-  //   TRUE means only one call can be in progress at any time per      //
-  // connection.                                                        //
-  //                                                                    //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean oneCallPerConnection;     //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // threadPerConnectionPolicy                                          //
-  //   TRUE means dedicate one thread per connection on the server side //
-  //                                                                    //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean threadPerConnectionPolicy;//
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // maxServerThreadPerConnection                                       //
-  //   The max. no. of threads the server will dispatch to server the   //
-  //   requests coming from one connection.                             //
-  _CORBA_MODULE_VAR _core_attr unsigned int maxServerThreadPerConnection;
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // maxInterleavedCallsPerConnection                                   //
-  //   No. of interleaved calls per connection the server is prepared   //
-  //   to accept. If this number is exceeded, the connection is closed. //
-  _CORBA_MODULE_VAR _core_attr unsigned int maxInterleavedCallsPerConnection;
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // maxServerThreadPoolSize                                            //
-  //   The max. no. of threads the server will allocate to do various   //
-  //   ORB tasks. This number does not include the dedicated thread     //
-  //   per connection when the threadPerConnectionPolicy is in effect   //
-  _CORBA_MODULE_VAR _core_attr unsigned int maxServerThreadPoolSize;    //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // threadPerConnectionUpperLimit                                      //
-  //   If the one thread per connection is in effect, this number is    //
-  //   the max. no. of connections the server will allow before it      //
-  //   switch off the one thread per connection policy and move to      //
-  //   the thread pool policy.                                          //
-  _CORBA_MODULE_VAR _core_attr unsigned int threadPerConnectionUpperLimit;
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // threadPerConnectionLowerLimit                                      //
-  //   If the one thread per connection was in effect and was switched  //
-  //   off because threadPerConnectionUpperLimit has been exceeded      //
-  //   previously, this number tells when the policy should be restored //
-  //   when the number of connections drop.                             //
-  _CORBA_MODULE_VAR _core_attr unsigned int threadPerConnectionLowerLimit;
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // acceptBiDirectionalGIOP   	                                        //
-  //   Applies to the client side. Set to TRUE to indicates that the    //
-  //   ORB may choose to use a connection to do bidirectional GIOP      //
-  //   calls. Set to FALSE means the ORB should never do bidirectional. //
-  //   	       	       	       	       	       	       	       	        //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean acceptBiDirectionalGIOP;
-  // false by default.		  		                        //
-
-  ////////////////////////////////////////////////////////////////////////
-  // offerBiDirectionalGIOP   	                                        //
-  //   Applies to the server side. Set to TRUE to indicates that the    //
-  //   ORB may choose to accept a clients offer to use bidirectional    //
-  //   GIOP calls on a connection. Set to FALSE means the ORB should    //
-  //   never accept any bidirectional offer and should stick to normal  //
-  //   GIOP.   	       	       	       	       	       	       	        //
-  //   	       	       	       	       	       	       	       	        //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean offerBiDirectionalGIOP;
-  // false by default.				                        //
-
-  ////////////////////////////////////////////////////////////////////////
-  // unixTransportDirectory   	                                        //
-  //   Applies to the server side. Determine the directory in which     //
-  //   the unix domain socket is to be created.                         //
-  //   	       	       	       	       	       	       	       	        //
-  _CORBA_MODULE_VAR _core_attr const char* unixTransportDirectory;
-  // Default is /tmp/omni-<uid>/.		                        //
-
-  ////////////////////////////////////////////////////////////////////////
-  // unixTransportPermission   	                                        //
-  //   Applies to the server side. Determine the permission mode bits   //
-  //   the unix domain socket is set to.                                //
-  //   	       	       	       	       	       	       	       	        //
-  _CORBA_MODULE_VAR _core_attr CORBA::UShort unixTransportPermission;
-  // Default is 0777.               		                        //
-
-
-  ////////////////////////////////////////////////////////////////////////
-  // diiThrowsSysExceptions                                             //
-  //  If the value of this variable is TRUE then the Dynamic            //
-  // Invacation Interface functions (Request::invoke, send_oneway,      //
-  // send_deferred, get_response, poll_response) will throw system      //
-  // exceptions as appropriate. Otherwise the exception will be stored  //
-  // in the Environment pseudo object associated with the Request.      //
-  //  By default system exceptions are passed through the Environment   //
-  // object. The default value is TRUE(1).                              //
-  //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean diiThrowsSysExceptions;   //
-  //                                                                    //
-  //     This value can be changed at runtime either by command-line    //
-  //     option: -ORBdiiThrowsSysExceptions <0|1>, or by direct         //
-  //     assignment to this variable.                                   //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // abortOnInternalError                                               //
-  //  If the value of this variable is TRUE then the ORB will abort     //
-  // instead of throwing an exception when a fatal internal error is    //
-  // detected. This is useful for debuging the ORB -- as the stack will //
-  // not be unwound by the exception handler, so a stack trace can be   //
-  // obtained. The default value is FALSE(0).                           //
-  //  It is hoped that this will not often be needed by users of        //
-  // omniORB!                                                           //
-  //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean abortOnInternalError;     //
-  //                                                                    //
-  //     This value can be changed at runtime either by command-line    //
-  //     option: -ORBabortOnInternalError, or by direct assignment to   //
-  //     this variable.                                                 //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // objectTableSize                                                    //
-  // ?? Document.                                                       //
-  _CORBA_MODULE_VAR _CORBA_ULong objectTableSize;                       //
-  //                                                                    //
-  //     This value can be changed at runtime either by command-line    //
-  //     option: -ORBobjectTableSize <size>, or by direct assignment to //
-  //     this variable (*before* calling ORB_init()).                   //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // enableLcdMode()                                                    //
-  //  Call this function to enable 'Lowest Common Denominator' Mode.    //
-  // This will disable various features of IIOP and GIOP which are      //
-  // poorly supported by some ORBs, and disable warnings/errors when    //
-  // certain types of erroneous message are received on the wire.       //
-  //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_FN void enableLcdMode();                                //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // maxGIOPVersion()                                                   //
-  // Set the maximum GIOP version the ORB should support. The ORB tries //
-  // to match the <major>.<minor> version as specified. This function   //
-  // should only be called before ORB_init(). Calling this function     //
-  // after ORB_init()  does not cause the ORB to change its maximum     //
-  // supported version, in this case the ORB just returns its version   //
-  // number in <major>.<minor>.                                         //
-  // This function has the same effect as a command-line option:        //
-  //   -ORBmaxGIOPVersion <major no>.<minor no>                         //
-  //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_FN void maxGIOPVersion(_CORBA_Char& major,              //
-				       _CORBA_Char& minor);             //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // In pre-2.8.0 versions, the CORBA::Any extraction operator for     	//
-  //   1. unbounded string operator>>=(char*&)                          //
-  //   2. bounded string   operator>>=(to_string)                       //
-  //   3. object reference operator>>=(A_ptr&) for interface A          //
-  // Returns a copy of the value. The caller must free the returned     //
-  // value later.                                                       //
-  //                                                                    //
-  // With 2.8.0 and later, the semantics becomes non-copy, i.e. the Any //
-  // still own the storage of the returned value.   	       	       	//
-  // This would cause problem in programs that is written to use the    //
-  // pre-2.8.0 semantics. To make it easier for the transition,	       	//
-  // set omniORB_27_CompatibleAnyExtraction to 1.                       //
-  // This would revert the semantics to the pre-2.8.0 versions.         //
-  //                                                                    //
-  _CORBA_MODULE_VAR _dyn_attr                                           //
-                      CORBA::Boolean omniORB_27_CompatibleAnyExtraction;//
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // verifyObjectExistsAndType                                          //
-  // If the value of this variable is FALSE then the ORB will not       //
-  // send a GIOP LOCATE_REQUEST message to verify the existence of      //
-  // the object prior to the first invocation. Setting this variable    //
-  // if the other end is a buggy ORB that cannot handle GIOP            //
-  // LOCATE_REQUEST. The default is TRUE(1).                            //
-  //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean verifyObjectExistsAndType;//
-  //                                                                    //
-  //     This value can be changed at runtime either by command-line    //
-  //     option: -ORBverifyObjectExistsAndType,or by direct assignment  //
-  //     to this variable.                                              //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // poaHoldRequestTimeout                                              //
-  //  This variable can be used to set a time-out for calls being held  //
-  // in a POA which is in the HOLDING state.  It gives the time in      //
-  // seconds after which a TRANSIENT exception will be thrown if the    //
-  // POA is not transitioned to a different state.                      //
-  //  The default value is 0, for no time-out.                          //
-  //                                                                    //
-  _CORBA_MODULE_VAR int poaHoldRequestTimeout;                          //
-  //                                                                    //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  // supportCurrent                                                     //
-  // If the value of this variable is TRUE, per-thread information is   //
-  // made available through the Current interfaces, e.g.                //
-  // PortableServer::Current. If you do not need this information, you  //
-  // can set the value to FALSE(0), resulting in a small performance    //
-  // improvement. The default is TRUE(1).                               //
-  //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportCurrent;           //
-  //                                                                    //
-  //     This value can be changed at runtime by direct assignment      //
-  //     to this variable.                                              //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -899,212 +495,15 @@ _CORBA_MODULE_BEG
   };                                                                    //
   ////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////
-  //                                                                    //
-  // getInterceptors()                                                  //
-  //   Only call this function after ORB_init().                        //
-  //   The returned object contains all the ORB processing points where //
-  //   interception functions can be added.                             //
-  //   Calling this function before ORB_init() will result in a system  //
-  //   exception.                                                       //
-  _CORBA_MODULE_FN _OMNI_NS(omniInterceptors)* getInterceptors();       //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  //                                                                    //
-  // nativeCharCodeSet()                                                //
-  //   set or get the native code set for char and string               //
-  //                                                                    //
-  // nativeWCharCodeSet()                                               //
-  //   set or get the native code set for wchar and wstring             //
-  //                                                                    //
-  // anyCharCodeSet()                                                   //
-  //   set or get the preferred code set for char data inside anys      //
-  //                                                                    //
-  // anyWCharCodeSet()                                                  //
-  //   set or get the preferred code set for wchar data inside anys     //
-  //                                                                    //
-  // Code sets may only be set once, before ORB_init(). Attempts to set //
-  // them more than once, or after ORB_init(), throw BAD_INV_ORDER.     //
-  // If the requested code set is not available, throw NO_RESOURCES.    //
-  //                                                                    //
-  // Set functions are NOT thread-safe.                                 //
-  //                                                                    //
-  // Command line equivalents are -ORBnativeCharCodeSet, etc.           //
-  //                                                                    //
-  // Get functions return null if no code set is configured.            //
-  //                                                                    //
-  _CORBA_MODULE_FN void nativeCharCodeSet (const char* name);           //
-  _CORBA_MODULE_FN void nativeWCharCodeSet(const char* name);           //
-  _CORBA_MODULE_FN void anyCharCodeSet    (const char* name);           //
-  _CORBA_MODULE_FN void anyWCharCodeSet   (const char* name);           //
-                                                                        //
-  _CORBA_MODULE_FN const char* nativeCharCodeSet();                     //
-  _CORBA_MODULE_FN const char* nativeWCharCodeSet();                    //
-  _CORBA_MODULE_FN const char* anyCharCodeSet();                        //
-  _CORBA_MODULE_FN const char* anyWCharCodeSet();                       //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  //                                                                    //
-  // setMainThread()                                                    //
-  //                                                                    //
-  // POAs with the MAIN_THREAD policy dispatch calls on the "main"      //
-  // thread. By default, omniORB assumes that the thread which          //
-  // initialised the omnithread library is the "main" thread. To choose //
-  // a different thread, call this function from the desired "main"     //
-  // thread. The calling thread must have an omni_thread associated     //
-  // with it. If it does not, throws CORBA::INITIALIZE.                 //
-  //                                                                    //
-  // Note that calls are only actually dispatched to the "main" thread  //
-  // if ORB::run() or ORB::perform_work() is called from that thread.   //
-  //                                                                    //
-  _CORBA_MODULE_FN void setMainThread();                                //
-  ////////////////////////////////////////////////////////////////////////
-
-
-  // Internal configuration variables. Do not use!
-
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean useTypeCodeIndirections;
-  // true by default
-
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean acceptMisalignedTcIndirections;
-  // false by default
-
-  class logStream {
-  public:
-    logStream();
-    ~logStream();
-    logStream& operator<<(char c);
-    logStream& operator<<(unsigned char c) { return (*this) << (char)c; }
-    logStream& operator<<(signed char c) { return (*this) << (char)c; }
-    logStream& operator<<(const char *s);
-    logStream& operator<<(const unsigned char *s) {
-      return (*this) << (const char*)s;
-    }
-    logStream& operator<<(const signed char *s) {
-      return (*this) << (const char*)s;
-    }
-    logStream& operator<<(const void *p);
-    logStream& operator<<(int n);
-    logStream& operator<<(unsigned int n);
-    logStream& operator<<(long n);
-    logStream& operator<<(unsigned long n);
-    logStream& operator<<(short n) {return operator<<((int)n);}
-    logStream& operator<<(unsigned short n) {return operator<<((unsigned int)n);}
-#ifdef HAS_Cplusplus_Bool
-    logStream& operator<<(bool b) { return operator<<((int)b); }
-#endif
-#ifndef NO_FLOAT
-    logStream& operator<<(double n);
-    logStream& operator<<(float n) { return operator<<((double)n); }
-#endif
-    logStream& flush();
-  private:
-    void* pd_state;
-  };
-
-  _CORBA_MODULE_VAR _core_attr logStream& log;
-
-  //////////////////////////////////////////////////////////////////////
-  /////////////////////////// omniORB::logger //////////////////////////
-  //////////////////////////////////////////////////////////////////////
-
-  static inline int trace(int tl) { return traceLevel >= tl; }
-
-
-  class logger {
-  public:
-    logger(const char* prefix = 0);  // prefix defaults to "omniORB: "
-    ~logger();
-    // The destructor flushes the message.
-
-    logger& operator<<(char c);
-    logger& operator<<(unsigned char c) { return (*this) << (char)c; }
-    logger& operator<<(signed char c) { return (*this) << (char)c; }
-    logger& operator<<(const char *s);
-    logger& operator<<(const unsigned char *s) {
-      return (*this) << (const char*)s;
-    }
-    logger& operator<<(const signed char *s) {
-      return (*this) << (const char*)s;
-    }
-    logger& operator<<(const void *p);
-    logger& operator<<(int n);
-    logger& operator<<(unsigned int n);
-    logger& operator<<(long n);
-    logger& operator<<(unsigned long n);
-    logger& operator<<(short n) {return operator<<((int)n);}
-    logger& operator<<(unsigned short n) {return operator<<((unsigned int)n);}
-#ifdef HAS_Cplusplus_Bool
-    logger& operator<<(bool b) { return operator<<((int)b); }
-#endif
-#ifndef NO_FLOAT
-    logger& operator<<(double n);
-    logger& operator<<(float n) { return operator<<((double)n); }
-#endif
-    logger& operator<<(omniLocalIdentity*);
-    logger& operator<<(omniIdentity*);
-    logger& operator<<(omniObjKey&);
-
-    logger& operator<<(const CORBA::SystemException&);
-
-    class exceptionStatus {
-    public:
-      exceptionStatus(CORBA::CompletionStatus s, CORBA::ULong m) :
-	status(s), minor(m), minor_string(0) {}
-
-      exceptionStatus(CORBA::CompletionStatus s, const char* description) :
-	status(s), minor(0), minor_string(description) {}
-
-      CORBA::CompletionStatus status;
-      CORBA::ULong            minor;
-      const char*             minor_string;
-    private:
-      exceptionStatus();
-    };
-
-    logger& operator<<(const exceptionStatus&);
-
-    void flush();
-    // Flushes the logger -- it can then be re-used for another
-    // message.
-
-  private:
-    logger(const logger&);
-    logger& operator=(const logger&);
-
-    inline void reserve(int n) { if( pd_end - pd_p - 1 < n )  more(n); }
-    void more(int n);
-
-    const char* pd_prefix;
-    char*       pd_buf;
-    char*       pd_p;      // assert(*pd_p == '\0')
-    char*       pd_end;    // assert(pd_p < pd_end)
-  };
-
-
-  _CORBA_MODULE_FN void logf(const char* fmt ...);
-  // Writes log message with prefix, and appends '\n'.
-
-  _CORBA_MODULE_FN void do_logs(const char* msg);
-  // internal
-
-  _CORBA_MODULE_FN inline void logs(int tl, const char* msg) {
-    if( traceLevel >= tl )  do_logs(msg);
-  }
-  // Writes log message with prefix, and appends '\n'.
-
-  _CORBA_MODULE_VAR _core_attr GIOP::AddressingDisposition giopTargetAddressMode;
-
+#define _INCLUDE_OMNIORBCOMPAT_
+#include <omniORB4/omniORBcompat.h>
+#undef  _INCLUDE_OMNIORBCOMPAT_
 
 #ifndef HAS_Cplusplus_Namespace
   friend class omni;
   friend class CORBA;
 private:
 #endif
-  _CORBA_MODULE_VAR _core_attr objectKey seed;
-
 
 #ifndef HAS_Cplusplus_catch_exception_by_base
   // Internal omniORB class.  Used in the stubs to pass
