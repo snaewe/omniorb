@@ -8,6 +8,25 @@
 
 <buglist version="3.0.2">
 
+<bug id="13" date="Mon Jan 15 15:49:43 GMT 2001" user="dpg1">
+
+  <summary>Bug in omniidl C++ back-end with unusual
+  inheritance</summary>
+  <reported>Daniel von Tabouillot</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2001-01/0100.html"/>
+  <text>
+  IDL like the following would cause an internal error in the omniidl
+  C++ back-end:
+
+    <pre>
+    interface A;
+    typedef A B;
+    interface A {};
+    interface C : B {};
+    </pre>
+  </text>
+</bug>
+
 <bug id="12" date="Mon Dec 11 09:51:35 GMT 2000" user="dpg1">
 
   <summary>CORBA::Object::_narrow() does not increment the reference

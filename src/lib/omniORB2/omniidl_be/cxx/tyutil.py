@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.10  2001/01/15 15:57:53  dpg1
+# Bug in omniidl C++ back-end when an interface is inherited from a
+# typedef to a forward-declared interface.
+#
 # Revision 1.30.2.9  2000/08/07 15:34:34  dpg1
 # Partial back-port of long long from omni3_1_develop.
 #
@@ -763,6 +767,8 @@ def allInherits(interface):
         # extend search one level deeper than current
         next = []
         for c in map(remove_typedefs, current):
+            if isinstance(c, idlast.Forward):
+                c = c.fullDecl()
             next = next + c.inherits()
 
         return next + bfs(next, bfs)

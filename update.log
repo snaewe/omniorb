@@ -1,3 +1,16 @@
+Mon Jan 15 15:49:43 GMT 2001 dpg1
+=================================
+
+- Bug in omniidl C++ back-end when an interface is inherited from a
+  typedef to a forward-declared interface.
+
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+
+- Potential bug in forward-declared AST nodes.
+
+src/tool/omniidl/python/omniidl/idlast.py
+
+
 Wed Jan 10 15:21:47 GMT 2001 dpg1
 =================================
 
