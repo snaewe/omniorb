@@ -27,7 +27,7 @@ micro_version = $(word 3,$(subst ., ,$(VERSION)))
 
 #
 # Life cycle run time library version
-LC_VERSION = 1.2.3
+LC_VERSION = 1.3.0
 
 lc_major_version = $(word 1,$(subst ., ,$(LC_VERSION)))
 lc_minor_version = $(word 2,$(subst ., ,$(LC_VERSION)))
