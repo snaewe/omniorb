@@ -7,6 +7,22 @@
 
 // amrw (7/3/95)
 
+#ifndef CONCAT
+#define CONCAT(A,B) A##B
+#endif 
+
+#ifndef CONCAT3
+#define CONCAT3(A,B,C) A##B##C
+#endif
+
+#ifndef COLONCONCAT
+#define COLONCONCAT(A,B) A/**/B
+#endif
+
+#ifndef COLONCONCAT3
+#define COLONCONCAT3(A,B,C) A/**/B/**/C
+#endif
+
 #ifdef NONNESTED
 
 // MACROS FOR COMPILERS WHICH DO NOT FULLY SUPPORT NESTED CLASSES
