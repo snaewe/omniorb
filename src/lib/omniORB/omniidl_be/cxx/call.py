@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.15  2005/03/29 15:52:54  dgrisby
+# Change on 1st July to void operation call descriptors broke with
+# compilers that cannot catch by base class.
+#
 # Revision 1.1.4.14  2004/07/01 19:13:32  dgrisby
 # Suppress compiler warnings on void methods. Thanks Peter Klotz.
 #
@@ -338,13 +342,8 @@ class CallDescriptor:
                           cxx_operation_name = operation,
                           operation_arguments = string.join(impl_args, ", "))
 
-        if get_cd != "":
-            cd_argument = " cd"
-        else:
-            cd_argument = ""
         stream.out(template.interface_callback,
                    local_call_descriptor = function_name,
-                   cd = cd_argument,
                    get_call_descriptor = get_cd,
                    impl_fqname =interface_name.prefix("_impl_").fullyQualify(),
                    name = interface_name.fullyQualify(),

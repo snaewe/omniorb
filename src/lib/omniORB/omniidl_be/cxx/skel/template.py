@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.31  2005/03/29 15:52:53  dgrisby
+# Change on 1st July to void operation call descriptors broke with
+# compilers that cannot catch by base class.
+#
 # Revision 1.3.2.30  2004/10/17 21:47:40  dgrisby
 # Fully qualify scopes in _ptrToObjRef and _ptrToInterface.
 #
@@ -349,7 +353,7 @@ interface_shortcut_inh = """\
 interface_callback = """\
 // Local call call-back function.
 static void
-@local_call_descriptor@(omniCallDescriptor*@cd@, omniServant* svnt)
+@local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
 {
   @get_call_descriptor@
   @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
