@@ -209,6 +209,9 @@ main(int argc, char **argv)
 
       context->list(0, bl, bi);
 
+      if (CORBA::is_nil(bi))
+	goto done;
+
       while (bi->next_one(b)) {
 
 	CORBA::String_var sname = omniURI::nameToString(b->binding_name);

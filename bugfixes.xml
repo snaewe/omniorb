@@ -8,6 +8,14 @@
 
 <buglist version="3.0.4">
 
-<nobugs/>
+<bug id="1" date="Fri Jul  6 14:30:35 BST 2001" user="dpg1">
+
+  <summary>nameclt fails when passed a nil BindingIterator</summary>
+  <reported>Tilman Skobowsky</reported>
+  <text>
+  Some Naming services return a nil BindingIterator if a context is
+  empty. nameclt would blindly dereference the nil in this case.
+  </text>
+</bug>
 
 </buglist>

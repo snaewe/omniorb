@@ -1,3 +1,11 @@
+Fri Jul  6 14:30:35 BST 2001 dpg1
+=================================
+
+- nameclt did not cope with a nil BindingIterator
+
+src/appl/utils/nameclt/nameclt.cc
+
+
 Wed Jul  4 10:53:06 BST 2001 dpg1
 =================================
 
