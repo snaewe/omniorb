@@ -1,3 +1,30 @@
+Fri Aug 16 16:48:43 BST 2002 dgrisby
+====================================
+
+- Bug in generated code with evil IDL that uses the same parameter
+  names as type names.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/support.py
+
+- Makefile tweaks to allow all COS interfaces to be built.
+
+src/services/mklib/libdefs.mk
+
+- Bugs accessing uninitialised String_vars with [].
+
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+- Interceptor tweaks.
+
+include/omniORB4/omniInterceptors.h
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Fri Jul 12 11:14:03 BST 2002 dgrisby
 ====================================
 
