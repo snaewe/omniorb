@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/07/31 16:16:15  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.1  2001/04/18 18:10:43  sll
   Big checkin with the brand new internal APIs.
 
@@ -49,6 +52,11 @@ class tcpTransportImpl : public giopTransportImpl {
   giopAddress*   toAddress(const char* param);
   CORBA::Boolean isValid(const char* param);
   CORBA::Boolean addToIOR(const char* param);
+
+  static CORBA::Boolean parseAddress(const char* param,
+				     IIOP::Address& address);
+  // parse the string of the form <host>:<port> to an IIOP address.
+  // return 0 if the string is not in the valid format.
 
  private:
   tcpTransportImpl(const tcpTransportImpl&);

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/07/31 16:16:23  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.4  2001/07/13 15:36:24  sll
   Revised declaration to match the changes in giopConnection.
 
@@ -50,14 +53,14 @@
 #define __SSLCONNECTION_H__
 
 
-#include <tcp/tcpConnection.h>
+#include <SocketCollection.h>
 #include <openssl/ssl.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
 class sslEndpoint;
 
-class sslConnection : public giopConnection {
+class sslConnection : public giopConnection, public SocketLink {
  public:
 
   int Send(void* buf, size_t sz,
@@ -78,25 +81,40 @@ class sslConnection : public giopConnection {
 
   void clearSelectable();
 
-  void Peek(giopEndpoint::notifyReadable_t func,void* cookie);
+  void Peek(giopConnection::notifyReadable_t func,void* cookie);
 
-  tcpSocketHandle_t handle() const { return pd_socket; }
+  SocketHandle_t handle() const { return pd_socket; }
   ::SSL*            ssl_handle() const { return pd_ssl; }
 
-  sslConnection(tcpSocketHandle_t,::SSL*,sslEndpoint* endpoint = 0);
+  sslConnection(SocketHandle_t,::SSL*,SocketCollection*);
 
   ~sslConnection();
 
-  friend class sslEndpoint;
 
  private:
-  tcpSocketHandle_t pd_socket;
-  sslEndpoint*      pd_endpoint;
   ::SSL*            pd_ssl;
+  SocketCollection* pd_belong_to;
   CORBA::String_var pd_myaddress;
   CORBA::String_var pd_peeraddress;
-  sslConnection*    pd_next;
+
 };
+
+
+class sslActiveConnection : public giopActiveConnection, public sslConnection {
+public:
+  giopActiveCollection* registerMonitor();
+  giopConnection& getConnection();
+
+  sslActiveConnection(SocketHandle_t,::SSL*);
+  ~sslActiveConnection();
+
+private:
+  CORBA::Boolean pd_registered;
+
+  sslActiveConnection(const sslActiveConnection&);
+  sslActiveConnection& operator=(const sslActiveConnection&);
+};
+
 
 OMNI_NAMESPACE_END(omni)
 

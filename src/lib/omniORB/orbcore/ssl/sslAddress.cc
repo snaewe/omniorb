@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/07/31 16:16:24  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.5  2001/07/26 16:37:21  dpg1
   Make sure static initialisers always run.
 
@@ -54,6 +57,7 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
 #include <omniORB4/sslContext.h>
+#include <SocketCollection.h>
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <openssl/err.h>
@@ -114,14 +118,14 @@ sslAddress::duplicate() const {
 }
 
 /////////////////////////////////////////////////////////////////////////
-giopConnection*
+giopActiveConnection*
 sslAddress::Connect(unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) const {
 
   struct sockaddr_in raddr;
   LibcWrapper::hostent_var h;
   int  rc;
-  tcpSocketHandle_t sock;
+  SocketHandle_t sock;
     
   if (! LibcWrapper::isipaddr(pd_address.host)) {
     if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
@@ -150,7 +154,7 @@ sslAddress::Connect(unsigned long deadline_secs,
     return 0;
   }
 
-  if (tcpConnection::setnonblocking(sock) == RC_INVALID_SOCKET) {
+  if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {
     CLOSESOCKET(sock);
     return 0;
   }
@@ -169,7 +173,7 @@ sslAddress::Connect(unsigned long deadline_secs,
     struct timeval t;
 
     if (deadline_secs || deadline_nanosecs) {
-      tcpConnection::setTimeOut(deadline_secs,deadline_nanosecs,t);
+      SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
       if (t.tv_sec == 0 && t.tv_usec == 0) {
 	// Already timeout.
 	CLOSESOCKET(sock);
@@ -230,7 +234,7 @@ sslAddress::Connect(unsigned long deadline_secs,
 
   } while (0);
 
-  if (tcpConnection::setblocking(sock) == RC_INVALID_SOCKET) {
+  if (SocketSetblocking(sock) == RC_INVALID_SOCKET) {
     CLOSESOCKET(sock);
     return 0;
   }
@@ -245,7 +249,7 @@ sslAddress::Connect(unsigned long deadline_secs,
 
     switch(code) {
     case SSL_ERROR_NONE:
-      return new sslConnection(sock,ssl);
+      return new sslActiveConnection(sock,ssl);
 
     case SSL_ERROR_WANT_READ:
     case SSL_ERROR_WANT_WRITE:

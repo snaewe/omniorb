@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/07/31 16:16:17  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.5  2001/07/13 15:34:24  sll
   Added the ability to monitor connections and callback to the giopServer when
   data has arrived at a connection.
@@ -51,41 +54,32 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <SocketCollection.h>
 #include <tcp/tcpConnection.h>
 #include <tcp/tcpAddress.h>
 #include <tcp/tcpEndpoint.h>
+#include <stdio.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpEndpoint);
 
 OMNI_NAMESPACE_BEGIN(omni)
 
 /////////////////////////////////////////////////////////////////////////
-unsigned long tcpEndpoint::scan_interval_sec  = 0;
-unsigned long tcpEndpoint::scan_interval_nsec = 50*1000*1000;
-CORBA::ULong  tcpEndpoint::hashsize           = 103;
-
-
-/////////////////////////////////////////////////////////////////////////
 tcpEndpoint::tcpEndpoint(const IIOP::Address& address) :
-  pd_socket(RC_INVALID_SOCKET), pd_address(address), 
-  pd_n_fdset_1(0), pd_n_fdset_2(0), pd_n_fdset_dib(0),
-  pd_abs_sec(0), pd_abs_nsec(0) {
+  pd_socket(RC_INVALID_SOCKET), pd_address(address),
+  pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
+  pd_callback_cookie(0) {
 
   pd_address_string = (const char*) "giop:tcp:255.255.255.255:65535";
   // address string is not valid until bind is called.
-
-  FD_ZERO(&pd_fdset_1);
-  FD_ZERO(&pd_fdset_2);
-  FD_ZERO(&pd_fdset_dib);
-
-  pd_hash_table = new tcpConnection* [hashsize];
-  for (CORBA::ULong i=0; i < hashsize; i++)
-    pd_hash_table[i] = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
 tcpEndpoint::tcpEndpoint(const char* address) :
   pd_socket(RC_INVALID_SOCKET),
-  pd_n_fdset_1(0), pd_n_fdset_2(0), pd_n_fdset_dib(0),
-  pd_abs_sec(0), pd_abs_nsec(0) {
+  pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
+  pd_callback_cookie(0) {
 
   pd_address_string = address;
   // OMNIORB_ASSERT(strncmp(address,"giop:tcp:",9) == 0);
@@ -103,14 +97,6 @@ tcpEndpoint::tcpEndpoint(const char* address) :
   // OMNIORB_ASSERT(rc == 1);
   // OMNIORB_ASSERT(v > 0 && v < 65536);
   pd_address.port = v;
-
-  FD_ZERO(&pd_fdset_1);
-  FD_ZERO(&pd_fdset_2);
-  FD_ZERO(&pd_fdset_dib);
-
-  pd_hash_table = new tcpConnection* [hashsize];
-  for (CORBA::ULong i=0; i < hashsize; i++)
-    pd_hash_table[i] = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -218,10 +204,6 @@ tcpEndpoint::Bind() {
   sprintf((char*)pd_address_string,format,
 	  (const char*)pd_address.host,(int)pd_address.port);
 
-  FD_SET(pd_socket,&pd_fdset_1);
-  FD_SET(pd_socket,&pd_fdset_2);
-  pd_n_fdset_1++;
-  pd_n_fdset_2++;
   return 1;
 }
 
@@ -230,8 +212,8 @@ void
 tcpEndpoint::Poke() {
 
   tcpAddress* target = new tcpAddress(pd_address);
-  tcpConnection* conn;
-  if ((conn = (tcpConnection*)target->Connect()) == 0) {
+  giopActiveConnection* conn;
+  if ((conn = target->Connect()) == 0) {
     if (omniORB::trace(1)) {
       omniORB::logger log;
       log << "Warning: Fail to connect to myself ("
@@ -253,266 +235,44 @@ tcpEndpoint::Shutdown() {
 
 /////////////////////////////////////////////////////////////////////////
 giopConnection*
-tcpEndpoint::AcceptAndMonitor(giopEndpoint::notifyReadable_t func,
+tcpEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 			      void* cookie) {
 
   OMNIORB_ASSERT(pd_socket != RC_INVALID_SOCKET);
 
-  struct timeval timeout;
-  fd_set         rfds;
-  tcpSocketHandle_t sock;
-  int            total;
-  
+  pd_callback_func = func;
+  pd_callback_cookie = cookie;
+  setSelectable(pd_socket,1,0,0);
+
   while (1) {
-
-    // (pd_abs_sec,pd_abs_nsec) define the absolute time when we switch fdset
-    tcpConnection::setTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
-
-    if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
-
-      omni_thread::get_time(&pd_abs_sec,&pd_abs_nsec,
-			    scan_interval_sec,scan_interval_nsec);
-      timeout.tv_sec = scan_interval_sec;
-      timeout.tv_usec = scan_interval_nsec / 1000;
-
-      omni_tracedmutex_lock sync(pd_fdset_lock);
-      rfds  = pd_fdset_2;
-      total = pd_n_fdset_2;
-      pd_fdset_2 = pd_fdset_1;
-      pd_n_fdset_2 = pd_n_fdset_1;
-    }
-    else {
-
-      omni_tracedmutex_lock sync(pd_fdset_lock);
-      rfds  = pd_fdset_2;
-      total = pd_n_fdset_2;
-    }
-
-    int maxfd = 0;
-    int fd = 0;
-    while (total) {
-      if (FD_ISSET(fd,&rfds)) {
-	maxfd = fd;
-	total--;
-      }
-      fd++;
-    }
-
-    int nready = select(maxfd+1,&rfds,0,0,&timeout);
-
-    if (nready == RC_SOCKET_ERROR) {
-      if (ERRNO != RC_EINTR) {
-	sock = RC_SOCKET_ERROR;
-	break;
-      }
-      else {
-	continue;
-      }
-    }
-
-    // Reach here if nready >= 0
-
-    if (FD_ISSET(pd_socket,&rfds)) {
-      // Got a new connection
-      sock = ::accept(pd_socket,0,0);
-      break;
-    }
-
-    {
-      omni_tracedmutex_lock sync(pd_fdset_lock);
-
-      // Process the result from the select.
-      tcpSocketHandle_t fd = 0;
-      while (nready) {
-	if (FD_ISSET(fd,&rfds)) {
-	  notifyReadable(fd,func,cookie);
-	  if (FD_ISSET(fd,&pd_fdset_1)) {
-	    pd_n_fdset_1--;
-	    FD_CLR(fd,&pd_fdset_1);
-	  }
-	  if (FD_ISSET(fd,&pd_fdset_dib)) {
-	    pd_n_fdset_dib--;
-	    FD_CLR(fd,&pd_fdset_dib);
-	  }
-	  nready--;
-	}
-	fd++;
-      }
-
-      // Process pd_fdset_dib. Those sockets with their bit set have
-      // already got data in buffer. We do a call back for these sockets if
-      // their entries in pd_fdset_1 is also set.
-      fd = 0;
-      nready = pd_n_fdset_dib;
-      while (nready) {
-	if (FD_ISSET(fd,&pd_fdset_dib)) {
-	  if (FD_ISSET(fd,&pd_fdset_2)) {
-	    notifyReadable(fd,func,cookie);
-	    if (FD_ISSET(fd,&pd_fdset_1)) {
-	      pd_n_fdset_1--;
-	      FD_CLR(fd,&pd_fdset_1);
-	    }
-	    pd_n_fdset_dib--;
-	    FD_CLR(fd,&pd_fdset_dib);
-	  }
-	  nready--;
-	}
-	fd++;
-      }
+    pd_new_conn_socket = RC_INVALID_SOCKET;
+    if (!Select()) break;
+    if (pd_new_conn_socket != RC_INVALID_SOCKET) {
+      return  new tcpConnection(pd_new_conn_socket,this);
     }
   }
-
-  if (sock == RC_SOCKET_ERROR) {
-    return 0;
-  }
-  else {
-    return new tcpConnection(sock,this);
-  }
-
+  return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
-void
-tcpEndpoint::notifyReadable(tcpSocketHandle_t fd,
-			    giopEndpoint::notifyReadable_t func,
-			    void* cookie) {
+CORBA::Boolean
+tcpEndpoint::notifyReadable(SocketHandle_t fd) {
 
-  // Caller hold pd_fdset_lock
-
-  if (FD_ISSET(fd,&pd_fdset_2)) {
-    pd_n_fdset_2--;
-    FD_CLR(fd,&pd_fdset_2);
-    giopConnection* conn = 0;
-    tcpConnection** head = &(pd_hash_table[fd%hashsize]);
-    while (*head) {
-      if ((*head)->handle() == fd) {
-	conn = (giopConnection*)(*head);
-	break;
-      }
-      head = &((*head)->pd_next);
+  if (fd == pd_socket) {
+    SocketHandle_t sock;
+    sock = ::accept(pd_socket,0,0);
+    if (sock == RC_SOCKET_ERROR) {
+      return 0;
     }
-    if (conn) {
-      // Note: do the callback while holding pd_fdset_lock
-      func(cookie,conn);
-    }
+    pd_new_conn_socket = sock;
+    setSelectable(pd_socket,1,0,1);
+    return 1;
   }
-}
-
-/////////////////////////////////////////////////////////////////////////
-void
-tcpConnection::setSelectable(CORBA::Boolean now,
-			     CORBA::Boolean data_in_buffer) {
-
-  if (!pd_endpoint) return;
-
-  omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-
-  if (data_in_buffer && !FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_dib))) {
-    pd_endpoint->pd_n_fdset_dib++;
-    FD_SET(pd_socket,&(pd_endpoint->pd_fdset_dib));
+  SocketLink* conn = findSocket(fd,1);
+  if (conn) {
+    pd_callback_func(pd_callback_cookie,(tcpConnection*)conn);
   }
-
-  if (!FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1)))
-    pd_endpoint->pd_n_fdset_1++;
-  FD_SET(pd_socket,&(pd_endpoint->pd_fdset_1));
-  if (now) {
-    if (!FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_2)))
-      pd_endpoint->pd_n_fdset_2++;
-    FD_SET(pd_socket,&(pd_endpoint->pd_fdset_2));
-    // XXX poke the thread doing accept to look at the fdset immediately.
-  }
+  return 1;
 }
-
-
-/////////////////////////////////////////////////////////////////////////
-void
-tcpConnection::clearSelectable() {
-
-  if (!pd_endpoint) return;
-
-  omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-
-  if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1)))
-    pd_endpoint->pd_n_fdset_1--;
-  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_1));
-  if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_2)))
-    pd_endpoint->pd_n_fdset_2--;
-  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_2));
-  if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_dib)))
-    pd_endpoint->pd_n_fdset_dib--;
-  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_dib));
-}
-
-/////////////////////////////////////////////////////////////////////////
-void
-tcpConnection::Peek(giopEndpoint::notifyReadable_t func, void* cookie) {
-
-  if (!pd_endpoint) return;
-
-  {
-    omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-   
-    // Do nothing if this connection is not set to be monitored.
-    if (!FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1)))
-      return;
-
-    // If data in buffer is set, do callback straight away.
-    if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_dib))) {
-      func(cookie,this);
-      if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1))) {
-	pd_endpoint->pd_n_fdset_1--;
-	FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_1));
-      }
-      pd_endpoint->pd_n_fdset_2--;
-      FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_2));
-      pd_endpoint->pd_n_fdset_dib--;
-      FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_dib));
-    }
-  }
-
-  struct timeval timeout;
-  // select on the socket for half the time of scan_interval, if no request
-  // arrives in this interval, we just let AcceptAndMonitor take care
-  // of it.
-  timeout.tv_sec = tcpEndpoint::scan_interval_sec / 2;
-  timeout.tv_usec = tcpEndpoint::scan_interval_nsec / 1000 / 2;
-  fd_set         rfds;
-
-  do {
-    FD_SET(pd_socket,&rfds);
-    int nready = select(pd_socket+1,&rfds,0,0,&timeout);
-
-    if (nready == RC_SOCKET_ERROR) {
-      if (ERRNO != RC_EINTR) {
-	break;
-      }
-      else {
-	continue;
-      }
-    }
-
-    // Reach here if nready >= 0
-
-    if (FD_ISSET(pd_socket,&rfds)) {
-      omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-
-      // Are we still interested?
-      if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1))) {
-	func(cookie,this);
-	if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_2))) {
-	  pd_endpoint->pd_n_fdset_2--;
-	  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_2));
-	}
-	pd_endpoint->pd_n_fdset_1--;
-	FD_CLR(pd_socket,&pd_endpoint->pd_fdset_1);
-	if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_dib))) {
-	  pd_endpoint->pd_n_fdset_dib--;
-	  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_dib));
-	}
-      }
-    }
-  } while(0);
-}
-
 
 OMNI_NAMESPACE_END(omni)

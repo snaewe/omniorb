@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/07/31 16:16:16  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.3  2001/07/13 15:34:24  sll
   Added the ability to monitor connections and callback to the giopServer when
   data has arrived at a connection.
@@ -46,56 +49,82 @@
 #ifndef __TCPENDPOINT_H__
 #define __TCPENDPOINT_H__
 
-#include <omniORB4/tracedthread.h>
-
 OMNI_NAMESPACE_BEGIN(omni)
 
 class tcpConnection;
 
-class tcpEndpoint : public giopEndpoint {
+class tcpEndpoint : public giopEndpoint, public SocketCollection {
 public:
 
   tcpEndpoint(const IIOP::Address& address);
   tcpEndpoint(const char* address);
+
+  // The following implement giopEndpoint abstract functions
   const char* type() const;
   const char* address() const;
   CORBA::Boolean Bind();
-  giopConnection* AcceptAndMonitor(notifyReadable_t,void*);
+  giopConnection* AcceptAndMonitor(giopConnection::notifyReadable_t,void*);
   void Poke();
   void Shutdown();
 
   ~tcpEndpoint();
 
-  friend class tcpConnection;
-
-  static unsigned long scan_interval_sec;
-  static unsigned long scan_interval_nsec;
-  static CORBA::ULong  hashsize;
+protected:
+  CORBA::Boolean notifyReadable(SocketHandle_t);
+  // implement SocketCollection::notifyReadable
   
- private:
-  tcpSocketHandle_t    pd_socket;
+
+private:
+  SocketHandle_t       pd_socket;
   IIOP::Address        pd_address;
   CORBA::String_var    pd_address_string;
-  tcpSocketHandleSet_t pd_fdset_1;
-  tcpSocketHandleSet_t pd_fdset_2;
-  tcpSocketHandleSet_t pd_fdset_dib; // data in buffer
-  int                  pd_n_fdset_1;
-  int                  pd_n_fdset_2;
-  int                  pd_n_fdset_dib;
-  omni_tracedmutex     pd_fdset_lock;
-  unsigned long        pd_abs_sec;
-  unsigned long        pd_abs_nsec;
-  tcpConnection**      pd_hash_table;      
+
+  SocketHandle_t                   pd_new_conn_socket;
+  giopConnection::notifyReadable_t pd_callback_func;
+  void*                            pd_callback_cookie;
 
   tcpEndpoint();
   tcpEndpoint(const tcpEndpoint&);
-
-  void notifyReadable(tcpSocketHandle_t,
-		      giopEndpoint::notifyReadable_t func,
-		      void*);
-
+  tcpEndpoint& operator=(const tcpEndpoint&);
 };
 
+
+class tcpActiveConnection;
+
+class tcpActiveCollection : public giopActiveCollection, 
+			    public SocketCollection {
+public:
+  const char* type() const;
+  // implement giopActiveCollection::type
+
+  void Monitor(giopConnection::notifyReadable_t func, void* cookie);
+  // implement giopActiveCollection::Monitor
+
+  CORBA::Boolean isEmpty() const;
+  // implement giopActiveCollection::isEmpty
+
+  tcpActiveCollection();
+  ~tcpActiveCollection();
+
+  friend class tcpActiveConnection;
+
+protected:
+  CORBA::Boolean notifyReadable(SocketHandle_t);
+  // implement SocketCollection::notifyReadable
+
+  void addMonitor(SocketHandle_t);
+  void removeMonitor(SocketHandle_t);
+
+private:
+  CORBA::ULong      pd_n_sockets;
+  omni_tracedmutex  pd_lock;
+
+  giopConnection::notifyReadable_t pd_callback_func;
+  void*                            pd_callback_cookie;
+
+  tcpActiveCollection(const tcpActiveCollection&);
+  tcpActiveCollection& operator=(const tcpActiveCollection&);
+};
 
 OMNI_NAMESPACE_END(omni)
 

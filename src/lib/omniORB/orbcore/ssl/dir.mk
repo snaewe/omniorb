@@ -1,4 +1,5 @@
 SSL_SRCS = \
+           sslActive.cc \
            sslAddress.cc \
            sslConnection.cc \
            sslEndpoint.cc \

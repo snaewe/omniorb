@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/07/31 16:16:17  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.5  2001/07/13 15:32:50  sll
   Enter a mapping from a socket to a giopConnection in the endpoint's hash
   table.
@@ -52,69 +55,14 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <SocketCollection.h>
 #include <tcp/tcpConnection.h>
 #include <stdio.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpConnection);
 
 OMNI_NAMESPACE_BEGIN(omni)
-
-/////////////////////////////////////////////////////////////////////////
-void
-tcpConnection::setTimeOut(unsigned long abs_sec,
-			  unsigned long abs_nsec,struct timeval& t)
-{
-  unsigned long now_sec, now_nsec;
-  omni_thread::get_time(&now_sec,&now_nsec);
-
-  if ((abs_sec <= now_sec) && ((abs_sec < now_sec) || (abs_nsec < now_nsec))) {
-    t.tv_sec = t.tv_usec = 0;
-  }
-  else {
-    t.tv_sec = abs_sec - now_sec;
-    if (abs_nsec >= now_nsec) {
-      t.tv_usec = (abs_nsec - now_nsec) / 1000;
-    }
-    else {
-      t.tv_usec = (1000000000 + abs_nsec - now_nsec) / 1000;
-      t.tv_sec -= 1;
-    }
-  }
-}
-
-/////////////////////////////////////////////////////////////////////////
-int
-tcpConnection::setnonblocking(tcpSocketHandle_t sock) {
-# if !defined(__WIN32__)
-  int fl = O_NONBLOCK;
-  if (fcntl(sock,F_SETFL,fl) < RC_SOCKET_ERROR) {
-    return RC_INVALID_SOCKET;
-  }
-  return 0;
-# else
-  u_long v = 1;
-  if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
-    return RC_INVALID_SOCKET;
-  }
-  return 0;
-# endif
-}
-
-/////////////////////////////////////////////////////////////////////////
-int
-tcpConnection::setblocking(tcpSocketHandle_t sock) {
-# if !defined(__WIN32__)
-  int fl = 0;
-  if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
-    return RC_INVALID_SOCKET;
-  }
-  return 0;
-# else
-  u_long v = 0;
-  if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
-    return RC_INVALID_SOCKET;
-  }
-  return 0;
-# endif
-}
 
 /////////////////////////////////////////////////////////////////////////
 char*
@@ -172,7 +120,7 @@ tcpConnection::Send(void* buf, size_t sz,
     struct timeval t;
 
     if (deadline_secs || deadline_nanosecs) {
-      setTimeOut(deadline_secs,deadline_nanosecs,t);
+      SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
       if (t.tv_sec == 0 && t.tv_usec == 0) {
 	// Already timeout.
 	return 0;
@@ -240,7 +188,7 @@ tcpConnection::Recv(void* buf, size_t sz,
     struct timeval t;
 
     if (deadline_secs || deadline_nanosecs) {
-      setTimeOut(deadline_secs,deadline_nanosecs,t);
+      SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
       if (t.tv_sec == 0 && t.tv_usec == 0) {
 	// Already timeout.
 	return 0;
@@ -326,14 +274,9 @@ tcpConnection::peeraddress() {
 }
 
 /////////////////////////////////////////////////////////////////////////
-tcpSocketHandle_t
-tcpConnection::handle() const {
-  return pd_socket;
-}
-
-/////////////////////////////////////////////////////////////////////////
-tcpConnection::tcpConnection(tcpSocketHandle_t sock, tcpEndpoint* endpoint) : 
-  pd_socket(sock), pd_endpoint(endpoint) {
+tcpConnection::tcpConnection(SocketHandle_t sock, 
+			     SocketCollection* belong_to) : 
+  SocketLink(sock), pd_belong_to(belong_to) {
 
   struct sockaddr_in addr;
   SOCKNAME_SIZE_T l;
@@ -354,38 +297,39 @@ tcpConnection::tcpConnection(tcpSocketHandle_t sock, tcpEndpoint* endpoint) :
   pd_peeraddress = ip4ToString((CORBA::ULong)addr.sin_addr.s_addr,
 			       (CORBA::UShort)addr.sin_port,"giop:tcp:");
 
-  if (endpoint) {
-    omni_tracedmutex_lock sync(endpoint->pd_fdset_lock);
-    tcpConnection** head = &(endpoint->pd_hash_table[sock%tcpEndpoint::hashsize]);
-    pd_next = *head;
-    *head = this;
-  }
-
-  if (endpoint && omniORB::trace(5)) {
-    omniORB::logger l;
-    l << "connect from " << pd_peeraddress << "\n";
-  }
+  belong_to->addSocket(this);
 }
 
 /////////////////////////////////////////////////////////////////////////
 tcpConnection::~tcpConnection() {
+  pd_belong_to->removeSocket(pd_socket);
   CLOSESOCKET(pd_socket);
-  if (pd_endpoint) {
-    omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-    tcpConnection** head = &(pd_endpoint->pd_hash_table[pd_socket % 
-						       tcpEndpoint::hashsize]);
-    while (*head) {
-      if (*head == this) {
-	*head = pd_next;
-	break;
-      }
-      head = &((*head)->pd_next);
-    }
-  }
-  if (omniORB::trace(20)) {
-    omniORB::logger log;
-    log << "close connection to peer " << peeraddress() << "\n";
+}
+
+/////////////////////////////////////////////////////////////////////////
+void
+tcpConnection::setSelectable(CORBA::Boolean now,
+			     CORBA::Boolean data_in_buffer) {
+
+  pd_belong_to->setSelectable(pd_socket,now,data_in_buffer);
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+void
+tcpConnection::clearSelectable() {
+
+  pd_belong_to->clearSelectable(pd_socket);
+}
+
+/////////////////////////////////////////////////////////////////////////
+void
+tcpConnection::Peek(giopConnection::notifyReadable_t func, void* cookie) {
+
+  if (pd_belong_to->Peek(pd_socket)) {
+    func(cookie,this);
   }
 }
+
 
 OMNI_NAMESPACE_END(omni)

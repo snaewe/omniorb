@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/07/31 16:16:22  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.3  2001/07/26 16:37:21  dpg1
   Make sure static initialisers always run.
 
@@ -62,6 +65,7 @@ OMNI_FORCE_LINK(sslAddress);
 OMNI_FORCE_LINK(sslConnection);
 OMNI_FORCE_LINK(sslContext);
 OMNI_FORCE_LINK(sslEndpoint);
+OMNI_FORCE_LINK(sslActive);
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(omnisslTP);
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/07/31 16:16:22  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.5  2001/07/26 16:37:21  dpg1
   Make sure static initialisers always run.
 
@@ -54,10 +57,11 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
 #include <omniORB4/sslContext.h>
+#include <SocketCollection.h>
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <ssl/sslEndpoint.h>
-#include <tcp/tcpEndpoint.h>
+#include <tcp/tcpConnection.h>
 #include <openssl/err.h>
 #include <omniORB4/linkHacks.h>
 
@@ -68,26 +72,18 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////////////////////////////////////////////////////
 sslEndpoint::sslEndpoint(const IIOP::Address& address, sslContext* ctx) : 
   pd_socket(RC_INVALID_SOCKET), pd_address(address), pd_ctx(ctx),
-  pd_n_fdset_1(0), pd_n_fdset_2(0), pd_n_fdset_dib(0),
-  pd_abs_sec(0), pd_abs_nsec(0) {
+  pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
+  pd_callback_cookie(0) {
 
   pd_address_string = (const char*) "giop:ssl:255.255.255.255:65535";
   // address string is not valid until bind is called.
-
-  FD_ZERO(&pd_fdset_1);
-  FD_ZERO(&pd_fdset_2);
-  FD_ZERO(&pd_fdset_dib);
-
-  pd_hash_table = new sslConnection* [tcpEndpoint::hashsize];
-  for (CORBA::ULong i=0; i < tcpEndpoint::hashsize; i++)
-    pd_hash_table[i] = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
 sslEndpoint::sslEndpoint(const char* address, sslContext* ctx) : 
   pd_socket(RC_INVALID_SOCKET), pd_ctx(ctx),
-  pd_n_fdset_1(0), pd_n_fdset_2(0), pd_n_fdset_dib(0),
-  pd_abs_sec(0), pd_abs_nsec(0) {
+  pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
+  pd_callback_cookie(0) {
 
   pd_address_string = address;
   // OMNIORB_ASSERT(strncmp(address,"giop:ssl:",9) == 0);
@@ -105,14 +101,6 @@ sslEndpoint::sslEndpoint(const char* address, sslContext* ctx) :
   // OMNIORB_ASSERT(rc == 1);
   // OMNIORB_ASSERT(v > 0 && v < 65536);
   pd_address.port = v;
-
-  FD_ZERO(&pd_fdset_1);
-  FD_ZERO(&pd_fdset_2);
-  FD_ZERO(&pd_fdset_dib);
-
-  pd_hash_table = new sslConnection* [tcpEndpoint::hashsize];
-  for (CORBA::ULong i=0; i < tcpEndpoint::hashsize; i++)
-    pd_hash_table[i] = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -220,10 +208,6 @@ sslEndpoint::Bind() {
   sprintf((char*)pd_address_string,format,
 	  (const char*)pd_address.host,(int)pd_address.port);
 
-  FD_SET(pd_socket,&pd_fdset_1);
-  FD_SET(pd_socket,&pd_fdset_2);
-  pd_n_fdset_1++;
-  pd_n_fdset_2++;
   return 1;
 
 }
@@ -233,8 +217,8 @@ void
 sslEndpoint::Poke() {
 
   sslAddress* target = new sslAddress(pd_address,pd_ctx);
-  sslConnection* conn;
-  if ((conn = (sslConnection*)target->Connect()) == 0) {
+  giopActiveConnection* conn;
+  if ((conn = target->Connect()) == 0) {
     if (omniORB::trace(1)) {
       omniORB::logger log;
       log << "Warning: Fail to connect to myself (" 
@@ -258,310 +242,87 @@ sslEndpoint::Shutdown() {
 
 /////////////////////////////////////////////////////////////////////////
 giopConnection*
-sslEndpoint::AcceptAndMonitor(giopEndpoint::notifyReadable_t func,
+sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 			      void* cookie) {
 
   OMNIORB_ASSERT(pd_socket != RC_INVALID_SOCKET);
 
-  struct timeval timeout;
-  fd_set         rfds;
-  tcpSocketHandle_t sock;
-  int            total;
+  pd_callback_func = func;
+  pd_callback_cookie = cookie;
+  setSelectable(pd_socket,1,0,0);
 
- again:
-  
   while (1) {
+    pd_new_conn_socket = RC_INVALID_SOCKET;
+    if (!Select()) break;
+    if (pd_new_conn_socket != RC_INVALID_SOCKET) {
 
-    // (pd_abs_sec,pd_abs_nsec) define the absolute time when we switch fdset
-    tcpConnection::setTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
+      ::SSL* ssl = SSL_new(pd_ctx->get_SSL_CTX());
+      SSL_set_fd(ssl, pd_new_conn_socket);
+      SSL_set_accept_state(ssl);
 
-    if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
+      while(1) {
+	int result = SSL_accept(ssl);
+	int code = SSL_get_error(ssl, result);
 
-      omni_thread::get_time(&pd_abs_sec,&pd_abs_nsec,
-			    tcpEndpoint::scan_interval_sec,
-			    tcpEndpoint::scan_interval_nsec);
-      timeout.tv_sec = tcpEndpoint::scan_interval_sec;
-      timeout.tv_usec = tcpEndpoint::scan_interval_nsec / 1000;
+	switch(code) {
+	case SSL_ERROR_NONE:
+	  return new sslConnection(pd_new_conn_socket,ssl,this);
 
-      omni_tracedmutex_lock sync(pd_fdset_lock);
-      rfds  = pd_fdset_2;
-      total = pd_n_fdset_2;
-      pd_fdset_2 = pd_fdset_1;
-      pd_n_fdset_2 = pd_n_fdset_1;
-    }
-    else {
-
-      omni_tracedmutex_lock sync(pd_fdset_lock);
-      rfds  = pd_fdset_2;
-      total = pd_n_fdset_2;
-    }
-
-    int maxfd = 0;
-    int fd = 0;
-    while (total) {
-      if (FD_ISSET(fd,&rfds)) {
-	maxfd = fd;
-	total--;
-      }
-      fd++;
-    }
-
-    int nready = select(maxfd+1,&rfds,0,0,&timeout);
-
-    if (nready == RC_SOCKET_ERROR) {
-      if (ERRNO != RC_EINTR) {
-	sock = RC_SOCKET_ERROR;
-	break;
-      }
-      else {
-	continue;
-      }
-    }
-
-    // Reach here if nready >= 0
-
-    if (FD_ISSET(pd_socket,&rfds)) {
-      // Got a new connection
-      sock = ::accept(pd_socket,0,0);
-      break;
-    }
-
-    {
-      omni_tracedmutex_lock sync(pd_fdset_lock);
-
-      // Process the result from the select.
-      tcpSocketHandle_t fd = 0;
-      while (nready) {
-	if (FD_ISSET(fd,&rfds)) {
-	  notifyReadable(fd,func,cookie);
-	  if (FD_ISSET(fd,&pd_fdset_1)) {
-	    pd_n_fdset_1--;
-	    FD_CLR(fd,&pd_fdset_1);
-	  }
-	  if (FD_ISSET(fd,&pd_fdset_dib)) {
-	    pd_n_fdset_dib--;
-	    FD_CLR(fd,&pd_fdset_dib);
-	  }
-	  nready--;
-	}
-	fd++;
-      }
-
-      // Process pd_fdset_dib. Those sockets with their bit set have
-      // already got data in buffer. We do a call back for these sockets if
-      // their entries in pd_fdset_1 is also set.
-      fd = 0;
-      nready = pd_n_fdset_dib;
-      while (nready) {
-	if (FD_ISSET(fd,&pd_fdset_dib)) {
-	  if (FD_ISSET(fd,&pd_fdset_2)) {
-	    notifyReadable(fd,func,cookie);
-	    if (FD_ISSET(fd,&pd_fdset_1)) {
-	      pd_n_fdset_1--;
-	      FD_CLR(fd,&pd_fdset_1);
-	    }
-	    pd_n_fdset_dib--;
-	    FD_CLR(fd,&pd_fdset_dib);
-	  }
-	  nready--;
-	}
-	fd++;
-      }
-    }
-  }
-
-  if (sock == RC_SOCKET_ERROR) {
-    return 0;
-  }
-
-  ::SSL* ssl = SSL_new(pd_ctx->get_SSL_CTX());
-  SSL_set_fd(ssl, sock);
-  SSL_set_accept_state(ssl);
-
-  while(1) {
-    int result = SSL_accept(ssl);
-    int code = SSL_get_error(ssl, result);
-
-    switch(code) {
-    case SSL_ERROR_NONE:
-      return new sslConnection(sock,ssl,this);
-
-    case SSL_ERROR_WANT_READ:
-    case SSL_ERROR_WANT_WRITE:
-      continue;
-
-    case SSL_ERROR_SYSCALL:
-      {
-	if (ERRNO == RC_EINTR)
+	case SSL_ERROR_WANT_READ:
+	case SSL_ERROR_WANT_WRITE:
 	  continue;
-      }
-      // otherwise falls through
-    case SSL_ERROR_SSL:
-      {
-	if (omniORB::trace(10)) {
-	  omniORB::logger log;
-	  char buf[128];
-	  ERR_error_string_n(ERR_get_error(),buf,128);
-	  log << "openSSL error detected in sslEndpoint::accept. Reason: "
-	      << (const char*) buf << "\n";
-	}
-	SSL_free(ssl);
-	CLOSESOCKET(sock);
-	//break;
-	// XXX We should be able to go back to accept again. But for
-	//     some reason the SSL library SEGV if we do. For the time
-	//     being, we returns 0 which effectively shutdown the endpoint.
-	return 0;
-      }
-    }
-  }
-  goto again;
-}
 
-/////////////////////////////////////////////////////////////////////////
-void
-sslEndpoint::notifyReadable(tcpSocketHandle_t fd,
-			    giopEndpoint::notifyReadable_t func,
-			    void* cookie) {
-
-  // Caller hold pd_fdset_lock
-
-  if (FD_ISSET(fd,&pd_fdset_2)) {
-    pd_n_fdset_2--;
-    FD_CLR(fd,&pd_fdset_2);
-    giopConnection* conn = 0;
-    sslConnection** head = &(pd_hash_table[fd%tcpEndpoint::hashsize]);
-    while (*head) {
-      if ((*head)->handle() == fd) {
-	conn = (giopConnection*)(*head);
-	break;
-      }
-      head = &((*head)->pd_next);
-    }
-    if (conn) {
-      // Note: do the callback while holding pd_fdset_lock
-      func(cookie,conn);
-    }
-  }
-}
-
-/////////////////////////////////////////////////////////////////////////
-void
-sslConnection::setSelectable(CORBA::Boolean now,
-			     CORBA::Boolean data_in_buffer) {
-
-  if (!pd_endpoint) return;
-
-  omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-
-  if ((data_in_buffer || SSL_pending(ssl_handle())) && 
-      !FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_dib))) {
-    pd_endpoint->pd_n_fdset_dib++;
-    FD_SET(pd_socket,&(pd_endpoint->pd_fdset_dib));
-  }
-
-  if (!FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1)))
-    pd_endpoint->pd_n_fdset_1++;
-  FD_SET(pd_socket,&(pd_endpoint->pd_fdset_1));
-  if (now) {
-    if (!FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_2)))
-      pd_endpoint->pd_n_fdset_2++;
-    FD_SET(pd_socket,&(pd_endpoint->pd_fdset_2));
-    // XXX poke the thread doing accept to look at the fdset immediately.
-  }
-}
-
-
-/////////////////////////////////////////////////////////////////////////
-void
-sslConnection::clearSelectable() {
-
-  if (!pd_endpoint) return;
-
-  omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-
-  if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1)))
-    pd_endpoint->pd_n_fdset_1--;
-  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_1));
-  if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_2)))
-    pd_endpoint->pd_n_fdset_2--;
-  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_2));
-  if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_dib)))
-    pd_endpoint->pd_n_fdset_dib--;
-  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_dib));
-}
-
-/////////////////////////////////////////////////////////////////////////
-void
-sslConnection::Peek(giopEndpoint::notifyReadable_t func, void* cookie) {
-
-  if (!pd_endpoint) return;
-
-  {
-    omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-   
-    // Do nothing if this connection is not set to be monitored.
-    if (!FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1)))
-      return;
-
-    // If data in buffer is set, do callback straight away.
-    if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_dib)) ||
-	SSL_pending(ssl_handle())) {
-
-      func(cookie,this);
-      if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1))) {
-	pd_endpoint->pd_n_fdset_1--;
-	FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_1));
-      }
-      pd_endpoint->pd_n_fdset_2--;
-      FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_2));
-      pd_endpoint->pd_n_fdset_dib--;
-      FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_dib));
-    }
-  }
-
-  struct timeval timeout;
-  // select on the socket for half the time of scan_interval, if no request
-  // arrives in this interval, we just let AcceptAndMonitor take care
-  // of it.
-  timeout.tv_sec = tcpEndpoint::scan_interval_sec / 2;
-  timeout.tv_usec = tcpEndpoint::scan_interval_nsec / 1000 / 2;
-  fd_set         rfds;
-
-  do {
-    FD_SET(pd_socket,&rfds);
-    int nready = select(pd_socket+1,&rfds,0,0,&timeout);
-
-    if (nready == RC_SOCKET_ERROR) {
-      if (ERRNO != RC_EINTR) {
-	break;
-      }
-      else {
-	continue;
-      }
-    }
-
-    // Reach here if nready >= 0
-
-    if (FD_ISSET(pd_socket,&rfds)) {
-      omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
-
-      // Are we still interested?
-      if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_1))) {
-	func(cookie,this);
-	if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_2))) {
-	  pd_endpoint->pd_n_fdset_2--;
-	  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_2));
-	}
-	pd_endpoint->pd_n_fdset_1--;
-	FD_CLR(pd_socket,&pd_endpoint->pd_fdset_1);
-	if (FD_ISSET(pd_socket,&(pd_endpoint->pd_fdset_dib))) {
-	  pd_endpoint->pd_n_fdset_dib--;
-	  FD_CLR(pd_socket,&(pd_endpoint->pd_fdset_dib));
+	case SSL_ERROR_SYSCALL:
+	  {
+	    if (ERRNO == RC_EINTR)
+	      continue;
+	  }
+	  // otherwise falls through
+	case SSL_ERROR_SSL:
+	  {
+	    if (omniORB::trace(10)) {
+	      omniORB::logger log;
+	      char buf[128];
+	      ERR_error_string_n(ERR_get_error(),buf,128);
+	      log << "openSSL error detected in sslEndpoint::accept. Reason: "
+		  << (const char*) buf << "\n";
+	    }
+	    SSL_free(ssl);
+	    CLOSESOCKET(pd_new_conn_socket);
+	    //break;
+	    // XXX We should be able to go back to accept again. But for
+	    //     some reason the SSL library SEGV if we do. For the time
+	    //     being, we returns 0 which effectively shutdown the endpoint.
+	    return 0;
+	  }
 	}
       }
     }
-  } while(0);
+  }
+  return 0;
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+sslEndpoint::notifyReadable(SocketHandle_t fd) {
+
+  if (fd == pd_socket) {
+    SocketHandle_t sock;
+    sock = ::accept(pd_socket,0,0);
+    if (sock == RC_SOCKET_ERROR) {
+      return 0;
+    }
+    pd_new_conn_socket = sock;
+    setSelectable(pd_socket,1,0,1);
+    return 1;
+  }
+
+  SocketLink* conn = findSocket(fd,1);
+  if (conn) {
+    pd_callback_func(pd_callback_cookie,(sslConnection*)conn);
+  }
+  return 1;
 }
 
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/31 16:16:18  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.2  2001/06/20 18:35:16  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -52,8 +55,8 @@ class tcpAddress : public giopAddress {
   const char* type() const;
   const char* address() const;
   giopAddress* duplicate() const;
-  giopConnection* Connect(unsigned long deadline_secs = 0,
-			  unsigned long deadline_nanosecs = 0) const;
+  giopActiveConnection* Connect(unsigned long deadline_secs = 0,
+				unsigned long deadline_nanosecs = 0) const;
 
   ~tcpAddress() {}
 

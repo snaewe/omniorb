@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/07/31 16:16:18  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.5  2001/07/13 15:31:21  sll
   Error in setblocking and setnonblocking now causes the socket to be closed
   as well.
@@ -53,6 +56,10 @@
 #include <omniORB4/giopEndpoint.h>
 #include <tcp/tcpConnection.h>
 #include <tcp/tcpAddress.h>
+#include <stdio.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpAddress);
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -106,14 +113,14 @@ tcpAddress::duplicate() const {
 }
 
 /////////////////////////////////////////////////////////////////////////
-giopConnection*
+giopActiveConnection*
 tcpAddress::Connect(unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) const {
 
   struct sockaddr_in raddr;
   LibcWrapper::hostent_var h;
   int  rc;
-  tcpSocketHandle_t sock;
+  SocketHandle_t sock;
 
   if (! LibcWrapper::isipaddr(pd_address.host)) {
     if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
@@ -149,11 +156,11 @@ tcpAddress::Connect(unsigned long deadline_secs,
     CLOSESOCKET(sock);
     return 0;
   }
-  return new tcpConnection(sock);
+  return new tcpActiveConnection(sock);
 
 #else
 
-  if (tcpConnection::setnonblocking(sock) == RC_INVALID_SOCKET) {
+  if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {
     CLOSESOCKET(sock);
     return 0;
   }
@@ -172,7 +179,7 @@ tcpAddress::Connect(unsigned long deadline_secs,
     struct timeval t;
 
     if (deadline_secs || deadline_nanosecs) {
-      tcpConnection::setTimeOut(deadline_secs,deadline_nanosecs,t);
+      SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
       if (t.tv_sec == 0 && t.tv_usec == 0) {
 	// Already timeout.
 	CLOSESOCKET(sock);
@@ -233,12 +240,12 @@ tcpAddress::Connect(unsigned long deadline_secs,
 
   } while (0);
 
-  if (tcpConnection::setblocking(sock) == RC_INVALID_SOCKET) {
+  if (SocketSetblocking(sock) == RC_INVALID_SOCKET) {
     CLOSESOCKET(sock);
     return 0;
   }
 
-  return new tcpConnection(sock);
+  return new tcpActiveConnection(sock);
 #endif
 }
 

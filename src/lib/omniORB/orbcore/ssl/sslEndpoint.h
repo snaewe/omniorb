@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/07/31 16:16:22  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.3  2001/07/13 15:36:53  sll
   Added the ability to monitor connections and callback to the giopServer
   when data has arrived at a connection.
@@ -51,7 +54,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class sslConnection;
 
-class sslEndpoint : public giopEndpoint {
+class sslEndpoint : public giopEndpoint, public SocketCollection {
 public:
 
   sslEndpoint(const IIOP::Address& address, sslContext* ctx);
@@ -59,36 +62,67 @@ public:
   const char* type() const;
   const char* address() const;
   CORBA::Boolean Bind();
-  giopConnection* AcceptAndMonitor(notifyReadable_t,void*);
+  giopConnection* AcceptAndMonitor(giopConnection::notifyReadable_t,void*);
   void Poke();
   void Shutdown();
 
   ~sslEndpoint();
 
-  friend class sslConnection;
+protected:
+  CORBA::Boolean notifyReadable(SocketHandle_t);
+  // implement SocketCollection::notifyReadable
 
  private:
-  tcpSocketHandle_t  pd_socket;
+  SocketHandle_t     pd_socket;
   IIOP::Address      pd_address;
   CORBA::String_var  pd_address_string;
   sslContext*        pd_ctx;
-  tcpSocketHandleSet_t pd_fdset_1;
-  tcpSocketHandleSet_t pd_fdset_2;
-  tcpSocketHandleSet_t pd_fdset_dib; // data in buffer
-  int                  pd_n_fdset_1;
-  int                  pd_n_fdset_2;
-  int                  pd_n_fdset_dib;
-  omni_tracedmutex     pd_fdset_lock;
-  unsigned long        pd_abs_sec;
-  unsigned long        pd_abs_nsec;
-  sslConnection**      pd_hash_table;      
+
+  SocketHandle_t                   pd_new_conn_socket;
+  giopConnection::notifyReadable_t pd_callback_func;
+  void*                            pd_callback_cookie;
 
   sslEndpoint();
   sslEndpoint(const sslEndpoint&);
+  sslEndpoint& operator=(const sslEndpoint&);
+};
 
-  void notifyReadable(tcpSocketHandle_t,
-		      giopEndpoint::notifyReadable_t func,
-		      void*);
+
+class sslActiveConnection;
+
+class sslActiveCollection : public giopActiveCollection, 
+			    public SocketCollection {
+public:
+  const char* type() const;
+  // implement giopActiveCollection::type
+
+  void Monitor(giopConnection::notifyReadable_t func, void* cookie);
+  // implement giopActiveCollection::Monitor
+
+  CORBA::Boolean isEmpty() const;
+  // implement giopActiveCollection::isEmpty
+
+  sslActiveCollection();
+  ~sslActiveCollection();
+
+  friend class sslActiveConnection;
+
+protected:
+  CORBA::Boolean notifyReadable(SocketHandle_t);
+  // implement SocketCollection::notifyReadable
+
+  void addMonitor(SocketHandle_t);
+  void removeMonitor(SocketHandle_t);
+
+private:
+  CORBA::ULong      pd_n_sockets;
+  omni_tracedmutex  pd_lock;
+
+  giopConnection::notifyReadable_t pd_callback_func;
+  void*                            pd_callback_cookie;
+
+  sslActiveCollection(const sslActiveCollection&);
+  sslActiveCollection& operator=(const sslActiveCollection&);
 };
 
 OMNI_NAMESPACE_END(omni)

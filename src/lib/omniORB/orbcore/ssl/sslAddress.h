@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/31 16:16:23  sll
+  New transport interface to support the monitoring of active connections.
+
   Revision 1.1.2.2  2001/06/20 18:35:16  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -52,15 +55,15 @@ class sslAddress : public giopAddress {
   const char* type() const;
   const char* address() const;
   giopAddress* duplicate() const;
-  giopConnection* Connect(unsigned long deadline_secs = 0,
-			  unsigned long deadline_nanosecs = 0) const;
+  giopActiveConnection* Connect(unsigned long deadline_secs = 0,
+				unsigned long deadline_nanosecs = 0) const;
 
   ~sslAddress() {}
 
  private:
   IIOP::Address      pd_address;
   CORBA::String_var  pd_address_string;
-  sslContext*         pd_ctx;
+  sslContext*        pd_ctx;
 
   sslAddress();
   sslAddress(const sslAddress&);
