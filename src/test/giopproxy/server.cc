@@ -10,6 +10,8 @@
 CORBA::ORB_ptr orb;
 CORBA::BOA_ptr boa;
 
+static omniObject* myMapTargetAddressToObject(const GIOP::IORAddressingInfo&);
+
 /////////////////////////////////////////////////////////////////////////
 class Relay_i : public virtual omniObject,
                 public virtual CORBA::Object {
@@ -102,7 +104,14 @@ public:
 int
 main(int argc, char** argv)
 {
+  // Set the flag to make sure that the object reference of the giopProxy
+  // object does not recursively contain any GIOPProxy object reference
+  // that might be passed in via omniORB.cfg
   omniORB::noFirewallNavigation = 1;
+
+  // Register the upcall function to handle GIOP 1.2 Target Address
+  // that does not point to an object in this address space.
+  omniORB::gateway::set(myMapTargetAddressToObject);
 
   orb = CORBA::ORB_init(argc,argv,"omniORB2");
   
@@ -187,3 +196,11 @@ relayCallDesc::userException(GIOP_C& giop_client, const char* repoId)
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+static
+omniObject*
+myMapTargetAddressToObject(const GIOP::IORAddressingInfo& ia) {
+  omniORB::logger log("");
+  log << "myMapTargetAddressToObject called. Return 0 to indicate object not exist.\n";
+  return 0;
+}

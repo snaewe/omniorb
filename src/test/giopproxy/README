@@ -1,0 +1,66 @@
+This is a simple server to test the firewall navigation ability of omniORB.
+The server acts as a GIOPProxy which relay calls to the target server.
+
+The server responses to new_target() operation by creating a relay object
+internally and returns its object reference to the client. The relay object
+stores the object reference of the target object. 
+
+When a request subsequently comes in for the relay object, it handles it by
+forwarding the request to the target and relays the reply back to the
+client.
+
+The relay works by using the fast copy feature of the ORB. This **ONLY**
+works if both the client and the target uses GIOP 1.2. So don't expect this
+server to handle GIOP 1.1 or 1.0 clients or servers.
+
+The server also registers an upcall handler to the ORB. This handler is
+called by the ORB when a GIOP 1.2 request comes in with a TargetAddress in
+the header points to an object not belong to this address space. This will
+happen when a GIOP 1.2 client chooses not to use new_target() to navigate
+the firewall. At the moment, the handler does nothing other than print a
+message. Because the handler returns 0, the ORB replies to the client with
+an OBJECT_NOT_EXIST exception.
+
+To use the server:
+
+1. Run the server. The server prints an IOR on stderr.
+e.g.
+
+% ./server
+'IOR:010000002300000049444c3a6f6d672e6f72672f4669726577616c6c2f47494f5050726f78793a312e30000001000000000000003c000000010102000e0000003135382e3132342e36352e33370028230c0000004154540041545400415454000100000000000000080000000100000000545441'
+
+2. Enter the IOR output by the server into a omniORB.cfg file like this:
+
+# GIOPProxy at 158.124.65.37 port 9000
+GIOPProxy IOR:010000002300000049444c3a6f6d672e6f72672f4669726577616c6c2f47494f5050726f78793a312e30000001000000000000003c000000010102000e0000003135382e3132342e36352e33370028230c0000004154540041545400415454000100000000000000080000000100000000545441
+
+3. Set the shell environment variable OMNIORB_CONFIG so that when a client
+or a server is executed, the ORB reads the omniORB.cfg file setup in (2).
+
+e.g.
+
+export OMNIORB_CONFIG=/project/omni/var/omniORB.cfg
+
+if /project/omni/var/omniORB.cfg contains the file written in (2).
+
+4. Run the example.
+
+$ eg3_impl
+
+$ eg3_clt
+
+   The call should succeed and should have gone through the GIOPProxy server.
+
+
+5. To make the client use GIOP 1.2 target address feature, do this:
+
+$ eg3_clt -ORBgiopTargetAddressMode 2
+
+   The server should print out a message
+
+"myMapTargetAddressToObject called. Return 0 to indicate object not exist."
+
+   And the client seens a system exception OBJECT_NOT_EXIST.
+
+
+
