@@ -32,7 +32,7 @@ class ObjectBinding {
 public:
 
   CosNaming::Binding binding;
-  CORBA::Object_ptr object;
+  CORBA::Object_var object;
 
   NamingContext_i* nc;
   ObjectBinding* prev;
@@ -41,10 +41,14 @@ public:
   ObjectBinding(const CosNaming::Name& n, CosNaming::BindingType t,
 		CORBA::Object_ptr o, NamingContext_i* nct,
 		ObjectBinding* nx = 0)
-    : object(o), nc(nct), next(nx)
   {
     binding.binding_name = n;
     binding.binding_type = t;
+
+    object = CORBA::Object::_duplicate(o);
+    nc = nct;
+    next = nx;
+
     if (next) {
       prev = next->prev;
       next->prev = this;

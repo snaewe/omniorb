@@ -120,7 +120,7 @@ NamingContext_i::resolve_simple(const CosNaming::Name& n)
       {
 	DB(cerr << "  resolve_simple: found (" << n[0].id << "," << n[0].kind
 	   << ")" << " in context " << this << ", bound to "
-	   << ob->object << endl);
+	   << (void*)((CORBA::Object_ptr)ob->object) << endl);
 
 	return ob;
       }
@@ -174,19 +174,20 @@ NamingContext_i::resolve_compound(const CosNaming::Name& n,
     throw;
   }
 
-  CosNaming::NamingContext_ptr context
+  CosNaming::NamingContext_var context
     = CosNaming::NamingContext::_narrow(ob->object);
 
   if (CORBA::is_nil((const CosNaming::NamingContext_ptr)context) ||
       (ob->binding.binding_type != CosNaming::ncontext))
   {
-    DB(cerr << "  resolve_compound: object " << ob->object
+    DB(cerr << "  resolve_compound: object "
+       << (void*)((CORBA::Object_ptr)ob->object)
        << " not (bound as) a context; raising exception" << endl);
     throw CosNaming::NamingContext::NotFound(CosNaming::NamingContext::
 					     not_context, n);
   }
 
-  return context;
+  return CosNaming::NamingContext::_duplicate(context);
 }
 
 
@@ -205,7 +206,7 @@ NamingContext_i::resolve(const CosNaming::Name& n)
 
     ObjectBinding* ob = resolve_simple(n);
 
-    DB(cerr << "returning " << ob->object << endl);
+    DB(cerr << "returning " << (void*)((CORBA::Object_ptr)ob->object) << endl);
 
     return CORBA::Object::_duplicate(ob->object);
 
@@ -273,11 +274,11 @@ NamingContext_i::bind_helper(const CosNaming::Name& n, CORBA::Object_ptr obj,
     if (ob) {
       DB(cerr << "  rebind in context " << this
 	 << ": unbinding simple name (" << n[0].id << "," << n[0].kind
-	 << ") from " << ob->object << endl);
+	 << ") from " << (void*)((CORBA::Object_ptr)ob->object) << endl);
       delete ob;
     }
 
-    new ObjectBinding(n, t, CORBA::Object::_duplicate(obj), this);
+    new ObjectBinding(n, t, obj, this);
 
     DB(cerr << "  bind in context " << this << ": bound simple name ("
        << n[0].id << "," << n[0].kind << ") to " << obj << endl);
@@ -342,9 +343,7 @@ NamingContext_i::unbind(const CosNaming::Name& n)
 
     DB(cerr << "  unbind: removing (" << n[0].id << "," << n[0].kind << ")"
        << " from context " << this << " (was bound to "
-       << ob->object << ")" << endl);
-
-    CORBA::release(ob->object);
+       << (void*)((CORBA::Object_ptr)ob->object) << ")" << endl);
 
     delete ob;
 
