@@ -558,6 +558,16 @@ tcParser::getTC() const
   return pd_tc;
 }
 
+void
+tcParser::replaceTC(CORBA::TypeCode_ptr tc)
+{
+  if (pd_tc->equivalent(tc)) {
+    pd_tc = CORBA::TypeCode::_duplicate(tc);
+  }
+  else {
+    throw CORBA::TypeCode::BadKind();
+  }
+}
 
 void
 tcParser::skip(MemBufferedStream& mbs, CORBA::TypeCode_ptr tc)
