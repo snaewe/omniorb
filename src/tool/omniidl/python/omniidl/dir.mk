@@ -9,11 +9,16 @@ all::
 export::
 	@$(MakeSubdirs)
 
+ifdef UnixPlatform
 export:: omniidl
 	@(file="omniidl"; dir="$(PYBINDIR)"; $(ExportExecutableFileToDir))
+endif
 
 export:: __init__.py
 	@(file="__init__.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
+export:: main.py
+	@(file="main.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
 export:: idlast.py
 	@(file="idlast.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))

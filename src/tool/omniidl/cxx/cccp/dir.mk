@@ -11,9 +11,19 @@ omni-cpp = $(patsubst %,$(BinPattern),omni-cpp)
 
 all:: $(omni-cpp)
 
+
+ifdef Win32Platform
+
+export:: $(omni-cpp)
+	$(ExportExecutable)
+
+else
+
 export:: $(omni-cpp)
 	@(dir="$(EXPORT_TREE)/$(LIBDIR)"; file="$(omni-cpp)"; \
 	$(ExportExecutableFileToDir))
 
+endif
+
 $(omni-cpp): $(OBJS)
-	@($(CExecutable))
+	@(libs=""; $(CExecutable))

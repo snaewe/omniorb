@@ -136,22 +136,20 @@ ifdef Win32Platform
 DIR_CPPFLAGS += -DMSDOS -DNO_STRCASECMP
 
 DIR_CPPFLAGS += -I"c:\progra~1/Python/include"
-PYLIBPATH = -libpath:"c:\progra~1\Python\libs"
+CXXLINKOPTIONS += -libpath:"c:\progra~1\Python\libs"
 
-implib = _omniidl.lib
-lib = $(patsubst %.lib,%.pyd,$(implib))
+omniidl = $(patsubst %,$(BinPattern),omniidl)
 
-all:: $(lib)
+all:: $(omniidl)
 
-$(lib): $(OBJS) $(PYOBJS)
-	(set -x; \
-	 $(RM) $@; \
-	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $(PYOBJS) $$libs; \
-	)
+export:: $(omniidl)
+	@$(ExportExecutable)
 
-export:: $(lib)
-	@$(ExportLibrary)
+clean::
+	$(RM) $(omniidl)
 
+$(omniidl): $(OBJS) $(PYOBJS)
+	@(libs="python15.lib"; $(CXXExecutable))
 
 endif
 
@@ -164,4 +162,4 @@ endif
 all:: $(idlc)
 
 $(idlc): $(OBJS) idlc.o
-	@($(CXXExecutable))
+	@(libs=""; $(CXXExecutable))
