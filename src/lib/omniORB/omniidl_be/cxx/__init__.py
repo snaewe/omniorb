@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.5  2002/02/20 13:37:18  dpg1
+# C++ back-end old signatures option did not work.
+#
 # Revision 1.20.2.4  2001/11/08 16:33:50  dpg1
 # Local servant POA shortcut policy.
 #
@@ -201,7 +204,7 @@ def process_args(args):
         elif arg == "BOA":
             config.state['BOA Skeletons']     = 1
         elif arg == "old":
-            config.state['Old Signatures']    = 0
+            config.state['Old Signatures']    = 1
         elif arg == "old_prefix":
             config.state['Reserved Prefix']   = "_"
         elif arg == "keep_inc_path":
