@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2004/12/20 18:09:05  dgrisby
+  Properly set principal length.
+
   Revision 1.1.4.7  2002/11/26 14:51:48  dgrisby
   Implement missing interceptors.
 
@@ -196,6 +199,7 @@ class GIOP_S : public IOP_S, public giopStream, public giopStreamList {
     if (sz > GIOP_S_INLINE_BUF_SIZE) {
       pd_principal = new _CORBA_Octet[sz];
     }
+    pd_principal_len = sz;
   }
 
   //////////////////////////////////////////////////////////////////
