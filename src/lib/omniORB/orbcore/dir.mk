@@ -29,6 +29,14 @@ TRANSPORT_SRCS = \
             tcpAddress.cc \
             tcpActive.cc
 
+UNIXSOCK_SRCS = \
+            unixTransportImpl.cc \
+            unixConnection.cc \
+            unixEndpoint.cc \
+            unixAddress.cc \
+            unixActive.cc
+      
+
 CODESET_SRCS = \
 	    codeSets.cc \
 	    cs-8bit.cc \
@@ -95,6 +103,17 @@ DIR_CPPFLAGS += -DUSE_omniORB_logStream
 DIR_CPPFLAGS += -D_OMNIORB_LIBRARY
 
 ##########################################################################
+# Add magic to find tcp transport source files
+CXXVPATH = $(VPATH):$(VPATH:%=%/tcp)
+
+##########################################################################
+# Build unix transport if this is a unix platform
+ifdef UnixPlatform
+  ORB_SRCS += $(UNIXSOCK_SRCS)
+  CXXVPATH += $(VPATH:%=%/unix)
+endif
+
+##########################################################################
 ifdef OMNIORB_CONFIG_DEFAULT_LOCATION
   CONFIG_DEFAULT_LOCATION = $(OMNIORB_CONFIG_DEFAULT_LOCATION)
 else
@@ -132,10 +151,10 @@ CXXSRCS       = $(ORB_SRCS)
 
 ifdef NoGateKeeper
 ORB_OBJS     += gatekeeper.o
-vpath %.cc $(VPATH):$(VPATH:%=%/tcp):$(VPATH:%=%/gatekeepers/dummystub)
-else
-vpath %.cc $(VPATH):$(VPATH:%=%/tcp)
+CXXVPATH     += $(VPATH:%=%/gatekeepers/dummystub)
 endif
+
+vpath %cc $(CXXVPATH)
 
 LIB_NAME     := omniORB
 LIB_VERSION  := $(OMNIORB_VERSION)
