@@ -11,6 +11,32 @@ module RDITestTypes {
   typedef sequence<string> StringSeq;
   typedef sequence<double> DoubleSeq;
 
+  union ExampleUnion1 switch(boolean) {
+  case TRUE: long l;
+  default: double d;
+  };
+
+  union ExampleUnion2 switch(long) {
+  case 1: long l;
+  case 2: double d;
+  };
+
+  union ExampleUnion3 switch(boolean) {
+  case TRUE: long l;
+  case FALSE: double d;
+  };
+
+#if 0
+  // this idl is not legal ?
+  union ExampleUnion4 switch(short) {
+  case 0:
+  case 2: string s;
+  case 3: long l;
+  case 5: double d;
+  default: unsigned short u;
+  };
+#endif
+
 };
 
 #endif

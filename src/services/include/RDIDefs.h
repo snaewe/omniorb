@@ -38,54 +38,13 @@ inline char* CORBA_STRING_DUP(const char* str) {
 
 #define CORBA_STRING_FREE(str) CORBA::string_free(str)
 
-// XXX Do we really need our own dup/alloc/free???
-// XXX
-// XXX thimios is not using the CORBA string class /
-// XXX   flex and yacc are not using it either
-
-
-inline char* RDI_StringDupl(const char* string) 
-{ char* ptr = 0;
-#ifdef RDI_DBG_ALLOC
-  RDI_DbgAlloc_is_string = 1;
-#endif
-  if ( string && (ptr = new char [ strlen(string) + 1 ]) != (char *) 0 )
-    strcpy(ptr, string);
-  //   if (string) cerr << flush << "XXX Allocd for [" << string << "]   " << (void*)ptr << endl << flush;
-  //   else cerr << flush << "XXX Alloc called on null string" << endl << flush;
-#ifdef RDI_DBG_ALLOC
-  RDI_DbgAlloc_is_string = 0;
-#endif
-  return ptr;
-}
-
-inline char* RDI_StringAlloc(unsigned int size)
-{ 
-#ifdef RDI_DBG_ALLOC
-  RDI_DbgAlloc_is_string = 1;
-#endif
-char* ptr = new char [ size + 1];
-// cerr << flush << "XXX Allocd " << (void*)ptr << endl << flush;
-#ifdef RDI_DBG_ALLOC
-  RDI_DbgAlloc_is_string = 0;
-#endif
- return ptr;
-}
-
-inline void RDI_StringFree(char* string)
-{
-  //   if (string) cerr << flush << "XXX Freeing [" << string << "]   " << (void*)string << endl << flush;
-  //   else cerr << flush << "XXX Freeing null ptr" << endl << flush;
-  if ( string ) delete [] string;
-}
-
 //-------------------------------------------------------------------------
 // RDI_DELNULL : only invoke on reference to obj alloc'd using new
 #define RDI_DELNULL(x)      if (x) {delete x; x=NULL;}
 #define RDI_DELNULL2(x,y)   RDI_DELNULL(x) RDI_DELNULL(y)
 #define RDI_DELNULL3(x,y,z) RDI_DELNULL(x) RDI_DELNULL(y) RDI_DELNULL(z)
 
-#define RDI_STRDELNULL(x)      if (x) {RDI_StringFree(x); x=NULL;}
+#define RDI_STRDELNULL(x)      if (x) {CORBA_STRING_FREE(x); x=NULL;}
 #define RDI_STRDELNULL2(x,y)   RDI_STRDELNULL(x) RDI_STRDELNULL(y)
 #define RDI_STRDELNULL3(x,y,z) RDI_STRDELNULL(x) RDI_STRDELNULL(y) RDI_STRDELNULL(z)
 
@@ -107,7 +66,7 @@ inline void RDI_StringFree(char* string)
 #endif
 
 inline char*
-RDI_BUILD_STRING(const char* s1) { return RDI_StringDupl(s1); }
+RDI_BUILD_STRING(const char* s1) { return CORBA_STRING_DUP(s1); }
 
 inline char*
 RDI_BUILD_STRING(const char* s1, 
@@ -124,7 +83,7 @@ RDI_BUILD_STRING(const char* s1,
   for (i = 0; i < 8; i++) {
     if (s[i]) len += strlen(s[i]);
   }
-  char* result = RDI_StringAlloc(len);
+  char* result = CORBA_STRING_ALLOC(len);
   strcpy(result, s1);
   for (i = 1; i < 8; i++) {
     if (s[i]) strcat(result, s[i]);
