@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.18  1998/01/20 17:32:01  sll
-  Added support for OpenVMS.
+  Revision 1.19  1998/03/09 11:33:57  ewc
+  Changes for NextStep made.
 
+// Revision 1.18  1998/01/20  17:32:01  sll
+// Added support for OpenVMS.
+//
   Revision 1.17  1997/12/18 17:27:51  sll
   *** empty log message ***
 
@@ -263,10 +266,14 @@ void initFile::initialize()
 int initFile::read_file(char* config_fname)
 {
   // Test if the specified file exists and is not a directory
-#if defined(UnixArchitecture) || defined(__VMS)
+#if defined(UnixArchitecture) || defined(__VMS) || defined(__nextstep__)
   {
     struct stat stbuf;
+#if defined(__nextstep__)
+    if (stat(config_fname,&stbuf) < 0 || !(S_IFREG && stbuf.st_mode)) {
+#else
     if (stat(config_fname,&stbuf) < 0 || !S_ISREG(stbuf.st_mode)) {
+#endif
       if (omniORB::traceLevel >= 2) {
 	cerr << "omniORB configuration file: "
 	     << config_fname << " either does not exist or is not a file."
