@@ -4,6 +4,7 @@
 #define _RDITestTypes_IDL_
 
 #pragma prefix "research.att.com"
+#pragma javaPackage "com.att.research"
 
 module RDITestTypes {
 
