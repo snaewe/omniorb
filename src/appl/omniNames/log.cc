@@ -188,8 +188,11 @@ log::log(int& p) : port(p)
 
     firstTime = 0;
 
+#ifdef __NT__
+    ifstream initf(active,ios::in | ios::nocreate);
+#else
     ifstream initf(active);
-
+#endif
     if (!initf) {
       cerr << ts.t() << "Error: cannot open log file '" << active << "'."
 	   << endl;
