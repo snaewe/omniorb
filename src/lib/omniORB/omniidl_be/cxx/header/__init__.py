@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  2000/01/10 17:18:14  djs
+# Removed redundant code.
+#
 # Revision 1.7  1999/12/24 18:14:29  djs
 # Fixed handling of #include'd .idl files
 #
@@ -161,8 +164,6 @@ def monolithic(stream, tree):
         tree.accept(tie)
 
     
-    #poa_defs(stream, node)
-
     stream.out("""\
 #undef _core_attr
 #undef _dyn_attr

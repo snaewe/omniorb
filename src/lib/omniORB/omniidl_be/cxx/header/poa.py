@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  2000/01/10 17:18:14  djs
+# Removed redundant code.
+#
 # Revision 1.8  2000/01/10 15:38:55  djs
 # Better name and scope handling.
 #
@@ -79,24 +82,6 @@ def __init__(stream):
 
 self.__nested = 0
 
-#self.__environment = name.Environment()
-
-#def addName(name):
-#    #print "add " + name + " to " + str(self.__environment)
-#    try:
-#        self.__environment.add(name)
-#    except KeyError:
-#        pass
-#def enter(scope):
-#    # the exception is thrown in the case of a forward declared interface
-#    # being properly defined. Needs tidying up?
-#    addName(scope)
-#    self.__environment = self.__environment.enterScope(scope)
-#def leave():
-#    self.__environment = self.__environment.leaveScope()
-#def currentScope():
-#    return self.__environment.scope()
-
 def POA_prefix():
     if not(self.__nested):
         return "POA_"
@@ -116,8 +101,6 @@ def visitModule(node):
         return
     
     name = tyutil.mapID(node.identifier())
-    #enter(name)
-    #scope = currentScope()
     
     stream.out("""\
 _CORBA_MODULE @POA_prefix@@name@
@@ -140,17 +123,13 @@ _CORBA_MODULE_BEG
 _CORBA_MODULE_END
 
 """)
-    #leave()
-
+    return
 
 def visitInterface(node):
     if not(node.mainFile()):
         return
     
     iname = tyutil.mapID(node.identifier())
-#    enter(name)
-    #scope = currentScope()
-    #env = self.__environment
     environment = env.lookup(node)
     scope = tyutil.scope(node.scopedName())
 
@@ -178,44 +157,19 @@ public:
                scopedID = scopedID,
                impl_scopedID = impl_scopedID)
 
-    #enter(node.identifier())
     if config.TieFlag():
         tie.template(environment, node, self.__nested)
-    #leave()
-    
-#    leave()
+    return
 
 def visitTypedef(node):
-    #for d in node.declarators():
-    #    addName(d.identifier())
-
-
-    return
-    #scope = currentScope()
-    # 
-    #aliasType = node.aliasType()
-    #derefType = tyutil.deref(aliasType)
-    #base = tyutil.principalID(aliasType, scope)
-    #for d in node.declarators():
-    #    name = tyutil.mapID(d.identifier())
-    #    if tyutil.isObjRef(derefType):
-    #        stream.out("""\
-#typedef @POA_prefix@@base@ @POA_prefix@@name@;""",
-    #                   POA_prefix = POA_prefix(),
-    #                   base = base,
-    #                   name = name)    
-    
-
+    pass
 def visitEnum(node):
     pass
 def visitStruct(node):
-    #addName(node.identifier())
     pass
 def visitUnion(node):
-    #addName(node.identifier())
     pass
 def visitForward(node):
-    #addName(node.identifier())
     pass
 def visitConst(node):
     pass
@@ -224,5 +178,4 @@ def visitDeclarator(node):
 def visitMember(node):
     pass
 def visitException(node):
-    #addName(node.identifier())
     pass
