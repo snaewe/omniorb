@@ -1,3 +1,4 @@
+#pragma javaPackage "UK.co.orl.omniorb"
 interface Echo {
   string echoString(in string mesg);
 };
