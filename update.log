@@ -1,3 +1,10 @@
+Fri Dec 17 17:58:57 GMT 1999 dpg1
+=================================
+
+- Fix to name lookup in inherited interfaces
+
+src/tool/omniidl2/util/utl_scope.cc
+
 
 Fri Dec 17 13:27:16 GMT 1999 djr
 ================================
