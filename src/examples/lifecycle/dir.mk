@@ -17,7 +17,7 @@ clean::
 	$(RM) $(lcserver) $(lcclient) $(lcremove)
 
 export: $(lcserver) $(lcclient) $(lcremove)
-	@$(ExportExecutable)
+	@$(module="lcexamples"; ExportExecutable)
 
 $(lcserver): lcserver.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
 	@(libs="$(CORBA_LIB) $(OMNIORB2_LC_LIB)"; $(CXXExecutable))
