@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2001/08/17 13:49:08  dpg1
+  Optional logging for traced mutexes and condition variables.
+
   Revision 1.2.2.2  2000/09/27 17:35:50  sll
   Updated include/omniORB3 to include/omniORB4
 
@@ -81,7 +84,8 @@ static const char* bug_msg =
 omni_tracedmutex::omni_tracedmutex()
   : pd_cond(&pd_lock),
     pd_holder(0),
-    pd_n_conds(0)
+    pd_n_conds(0),
+    pd_logname(0)
 {
 }
 
@@ -112,6 +116,12 @@ omni_tracedmutex::lock()
 {
   omni_thread* me = omni_thread::self();
 
+  if (pd_logname) {
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " calls lock()\n";
+  }
+
   omni_mutex_lock sync(pd_lock);
 
   if( me && pd_holder == me ) {
@@ -133,6 +143,12 @@ void
 omni_tracedmutex::unlock()
 {
   omni_thread* me = omni_thread::self();
+
+  if (pd_logname) {
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " calls unlock()\n";
+  }
 
   {
     omni_mutex_lock sync(pd_lock);
@@ -174,12 +190,19 @@ omni_tracedmutex::assert_held(const char* file, int line, int yes)
   BOMB_OUT();
 }
 
+void
+omni_tracedmutex::log(const char* name)
+{
+  pd_logname = name;
+}
+
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////// omni_tracedcondition ////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 omni_tracedcondition::omni_tracedcondition(omni_tracedmutex* m)
-  : pd_mutex(*m), pd_cond(&m->pd_lock), pd_n_waiters(0)
+  : pd_mutex(*m), pd_cond(&m->pd_lock), pd_n_waiters(0), pd_logname(0)
 {
   if( !m ) {
     omniORB::log <<
@@ -214,6 +237,12 @@ omni_tracedcondition::wait()
 {
   omni_thread* me = omni_thread::self();
 
+  if (pd_logname) {
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " calls wait()\n";
+  }
+
   omni_mutex_lock sync(pd_mutex.pd_lock);
 
   if( me && pd_mutex.pd_holder != me ) {
@@ -233,6 +262,12 @@ omni_tracedcondition::wait()
   pd_n_waiters--;
   while( pd_mutex.pd_holder )  pd_mutex.pd_cond.wait();
   pd_mutex.pd_holder = me ? me : (omni_thread*) 1;
+
+  if (pd_logname) {
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " leaves wait()\n";
+  }
 }
 
 
@@ -240,6 +275,12 @@ int
 omni_tracedcondition::timedwait(unsigned long secs, unsigned long nanosecs)
 {
   omni_thread* me = omni_thread::self();
+
+  if (pd_logname) {
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " calls timedwait()\n";
+  }
 
   omni_mutex_lock sync(pd_mutex.pd_lock);
 
@@ -261,6 +302,11 @@ omni_tracedcondition::timedwait(unsigned long secs, unsigned long nanosecs)
   while( pd_mutex.pd_holder )  pd_mutex.pd_cond.wait();
   pd_mutex.pd_holder = me ? me : (omni_thread*) 1;
 
+  if (pd_logname) {
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " leaves timedwait()\n";
+  }
   return ret;
 }
 
@@ -268,6 +314,12 @@ omni_tracedcondition::timedwait(unsigned long secs, unsigned long nanosecs)
 void
 omni_tracedcondition::signal()
 {
+  if (pd_logname) {
+    omni_thread* me = omni_thread::self();
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " calls signal()\n";
+  }
   pd_cond.signal();
 }
 
@@ -275,7 +327,19 @@ omni_tracedcondition::signal()
 void
 omni_tracedcondition::broadcast()
 {
+  if (pd_logname) {
+    omni_thread* me = omni_thread::self();
+    omniORB::logger l;
+    l << pd_logname << ": thread " << (me ? me->id() : -1)
+      << " calls broadcast()\n";
+  }
   pd_cond.broadcast();
+}
+
+void
+omni_tracedcondition::log(const char* name)
+{
+  pd_logname = name;
 }
 
 
