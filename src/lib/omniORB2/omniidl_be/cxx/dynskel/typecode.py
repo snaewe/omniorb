@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13  2000/01/19 09:35:48  djs
+# *** empty log message ***
+#
 # Revision 1.12  2000/01/17 17:07:29  djs
 # Better handling of recursive types
 #
@@ -406,8 +409,8 @@ def visitStruct(node):
     
     for child in node.members():
         memberType = child.memberType()
-        if child.constrType():
-        #if isinstance(memberType, idltype.Declared):
+        #if child.constrType():
+        if isinstance(memberType, idltype.Declared):
             memberType.decl().accept(self)
 
     self.__override = override
