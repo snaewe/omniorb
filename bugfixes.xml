@@ -8,6 +8,19 @@
 
 <buglist>
 
+<bug id="5" date="Fri Aug 25 14:25:20 BST 2000" user="dpg1">
+
+  <summary>omniidl loses all but the first comment with -K</summary>
+  <reported>Richard Gruet</reported>
+  <text>
+  On some platforms, omniidl -K would lose all but the first comment
+  attached to a node. The code used a construct whose evaluation order
+  is undefined in C++, so it worked with some compilers, but not
+  others.
+  </text>
+</bug>
+
+
 <bug id="4" date="Wed Aug 23 16:44:36 BST 2000" user="djs">
 
   <summary>MSVC5/6 marshalling multidimensional arrays of basic types</summary>

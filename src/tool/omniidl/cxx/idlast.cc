@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.14.2.8  2000/08/25 13:33:02  dpg1
+// Multiple comments preceding a declaration are now properly attached on
+// all platforms
+//
 // Revision 1.14.2.7  2000/08/07 15:34:36  dpg1
 // Partial back-port of long long from omni3_1_develop.
 //
@@ -136,8 +140,14 @@ add(const char* commentText, const char* file, int line)
 {
   if (Config::keepComments) {
     if (Config::commentsFirst) {
-      if (saved_)
-	mostRecent_->next_ = new Comment(commentText, file, line);
+      if (saved_) {
+	// C++ says that the order of value evaluation is undefined.
+	// Comment's constructor sets mostRecent_, so the innocent-
+	// looking mostRecent_->next_ = new Comment... does the wrong
+	// thing with some compilers :-(
+	Comment* mr = mostRecent_;
+	mr->next_ = new Comment(commentText, file, line);
+      }
       else
 	saved_ = new Comment(commentText, file, line);
     }
