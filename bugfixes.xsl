@@ -93,6 +93,7 @@
           <p>
           The bugs pages for earlier versions can be found here:
           <ul>
+              <li><a href="bug302.html">3.0.2</a></li>
               <li><a href="bug301.html">3.0.1</a></li>
               <li><a href="bug300.html">3.0.0</a></li>
               <li><a href="bug280.html">2.8.0</a></li>

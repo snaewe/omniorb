@@ -25,11 +25,11 @@ TOP = ..\..\..\..
 #
 DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #
-# omniDynamic301_rt.lib is the runtime DLL to support the CORBA dynamic
+# omniDynamic303_rt.lib is the runtime DLL to support the CORBA dynamic
 # interfaces, such as Anys, typecodes, DSI and DII. In these examples, the
 # runtime library is not required as none of these features are used.
 # However, a bug in MSVC++ causes it to generate a bunch of references
-# to functions in omniDynamic301_rt.lib when compiling the stubs.
+# to functions in omniDynamic303_rt.lib when compiling the stubs.
 # So now we link the dynamic library as well.
 # An alternative is to replace the dynamic library with the much smaller 
 # library msvcstub.lib. The smaller library contains nothing but stubs
@@ -37,11 +37,11 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 # interfaces are used. We use the small library here. If you prefer
 # to link with the dynamic library, swap the comment on the next 2
 # lines.
-#OMNI_DYNAMIC_LIB = omniDynamic301_rt.lib
+#OMNI_DYNAMIC_LIB = omniDynamic303_rt.lib
 OMNI_DYNAMIC_LIB = msvcstub.lib -NODEFAULTLIB:libcmt.lib -NODEFAULTLIB:libcmtd.lib 
 
 CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-CORBA_LIB      = omniORB301_rt.lib omnithread2_rt.lib \
+CORBA_LIB      = omniORB303_rt.lib omnithread2_rt.lib \
                  $(OMNI_DYNAMIC_LIB) \
                  wsock32.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
@@ -57,10 +57,10 @@ CXXLINKOPTIONS =
 # To build debug executables
 # Replace the above with the following:
 #
-#OMNI_DYNAMIC_LIB = omniDynamic301_rtd.lib
+#OMNI_DYNAMIC_LIB = omniDynamic303_rtd.lib
 #OMNI_DYNAMIC_LIB = msvcstubd.lib -NODEFAULTLIB:libcmt.lib -NODEFAULTLIB:libcmtd.lib 
 #CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniORB301_rtd.lib omnithread2_rtd.lib \
+#CORBA_LIB      = omniORB303_rtd.lib omnithread2_rtd.lib \
 #                 $(OMNI_DYNAMIC_LIB) \
 #                 wsock32.lib advapi32.lib -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)

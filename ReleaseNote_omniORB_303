@@ -1,3 +1,41 @@
+Release Notes for omniORB 3.0.2 (20 Feb 2001)
+===============================
+
+This is a minor release since omniORB 3.0.1. The release notes of all
+the 3.0.x series are at the end.
+
+Changes since 3.0.2:
+
+  1. Bug fixes. The list of bugs fixed since 3.0.1 can be found by
+     following the links at:
+
+        http://www.uk.research.att.com/omniORB/omniORBbug.html
+
+  2. Better error messages from omniNames and omniMapper if they
+     cannot start for some reason.
+
+  3. Support for KAI C++ 4.0 on HPUX 11.00 and Linux glibc2.1.
+
+  4. Shared runtime version number change
+
+       On Windows NT/95, the omniORB runtime DLLs for this version are:
+        libomniORB303_rt.dll
+        libomniORB303_rt.lib
+        libomniDynamic303_rt.dll
+        libomniDynamic303_rt.lib
+
+       Make sure you update your Visual Studio to pick up the right
+       library.
+
+       On IBM AIX, the name is unchanged, i.e.
+        libomniORB30.a
+        libomniDynamic30.a
+
+       On various unices, the name is,
+         libomniORB3.so ---> libomniORB3.so.0 --> libomniORB3.so.0.3
+
+
+
 Release Notes for omniORB 3.0.2 (2 Oct 2000)
 ===============================
 

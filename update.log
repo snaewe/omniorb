@@ -1,3 +1,28 @@
+Tue Feb 20 10:19:23 GMT 2001 dpg1
+=================================
+
+- Updates for 3.0.3 release.
+
+bugfixes-302.xml                        -- new
+bugfixes.xml
+bugfixes.xsl
+external_merge/ReleaseNote_omniORB_302  -- deleted
+external_merge/ReleaseNote_omniORB_303  -- new
+external_merge/THIS_IS_omniORB_3_0_2    -- deleted
+external_merge/THIS_IS_omniORB_3_0_3    -- new
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak
+
+
 Mon Feb 19 17:42:05 GMT 2001 dpg1
 =================================
 
