@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.19  1999/05/20 15:24:26  sll
+  Explicitly cast a StringBuf to const char* when passed to stream <<
+  operator. MSVC++ is confused otherwise.
+
   Revision 1.18  1999/04/21 13:04:54  djr
   sequence<string> now uses a pre-defined type.
 
@@ -864,7 +868,8 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
     break;
   }
 
-  IND(s); s << "typedef " << var_type << ' ' << tdef->uqname() << "_var;\n\n";
+  IND(s); s << "typedef " << (const char*)var_type 
+	    << ' ' << tdef->uqname() << "_var;\n\n";
 }
 
 
