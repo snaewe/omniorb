@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.24  2003/06/19 16:22:21  dgrisby
+# Updates to facilitate Windows omniNotify port. Work around DLL issues
+# and a compiler bug.
+#
 # Revision 1.3.2.23  2002/01/16 11:31:58  dpg1
 # Race condition in use of registerNilCorbaObject/registerTrackedObject.
 # (Reported by Teemu Torma).
@@ -534,9 +538,18 @@ const char*
 """
 
 interface_impl_inherit_dispatch = """\
+
+#ifndef _MSC_VER
 if( @impl_inherited_name@::_dispatch(_handle) ) {
   return 1;
 }
+#else
+// Work-around for incorrect MSVC code generation.
+if( ((@impl_inherited_name@*)this)->
+    @impl_inherited_name@::_dispatch(_handle) ) {
+  return 1;
+}
+#endif
 """
 
 interface_impl_repoID_ptr = """\
