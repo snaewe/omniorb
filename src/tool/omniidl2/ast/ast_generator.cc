@@ -216,11 +216,10 @@ AST_Generator::create_attribute(idl_bool ro,
  * Construct an AST_Union node (a union)
  */
 AST_Union	*
-AST_Generator::create_union(AST_ConcreteType *dt,
-			   UTL_ScopedName *n,
+AST_Generator::create_union(UTL_ScopedName *n,
 			   UTL_StrList *p)
 {
-  return new AST_Union(dt, n, p);
+  return new AST_Union(n, p);
 }
 
 /*
