@@ -1,0 +1,27 @@
+Object lcserver_exe.o
+{
+    Executable lcserver
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+
+Object lcclient_exe.o
+{
+    Executable lcclient
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+
+Object lcremove_exe.o
+{
+    Executable lcremove
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+
