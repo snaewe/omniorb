@@ -1,3 +1,11 @@
+Thu Apr 19 11:02:32 BST 2001 dpg1
+=================================
+
+- Bug in sort_exceptions()
+
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+
+
 Thu Apr 19 10:45:44 BST 2001 sll
 ================================
 
