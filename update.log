@@ -9,7 +9,6 @@ aclocal.m4
 configure
 configure.ac
 contrib/GNUmakefile.in                  -- new
-contrib/RPMs/omniORB.spec
 contrib/pkgconfig/GNUmakefile.in        -- new
 contrib/pkgconfig/omniCOS4.pc.in        -- new
 contrib/pkgconfig/omniCOSDynamic4.pc.in -- new

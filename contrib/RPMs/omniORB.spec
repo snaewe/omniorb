@@ -1,32 +1,24 @@
-%define version       4.0.2
-%define release       1
-%define name          omniORB
-%define lib_major     4
-%define lib_name      lib%{name}%{lib_major}
-%define py_ver        %(python -c 'import sys;print(sys.version[0:3])')
-%define prefix        /usr
-
 Summary: Object Request Broker (ORB)
-Name:           %{name}
-Version:        %{version}
-Release:        %{release}
-License:        GPL / LGPL
-Group:          System/Libraries
-Source0:        omniORB-%{version}.tar.gz
+Name:    omniORB
+Version: 4.0.3
+Release: 1
+License: GPL / LGPL
+Group:   System/Libraries
+Source0: %{name}-%{version}.tar.gz
 # omniORB.cfg is a (possibly modified) version of sample.cfg in the omniORB distro.
-#Source1:        omniORB.cfg
-#Patch0:         omniORB.patches
+Prefix: /usr
+Prereq: /sbin/chkconfig /sbin/ldconfig
 URL:            http://omniorb.sourceforge.net/
 #Provides:       corba
-BuildRequires:  python >= 2.0 glibc-devel openssl
+BuildRequires:  python glibc-devel openssl
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 #BuildArch:      i586
 
 %description
-omniORB is an Object Request Broker (ORB) which implements
+%{name} is an Object Request Broker (ORB) which implements
 specification 2.6 of the Common Object Request Broker Architecture
-(CORBA).  This package contains the libraries needed to run programs
-dynamically linked with %{name}.
+(CORBA). Contains the libraries needed to run programs dynamically
+linked with %{name}.
 
 # servers
 
@@ -35,10 +27,18 @@ Summary: Utility programs
 Group:          Development/C++
 Requires:       %{name} = %{version}-%{release}
 Provides:       libomniorb-servers = %{version}-%{release} %{name}-servers = %{version}-%{release}
-#BuildArch:      i586
 
 %description -n %{name}-servers
-omniORB CORBA services including a Naming Service.
+%{name} CORBA services including a Naming Service.
+
+%package -n %{name}-bootscripts
+Summary: Utility programs
+Group: Development/C++
+Requires: %{name}-servers = %{version}-%{release} %{name}-utils = %{version}-%{release}
+Provides: %{name}-bootscripts = %{version}-%{release}
+
+%description -n %{name}-bootscripts
+Automatic starting of the %{name} CORBA Naming Service.
 
 # utilities
 
@@ -47,10 +47,9 @@ Summary: Utility programs
 Group:          Development/C++
 Requires:       %{name} = %{version}-%{release}
 Provides:       libomniorb-utils = %{version}-%{release} %{name}-utils = %{version}-%{release}
-#BuildArch:      i586
 
 %description -n %{name}-utils
-This package includes utility programs which may be useful at runtime.
+%{name} utility programs which may be useful at runtime.
 
 # devel part of the bundle
 
@@ -59,11 +58,10 @@ Summary: Header files and libraries needed for %{name} development
 Group:          Development/C++
 Requires:       %{name} = %{version}-%{release}
 Provides:       libomniorb-devel = %{version}-%{release} %{name}-devel = %{version}-%{release}
-#BuildArch:      i586
 
 %description -n %{name}-devel
-This package includes the header files and libraries needed for
-developing programs using %{name}.
+The header files and libraries needed for developing programs using
+%{name}.
 
 # docs and examples are in a separate package
 
@@ -71,49 +69,61 @@ developing programs using %{name}.
 Summary: Documentation and examples for %{name}
 Group:          Development/C++
 #Requires:       %{name} = %{version}
-#BuildArch:      noarch
 
 %description -n %{name}-doc
-This package includes developer documentation including examples.
+Developer documentation and examples.
 
+
+%define py_ver        %(python -c 'import sys;print(sys.version[0:3])')
 
 %prep 
 
-%setup -n omniORB-%{version}
+%setup -n %{name}-%{version}
 #%patch0 -p1
 
 ./configure --prefix=%{prefix} --with-openssl=/usr
 
 
 %build
-make CCFLAGS+="$RPM_OPT_FLAGS" all
+# We abuse the CPPFLAGS to pass optimisation options through.
+make IMPORT_CPPFLAGS+="$RPM_OPT_FLAGS" all
 
 
 %install
 make DESTDIR=$RPM_BUILD_ROOT install
 
-mv $RPM_BUILD_ROOT/%{prefix}/bin/catior $RPM_BUILD_ROOT/%{prefix}/bin/catior.omni
-
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
-cp etc/init.d/omninames $RPM_BUILD_ROOT/etc/rc.d/init.d/omninames
-chmod +x $RPM_BUILD_ROOT/etc/rc.d/init.d/omninames
-#cp %{SOURCE1} $RPM_BUILD_ROOT/etc/
+cp sample.cfg $RPM_BUILD_ROOT/etc/omniORB.cfg
+cp etc/init.d/omniNames $RPM_BUILD_ROOT/etc/rc.d/init.d/
 
-mkdir -p $RPM_BUILD_ROOT/var/omninames
-
-mkdir -p $RPM_BUILD_ROOT/%{prefix}/man/man1
+mkdir -p $RPM_BUILD_ROOT/%{prefix}/man/man{1,5}
 cp -r man/* $RPM_BUILD_ROOT/%{prefix}/man
 
-cp sample.cfg $RPM_BUILD_ROOT/etc/omniORB.cfg
+mkdir -p $RPM_BUILD_ROOT/var/log/omniNames
+mkdir -p $RPM_BUILD_ROOT/var/lib/omniMapper
+
+# Rename catior to avoid naming conflict with TAO
+mv $RPM_BUILD_ROOT/%{prefix}/bin/catior $RPM_BUILD_ROOT/%{prefix}/bin/catior.omni
+mv $RPM_BUILD_ROOT/%prefix/man/man1/catior.1 $RPM_BUILD_ROOT/%prefix/man/man1/catior.omni.1
+
 
 %clean
 [ -z $RPM_BUILD_ROOT ] || rm -rf $RPM_BUILD_ROOT
 
+%pre
 %post -n %{name} -p /sbin/ldconfig
-
 %postun -n %{name} -p /sbin/ldconfig
 
-# main package includes libraries and servers
+%post bootscripts
+/sbin/chkconfig --add omniNames
+
+%preun bootscripts
+/sbin/chkconfig --del omniNames
+rm -rf /var/log/omniNames/*
+rm -rf /var/lib/omniMapper/*
+
+
+# main package includes libraries and copyright info
 %files
 %defattr (-,root,root)
 %doc CREDITS COPYING COPYING.LIB
@@ -124,13 +134,17 @@ cp sample.cfg $RPM_BUILD_ROOT/etc/omniORB.cfg
 
 %files -n %{name}-servers
 %defattr (-,root,root)
-%dir %attr(754,root,root) /var/omninames
-%config(noreplace) %_sysconfdir/rc.d/init.d/*
 %attr(644,root,man) %prefix/man/man1/omniNames*
 #%attr(644,root,man) %prefix/man/man1/omniMapper*
 %prefix/bin/omniMapper
 %prefix/bin/omniNames
-%prefix/bin/omniNames-daemon
+# Thin substitute for standard Linux init script
+
+%files -n %{name}-bootscripts
+%defattr (-,root,root)
+%config(noreplace) %_sysconfdir/rc.d/init.d/*
+%dir %attr(754,root,root) /var/log/omniNames
+%dir %attr(754,root,root) /var/lib/omniMapper
 
 
 %files -n %{name}-utils
@@ -163,15 +177,20 @@ cp sample.cfg $RPM_BUILD_ROOT/etc/omniORB.cfg
 %prefix/lib/python%{py_ver}/site-packages/omniidl_be/cxx/dynskel/*
 %prefix/lib/python%{py_ver}/site-packages/omniidl_be/cxx/impl/*
 %prefix/lib/python%{py_ver}/site-packages/_omniidlmodule.so*
-
+%prefix/lib/pkgconfig/*.pc
 
 %files -n %{name}-doc
 %defattr(-,root,root)
 %doc doc/* 
-%doc src/examples
 
 
 %changelog
+* Wed Nov 19 2003 Duncan Grisby <duncan@grisby.org> 4.0.3
+- Merge contributed updates, bump version number.
+
+* Fri Aug 08 2003 Thomas Lockhart <lockhart@fourpalms.org> 4.0.2
+- Rename catior man page to match catior.omni binary name
+
 * Wed Aug  6 2003 Duncan Grisby <dgrisby@apasphere.com> 4.0.2
 - Bump version number.
 

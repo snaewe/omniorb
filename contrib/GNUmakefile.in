@@ -1,0 +1,14 @@
+TOP=..
+CURRENT=contrib
+BASE_OMNI_TREE=@top_srcdir@
+VPATH=@srcdir@
+INSTALL=@INSTALL@
+
+SUBDIRS = pkgconfig
+
+include $(TOP)/mk/beforeauto.mk
+
+install::
+	@$(MakeSubdirs)
+
+include $(TOP)/mk/afterauto.mk
