@@ -2,20 +2,13 @@
 # Standard make variables and rules for all ATMos platforms.
 #
 
+ATMos = 1
+ArmProcessor = 1
+
 #
 # Any recursively-expanded variable set here can be overridden _afterwards_ by
-# a platform-specific mk file which includes this one.  If for some
-# reason this won't work (e.g. the variable is used here in an assignment to a
-# simply-expanded variable) then this file should put an "ifdef" around the
-# variable so that it can be overridden by the architecture-specific ".mk" file
-# _before_ it includes this one.
+# a platform-specific mk file which includes this one.
 #
-# I haven't quite worked out how (or whether) _rules_ should be overridden, or
-# how a later import tree's mk file should override variables in the latter
-# case described above.
-#
-
-ATMosArchitecture = 1
 
 ATMOS_RELEASE_DIR = /project/atmos/release$(ATMOS_VERSION)/$(ATMOS_HARDWARE)
 
@@ -29,13 +22,12 @@ ATMOS_INCLUDES += pthreads llibc llibc++ timer uart atm console isfs colours ip
 CC                = arm-gcc
 CDEBUGFLAGS       = -O3
 COPTIONS          = -nostdinc -fno-common -fno-builtin -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses
-
-CMAKEDEPEND       = $(CC) -M
+CMAKEDEPEND       = omkdepend -D__GNUC__
 
 CXX               = arm-gcc
 CXXDEBUGFLAGS     = 
 CXXOPTIONS        = -D__cplusplus -nostdinc -nostdinc++ -fno-common -fno-builtin -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses -Wno-unused -fhandle-exceptions
-CXXMAKEDEPEND     = $(CXX) -M
+CXXMAKEDEPEND     = omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
 
 CATOBJ            = catobj
 
@@ -70,27 +62,10 @@ INSTEXEFLAGS      = -m 0755
 # Standard ATMos CPP flags.
 #
 
-IMPORT_CPPFLAGS += -D__atmos__ -D__arm__ -DATMOS \
+IMPORT_CPPFLAGS += -D__atmos__ -D__arm__ \
 		   -D__OSVERSION__=$(ATMOS_MAJOR_VERSION) \
 	           $(patsubst %,-I%/$(BINDIR)/init,$(IMPORT_TREES)) \
 		   $(patsubst %,-I$(ATMOS_RELEASE_DIR)/%,$(ATMOS_INCLUDES))
-
-
-#
-# Rules to generate dependency files
-#
-
-define GenerateCDependencies
-$(SHELL) -ec "$(CMAKEDEPEND) $(CPPFLAGS) $< | sed 's/$*\\.o/& $@/g' > $@"
-endef
-
-define GenerateCXXDependencies
-$(SHELL) -ec "$(CXXMAKEDEPEND) $(CPPFLAGS) $< | sed 's/$*\\.o/& $@/g' > $@"
-endef
-
-define GenerateASDependencies
-$(SHELL) -ec "$(ASMAKEDEPEND) $(CPPFLAGS) $< | sed 's/$*\\.o/& $@/g' > $@"
-endef
 
 
 #
