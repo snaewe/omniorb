@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.19  2001/11/09 09:56:11  dpg1
+# Missed a file in yesterday's checkin.
+#
 # Revision 1.3.2.18  2001/11/07 15:45:53  dpg1
 # Faster _ptrToInterface/_ptrToObjRef in common cases.
 #
@@ -239,7 +242,7 @@ interface_objref = """\
 
 @fq_objref_name@::@objref_name@(omniIOR* ior, omniIdentity* id) :
    @inherits_str@
-   omniObjRef(::@name@::_PD_repoId, ior, id, 1)
+   omniObjRef(::@name@::_PD_repoId, ior, id, 1)@init_shortcut@
 {
   _PR_setobj(this);
 }
@@ -272,6 +275,22 @@ interface_objref_repoID_str = """\
 if( omni::strMatch(id, @inherits_fqname@::_PD_repoId) )
   return (@inherits_fqname@_ptr) this;
 """
+
+interface_shortcut = """\
+void
+@fq_objref_name@::_enableShortcut(omniServant* _svt, const _CORBA_Boolean* _inv)
+{
+  if (_svt)
+    _shortcut = (_impl_@basename@*)_svt->_ptrToInterface(::@name@::_PD_repoId);
+  else
+    _shortcut = 0;
+  _invalid  = _inv;
+  @inherited@
+}
+"""
+
+interface_shortcut_inh = """\
+@parent@::_enableShortcut(_svt, _inv);"""
 
 
 interface_callback = """\
@@ -395,6 +414,19 @@ interface_operation = """\
 @assign_context@
 _invoke(_call_desc);
 @assign_res@
+"""
+
+interface_operation_shortcut = """\
+@impl_type@* _s = _shortcut;
+if (_s) {
+  if (!*_invalid) {
+    @callreturn@_s->@name@(@args@);@voidreturn@
+  }
+  else {
+    _enableShortcut(0,0);
+    // drop through to normal invoke
+  }
+}\
 """
 
 

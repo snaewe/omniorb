@@ -1,3 +1,11 @@
+Fri Nov  9 09:55:10 GMT 2001 dpg1
+=================================
+
+- Missed a file in yesterday's checkin.
+
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+
 Thu Nov  8 16:29:17 GMT 2001 dpg1
 =================================
 
