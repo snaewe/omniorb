@@ -27,9 +27,12 @@
 
 /*
   $Log$
-  Revision 1.5  1997/05/06 14:05:26  sll
-  Public release.
+  Revision 1.6  1997/08/21 21:17:27  sll
+  Added support for sequence of array. It was missing previously.
 
+// Revision 1.5  1997/05/06  14:05:26  sll
+// Public release.
+//
   */
 
 /*
@@ -129,6 +132,10 @@
 #define SEQUENCE_TEMPLATE_BOUNDED                  "_CORBA_Bounded_Sequence"
 #define SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT "_CORBA_Unbounded_Sequence_w_FixSizeElement"
 #define SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT "_CORBA_Bounded_Sequence_w_FixSizeElement"
+#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY    "_CORBA_Unbounded_Sequence_Array"
+#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY      "_CORBA_Bounded_Sequence_Array"
+#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY_W_FIXSIZEELEMENT "_CORBA_Unbounded_Sequence_Array_w_FixSizeElement"
+#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY_W_FIXSIZEELEMENT "_CORBA_Bounded_Sequence_Array_w_FixSizeElement"
 #define SEQUENCE_TEMPLATE_ADPT_CLASS "_CORBA_Sequence_OUT_arg"
 
 static size_t astExpr2val(AST_Expression *v);
@@ -191,10 +198,13 @@ o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
   o2be_operation::argMapping mapping;
   o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(base_type(),
 					        o2be_operation::wIN,mapping);
-  size_t s_max = astExpr2val(max_size());
-  size_t elmsize = 0;
+  size_t s_max = astExpr2val(max_size()); // non-zero means 
+                                          // this is a bounded seq
+  size_t dimension = 0;       // non-zero means this is a sequence of array
+  size_t elmsize = 0;         // non-zero means this is a primitive type seq
   size_t alignment = 0;
   const char* baseclassname = o2be_name::narrow_and_produce_fqname(base_type());
+  const char* elmclassname = 0; // non-zero if this is a sequence of array
   switch (ntype) 
     {
     case o2be_operation::tBoolean:
@@ -243,6 +253,79 @@ o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
 	baseclassname = o2be_sequence::narrow_from_decl(decl)->seq_template_name();
 	break;
       }
+    case o2be_operation::tArrayFixed:
+      {
+	AST_Decl *decl = base_type();
+	while (decl->node_type() == AST_Decl::NT_typedef)
+	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	dimension = o2be_array::narrow_from_decl(decl)->getNumOfElements();
+	// look at the type of the elements in the array and see
+	// if it is a primitive type
+	decl = o2be_array::narrow_from_decl(decl)->getElementType();
+	elmclassname = o2be_name::narrow_and_produce_fqname(decl);
+	ntype = o2be_operation::ast2ArgMapping(decl,
+					       o2be_operation::wIN,mapping);
+	switch (ntype)
+	  {
+	  case o2be_operation::tBoolean:
+	  case o2be_operation::tChar:
+	  case o2be_operation::tOctet:
+	    elmsize = 1;
+	    alignment = 1;
+	    break;
+	  case o2be_operation::tShort:
+	  case o2be_operation::tUShort:
+	    elmsize = 2;
+	    alignment = 2;
+	    break;
+	  case o2be_operation::tLong:
+	  case o2be_operation::tULong:
+	  case o2be_operation::tEnum:
+	    elmsize = 4;
+	    alignment = 4;
+	    break;
+	  case o2be_operation::tFloat:
+	    elmsize = 4;
+	    alignment = 4;
+	    break;
+	  case o2be_operation::tDouble:
+	    elmsize = 8;
+	    alignment = 8;
+	    break;
+	  default:
+	    break;
+	  }
+	break;
+      }
+    case o2be_operation::tArrayVariable:
+      {
+	AST_Decl *decl = base_type();
+	while (decl->node_type() == AST_Decl::NT_typedef)
+	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	dimension = o2be_array::narrow_from_decl(decl)->getNumOfElements();
+	decl = o2be_array::narrow_from_decl(decl)->getElementType();
+	// look at the type of the elements in the array
+	ntype = o2be_operation::ast2ArgMapping(decl,
+					       o2be_operation::wIN,mapping);
+	switch (ntype)
+	  {
+	  case o2be_operation::tObjref:
+	    {
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	      elmclassname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname();
+	    }
+	    break;
+	  case o2be_operation::tString:
+	    {
+	      elmclassname = o2be_string::fieldMemberTypeName();
+	    }
+	    break;
+	  default:
+	    elmclassname = o2be_name::narrow_and_produce_fqname(decl);
+	  }
+	break;
+      }
     case o2be_operation::tAny:
     default:
     break;
@@ -253,51 +336,111 @@ o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
   if (s_max)
     {
       // bounded sequence
-      if (elmsize) {
-	size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT)
-	                  + strlen(baseclassname) + 20;
-	pd_seq_template_name = new char[namesize];
-	sprintf(pd_seq_template_name,
-		"%s<%s,%d,%d,%d>",
-		SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT,
-		baseclassname,
-		s_max,
-		elmsize,
-		alignment);
+      if (!dimension) {
+	if (elmsize) {
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT)
+	                    + strlen(baseclassname) + 20;
+	  pd_seq_template_name = new char[namesize];
+	  sprintf(pd_seq_template_name,
+		  "%s<%s,%d,%d,%d>",
+		  SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT,
+		  baseclassname,
+		  s_max,
+		  elmsize,
+		  alignment);
+	}
+	else {
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED)
+   	                    + strlen(baseclassname) + 13;
+	  pd_seq_template_name = new char[namesize];
+	  sprintf(pd_seq_template_name,
+		  "%s<%s,%d>",
+		  SEQUENCE_TEMPLATE_BOUNDED,
+		  baseclassname,
+		  s_max);
+	}      
       }
       else {
-	size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED)
-	                  + strlen(baseclassname) + 13;
-	pd_seq_template_name = new char[namesize];
-	sprintf(pd_seq_template_name,
-		"%s<%s,%d>",
-		SEQUENCE_TEMPLATE_BOUNDED,
-		baseclassname,
-		s_max);
-      }      
+	// bounded sequence of array
+	if (elmsize) {
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_ARRAY_W_FIXSIZEELEMENT)
+	                    +strlen(baseclassname)+strlen(elmclassname)+33;
+	  pd_seq_template_name = new char[namesize];
+	  sprintf(pd_seq_template_name,
+		  "%s<%s,%s,%d,%d,%d,%d>",
+		  SEQUENCE_TEMPLATE_BOUNDED_ARRAY_W_FIXSIZEELEMENT,
+		  baseclassname,
+		  elmclassname,
+		  dimension,
+		  s_max,
+		  elmsize,
+		  alignment);
+	}
+	else {
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_ARRAY)
+   	                    +strlen(baseclassname)+strlen(elmclassname)+26;
+	  pd_seq_template_name = new char[namesize];
+	  sprintf(pd_seq_template_name,
+		  "%s<%s,%s,%d,%d>",
+		  SEQUENCE_TEMPLATE_BOUNDED_ARRAY,
+		  baseclassname,
+		  elmclassname,
+		  dimension,
+		  s_max);
+	}      
+      }
     }
   else
     {
       // unbounded sequence
-      if (elmsize) {
-	size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT)
-	                  + strlen(baseclassname) + 7;
-	pd_seq_template_name = new char[namesize];
-	sprintf(pd_seq_template_name,
-		"%s<%s,%d,%d>",
-		SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT,
-		baseclassname,
-		elmsize,
-		alignment);
+      if (!dimension) {
+	if (elmsize) {
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT)
+	                    + strlen(baseclassname) + 7;
+	  pd_seq_template_name = new char[namesize];
+	  sprintf(pd_seq_template_name,
+		  "%s<%s,%d,%d>",
+		  SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT,
+		  baseclassname,
+		  elmsize,
+		  alignment);
+	}
+	else {
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED)
+	                    + strlen(baseclassname) + 4;
+	  pd_seq_template_name = new char[namesize];
+	  sprintf(pd_seq_template_name,
+		  "%s<%s >",
+		  SEQUENCE_TEMPLATE_UNBOUNDED,
+		  baseclassname);
+	}
       }
       else {
-	size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED)
-	                  + strlen(baseclassname) + 4;
-	pd_seq_template_name = new char[namesize];
-	sprintf(pd_seq_template_name,
-		"%s<%s >",
-		SEQUENCE_TEMPLATE_UNBOUNDED,
-		baseclassname);
+	// unbounded sequence of array
+	if (elmsize) {
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY_W_FIXSIZEELEMENT)
+	                    + strlen(baseclassname)+strlen(elmclassname)+21;
+	  pd_seq_template_name = new char[namesize];
+	  sprintf(pd_seq_template_name,
+		  "%s<%s,%s,%d,%d,%d>",
+		  SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY_W_FIXSIZEELEMENT,
+		  baseclassname,
+		  elmclassname,
+		  dimension,
+		  elmsize,
+		  alignment);
+	}
+	else {
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY)
+	                    + strlen(baseclassname)+strlen(elmclassname)+18;
+	  pd_seq_template_name = new char[namesize];
+	  sprintf(pd_seq_template_name,
+		  "%s<%s,%s,%d>",
+		  SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY,
+		  baseclassname,
+		  elmclassname,
+		  dimension);
+	}
       }
     }
   return;
