@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2004/02/06 16:17:44  dgrisby
+  Properly handle large giopMaxMsgSize settings.
+
   Revision 1.1.2.8  2003/11/05 13:00:33  dgrisby
   Properly set sequence length in dumpSpecified.
 
@@ -67,6 +70,7 @@
 #include <initialiser.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -413,9 +417,9 @@ orbOptions::getBoolean(const char* value, CORBA::Boolean& result) {
 CORBA::Boolean
 orbOptions::getULong(const char* value, CORBA::ULong& result) {
 
-  long v;
-  v = strtol(value,0,10);
-  if (v == LONG_MIN || v == LONG_MAX || v < 0) return 0;
+  unsigned long v;
+  v = strtoul(value,0,10);
+  if (v == ULONG_MAX && errno == ERANGE) return 0;
   result = v;
   return 1;
 }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.23  2004/02/06 16:17:45  dgrisby
+  Properly handle large giopMaxMsgSize settings.
+
   Revision 1.1.4.22  2003/11/19 10:42:09  dgrisby
   Locking bug with comm failure in bidirectional GIOP.
 
@@ -1891,7 +1894,14 @@ giopImpl12::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
     avail = ((avail + 7) >> 3) << 3;
 
     omni::ptr_arith_t newmkr = (omni::ptr_arith_t) g->pd_outb_mkr + avail;
-    if (newmkr < (omni::ptr_arith_t)g->pd_outb_end) {
+
+    // If the new position is inside the buffer, set the end pointer.
+    // Note that if avail is very large, newmkr may wrap around and be
+    // < pd_outb_mkr.
+
+    if ((newmkr >= (omni::ptr_arith_t)g->pd_outb_mkr &&
+	 newmkr <  (omni::ptr_arith_t)g->pd_outb_end)) {
+
       g->pd_outb_end = (void*) newmkr;
     }
   }
