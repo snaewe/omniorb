@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.7  2001/07/25 13:40:52  dpg1
+# Suppress compiler warning about unused variable in _dispatch() for
+# empty interfaces.
+#
 # Revision 1.1.4.6  2001/07/25 11:42:15  dpg1
 # Generate correct code for operation parameters whose names clash with
 # C++ keywords.
@@ -448,10 +452,15 @@ class _impl_I(Class):
 
     node_name = self.interface().name()
     impl_name = node_name.prefix("_impl_")
+    if self.methods():
+      getopname = "const char* op = _handle.operation_name();"
+    else:
+      getopname = ""
 
     stream.out(omniidl_be.cxx.skel.template.interface_impl,
                impl_fqname = impl_name.fullyQualify(),
                uname = node_name.simple(),
+               getopname = getopname,
                dispatch = dispatch,
                impl_name = impl_name.unambiguous(self._environment),
                _ptrToInterface = _ptrToInterface,

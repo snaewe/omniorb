@@ -1,3 +1,17 @@
+Wed Jul 25 14:38:42 BST 2001 dpg1
+=================================
+
+- Missing wstring case in TypeCode unmarshalling.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+- Suppress compiler warning about unused variable in _dispatch() for
+  empty interfaces.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+
 Wed Jul 25 12:35:27 BST 2001 dpg1
 =================================
 
