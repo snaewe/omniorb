@@ -29,24 +29,289 @@
 
 /*
   $Log$
-  Revision 1.3  1997/05/06 15:09:04  sll
-  Public release.
+  Revision 1.4  1997/12/09 18:19:09  sll
+  New members BOA::impl_shutdown and BOA::destroy
+  Merged code from orb.cc.
+  Updated to use the new rope factory interfaces.
 
+// Revision 1.3  1997/05/06  15:09:04  sll
+// Public release.
+//
  */
 
 #include <omniORB2/CORBA.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <ropeFactory.h>
+#include <objectManager.h>
+#ifndef __atmos__
+#include <tcpSocket.h>
+#define _tcpIncomingFactory tcpSocketMTincomingFactory
+#define _tcpIncomingRope    tcpSocketIncomingRope
+#define _tcpEndpoint        tcpSocketEndpoint
+#else
+#include <tcpATMos.h>
+#define _tcpIncomingFactory tcpATMosMTincomingFactory
+#define _tcpIncomingRope    tcpATMosIncomingRope
+#define _tcpEndpoint        tcpATMosEndpoint
+#endif
+#include <scavenger.h>
+
+#ifndef OMNIORB_USEHOSTNAME_VAR
+#define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
+#endif
+
+static CORBA::BOA_ptr     boa = 0;
+static const char*        myBOAId = "omniORB2_BOA";
+static omni_mutex         internalLock;
+static omni_condition     internalCond(&internalLock);
+static int                internalBlockingFlag = 0;
+static omniObjectManager* rootObjectManager = 0;
+
+omniObjectManager*
+omniObjectManager::root(CORBA::Boolean no_exception) throw (CORBA::OBJ_ADAPTER)
+{
+  if (!rootObjectManager) {
+    if (!no_exception)
+      throw CORBA::OBJ_ADAPTER(0,CORBA::COMPLETED_NO);
+    else
+      return 0;
+  }
+  return rootObjectManager;
+}
+
+
+class BOAobjectManager : public omniObjectManager {
+public:
+  ropeFactoryList* incomingRopeFactories() { return &pd_factories; }
+  Rope* defaultLoopBack();
+
+  BOAobjectManager();
+  virtual ~BOAobjectManager() {}
+private:
+  ropeFactoryList  pd_factories;
+  Rope*            pd_loopback;
+};
+
+BOAobjectManager::BOAobjectManager() : pd_loopback(0) {
+  pd_factories.insert(new _tcpIncomingFactory);
+}
+
+Rope*
+BOAobjectManager::defaultLoopBack()
+{
+  omni_mutex_lock sync(internalLock);
+  if (!pd_loopback) {
+    Endpoint* myaddr = 0;
+
+    // Locate the incoming tcpSocket Rope, read its address and
+    // use this address to create a new outgoing tcpSocket Rope.
+    {
+      ropeFactory_iterator iter(pd_factories);
+      incomingRopeFactory* factory;
+      while ((factory = (incomingRopeFactory*) iter())) {
+	if (factory->getType()->is_protocol( _tcpEndpoint ::protocol_name))
+	  {
+	    Rope_iterator riter(factory);
+	    _tcpIncomingRope * r = ( _tcpIncomingRope *) riter();
+	    if (r) {
+	      r->this_is(myaddr);
+	    }
+	    else {
+	      // This is tough!!! Haven't got a loop back!
+	      // May be the BOA has been destroyed!!!
+	      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+	    }
+	  }
+      }
+    }
+
+    {
+      ropeFactory_iterator iter(globalOutgoingRopeFactories);
+      outgoingRopeFactory* factory;
+      while ((factory = (outgoingRopeFactory*) iter())) {
+	if ((pd_loopback = factory->findOrCreateOutgoing((Endpoint*)myaddr))) {
+	  break;
+	}
+      }
+    }
+    delete myaddr;
+  }
+  return pd_loopback;
+}
+
+
+static
+CORBA::Boolean
+parse_BOA_args(int &argc,char **argv,const char *orb_identifier);
 
 CORBA::
-BOA::BOA() 
+BOA::BOA()
 {
-  return;
 }
 
 CORBA::
 BOA::~BOA()
 {
+}
+
+CORBA::BOA_ptr
+CORBA::
+ORB::BOA_init(int &argc, char **argv, const char *boa_identifier)
+{
+  omni_mutex_lock sync(internalLock);
+  if (boa)
+    return CORBA::BOA::_duplicate(boa);
+
+  try {
+    rootObjectManager = new BOAobjectManager;
+    if (!parse_BOA_args(argc,argv,boa_identifier)) {
+      throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+    }
+
+    ropeFactory_iterator iter(*rootObjectManager->incomingRopeFactories());
+    incomingRopeFactory* factory;
+
+    while ((factory = (incomingRopeFactory*)iter())) {
+      if (factory->getType()->is_protocol( _tcpEndpoint ::protocol_name)) {
+	CORBA::Boolean install_iiop_port = 1;
+	{
+	  // Do not call factory->instantiateIncoming() while the
+	  // Rope_iterator is still in scope. Otherwise deadlock will occur
+	  Rope_iterator iter(factory);
+	  if (iter() != 0) {
+	    // iiop port has already been specified by -BOAiiop_port
+	    install_iiop_port = 0;
+	  }
+	}
+	if (install_iiop_port) {
+	  CORBA::Char* hostname;
+	  if ((hostname=(CORBA::Char*)getenv(OMNIORB_USEHOSTNAME_VAR))==NULL){
+	    hostname = (CORBA::Char*)"";
+	  }
+	  _tcpEndpoint e (hostname,0);
+	  // instantiate a rope. Let the OS pick a port number.
+	  factory->instantiateIncoming(&e,1);
+	}
+      }
+    }
+    boa = new CORBA::BOA;
+  }
+  catch (...) {
+    if (rootObjectManager) {
+      delete rootObjectManager;
+      rootObjectManager = 0;
+    }
+    if (boa) {
+      delete boa;
+      boa = 0;
+    }
+    throw;
+  }
+  return boa;
+}
+
+CORBA::BOA_ptr
+CORBA::
+BOA::getBOA()
+{
+  if (!boa) {
+    throw CORBA::OBJ_ADAPTER(0,CORBA::COMPLETED_NO);
+  }
+  return CORBA::BOA::_duplicate(boa);
+}
+
+void
+CORBA::
+BOA::impl_is_ready(CORBA::ImplementationDef_ptr p,CORBA::Boolean NonBlocking)
+{
+  omni_mutex_lock sync(internalLock);
+  internalBlockingFlag++;
+  if (internalBlockingFlag == 1) {
+
+    {
+      // Beware of a possible deadlock where the scavenger thread and this
+      // thread both try to grep the mutex in factory->anchor().
+      // To prevent this from happening, put this block of code in a separate
+      // scope.
+      ropeFactory_iterator iter(*rootObjectManager->incomingRopeFactories());
+      incomingRopeFactory* factory;
+      while ((factory = (incomingRopeFactory*)iter())) {
+	factory->startIncoming();
+      }
+    }
+    StrandScavenger::initInScavenger();
+  }
+  if (!NonBlocking) {
+    while (internalBlockingFlag > 0) {
+      internalCond.wait();	// block here until impl_shutdown()
+    }
+  }
+  else {
+    if (internalBlockingFlag != 1) {
+      internalBlockingFlag--;
+    }
+  }
+  // If impl_is_ready() has been called, internalBlockingFlag is >=1.
+  // If internalBlockFlag > 1, its value n indicates that n or n-1 threads
+  // are blocking inside impl_is_ready().
   return;
 }
+
+void
+CORBA::
+BOA::impl_shutdown()
+{
+  omni_mutex_lock sync(internalLock);
+  if (internalBlockingFlag > 0) {
+    {
+      // Beware of a possible deadlock where the scavenger thread and this
+      // thread both try to grep the mutex in factory->anchor().
+      // To prevent this from happening, put this block of code in a separate
+      // scope.
+      ropeFactory_iterator iter(*rootObjectManager->incomingRopeFactories());
+      incomingRopeFactory* factory;
+      while ((factory = (incomingRopeFactory*)iter())) {
+	factory->stopIncoming();
+      }
+    }
+    StrandScavenger::killInScavenger();
+    while (internalBlockingFlag) {
+      internalCond.signal();
+      internalBlockingFlag--;
+    }
+  }
+}
+
+void
+CORBA::
+BOA::destroy()
+{
+  omni_mutex_lock sync(internalLock);
+  {
+    // Beware of a possible deadlock where the scavenger thread and this
+    // thread both try to grep the mutex in factory->anchor().
+    // To prevent this from happening, put this block of code in a separate
+    // scope.
+    ropeFactory_iterator iter(*rootObjectManager->incomingRopeFactories());
+    incomingRopeFactory* factory;
+    while ((factory = (incomingRopeFactory*)iter())) {
+      if (internalBlockingFlag > 0) {
+	factory->stopIncoming();
+      }
+      factory->removeIncoming();
+    }
+  }
+  if (internalBlockingFlag > 0) {
+    StrandScavenger::killInScavenger();
+    while (internalBlockingFlag) {
+      internalCond.signal();
+      internalBlockingFlag--;
+    }
+  }
+}
+
 
 void
 CORBA::
@@ -65,19 +330,6 @@ BOA::obj_is_ready(Object_ptr op, ImplementationDef_ptr ip /* ignored */)
   return;
 }
 
-void
-CORBA::
-BOA::impl_is_ready(CORBA::ImplementationDef_ptr p,CORBA::Boolean NonBlocking)
-{
-  omni::orbIsReady();
-  if (!NonBlocking) {
-    omni_mutex m;
-    omni_condition c(&m);
-    m.lock();
-    c.wait();	// block here forever
-  }
-  return;
-}
 
 CORBA::BOA_ptr 
 CORBA::
@@ -156,3 +408,128 @@ BOA::deactivate_obj(CORBA::Object_ptr obj)
   return;
 }
 
+static
+void
+move_args(int& argc,char **argv,int idx,int nargs)
+{
+  if ((idx+nargs) <= argc)
+    {
+      for (int i=idx+nargs; i < argc; i++) {
+	argv[i-nargs] = argv[i];
+      }
+      argc -= nargs;
+    }
+}
+
+static
+CORBA::Boolean
+parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
+{
+  CORBA::Boolean orbId_match = 0;
+  if (orb_identifier && strcmp(orb_identifier,myBOAId) != 0)
+    {
+      if (omniORB::traceLevel > 0) {
+	cerr << "BOA_init failed: the BOAid ("
+	     << orb_identifier << ") is not " <<  myBOAId << endl;
+      }
+      return 0;
+    }
+
+  int idx = 1;
+  while (argc > idx)
+    {
+      // -BOAxxxxxxxx ??
+      if (strlen(argv[idx]) < 4 ||
+	  !(argv[idx][0] == '-' && argv[idx][1] == 'B' &&
+	    argv[idx][2] == 'O' && argv[idx][3] == 'A'))
+	{
+	  idx++;
+	  continue;
+	}
+	  
+      // -BOAid <id>
+      if (strcmp(argv[idx],"-BOAid") == 0) {
+	if ((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "BOA_init failed: missing -BOAid parameter." << endl;
+	  }
+	  return 0;
+	}
+	if (strcmp(argv[idx+1],myBOAId) != 0)
+	  {
+	    if (omniORB::traceLevel > 0) {
+	      cerr << "BOA_init failed: the BOAid ("
+		   << argv[idx+1] << ") is not " << myBOAId << endl;
+	    }
+	    return 0;
+	  }
+	orbId_match = 1;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -BOAiiop_port <port number>[,<port number>]*
+      if (strcmp(argv[idx],"-BOAiiop_port") == 0) {
+	if ((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "BOA_init failed: missing -BOAiiop_port parameter." << endl;
+	  }
+	  return 0;
+	}
+        unsigned int port;
+	if (sscanf(argv[idx+1],"%u",&port) != 1 ||
+            (port == 0 || port >= 65536)) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "BOA_init failed: invalid -BOAiiop_port parameter." << endl;
+	  }
+	  return 0;
+	}
+
+	CORBA::Char* hostname;
+	if ((hostname = (CORBA::Char*)getenv(OMNIORB_USEHOSTNAME_VAR))==NULL) {
+	  hostname = (CORBA::Char*)"";
+	}
+	try {
+	  _tcpEndpoint e (hostname,(CORBA::UShort)port);
+	  ropeFactory_iterator iter(*rootObjectManager->incomingRopeFactories());
+	  incomingRopeFactory* factory;
+	  while ((factory = (incomingRopeFactory*)iter())) {
+	    if (factory->getType()->is_protocol( _tcpEndpoint ::protocol_name)) {
+	      if (!factory->isIncoming(&e)) {
+		// This port has not been instantiated
+		factory->instantiateIncoming(&e,1);
+		if (omniORB::traceLevel >= 2)
+		  cerr << "Accept IIOP calls on port " << e.port() << endl;
+	      }
+	      break;
+	    }
+	  }
+	}
+	catch (...) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "BOA_init falied: cannot use port " << port
+		 << " to accept incoming IIOP calls." << endl;
+	  }
+	  return 0;
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // Reach here only if the argument in this form: -ORBxxxxx
+      // is not recognised.
+      if (omniORB::traceLevel > 0) {
+	cerr << "BOA_init failed: unknown BOA argument ("
+	     << argv[idx] << ")" << endl;
+      }
+      return 0;
+    }
+
+  if (!orb_identifier && !orbId_match) {
+    if (omniORB::traceLevel > 0) {
+      cerr << "BOA_init failed: BOAid is not specified." << endl;
+    }
+    return 0;
+  }
+  return 1;
+}
