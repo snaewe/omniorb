@@ -561,7 +561,7 @@ class Type:
     
         if d_SeqType.char():
             template["suffix"] = "_Char"
-        if d_SeqType.wchar():
+        elif d_SeqType.wchar():
             template["suffix"] = "_WChar"
         elif d_SeqType.boolean():
             template["suffix"] = "_Boolean"
