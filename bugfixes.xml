@@ -15,7 +15,7 @@
   <reported>Paul Nader</reported>
 
   <text>
-  For an interface I, the _sk_I::_sk_I(const omniOrbBoaKey&amp;) was missing.
+  For an interface I, the _sk_I::_sk_I(const omniOrbBoaKey&) was missing.
   </text>
 
 </bug>
