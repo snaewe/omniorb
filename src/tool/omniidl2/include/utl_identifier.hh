@@ -90,7 +90,7 @@ class Identifier {
 
     // Operations
     char	*get_string();
-    long	compare(Identifier *other);
+    long	compare(Identifier *other,idl_bool ignore_case=0);
 
     // Dumping
     virtual void	dump(ostream &o);
