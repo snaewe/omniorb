@@ -11,6 +11,7 @@
 #  i586_linux_2.0            x86 Redhat linux 4.2, gcc-2.7.2
 #  alpha_osf1_3.2            Digital Unix 3.2, DEC C++ v5.5
 #  alpha_osf1_4.0            Digital Unix 4.0, DEC C++ v6.0
+#  alpha_osf1_5.0            Tru64 5.0, DEC C++ v6.2
 #  powerpc_aix_4.2           IBM AIX 4.2, IBM C Set++
 #  powerpc_linux_2.2_glibc   PowerPC linux, Debain
 #  hppa_hpux_10.20           HPUX 10.20, aC++ B3910B A.01.04
@@ -44,6 +45,7 @@
 #platform = sun4_sosV_5.7
 #platform = alpha_osf1_3.2
 #platform = alpha_osf1_4.0
+#platform = alpha_osf1_5.0
 #platform = powerpc_aix_4.2
 #platform = powerpc_aix_4.3
 #platform = hppa_hpux_10.20
