@@ -16,6 +16,7 @@
 \newcommand{\intf}[1]{\texttt{#1}}
 \newcommand{\op}[1]{\texttt{#1()}}
 \newcommand{\cmdline}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
 
 \newcommand{\dfunc}[1]{\item[\func{#1}]\mbox{}\\}
 \newcommand{\cfunc}[1]{\item[\func{#1}]}
@@ -214,6 +215,9 @@ The supported flags are:
 \cmdline{-C}\textit{dir}
      \> Change directory to \textit{dir} before writing output files.\\
 
+\cmdline{-i}
+     \> Run the front end and back-ends, then enter the interactive loop.\\
+
 \cmdline{-d}
      \> Dump the parsed IDL then exit, without running a back-end.\\
 
@@ -313,6 +317,16 @@ interface I {
 \noindent the \cmdline{-k} flag will attach the comment to \op{op1};
 the \cmdline{-K} flag will attach it to \op{op2}.
 
+
+
+\subsection{Interactive loop}
+
+When \omniidl\ is given the \cmdline{-i} option, it runs the compiler
+front-end and any back-ends specified, and then drops into Python's
+interactive command loop. Within the interactive loop, you can
+\code{import omniidl}. The parsed AST is then available as
+\code{omniidl.idlast.tree}. This mode is useful for investigating the
+parsed tree.
 
 
 \subsection{Copyright}
@@ -482,6 +496,12 @@ functions:
   >>> pruneScope(['A','B','C','D'],['A','B','D'])
   ['C','D']
 \end{verbatim}
+
+\dfunc{relativeScope(from,dest)}
+  Given two globally-scoped name lists, return a minimal scoped name
+  list which identifies the destination scope, without clashing with
+  another identifier. If the only valid result is a globally-scoped
+  name, the result list is prefixed with \var{None}.
 
 \cfunc{slashName(sn,from)}
 \cfunc{dotName(sn,from)}
@@ -706,7 +726,7 @@ The declaration objects making up the tree have the following classes:
   {Constant declaration}
 
 \dfunc{constType()}
-  \class{IdlType.Type} object of the constant. Aliases not stripped.
+  \class{idltype.Type} object of the constant. Aliases not stripped.
 
 \dfunc{constKind()}
   TypeCode kind of the constant with aliases stripped. So for a
@@ -718,7 +738,7 @@ The declaration objects making up the tree have the following classes:
 \end{verbatim}
   %
   \func{constKind()} will return \var{tk\_long}, but
-  \func{constType()} will return an \class{IdlType.Declared} object
+  \func{constType()} will return an \class{idltype.Declared} object
   (see page~\pageref{cls:typeDeclared}) which refers to \var{MyLong}'s
   typedef \class{Declarator} object.
 
@@ -731,7 +751,7 @@ The declaration objects making up the tree have the following classes:
 
 \begin{classdesc}
   {omniidl.idlast.Declarator (Decl,DeclRepoId)}
-  {Declarator used in typedefs, struct members, etc.}
+  {Declarator used in typedefs, struct members, attributes, etc.}
 
 \dfunc{sizes()}
   List of array sizes, or \var{None} if it is a simple declarator.
@@ -748,7 +768,7 @@ The declaration objects making up the tree have the following classes:
   {Typedef declaration}
 
 \dfunc{aliasType()}
-  \class{IdlType.Type} object that this is an alias to.
+  \class{idltype.Type} object that this is an alias to.
 
 \dfunc{constrType()}
   Boolean: true if the alias type was constructed within this typedef
@@ -769,7 +789,7 @@ The declaration objects making up the tree have the following classes:
   {Member of a struct or exception}
 
 \dfunc{memberType()}
-  \class{IdlType.Type} object for the type of this member.
+  \class{idltype.Type} object for the type of this member.
 
 \dfunc{constrType()}
   Boolean: true if the member type was constructed within the member
@@ -845,7 +865,7 @@ The declaration objects making up the tree have the following classes:
   List of \class{CaseLabel} objects.
 
 \dfunc{caseType()}
-  \class{IdlType.Type} object for the case type.
+  \class{idltype.Type} object for the case type.
 
 \dfunc{constrType()}
   Boolean: true if the case type was constructed within the case.
@@ -861,7 +881,7 @@ The declaration objects making up the tree have the following classes:
   {Union declaration}
 
 \dfunc{switchType()}
-  \class{IdlType.Type} object corresponding to the switch type.
+  \class{idltype.Type} object corresponding to the switch type.
 
 \dfunc{constrType()}
   Boolean: true if the switch type was declared within the switch
@@ -904,10 +924,15 @@ No non-inherited functions.
   Boolean: true if the attribute is read only.
 
 \dfunc{attrType()}
-  \class{IdlType.Type} object for the attribute's type.
+  \class{idltype.Type} object for the attribute's type.
+
+\dfunc{declarators()}
+  List of \class{Declarator} objects for this attribute. All
+  declarators are guaranteed to be simple.
 
 \dfunc{identifiers()}
-  List of strings containing the attribute identifiers. e.g.\ for the
+  Convenience function returning a list of strings containing the
+  attribute identifiers from the declarators. e.g.\ for the
   declaration
 
 \begin{verbatim}
@@ -933,7 +958,7 @@ No non-inherited functions.
   Boolean: true if out or inout.
 
 \dfunc{paramType()}
-  \class{IdlType.Type} object for the parameter type.
+  \class{idltype.Type} object for the parameter type.
 
 \dfunc{identifier()}
   String containing the parameter identifier.
@@ -942,17 +967,14 @@ No non-inherited functions.
 
 
 \begin{classdesc}
-  {omniidl.idlast.Operation (Decl)}
+  {omniidl.idlast.Operation (Decl,DeclRepoId)}
   {Operation declaration}
 
 \dfunc{oneway()}
   Boolean: true if the operation is one way.
 
 \dfunc{returnType()}
-  \class{IdlType.Type} object for the return type.
-
-\dfunc{identifier()}
-  String containing the operation identifier.
+  \class{idltype.Type} object for the return type.
 
 \dfunc{parameters()}
   List of \class{Parameter} objects.
@@ -986,7 +1008,7 @@ No non-inherited functions.
   Integer: 0 == public, 1 == private.
 
 \dfunc{memberType()}
-  \class{IdlType.Type} object for member type.
+  \class{idltype.Type} object for member type.
 
 \dfunc{constrType()}
   Boolean: true if the member type is declared within the StateMember.
@@ -1030,7 +1052,7 @@ No non-inherited functions.
   {Boxed valuetype declaration}
 
 \dfunc{boxedType()}
-  \class{IdlType.Type} object for the boxed type.
+  \class{idltype.Type} object for the boxed type.
 
 \dfunc{constrType()}
   Boolean: true if boxed type is declared inside the valuetype
@@ -1110,6 +1132,10 @@ All type objects are derived from the base class \class{Type}:
 \dfunc{kind()}
   TypeCode kind of type.
 
+\dfunc{unalias()}
+  Return an equivalent \class{Type} object with top-level aliases
+  stripped. Only has an effect with typedef types.
+
 \dfunc{accept(visitor)}
   Visitor pattern accept.
 
@@ -1154,7 +1180,7 @@ declaration.
   {Sequence type}
 
 \dfunc{seqType()}
-  \class{IdlType.Type} object representing what the sequence contains.
+  \class{idltype.Type} object representing what the sequence contains.
 
 \dfunc{bound()}
   Bound of a bounded sequence, or 0 for unbounded sequences.
