@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.7  2000/01/03 18:43:32  djr
+  Fixed bug in ref counting of POA Policy objects.
+
   Revision 1.1.2.6  1999/10/29 13:18:20  djr
   Changes to ensure mutexes are constructed when accessed.
 
@@ -108,7 +111,7 @@ PortableServer::name::_ptrToObjRef(const char* repoId)  \
 PortableServer::name##_ptr  \
 PortableServer::name::_duplicate(PortableServer::name##_ptr obj)  \
 {  \
-  if( CORBA::is_nil(obj) )  obj->_NP_incrRefCount();  \
+  if( !CORBA::is_nil(obj) )  obj->_NP_incrRefCount();  \
   \
   return obj;  \
 }  \
