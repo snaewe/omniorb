@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.8.6.4  2000/02/15 13:43:43  djr
+ * Fixed bug in create_union_tc() -- problem if discriminator was an alias.
+ *
  * Revision 1.8.6.3  1999/10/14 17:31:34  djr
  * Minor corrections.
  *
@@ -313,7 +316,8 @@ public:
 
   virtual CORBA::Boolean NP_containsAnAlias();
   // Returns true if this TypeCode or any of its members
-  // is an alias.
+  // is an alias.  Used in the implementation of
+  // aliasExpand() below.
 
   virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
   // Return a TypeCode equivalent to this, but with aliases expanded
@@ -321,6 +325,8 @@ public:
   // if necassary - ie. the instance it is invoked on really does
   // contain an alias.  This is necassary to reduce the number of
   // calls to NP_containsAnAlias that are necassary.
+  //  **This is used to implement aliasExpand() below, and should not
+  // be called directly**
 
   TypeCode_base* NP_compactTc();
   // Return a TypeCode equivalent to this, but with the optional
