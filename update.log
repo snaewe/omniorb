@@ -1,3 +1,10 @@
+Wed Aug  1 17:45:27 BST 2001 sll
+================================
+
+- Remove symbols inside an anonymous name from DLL def file
+
+external_merge/mk/win32.mk
+
 Wed Aug  1 17:03:11 BST 2001 sll
 ================================
 
