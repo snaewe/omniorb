@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.13  1997/12/09 20:40:21  sll
+ Various platform specific updates.
+
  Revision 1.12  1997/08/21 22:22:12  sll
  Support for AIX.
 
@@ -58,6 +61,7 @@
 
 #elif defined(__DECCXX)
 // DEC C++ compiler
+#define NEED_DUMMY_RETURN
 
 #  if defined(__alpha)
 #     define SIZEOF_LONG 8
@@ -65,13 +69,30 @@
 #     define SIZEOF_PTR  8
 #  endif
 
-#elif defined(__SUNPRO_CC)
+#elif defined(__SUNPRO_CC) 
 // SUN C++ compiler
+#if __SUNPRO_CC < 0x420
+#define NEED_DUMMY_RETURN
+#endif
 
 #elif defined(_MSC_VER)
 //  Microsoft Visual C++ compiler
- 
+#define NEED_DUMMY_RETURN
 #endif
+
+#if defined(__hpux__)
+// HP aCC does not define a macro to identify itself.
+// Test if this is gcc, if not assume it is aCC.
+#if !defined(__GNUG__)
+#define NEED_DUMMY_RETURN
+#endif
+
+// Do we really need to include this here?   -SLL
+#include <stdio.h>
+#undef __ptr
+
+#endif
+
 
 #if defined(arm)
 // We don't have support for float.
@@ -131,6 +152,16 @@
 #endif
 #elif defined(__aix__) && defined(__powerpc__)
 #define _OMNIORB_HOST_BYTE_ORDER_ 0
+#define _HAS_SIGNAL 1
+#elif defined(__hpux__) && defined(__hppa__)
+#define _OMNIORB_HOST_BYTE_ORDER_ 0
+#define _HAS_SIGNAL 1
+#elif defined(__m68k__) && defined(__nextstep__)
+#define _OMNIORB_HOST_BYTE_ORDER_ 0
+#define _HAS_SIGNAL 1
+#define _USE_MACH_SIGNAL 1
+#define _NO_STRDUP 1
+#define _USE_GETHOSTNAME 1
 #else
 #error "The byte order of this platform is unknown"
 #endif
@@ -158,6 +189,14 @@
 #define _OMNIORB2_NTDLL_
 #endif 
  // _OMNIORB2_DLL && _WINSTATIC
+
+#ifdef _DEBUG
+// The type name instantiated from the sequence templates could exceeds the
+// 255 char limit of the debug symbol names. It is harmless except that one
+// cannot read their values with the debugger. Disable the warning about
+// the symbol name truncation.
+#pragma warning(disable: 4786)
+#endif
 
 #else
 #define _OMNIORB2_NTDLL_
