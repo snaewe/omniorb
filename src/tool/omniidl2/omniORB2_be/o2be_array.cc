@@ -10,9 +10,17 @@
 
 /*
   $Log$
-  Revision 1.3  1997/02/17 18:01:56  ewc
-  Added support for Windows NT
+  Revision 1.4  1997/03/10 16:28:36  sll
+  - New member function out_adptarg_name() to return the name of the
+    adaptation class. This class is used for passing variable length
+    arrays as OUT arguments.
+  - For  array types declared in the global scope, T_dup, T_alloc and T_free
+    functions are declared extern and the implementation code was moved to the
+    stub CC file.
 
+// Revision 1.3  1997/02/17  18:01:56  ewc
+// Added support for Windows NT
+//
 // Revision 1.2  1997/01/13  15:35:19  sll
 // Added code to implement isVariable() properly.
 // New member function produce_typedef_hdr(). This is called when a typedef
@@ -28,6 +36,7 @@
 #include "idl_extern.hh"
 #include "o2be.h"
 
+#define ADPT_CLASS_TEMPLATE "_CORBA_Array_OUT_arg"
 
 o2be_array::o2be_array(UTL_ScopedName *n,
 		       unsigned long ndims,
@@ -322,82 +331,100 @@ o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
   }	
   s << ";\n\n";
 
-  IND(s); s << ((!(defined_in()==idl_global->root()))?"static ":"extern ")
-	    << tdef->uqname() << "_slice* "<< tdef->uqname() << "_alloc() {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return new " << tdef->uqname() << "_slice["
-	    << getSliceDim()
-	    << "];\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-  IND(s); s << ((!(defined_in()==idl_global->root()))?"static ":"extern ")
-	    << tdef->uqname() << "_slice* "<< tdef->uqname() << "_dup(const "
-	    << tdef->uqname() << "_slice* _s) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "if (!_s) return 0;\n";
-  IND(s); s << tdef->uqname() << "_slice *_data = "
-	    << tdef->uqname() << "_alloc();\n";
-  IND(s); s << "if (_data) {\n";
-  INC_INDENT_LEVEL();
-  {
-    unsigned int ndim = 0;
-    unsigned int dimval;
-    o2be_array::dim_iterator next(this);
-    while (ndim < getNumOfDims())
+  if (defined_in() == idl_global->root())
+    {
+      // memory management functions are declared as externs in the global
+      // scope. Their implementation cannot be generated inline.
+      IND(s); s << "extern "
+		<< tdef->uqname() << "_slice* "
+		<< tdef->uqname() << "_alloc();\n";
+      IND(s); s << "extern "
+		<< tdef->uqname() << "_slice* "<< tdef->uqname() << "_dup(const "
+		<< tdef->uqname() << "_slice* _s);\n";
+      IND(s); s << "extern "
+		<< "void " << tdef->uqname() << "_free("
+		<< tdef->uqname() << "_slice* _s);\n";
+    }
+  else
+    {
+      IND(s); s << "static inline "
+		<< tdef->uqname() << "_slice* "
+		<< tdef->uqname() << "_alloc() {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "return new " << tdef->uqname() << "_slice["
+		<< getSliceDim()
+		<< "];\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+      IND(s); s << "static inline "
+		<< tdef->uqname() << "_slice* "<< tdef->uqname() << "_dup(const "
+		<< tdef->uqname() << "_slice* _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "if (!_s) return 0;\n";
+      IND(s); s << tdef->uqname() << "_slice *_data = "
+		<< tdef->uqname() << "_alloc();\n";
+      IND(s); s << "if (_data) {\n";
+      INC_INDENT_LEVEL();
       {
-	dimval = next();
-	IND(s); s << "for (unsigned int _i" << ndim << " =0;"
-		  << "_i" << ndim << " < " << dimval << ";"
-		  << "_i" << ndim << "++) {\n";
-	INC_INDENT_LEVEL();
-	ndim++;
+	unsigned int ndim = 0;
+	unsigned int dimval;
+	o2be_array::dim_iterator next(this);
+	while (ndim < getNumOfDims())
+	  {
+	    dimval = next();
+	    IND(s); s << "for (unsigned int _i" << ndim << " =0;"
+		      << "_i" << ndim << " < " << dimval << ";"
+		      << "_i" << ndim << "++) {\n";
+	    INC_INDENT_LEVEL();
+	    ndim++;
+	  }
+	
+	IND(s); s << "_data";
+	ndim = 0;
+	while (ndim < getNumOfDims())
+	  {
+	    s << "[_i" << ndim << "]";
+	    ndim++;
+	  }
+	s << " = _s";
+	ndim = 0;
+	while (ndim < getNumOfDims())
+	  {
+	    s << "[_i" << ndim << "]";
+	    ndim++;
+	  }
+	s << ";\n";
+	ndim = 0;
+	while (ndim < getNumOfDims())
+	  {
+	    DEC_INDENT_LEVEL();
+	    IND(s); s << "}\n";
+	    ndim++;
+	  }
       }
-
-    IND(s); s << "_data";
-    ndim = 0;
-    while (ndim < getNumOfDims())
-      {
-	s << "[_i" << ndim << "]";
-	ndim++;
-      }
-    s << " = _s";
-    ndim = 0;
-    while (ndim < getNumOfDims())
-      {
-	s << "[_i" << ndim << "]";
-	ndim++;
-      }
-    s << ";\n";
-    ndim = 0;
-    while (ndim < getNumOfDims())
-      {
-	DEC_INDENT_LEVEL();
-	IND(s); s << "}\n";
-	ndim++;
-      }
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  IND(s); s << "return _data;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-  IND(s); s << ((!(defined_in()==idl_global->root()))?"static ":"extern ")
-	    << "void " << tdef->uqname() << "_free("
-	    << tdef->uqname() << "_slice* _s) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "delete [] _s;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      IND(s); s << "return _data;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+      IND(s); s << "static inline "
+		<< "void " << tdef->uqname() << "_free("
+		<< tdef->uqname() << "_slice* _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "delete [] _s;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+    }
 
   IND(s); s << "class " << tdef->uqname() << "_copyHelper {\n";
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "static " << tdef->uqname() << "_slice* alloc() { return "
+  IND(s); s << "static inline " << tdef->uqname() << "_slice* alloc() { return "
 	    << tdef->uqname() << "_alloc(); }\n";
-  IND(s); s << "static " << tdef->uqname() << "_slice* dup(const "
+  IND(s); s << "static inline " << tdef->uqname() << "_slice* dup(const "
 	    << tdef->uqname() << "_slice* p) { return "
 	    << tdef->uqname() << "_dup(p); }\n";
-  IND(s); s << "static void free("
+  IND(s); s << "static inline void free("
 	    << tdef->uqname() << "_slice* p) { "
 	    << tdef->uqname() << "_free(p); }\n";
   DEC_INDENT_LEVEL();
@@ -416,6 +443,78 @@ o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
 void
 o2be_array::produce_skel (fstream &s, o2be_typedef *tdef)
 {
+  if (defined_in() == idl_global->root())
+    {
+      // memory management functions are declared as externs in the global
+      // scope. Generate their implemenation here.
+      IND(s); s << "extern "
+		<< tdef->uqname() << "_slice* "
+		<< tdef->uqname() << "_alloc() {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "return new " << tdef->uqname() << "_slice["
+		<< getSliceDim()
+		<< "];\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+      IND(s); s << "extern "
+		<< tdef->uqname() << "_slice* "<< tdef->uqname() << "_dup(const "
+		<< tdef->uqname() << "_slice* _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "if (!_s) return 0;\n";
+      IND(s); s << tdef->uqname() << "_slice *_data = "
+		<< tdef->uqname() << "_alloc();\n";
+      IND(s); s << "if (_data) {\n";
+      INC_INDENT_LEVEL();
+      {
+	unsigned int ndim = 0;
+	unsigned int dimval;
+	o2be_array::dim_iterator next(this);
+	while (ndim < getNumOfDims())
+	  {
+	    dimval = next();
+	    IND(s); s << "for (unsigned int _i" << ndim << " =0;"
+		      << "_i" << ndim << " < " << dimval << ";"
+		      << "_i" << ndim << "++) {\n";
+	    INC_INDENT_LEVEL();
+	    ndim++;
+	  }
+	
+	IND(s); s << "_data";
+	ndim = 0;
+	while (ndim < getNumOfDims())
+	  {
+	    s << "[_i" << ndim << "]";
+	    ndim++;
+	  }
+	s << " = _s";
+	ndim = 0;
+	while (ndim < getNumOfDims())
+	  {
+	    s << "[_i" << ndim << "]";
+	    ndim++;
+	  }
+	s << ";\n";
+	ndim = 0;
+	while (ndim < getNumOfDims())
+	  {
+	    DEC_INDENT_LEVEL();
+	    IND(s); s << "}\n";
+	    ndim++;
+	  }
+      }
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      IND(s); s << "return _data;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+      IND(s); s << "extern "
+		<< "void " << tdef->uqname() << "_free("
+		<< tdef->uqname() << "_slice* _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "delete [] _s;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+    }
 }
 
 void
@@ -611,6 +710,22 @@ o2be_array::produce_typedef_in_union(fstream &s, const char *tname)
       }
   }	
   s << ";\n\n";
+}
+
+const char*
+o2be_array::out_adptarg_name(o2be_typedef* tdef) const
+{
+  char* p = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<, >")+
+		     strlen(tdef->fqname()) + strlen("_slice") +
+		     strlen(tdef->fqname()) + strlen("_var")+1];
+  strcpy(p,ADPT_CLASS_TEMPLATE);
+  strcat(p,"<");
+  strcat(p,tdef->fqname());
+  strcat(p,"_slice");
+  strcat(p,",");
+  strcat(p,tdef->fqname());
+  strcat(p,"_var >");
+  return p;  
 }
 
 
