@@ -531,7 +531,7 @@ RequestImpl::marshalArgs(cdrStream& s)
 
   for( CORBA::ULong i = 0; i < num_args; i++ ){
     CORBA::NamedValue_ptr arg = pd_arguments->item(i);
-    if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
+    if( arg->flags() & CORBA::ARG_IN )
       arg->value()->NP_marshalDataOnly(s);
   }
   if( !CORBA::is_nil(pd_contexts) ) {
@@ -553,7 +553,7 @@ RequestImpl::unmarshalResults(cdrStream& s)
 
   for( CORBA::ULong i = 0; i < num_args; i++){
     CORBA::NamedValue_ptr arg = pd_arguments->item(i);
-    if( arg->flags() & CORBA::ARG_OUT || arg->flags() & CORBA::ARG_INOUT )
+    if( arg->flags() & CORBA::ARG_OUT )
       arg->value()->NP_unmarshalDataOnly(s);
   }
 }

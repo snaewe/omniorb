@@ -1,3 +1,16 @@
+Wed Nov 14 19:10:23 GMT 2001 dpg1
+=================================
+
+- Bug with empty UTF-16 wstring.
+
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+
+- Bug introduced by changed CORBA::Flags values.
+
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/serverRequest.cc
+
+
 Wed Nov 14 17:46:23 GMT 2001 dpg1
 =================================
 

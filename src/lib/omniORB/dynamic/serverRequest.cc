@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.8.2.12  2001/11/14 19:12:45  dpg1
+ Bug introduced by changed CORBA::Flags values.
+
  Revision 1.8.2.11  2001/11/13 14:11:44  dpg1
  Tweaks for CORBA 2.5 compliance.
 
@@ -271,7 +274,7 @@ unmarshalArguments(cdrStream& s)
 
   for( CORBA::ULong i = 0; i < num_args; i++){
     CORBA::NamedValue_ptr arg = pd_params->item(i);
-    if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
+    if( arg->flags() & CORBA::ARG_IN )
       arg->value()->NP_unmarshalDataOnly(s);
   }
 
@@ -289,8 +292,7 @@ marshalReturnedValues(cdrStream& s)
   pd_result.NP_marshalDataOnly(s);
   for( CORBA::ULong j = 0; j < pd_params->count(); j++ ){
     CORBA::NamedValue_ptr arg = pd_params->item(j);
-    if( arg->flags() & CORBA::ARG_OUT ||
-	arg->flags() & CORBA::ARG_INOUT )
+    if( arg->flags() & CORBA::ARG_OUT )
       arg->value()->NP_marshalDataOnly(s);
   }
 }
