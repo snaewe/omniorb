@@ -23,6 +23,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.4  2001/10/03 14:16:27  dpg1
+// Remove double "is" from error messages.
+//
 // Revision 1.1.2.3  2001/01/16 12:54:46  dpg1
 // omniNames and omniMapper now complain if they cannot open the
 // requested port, rather than dying with an uncaught exception.
@@ -270,7 +273,7 @@ main(int argc, char** argv)
   }
   catch (CORBA::INITIALIZE& ex) {
     cerr << "Failed to initialise the POA. "
-	 << "Is omniMapper is already running?" << endl;
+	 << "Is omniMapper already running?" << endl;
     return 1;
   }
 

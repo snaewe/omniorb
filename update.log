@@ -1,3 +1,12 @@
+Wed Oct  3 15:14:47 BST 2001 dpg1
+=================================
+
+- Remove double "is" from error messages.
+
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/omniNames.cc
+
+
 Fri Sep 28 17:10:02 BST 2001 dpg1
 =================================
 

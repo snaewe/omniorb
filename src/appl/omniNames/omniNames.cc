@@ -206,7 +206,7 @@ main(int argc, char **argv)
   }
   catch (CORBA::INITIALIZE& ex) {
     cerr << "Failed to initialise the POAs. "
-	 << "Is omniNames is already running?" << endl;
+	 << "Is omniNames already running?" << endl;
     return 1;
   }
 
