@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.8  1998/01/27 16:07:58  ewc
-  Added -ORBtcAliasExpand flag
+  Revision 1.9  1998/02/25 20:34:59  sll
+  New omniORB::loader class for adding dynamic object loader.
 
+ * Revision 1.8  1998/01/27  16:07:58  ewc
+ * Added -ORBtcAliasExpand flag
+ *
   Revision 1.7  1997/12/12 18:47:16  sll
   New variable serverName.
 
@@ -322,6 +325,45 @@ public:
 					    void* cookie,		//
 					    systemExceptionHandler_t fn);
   ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // An application can register a handler for loading objects          //
+  // dynamically. The handler should have the signature:                //
+  //                                                                    //
+  //          omniORB::loader::mapKeyToObject_t                         //
+  //                                                                    //
+  // When the ORB cannot locate the target object in this address space,//
+  // it calls the handler with the object key of the target.            //
+  // The handler is expected to instantiate the object, either in       //
+  // this address space or in another address space, and returns the    //
+  // object reference to the newly instantiated object. The ORB will    //
+  // then reply with a LOCATION_FORWARD message to instruct the client  //
+  // to retry using the object reference returned by the handler.       //
+  // When the handler returns, the ORB assumes ownership of the         //
+  // returned value. It will call CORBA::release() on the returned      //
+  // value when it has finished with it.                                //
+  //                                                                    //
+  // The handler may be called concurrently by multi-threads. Hence it  //
+  // must be thread-safe.                                               //
+  //                                                                    //
+  // If the handler cannot load the target object, it should return     //
+  // CORBA::Object::_nil(). The object will be treated as non-existing. //
+  //                                                                    //
+  // The application registers the handler with the ORB at runtime      //
+  // using omniORB::loader::set(). This function is not thread-safe.    //
+  // Calling this function again will replace the old handler with      //
+  // the new one.                                                       //
+  //                                                                    //
+  class loader {                                                        //
+  public:                                                               //
+    typedef CORBA::Object_ptr (*mapKeyToObject_t) (                     //
+                                       const omniORB::objectKey& key);  //
+                                                                        // 
+    static void set(mapKeyToObject_t NewKeyToObject);                   //
+  };
+  ////////////////////////////////////////////////////////////////////////
+
 
   ////////////////////////////////////////////////////////////////////////
   // class fatalException                                               //
