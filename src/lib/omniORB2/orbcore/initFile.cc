@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.28  1999/06/18 20:54:00  sll
+  Added include Naming.hh as it is no longer included by default when this
+  runtime library is compiled.
+
   Revision 1.27  1999/05/25 17:00:31  sll
   Added new variable INTERFACE_REPOSITORY in the config file.
 
@@ -89,6 +93,7 @@
   */
 
 #include <omniORB2/CORBA.h>
+#include <omniORB2/Naming.hh>
 
 #ifdef HAS_pch
 #pragma hdrstop
