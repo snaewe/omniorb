@@ -1,3 +1,17 @@
+Thu May  4 15:11:00 BST 2000 djs
+================================
+
+- omniIDL C++ backend outputs reopened modules in separate fragments
+  and a new backend flag -Wbsplice-modules has been added to copy
+  the old behaviour by outputting all the continuations as one lump.
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/config.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
 Tue May  2 16:22:06 BST 2000 dpg1
 =================================
 
