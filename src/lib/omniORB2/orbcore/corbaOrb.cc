@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.2.4  2000/01/07 15:44:56  djr
+  Call timeouts are now disabled by default.
+
   Revision 1.29.2.3  2000/01/05 17:19:03  djr
   Added check for reinitialisation in ORB_init and BOA_init.
 
@@ -725,7 +728,7 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	unsigned int v;
 	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
 	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBinConScanPeriod parameter.");
+			" -ORBclientCallTimeOutPeriod parameter.");
 	  return 0;
 	}
 	omniORB::callTimeOutPeriod(omniORB::clientSide, v);
