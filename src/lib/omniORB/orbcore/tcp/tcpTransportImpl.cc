@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.19  2003/11/06 10:18:39  dgrisby
+  Expand FD_SETSIZE on Windows.
+
   Revision 1.1.2.18  2003/07/25 16:04:57  dgrisby
   vxWorks patches.
 
@@ -101,13 +104,13 @@
 #include <orbParameters.h>
 
 #if defined(UnixArchitecture)
-#include <sys/ioctl.h>
-#include <net/if.h>
+#  include <sys/ioctl.h>
+#  include <net/if.h>
 #endif
 
 #if defined(NTArchitecture)
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#  include <libcWrapper.h>
+#  include <ws2tcpip.h>
 #endif
 
 #include <omniORB4/linkHacks.h>

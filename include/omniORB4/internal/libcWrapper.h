@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2003/11/06 10:18:39  dgrisby
+  Expand FD_SETSIZE on Windows.
+
   Revision 1.1.4.9  2003/07/25 16:00:51  dgrisby
   Avoid linker warnings on Windows.
 
@@ -83,6 +86,7 @@
 #define __LIBCWRAPPER_H__
 
 #if defined(__WIN32__)
+#  define FD_SETSIZE 2048
 #  include <winsock2.h>
 #else
 #  include <netdb.h>
