@@ -1,4 +1,18 @@
 
+Fri Mar 24 16:19:00 GMT 2000 djs
+================================
+
+- omniIDL output some invalid C++ typedefs in the case of typedefs 
+  to object references
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+
+- omniIDL needed some " "s after "<" and ">" (the maximal-munch
+  C++ parsing problem)
+
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+
+
 Fri Mar 24 16:14:00 GMT 2000 djs
 ================================
 
