@@ -3,7 +3,7 @@
 // CORBA.h                    Created on: 30/1/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -24,11 +24,16 @@
 //
 //
 // Description:
-// 	A complete set of C++ definitions for the CORBA module.
+//    A complete set of C++ definitions for the CORBA module.
 //
 
 /*
  $Log$
+ Revision 1.32  1999/04/21 13:41:10  djr
+ Added marshalling methods to CORBA::Context.
+ String types are now defined in stringtypes.h, and typedef inside the
+ CORBA module.
+
  Revision 1.31  1999/02/18 15:23:29  djr
  New type CORBA::Request_member. Corrected CORBA::ORB::RequestSeq to use
  this. CORBA::ORB::get_next_response now has Request_out parameter.
@@ -115,6 +120,7 @@
 
 #include <omniORB2/omniInternal.h>
 #include <omniORB2/templatedecls.h>
+#include <omniORB2/stringtypes.h>
 
 
 #ifdef _LC_attr
@@ -168,194 +174,11 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN void string_free(char*);
   _CORBA_MODULE_FN char* string_dup(const char*);
 
-
-  class String_member;
-  class String_INOUT_arg;
-  class String_OUT_arg;
-
-  class String_var {
-  public:
-    typedef char* ptr_t;
-
-    inline String_var()        { _data = 0; }
-    inline String_var(char *p) { _data = p; }
-
-    inline String_var(const char* p) {
-      if( p ) _data = string_dup(p);
-      else    _data = 0;
-    }
-
-    inline String_var(const String_var& s) {
-      if( (const char *)s )  _data = string_dup(s);
-      else                   _data = 0;
-    }
-
-    String_var(const String_member& s);
-
-    inline ~String_var() {
-      if( _data )  string_free(_data);
-    }
-
-    inline String_var& operator=(char* p) {
-      if (_data)  string_free(_data);
-      _data = p;
-      return *this;
-    }
-
-    inline String_var& operator=(const char* p) {
-      if (_data){
-	string_free(_data);
-	_data = 0;
-      }
-      if (p)  _data = string_dup(p);
-      return *this;
-    }
-
-    inline String_var& operator=(const String_var& s) {
-      if (_data){
-	string_free(_data);
-	_data = 0;
-      }
-      if( (const char*)s )  _data = string_dup(s);
-      return *this;
-    }
-
-    String_var& operator=(const String_member& s);
-
-    inline operator char* () const       { return _data; }
-    inline operator const char* () const { return _data; }
-
-    char& operator[] (ULong index);
-    char operator[] (ULong index) const;
-
-    inline const char* in() const { return _data; }
-    inline char*& inout()         { return _data; }
-    inline char*& out() {
-      if( _data ){
-	string_free(_data);
-	_data = 0;
-      }
-      return _data;
-    }
-    inline char* _retn() {
-      char* tmp = _data;
-      _data = 0;
-      return tmp;
-    }
-
-    friend class String_INOUT_arg;
-    friend class String_OUT_arg;
-
-  private:
-    char* _data;
-  };
-
-
-  class String_member {
-  public:
-    typedef char* ptr_t;
-
-    inline String_member() { _ptr = 0; }
-
-    inline String_member(const String_member& s) {
-      if (s._ptr)  _ptr = string_dup(s._ptr);
-      else         _ptr = 0;
-    }
-
-    inline ~String_member() {
-      if (_ptr)  string_free(_ptr);
-    }
-
-    inline String_member& operator=(char* s) {
-      if (_ptr)  string_free(_ptr);
-      _ptr = s;
-      return *this;
-    }
-
-    inline String_member& operator= (const char* s) {
-      if (_ptr){
-	string_free(_ptr);
-	_ptr = 0;
-      }
-      if (s)  _ptr = string_dup(s);
-      return *this;
-    }
-
-    inline String_member& operator=(const String_member& s) {
-      if (_ptr) {
-	string_free(_ptr);
-	_ptr = 0;
-      }
-      if (s._ptr)  _ptr = string_dup(s._ptr);
-      return *this;
-    }
-
-    inline String_member& operator=(const String_var& s) {
-      if (_ptr) {
-	string_free(_ptr);
-	_ptr = 0;
-      }
-      if( (const char*)s )  _ptr = string_dup((const char*)s);
-      return *this;
-    }
-
-    inline operator char* ()             { return _ptr; }
-    inline operator const char* () const { return _ptr; }
-
-    inline const char* in() const { return _ptr; }
-    inline char*& inout()         { return _ptr; }
-    inline char*& out() {
-      if( _ptr ){
-	string_free(_ptr);
-	_ptr = 0;
-      }
-      return _ptr;
-    }
-    inline char* _retn() {
-      char* tmp = _ptr;
-      _ptr = 0;
-      return tmp;
-    }
-
-    char* _ptr;
-
-    void operator>>= (NetBufferedStream& s) const;
-    void operator<<= (NetBufferedStream& s);
-    void operator>>= (MemBufferedStream& s) const;
-    void operator<<= (MemBufferedStream& s);
-    size_t NP_alignedSize(size_t initialoffset) const;
-  };
-
-
-  // omniORB2 private class
-  class String_INOUT_arg {
-  public:
-    inline String_INOUT_arg(char*& p) : _data(p) {}
-    inline String_INOUT_arg(String_var& p) : _data(p._data) {}
-    inline String_INOUT_arg(String_member& p) : _data(p._ptr) {}
-    inline ~String_INOUT_arg() {}
-
-    char*& _data;
-
-  private:
-    String_INOUT_arg();
-  };
-
-
-  // omniORB2 private class
-  // ?? Rename to String_out
-  class String_OUT_arg {
-  public:
-    inline String_OUT_arg(char*& p) : _data(p) { }
-    inline String_OUT_arg(String_var& p) : _data(p._data) { p = (char*)0; }
-    inline String_OUT_arg(String_member& p) : _data(p._ptr) { p = (char*)0; }
-    inline ~String_OUT_arg() {}
-
-    char*& _data;
-
-  private:
-    String_OUT_arg();
-  };
+  typedef _CORBA_String_var String_var;
+  typedef _CORBA_String_member String_member;
+  typedef _CORBA_String_inout String_INOUT_arg;
+  typedef _CORBA_String_out String_OUT_arg;
+  typedef String_OUT_arg String_out;
 
 
   //////////////////////////////////////////////////////////////////////
@@ -1053,6 +876,16 @@ _CORBA_MODULE_BEG
     static Context_ptr _duplicate(Context_ptr);
     static Context_ptr _nil();
 
+    // omniORB2 specifics.
+    static size_t NP_alignedSize(Context_ptr ctxt, const char*const* which,
+				 int whichlen, size_t initialoffset);
+    static void marshalContext(Context_ptr ctxt, const char*const* which,
+			       int whichlen, NetBufferedStream& s);
+    static void marshalContext(Context_ptr ctxt, const char*const* which,
+			       int whichlen, MemBufferedStream& s);
+    static Context_ptr unmarshalContext(NetBufferedStream& s);
+    static Context_ptr unmarshalContext(MemBufferedStream& s);
+
   protected:
     Context() {}
 
@@ -1261,7 +1094,7 @@ _CORBA_MODULE_BEG
   typedef _CORBA_ConstrType_Variable_Var<UnionMember> UnionMember_var;
   typedef _CORBA_Pseudo_Unbounded_Sequence<UnionMember> UnionMemberSeq;
 
-  typedef _CORBA_Pseudo_Unbounded_Sequence<String_member> EnumMemberSeq;
+  typedef _CORBA_Unbounded_Sequence__String EnumMemberSeq;
 
   class ImplementationDef {};
   typedef ImplementationDef* ImplementationDef_ptr;
@@ -1341,10 +1174,10 @@ _CORBA_MODULE_BEG
     _CORBA_Boolean NP_is_nil() const;
     void PR_setobj(omniObject *obj);
     omniObject *PR_getobj();
-    static size_t NP_alignedSize(Object_ptr obj,size_t initialoffset);
-    static void marshalObjRef(Object_ptr obj,NetBufferedStream& s);
+    static size_t NP_alignedSize(Object_ptr obj, size_t initialoffset);
+    static void marshalObjRef(Object_ptr obj, NetBufferedStream& s);
     static Object_ptr unmarshalObjRef(NetBufferedStream& s);
-    static void marshalObjRef(Object_ptr obj,MemBufferedStream& s);
+    static void marshalObjRef(Object_ptr obj, MemBufferedStream& s);
     static Object_ptr unmarshalObjRef(MemBufferedStream& s);
     static Object CORBA_Object_nil;
     static const _CORBA_Char* repositoryID;
@@ -2431,21 +2264,21 @@ private:
       return *this;
     }
     inline size_t NP_alignedSize(size_t initialoffset) const {
-      return CORBA::Object_Helper::NP_alignedSize(_ptr,initialoffset);
+      return CORBA::Object::NP_alignedSize(_ptr,initialoffset);
     }
     inline void operator>>= (NetBufferedStream& s) const {
-      CORBA::Object_Helper::marshalObjRef(_ptr,s);
+      CORBA::Object::marshalObjRef(_ptr,s);
     }
     inline void operator<<= (NetBufferedStream& s) {
-      Object_ptr _result = CORBA::Object_Helper::unmarshalObjRef(s);
+      Object_ptr _result = CORBA::Object::unmarshalObjRef(s);
       CORBA::release(_ptr);
       _ptr = _result;
     }
     inline void operator>>= (MemBufferedStream& s) const {
-      CORBA::Object_Helper::marshalObjRef(_ptr,s);
+      CORBA::Object::marshalObjRef(_ptr,s);
     }
     inline void operator<<= (MemBufferedStream& s) {
-      Object_ptr _result = CORBA::Object_Helper::unmarshalObjRef(s);
+      Object_ptr _result = CORBA::Object::unmarshalObjRef(s);
       CORBA::release(_ptr);
       _ptr = _result;
     }
