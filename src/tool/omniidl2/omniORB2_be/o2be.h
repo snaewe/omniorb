@@ -10,9 +10,12 @@
 
 /*
  $Log$
- Revision 1.2  1997/01/13 15:18:54  sll
- *** empty log message ***
+ Revision 1.3  1997/01/23 17:04:51  sll
+ Now say friend class X instead of just friend X.
 
+ * Revision 1.2  1997/01/13  15:18:54  sll
+ * *** empty log message ***
+ *
  Revision 1.1  1997/01/08 17:33:30  sll
  Initial revision
 
@@ -491,11 +494,11 @@ public:
   void produce_nil_skel(fstream &s);
   // produce the definition of the nil object's method
 
-  friend o2be_attribute;
-  friend o2be_structure;
-  friend o2be_sequence;
-  friend o2be_union;
-  friend o2be_exception;
+  friend class o2be_attribute;
+  friend class o2be_structure;
+  friend class o2be_sequence;
+  friend class o2be_union;
+  friend class o2be_exception;
 
   enum argType {
     tShort = 0, tLong = 1, tUShort = 2, tULong = 3, tFloat = 4, tDouble = 5,
