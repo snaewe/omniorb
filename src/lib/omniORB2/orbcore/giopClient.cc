@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.12.4.4  2000/03/27 17:34:09  sll
+  Changed to use the new giopStream interface.
+
   Revision 1.12.4.3  1999/11/04 20:20:18  sll
   GIOP engines can now do callback to the higher layer to calculate total
   message size if necessary.
@@ -74,7 +77,7 @@
 GIOP_C::GIOP_C(GIOPObjectInfo* f) : pd_invokeInfo(f)
 {
   pd_state = GIOP_C::Idle;
-  pd_cdrStream = giopStream::acquire(f->rope(),f->giopVersion());
+  pd_cdrStream = giopStream::acquireClient(f->rope(),f->giopVersion());
 }
 
 
@@ -140,7 +143,7 @@ GIOP_C::ReceiveReply()
   
   GIOP::ReplyStatusType rc;
 
-  rc = pd_cdrStream->inputReplyMessageBegin(pd_request_id);
+  rc = pd_cdrStream->inputReplyMessageBegin();
 
   pd_state = GIOP_C::ReplyIsBeingProcessed;
 
@@ -196,7 +199,7 @@ GIOP_C::IssueLocateRequest()
 
   GIOP::LocateStatusType rc;
 
-  rc = pd_cdrStream->inputLocateReplyMessageBegin(pd_request_id);
+  rc = pd_cdrStream->inputLocateReplyMessageBegin();
 
   pd_state = GIOP_C::ReplyIsBeingProcessed;
 

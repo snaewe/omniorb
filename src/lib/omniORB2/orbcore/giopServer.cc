@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.21.4.5  2000/03/27 17:34:09  sll
+  Changed to use the new giopStream interface.
+
   Revision 1.21.4.4  1999/11/05 17:36:36  sll
   Updated  GIOP_S_null_marshaller::dataSize() to return 0.
 
@@ -150,7 +153,7 @@ MarshallSystemException(GIOP_S *s,
 GIOP_S::GIOP_S(Strand *s)
 {
   pd_state = GIOP_S::Idle;
-  pd_cdrStream = giopStream::acquire(s);
+  pd_cdrStream = giopStream::acquireServer(s);
 }
 
 
