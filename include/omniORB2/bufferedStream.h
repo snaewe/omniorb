@@ -11,9 +11,14 @@
 
 /*
   $Log$
-  Revision 1.5  1997/03/09 12:59:52  sll
-  Minor cleanup.
+  Revision 1.6  1997/04/23 14:11:38  sll
+  Marshalling functions for the sequence templates are defined here.
+  get_char_array and put_char_array are used to marshal sequence of
+  primitive data types.
 
+ * Revision 1.5  1997/03/09  12:59:52  sll
+ * Minor cleanup.
+ *
   Revision 1.4  1997/01/23 18:03:49  sll
   Fixed bug in marshalling of double. The alignment should be 8.
 
@@ -463,6 +468,15 @@ public:
     pd_byte_order = b;
   }
 
+  size_t alreadyRead() const {
+    if (pd_in_mkr < pd_out_mkr)
+      return ((omni::ptr_arith_t)pd_in_mkr - 
+	      (omni::ptr_arith_t)startofstream());
+    else
+      return ((omni::ptr_arith_t)pd_out_mkr - 
+	      (omni::ptr_arith_t)startofstream());
+  }
+
   size_t unRead() const {
     if (pd_in_mkr < pd_out_mkr)
       return ((omni::ptr_arith_t)pd_out_mkr - 
@@ -470,6 +484,13 @@ public:
     else
       return 0;
   }
+
+  size_t alreadyWritten() const {
+    return ((omni::ptr_arith_t)pd_out_mkr - 
+	    (omni::ptr_arith_t)startofstream());
+  }
+
+  void skip(_CORBA_ULong size);
 
   void *data() const {
     return pd_in_mkr;
@@ -512,8 +533,6 @@ private:
   void *overrun_error();
 };
 
-#undef Swap16
-#undef Swap32
 #undef MARSHAL
 #undef UMARSHAL
 
@@ -573,5 +592,389 @@ _CORBA_Sequence<T>::operator<<= (MemBufferedStream &s)
   return;
 }
 
+
+template <class T>
+inline
+size_t
+_CORBA_Unbounded_Sequence<T>::NP_alignedSize(size_t initialoffset) const 
+{
+  size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
+  for (unsigned long i=0; i < length(); i++) {
+    alignedsize = NP_data()[i].NP_alignedSize(alignedsize);
+  }
+  return alignedsize;
+}
+
+template <class T>
+inline 
+void 
+_CORBA_Unbounded_Sequence<T>::operator>>= (NetBufferedStream &s) const
+{
+  _CORBA_Sequence<T>::operator>>=(s);
+}
+
+template <class T>
+inline
+void
+_CORBA_Unbounded_Sequence<T>::operator<<= (NetBufferedStream &s)
+{
+  _CORBA_Sequence<T>::operator<<=(s);
+}
+
+template <class T>
+inline
+void 
+_CORBA_Unbounded_Sequence<T>::operator>>= (MemBufferedStream &s) const
+{
+  _CORBA_Sequence<T>::operator>>=(s);
+}
+
+template <class T>
+inline
+void 
+_CORBA_Unbounded_Sequence<T>::operator<<= (MemBufferedStream &s)
+{
+  _CORBA_Sequence<T>::operator<<=(s);
+}
+
+template <class T,int max>
+inline 
+size_t
+_CORBA_Bounded_Sequence<T,max>::NP_alignedSize(size_t initialoffset) const 
+{
+  size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
+  for (unsigned long i=0; i < length(); i++) {
+    alignedsize = NP_data()[i].NP_alignedSize(alignedsize);
+  }
+  return alignedsize;
+}
+
+template <class T,int max>
+inline 
+void
+_CORBA_Bounded_Sequence<T,max>::operator>>= (NetBufferedStream &s) const
+{
+  _CORBA_Sequence<T>::operator>>=(s);
+}
+
+template <class T,int max>
+inline void
+_CORBA_Bounded_Sequence<T,max>::operator<<= (NetBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l > s.RdMessageUnRead() || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    NP_data()[i] <<= s;
+  }
+  return;
+}
+
+template <class T,int max>
+inline void
+_CORBA_Bounded_Sequence<T,max>::operator>>= (MemBufferedStream &s) const 
+{
+  _CORBA_Sequence<T>::operator>>=(s);
+}
+
+template <class T,int max>
+inline void
+_CORBA_Bounded_Sequence<T,max>::operator<<= (MemBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l > s.unRead() || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    NP_data()[i] <<= s;
+  }
+  return;
+}
+
+template <class T,int elmSize,int elmAlignment>
+inline
+size_t
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::NP_alignedSize(size_t initialoffset) const 
+{
+  size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
+  alignedsize = ((alignedsize+(elmAlignment-1)) & ~(elmAlignment-1));
+  alignedsize += length() * elmSize;
+  return alignedsize;
+}
+
+template <class T,int elmSize,int elmAlignment>
+inline
+void
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= (NetBufferedStream &s) const
+{
+  _CORBA_ULong l = length();
+  l >>= s;
+  if (l==0) return;
+  if ((int)elmAlignment == (int)omni::ALIGN_8) {
+    CORBA::ULong padding = 0;
+    if (s.WrMessageAlreadyWritten() & ((int)omni::ALIGN_8 - 1))
+      padding >>= s;
+  }
+  s.put_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+}
+
+template <class T,int elmSize,int elmAlignment>
+inline
+void
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= (NetBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l*elmSize > s.RdMessageUnRead()) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  if (l==0) return;
+  if ((int)elmAlignment == (int)omni::ALIGN_8) {
+    if (s.RdMessageAlreadyRead() & ((int)omni::ALIGN_8 - 1))
+      s.skip(sizeof(_CORBA_ULong));
+  }
+  s.get_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  if (s.RdMessageByteOrder() != omni::myByteOrder && elmAlignment != 1) {
+    if (elmSize == 2) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	NP_data()[i] = Swap16(t);
+      }
+    }
+    else if (elmSize == 4) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	NP_data()[i] = Swap32(t);
+      }
+    }
+    else if (elmSize == 8) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	_CORBA_ULong tl1 = ((_CORBA_ULong *)&t)[1];
+	_CORBA_ULong tl2 = Swap32(tl1);
+	tl1 = ((_CORBA_ULong *)&t)[0];
+	((_CORBA_ULong *)&t)[0] = tl2;
+	tl2 = Swap32(tl1);
+	((_CORBA_ULong *)&t)[1] = tl2;
+	NP_data()[i] = t;
+      }
+    }
+  }
+}
+
+template <class T,int elmSize,int elmAlignment>
+inline
+void
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= (MemBufferedStream &s) const
+{
+  _CORBA_ULong l = length();
+  l >>= s;
+  if (l==0) return;
+  if ((int)elmAlignment == (int)omni::ALIGN_8) {
+    CORBA::ULong padding = 0;
+    if (s.alreadyWritten() & ((int)omni::ALIGN_8 - 1))
+      padding >>= s;
+  }
+  s.put_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+}
+
+template <class T,int elmSize,int elmAlignment>
+inline
+void
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= (MemBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l*elmSize > s.unRead()) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  if (l==0) return;
+  if ((int)elmAlignment == (int)omni::ALIGN_8) {
+    if (s.alreadyRead() & ((int)omni::ALIGN_8 - 1))
+      s.skip(sizeof(_CORBA_ULong));
+  }
+  s.get_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+  if (s.byteOrder() != omni::myByteOrder && elmAlignment != 1) {
+    if (elmSize == 2) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	NP_data()[i] = Swap16(t);
+      }
+    }
+    else if (elmSize == 4) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	NP_data()[i] = Swap32(t);
+      }
+    }
+    else if (elmSize == 8) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	_CORBA_ULong tl1 = ((_CORBA_ULong *)&t)[1];
+	_CORBA_ULong tl2 = Swap32(tl1);
+	tl1 = ((_CORBA_ULong *)&t)[0];
+	((_CORBA_ULong *)&t)[0] = tl2;
+	tl2 = Swap32(tl1);
+	((_CORBA_ULong *)&t)[1] = tl2;
+	NP_data()[i] = t;
+      }
+    }
+  }
+}
+
+
+
+template <class T,int max,int elmSize, int elmAlignment>
+inline
+size_t
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::NP_alignedSize(size_t initialoffset) const 
+{
+  size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
+  alignedsize = ((alignedsize+(elmAlignment-1)) & ~(elmAlignment-1));
+  alignedsize += length() * elmSize;
+  return alignedsize;
+}
+
+
+template <class T,int max,int elmSize, int elmAlignment>
+inline
+void
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>= (NetBufferedStream &s) const
+{
+  _CORBA_ULong l = length();
+  l >>= s;
+  if (l==0) return;
+  if ((int)elmAlignment == (int)omni::ALIGN_8) {
+    CORBA::ULong padding = 0;
+    if (s.WrMessageAlreadyWritten() & ((int)omni::ALIGN_8 - 1))
+      padding >>= s;
+  }
+  s.put_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+}
+
+template <class T,int max,int elmSize, int elmAlignment>
+inline
+void
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<= (NetBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l*elmSize > s.RdMessageUnRead() || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  
+  length(l);
+  if (l==0) return;
+  if ((int)elmAlignment == (int)omni::ALIGN_8) {
+    if (s.RdMessageAlreadyRead() & ((int)omni::ALIGN_8 - 1))
+      s.skip(sizeof(_CORBA_ULong));
+  }
+  s.get_char_array((_CORBA_Char*)pd_buf,(int)l*elmSize);
+  if (s.RdMessageByteOrder() != omni::myByteOrder && elmAlignment != 1) {
+    if (elmSize == 2) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	NP_data()[i] = Swap16(t);
+      }
+    }
+    else if (elmSize == 4) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	NP_data()[i] = Swap32(t);
+      }
+    }
+    else if (elmSize == 8) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	_CORBA_ULong tl1 = ((_CORBA_ULong *)&t)[1];
+	_CORBA_ULong tl2 = Swap32(tl1);
+	tl1 = ((_CORBA_ULong *)&t)[0];
+	((_CORBA_ULong *)&t)[0] = tl2;
+	tl2 = Swap32(tl1);
+	((_CORBA_ULong *)&t)[1] = tl2;
+	NP_data()[i] = t;
+      }
+    }
+  }
+}
+
+template <class T,int max,int elmSize, int elmAlignment>
+inline
+void
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>= (MemBufferedStream &s) const
+{
+  _CORBA_ULong l = length();
+  l >>= s;
+  if (l==0) return;
+  if ((int)elmAlignment == (int)omni::ALIGN_8) {
+    CORBA::ULong padding = 0;
+    if (s.alreadyWritten() & ((int)omni::ALIGN_8 - 1))
+      padding >>= s;
+  }
+  s.put_char_array((_CORBA_Char*)NP_data(),(int)l*elmSize);
+}
+
+template <class T,int max,int elmSize, int elmAlignment>
+inline
+void
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<= (MemBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l*elmSize > s.unRead() || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  
+  length(l);
+  if (l==0) return;
+  if ((int)elmAlignment == (int)omni::ALIGN_8) {
+    if (s.alreadyRead() & ((int)omni::ALIGN_8 - 1))
+      s.skip(sizeof(_CORBA_ULong));
+  }
+  s.get_char_array((_CORBA_Char*)pd_buf,(int)l*elmSize);
+  if (s.byteOrder() != omni::myByteOrder && elmAlignment != 1) {
+    if (elmSize == 2) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	NP_data()[i] = Swap16(t);
+      }
+    }
+    else if (elmSize == 4) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	NP_data()[i] = Swap32(t);
+      }
+    }
+    else if (elmSize == 8) {
+      for (_CORBA_ULong i=0; i<l; i++) {
+	T t = NP_data()[i];
+	_CORBA_ULong tl1 = ((_CORBA_ULong *)&t)[1];
+	_CORBA_ULong tl2 = Swap32(tl1);
+	tl1 = ((_CORBA_ULong *)&t)[0];
+	((_CORBA_ULong *)&t)[0] = tl2;
+	tl2 = Swap32(tl1);
+	((_CORBA_ULong *)&t)[1] = tl2;
+	NP_data()[i] = t;
+      }
+    }
+  }
+}
+
+#undef Swap16
+#undef Swap32
 
 #endif // __BUFFEREDSTREAM_H__
