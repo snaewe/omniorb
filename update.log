@@ -1,3 +1,15 @@
+Tue Jan 16 11:49:14 GMT 2001 dpg1
+=================================
+
+- Yesterday's C++ back-end bug fix missed a case.
+
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+
+- The potential bug wasn't a potential bug after all.
+
+src/tool/omniidl/python/omniidl/idlast.py
+
+
 Mon Jan 15 15:49:43 GMT 2001 dpg1
 =================================
 
