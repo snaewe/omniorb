@@ -29,6 +29,20 @@ module AttNotifyChannelAdmin {
 	PerformanceStats              obtain_performance_stats();
   };
 
+  interface EventChannelFactory : CosNotifyChannelAdmin::EventChannelFactory
+  {
+  	EventChannel create_att_channel (
+			in  CosNotification::QoSProperties   initial_qos,
+			in  CosNotification::AdminProperties initial_admin,
+			out CosNotifyChannelAdmin::ChannelID id )
+		raises ( CosNotification::UnsupportedQoS,
+			 CosNotification::UnsupportedAdmin );
+	
+	EventChannel get_att_event_channel ( 
+			in CosNotifyChannelAdmin::ChannelID id )
+		raises ( CosNotifyChannelAdmin::ChannelNotFound );
+  };
+
 };
 
 #endif
