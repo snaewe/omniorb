@@ -33,23 +33,26 @@ module CORBA {
 
 
   // Sequences of basic types
-  typedef sequence<short>              ShortSeq;
-  typedef sequence<long>               LongSeq;
-  typedef sequence<unsigned short>     UShortSeq;
-  typedef sequence<unsigned long>      ULongSeq;
-  typedef sequence<float>              FloatSeq;
-  typedef sequence<double>             DoubleSeq;
+  typedef sequence<any>                AnySeq;
   typedef sequence<boolean>            BooleanSeq;
   typedef sequence<char>               CharSeq;
+  typedef sequence<wchar>              WCharSeq;
   typedef sequence<octet>              OctetSeq;
+  typedef sequence<short>              ShortSeq;
+  typedef sequence<unsigned short>     UShortSeq;
+  typedef sequence<long>               LongSeq;
+  typedef sequence<unsigned long>      ULongSeq;
 #ifdef HAS_LongLong
   typedef sequence<long long>          LongLongSeq;
   typedef sequence<unsigned long long> ULongLongSeq;
 #endif
+  typedef sequence<float>              FloatSeq;
+  typedef sequence<double>             DoubleSeq;
 #ifdef HAS_LongDouble
   typedef sequence<long double>        LongDoubleSeq;
 #endif
-  typedef sequence<wchar>              WCharSeq;
+  typedef sequence<string>             StringSeq;
+  typedef sequence<wstring>            WStringSeq;
 
 
 //////////////////////////////////////////////////////////////////////
