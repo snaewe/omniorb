@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.4.6  2002/11/29 14:03:41  dgrisby
+  Rearrange declarations to make Code Warrior happy.
+
   Revision 1.1.4.5  2001/09/19 17:26:47  dpg1
   Full clean-up after orb->destroy().
 
@@ -75,6 +78,8 @@ OMNI_NAMESPACE_END(omni)
 
 class omniRemoteIdentity : public omniIdentity {
 public:
+  static void* thisClassCompare(omniIdentity*, void*);
+
   inline omniRemoteIdentity(omniIOR* ior, 
 			    const CORBA::Octet* key,
 			    CORBA::ULong keysize,
@@ -110,8 +115,6 @@ public:
 
   virtual _CORBA_Boolean inThisAddressSpace();
   // Override omniIdentity.
-
-  static void* thisClassCompare(omniIdentity*, void*);
 
   static inline omniRemoteIdentity* downcast(omniIdentity* id)
   {

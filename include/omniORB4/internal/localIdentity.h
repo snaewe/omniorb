@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2002/11/29 14:03:41  dgrisby
+  Rearrange declarations to make Code Warrior happy.
+
   Revision 1.1.4.8  2001/11/27 14:36:17  dpg1
   Local _is_equivalent fix.
 
@@ -90,6 +93,8 @@ OMNI_NAMESPACE_END(omni)
 
 class omniLocalIdentity : public omniIdentity {
 public:
+  static void* thisClassCompare(omniIdentity*, void*);
+
   inline ~omniLocalIdentity() {}
 
   inline omniLocalIdentity(omniObjKey& key,
@@ -154,8 +159,6 @@ public:
 
   virtual _CORBA_Boolean inThisAddressSpace();
   // Override omniIdentity.
-
-  static void* thisClassCompare(omniIdentity*, void*);
 
   static inline omniLocalIdentity* downcast(omniIdentity* id)
   {

@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.7  2002/11/29 14:03:41  dgrisby
+ Rearrange declarations to make Code Warrior happy.
+
  Revision 1.1.2.6  2001/11/27 14:36:17  dpg1
  Local _is_equivalent fix.
 
@@ -66,6 +69,8 @@ OMNI_NAMESPACE_END(omni)
 
 class omniInProcessIdentity : public omniIdentity {
 public:
+  static void* thisClassCompare(omniIdentity*, void*);
+
   inline ~omniInProcessIdentity() {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     if (--identity_count == 0)
@@ -108,8 +113,6 @@ public:
 
   virtual _CORBA_Boolean inThisAddressSpace();
   // Override omniIdentity.
-
-  static void* thisClassCompare(omniIdentity*, void*);
 
   static inline omniInProcessIdentity* downcast(omniIdentity* id)
   {

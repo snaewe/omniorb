@@ -1,3 +1,18 @@
+Fri Nov 29 13:56:19 GMT 2002 dgrisby
+====================================
+
+- Configure editing error.
+
+configure
+configure.ac
+
+- Rearrange declarations to make Code Warrior happy.
+
+include/omniORB4/internal/inProcessIdentity.h
+include/omniORB4/internal/localIdentity.h
+include/omniORB4/internal/remoteIdentity.h
+
+
 Tue Nov 26 16:42:23 GMT 2002 dgrisby
 ====================================
 
