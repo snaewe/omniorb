@@ -8,7 +8,7 @@
 \author{Tristan Richardson\\
         ORL\\
         Cambridge}
-\date{28 October 1996}
+\date{29 October 1996}
 
 \begin{document}
 
@@ -165,6 +165,7 @@ will be done using the ODE in the simplest way as in case~\ref{buildtreeonly}
 above.
 
 \subsection{Setting up Your Environment}
+\label{settingenv}
 
 Although not strictly necessary it is advisable to set the environment variable
 \verb|OMNI_TREE| to point to the base OMNI tree you wish to use (for example
@@ -665,8 +666,73 @@ relevant libraries have also been built with the same CORBA implementation.
 
 \section{Building on NT}
 
-...to be continued
+\subsection{Installing the GNU-WIN32 environment}
 
+It's best to set up the GNU-WIN32 tools on a machine's local disk as this makes
+a noticeable difference to the speed at which they operate.  The tools are
+usually put into \verb|C:\gw14| and take up about 17 Mbytes.  If you need to
+install them on a new machine you can use a gzip'd tar file from
+\verb|/project/omni/version4.0/misc/gw14.tar.gz|:
+
+{\small \begin{verbatim}
+C:\>\\hazel\win32app\x86\bin\gunzip -c \\shallot\omni\version4.0\misc\gw14.tar.
+gz | \\hazel\win32app\x86\bin\tar xf -
+\end{verbatim}}
+
+This should create the directory \verb|C:\gw14|.  You'll notice that underneath
+this directory it looks a bit like a standard unix root directory with {\tt
+bin}, {\tt usr} and {\tt tmp} subdirectories.
+
+\subsection{Setting your path and mounting directories}
+
+Having made sure the tools are installed on the local machine you now need to
+set up your personal environment.  Firstly you need to put \verb|C:\gw14\bin|
+and \verb|C:\gw14\usr\bin| on your path.  It's probably also worth removing
+\verb|\\hazel\win32app\x86\bin| from your path since this contains several
+unix-like programs which will conflict with the GNU-WIN32 tools.  The next
+thing to do is ``mount'' the {\tt bin}, {\tt usr} and {\tt tmp} directories at
+the root:
+
+{\small \begin{verbatim}
+C:\>set path=c:\gw14\bin;c:\gw14\usr\bin;%path%
+
+C:\>mount c:/gw14/bin /bin
+
+C:\>mount c:/gw14/usr /usr
+
+C:\>mount c:/gw14/tmp /tmp
+\end{verbatim}}
+
+You should now be able to run {\tt bash} and all the other tools.  
+
+The next stage is to ``mount'' any other unix file systems you require.  These
+should be mounted with the same pathname as on unix machines.  For example say
+you have drive \verb|O:| connected to \verb|\\shallot\omni|, then do
+``\verb|mount o: /project/omni|''.  It is possible to mount a directory without
+connecting it to a drive letter, by doing for example
+``\verb|mount \\shallot\omni /project/omni|'', but this doesn't work properly
+if the directory in question {\em is} actually connected to a drive letter.
+
+As well as \verb|/project/omni| and other project directories, you will also
+need Microsoft Visual C++ 4.2 installed on the machine.  This must be
+accessible as \verb|/msdev| in the GNU-WIN32 environment (since \verb|C:\| is
+the GNU-WIN32 root this is the normal place for it to be installed on a
+machine).  Additionally if you want to build Orbix programs then you also need
+\verb|\\hazel\win32app| mounted as \verb|/win32app|.
+
+Now that you have all the right directories mounted you need to finish off
+setting your environment variables.  You need to make sure that the Visual C++
+tools and the Orbix tools are available by adding the \verb|/msdev/bin| and
+\verb|/win32app/x86/orbix/bin| directories to your path.  You can either add
+these directories to your path inside {\tt bash}, in which case you can use the
+unix-style directory names, or inside MSDOS / Control Panel in which case you
+need to use NT-style names (either using drive letters or the {\it
+\verb|\\|machine\verb|\|directory} form depending on how you've mounted each
+directory).
+
+Finally you need to set up the environment variables described in section
+\ref{settingenv}.  Now you should be able to use {\tt obuildtree}, {\tt omake},
+etc just as on any unix platform.
 
 \section{Building on ATMos}
 
