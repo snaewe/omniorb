@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.3  2000/03/15 20:49:18  djs
+# Problem with typedefs to sequences or array declarators defined externally
+# and used within a local struct or union.
+# Refactoring of this code is now required....
+#
 # Revision 1.12.2.2  2000/02/15 15:36:25  djs
 # djr's and jnw's "Super-Hacky Optimisation" patched and added
 #
@@ -551,11 +556,31 @@ def member(node, modify_for_exception = 0):
                             helper_name + ">"
             if not(is_array):
                 desc.out(str(interface(memberType)))
+        # this corresponds to an anonymous sequence type
         elif tyutil.isSequence(memberType):
             desc.out(str(sequence(memberType)))
+            
         elif tyutil.isString(memberType):
             desc.out(str(bstring(memberType)))
 
+        elif tyutil.isTypedef(memberType):
+            memberType_decl = memberType.decl()
+            if not(memberType_decl.mainFile()):
+                # have we seen this declarator before?
+                if not(self.__seenDeclarators.has_key(memberType_decl)):
+                    self.__seenDeclarators[memberType_decl] = 1
+                    alias = memberType_decl.alias()
+                    # FIXME: This bit is copied from above
+                    alias_dims = memberType_decl.sizes() +\
+                                 tyutil.typeDims(memberType)
+                    full_deref_memberType = tyutil.deref(memberType)
+                    # if its an array we need to generate that
+                    if alias_dims != []:
+                        desc.out(str(array(alias.aliasType(),
+                                           memberType_decl)))
+                    elif tyutil.isSequence(full_deref_memberType):
+                        desc.out(str(sequence(full_deref_memberType)))
+            
         # FIXME: unify with  dynskel/main/visitUnion
         elif tyutil.isStruct(memberType) or \
              tyutil.isUnion(memberType)  or \
