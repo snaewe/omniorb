@@ -3035,11 +3035,13 @@ can be changed using the command-line options {\tt -ORBinConScanPeriod} and
 
 Similary, how long the ORB will wait for a remote call to complete is
 determined by the parameter clientCallTimeOutPeriod for the client side and
-the serverCallTimeOutPeroid for the server side. The default values are 60
-and 90 seconds for the client and the server side respectively. These
-values can be changed using the command-line option {\tt
+the serverCallTimeOutPeroid for the server side.  By default calls will not
+timeout on either the client or server side.
+These values can be changed using the command-line option {\tt
 -ORBclientCallTimeOutPeriod} and {\tt -ORBserverCallTimeOutPeriod}. They
 can also be controlled by the {\tt omniORB::callTimeOutPeriod()} call.
+
+The APIs are documented in {\tt include/omniORB3/omniORB.h}.
 
 
 {\small

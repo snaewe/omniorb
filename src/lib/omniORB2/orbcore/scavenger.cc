@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.10.6.4  2000/01/07 14:51:14  djr
+  Call timeouts are now disabled by default.
+
   Revision 1.10.6.3  1999/09/27 11:01:11  djr
   Modifications to logging.
 
@@ -105,11 +108,14 @@
   omniORB::logs(level, "scavenger " prefix ": " message)
 
 
-static CORBA::ULong ScanPeriod  = 5;		// seconds
-static int serverCallTimeLimit_ = 18;
-static int clientCallTimeLimit_ = 12;
+static CORBA::ULong ScanPeriod = 5;  // seconds
+
+// The following are in scan periods.
+static int serverCallTimeLimit_ = INT_MAX;
+static int clientCallTimeLimit_ = INT_MAX;
 static int outIdleTimeLimit_    = 24;
 static int inIdleTimeLimit_     = 36;
+
 
 /////////////////////////////////////////////////////////////////////////////
 // omniORB_Scavenger
