@@ -1,6 +1,6 @@
 // -*- Mode: C++; -*-
 //                            Package   : omniORB2
-// tcpSocket.cc               Created on: 18/3/96
+// tcpSocket_UNIX.cc          Created on: 18/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
 // Copyright (C) Olivetti Research Limited, 1996
@@ -11,25 +11,41 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/08 18:49:53  ewc
+  Added check to see if remote hostname embedded in IOR is IP address.
+  If it is, a gethostbyname() on the address is not now performed.
+
   Revision 1.1  1997/01/08 17:26:01  sll
   Initial revision
 
   */
 
 #include <omniORB2/CORBA.h>
-#include "tcpSocket.h"
+#include "tcpSocket_UNIX.h"
+
+#ifdef __NT__
+#include <winsock.h>
+#else
 #include <sys/time.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
+#endif
+
+#include <sys/types.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
+
 #include "libcWrapper.h"
 
 #if defined(__sunos__) && __OSVERSION__ == 5
 extern "C" int gethostname(char *name, int namelen);
+#endif
+
+#if defined(__NT__)
+int close(SOCKET s) {return closesocket(s); }
 #endif
 
 // Size of transmit and receive buffers
@@ -45,19 +61,35 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketRope *rope,
   struct sockaddr_in raddr;
   LibcWrapper::hostent_var h;
   int  rc;
-  if (LibcWrapper::gethostbyname((char *)r->host(),h,rc) < 0) {
-    // XXX look at rc to decide what to do or if to give up what errno
-    // XXX to return
-    // XXX For the moment, just return EINVAL
-    throw CORBA::COMM_FAILURE(EINVAL,CORBA::COMPLETED_NO);
-  }
-  // We just pick the first address in the list, may be we should go
-  // through the list and if possible pick the one that is on the same
-  // subnet.
-  memcpy((void*)&raddr.sin_addr,
-	 (void*)h.hostent()->h_addr_list[0],
-	 sizeof(raddr.sin_addr));
-  
+
+  if (! LibcWrapper::isipaddr( (char*) r->host()))
+      {
+	if (LibcWrapper::gethostbyname((char *)r->host(),h,rc) < 0) 
+	  {
+	  // XXX look at rc to decide what to do or if to give up what errno
+	  // XXX to return
+	  // XXX For the moment, just return EINVAL
+	  throw CORBA::COMM_FAILURE(EINVAL,CORBA::COMPLETED_NO);
+	  }
+	// We just pick the first address in the list, may be we should go
+	// through the list and if possible pick the one that is on the same
+	// subnet.
+	memcpy((void*)&raddr.sin_addr,
+	       (void*)h.hostent()->h_addr_list[0],
+	       sizeof(raddr.sin_addr));
+      }
+else
+      {
+	// The machine name is already an IP address
+	unsigned long int ip_p;
+	if ( (ip_p = inet_addr( (char*) r->host() )) < 0)
+	  {
+	    throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+	  }
+
+	memcpy((void*) &raddr.sin_addr, (void*) &ip_p, sizeof(raddr.sin_addr));
+      }
+
   raddr.sin_family = AF_INET;
   raddr.sin_port   = htons(r->port());
 
@@ -586,11 +618,9 @@ tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketEndpoint *me)
   }
   
   {
-#if defined(__linux__) && defined(__alpha__)
-    // XXX
-    // According to the man page of getsockname(), its 3rd argument should
-    // really be int *. But alpha-linux's library wants size_t *.
-    // If in future they change back to int *, just remove this #if
+#if defined(__GNU_LIBRARY__)
+  // GNU C library uses size_t* instead of int* in getsockname().
+  // This is suppose to be compatible with the upcoming POSIX standard.
     size_t l;
 #else
     int l;
@@ -600,31 +630,36 @@ tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketEndpoint *me)
       close(pd_socket);
       throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
     }
+
     me->port(ntohs(myaddr.sin_port));
+
     char self[64];
     if (gethostname(&self[0],64) < 0) {
       throw omniORB::fatalException(__FILE__,__LINE__,
 				    "Cannot get the name of this host");
     }
+
     LibcWrapper::hostent_var h;
     int rc;
+
     if (LibcWrapper::gethostbyname(self,h,rc) < 0) {
-      throw omniORB::fatalException(__FILE__,__LINE__,
+	throw omniORB::fatalException(__FILE__,__LINE__,
 				    "Cannot get the address of this host");
-    }
+	}
     memcpy((void *)&myaddr.sin_addr,
 	   (void *)h.hostent()->h_addr_list[0],
-	   sizeof(myaddr.sin_addr));
+	    sizeof(myaddr.sin_addr));
     char ipaddr[16];
     sprintf(ipaddr,"%d.%d.%d.%d",
-	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0xff000000) >> 24),
-	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x00ff0000) >> 16),
-	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x0000ff00) >> 8),
-	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x000000ff)));
-    me->host((const CORBA::Char *)ipaddr);
-  }
-  pd_rope = r;
-  return;
+		(int)((ntohl(myaddr.sin_addr.s_addr) & 0xff000000) >> 24),
+		(int)((ntohl(myaddr.sin_addr.s_addr) & 0x00ff0000) >> 16),
+		(int)((ntohl(myaddr.sin_addr.s_addr) & 0x0000ff00) >> 8),
+		(int)((ntohl(myaddr.sin_addr.s_addr) & 0x000000ff)));
+     me->host((const CORBA::Char *) ipaddr);
+    }
+    
+    pd_rope = r;
+    return;
 }
 
 tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketHandle_t sock) 
@@ -649,15 +684,15 @@ tcpSocketRendezvous::accept()
 {
   tcpSocketHandle_t new_sock;
   struct sockaddr_in raddr;
-#if defined(__linux__) && defined(__alpha__)
-  // XXX
-  // According to the man page of accept(), its 3rd argument should
-  // really be int *. But alpha-linux's library wants size_t *.
-  // If in future they change back to int *, just remove this #if
+ 
+#if defined(__GNU_LIBRARY__)
+  // GNU C library uses size_t* instead of int* in accept().
+  // This is suppose to be compatible with the upcoming POSIX standard.
   size_t l;
 #else
   int l;
 #endif
+
   l = sizeof(struct sockaddr_in);
 
   if ((new_sock = ::accept(pd_socket,(struct sockaddr *)&raddr,&l)) < 0) {
