@@ -183,7 +183,7 @@ struct tcStructDesc
 ////////////////
 
 typedef CORBA::Boolean (*tcSeqGetElementDescFn)
-  (tcSequenceDesc *, CORBA::ULong, tcDescriptor&);
+  (tcSequenceDesc *, CORBA::ULong, tcDescriptor&, CORBA::ULong&);
 typedef CORBA::ULong (*tcSeqGetElementCountFn)
   (tcSequenceDesc *);
 typedef void (*tcSeqSetElementCountFn)
@@ -205,7 +205,7 @@ struct tcSequenceDesc
 /////////////
 
 typedef CORBA::Boolean (*tcArrayGetElementDescFn)
-  (tcArrayDesc*, CORBA::ULong, tcDescriptor&);
+  (tcArrayDesc*, CORBA::ULong, tcDescriptor&, CORBA::ULong&);
 
 struct tcArrayDesc
 {
@@ -218,6 +218,9 @@ struct tcArrayDesc
 //////////////////////////////////////////////////////////////////////
 
 union tcDescriptor {
+
+  // Pointer used in streaming tcDescriptors
+  void *          p_streamdata;
 
   // BASIC types
   // appendItem() will read in the data pointed to
@@ -249,8 +252,12 @@ union tcDescriptor {
 
   // appendItem() will read in the string from string pointer
   // fetchItem() will overwrite the string pointer to a new string - 
-  //   if *p_string is not nil, it will be freed.
-  char**               p_string;
+  //   if( *ptr && release )  existing string will be freed.
+  //   If new memory is allocated for the string, release is set to true.
+  struct {
+    char**          ptr;
+    _CORBA_Boolean* release;
+  } p_string;
 
   // CONSTRUCTED types
   // These types have manager classes to help handle them, since their
@@ -350,7 +357,8 @@ _0RL_buildDesc_cany(tcDescriptor &desc, const CORBA::Any& data)
 inline void
 _0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_member const& data)
 {
-  desc.p_string = &data._ptr;
+  desc.p_string.ptr = &data._ptr;
+  desc.p_string.release = (_CORBA_Boolean*) &data.pd_rel;
 }
 
 ///////////////////

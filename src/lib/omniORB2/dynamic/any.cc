@@ -30,6 +30,10 @@
 
 /*
  * $Log$
+ * Revision 1.18.6.5  2000/02/09 12:04:52  djr
+ * Fixed memory allocation bug in Any insertion/extraction of strings.
+ * Optimisation for insertion/extraction of sequence of simple types.
+ *
  * Revision 1.18.6.4  1999/10/14 17:31:30  djr
  * Minor corrections.
  *
@@ -467,7 +471,8 @@ void
 CORBA::Any::operator<<=(const char* s)
 {
   tcDescriptor tcd;
-  tcd.p_string = (char**) &s;
+  tcd.p_string.ptr = (char**) &s;
+  // tcd.p_string.release not needed for insertion
   pdAnyP()->setData(CORBA::_tc_string, tcd);
 }  
 
@@ -476,7 +481,8 @@ void
 CORBA::Any::operator<<=(from_string s)
 {
   tcDescriptor tcd;
-  tcd.p_string = &s.val;
+  tcd.p_string.ptr = &s.val;
+  // tcd.p_string.release not needed for insertion
 
   if( s.bound ) {
     CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_string_tc(s.bound);
@@ -663,8 +669,10 @@ CORBA::Any::operator>>=(char*& s) const
   }
   else {
     char* p = 0;
+    _CORBA_Boolean rel = 0;
     tcDescriptor tcd;
-    tcd.p_string = &p;
+    tcd.p_string.ptr = &p;
+    tcd.p_string.release = &rel;
 
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
@@ -687,8 +695,10 @@ CORBA::Any::operator>>=(const char*& s) const
 {
   char* sp = (char*) PR_getCachedData();
   if (sp == 0) {
+    _CORBA_Boolean rel = 0;
     tcDescriptor tcd;
-    tcd.p_string = &sp;
+    tcd.p_string.ptr = &sp;
+    tcd.p_string.release = &rel;
 
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
@@ -717,8 +727,10 @@ CORBA::Any::operator>>=(to_string s) const
 
   char* sp = (char*) PR_getCachedData();
   if (sp == 0) {
+    _CORBA_Boolean rel = 0;
     tcDescriptor tcd;
-    tcd.p_string = &sp;
+    tcd.p_string.ptr = &sp;
+    tcd.p_string.release = &rel;
 
     if (pdAnyP()->getData(newtc, tcd))
     {

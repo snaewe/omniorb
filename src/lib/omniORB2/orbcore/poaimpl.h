@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2000/02/09 12:04:53  djr
+  Fixed memory allocation bug in Any insertion/extraction of strings.
+  Optimisation for insertion/extraction of sequence of simple types.
+
   Revision 1.1.2.5  1999/10/04 17:08:33  djr
   Some more fixes/MSVC work-arounds.
 
@@ -156,7 +160,6 @@ public:
     unsigned req_processing         : 2;
     unsigned implicit_activation    : 1;
   };
-  // The PERSISTENT lifespan policy is not currently supported.
 
   typedef _CORBA_PseudoValue_Sequence<omniOrbPOA*> ChildSeq;
 

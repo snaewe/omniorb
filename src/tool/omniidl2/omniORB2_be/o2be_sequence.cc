@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.29.6.3  2000/02/09 12:04:55  djr
+  Fixed memory allocation bug in Any insertion/extraction of strings.
+  Optimisation for insertion/extraction of sequence of simple types.
+
   Revision 1.29.6.2  1999/12/07 18:17:21  djr
   Fixed bug in omniidl3.
 
@@ -1300,16 +1304,46 @@ o2be_sequence::produce_buildDesc_support(std::fstream& s)
   IND(s); s << "static CORBA::Boolean\n";
   IND(s); s << "_0RL_tcParser_getElementDesc" << canon_name
 	    << "(tcSequenceDesc* _desc, CORBA::ULong _index, "
-	    "tcDescriptor& _newdesc)\n";
+	    "tcDescriptor& _newdesc, _CORBA_ULong& _contiguous)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  {
-    char* tmp = new char[1 + 4 + strlen(seq_type_name) + 26];
-    strcpy(tmp, "(*((");
-    strcat(tmp, seq_type_name);
-    strcat(tmp, "*)_desc->opq_seq))[_index]");
-    o2be_buildDesc::call_buildDesc(s, base_type(), "_newdesc", tmp);
-    delete[] tmp;
+
+  // Lovely Super Hacky optimisation ... (jnw and djr's faults)
+  int do_contiguous_optimisation = 0;
+  if( base_type()->node_type() == AST_Decl::NT_pre_defined ) {
+    o2be_operation::argMapping dummymapping;
+    o2be_operation::argType atype = ast2ArgMapping(base_type(),
+						   o2be_operation::wIN,
+						   dummymapping);
+    switch( atype ) {
+    case o2be_operation::tBoolean:
+    case o2be_operation::tChar:
+    case o2be_operation::tOctet:
+    case o2be_operation::tShort:
+    case o2be_operation::tUShort:
+    case o2be_operation::tLong:
+    case o2be_operation::tULong:
+    case o2be_operation::tEnum:
+    case o2be_operation::tFloat:
+    case o2be_operation::tDouble:
+      do_contiguous_optimisation = 1;
+      break;
+    default:
+      break;
+    }
+  }
+  if( do_contiguous_optimisation ) {
+    IND(s); s << "_newdesc.p_streamdata = ((" << seq_type_name
+	      << "*) _desc->opq_seq)->NP_data();\n";
+    IND(s); s << "_contiguous = ((" << seq_type_name
+	      << "*) _desc->opq_seq)->length() - _index;\n";
+  }
+  else {
+    StringBuf tmp;
+    tmp += "(*((";
+    tmp += seq_type_name;
+    tmp += "*)_desc->opq_seq))[_index]";
+    o2be_buildDesc::call_buildDesc(s, base_type(), "_newdesc", tmp.c_str());
   }
   IND(s); s << "return 1;\n";
   DEC_INDENT_LEVEL();

@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.19.6.3  2000/02/09 12:04:54  djr
+  Fixed memory allocation bug in Any insertion/extraction of strings.
+  Optimisation for insertion/extraction of sequence of simple types.
+
   Revision 1.19.6.2  2000/01/07 16:28:01  djr
   Provide Foo_copy() for array types per CORBA 2.3
   Minor fix in o2be_root.cc
@@ -998,7 +1002,7 @@ o2be_array::produce_buildDesc_support(std::fstream& s)
     produce_indicies(this, s, dim, getNumOfDims(), PIM_NAME);
     s << o2be_name::narrow_and_produce_canonical_name(element_type)
       << "(tcArrayDesc* _adesc, CORBA::ULong _index, "
-      "tcDescriptor &_desc)\n";
+      "tcDescriptor& _desc, _CORBA_ULong& _contiguous)\n";
     IND(s); s << "{\n";
     INC_INDENT_LEVEL();
 
@@ -1014,6 +1018,7 @@ o2be_array::produce_buildDesc_support(std::fstream& s)
     // If not then we use the getElementDesc function for the next slice
     // in.
     if( dim == getNumOfDims() ) {
+      // ?? DJR/JNW Simple type optimisation?
       o2be_buildDesc::call_buildDesc(s, element_type, "_desc", "_0RL_tmp");
     } else {
       IND(s); s << "_desc.p_array.getElementDesc = "

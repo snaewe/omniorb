@@ -1,4 +1,22 @@
 
+Wed Feb  9 11:57:28 GMT 2000 djr
+================================
+
+- Fixed a bug in insertion to/extraction from Anys.  tcParser code now
+  uses a flag to determine whether to free the string, and sets the flag
+  if a new string is allocated (to ensure the String_member releases it
+  properly).
+
+- New optimisation for insert/extraction of sequences of simple types
+  to/from Anys.
+
+include/omniORB3/tcDescriptor.h
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/tcParser.cc
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+
+
 Tue Feb  8 13:20:50 GMT 2000 djr
 ================================
 
