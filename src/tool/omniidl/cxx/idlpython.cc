@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.12  1999/12/01 11:35:22  dpg1
+// Include path for Python.h changed to be consistent with omnipy module.
+//
 // Revision 1.11  1999/11/17 14:34:42  dpg1
 // More multi-platform support (NT and AIX).
 //
@@ -64,7 +67,11 @@
 // First revision.
 //
 
+#ifdef __WIN32__
 #include <Python.h>
+#else
+#include <python1.5/Python.h>
+#endif
 
 #include <idlsysdep.h>
 #include <idlast.h>

@@ -48,7 +48,6 @@ idlc = $(patsubst %,$(BinPattern),idlc)
 
 ifdef UnixPlatform
 CXXDEBUGFLAGS = -g
-DIR_CPPFLAGS += -I/usr/local/include/python1.5 -I/usr/include/python1.5
 endif
 
 
