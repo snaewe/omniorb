@@ -1,4 +1,12 @@
 
+Tue Feb  1 19:15:12 GMT 2000 djr
+================================
+
+- Removed debugging output (left in by mistake).
+
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Mon Jan 31 11:10:10 GMT 2000 djr
 ================================
 
