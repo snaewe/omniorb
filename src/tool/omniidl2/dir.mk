@@ -51,6 +51,9 @@ $(prog): $(DRV_OBJS) $(OBJ_LIBS)
 export:: $(prog)
 	@$(ExportExecutable)
 
+clean::
+	$(RM) $(prog)
+
 ciao::
 	@$(MakeSubdirs)
 

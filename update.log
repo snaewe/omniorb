@@ -1,3 +1,21 @@
+Wed May 26 12:36:42 BST 1999 sll
+================================
+
+-  Replaced WrTimedLock with WrTestLock.
+-  Changed the operator() of Strand_iterator to increment the ref count
+   of the strand it returns.
+-  Added new member is_unused() to class Strand. This is used to check
+   if no Sync object is parking on the strand. This member is necessary
+   because given the change in the Strand_iterator, is_idle() is no
+   longer appropriate to test if no Sync object is using the strand.
+-  The net effect is to fix a rare race condition in the scavenger threads.
+   that could result in the ORB core dump because of invalid pointers are
+   being de-referenced.
+
+include/omniORB2/rope.h
+src/lib/omniORB2/strand.cc
+src/lib/omniORB2/scavenger.cc
+
 Tue May 25 13:53:29 BST 1999 sll
 ================================
 
