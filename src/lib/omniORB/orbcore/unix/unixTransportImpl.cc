@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/11/21 16:16:35  dgrisby
+  Unix socket type bug. (Thanks Bastiaan Bakker.)
+
   Revision 1.1.2.5  2002/04/16 12:44:27  dpg1
   Fix SSL accept bug, clean up logging.
 
@@ -114,7 +117,7 @@ unixTransportImpl::toEndpoint(const char* param) {
       param = dname;
     }
     if (stat(param,&sb) == 0) {
-      if (!(sb.st_mode & S_IFDIR)) {
+      if (!S_ISDIR(sb.st_mode)) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;	
 	  log << "Error: " << param << " exists and is not a directory. "
@@ -134,7 +137,7 @@ unixTransportImpl::toEndpoint(const char* param) {
     }
   }
 
-  if (stat(param,&sb) == 0 && (sb.st_mode & S_IFDIR)) {
+  if (stat(param,&sb) == 0 && S_ISDIR(sb.st_mode)) {
     const char* format = "%s/%09u-%09u";
     fname = CORBA::string_alloc(strlen(param)+24);
 
