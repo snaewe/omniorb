@@ -1,3 +1,11 @@
+Wed Dec 18 17:46:49 GMT 2002 dgrisby
+====================================
+
+- Respond nicely if we receive a request message on a client strand.
+
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Wed Dec 18 15:54:21 GMT 2002 dgrisby
 ====================================
 
