@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2001/09/03 16:56:09  sll
+  Make sure that the deadline is set to 0.
+
   Revision 1.1.4.9  2001/08/29 17:52:34  sll
   Make sure that the invariant of the dtor is satisfied in safeDelete.
 
@@ -432,6 +435,7 @@ giopStrand::acquireServer(giopWorker* w)
   sp->TCS_C(0);
   sp->TCS_W(0);
   sp->worker(w);
+  sp->setDeadline(0,0);
   return sp;
 }
 
