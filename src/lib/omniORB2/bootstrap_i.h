@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.6.2  1999/09/27 08:48:31  djr
+  Minor corrections to get rid of warnings.
+
   Revision 1.4.6.1  1999/09/22 14:26:24  djr
   Major rewrite of orbcore to support POA.
 
@@ -74,11 +77,6 @@ public:
   // Returns true if a boostrap agent exists.
 
   static void initialise_bootstrap_agent(const char* host, CORBA::UShort port);
-
-private:
-  inline omniInitialReferences() {}
-  omniInitialReferences(const omniInitialReferences&);
-  omniInitialReferences& operator=(const omniInitialReferences&);
 };
 
 

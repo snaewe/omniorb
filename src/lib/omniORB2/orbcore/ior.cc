@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.9.6.2  1999/09/27 08:48:32  djr
+  Minor corrections to get rid of warnings.
+
   Revision 1.9.6.1  1999/09/22 14:26:51  djr
   Major rewrite of orbcore to support POA.
 
@@ -94,7 +97,7 @@ IOP::iorToEncapStr(const CORBA::Char* type_id,
     size_t bufsize = 8 + l;
     bufsize = profiles->_NP_alignedSize(bufsize);
     CORBA::Char dummy = 0;
-    for (int i=0; i < bufsize; i++) dummy >>= buf;
+    for (size_t i=0; i < bufsize; i++) dummy >>= buf;
     buf.rewind_inout_mkr();
   }
 

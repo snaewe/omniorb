@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.3  1999/09/27 08:48:33  djr
+  Minor corrections to get rid of warnings.
+
   Revision 1.1.2.2  1999/09/24 15:01:35  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -211,7 +214,7 @@ omniInternal::resizeObjectTable()
 
   // Create and initialise new object table.
   omniLocalIdentity** newtable = new omniLocalIdentity* [newsize];
-  int i;
+  CORBA::ULong i;
   for( i = 0; i < newsize; i++ )  newtable[i] = 0;
 
   // Move the objects across...
@@ -961,7 +964,7 @@ public:
     }
 
     objectTable = new omniLocalIdentity* [objectTableSize];
-    for( int i = 0; i < objectTableSize; i++ )  objectTable[i] = 0;
+    for( CORBA::ULong i = 0; i < objectTableSize; i++ )  objectTable[i] = 0;
   }
 
   void detach() {}
