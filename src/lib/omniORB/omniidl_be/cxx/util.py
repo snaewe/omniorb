@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/11/19 20:05:39  djs
+# Removed superfluous function. Added zip.
+#
 # Revision 1.5  1999/11/15 19:10:55  djs
 # Added module for utility functions specific to generating skeletons
 # Union skeletons working
@@ -57,11 +60,6 @@ import re, string
 # ------------------------------------------------------------------
 # Generic formatting functions
 
-# Make a (eg comma) delimited list
-def delimitedlist(list, delimiter=", "):
-    if len(list) == 0: return ""
-    if len(list) == 1: return "" + list[0]
-    return list[0] + delimiter + (delimitedlist(list[1:], delimiter))
 
 # ------------------------------------------------------------------
 # Generic output utilities
@@ -214,3 +212,9 @@ def intersect(a, b):
             result.append(x)
     return result
 
+# ------------------------------------------------------------------
+# List manipulation functions
+
+def zip(a, b):
+    if a == [] or b == []: return []
+    return [(a[0], b[0])] + zip(a[1:], b[1:])
