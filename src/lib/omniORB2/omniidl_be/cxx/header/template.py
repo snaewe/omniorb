@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.3  2000/03/09 15:22:42  djs
+# Changing the protection status of an exception method, mirroring a change
+# in omniidl3
+#
 # Revision 1.3.2.2  2000/03/07 18:07:33  djr
 # Fixed user-exceptions when can't catch by base class.
 #
@@ -663,14 +667,14 @@ public:
   @inline@ void operator<<=(NetBufferedStream&) @body@
   @inline@ void operator<<=(MemBufferedStream&) @body@
 
-  virtual CORBA::Exception* _NP_duplicate() const;
-
   static _core_attr insertExceptionToAny    insertToAnyFn;
   static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
 
   static _core_attr const char* _PD_repoId;
 
 private:
+  virtual CORBA::Exception* _NP_duplicate() const;
+
   virtual const char* _NP_typeId() const;
   virtual const char* _NP_repoId(int*) const;
   virtual void _NP_marshal(NetBufferedStream&) const;
