@@ -213,7 +213,7 @@ main(int argc, char **argv)
 
 	CORBA::String_var sname = omniURI::nameToString(b->binding_name);
 
-	cout << sname;
+	cout << (const char*)sname;
 
 	if (b->binding_type == CosNaming::ncontext)
 	  cout << "/";

@@ -1,3 +1,13 @@
+Mon Jun 19 16:23:03 BST 2000 dpg1
+=================================
+
+- Even more explicit casts to (const char*) when using String_var with
+  logger
+
+src/appl/utils/nameclt/nameclt.cc
+src/appl/omniMapper/omniMapper.cc
+
+
 Mon Jun 19 15:14:30 BST 2000 dpg1
 =================================
 
