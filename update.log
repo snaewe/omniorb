@@ -1,3 +1,11 @@
+Tue Mar 30 10:51:03 BST 2004 dgrisby
+====================================
+
+- Bug in _do_get_interface. Thanks Alex Tingle.
+
+src/lib/omniORB/orbcore/portableserver.cc
+
+
 Fri Mar 26 12:01:27 GMT 2004 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.12  2004/03/30 09:40:54  dgrisby
+  Bug in _do_get_interface. Thanks Alex Tingle.
+
   Revision 1.2.2.11  2002/01/16 11:32:00  dpg1
   Race condition in use of registerNilCorbaObject/registerTrackedObject.
   (Reported by Teemu Torma).
@@ -323,7 +326,8 @@ PortableServer::ServantBase::_do_get_interface()
     call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, repoId);
   repository->_PR_getobj()->_invoke(call_desc);
 
-  return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
+  CORBA::Object_ptr result = call_desc.result();
+  return result ? result->_PR_getobj() : 0;
 }
 
 
