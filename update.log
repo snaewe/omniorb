@@ -1,3 +1,15 @@
+Wed Feb 11 11:52:30 GMT 2004 dgrisby
+====================================
+
+- Generate _out types for simple typedefs.
+
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+- Robustness in the face of exceptions from _remove_ref().
+
+src/lib/omniORB/orbcore/poa.cc
+
+
 Wed Feb 11 10:54:46 GMT 2004 dgrisby
 ====================================
 
