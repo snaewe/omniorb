@@ -196,6 +196,44 @@ export:: $(lib)
 endif
 
 
+#############################################################################
+#   Make rules for FreeBSD                                                    #
+#############################################################################
+
+ifdef FreeBSD
+
+CXXOPTIONS += -fPIC
+
+libname = _omniidlmodule.so
+soname = $(libname).$(IDLMODULE_MAJOR)
+lib = $(soname).$(IDLMODULE_MINOR)
+
+all:: $(lib)
+
+$(lib): $(OBJS) $(PYOBJS)
+       (set -x; \
+       $(RM) $@; \
+       $(CXXLINK) $(CXXLINKOPTIONS) -shared -o $@ -Wl,-soname,$(soname) $(IMPOR
+T_LIBRARY_FLAGS) \
+        $(filter-out $(LibSuffixPattern),$^) $(LIBS)\
+       )
+
+export:: $(lib)
+       @$(ExportLibrary)
+       @(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+clean::
+       $(RM) $(lib)
+
+endif
+
+
 
 #############################################################################
 #   Test executable                                                         #
