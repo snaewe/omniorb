@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16  1999/03/19 15:17:44  djr
+  New option acceptMisalignedIndirections
+
   Revision 1.15  1999/02/18 15:19:54  djr
   New configuration function omniORB::enableLcdMode()
 
@@ -534,6 +537,9 @@ _CORBA_MODULE_BEG
 
   _CORBA_MODULE_VAR CORBA::Boolean useTypeCodeIndirections;
   // true by default
+
+  _CORBA_MODULE_VAR CORBA::Boolean acceptMisalignedTcIndirections;
+  // false by default
 
 
   class logStream {
