@@ -1,3 +1,22 @@
+Mon Sep 11 15:12:38 BST 2000 dpg1
+=================================
+
+- Fix name tags in bugfixes stylesheet
+
+bugfixes.xsl
+
+- DuplicateRoleName exception missing from
+  RelationshipFactory::create() as downloaded from omg.org
+
+idl/COS/CosRelationships.idl
+
+- New -T flag to omniidl, to use a temporary file instead of a pipe
+  between omnicpp and omniidl. This works-around the bug seen of some
+  Win98 machines.
+
+src/tool/omniidl/python/omniidl/main.py
+
+
 Thu Sep  7 17:20:37 BST 2000 dpg1
 =================================
 

@@ -8,6 +8,21 @@
 
 <buglist>
 
+<bug id="9" date="Mon Sep 11 15:12:38 BST 2000" user="dpg1">
+
+  <summary>omniidl produces no useful output on Windows 98</summary>
+  <reported>Guangyu Gu, Mark Pumar, others</reported>
+  <text>
+  On some Windows 98 machines, but not others, the C pre-processor
+  output is echoed to the screen, rather than forming the input to
+  omniidl. omniidl therefore fails to generate any code. This fix adds
+  a <code>-T</code> option to omniidl, which uses a temporary file
+  rather than a pipe between the pre-processor and omniidl. It is
+  reported that this works on affected Win98 machines.
+  </text>
+</bug>
+
+
 <bug id="8" date="Wed Sep  6 12:13:30 BST 2000" user="dpg1">
 
   <summary>Support for Python 1.6 and 2.0b1</summary>
