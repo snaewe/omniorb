@@ -27,9 +27,13 @@
 
 /*
   $Log$
-  Revision 1.12  1997/08/27 17:54:31  sll
-  Added _var typedef for IDL typedef Object.
+  Revision 1.13  1997/09/20 16:44:22  dpg1
+  Added new is_cxx_type argument to _widenFromTheMostDerivedIntf().
+  Added LifeCycle code generation.
 
+// Revision 1.12  1997/08/27  17:54:31  sll
+// Added _var typedef for IDL typedef Object.
+//
   Revision 1.11  1997/08/22 12:43:23  sll
   Oh well, gcc does not like variable names starting with __, changed
   the prefix to _0RL_.
@@ -51,6 +55,11 @@
 #define PROXY_CLASS_PREFIX        "_proxy_"
 #define SERVER_CLASS_PREFIX       "_sk_"
 #define NIL_CLASS_PREFIX           "_nil_"
+#define LCPROXY_CLASS_PREFIX      "_lc_proxy_"
+#define LCSERVER_CLASS_PREFIX     "_lc_sk_"
+#define DEAD_CLASS_PREFIX         "_dead_"
+#define HOME_CLASS_PREFIX         "_wrap_home_"
+#define WRAPPROXY_CLASS_PREFIX    "_wrap_proxy_"
 #define PROXY_OBJ_FACTORY_POSTFIX "_proxyObjectFactory"
 #define IRREPOID_POSTFIX          "_IntfRepoID"
 #define FIELD_MEMBER_TEMPLATE     "_CORBA_ObjRef_Member"
@@ -141,7 +150,77 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
       pd_nil_fqname = pd_nil_uqname;
     }
 
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    pd_lcserver_uqname = new char[strlen(uqname())+strlen(LCSERVER_CLASS_PREFIX)+1];
+    strcpy(pd_lcserver_uqname,LCSERVER_CLASS_PREFIX);
+    strcat(pd_lcserver_uqname,uqname());
 
+    if (strlen(scopename())) {
+      pd_lcserver_fqname = new char[strlen(scopename()) +
+				   strlen(pd_lcserver_uqname)+1];
+      strcpy(pd_lcserver_fqname,scopename());
+      strcat(pd_lcserver_fqname,pd_lcserver_uqname);
+    }
+    else {
+      pd_lcserver_fqname = pd_lcserver_uqname;
+    }
+
+    pd_dead_uqname = new char[strlen(uqname())+strlen(DEAD_CLASS_PREFIX)+1];
+    strcpy(pd_dead_uqname,DEAD_CLASS_PREFIX);
+    strcat(pd_dead_uqname,uqname());
+
+    if (strlen(scopename())) {
+      pd_dead_fqname = new char[strlen(scopename()) +
+			       strlen(pd_dead_uqname)+1];
+      strcpy(pd_dead_fqname,scopename());
+      strcat(pd_dead_fqname,pd_dead_uqname);
+    }
+    else {
+      pd_dead_fqname = pd_dead_uqname;
+    }
+
+    pd_home_uqname = new char[strlen(uqname())+strlen(HOME_CLASS_PREFIX)+1];
+    strcpy(pd_home_uqname,HOME_CLASS_PREFIX);
+    strcat(pd_home_uqname,uqname());
+
+    if (strlen(scopename())) {
+      pd_home_fqname = new char[strlen(scopename()) +
+			       strlen(pd_home_uqname)+1];
+      strcpy(pd_home_fqname,scopename());
+      strcat(pd_home_fqname,pd_home_uqname);
+    }
+    else {
+      pd_home_fqname = pd_home_uqname;
+    }
+
+    pd_lcproxy_uqname = new char[strlen(uqname())+strlen(LCPROXY_CLASS_PREFIX)+1];
+    strcpy(pd_lcproxy_uqname,LCPROXY_CLASS_PREFIX);
+    strcat(pd_lcproxy_uqname,uqname());
+
+    if (strlen(scopename())) {
+      pd_lcproxy_fqname = new char[strlen(scopename()) +
+				  strlen(pd_lcproxy_uqname)+1];
+      strcpy(pd_lcproxy_fqname,scopename());
+      strcat(pd_lcproxy_fqname,pd_lcproxy_uqname);
+    }
+    else {
+      pd_lcproxy_fqname = pd_lcproxy_uqname;
+    }
+
+    pd_wrapproxy_uqname = new char[strlen(uqname())+strlen(WRAPPROXY_CLASS_PREFIX)+1];
+    strcpy(pd_wrapproxy_uqname,WRAPPROXY_CLASS_PREFIX);
+    strcat(pd_wrapproxy_uqname,uqname());
+
+    if (strlen(scopename())) {
+      pd_wrapproxy_fqname = new char[strlen(scopename()) +
+				    strlen(pd_wrapproxy_uqname)+1];
+      strcpy(pd_wrapproxy_fqname,scopename());
+      strcat(pd_wrapproxy_fqname,pd_wrapproxy_uqname);
+    }
+    else {
+      pd_wrapproxy_fqname = pd_wrapproxy_uqname;
+    }
+  }
 
   pd_fieldmem_uqname = new char[strlen(uqname())+
 			        strlen(uqname())+strlen("_Helper")+
@@ -274,6 +353,9 @@ o2be_interface::produce_hdr(fstream &s)
   IND(s); s << "class   " << uqname() << ";\n";
   IND(s); s << "typedef " << uqname() << "* " << objref_uqname() << ";\n";
   IND(s); s << "typedef " << objref_uqname() << " " << uqname() << "Ref;\n\n";
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    IND(s); s << "class " << home_uqname() << ";\n\n";
+  }
   IND(s); s << "class " << uqname() << "_Helper {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "public:\n";
@@ -466,13 +548,16 @@ o2be_interface::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "virtual ~" << uqname() << "() {}\n";
-  IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId);\n";
+  IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id=0);\n";
   s << "\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "private:\n\n";
   INC_INDENT_LEVEL();
   IND(s); s << uqname() << "(const " << uqname() << "&);\n";
   IND(s); s << uqname() << " &operator=(const " << uqname() << "&);\n";
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    IND(s); s << "friend class " << home_uqname() << ";\n";
+  }
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 
@@ -546,9 +631,9 @@ o2be_interface::produce_hdr(fstream &s)
   s << "\n";
   IND(s); s << "protected:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {\n";
+  IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId);\n";
+  IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";	
   DEC_INDENT_LEVEL();
@@ -622,9 +707,9 @@ o2be_interface::produce_hdr(fstream &s)
   IND(s); s << "protected:\n\n";
   INC_INDENT_LEVEL();
   IND(s); s << proxy_uqname() << " () {}\n\n";
-  IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {\n";
+  IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId);\n";
+  IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId,is_cxx_type);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";	
   DEC_INDENT_LEVEL();
@@ -690,13 +775,458 @@ o2be_interface::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "protected:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {\n";
+  IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId);\n";
+  IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";	
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
+
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    IND(s); s << "// *** Start of LifeCycle stuff:\n";
+
+    // _lc_sk:
+    IND(s); s << "class " << lcserver_uqname() << " : ";
+    {
+      AST_Interface **intftable = inherits();
+      int ni = n_inherits();
+      for (int j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  s << " public virtual " << intf->lcserver_fqname() << ",";
+	}
+      if (ni==0)
+	s << " public virtual _lc_sk,";
+    }
+    s << " public virtual " << uqname() << " {\n";
+    IND(s); s << "public:\n\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << lcserver_uqname() << "() {}\n";
+    IND(s); s << lcserver_uqname() << "(const omniORB::objectKey& k);\n";
+    IND(s); s << "virtual ~" << lcserver_uqname() << "() {}\n";
+    IND(s); s << objref_uqname() << " _this();\n";
+    IND(s); s << "void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }\n";
+    IND(s); s << "CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }\n";
+    IND(s); s << "void _dispose() { _boa()->dispose(this); }\n";
+    IND(s); s << "omniORB::objectKey _key();\n";
+    IND(s); s << "void _set_lifecycle(omniLifeCycleInfo_ptr li);\n";
+    IND(s); s << "omniLifeCycleInfo_ptr _get_lifecycle();\n";
+    IND(s); s << "virtual void _move(CORBA::Object_ptr to);\n";
+    IND(s); s << "virtual void _remove();\n";
+    {
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  if (d->node_type() == AST_Decl::NT_op)
+	    {
+	      o2be_operation* op = o2be_operation::narrow_from_decl(d);
+	      IND(s); s << "virtual ";
+	      op->produce_decl(s);
+	      s << " = 0;\n";
+	      if (op->has_variable_out_arg() || op->has_pointer_inout_arg())
+		{
+		  IND(s); s << "virtual ";
+		  op->produce_decl(s,0,"_0RL__");
+		  s << " {\n";
+		  INC_INDENT_LEVEL();
+		  IND(s);
+		  if (!op->return_is_void()) {
+		    s << "return ";
+		  }
+		  op->produce_invoke(s);
+		  s << ";\n";
+		  DEC_INDENT_LEVEL();
+		  IND(s); s << "}\n";
+		}
+	    }
+	  else if (d->node_type() == AST_Decl::NT_attr)
+	    {
+	      IND(s); s << "virtual ";
+	      o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
+	      a->produce_decl_rd(s);
+	      s << " = 0;\n";
+	      if (!a->readonly())
+		{
+		  IND(s); s << "virtual ";
+		  a->produce_decl_wr(s);
+		  s << " = 0;\n";
+		}
+	    }
+	  i.next();
+	}
+    }
+    IND(s); s << "virtual CORBA::Boolean dispatch(GIOP_S &s,const char *op,CORBA::Boolean response);\n";
+    DEC_INDENT_LEVEL();
+    s << "\n";
+    IND(s); s << "protected:\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";	
+    IND(s); s << "virtual void _set_home(CORBA::Object_ptr home) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_home_" << _fqname() << " = " << uqname() << "::_narrow(home);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "private:\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << lcserver_uqname() << " (const " << lcserver_uqname() << "&);\n";
+    IND(s); s << lcserver_uqname() << " &operator=(const " << lcserver_uqname() << "&);\n";
+    IND(s); s << uqname() << "_var _home_" << _fqname() << ";\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n\n";
+
+    // _dead
+    IND(s); s << "class " << dead_uqname() << " : ";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      if ((ni = n_inherits()) != 0)
+	{
+	  intftable = inherits();
+	  for (j=0; j< ni; j++)
+	    {
+	      o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	      s << " public virtual " 
+		<< intf->dead_fqname() << ", ";
+	    }
+	}
+    }
+    s << "public virtual " << uqname() << " {\n";
+    IND(s); s << "public:\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << dead_uqname() << "() { }\n";
+    IND(s); s << "virtual ~" << dead_uqname() << "() {}\n";
+    {
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  if (d->node_type() == AST_Decl::NT_op)
+	    {
+	      o2be_operation* op = o2be_operation::narrow_from_decl(d);
+	      if (op->has_variable_out_arg() || op->has_pointer_inout_arg()) {
+		op->produce_dead_skel(s,"_0RL__");
+	      }
+	      else {
+		op->produce_dead_skel(s);
+	      }
+	      s << "\n";
+	    }
+	  else if (d->node_type() == AST_Decl::NT_attr)
+	    {
+	      o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
+	      a->produce_dead_rd_skel(s);
+	      s << "\n";
+	      if (!a->readonly())
+		{
+		  a->produce_dead_wr_skel(s);
+		  s << "\n";
+		}
+	    }
+	  i.next();
+	}
+    }
+    IND(s); s << "CORBA::Boolean dispatch(GIOP_S &s,const char *op,CORBA::Boolean response) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);\n";
+    IND(s); s << "CORBA::Boolean _0RL_result = 0;\n";
+    IND(s); s << "return _0RL_result;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n";
+    IND(s); s << "void _obj_is_ready(CORBA::BOA_ptr boa) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "boa->obj_is_ready(this);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n";
+
+    DEC_INDENT_LEVEL();
+    IND(s); s << "protected:\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId,is_cxx_type_id);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";	
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n\n";
+
+    // _wrap_home:
+    IND(s); s << "class " << home_uqname() << " : ";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      if ((ni = n_inherits()) != 0)
+	{
+	  intftable = inherits();
+	  for (j=0; j< ni; j++)
+	    {
+	      o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	      s << " public virtual " 
+		<< intf->home_fqname() << ", ";
+	    }
+	}
+      else
+	{
+	  s << " public virtual _wrap_home, ";
+	}
+    }
+    s << "public virtual " << uqname() << " {\n";
+
+    IND(s); s << "private:\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << objref_uqname() << " _actual_" << _fqname() << ";\n\n";
+    DEC_INDENT_LEVEL();
+
+    IND(s); s << "protected:\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "void _set_actual(" << objref_uqname() << " p);\n";
+    IND(s); s << "void _release_actual();\n";
+    IND(s); s << home_uqname() << "() { }\n";
+    DEC_INDENT_LEVEL();
+
+    IND(s); s << "public:\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << home_uqname() << "(" << lcserver_uqname() << " *sk);\n";
+    IND(s); s << "~" << home_uqname() << "();\n\n";
+
+    IND(s); s << "void _move(CORBA::Object_ptr to);\n";
+    IND(s); s << "void _remove();\n\n";
+    {
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  if (d->node_type() == AST_Decl::NT_op)
+	    {
+	      o2be_operation* op = o2be_operation::narrow_from_decl(d);
+	      if (op->has_variable_out_arg() || op->has_pointer_inout_arg()) {
+		op->produce_home_skel(s, *this, "_0RL__");
+	      }
+	      else {
+		op->produce_home_skel(s, *this);
+	      }
+	      s << "\n";
+	    }
+	  else if (d->node_type() == AST_Decl::NT_attr)
+	    {
+	      o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
+	      a->produce_home_rd_skel(s, *this);
+	      s << "\n";
+	      if (!a->readonly())
+		{
+		  a->produce_home_wr_skel(s, *this);
+		  s << "\n";
+		}
+	    }
+	  i.next();
+	}
+    }
+    IND(s); s << "CORBA::Boolean dispatch(GIOP_S &s,const char *op,CORBA::Boolean response) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return _dispatcher->dispatch(s, op, response);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n";
+    IND(s); s << "void _obj_is_ready(CORBA::BOA_ptr boa) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "boa->obj_is_ready(this);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n\n";
+
+    // _lc_proxy:
+    IND(s); s << "class " << wrapproxy_uqname() << ";\n";
+
+    IND(s); s << "class " << lcproxy_uqname() << " : ";
+    {
+      AST_Interface **intftable = inherits();
+      int ni = n_inherits();
+      for (int j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  s << " public virtual " << intf->lcproxy_fqname() << ",";
+	}
+    }
+    s << " public virtual " << uqname() << " {\n";
+    IND(s); s << "public:\n\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << lcproxy_uqname() << " (Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release) :\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "omniObject(" << IRrepoId() << ",r,key,keysize,profiles,release) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "omni::objectIsReady(this);\n";
+    DEC_INDENT_LEVEL();
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+
+    IND(s); s << "virtual ~" << lcproxy_uqname() << "() {}\n";
+
+    IND(s); s << "void _set_wrap_" << _fqname() << "("
+	      << wrapproxy_uqname() << " *wrap) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_wrap_" << _fqname() << " = wrap;\n";
+    {
+      AST_Interface **intftable = inherits();
+      int ni = n_inherits();
+      for (int j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  IND(s); s << intf->lcproxy_fqname() << "::_set_wrap_"
+		    << intf->_fqname() << "((" << intf->wrapproxy_fqname()
+		    << " *)wrap);\n";
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    {
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  if (d->node_type() == AST_Decl::NT_op)
+	    {
+	      o2be_operation* op = o2be_operation::narrow_from_decl(d);
+	      IND(s); s << "virtual ";
+	      if (op->has_variable_out_arg() ||
+		  op->has_pointer_inout_arg())
+		{
+		  op->produce_decl(s,0,"_0RL__");
+		}
+	      else
+		{
+		  op->produce_decl(s);
+		}
+	      s << ";\n";
+	    }
+	  else if (d->node_type() == AST_Decl::NT_attr)
+	    {
+	      IND(s); s << "virtual ";
+	      o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
+	      a->produce_decl_rd(s);
+	      s << ";\n";
+	      if (!a->readonly())
+		{
+		  IND(s); s << "virtual ";
+		  a->produce_decl_wr(s);
+		  s << ";\n";
+		}
+	    }
+	  i.next();
+	}
+    }
+    DEC_INDENT_LEVEL();
+    s << "\n";
+    IND(s); s << "protected:\n\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << lcproxy_uqname() << " () {}\n\n";
+    IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type = 0) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return " << uqname() << "::_widenFromTheMostDerivedIntf(repoId,is_cxx_type);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";	
+    DEC_INDENT_LEVEL();
+    IND(s); s << "private:\n\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << wrapproxy_uqname() << " *_get_wrap_" << _fqname() << "() {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return _wrap_" << _fqname() << ";\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << wrapproxy_uqname() << " *_wrap_" << _fqname() << ";\n";
+
+    IND(s); s << lcproxy_uqname() << " (const " << lcproxy_uqname() << "&);\n";
+    IND(s); s << lcproxy_uqname() << " &operator=(const " << lcproxy_uqname() << "&);\n";
+
+    IND(s); s << "friend class " << wrapproxy_uqname() << ";\n";
+
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n\n";
+
+    // _wrap_proxy:
+    IND(s); s << "class " << wrapproxy_uqname() << " : ";
+    {
+      AST_Interface **intftable = inherits();
+      int ni = n_inherits();
+      if (ni) {
+	for (int j=0; j< ni; j++)
+	  {
+	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	    s << " public virtual " << intf->wrapproxy_fqname() << ",";
+	  }
+      }
+      else
+	s << " public virtual _wrap_proxy,";
+    }
+    s << " public virtual " << uqname() << " {\n";
+
+    IND(s); s << "private:\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << lcproxy_uqname() << " *_orig_" << _fqname() << ";\n";
+    IND(s); s << objref_uqname() << " _actual_" << _fqname() << ";\n\n";
+    DEC_INDENT_LEVEL();
+
+    IND(s); s << "public:\n\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << wrapproxy_uqname() << " (" << lcproxy_uqname()
+	      << " *proxy,Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release);\n\n";
+
+    IND(s); s << "virtual ~" << wrapproxy_uqname() << "();\n";
+
+    IND(s); s << "virtual void _forward_to(CORBA::Object_ptr obj);\n";
+    IND(s); s << "virtual void _reset_proxy();\n\n";
+
+    {
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  if (d->node_type() == AST_Decl::NT_op)
+	    {
+	      o2be_operation* op = o2be_operation::narrow_from_decl(d);
+	      if (op->has_variable_out_arg() || op->has_pointer_inout_arg()) {
+		op->produce_wrapproxy_skel(s, *this, "_0RL__");
+	      }
+	      else {
+		op->produce_wrapproxy_skel(s, *this);
+	      }
+	      s << "\n";
+	    }
+	  else if (d->node_type() == AST_Decl::NT_attr)
+	    {
+	      o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
+	      a->produce_wrapproxy_rd_skel(s, *this);
+	      s << "\n";
+	      if (!a->readonly())
+		{
+		  a->produce_wrapproxy_wr_skel(s, *this);
+		  s << "\n";
+		}
+	    }
+	  i.next();
+	}
+    }
+    DEC_INDENT_LEVEL();
+    s << "\n";
+    IND(s); s << "protected:\n\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type = 0);\n";
+
+    IND(s); s << "virtual void _set_actual(CORBA::Object_ptr p);\n";
+    IND(s); s << wrapproxy_uqname() << "(" << lcproxy_uqname()
+	      << " *proxy);\n";
+
+    DEC_INDENT_LEVEL();
+    IND(s); s << "};\n\n";
+
+    IND(s); s << "// *** End of LifeCycle stuff\n";
+  }
 
   // proxyObjectFactory
   IND(s); s << "class " << uqname() << PROXY_OBJ_FACTORY_POSTFIX
@@ -719,10 +1249,16 @@ o2be_interface::produce_hdr(fstream &s)
   IND(s); s << "return _" << nil_uqname() << ";\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    IND(s); s << "static void mayMoveLocal(CORBA::Boolean l) { _may_move_local = 1; }\n";
+  }
   DEC_INDENT_LEVEL();
   IND(s); s << "private:\n";
   INC_INDENT_LEVEL();
   IND(s); s << "static " << objref_fqname() << " _" << nil_uqname() << ";\n";
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    IND(s); s << "static CORBA::Boolean _may_move_local;\n";
+  }
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 
@@ -821,9 +1357,17 @@ o2be_interface::produce_skel(fstream &s)
 	    o2be_operation* op = o2be_operation::narrow_from_decl(d);
 	    if (op->has_variable_out_arg() || op->has_pointer_inout_arg()) {
 	      op->produce_proxy_skel(s,*this,"_0RL__");
+	      s << "\n";
+	      if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+		op->produce_lcproxy_skel(s,*this,"_0RL__");
+	      }
 	    }
 	    else {
 	      op->produce_proxy_skel(s,*this);
+	      s << "\n";
+	      if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+		op->produce_lcproxy_skel(s,*this);
+	      }
 	    }
 	    s << "\n";
 	  }
@@ -832,10 +1376,18 @@ o2be_interface::produce_skel(fstream &s)
 	    o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
 	    a->produce_proxy_rd_skel(s,*this);
 	    s << "\n";
+	    if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+	      a->produce_lcproxy_rd_skel(s,*this);
+	      s << "\n";
+	    }
 	    if (!a->readonly())
 	      {
 		a->produce_proxy_wr_skel(s,*this);
 		s << "\n";
+		if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+		  a->produce_lcproxy_wr_skel(s,*this);
+		  s << "\n";
+		}
 	      }
 	  }
 	i.next();
@@ -981,9 +1533,10 @@ o2be_interface::produce_skel(fstream &s)
 
   // _widenFromTheMostDerivedIntf
   IND(s); s << "void *\n";
-  IND(s); s << fqname() << "::_widenFromTheMostDerivedIntf(const char *repoId)\n";
+  IND(s); s << fqname() << "::_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
+  IND(s); s << "if (is_cxx_type_id) return 0;\n";
   IND(s); s << "if (!repoId)\n";
   INC_INDENT_LEVEL();
   IND(s); s << "return (void *)((CORBA::Object_ptr)this);\n";
@@ -1137,14 +1690,53 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << proxy_fqname() << " *p = new " << proxy_fqname()
-	    << "(r,key,keysize,profiles,release);\n";
-  IND(s); s << "if (!p) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  IND(s); s << "return (CORBA::Object_ptr) p;\n";
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    IND(s); s << "if (_may_move_local) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << lcproxy_fqname() << " *p = new " << lcproxy_fqname()
+	      << "(r,key,keysize,profiles,0);\n";
+    IND(s); s << "if (!p) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << "r->incrRefCount();\n";
+    IND(s); s << wrapproxy_fqname() << " *w = new " << wrapproxy_fqname()
+	      << "(p,r,key,keysize,profiles,release);\n";
+    IND(s); s << "if (!w) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << "p->_set_wrap_" << _fqname() << "(w);\n";
+    IND(s); s << "return (CORBA::Object_ptr)w;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "else {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << proxy_fqname() << " *p = new " << proxy_fqname()
+	      << "(r,key,keysize,profiles,release);\n";
+    IND(s); s << "if (!p) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "return (CORBA::Object_ptr) p;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+  }
+  else {
+    IND(s); s << proxy_fqname() << " *p = new " << proxy_fqname()
+	      << "(r,key,keysize,profiles,release);\n";
+    IND(s); s << "if (!p) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "return (CORBA::Object_ptr) p;\n";
+  }
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
   // _is_a()
@@ -1170,6 +1762,450 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << objref_fqname() << " " 
 	    << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::_"
 	    << nil_uqname() << " = 0;\n\n";
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    s << "\n// *** Start of LifeCycle stuff\n\n";
+
+    IND(s); s << "CORBA::Boolean " << fqname() << PROXY_OBJ_FACTORY_POSTFIX
+	      << "::_may_move_local = 0;\n\n";
+
+    // New LifeCycle functions:
+
+    // _lc_sk_ dispatch():
+    IND(s); s << "CORBA::Boolean\n";
+    IND(s); s << lcserver_fqname() << "::dispatch(GIOP_S &_0RL_s,const char *_0RL_op,CORBA::Boolean _0RL_response_expected)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    {
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      idl_bool notfirst = I_FALSE;
+      while (!i.is_done())
+	{
+	  AST_Decl *d = i.item();
+	  if (d->node_type() == AST_Decl::NT_op)
+	    {
+	      IND(s); s << ((notfirst)?"else ":"")
+			<< "if (strcmp(_0RL_op,\""
+			<< d->local_name()->get_string()
+			<< "\") == 0)\n";
+	      IND(s); s << "{\n";
+	      INC_INDENT_LEVEL();
+	      o2be_operation::narrow_from_decl(d)->produce_server_skel(s,*this);
+	      DEC_INDENT_LEVEL();
+	      IND(s); s << "}\n";
+	      notfirst = I_TRUE;
+	    }
+	  else if (d->node_type() == AST_Decl::NT_attr)
+	    {
+	      o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
+	      IND(s); s << ((notfirst)?"else ":"")
+			<< "if (strcmp(_0RL_op,\""
+			<< "_get_" << a->local_name()->get_string()
+			<< "\") == 0)\n";
+	      IND(s); s << "{\n";
+	      INC_INDENT_LEVEL();
+	      a->produce_server_rd_skel(s,*this);
+	      DEC_INDENT_LEVEL();
+	      IND(s); s << "}\n";
+	      if (!a->readonly())
+		{
+		  IND(s); s << "else if (strcmp(_0RL_op,\""
+			    << "_set_" << a->local_name()->get_string()
+			    << "\") == 0)\n";
+		  IND(s); s << "{\n";
+		  INC_INDENT_LEVEL();
+		  a->produce_server_wr_skel(s,*this);
+		  DEC_INDENT_LEVEL();
+		  IND(s); s << "}\n";
+		}
+	      notfirst = I_TRUE;
+	    }
+	  i.next();
+	}
+      {
+	AST_Interface **intftable = inherits();
+	int ni = n_inherits();
+	for (int j=0; j< ni; j++)
+	  {
+	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	    IND(s); s << ((notfirst)?"else ":"")
+		      << "if (" << intf->lcserver_fqname() 
+		      << "::dispatch(_0RL_s,_0RL_op,_0RL_response_expected)) {\n";
+	    INC_INDENT_LEVEL();
+	    IND(s); s << "return 1;\n";
+	    DEC_INDENT_LEVEL();
+	    IND(s); s << "}\n";
+	    notfirst = I_TRUE;
+	  }
+      }
+      IND(s); s << ((notfirst)?"else {\n":"{\n");
+      INC_INDENT_LEVEL();
+      IND(s); s << "return 0;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  
+
+    IND(s); s << lcserver_fqname() << "::" << lcserver_uqname() 
+	      << " (const omniORB::objectKey& k)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_home_" << _fqname() << " = " << fqname() << "::_nil();\n";
+    IND(s); s << "omniRopeAndKey l(0,(CORBA::Octet*)&k,(CORBA::ULong)sizeof(k));\n";
+    IND(s); s << "setRopeAndKey(l,0);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << "omniORB::objectKey\n";
+    IND(s); s << lcserver_fqname() << "::_key()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "omniRopeAndKey l;\n";
+    IND(s); s << "getRopeAndKey(l);\n";
+    IND(s); s << "return (*((omniORB::objectKey*)l.key()));\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _lc_sk_ ::_this:
+    IND(s); s << objref_fqname() << "\n";
+    IND(s); s << lcserver_fqname() << "::_this()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "if (CORBA::is_nil(_home_" << _fqname() << ")) {\n";
+    INC_INDENT_LEVEL();    
+    IND(s); s << home_fqname() << " *wrap = new "
+	      << home_fqname() << "(this);\n";
+    IND(s); s << "wrap->_obj_is_ready(CORBA::BOA::getBOA());\n";
+    IND(s); s << "LifeCycleInfo_i *li = new LifeCycleInfo_i(wrap, wrap);\n";
+    IND(s); s << "li->_obj_is_ready(li->_boa());\n";
+    IND(s); s << "_set_home(wrap);\n";
+    IND(s); s << "_set_linfo(li);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "return " << fqname() << "::_duplicate(_home_"
+	      << _fqname() << ");\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _set_lifecycle:
+    IND(s); s << "void\n";
+    IND(s); s << lcserver_fqname()
+	      << "::_set_lifecycle(omniLifeCycleInfo_ptr li)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_set_linfo(li);\n";
+    IND(s); s << "CORBA::Object_var home = li->homeObject();\n";
+    IND(s); s << "_set_home(home);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _get_lifecycle:
+    IND(s); s << "omniLifeCycleInfo_ptr\n";
+    IND(s); s << lcserver_fqname() << "::_get_lifecycle()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return _get_linfo();\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _move:
+    IND(s); s << "void\n";
+    IND(s); s << lcserver_fqname() << "::_move(CORBA::Object_ptr to)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "if (_home_" << _fqname() << "->is_proxy())\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_wrap_proxy::_reset_wraps(this);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "_get_linfo()->reportMove(to);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _remove:
+    IND(s); s << "void\n";
+    IND(s); s << lcserver_fqname() << "::_remove()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "if (_home_" << _fqname() << "->is_proxy())\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_wrap_proxy::_reset_wraps(this);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "_get_linfo()->reportRemove();\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _wrap_home constructor:
+    IND(s); s << home_fqname() << "::" << home_uqname()
+	      << "(" << lcserver_fqname() << " *sk)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_dispatcher = " << fqname() << "::_duplicate(sk);\n";
+    IND(s); s << "_set_actual(sk);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // destructor:
+    IND(s); s << home_fqname() << "::~" << home_uqname() << "()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_release_actual();\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _set_actual:
+    IND(s); s << "void\n";
+    IND(s); s << home_fqname() << "::_set_actual(" << objref_fqname()
+	      << " p)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_actual_" << _fqname() << " = "
+	      << fqname() << "::_duplicate(p);\n";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      ni = n_inherits();
+      intftable = inherits();
+      for (j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  IND(s); s << intf->home_fqname() << "::_set_actual(p);\n";
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _release_actual:
+    IND(s); s << "void\n";
+    IND(s); s << home_fqname() << "::_release_actual()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "CORBA::release(_actual_" << _fqname() << ");";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      ni = n_inherits();
+      intftable = inherits();
+      for (j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  IND(s); s << intf->home_fqname() << "::_release_actual();\n";
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _move:
+    IND(s); s << "void\n";
+    IND(s); s << home_fqname() << "::_move(CORBA::Object_ptr to)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << objref_fqname() << " p;\n";
+
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << fqname() << "_var q = " << fqname() << "::_narrow(to);\n";
+    IND(s); s << "void *v = q->_widenFromTheMostDerivedIntf(\""
+	      << lcproxy_fqname() << "\", 1);\n";
+    IND(s); s << "if (v)\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "p = (" << objref_fqname() << ")(("
+	      << lcproxy_fqname() << " *)v);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "else\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "p = q;\n";
+    DEC_INDENT_LEVEL();
+
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+
+    IND(s); s << "reDirect *rd = new reDirect("
+	      << fqname() << "::_duplicate(p));\n";
+    IND(s); s << "rd->_obj_is_ready(CORBA::BOA::getBOA());\n\n";
+
+    IND(s); s << "omni::objectRelease(_dispatcher);\n";
+    IND(s); s << "omni::objectDuplicate(rd);\n";
+    IND(s); s << "_dispatcher = rd;\n";
+    IND(s); s << "omni::disposeObject(rd);\n";
+
+    IND(s); s << "_release_actual();\n";
+    IND(s); s << "_set_actual(p);\n";
+
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _remove:
+    IND(s); s << "void\n";
+    IND(s); s << home_fqname() << "::_remove()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "omni::objectRelease(_dispatcher);\n";
+    IND(s); s << "_release_actual();\n\n";
+
+    IND(s); s << dead_fqname() << " *dead = new " << dead_fqname() << ";\n";
+    IND(s); s << "dead->_obj_is_ready(CORBA::BOA::getBOA());\n";
+    IND(s); s << "_dispatcher = " << fqname() << "::_duplicate(dead);\n";
+    IND(s); s << "_set_actual(dead);\n";
+    IND(s); s << "CORBA::BOA::getBOA()->dispose(dead);\n";
+    IND(s); s << "CORBA::BOA::getBOA()->dispose(this);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _wrap_proxy constructor:
+    IND(s); s << wrapproxy_fqname() << "::" << wrapproxy_uqname()
+	      << "(" << lcproxy_fqname()
+	      << " *proxy,Rope *r,CORBA::Octet *key,size_t keysize,"
+	      << "IOP::TaggedProfileList *profiles,CORBA::Boolean release)"
+	      << " : omniObject(" << IRrepoId()
+	      << ",r,key,keysize,profiles,release)";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      ni = n_inherits();
+      intftable = inherits();
+      for (j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  s << ", " << intf->wrapproxy_fqname() << "(proxy)";
+	}
+    }
+    s << "\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "omni::objectIsReady(this);\n";
+    IND(s); s << "omni::objectDuplicate(proxy);\n";
+    IND(s); s << "_orig_" << _fqname() << " = proxy;\n";
+    IND(s); s << "_actual_" << _fqname() << " = " << fqname()
+	      << "::_duplicate(proxy);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << wrapproxy_fqname() << "::" << wrapproxy_uqname()
+	      << "(" << lcproxy_fqname() << " *proxy)";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      ni = n_inherits();
+      intftable = inherits();
+      char *sep = " : ";
+      for (j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  s << sep << intf->wrapproxy_fqname() << "(proxy)";
+	  sep = ", ";
+	}
+    }
+    s << "\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_orig_" << _fqname() << " = proxy;\n";
+    IND(s); s << "_actual_" << _fqname() << " = " << fqname()
+	      << "::_duplicate(proxy);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // destructor:
+    IND(s); s << wrapproxy_fqname() << "::~" << wrapproxy_uqname() << "()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "if (!(_actual_" << _fqname() << "->is_proxy()))\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_unregister_wrap();\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "CORBA::release(_orig_" << _fqname() << ");\n";
+    IND(s); s << "CORBA::release(_actual_" << _fqname() << ");\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _forward_to:
+    IND(s); s << "void\n";
+    IND(s); s << wrapproxy_fqname()
+	      << "::_forward_to(CORBA::Object_ptr obj)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "if (obj->PR_getobj()->is_proxy()) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << lcproxy_fqname() << " *p = (" << lcproxy_fqname()
+	      << " *)obj->PR_getobj()->_widenFromTheMostDerivedIntf(\""
+	      << lcproxy_fqname() << "\", 1);\n";
+    IND(s); s << "p->_set_wrap_" << _fqname() << "(this);\n";
+    IND(s); s << "_set_actual(p);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "else {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_register_wrap(obj->PR_getobj());\n";
+    IND(s); s << "_set_actual(obj);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "_fwd = 1;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _reset_proxy:
+    IND(s); s << "void\n";
+    IND(s); s << wrapproxy_fqname() << "::_reset_proxy()\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "CORBA::release(_actual_" << _fqname() << ");\n";
+    IND(s); s << "_actual_" << _fqname() << " = " << fqname()
+	      << "::_duplicate(_orig_" << _fqname() << ");\n";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      ni = n_inherits();
+      intftable = inherits();
+      for (j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  IND(s); s << intf->wrapproxy_fqname() << "::_reset_proxy();\n";
+	}
+    }
+    IND(s); s << "_fwd = 0;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _widen...:
+    IND(s); s << "void *\n";
+    IND(s); s << wrapproxy_fqname()
+	      << "::_widenFromTheMostDerivedIntf(const char *repoID,"
+	      << "CORBA::Boolean is_cxx_type_id)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "if (is_cxx_type_id && repoID && !(strcmp(repoID,\""
+	      << lcproxy_fqname() << "\")))\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return (void *)_orig_" << _fqname() << ";\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "return " << fqname()
+	      << "::_widenFromTheMostDerivedIntf(repoID,is_cxx_type_id);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // _set_actual:
+    IND(s); s << "void\n";
+    IND(s); s << wrapproxy_fqname() << "::_set_actual(CORBA::Object_ptr p)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "CORBA::release(_actual_" << _fqname() << ");\n";
+    IND(s); s << "_actual_" << _fqname() << " = " << fqname()
+	      << "::_narrow(p);\n";
+    {
+      int ni,j;
+      AST_Interface **intftable;
+      ni = n_inherits();
+      intftable = inherits();
+      for (j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  IND(s); s << intf->wrapproxy_fqname() << "::_set_actual(p);\n";
+	}
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+    s << "\n// *** End of LifeCycle stuff\n\n";
+  }
 }
 
 void
