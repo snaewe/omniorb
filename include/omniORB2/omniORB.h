@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.4.1  1999/09/15 20:22:30  sll
+  New API omniORB::gateway.
+
   Revision 1.22  1999/09/01 12:57:26  djr
   Added atomic logging class omniORB::logger, and methods logf() and logs().
 
@@ -632,6 +635,36 @@ _CORBA_MODULE_BEG
   //     to this variable.                                              //
   ////////////////////////////////////////////////////////////////////////
 
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // A GIOP gateway can register a handler to accept invocation on an   //
+  // object not in the current address space.                           //
+  // The handler should have the signature:                             //
+  //                                                                    //
+  //          omniORB::gateway::mapTargetAddressToObject_t              //
+  //                                                                    //
+  // The handler may be called concurrently by multi-threads. Hence it  //
+  // must be thread-safe.                                               //
+  //                                                                    //
+  // If the handler cannot handle the target object, it should return   //
+  // 0. The object will be treated as non-existing.                     //
+  // Before the target object is returned, it should have been passed   //
+  // through omni::objectDuplicate(). The ORB will call                 //
+  // omni::objectRelease() when it has finished with it.                //
+  //                                                                    //
+  // The gateway registers the handler with the ORB at runtime          //
+  // using omniORB::gateway::set(). This function is not thread-safe.   //
+  // Calling this function again will replace the old handler with      //
+  // the new one.                                                       //
+  //                                                                    //
+  class gateway {                                                       //
+  public:                                                               //
+    typedef omniObject* (*mapTargetAddressToObject_t) (                 //
+                           const giopStream::requestInfo&);             //
+                                                                        //
+    static void set(mapTargetAddressToObject_t);                        //
+  };                                                                    //
+  ////////////////////////////////////////////////////////////////////////
 
   // Internal configuration variables. Do not use!
 
