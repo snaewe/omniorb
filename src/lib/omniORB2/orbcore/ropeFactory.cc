@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.7  1999/07/02 19:27:21  sll
+ Fixed typo in ropeFactory_iterator.
+
  Revision 1.6  1999/07/02 19:10:29  sll
  Added virtual destructors which have been removed from the header.
 
@@ -173,7 +176,7 @@ ropeFactoryList::~ropeFactoryList() {}
 
 ropeFactoryList_ThreadSafe::~ropeFactoryList_ThreadSafe() {}
 
-ropeFactory_iteractor::~ropeFactory_iterator() { pd_l.unlock(); }
+ropeFactory_iterator::~ropeFactory_iterator() { pd_l.unlock(); }
 
 
 Endpoint::~Endpoint() {
