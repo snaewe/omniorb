@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/11/10 15:41:36  dpg1
+  Native code sets throw BAD_PARAM if they are given a null transmission
+  code set.
+
   Revision 1.1.2.2  2000/11/03 18:49:17  sll
   Separate out the marshalling of byte, octet and char into 3 set of distinct
   marshalling functions.
@@ -198,6 +202,7 @@ void
 NCS_C_UTF_8::marshalChar(cdrStream& stream,
 			 omniCodeSet::TCS_C* tcs, _CORBA_Char c)
 {
+  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
   if (tcs->fastMarshalChar(stream, this, c)) return;
 
   if ((c & 0x80) == 0)
@@ -210,6 +215,7 @@ void
 NCS_C_UTF_8::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
 			   _CORBA_ULong bound, const char* s)
 {
+  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
   if (tcs->fastMarshalString(stream, this, bound, s)) return;
 
   omniCodeSetUtil::BufferU ub;
@@ -261,6 +267,7 @@ NCS_C_UTF_8::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
 _CORBA_Char
 NCS_C_UTF_8::unmarshalChar(cdrStream& stream, omniCodeSet::TCS_C* tcs)
 {
+  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
   _CORBA_Char c;
   if (tcs->fastUnmarshalChar(stream, this, c)) return c;
 
@@ -278,6 +285,7 @@ _CORBA_ULong
 NCS_C_UTF_8::unmarshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
 			     _CORBA_ULong bound, char*& s)
 {
+  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
   _CORBA_ULong len;
   if (tcs->fastUnmarshalString(stream, this, bound, len, s)) return len;
 

@@ -1,3 +1,20 @@
+Fri Nov 10 15:37:46 GMT 2000 dpg1
+=================================
+
+- Missed an update in yesterday's merge.
+
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+
+- Native code sets throw BAD_PARAM if they are given a null
+  transmission code set.
+
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UCS-4.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+
 Thu Nov  9 12:23:16 GMT 2000 dpg1
 =================================
 
