@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.7  2001/06/15 14:31:22  dpg1
+# Updates for 3.0.4 release.
+#
 # Revision 1.1.2.6  2001/04/25 16:55:11  dpg1
 # Properly handle files #included at non-file scope.
 #
@@ -56,7 +59,7 @@
 import string
 
 from omniidl import idlast, idlvisitor
-from omniidl_be.cxx import tyutil, util, id, types
+from omniidl_be.cxx import tyutil, util, id, types, config
 from omniidl_be.cxx.impl import template
 
 import main
