@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.15  1999/06/22 14:56:09  sll
+  Correct type casting in any extraction operator
+
   Revision 1.14  1999/06/18 20:45:49  sll
   Updated to support CORBA 2.3 mapping.
 
@@ -804,7 +807,7 @@ o2be_structure::produce_binary_operators_in_dynskel(std::fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "} else {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "delete _sp; _sp = 0;\n";
+  IND(s); s << "delete (" << fqname() << " *)_sp; _sp = 0;\n";
   IND(s); s << "return 0;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
