@@ -1,4 +1,12 @@
 
+Tue Mar 21 10:56:00 GMT 2000 djs
+================================
+
+- omniidl C++ backend -WbF (generate fragments) output class
+  fixed
+
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+
 Mon Mar 20 15:00:13 GMT 2000 djr
 ================================
 
