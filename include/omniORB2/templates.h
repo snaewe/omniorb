@@ -9,6 +9,10 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/30 20:23:45  sll
+  Remove reference to CORBA::is_nil() etc in _CORBA_ObjRef_Var and
+  _CORBA_ObjRef_Member.
+
   Revision 1.1  1997/01/23 15:20:03  sll
   Initial revision
 
@@ -80,7 +84,7 @@ public:
   inline _CORBA_ObjRef_Var() { pd_objref = T_Helper::_nil(); }
   inline _CORBA_ObjRef_Var(T *p) { pd_objref = p; }
   inline ~_CORBA_ObjRef_Var() { 
-    if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref); 
+    if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref); 
   }
   inline _CORBA_ObjRef_Var(const _CORBA_ObjRef_Var<T,T_Helper> &p);
   inline _CORBA_ObjRef_Var(const _CORBA_ObjRef_Member<T,T_Helper>&);
@@ -105,7 +109,7 @@ public:
   inline _CORBA_ObjRef_Member(T *p) { _ptr = p; }
   inline _CORBA_ObjRef_Member(const _CORBA_ObjRef_Member<T,T_Helper> &p);
   inline ~_CORBA_ObjRef_Member() {
-    if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+    if (!T_Helper::is_nil(_ptr)) T_Helper::release(_ptr);
   }
   inline _CORBA_ObjRef_Member<T,T_Helper> &operator= (T * p);
   inline _CORBA_ObjRef_Member<T,T_Helper> &operator= (const _CORBA_ObjRef_Member<T,T_Helper> &p);
@@ -382,8 +386,8 @@ template <class T,class T_Helper>
 inline
 _CORBA_ObjRef_Var<T,T_Helper>::_CORBA_ObjRef_Var(const _CORBA_ObjRef_Var<T,T_Helper> &p) 
 {
-  if (!CORBA::is_nil(p.pd_objref)) {
-    CORBA::Object::_duplicate(p.pd_objref);
+  if (!T_Helper::is_nil(p.pd_objref)) {
+    T_Helper::duplicate(p.pd_objref);
     pd_objref = p.pd_objref;
   }
   else
@@ -394,8 +398,8 @@ template <class T,class T_Helper>
 inline
 _CORBA_ObjRef_Var<T,T_Helper>::_CORBA_ObjRef_Var(const _CORBA_ObjRef_Member<T,T_Helper>& p)
 {
-  if (!CORBA::is_nil(p._ptr)) {
-    CORBA::Object::_duplicate(p._ptr);
+  if (!T_Helper::is_nil(p._ptr)) {
+    T_Helper::duplicate(p._ptr);
     pd_objref = p._ptr;
   }
   else
@@ -407,7 +411,7 @@ inline
 _CORBA_ObjRef_Var<T,T_Helper> &
 _CORBA_ObjRef_Var<T,T_Helper>::operator= (T * p)
 {
-  if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
+  if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref);
   pd_objref = p;
   return *this;
 }
@@ -417,9 +421,9 @@ inline
 _CORBA_ObjRef_Var<T,T_Helper> &
 _CORBA_ObjRef_Var<T,T_Helper>::operator= (const _CORBA_ObjRef_Var<T,T_Helper> &p)
 {
-  if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
-  if (!CORBA::is_nil(p.pd_objref)) {
-    CORBA::Object::_duplicate(p.pd_objref);
+  if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref);
+  if (!T_Helper::is_nil(p.pd_objref)) {
+    T_Helper::duplicate(p.pd_objref);
     pd_objref = p.pd_objref;
   }
   else
@@ -432,9 +436,9 @@ inline
 _CORBA_ObjRef_Var<T,T_Helper> &
 _CORBA_ObjRef_Var<T,T_Helper>::operator= (const _CORBA_ObjRef_Member<T,T_Helper>& p)
 {
-  if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
-  if (!CORBA::is_nil(p._ptr)) {
-    CORBA::Object::_duplicate(p._ptr);
+  if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref);
+  if (!T_Helper::is_nil(p._ptr)) {
+    T_Helper::duplicate(p._ptr);
     pd_objref = p._ptr;
   }
   else
@@ -446,8 +450,8 @@ template <class T,class T_Helper>
 inline 
 _CORBA_ObjRef_Member<T,T_Helper>::_CORBA_ObjRef_Member(const _CORBA_ObjRef_Member<T,T_Helper> &p)
 {
-  if (!CORBA::is_nil(p._ptr)) {
-    CORBA::Object::_duplicate(p._ptr);
+  if (!T_Helper::is_nil(p._ptr)) {
+    T_Helper::duplicate(p._ptr);
     _ptr = p._ptr;
   }
   else
@@ -459,7 +463,7 @@ inline
 _CORBA_ObjRef_Member<T,T_Helper>&
 _CORBA_ObjRef_Member<T,T_Helper>::operator= (T * p)
 {
-  if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+  if (!T_Helper::is_nil(_ptr)) T_Helper::release(_ptr);
   _ptr = p;
   return *this;
 }
@@ -469,9 +473,9 @@ inline
 _CORBA_ObjRef_Member<T,T_Helper>&
 _CORBA_ObjRef_Member<T,T_Helper>::operator= (const _CORBA_ObjRef_Member<T,T_Helper> &p)
 {
-  if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
-  if (!CORBA::is_nil(p._ptr)) {
-    CORBA::Object::_duplicate(p._ptr);
+  if (!T_Helper::is_nil(_ptr)) T_Helper::release(_ptr);
+  if (!T_Helper::is_nil(p._ptr)) {
+    T_Helper::duplicate(p._ptr);
     _ptr = p._ptr;
   }
   else
@@ -484,9 +488,9 @@ inline
 _CORBA_ObjRef_Member<T,T_Helper>&
 _CORBA_ObjRef_Member<T,T_Helper>::operator= (const _CORBA_ObjRef_Var<T,T_Helper> &p)
 {
-  if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
-  if (!CORBA::is_nil(p.pd_objref)) {
-    CORBA::Object::_duplicate(p.pd_objref);
+  if (!T_Helper::is_nil(_ptr)) T_Helper::release(_ptr);
+  if (!T_Helper::is_nil(p.pd_objref)) {
+    T_Helper::duplicate(p.pd_objref);
     _ptr = p.pd_objref;
   }
   else
@@ -516,7 +520,7 @@ void
 _CORBA_ObjRef_Member<T,T_Helper>::operator<<= (NetBufferedStream &s)
 {
   T* _result = T_Helper::unmarshalObjRef(s);
-  CORBA::release(_ptr);
+  T_Helper::release(_ptr);
   _ptr = _result;
 }
 
@@ -534,7 +538,7 @@ void
 _CORBA_ObjRef_Member<T,T_Helper>::operator<<= (MemBufferedStream &s)
 {
   T* _result = T_Helper::unmarshalObjRef(s);
-  CORBA::release(_ptr);
+  T_Helper::release(_ptr);
   _ptr = _result;
 }
 
