@@ -1,3 +1,11 @@
+Tue Apr 30 15:58:11 BST 2002 dgrisby
+====================================
+
+- omniidl segfault when checking a non-existent identifier is not a forward.
+
+src/tool/omniidl/cxx/idlast.cc
+
+
 Mon Apr 29 19:04:47 BST 2002 dgrisby
 ====================================
 

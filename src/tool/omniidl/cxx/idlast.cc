@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.12  2002/04/30 14:59:37  dgrisby
+// omniidl segfault when checking a non-existent identifier is not a forward.
+//
 // Revision 1.16.2.11  2001/11/08 16:31:20  dpg1
 // Minor tweaks.
 //
@@ -159,6 +162,8 @@ Comment* Comment::saved_      = 0;
 static void
 checkNotForward(const char* file, int line, IdlType* t)
 {
+  if (!t) return;
+
   if (t->kind() == IdlType::ot_structforward) {
     StructForward* f = (StructForward*)((DeclaredType*)t)->decl();
 
@@ -192,11 +197,13 @@ void
 checkValidType(const char* file, int line, IdlType* t)
 {
   t = t->unalias();
+  if (!t) return;  // Ignore if earlier errors.
+
   checkNotForward(file, line, t);
 
-  if (t->kind() == IdlType::tk_sequence) {
+  if (t && t->kind() == IdlType::tk_sequence) {
 
-    while (t->kind() == IdlType::tk_sequence)
+    while (t && t->kind() == IdlType::tk_sequence)
       t = ((SequenceType*)t)->seqType()->unalias();
 
     checkNotForward(file, line, t);
