@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5  1999/01/11 09:45:53  djr
+  *** empty log message ***
+
   Revision 1.4  1999/01/07 15:13:08  djr
   Added singleton class omniInitialRefLister to list the initial object
   references found (if traceLevel >= 15).
@@ -273,7 +276,7 @@ omniInitialRefLister::~omniInitialRefLister()
     omniORB::log <<
       "  Name  : " << name << "\n"
       "  IR ID : " << obj->PR_getobj()->NP_IRRepositoryId() << "\n"
-      "  ObjRef: " << sref << "\n";
+      "  ObjRef: " << (char*)sref << "\n";
   }
 
   omniORB::log.flush();
