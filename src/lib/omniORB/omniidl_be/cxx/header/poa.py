@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  2000/01/10 15:38:55  djs
+# Better name and scope handling.
+#
 # Revision 1.7  2000/01/10 11:01:56  djs
 # Forgot to keep track of names already defined causing a scoping problem.
 #
@@ -61,7 +64,7 @@ import string
 
 from omniidl import idlast, idltype, idlutil
 
-from omniidl.be.cxx import tyutil, name, config, util
+from omniidl.be.cxx import tyutil, name, env, config, util
 
 from omniidl.be.cxx.header import tie
 
@@ -76,23 +79,23 @@ def __init__(stream):
 
 self.__nested = 0
 
-self.__environment = name.Environment()
+#self.__environment = name.Environment()
 
-def addName(name):
-    #print "add " + name + " to " + str(self.__environment)
-    try:
-        self.__environment.add(name)
-    except KeyError:
-        pass
-def enter(scope):
-    # the exception is thrown in the case of a forward declared interface
-    # being properly defined. Needs tidying up?
-    addName(scope)
-    self.__environment = self.__environment.enterScope(scope)
-def leave():
-    self.__environment = self.__environment.leaveScope()
-def currentScope():
-    return self.__environment.scope()
+#def addName(name):
+#    #print "add " + name + " to " + str(self.__environment)
+#    try:
+#        self.__environment.add(name)
+#    except KeyError:
+#        pass
+#def enter(scope):
+#    # the exception is thrown in the case of a forward declared interface
+#    # being properly defined. Needs tidying up?
+#    addName(scope)
+#    self.__environment = self.__environment.enterScope(scope)
+#def leave():
+#    self.__environment = self.__environment.leaveScope()
+#def currentScope():
+#    return self.__environment.scope()
 
 def POA_prefix():
     if not(self.__nested):
@@ -113,8 +116,8 @@ def visitModule(node):
         return
     
     name = tyutil.mapID(node.identifier())
-    enter(name)
-    scope = currentScope()
+    #enter(name)
+    #scope = currentScope()
     
     stream.out("""\
 _CORBA_MODULE @POA_prefix@@name@
@@ -137,7 +140,7 @@ _CORBA_MODULE_BEG
 _CORBA_MODULE_END
 
 """)
-    leave()
+    #leave()
 
 
 def visitInterface(node):
@@ -146,8 +149,10 @@ def visitInterface(node):
     
     iname = tyutil.mapID(node.identifier())
 #    enter(name)
-    scope = currentScope()
-    env = self.__environment
+    #scope = currentScope()
+    #env = self.__environment
+    environment = env.lookup(node)
+    scope = tyutil.scope(node.scopedName())
 
     scopedName = scope + [iname]
     scopedID = idlutil.ccolonName(scopedName)
@@ -173,16 +178,16 @@ public:
                scopedID = scopedID,
                impl_scopedID = impl_scopedID)
 
-    enter(node.identifier())
+    #enter(node.identifier())
     if config.TieFlag():
-        tie.template(env, node, self.__nested)
-    leave()
+        tie.template(environment, node, self.__nested)
+    #leave()
     
 #    leave()
 
 def visitTypedef(node):
-    for d in node.declarators():
-        addName(d.identifier())
+    #for d in node.declarators():
+    #    addName(d.identifier())
 
 
     return
@@ -204,13 +209,13 @@ def visitTypedef(node):
 def visitEnum(node):
     pass
 def visitStruct(node):
-    addName(node.identifier())
+    #addName(node.identifier())
     pass
 def visitUnion(node):
-    addName(node.identifier())
+    #addName(node.identifier())
     pass
 def visitForward(node):
-    addName(node.identifier())
+    #addName(node.identifier())
     pass
 def visitConst(node):
     pass
@@ -219,5 +224,5 @@ def visitDeclarator(node):
 def visitMember(node):
     pass
 def visitException(node):
-    addName(node.identifier())
+    #addName(node.identifier())
     pass

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  2000/01/10 15:39:34  djs
+# Better name and scope handling.
+#
 # Revision 1.11  1999/12/24 18:20:12  djs
 # Builds list of IDL files #included by walking the AST and examining the
 # file() of each Decl node.
@@ -80,6 +83,7 @@ from omniidl.be.cxx import header
 from omniidl.be.cxx import skel
 from omniidl.be.cxx import dynskel
 
+from omniidl.be.cxx import env
 from omniidl.be.cxx import config
 
 import re, sys
@@ -134,6 +138,10 @@ def run(tree, args):
     # build the list of include files
     walker = config.WalkTreeForIncludes()
     tree.accept(walker)
+
+    # build the cache of environments
+    environments = env.WalkTree()
+    tree.accept(environments)
 
     # set the default behaviour
     config.setTypecodeFlag(0)

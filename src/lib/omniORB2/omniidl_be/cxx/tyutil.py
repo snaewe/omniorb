@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.22  2000/01/10 15:39:34  djs
+# Better name and scope handling.
+#
 # Revision 1.21  2000/01/07 20:31:18  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -461,11 +464,11 @@ def objRefTemplate(type, suffix, environment):
 # ------------------------------------------------------------------
 
 def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
-    try:
-        outer_env = environment.leaveScope()
-        environment = outer_env
-    except AttributeError:
-        pass
+    #try:
+    #    outer_env = environment.leaveScope()
+    #    environment = outer_env
+    #except AttributeError:
+    #    pass
     param_type = environment.principalID(type, fully_scope)
     isVariable = isVariableType(type)
     type_dims = typeDims(type)

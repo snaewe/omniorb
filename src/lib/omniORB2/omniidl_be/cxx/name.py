@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  2000/01/10 15:39:34  djs
+# Better name and scope handling.
+#
 # Revision 1.5  2000/01/07 20:31:17  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -77,25 +80,32 @@ class Environment:
     def __init__(self):
         self.__scope = []
         self.__names = {}
+        #self.__old_scope = None
 
     # effectively a copy constructor
     def copy(self):
         environment = Environment()
         environment.__scope = self.__scope[:]
         environment.__names = self.__names.copy()
+        #environment.__old_scope = self.__old_scope
         return environment
 
     # called to enter a new scope
     def enterScope(self, name):
         environment = self.copy()
         environment.__scope.append(name)
-        environment.__old_scope = self
+        #environment.__old_scope = self
         return environment
 
     def leaveScope(self):
         # keep all the names we've defined
-        self.__old_scope.__names = self.__names.copy()
-        return self.__old_scope
+        environment = self.copy()
+        scope = environment.__scope
+        #print "scope = " + repr(scope)
+        del scope[len(scope) - 1]
+        return environment
+        #self.__old_scope.__names = self.__names.copy()
+        #return self.__old_scope
 
     # returns the current scope
     def scope(self):

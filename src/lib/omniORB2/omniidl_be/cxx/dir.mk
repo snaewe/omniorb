@@ -23,6 +23,9 @@ export:: skutil.py
 export:: name.py
 	@(file="name.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: env.py
+	@(file="env.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
 export:: config.py
 	@(file="config.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 

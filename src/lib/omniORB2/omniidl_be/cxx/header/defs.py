@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20  2000/01/10 15:38:55  djs
+# Better name and scope handling.
+#
 # Revision 1.19  2000/01/07 20:31:27  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -102,7 +105,7 @@ import string
 
 from omniidl import idlast, idltype, idlutil
 
-from omniidl.be.cxx import tyutil, util, name, config
+from omniidl.be.cxx import tyutil, util, name, env, config
 
 import defs
 
@@ -120,21 +123,21 @@ self.__insideClass = 0
 # IDL (not C++) scope, should be filtered through tyutil.mapID before
 # being used
 #self.__scope = []
-self.__environment = name.Environment()
+#self.__environment = name.Environment()
 self.__globalScope = name.globalScope()
 #self.__scope = util.Environment()
 
-def enter(scope):
-    #self.__scope.append(scope)
-    self.__environment = self.__environment.enterScope(scope)
-def leave():
-    #self.__scope = self.__scope[0:-1]
-    self.__environment = self.__environment.leaveScope()
-def currentScope():
-    #return self.__scope[:]
-    return self.__environment.scope()
-def addName(name):
-    self.__environment.add(name)
+#def enter(scope):
+#    #self.__scope.append(scope)
+#    self.__environment = self.__environment.enterScope(scope)
+#def leave():
+#    #self.__scope = self.__scope[0:-1]
+#    self.__environment = self.__environment.leaveScope()
+#def currentScope():
+#    #return self.__scope[:]
+#    return self.__environment.scope()
+#def addName(name):
+#    self.__environment.add(name)
 
 
 def __init__(stream):
@@ -154,7 +157,7 @@ def visitModule(node):
     if not(node.mainFile()):
         return
     
-    addName(node.identifier())
+    #addName(node.identifier())
     
     name = tyutil.mapID(node.identifier())
     
@@ -169,12 +172,12 @@ _CORBA_MODULE_BEG
     insideModule = self.__insideModule
     self.__insideModule = 1
 
-    enter(node.identifier())
+    #enter(node.identifier())
     
     for n in node.definitions():
         n.accept(self)
 
-    leave()
+    #leave()
 
     self.__insideModule = insideModule
     if not(isFragment):
@@ -187,17 +190,19 @@ _CORBA_MODULE_END
 def visitInterface(node):
     if not(node.mainFile()):
         return
-    try:
-        addName(node.identifier())
-    except KeyError:
-        pass
+    #try:
+    #    addName(node.identifier())
+    #except KeyError:
+    #    pass
+    name = node.identifier()
+    cxx_name = tyutil.mapID(name)
+    #interface_scope = currentScope()
     
-    name = tyutil.mapID(node.identifier())
-    interface_scope = currentScope()
 #    print "[[[ interface scope = " + repr(interface_scope) + "]]]"
-    enter(node.identifier())    
-    scope = currentScope()
-    environment = self.__environment
+    #enter(node.identifier())
+    outer_environment = env.lookup(node)
+    environment = outer_environment.enterScope(name)
+    scope = environment.scope()
 
     insideInterface = self.__insideInterface
     self.__insideInterface = 1
@@ -270,7 +275,7 @@ public:
 
   // Other IDL defined within this scope.
   """,
-               name = name,
+               name = cxx_name,
                guard = guard)
     # output code for other declarations within this scope
     for n in node.declarations():
@@ -291,8 +296,8 @@ public:
             attrType = c.attrType()
             derefAttrType = tyutil.deref(attrType)
             
-            returnType = tyutil.operationArgumentType(attrType, environment)[0]
-            inType = tyutil.operationArgumentType(attrType, environment)[1]
+            returnType = tyutil.operationArgumentType(attrType, outer_environment)[0]
+            inType = tyutil.operationArgumentType(attrType, outer_environment)[1]
             
             #if tyutil.isObjRef(derefAttrType):
             #    type = tyutil.principalID(derefAttrType, scope) + "_ptr"
@@ -306,8 +311,8 @@ public:
                     attributes.append("void " + attribname + "(" \
                                       + inType + ")")
         elif isinstance(c, idlast.Operation):
-            def argumentTypeToString(arg, virtual = 0, env = environment):
-                return tyutil.operationArgumentType(arg, env, virtual)
+            def argumentTypeToString(arg, virtual = 0, envir = outer_environment):
+                return tyutil.operationArgumentType(arg, envir, virtual)
 
             params = []
             virtual_params = []
@@ -416,7 +421,7 @@ public:
 
 """,
                inherits = objref_inherits,
-               name = name,
+               name = cxx_name,
                operations = operations_str,
                attributes = attributes_str)
     stream.out("""\
@@ -439,7 +444,7 @@ private:
 
 """,
                inherits = impl_inherits,
-               name = name,
+               name = cxx_name,
                virtual_operations = virtual_operations_str,
                virtual_attributes = virtual_attributes_str)
 
@@ -452,9 +457,9 @@ private:
                                                self.__insideClass)
         stream.out("""\
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;
-""", qualifier = qualifier, name = name)
+""", qualifier = qualifier, name = cxx_name)
         
-    leave()
+    #leave()
 
     
 
@@ -464,16 +469,28 @@ def visitForward(node):
     
     # it's legal to have multiple forward declarations
     # of the same name. ignore the duplicates here
+    environment = env.lookup(node)
+    #print "e = " + str(environment)
+    #print 
     try:
-        addName(node.identifier())
-    except KeyError:
+        environment.lookup([None] + node.scopedName())
+        # the name already exists in this scope so we
+        # just ignore it
         return
+    except KeyError:
+        pass
+    #try:
+    #    addName(node.identifier())
+    #except KeyError:
+    #    return
     
+
+    environment = env.lookup(node)
+    scope = environment.scope()
     name = tyutil.mapID(node.identifier())
 
-    scope = currentScope()
-    
     guard = tyutil.guardName(scope + [name])
+    
     stream.out("""\
 #ifndef __@guard@__
 #define __@guard@__
@@ -508,9 +525,10 @@ def visitForward(node):
 def visitConst(node):
     if not(node.mainFile()):
         return
-    
-    scope = currentScope()
-    environment = self.__environment
+
+    environment = env.lookup(node)
+    scope = environment.scope()
+    #environment = self.__environment
     
     constType = node.constType()
     deref_constType = tyutil.deref(constType)
@@ -560,8 +578,9 @@ def visitTypedef(node):
         return
     
     # need to have some way of keeping track of current scope
-    scope = currentScope()
-    environment = self.__environment
+    environment = env.lookup(node)
+    scope = environment.scope()
+    #environment = self.__environment
 
     is_global_scope = not(self.__insideModule or self.__insideInterface)
     
@@ -590,7 +609,7 @@ def visitTypedef(node):
     
     # each one is handled independently
     for d in node.declarators():
-        addName(d.identifier())
+        #addName(d.identifier())
         
         # derivedName is the new typedef'd name
         # alias_dims is a list of dimensions of the type being aliased
@@ -703,12 +722,17 @@ typedef @base@_out @name@_out;
                 objref_base = ""
                 if not(is_CORBA_Object):
                     scopedName = derefType.decl().scopedName()
-                    impl_scopedName = tyutil.scope(scopedName) + \
-                                      ["_impl_" + tyutil.name(scopedName)]
-                    objref_scopedName = tyutil.scope(scopedName) + \
-                                        ["_objref_" + tyutil.name(scopedName)]
-                    impl_name = environment.nameToString(environment.relName(impl_scopedName))
-                    objref_name = environment.nameToString(environment.relName(objref_scopedName))
+                    relName = environment.relName(scopedName)
+                    
+                    impl_scopedName = tyutil.scope(relName) + \
+                                      ["_impl_" + tyutil.name(relName)]
+                    objref_scopedName = tyutil.scope(relName) + \
+                                        ["_objref_" + tyutil.name(relName)]
+                    impl_name = environment.nameToString(impl_scopedName)
+                    objref_name = environment.nameToString(objref_scopedName)
+                    
+                    #impl_name = environment.nameToString(environment.relName(impl_scopedName))
+                    #objref_name = environment.nameToString(environment.relName(objref_scopedName))
                     impl_base = "typedef " + impl_name + "_impl_" + derivedName + ";"
                     objref_base = "typedef " + objref_name + "_objref_" + \
                                   derivedName + ";"
@@ -1077,18 +1101,24 @@ def visitMember(node):
 def visitStruct(node):
     if not(node.mainFile()):
         return
-    addName(node.identifier())
-    
-    name = tyutil.mapID(node.identifier())
-    enter(node.identifier())
+    #addName(node.identifier())
 
-    scope = currentScope()
-    environment = self.__environment
+    name = node.identifier()
+    cxx_name = tyutil.mapID(name)
+    #enter(node.identifier())
+
+    #scope = currentScope()
+    outer_environment = env.lookup(node)
+    environment = outer_environment.enterScope(name)
+    
+    scope = environment.scope()
+    
+    #environment = self.__environment
     insideClass = self.__insideClass
     self.__insideClass = 1
             
     stream.out("""\
-struct @name@ {""", name = name)
+struct @name@ {""", name = cxx_name)
     stream.inc_indent()
         
     if tyutil.isVariableDecl(node):
@@ -1098,7 +1128,7 @@ struct @name@ {""", name = name)
             
     stream.out("""\
 typedef _CORBA_ConstrType_@type@_Var<@name@> _var_type;""",
-               name = name, type = type)
+               name = cxx_name, type = type)
 
     # First pass through the members outputs code for all the user
     # declared new types
@@ -1160,7 +1190,10 @@ _@memtype@ @instname@;""",
                 else:
                     memtype = environment.principalID(memberType)
             else:
-                memtype = environment.principalID(memberType) 
+                memtype = environment.principalID(memberType)
+                #print "environment = " + str(environment)
+                #print "memtype = " + memtype
+                #print
 
 
         for d in m.declarators():
@@ -1184,7 +1217,7 @@ _@memtype@ @instname@;""",
 typedef @name@::_var_type @name@_var;
 
 typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
-""", type = type,name = name)
+""", type = type,name = cxx_name)
 
     self.__insideClass = insideClass
 
@@ -1195,26 +1228,31 @@ typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
                                            self.__insideClass)
         stream.out("""\
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
-                   qualifier = qualifier, name = name)
+                   qualifier = qualifier, name = cxx_name)
 
 
 
     node.written = name
-    leave()
+    #leave()
 
 def visitException(node):
     if not(node.mainFile()):
         return
     
     # the exception's name
-    addName(node.identifier())
+    #addName(node.identifier())
+
+    exname = node.identifier()
+    cxx_exname = tyutil.mapID(exname)
+
+    #enter(node.identifier())
+
+    outer_environment = env.lookup(node)
+    environment = outer_environment.enterScope(exname)
     
-    exname = tyutil.mapID(node.identifier())
-
-    enter(node.identifier())
-
-    scope = currentScope()
-    environment = self.__environment
+    scope = environment.scope()
+    #scope = currentScope()
+    #environment = self.__environment
     insideClass = self.__insideClass
     self.__insideClass = 1
 
@@ -1225,7 +1263,7 @@ def visitException(node):
     stream.out("""\
 class @name@ : public CORBA::UserException {
 public:
-  """, name = exname)
+  """, name = cxx_exname)
 
     # deal with the datamembers and constructors
     data = util.StringStream()
@@ -1278,7 +1316,7 @@ public:
             ctor_args.append(ctor_arg_type + " i_" + name)
     ctor = ""
     if ctor_args != []:
-        ctor = exname + "(" + string.join(ctor_args, ", ") + ");"
+        ctor = cxx_exname + "(" + string.join(ctor_args, ", ") + ");"
             
     if no_members:
         inline = "inline"
@@ -1328,7 +1366,7 @@ private:
 };
 
 """,
-               name = exname, datamembers = str(data),
+               name = cxx_exname, datamembers = str(data),
                constructor = ctor,
                inline = inline, body = body,
                alignedSize = alignedSize)
@@ -1340,21 +1378,27 @@ private:
                                            self.__insideClass)
         stream.out("""\
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;
-""", qualifier = qualifier, name = exname)
+""", qualifier = qualifier, name = cxx_exname)
     
-    leave()
+    #leave()
 
 
 def visitUnion(node):
     if not(node.mainFile()):
         return
     
-    addName(node.identifier())
+    #addName(node.identifier())
     
-    enter(node.identifier())
+    #enter(node.identifier())
 
-    scope = currentScope()
-    environment = self.__environment
+    name = node.identifier()
+    cxx_name = tyutil.mapID(name)
+    outer_environment = env.lookup(node)
+    environment = outer_environment.enterScope(name)
+    
+    scope = environment.scope()
+    #scope = currentScope()
+    #environment = self.__environment
     insideClass = self.__insideClass
     self.__insideClass = 1
     
@@ -1446,7 +1490,6 @@ def visitUnion(node):
     exhaustive = tyutil.exhaustiveMatch(switchType, tyutil.allCaseValues(node))
     implicitDefault = not(hasDefault) and not(exhaustive)
     
-    name = tyutil.mapID(node.identifier())
     if tyutil.isVariableDecl(node):
         fixed = "Variable"
     else:
@@ -1456,7 +1499,7 @@ class @unionname@ {
 public:
 
   typedef _CORBA_ConstrType_@fixed@_Var<@unionname@> _var_type;
-  @unionname@() {""",unionname = name, fixed = fixed)
+  @unionname@() {""",unionname = cxx_name, fixed = fixed)
     stream.inc_indent()
         
     if implicitDefault:
@@ -1474,15 +1517,15 @@ public:
     for section in ['copyconst', 'equalsop']:
         if (section is 'copyconst'):
             stream.out("""\
-  @unionname@(const @unionname@& _value) {""", unionname = name)
+  @unionname@(const @unionname@& _value) {""", unionname = cxx_name)
         else:
             stream.out("""\
-  @unionname@& operator=(const @unionname@& _value) {""", unionname = name)
+  @unionname@& operator=(const @unionname@& _value) {""", unionname = cxx_name)
         stream.inc_indent()
         if not(exhaustive):
             stream.out("""\
     if ((pd__default = _value.pd__default)) {
-      pd__d = _value.pd__d;""", unionname = name)
+      pd__d = _value.pd__d;""", unionname = cxx_name)
             # the default case (if it exists) need initialising here
             for c in node.cases():
                 if c.isDefault:
@@ -1539,7 +1582,7 @@ public:
   }
 
   ~@unionname@() {}
-  """, unionname= name)
+  """, unionname= cxx_name)
             # deal with the discriminator
     stream.out("""\
   
@@ -1942,7 +1985,7 @@ typedef @Name@::_var_type @Name@_var;
 typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
 """,
                isVariable = isVariable,
-               Name = name)
+               Name = cxx_name)
 
     self.__insideClass = insideClass
 
@@ -1952,26 +1995,27 @@ typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
                                            self.__insideClass)
         stream.out("""\
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
-                   qualifier = qualifier, name = name)
+                   qualifier = qualifier, name = cxx_name)
 
-    leave()
+    #leave()
 
 
 def visitEnum(node):
     if not(node.mainFile()):
         return
     
-    addName(node.identifier())
+    #addName(node.identifier())
     
     if hasattr(node,"written"):
         return node.written;
     name = tyutil.mapID(node.identifier())
+    cxx_name = tyutil.mapID(name)
     enumerators = node.enumerators()
     memberlist = map(lambda x: tyutil.name(x.scopedName()), enumerators)
     stream.out("""\
 enum @name@ { @memberlist@ };
 typedef @name@& @name@_out;
-""", name = name, memberlist = string.join(memberlist, ", "))
+""", name = cxx_name, memberlist = string.join(memberlist, ", "))
 
     # TypeCode and Any
     if config.TypecodeFlag():
@@ -1980,8 +2024,8 @@ typedef @name@& @name@_out;
         qualifier = tyutil.const_qualifier(insideModule, insideClass)
         stream.out("""\
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
-                   qualifier = qualifier, name = name)
+                   qualifier = qualifier, name = cxx_name)
     
-    node.written = name
-    return name
+    node.written = cxx_name
+    return cxx_name
 
