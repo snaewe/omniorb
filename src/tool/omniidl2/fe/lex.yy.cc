@@ -13,6 +13,12 @@
 # define lex_output(c) (void)putc(c,yyout)
 #endif
 
+#if defined(__cplusplus)
+#ifndef __EXTERN_C__
+#define __EXTERN_C__
+#endif
+#endif
+
 #if defined(__cplusplus) || defined(__STDC__)
 
 #if defined(__cplusplus) && defined(__EXTERN_C__)
@@ -68,6 +74,8 @@ extern char *yysptr, yysbuf[];
 int yytchar;
 FILE *yyin = {stdin}, *yyout = {stdout};
 extern int yylineno;
+# define YYTYPE unsigned char
+struct yywork { YYTYPE verify, advance; };
 struct yysvf { 
 	struct yywork *yystoff;
 	struct yysvf *yyother;
@@ -1518,7 +1526,8 @@ int yyvstop[] = {
 0,
 0};
 # define YYTYPE unsigned char
-struct yywork { YYTYPE verify, advance; } yycrank[] = {
+//struct yywork { YYTYPE verify, advance; } yycrank[] = {
+struct yywork yycrank[] = {
 0,0,	0,0,	1,3,	0,0,	
 0,0,	0,0,	0,0,	0,0,	
 0,0,	0,0,	1,4,	1,5,	
@@ -2099,7 +2108,7 @@ yylook()
 				}
 # endif
 			yyr = yyt;
-			if ( (int)yyt > (int)yycrank){
+			if ( (long)yyt > (long)yycrank){
 				yyt = yyr + yych;
 				if (yyt <= yytop && yyt->verify+yysvec == yystate){
 					if(yyt->advance+yysvec == YYLERR)	/* error transitions */
@@ -2113,7 +2122,7 @@ yylook()
 					}
 				}
 # ifdef YYOPTIM
-			else if((int)yyt < (int)yycrank) {		/* r < yycrank */
+			else if((long)yyt < (long)yycrank) {		/* r < yycrank */
 				yyt = yyr = yycrank+(yycrank-yyt);
 # ifdef LEXDEBUG
 				if(debug)fprintf(yyout,"compressed state\n");
