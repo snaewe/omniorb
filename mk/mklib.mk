@@ -127,9 +127,19 @@ endif
 ##############################################################################
 ifdef Win32Platform
 
+ifdef BuildSharedLibrary
+
 all:: mkstaticdbug mkshareddbug
 
 export:: mkstaticdbug mkshareddbug
+
+else
+
+all:: mkstaticdbug
+
+export:: mkstaticdbug
+
+endif
 
 #####################################################
 #      Static debug libraries
@@ -161,6 +171,8 @@ veryclean::
 #      DLL debug libraries
 #####################################################
 
+ifdef BuildSharedLibrary
+
 dbugshlib := shareddebug/$(shell $(SharedLibraryDebugFullName) $(namespec))
 MDFLAGS += -p shareddebug/
 
@@ -188,4 +200,5 @@ veryclean::
 	$(RM) shareddebug/*.o
 	@(dir=shareddebug; $(CleanSharedLibrary))
 
+endif
 endif

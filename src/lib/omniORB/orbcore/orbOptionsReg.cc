@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/03/11 12:21:07  dpg1
+  ETS things.
+
   Revision 1.1.2.5  2001/08/21 11:02:18  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -53,6 +56,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <winreg.h>
 

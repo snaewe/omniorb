@@ -141,7 +141,7 @@ DIR_CPPFLAGS += -DCONFIG_ENV='"$(CONFIG_ENV)"'
 
 ##########################################################################
 ifdef UnixPlatform
-#  CXXDEBUGFLAGS = -g
+  CXXDEBUGFLAGS = -g
   DIR_CPPFLAGS += -DUnixArchitecture
   ifdef SunOS
     DIR_CPPFLAGS += -DBSD_COMP   # include BSD flags in ioctl.h
@@ -154,7 +154,9 @@ ifdef Win32Platform
   SHARED_ONLY_OBJS = msvcdllstub.o
   MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
   MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC
+ifndef ETSKernel
   ORB_SRCS += orbOptionsReg.cc
+endif
 endif
 
 #########################################################################

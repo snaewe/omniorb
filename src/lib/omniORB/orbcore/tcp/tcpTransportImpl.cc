@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2002/03/11 12:21:07  dpg1
+  ETS things.
+
   Revision 1.1.2.7  2002/01/09 11:37:46  dpg1
   Platform, constness fixes.
 
@@ -280,6 +283,21 @@ void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
 
 /////////////////////////////////////////////////////////////////////////
 #if defined(NTArchitecture)
+
+#if defined(__ETS_KERNEL__)
+extern "C" int WSAAPI ETS_WSAIoctl(
+  SOCKET s,
+  DWORD dwIoControlCode,
+  LPVOID lpvInBuffer,
+  DWORD cbInBuffer,
+  LPVOID lpvOutBuffer,
+  DWORD cbOutBuffer,
+  LPDWORD lpcbBytesReturned,
+  LPWSAOVERLAPPED lpOverlapped,
+  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+);
+#define WSAIoctl ETS_ESAIoctl
+#endif
 
 static
 void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
