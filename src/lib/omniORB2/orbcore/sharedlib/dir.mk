@@ -399,10 +399,10 @@ all:: $(lib)
 all::
 	@$(MakeSubdirs)
 
-$(lib): $(ORB2_OBJS) omniORB2.def
+$(lib): $(ORB2_OBJS) msvcdllstub.o omniORB2.def
 	(libs="$(NT_EXTRA_LIBS) $(OMNITHREAD_LIB)"; \
          $(RM) $@; \
-         $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) -def:omniORB2.def -IMPLIB:$(implib) $(IMPORT_LIBRARY_FLAGS) $(ORB2_OBJS) $$libs; \
+         $(CXXLINK) -out:$@ -DLL  $(CXXLINKOPTIONS) -def:omniORB2.def -IMPLIB:$(implib) $(IMPORT_LIBRARY_FLAGS) $(ORB2_OBJS) msvcdllstub.o $$libs; \
         )
 
 # omniORB2.def
@@ -458,6 +458,17 @@ export::
 
 gatekeeper.o: gatekeepers/dummystub/gatekeeper.cc
 	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
+
+
+# A feature or a bug in MSVC++ causes it to generate a bunch of references
+# to a list of functions even though none of the these functions are actually
+# used in the DLL. This file contain stub version of these functions. The
+# real function definitions are in the dynamic DLL. Notice that none
+# of the stubs are exported by this DLL so they would not clash with
+# the ones exported by the dynamic DLL.
+msvcdllstub.o: sharedlib/msvcdllstub.cc
+	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
+
 
 endif
 
