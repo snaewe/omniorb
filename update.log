@@ -1,3 +1,11 @@
+Mon Nov 27 18:48:52 GMT 2000 dpg1
+=================================
+
+- jnw's fix for bug with multiply-recursive TypeCode.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Mon Nov 27 16:32:22 GMT 2000 sll
 ================================
 

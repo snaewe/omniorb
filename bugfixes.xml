@@ -8,6 +8,16 @@
 
 <buglist version="3.0.2">
 
+<bug id="10" date="Mon Nov 27 18:48:52 GMT 2000" user="jnw/dpg1">
+
+  <summary>Bug with multiply-recursive TypeCode</summary>
+  <reported>Walter Stroebel</reported>
+  <text>
+  A recursive type in which more than one member recursed to the same
+  type could cause an infinite recursion, leading to a stack overflow.
+  </text>
+</bug>
+
 <bug id="9" date="Thu Nov 23 11:22:57 GMT 2000" user="sll">
   <summary>New platform file for Tru64 5.0</summary>
   <reported>dek_ml@konerding</reported>

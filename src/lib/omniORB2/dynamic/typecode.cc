@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.12  2000/11/27 18:58:29  dpg1
+ * jnw's fix for bug with multiply-recursive TypeCode.
+ *
  * Revision 1.33.6.11  2000/08/30 14:57:12  sll
  * Fixed a bug in the unmarshal code of a typecode of kind tk_objref. The
  * resulting typecode has its field pd_complete left as 0 which should
@@ -4511,12 +4514,12 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 	tc->pd_loop_member = 1;
       else
 	tc->pd_loop_member = 0;
+
+      // Clear the mark
+      tc->pd_mark = 0;
     }
 
-  // Clear the mark
-  tc->pd_mark = 0;
-
-  // And return the least-deep accessible node
+  // Return the least-deep accessible node
   return tc->pd_internal_depth;
 }
 
