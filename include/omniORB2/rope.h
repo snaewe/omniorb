@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.6  1999/01/25 18:06:24  sll
+  Added comment on the side-effect of WrTimedLock and WrUnlock(Strand*).
+
   Revision 1.5  1998/03/19 19:59:01  sll
   Added comment to clarify the sync. requirement of newStrand().
 
@@ -434,6 +437,10 @@ public:
     //        Restore <MUTEX> to the same state as indicated by held_rope_mutex
     //      For WrTimedLock(), WrUnlock(Strand*):
     //        Still held <MUTEX> on exit
+    // XXX  For WrTimedLock(), if the write lock has been acquired, the
+    //                         reference count of the strand is increment by 1.
+    // XXX  For WrUnlock(Strand*), the reference count of the strand is
+    //                         decrement by 1.
     //
     // There are two ways to acquire a Write Lock, 
     //    i.e. WrLock and WrTimedLock.
