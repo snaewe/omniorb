@@ -1,3 +1,60 @@
+Mon Mar 27 18:54:04 BST 2000 sll
+================================
+
+- Support for call multiplexing on a single connection. Now clients can
+  have multiple calls in progress on the same connection at the same time.
+  Servers can spawn more than one worker threads to serve calls coming in
+  on 1 connection.
+
+
+include/omniORB2/giopStream.h
+include/omniORB2/omniORB.h
+include/omniORB2/rope.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/giopStream.cc
+src/lib/omniORB2/orbcore/giopStream10.cc
+src/lib/omniORB2/orbcore/giopStream11.cc
+src/lib/omniORB2/orbcore/giopStream12.cc
+src/lib/omniORB2/orbcore/giopStreamImpl.h
+src/lib/omniORB2/orbcore/relStream.h
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/strand.cc
+src/lib/omniORB2/orbcore/tcpSocket.h
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+src/testsuite/giopTests/dir.mk
+src/testsuite/giopTests/fclt.cc
+src/testsuite/giopTests/fragInterleave.cc
+src/testsuite/giopTests/fragServer.cc
+src/testsuite/giopTests/fragServer2.cc
+src/testsuite/giopTests/fsrv.cc
+
+
+Mon Mar 27 18:16:21 BST 2000 sll
+================================
+
+- On win32:
+   1. make the stub compiles again. 
+   2. Fix a bug in the driver to make it accept and generate stub code in 
+      the current directory when the idl file is named as a full path name.
+   3. Workaround bugs in MSVC++ 5
+   4. Use 290 DLLs
+
+- On Linux
+   1. Added test to recognise Cygnus CodeFusion 1.0 compiler
+   2. Added workaround to bugs in that compiler.
+
+src/tool/omniidl2/driver/drv_preproc.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/ior.cc
+src/lib/omniORB2/orbcore/tcpSocket.cc
+include/omniORB2/CORBA_sysdep.h
+mk/win32.mk
+
 Mon Feb 14 18:03:49 GMT 2000 sll
 ================================
 
