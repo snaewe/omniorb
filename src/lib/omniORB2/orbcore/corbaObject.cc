@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.10  1998/02/27 13:58:55  sll
+  _is_equivalent() now returns the correct answer when a proxy object
+  is tested against its colocated object implmentation. This situation will
+  only occur if the proxy object is created before the object implementation.
+
   Revision 1.9  1997/12/09 17:26:32  sll
   Updated _non_existent() to use the system exception handlers.
 
@@ -38,6 +43,8 @@
   */
 
 #include <omniORB2/CORBA.h>
+#include <ropeFactory.h>
+#include <objectManager.h>
 
 CORBA::Object       CORBA::Object::CORBA_Object_nil;
 
@@ -147,13 +154,25 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
 	return 1;  // other_object is also local
       }
       else {
-	return 0;   // other_object is a proxy 
+	// other_object is a proxy.
+	// Have to check if the proxy actually points back to this object
+	// via the loop back connection
+	if (objptr->_objectManager()->defaultLoopBack() == other_rak.rope())
+	  return 1;
+	else
+	  return 0;
       }
     }
     else {
       // this is a proxy object
       if (!other_objptr->is_proxy()) {
-	return 0;  // other_object is local
+	// other_object is local.
+	// Have to check if this proxy actually points back to the local
+	// object via the loop back connection
+	if (other_objptr->_objectManager()->defaultLoopBack() == rak.rope())
+	  return 1;
+	else
+	  return 0;
       }
       else {
 	// both are proxy objects, check whether they go back to the same
