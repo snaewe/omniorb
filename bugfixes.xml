@@ -8,6 +8,18 @@
 
 <buglist>
 
+<bug id="19" date="Mon Aug 14 20:29:57 BST 2000" user="djs">
+
+  <summary>omniIDL C++ backend didn't always report unsupported IDL
+  constructs (eg wide strings) in the AST.
+  </summary>
+
+  <reported>André Bjärby</reported>
+
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-08/0108.html"/>
+
+</bug>
+
 <bug id="18" date="Fri Jul 21 16:20:43 BST 2000" user="sll">
 
   <summary>If the remote server is not present, a CORBA call on win32
