@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.18.6.2  2000/11/23 11:21:35  sll
+  For DU/Tru64, clear the buffer before passing it to gethostbyname_r().
+
   Revision 1.18.6.1  1999/09/22 14:26:51  djr
   Major rewrite of orbcore to support POA.
 
@@ -121,6 +124,7 @@ again:
   // Use gethostbyname_r() on Digital UNIX
   if (!h.pd_buffer) {
     h.pd_buffer = new char[sizeof(struct hostent_data)];
+    memset(h.pd_buffer,0,sizeof(struct hostent_data));
     // XXX Is it possible that the pointer h.pd_buffer is at a wrong alignment
     //     for a struct hostent_data?
     h.pd_buflen = sizeof(struct hostent_data);
