@@ -1,3 +1,12 @@
+Tue Feb 22 12:23:01 GMT 2000 dpg1
+=================================
+
+- Minor ORB core changes to support omniORBpy
+
+include/omniORB3/omniInternal.h
+include/omniORB3/omniObjRef.h
+src/lib/omniORB2/orbcore/omniInternal.cc
+
 
 Mon Feb 21 09:54:13 GMT 2000 djr
 ================================

@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.1.2.10  2000/02/22 12:25:38  dpg1
+  A few things made `publicly' accessible so omniORBpy can get its hands
+  on them.
+
   Revision 1.1.2.9  2000/01/27 16:31:33  djr
   String_member now initialised to empty string by default.
 
@@ -92,7 +96,7 @@ const char*const                 omni::empty_string = "";
 int                              omni::remoteInvocationCount = 0;
 int                              omni::localInvocationCount = 0;
 
-static omni_tracedmutex*         objref_rc_lock = 0;
+omni_tracedmutex*                omni::objref_rc_lock = 0;
 // Protects omniObjRef reference counting.
 
 // The local object table.  This is a dynamically resized
@@ -1003,9 +1007,9 @@ public:
   void attach() {
     OMNIORB_ASSERT(!objectTable);  OMNIORB_ASSERT(!omni::internalLock);
 
-    omni::internalLock = new omni_tracedmutex;
-    omni::poRcLock = new omni_tracedmutex;
-    objref_rc_lock = new omni_tracedmutex;
+    omni::internalLock   = new omni_tracedmutex;
+    omni::poRcLock       = new omni_tracedmutex;
+    omni::objref_rc_lock = new omni_tracedmutex;
 
     numObjectsInTable = 0;
     minNumObjects = 0;

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/02/22 12:25:38  dpg1
+  A few things made `publicly' accessible so omniORBpy can get its hands
+  on them.
+
   Revision 1.1.2.2  1999/10/27 17:32:09  djr
   omni::internalLock and objref_rc_lock are now pointers.
 
@@ -259,6 +263,7 @@ private:
   //////////////////////////////////////////////////
   friend class omni;
   friend class omniInternal;
+  friend class omniPy;
 
   inline void _setIdentity(omniIdentity* id, omniLocalIdentity* lid) {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
