@@ -1,3 +1,65 @@
+Wed Apr 18 17:40:57 BST 2001 sll
+================================
+
+- Big checkin with the brand new internal APIs.
+- These files have been DELETED!!!!
+
+include/omniORB4/giopDriver.h
+include/omniORB4/giopStream.h
+include/omniORB4/rope.h
+src/lib/omniORB/codeSetUtil.h
+src/lib/omniORB/exceptiondefs.h
+src/lib/omniORB/initialiser.h
+src/lib/omniORB/omniutilities.h
+src/lib/omniORB/dynamicLib.h
+src/lib/omniORB/initRefs.h
+src/lib/omniORB/omniIdentity.h
+src/lib/omniORB/remoteIdentity.h
+src/lib/omniORB/orbcore/firewallProxy.cc
+src/lib/omniORB/orbcore/firewallProxy.h
+src/lib/omniORB/orbcore/giopClient.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopStream10.cc
+src/lib/omniORB/orbcore/giopStream11.cc
+src/lib/omniORB/orbcore/giopStream12.cc
+src/lib/omniORB/orbcore/giopStreamImpl.h
+src/lib/omniORB/orbcore/relStream.cc
+src/lib/omniORB/orbcore/relStream.h
+src/lib/omniORB/orbcore/ropeFactory.cc
+src/lib/omniORB/orbcore/ropeFactory.h
+src/lib/omniORB/orbcore/scavenger.cc
+src/lib/omniORB/orbcore/scavenger.h
+src/lib/omniORB/orbcore/strand.cc
+src/lib/omniORB/orbcore/tcpSocket.cc
+src/lib/omniORB/orbcore/tcpSocket.h
+src/lib/omniORB/orbcore/tcpSocketAux.cc
+src/lib/omniORB/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB/orbcore/anonObject.h
+src/lib/omniORB/orbcore/corbaBoa.h
+src/lib/omniORB/orbcore/corbaOrb.h
+src/lib/omniORB/orbcore/excepthandler.h
+src/lib/omniORB/orbcore/gatekeeper.h
+src/lib/omniORB/orbcore/initFile.h
+src/lib/omniORB/orbcore/libcWrapper.h
+src/lib/omniORB/orbcore/localIdentity.h
+src/lib/omniORB/orbcore/objectAdapter.h
+src/lib/omniORB/orbcore/objectStub.h
+src/lib/omniORB/orbcore/poaimpl.h
+src/lib/omniORB/orbcore/poamanager.h
+src/lib/omniORB/orbcore/taskqueue.h
+src/lib/omniORB/dynamic/anyP.h
+src/lib/omniORB/dynamic/context.h
+src/lib/omniORB/dynamic/deferredRequest.h
+src/lib/omniORB/dynamic/dynAny.h
+src/lib/omniORB/dynamic/dynException.h
+src/lib/omniORB/dynamic/dynamicImplementation.h
+src/lib/omniORB/dynamic/pseudo.h
+src/lib/omniORB/dynamic/request.h
+src/lib/omniORB/dynamic/tcParser.h
+src/lib/omniORB/dynamic/typecode.h
+
+
 Tue Apr 10 11:53:45 BST 2001 dpg1
 =================================
 
