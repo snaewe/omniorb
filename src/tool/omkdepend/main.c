@@ -86,7 +86,6 @@ char	*includedirs[ MAXDIRS + 1 ];
 char	*notdotdot[ MAXDIRS ];
 char	*objprefix = "";
 char	*objsuffix = ".o";
-char	*startat = "# DO NOT DELETE";
 int	width = 78;
 boolean	append = FALSE;
 boolean	printed = FALSE;
@@ -135,8 +134,9 @@ main(argc, argv)
 	char *endmarker = NULL;
 	char *defincdir = NULL;
 
+#ifdef WIN32
 	GetMounts();
-
+#endif
 	ProgramName = argv[0];
 
 	while (psymp->s_name)
@@ -201,7 +201,9 @@ main(argc, argv)
 			/* treat +thing as an option for C++ */
 			if (endmarker && **argv == '+')
 				continue;
+#ifdef WIN32
 			argv[0] = TranslateFileNameU2D(argv[0],0);
+#endif
 			*fp++ = argv[0];
 			continue;
 		}
@@ -229,12 +231,14 @@ main(argc, argv)
 		case 'I':
 			if (incp >= includedirs + MAXDIRS)
 			    fatalerr("Too many -I flags.\n");
-			argv[0] = TranslateFileNameU2D(argv[0],2);
 			*incp++ = argv[0]+2;
 			if (**(incp-1) == '\0') {
 				*(incp-1) = *(++argv);
 				argc--;
 			}
+#ifdef WIN32
+			*(incp-1) = TranslateFileNameU2D(*(incp-1),0);
+#endif
 			break;
 		case 'Y':
 			defincdir = argv[0]+2;
@@ -279,29 +283,6 @@ main(argc, argv)
 				_debugmask = atoi(argv[0]+2);
 #endif
 			break;
-		case 's':
-			if (endmarker) break;
-			startat = argv[0]+2;
-			if (*startat == '\0') {
-				startat = *(++argv);
-				argc--;
-			}
-			if (*startat != '#')
-				fatalerr("-s flag's value should start %s\n",
-					"with '#'.");
-			break;
-		case 'f':
-			if (endmarker) break;
-			if (argv[0][2] == '\0') {
-				makefile = *(++argv);
-				makefile = TranslateFileNameU2D(makefile,0);
-				argc--;
-			} else {
-				argv[0] = TranslateFileNameU2D(argv[0],2);
-				makefile = argv[0]+2;
-			}
-			break;
-
 		case 'm':
 			warn_multiple = TRUE;
 			break;
@@ -324,8 +305,6 @@ main(argc, argv)
 		fatalerr("Too many -I flags.\n");
 	    *incp++ = defincdir;
 	}
-
-	redirect(startat, makefile);
 
 	/*
 	 * catch signals.
@@ -396,16 +375,24 @@ main(argc, argv)
 	 * now peruse through the list of files.
 	 */
 	for(fp=filelist; *fp; fp++) {
+		char *base = base_name(*fp);
+		char *depfile = (char *)malloc(strlen(base) + 3);
+		sprintf(depfile,"%s.d",base);
+		if (!freopen(depfile, "wb", stdout))
+		    fatalerr("cannot open \"%s\"\n", depfile);
+		free(depfile);
+		free(base);
+		printed = FALSE;
 		filecontent = getfile(*fp);
 		ip = newinclude(*fp, (char *)NULL);
 
-		find_includes(filecontent, ip, ip, 0, FALSE);
+		find_includes(filecontent, ip, ip, 0, TRUE);
 		freefile(filecontent);
 		recursive_pr_include(ip, ip->i_file, base_name(*fp));
 		inc_clean();
+		if (printed)
+			printf("\n");
 	}
-	if (printed)
-		printf("\n");
 	exit(0);
 }
 
@@ -497,6 +484,14 @@ char *getline(filep)
 			}
 			continue;
 		}
+		else if (*p == '/' && *(p+1) == '/') { /* consume comments */
+			*p++ = ' ', *p++ = ' ';
+			while (*p && *p != '\n')
+				*p++ = ' ';
+			p--;	/* go back to before newline */
+			lineno++;
+			continue;
+		}
 		else if (*p == '\\') {
 			if (*(p+1) == '\n') {
 				*p = ' ';
@@ -545,34 +540,6 @@ char *base_name(file)
 	return(file);
 }
 
-#if defined(USG) && !defined(CRAY) && !defined(SVR4)
-int rename (from, to)
-    char *from, *to;
-{
-    (void) unlink (to);
-    if (link (from, to) == 0) {
-	unlink (from);
-	return 0;
-    } else {
-	return -1;
-    }
-}
-#endif /* USGISH */
-
-redirect(line, makefile)
-	char	*line,
-		*makefile;
-{
-	struct stat	st;
-	FILE	*fdin, *fdout;
-	char	backup[ BUFSIZ ],
-		buf[ BUFSIZ ];
-	boolean	found = FALSE;
-	int	len;
-
-	if ((fdout = freopen(makefile, "wb", stdout)) == NULL)
-		fatalerr("cannot open \"%s\"\n", backup);
-}
 
 #if NeedVarargsPrototypes
 fatalerr(char *msg, ...)
