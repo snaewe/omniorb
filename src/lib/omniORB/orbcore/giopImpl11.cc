@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.22  2004/05/05 11:02:01  dgrisby
+  Bug in system exception marshalling with GIOP 1.1. Thanks Paul Haesler.
+
   Revision 1.1.4.21  2004/02/06 16:17:45  dgrisby
   Properly handle large giopMaxMsgSize settings.
 
@@ -1278,6 +1281,8 @@ giopImpl11::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 
   int repoid_size;
   const char* repoid = ex._NP_repoId(&repoid_size);
+
+  outputNewMessage(g);
 
   char* hdr = (char*) g->pd_currentOutputBuffer + 
                       g->pd_currentOutputBuffer->start;

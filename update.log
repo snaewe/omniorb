@@ -1,3 +1,11 @@
+Wed May  5 11:52:34 BST 2004 dgrisby
+====================================
+
+- Bug in system exception marshalling with GIOP 1.1. Thanks Paul Haesler.
+
+src/lib/omniORB/orbcore/giopImpl11.cc
+
+
 Fri Apr 30 16:57:13 BST 2004 dgrisby
 ====================================
 
