@@ -1,4 +1,13 @@
 
+Mon Jan 31 11:10:10 GMT 2000 djr
+================================
+
+- Fixed bug in unmarshalling of strings, which would cause a static
+  string object to be free()d.
+
+src/lib/omniORB2/orbcore/corbaString.cc
+
+
 Fri Jan 28 15:43:09 GMT 2000 djr
 ================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14.6.3  2000/01/31 11:12:34  djr
+  Fixed bug in unmarshalling of String_member.
+
   Revision 1.14.6.2  1999/10/14 16:22:07  djr
   Implemented logging when system exceptions are thrown.
 
@@ -145,10 +148,8 @@ _CORBA_String_member::operator >>= (NetBufferedStream& s) const
 void
 _CORBA_String_member::operator <<= (NetBufferedStream& s)
 {
-  if( _ptr ) {
-    omni::freeString(_ptr);
-    _ptr = 0;
-  }
+  if( pd_rel && _ptr )  omni::freeString(_ptr);
+  _ptr = 0;
 
   CORBA::ULong len;
   len <<= s;
@@ -196,10 +197,8 @@ _CORBA_String_member::operator >>= (MemBufferedStream& s) const
 void
 _CORBA_String_member::operator <<= (MemBufferedStream& s)
 {
-  if( _ptr ) {
-    omni::freeString(_ptr);
-    _ptr = 0;
-  }
+  if( pd_rel && _ptr )  omni::freeString(_ptr);
+  _ptr = 0;
 
   CORBA::ULong len;
   len <<= s;
