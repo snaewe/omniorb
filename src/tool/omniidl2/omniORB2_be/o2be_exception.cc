@@ -25,6 +25,10 @@
 
 /*
   $Log$
+  Revision 1.17  1999/06/22 14:53:00  sll
+  Fixed core dump when a member of an exception is a typedef of an interface.
+  Cleanup any extraction operator signature and type casting.
+
   Revision 1.16  1999/06/18 20:46:24  sll
   Updated to support CORBA 2.3 mapping.
 
@@ -233,6 +237,9 @@ o2be_exception::produce_hdr(std::fstream &s)
 
       switch (ntype) {
       case o2be_operation::tObjref:
+ 	while (decl->node_type() == AST_Decl::NT_typedef) {
+ 	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+ 	}
 	s << o2be_interface::narrow_from_decl(decl)
 	  ->unambiguous_objref_name(this);
 	break;
@@ -424,6 +431,9 @@ o2be_exception::produce_skel(std::fstream &s)
 	s << ((mapping.is_const) ? "const ":"");
 	switch (ntype) {
 	case o2be_operation::tObjref:
+ 	  while (decl->node_type() == AST_Decl::NT_typedef) {
+ 	    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+ 	  }
 	  s << o2be_interface::narrow_from_decl(decl)
 	    ->unambiguous_objref_name(this);
 	  break;
@@ -1038,7 +1048,7 @@ o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
   //////////////////////// Any extraction operator /////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a,const "
 	    << fqname() << "*& _sp) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "_sp = (" << fqname() << " *) _a.PR_getCachedData();\n";
@@ -1050,13 +1060,13 @@ o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
   IND(s); s << "if (_a.PR_unpackTo(_0RL_tc_" << _idname()
 	    << ", &_0RL_tcdesc)) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "((CORBA::Any *)&_a)->PR_setCachedData(_sp, "
+  IND(s); s << "((CORBA::Any *)&_a)->PR_setCachedData((void*)_sp, "
 	    << "_0RL_delete_" << _idname() << ");\n";
   IND(s); s << "return 1;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "} else {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "delete _sp;_sp = 0;\n";
+  IND(s); s << "delete (" << fqname() << " *)_sp;_sp = 0;\n";
   IND(s); s << "return 0;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
@@ -1066,7 +1076,7 @@ o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
   IND(s); s << "CORBA::TypeCode_var _0RL_tctmp = _a.type();\n";
   IND(s); s << "if (_0RL_tctmp->equivalent(_0RL_tc_" << _idname()
 	    << ")) return 1;\n";
-  IND(s); s << "delete _sp; _sp = 0;\n";
+  IND(s); s << "delete (" << fqname() << " *)_sp;_sp = 0;\n";
   IND(s); s << "return 0;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
@@ -1077,8 +1087,8 @@ o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
 	    << canonical_name()
 	    << "(CORBA::Any& a,const CORBA::Exception& e) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "const "<< fqname()<< " & ex = (const "<< fqname() <<" &) e;\n";
-  IND(s); s << "operator<<=(a,ex);\n";
+  IND(s); s << "const "<< fqname()<< " & _ex = (const "<< fqname() <<" &) e;\n";
+  IND(s); s << "operator<<=(a,_ex);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -1086,8 +1096,8 @@ o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
 	    << canonical_name()
 	    << " (CORBA::Any& a,const CORBA::Exception* e) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "const "<< fqname()<< " * ex = (const "<< fqname() <<" *) e;\n";
-  IND(s); s << "operator<<=(a,ex);\n";
+  IND(s); s << "const "<< fqname()<< " * _ex = (const "<< fqname() <<" *) e;\n";
+  IND(s); s << "operator<<=(a,_ex);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
