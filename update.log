@@ -1,3 +1,11 @@
+
+Fri Nov 14 17:29:16 GMT 1997 tjr
+================================
+
+mk/platforms/alpha_osf1_3.2.mk	- add -O when compiling C programs
+mk/platforms/alpha_osf1_4.0.mk	- add -O when compiling C programs
+
+
 Fri Oct 31 17:24:36 GMT 1997 tjr
 ================================
 
