@@ -37,7 +37,7 @@ static omni_mutex print_mutex;
 
 int main(int argc, char** argv)
 {
-    unsigned long s1, s2, n1, n2;
+    unsigned long s1, s2, n1, n2, sum = 0;
     char buf[20];
 
     if ((argc != 2) || (argv[1][0] == '-')) {
@@ -48,11 +48,13 @@ int main(int argc, char** argv)
     loop_iterations = atoi(argv[1]);
 
     omni_thread::get_time(&s1,&n1);
-    for (int i = 0; i < loop_iterations; i++)
-	;
+
+    for (int i = 0; i < loop_iterations; i++) {
+        sum += (1 - 2 * (i & 1)) * i * i;
+    }
     omni_thread::get_time(&s2,&n2);
 
-    if (n2 > n1) {
+    if (n2 >= n1) {
 	n2 -= n1;
 	s2 -= s1;
     } else {
@@ -94,9 +96,10 @@ static void func(void* arg)
     while (1) {
 	PRINTMSG(cout << name << ": entering 1st compute-bound loop\n");
 
-        int i;
-	for (i = 0; i < loop_iterations; i++)
-	    ;
+        int i; long sum = 0;
+	for (i = 0; i < loop_iterations; i++) {
+	    sum += (1 - 2 * (i & 1)) * i * i;
+	}
 
 	PRINTMSG(cout << name << ": left compute-bound loop; yielding\n");
 

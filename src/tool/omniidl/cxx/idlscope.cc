@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.9  2001/02/20 11:25:12  dpg1
+// Changes for Digital Unix 4.0E.
+//
 // Revision 1.11.2.8  2000/11/30 11:40:48  dpg1
 // Add -nc option to omniidl to accept invalid IDL with identifiers
 // differing only by case.
@@ -341,7 +344,7 @@ init()
 {
   const char* file = "<built in>";
 
-  assert(!global_);
+  assert(global_ == 0);
 
   global_  = new Scope(0, Scope::S_GLOBAL, 0, file, 0);
   Scope* s = global_->newModuleScope("CORBA", file, 1);
@@ -357,7 +360,7 @@ void
 Scope::
 clear()
 {
-  assert(global_);
+  assert(global_ != 0);
   delete global_;
   global_ = 0;
 }
@@ -438,9 +441,9 @@ void
 Scope::
 endScope()
 {
-  assert(current_);
+  assert(current_ != 0);
   current_ = current_->parent();
-  assert(current_);
+  assert(current_ != 0);
 }
 
 // Scope creation functions
@@ -1261,7 +1264,7 @@ remEntry(Scope::Entry* re)
   else {
     Entry *e;
     for (e = entries_; e && (e->next() != re); e = e->next());
-    assert(e);
+    assert(e != 0);
     e->next_ = re->next();
     if (!e->next_) last_ = e;
   }

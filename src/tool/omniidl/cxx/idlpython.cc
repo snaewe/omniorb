@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.19  2001/02/20 11:25:12  dpg1
+// Changes for Digital Unix 4.0E.
+//
 // Revision 1.15.2.18  2001/01/05 16:04:17  dpg1
 // Error in import exception handling when omniidl is an executable.
 //
@@ -184,8 +187,8 @@ static inline PyObject* MyPyLong_FromLongLong(IDL_LongLong ll)
 #endif
 
 
-#define ASSERT_RESULT     if (!result_) PyErr_Print(); assert(result_)
-#define ASSERT_PYOBJ(pyo) if (!pyo)     PyErr_Print(); assert(pyo)
+#define ASSERT_RESULT     if (result_ == 0) PyErr_Print(); assert(result_ != 0)
+#define ASSERT_PYOBJ(pyo) if (pyo == 0)     PyErr_Print(); assert(pyo != 0)
 
 class PythonVisitor : public AstVisitor, public TypeVisitor {
 public:
