@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.19  1998/04/18 10:06:25  sll
+ Added section for Borland C++. (Not actually working yet.)
+
  Revision 1.18  1998/04/09 19:17:59  sll
  Extra macros defined for specifying initializers in the declaration
  of integral constants.
@@ -115,6 +118,10 @@
 #define HAS_Cplusplus_Namespace
 #define HAS_Std_Namespace
 #endif
+
+#elif defined(__BCPLUSPLUS__)
+#define HAS_Cplusplus_Namespace
+
 #endif
 
 #if defined(__hpux__)
