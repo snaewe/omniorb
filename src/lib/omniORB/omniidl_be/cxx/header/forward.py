@@ -28,8 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.8.2.1  2000/07/17 10:35:46  sll
-# Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+# Revision 1.8.2.2  2000/10/12 15:37:51  sll
+# Updated from omni3_1_develop.
+#
+# Revision 1.9.2.1  2000/08/21 11:35:17  djs
+# Lots of tidying
 #
 # Revision 1.9  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
@@ -78,7 +81,7 @@
 """Produce ancillary forward declarations for the header file"""
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, config, id
+from omniidl_be.cxx import config, id
 from omniidl_be.cxx.header import template
 
 import forward

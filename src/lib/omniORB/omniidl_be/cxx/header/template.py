@@ -28,11 +28,27 @@
 
 # $Id$
 # $Log$
-# Revision 1.5.2.1  2000/07/17 10:35:48  sll
-# Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+# Revision 1.5.2.2  2000/10/12 15:37:51  sll
+# Updated from omni3_1_develop.
+#
+# Revision 1.6.2.2  2000/08/21 11:35:18  djs
+# Lots of tidying
+#
+# Revision 1.6.2.1  2000/08/02 10:52:02  dpg1
+# New omni3_1_develop branch, merged from omni3_develop.
 #
 # Revision 1.6  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.3.2.15  2000/07/26 15:29:11  djs
+# Missing typedef and forward when generating BOA skeletons
+#
+# Revision 1.3.2.14  2000/07/24 09:35:20  dpg1
+# Adding the missing constructor meant that there was no longer a
+# default constructor.
+#
+# Revision 1.3.2.13  2000/07/24 10:17:31  djs
+# Added missing BOA skeleton constructor
 #
 # Revision 1.3.2.12  2000/07/04 12:57:55  djs
 # Fixed Any insertion/extraction operators for unions and exceptions
@@ -117,6 +133,15 @@ main = """\
 #include <omniORB3/CORBA.h>
 #endif
 
+#ifndef  USE_core_stub_in_nt_dll
+# define USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+#ifndef  USE_dyn_stub_in_nt_dll
+# define USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+
+@cxx_direct_include@
+
 @includes@
 
 #ifdef USE_stub_in_nt_dll
@@ -164,6 +189,15 @@ main = """\
 @operators@
 
 @marshalling@
+
+#ifdef   USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+# undef  USE_core_stub_in_nt_dll
+# undef  USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+#ifdef   USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+# undef  USE_dyn_stub_in_nt_dll
+# undef  USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
 
 #endif  // __@guard@_hh__
 """
@@ -222,13 +256,14 @@ public:
 ##
 ## Interfaces
 ##
-interface_begin = """\
+interface_Helper = """\
 #ifndef __@guard@__
 #define __@guard@__
 
 class @name@;
 class _objref_@name@;
 class _impl_@name@;
+@class_sk_name@
 typedef _objref_@name@* @name@_ptr;
 typedef @name@_ptr @name@Ref;
 
@@ -295,7 +330,6 @@ class _objref_@name@ :
 {
 public:
   @operations@
-  @attributes@
 
   inline _objref_@name@() { _PR_setobj(0); }  // nil
   _objref_@name@(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
@@ -331,8 +365,7 @@ class _impl_@name@ :
 public:
   virtual ~_impl_@name@();
 
-  @virtual_operations@
-  @virtual_attributes@
+  @operations@
   
 public:  // Really protected, workaround for xlC
   virtual _CORBA_Boolean _dispatch(GIOP_S&);
@@ -347,9 +380,11 @@ private:
 interface_sk = """\
 class _sk_@name@ :
   public virtual _impl_@name@,
-  @sk_inherits@
+  @inherits@
 {
 public:
+  _sk_@name@() {}
+  _sk_@name@(const omniOrbBoaKey&);
   virtual ~_sk_@name@();
   inline @name@::_ptr_type _this() {
     return (@name@::_ptr_type) omniOrbBoaServant::_this(@name@::_PD_repoId);
@@ -437,6 +472,7 @@ typedef @base@_Helper @name@_Helper;
 typedef @base@_var @name@_var;
 typedef @base@_out @name@_out;
 """
+
 
 typedef_enum_oper_friend = """\
 // Need to declare <<= for elem type, as GCC expands templates early

@@ -28,11 +28,22 @@
 
 # $Id$
 # $Log$
-# Revision 1.14.2.1  2000/07/17 10:35:44  sll
-# Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+# Revision 1.14.2.2  2000/10/12 15:37:49  sll
+# Updated from omni3_1_develop.
 #
-# Revision 1.15  2000/07/13 15:26:01  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.15.2.3  2000/09/14 16:03:03  djs
+# Remodularised C++ descriptor name generator
+# Bug in listing all inherited interfaces if one is a forward
+# repoID munging function now handles #pragma ID in bootstrap.idl
+# Naming environments generating code now copes with new IDL AST types
+# Modified type utility functions
+# Minor tidying
+#
+# Revision 1.15.2.2  2000/08/21 11:34:37  djs
+# Lots of omniidl/C++ backend changes
+#
+# Revision 1.15.2.1  2000/08/07 17:48:13  dpg1
+# Merge from omni3_develop again.
 #
 # Revision 1.12.2.8  2000/06/28 13:59:04  dpg1
 # Remove dependency on traceback module.
@@ -123,17 +134,17 @@ except:
     have_traceback = 0
 
 
-# -----------------------------------------------------------------
-# Fatal error handling function
+## Fatal error handling function ##################################
+##
 def fatalError(explanation):
     if config.state['Debug']:
         # don't exit the program in debug mode...
         print "omniidl: fatalError occurred, in debug mode."
         for line in string.split(explanation, "\n"):
             print ">> " + line
-        print "Configuration state:"
-        print "-------------------------"
-        config.state.dump()
+        #print "Configuration state:"
+        #print "-------------------------"
+        #config.state.dump()
 
         if have_traceback:
             print "Stack:"
@@ -142,8 +153,7 @@ def fatalError(explanation):
             print "Exception:"
             print "-------------------------"
             traceback.print_exc()
-            sys.exit(-1)
-            return
+        sys.exit(1)
     
     lines = string.split(explanation, "\n")
     lines = [ "Fatal error in C++ backend", "" ] + lines
@@ -158,7 +168,7 @@ For more information (mailing list archives, bug reports etc) please visit
 the webpage:
   http://www.uk.research.att.com/omniORB/omniORB.html
 """)
-    sys.exit(-1)
+    sys.exit(1)
 
 # Called whenever an unsupported IDL construct is found in the input
 # (necessary because the front end supports all the new CORBA 2.3
@@ -168,196 +178,13 @@ def unsupportedIDL():
 Unsupported IDL construct encountered in input.
 
 omniORB does not currently support:
-  IDL types longlong, longdouble, wchar, wstring, fixed, valuetype
+  IDL types longdouble, wchar, wstring, fixed, valuetype
 """
     fatalError(e)
     
 
-# ------------------------------------------------------------------
-# Generic output utilities
-
-# Stream is a wrapper around a python file stream
-# StringStream is a string buffer with a stream interface
-#
-# Holes in output template string can consist of:
-#   Strings - inserted as is
-#   StringStreams - converted into strings and inserted
-#   Integers - converted into strings (using str) and inserted
-#   Functions - stream is updated to reflect the current indent level
-#      and the function is applied (permitting template driven code
-#      rather than code-driving-template style)
-#
-# Multiline strings are inserted at the same indent level eg
-#
-# ~~~~~          ~~~~~
-#   @foo@   ->     ~~~~~~
-#                  ~~~~~~
-# ~~~~~          ~~~~~              
-#
-# Entire lines are buffered and if they consist of a preprocessor
-# directive ( ^\s*# ) the preceeding whitespace is trimmed.
-#
-# Note that a line which is empty apart from a hole is still a complete
-# line even if the hole itself is empty. This commonly causes large blocks of
-# empty lines in the output. For aesthetic effect, runs of more than 1 empty
-# line are removed.
-
-import re, string
-
-# dummy function which exists to get a handle on its type
-def fn():
-    pass
-
-class Stream:
-    """Test output stream, same as omniidl.output.Stream but with an
-       indirection (through write method)"""
-    def __init__(self, file, indent_size = 2):
-        self.indent = 0
-        self.istring = " " * indent_size
-        self.file = file
-
-        self.pre_indent = ""
-        self.line_buffer = ""
-
-        self.last_line_empty = self.false
-
-    function_type = type(fn)
-    integer_type = type(1)
-    string_type = type("foo")
-    true = 1 == 1
-    false = 1 == 0
-
-    regex = re.compile(r"@([^@]*)@")
-
-    def inc_indent(self): self.indent = self.indent + 1
-    def dec_indent(self): self.indent = self.indent - 1
-    def reset_indent(self): self.indent = 0
-    def out(self, text, ldict={}, **dict):
-        """Output a multi-line string with indentation and @@ substitution."""
-
-        dict.update(ldict)
-
-        def replace(match, dict=dict):
-            if match.group(1) == "": return "@"
-            return eval(match.group(1), globals(), dict)
-
-        for l in string.split(text, "\n"):
-            is_literal_text = 1 == 0
-            tokens = string.split(l, "@")
-            if tokens == []: continue
-
-            pre_indent = self.istring * self.indent
-            if string.lstrip(tokens[0]) == "":
-                pre_indent = pre_indent + tokens[0]
-                is_literal_text = not(is_literal_text)
-                tokens = tokens[1:]
-
-            start_of_line = self.true
-            for token in tokens:
-                is_literal_text = not(is_literal_text)
-
-                
-                if is_literal_text:
-                    if start_of_line:
-                        self.write(self.pre_indent + pre_indent)
-                    self.write(token)    
-                else:
-                    thing = eval(token, globals(), dict)
-
-                    expanded = ""
-                    if isinstance(thing, self.string_type):
-                        expanded = thing
-                    elif isinstance(thing, StringStream):
-                        expanded = str(thing)
-                    elif isinstance(thing, self.function_type):
-                        old_indent_str = self.pre_indent
-                        old_indent_level = self.indent
-                        self.indent = 0
-                        self.pre_indent = self.pre_indent + pre_indent
-                        apply(thing)
-                        self.pre_indent = old_indent_str
-                        self.indent = old_indent_level
-                        continue
-                    elif isinstance(thing, self.integer_type) or \
-                         hasattr(thing, "__str__"):
-                        expanded = str(thing)
-                    else:
-                        raise "What kind of type is " + repr(thing)
-
-                    lines = string.split(expanded, "\n")
-                    for n in range(0, len(lines)):
-                        if start_of_line:
-                            self.write(self.pre_indent + pre_indent)
-
-                        start_of_line = self.false
-
-                        self.write(lines[n])
-                        if n < (len(lines) - 1):
-                            self.write("\n")
-                            start_of_line = self.true
-
-                start_of_line = self.false
-                
-            self.write("\n")
-
-    def niout(self, text, ldict={}, **dict):
-        """Output a multi-line string without indentation."""
-
-        dict.update(ldict)
-
-        def replace(match, dict=dict):
-            if match.group(1) == "": return "@"
-            return eval(match.group(1), globals(), dict)
-
-        for l in string.split(self.regex.sub(replace, text), "\n"):
-            self.write(l)
-            self.write("\n")
-
-    def preproc(self):
-        lstrip = string.lstrip(self.line_buffer)
-        if (lstrip != "") and (lstrip[0] == "#"):
-            self.line_buffer = lstrip
-        
-    def write(self, text):
-        if text == "\n":
-            self.preproc()
-
-            this_line_empty = string.lstrip(self.line_buffer) == ""
-            if not(self.last_line_empty and this_line_empty):
-                self.writeln()
-            else:
-               self.line_buffer = ""
-            self.last_line_empty = this_line_empty
-            
-            return
-        self.line_buffer = self.line_buffer + text
-
-    def writeln(self):
-        self.file.write(self.line_buffer)
-        self.file.write("\n")
-        self.line_buffer = ""
-
-
-class StringStream(Stream):
-    """Writes to a string buffer rather than a file."""
-    def __init__(self, indent_size = 2):
-        Stream.__init__(self, None, indent_size)
-        self.__buffer = ""
-
-    def writeln(self):
-        self.__buffer = self.__buffer + self.line_buffer + "\n"
-        self.line_buffer = ""
-
-    def __str__(self):
-        return self.__buffer
-
-    def __add__(self, other):
-        return self.__buffer + str(other)
-
-
-# ------------------------------------------------------------------
-# Set manipulation functions
-
+## Set manipulation functions ######################################
+##
 def union(a, b):
     result = a[:]
     for x in b:
@@ -387,9 +214,8 @@ def setify(set):
 
     return new_set
 
-# ------------------------------------------------------------------
-# List manipulation functions
-
+## List manipulation functions #####################################
+##
 def zip(a, b):
     if a == [] or b == []: return []
     return [(a[0], b[0])] + zip(a[1:], b[1:])
@@ -401,46 +227,15 @@ def fold(list, base, fn):
     rest = [first] + list[2:]
     return fold(rest, base, fn)
 
-def append(x, y):
-    return x + y
-
-# ------------------------------------------------------------------
-# Useful C++ things
-
-# Build a loop iterating over every element of a multidimensional
-# thing and return the indexing string
-def start_loop(where, dims, prefix = "_i"):
-    index = 0
-    istring = ""
-    iter_type = "CORBA::ULong"
-    for dimension in dims:
-        where.out("""\
-for (@iter_type@ @prefix@@n@ = 0;@prefix@@n@ < @dim@;_i@n@++) {""",
-                  iter_type = iter_type,
-                  prefix = prefix,
-                  n = str(index),
-                  dim = str(dimension))
-        where.inc_indent()
-        istring = istring + "[" + prefix + str(index) + "]"
-        index = index + 1
-    return istring
-
-# Finish the loop
-def finish_loop(where, dims):
-    for dummy in dims:
-        where.dec_indent()
-        where.out("}")
-    
-# Create a nested block as a container and call start_loop
-def block_begin_loop(string, full_dims):
-    iter_type = "CORBA::ULong"
-    string.out("{")
-    string.inc_indent()
-    return start_loop(string, full_dims)
-
-# finish the loop and close the nested block
-def block_end_loop(string, full_dims):
-    finish_loop(string, full_dims)
-            
-    string.dec_indent()
-    string.out("}")
+## Assorted other functions ########################################
+##
+class Stack:
+    def __init__(self):
+        self.__list = []
+    def push(self, thing):
+        self.__list.append(thing)
+    def pop(self):
+        if self.__list == []: raise "Stack Empty"
+        thing = self.__list[-1]
+        self.__list = self.__list[0:-1]
+        return thing

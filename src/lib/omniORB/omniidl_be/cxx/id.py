@@ -65,6 +65,11 @@ class Name:
         self.__prefix = ""
         self.__suffix = ""
 
+    def __cmp__(self, other):
+        if not(isinstance(other, Name)): return 1
+        return self.fullyQualify() == other.fullyQualify()
+
+
     def simple(self, cxx = 1):
         """simple(id.Name, cxx boolean): string
            Returns the 'simple' part of the name with the scope removed"""
@@ -91,7 +96,7 @@ class Name:
            Add a prefix to the name
                ie ::A::B::C -> ::A::B::_objref_C"""
         new = Name(self.__scopedName)
-        new.__prefix = prefix
+        new.__prefix = prefix + self.__prefix
         new.__suffix = self.__suffix
         return new
 
@@ -101,7 +106,7 @@ class Name:
                ie ::A::B::C -> ::A::B::C_ptr"""
         new = Name(self.__scopedName)
         new.__prefix = self.__prefix
-        new.__suffix = suffix
+        new.__suffix = self.__suffix + suffix
         return new
 
     def __map_cxx(self):
@@ -109,7 +114,7 @@ class Name:
         # Maps an IDL name into a cxx one with proper escaping
         return map(mapID, self.__scopedName)
     
-    def fullyQualify(self, cxx = 1, include_root = 0):
+    def fullyQualify(self, cxx = 1):
         """fullyQualify(id.Name, cxx boolean, include_root boolean): string
            Returns a fully qualified C++ name (initial root :: optional)"""
         if cxx: sn = self.__map_cxx()
@@ -117,10 +122,7 @@ class Name:
 
         sn = self.__apply_presuffix(sn)
 
-        if include_root: name = "::"
-        else:            name = ""
-        
-        return name + string.join(sn, "::")
+        return string.join(sn, "::")
 
     def fullName(self):
         """fullName(id.Name): string list
@@ -164,7 +166,7 @@ class Name:
         relName = self.relName(environment)
         if relName == None:
             # must fully qualify from the root
-            return self.fullyQualify(cxx = cxx, include_root = 1)
+            return "::" + self.fullyQualify(cxx = cxx)
 
         if cxx: relName = map(mapID, relName)
         relName = self.__apply_presuffix(relName)
@@ -180,8 +182,33 @@ class Name:
             return re.sub(r"\W", "_", text)
         scopedName = map(escapeChars, self.__scopedName[:])
 
-        return string.join(scopedName, "_m")
-        
+        return string.join(self.__apply_presuffix(scopedName), "_m")
+
+    # comment copied from src/tool/omniidl2/omniORB2_be/o2be_interface.cc:
+
+    # MSVC {4.2,5.0} cannot deal with a call to a virtual member
+    # of a base class using the member function's fully/partially
+    # scoped name. Have to use the alias for the base class in the
+    # global scope to refer to the virtual member function instead.
+    #
+    # We scan all the base interfaces to see if any of them has to
+    # be referred to by their fully/partially qualified names. If
+    # that is necessary, we generate a typedef to define an alias for
+    # this base interface. This alias is used in the stub generated below
+    #
+    # FIXME: is this a solution to the OMNI_BASE_CTOR stuff below?
+    #
+    def flatName(self):
+        return string.join(self.fullName(), "_")
+    
+    def needFlatName(self, environment):
+        # does the name have scope :: qualifiers
+        relName = self.relName(environment)
+        #if not(relName): return 0
+            
+        return len(relName) > 1
+
+
     def hash(self):
         """hash(id.Name): string
            Returns a hashable unique key for this object"""
@@ -275,14 +302,21 @@ class Environment:
 # (facilitates multiple passes of the AST, by precaching naming info)
 id._environments = None
 
-# modules can't emulate sequence types?
+# List of predefined names
+id._predefined_names =  [ ["CORBA", "Object"] ]
+
+def predefine_decl(decl):
+    id._predefined_names.append(decl.scopedName())
+
+
+# Could annotate the tree instead?
 def lookup(node):
     """lookup : AST node -> Environment"""
     try:
         return id._environments[node]
     except KeyError:
         util.fatalError("Failed to find environment corresponding to node" +\
-                        " (= " + repr(node) + ")")
+                        " (= " + repr(node.scopedName()) + ")")
 
 class WalkTree(idlvisitor.AstVisitor):
     """Walks over the AST once building the hash of
@@ -311,14 +345,21 @@ class WalkTree(idlvisitor.AstVisitor):
         id._environments = {}
         # Names which are predefined
         self.__env = Environment()
-        predefined = [ ["CORBA", "Object"] ]
-        for scopedName in predefined:
-            self.__env.addName(scopedName)
+
+        for name in id._predefined_names:
+            self.__env.addName(name)
+
         
     # Tree walking functions
     def visitAST(self, node):
         for n in node.declarations():
             n.accept(self)
+
+        self.__cache(node)
+
+    def visitDeclRepoId(self, node):
+        name = node.identifier()
+        self.__add(name)
 
         self.__cache(node)
             

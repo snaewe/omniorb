@@ -29,7 +29,7 @@
 import string
 
 from omniidl import idltype, idlast
-from omniidl_be.cxx import util, config, id, tyutil
+from omniidl_be.cxx import util, config, id
 
 # direction constants
 IN     = 0
@@ -38,8 +38,7 @@ OUT    = 2
 RET    = 3
 
 # we don't support these yet
-unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longlong,
-                        idltype.tk_ulonglong, idltype.tk_longdouble,
+unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longdouble,
                         idltype.tk_wchar, idltype.tk_wstring,
                         idltype.tk_fixed, idltype.tk_value,
                         idltype.tk_value_box, idltype.tk_native,
@@ -177,6 +176,10 @@ class Type:
 
         util.fatalError("Unknown type encountered (kind = " + str(kind) + ")")
         return
+
+    def op_is_pointer(self, direction):
+        if not(self.array()) and self.deref().string(): return 0
+        return self.__argmapping(direction)[2]
 
     def __var_argmapping(self, direction):
         # __var_argmapping(types.Type, direction): const * reference
@@ -443,12 +446,16 @@ class Type:
         if kind in [ idltype.tk_short, idltype.tk_ushort ]:
             return str(value)
         # careful with long ints to avoid "L" postfix
-        if kind in [ idltype.tk_long, idltype.tk_longlong,
-                     idltype.tk_ulong, idltype.tk_ulonglong ]:
+        if kind in [ idltype.tk_long, idltype.tk_ulong ]:
             s = str(value)
             if s[-1] == 'L':
                 return s[0:-1]
             return s
+        if kind in [ idltype.tk_longlong, idltype.tk_ulonglong ]:
+            s = str(value)
+            if s[-1] == 'L':
+                s = s[:-1]
+            return "_CORBA_LONGLONG_CONST(" + s + ")"
         if kind in [ idltype.tk_float, idltype.tk_double ]:
             return str(value)
         # chars are single-quoted
@@ -540,8 +547,8 @@ class Type:
         elif d_SeqType.octet():
             template["suffix"] = "__Octet"
                     
-        elif tyutil.typeSizeAlignMap.has_key(d_SeqType.type().kind()):
-            template["fixed"] = tyutil.typeSizeAlignMap[d_SeqType.type().\
+        elif typeSizeAlignMap.has_key(d_SeqType.type().kind()):
+            template["fixed"] = typeSizeAlignMap[d_SeqType.type().\
                                                         kind()]
         
         elif d_SeqType.objref():
@@ -634,7 +641,146 @@ class Type:
 
         return name
 
+    def _var(self, environment = None):
+        """Returns a representation of the type which is responsible for its
+           own destruction. Assigning a heap allocated thing to this type
+           should allow the user to forget about deallocation."""
+        d_T = self.deref()
 
+        if self.array() or d_T.struct()    or d_T.union() or \
+                           d_T.exception() or d_T.sequence() or \
+                           d_T.objref():
+            name = id.Name(self.type().decl().scopedName()).suffix("_var")
+            return name.unambiguous(environment)
+
+        if d_T.typecode(): return "CORBA::TypeCode_var"
+        if d_T.any():      return "CORBA::Any_var"
+        if d_T.string():   return "CORBA::String_var"
+        if d_T.enum():
+            name = id.Name(self.type().decl().scopedName())
+            return name.unambiguous(environment)
+        
+        if d_T.kind() in basic_map.keys():
+            return basic_map[d_T.kind()]
+        
+        if d_T.void():     raise "No such thing as a void _var type"
+
+        raise "Unknown _var type, kind = " + str(d_T.kind())
+
+    def _ptr_is_pointer(self):
+        """Returns whether a pointer to this type is actually a C++ pointer
+           rather than a _ptr typedef"""
+        if self.array(): return 0
+
+        d_T = self.deref()
+        if d_T.struct() or d_T.union() or d_T.exception():
+            return d_T.variable()
+
+        if d_T.sequence(): return 1
+
+        if d_T.any(): return 1
+        
+        return 0
+
+    def _ptr(self, environment = None):
+        """Returns a representation of a type which is not responsible for its
+           own destruction. Assigning a heap alloccated thing to this type
+           does not relieve the user of the responsibility of deallocation"""
+
+        if self.array():
+            name = id.Name(self.type().decl().scopedName()).suffix("_slice*")
+            return name.unambiguous(environment)
+
+        d_T = self.deref()
+
+        if d_T.typecode(): return "CORBA::TypeCode_ptr"
+        if d_T.any():      return "CORBA::Any*"
+        if d_T.string():   return "char*"
+        if d_T.enum():
+            name = id.Name(self.type().decl().scopedName())
+            return name.unambiguous(environment)
+
+        if d_T.struct() or d_T.union() or d_T.exception() or d_T.sequence():
+            name = id.Name(self.type().decl().scopedName())
+            name = name.unambiguous(environment)
+            if d_T._ptr_is_pointer(): name = name + "*"
+            return name
+        
+        if d_T.objref():
+            name = id.Name(self.type().decl().scopedName()).suffix("_ptr")
+            return name.unambiguous(environment)
+
+        if d_T.kind() in basic_map.keys():
+            return basic_map[d_T.kind()]
+        
+        if d_T.void():     raise "No such thing as a void _ptr type"
+
+        raise "Unknown _ptr type, kind = " + str(d_T.kind())
+
+    def out(self, ident):
+        if self.kind() in basic_map.keys():
+            return ident
+        
+        return ident + ".out()"
+
+    def free(self, thing, environment = None):
+        """Ensures that any heap allocated storage associated with this type
+           has been deallocated."""
+
+        if self.array():
+            name = id.Name(self.type().decl().scopedName()).suffix("_free")
+            return name.unambiguous(environment) + "(" + thing + ");"
+
+        d_T = self.deref()
+
+        if d_T.objref() or d_T.typecode():
+            return "CORBA::release(" + thing + ");"
+        if d_T.string():   return "CORBA::string_free(" + thing + ");"
+
+        if d_T.struct() or d_T.union() or d_T.exception() or \
+           d_T.sequence() or d_T.any():
+            if d_T.variable():
+                return "delete " + thing + ";"
+            return "" # stored by value
+
+        if d_T.enum() or d_T.void() or (d_T.kind() in basic_map.keys()):
+            return ""
+
+        raise "Don't know how to free type, kind = " + str(d_T.kind())
+
+    def copy(self, src, dest, environment = None):
+        """Copies an entity from src to dest"""
+
+        if self.array():
+            name = id.Name(self.type().decl().scopedName()).suffix("_dup")
+            return dest + " = " + name.unambiguous(environment) + "("+src+");"
+
+        d_T = self.deref()
+        if d_T.typecode():
+            return dest + " = CORBA::TypeCode::_duplicate(" + src + ");"
+        if d_T.objref():
+            # Use the internal omniORB duplicate function in case the
+            # normal one isn't available
+            name = id.Name(self.type().decl().scopedName()).suffix("_Helper")
+            return name.unambiguous(environment) + "::duplicate" +\
+                   "(" + src + ");\n" + dest + " = " + src + ";"
+        if d_T.string():
+            return dest + " = CORBA::string_dup(" + src + ");"
+        if d_T.any():
+            return dest + " = new CORBA::Any(" + src + ");"
+        
+        if d_T.struct() or d_T.union() or d_T.exception() or d_T.sequence():
+            name = id.Name(self.type().decl().scopedName()).\
+                   unambiguous(environment)
+            if d_T.variable():
+                return dest + " = new " + name + "(" + src + ");"
+            return dest + " = " + src + ";"
+        
+        if d_T.enum() or (d_T.kind() in basic_map.keys()):
+            return dest + " = " + src + ";"
+
+        raise "Don't know how to free type, kind = " + str(d_T.kind())
+               
     def representable_by_int(self):
         """representable_by_int(types.Type): boolean
            Returns true if the type is representable by an integer"""
@@ -758,8 +904,7 @@ def variableDecl(decl):
          decl.alias() != None:
         return Type(decl.alias().aliasType()).variable()
 
-    util.fatalError("Unknown AST node encountered when computing " +\
-                    "variable-ness of a declared type")
+    util.fatalError("Unknown AST node, scopedName = " +repr(decl.scopedName()))
 
 
 
@@ -857,3 +1002,19 @@ for key in basic_map.keys():
     basic_map_out[key] = basic_map[key] + "_out"
 
 
+# Info on size and alignment of basic types
+typeSizeAlignMap = {
+    idltype.tk_char:    (1, 1),
+    idltype.tk_boolean: (1, 1),
+    idltype.tk_wchar:   (2, 2),
+    idltype.tk_short:   (2, 2),
+    idltype.tk_ushort:  (2, 2),
+    idltype.tk_long:    (4, 4),
+    idltype.tk_ulong:   (4, 4),
+    idltype.tk_float:   (4, 4),
+    idltype.tk_enum:    (4, 4),
+    idltype.tk_double:  (8, 8),
+    idltype.tk_octet:   (1, 1),
+    idltype.tk_longlong: (8, 8),
+    idltype.tk_ulonglong: (8, 8)
+    }

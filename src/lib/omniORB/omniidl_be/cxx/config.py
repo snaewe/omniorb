@@ -1,7 +1,42 @@
+ # -*- python -*-
+#                           Package   : omniidl
+# config.py                 Created on: 2000/10/8
+#                           Author    : David Scott (djs)
+#
+#    Copyright (C) 1999 AT&T Laboratories Cambridge
+#
+#  This file is part of omniidl.
+#
+#  omniidl is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA.
+#
+# Description:
+#
+#   Global state of the C++ backend is stored here
+#
+# $Id$
+# $Log$
+# Revision 1.14.2.2  2000/10/12 15:37:46  sll
+# Updated from omni3_1_develop.
+#
+# Revision 1.15.2.2  2000/08/21 11:34:32  djs
+# Lots of omniidl/C++ backend changes
+#
 
 import string
 
-from omniidl import idlvisitor
 import config
 
 # Stores the global configuration of the C++ backend and can dump it to
@@ -64,8 +99,15 @@ class ConfigurationState:
             # Do we #include files using double-quotes rather than
             # angled brackets (the default)
             'Use Quotes':            0,
+            
+            # Output AMI ReplyHandlers, Pollers etc
+            #'AMI':                   0,
+            # Not ported yet.
+            
+            # Do we make all the objref methods virtual
+            'Virtual Objref Methods':0,
             # Are we in DEBUG mode?
-            'Debug':                 0
+            'Debug':                 1
                        
             }
 
@@ -93,33 +135,5 @@ class ConfigurationState:
 if not(hasattr(config, "state")):
     config.state = ConfigurationState()
 
-# list of all files #included in the IDL
-includes = []
-
-# Traverses the AST compiling the list of files #included by the main
-# IDL file. Note that types constructed within other types must necessarily
-# be in the same IDL file
-class WalkTreeForIncludes(idlvisitor.AstVisitor):
-    def __init__(self):
-        config.includes = []
-    def add(self, node):
-        file = node.file()
-        if not(file in config.includes):
-            config.includes = [file] + config.includes
-
-    def visitAST(self, node):
-        self.add(node)
-        for d in node.declarations(): d.accept(self)
-    def visitModule(self, node):
-        self.add(node)
-        for d in node.definitions(): d.accept(self)
-    def visitInterface(self, node): self.add(node)
-    def visitForward(self, node):   self.add(node)
-    def visitConst(self, node):     self.add(node)
-    def visitTypedef(self, node):   self.add(node)
-    def visitStruct(self, node):    self.add(node)
-    def visitException(self, node): self.add(node)
-    def visitUnion(self, node):     self.add(node)
-    def visitEnum(self, node):      self.add(node)
     
 

@@ -12,12 +12,6 @@ export:: poa.py
 export:: mangler.py
 	@(file="mangler.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
-export:: dispatch.py
-	@(file="dispatch.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: proxy.py
-	@(file="proxy.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
 export:: template.py
 	@(file="template.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 

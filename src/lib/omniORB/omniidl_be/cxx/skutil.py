@@ -28,8 +28,14 @@
 
 # $Id$
 # $Log$
-# Revision 1.17.2.1  2000/07/17 10:35:43  sll
-# Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+# Revision 1.17.2.2  2000/10/12 15:37:48  sll
+# Updated from omni3_1_develop.
+#
+# Revision 1.18.2.2  2000/08/21 11:34:35  djs
+# Lots of omniidl/C++ backend changes
+#
+# Revision 1.18.2.1  2000/08/04 17:10:26  dpg1
+# Long long support
 #
 # Revision 1.18  2000/07/13 15:26:01  dpg1
 # Merge from omni3_develop for 3.0 release.
@@ -106,7 +112,7 @@ import string
 
 from omniidl import idlutil, idltype, idlast
 
-from omniidl_be.cxx import util, tyutil, types, id
+from omniidl_be.cxx import util, types, id, ast, output, cxx
 
 # From http://www-i3.informatik.rwth-aachen.de/funny/babbage.html:
 #
@@ -167,8 +173,8 @@ def marshall(string, environment, type, decl, argname, to="_n",
 
     # marshall an array of basic things
     if is_array:
-        if tyutil.typeSizeAlignMap.has_key(d_type.type().kind()):
-            (size, align) = tyutil.typeSizeAlignMap[d_type.type().kind()]
+        if types.typeSizeAlignMap.has_key(d_type.type().kind()):
+            (size, align) = types.typeSizeAlignMap[d_type.type().kind()]
             num_bytes = size * num_elements
             if align != 1:
                 align_str = ", omni::ALIGN_" + str(align)
@@ -186,18 +192,22 @@ def marshall(string, environment, type, decl, argname, to="_n",
         # same as obj ref
         indexing_string = ""
         if is_array:
-            indexing_string = util.block_begin_loop(string, full_dims) +\
-                              "._ptr"
+            block = cxx.Block(string)
+            loop = cxx.For(string, full_dims)
+            indexing_string = loop.index() + "._ptr"
         string.out("""\
 CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
                    argname = argname, to = to,
                    indexing_string = indexing_string)
         if is_array:
-            util.block_end_loop(string, full_dims)
+            loop.end()
+            block.end()
        
     elif d_type.string():
-        indexing_string = util.block_begin_loop(string, full_dims)
-        bounds = util.StringStream()
+        block = cxx.Block(string)
+        loop = cxx.For(string, full_dims)
+        indexing_string = loop.index()
+        bounds = output.StringStream()
         if d_type.type().bound() != 0:
             bounds.out("""\
 if (_len > @n@+1) {
@@ -220,12 +230,14 @@ else {
                    argname = argname,
                    indexing_string = indexing_string,
                    to = to)
-        util.block_end_loop(string, full_dims)
+        loop.end()
+        block.end()
     elif d_type.objref():
         indexing_string = ""
         if is_array:
-            indexing_string = util.block_begin_loop(string, full_dims) +\
-                              "._ptr"
+            block = cxx.Block(string)
+            loop = cxx.For(string, full_dims)
+            indexing_string = loop.index() + "._ptr"
         string.out("""\
 @type_name@_Helper::marshalObjRef(@argname@@indexing_string@,@to@);""",
                    type_name = type_name,
@@ -233,10 +245,13 @@ else {
                    indexing_string = indexing_string,
                    to = to)
         if is_array:
-            util.block_end_loop(string, full_dims)
+            loop.end()
+            block.end()
     else:
         if is_array:
-            indexing_string = util.block_begin_loop(string, full_dims)
+            block = cxx.Block(string)
+            loop = cxx.For(string, full_dims)
+            indexing_string = loop.index()
         else:
             indexing_string = ""
         string.out("""\
@@ -244,7 +259,8 @@ else {
                    argname = argname, indexing_string = indexing_string,
                    to = to)
         if is_array:
-            util.block_end_loop(string, full_dims)
+            loop.end()
+            block.end()
     
     return
 
@@ -322,6 +338,8 @@ def unmarshall(to, environment, type, decl, name,
             idltype.tk_float:  "Float",
             idltype.tk_double: "Double",
             idltype.tk_enum:   "ULong",
+            idltype.tk_longlong: "LongLong",
+            idltype.tk_ulonglong: "ULongLong"
             }
         if array_helper_suffix.has_key(d_type.type().kind()):
             typecast = "((" + type_name + "*) " + element_name + ")"
@@ -343,10 +361,10 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
 
     # superfluous bracketting
     if is_array:
-        to.out("{")
-        to.inc_indent()
+        block = cxx.Block(to)
 
-    indexing_string = util.start_loop(to, full_dims)
+    loop = cxx.For(to, full_dims)
+    indexing_string = loop.index()
     element_name = name + indexing_string
 
     if d_type.typecode():
@@ -411,11 +429,10 @@ else
                    element_name = element_name,
                    from_where = from_where)
 
-    util.finish_loop(to, full_dims)
+    loop.end()
     
     if is_array:
-        to.dec_indent()
-        to.out("}")
+        block.end()
 
     
 # ------------------------------------------------------------------
@@ -455,11 +472,11 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
     else:
         dereference = "."
 
-    string = util.StringStream()
+    string = output.StringStream()
 
     if not(is_array):
-        if tyutil.typeSizeAlignMap.has_key(d_type.type().kind()):
-            size = tyutil.typeSizeAlignMap[d_type.type().kind()][0]
+        if types.typeSizeAlignMap.has_key(d_type.type().kind()):
+            size = types.typeSizeAlignMap[d_type.type().kind()][0]
             
             if size == 1:
                 string.out("""\
@@ -506,8 +523,8 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
 @sizevar@ += @num_elements@;""", sizevar = sizevar,
                        num_elements = str(num_elements))
             return str(string)
-        if tyutil.typeSizeAlignMap.has_key(d_type.type().kind()):
-            size = tyutil.typeSizeAlignMap[d_type.type().kind()][0]
+        if types.typeSizeAlignMap.has_key(d_type.type().kind()):
+            size = types.typeSizeAlignMap[d_type.type().kind()][0]
 
             if size == 1:
                 string.out("""\
@@ -524,7 +541,9 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
             return str(string)
 
         # must be an array of fixed structs or unions
-        indexing_string = util.block_begin_loop(string, full_dims)
+        block = cxx.Block(string)
+        loop = cxx.For(string, full_dims)
+        indexing_string = loop.index()
 
         # do the actual calculation
         string.out("""\
@@ -533,13 +552,16 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
                    indexing_string = indexing_string,
                    deref = dereference)
 
-        util.block_end_loop(string, full_dims)
+        loop.end()
+        block.end()
 
         return str(string)
 
 
     # thing is an array of variable sized elements
-    indexing_string = util.block_begin_loop(string, full_dims)
+    block = cxx.Block(string)
+    loop = cxx.For(string, full_dims)
+    indexing_string = loop.index()
 
     if d_type.string():
         string.out("""\
@@ -571,13 +593,14 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
                    deref = dereference)
                
 
-    util.block_end_loop(string, full_dims)
+    loop.end()
+    block.end()
 
     return str(string)
 
 
 def unmarshal_string_via_temporary(variable_name, stream_name):
-    stream = util.StringStream()
+    stream = output.StringStream()
     stream.out("""\
 {
   CORBA::String_member _0RL_str_tmp;

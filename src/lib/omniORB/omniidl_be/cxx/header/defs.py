@@ -28,11 +28,31 @@
 
 # $Id$
 # $Log$
-# Revision 1.33.2.1  2000/07/17 10:35:45  sll
-# Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+# Revision 1.33.2.2  2000/10/12 15:37:50  sll
+# Updated from omni3_1_develop.
+#
+# Revision 1.34.2.3  2000/08/21 11:35:15  djs
+# Lots of tidying
+#
+# Revision 1.34.2.2  2000/08/04 17:10:29  dpg1
+# Long long support
+#
+# Revision 1.34.2.1  2000/08/02 10:52:02  dpg1
+# New omni3_1_develop branch, merged from omni3_develop.
 #
 # Revision 1.34  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.31.2.19  2000/08/03 21:27:39  djs
+# Typo in -Wbvirtual_objref code caused incorrect operation signatures to be
+# generated in the _objref class of an interface.
+#
+# Revision 1.31.2.18  2000/07/26 15:29:08  djs
+# Missing typedef and forward when generating BOA skeletons
+#
+# Revision 1.31.2.17  2000/07/18 15:34:25  djs
+# Added -Wbvirtual_objref option to make attribute and operation _objref
+# methods virtual
 #
 # Revision 1.31.2.16  2000/07/12 17:16:11  djs
 # Minor bugfix to option -Wbsplice-modules
@@ -210,8 +230,7 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, config
-from omniidl_be.cxx import id, types
+from omniidl_be.cxx import output, config, id, types, iface, cxx, ast, util
 from omniidl_be.cxx.header import template
 
 import defs
@@ -237,6 +256,17 @@ def __init__(stream):
     self.__completedModules = {}
 
     return defs
+
+# Returns the prefix required inside a const declaration (it depends on
+# exactly what the declaration is nested inside)
+def const_qualifier(insideModule, insideClass):
+    if not(insideModule) and not(insideClass):
+        return "_CORBA_GLOBAL_VAR"
+    elif insideClass:
+        return "static"
+    else:
+        return "_CORBA_MODULE_VAR"
+
 
 #
 # Control arrives here
@@ -302,7 +332,6 @@ def visitInterface(node):
 
     outer_environment = id.lookup(node)
     environment = outer_environment.enter(name)
-    scope = environment.scope()
 
     # push self.__insideInterface, true
     # push self.__insideClass, true
@@ -310,141 +339,39 @@ def visitInterface(node):
     self.__insideInterface = 1
     insideClass = self.__insideClass
     self.__insideClass = 1
-    
-    # the ifndef guard name contains flattened scope
-    guard = id.Name(scope).guard()
 
     # make the necessary forward references, typedefs and define
     # the _Helper class
-    stream.out(template.interface_begin,
-               guard = guard,
-               name = cxx_name)
+    I = iface.Interface(node)
+
+    I_Helper = iface.instance("I_Helper")(I)
+    I_Helper.hh(stream)
 
     # recursively take care of other IDL declared within this
     # scope (evaluate function later- lazy eval though 'thunking')
-    def Other_IDL(node = node, environment = environment):
+    def Other_IDL(node = node):
         for n in node.declarations():
             n.accept(self)
 
     # Output the this interface's corresponding class
     stream.out(template.interface_type,
-               name = cxx_name,
+               name = id.mapID(node.identifier()),
                Other_IDL = Other_IDL)
-    
-    # build methods corresponding to attributes, operations etc
-    attributes = []
-    operations = []
-    virtual_operations = []
-        
-    for c in node.callables():
-        if isinstance(c, idlast.Attribute):
-            attrType = types.Type(c.attrType())
-            
-            for i in c.identifiers():
-                attribname = id.mapID(i)
-                attributes.append(attrType.op(types.RET, outer_environment) +\
-                                  " " + attribname + "()")
-                if not(c.readonly()):
-                    attributes.append("void " + attribname + "("             +\
-                                      attrType.op(types.IN,outer_environment)+\
-                                      ")")
-        elif isinstance(c, idlast.Operation):
-            params = []
-            virtual_params = []
-            for p in c.parameters():
-                paramType = types.Type(p.paramType())
 
-                tuple = ("", "")
-                direction = types.direction(p)
-                tuple = (paramType.op(direction, outer_environment, use_out=1),
-                         paramType.op(direction, outer_environment, use_out=0))
+    _objref_I = iface.instance("_objref_I")(I)
+    _objref_I.hh(stream)
 
-                argname = id.mapID(p.identifier())
-                params.append(tuple[0] + " " + argname)
-                virtual_params.append(tuple[1] + " " + argname)
 
-            # deal with possible "context"
-            if c.contexts() != []:
-                params.append("CORBA::Context_ptr _ctxt")
-                virtual_params.append("CORBA::Context_ptr _ctxt")
+    _pof_I = iface.instance("_pof_I")(I)
+    _pof_I.hh(stream)
 
-            return_type = types.Type(c.returnType()).op(types.RET,
-                                                        outer_environment)
-
-            opname = id.mapID(c.identifier())
-            arguments = string.join(params, ", ")
-            virtual_arguments = string.join(virtual_params, ", ")
-            operations.append(return_type + " " + opname + \
-                              "(" + arguments + ")")
-            virtual_operations.append(return_type + " " + opname + \
-                                      "(" + virtual_arguments + ")")
-        else:
-            raise "No code for interface member: " + repr(c)
-
-    attributes_str = string.join(map(lambda x: x + ";\n", attributes ),"")
-    operations_str = string.join(map(lambda x: x + ";\n", operations ),"")
-        
-    virtual_attributes_str = string.join(
-        map( lambda x: "virtual " + x + " = 0;\n", attributes ), "")
-    virtual_operations_str = string.join(
-        map( lambda x: "virtual " + x + " = 0;\n", virtual_operations ), "")
-
-    # deal with inheritance
-    objref_inherits = []
-    impl_inherits = []
-    sk_inherits = []
-    for i in node.inherits():
-
-        name = id.Name(i.scopedName())
-        ident = id.mapID(i.identifier())
-        scope = name.scope()
-
-        objref_scopedName = name.prefix("_objref_")
-        impl_scopedName   = name.prefix("_impl_")
-        sk_scopedName     = name.prefix("_sk_")
-        objref_string     = objref_scopedName.unambiguous(environment)
-        impl_string       = impl_scopedName.unambiguous(environment)
-        sk_string         = sk_scopedName.unambiguous(environment)
-
-        objref_inherits.append("public virtual " + objref_string)
-        impl_inherits.append("public virtual " + impl_string)
-        sk_inherits.append("public virtual " + sk_string)
-
-    # if already inheriting, the base classes will be present
-    # (transitivity of the inherits-from relation)
-    if node.inherits() == []:
-        objref_inherits = [ "public virtual CORBA::Object, " + \
-                            "public virtual omniObjRef" ]
-        impl_inherits   = [ "public virtual omniServant" ]
-        sk_inherits     = [ "public virtual omniOrbBoaServant" ]
-            
-    objref_inherits = string.join(objref_inherits, ",\n")
-    impl_inherits = string.join(impl_inherits, ", \n")
-    sk_inherits = string.join(sk_inherits, ", \n")
-
-    # Output the _objref_ class definition
-    stream.out(template.interface_objref,
-               name = cxx_name,
-               inherits = objref_inherits,
-               operations = operations_str,
-               attributes = attributes_str)
-
-    # Output the _pof_ class definition
-    stream.out(template.interface_pof,
-               name = cxx_name)
-
-    # Output the _impl_ class definition
-    stream.out(template.interface_impl,
-               inherits = impl_inherits,
-               virtual_operations = virtual_operations_str,
-               virtual_attributes = virtual_attributes_str,
-               name = cxx_name)
+    _impl_I = iface.instance("_impl_I")(I)
+    _impl_I.hh(stream)
 
     # Generate BOA compatible skeletons?
     if config.state['BOA Skeletons']:
-        stream.out(template.interface_sk,
-                   name = cxx_name,
-                   sk_inherits = sk_inherits)
+        _sk_I = iface.instance("_sk_I")(I)
+        _sk_I.hh(stream)
 
     # pop self.__insideInterface
     # pop self.__insideClass
@@ -453,8 +380,7 @@ def visitInterface(node):
 
     # Typecode and Any
     if config.state['Typecode']:
-        qualifier = tyutil.const_qualifier(self.__insideModule,
-                                           self.__insideClass)
+        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier,
                    name = cxx_name)
@@ -478,9 +404,15 @@ def visitForward(node):
     name = id.Name(node.scopedName())
     guard = name.guard()
 
+    # Potentially forward declare BOA skeleton class
+    class_sk = ""
+    if config.state['BOA Skeletons']:
+        class_sk = "class _sk_" + name.unambiguous(environment) + ";"
+
     # output the definition
-    stream.out(template.interface_begin,
+    stream.out(template.interface_Helper,
                guard = guard,
+               class_sk_name = class_sk,
                name = name.unambiguous(environment))
 
 def visitConst(node):
@@ -568,8 +500,7 @@ def visitTypedef(node):
 
         # Typecode and Any
         if config.state['Typecode']:
-            qualifier = tyutil.const_qualifier(self.__insideModule,
-                                               self.__insideClass)
+            qualifier = const_qualifier(self.__insideModule,self.__insideClass)
             stream.out(template.typecode,
                        qualifier = qualifier,
                        name = derivedName)
@@ -631,24 +562,33 @@ def visitTypedef(node):
                                   ["CORBA", "Object"]
                 impl_base = ""
                 objref_base = ""
+                sk_base = ""
                 if not(is_CORBA_Object):
                     scopedName = d_type.type().decl().scopedName()
                     name = id.Name(scopedName)
                     impl_scopedName = name.prefix("_impl_")
                     objref_scopedName = name.prefix("_objref_")
+                    sk_scopedName = name.prefix("_sk_")
                     impl_name = impl_scopedName.unambiguous(environment)
                     objref_name = objref_scopedName.unambiguous(environment)
+                    sk_name = sk_scopedName.unambiguous(environment)
 
-                    impl_base = "typedef " + impl_name + " _impl_" +\
-                                derivedName + ";"
-                    objref_base = "typedef " + objref_name + " _objref_" + \
-                                  derivedName + ";"
+                    impl_base =   "typedef " + impl_name   + " _impl_"   +\
+                                   derivedName + ";"
+                    objref_base = "typedef " + objref_name + " _objref_" +\
+                                   derivedName + ";"
+                    sk_base =     "typedef " + sk_name     + " _sk_"     +\
+                                   derivedName + ";"
 
                 stream.out(template.typedef_simple_objref,
                            base = derefTypeID,
                            name = derivedName,
                            impl_base = impl_base,
                            objref_base = objref_base)
+                if config.state['BOA Skeletons']:
+                    stream.out(sk_base)
+                               
+                    
             # Non-array of user declared types
             elif d_type.kind() in [ idltype.tk_struct, idltype.tk_union,
                                     idltype.tk_except, idltype.tk_enum ]:
@@ -792,8 +732,8 @@ def visitTypedef(node):
         elif array_declarator:
 
             all_dims = d.sizes() + alias_dims
-            dimsString = tyutil.dimsToString(d.sizes())
-            taildims = tyutil.dimsToString(d.sizes()[1:])
+            dimsString = cxx.dimsToString(d.sizes())
+            taildims = cxx.dimsToString(d.sizes()[1:])
             
             typestring = aliasType.member(environment)
 
@@ -810,16 +750,17 @@ def visitTypedef(node):
             else:
                 # build the _dup loop
                 def dup_loop(stream = stream, all_dims = all_dims):
-                    index = util.start_loop(stream, all_dims)
+                    loop = cxx.For(stream, all_dims)
                     stream.out("\n_data@index@ = _s@index@;\n",
-                               index = index)
-                    util.finish_loop(stream, all_dims)
+                               index = loop.index())
+                    loop.end()
 
                 # build the _copy loop
                 def copy_loop(stream = stream, all_dims = all_dims):
-                    index = util.start_loop(stream, all_dims)
-                    stream.out("\n_to@index@ = _from@index@;\n", index = index)
-                    util.finish_loop(stream, all_dims)
+                    loop = cxx.For(stream, all_dims)
+                    stream.out("\n_to@index@ = _from@index@;\n",
+                               index = loop.index())
+                    loop.end()
 
                 # output the static functions
                 stream.out(template.typedef_array_static,
@@ -893,7 +834,7 @@ def visitStruct(node):
                     stream.out(template.struct_normal_member,
                                memtype = memtype,
                                cxx_id = cxx_id,
-                               dims = tyutil.dimsToString(decl_dims))
+                               dims = cxx.dimsToString(decl_dims))
             
     # Output the structure itself
     stream.out(template.struct,
@@ -907,8 +848,7 @@ def visitStruct(node):
     # TypeCode and Any
     if config.state['Typecode']:
         # structs in C++ are classes with different default privacy policies
-        qualifier = tyutil.const_qualifier(self.__insideModule,
-                                           self.__insideClass)
+        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier,
                    name = cxx_name)
@@ -955,7 +895,7 @@ def visitException(node):
 
                 cxx_id = id.mapID(ident)
 
-                dims_string = tyutil.dimsToString(decl_dims)
+                dims_string = cxx.dimsToString(decl_dims)
                 
                 if is_array_declarator:
                     stream.out(template.exception_array_declarator,
@@ -1024,8 +964,7 @@ def visitException(node):
 
     # Typecode and Any
     if config.state['Typecode']:
-        qualifier = tyutil.const_qualifier(self.__insideModule,
-                                           self.__insideClass)
+        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier,
                    name = cxx_exname)
@@ -1054,13 +993,11 @@ def visitUnion(node):
     # member, choose a discriminator value to set. Note that attempting
     # to access the data is undefined
     def chooseArbitraryDefault(switchType = switchType,
-                               allCases = tyutil.allCases(node),
+                               values = ast.allCaseLabelValues(node),
                                environment = environment):
         
         # dereference the switch_type (ie if CASE <scoped_name>)
         switchType = switchType.deref()
-        # get the values from the cases
-        values = map(lambda x: x.value(), allCases)
 
         # for integer types, find the lowest unused number
         def min_unused(start, used = values):
@@ -1068,21 +1005,14 @@ def visitUnion(node):
             while x in used:
                 x = x + 1
             return x
-                
+
         kind = switchType.type().kind()
-        if kind == idltype.tk_short:
-            short_min = -32767 # - [ 2 ^ (32-1) -1 ]
-            return str(min_unused(short_min))
-        
-        elif kind == idltype.tk_long:
-            long_min = -2147483647 # - [ 2 ^ (64-1) -1 ]
-            return str(min_unused(long_min))
-        
-        elif kind in [ idltype.tk_ushort, idltype.tk_longlong,
-                       idltype.tk_ulong, idltype.tk_ulonglong ]:
-            # unsigned values start at 0
-            return str(min_unused(0))
-            
+        if switchType.integer():
+            (low, high) = ast.integer_type_ranges[kind]
+            s = str(min_unused(low))
+            if s[-1] == 'L': s = s[:-1]
+            return s
+
         # for other types, first compute the set of all legal values
         # (sets are all fairly small)
         elif kind == idltype.tk_char:
@@ -1107,13 +1037,14 @@ def visitUnion(node):
     # does the IDL union have any default case?
     # It'll be handy to know which case is the default one later-
     # so add a new attribute to mark it
-    hasDefault = tyutil.getDefaultCaseAndMark(node) != None
+    ast.markDefaultCase(node)
+    hasDefault = ast.defaultCase(node) != None
         
     # CORBA 2.3 C++ Mapping 1-34
     # "A union has an implicit default member if it does not have
     # a default case and not all permissible values of the union
     # discriminant are listed"
-    exhaustive = tyutil.exhaustiveMatch(switchType, tyutil.allCases(node))
+    exhaustive = ast.exhaustiveMatch(switchType, ast.allCaseLabelValues(node))
     implicitDefault = not(hasDefault) and not(exhaustive)
 
     fixed = "Fix"
@@ -1221,7 +1152,7 @@ def visitUnion(node):
         # Need to fill in a default case only if the union has none itself
         outer_has_default = 0
 
-        cases = util.StringStream()
+        cases = output.StringStream()
 
         # keep track of which cases have been done
         cases_done = []
@@ -1311,7 +1242,7 @@ def visitUnion(node):
                       
 
         # output the code here
-        switch = util.StringStream()
+        switch = output.StringStream()
         if need_switch:
             switch.out("switch (_pd__d){\n  @cases@\n};", cases = cases)
         stream.out(template.union_d_fn_body, switch = switch)
@@ -1377,10 +1308,6 @@ def visitUnion(node):
                     discrimvalue = switchType.literal(label.value(),
                                                       environment)
 
-                # FIXME: stupid special case, see above
-                if switchType.char() and label.value() == '\0':
-                    discrimvalue = "0000"
-
                 # only different when array declarator
                 const_type_str = memtype
                 
@@ -1391,8 +1318,8 @@ def visitUnion(node):
                                prefix = prefix,
                                memtype = memtype,
                                name = member,
-                               dims = tyutil.dimsToString(decl.sizes()),
-                               tail_dims = tyutil.dimsToString(decl.sizes()[1:]))
+                               dims = cxx.dimsToString(decl.sizes()),
+                               tail_dims = cxx.dimsToString(decl.sizes()[1:]))
                     const_type_str = prefix + "_" + member
                     memtype = "_" + member
              
@@ -1400,10 +1327,11 @@ def visitUnion(node):
                     # build the loop
                     def loop(stream = stream, full_dims = full_dims,
                              member = member):
-                        index = util.start_loop(stream, full_dims)
+                        loop = cxx.For(stream, full_dims)
+                        index = loop.index()
                         stream.out("\n_pd_" + member + index + " = _value" +\
                                    index + ";\n")
-                        util.finish_loop(stream, full_dims)
+                        loop.end()
                         return
                     
                     stream.out(template.union_array,
@@ -1493,8 +1421,8 @@ def visitUnion(node):
     # FIXME: there is some interesting behaviour in
     # o2be_union::produce_hdr which I should examine more
     # carefully
-    inside = util.StringStream()
-    outside = util.StringStream()
+    inside = output.StringStream()
+    outside = output.StringStream()
     used_inside = 0
     used_outside = 0
     for c in node.cases():
@@ -1518,7 +1446,7 @@ def visitUnion(node):
         if not(is_array_declarator) and caseType.sequence():
             type_str = "_" + member_name + "_seq"
         
-        dims_str = tyutil.dimsToString(decl_dims)
+        dims_str = cxx.dimsToString(decl_dims)
 
         # Decide what does inside and outside the union {} itself
         # Note: floats in unions are special cases
@@ -1556,7 +1484,7 @@ def visitUnion(node):
     discrimtype = d_switchType.base(environment)
     
     if used_inside:
-        _union = util.StringStream()
+        _union = output.StringStream()
         _union.out(template.union_union, members = str(inside))
         inside = _union
 
@@ -1580,8 +1508,7 @@ def visitUnion(node):
 
     # TypeCode and Any
     if config.state['Typecode']:
-        qualifier = tyutil.const_qualifier(self.__insideModule,
-                                           self.__insideClass)
+        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier,
                    name = cxx_id)
@@ -1603,9 +1530,7 @@ def visitEnum(node):
 
     # TypeCode and Any
     if config.state['Typecode']:
-        insideModule = self.__insideModule
-        insideClass = self.__insideClass
-        qualifier = tyutil.const_qualifier(insideModule, insideClass)
+        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier, name = name)
     

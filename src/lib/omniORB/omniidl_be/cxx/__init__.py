@@ -28,11 +28,26 @@
 
 # $Id$
 # $Log$
-# Revision 1.20.2.1  2000/07/17 10:35:43  sll
-# Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+# Revision 1.20.2.2  2000/10/12 15:37:45  sll
+# Updated from omni3_1_develop.
 #
-# Revision 1.21  2000/07/13 15:26:02  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.21.2.4  2000/09/14 16:03:00  djs
+# Remodularised C++ descriptor name generator
+# Bug in listing all inherited interfaces if one is a forward
+# repoID munging function now handles #pragma ID in bootstrap.idl
+# Naming environments generating code now copes with new IDL AST types
+# Modified type utility functions
+# Minor tidying
+#
+# Revision 1.21.2.3  2000/08/21 11:34:31  djs
+# Lots of omniidl/C++ backend changes
+#
+# Revision 1.21.2.2  2000/08/07 17:48:14  dpg1
+# Merge from omni3_develop again.
+#
+# Revision 1.18.2.8  2000/07/18 15:34:17  djs
+# Added -Wbvirtual_objref option to make attribute and operation _objref
+# methods virtual
 #
 # Revision 1.18.2.7  2000/06/26 16:23:09  djs
 # Added new backend arguments.
@@ -127,16 +142,12 @@
 # is to make it so complicated that there are no obvious deficiencies." 
 #
 
-# -----------------------------
-# Output generation functions
-from omniidl_be.cxx import header
-from omniidl_be.cxx import skel
-from omniidl_be.cxx import dynskel
-from omniidl_be.cxx import impl
+## Import Output generation functions ###################################
+## 
+from omniidl_be.cxx import header, skel, dynskel, impl
 
-from omniidl_be.cxx import id
-
-from omniidl_be.cxx import config
+## Utility functions
+from omniidl_be.cxx import id, config, ast, output, support, descriptor
 
 import re, sys, os.path
 
@@ -175,6 +186,9 @@ def process_args(args):
             config.state['Splice Modules']    = 1
         elif arg == "example":
             config.state['Example Code']      = 1
+#        elif arg == "AMI":
+#            config.state['AMI']               = 1
+#        Not ported yet.
         elif arg == "F":
             config.state['Fragment']          = 1
         elif arg == "BOA":
@@ -187,6 +201,8 @@ def process_args(args):
             config.state['Keep Include Path'] = 1
         elif arg == "use_quotes":
             config.state['Use Quotes']        = 1
+        elif arg == "virtual_objref":
+            config.state['Virtual Objref Methods'] = 1
         elif arg == "debug":
             config.state['Debug']             = 1
         elif arg[:2] == "h=":
@@ -209,12 +225,25 @@ def run(tree, args):
     process_args(args)
 
     try:
-        # build the list of include files
-        walker = config.WalkTreeForIncludes()
-        tree.accept(walker)
+        # Check the input tree only contains stuff we understand
+        support.checkIDL(tree)
+
+        # Initialise the descriptor generating code
+        descriptor.__init__(tree)
+
+        # Build the map of AST nodes to Environments
+        tree.accept(id.WalkTree())
+
+        # AMI code hooks into existing infrastructure (ie doesn't need to
+        # be driven explicitly here)
+        #if config.state['AMI']:
+        #    tree = ami.__init__(tree)
+        #    tree.accept(id.WalkTree())
+        # Not ported yet.
         
-        environments = id.WalkTree()
-        tree.accept(environments)
+
+        # initialise the handy ast module
+        ast.__init__(tree)
 
         header.run(tree)
         
@@ -236,8 +265,12 @@ def run(tree, args):
             util.unsupportedIDL()
             
         util.fatalError("An AttributeError exception was caught")
-    except SystemExit:
+    except SystemExit, e:
         # fatalError function throws SystemExit exception
-        pass
+        # delete all possibly partial output files
+        for file in output.listAllCreatedFiles():
+            os.unlink(file)
+        
+        raise e
     except:
         util.fatalError("An internal exception was caught")
