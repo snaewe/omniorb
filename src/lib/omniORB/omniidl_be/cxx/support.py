@@ -167,34 +167,23 @@ class SupportedASTVisitor(idlvisitor.AstVisitor):
         unsupportedIDL("native")
 
     def visitStateMember(self, node):
-        # *** FIXME
         pass
-#         unsupportedIDL("valuetypes")
 
     def visitFactory(self, node):
-        # *** FIXME
         pass
-#         unsupportedIDL("valuetypes")
 
     def visitValueForward(self, node):
-        # *** FIXME
         pass
-#         unsupportedIDL("valuetypes")
 
     def visitValueBox(self, node):
-        # *** FIXME
-        pass
-#         unsupportedIDL("valuetypes")
+        value.getValueType(node)
 
     def visitValueAbs(self, node):
-        # *** FIXME
-        pass
-#         unsupportedIDL("valuetypes")
+        value.getValueType(node)
 
     def visitValue(self, node):
-        # *** FIXME
-        pass
-#         unsupportedIDL("valuetypes")
+        if node.custom():
+            unsupportedIDL("custom valuetypes")
 
         
 

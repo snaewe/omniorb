@@ -1982,6 +1982,53 @@ class ValueType (mapping.Decl):
                     self._gen_statemember_code(value_name, mtype,
                                                d, self._environment)
 
+        # Build node annotations
+        has_callables     = 0
+        has_factories     = 0
+        supports_abstract = 0
+
+        if astdecl.callables():
+            has_callables = 1
+
+        if astdecl.factories():
+            has_factories = 1
+
+        for v in astdecl.inherits():
+            if v._cxx_has_callables:
+                has_callables = 1
+            if v._cxx_has_factories:
+                has_factories = 1
+
+        if astdecl.supports():
+            has_callables = 1
+
+            for intf in astdecl.supports():
+                if intf.abstract():
+                    supports_abstract = 1
+
+        if (astdecl.inherits() and
+            isinstance(astdecl.inherits()[0], idlast.Value)):
+
+            baseval = astdecl.inherits()[0]
+            statememberl = baseval._cxx_statememberl[:]
+            init_paraml  = baseval._cxx_init_paraml[:]
+        else:
+            statememberl = []
+            init_paraml  = []
+
+        for s in astdecl.statemembers():
+            for d in s.declarators():
+                statememberl.append(d._cxx_name)
+                init_paraml.append(d._cxx_init_arg)
+
+        astdecl._cxx_has_callables     = has_callables
+        astdecl._cxx_has_factories     = has_factories
+        astdecl._cxx_supports_abstract = supports_abstract
+        astdecl._cxx_init_paraml       = init_paraml
+        astdecl._cxx_statememberl      = statememberl
+
+
+
     # Methods to make this look enough like a cxx.Class to make
     # cxx.Method happy.
     
@@ -2368,44 +2415,27 @@ class ValueType (mapping.Decl):
             for n in node.declarations():
                 n.accept(visitor)
 
-        has_callables     = 0
-        has_factories     = 0
-        supports_abstract = 0
-
-        if astdecl.callables():
-            has_callables = 1
-
-        if astdecl.factories():
-            has_factories = 1
+        has_callables     = astdecl._cxx_has_callables
+        has_factories     = astdecl._cxx_has_factories
+        supports_abstract = astdecl._cxx_supports_abstract
 
         inheritl = []
         for v in astdecl.inherits():
             iname = id.Name(v.scopedName())
             uname = iname.unambiguous(environment)
             inheritl.append("public virtual " + uname)
-            if v._cxx_has_callables:
-                has_callables = 1
-            if v._cxx_has_factories:
-                has_factories = 1
 
         if not inheritl:
             inheritl.append("public virtual CORBA::ValueBase")
 
         if astdecl.supports():
-            has_callables = 1
-
             for intf in astdecl.supports():
                 if intf.abstract():
-                    supports_abstract = 1
                     iname = id.Name(intf.scopedName())
                     uname = iname.unambiguous(environment)
                     inheritl.append("public virtual " + uname)
 
         inherits = string.join(inheritl, ",\n")
-
-        astdecl._cxx_has_callables     = has_callables
-        astdecl._cxx_has_factories     = has_factories
-        astdecl._cxx_supports_abstract = supports_abstract
 
         public_accessors  = output.StringStream()
         private_accessors = output.StringStream()
@@ -2566,16 +2596,6 @@ class ValueType (mapping.Decl):
 
         inherits = string.join(inheritl, ",\n")
 
-        if (astdecl.inherits() and
-            isinstance(astdecl.inherits()[0], idlast.Value)):
-
-            baseval = astdecl.inherits()[0]
-            statememberl = baseval._cxx_statememberl[:]
-            init_paraml  = baseval._cxx_init_paraml[:]
-        else:
-            statememberl = []
-            init_paraml  = []
-
         for s in astdecl.statemembers():
             for d in s.declarators():
                 if s.memberAccess() == 0:
@@ -2586,11 +2606,9 @@ class ValueType (mapping.Decl):
                     private_accessors.out(d._cxx_obv_sig)
 
                 state_holders.out(d._cxx_holder)
-                statememberl.append(d._cxx_name)
-                init_paraml.append(d._cxx_init_arg)
 
-        astdecl._cxx_init_paraml  = init_paraml
-        astdecl._cxx_statememberl = statememberl
+        init_paraml  = astdecl._cxx_init_paraml
+        statememberl = astdecl._cxx_statememberl
 
         init_params = string.join(init_paraml, ", ")
 

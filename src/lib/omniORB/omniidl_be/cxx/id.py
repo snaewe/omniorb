@@ -488,6 +488,9 @@ class WalkTree(idlvisitor.AstVisitor):
 
         self.__cache(node)
 
+        from omniidl_be.cxx import value
+        value.getValueType(node)
+
     def visitValueAbs(self, node):
         name = node.identifier()
         self.__add(name, allow_already_exists = 1)
@@ -499,6 +502,9 @@ class WalkTree(idlvisitor.AstVisitor):
 
         self.__cache(node)
 
+        from omniidl_be.cxx import value
+        value.getValueType(node)
+
     def visitValueBox(self, node):
         if node.constrType():
             node.boxedType().decl().accept(self)
@@ -507,3 +513,6 @@ class WalkTree(idlvisitor.AstVisitor):
         self.__add(name)
 
         self.__cache(node)
+
+        from omniidl_be.cxx import value
+        value.getValueType(node)

@@ -1,3 +1,13 @@
+Fri Jan 21 12:13:51 GMT 2005 dgrisby
+====================================
+
+- Fix AttributeError with values inheriting from values in #included files.
+
+src/lib/omniORB/omniidl_be/cxx/id.py
+src/lib/omniORB/omniidl_be/cxx/support.py
+src/lib/omniORB/omniidl_be/cxx/value.py
+
+
 Tue Jan 18 12:09:12 GMT 2005 dgrisby
 ====================================
 
