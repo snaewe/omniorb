@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/29 15:27:28  djs
+# Moved proxy call descriptor generation for attributes to this module.
+#
 # Revision 1.2  1999/11/26 18:50:48  djs
 # Module for creating call descriptor proxies
 #
@@ -67,8 +70,7 @@ public:
      @inherits_list@ {}
   
   @marshal_arguments_decl@
-  @unmarshal_arguments_decl@
-  
+  @unmarshal_arguments_decl@  
   @result_member_function@
   @member_data@
   @result_member_data@
@@ -479,7 +481,8 @@ CORBA::string_free(@name@);
             # we need to allocate storage if the return is an
             # array
             if return_is_array:
-                if return_is_variable or tyutil.isStruct(deref_return_type):
+                if return_is_variable or tyutil.isStruct(deref_return_type) or \
+                   tyutil.isUnion(deref_return_type):
                     name = "((" + return_type_base + "_slice*) pd_result)"
                 unmarshal_block.out("""\
 pd_result = @type@_alloc();""", type = return_type_base)
@@ -573,5 +576,140 @@ pd_result = new @type@;""", type = return_type_base)
                    post_assign = str(post_assign))
 
 
-                    
+def attribute(attribute, seed):
+    assert isinstance(attribute, idlast.Attribute)
 
+    environment = self.__environment
+    stream = self.__stream
+
+    read_signature = mangler.produce_read_attribute_signature(attribute)
+    write_signature = mangler.produce_write_attribute_signature(attribute)
+    try:
+        # see if we already have proxies generated
+        mangler.attribute_read_descriptor_name(attribute)
+        need_proxies = 0
+    except KeyError:
+        mangler.generate_descriptors(attribute, seed)
+        need_proxies = 1
+
+    if not(need_proxies):
+        return
+    
+    read_desc = mangler.attribute_read_descriptor_name(attribute)
+    write_desc = mangler.attribute_write_descriptor_name(attribute)
+
+    attrType = attribute.attrType()
+    attr_dims = tyutil.typeDims(attrType)
+    is_array = attr_dims != []   
+    deref_attrType = tyutil.deref(attrType)
+    attrType_name = environment.principalID(attrType, 1)
+
+    fully_scoped_attrTypes = tyutil.operationArgumentType(attrType,
+                                                          environment, 0,
+                                                          fully_scope = 1)
+    attrTypes = tyutil.operationArgumentType(attrType, environment, 0,
+                                             fully_scope = 0)
+
+    return_type = fully_scoped_attrTypes[0]
+    if is_array:
+        in_type = attrTypes[1]+"_slice*"
+        fully_scoped_in_type = fully_scoped_attrTypes[1]+"_slice*"
+    else:
+        in_type = attrTypes[1]
+        fully_scoped_in_type = fully_scoped_attrTypes[1]
+
+    size = skutil.sizeCalculation(environment, attrType, None ,
+                                  "msgsize",
+                                  "arg_0", 1, fully_scope = 1)
+    marshal_arg = util.StringStream()
+    skutil.marshall(marshal_arg, environment, attrType, None,
+                    "arg_0", "giop_client", fully_scope = 1)
+
+    if is_array:
+        s = util.StringStream()
+        s.out("pd_result = @name@_alloc();", name = attrType_name)
+        # basic types don't have slices
+        if tyutil.ttsMap.has_key(deref_attrType.kind()):
+            result_string = "pd_result"
+        else:
+            result_string = "((" + attrType_name + "_slice*)" + "pd_result)"
+
+        skutil.unmarshall(s, environment, attrType, None, result_string, 1,
+                          "giop_client", fully_scope = 1)
+        unmarshal_ret = str(s)
+            
+    elif tyutil.isString(deref_attrType):
+        unmarshal_ret = skutil.unmarshal_string_via_temporary("pd_result",
+                                                              "giop_client")
+    elif tyutil.isObjRef(deref_attrType):
+        unmarshal_ret = "\
+pd_result = " + attrType_name + "_Helper::unmarshalObjRef(giop_client);"
+    elif tyutil.isVariableType(deref_attrType):
+        unmarshal_ret = "\
+pd_result = new " + attrType_name + ";\n" + "\
+*pd_result <<= giop_client;"
+    else:
+        unmarshal_ret = """\
+pd_result <<= giop_client;"""
+
+    # -------------------------------------------------------------
+
+    # write the read class template
+    ctor_args = "LocalCallFn lcfn, const char* op, " +\
+                "size_t oplen, _CORBA_Boolean oneway"
+    inherits_list = "omniCallDescriptor(lcfn, op, oplen, oneway)"
+    unmarshal_decl = "virtual void unmarshalReturnedValues(GIOP_C&);"
+    result_mem_fn = "inline " + return_type + " result() { return pd_result; }"
+    result_mem_data = return_type + " pd_result;"
+    stream.out(proxy_class_template,
+               signature = read_signature,
+               call_descriptor = read_desc,
+               ctor_args = ctor_args,
+               inherits_list = inherits_list,
+               marshal_arguments_decl = "",
+               unmarshal_arguments_decl = unmarshal_decl,
+               result_member_function = result_mem_fn,
+               member_data = "",
+               result_member_data = result_mem_data)
+
+    # -------------------------------------------------------------
+
+    # write the read unmarshalReturned function
+    stream.out(unmarshal_template,
+               call_descriptor = read_desc,
+               pre_decls = "",
+               unmarshal_block = unmarshal_ret,
+               post_assign = "")
+
+    # -------------------------------------------------------------
+
+    # write the write class template
+    ctor_args = ctor_args + ", " + fully_scoped_in_type + " a_0"
+    inherits_list = inherits_list + ",\n" + "arg_0(a_0)"
+    marshal_decl = "virtual CORBA::ULong alignedSize(CORBA::ULong);\n" +\
+                   "virtual void marshalArguments(GIOP_C&);"
+    member_data = fully_scoped_in_type + " arg_0;"
+    stream.out(proxy_class_template,
+               signature = write_signature,
+               call_descriptor = write_desc,
+               ctor_args = ctor_args,
+               inherits_list = inherits_list,
+               marshal_arguments_decl = marshal_decl,
+               unmarshal_arguments_decl = "",
+               result_member_function = "",
+               member_data = member_data,
+               result_member_data = "") 
+
+    # -------------------------------------------------------------
+
+    # write the write alignment template
+    stream.out(alignment_template,
+               call_descriptor = write_desc,
+               size_calculation = size)
+
+    # -------------------------------------------------------------
+
+    # write the write marshal template
+    stream.out(marshal_template,
+               call_descriptor = write_desc,
+               marshal_block = str(marshal_arg))
