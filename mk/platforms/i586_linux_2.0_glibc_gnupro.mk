@@ -37,7 +37,7 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) \
                 -Wl,-rpath /opt/cygnus/codefusion-990706/H-i686-pc-linux-gnulibc2.0/lib -L/opt/cygnus/codefusion-990706/H-i686-pc-linux-gnulibc2.0/lib \
 		$(patsubst %,-Wl$(comma)-rpath$(comma)%,$(IMPORT_LIBRARY_DIRS))
 
-CXXOPTIONS      = 
+#CXXOPTIONS      = -fmemoize-lookups -fsave-memoized
 
 CC           = /opt/cygnus/codefusion-990706/H-i686-pc-linux-gnulibc2.0/bin/gcc
 CMAKEDEPEND  = $(OMKDEPEND) -D__GNUC__

@@ -110,13 +110,14 @@ endif
 #############################################################################
 
 ifdef SunOS
-ifeq ($(notdir $(CXX)),CC)
-
-DIR_CPPFLAGS += -Kpic
 
 libname = libomnithread.so
 soname  = $(libname).$(minor_version)
 lib = $(soname).$(micro_version)
+
+ifeq ($(notdir $(CXX)),CC)
+
+DIR_CPPFLAGS += -Kpic
 
 $(lib): $(OBJS)
 	(set -x; \
@@ -142,6 +143,34 @@ export:: $(lib)
          )
 
 endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+DIR_CPPFLAGS += -fPIC
+
+$(lib): $(OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) $(CXXOPTIONS) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^); \
+       )
+
+all:: $(lib)
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+endif
+
 endif
 
 #############################################################################

@@ -87,6 +87,11 @@ micro_version = $(word 3,$(subst ., ,$(VERSION)))
 #############################################################################
 
 ifdef SunOS
+
+libname = libtcpwrapGK.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
 ifeq ($(notdir $(CXX)),CC)
 
 CXXOPTIONS += -Kpic
@@ -97,9 +102,6 @@ else
 COPTIONS += -Kpic
 endif
 
-libname = libtcpwrapGK.so
-soname  = $(libname).$(minor_version)
-lib = $(soname).$(micro_version)
 
 all:: $(lib)
 
@@ -125,6 +127,37 @@ export:: $(lib)
          )
 
 endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+COPTIONS += -fpic
+CXXOPTIONS += -fpic
+
+all:: $(lib)
+
+$(lib): $(OBJS) $(CXXOBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) $(CXXOPTIONS) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
+       )
+
+all:: $(lib)
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+endif
+
 endif
 
 #############################################################################
