@@ -8,6 +8,23 @@
 
 <buglist>
 
+<bug id="18" date="Fri Jul 21 16:20:43 BST 2000" user="sll">
+
+  <summary>If the remote server is not present, a CORBA call on win32
+  platforms blocks for 30 seconds before raising a COMM_FAILURE exception.
+  </summary>
+
+  <reported>sll</reported>
+
+  <text>
+  <p> The ORB uses a select() after the connect() call. Win32 differs from
+  other platforms in that it reports a connect() failure to the select()
+  via the exception fd_set. This was not tested by the ORB.
+  </p>
+  </text>
+
+</bug>
+
 <bug id="17" date="Tue Aug  8 15:55:35 BST 2000" user="dpg1">
 
   <summary>-ORBpoa_iiop_port overrides OMNIORB_USEHOSTNAME</summary>
