@@ -37,6 +37,10 @@ int main(int argc, char **argv)
 
 	argv[i] = TranslateFileName(argv[i],5);
 
+      } else if (strncmp(argv[i], "-def:", 5) == 0) {
+
+	argv[i] = TranslateFileName(argv[i],5);
+
       }
 
     } else {
