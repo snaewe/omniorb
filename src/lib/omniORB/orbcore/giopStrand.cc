@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/09 19:36:54  sll
+  Client side idle connection cleanup now works
+
   Revision 1.1.4.1  2001/04/18 18:10:49  sll
   Big checkin with the brand new internal APIs.
 
@@ -102,9 +105,29 @@ giopStrand::giopStrand(giopConnection* conn) :
 giopStrand::~giopStrand()
 {
   OMNIORB_ASSERT(pd_state == DYING);
-  OMNIORB_ASSERT(giopStream::noLockWaiting(this));
-  OMNIORB_ASSERT(giopStreamList::is_empty(servers));
-  OMNIORB_ASSERT(giopStreamList::is_empty(clients));
+
+  if (!giopStreamList::is_empty(servers)) {
+    giopStreamList* gp = servers.next;
+    while (gp != &servers) {
+      GIOP_S* g = (GIOP_S*)gp;
+      OMNIORB_ASSERT(g->state() == IOP_S::UnUsed);
+      gp = gp->next;
+      g->giopStreamList::remove();
+      delete g;
+    }
+  }
+
+  if (!giopStreamList::is_empty(clients)) {
+    giopStreamList* gp = clients.next;
+    while (gp != &clients) {
+      GIOP_C* g = (GIOP_C*)gp;
+      OMNIORB_ASSERT(g->state() == IOP_C::UnUsed);
+      gp = gp->next;
+      g->giopStreamList::remove();
+      delete g;
+    }
+  }
+
   giopStream_Buffer* p = head;
   while (p) {
     giopStream_Buffer* q = p->next;
@@ -344,18 +367,21 @@ void
 Scavenger::removeIdle(StrandList& src,StrandList& dest)
 {
   StrandList* p = src.next;
-  for (; p != &src; p = p->next) {
+  while (p != &src) {
     giopStrand* s = (giopStrand*)p;
     if ( ( !s->biDir )  &&
 	 ( giopStreamList::is_empty(s->clients) || 
 	   ((GIOP_C*)s->clients.next)->state() == IOP_C::UnUsed ) )
       {
 	if (--(s->idlebeats) <= 0) {
+	  p = p->next;
 	  s->StrandList::remove();
 	  s->Rope::Link::remove();
 	  s->StrandList::insert(dest);
+	  continue;
 	}
       }
+    p = p->next;
   }
 }
 
@@ -374,6 +400,12 @@ Scavenger::execute()
       }
       omni_thread::get_time(&abs_sec,&abs_nsec,giopStrand::scanPeriod);
       cond->timedwait(abs_sec,abs_nsec);
+    }
+
+    if (omniORB::trace(30)) {
+      omniORB::logger log;
+      log << "Scan for idle outgoing connections (" 
+	  << abs_sec << "," << abs_nsec << ")\n";
     }
 
     StrandList shutdown_list;
@@ -398,9 +430,20 @@ Scavenger::execute()
 	giopStrand* s = (giopStrand*)p;
 	p = p->next;
 	s->StrandList::remove();
+	s->state(giopStrand::DYING);
+	if (omniORB::trace(30)) {
+	  omniORB::logger log;
+	  log << "Close connection to " << s->address->address() << "\n";
+	}
 	if (s->connection) delete s->connection;
 	delete s;
       }
+    }
+
+    if (omniORB::trace(30)) {
+      omniORB::logger log;
+      log << "Scan for idle outgoing connections done ("
+	  << abs_sec << "," << abs_nsec << ").\n";
     }
   }
 
