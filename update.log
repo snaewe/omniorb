@@ -25,6 +25,10 @@ src/lib/omniORB2/orbcore/poamanager.cc
 src/lib/omniORB2/orbcore/poastubs.cc
 src/tool/omniidl2/omniORB2_be/o2be_interface.cc
 
+- Minor mod to example.
+
+src/examples/echo/eg2_clt.cc
+
 
 Wed Jan 26 15:29:24 GMT 2000 djr
 ================================

@@ -13,11 +13,6 @@
 
 static void hello(Echo_ptr e)
 {
-  if( CORBA::is_nil(e) ) {
-    cerr << "hello: The object reference is nil!\n" << endl;
-    return;
-  }
-
   CORBA::String_var src = (const char*) "Hello!";
 
   CORBA::String_var dest = e->echoString(src);
@@ -40,6 +35,10 @@ int main(int argc, char** argv)
 
     CORBA::Object_var obj = orb->string_to_object(argv[1]);
     Echo_var echoref = Echo::_narrow(obj);
+    if( CORBA::is_nil(echoref) ) {
+      cerr << "Can't narrow reference to type Echo (or it was nil)." << endl;
+      return 1;
+    }
     hello(echoref);
 
     orb->destroy();
