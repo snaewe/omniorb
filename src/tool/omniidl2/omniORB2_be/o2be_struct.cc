@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.12  1999/05/26 10:26:56  sll
+  Use o2be_nested_typedef to generate stub for nested types.
+
   Revision 1.11  1999/03/11 16:26:11  djr
   Updated copyright notice
 
@@ -146,11 +149,6 @@ o2be_structure::o2be_structure(UTL_ScopedName *n, UTL_StrList *p)
 	      o2be_sequence_chain(AST_Decl::NT_struct, n, p)
 {
   pd_isvar = I_FALSE;
-  pd_hdr_produced_in_field = I_FALSE;
-  pd_skel_produced_in_field = I_FALSE;
-  pd_binary_operators_hdr_produced_in_field = I_FALSE;
-  pd_binary_operators_skel_produced_in_field = I_FALSE;
-  pd_have_produced_typecode_skel = I_FALSE;
 
   pd_out_adptarg_name = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
 				 strlen(fqname())+
@@ -216,54 +214,8 @@ o2be_structure::produce_hdr(std::fstream &s)
 {
   IND(s); s << "struct " << uqname() << " {\n";
   INC_INDENT_LEVEL();
-  {
-    // declare any constructor types defined in this scope
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	if (d->node_type() == AST_Decl::NT_field)
-	  {
-	    AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			       ->get_hdr_produced_in_field()) 
-		      {
-			o2be_enum::narrow_from_decl(decl)
-			       ->set_hdr_produced_in_field();
-			o2be_enum::narrow_from_decl(decl)->produce_hdr(s);
-		      }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			       ->get_hdr_produced_in_field()) 
-		      {
-			o2be_structure::narrow_from_decl(decl)
-			       ->set_hdr_produced_in_field();
-			o2be_structure::narrow_from_decl(decl)->produce_hdr(s);
-		      }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			       ->get_hdr_produced_in_field()) 
-		      {
-			o2be_union::narrow_from_decl(decl)
-			       ->set_hdr_produced_in_field();
-			o2be_union::narrow_from_decl(decl)->produce_hdr(s);
-		      }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
+
+  o2be_nested_typedef::produce_hdr(s,this);
 
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -368,51 +320,7 @@ o2be_structure::produce_hdr(std::fstream &s)
 void
 o2be_structure::produce_skel(std::fstream &s)
 {
-  {
-    // declare any constructor types defined in this scope
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	if (d->node_type() == AST_Decl::NT_field)
-	  {
-	    AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) {
-		      o2be_enum::narrow_from_decl(decl)
-			->set_skel_produced_in_field();
-		      o2be_enum::narrow_from_decl(decl)->produce_skel(s);
-		    }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) {
-		      o2be_structure::narrow_from_decl(decl)
-			->set_skel_produced_in_field();
-		      o2be_structure::narrow_from_decl(decl)->produce_skel(s);
-		    }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) {
-		      o2be_union::narrow_from_decl(decl)
-			->set_skel_produced_in_field();
-		      o2be_union::narrow_from_decl(decl)->produce_skel(s);
-		    }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
+  o2be_nested_typedef::produce_skel(s,this);
 
   IND(s); s << "size_t\n";
   IND(s); s << fqname() << "::NP_alignedSize(size_t _initialoffset) const\n";
@@ -633,55 +541,11 @@ o2be_structure::produce_skel(std::fstream &s)
 void
 o2be_structure::produce_dynskel(std::fstream &s)
 {
-  {
-    // declare any constructor types defined in this scope
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	if (d->node_type() == AST_Decl::NT_field)
-	  {
-	    AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			       ->get_dynskel_produced_in_field()) {
-		      o2be_enum::narrow_from_decl(decl)
-			->set_dynskel_produced_in_field();
-		      o2be_enum::narrow_from_decl(decl)->produce_dynskel(s);
-		    }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			       ->get_dynskel_produced_in_field()) {
-		      o2be_structure::narrow_from_decl(decl)
-			->set_dynskel_produced_in_field();
-		      o2be_structure::narrow_from_decl(decl)
-			->produce_dynskel(s);
-		    }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			       ->get_dynskel_produced_in_field()) {
-		      o2be_union::narrow_from_decl(decl)
-			->set_dynskel_produced_in_field();
-		      o2be_union::narrow_from_decl(decl)->produce_dynskel(s);
-		    }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
-
   // Produce code for types any and TypeCode
   this->produce_typecode_skel(s);
+
+  o2be_nested_typedef::produce_dynskel(s,this);
+
 
   if (defined_in() != idl_global->root() &&
       defined_in()->scope_node_type() == AST_Decl::NT_module)
@@ -720,57 +584,7 @@ o2be_structure::produce_dynskel(std::fstream &s)
 void
 o2be_structure::produce_binary_operators_in_hdr(std::fstream &s)
 {
-  {
-    // declare any constructor types defined in this scope
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	if (d->node_type() == AST_Decl::NT_field)
-	  {
-	    AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			  ->get_binary_operators_hdr_produced_in_field()) 
-		      {
-			o2be_enum::narrow_from_decl(decl)
-			  ->set_binary_operators_hdr_produced_in_field();
-			o2be_enum::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_hdr(s);
-		      }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			  ->get_binary_operators_hdr_produced_in_field()) 
-		      {
-			o2be_structure::narrow_from_decl(decl)
-			  ->set_binary_operators_hdr_produced_in_field();
-			o2be_structure::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_hdr(s);
-		      }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			  ->get_binary_operators_hdr_produced_in_field()) 
-		      {
-			o2be_union::narrow_from_decl(decl)
-			  ->set_binary_operators_hdr_produced_in_field();
-			o2be_union::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_hdr(s);
-		      }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
+  o2be_nested_typedef::produce_binary_operators_in_hdr(s,this);
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // any insertion and extraction operators
@@ -787,56 +601,7 @@ o2be_structure::produce_binary_operators_in_hdr(std::fstream &s)
 void
 o2be_structure::produce_binary_operators_in_dynskel(std::fstream &s)
 {
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	if (d->node_type() == AST_Decl::NT_field)
-	  {
-	    AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			  ->get_binary_operators_skel_produced_in_field()) 
-		      {
-			o2be_enum::narrow_from_decl(decl)
-			  ->set_binary_operators_skel_produced_in_field();
-			o2be_enum::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_dynskel(s);
-		      }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			  ->get_binary_operators_skel_produced_in_field()) 
-		      {
-			o2be_structure::narrow_from_decl(decl)
-			  ->set_binary_operators_skel_produced_in_field();
-			o2be_structure::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_dynskel(s);
-		      }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			  ->get_binary_operators_skel_produced_in_field()) 
-		      {
-			o2be_union::narrow_from_decl(decl)
-			  ->set_binary_operators_skel_produced_in_field();
-			o2be_union::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_dynskel(s);
-		      }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
+  o2be_nested_typedef::produce_binary_operators_in_dynskel(s,this);
 
   // Any storage management function
   // Stupidly, any has to handle the storage for data unmarshalled from it,
@@ -1017,55 +782,47 @@ o2be_structure::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 void
 o2be_structure::produce_typecode_skel(std::fstream &s)
 {
-  if( have_produced_typecode_skel() )  return;
+  if( have_produced_typecode_skel() ) return;
   set_have_produced_typecode_skel();
 
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
+  o2be_nested_typedef::produce_typecode_skel(s,this);
 
-    { // Ensure we have the typecodes of the members
-      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-      while( !i.is_done() ) {
-	AST_Decl* d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )
-	  continue;
-	d = AST_Field::narrow_from_decl(d)->field_type();
-	o2be_name::narrow_and_produce_typecode_skel(d, s);
-      }
+  // Produce entries in PR_structMember for struct members
+  IND(s); s << "static CORBA::PR_structMember _0RL_structmember_"
+	    << _idname() << "[] = {\n";
+
+  INC_INDENT_LEVEL();
+
+  unsigned long memberCount = 0;
+
+  { // Produce entries in PR_structMember for struct members
+
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while( !i.is_done() ) {
+      AST_Decl* d = i.item();
+      i.next();
+      if( d->node_type() != AST_Decl::NT_field )
+	continue;
+      else
+	memberCount++;
+
+      IND(s); s << "{\"" << o2be_field::narrow_from_decl(d)->uqname()
+		<< "\", ";
+      AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
+      o2be_name::produce_typecode_member(decl, s);
+      s << "}";
+      if( i.is_done() )  s << '\n';
+      else               s << ",\n";
     }
-
-    // Produce entries in PR_structMember for struct members
-    IND(s); s << "static CORBA::PR_structMember _0RL_structmember_"
-	      << _idname() << "[] = {\n";
-
-    INC_INDENT_LEVEL();
-    { // Produce entries in PR_structMember for struct members
-
-      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-      while( !i.is_done() ) {
-	AST_Decl* d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )
-	  continue;
-
-	IND(s); s << "{\"" << o2be_field::narrow_from_decl(d)->uqname()
-		  << "\", ";
-	AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-	o2be_name::produce_typecode_member(decl, s);
-	s << "}";
-	if( i.is_done() )  s << '\n';
-	else               s << ",\n";
-      }
-    }
-    DEC_INDENT_LEVEL();
-    IND(s); s << "};\n";
-
-    IND(s); s << "static CORBA::TypeCode_ptr _0RL_tc_" << _idname() << " = "
-	      << "CORBA::TypeCode::PR_struct_tc("
-	      << "\"" << repositoryID() << "\", \"" << uqname() << "\", "
-	      << "_0RL_structmember_" << _idname() << ", "
-	      << this->nmembers() << ");\n\n";
   }
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n";
+  
+  IND(s); s << "static CORBA::TypeCode_ptr _0RL_tc_" << _idname() << " = "
+	    << "CORBA::TypeCode::PR_struct_tc("
+	    << "\"" << repositoryID() << "\", \"" << uqname() << "\", "
+	    << "_0RL_structmember_" << _idname() << ", "
+	    << memberCount << ");\n\n";
 }
 
 
