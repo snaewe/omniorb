@@ -6,9 +6,14 @@ Wed Oct 13 16:11:27 BST 1999 sll
 
 src/lib/omnithread/posix.cc
 
-- Fixed omniidl3 bug.  Call descriptors for operations and attributes
-  used different naming conventions for members, but can be used
-  interchangeably.
+- Fixed omniidl3 bugs:
+
+   Fixed mapping for server-skeleton signatures.  inout parameters
+   should not use _INOUT_arg types.
+
+   Call descriptors for operations and attributes used different naming
+   conventions for members, and had different constructors, but can be
+   used interchangeably (so need to export identical interfaces).
 
 src/too/omniidl2/omniORB2_be/o2be.h
 src/too/omniidl2/omniORB2_be/o2be_attribute.cc
