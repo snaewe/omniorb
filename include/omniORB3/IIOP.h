@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/05/25 08:45:54  dpg1
+  Forgot _core_attr onn IIOP::DEFAULT_CORBALOC_PORT
+
   Revision 1.1.2.3  2000/05/24 17:10:57  dpg1
   Rename IIOP::DEFAULT_PORT IIOP::DEFAULT_CORBALOC_PORT
 
@@ -91,7 +94,7 @@ public:
     ~ProfileBody() { if (host) delete [] host; }
   };
 
-  static const _CORBA_UShort DEFAULT_CORBALOC_PORT;
+  static _core_attr const _CORBA_UShort DEFAULT_CORBALOC_PORT;
 };
 
 
