@@ -43,20 +43,13 @@ export:: omniLifeCycle.hh
 		$(ExportFileToDir))
 
 
-veryclean::
-	$(RM)	Naming.idl Naming.hh NamingSK.cc NamingDynSK.cc \
-		bootstrap.idl bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc \
-		ir.idl ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc \
-		corbaidl.idl corbaidl_defs.hh corbaidl_operators.hh \
-                corbaidlSK.cc corbaidlDynSK.cc \
-		omniLifeCycle.idl omniLifeCycle.hh omniLifeCycleSK.cc \
-			omniLifeCycleDynSK.cc
-
-
 all::
 	@$(MakeSubdirs)
 
 clean::
+	@$(MakeSubdirs)
+
+veryclean::
 	@$(MakeSubdirs)
 
 export::
@@ -94,4 +87,14 @@ omniLifeCycle.hh omniLifeCycleSK.cc omniLifeCycleDynSK.cc: omniLifeCycle.idl
 
 ciao:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh
 	@$(MakeSubdirs)
+
+veryclean::
+	$(RM)	Naming.idl Naming.hh NamingSK.cc NamingDynSK.cc \
+		bootstrap.idl bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc \
+		ir.idl ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc \
+		corbaidl.idl corbaidl_defs.hh corbaidl_operators.hh \
+                corbaidlSK.cc corbaidlDynSK.cc \
+		omniLifeCycle.idl omniLifeCycle.hh omniLifeCycleSK.cc \
+			omniLifeCycleDynSK.cc
+
 
