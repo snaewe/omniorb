@@ -1,3 +1,15 @@
+Mon Jul 10 11:41:10 BST 2000 sll
+================================
+
+- Some platforms' stream::flush() function requires an addition
+  low level sync() call to ensure that the data is flushed to disk.
+  Whenever a transaction is to be flushed to the redolog, omniNames now
+  call reallyFlush() which may call sync() if necessary.
+
+src/appl/omniNames/log.cc
+
+
+
 Fri Jul  7 11:28:19 BST 2000 sll
 ================================
 
