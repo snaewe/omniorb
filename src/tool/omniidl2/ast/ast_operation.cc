@@ -198,11 +198,9 @@ AST_Argument *AST_Operation::fe_add_argument(AST_Argument *t)
 
   /*
    * Check if the argument name has been used in the operation's argument
-   * list or within the scope of the interface where this operation is
-   * defined.
+   * list.
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = (defined_in())->lookup_for_add(t, I_FALSE, I_TRUE)) == NULL) {
     if ((d = lookup_for_add(t, I_FALSE,I_TRUE)) != NULL) {
       if (!can_be_redefined(d)) {
 	idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
@@ -217,13 +215,6 @@ AST_Argument *AST_Operation::fe_add_argument(AST_Argument *t)
 	return NULL;
       }
     }
-  }
-  else {
-    idl_global->err()->error3(UTL_Error::EIDL_REDEF,t,
-			      AST_Interface::narrow_from_scope(defined_in()),
-			      d);
-    return NULL;
-  }
   /*
    * Cannot add OUT or INOUT argument to oneway operation
    */
