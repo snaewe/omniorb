@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2005/01/04 14:50:34  dgrisby
+  Segfault in omniCurrent::get() when ORB has not been initialised.
+  Thanks Eric Noyau.
+
   Revision 1.1.2.3  2002/10/14 20:06:41  dgrisby
   Per objref / per thread timeouts.
 
@@ -74,7 +78,7 @@ public:
     if (!_OMNI_NS(orbParameters)::supportCurrent) return 0;
 
     omni_thread* thr = omni_thread::self();
-    if (!thr) return 0;
+    if (!thr || !thread_key) return 0;
 
     omniCurrent* current = (omniCurrent*)(thr->get_value(thread_key));
     if (!current)
@@ -84,6 +88,7 @@ public:
 
   static inline omniCurrent* get(omni_thread* thr)
   {
+    if (!thread_key) return 0;
     omniCurrent* current = (omniCurrent*)(thr->get_value(thread_key));
     if (!current)
       current = new omniCurrent(thr);
