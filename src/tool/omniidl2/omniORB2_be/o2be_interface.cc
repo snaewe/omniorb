@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.12  1997/08/27 17:54:31  sll
+  Added _var typedef for IDL typedef Object.
+
   Revision 1.11  1997/08/22 12:43:23  sll
   Oh well, gcc does not like variable names starting with __, changed
   the prefix to _0RL_.
@@ -1175,7 +1178,6 @@ o2be_interface::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
   IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
   IND(s); s << "typedef " << objref_fqname() << " " << tdef->uqname() << "_ptr;\n";
   IND(s); s << "typedef " << fqname() << "Ref " << tdef->uqname() << "Ref;\n";
-
   if (strcmp(uqname(),"Object") != 0) {
     IND(s); s << "typedef " << fqname() << "_Helper " << tdef->uqname() << "_Helper;\n";
     IND(s); s << "typedef " << proxy_fqname()
@@ -1184,11 +1186,10 @@ o2be_interface::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 	      << " " << SERVER_CLASS_PREFIX << tdef->uqname() << ";\n";
     IND(s); s << "typedef " << nil_fqname()
 	      << " " << NIL_CLASS_PREFIX << tdef->uqname() << ";\n";
-    IND(s); s << "typedef " << fqname() << "_var "
-	      << tdef->uqname() << "_var;\n";
     s << "#define " << tdef->_fqname() << IRREPOID_POSTFIX << " " << IRrepoId()
       << ";\n";
   }
+  IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n";
 }
 
 
