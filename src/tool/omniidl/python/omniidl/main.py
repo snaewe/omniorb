@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  1999/12/17 11:39:23  dpg1
+# Cosmetic change
+#
 # Revision 1.10  1999/11/30 10:41:20  dpg1
 # Back-ends can now have their own usage string.
 #
@@ -236,7 +239,7 @@ def main(argv=None):
             preprocessor_args.extend(be.cpp_args)
 
         if print_usage and hasattr(be, "usage_string"):
-            print "\nArguments specific to back-end `" + backend + "':\n"
+            print "\nArguments for back-end `" + backend + "':\n"
             print be.usage_string
 
     if print_usage:
