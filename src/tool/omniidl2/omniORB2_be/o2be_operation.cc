@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.34.4.4  1999/11/05 17:35:32  sll
+  Updated server Upcall function to remove a SUN Pro compiler warning.
+
   Revision 1.34.4.3  1999/11/04 20:16:07  sll
   Server side stub now use a descriptor mechanism similar to the client size
   stub.
@@ -898,7 +901,7 @@ o2be_operation::produce_server_skel_aux(std::fstream& s)
   s << "obj->";
   if (has_variable_out_arg() || has_pointer_inout_arg()) {
     // Use the indirection function in the base class
-    s << intf->uqname() << "::";
+    s << intf->fqname() << "::";
   }
   s << uqname() << "(";
   {

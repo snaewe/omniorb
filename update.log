@@ -1,5 +1,13 @@
+Fri Nov  5 17:31:04 GMT 1999 sll
+================================
+
+- update to the server side stub to remove a compiler warning from SunPro
+  compiler
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
 Fri Nov  5 14:39:28 GMT 1999 sll
-===============================
+================================
 
 - Fully initialise the return value of
   giopStream::requestInfo::targetAddress() even if the addressing
