@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.30  2003/05/22 13:41:41  dgrisby
+  HPUX patches.
+
   Revision 1.2.2.29  2003/01/16 11:08:26  dgrisby
   Patches to support Digital Mars C++. Thanks Christof Meerwald.
 
@@ -235,6 +238,19 @@ CORBA::Boolean  omniORB::traceThreadId = 0;
 //    Valid values = 0 or 1
 
 
+const CORBA::Char                omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
+omni_tracedmutex*                omni::internalLock = 0;
+omni_tracedmutex*                omni::poRcLock = 0;
+_CORBA_Unbounded_Sequence_Octet  omni::myPrincipalID;
+const omni::alignment_t          omni::max_alignment = ALIGN_8;
+
+int                              omni::remoteInvocationCount = 0;
+int                              omni::localInvocationCount = 0;
+int                              omni::mainThreadId = 0;
+
+omni_tracedmutex*                omni::objref_rc_lock = 0;
+// Protects omniObjRef reference counting and linked list.
+
 OMNI_USING_NAMESPACE(omni)
 
 CORBA::ULong orbParameters::objectTableSize = 0;
@@ -269,19 +285,6 @@ using omniORB::operator==;
 #  endif
 #endif
 
-
-const CORBA::Char                omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
-omni_tracedmutex*                omni::internalLock = 0;
-omni_tracedmutex*                omni::poRcLock = 0;
-_CORBA_Unbounded_Sequence_Octet  omni::myPrincipalID;
-const omni::alignment_t          omni::max_alignment = ALIGN_8;
-
-int                              omni::remoteInvocationCount = 0;
-int                              omni::localInvocationCount = 0;
-int                              omni::mainThreadId = 0;
-
-omni_tracedmutex*                omni::objref_rc_lock = 0;
-// Protects omniObjRef reference counting and linked list.
 
 OMNI_NAMESPACE_BEGIN(omni)
 

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.13  2003/05/22 13:41:40  dgrisby
+ HPUX patches.
+
  Revision 1.2.2.12  2003/01/16 12:47:08  dgrisby
  Const cast macro. Thanks Matej Kenda.
 
@@ -394,7 +397,7 @@ public:
       if (s.pd_data && s.pd_data != _CORBA_String_helper::empty_string)
 	pd_data = _CORBA_String_helper::dup(s.pd_data);
       else {
-	pd_data = OMNI_CONST_CAST(char*, s.pd_data);
+	pd_data = OMNI_CONST_CAST(char*, (const char*)s.pd_data);
       }
     }
     return *this;

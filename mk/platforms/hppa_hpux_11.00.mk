@@ -191,7 +191,7 @@ BuildSharedLibrary = 1
 
 SHAREDLIB_CPPFLAGS += +Z
 
-SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname -Wl,+s
+SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h,$$soname -Wl,+s
 # May need  $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS))
 
 endif
