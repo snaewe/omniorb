@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/07/31 16:20:30  sll
+  New primitives to acquire read lock on a connection.
+
   Revision 1.1.4.2  2001/05/01 16:07:32  sll
   All GIOP implementations should now work with fragmentation and abitrary
   sizes non-copy transfer.
@@ -101,19 +104,50 @@ class giopStream : public cdrStream {
   // Thread Safety preconditions:
   //   Caller of these strand locking functions must hold the
   //   omniTransportLock before calling.
-  virtual void rdLock();  // Acquire read lock on the strand.
+
+  virtual void rdLock(unsigned long deadline_secs = 0,
+		      unsigned long deadline_nanosecs = 0); 
+  // Acquire read lock on the strand.
+  // The optional arguments, if specified, define a deadline in real time
+  // when the func should give up waiting to be unblock.
+  //
+  // Error conditions. If the deadline has expired, this call raises the
+  // CommFailure exception.
+
+  virtual void wrLock(unsigned long deadline_secs = 0,
+		      unsigned long deadline_nanosecs = 0); 
+  // Acquire write lock on the strand.
+  // The optional arguments, if specified, define a deadline in real time
+  // when the func should give up waiting to be unblock.
+  //
+  // Error conditions. If the deadline has expired, this call raises the
+  // CommFailure exception.
+
   virtual void rdUnLock();// Release the read lock if this instance holds one
-  virtual void wrLock();  // Acquire write lock on the strand.
   virtual void wrUnLock();// Release the write lock if this instance holds one.
 
-  static _CORBA_Boolean rdLockNonBlocking(giopStrand*);
+  virtual _CORBA_Boolean rdLockNonBlocking();
   // Acquire read lock but do not block if another thread is already
   // holding one. Return True if read lock is acquired.
 
-  static void sleepOnRdLock(giopStrand*,CORBA::Boolean always=0);
+  virtual void sleepOnRdLock(unsigned long deadline_secs = 0,
+			     unsigned long deadline_nanosecs = 0);
   // Block until the read lock is available.
-  // if always == TRUE(1), block even if the read lock is available at the
-  // time. In other words, block until other threads call wakeUpRdLock.
+  // The optional arguments, if specified, define a deadline in real time
+  // when the func should give up waiting to be unblock.
+  //
+  // Error conditions. If the deadline has expired, this call raises the
+  // CommFailure exception.
+
+  virtual void sleepOnRdLockAlways(unsigned long deadline_secs = 0,
+				   unsigned long deadline_nanosecs = 0);
+  // Irrespective of the state of the read lock. Block the thread
+  // on the read lock condition variable until it is signalled by another
+  // thread or the option deadline in real time has expired.
+  //
+  // Error conditions. If the deadline has expired, this call raises the
+  // CommFailure exception.
+
 
   static void wakeUpRdLock(giopStrand*);
   // Wakeup all those threads blocking to acquire a read lock.
@@ -121,8 +155,19 @@ class giopStream : public cdrStream {
   static _CORBA_Boolean noLockWaiting(giopStrand*);
   // Returns True (1) if no thread is waiting to acquire a read or write lock
 
-  virtual void markRdLock();
-  // Caller must have called rdLockNonBlocking() and succeeded.
+  static _CORBA_Boolean rdLockNonBlocking(giopStrand*);
+  // Acquire read lock but do not block if another thread is already
+  // holding one. Return True if read lock is acquired. A variant of
+  // the member func with the same name except that the caller do not
+  // have a giopStream at hand.
+
+  static void sleepOnRdLock(giopStrand*);
+  // Block until the read lock is available. A variant of
+  // the member func with the same name except that the caller do not
+  // have a giopStream at hand.
+
+  void markRdLock();
+  // Caller must have called rdLockNonBlocking(giopStrand*) and succeeded.
   // Mark this instance as the one that have acquired the lock.
 
   static _CORBA_Boolean RdLockIsHeld(giopStrand*);
@@ -252,6 +297,8 @@ public:
   void fetchInputData(omni::alignment_t,size_t);
   _CORBA_Boolean reserveOutputSpaceForPrimitiveType(omni::alignment_t,size_t);
   _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t,size_t);
+
+  _CORBA_Boolean is_giopStream();
 
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;

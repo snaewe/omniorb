@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2001/07/31 16:20:29  sll
+  New primitives to acquire read lock on a connection.
+
   Revision 1.1.4.7  2001/07/13 15:23:51  sll
   Call notifyCallFullyBuffered when a request has arrived and fully buffered.
 
@@ -346,8 +349,7 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
     CORBA::ULong fetchsz = b->size - (b->last - b->start);
     while (fetchsz) {
       // fetch the rest of the message;
-      giopStream_Buffer* p = g->inputChunk(fetchsz,0,0);
-      // XXX no deadline set.
+      giopStream_Buffer* p = g->inputChunk(fetchsz,0,0);// XXX no deadline set.
       pp = &((*pp)->next);
       *pp = p;
       fetchsz -= (p->last - p->start);
@@ -381,8 +383,7 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
     giopStream_Buffer::deleteBuffer(b);
     while (fetchsz) {
       // fetch the rest of the message;
-      b = g->inputChunk(fetchsz,0,0);
-      // XXX no deadline set.
+      b = g->inputChunk(fetchsz,0,0); // XXX no deadline set.
       fetchsz -= (b->last - b->start);
       giopStream_Buffer::deleteBuffer(b);
     }
@@ -398,8 +399,7 @@ giopImpl12::inputNewServerMessage(giopStream* g) {
 
  again:
 
-  g->pd_currentInputBuffer = g->inputMessage(0,0);
-  // XXX no deadline set
+  g->pd_currentInputBuffer = g->inputMessage(0,0); // XXX no deadline set
 
   unsigned char* hdr = (unsigned char*)g->pd_currentInputBuffer + 
                                        g->pd_currentInputBuffer->start;
@@ -445,7 +445,7 @@ giopImpl12::inputNewFragment(giopStream* g) {
 
  again:
   if (!g->pd_input) {
-    giopStream_Buffer* p = g->inputMessage(0,0);
+    giopStream_Buffer* p = g->inputMessage(0,0); // no deadline set yet
     inputQueueMessage(g,p);
     goto again;
   }
@@ -500,11 +500,9 @@ giopImpl12::inputReplyBegin(giopStream* g,
     if (!g->pd_strand->biDir) {
 
       while (!(g->inputFullyBuffered() || g->pd_rdlocked)) {
-	if (giopStream::rdLockNonBlocking(g->pd_strand)) {
-	  g->markRdLock();
-	}
-	else {
-	  giopStream::sleepOnRdLock(g->pd_strand);
+	if (!g->rdLockNonBlocking()) {
+	  g->sleepOnRdLock(0,0);
+	  // XXX no deadline set yet.
 	}
       }
     }
@@ -514,9 +512,20 @@ giopImpl12::inputReplyBegin(giopStream* g,
       // demultiplex any reply back to us. Therefore, we do not
       // try to acquire the read lock but just sleep on the read
       // lock instead.
-      while (!g->inputFullyBuffered()) {
+      while (!(g->pd_strand->state() == giopStrand::DYING ||
+	       g->inputFullyBuffered() ) ) {
 	OMNIORB_ASSERT(g->pd_rdlocked == 0);
-	giopStream::sleepOnRdLock(g->pd_strand,1);
+	g->sleepOnRdLockAlways(0,0); // XXX no deadline set yet.
+      }
+      if (g->pd_strand->state() == giopStrand::DYING) {
+	CORBA::ULong minor;
+	CORBA::Boolean retry;
+	g->notifyCommFailure(minor,retry);
+	giopStream::CommFailure::_raise(minor,
+					(CORBA::CompletionStatus)g->completion(),
+					retry,
+					__FILE__,__LINE__);
+	// never reaches here.
       }
     }
   }
@@ -524,7 +533,7 @@ giopImpl12::inputReplyBegin(giopStream* g,
   if (!g->pd_currentInputBuffer) {
   again:
     if (!g->pd_input) {
-      giopStream_Buffer* p = g->inputMessage(0,0);
+      giopStream_Buffer* p = g->inputMessage(0,0); // XXX no deadline set yet.
       inputQueueMessage(g,p);
       goto again;
     }
@@ -1147,7 +1156,7 @@ giopImpl12::outputNewMessage(giopStream* g) {
 
   if (!g->pd_wrlocked) {
     omni_tracedmutex_lock sync(*omniTransportLock);
-    g->wrLock();
+    g->wrLock(0,0); // XXX no deadline set yet
   }
 
   if (!g->pd_currentOutputBuffer) {

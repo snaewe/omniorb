@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2001/07/31 16:20:29  sll
+  New primitives to acquire read lock on a connection.
+
   Revision 1.1.4.12  2001/07/13 15:28:36  sll
   Added more tracing messages.
 
@@ -113,6 +116,12 @@ giopStream::~giopStream() {
 }
 
 ////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopStream::is_giopStream() {
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
 void
 giopStream::reset() {
   giopStream_Buffer* p = pd_input;
@@ -139,7 +148,8 @@ giopStream::version() {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::rdLock() {
+giopStream::rdLock(unsigned long deadline_secs,
+		   unsigned long deadline_nanosecs) {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
@@ -147,7 +157,17 @@ giopStream::rdLock() {
 
   while (pd_strand->rd_nwaiting < 0) {
     pd_strand->rd_nwaiting--;
-    pd_strand->rdcond.wait();
+
+    // Now blocks.
+    if (!(deadline_secs || deadline_nanosecs))
+      pd_strand->rdcond.wait();
+    else {
+      if (!pd_strand->rdcond.timedwait(deadline_secs,deadline_nanosecs)) {
+	// Timeout. 
+	errorOnReceive(0,__FILE__,__LINE__,0);
+      }
+    }
+
     if (pd_strand->rd_nwaiting >= 0)
       pd_strand->rd_nwaiting--;
     else
@@ -169,15 +189,28 @@ giopStream::rdUnLock() {
 
   OMNIORB_ASSERT(pd_strand->rd_nwaiting < 0);
   pd_strand->rd_nwaiting = -pd_strand->rd_nwaiting - 1;
-  if (pd_strand->rd_nwaiting > 0)
-    pd_strand->rdcond.signal();
-
+  if (pd_strand->rd_nwaiting > 0) {
+    if (pd_strand->rd_n_justwaiting == 0) {
+      pd_strand->rdcond.signal();
+    }
+    else {
+      // There are threads which have blocked on the read lock's condition
+      // variable and do not try to acquire the read lock.  If we signal
+      // just one thread, the thread got woken up may just be of this type.
+      // The other threads which do want the read lock may not get
+      // it. The end result is no thread gets the read lock and the threads
+      // that want it are still blocked in the condition variable.
+      // To prevent this from happening, we wake all threads up.
+      wakeUpRdLock(pd_strand);
+    }
+  }
   pd_rdlocked = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::wrLock() {
+giopStream::wrLock(unsigned long deadline_secs,
+		   unsigned long deadline_nanosecs) {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
@@ -185,7 +218,17 @@ giopStream::wrLock() {
 
   while (pd_strand->wr_nwaiting < 0) {
     pd_strand->wr_nwaiting--;
-    pd_strand->wrcond.wait();
+
+    // Now blocks.
+    if (!(deadline_secs || deadline_nanosecs))
+      pd_strand->wrcond.wait();
+    else {
+      if (!pd_strand->wrcond.timedwait(deadline_secs,deadline_nanosecs)) {
+	// Timeout. 
+	errorOnReceive(0,__FILE__,__LINE__,0);
+      }
+    }
+
     if (pd_strand->wr_nwaiting >= 0)
       pd_strand->wr_nwaiting--;
     else
@@ -211,6 +254,31 @@ giopStream::wrUnLock() {
     pd_strand->wrcond.signal();
 
   pd_wrlocked = 0; 
+
+  if ( pd_strand->state() == giopStrand::DYING && 
+       pd_strand->rd_n_justwaiting ) {
+    // There are threads just blocking on the read lock's condition
+    // variable and do not try to acquire the read lock. They may never
+    // have a chance to discover that the strand has in fact died.
+    wakeUpRdLock(pd_strand);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopStream::rdLockNonBlocking() {
+
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+
+  OMNIORB_ASSERT(!pd_rdlocked);
+
+  if (pd_strand->rd_nwaiting < 0)
+    return 0;
+  else {
+    pd_strand->rd_nwaiting = -pd_strand->rd_nwaiting - 1;
+    pd_rdlocked = 1;
+    return 1;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -229,7 +297,34 @@ giopStream::rdLockNonBlocking(giopStrand* strand) {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::sleepOnRdLock(giopStrand* strand, CORBA::Boolean always) {
+giopStream::sleepOnRdLock(unsigned long deadline_secs,
+			  unsigned long deadline_nanosecs) {
+
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+
+  if (pd_strand->rd_nwaiting < 0) {
+    pd_strand->rd_nwaiting--;
+
+    // Now blocks.
+    if (!(deadline_secs || deadline_nanosecs))
+      pd_strand->rdcond.wait();
+    else {
+      if (!pd_strand->rdcond.timedwait(deadline_secs,deadline_nanosecs)) {
+	// Timeout. 
+	errorOnReceive(0,__FILE__,__LINE__,0);
+      }
+    }
+
+    if (pd_strand->rd_nwaiting >= 0)
+      pd_strand->rd_nwaiting--;
+    else
+      pd_strand->rd_nwaiting++;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+void
+giopStream::sleepOnRdLock(giopStrand* strand) {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
@@ -241,14 +336,38 @@ giopStream::sleepOnRdLock(giopStrand* strand, CORBA::Boolean always) {
     else
       strand->rd_nwaiting++;
   }
-  else if (always) {
-    strand->rd_nwaiting++;
-    strand->rdcond.wait();
-    if (strand->rd_nwaiting >= 0)
-      strand->rd_nwaiting--;
-    else
-      strand->rd_nwaiting++;
+}
+
+////////////////////////////////////////////////////////////////////////
+void
+giopStream::sleepOnRdLockAlways(unsigned long deadline_secs,
+				unsigned long deadline_nanosecs) {
+
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+
+  if (pd_strand->rd_nwaiting < 0)
+    pd_strand->rd_nwaiting--;
+  else
+    pd_strand->rd_nwaiting++;
+
+  pd_strand->rd_n_justwaiting++;
+
+  // Now blocks.
+  if (!(deadline_secs || deadline_nanosecs))
+    pd_strand->rdcond.wait();
+  else {
+    if (!pd_strand->rdcond.timedwait(deadline_secs,deadline_nanosecs)) {
+      // Timeout. 
+      errorOnReceive(0,__FILE__,__LINE__,0);
+    }
   }
+
+  pd_strand->rd_n_justwaiting--;
+
+  if (pd_strand->rd_nwaiting >= 0)
+    pd_strand->rd_nwaiting--;
+  else
+    pd_strand->rd_nwaiting++;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -257,16 +376,16 @@ giopStream::wakeUpRdLock(giopStrand* strand) {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
-  if (strand->rd_nwaiting < 0) {
 #if 1
-    strand->rdcond.broadcast();
+  strand->rdcond.broadcast();
 #else
-    // Do this if the platform's condition variable broadcast does not
-    // work.
-    for (int i= -strand->rd_nwaiting; i > 0; i--)
-      strand->rdcond.signal();
+  // Do this if the platform's condition variable broadcast does not
+  // work.
+  int i = strand->rd_nwaiting;
+  if (i < 0) i = -1;
+  for ( ; i > 0; i--)
+    strand->rdcond.signal();
 #endif
-  }
 
 }
 
@@ -513,7 +632,7 @@ giopStream::errorOnReceive(int rc, const char* filename, CORBA::ULong lineno,
   if (rc == 0) {
     // Timeout.
     // We do not use the return code from the function.
-    if (buf->end != buf->start) {
+    if (buf && buf->end != buf->start) {
       // partially received a buffer, we assume the other end
       // is in serious trouble.
       pd_strand->state(giopStrand::DYING);
@@ -585,9 +704,6 @@ giopStream::inputMessage(unsigned long deadline_secs,
     buf = pd_strand->head;
     pd_strand->head = buf->next;
     buf->next = 0;
-
-    omniORB::logger log;
-    log << "Got a queued message\n";
   }
   else if (pd_strand->spare) {
     buf = pd_strand->spare;
@@ -614,9 +730,13 @@ giopStream::inputMessage(unsigned long deadline_secs,
     }
   }
 
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    log << "inputMessage: from " 
+	<< pd_strand->connection->peeraddress() << " "
+	<< buf->last - buf->start << " bytes\n";
+  }
   if (omniORB::trace(30)) {
-    fprintf(stderr,"omniORB: inputMessage: from %s %lu bytes\n",
-	    pd_strand->connection->peeraddress(),buf->last - buf->start);
     dumpbuf((unsigned char*)buf+buf->start,buf->last - buf->start);
   }
 
@@ -636,9 +756,13 @@ giopStream::inputMessage(unsigned long deadline_secs,
 					    (size_t) total,
 					    deadline_secs, deadline_nanosecs);
       if (rsz > 0) {
+	if (omniORB::trace(25)) {
+	  omniORB::logger log;
+	  log << "inputMessage: (body) from " 
+	      << pd_strand->connection->peeraddress() << " "
+	      << rsz << " bytes\n";
+	}
 	if (omniORB::trace(30)) {
-	  fprintf(stderr,"omniORB: inputMessage: (body) from %s %d bytes\n",
-		  pd_strand->connection->peeraddress(),rsz);
 	  dumpbuf((unsigned char*)buf+buf->last,rsz);
 	}
 	buf->last += rsz;
@@ -746,9 +870,13 @@ giopStream::inputChunk(CORBA::ULong maxsize,
       // never reaches here.
     }
   }
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    log << "inputChunk: from " 
+	<< pd_strand->connection->peeraddress() << " "
+	<< buf->last - buf->start << " bytes\n";
+  }
   if (omniORB::trace(30)) {
-    fprintf(stderr,"omniORB: inputChunk: from %s %lu bytes\n",
-	    pd_strand->connection->peeraddress(),buf->last - buf->start);
     dumpbuf((unsigned char*)buf+buf->start,buf->last - buf->start);
   }
   return buf;
@@ -778,9 +906,11 @@ giopStream::inputCopyChunk(void* dest,
 
   char* p = (char*) dest;
 
-  if (omniORB::trace(30)) {
-    fprintf(stderr,"omniORB: inputCopyChunk: from %s %lu bytes\n",
-	    pd_strand->connection->peeraddress(),size);
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    log << "inputCopyChunk: from " 
+	<< pd_strand->connection->peeraddress() << " "
+	<< size << " bytes\n";
   }
 
   while (size) {
@@ -810,19 +940,32 @@ giopStream::sendChunk(giopStream_Buffer* buf,
 
   if (!pd_strand->connection) {
     OMNIORB_ASSERT(pd_strand->address);
-    pd_strand->connection = pd_strand->address->Connect(deadline_secs,
-							deadline_nanosecs);
+    if (pd_strand->state() != giopStrand::DYING) {
+      giopActiveConnection* c = pd_strand->address->Connect(deadline_secs,
+							    deadline_nanosecs);
+      if (c) pd_strand->connection = &(c->getConnection());
+    }
     if (!pd_strand->connection) {
       errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__);
+    }
+    if (omniORB::trace(20)) {
+      omniORB::logger log;
+      log << "Client opened connection to " 
+	  << pd_strand->connection->peeraddress() << "\n";
     }
   }
 
   CORBA::ULong first = buf->start;
   size_t total;
 
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    log << "sendChunk: to " 
+	<< pd_strand->connection->peeraddress() << " "
+	<< buf->last - buf->start << " bytes\n";
+  }
+
   if (omniORB::trace(30)) {
-    fprintf(stderr,"omniORB: sendChunk: to %s %lu bytes\n",
-	    pd_strand->connection->peeraddress(),buf->last - buf->start);
     dumpbuf((unsigned char*)buf+buf->start,buf->last-buf->start);
   }
 
@@ -850,16 +993,29 @@ giopStream::sendCopyChunk(void* buf,
 
   if (!pd_strand->connection) {
     OMNIORB_ASSERT(pd_strand->address);
-    pd_strand->connection = pd_strand->address->Connect(deadline_secs,
-							deadline_nanosecs);
+    if (pd_strand->state() != giopStrand::DYING) {
+      giopActiveConnection* c = pd_strand->address->Connect(deadline_secs,
+							    deadline_nanosecs);
+      if (c) pd_strand->connection = &(c->getConnection());
+    }
     if (!pd_strand->connection) {
       errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__);
     }
+    if (omniORB::trace(20)) {
+      omniORB::logger log;
+      log << "Client opened connection to " 
+	  << pd_strand->connection->peeraddress() << "\n";
+    }
+  }
+
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    log << "sendCopyChunk: to " 
+	<< pd_strand->connection->peeraddress() << " "
+	<< size << " bytes\n";
   }
 
   if (omniORB::trace(30)) {
-    fprintf(stderr,"omniORB: sendCopyChunk: to %s %lu bytes\n",
-	    pd_strand->connection->peeraddress(),size);
     dumpbuf((unsigned char*)buf,size);
   }
 
