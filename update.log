@@ -1,3 +1,12 @@
+Mon Apr  9 16:16:30 BST 2001 dpg1
+=================================
+
+- Tweak fixed point to make life easier for omniORBpy.
+
+include/omniORB4/CORBA.h
+src/lib/omniORB/orbcore/corbaFixed.cc
+
+
 Mon Mar 26 12:08:06 BST 2001 dpg1
 =================================
 

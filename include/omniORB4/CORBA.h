@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.12  2001/04/09 15:18:46  dpg1
+ Tweak fixed point to make life easier for omniORBpy.
+
  Revision 1.2.2.11  2001/03/13 10:32:04  dpg1
  Fixed point support.
 
@@ -2744,8 +2747,16 @@ _CORBA_MODULE_BEG
     // Return a string containing the fixed. Caller frees with
     // CORBA::string_free().
 
-    void NP_fromString(const char* val);
+    void NP_fromString(const char* val, Boolean ignore_end = 0);
     // Set the value from the given string.
+    // If ignore_end is true, do not complain about trailing garbage.
+
+    static int NP_cmp(const Fixed& a, const Fixed& b);
+    // Compare a and b. Returns -1 if a < b, 1 if a > b, 0 if a == b.
+
+
+    // "Private" functions only to be called by omniORB internals.
+    // Application code which uses these is asking for trouble.
 
     const Octet* PR_val() const { return pd_val; }
     // Return the internal value buffer. Used by arithmetic functions.
@@ -2761,6 +2772,9 @@ _CORBA_MODULE_BEG
 
     void PR_setLimits(UShort idl_digits, UShort idl_scale);
     // Set and check the digits/scale limits.
+
+    void PR_changeScale(UShort new_scale);
+    // Modify the scale. Updates the number of digits if necessary.
 
     // Marshalling operators
     void operator>>= (cdrStream& s) const;
