@@ -1,3 +1,11 @@
+Mon Oct 28 13:40:25 GMT 2002 dgrisby
+====================================
+
+- Work around Windows ME 0.0.0.0 interface problem.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Mon Oct 28 11:52:10 GMT 2002 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2002/10/28 13:48:50  dgrisby
+  Work around Windows ME 0.0.0.0 interface problem.
+
   Revision 1.1.2.13  2002/04/29 18:22:02  dgrisby
   Yet another Windows fix.
 
@@ -354,6 +357,11 @@ void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
 	struct sockaddr_in* iaddr = &info[i].iiAddress.AddressIn;
 	CORBA::String_var s;
 	s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+
+	// Just to catch us out, Windows ME apparently sometimes
+	// returns 0.0.0.0 as one of its interfaces...
+	if (omni::strMatch((const char*)s, "0.0.0.0")) continue;
+
 	ifaddrs.push_back(s._retn());
       }
     }
