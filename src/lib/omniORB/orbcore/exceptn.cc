@@ -31,7 +31,7 @@
 #include <string.h>
 
 
-CORBA::Exception::~Exception() {}
+CORBA::Exception::~Exception() { pd_magic = 0; }
 
 
 void
