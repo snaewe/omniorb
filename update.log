@@ -1,3 +1,20 @@
+Mon Mar 20 11:51:00 GMT 2000 djs
+================================
+
+- reduced excess output buffering in the omniidl C++ backend
+  by attaching function pointers (pseudo-closures) to template
+  holes, which are only evaluated when the template is finally
+  output.
+
+src/lib/omniORB2/omniidl_be/cxx/util.py
+src/lib/omniORB2/omniidl_be/cxx/header/*
+src/lib/omniORB2/omniidl_be/cxx/skel/*
+
+- better generation of DynSK.cc code for unions with externally
+  defined switch types
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+
 Fri Mar 17 16:26:42 GMT 2000 dpg1
 =================================
 
