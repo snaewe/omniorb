@@ -1,3 +1,15 @@
+Mon Mar  9 11:42:47 GMT 1998 ewc
+================================
+
+- Changes made for NextStep 3.3 with gcc 2.7.2
+
+src/lib/omniORB2/gatekeepers/tcpwrapper/tcpd.h
+src/lib/omniORB2/initFile.cc
+src/tool/omkdepend/main.c
+src/tool/omniidl2/driver/drv_fork.cc
+src/tool/omniidl2/driver/drv_preproc.cc
+
+
 Thu Mar  5 11:22:28 GMT 1998 sll
 ================================
 
