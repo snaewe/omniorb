@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.12  1998/09/23 08:48:34  sll
+  Use config variable omniORB::maxTcpConnectionPerServer to determine the
+  maximum number of outgoing per tcpSocketOutgoingRope.
+
   Revision 1.11  1998/08/14 13:54:38  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -561,7 +565,7 @@ tcpSocketMToutgoingFactory::findOrCreateOutgoing(Endpoint* addr)
 	return r;
       }
     }
-  r = new tcpSocketOutgoingRope(this,5,te);
+  r = new tcpSocketOutgoingRope(this,omniORB::maxTcpConnectionPerServer,te);
   r->incrRefCount(1);
   return r;
 }
