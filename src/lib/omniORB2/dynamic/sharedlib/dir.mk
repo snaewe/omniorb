@@ -136,26 +136,26 @@ endif
 #   Make variables common to all platforms                                  #
 #############################################################################
 
-DYN2_SRCS = bootstrapDynSK.cc NamingDynSK.cc \
-	    any.cc typecode.cc anyP.cc tcParser.cc \
+DYN2_SRCS = any.cc typecode.cc anyP.cc tcParser.cc \
 	    dynAny.cc dynAnyNil.cc \
 	    namedValue.cc nvList.cc exceptionList.cc contextList.cc \
 	    environment.cc context.cc deferredRequest.cc unknownUserExn.cc \
-            proxyCall.cc wrongTranExn.cc \
+            proxyCall.cc \
 	    request.cc serverRequest.cc dynamicImplementation.cc \
 	    pseudoBase.cc dynException.cc ir.cc \
 	    irstub.cc irdynstub.cc corbaidlstub.cc corbaidldynstub.cc \
+            bootstrapdynstub.cc Namingdynstub.cc \
 	    orbMultiRequest.cc
 
-DYN2_OBJS = bootstrapDynSK.o NamingDynSK.o \
-	    any.o typecode.o anyP.o tcParser.o \
+DYN2_OBJS = any.o typecode.o anyP.o tcParser.o \
 	    dynAny.o dynAnyNil.o \
 	    namedValue.o nvList.o exceptionList.o contextList.o \
 	    environment.o context.o deferredRequest.o unknownUserExn.o \
-            proxyCall.o wrongTranExn.o \
+            proxyCall.o \
 	    request.o serverRequest.o dynamicImplementation.o \
 	    pseudoBase.o dynException.o ir.o \
 	    irstub.o irdynstub.o corbaidlstub.o corbaidldynstub.o \
+            bootstrapdynstub.o Namingdynstub.o \
 	    orbMultiRequest.o
 
 DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))
@@ -173,7 +173,7 @@ CXXSRCS = $(DYN2_SRCS)
 ifdef SunOS
 ifeq ($(notdir $(CXX)),CC)
 
-DIR_CPPFLAGS += -Kpic
+DIR_CPPFLAGS += -KPIC
 
 libname = libomniORB$(major_version).so
 soname  = $(libname).$(minor_version)
