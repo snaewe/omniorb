@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/05/04 13:55:58  sll
+  Silly mistake that causes non-copy marshalling to do the wrong thing
+  in GIOP 1.0.
+
   Revision 1.1.4.3  2001/05/01 17:56:29  sll
   Remove user exception check in sendUserException. This has been done by
   the caller.
@@ -1380,7 +1384,7 @@ giopImpl10::copyOutputData(giopStream* g,void* b, size_t sz,
     g->sendCopyChunk(b,sz,0,0);
     // XXX no deadline set.
 
-    size_t leftover = (newmkr + sz) % 0x7;
+    size_t leftover = (newmkr + sz) & 0x7;
     if (leftover) {
       g->pd_currentOutputBuffer->start += leftover;
       g->pd_outb_mkr = (void*) ((omni::ptr_arith_t) 
