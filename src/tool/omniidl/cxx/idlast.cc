@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.14.2.12  2001/03/26 09:36:35  dpg1
+// Segfault with invalid IDL.
+//
 // Revision 1.14.2.11  2001/02/20 11:25:12  dpg1
 // Changes for Digital Unix 4.0E.
 //
@@ -952,8 +955,10 @@ Member(const char* file, int line, IDL_Boolean mainFile,
   else if (memberType->kind() == IdlType::tk_sequence) {
     // Look for recursive sequence
     IdlType* t = memberType;
-    while (t->kind() == IdlType::tk_sequence)
+    while (t && t->kind() == IdlType::tk_sequence)
       t = ((SequenceType*)t)->seqType();
+
+    if (!t) return; // Sequence of undeclared type
 
     if (t->kind() == IdlType::tk_struct) {
       Struct* s = (Struct*)((DeclaredType*)t)->decl();
@@ -1153,8 +1158,10 @@ UnionCase(const char* file, int line, IDL_Boolean mainFile,
   else if (caseType->kind() == IdlType::tk_sequence) {
     // Look for recursive sequence
     IdlType* t = caseType;
-    while (t->kind() == IdlType::tk_sequence)
+    while (t && t->kind() == IdlType::tk_sequence)
       t = ((SequenceType*)t)->seqType();
+
+    if (!t) return; // Sequence of undeclared type
 
     if (t->kind() == IdlType::tk_struct) {
       Struct* s = (Struct*)((DeclaredType*)t)->decl();

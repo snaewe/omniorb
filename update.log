@@ -1,3 +1,11 @@
+Mon Mar 26 10:33:27 BST 2001 dpg1
+=================================
+
+- Segfault with invalid IDL.
+
+src/tool/omniidl/cxx/idlast.cc
+
+
 Wed Mar 21 16:31:13 GMT 2001 dpg1
 =================================
 
