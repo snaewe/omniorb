@@ -1,3 +1,16 @@
+Wed Aug 30 15:48:38 BST 2000 sll
+================================
+
+- Fixed a bug in the unmarshal code of a typecode of kind tk_objref.
+  The resulting typecode has its field pd_complete left as 0 which
+  should actually be 1. This normally isn't a problem unless the
+  typecode is a member of a sequence (or other complex structure) typecode and
+  is used in an environment with typecode alias expansion
+  (omniORB::tcAliasExpand) set to true.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Wed Aug 30 10:43:34 BST 2000 dpg1
 =================================
 

@@ -30,6 +30,14 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.11  2000/08/30 14:57:12  sll
+ * Fixed a bug in the unmarshal code of a typecode of kind tk_objref. The
+ * resulting typecode has its field pd_complete left as 0 which should
+ * actually be 1. This normally isn't a problem unless the typecode is a
+ * member of a sequence (or other complex structure) typecode and is used in
+ * an environment with typecode alias expansion (omniORB::tcAliasExpand) set
+ * to true.
+ *
  * Revision 1.33.6.10  2000/06/27 16:23:25  sll
  * Merged OpenVMS port.
  *
@@ -1185,6 +1193,7 @@ TypeCode_objref::TypeCode_objref(const char* repositoryId, const char* name)
   pd_name = name;
   pd_alignmentTable.setNumEntries(1);
   pd_alignmentTable.addNasty(this);
+  pd_complete = 1;
 }
 
 
@@ -1217,6 +1226,7 @@ TypeCode_objref::NP_unmarshalComplexParams(MemBufferedStream &s,
 
   _ptr->pd_repoId <<= s;
   _ptr->pd_name <<= s;
+  _ptr->pd_complete = 1;
 
   return _ptr;
 }
