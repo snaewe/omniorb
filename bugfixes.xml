@@ -8,6 +8,22 @@
 
 <buglist>
 
+<bug id="21" date="Thu Aug 17 18:11:14 BST 2000" user="djs">
+
+  <summary>omniIDL/C++ backend generated incorrect DynSK.cc typecode
+  data for some interfaces.</summary>
+
+  <reported>dme</reported>
+
+  <text>Incorrect typecode data was generated for some interfaces eg:
+  <pre>
+  interface I{
+    typedef sequence&lt;I&gt; t_I;
+  };
+  </pre>
+  </text>
+</bug>
+
 <bug id="20" date="Tue Aug 15 14:11:37 BST 2000" user="dpg1">
 
   <summary>Any insertion functions for PortableServer exceptions

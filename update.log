@@ -1,3 +1,13 @@
+
+Thu Aug 17 18:11:14 BST 2000 djs
+================================
+
+- omniIDL/C++ generated incorrect DynSK.cc typecode data for "recursive"
+  interfaces
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
 Thu Aug 17 16:30:16 BST 2000 sll
 ================================
 
