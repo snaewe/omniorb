@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.3  1998/08/26 11:19:05  sll
+   Minor upates to remove warnings when compiled with standard C++ compilers.
+
   Revision 1.2  1998/08/25 19:01:35  sll
   Moved auto-variable declaration in set() to make it acceptable to old
   and new compilers.
@@ -98,7 +101,7 @@ omniInitialReferences::get(const char* identifier)
 	  CORBA::String_var ior = omni::objectToString(pd_bootagent->PR_getobj());
 	  omniORB::log << "omniORB2 getting initial object reference for "
 		       << identifier << " from '"
-		       << ior << "'...";
+		       << (const char*) ior << "'...";
 	  omniORB::log.flush();
 	}
 
