@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/02 18:24:32  sll
+  Reformatted trace messages.
+
   Revision 1.1.2.1  1999/09/15 20:37:29  sll
   *** empty log message ***
 
@@ -71,7 +74,7 @@ static const char fragmentHeader[8] = {
 
 #define LOGMESSAGE(level,prefix,message) do {\
    if (omniORB::trace(level)) {\
-     omniORB::logger log("giop 1.2 " ## prefix ## ": ");\
+     omniORB::logger log("omniORB: giop 1.2 " ## prefix ## ": ");\
 	log << message ## "\n";\
    }\
 } while (0)

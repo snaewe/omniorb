@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.9.4.1  1999/10/02 18:24:32  sll
+  Reformatted trace messages.
+
   Revision 1.9  1999/06/18 20:53:10  sll
   New function _CORBA_bad_param_freebuf().
 
@@ -110,16 +113,23 @@ omniExHandlers::Table = 0;
 omni_mutex
 omniExHandlers::TableLock;
 
+#define LOGMESSAGE(level,prefix,message) do {\
+   if (omniORB::trace(level)) {\
+     omniORB::logger log("omniORB: ");\
+	log << prefix ## ": " ## message ## "\n";\
+   }\
+} while (0)
+
 
 CORBA::Boolean
 omni_defaultTransientExcHandler(void*,
 				CORBA::ULong n_retries,
 				const CORBA::TRANSIENT& ex)
 {
-  if (omniORB::traceLevel > 10) {
-    omniORB::log << "omniORB::defaultTransientExceptionHandler: retry "
-		 << n_retries << "th times.\n";
-    omniORB::log.flush();
+  if (omniORB::trace(10)) {
+    omniORB::logger log("omniORB: ");
+    log << "defaultTransientExceptionHandler: retry "
+	<< n_retries << "th times.\n";
   }
 
   unsigned long secs = n_retries*omniORB::defaultTransientRetryDelayIncrement;
@@ -353,10 +363,7 @@ omniExHandlers_iterator::remove(omniObject* p)
 CORBA::Boolean 
 _CORBA_use_nil_ptr_as_nil_objref()
 {
-  if (omniORB::traceLevel > 10) {
-    omniORB::log << "Warning: omniORB2 detects that a nil pointer is wrongly used as a nil object reference.\n";
-    omniORB::log.flush();
-  }
+  LOGMESSAGE(10,"Warning: ","omniORB detects that a nil pointer is wrongly used as a nil object reference.");
   return 1;
 }
 
@@ -387,12 +394,11 @@ _CORBA_invoked_nil_pseudo_ref()
 CORBA::Boolean 
 _CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType)
 {
-  if (omniORB::traceLevel > 10) {
-    omniORB::log <<
-      "Warning: omniORB2 detects that a nil (0) pointer is wrongly used as\n"
+  if (omniORB::trace(10)) {
+    omniORB::logger log("omniORB: ");
+    log << "Warning: omniORB detects that a nil (0) pointer is wrongly used as\n"
       " a nil CORBA::" << objType << " object reference.\n"
       " Use CORBA::" << objType << "::_nil()\n";
-    omniORB::log.flush();
   }
   return 1;
 }
@@ -400,9 +406,9 @@ _CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType)
 void
 _CORBA_bad_param_freebuf()
 {
-  if (omniORB::traceLevel > 1) {
-    omniORB::log << "Warning: omniORB2 detects that an invalid buffer pointer is passed to freebuf of string or object sequence\n";
-    omniORB::log.flush();
+  if (omniORB::trace(1)) {
+    omniORB::logger log("omniORB: ");
+    log << "Warning: omniORB detects that an invalid buffer pointer is passed to freebuf of string or object sequence\n";
   }
 }
 
