@@ -6,6 +6,11 @@ Fri Nov 12 17:02:06 GMT 1999 djr
 
 src/lib/omniORB2/orbcore/poa.cc
 
+- Added make files for callback example.
+
+external_merge/src/examples/call_back/GNUmakefile  -- new
+external_merge/src/examples/call_back/dir.mak      -- new
+
 
 Mon Nov  8 09:42:40 GMT 1999 djr
 ================================
