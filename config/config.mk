@@ -5,18 +5,18 @@
 # Uncomment one of the following platform line to build for the target
 # platform
 #
-#  sun4_sosV_5.5             Solaris 2.5, Sunpro C++/gcc
-#  sun4_sosV_5.6             Solaris 2.6, Sunpro C++/gcc
-#  sun4_sosV_5.7             Solaris 7, Sunpro C++/gcc
-#  i586_linux_2.0            x86 Redhat linux 4.2, gcc-2.7.2
-#  i586_linux_2.0_glibc      x86 Redhat linux 5.1,egcs-980302 or later snapshot
-#  i586_linux_2.0_glibc2.1   x86 Redhat linux 6, etc
 #  x86_nt_3.5                x86 Windows NT 3.5, MS VC++ 5.0
 #  x86_nt_4.0                x86 Windows NT 4.0, MS VC++ 5.0
 #  x86_nt_4.0_vs_7           x86 Windows NT 4.0 (or later), MS VC++ 7.x (.NET)
 #  x86_nt_4.0_mingw          x86 Windows NT 4.0 (or later), mingw/g++ build
 #  x86_win95                 Windows 95, MS VC++ 5.0
 #  x86_win32_dmc             x86 Win32, Digital Mars C++ (>= 8.32.14)
+#  sun4_sosV_5.5             Solaris 2.5, Sunpro C++/gcc
+#  sun4_sosV_5.6             Solaris 2.6, Sunpro C++/gcc
+#  sun4_sosV_5.7             Solaris 7, Sunpro C++/gcc
+#  i586_linux_2.0            x86 Redhat linux 4.2, gcc-2.7.2
+#  i586_linux_2.0_glibc      x86 Redhat linux 5.1,egcs-980302 or later snapshot
+#  i586_linux_2.0_glibc2.1   x86 Redhat linux 6, etc
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
 #  alpha_osf1_3.2            Digital Unix 3.2, DEC C++ v5.5
 #  alpha_osf1_4.0            Digital Unix 4.0, DEC C++ v6.0
@@ -50,7 +50,7 @@
 
 #platform = x86_nt_4.0
 #platform = x86_nt_4.0_vs_7
-platform = x86_nt_4.0_mingw
+#platform = x86_nt_4.0_mingw
 #platform = x86_nt_3.5
 #platform = x86_win95
 #platform = x86_win32_dmc
