@@ -172,18 +172,14 @@ steps:
   If you do not have Python 1.5.2 or higher, you can download the full
   source distribution from
 
-    http://www.python.org/download/
-
-  or
-
-    ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.tgz
+   http://www.python.org/download/
 
   Alternatively, on Solaris, Linux, IRIX and HPUX (and Windows, but
   this is README.unix!) you can download a minimal version of Python
   which contains just the functionality required by omniidl. Download
   it from
 
-    ftp://ftp.uk.research.att.com/pub/omniORB/python/
+   http://sourceforge.net/project/showfiles.php?group_id=51138&release_id=90793
 
   Unpack the archive at the top of the omniORB tree. It places files
   in the bin, lib and include directories.

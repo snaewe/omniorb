@@ -175,19 +175,19 @@ c) Set up macros and libraries:
 
     6. In the "Category" box, select "Input". In the "Object/library
        modules" box, add the following libraries: ws2_32.lib,
-       mswsock.lib, advapi32.lib, omniORB400_rt.lib,
-       omniDynamic400_rt.lib, omnithread30_rt.lib
+       mswsock.lib, advapi32.lib, omniORB401_rt.lib,
+       omniDynamic401_rt.lib, omnithread30_rt.lib
 
-   If you are building a debug executable, the debug version of the
-   libraries: omniORB400_rtd.lib, omniDynamic400_rtd.lib and
-   omnithread30_rtd.lib should be used.
+       If you are building a debug executable, the debug version of
+       the libraries: omniORB401_rtd.lib, omniDynamic401_rtd.lib and
+       omnithread30_rtd.lib should be used.
 
 d) Your project is now set up, and you can build it.
 
 
 If you want to use the static versions of omniORB and omnithread, you
 must add the macro _WINSTATIC (see step (c) 4, above), and replace the
-libraries omniORB400_rt.lib, omniDynamic400_rt.lib and
+libraries omniORB401_rt.lib, omniDynamic401_rt.lib and
 omnithread30_rt.lib with omniORB4.lib, omniDynamic4.lib and
 omnithread.lib (see step (c) 6, above).
 
@@ -229,15 +229,15 @@ module A {
 Building omniORB from the source files
 ======================================
 
-omniORB should be compiled using Visual C++ 5.0 or Visual C++ 6.0.
+omniORB should be compiled using Visual C++ 5.0 or higher.
 
 
  A. Pre-requisites
     --------------
 
     The omniORB source tree requires the Cygwin utilities to build. It
-    also requires the scripting language Python to both compile and
-    run.
+    also requires the scripting language Python to be able to compile
+    IDL to C++.
 
     gnu-win32
     ---------

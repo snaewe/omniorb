@@ -1,9 +1,19 @@
-RELEASE NOTES for omniORB 4.0.0
+RELEASE NOTES for omniORB 4.0.1
 ===============================
 
-This is omniORB 4.0.0. It is a stable release.
+This is omniORB 4.0.1. It is a stable release.
 
 See README.unix or README.win32 for building instructions.
+
+
+New features since omniORB 4.0.0
+--------------------------------
+
+ - Bug fixes.
+ - Per object reference and per-thread timeouts.
+ - Complete interceptors.
+ - Support for new platforms: VxWorks, Digital Mars C++
+ - Small performance improvements.
 
 
 Major new features since omniORB 3.0.x
@@ -29,14 +39,7 @@ Known issues
 ------------
 
 This release has the following known issues and omissions. They are
-planned for the 4.0.1 release.
-
- - Some interceptors are not implemented yet.
-
- - The planned per-thread call timeout is not implemented.
+planned for later in the 4.0 series.
 
  - iostream insertion and extraction operators for CORBA types are not
    implemented.
-
- - Optional locking of proxy object factories, to enable dynamic
-   loading/unloading of stubs is not implemented.

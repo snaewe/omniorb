@@ -1,6 +1,6 @@
 READ ME FIRST!
 
-This is version 4.0 of omniORB.
+This is version 4.0.1 of omniORB.
 
 omniORB is copyright AT&T Laboratories Cambridge, Apasphere Ltd and
 others. It is free software. The programs in omniORB are distributed
@@ -82,7 +82,7 @@ following features are not supported in the current release.
 Missing features
 ================
 
-The following features are missing from omniORB3. We are not currently
+The following features are missing from omniORB. We are not currently
 planning on adding support for these features.
 
 - omniORB does not have its own Interface Repository. However, the

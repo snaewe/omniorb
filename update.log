@@ -1,3 +1,36 @@
+Tue Mar 11 15:47:44 GMT 2003 dgrisby
+====================================
+
+- Bump version number.
+
+README.FIRST
+README.unix
+README.win32
+ReleaseNotes_4.0.0.txt  -- deleted
+ReleaseNotes_4.0.1.txt  -- new
+THIS_IS_OMNIORB_4_0_0   -- deleted
+THIS_IS_OMNIORB_4_0_1   -- new
+bugfixes-401.xml        -- new
+configure
+configure.ac
+mk/beforeauto.mk.in
+mk/rtems.mk
+mk/unix.mk
+mk/vxWorks.mk
+mk/win32.mk
+src/examples/dir.mak
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/dsi/dir.mak
+src/examples/echo/dir.mak
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+
+
 Mon Mar 10 11:02:06 GMT 2003 dgrisby
 ====================================
 
