@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.18  2001/08/20 10:43:57  sll
+  Fixed minor bug detected by MSVC++
+
   Revision 1.2.2.17  2001/08/17 17:12:41  sll
   Modularise ORB configuration parameters.
 
@@ -218,7 +221,7 @@ OMNI_USING_NAMESPACE(omni)
 //  seconds after which a TRANSIENT exception will be thrown if the
 //  POA is not transitioned to a different state.
 //
-//  Valid values = (n >= 0 in milliseconds) 
+//  Valid values = (n >= 0 in milliseconds)
 //                  0 --> no time-out.
 
 
@@ -1068,7 +1071,7 @@ omniOrbPOA::localId_to_ObjectId(omniIdentity* id)
   ret->length(idsize);
   memcpy(ret->NP_data(), id->key() + pd_poaIdSize, idsize);
   return ret;
-}  
+}
 
 void
 omniOrbPOA::localId_to_ObjectId(omniIdentity* id,
@@ -1082,7 +1085,7 @@ omniOrbPOA::localId_to_ObjectId(omniIdentity* id,
   OMNIORB_ASSERT(idsize >= 0);
   oid.length(idsize);
   memcpy(oid.NP_data(), id->key() + pd_poaIdSize, idsize);
-}  
+}
 
 
 
@@ -1763,7 +1766,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
     strcpy(pd_fullname, pd_parent->pd_fullname);
     strcat(pd_fullname, POA_NAME_SEP_STR);
     strcat(pd_fullname, name);
-    
+
     pd_poaIdSize = 0;
     pd_poaId     = (const char*)"";
   }
@@ -1805,7 +1808,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
     pd_main_thread_sync.mu  = new omni_tracedmutex();
     pd_main_thread_sync.cond= new omni_tracedcondition(pd_main_thread_sync.mu);
     break;
-  } 
+  }
 
   // We assume that the policies given have been checked for validity.
   pd_policy = policies;
@@ -2745,7 +2748,7 @@ static omniServantActivatorTaskQueue* servant_activator_queue = 0;
 void
 omniOrbPOA::add_object_to_etherealisation_queue(omniObjTableEntry* entry,
 				PortableServer::ServantActivator_ptr sa,
-				int cleanup_in_progress, int detached=0)
+				int cleanup_in_progress, int detached)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   OMNIORB_ASSERT(entry);
@@ -3052,7 +3055,7 @@ omniOrbPOA::dispatch_to_sl(omniCallHandle& handle,
     OMNIORB_THROW(OBJ_ADAPTER, OBJ_ADAPTER_NoServant, CORBA::COMPLETED_NO);
   }
 
-  omniLocalIdentity the_id(key, keysize, 
+  omniLocalIdentity the_id(key, keysize,
 			   (PortableServer::Servant)servant, this);
 
   // Create postinvoke hook
@@ -3424,7 +3427,7 @@ generateUniqueId(CORBA::Octet* k)
 
 #elif defined(__WIN32__)
     // Unique number on NT
-    // Use _ftime() to obtain the current system time. 
+    // Use _ftime() to obtain the current system time.
 # ifndef __BCPLUSPLUS__
     struct _timeb v;
     _ftime(&v);
@@ -3527,7 +3530,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 class poaHoldRequestTimeoutHandler : public orbOptions::Handler {
 public:
 
-  poaHoldRequestTimeoutHandler() : 
+  poaHoldRequestTimeoutHandler() :
     orbOptions::Handler("poaHoldRequestTimeout",
 			"poaHoldRequestTimeout = n >= 0 in msec",
 			1,
