@@ -50,7 +50,7 @@
 #include <time.h>
 #include "omnithread.h"
 
-#ifdef __linux__
+#if defined(__linux__) && defined(_MIT_POSIX_THREADS)
 #include <pthread/mit/sys/timers.h>
 #endif
 
