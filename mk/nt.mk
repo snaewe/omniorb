@@ -27,7 +27,7 @@ CXXMAKEDEPEND = gcc -M -undef -nostdinc -D_WIN32 -D_MT -D__cplusplus \
 		-DMSC_VER=1000 -D_M_IX86=400
 
 CXXLINK	= linkwrapper
-CXXLINKOPTIONS = -libpath:/c/msdev/lib
+CXXLINKOPTIONS = -libpath:/msdev/lib
 
 CC = clwrapper
 COPTIONS = -MD
@@ -35,7 +35,7 @@ CMAKEDEPEND = gcc -M -undef -nostdinc -D_WIN32 -D_MT -DMSC_VER=1000 \
 		-D_M_IX86=400
 
 CLINK = linkwrapper
-CLINKOPTIONS = -libpath:/c/msdev/lib
+CLINKOPTIONS = -libpath:/msdev/lib
 
 IMPORT_CPPFLAGS += -D__NT__
 
@@ -56,11 +56,11 @@ IMPORT_CPPFLAGS += -D__NT__
 #
 
 define GenerateCDependencies
-$(SHELL) -ec "$(CMAKEDEPEND) $(CPPFLAGS) -I/c/msdev/include $< | sed 's/$*\\.o/& $@/g' > $@"
+$(SHELL) -ec "$(CMAKEDEPEND) $(CPPFLAGS) -I/msdev/include $< | sed 's/$*\\.o/& $@/g' > $@"
 endef
 
 define GenerateCXXDependencies
-$(SHELL) -ec "$(CXXMAKEDEPEND) $(CPPFLAGS) -I/c/msdev/include $< | sed 's/$*\\.o/& $@/g' > $@"
+$(SHELL) -ec "$(CXXMAKEDEPEND) $(CPPFLAGS) -I/msdev/include $< | sed 's/$*\\.o/& $@/g' > $@"
 endef
 
 
