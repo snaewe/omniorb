@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.5  1999/09/30 12:26:19  djr
+  Minor change to remove compiler warning.
+
   Revision 1.22.6.4  1999/09/27 13:26:23  djr
   Updates to loggin to ensure prefix is always omniORB:
 
@@ -1101,7 +1104,7 @@ realConnect(tcpSocketEndpoint* r)
 #if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
 #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x420
 #include <signal.h>
-extern "C" void abort()
+static void abort()
 {
   kill (getpid(),SIGABRT);
   while (1) {
@@ -1121,7 +1124,6 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
 #if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
 #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x420
-  //?? Problem here - passing ptr to fn with C linkage.
   set_terminate(abort);
 #endif
 #endif
@@ -1336,7 +1338,6 @@ tcpSocketWorker::_realRun(void *arg)
 
 #if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
 #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x420
-  //?? Problem here - passing ptr to fn with C linkage.
   set_terminate(abort);
 #endif
 #endif
