@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/19 20:09:03  djs
+# Fixed signature generating bug when return type is void
+#
 # Revision 1.1  1999/11/17 20:37:23  djs
 # Code for call descriptors and proxies
 #
@@ -147,8 +150,11 @@ def produce_operation_signature(operation):
     returnType = operation.returnType()
 
     # return type
-    sig = produce_canonical_name_for_type(returnType)
-
+    if tyutil.isVoid(returnType, 1):
+        sig = "void"
+    else:
+        sig = produce_canonical_name_for_type(returnType)
+        
     # parameter list
     for param in operation.parameters():
         if param.is_in() and param.is_out():
