@@ -62,6 +62,11 @@ else
 DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH)) \
                -DIDL_CFE_VERSION=$(IDL_CFE_VERSION) \
                -DCPP_LOCATION=\"$(CPP_LOCATION)\"
+
+ifdef SunOS
+DIR_CPPFLAGS += -DSVR4
+endif
+
 endif
 
 lib = $(patsubst %,$(LibPattern),drv)
