@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.13  2000/06/19 18:19:49  djs
+# Implemented union discriminant setting function _d(_value) with checks for
+# illegal uses (setting to a label corresponding to a non-current member and
+# setting before initialisation)
+#
 # Revision 1.31.2.12  2000/06/16 08:36:40  djs
 # For a union with a boolean discriminant and an implied default, sets a
 # better default discriminator in _default()
@@ -1169,6 +1174,130 @@ def visitUnion(node):
                        arbitraryDefault = choose())
         return
 
+    # The body of the union _d(_value) function generated here
+    def _d_fn(stream = stream, node = node, switchType = switchType,
+              implicitDefault = implicitDefault,
+              environment = environment):
+
+        # The plan:
+        #  * Check the _pd__initialised flag is set, else throw BAD_PARAM
+        #  * Check for the simple case where _value == _pd__d and return
+        #  * Have a nested switch, the outer switch is keyed on the current
+        #    discriminator value and the inner one is the requested new value
+        #
+        # Possibilities:
+        #  * Could perform some code minimisation eg for the case
+        #      union foo switch(boolean){
+        #         case TRUE:
+        #         case FALSE:
+        #           T bar;
+        #      };
+        #    This is equivalent to a single default: case and no switch is
+        #    required.
+        
+        # Make sure we don't output a switch with no cases (if there is a
+        # one-to-one mapping of labels to cases)
+        need_switch = 0
+
+        # Need to fill in a default case only if the union has none itself
+        outer_has_default = 0
+
+        cases = util.StringStream()
+
+        # keep track of which cases have been done
+        cases_done = []
+
+
+        # Produce a set of "case <foo>: goto fail;" for every label
+        # except those in an exception list
+        def fail_all_but(exceptions, node = node, cases = cases,
+                         switchType = switchType, environment = environment):
+            for c in node.cases():
+                for l in c.labels():
+                    if not(l in exceptions):
+                        cases.out("case @label@: goto fail;",
+                                  label = switchType.literal(l.value(),
+                                                             environment))
+                        
+
+        # first switch on the current case
+        for c in node.cases():
+            # optimisation: we've already checked for the simple case where
+            # we set the discriminator to the current value
+            if len(c.labels()) == 1 and not(c.labels()[0].default()):
+                # case has one label, for control to get here _value must
+                # be for a different label _unless_ the one label was itself
+                # a default: which means many label values are possible
+                continue
+
+            need_switch = 1
+            # output one C++ case label for each IDL case label for this member
+            for l in c.labels():
+                if l.default():
+                    cases.out("default:")
+                    outer_has_default = 1
+                    this_is_default = 1
+                else:
+                    cases.out("case @label@:",
+                              label = switchType.literal(l.value(),
+                                                         environment))
+                    cases_done.append(l)
+                    this_is_default = 0
+
+            # switch on the to-label
+            cases.inc_indent()
+            cases.out("switch (_value){\n")
+            cases.inc_indent()
+            has_default = 0
+
+
+            # If we are in the default state, then make sure we're not trying
+            # to set the discriminator to a non-default value
+            if this_is_default:
+                fail_all_but(c.labels())
+                        
+            for l in c.labels():
+                if l.default():
+                    cases.out("default: _pd__d = _value; return;")
+                    has_default = 1
+                elif not(this_is_default):
+                    cases.out("case @label@: _pd__d = @label@; return;",
+                              label = switchType.literal(l.value(),
+                                                         environment))
+                    cases_done.append(l)
+
+            if not(has_default):
+                cases.out("default: goto fail;")
+            cases.dec_indent()
+            cases.out("}\n")
+            cases.dec_indent()
+            
+        if not(outer_has_default) and not(implicitDefault):
+            cases.out("default: goto fail;")
+
+        # do we have an implicit default member (no actual case, but a
+        # legal set of discriminator values)
+        if implicitDefault:
+            cases.out("default:")
+            cases.out("switch (_value){")
+            cases.inc_indent()
+            # again, make sure we aren't currently in the default state
+            # and trying to set the discriminator to a non-default state
+            fail_all_but([])
+
+            cases.out("default: _pd__d = _value; return;")
+
+            cases.dec_indent()
+            cases.out("}")
+                      
+
+        # output the code here
+        switch = util.StringStream()
+        if need_switch:
+            switch.out("switch (_pd__d){\n  @cases@\n};", cases = cases)
+        stream.out(template.union_d_fn_body, switch = switch)
+            
+
     # get and set functions for each case:
     def members(stream = stream, node = node, environment = environment,
                 choose = chooseArbitraryDefault, switchType = switchType):
@@ -1420,6 +1549,7 @@ def visitUnion(node):
                default_constructor = default_constructor,
                copy_constructor = copy_constructor,
                discrimtype = discrimtype,
+               _d_body = _d_fn,
                implicit_default = implicit_default,
                members = members,
                tcParser_unionHelper = tcParser_unionHelper,

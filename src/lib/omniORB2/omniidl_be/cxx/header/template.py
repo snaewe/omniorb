@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.10  2000/06/19 18:19:50  djs
+# Implemented union discriminant setting function _d(_value) with checks for
+# illegal uses (setting to a label corresponding to a non-current member and
+# setting before initialisation)
+#
 # Revision 1.3.2.9  2000/06/05 13:03:57  djs
 # Removed union member name clash (x & pd_x, pd__default, pd__d)
 # Removed name clash when a sequence is called "pd_seq"
@@ -762,23 +767,27 @@ public:
 
   @Other_IDL@
 
-  @unionname@() {
+  @unionname@(): _pd__initialised(0) {
     @default_constructor@
   }
   
   @unionname@(const @unionname@& _value) {
+    _pd__initialised = _value._pd__initialised;
     @copy_constructor@
   }
 
   ~@unionname@() {}
 
   @unionname@& operator=(const @unionname@& _value) {
+    _pd__initialised = _value._pd__initialised;
     @copy_constructor@
     return *this;
   }
 
   @discrimtype@ _d() const { return _pd__d;}
-  void _d(@discrimtype@ _value) {}
+  void _d(@discrimtype@ _value){
+    @_d_body@
+  }
 
   @implicit_default@
 
@@ -795,6 +804,7 @@ public:
 private:
   @discrimtype@ _pd__d;
   CORBA::Boolean _pd__default;
+  CORBA::Boolean _pd__initialised;
 
   @union@
   @outsideUnion@
@@ -809,6 +819,18 @@ union {
 };
 """
 
+union_d_fn_body = """\
+// illegal to set discriminator before making a member active
+if (!_pd__initialised) throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+
+if (_value == _pd__d) return; // no change
+
+@switch@
+
+fail:
+throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+"""
+
 union_constructor_implicit = """\
 _default();
 """
@@ -819,6 +841,7 @@ _pd__d = @default@;
 union_implicit_default = """\
 void _default()
 {
+  _pd__initialised = 1;
   _pd__d = @arbitraryDefault@;
   _pd__default = 1;
 }
@@ -853,6 +876,7 @@ typedef @memtype@ _@name@_slice@tail_dims@;
 union_array = """\
 const @memtype@_slice *@name@ () const { return _pd_@name@; }
 void @name@ (const @const_type@ _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   @loop@
@@ -863,6 +887,7 @@ union_any = """\
 const @type@ &@name@ () const { return _pd_@name@; }
 @type@ &@name@ () { return _pd_@name@; }
 void @name@ (const @type@& _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
@@ -872,16 +897,19 @@ void @name@ (const @type@& _value) {
 union_typecode = """\
 CORBA::TypeCode_ptr @name@ () const { return _pd_@name@._ptr; }
 void @name@(CORBA::TypeCode_ptr _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = CORBA::TypeCode::_duplicate(_value);
 }
 void @name@(const CORBA::TypeCode_member& _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
 void @name@(const CORBA::TypeCode_var& _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
@@ -891,6 +919,7 @@ void @name@(const CORBA::TypeCode_var& _value) {
 union_basic = """\
 @type@ @name@ () const { return _pd_@name@; }
 void @name@ (@type@  _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
@@ -900,21 +929,25 @@ void @name@ (@type@  _value) {
 union_string = """\
 const char * @name@ () const { return (const char*) _pd_@name@; }
 void @name@(char* _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
 void @name@(const char*  _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
 void @name@(const CORBA::String_var& _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
 void @name@(const CORBA::String_member& _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
@@ -924,17 +957,20 @@ void @name@(const CORBA::String_member& _value) {
 union_objref = """\
 @ptr_name@ @member@ () const { return _pd_@member@._ptr; }
 void @member@(@ptr_name@ _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   @Helper_name@::duplicate(_value);
   _pd_@member@ = _value;
 }
 void @member@(const @memtype@& _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@member@ = _value;
 }
 void @member@(const @var_name@&  _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@member@ = _value;
@@ -945,6 +981,7 @@ union_constructed = """\
 const @type@ &@name@ () const { return _pd_@name@; }
 @type@ &@name@ () { return _pd_@name@; }
 void @name@ (const @type@& _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
@@ -956,6 +993,7 @@ typedef @sequence_template@ _@member@_seq;
 const _@member@_seq& @member@ () const { return _pd_@member@; }
 _@member@_seq& @member@ () { return _pd_@member@; }
 void @member@ (const _@member@_seq& _value) {
+  _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@member@ = _value;
