@@ -962,17 +962,21 @@ IMPORT_CPPFLAGS += -D__darwin__
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \
                             -DPthreadSupportThreadPriority -DNoNanoSleep
 
-SHAREDLIB_CPPFLAGS = -fno-common # compiler flag
+CXXOPTIONS = -fno-common -bind_at_load
 SHAREDLIB_SUFFIX = dylib
 
 SharedLibraryFullNameTemplate = lib$$1$$2.$$3.$$4.$(SHAREDLIB_SUFFIX)
 SharedLibrarySoNameTemplate = lib$$1$$2.$$3.$(SHAREDLIB_SUFFIX)
 SharedLibraryLibNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX)
-SharedLibraryPlatformLinkFlagsTemplate = -dynamiclib -flat_namespace \
+SharedLibraryPlatformLinkFlagsTemplate = -dynamiclib \
+                                         -install_name $(INSTALLLIBDIR)/$$soname \
+                                         -flat_namespace \
                                          -undefined suppress
 PythonLibraryPlatformLinkFlagsTemplate = -bundle -flat_namespace \
-                                         -undefined suppress
+                                         -undefined suppress \
+                                         -bind_at_load
 PythonSHAREDLIB_SUFFIX = so
+
 
 # Re-define 'ExportLibrary' to run 'ranlib' after the file is copied,
 # for static libraries as otherwise the linker complains: "table of 

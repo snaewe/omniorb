@@ -1,3 +1,15 @@
+Tue Mar 15 10:24:43 GMT 2005 dgrisby
+====================================
+
+- Spec file updates from Dirk Siebnich.
+
+contrib/RPMs/omniORB.spec
+
+- Mac OS X changes from Eric Noyau.
+
+mk/beforeauto.mk.in
+
+
 Mon Mar 14 13:31:31 GMT 2005 dgrisby
 ====================================
 
