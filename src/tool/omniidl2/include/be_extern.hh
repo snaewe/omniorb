@@ -79,4 +79,6 @@ extern "C" void			BE_prep_arg(char *, idl_bool);
 
 extern "C" void			BE_version();
 
+extern "C" void                 BE_parse_args(int argc, char **argv);
+
 #endif           // _BE_EXTERN_BE_EXTERN_HH
