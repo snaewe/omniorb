@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/08 18:29:54  ewc
-  Renamed from tcpSocket.h to tcpSocket_UNIX.h
+  Revision 1.3  1997/01/23 16:55:41  sll
+  New static member variable has_spawned_rendevous_threads.
 
+ * Revision 1.2  1997/01/08  18:29:54  ewc
+ * Renamed from tcpSocket.h to tcpSocket_UNIX.h
+ *
  * Revision 1.1  1997/01/08  17:26:34  sll
  * Initial revision
  *
@@ -110,6 +113,8 @@ public:
   virtual ~tcpSocketRendezvous();
 
   tcpSocketStrand * accept();
+
+  static CORBA::Boolean has_spawned_rendevous_threads;
 
 private:
   tcpSocketRope    *pd_rope;
