@@ -1,3 +1,23 @@
+Mon Jul 31 18:34:21 BST 2000 sll
+================================
+
+- Make shared library for COS idl stub libraries.
+- name stub libraries with the same version number as the omniORB run time.
+     e.g. for omniORB 3.0.0, the library name is libCOS3.a, libCOS3.so.0.0
+
+external_merge/src/services/GNUmakefile                            NEW
+external_merge/src/services/mklib/GNUmakefile                      NEW
+external_merge/src/services/mklib/mkBOAlib/GNUmakefile             NEW
+external_merge/src/services/mklib/mkBOAlib/sharedlib/GNUmakefile   NEW
+external_merge/src/services/mklib/sharedlib/GNUmakefile
+
+src/services/mklib/dir.mk
+src/services/mklib/libdefs.mk
+src/services/mklib/mkBOAlib/dir.mk
+src/services/mklib/mkBOAlib/sharedlib/dir.mk                      NEW
+src/services/mklib/sharedlib/dir.mk                               NEW
+
+
 Mon Jul 31 18:27:49 BST 2000 sll
 ================================
 

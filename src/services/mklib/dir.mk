@@ -7,8 +7,10 @@ vpath %.idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../idl)
 DIR_IDLFLAGS += -I. $(patsubst %,-I%/../idl,$(VPATH)) \
                    $(patsubst %,-I%/idl,$(IMPORT_TREES))
 
-sklib    = $(patsubst %,$(LibPattern),COS)
-dynsklib = $(patsubst %,$(LibPattern),COSdynamic)
+VERSION  = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
+
+sklib    = $(patsubst %,$(LibPattern),COS$(VERSION))
+dynsklib = $(patsubst %,$(LibPattern),COSdynamic$(VERSION))
 
 all:: $(sklib) $(dynsklib)
 
@@ -42,7 +44,7 @@ export:: $(COS_INTERFACES:%=%.hh)
 ##############################################################################
 # Also build in subdirs
 ##############################################################################
-SUBDIRS = mkBOAlib
+SUBDIRS = sharedlib mkBOAlib 
 
 all::
 	@$(MakeSubdirs)

@@ -14,6 +14,7 @@ DIR_IDLFLAGS  += -Wbuse_quotes
 # we need to pass the -DNOLONGLONG flag to generate correct stubs.
 DIR_IDLFLAGS  += -DNOLONGLONG
 
+DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 CXXDEBUGFLAGS =
 
 

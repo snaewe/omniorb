@@ -10,7 +10,9 @@ vpath %.idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../../idl)
 DIR_IDLFLAGS += -I. $(patsubst %,-I%/../../idl,$(VPATH)) \
                    $(patsubst %,-I%/idl,$(IMPORT_TREES))
 
-sklib    = $(patsubst %,$(LibPattern),COS_BOA)
+VERSION  = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
+
+sklib    = $(patsubst %,$(LibPattern),COS_BOA$(VERSION))
 
 all:: $(sklib)
 
@@ -34,7 +36,7 @@ export:: $(COS_INTERFACES:%=%.hh)
 ##############################################################################
 # Also build in subdirs
 ##############################################################################
-#SUBDIRS = sharedlib
+SUBDIRS = sharedlib
 
 all::
 	@$(MakeSubdirs)
