@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.43  1999/08/16 19:33:24  sll
+ New method NP_destroy() in class CORBA::ORB.
+
  Revision 1.42  1999/08/15 13:51:33  sll
  Define ImplmentationDef as an empty class to keep some compilers happy.
 
@@ -2696,6 +2699,12 @@ _CORBA_MODULE_BEG
 
     Boolean get_service_information(ServiceType service_type,
 				    ServiceInformation*& service_information);
+
+    void NP_destroy();
+    // omniORB2 specific
+    // Calling this function would destroy the ORB runtime. After this function
+    // is called, the ORB_ptr should not be used.
+
 
     static ORB_ptr _duplicate(ORB_ptr p);
     static ORB_ptr _nil();
