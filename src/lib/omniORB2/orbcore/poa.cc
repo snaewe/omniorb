@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  1999/11/12 17:05:38  djr
+  Minor mods for hp-10.20 with aCC.
+
   Revision 1.1.2.9  1999/10/29 13:18:18  djr
   Changes to ensure mutexes are constructed when accessed.
 
@@ -463,7 +466,7 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Destroying POA(" << pd_name << ").\n";
+    l << "Destroying POA(" << (char*) pd_name << ").\n";
   }
 
   pd_manager->lose_poa(this);
@@ -1234,7 +1237,7 @@ omniOrbPOA::decrRefCount()
 
   if( omniORB::trace(15) ) {
     omniORB::logger l;
-    l << "POA(" << pd_name << ") ref count is zero -- deleted.\n";
+    l << "POA(" << (char*) pd_name << ") ref count is zero -- deleted.\n";
   }
 
   CORBA::release(pd_manager);
@@ -1359,7 +1362,7 @@ omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
 
   if( omniORB::trace(15) ) {
     omniORB::logger l;
-    l << "POA(" << pd_name << ") etherealising detached object.\n"
+    l << "POA(" << (char*) pd_name << ") etherealising detached object.\n"
       << " id: " << id->servant()->_mostDerivedRepoId() << "\n";
   }
 
@@ -1445,7 +1448,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
     strcpy(pd_poaId, pd_fullname);
     if( policies.transient ) {
       ((char*) pd_poaId)[fnlen] = TRANSIENT_SUFFIX_SEP;
-      generateUniqueId((_CORBA_Octet*) (pd_poaId + fnlen + 1));
+      generateUniqueId((_CORBA_Octet*) ((char*) pd_poaId + fnlen + 1));
       ((char*) pd_poaId)[pd_poaIdSize - 1] = '\0';
     }
   }
@@ -1456,7 +1459,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
     pd_poaIdSize = 1 + TRANSIENT_SUFFIX_SIZE + 1;
     pd_poaId = omni::allocString(pd_poaIdSize - 1);
     ((char*) pd_poaId)[0] = TRANSIENT_SUFFIX_SEP;
-    generateUniqueId((_CORBA_Octet*) (pd_poaId + 1));
+    generateUniqueId((_CORBA_Octet*) ((char*) pd_poaId + 1));
     ((char*) pd_poaId)[pd_poaIdSize - 1] = '\0';
   }
 
@@ -1506,7 +1509,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Deactivating all POA(" << pd_name << ")'s objects.\n";
+    l << "Deactivating all POA(" << (char*) pd_name << ")'s objects.\n";
   }
 
   // Deactivate all objects in the active object map.
@@ -1523,7 +1526,8 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Waiting for requests to complete on POA(" << pd_name << ").\n";
+    l << "Waiting for requests to complete on POA(" << (char*) pd_name
+      << ").\n";
   }
 
   // There may still be requests blocked in synchronise_request(),
@@ -1552,7 +1556,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Etherealising POA(" << pd_name << ")'s objects.\n";
+    l << "Etherealising POA(" << (char*) pd_name << ")'s objects.\n";
   }
 
   // Signal so that any detached objects waiting to etherealise
@@ -1587,7 +1591,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Destruction of POA(" << pd_name << ") complete.\n";
+    l << "Destruction of POA(" << (char*) pd_name << ") complete.\n";
   }
 
   CORBA::release(this);
@@ -1838,7 +1842,7 @@ omniOrbPOA::getAdapter(const _CORBA_Octet* key, int keysize)
     // the transient id matches.
     k++;
     if( k + TRANSIENT_SUFFIX_SIZE >= kend )  return 0;
-    const char* t = poa->pd_poaId +
+    const char* t = (char*) poa->pd_poaId +
       poa->pd_poaIdSize - TRANSIENT_SUFFIX_SIZE - 1;
     int i = TRANSIENT_SUFFIX_SIZE;
     while( i-- )  if( *k++ != *t++ )  return 0;
@@ -2296,7 +2300,7 @@ omniOrbPOA::dispatch_to_sa(GIOP_S& giop_s, const CORBA::Octet* key,
       if( omniORB::trace(2) ) {
 	omniORB::logger l;
 	l << "A servant activator returned a servant which is already "
-	  "activated\n as " << id << "\n to POA(" << pd_name << ")"
+	  "activated\n as " << id << "\n to POA(" << (char*) pd_name << ")"
 	  " which has the UNIQUE_ID policy.\n";
       }
       add_object_to_etherealisation_queue(servant, sa, key, keysize, 0);

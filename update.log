@@ -1,4 +1,12 @@
 
+Fri Nov 12 17:02:06 GMT 1999 djr
+================================
+
+- Minor mods for aCC on hp-10.20.
+
+src/lib/omniORB2/orbcore/poa.cc
+
+
 Mon Nov  8 09:42:40 GMT 1999 djr
 ================================
 
