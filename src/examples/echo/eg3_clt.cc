@@ -21,9 +21,7 @@
 #include <iostream.h>
 #include <echo.hh>
 
-
 static CORBA::Object_ptr getObjectReference(CORBA::ORB_ptr orb);
-
 
 static void hello(Echo_ptr e)
 {
@@ -48,14 +46,12 @@ main (int argc, char **argv)
   try {
     CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
 
-    {
-      CORBA::Object_var obj = getObjectReference(orb);
+    CORBA::Object_var obj = getObjectReference(orb);
 
-      Echo_var echoref = Echo::_narrow(obj);
+    Echo_var echoref = Echo::_narrow(obj);
 
-      for (CORBA::ULong count=0; count < 10; count++)
-	hello(echoref);
-    }
+    for (CORBA::ULong count=0; count < 10; count++)
+      hello(echoref);
 
     orb->destroy();
   }
@@ -107,7 +103,6 @@ getObjectReference(CORBA::ORB_ptr orb)
     return CORBA::Object::_nil();
   }
 
-
   // Create a name object, containing the name test/context:
   CosNaming::Name name;
   name.length(2);
@@ -119,7 +114,6 @@ getObjectReference(CORBA::ORB_ptr orb)
   // Note on kind: The kind field is used to indicate the type
   // of the object. This is to avoid conventions such as that used
   // by files (name.type -- e.g. test.ps = postscript etc.)
-
 
   try {
     // Resolve the name to an object reference.
@@ -141,4 +135,3 @@ getObjectReference(CORBA::ORB_ptr orb)
 
   return CORBA::Object::_nil();
 }
-

@@ -1,3 +1,16 @@
+Fri Jul 12 10:07:17 BST 2002 dgrisby
+====================================
+
+- Update echo examples to match code in new documentation (not yet checked in).
+
+src/examples/echo/eg1.cc
+src/examples/echo/eg2_clt.cc
+src/examples/echo/eg2_impl.cc
+src/examples/echo/eg3_clt.cc
+src/examples/echo/eg3_impl.cc
+src/examples/echo/eg3_tieimpl.cc
+
+
 Thu Jul 11 20:27:28 BST 2002 dgrisby
 ====================================
 

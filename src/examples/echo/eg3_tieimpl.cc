@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     // This is because tie implementations do not inherit from the
     // PortableServer::RefCountServantBase mixin class -- and so are
     // not automatically deleted by the POA.
-    //  However, it will delete its implementation (myimpl) when it
+    // However, it will delete its implementation (myimpl) when it
     // it itself destroyed (when it goes out of scope).  It is
     // essential however to ensure that such objects are not deleted
     // whilst still activated.
@@ -73,7 +73,6 @@ int main(int argc, char** argv)
     pman->activate();
 
     orb->run();
-    orb->destroy();
   }
   catch(CORBA::SystemException&) {
     cerr << "Caught CORBA::SystemException." << endl;
@@ -119,7 +118,6 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     return 0;
   }
 
-
   try {
     // Bind a context called "test" to the root context:
 
@@ -148,7 +146,6 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
         return 0;
       }
     }
-
 
     // Bind objref with name Echo to the testContext:
     CosNaming::Name objectName;
