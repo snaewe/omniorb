@@ -28,7 +28,7 @@
 
 import string
 
-from omniidl import idltype, idlast
+from omniidl import idltype, idlast, idlutil
 from omniidl_be.cxx import util, config, id
 
 # direction constants
@@ -444,28 +444,20 @@ class Type:
         """literal(types.Type, value any, id.Environment option): string
            Returns a C++ representation of a value"""
 
-        def representChar(c):
-            if c not in printable:
-                # use the octal representation
-                octal_string = str(oct(ord(c)))
-                return "\\" + "0" * (4 - len(octal_string)) + octal_string
-            
-            if c in need_escaping:
-                return "\\" + str(c) 
-        
-            return str(c)
-    
         type = self.deref()
         kind = type.__type.kind()
+
         # (unsigned) short ints are themselves
         if kind in [ idltype.tk_short, idltype.tk_ushort ]:
             return str(value)
+
         # careful with long ints to avoid "L" postfix
         if kind in [ idltype.tk_long, idltype.tk_ulong ]:
             s = str(value)
             if s[-1] == 'L':
                 return s[0:-1]
             return s
+
         if kind in [ idltype.tk_longlong, idltype.tk_ulonglong ]:
             s = str(value)
             if s[-1] == 'L':
@@ -479,29 +471,31 @@ class Type:
             return str(value)
 
         # chars are single-quoted
-        if kind in [ idltype.tk_char, idltype.tk_wchar ]:
-            if value not in printable:
-                # use the octal representation
-                octal_string = str(oct(ord(value)))
-                return "0" * (4 - len(octal_string)) + octal_string
-            if value in need_escaping:
-                return "'\\" + str(value) + "'"
-            
-            return "'" + str(value) + "'"
+        if kind in [ idltype.tk_char ]:
+            return "'" + idlutil.escapifyString(value) + "'"
+
+        if kind in [ idltype.tk_wchar ]:
+            return "L'" + idlutil.escapifyWString([value]) + "'"
+        
         # booleans are straightforward
         if kind in [ idltype.tk_boolean ]:
             return str(value)
+
         if kind in [ idltype.tk_enum ]:
             # value is an enumerator
             enum_name = id.Name(value.scopedName())
             #enum_name = id.Name(type.__type.decl().scopedName() + [str(value)])
             return enum_name.unambiguous(environment)
+
         if kind in [ idltype.tk_string ]:
-            chars = list(value)
-            chars = map(representChar, chars)
-            return "\"" + string.join(chars, "") + "\""
+            return '"' + idlutil.escapifyString(value) + '"'
+
+        if kind in [ idltype.tk_wstring ]:
+            return 'L"' + idlutil.escapifyWString(value) + '"'
+
         if kind in [ idltype.tk_octet ]:
             return str(value)
+
         if kind in [ idltype.tk_fixed ]:
             return '"' + value + '"'
 
@@ -910,19 +904,6 @@ def variableDecl(decl):
 
 
 
-digits = map(chr, range(ord('0'), ord('9') + 1))
-lower_case_letters = map(chr, range(ord('a'), ord('z') + 1))
-upper_case_letters = map(chr, range(ord('A'), ord('Z') + 1))
-symbols = list("""`!""£$%^&*()-_+=[{]};:'@#~,<.>/? |""")
-need_escaping = ['\\', '\'']
-
-# (extra quote is to un-confuse emacs)
-
-printable = digits + lower_case_letters + upper_case_letters + symbols +\
-            need_escaping
-
-
-    
 
 def direction(param):
     if param.is_in() and param.is_out():
@@ -1000,23 +981,23 @@ basic_map = {
     idltype.tk_octet:              "CORBA::Octet"
     }
 basic_map_out = { }
-for key in basic_map.keys():
-    basic_map_out[key] = basic_map[key] + "_out"
+for key,value in basic_map.items():
+    basic_map_out[key] = value + "_out"
 
 
 # Info on size and alignment of basic types
 typeSizeAlignMap = {
-    idltype.tk_char:    (1, 1),
-    idltype.tk_boolean: (1, 1),
-    idltype.tk_wchar:   (2, 2),
-    idltype.tk_short:   (2, 2),
-    idltype.tk_ushort:  (2, 2),
-    idltype.tk_long:    (4, 4),
-    idltype.tk_ulong:   (4, 4),
-    idltype.tk_float:   (4, 4),
-    idltype.tk_enum:    (4, 4),
-    idltype.tk_double:  (8, 8),
-    idltype.tk_octet:   (1, 1),
-    idltype.tk_longlong: (8, 8),
+    idltype.tk_char:      (1, 1),
+    idltype.tk_boolean:   (1, 1),
+    idltype.tk_wchar:     (2, 2),
+    idltype.tk_short:     (2, 2),
+    idltype.tk_ushort:    (2, 2),
+    idltype.tk_long:      (4, 4),
+    idltype.tk_ulong:     (4, 4),
+    idltype.tk_float:     (4, 4),
+    idltype.tk_enum:      (4, 4),
+    idltype.tk_double:    (8, 8),
+    idltype.tk_octet:     (1, 1),
+    idltype.tk_longlong:  (8, 8),
     idltype.tk_ulonglong: (8, 8)
     }

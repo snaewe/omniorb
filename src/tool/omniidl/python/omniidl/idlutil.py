@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.4  2001/06/13 11:28:22  dpg1
+# Proper omniidl support for wchar/wstring constants.
+#
 # Revision 1.5.2.3  2001/03/13 10:34:01  dpg1
 # Minor Python clean-ups
 #
@@ -106,17 +109,40 @@ with any prefix it shares with B removed.
         i = i + 1
     return tscope
 
-def escapifyString(str):
+_valid_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" \
+               " _!$%^&*()-=+[]{};'#:@~,./<>?|`"
+
+_valid_unichars = map(ord, list(_valid_chars))
+
+def escapifyString(s):
     """escapifyString(string) -> string
 
 Return the given string with any non-printing characters escaped."""
     
-    l = list(str)
-    vis = string.letters + string.digits + " _!$%^&*()-=+[]{};'#:@~,./<>?|`"
+    global _valid_chars
+    l = list(s)
     for i in range(len(l)):
-        if l[i] not in vis:
+        if l[i] not in _valid_chars:
             l[i] = "\\%03o" % ord(l[i])
     return string.join(l, "")
+
+
+def escapifyWString(l):
+    """escapifyWString(int list) -> string
+
+Take a list of integers representing Unicode characters and return an
+ASCII string with all characters outside that range replaced with \\u
+escapes."""
+
+    global _valid_unichars
+    m = [None] * len(l)
+    for i in range(len(l)):
+        assert(l[i] <= 0xffff)
+        if l[i] in _valid_unichars:
+            m[i] = chr(l[i])
+        else:
+            m[i] = "\\u%04x" % l[i]
+    return string.join(m, "")
 
 
 def relativeScope(fromScope, destScope):

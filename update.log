@@ -1,3 +1,15 @@
+Wed Jun 13 12:26:02 BST 2001 dpg1
+=================================
+
+- Proper omniidl support for wchar/wstring constants.
+
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/python/omniidl/idlutil.py
+
+
 Tue Jun 12 12:34:23 BST 2001 dpg1
 =================================
 

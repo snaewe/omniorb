@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.9.2.6  2001/06/13 11:28:20  dpg1
+// Proper omniidl support for wchar/wstring constants.
+//
 // Revision 1.9.2.5  2001/03/13 10:32:10  dpg1
 // Fixed point support.
 //
@@ -334,7 +337,7 @@ L"'"\\."'" {
 
 L{STR} {
   yytext[yyleng-1] = '\0';
-  yylval.wstring_val = escapedStringToWString(yytext + 1);
+  yylval.wstring_val = escapedStringToWString(yytext + 2);
   return WIDE_STRING_LITERAL;
 }
 
