@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.3  2000/11/07 18:27:51  sll
+# Pass environment to out_objrefcall.
+#
 # Revision 1.1.4.2  2000/11/03 19:30:21  sll
 # Rationalise code generation. Consolidate all code that use call descriptors
 # into the CallDescriptor class.
@@ -319,7 +322,8 @@ class _objref_I(Class):
       call_descriptor.out_objrefcall(body,
                                      callable.operation_name(),
                                      argnames,
-                                     localcall_fn)
+                                     localcall_fn,
+                                     self._environment)
       method.cc(stream, body)
 
 class _pof_I(Class):
