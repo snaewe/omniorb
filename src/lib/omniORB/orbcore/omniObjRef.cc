@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2001/05/02 16:11:44  sll
+   _realNarrow() calls createObjRef with the right locking and arguments.
+
   Revision 1.2.2.8  2001/04/18 18:18:06  sll
   Big checkin with the brand new internal APIs.
 
@@ -162,7 +165,10 @@ omniObjRef::_realNarrow(const char* repoId)
 	ior = pd_ior->duplicateNoLock();
       }
 
-      objref = omni::createObjRef(repoId,ior,0,0,_localId());
+      {
+	omni_tracedmutex_lock sync(*omni::internalLock);
+	objref = omni::createObjRef(repoId,ior,1,_identity(),_localId());
+      }
 
       if( objref ) {
 	target = objref->_ptrToObjRef(repoId);
