@@ -200,7 +200,12 @@ CORBA::name::_NP_typeId() const \
  \
 CORBA::Exception::insertExceptionToAny CORBA::name::insertToAnyFn = 0; \
 CORBA::Exception::insertExceptionToAnyNCP CORBA::name::insertToAnyFnNCP = 0; \
-
+\
+const char* \
+CORBA::name::NP_minorString() const \
+{ \
+  return _OMNI_NS(minorCode2String)(_OMNI_NS(name##_LookupTable),pd_minor); \
+}
 
 OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)
 #undef STD_EXCEPTION

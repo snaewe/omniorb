@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/11/01 12:04:31  dpg1
+  Function in SystemException to return minor code string.
+
   Revision 1.1.2.2  2001/10/17 16:44:00  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -183,6 +186,10 @@ public:
     return *this;
   }
 
+  virtual const char* NP_minorString() const = 0;
+  // omniORB proprietary function to get a meaningful name for the
+  // minor code. The string must NOT be freed.
+
 protected:
   ULong             pd_minor;
   CompletionStatus  pd_status;
@@ -212,6 +219,7 @@ private:
     virtual const char* _NP_repoId(int* size) const; \
     static _core_attr Exception::insertExceptionToAny    insertToAnyFn; \
     static _core_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP; \
+    virtual const char* NP_minorString() const; \
   private: \
     virtual Exception* _NP_duplicate() const; \
     virtual const char* _NP_typeId() const; \

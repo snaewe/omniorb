@@ -413,7 +413,7 @@ int main(int argc, char* argv[])
 	}
 	else if (ior.profiles[count].tag == IOP::TAG_MULTIPLE_COMPONENTS) {
 	  
-	  cout << "Multiple Componet Profile ";
+	  cout << "Multiple Component Profile ";
 	  IIOP::ProfileBody pBody;
 	  IIOP::unmarshalMultiComponentProfile(ior.profiles[count],
 					       pBody.components);
@@ -432,7 +432,11 @@ int main(int argc, char* argv[])
   }
   catch(CORBA::MARSHAL& ex) {
     cerr << "Invalid stringified IOR supplied." << endl;
-    cerr << "(Minor = " << ex.minor() << ")" << endl;
+    const char* ms = ex.NP_minorString();
+    if (ms)
+      cerr << "(MARSHAL Minor = " << ms << ")" << endl;
+    else
+      cerr << "(MARSHAL Minor = " << ex.minor() << ")" << endl;
     return 1;
   }
   catch(...) {
