@@ -755,6 +755,9 @@ CXXMTFLAG     = -mt
 SHAREDLIB_CPPFLAGS = -KPIC
 endif
 ifdef Compiler_Sun4
+CXXMTFLAG     = -mt
+CXXDEBUGFLAGS = -O2 -g
+SHAREDLIB_CPPFLAGS = -KPIC
 SharedLibraryPlatformLinkFlagsTemplate = -G -h $$soname
 PythonLibraryPlatformLinkFlagsTemplate = -G -h $$soname -lC
 endif
