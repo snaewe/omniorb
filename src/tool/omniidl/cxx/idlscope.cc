@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.4  1999/11/02 10:35:03  dpg1
+// add...() functions now carry on regardless after a keyword clash, to
+// prevent later errors.
+//
 // Revision 1.3  1999/11/02 10:01:46  dpg1
 // Minor fixes.
 //
@@ -692,8 +696,7 @@ addModule(const char* identifier, Scope* scope, Decl* decl,
   if (*identifier == '_')
     ++identifier;
   else
-    if (keywordClash(identifier, file, line))
-      return;
+    keywordClash(identifier, file, line);
 
   Entry* clash = iFind(identifier);
 
@@ -753,8 +756,7 @@ addDecl(const char* identifier, Scope* scope, Decl* decl, IdlType* idltype,
   if (*identifier == '_')
     ++identifier;
   else
-    if (keywordClash(identifier, file, line))
-      return;
+    keywordClash(identifier, file, line);
 
   Entry* clash = iFind(identifier);
 
@@ -849,8 +851,7 @@ addCallable(const char* identifier, Scope* scope, Decl* decl,
   if (*identifier == '_')
     ++identifier;
   else
-    if (keywordClash(identifier, file, line))
-      return;
+    keywordClash(identifier, file, line);
 
   Entry* clash = iFind(identifier);
 
@@ -1002,8 +1003,7 @@ addInstance(const char* identifier, Decl* decl, IdlType* idltype,
   if (*identifier == '_')
     ++identifier;
   else
-    if (keywordClash(identifier, file, line))
-      return;
+    keywordClash(identifier, file, line);
 
   Entry* clash = iFind(identifier);
 
