@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.19  1999/08/09 12:26:36  sll
+  Updated how _out name is generated.
+
   Revision 1.18  1999/06/18 20:48:41  sll
   Updated to use equivalent instead of equal in any extraction operator.
 
@@ -86,8 +89,7 @@
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
-
-#define ADPT_CLASS_TEMPLATE "_CORBA_Array_OUT_arg"
+#include <o2be_stringbuf.h>
 
 o2be_array::o2be_array(UTL_ScopedName* n,
 		       unsigned long ndims,
@@ -424,7 +426,9 @@ o2be_array::produce_hdr (std::fstream &s, o2be_typedef* tdef)
 	    << tdef->uqname() << "_copyHelper,"
 	    << tdef->uqname() << "_slice> "
 	    << tdef->uqname() << "_var;\n";
-  IND(s); s << "typedef " << out_adptarg_name(tdef,tdef)  << " "
+  IND(s); s << "typedef _CORBA_Array_OUT_arg<"
+	    << tdef->uqname() << "_slice,"
+	    << tdef->uqname() << "_var > "
 	    << tdef->uqname()
 	    <<"_out;\n";
   IND(s); s << "typedef _CORBA_Array_Forany<"
@@ -1057,26 +1061,10 @@ o2be_array::call_buildDesc(std::fstream& s, const char* newdesc,
 const char*
 o2be_array::out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const
 {
-  const char* ubname;
-
-  if (o2be_global::qflag()) {
-    ubname = tdef->fqname();
-  }
-  else {
-    ubname = tdef->unambiguous_name(used_in);
-  }
-
-  char* p = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<, >")+
-		     strlen(ubname) + strlen("_slice") +
-		     strlen(ubname) + strlen("_var")+1];
-  strcpy(p,ADPT_CLASS_TEMPLATE);
-  strcat(p,"<");
-  strcat(p,ubname);
-  strcat(p,"_slice");
-  strcat(p,",");
-  strcat(p,ubname);
-  strcat(p,"_var >");
-  return p;  
+  StringBuf out_type;
+  out_type += tdef->unambiguous_name(used_in);
+  out_type += "_out";
+  return out_type.release();
 }
 
 
