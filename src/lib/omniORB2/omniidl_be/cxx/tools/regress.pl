@@ -30,6 +30,10 @@ $compare_program = "/home/djs/src/omni/cvs/src".
 # command line option
 $test_suite = "/home/djs/src/idl-test-suite";
 
+$tests = [ ["", "", ""],
+#	   ["-tp",  "-Wbtp", "Tie Templates"],
+#           ["-tf",  "-Wbtf", "Flattened tie templates"],
+           ["-a",   "-Wba",  "TypeCode and Any"] ];
 
 
 # ------------------------------------------------------
@@ -153,53 +157,65 @@ sub getFailList{
 
 my $numFailed = 0;
 my $numTried = 0;
+my $totalTests = 0;
 foreach $idl (@sorted_test_idl){
     last if ($numTests == 0);
     $numTests --;
     $numTried ++;
 
-    print padto("\nFile: $idl",40);
-    $idl =~ /(.+)\.idl$/;
-    $basename = $1;
+    foreach $test (@$tests){
+	$totalTests ++;
 
-    chdir("$test_suite/old");
-    print jright("OLD",10);
-    if (system("$old_compiler $old_args ../$idl 2>/dev/null") != 0){
-	my $failures = getFailList("Old compiler");
-	push @$failures, $idl;
-	print jright("[ ".$RED."FAIL".$RESET." ]",20);
-	$numFailed ++;
-	next;
-    }
+	my @options = @$test;
+	if (!$options[0]){
+	    print padto("\nFile: $idl",40);
+	}else{
+	    print padto("\n  $options[2]", 40);
+	}
+	$old_opt = $options[0];
+	$new_opt = $options[1];
+	$idl =~ /(.+)\.idl$/;
+	$basename = $1;
 
-    chdir("$test_suite/new");
-    print jright("NEW",10);
-    if (system("$new_compiler $new_args ../$idl 2>/dev/null") != 0){
-	my $failures = getFailList("New compiler");
-	push @$failures, $idl;
-	print jright("[ ".$RED."FAIL".$RESET." ]",25);
-	$numFailed ++;
-	next;
-    }
-
-    chdir("$test_suite");
-    foreach $suffix (".hh", "SK.cc", "DynSK.cc"){
-	my $failures = getFailList($suffix);
-	if ((!-e "old/$basename$suffix")or(!-e "new/$basename$suffix")){
-	    print jright("[ ".$YELLOW.$suffix.$RESET." ]", 30);
-	    
-	    if (!member($idl, @failures)){
-		push @$failures, $idl;
-	    }
+	chdir("$test_suite/old");
+	print jright("OLD",10);
+	if (system("$old_compiler $old_args $old_opt ../$idl 2>/dev/null") != 0){
+	    my $failures = getFailList("Old compiler");
+	    push @$failures, $idl;
+	    print jright("[ ".$RED."FAIL".$RESET." ]",20);
 	    $numFailed ++;
 	    next;
 	}
-	if (`$compare_program old/$basename$suffix new/$basename$suffix`){
-	    print jright("[ ".$RED.$suffix.$RESET." ]", 30);
+
+	chdir("$test_suite/new");
+	print jright("NEW",10);
+	if (system("$new_compiler $new_args $new_opt ../$idl 2>/dev/null") != 0){
+	    my $failures = getFailList("New compiler");
 	    push @$failures, $idl;
+	    print jright("[ ".$RED."FAIL".$RESET." ]",25);
 	    $numFailed ++;
-	}else{
-	    print jright("[ ".$GREEN.$suffix.$RESET." ]", 30);
+	    next;
+	}
+
+	chdir("$test_suite");
+	foreach $suffix (".hh", "SK.cc", "DynSK.cc"){
+	    my $failures = getFailList($suffix);
+	    if ((!-e "old/$basename$suffix")or(!-e "new/$basename$suffix")){
+		print jright("[ ".$YELLOW.$suffix.$RESET." ]", 30);
+		
+	    #if (!member($idl, @failures)){
+	    #push @$failures, $idl;
+	    #}
+		$numFailed ++;
+		next;
+	    }
+	    if (`$compare_program old/$basename$suffix new/$basename$suffix`){
+		print jright("[ ".$RED.$suffix.$RESET." ]", 30);
+		push @$failures, $idl;
+		$numFailed ++;
+	    }else{
+		print jright("[ ".$GREEN.$suffix.$RESET." ]", 30);
+	    }
 	}
     }
 }
@@ -220,7 +236,7 @@ if ($numFailed == 0){
 
 if ($numTried == ($#sorted_test_idl+1)){
     open(FILE, ">>$test_suite/results.txt");
-    print FILE "$#sorted_test_idl ";
+    print FILE "$totalTests ";
     my $hh_ = getFailList(".hh"); my @hh  = @$hh_;
     my $sk_ = getFailList("SK.cc"); my @sk = @$sk_;
     my $dyn_ = getFailList("DynSK.cc"); my @dyn = @$dyn_;
