@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2003/11/05 13:00:33  dgrisby
+  Properly set sequence length in dumpSpecified.
+
   Revision 1.1.2.7  2003/07/26 22:52:22  dgrisby
   Avoid spurious gcc warnings when sizeof pointer > sizeof int.
 
@@ -346,7 +349,8 @@ orbOptions::sequenceString*
 orbOptions::dumpSpecified() const {
 
   sequenceString_var result(new sequenceString(pd_values.size()));
-  
+  result->length(pd_values.size());
+
   omnivector<HandlerValuePair*>::const_iterator i = pd_values.begin();
   omnivector<HandlerValuePair*>::const_iterator last = pd_values.end();
 
@@ -370,6 +374,7 @@ orbOptions::dumpCurrentSet() const {
   if (!pd_handlers_sorted) ((orbOptions*)this)->sortHandlers();
 
   sequenceString_var result(new sequenceString(pd_handlers.size()));
+  result->length(pd_values.size());
 
   omnivector<orbOptions::Handler*>::const_iterator i = pd_handlers.begin();
   omnivector<orbOptions::Handler*>::const_iterator last = pd_handlers.end();
