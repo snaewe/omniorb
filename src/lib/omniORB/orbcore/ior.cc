@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.13  2001/07/31 16:27:59  sll
+  Added GIOP BiDir support.
+
   Revision 1.10.2.12  2001/06/13 20:13:15  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -120,6 +123,7 @@
 #include <omniORB4/omniInterceptors.h>
 #include <exceptiondefs.h>
 #include <initialiser.h>
+#include <giopBiDir.h>
 #include <stdio.h>
 
 OMNI_USING_NAMESPACE(omni)
@@ -226,6 +230,17 @@ IOP::IOR::unmarshaltype_id(cdrStream& s) {
   return id._retn();
 }
 
+void
+IIOP::Address::operator>>= (cdrStream& s) const {
+  s.marshalRawString(host);
+  port >>= s;
+}
+
+void
+IIOP::Address::operator<<= (cdrStream& s) {
+  host = s.unmarshalRawString();
+  port <<= s;
+}
 
 void
 IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
@@ -447,22 +462,6 @@ omniIOR::dump_TAG_ORB_TYPE(const IOP::TaggedComponent& c)
   return outstr._retn();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-static
-giopAddress* unmarshal_IIOP_Address(const IIOP::Address& addr) {
-
-  const char* format = "giop:tcp:%s:%d";
-
-  CORBA::ULong len = strlen(addr.host);
-  if (len == 0) return 0;
-  len += strlen(format) + 6;
-  CORBA::String_var addrstr;
-  addrstr = CORBA::string_alloc(len);
-  sprintf(addrstr,format,(const char*)addr.host,addr.port);
-  return giopAddress::str2Address(addrstr);
-}
-
 
 void
 omniIOR::unmarshal_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent& c , omniIOR& ior)
@@ -474,7 +473,7 @@ omniIOR::unmarshal_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent& c , om
   IIOP::Address v;
   v.host = e.unmarshalRawString();
   v.port <<= e;
-  giopAddress* address = unmarshal_IIOP_Address(v);
+  giopAddress* address = giopAddress::fromTcpAddress(v);
   if (address == 0) return;
   ior.getIORInfo()->addresses().push_back(address);
 }
@@ -612,11 +611,10 @@ omniIOR::unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c ,
   strncpy(copyhost,host,hostlen);
   copyhost[hostlen] = '\0';
 
-  const char* format = "giop:ssl:%s:%d";
-  CORBA::String_var addrstr(CORBA::string_alloc(strlen(format)+hostlen+6));
-  sprintf(addrstr,format,(const char*)copyhost,port);
-
-  giopAddress* address = giopAddress::str2Address(addrstr);
+  IIOP::Address ssladdr;
+  ssladdr.host = copyhost._retn();
+  ssladdr.port = port;
+  giopAddress* address = giopAddress::fromSslAddress(ssladdr);
   // If we do not have ssl transport linked the return value will be 0
   if (address == 0) return;
   ior.getIORInfo()->addresses().push_back(address);
@@ -667,6 +665,61 @@ omniIOR::dump_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c) {
     outstr = (const char*)"TAG_SSL_SEC_TRANS (non-standard and unknown format)";
   }
   return outstr._retn();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+void
+omniIOR::unmarshal_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent& c ,
+				     omniIOR& ior) {
+  
+  OMNIORB_ASSERT(c.tag == IOP::TAG_OMNIORB_BIDIR);
+  OMNIORB_ASSERT(ior.pd_iorInfo);
+
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  char* sendfrom = e.unmarshalRawString();
+
+  BiDirInfo* info = new BiDirInfo(sendfrom);
+  
+  omniIOR::IORExtraInfoList& infolist = ior.pd_iorInfo->extraInfo();
+  CORBA::ULong index = infolist.length();
+  infolist.length(index+1);
+  infolist[index] = (omniIOR::IORExtraInfo*)info;
+}
+
+char*
+omniIOR::dump_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent& c) {
+
+  OMNIORB_ASSERT(c.tag == IOP::TAG_OMNIORB_BIDIR);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  CORBA::String_var sendfrom;
+  sendfrom = e.unmarshalRawString();
+  CORBA::String_var outstr;
+  CORBA::ULong len = sizeof("TAG_OMNIORB_BIDIR ")+strlen(outstr);
+  outstr = CORBA::string_alloc(len);
+  sprintf(outstr,"%s %s","TAG_OMNIORB_BIDIR",(const char*)sendfrom);
+  return outstr._retn();
+}
+
+void
+omniIOR::add_TAG_OMNIORB_BIDIR(const char* sendfrom,omniIOR& ior) {
+
+  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  s.marshalRawString(sendfrom);
+
+  IOP::MultipleComponentProfile body;
+  body.length(1);
+  body[0].tag = IOP::TAG_OMNIORB_BIDIR;
+  CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+  body[0].component_data.replace(max,len,p,1);
+
+  CORBA::ULong index = ior.pd_iopProfiles->length();
+  ior.pd_iopProfiles->length(index+1);
+  IIOP::encodeMultiComponentProfile(body,ior.pd_iopProfiles[index]);
 }
 
 
@@ -730,6 +783,11 @@ static struct {
 
   { IOP::TAG_PRIMARY, 0, 0 },
   { IOP::TAG_HEARTBEAT_ENABLED, 0, 0 },
+
+  { IOP::TAG_OMNIORB_BIDIR,
+    omniIOR::unmarshal_TAG_OMNIORB_BIDIR,
+    omniIOR::dump_TAG_OMNIORB_BIDIR },
+
   { 0xffffffff, 0, 0 }
 };
 
@@ -973,7 +1031,7 @@ CORBA::Boolean extractSupportedComponents(omniInterceptors::decodeIOR_T::info_T&
 
   iorInfo.version(info.iiop.version);
 
-  giopAddress* address = unmarshal_IIOP_Address(info.iiop.address);
+  giopAddress* address = giopAddress::fromTcpAddress(info.iiop.address);
   if (address)
     iorInfo.addresses().push_back(address);
 

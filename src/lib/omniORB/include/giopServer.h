@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/07/31 16:28:01  sll
+  Added GIOP BiDir support.
+
   Revision 1.1.4.3  2001/07/13 15:19:30  sll
   Manage the state of each connection internally. Added new callback
   functions.
@@ -55,11 +58,13 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class giopRendezvouser;
 class giopWorker;
+class giopMonitor;
 class giopStrand;
 
 class giopServer : public orbServer {
 public:
-  giopServer();
+
+  static giopServer* singleton();
   ~giopServer();
 
   const char* instantiate(const char* endpoint_uri,
@@ -76,8 +81,22 @@ public:
   void remove();
   // Implement orbServer::remove().
 
+
+  CORBA::Boolean addBiDirStrand(giopStrand*,giopActiveCollection* watcher);
+  // Add a connection to be managed by the server. The connection is
+  // an active connection used for bidirectional calls. In contrast,
+  // instantiate() registers an endpoint from which passive connections
+  // are created. 
+  // This call returns TRUE(1) if successful. Otherwise it returns FALSE(0).
+  // If the latter happens, the caller should not continue to use the
+  // connection to make a call. The state of the connection is not changed
+  // however.
+  // When this function is called, the server must already be in the ACTIVE
+  // state. Otherwise, it always returns FALSE(0).
+
   friend class giopRendezvouser;
   friend class giopWorker;
+  friend class giopMonitor;
 
   class Link {
   public:
@@ -98,7 +117,6 @@ public:
     Link& operator=(const Link&);
   };
 
-
 private:
   enum { IDLE, ACTIVE, ZOMBIE, INFLUX }  pd_state;
   giopEndpointList                       pd_endpoints;
@@ -108,6 +126,10 @@ private:
   omni_tracedcondition                   pd_cond;
   CORBA::Boolean                         pd_thread_per_connection;
   CORBA::ULong                           pd_n_temporary_workers;
+
+  omnivector<giopStrand*>                pd_bidir_strands;
+  omnivector<giopActiveCollection*>      pd_bidir_collections;
+  Link                                   pd_bidir_monitors;
 
   void activate();
   // Activate all endpoints in pd_endpoints. This involves instantiating a
@@ -216,6 +238,21 @@ public:
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   //
+  // Callback functions used by giopMonitor
+  //
+  void notifyMrDone(giopMonitor*,CORBA::Boolean exit_on_error);
+  // Callback by giopMonitor when it finishes one upcall.
+  //
+  // The flag exit_on_error indicates whether the task ends because it
+  // was told or trigged by an error.
+  //
+  // Thread Safety preconditions:
+  //    Caller MUST NOT hold pd_lock. The lock is acquired by this method.
+  //
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+  //
   // Callback functions used by giopImpl12
   //
   void notifyCallFullyBuffered(giopConnection*);
@@ -225,6 +262,17 @@ public:
   // are set aside. If these set-aside fragments actually constitute a 
   // complete request, this callback function is invoked. The server should
   // dispatch a giopWorker task to deal with this callback. 
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+  //
+  // Callback functions used by getBiDirServiceContext.
+  // Indicate that the connection is now bidirectional. There should
+  // be a dedicate thread serving the connection. Normally the return
+  // value is 1, if it returns 0 the server fails to arrange the connection
+  // to be served as bidirectional.
+  //
+  CORBA::Boolean notifySwitchToBiDirectional(giopConnection*);
 
 private:
 
@@ -245,8 +293,11 @@ private:
   connectionState* csLocate(giopConnection*);
   connectionState* csRemove(giopConnection*);
   connectionState* csInsert(giopConnection*);
+  connectionState* csInsert(giopStrand*);
 
   void removeConnectionAndWorker(giopWorker* conn);
+
+  giopServer();
 };
 
 OMNI_NAMESPACE_END(omni)

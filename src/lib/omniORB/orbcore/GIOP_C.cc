@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/07/31 16:28:01  sll
+  Added GIOP BiDir support.
+
   Revision 1.1.4.2  2001/05/11 14:30:56  sll
   first_use status of the strand is now in use.
 
@@ -220,6 +223,17 @@ GIOP_C::notifyCommFailure(CORBA::ULong& minor,
       pd_calldescriptor->firstAddressUsed(addr);
     }
     retry =  (pd_rope->notifyCommFailure(addr) != addr);
+  }
+  else if (pd_strand->biDir && 
+	   pd_strand->isClient() && 
+	   pd_strand->biDir_has_callbacks) {
+
+    // when the connection is used bidirectionally, the call back
+    // objects at the other end will not be able to call us.
+    // The application may want to know this. We
+    // should not silently retry and reconnect again because the
+    // callback objects would not the new connection.
+    retry = 0;
   }
   else {
     retry = 1;

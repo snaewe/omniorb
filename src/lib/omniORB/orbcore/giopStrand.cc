@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/07/31 16:27:59  sll
+  Added GIOP BiDir support.
+
   Revision 1.1.4.4  2001/07/13 15:28:17  sll
   Use safeDelete to manage the lifecycle of a strand.
 
@@ -75,16 +78,17 @@ private:
   static omni_tracedcondition*	 cond;
   static Scavenger*              theTask;
 
-  void removeIdle(StrandList& src,StrandList& dest);
+  void removeIdle(StrandList& src,StrandList& dest, CORBA::Boolean skip_bidir);
 };
 
 ////////////////////////////////////////////////////////////////////////
 giopStrand::giopStrand(const giopAddress* addr) :
   pd_safelyDeleted(0),
   biDir(0), address(addr), connection(0), server(0),
-  gatekeeper_checked(0),first_use(1),
+  gatekeeper_checked(0),first_use(1), 
+  biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
-  rdcond(omniTransportLock), rd_nwaiting(0),
+  rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
   wrcond(omniTransportLock), wr_nwaiting(0),
   seqNumber(0), head(0), spare(0), pd_state(ACTIVE)
 {
@@ -99,9 +103,10 @@ giopStrand::giopStrand(const giopAddress* addr) :
 giopStrand::giopStrand(giopConnection* conn, giopServer* serv) :
   pd_safelyDeleted(0),
   biDir(0), address(0), connection(conn), server(serv),
-  gatekeeper_checked(0),first_use(0),
+  gatekeeper_checked(0),first_use(0), 
+  biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
-  rdcond(omniTransportLock), rd_nwaiting(0),
+  rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
   wrcond(omniTransportLock), wr_nwaiting(0),
   seqNumber(1), head(0), spare(0), pd_state(ACTIVE)
 {
@@ -109,6 +114,11 @@ giopStrand::giopStrand(giopConnection* conn, giopServer* serv) :
   resetIdleCounter(idleIncomingBeats);
   // Do not call scavenger::notify() because passive strands are not
   // looked after by the scavenger.
+
+  if (omniORB::trace(20)) {
+    omniORB::logger log;
+    log << "Server accepted connection from " << conn->peeraddress() << "\n";
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -163,9 +173,7 @@ giopStrand::safeDelete(CORBA::Boolean forced)
   if (!forced) {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
-    deleted = pd_safelyDeleted;
-
-    if (deleted) return 1;
+    deleted = pd_safelyDeleted = 1;
 
     if (giopStreamList::is_empty(clients) &&
 	giopStreamList::is_empty(servers) &&
@@ -176,7 +184,6 @@ giopStrand::safeDelete(CORBA::Boolean forced)
       // be empty.
       StrandList::remove();
       RopeLink::remove();
-      deleted = pd_safelyDeleted = 1;
       deleteStrandAndConnection();
     }
   }
@@ -192,18 +199,49 @@ void
 giopStrand::deleteStrandAndConnection(CORBA::Boolean forced)
 {
   // Delete this strand only when connection's reference count goes to 0.
+  CORBA::String_var peeraddr;
+
   if (connection) {
+
+    peeraddr = connection->peeraddress();
+
     int count;
     if (!forced) {
       count = connection->decrRefCount();
+      if (omniORB::trace(25)) {
+	omniORB::logger log;
+	log << (isClient() ? "Client" : "Server")
+	    << " connection refcount = " << count << "\n"; 
+      }
       OMNIORB_ASSERT(count >= 0);
       if (count != 0)
 	return;
     }
     else {
       count = connection->decrRefCount(1);
-      OMNIORB_ASSERT(count == 0);
+      if (omniORB::trace(25)) {
+	omniORB::logger log;
+	log << (isClient() ? "Client" : "Server")
+	    << " connection refcount (forced) = " << count << "\n"; 
+      }
+      if (count) {
+	// The only condition when this happen is when the connection
+	// is bidirectional. giopServer still holds a refcount on this
+	// connection.
+	OMNIORB_ASSERT(biDir);
+	connection->Shutdown(); // This would cause the giopServer to
+	                        // remove this connection as well.
+	return;                 // Do not delete the strand. Do so
+                                // when the giopServer call this function.
+      }
     }
+  }
+  if (omniORB::trace(20) && connection) {
+    omniORB::logger log;
+    log << (isClient() ? "Client" : "Server")
+	<< " close connection" 
+	<< (isClient() ? " to " : " from ")
+	<< (const char*)peeraddr << "\n";
   }
   delete this;
 }
@@ -445,14 +483,15 @@ giopStrand::timeValue giopStrand::incomingCallTimeOut = { 0, 0 };
 
 ////////////////////////////////////////////////////////////////////////
 void
-Scavenger::removeIdle(StrandList& src,StrandList& dest)
+Scavenger::removeIdle(StrandList& src,StrandList& dest,
+		      CORBA::Boolean skip_bidir)
 {
   StrandList* p = src.next;
   while (p != &src) {
     giopStrand* s = (giopStrand*)p;
-    if ( ( !s->biDir )  &&
-	 ( giopStreamList::is_empty(s->clients) ||
-	   ((GIOP_C*)s->clients.next)->state() == IOP_C::UnUsed ) )
+    if ( (!s->biDir || !skip_bidir) && 
+	  ( giopStreamList::is_empty(s->clients) ||
+	    ((GIOP_C*)s->clients.next)->state() == IOP_C::UnUsed ) )
       {
 	if (--(s->idlebeats) <= 0) {
 	  p = p->next;
@@ -500,8 +539,8 @@ Scavenger::execute()
 
       // Notice that only those strands that have no other threads touching
       // them will be scanned and may be removed.
-      removeIdle(giopStrand::active_timedout,shutdown_list);
-      removeIdle(giopStrand::active,shutdown_list);
+      removeIdle(giopStrand::active_timedout,shutdown_list,0);
+      removeIdle(giopStrand::active,shutdown_list,1);
     }
 
     {

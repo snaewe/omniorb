@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/07/31 16:28:01  sll
+  Added GIOP BiDir support.
+
   Revision 1.1.4.3  2001/07/13 15:20:56  sll
   New member safeDelete is now the only method to delete a strand.
 
@@ -227,7 +230,7 @@ public:
   CORBA::Boolean      biDir;
   // Indicate if the strand is used for bidirectional GIOP.
 
-  inline CORBA::Boolean isClient() { return (server == 0); }
+  inline CORBA::Boolean isClient() { return (address != 0); }
   // Return TRUE if this is an active strand on the client side. Unless
   // biDir is TRUE, only those messages expected by a GIOP client can be
   // received from this connection.
@@ -254,6 +257,20 @@ public:
   // not been used to carry an invocation before.
   // This flag is set to 1 by ctor and reset to 0 by GIOP_C.
 
+  CORBA::Boolean      biDir_initiated;
+  // only applies to active strand. TRUE(1) means biDir service context
+  // has been sent for this connection.
+  // This flag is initialised to 0 by ctor and set to 1 by 
+  // setBiDirServiceContext.
+
+  CORBA::Boolean      biDir_has_callbacks;
+  // only applies to active bidirectional strand. TRUE(1) means call back
+  // objects have been sent through this connection. In other words, the
+  // connection may receive invocations on these objects from the other
+  // end.
+  // This flag is initialised to 0 by ctor and set to 1 by 
+  // omniObjRef::_marshal.
+
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
   // The following are data structures used by the giopStream instances
@@ -277,6 +294,7 @@ public:
   // functions.
   omni_tracedcondition rdcond;
   int                  rd_nwaiting;
+  int                  rd_n_justwaiting;
   omni_tracedcondition wrcond;
   int                  wr_nwaiting;
 

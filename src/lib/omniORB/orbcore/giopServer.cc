@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.11  2001/07/31 16:28:00  sll
+  Added GIOP BiDir support.
+
   Revision 1.22.2.10  2001/07/13 15:27:42  sll
   Support for the thread-pool as well as the thread-per-connection policy
   Support for serving multiple incoming calls on the same connection
@@ -54,7 +57,10 @@
 #include <giopServer.h>
 #include <giopWorker.h>
 #include <giopRendezvouser.h>
+#include <giopMonitor.h>
 #include <giopStrand.h>
+#include <initialiser.h>
+#include <omniORB4/omniInterceptors.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -113,6 +119,65 @@ giopServer::instantiate(const char* uri,
   return uri;
 }
 
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopServer::addBiDirStrand(giopStrand* s,giopActiveCollection* watcher) {
+
+  OMNIORB_ASSERT(s->isClient() && s->biDir && s->connection);
+  {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
+    omni_tracedmutex_lock sync(*omniTransportLock);
+    s->connection->incrRefCount();
+  }
+
+  CORBA::Boolean status = 0;
+
+  {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,0);
+    omni_tracedmutex_lock sync(pd_lock);
+
+    ensureNotInFlux();
+
+    if (pd_state == ACTIVE) {
+
+      pd_bidir_strands.push_back(s);
+
+      CORBA::Boolean matched = 0;
+      {
+	omnivector<giopActiveCollection*>::iterator i = pd_bidir_collections.begin();
+	omnivector<giopActiveCollection*>::iterator last = pd_bidir_collections.end();
+	while (i != last) {
+	  if ((*i) == watcher) {
+	    matched = 1;
+	    break;
+	  }
+	}
+      }
+      if (!matched) {
+	Link* p = pd_bidir_monitors.next;
+	for (; p != &pd_bidir_monitors; p = p->next) {
+	  if (((giopMonitor*)p)->collection() == watcher) {
+	    matched = 1;
+	    break;
+	  }
+	}
+      }
+      if (!matched) {
+	pd_bidir_collections.push_back(watcher);
+      }
+      activate();
+
+      status = 1;
+    }
+  }
+
+  if (!status) {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
+    omni_tracedmutex_lock sync(*omniTransportLock);
+    s->connection->decrRefCount();
+  }
+  return status;
+}
 
 ////////////////////////////////////////////////////////////////////////////
 void
@@ -216,6 +281,63 @@ giopServer::activate()
 
     task->insert(pd_rendezvousers);
   }
+
+  omnivector<giopStrand*>::iterator j;
+  j = pd_bidir_strands.begin();
+
+  while (j != pd_bidir_strands.end()) {
+
+    giopStrand* g = *j;
+
+    pd_bidir_strands.erase(j);
+
+    connectionState* cs = csInsert(g);
+
+    if (cs->connection->pd_has_dedicated_thread) {
+      giopWorker* task = new giopWorker(cs->strand,this,0);
+      if (!orbAsyncInvoker->insert(task)) {
+	// Cannot start serving this new connection.
+	omniORB::logger log;
+	log << "Cannot create a worker for this bidirectional connection: "
+	    << " to "
+	    << cs->connection->peeraddress()
+	    << "\n";
+	delete task;
+	cs->connection->Shutdown();
+	csRemove(cs->connection);
+	delete cs;
+	continue;
+      }
+      task->insert(cs->workers);
+      cs->connection->pd_n_workers++;
+    }
+    else {
+      cs->connection->setSelectable(1);
+    }
+  }
+
+  {
+    omnivector<giopActiveCollection*>::iterator i;
+    i    = pd_bidir_collections.begin();
+
+    while (i != pd_bidir_collections.end()) {
+      giopMonitor* task = new giopMonitor(*i,this);
+
+      if (!orbAsyncInvoker->insert(task)) {
+	// Cannot start serving this collection.
+	// Do not raise an exception. Instead, just moan about it.
+	omniORB::logger log;
+	log << "Cannot create a monitor for this bidir collection type: ";
+	log << (*i)->type();
+	log << "\n";
+	delete task;
+      }
+      else {
+	task->insert(pd_bidir_monitors);
+      }
+      pd_bidir_collections.erase(i);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -246,6 +368,22 @@ giopServer::deactivate()
 
     for (; p != &pd_rendezvousers; p = p->next) {
       ((giopRendezvouser*)p)->terminate();
+    }
+  }
+
+  if (!Link::is_empty(pd_bidir_monitors)) {
+    waitforcompletion = 1;
+  }
+
+
+  {
+    omnivector<giopStrand*>::iterator i = pd_bidir_strands.begin();
+
+    while (i != pd_bidir_strands.end()) {
+      giopStrand* g = *i;
+      pd_bidir_strands.erase(i);
+      g->connection->Shutdown();
+      g->deleteStrandAndConnection();
     }
   }
 
@@ -354,7 +492,7 @@ giopServer::connectionState*
 giopServer::csInsert(giopConnection* conn)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,1);
-  
+
 
   giopStrand* s = new giopStrand(conn,this);
   {
@@ -375,7 +513,7 @@ giopServer::csInsert(giopConnection* conn)
   if (omniORB::threadPerConnectionPolicy) {
     // Check the number of connection and decide if we need to
     // turn off the one thread per connection policy temporarily.
-    if (pd_thread_per_connection && 
+    if (pd_thread_per_connection &&
 	pd_nconnections >= omniORB::threadPerConnectionUpperLimit) {
       pd_thread_per_connection = 0;
     }
@@ -383,6 +521,43 @@ giopServer::csInsert(giopConnection* conn)
 
   conn->pd_has_dedicated_thread = pd_thread_per_connection;
 
+  return cs;
+}
+
+////////////////////////////////////////////////////////////////////////////
+giopServer::connectionState*
+giopServer::csInsert(giopStrand* s)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,1);
+
+  OMNIORB_ASSERT(s->biDir && s->isClient());
+
+  giopConnection* conn = s->connection;
+
+  connectionState* cs =  new connectionState(conn,s);
+
+  connectionState** head = &(pd_connectionState[((omni::ptr_arith_t)conn)%
+						connectionState::hashsize]);
+  cs->next = *head;
+  *head = cs;
+
+  pd_nconnections++;
+
+  if (omniORB::threadPerConnectionPolicy) {
+    // Check the number of connection and decide if we need to
+    // turn off the one thread per connection policy temporarily.
+    if (pd_thread_per_connection &&
+	pd_nconnections >= omniORB::threadPerConnectionUpperLimit) {
+      pd_thread_per_connection = 0;
+    }
+  }
+
+  conn->pd_has_dedicated_thread = pd_thread_per_connection;
+
+  {
+    omni_tracedmutex_lock sync(*omniTransportLock);
+    s->connection->decrRefCount();
+  }
   return cs;
 }
 
@@ -472,7 +647,9 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
   }
 
   if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) && pd_nconnections == 0) {
+    if (Link::is_empty(pd_rendezvousers) &&
+	pd_nconnections == 0             &&
+	Link::is_empty(pd_bidir_monitors)   ) {
       pd_cond.broadcast();
     }
   }
@@ -560,7 +737,9 @@ giopServer::removeConnectionAndWorker(giopWorker* w) {
   }
 
   if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) && pd_nconnections == 0) {
+    if (Link::is_empty(pd_rendezvousers) &&
+	pd_nconnections == 0             &&
+	Link::is_empty(pd_bidir_monitors)   ) {
       pd_cond.broadcast();
     }
   }
@@ -641,11 +820,11 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       // Set doselect if this is the last worker for this connection and
       // there is no worker tasks that cannot be allocated to a thread from
       // the pool.
-      doselect = (conn->pd_n_workers == 0 && 
+      doselect = (conn->pd_n_workers == 0 &&
 		  pd_n_temporary_workers < omniORB::maxServerThreadPoolSize);
     }
     if (doselect) {
-      // We could call conn->setSelectable(1). 
+      // We could call conn->setSelectable(1).
       // Instead we call Peek(). This thread will be used for a short time to
       // monitor the connection. If the connection is available for reading,
       // the callback function peekCallBack is called. We can afford to
@@ -678,17 +857,12 @@ giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
     // This connection is managed with the thread-per-connection policy
     if (!w->singleshot()) {
       // This is the dedicated thread.
-      // setSelectable unless another temporary worker thread is already
-      // present.
-      int n;
+      // setSelectable.
       {
 	omni_tracedmutex_lock sync(pd_lock);
-	n = conn->pd_n_workers;
 	conn->pd_dedicated_thread_in_upcall = 1;
       }
-      if (n == 1) {
-	conn->setSelectable(0,data_in_buffer);
-      }
+      conn->setSelectable(0,data_in_buffer);
     }
     else {
       // This is a temporary worker thread
@@ -706,6 +880,43 @@ giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
   else {
     // This connection is managed with the thread-pool policy
     conn->setSelectable(0,data_in_buffer);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopServer::notifySwitchToBiDirectional(giopConnection* conn)
+{
+  return 1;
+  // Note: we could override the threading policy to dictate that all
+  //       bidirectional connection will be served by a dedicated thread
+  //       on the server side. 
+}
+
+////////////////////////////////////////////////////////////////////////////
+void
+giopServer::notifyMrDone(giopMonitor* m, CORBA::Boolean exit_on_error)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,0);
+  omni_tracedmutex_lock sync(pd_lock);
+
+  if (!exit_on_error && !m->collection()->isEmpty()) {
+    // We may have seen a race condition in which the Monitor is about
+    // to return when another connection has been added to be monitored.
+    // We should not remove the monitor in this case.
+    if (orbAsyncInvoker->insert(m)) {
+      return;
+    }
+    // Otherwise, we let the following deal with it.
+  }
+  m->remove();
+  delete m;
+  if (pd_state == INFLUX) {
+    if (Link::is_empty(pd_rendezvousers) &&
+	pd_nconnections == 0             &&
+	Link::is_empty(pd_bidir_monitors)   ) {
+      pd_cond.broadcast();
+    }
   }
 }
 
@@ -733,6 +944,43 @@ giopServer::Link::is_empty(giopServer::Link& head)
 {
   return (head.next == &head);
 }
+
+/////////////////////////////////////////////////////////////////////////////
+giopServer*
+giopServer::singleton() {
+  static giopServer* singleton_ = 0;
+  if (!singleton_) {
+    singleton_ = new giopServer();
+  }
+  return singleton_;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+static
+CORBA::Boolean
+registerGiopServer(omniInterceptors::createORBServer_T::info_T& info) {
+  info.servers.push_back(giopServer::singleton());
+  return 1;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_giopserver_initialiser : public omniInitialiser {
+public:
+  void attach() {
+    omniInterceptors* interceptors = omniORB::getInterceptors();
+    interceptors->createORBServer.add(registerGiopServer);
+  }
+  void detach() {
+  }
+};
+
+
+static omni_giopserver_initialiser initialiser;
+
+omniInitialiser& omni_giopserver_initialiser_ = initialiser;
 
 
 OMNI_NAMESPACE_END(omni)
@@ -818,7 +1066,7 @@ OMNI_NAMESPACE_END(omni)
 //
 
 //   To summarise, here are what the transition function should do:
-//     notifyRzReadable() 
+//     notifyRzReadable()
 //        - Always create a temporary worker
 //
 //     notifyWkPreUpCall()
@@ -890,58 +1138,58 @@ OMNI_NAMESPACE_END(omni)
 //	      |	       	|      		      	   |
 //	      |	       	|notifyRzReadable     	   |	notifyWkPreUpCall
 //notifyWkDone|	   	|      		      	   |   +--+
-//	      |	   	| +-----------------------+|   |  |
-//	      |	   	| | notifyWkPreUpCall(1)  ||   |  |
-//	      |	   	V V ^^^^^^^^^^^^^^^^^  	  ||   V  |
+//	      |	   	|                          |   |  |
+//	      |	   	|                          |   |  |
+//	      |	   	V                          |   V  |
 //            |    +---------+         	          ++------+-+
 //     	    +-|--->| (0,0,2) +------------------->| (0,0,2*)|
 //	    | |    +----+----+    notifyWkDone    +---------+
-//	    | |	   	|      	  ^^^^^^^^^^^^	     ^ ^
-//	    | |	   	|  			     | |
-//	    | |	   	|notifyWkPreUpCall	     | |
-//	    | |	   	|  		  	     | |
-//	    | |	   	|      	       	  	     | |
-//	    | |	   	V  			     | |
-//          | |    +---------+			     | |
+//	    | |	   	|      	  ^^^^^^^^^^^^	  |  ^ ^
+//	    | |	   	|  			  |  | |
+//	    | |	   	|notifyWkPreUpCall	  |  | |
+//	    | |	   	|  		  	  |  | |
+//	    | |	   	| +-----------------------+  | |
+//	    | |	   	V V     notifyWkPreUpCall(1) | |
+//          | |    +---------+ 	^^^^^^^^^^^^^^^^^^^^ | |
 //     	    | +----+ (1,0,2) +-----------------------+ |
-//	    |   +->+----+----+	   notifyWkDone	       |notifyWkDone
-//     	    +-+	|      	|  	   ^^^^^^^^^^^^	       |
-//     	      |	|      	|  			       |
-//	      |	|  	|DataArrive		       |
-//	      |	|  	|  			       |
-//	      |	|  	V  			       |
-//            | |  +---------+			       |
-//     	      |	|  | (0,1,2) +			       |
-//	      | |  +----+----+			   +---+
+//	    |   +->+----+----+ 	   notifyWkDone	       |notifyWkDone
+//     	    +-+	|      	|      	   ^^^^^^^^^^^^	       |
+//     	      |	|      	|      		    	       |
+//	      |	|  	|DataArrive	    	       |
+//	      |	|  	|      		    	       |
+//	      |	|  	V      		    	       |
+//            | |  +---------+ 		    	       |
+//     	      |	|  | (0,1,2) + 		    	       |
+//	      | |  +----+----+ 		    	   +---+
 //	      |	|      	|      		      	   |
 //	      |	|      	|notifyRzReadable     	   |	notifyWkPreUpCall
 //notifyWkDone|	|  	|      		      	   |   +--+
-//	      |	|  	|     		      	   |   |  |
+//	      |	|  	|      		      	   |   |  |
 //	      |	|  	|      		      	   |   |  |
 //	      |	|  	V      		      	   |   V  |
 //            | |  +---------+       	          ++------+-+
 //     	      +----+ (0,0,3) +------------------->| (0,0,3*)|
 //	        |  +----+----+    notifyWkDone    +---------+
-//     	       	|      	|      	  ^^^^^^^^^^^^	   ^
-//	       	|      	|  		  	   |
-//  notifyWkDone|  	|notifyWkPreUpCall	   |
-//	       	|  	|  		  	   |
-//	       	|  	|      	       	  	   |
-//	       	|  	V  		  	   |
-//              |  +---------+		  	   |
-//     	        +--+ (1,0,3) +---------------------+
+//     	       	|      	|      	  ^^^^^^^^^^^^	  |    ^
+//	       	|      	|      		    	  |    |
+//  notifyWkDone|  	|notifyWkPreUpCall  	  |    |
+//	       	|  	|      		    	  |    |
+//	       	|  	|  +----------------------+    |
+//	       	|  	V  V   	notifyWkPreUpCall(1)   |
+//              |  +---------+ 	^^^^^^^^^^^^^^^^^^^^   |
+//     	        +--+ (1,0,3) +-------------------------+
 //     	           +----+----+	   notifyWkDone
 //     	       	       	|      	   ^^^^^^^^^^^^
 //
-//   Note: (1) Race condition. Happen if dedicated thread gets the read lock
-//             before the temporary worker.
+//   Note: (1) May also happen under a race condition- if dedicated thread 
+//             gets the read lock before the temporary worker.
 //
 //   And So On...
 //
 //
 
 //   To summarise, here are what the transition function should do:
-//     notifyRzReadable() 
+//     notifyRzReadable()
 //        - Always create a temporary worker
 //
 //     notifyWkPreUpCall()

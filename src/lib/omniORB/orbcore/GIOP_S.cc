@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2001/07/31 16:28:01  sll
+  Added GIOP BiDir support.
+
   Revision 1.1.4.8  2001/07/13 15:22:45  sll
   Call notifyWkPreUpCall at the right time and determine if there are
   buffered data to be served by another thread.
@@ -81,6 +84,7 @@
 #include <GIOP_S.h>
 #include <omniORB4/minorCode.h>
 #include <omniORB4/omniInterceptors.h>
+#include <poaimpl.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -92,7 +96,7 @@ GIOP_S_Holder::GIOP_S_Holder(giopStrand* g, giopWorker* work) : pd_strand(g) {
 
 ////////////////////////////////////////////////////////////////////////
 GIOP_S_Holder::~GIOP_S_Holder() {
-  pd_strand->releaseServer(pd_iop_s);
+  if (pd_iop_s) pd_strand->releaseServer(pd_iop_s);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -503,6 +507,17 @@ GIOP_S::ReceiveRequest(omniCallDescriptor& desc) {
   pd_worker->server()->notifyWkPreUpCall(pd_worker,data_in_buffer);
 
   impl()->inputMessageEnd(this,0);
+
+
+  // Check if this call comes in from a bidirectional connection.
+  // If so check if the servant's POA policy allows this.
+  giopStrand& g = (giopStrand&)((giopStream&)(*this));
+  if (g.biDir && g.isClient()) {
+    if (!pd_calldescriptor->poa()->acceptBiDirectional()) {
+      OMNIORB_THROW(OBJ_ADAPTER,OBJ_ADAPTER_BiDirNotAllowed,
+		    CORBA::COMPLETED_NO);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.18  2001/07/31 16:28:00  sll
+  Added GIOP BiDir support.
+
   Revision 1.33.2.17  2001/07/13 15:23:09  sll
   New ORB initialisation options.
 
@@ -310,6 +313,8 @@ extern omniInitialiser& omni_codeSet_initialiser_;
 extern omniInitialiser& omni_cdrStream_initialiser_;
 extern omniInitialiser& omni_giopStrand_initialiser_;
 extern omniInitialiser& omni_giopStreamImpl_initialiser_;
+extern omniInitialiser& omni_giopserver_initialiser_;
+extern omniInitialiser& omni_giopbidir_initialiser_;
 extern omniInitialiser& omni_omniTransport_initialiser_;
 extern omniInitialiser& omni_omniCurrent_initialiser_;
 
@@ -417,6 +422,8 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_codeSet_initialiser_.attach();
     omni_cdrStream_initialiser_.attach();
     omni_omniTransport_initialiser_.attach();
+    omni_giopserver_initialiser_.attach();
+    omni_giopbidir_initialiser_.attach();
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
     omni_giopStrand_initialiser_.attach();
@@ -610,9 +617,11 @@ omniOrbORB::destroy()
     omni_giopStrand_initialiser_.detach();
     omni_initRefs_initialiser_.detach();
     omni_initFile_initialiser_.detach();
-    omni_codeSet_initialiser_.detach();
+    omni_giopbidir_initialiser_.detach();
+    omni_giopserver_initialiser_.detach();
     omni_omniTransport_initialiser_.detach();
     omni_cdrStream_initialiser_.detach();
+    omni_codeSet_initialiser_.detach();
     omni_ior_initialiser_.detach();
     omni_omniIOR_initialiser_.detach();
     omni_giopStreamImpl_initialiser_.detach();
@@ -1441,6 +1450,42 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	continue;
       }
 
+      // -ORBofferBiDirectionalGIOP
+      if( strcmp(argv[idx],"-ORBofferBiDirectionalGIOP") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBofferBiDirectionalGIOP parameter (0 or 1).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBofferBiDirectionalGIOP parameter.");
+	  return 0;
+	}
+	omniORB::offerBiDirectionalGIOP = v ? 1 : 0;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBacceptBiDirectionalGIOP
+      if( strcmp(argv[idx],"-ORBacceptBiDirectionalGIOP") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBacceptBiDirectionalGIOP parameter (0 or 1).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBacceptBiDirectionalGIOP parameter.");
+	  return 0;
+	}
+	omniORB::acceptBiDirectionalGIOP = v ? 1 : 0;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
       // -ORBnativeCharCodeSet
       if (strcmp(argv[idx],"-ORBnativeCharCodeSet") == 0) {
 	if (idx +1 >= argc) {
@@ -1523,6 +1568,8 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  "    -ORBtcAliasExpand <0|1>\n"
 	  "    -ORBgiopMaxMsgSize <n bytes>\n"
 	  "    -ORBmaxGIOPVersion <major no>.<minor no>\n"
+	  "    -ORBofferBiDirectionalGIOP <0|1>\n"
+	  "    -ORBacceptBiDirectionalGIOP <0|1>\n"
 	  "    -ORBobjectTableSize <n entries>\n"
 	  "    -ORBserverName <name>\n"
 	  "    -ORBInitialHost <name>\n"
@@ -1557,7 +1604,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
           "                            *\"giop:unix:<filename>\"   |\n"
           "                            *\"giop:fd:<no.>\"          |\n"
           "                            *\"<other protocol>:<network protocol>:<options>\"\n"
-          "                         * may not be supported on the platform.\n";
+	  "                         * may not be supported on the platform.\n";
 	move_args(argc,argv,idx,1);
 	continue;
       }
