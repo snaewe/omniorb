@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.2.2.11  2001/05/10 15:08:38  dpg1
+  _compatibleServant() replaced with _localServantTarget().
+  createIdentity() now takes a target string.
+  djr's fix to deactivateObject().
+
   Revision 1.2.2.10  2001/05/09 17:04:24  sll
   _realNarrow() now propagates location forward flag when it has to create
   a new object reference.
@@ -101,15 +106,10 @@
 
 OMNI_USING_NAMESPACE(omni)
 
-CORBA::Boolean
-omniObjRef::_compatibleServant(omniServant* svnt)
+const char*
+omniObjRef::_localServantTarget()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-
-  if (svnt->_ptrToInterface(pd_intfRepoId))
-    return 1;
-  else
-    return 0;
+  return pd_intfRepoId;
 }
 
 
@@ -648,10 +648,10 @@ omniObjRef::_fromString(const char* str)
   if (s<4)
     OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
   const char *p = str;
-  if (p[0] != 'I' ||
-      p[1] != 'O' ||
-      p[2] != 'R' ||
-      p[3] != ':')
+  if (!((p[0] == 'I' || p[0] == 'i') &&
+	(p[1] == 'O' || p[1] == 'o') &&
+	(p[2] == 'R' || p[2] == 'r') &&
+	(p[3] == ':')))
     OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
   s = (s-4)/2;  // how many octets are there in the string

@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.2.2.9  2001/05/10 15:08:37  dpg1
+  _compatibleServant() replaced with _localServantTarget().
+  createIdentity() now takes a target string.
+  djr's fix to deactivateObject().
+
   Revision 1.2.2.8  2001/05/09 17:05:34  sll
   createIdentity() now can deal with it being called more than once with the
   same IOR.
@@ -229,26 +234,18 @@ omniInternal::replaceImplementation(omniObjRef* objref, omniIdentity* id,
   OMNIORB_ASSERT(objref);
   OMNIORB_ASSERT(id);
 
-  if( objref->_identity() == id ) {
-    OMNIORB_ASSERT(objref->_localId() == local_id );
-    return;
-  }
-
   omniLocalIdentity* old_lid = objref->_localId();
+  omniIdentity* old_id = objref->_identity();
 
-  if( objref->_identity() != old_lid )
-    objref->_identity()->loseObjRef(objref);
-  if( old_lid ) {
+  if( old_id != id )  old_id->loseObjRef(objref);
+  if( old_lid && old_lid != old_id )
     old_lid->omniLocalIdentity::loseObjRef(objref);
-    // NB. We removeAndDestroyDummyId if necassary, but we do it
-    // later -- just in case old_lid == local_id (and yes, that
-    // is possible).
-  }
 
   objref->_setIdentity(id, local_id);
 
-  if( local_id )  local_id->omniLocalIdentity::gainObjRef(objref);
-  if( id != local_id )  id->gainObjRef(objref);
+  if( old_id != id )  id->gainObjRef(objref);
+  if( local_id && local_id != id )
+    local_id->omniLocalIdentity::gainObjRef(objref);
 
   if( old_lid && !old_lid->servant() && !old_lid->localRefList() )
     removeAndDestroyDummyId(old_lid);
@@ -499,7 +496,7 @@ omni::activateObject(omniServant* servant, omniObjAdapter* adapter,
 
   while( objreflist ) {
     objreflist->pd_flags.object_exists = 1;
-    if (objreflist->_compatibleServant(servant)) {
+    if (servant->_ptrToInterface(objreflist->_localServantTarget())) {
       omniInternal::replaceImplementation(objreflist, id, id);
       objreflist->pd_flags.type_verified = 1;
     }
@@ -557,18 +554,18 @@ omni::deactivateObject(const CORBA::Octet* key, int keysize)
     while( objreflist ) {
       omniObjRef* next = *(objreflist->_addrOfLocalRefList());
       objreflist->pd_flags.object_exists = 0;
-      int has_remote_id = objreflist->_identity() != objreflist->_localId();
 
-      if( !remote_id && has_remote_id )
-	remote_id = objreflist->_identity();
+      if( !remote_id ) {
+	int has_remote_id = objreflist->_identity() != objreflist->_localId();
 
-      if( !has_remote_id ) {
-	if( !remote_id ) {
+	if( has_remote_id )
+	  remote_id = objreflist->_identity();
+	else {
 	  remote_id = createLoopBackIdentity(objreflist->_getIOR(),
 					     newid->key(),newid->keysize());
 	}
-	omniInternal::replaceImplementation(objreflist, remote_id, newid);
       }
+      omniInternal::replaceImplementation(objreflist, remote_id, newid);
       objreflist = next;
     }
     OMNIORB_ASSERT(id->localRefList() == 0);
@@ -595,7 +592,7 @@ omni::deactivateObject(const CORBA::Octet* key, int keysize)
 
 omniIdentity*
 omni::createIdentity(omniIOR* ior,omniLocalIdentity*& local_id,
-		     CORBA::Boolean locked) {
+		     const char* target, CORBA::Boolean locked) {
 
   omniIOR_var holder(ior); // Place the ior inside a var. If ever
                            // any function we called results in an
@@ -608,11 +605,19 @@ omni::createIdentity(omniIOR* ior,omniLocalIdentity*& local_id,
 
   if (local_id) {
     // We are told this is a local object, check to see if we can just
-    // use the localidentity or we have to use the loopback identity
+    // use the localIdentity or we have to use the loopback identity
     if (local_id->servant()) {
-      return local_id;
+      if (local_id->servant()->_ptrToInterface(target)) {
+	return local_id;
+      }
+      else {
+	// *** Return local-but-no-local-call identity
+	ior->duplicate();
+	return createLoopBackIdentity(ior,local_id->key(),local_id->keysize());
+      }
     }
     else {
+      // *** Return local-but-not-yet-activated identity
       ior->duplicate();
       return createLoopBackIdentity(ior,local_id->key(),local_id->keysize());
     }
@@ -683,9 +688,17 @@ omni::createIdentity(omniIOR* ior,omniLocalIdentity*& local_id,
     local_id = locateIdentity(object_key.get_buffer(),object_key.length(),
 			      hashv, 1);
     if (local_id->servant()) {
-      return local_id;
+      if (local_id->servant()->_ptrToInterface(target)) {
+	return local_id;
+      }
+      else {
+	// *** Return local-but-no-local-call identity
+	ior->duplicate();
+	return createLoopBackIdentity(ior,local_id->key(),local_id->keysize());
+      }
     }
     else {
+      // *** Return local-but-not-yet-activated identity
       ior->duplicate();
       return createLoopBackIdentity(ior,local_id->key(),local_id->keysize());
     }
@@ -721,7 +734,7 @@ omni::createObjRef(const char* targetRepoId,
 
   if (!id) {
     ior->duplicate();  // consumed by createIdentity
-    id = omni::createIdentity(ior,local_id,locked);
+    id = omni::createIdentity(ior,local_id,targetRepoId,locked);
     if ( !id ) {
       ior->release();
       return 0;
@@ -735,15 +748,11 @@ omni::createObjRef(const char* targetRepoId,
 
     // We know that <mostDerivedRepoId> is not derived from
     // <targetRepoId>. 
-    if (id == local_id) {
-      // We have a local servant and it is plain wrong to invoke
-      // on this servant as if it is of type <targetRepoId>.
-      // we make sure that all calls will be done via the loopback.
-      id = createLoopBackIdentity(ior->duplicate(),
-				  local_id->key(),
-				  local_id->keysize());
-    }
-    // Otherwise, we need to carry on regardless...
+
+    OMNIORB_ASSERT(id != local_id);
+    // createIdentity() should have made sure that the local id is
+    // compatible with the target type.
+
     pof = 0;
   }
 
@@ -777,7 +786,8 @@ omni::createObjRef(const char* targetRepoId,
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
-    l << "Creating ref to remote: " << id << "\n"
+    l << "Creating ref to " << ((id == local_id) ? "local" : "remote")
+      << ": " << id << "\n"
       " target id      : " << targetRepoId << "\n"
       " most derived id: " << (const char*)ior->repositoryID() << "\n";
   }
@@ -873,7 +883,8 @@ omni::revertToOriginalProfile(omniObjRef* objref)
 
   ior->duplicate(); // consumed by createIdentity
   omniLocalIdentity* local_id = 0;
-  omniIdentity* id = omni::createIdentity(ior, local_id, 1);
+  omniIdentity* id = omni::createIdentity(ior, local_id,
+					  objref->_localServantTarget(), 1);
   if( !id ) {
     OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
   }
@@ -928,11 +939,12 @@ omni::locationForward(omniObjRef* objref, omniObjRef* new_location,
     // that the servant supports the correct c++ type
     // interface.
 
-    omniIdentity* nl_id = new_location->_identity();
+    omniIdentity*      nl_id  = new_location->_identity();
     omniLocalIdentity* nl_lid = new_location->_localId();
 
     if( nl_id == nl_lid &&
-	objref->_compatibleServant(nl_lid->servant()) ) {
+	nl_lid->servant()->_ptrToInterface(objref->_localServantTarget()) ) {
+
       omniInternal::replaceImplementation(objref, nl_lid, nl_lid);
     }
     else {
@@ -946,8 +958,11 @@ omni::locationForward(omniObjRef* objref, omniObjRef* new_location,
       // In all of these cases we need to use a remote id, and set
       // type_verified to 0 to ensure we re-check the type before
       // using it.
+
       if ( nl_id == nl_lid ) {
-	// this is local & exists but doesn't support our interface
+	// local & exists but doesn't support our interface
+
+	// *** Create local-but-no-local-call identity
 	nl_id = createLoopBackIdentity(new_location->_getIOR(),
 				       nl_id->key(),nl_id->keysize());
 	objref->pd_flags.type_verified = 0;

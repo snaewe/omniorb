@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/05/10 15:08:37  dpg1
+  _compatibleServant() replaced with _localServantTarget().
+  createIdentity() now takes a target string.
+  djr's fix to deactivateObject().
+
   Revision 1.2.2.6  2001/04/18 17:50:44  sll
   Big checkin with the brand new internal APIs.
   Scoped where appropriate with the omni namespace.
@@ -320,23 +325,32 @@ _CORBA_MODULE_BEG
 
   _CORBA_MODULE_FN omniIdentity* createIdentity(omniIOR* ior,
 						omniLocalIdentity*& local_id,
+						const char* target,
 						_CORBA_Boolean locked);
   // Create an identity object that can be used to invoke operations on
-  // the CORBA object identitied by <ior>.
+  // the CORBA object identified by <ior>.
+  //
   // <local_id> if non-zero means that the object is local and its
-  // localidentity is contained in <local_id>. 
+  // localIdentity is contained in <local_id>. 
+  //
   // If <local_id> is zero and  the object is found to be local,
-  // the argument is updated to the localidentity of that object on return.
+  // the argument is updated to the localIdentity of that object on return.
   // Returns 0 to indicate that it is not possible to create an identity 
   // object.
+  //
+  // If a local identity is given or found, and it contains a non-zero
+  // servant pointer, the local identity is only returned if
+  // _ptrToInterface(<target>) returns non-zero.
+  //
   // <ior> is always consumed even if the function returns 0.
+  //
   // <locked> => hold <internalLock>.
 
 
   _CORBA_MODULE_FN omniIdentity* createLoopBackIdentity(omniIOR* ior,
 							const _CORBA_Octet* k,
 							int keysize);
-  // Returns an instance of omniIdentity to contact a local object identified,
+  // Returns an instance of omniIdentity to contact a local object identified
   // by the call arguments. <ior> is consumed.
 
   // Each of the reference creating functions below return a
@@ -345,9 +359,6 @@ _CORBA_MODULE_BEG
   // which we have static information.  <mostDerivedRepoId> is
   // the interface repository ID recorded in the original IOR.
   // This may be the empty string (but *not* null).
-  //  If <targetRepoId> is neither equal to <mostDerivedRepoId>
-  // nor the latter is a derived interface of the former, these
-  // methods return 0.
 
    _CORBA_MODULE_FN omniObjRef* createObjRef(const char* targetRepoId,
 					     omniIOR* ior,
@@ -356,7 +367,7 @@ _CORBA_MODULE_BEG
 					     omniLocalIdentity* local_id = 0);
   // Returns an object reference identified by <ior>.  If <id> is not 0, it
   // is a readily available identity object. Similarily a non-zero <local_id>,
-  // this is the localidentity object for this object reference.
+  // this is the localIdentity object for this object reference.
   // Return 0 if a type error is detected and the object reference cannot be
   // created.
   // <ior> is always consumed even if the function returns 0.

@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2001/05/10 15:08:37  dpg1
+  _compatibleServant() replaced with _localServantTarget().
+  createIdentity() now takes a target string.
+  djr's fix to deactivateObject().
+
   Revision 1.2.2.5  2001/04/18 17:50:43  sll
   Big checkin with the brand new internal APIs.
   Scoped where appropriate with the omni namespace.
@@ -101,12 +106,10 @@ public:
   //  This function does not throw any exceptions.
   //  This function is thread-safe.
 
-  virtual _CORBA_Boolean _compatibleServant(omniServant* svnt);
-  // Return true if the servant can be used in a local case
-  // optimisation, false if it must be contacted through the loopback
-  // interface.
+  virtual const char* _localServantTarget();
+  // Return a string which servant->_ptrToInterface() must accept for
+  // the servant to be contacted with the local case optimisation.
   // This funtion is thread safe.
-  // Must hold <omni::internalLock>.
 
   inline const char* _mostDerivedRepoId() const {
     return pd_mostDerivedRepoId;
