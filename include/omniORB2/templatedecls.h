@@ -211,7 +211,9 @@ public:
     return pd_buf[index];
   }
   static inline T* allocbuf(_CORBA_ULong nelems) { return new T[nelems]; }
-  static inline void freebuf(T * b) { if( b )  delete[] b; }
+  static inline void freebuf(T* b) { if( b )  delete[] b; }
+
+  inline T* NP_data() { return pd_buf; }
 
 protected:
   _CORBA_ULong    pd_max;
@@ -368,9 +370,12 @@ public:
   inline ElmType& operator[] (_CORBA_ULong index) {
     return (pd_data->_CORBA_Sequence<ElmType>::NP_data())[index];
   }
+#if 0
+  // const version not needed - see CORBA 2.2 20-41 (footnote).
   inline const ElmType& operator[] (_CORBA_ULong index) const {
     return (pd_data->_CORBA_Sequence<ElmType>::NP_data())[index];
   }
+#endif
 
   inline T* operator->() const { return pd_data; }
 
@@ -390,6 +395,11 @@ public:
   //
   // inline operator const T* () const { return pd_data; }
   // inline operator T* () { return pd_data; }
+
+  const T& in() const { return *pd_data; }
+  T& inout() { return *pd_data; }
+  T*& out() { return pd_data; }
+  T* _retn() { T* tmp = pd_seq; pd_seq = 0; return tmp; }
 
   friend class _CORBA_Sequence_OUT_arg<T,_CORBA_Sequence_Var<T,ElmType> >;
 
