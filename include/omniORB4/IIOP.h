@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2001/04/18 17:52:46  sll
+  Rationalise marshalling and unmarshalling routines.
+
   Revision 1.2.2.4  2000/11/15 17:01:59  sll
   Default ProfileBody ctor set components max to 2.
 
@@ -106,16 +109,17 @@ public:
     ProfileBody() : components(2) {}
   };
 
+  typedef _CORBA_Unbounded_Sequence<ProfileBody> ProfileBodyList;
+
   static _core_attr const _CORBA_UShort DEFAULT_CORBALOC_PORT;
 
   static void encodeProfile(const ProfileBody&,IOP::TaggedProfile&);
-  static void addAlternativeIIOPAddress(
-		   IOP::MultipleComponentProfile& components,
-		   const Address& addr);
+  static void encodeMultiComponentProfile(const IOP::MultipleComponentProfile&,
+					  IOP::TaggedProfile&);
 
-  static void decodeProfile(const IOP::TaggedProfile&, ProfileBody&);
-  static void decodeMultiComponentProfile(const IOP::TaggedProfile&,
-					  ProfileBody&);
+  static void unmarshalProfile(const IOP::TaggedProfile&, ProfileBody&);
+  static void unmarshalMultiComponentProfile(const IOP::TaggedProfile&,
+					     IOP::MultipleComponentProfile&);
 
 };
 
