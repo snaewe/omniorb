@@ -1,5 +1,5 @@
 // eg1.cc - This is the source code of example 1 used in Chapter 2
-//          "The Basics" of the omniORB2 user guide.
+//          "The Basics" of the omniORB user guide.
 //
 //          In this example, both the object implementation and the
 //          client are in the same process.

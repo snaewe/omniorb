@@ -1,5 +1,5 @@
 // eg2_clt.cc - This is the source code of example 2 used in Chapter 2
-//              "The Basics" of the omniORB2 user guide.
+//              "The Basics" of the omniORB user guide.
 //
 //              This is the client. The object reference is given as a
 //              stringified IOR on the command line.

@@ -1,8 +1,8 @@
 #ifndef __ANYEXAMPLE_IDL__
 #define __ANYEXAMPLE_IDL__
 
-// Note that when compiling this IDL with omniidl2, the -a command-line flag
-// should be specified.
+// Note that when compiling this IDL with omniidl, the -WBa
+// command-line flag should be specified.
 
 struct testStruct {
   long l;

@@ -1,5 +1,5 @@
 // eg3_impl.cc - This is the source code of example 3 used in Chapter 2
-//               "The Basics" of the omniORB2 user guide.
+//               "The Basics" of the omniORB user guide.
 //
 //               This is the object implementation.
 //

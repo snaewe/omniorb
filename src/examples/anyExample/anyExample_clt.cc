@@ -1,5 +1,5 @@
 // anyExample_clt.cc -  This is the source code of the example used in 
-//                      Chapter 9 "Type Any and TypeCode" of the omniORB2 
+//                      Chapter 9 "Type Any and TypeCode" of the omniORB
 //                      users guide.
 //
 //                      This is the client.
