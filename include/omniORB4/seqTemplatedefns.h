@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/10/15 23:23:29  dgrisby
+  Forgot case of compilers with no bool.
+
   Revision 1.1.2.8  2002/10/14 15:10:09  dgrisby
   Cope with platforms where sizeof(bool) != 1.
 
@@ -292,7 +295,7 @@ _CORBA_Sequence_Boolean::operator>>= (cdrStream& s) const
   _CORBA_ULong l = Base_T_seq::length();
   l >>= s;
   if (l==0) return;
-# if (SIZEOF_BOOL == 1)
+# if (SIZEOF_BOOL == 1) || !defined(HAVE_BOOL)
   s.put_octet_array((_CORBA_Octet*)pd_buf,l);
 # else
   for ( _CORBA_ULong i = 0; i < l; i++ )
@@ -313,7 +316,7 @@ _CORBA_Sequence_Boolean::operator<<= (cdrStream& s)
   }
   length(l);
   if (l==0) return;
-# if (SIZEOF_BOOL == 1)
+# if (SIZEOF_BOOL == 1) || !defined(HAVE_BOOL)
   s.get_octet_array((_CORBA_Octet*)pd_buf,l);
 # else
   for ( _CORBA_ULong i = 0; i < l; i++ )
