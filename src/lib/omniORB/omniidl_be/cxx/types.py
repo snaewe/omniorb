@@ -618,7 +618,7 @@ class Type:
                 # CORBA::Object doesn't have an _objref_xxx
                 scopedName = scopedName.prefix("_objref_")
            
-            objref_name = scopedName.unambiguous(environment, gscope=gscope)
+            objref_name = scopedName.unambiguous(environment)
 
             if not is_array:
                 objref_template = d_SeqType.objRefTemplate("Element", environment)

@@ -150,7 +150,7 @@ class Name:
         """unambiguous(id.Name, id.Environment option, cxx boolean): string
            Returns the unambiguous C++ name for a particular environment"""
 
-        if environment == None:
+        if environment is None:
             return self.fullyQualify(cxx)
         
         relName = self.relName(environment)

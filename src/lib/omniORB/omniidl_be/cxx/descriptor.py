@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.3  2004/02/20 00:03:35  dgrisby
+# Compilation fixes. Thanks Gary Duzan for pointing them out.
+#
 # Revision 1.1.6.2  2003/10/23 11:25:54  dgrisby
 # More valuetype support.
 #
@@ -218,7 +221,12 @@ def get_interface_operation_descriptor(iname, operation_name, signature):
     return descriptor
 
 
-# takes an int and returns the int in hex, without leading 0x and
-# with 0s padding
+# Takes an int and returns the int in hex, without leading 0x and with
+# 0s padding. Can't use %08x because Python 1.5.2 can't do it with
+# longs >= 2**31.
+
 def hex_word(x):
-    return "%08x" % x
+    s = hex(x)[2:]
+    if s[-1] == "L":
+        s = s[:-1]
+    return string.zfill(s, 8)

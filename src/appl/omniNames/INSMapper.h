@@ -24,6 +24,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.2  2004/02/20 00:03:35  dgrisby
+// Compilation fixes. Thanks Gary Duzan for pointing them out.
+//
 // Revision 1.5.2.1  2003/03/23 21:03:18  dgrisby
 // Start of omniORB 4.1.x development branch.
 //
@@ -51,7 +54,7 @@
 #include <omniORB4/CORBA.h>
 
 class INSMapper :
-  public PortableServer::RefCountServantBase
+  public PortableServer::ServantBase
 {
 public:
 

@@ -1,3 +1,19 @@
+Fri Feb 20 00:04:22 GMT 2004 dgrisby
+====================================
+
+- Suppress warning about EventType keyword.
+
+idl/COS/CosNotification.idl
+
+- Compilation fixes. Thanks Gary Duzan for pointing them out.
+
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/INSMapper.h
+src/lib/omniORB/omniidl_be/cxx/descriptor.py
+src/lib/omniORB/omniidl_be/cxx/id.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+
+
 Mon Feb 16 10:02:11 GMT 2004 dgrisby
 ====================================
 
