@@ -1,3 +1,16 @@
+Thu Mar  3 12:09:47 GMT 2005 dgrisby
+====================================
+
+- Compiler flag to prevent GCC 3.4 optimising static initialisers
+  away. Thanks Vladimir Panov.
+
+acinclude.m4
+aclocal.m4
+configure
+configure.ac
+mk/beforeauto.mk.in
+
+
 Wed Mar  2 13:23:03 GMT 2005 dgrisby
 ====================================
 

@@ -470,3 +470,14 @@ if test "$ac_cv_cxx_member_constants" = yes; then
 fi
 ])
 
+AC_DEFUN([OMNI_CHECK_NO_UNIT_AT_A_TIME],
+[AC_CACHE_CHECK(whether $CC accepts -fno-unit-at-a-time,
+omni_cv_no_unit_at_a_time,
+[
+    AC_LANG_PUSH(C)
+    save_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS -fno-unit-at-a-time"
+    AC_COMPILE_IFELSE(AC_LANG_PROGRAM(,), omni_cv_no_unit_at_a_time="yes", omni_cv_no_unit_at_a_time="no")
+    CFLAGS=$save_CFLAGS
+    AC_LANG_POP
+])])

@@ -733,7 +733,7 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 ifdef Compiler_GCC
 CMAKEDEPEND     += -D__GNUC__
 CXXMAKEDEPEND   += -D__GNUG__ -D__GNUC__
-CXXOPTIONS       = -Wall -Wno-unused -fexceptions
+CXXOPTIONS       = -Wall -Wno-unused -fexceptions @EXTRA_GCC_CXXFLAGS@
 EgcsMajorVersion = 1
 EgcsMinorVersion = 1
 SHAREDLIB_CPPFLAGS = -fPIC
