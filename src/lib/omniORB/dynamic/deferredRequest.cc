@@ -44,9 +44,7 @@ DeferredRequest::DeferredRequest(RequestImpl* request)
   pd_request = request;
   pd_ready = 0;
   pd_exception = 0;
-  orbAsyncInvoker->insert(this);
 }
-
 
 DeferredRequest::~DeferredRequest()
 {
