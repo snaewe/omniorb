@@ -13,7 +13,7 @@ endif
 ifeq ($(ThreadSystem),NT)
 CXXSRCS = nt.cc
 OBJS = nt.o
-DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
+DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS) -D "_WINSTATIC"
 endif
 
 
@@ -24,5 +24,21 @@ all:: $(lib)
 $(lib): $(OBJS)
 	@$(StaticLinkLibrary)
 
-export: $(lib)
+export:: $(lib)
 	@$(ExportLibrary)
+
+
+ifndef ATMosArchitecture
+
+SUBDIRS = sharedlib
+
+all::
+	@$(MakeSubdirs)
+
+clean::
+	@$(MakeSubdirs)
+
+export::
+	@$(MakeSubdirs)
+
+endif
