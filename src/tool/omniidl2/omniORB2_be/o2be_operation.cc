@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.34.4.3  1999/11/04 20:16:07  sll
+  Server side stub now use a descriptor mechanism similar to the client size
+  stub.
+
   Revision 1.34.4.2  1999/09/25 17:00:31  sll
   Merged changes from omni2_8_develop branch.
 
@@ -875,269 +879,371 @@ o2be_operation::produce_proxy_skel(std::fstream& s, o2be_interface& def_in,
 
 
 void
-o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
+o2be_operation::produce_server_skel_aux(std::fstream& s)
 {
-  // Even if this is request reply, the caller may send a GIOP request
-  // message with no responds specified in the header. Therefore the
-  // stub code should not throw an exception.
-  // In fact, this end should just dump the result from the upcall.
+  o2be_upcall_desc::produce_descriptor(s, *this);
+  const char* call_class = o2be_upcall_desc::descriptor_name(*this);
+
+  IND(s); s << "static void _0RL_" << _fqname() << "_UpCall "
+	    << "(OmniUpCallDesc& desc, void* h) {\n";
+  INC_INDENT_LEVEL();
+  o2be_interface* intf = o2be_interface::narrow_from_scope(defined_in());
+  IND(s); s << intf->server_fqname() << "* obj = ("
+	    << intf->server_fqname() << "*) h;\n";
+  IND(s); s << call_class << "& d = (" << call_class << "&)desc;\n";
+  IND(s);
+  if (!return_is_void()) {
+    s << "d.pd_result = ";
+  }
+  s << "obj->";
+  if (has_variable_out_arg() || has_pointer_inout_arg()) {
+    // Use the indirection function in the base class
+    s << intf->uqname() << "::";
+  }
+  s << uqname() << "(";
   {
-    // unmarshall arguments
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
+    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+    int argcount = 0;
+    while( !i.is_done() ) {
+      o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+      s << ((argcount)?",":"") << "d.arg_" << argcount;
+      i.next();
+      argcount++;
+    }
+    if (context()) {
+      s << ((argcount)?",":"") << "d.pd_ctxt";
+    }
+  }
+  s << ");\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+}
+
+void
+o2be_operation::produce_server_call_desc(std::fstream& s,
+					 const char* class_name)
+{
+  const char* call_desc_base_class;
+  if (!context()) {
+    call_desc_base_class = "OmniUpCallDesc";
+  }
+  else {
+    call_desc_base_class = "OmniUpCallDescWithContext";
+  }
+
+
+  IND(s); s << "// Up-call descriptor class. Mangled signature:\n";
+  IND(s); s << "//  " << mangled_signature() << '\n';
+  IND(s); s << "class " << class_name << '\n';
+  IND(s); s << "  : public " << call_desc_base_class << '\n';
+  IND(s); s << "{\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+
+
+  /////////// Constructor.
+  IND(s); s << "inline " << class_name << "(OmniUpCallDesc::UpCallFn _upcallFn, void* _handle";
+  s << ") :\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << call_desc_base_class << "(_upcallFn,_handle";
+  if( no_user_exception() )  s << ", 0";
+  else                       s << ", 1";
+  if( flags() == AST_Operation::OP_oneway ) s << ", 1)";
+  else                                      s << ", 0)";
+  s << "  {}\n\n";
+  DEC_INDENT_LEVEL();
+
+  // Declaration of methods to implement the call.
+  if( has_any_in_args() || has_any_inout_args() ) {
+    IND(s); s << "void unmarshalArguments(cdrStream&);\n";
+  }
+  if( has_any_inout_args() || has_any_out_args() || !return_is_void() ) {
+    IND(s); s << "void marshalReturnedValues(cdrStream&);\n";
+  }
+  if( !no_user_exception() ) {
+    IND(s); s << "CORBA::Boolean marshalUserException(cdrStream&);\n";
+  }
+
+  DEC_INDENT_LEVEL();
+
+  // Data member
+  INC_INDENT_LEVEL();
+  {
+    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+    int argcount = 0;
+    while( !i.is_done() ) {
+      IND(s);
+      o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+      argWhich kind;
+      switch (a->direction()) {
+      case AST_Argument::dir_IN: kind = wIN; break;
+      case AST_Argument::dir_OUT: kind = wOUT; break;
+      case AST_Argument::dir_INOUT: kind = wINOUT; break;
+      }
+      declareUpcallVarType(s,a->field_type(),o2be_global::root(),kind);
+      s << " arg_" << argcount << ";\n";
+      i.next();
+      argcount++;
+    }
+  }
+  {
+    if (!return_is_void()) {
+      IND(s);
+      declareUpcallVarType(s,return_type(),o2be_global::root(),wResult);
+      s << " pd_result;\n";
+    }
+    if (context()) {
+      s << "CORBA::Context_var pd_ctxt;\n";
+    }
+  }
+  if (!no_user_exception()) {
+    IND(s); s << "const CORBA::UserException* pd_ex;\n";
+  }
+  DEC_INDENT_LEVEL();
+
+  DEC_INDENT_LEVEL();
+
+  IND(s); s << "};\n\n";
+
+
+
+  // Method to unmarshal the arguments from the stream.
+  if( has_any_in_args() || has_any_inout_args() ) {
+    IND(s); s << "void " << class_name	
+	      << "::unmarshalArguments(cdrStream& giop_s) {\n";
+    INC_INDENT_LEVEL();
+    {
+      // unmarshall arguments
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      int argcount = 0;
+      while (!i.is_done()) {
 	argMapping mapping;
 	argType ntype;
 
 	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
-	IND(s);
-	switch(a->direction())
-	  {
-	  case AST_Argument::dir_IN:
-	    {
-	      ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
-	      if (ntype == tObjref || ntype == tString || ntype == tTypeCode)
-		// declare a <type>_var variable to manage the pointer type
-		declareVarType(s,a->field_type(),this,1);
-	      else
-		declareVarType(s,a->field_type(),this);
-	      s << " " << a->uqname();
-	      s << ";\n";
-
-	      produceUnMarshalCode(s,a->field_type(),
-				   (AST_Decl*)&def_in,
-				   "_0RL_s",a->uqname(),
-				   ntype,mapping);
-	      break;
-	    }
-	  case AST_Argument::dir_OUT:
-	    {
-	      ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-	      if (ntype == tObjref || ntype == tString || ntype == tTypeCode ||
-		  (mapping.is_arrayslice) ||
-		  (mapping.is_reference && mapping.is_pointer))
-		{
-		  // declare a <type>_var variable to manage the pointer type
-		  declareVarType(s,a->field_type(),this,1,mapping.is_arrayslice);
-		}
-	      else
-		declareVarType(s,a->field_type(),this);
-	      s << " " << a->uqname();
-	      s << ";\n";
-	      break;
-	    }
-	  case AST_Argument::dir_INOUT:
-	    {
-	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      if (ntype == tObjref || ntype == tString || ntype == tTypeCode)
-		{
-		  // declare a <type>_var variable to manage the pointer type
-		  declareVarType(s,a->field_type(),this,1);
-		}
-	      else
-		  declareVarType(s,a->field_type(),this);
-	      s << " " << a->uqname();
-	      s << ";\n";
-	      produceUnMarshalCode(s,a->field_type(),
-				   (AST_Decl*)&def_in,
-				   "_0RL_s",a->uqname(),
-				   ntype,mapping);
-	      break;
-	    }
-	  }
+	StringBuf argname;
+	argname += (const char*) "arg_";
+	argname += argcount++;
+	switch(a->direction()) {
+	case AST_Argument::dir_IN:
+	  ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
+	  produceUnMarshalCode(s,a->field_type(),
+			       o2be_global::root(),
+			       "giop_s",(const char*)argname,
+			       ntype,mapping);
+	  break;
+	case AST_Argument::dir_INOUT:
+	  ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
+	  produceUnMarshalCode(s,a->field_type(),
+			       o2be_global::root(),
+			       "giop_s",(const char*)argname,
+			       ntype,mapping);
+	  break;
+	default:
+	  break;
+	}
 	i.next();
       }
-  }
-  {
+    }
+    // Unmarshal context
     if (context()) {
-      IND(s); s << "CORBA::Context_var ctxt;\n";
-
       argMapping mapping;
       mapping.is_const = mapping.is_reference = mapping.is_arrayslice = 0;
       mapping.is_pointer = 1;
-      produceUnMarshalCode(s,this,
-			   (AST_Decl*)&def_in,
-			   "_0RL_s","ctxt",
-			   tContext,mapping);
+      produceUnMarshalCode(s,this,o2be_global::root(),
+			   "giop_s","pd_ctxt",tContext,mapping);
     }
-  }
-  IND(s); s << "_giop_s.RequestReceived();\n";
-
-  IND(s);
-  if (!return_is_void()) {
-    argMapping mapping;
-    argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
-    if (ntype == tObjref || ntype == tString || ntype == tTypeCode ||
-	(mapping.is_arrayslice) ||
-	(mapping.is_pointer))
-      {
-	// declare a <type>_var variable to manage the pointer type
-	declareVarType(s,return_type(),this,1,mapping.is_arrayslice);
-      }
-    else
-      {
-	declareVarType(s,return_type(),this);
-      }
-    s << " _0RL_result";
-    s << ";\n";
-  }
-
-  if (!no_user_exception()) {
-    IND(s); s << "try {\n";
-    INC_INDENT_LEVEL();
-  }
-  IND(s);
-  if (!return_is_void()) {
-    s << "_0RL_result = ";
-    if (has_variable_out_arg() || has_pointer_inout_arg()) {
-      // Use the indirection function in the base class
-      s << def_in.uqname() << "::";
-    }
-    produce_invoke(s);
-    s << ";\n";
-  }
-  else {
-    if (has_variable_out_arg() || has_pointer_inout_arg()) {
-      // Use the indirection function in the base class
-      s << def_in.uqname() << "::";
-    }
-    produce_invoke(s);
-    s << ";\n";
-  }
-
-  if (flags() == AST_Operation::OP_oneway) {
-    IND(s); s << "_giop_s.ReplyCompleted();\n";
-    IND(s); s << "return 1;\n";
-    return;
-  }
-
-  if (!no_user_exception()) {
     DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    // catch and marshal each user exception
-    UTL_ExceptlistActiveIterator i(exceptions());
-    while (!i.is_done())
-      {
-	o2be_exception *excpt = o2be_exception::narrow_from_decl(i.item());
-	IND(s); s << "catch ( " << excpt->fqname() << " &_0RL_ex) {\n";
-	INC_INDENT_LEVEL();
-
-	argType ntype = tStructVariable;
-	argMapping mapping = {I_FALSE,I_TRUE,I_FALSE,I_FALSE};
-
-	IND(s); s << "_giop_s.InitialiseReply(GIOP::USER_EXCEPTION);\n";
-	produceConstStringMarshalCode(s,"_0RL_s",excpt->repoIdConstName(),
-				      excpt->repoIdConstLen());
-	produceMarshalCode(s,i.item(),
-			   (AST_Decl*)&def_in,
-			   "_0RL_s","_0RL_ex",ntype,mapping);
-	IND(s); s << "_giop_s.ReplyCompleted();\n";
-	IND(s); s << "return 1;\n";
-	DEC_INDENT_LEVEL();
-	IND(s); s << "}\n";
-	i.next();
-      }
+    IND(s); s << "}\n\n";
   }
 
-  IND(s); s << "_giop_s.InitialiseReply(GIOP::NO_EXCEPTION);\n";
+  // Method to marshal returned values to the stream.
+  if( has_any_inout_args() || has_any_out_args() || !return_is_void() ) {
+    IND(s); s << "void " << class_name	
+	      << "::marshalReturnedValues(cdrStream& giop_s) {\n";
+    INC_INDENT_LEVEL();
+    if (!return_is_void()) {
+	argMapping mapping;
+	argType ntype;
+	ntype = ast2ArgMapping(return_type(), wResult, mapping);
 
-  // marshall results
-  if (!return_is_void())
-    {
-      argMapping mapping;
-      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
-      if ((ntype == tObjref || ntype == tString || ntype == tTypeCode ||
-	   mapping.is_pointer)
-	  && !mapping.is_arrayslice)
-	{
+
+	if ((ntype == tObjref || 
+	     ntype == tString || 
+	     ntype == tTypeCode ||
+	     mapping.is_pointer) && 
+	    !mapping.is_arrayslice) {
+	  
 	  // These are declared as <type>_var variable
-	  if (ntype == tString)
-	    {
-	      produceMarshalCode(s,return_type(),
-				 (AST_Decl*)&def_in,
-				 "_0RL_s",
-				 "_0RL_result",ntype,mapping);
-	    }
-	  else
-	    {
+	  if (ntype == tString) {
+	    produceMarshalCode(s,return_type(),o2be_global::root(),"giop_s",
+			       "pd_result",ntype,mapping);
+	  }
+	  else {
 	      // use operator->() to get to the pointer
-	      produceMarshalCode(s,return_type(),(AST_Decl*)&def_in,
-				 "_0RL_s",
-				 "(_0RL_result.operator->())",ntype,mapping);
-	    }
+	    produceMarshalCode(s,return_type(),o2be_global::root(),"giop_s",
+			       "(pd_result.operator->())",ntype,mapping);
+	  }
 	}
-      else
-	{
-	  produceMarshalCode(s,return_type(),(AST_Decl*)&def_in,
-			     "_0RL_s","_0RL_result",ntype,mapping);
+	else {
+	  produceMarshalCode(s,return_type(),o2be_global::root(),
+			     "giop_s","pd_result",ntype,mapping);
 	}
     }
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
+    {
+      UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+      int argcount = 0;
+      while( !i.is_done() ) {
 	argMapping mapping;
 	argType ntype;
 
 	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
-	switch(a->direction())
+	StringBuf argname;
+	argname += (const char*) "arg_";
+	argname += argcount++;
+	switch( a->direction() ) {
+	case AST_Argument::dir_OUT:
 	  {
-	  case AST_Argument::dir_OUT:
-	    {
-	      ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-	      if ((ntype == tObjref || ntype == tString || ntype == tTypeCode
-		   || (mapping.is_reference && mapping.is_pointer))
-		  && !mapping.is_arrayslice)
-		{
-		  // These are declared as <type>_var variable
-		  if (ntype == tString)
-		    {
-		      produceMarshalCode(s,a->field_type(),
-					 (AST_Decl*)&def_in,
-					 "_0RL_s",
-					 a->uqname(),ntype,mapping);
-		    }
-		  else
-		    {
-		      // use operator->() to get to the pointer
-		      char *_argname = new char[strlen(a->uqname())+
-					       strlen("(.operator->())")+1];
-		      strcpy(_argname,"(");
-		      strcat(_argname,a->uqname());
-		      strcat(_argname,".operator->())");
-		      produceMarshalCode(s,a->field_type(),
-					 (AST_Decl*)&def_in,
-					 "_0RL_s",
-					 _argname,ntype,mapping);
-		      delete [] _argname;
-		    }
-		}
-	      else
-		{
-		  produceMarshalCode(s,a->field_type(),
-				     (AST_Decl*)&def_in,
-				     "_0RL_s",a->uqname(),ntype,mapping);
-		}
-	      break;
+	    ntype = ast2ArgMapping(a->field_type(), wOUT, mapping);
+	    if ((ntype == tObjref || 
+		 ntype == tString || 
+		 ntype == tTypeCode || 
+		 (mapping.is_reference && mapping.is_pointer)) && 
+		!mapping.is_arrayslice) {
+
+	      // These are declared as <type>_var variable
+	      if (ntype == tString) {
+		produceMarshalCode(s,a->field_type(),o2be_global::root(),
+				   "giop_s",
+				   (const char*)argname,ntype,mapping);
+	      }
+	      else {
+		   
+		// use operator->() to get to the pointer
+		argname += ".operator->()";
+		produceMarshalCode(s,a->field_type(),o2be_global::root(),
+				   "giop_s",(const char*)argname,
+				   ntype,mapping);
+	      }
 	    }
-	  case AST_Argument::dir_INOUT:
-	    {
-	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceMarshalCode(s,a->field_type(),
-				 (AST_Decl*)&def_in,
-				 "_0RL_s",a->uqname(),ntype,mapping);
-	      break;
+	    else {
+	      produceMarshalCode(s,a->field_type(),o2be_global::root(),
+				 "giop_s",(const char*)argname,ntype,mapping);
 	    }
-	  case AST_Argument::dir_IN:
-	      break;
 	  }
+	  break;
+	case AST_Argument::dir_INOUT:
+	  {
+	    ntype = ast2ArgMapping(a->field_type(), wINOUT, mapping);
+	    produceMarshalCode(s, a->field_type(),o2be_global::root(),"giop_s",
+			       (const char*)argname, ntype, mapping);
+	  }
+	  break;
+	case AST_Argument::dir_IN:
+	  break;
+	}
+	argname.clear();
 	i.next();
       }
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
   }
 
-  IND(s); s << "_giop_s.ReplyCompleted();\n";
+  // Methods to set and marshal user exception
+  if( !no_user_exception() ) {
+    IND(s); s << "CORBA::Boolean " << class_name	
+	      << "::marshalUserException(cdrStream& giop_s) {\n";
+    INC_INDENT_LEVEL();
+    {
+      UTL_ExceptlistActiveIterator i(exceptions());
+      while (!i.is_done())
+	{
+	  o2be_exception *excpt = o2be_exception::narrow_from_decl(i.item());
+	  IND(s); s << "if (" << excpt->fqname() 
+		    << "::marshalException(giop_s,getUserException())) return 1;\n";
+	  i.next();
+	}
+    }
+    IND(s); s << "return 0;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  }
+}
+
+void
+o2be_operation::declareUpcallVarType(std::fstream& s,AST_Decl* a,
+				     AST_Decl* used_in,
+				     o2be_operation::argWhich kind)
+{
+  argMapping mapping;
+  argType ntype;
+
+  switch(kind)
+    {
+    case wIN:
+      {
+	ntype = ast2ArgMapping(a,wIN,mapping);
+	if (ntype == tObjref || ntype == tString || ntype == tTypeCode)
+	  // declare a <type>_var variable to manage the pointer type
+	  declareVarType(s,a,used_in,1);
+	else
+	  declareVarType(s,a,used_in);
+	break;
+      }
+    case wOUT:
+      {
+	ntype = ast2ArgMapping(a,wOUT,mapping);
+	if (ntype == tObjref || ntype == tString || ntype == tTypeCode ||
+	    (mapping.is_arrayslice) ||
+	    (mapping.is_reference && mapping.is_pointer))
+	  {
+	    // declare a <type>_var variable to manage the pointer type
+	    declareVarType(s,a,used_in,1,mapping.is_arrayslice);
+	  }
+	else
+	  declareVarType(s,a,used_in);
+	break;
+      }
+    case wINOUT:
+      {
+	ntype = ast2ArgMapping(a,wINOUT,mapping);
+	if (ntype == tObjref || ntype == tString || ntype == tTypeCode)
+	  {
+	    // declare a <type>_var variable to manage the pointer type
+	    declareVarType(s,a,used_in,1);
+	  }
+	else
+	  declareVarType(s,a,used_in);
+	break;
+      }
+    case wResult:
+      {
+	ntype = ast2ArgMapping(a,wResult,mapping);
+	if (ntype == tObjref || ntype == tString || ntype == tTypeCode ||
+	    (mapping.is_arrayslice) ||
+	    (mapping.is_pointer))
+	  {
+	    // declare a <type>_var variable to manage the pointer type
+	    declareVarType(s,a,used_in,1,mapping.is_arrayslice);
+	  }
+	else {
+	    declareVarType(s,a,used_in);
+	  }
+	break;
+      }
+    }
+}
+
+void
+o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
+{
+  const char* call_desc_class = o2be_upcall_desc::descriptor_name(*this);
+  IND(s); s << call_desc_class << " _call_desc(_0RL_"
+	    << _fqname() << "_UpCall,(void*)this";
+  s << ");\n\n";
+  IND(s); s << "OmniUpCallWrapper::upcall(_giop_s,_call_desc);\n";
   IND(s); s << "return 1;\n";
-  return;
 }
 
 void

@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.23.4.2  1999/11/04 20:16:04  sll
+  Server side stub now use a descriptor mechanism similar to the client size
+  stub.
+
   Revision 1.23.4.1  1999/09/15 20:18:45  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -356,120 +360,201 @@ o2be_attribute::produce_proxy_wr_skel(std::fstream& s,
   IND(s); s << "}\n\n";
 }
 
+void
+o2be_attribute::produce_server_skel_aux(std::fstream& s)
+{
+  o2be_upcall_desc::produce_descriptor(s, *this);
+
+  {
+    const char* call_class = o2be_upcall_desc::read_descriptor_name(*this);
+
+    IND(s); s << "static void _0RL_" << _fqname() << "_get_UpCall "
+	      << "(OmniUpCallDesc& desc, void* h) {\n";
+    INC_INDENT_LEVEL();
+    o2be_interface* intf = o2be_interface::narrow_from_scope(defined_in());
+    IND(s); s << intf->server_fqname() << "* obj = ("
+	      << intf->server_fqname() << "*) h;\n";
+    IND(s); s << call_class << "& d = (" << call_class << "&)desc;\n";
+    IND(s);
+    s << "d.pd_result = ";
+    s << "obj->" << uqname() << "();\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  }
+
+  if (readonly()) return;
+
+  {
+    const char* call_class = o2be_upcall_desc::write_descriptor_name(*this);
+    IND(s); s << "static void _0RL_" << _fqname() << "_set_UpCall "
+	      << "(OmniUpCallDesc& desc, void* h) {\n";
+    INC_INDENT_LEVEL();
+    o2be_interface* intf = o2be_interface::narrow_from_scope(defined_in());
+    IND(s); s << intf->server_fqname() << "* obj = ("
+	      << intf->server_fqname() << "*) h;\n";
+    IND(s); s << call_class << "& d = (" << call_class << "&)desc;\n";
+    IND(s);
+    s << "obj->" << uqname() << "(d.arg_0);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  }
+}
+
+void
+o2be_attribute::produce_server_rd_call_desc(std::fstream& s, const char* class_name)
+{
+  const char* call_desc_base_class;
+  call_desc_base_class = "OmniUpCallDesc";
+
+  IND(s); s << "// Up-call descriptor class. Mangled signature:\n";
+  IND(s); s << "//  " << mangled_read_signature() << '\n';
+  IND(s); s << "class " << class_name << '\n';
+  IND(s); s << "  : public " << call_desc_base_class << '\n';
+  IND(s); s << "{\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+
+
+  /////////// Constructor.
+  IND(s); s << "inline " << class_name << "(OmniUpCallDesc::UpCallFn _upcallFn, void* _handle) : \n";
+  INC_INDENT_LEVEL();
+  IND(s); s << call_desc_base_class 
+	    << "(_upcallFn,_handle,0,0) {}\n\n";
+  DEC_INDENT_LEVEL();
+
+  // Declaration of methods to implement the call.
+  IND(s); s << "void marshalReturnedValues(cdrStream&);\n";
+
+  DEC_INDENT_LEVEL();
+
+  // Data member
+  INC_INDENT_LEVEL();
+  IND(s);
+  o2be_operation::declareUpcallVarType(s,field_type(),o2be_global::root(),
+				       o2be_operation::wResult);
+  s << " pd_result;\n";
+  DEC_INDENT_LEVEL();
+
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
+
+
+
+  // Method to marshal returned values to the stream.
+  IND(s); s << "void " << class_name	
+	    << "::marshalReturnedValues(cdrStream& giop_s) {\n";
+  {
+    INC_INDENT_LEVEL();
+    o2be_operation::argMapping mapping;
+    o2be_operation::argType ntype;
+    ntype = o2be_operation::ast2ArgMapping(field_type(), 
+					   o2be_operation::wResult, mapping);
+
+    if ((ntype == o2be_operation::tObjref || 
+	 ntype == o2be_operation::tString || 
+	 ntype == o2be_operation::tTypeCode ||
+	 mapping.is_pointer) && 
+	!mapping.is_arrayslice) {
+	  
+      // These are declared as <type>_var variable
+      if (ntype == o2be_operation::tString) {
+	o2be_operation::produceMarshalCode(s,field_type(),
+					   o2be_global::root(),"giop_s",
+					   "pd_result",ntype,mapping);
+      }
+      else {
+	// use operator->() to get to the pointer
+	o2be_operation::produceMarshalCode(s,field_type(),o2be_global::root(),"giop_s",
+			   "(pd_result.operator->())",ntype,mapping);
+      }
+    }
+    else {
+      o2be_operation::produceMarshalCode(s,field_type(),o2be_global::root(),
+					 "giop_s","pd_result",ntype,mapping);
+    }
+  }
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+}
 
 void
 o2be_attribute::produce_server_rd_skel(std::fstream& s,o2be_interface &defined_in)
 {
-  IND(s); s << "_giop_s.RequestReceived();\n";
-
-  {
-    o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
-    if (ntype == o2be_operation::tObjref || 
-	ntype == o2be_operation::tString ||
-	ntype == o2be_operation::tTypeCode ||
-	(mapping.is_arrayslice) ||
-	(mapping.is_pointer)) 
-      {
-	// declare a <type>_var variable to manage the pointer type
-	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this,1,mapping.is_arrayslice);
-      }
-    else 
-      {
-	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this);
-      }
-    s << " _0RL_result = " << uqname() << "();\n";
-  }
-
-  IND(s); s << "_giop_s.InitialiseReply(GIOP::NO_EXCEPTION);\n";
-
-  // marshall results
-  {
-    o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
-    if ((ntype == o2be_operation::tObjref || 
-	 ntype == o2be_operation::tString ||
-	 ntype == o2be_operation::tTypeCode ||
-	 mapping.is_pointer)
-	&& !mapping.is_arrayslice)
-      {
-	// These are declared as <type>_var variable 
-	if (ntype == o2be_operation::tString) {
-	  o2be_operation::produceMarshalCode(s,field_type(),
-					     (AST_Decl*)&defined_in,
-					     "_0RL_s",
-					     "_0RL_result",ntype,mapping);
-	}
-	else {
-	  // use operator->() to get to the pointer
-	  o2be_operation::produceMarshalCode(s,field_type(),
-					     (AST_Decl*)&defined_in,
-					     "_0RL_s",
-					     "(_0RL_result.operator->())",
-					     ntype,mapping);
-	}
-      }
-    else
-      {
-	o2be_operation::produceMarshalCode(s,field_type(),
-					   (AST_Decl*)&defined_in,
-					   "_0RL_s",
-					   "_0RL_result",ntype,mapping);
-      }
-  }
-
-  IND(s); s << "_giop_s.ReplyCompleted();\n";
+  const char* call_desc_class = o2be_upcall_desc::read_descriptor_name(*this);
+  IND(s); s << call_desc_class << " _call_desc(_0RL_"
+	    << _fqname() << "_get_UpCall,(void*)this"
+	    << ");\n\n";
+  IND(s); s << "OmniUpCallWrapper::upcall(_giop_s,_call_desc);\n";
   IND(s); s << "return 1;\n";
-  return;
 }
 
 
 void
-o2be_attribute::produce_server_wr_skel(std::fstream& s,o2be_interface &defined_in)
+o2be_attribute::produce_server_wr_call_desc(std::fstream& s, const char* class_name)
 {
-  IND(s); s << "if (!_0RL_response_expected) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
+  const char* call_desc_base_class = "OmniUpCallDesc";
 
+  IND(s); s << "// Up-call descriptor class. Mangled signature:\n";
+  IND(s); s << "//  " << mangled_write_signature() << '\n';
+  IND(s); s << "class " << class_name << '\n';
+  IND(s); s << "  : public " << call_desc_base_class << '\n';
+  IND(s); s << "{\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+
+
+  /////////// Constructor.
+  IND(s); s << "inline " << class_name << "(OmniUpCallDesc::UpCallFn _upcallFn, void* _handle) : \n";
+  INC_INDENT_LEVEL();
+  IND(s); s << call_desc_base_class 
+	    << "(_upcallFn,_handle,0,0) {}\n\n";
+  DEC_INDENT_LEVEL();
+
+  // Declaration of methods to implement the call.
+  IND(s); s << "void unmarshalArguments(cdrStream&);\n";
+
+  DEC_INDENT_LEVEL();
+
+  // Data member
+  INC_INDENT_LEVEL();
+  IND(s);
+  o2be_operation::declareUpcallVarType(s,field_type(),o2be_global::root(),
+				       o2be_operation::wIN);
+  s << " arg_0;\n";
+  DEC_INDENT_LEVEL();
+
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
+
+  // Method to unmarshal the arguments from the stream.
+  IND(s); s << "void " << class_name	
+	    << "::unmarshalArguments(cdrStream& giop_s) {\n";
+  INC_INDENT_LEVEL();
   {
     // unmarshall arguments
     o2be_operation::argMapping mapping;
-    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wIN,mapping);
-    if (ntype == o2be_operation::tObjref || 
-	ntype == o2be_operation::tString ||
-	ntype == o2be_operation::tTypeCode) 
-      {
-      // declare a <type>_var variable to manage the pointer type
-	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this,1);
-      }
-    else
-      {
-	IND(s);
-	o2be_operation::declareVarType(s,field_type(),this);
-      }
-    s << " " << "_value;\n";
+    o2be_operation::argType ntype;
+    ntype = o2be_operation::ast2ArgMapping(field_type(),
+					   o2be_operation::wIN,mapping);
     o2be_operation::produceUnMarshalCode(s,field_type(),
-					 (AST_Decl*)&defined_in,
-					 "_0RL_s","_value",
+					 o2be_global::root(),
+					 "giop_s","arg_0",
 					 ntype,mapping);
   }
-
-  IND(s); s << "_giop_s.RequestReceived();\n";
-
-  IND(s); s << uqname() << "(_value);\n";
-
-  IND(s); s << "_giop_s.InitialiseReply(GIOP::NO_EXCEPTION);\n";
-
-  IND(s); s << "_giop_s.ReplyCompleted();\n";
-  IND(s); s << "return 1;\n";
-  return;
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
 }
 
+void
+o2be_attribute::produce_server_wr_skel(std::fstream& s,o2be_interface &defined_in)
+{
+  const char* call_desc_class = o2be_upcall_desc::write_descriptor_name(*this);
+  IND(s); s << call_desc_class << " _call_desc(_0RL_"
+	    << _fqname() << "_set_UpCall,(void*)this";
+  s << ");\n\n";
+  IND(s); s << "OmniUpCallWrapper::upcall(_giop_s,_call_desc);\n";
+  IND(s); s << "return 1;\n";
+}
 
 void
 o2be_attribute::produce_nil_rd_skel(std::fstream& s)

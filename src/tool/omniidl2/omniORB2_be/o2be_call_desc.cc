@@ -28,6 +28,7 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+#include <o2be_stringbuf.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -38,6 +39,9 @@
 
 #define PROXY_CALL_DESC_PREFIX      "_0RL_pc_"
 #define STD_PROXY_CALL_DESC_PREFIX  "OmniProxyCallWrapper::"
+
+#define UP_CALL_DESC_PREFIX      "_0RL_uc_"
+#define STD_UP_CALL_DESC_PREFIX  "OmniUpCallWrapper::"
 
 
 //////////////////////////////////////////////////////////////////////
@@ -154,6 +158,11 @@ public:
 
   char* generate_unique_name(const char* prefix);//DH
 
+  idl_bool doneProxyCallDesc(const char* sig);
+  idl_bool doneUpCallDesc(const char* sig);
+  void setDoneProxyCallDesc(const char* sig);
+  void setDoneUpCallDesc(const char* sig);
+
 private:
   void initialise_base(const char* sig);
   char* generate_class_name(const char* sig);
@@ -162,6 +171,9 @@ private:
   unsigned long pd_base_h;
   idl_bool pd_base_initialised;
   unsigned long pd_index;
+
+  SimpleStringMap pd_doneProxy;
+  SimpleStringMap pd_doneUpCall;
 };
 
 
@@ -171,8 +183,13 @@ CallDescTable::CallDescTable()
   pd_index = 0;
 
   // Insert the pre-defined call descriptor types.
-  SimpleStringMap::insert("void", STD_PROXY_CALL_DESC_PREFIX "void_call");
-  SimpleStringMap::insert("_wvoid", STD_PROXY_CALL_DESC_PREFIX "ow_void_call");
+  SimpleStringMap::insert("void", "void_call");
+  SimpleStringMap::insert("_wvoid", "ow_void_call");
+
+  pd_doneProxy.insert("void","done");
+  pd_doneUpCall.insert("void","done");
+  pd_doneProxy.insert("_wvoid","done");
+  pd_doneUpCall.insert("_wvoid","done");
 }
 
 
@@ -212,10 +229,9 @@ CallDescTable::generate_class_name(const char* sig)
     'a', 'b', 'c', 'd', 'e', 'f'
   };
 
-  char* result = new char[1 + strlen(PROXY_CALL_DESC_PREFIX) + 16 + 1 + 8];
+  char* result = new char[1 + 16 + 1 + 8];
 
-  strcpy(result, PROXY_CALL_DESC_PREFIX);
-  char* s = result + strlen(result);
+  char* s = result;
 
   for( unsigned i = 0 ; i < 8; i++ )
     *s++ = chrmap[(pd_base_h >> i * 4) & 0xf];
@@ -265,6 +281,30 @@ CallDescTable::generate_unique_name(const char* prefix)//DH
 }
 
 
+idl_bool
+CallDescTable::doneProxyCallDesc(const char* sig)
+{
+  return (pd_doneProxy[sig] ? 1 : 0);
+}
+
+idl_bool
+CallDescTable::doneUpCallDesc(const char* sig)
+{
+  return (pd_doneUpCall[sig] ? 1 : 0);
+}
+
+void
+CallDescTable::setDoneProxyCallDesc(const char* sig)
+{
+  pd_doneProxy.insert(sig,"done");
+}
+
+void
+CallDescTable::setDoneUpCallDesc(const char* sig)
+{
+  pd_doneUpCall.insert(sig,"done");
+}
+
 static CallDescTable callDescTable;
 
 //////////////////////////////////////////////////////////////////////
@@ -276,9 +316,10 @@ o2be_call_desc::produce_descriptor(std::fstream& s, o2be_operation& op)
 {
   const char* sig = op.mangled_signature();
 
-  if( !callDescTable[sig] ) {
-    const char* class_name = callDescTable.insert(sig, op._idname());
-    op.produce_proxy_call_desc(s, class_name);
+  if( !callDescTable.doneProxyCallDesc(sig) ) {
+    (void) callDescTable.insert(sig, op._idname());
+    callDescTable.setDoneProxyCallDesc(sig);
+    op.produce_proxy_call_desc(s, descriptor_name(op));
   }
 }
 
@@ -286,18 +327,20 @@ o2be_call_desc::produce_descriptor(std::fstream& s, o2be_operation& op)
 void
 o2be_call_desc::produce_descriptor(std::fstream& s, o2be_attribute& attr)
 {
-  const char* class_name;
-
   const char* sig = attr.mangled_read_signature();
-  if( !callDescTable[sig] ) {
-    class_name = callDescTable.insert(sig, attr._idname());
-    attr.produce_read_proxy_call_desc(s, class_name);
+  if( !callDescTable.doneProxyCallDesc(sig) ) {
+    (void) callDescTable.insert(sig, attr._idname());
+    callDescTable.setDoneProxyCallDesc(sig);
+    attr.produce_read_proxy_call_desc(s, read_descriptor_name(attr));
   }
 
+  if (attr.readonly()) return;
+
   sig = attr.mangled_write_signature();
-  if( !callDescTable[sig] ) {
-    class_name = callDescTable.insert(sig, attr._idname());
-    attr.produce_write_proxy_call_desc(s, class_name);
+  if( !callDescTable.doneProxyCallDesc(sig) ) {
+    (void) callDescTable.insert(sig, attr._idname());
+    callDescTable.setDoneProxyCallDesc(sig);
+    attr.produce_write_proxy_call_desc(s, write_descriptor_name(attr));
   }
 }
 
@@ -305,21 +348,46 @@ o2be_call_desc::produce_descriptor(std::fstream& s, o2be_attribute& attr)
 const char*
 o2be_call_desc::descriptor_name(o2be_operation& op)
 {
-  return callDescTable[op.mangled_signature()];
+  const char* sig = op.mangled_signature();
+
+  const char* prefix;
+  if (strcmp(sig,"void") == 0)
+    prefix = STD_PROXY_CALL_DESC_PREFIX;
+  else if (strcmp(sig,"_wvoid") == 0)
+    prefix = STD_PROXY_CALL_DESC_PREFIX;
+  else
+    prefix = PROXY_CALL_DESC_PREFIX;
+
+  StringBuf class_name;
+  class_name += prefix;
+  class_name += callDescTable[sig];
+  char* result = new char[strlen(class_name)+1];
+  strcpy(result,class_name);
+  return result;
 }
 
 
 const char*
 o2be_call_desc::read_descriptor_name(o2be_attribute& attr)
 {
-  return callDescTable[attr.mangled_read_signature()];
+  StringBuf class_name;
+  class_name += PROXY_CALL_DESC_PREFIX;
+  class_name += callDescTable[attr.mangled_read_signature()];
+  char* result = new char[strlen(class_name)+1];
+  strcpy(result,class_name);
+  return result;
 }
 
 
 const char*
 o2be_call_desc::write_descriptor_name(o2be_attribute& attr)
 {
-  return callDescTable[attr.mangled_write_signature()];
+  StringBuf class_name;
+  class_name += PROXY_CALL_DESC_PREFIX;
+  class_name += callDescTable[attr.mangled_write_signature()];
+  char* result = new char[strlen(class_name)+1];
+  strcpy(result,class_name);
+  return result;
 }
 
 
@@ -328,3 +396,89 @@ o2be_call_desc::generate_unique_name(const char* prefix)//DH
 {
   return callDescTable.generate_unique_name(prefix);
 }
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// o2be_call_desc ///////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+void
+o2be_upcall_desc::produce_descriptor(std::fstream& s, o2be_operation& op)
+{
+  const char* sig = op.mangled_signature();
+
+  if( !callDescTable.doneUpCallDesc(sig) ) {
+    if (!callDescTable[sig]) (void) callDescTable.insert(sig, op._idname());
+    callDescTable.setDoneUpCallDesc(sig);
+    op.produce_server_call_desc(s, descriptor_name(op));
+  }
+}
+
+
+void
+o2be_upcall_desc::produce_descriptor(std::fstream& s, o2be_attribute& attr)
+{
+  const char* sig = attr.mangled_read_signature();
+  if( !callDescTable.doneUpCallDesc(sig) ) {
+    if (!callDescTable[sig]) (void) callDescTable.insert(sig, attr._idname());
+    callDescTable.setDoneUpCallDesc(sig);
+    attr.produce_server_rd_call_desc(s, read_descriptor_name(attr));
+  }
+
+  if (attr.readonly()) return;
+
+  sig = attr.mangled_write_signature();
+  if( !callDescTable.doneUpCallDesc(sig) ) {
+    if (!callDescTable[sig]) (void) callDescTable.insert(sig, attr._idname());
+    callDescTable.setDoneUpCallDesc(sig);
+    attr.produce_server_wr_call_desc(s, write_descriptor_name(attr));
+  }
+}
+
+
+const char*
+o2be_upcall_desc::descriptor_name(o2be_operation& op)
+{
+  StringBuf class_name;
+
+  const char* sig = op.mangled_signature();
+
+  const char* prefix;
+  if (strcmp(sig,"void") == 0)
+    prefix = STD_UP_CALL_DESC_PREFIX;
+  else if (strcmp(sig,"_wvoid") == 0)
+    prefix = STD_UP_CALL_DESC_PREFIX;
+  else
+    prefix = UP_CALL_DESC_PREFIX;
+
+  class_name += prefix;
+  class_name += callDescTable[op.mangled_signature()];
+  char* result = new char[strlen(class_name)+1];
+  strcpy(result,class_name);
+  return result;
+}
+
+
+const char*
+o2be_upcall_desc::read_descriptor_name(o2be_attribute& attr)
+{
+  StringBuf class_name;
+  class_name += UP_CALL_DESC_PREFIX;
+  class_name += callDescTable[attr.mangled_read_signature()];
+  char* result = new char[strlen(class_name)+1];
+  strcpy(result,class_name);
+  return result;
+}
+
+
+const char*
+o2be_upcall_desc::write_descriptor_name(o2be_attribute& attr)
+{
+  StringBuf class_name;
+  class_name += UP_CALL_DESC_PREFIX;
+  class_name += callDescTable[attr.mangled_write_signature()];
+  char* result = new char[strlen(class_name)+1];
+  strcpy(result,class_name);
+  return result;
+}
+
+
