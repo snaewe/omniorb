@@ -1,3 +1,13 @@
+Mon Aug 14 17:06:16 BST 2000 dpg1
+=================================
+
+- Error message now says "Could not open..." rather than "Could not
+  find..." when Python imports fail.
+
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/python/scripts/omniidlrun.py
+
+
 Mon Aug 14 15:32:04 BST 2000 dpg1
 =================================
 

@@ -68,7 +68,7 @@ try:
 except ImportError, msg:
     sys.stderr.write("\n\n")
     sys.stderr.write("omniidl: ERROR!\n\n")
-    sys.stderr.write("omniidl: Could not find IDL compiler module " \
+    sys.stderr.write("omniidl: Could not open IDL compiler module " \
                      "_omniidlmodule.so\n")
     sys.stderr.write("omniidl: Please make sure it is in directory ")
     sys.stderr.write((archlibdir or binarchdir) + "\n")
@@ -84,7 +84,7 @@ try:
 except ImportError, msg:
     sys.stderr.write("\n\n")
     sys.stderr.write("omniidl: ERROR!\n\n")
-    sys.stderr.write("omniidl: Could not find Python files for IDL compiler\n")
+    sys.stderr.write("omniidl: Could not open Python files for IDL compiler\n")
     sys.stderr.write("omniidl: Please put them in directory " + \
                      (pylibdir or binarchdir) + "\n")
     sys.stderr.write("omniidl: (or set the PYTHONPATH environment variable)\n")
