@@ -27,4 +27,4 @@
 //
 
 #define USE_dyn_stub_in_nt_dll
-#include <omniORB3/NamingSK.cc>
+#include <omniORB4/NamingSK.cc>

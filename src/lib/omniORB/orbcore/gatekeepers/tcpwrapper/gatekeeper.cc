@@ -27,7 +27,7 @@
 //	gatekeeper implementation using Wietse Venema's tcp_wrappers library.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <libcWrapper.h>
 #include <gatekeeper.h>
 

@@ -27,7 +27,7 @@
 //	A dummy gatekeeper implementation. Accept all connections.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <gatekeeper.h>
 
 const char*
