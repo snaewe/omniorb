@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.19  2002/03/14 14:39:44  dpg1
+  Obscure bug in objref creation with unaligned buffers.
+
   Revision 1.10.2.18  2002/01/02 18:17:00  dpg1
   Relax IOR strictness when strictIIOP not set.
 
@@ -454,9 +457,19 @@ IIOP::unmarshalObjectKey(const IOP::TaggedProfile& profile,
   port <<= s;
 
   len <<= s; // Get object key length
-  CORBA::Octet* p = (CORBA::Octet*)((omni::ptr_arith_t)s.bufPtr() +
-				    s.currentInputPtr());
-  key.replace(len,len,p,0);
+
+  if (s.readOnly()) {
+    CORBA::Octet* p = (CORBA::Octet*)((omni::ptr_arith_t)s.bufPtr() +
+				      s.currentInputPtr());
+    key.replace(len,len,p,0);
+  }
+  else {
+    // If the cdrEncapsulationStream had to copy the profile data, we
+    // have to copy it _again_ here, otherwise it will be out of scope
+    // before the key is used.
+    key.length(len);
+    s.get_octet_array(key.NP_data(), len);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
