@@ -4,7 +4,10 @@
 #define _RDITestTypes_IDL_
 
 #pragma prefix "research.att.com"
+
+#ifdef _IDL_TO_JAVA
 #pragma javaPackage "com.att.research"
+#endif
 
 module RDITestTypes {
 
