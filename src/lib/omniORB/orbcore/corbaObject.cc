@@ -28,6 +28,11 @@
  
 /*
   $Log$
+  Revision 1.20.2.2  2000/09/27 18:13:26  sll
+  Use the new cdrStream abstraction.
+  Removed obsoluted code CORBA::UnMarshalObjRef() and CORBA::MarshalObjRef().
+  Let the omniObjRef handles is_equivalent() and hash().
+
   Revision 1.20.2.1  2000/07/17 10:35:52  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -91,13 +96,13 @@
 //
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
-#include <omniORB3/omniObjRef.h>
+#include <omniORB4/omniObjRef.h>
 #include <objectAdapter.h>
 #include <ropeFactory.h>
 #include <anonObject.h>
@@ -171,20 +176,7 @@ CORBA::Object::_is_equivalent(CORBA::Object_ptr other_object)
     omniObjRef* objptr = _PR_getobj();
     omniObjRef* other_objptr = other_object->_PR_getobj();
 
-    omniRopeAndKey rak, other_rak;
-    CORBA::Boolean is_local, other_is_local;
-    objptr->_getRopeAndKey(rak, &is_local);
-    other_objptr->_getRopeAndKey(other_rak, &other_is_local);
-
-    if( rak.keysize() != other_rak.keysize() ||
-	memcmp((void*) rak.key(),(void*) other_rak.key(),
-	       rak.keysize()) != 0 )
-      // Object keys do not match.
-      return 0;
-
-    return is_local && other_is_local
-      || !is_local && !other_is_local && rak.rope() == other_rak.rope();
-
+    return objptr->_is_equivalent(other_objptr);
   }
 }
 
@@ -195,10 +187,7 @@ CORBA::Object::_hash(CORBA::ULong maximum)
   if( _NP_is_nil() || maximum == 0 )  return 0;
   if( _NP_is_pseudo() )  return CORBA::ULong((unsigned long) this) % maximum;
 
-  omniObjKey key;
-  pd_obj->_getTheKey(key);
-
-  return CORBA::ULong(omni::hash(key.key(), key.size()) % maximum);
+  return _PR_getobj()->_hash(maximum);
 }
 
 
@@ -254,64 +243,25 @@ CORBA::Object::_ptrToObjRef(const char* repoId)
 }
 
 
-size_t
-CORBA::
-Object::_NP_alignedSize(CORBA::Object_ptr obj, size_t initialoffset)
-{
-  if (CORBA::is_nil(obj)) {
-    return CORBA::AlignedObjRef(obj, 0, 0, initialoffset);
-  }
-  else {
-    const char* irid = obj->pd_obj->_mostDerivedRepoId();
-    return CORBA::AlignedObjRef(obj, irid, strlen(irid) + 1, initialoffset);
-  }
-}
-
-
 void
 CORBA::
-Object::_marshalObjRef(CORBA::Object_ptr obj, NetBufferedStream& s)
+Object::_marshalObjRef(CORBA::Object_ptr obj, cdrStream& s)
 {
   OMNIORB_ASSERT(!obj->_NP_is_pseudo());
-
-  if (CORBA::is_nil(obj)) {
-    CORBA::MarshalObjRef(obj,0,0,s);
-  }
-  else {
-    const char *repoId = obj->pd_obj->_mostDerivedRepoId();
-    CORBA::MarshalObjRef(obj, repoId, strlen(repoId) + 1, s);
-  }
+  omniObjRef::_marshal(obj->_PR_getobj(),s);
 }
 
 
 CORBA::Object_ptr
-CORBA::Object::_unmarshalObjRef(NetBufferedStream& s)
+CORBA::Object::_unmarshalObjRef(cdrStream& s)
 {
-  return CORBA::UnMarshalObjRef(_PD_repoId, s);
+  omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
+  if (o)
+    return (CORBA::Object_ptr)o->_ptrToObjRef(_PD_repoId);
+  else
+    return _nil();
 }
 
-
-void
-CORBA::
-Object::_marshalObjRef(CORBA::Object_ptr obj, MemBufferedStream& s)
-{
-  OMNIORB_ASSERT(!obj->_NP_is_pseudo());
-
-  if (CORBA::is_nil(obj)) {
-    CORBA::MarshalObjRef(obj,0,0,s);
-  }
-  else {
-    const char *repoId = obj->pd_obj->_mostDerivedRepoId();
-    CORBA::MarshalObjRef(obj, repoId, strlen(repoId) + 1, s);
-  }
-}
-
-
-CORBA::Object_ptr
-CORBA::Object::_unmarshalObjRef(MemBufferedStream& s)
-{
-  return CORBA::UnMarshalObjRef(_PD_repoId, s);
-}
 
 
 const char*
@@ -358,17 +308,9 @@ Object_Helper::duplicate(CORBA::Object_ptr obj)
 }
 
 
-size_t
-CORBA::
-Object_Helper::NP_alignedSize(CORBA::Object_ptr obj,size_t initialoffset)
-{
-  return CORBA::Object::_NP_alignedSize(obj,initialoffset);
-}
-
-
 void
 CORBA::
-Object_Helper::marshalObjRef(CORBA::Object_ptr obj, NetBufferedStream& s)
+Object_Helper::marshalObjRef(CORBA::Object_ptr obj, cdrStream& s)
 {
   CORBA::Object::_marshalObjRef(obj,s);
 }
@@ -376,256 +318,10 @@ Object_Helper::marshalObjRef(CORBA::Object_ptr obj, NetBufferedStream& s)
 
 CORBA::Object_ptr
 CORBA::
-Object_Helper::unmarshalObjRef(NetBufferedStream& s)
+Object_Helper::unmarshalObjRef(cdrStream& s)
 {
   return CORBA::Object::_unmarshalObjRef(s);
 }
 
 
-void
-CORBA::
-Object_Helper::marshalObjRef(CORBA::Object_ptr obj, MemBufferedStream& s)
-{
-  CORBA::Object::_marshalObjRef(obj,s);
-}
 
-
-CORBA::Object_ptr
-CORBA::
-Object_Helper::unmarshalObjRef(MemBufferedStream& s)
-{
-  return CORBA::Object::_unmarshalObjRef(s);
-}
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-CORBA::Object_ptr
-CORBA::UnMarshalObjRef(const char* repoId, NetBufferedStream& s)
-{
-  OMNIORB_ASSERT(repoId);
-
-  CORBA::ULong idlen;
-  CORBA::Char* id = 0;
-  IOP::TaggedProfileList* profiles = 0;
-
-  try {
-    idlen <<= s;
-
-    switch (idlen) {
-
-    case 0:
-      // According to the CORBA specification 2.0 section 10.6.2:
-      //   Null object references are indicated by an empty set of
-      //   profiles, and by a NULL type ID (a string which contain
-      //   only *** a single terminating character ***).
-      //
-      // Therefore the idlen should be 1.
-      // Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
-      // and sends out a 0 len string.
-      id = new CORBA::Char[1];
-      id[0] = (CORBA::Char)'\0';
-      break;
-
-    case 1:
-      id = new CORBA::Char[1];
-      id[0] <<= s;
-      if (id[0] != (CORBA::Char)'\0')
-	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
-      idlen = 0;
-      break;
-
-    default:
-      if (idlen > s.RdMessageUnRead())
-	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
-      id = new CORBA::Char[idlen];
-      if( !id )  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_MAYBE);
-      s.get_char_array(id, idlen);
-      if( id[idlen - 1] != '\0' )
-	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
-      break;
-    }
-
-    profiles = new IOP::TaggedProfileList();
-    if( !profiles )  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_MAYBE);
-    *profiles <<= s;
-
-    if (profiles->length() == 0 && idlen == 0) {
-      // This is a nil object reference
-      delete profiles;
-      delete[] id;
-      return CORBA::Object::_nil();
-    }
-    else {
-      // It is possible that we reach here with the id string = '\0'.
-      // That is alright because the actual type of the object will be
-      // verified using _is_a() at the first invocation on the object.
-      //
-      // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
-      // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
-      //
-      omniObjRef* objref = omni::createObjRef((const char*) id, repoId,
-					      profiles, 1, 0);
-
-      profiles = 0;
-      delete[] id;
-      id = 0;
-
-      if( !objref )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-      return (CORBA::Object_ptr)  objref->_ptrToObjRef(Object::_PD_repoId);
-    }
-  }
-  catch (...) {
-    if( id )        delete[] id;
-    if( profiles )  delete profiles;
-    throw;
-  }
-}
-
-
-void
-CORBA::MarshalObjRef(CORBA::Object_ptr obj, const char* repoId,
-		     size_t repoIdSize, NetBufferedStream& s)
-{
-  if (CORBA::is_nil(obj)) {
-    // nil object reference
-    ::operator>>= ((CORBA::ULong)1,s);
-    ::operator>>= ((CORBA::Char) '\0',s);
-    ::operator>>= ((CORBA::ULong) 0,s);
-    return;
-  }
-
-  // non-nil object reference
-  repoId = obj->_PR_getobj()->_mostDerivedRepoId();
-  repoIdSize = strlen(repoId) + 1;
-  CORBA::ULong(repoIdSize) >>= s;
-  s.put_char_array((CORBA::Char*) repoId, repoIdSize);
-  IOP::TaggedProfileList* pl = obj->_PR_getobj()->_iopProfiles();
-  *pl >>= s;
-}
-
-
-size_t
-CORBA::AlignedObjRef(CORBA::Object_ptr obj, const char* repoId,
-		     size_t repoIdSize, size_t initialoffset)
-{
-  omni::ptr_arith_t msgsize = omni::align_to((omni::ptr_arith_t)
-                                                   initialoffset,
-						   omni::ALIGN_4);
-  if (CORBA::is_nil(obj)) {
-    return (size_t) (msgsize + 3 * sizeof(CORBA::ULong));
-  }
-  else {
-    repoId = obj->_PR_getobj()->_mostDerivedRepoId();
-    repoIdSize = strlen(repoId)+1;
-    msgsize += (omni::ptr_arith_t)(sizeof(CORBA::ULong)+repoIdSize);
-    IOP::TaggedProfileList *pl = obj->_PR_getobj()->_iopProfiles();
-    return pl->_NP_alignedSize((size_t)msgsize);
-  }
-}
-
-
-CORBA::Object_ptr
-CORBA::UnMarshalObjRef(const char* repoId, MemBufferedStream& s)
-{
-  OMNIORB_ASSERT(repoId);
-
-  CORBA::ULong idlen;
-  CORBA::Char* id = 0;
-  IOP::TaggedProfileList* profiles = 0;
-
-  try {
-    idlen <<= s;
-
-    switch (idlen) {
-
-    case 0:
-      // According to the CORBA specification 2.0 section 10.6.2:
-      //   Null object references are indicated by an empty set of
-      //   profiles, and by a NULL type ID (a string which contain
-      //   only *** a single terminating character ***).
-      //
-      // Therefore the idlen should be 1.
-      // Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
-      // and sends out a 0 len string.
-      id = new CORBA::Char[1];
-      id[0] = (CORBA::Char)'\0';
-      break;
-
-    case 1:
-      id = new CORBA::Char[1];
-      id[0] <<= s;
-      if (id[0] != (CORBA::Char)'\0')
-	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
-      idlen = 0;
-      break;
-
-    default:
-      if (idlen > s.RdMessageUnRead())
-	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
-      id = new CORBA::Char[idlen];
-      if( !id )  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_MAYBE);
-      s.get_char_array(id, idlen);
-      if( id[idlen - 1] != '\0' )
-	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
-      break;
-    }
-
-    profiles = new IOP::TaggedProfileList();
-    if( !profiles )  OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_MAYBE);
-    *profiles <<= s;
-
-    if (profiles->length() == 0 && idlen == 0) {
-      // This is a nil object reference
-      delete profiles;
-      delete[] id;
-      return CORBA::Object::_nil();
-    }
-    else {
-      // It is possible that we reach here with the id string = '\0'.
-      // That is alright because the actual type of the object will be
-      // verified using _is_a() at the first invocation on the object.
-      //
-      // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
-      // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
-      // 
-      omniObjRef* objref = omni::createObjRef((const char*) id, repoId,
-					      profiles, 1, 0);
-
-      profiles = 0;
-      delete[] id;
-      id = 0;
-
-      if( !objref )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-      return (CORBA::Object_ptr)  objref->_ptrToObjRef(Object::_PD_repoId);
-    }
-  }
-  catch (...) {
-    if( id )        delete[] id;
-    if( profiles )  delete profiles;
-    throw;
-  }
-}
-
-
-void 
-CORBA::MarshalObjRef(CORBA::Object_ptr obj, const char* repoId,
-		     size_t repoIdSize, MemBufferedStream& s)
-{
-  if (CORBA::is_nil(obj)) {
-    // nil object reference
-    ::operator>>= ((CORBA::ULong)1,s);
-    ::operator>>= ((CORBA::Char) '\0',s);
-    ::operator>>= ((CORBA::ULong) 0,s);
-    return;
-  }
-
-  // non-nil object reference
-  repoId = obj->_PR_getobj()->_mostDerivedRepoId();
-  repoIdSize = strlen(repoId)+1;
-  ::operator>>= ((CORBA::ULong) repoIdSize,s);
-  s.put_char_array((CORBA::Char*) repoId, repoIdSize);
-  IOP::TaggedProfileList * pl = obj->_PR_getobj()->_iopProfiles();
-  *pl >>= s;
-}
