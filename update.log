@@ -1,3 +1,29 @@
+Mon Jan 24 18:09:02 GMT 2005 dgrisby
+====================================
+
+- NetBSD support. Thanks Dave Sainty.
+
+configure
+configure.ac
+include/omnithread.h
+mk/beforeauto.mk.in
+
+- HPUX 11.23 support. Thanks Matej Kenda.
+
+include/omniORB4/CORBA_Policy.h
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/poa_operators.h
+mk/platforms/hppa_hpux_11.23.mk
+mk/platforms/ia64_hpux_11.23.mk
+src/lib/omnithread/posix.cc
+src/tool/omniidl/cxx/cccp/config-hpux.h
+src/tool/omniidl/cxx/cccp/config-linux.h
+
+- Avoid warnings on Windows. Thanks Sebastien Bouchex.
+
+src/lib/omniORB/orbcore/ssl/dir.mk
+
+
 Mon Jan 24 17:28:53 GMT 2005 dgrisby
 ====================================
 
