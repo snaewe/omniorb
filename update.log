@@ -1,3 +1,17 @@
+Wed Jan 16 11:59:58 GMT 2002 dpg1
+=================================
+
+- Darwin patches for MacOS X 10.1.
+
+external_merge/mk/platforms/powerpc_darwin_1.3.mk
+include/omniORB3/CORBA_sysdep.h
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+src/tool/omniidl/cxx/dir.mk
+
+
 Wed Jan  9 11:19:26 GMT 2002 dpg1
 =================================
 

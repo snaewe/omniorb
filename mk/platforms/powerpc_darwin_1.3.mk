@@ -83,7 +83,7 @@ SHAREDLIB_SUFFIX = dylib
 SharedLibraryFullNameTemplate = lib$$1$$2.$$3.$$4.$(SHAREDLIB_SUFFIX)
 SharedLibrarySoNameTemplate = lib$$1$$2.$$3.$(SHAREDLIB_SUFFIX)
 SharedLibraryLibNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX)
-SharedLibraryPlatformLinkFlagsTemplate = -dynamiclib -undefined suppress
+SharedLibraryPlatformLinkFlagsTemplate = -dynamiclib -flat_namespace -undefined suppress
 
 # Re-define 'ExportLibrary' to run 'ranlib' after the file is copied,
 # for static libraries as otherwise the linker complains: "table of 

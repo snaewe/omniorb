@@ -526,7 +526,7 @@ lib     = _omniidlmodule.$(IDLMODULE_MAJOR).$(IDLMODULE_MINOR).so
 $(lib): $(OBJS) $(PYOBJS)
 	(set -x; \
          $(RM) $@; \
-         $(CXX) -bundle -undefined suppress -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(CXX) -bundle -undefined suppress -flat_namespace -o $@ $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(LIBS) \
 	)
 

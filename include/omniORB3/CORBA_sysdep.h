@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.26  2002/01/16 12:01:46  dpg1
+ Darwin patches for MacOS X 10.1.
+
  Revision 1.1.2.25  2001/12/11 16:53:00  dpg1
  Bunch of new platforms, plus other minor tweaks.
 
@@ -512,6 +515,8 @@
 # define _USE_MACH_SIGNAL 1
 # define _NO_STRDUP 1
 # define _USE_GETHOSTNAME 1
+#elif defined(__darwin__)
+# define _HAS_SIGNAL 1
 #elif defined(__VMS)
 # define _OMNIORB_HOST_BYTE_ORDER_ 1
 # if __VMS_VER >= 70000000

@@ -740,7 +740,7 @@ all:: $(dynlib)
 $(dynlib): $(DYN_OBJS)
 	(set -x; \
         $(RM) $@; \
-        $(CXX) -dynamiclib -undefined suppress -o $@ \
+        $(CXX) -dynamiclib -flat_namespace -undefined suppress -o $@ \
          $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
         )
