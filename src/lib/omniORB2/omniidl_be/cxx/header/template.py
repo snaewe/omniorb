@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.4  2000/03/10 12:01:03  djr
+# Re-fixed omniidl (make exception _NP_duplicate() public).
+#
 # Revision 1.3.2.3  2000/03/09 15:22:42  djs
 # Changing the protection status of an exception method, mirroring a change
 # in omniidl3
@@ -670,11 +673,11 @@ public:
   static _core_attr insertExceptionToAny    insertToAnyFn;
   static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
 
+  virtual CORBA::Exception* _NP_duplicate() const;
+
   static _core_attr const char* _PD_repoId;
 
 private:
-  virtual CORBA::Exception* _NP_duplicate() const;
-
   virtual const char* _NP_typeId() const;
   virtual const char* _NP_repoId(int*) const;
   virtual void _NP_marshal(NetBufferedStream&) const;

@@ -1,3 +1,12 @@
+
+Fri Mar 10 11:57:45 GMT 2000 djr
+================================
+
+- Fixed omniidl back again (made exception _NP_duplicate public).
+
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
 Fri Mar 10 11:00:51 GMT 2000 dpg1
 =================================
 
