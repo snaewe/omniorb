@@ -1,3 +1,39 @@
+Thu Mar 31 00:34:29 BST 2005 dgrisby
+====================================
+
+- Another merge from omni4_0_develop.
+
+acinclude.m4
+configure
+configure.ac
+contrib/RPMs/omniORB.spec
+include/omniORB4/omniORB.h
+include/omniORB4/wstringtypes.h
+mk/beforeauto.mk.in
+mk/mingw.mk
+mk/rtems.mk
+mk/unix.mk
+mk/version.mk                    -- new
+mk/vxWorks.mk
+mk/win32.mk
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/corbaFixed.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+src/lib/omnithread/posix.cc
+src/tool/omniidl/cxx/idlfixed.cc
+
+
 Wed Mar  2 13:31:11 GMT 2005 dgrisby
 ====================================
 

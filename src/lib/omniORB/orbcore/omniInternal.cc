@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.4  2005/03/30 23:36:09  dgrisby
+  Another merge from omni4_0_develop.
+
   Revision 1.5.2.3  2005/01/06 23:10:36  dgrisby
   Big merge from omni4_0_develop.
 
@@ -474,8 +477,10 @@ omni::releaseObjRef(omniObjRef* objref)
     objref->_setIdentity(0);
   }
 
-  if( omniORB::trace(15) )
-    omniORB::logf("ObjRef(%s) -- deleted.", objref->_mostDerivedRepoId());
+  if( omniORB::trace(15) ) {
+    omniORB::logger l;
+    l << "ObjRef(" << objref->_mostDerivedRepoId() << ") -- deleted.\n";
+  }
 
   // Destroy the reference.
   delete objref;

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2005/03/30 23:36:10  dgrisby
+  Another merge from omni4_0_develop.
+
   Revision 1.1.6.2  2005/01/06 23:10:29  dgrisby
   Big merge from omni4_0_develop.
 
@@ -537,10 +540,12 @@ giopStrand::releaseServer(IOP_S* iop_s)
     giop_s->giopStreamList::insert(servers);
   }
 
-  if (remove && giop_s->state() != IOP_S::WaitingForReply)
-    delete giop_s;
-  else
-    restart_idle = 0;
+  if (remove) {
+    if (giop_s->state() != IOP_S::WaitingForReply)
+      delete giop_s;
+    else
+      restart_idle = 0;
+  }
 
   if (restart_idle && !biDir) {
     CORBA::Boolean success = startIdleCounter();
@@ -581,10 +586,10 @@ CORBA::Boolean
 giopStrand::startIdleCounter() {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
-  if (idlebeats >= 0) 
+  if (idlebeats >= 0) {
     // The idle counter is already active or has already expired.
     return 0;
-  
+  }
   if (isClient()) {
     idlebeats = (idleOutgoingBeats) ? (CORBA::Long)idleOutgoingBeats : -1;
   }
@@ -599,10 +604,10 @@ CORBA::Boolean
 giopStrand::stopIdleCounter() {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
-  if (idlebeats == 0)
+  if (idlebeats == 0) {
     // The idle counter has already expired.
     return 0;
-
+  }
   idlebeats = -1;
   return 1;
 }

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.6  2005/03/30 23:36:11  dgrisby
+# Another merge from omni4_0_develop.
+#
 # Revision 1.6.2.5  2005/01/06 23:10:10  dgrisby
 # Big merge from omni4_0_develop.
 #
@@ -413,7 +416,7 @@ interface_shortcut_inh = """\
 interface_callback = """\
 // Local call call-back function.
 static void
-@local_call_descriptor@(omniCallDescriptor*@cd@, omniServant* svnt)
+@local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
 {
   @get_call_descriptor@
   @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);

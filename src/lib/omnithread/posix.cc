@@ -575,12 +575,9 @@ omni_thread::start(void)
 
 #endif	/* PthreadSupportThreadPriority */
 
-#if !defined(__linux__)
     if (stack_size) {
       THROW_ERRORS(pthread_attr_setstacksize(&attr, stack_size));
     }
-#endif
-
 
 #if (PthreadDraftVersion == 4)
     THROW_ERRORS(pthread_create(&posix_thread, attr, omni_thread_wrapper,

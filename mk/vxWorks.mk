@@ -204,20 +204,13 @@ endif
 
 # omnithread - platform libraries required by omnithread.
 # Use when building omnithread.
-OMNITHREAD_VERSION = 3.0
-OMNITHREAD_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNITHREAD_VERSION)))
-OMNITHREAD_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNITHREAD_VERSION)))
-
 OMNITHREAD_PLATFORM_LIB = $(filter-out $(patsubst %,$(LibSearchPattern),omnithread), $(OMNITHREAD_LIB))
 
 #
 # CORBA stuff
 #
 
-OMNIORB_VERSION = 4.1.0
-OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+include $(BASE_OMNI_TREE)/mk/version.mk
 
 lib_depend := $(patsubst %,$(LibPattern),omniORB$(OMNIORB_MAJOR_VERSION))
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)

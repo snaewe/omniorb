@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/03/30 23:36:14  dgrisby
+  Another merge from omni4_0_develop.
+
   Revision 1.1.4.2  2005/01/06 23:08:22  dgrisby
   Big merge from omni4_0_develop.
 
@@ -98,7 +101,7 @@ static inline void free(_CORBA_WChar* s) {
 
 static inline int len(const _CORBA_WChar* s) {
   int i;
-  for (i=0; *s; s++, i++);
+  for (i=0; *s; s++, i++) {};
   return i;
 }
 

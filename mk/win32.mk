@@ -431,10 +431,7 @@ shareddebug/%.o: %.c
 # CORBA stuff
 #
 
-OMNIORB_VERSION = 4.1.0
-OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+include $(BASE_OMNI_TREE)/mk/version.mk
 
 OMNIORB_DLL_NAME = $(shell $(SharedLibraryFullName) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
 OMNIORB_DEBUG_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
@@ -527,10 +524,6 @@ ThreadSystem = NT
 # following 2 lines.
 #ThreadSystem = NTPosix
 #OMNITHREAD_CPPFLAGS= -D__POSIX_NT__
-
-OMNITHREAD_VERSION = 3.0
-OMNITHREAD_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNITHREAD_VERSION)))
-OMNITHREAD_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNITHREAD_VERSION)))
 
 OMNITHREAD_LIB = $(patsubst %,$(DLLSearchPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION))
 lib_depend := $(patsubst %,$(DLLPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION))

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.36.2.3  2005/03/30 23:36:10  dgrisby
+  Another merge from omni4_0_develop.
+
   Revision 1.36.2.2  2005/01/06 23:10:12  dgrisby
   Big merge from omni4_0_develop.
 
@@ -504,12 +507,12 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
     return the_orb;
   }
 
-  const char* option_src_1 = "configuration file";
-  const char* option_src_2 = "environment variable";
-  const char* option_src_3 = "argument";
-  const char* option_src_4 = "option list";
-  const char* option_src_5 = "-ORB arguments";
-  const char* option_source;
+  const char* option_src_1  = "configuration file";
+  const char* option_src_2  = "environment variable";
+  const char* option_src_3  = "argument";
+  const char* option_src_4  = "option list";
+  const char* option_src_5  = "-ORB arguments";
+  const char* option_source = 0;
   try {
 
     orbOptions::singleton().reset();
@@ -875,9 +878,9 @@ omniOrbORB::destroy()
 
     // Call detach method of the initialisers in reverse order.
     omni_hooked_initialiser_.detach();
-    omni_uri_initialiser_.attach();
-    omni_poa_initialiser_.attach();
-    omni_orbOptions_initialiser_.attach();
+    omni_uri_initialiser_.detach();
+    omni_poa_initialiser_.detach();
+    omni_orbOptions_initialiser_.detach();
     omni_initRefs_initialiser_.detach();
     omni_ObjRef_initialiser_.detach();
     omni_dynamiclib_initialiser_.detach();

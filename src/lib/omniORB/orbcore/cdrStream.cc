@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2005/03/30 23:36:10  dgrisby
+  Another merge from omni4_0_develop.
+
   Revision 1.1.4.5  2005/01/25 11:17:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -655,7 +658,7 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
 
       if (omniORB::trace(25)) {
 	omniORB::logger log;
-	log << " receive codeset service context and set TCS to ("
+	log << "Receive codeset service context and set TCS to ("
 	    << ((tcs_c) ? tcs_c->name() : "none") << "," 
 	    << ((tcs_w) ? tcs_w->name() : "none") << ")\n";
       }

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.6  2005/03/30 23:36:11  dgrisby
+# Another merge from omni4_0_develop.
+#
 # Revision 1.1.6.5  2005/01/06 23:09:49  dgrisby
 # Big merge from omni4_0_develop.
 #
@@ -350,13 +353,8 @@ class CallDescriptor:
                           cxx_operation_name = operation,
                           operation_arguments = string.join(impl_args, ", "))
 
-        if get_cd != "":
-            cd_argument = " cd"
-        else:
-            cd_argument = ""
         stream.out(template.interface_callback,
                    local_call_descriptor = function_name,
-                   cd = cd_argument,
                    get_call_descriptor = get_cd,
                    impl_fqname =interface_name.prefix("_impl_").fullyQualify(),
                    name = interface_name.fullyQualify(),

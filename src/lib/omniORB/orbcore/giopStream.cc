@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.4  2005/03/30 23:36:09  dgrisby
+  Another merge from omni4_0_develop.
+
   Revision 1.1.6.3  2005/01/13 21:10:00  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -1201,7 +1204,7 @@ static void dumpbuf(unsigned char* buf, size_t sz)
 
   const size_t dumplimit = 128;
   if (!omniORB::trace(40) && sz > dumplimit) {
-    l << dumplimit << "bytes out of " << sz << "\n";
+    l << dumplimit << " bytes out of " << sz << "\n";
     sz = dumplimit;
   }
   else {

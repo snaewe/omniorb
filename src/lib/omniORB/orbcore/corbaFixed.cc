@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.4.3  2005/03/30 23:36:10  dgrisby
+// Another merge from omni4_0_develop.
+//
 // Revision 1.1.4.2  2005/01/06 23:10:12  dgrisby
 // Big merge from omni4_0_develop.
 //
@@ -236,7 +239,7 @@ CORBA::Fixed::Fixed(const CORBA::Octet* val,
 
   if (pd_digits == 0) pd_negative = 0;
 
-  memcpy(pd_val, val, digits);
+  memcpy(pd_val, val, pd_digits);
   memset(pd_val + pd_digits, 0, OMNI_FIXED_DIGITS - pd_digits);
 }
 
@@ -862,6 +865,7 @@ realMul(const CORBA::Fixed& a, const CORBA::Fixed& b, CORBA::Boolean negative)
 
     for (bi=0; bi < b.fixed_digits(); ++bi) {
       bd = b.PR_val()[bi];
+      if (bd == 0 && carry == 0) continue;
       wi       = ai + bi;
       v        = work[wi] + ad * bd + carry;
       carry    = v / 10;

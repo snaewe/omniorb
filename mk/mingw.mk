@@ -342,10 +342,7 @@ shareddebug/%.o: %.c
 
 # Note that the DLL version is being used, so link to omniorb3_rt.lib
 
-OMNIORB_VERSION = 4.0.5
-OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+include $(BASE_OMNI_TREE)/mk/version.mk
 
 OMNIORB_DLL_NAME = $(shell $(SharedLibrarySearch) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
 OMNIORB_DEBUG_DLL_NAME = $(shell $(SharedLibraryDebugSearch) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
@@ -432,10 +429,6 @@ CorbaImplementation = OMNIORB
 
 # Use native win32 threads
 ThreadSystem = NT
-
-OMNITHREAD_VERSION = 3.0
-OMNITHREAD_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNITHREAD_VERSION)))
-OMNITHREAD_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNITHREAD_VERSION)))
 
 OMNITHREAD_LIB = $(patsubst %,$(DLLSearchPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION))
 lib_depend := $(patsubst %,$(DLLPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION))
