@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2000/11/15 17:25:45  sll
+  cdrCountingStream must now be told explicitly what char and wchar
+  codeset convertor to use.
+
   Revision 1.2.2.4  2000/11/09 12:27:59  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -117,7 +121,7 @@ public:
   }
 
   size_t dataSize(size_t initialoffset) {
-    cdrCountingStream s(initialoffset);
+    cdrCountingStream s(pd_s.TCS_C(),pd_s.TCS_W(),initialoffset);
     pd_desc.marshalArguments(s);
     return s.total();
   }
