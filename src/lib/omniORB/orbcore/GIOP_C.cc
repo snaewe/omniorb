@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2004/04/07 17:37:31  dgrisby
+  Fix bug with retries when location forwarding.
+
   Revision 1.1.4.9  2001/10/17 16:33:27  dpg1
   New downcast mechanism for cdrStreams.
 
@@ -268,7 +271,17 @@ GIOP_C::notifyCommFailure(CORBA::Boolean heldlock,
     }
     currentaddr = pd_rope->notifyCommFailure(currentaddr,heldlock);
     pd_calldescriptor->currentAddress(currentaddr);
-    retry =  (currentaddr != firstaddr);
+
+    if (currentaddr == firstaddr) {
+      // Run out of addresses to try.
+      retry = 0;
+      pd_calldescriptor->firstAddressUsed(0);
+      pd_calldescriptor->currentAddress(0);
+    }
+    else {
+      // Retry will use the next address in the list.
+      retry = 1;
+    }
   }
   else if (pd_strand->biDir && 
 	   pd_strand->isClient() && 
@@ -282,6 +295,9 @@ GIOP_C::notifyCommFailure(CORBA::Boolean heldlock,
     retry = 0;
   }
   else {
+    // Strand has been re-used from a previous invocation. Have
+    // another go with a new strand in case something was broken in
+    // the current one.
     retry = 1;
   }
 
