@@ -1,4 +1,22 @@
 
+Wed Feb 10 09:42:34 GMT 1999 djr
+================================
+
+- Fixed bug in which omniidl2 failed if constructed types were
+  declared in an exception member declaration.
+
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+src/tool/omniidl2/omniORB2_be/o2be_module.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+- Fixed bug in omniidl2 which generates bad code when a forward
+  declared interface is not defined anywhere in the translation
+  unit.
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+
 Tue Feb  9 17:44:19 GMT 1999 djr
 ================================
 
