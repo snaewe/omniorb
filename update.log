@@ -9,7 +9,14 @@ include/omniORB2/CORBA_sysdep.h
 include/omniORB2/CORBA.h
 src/lib/omniORB2/dynamic/irstub.cc
 src/lib/omniORB2/dynamic/irdynstub.cc
-
+src/lib/omniORB2/dynamic/dynamicImplementation.cc
+src/lib/omniORB2/dynamic/ir.cc
+src/lib/omniORB2/dynamic/nvList.cc
+src/lib/omniORB2/dynamic/serverRequest.cc
+src/lib/omniORB2/dynamic/corbaidlstub.cc
+src/lib/omniORB2/dynamic/corbaidldynstub.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/policy.cc
 
 Mon Aug 30 19:16:15 BST 1999 sll
 ================================
