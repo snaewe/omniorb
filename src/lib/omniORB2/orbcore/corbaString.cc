@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14.2.1  2000/01/31 11:05:59  djr
+  Fixed bug in unmarshalling of String_member.
+
   Revision 1.14  1999/06/18 20:52:29  sll
   Updated with new sequence string implementation.
 
@@ -143,10 +146,8 @@ _CORBA_String_member::operator >>= (NetBufferedStream& s) const
 void
 _CORBA_String_member::operator <<= (NetBufferedStream& s)
 {
-  if( _ptr ) {
-    FREE_BYTES(_ptr);
-    _ptr = 0;
-  }
+  if( pd_rel && _ptr )  FREE_BYTES(_ptr);
+  _ptr = 0;
 
   CORBA::ULong len;
   len <<= s;
@@ -194,10 +195,8 @@ _CORBA_String_member::operator >>= (MemBufferedStream& s) const
 void
 _CORBA_String_member::operator <<= (MemBufferedStream& s)
 {
-  if( _ptr ) {
-    FREE_BYTES(_ptr);
-    _ptr = 0;
-  }
+  if( pd_rel && _ptr )  FREE_BYTES(_ptr);
+  _ptr = 0;
 
   CORBA::ULong len;
   len <<= s;

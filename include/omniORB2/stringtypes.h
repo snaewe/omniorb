@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.2  2000/01/31 11:05:58  djr
+ Fixed bug in unmarshalling of String_member.
+
  Revision 1.5.2.1  2000/01/27 15:05:18  djr
  String_member now initialised to empty string by default.
 
@@ -168,7 +171,8 @@ class _CORBA_String_member {
 public:
   typedef char* ptr_t;
 
-  inline _CORBA_String_member() : pd_data(""), pd_rel(0), _ptr(pd_data) {}
+  inline _CORBA_String_member()
+    : pd_data((char*) ""), pd_rel(0), _ptr(pd_data) {}
 
   inline _CORBA_String_member(char*& p, _CORBA_Boolean rel) 
     : pd_data(0), pd_rel(rel), _ptr(p) {}

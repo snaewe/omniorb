@@ -10,6 +10,13 @@ Mon Jan 31 10:53:23 GMT 2000 djr
 
 src/lib/omniORB2/orbcore/strand.cc
 
+- Added cast to initialiser in String_member constructor.
+  Fixed bug in unmarshalling of strings, which would cause a static
+  string object to be free()d.
+
+include/omniORB2/stringtypes.h
+src/lib/omniORB2/orbcore/corbaString.cc
+
 
 Thu Jan 27 18:06:52 GMT 2000 djr
 ================================
