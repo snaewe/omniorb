@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.3  2000/03/21 10:58:49  djs
+# Forgot to make fragment mode use LazyStream instead of Stream
+#
 # Revision 1.12.2.2  2000/03/20 11:50:18  djs
 # Removed excess buffering- output templates have code attached which is
 # lazily evaluated when required.
@@ -139,7 +142,7 @@ def poa_fragment(stream, tree):
     """Creates the poa fragment only"""
     filename = config.basename() + config.poa_fragment_suffix()
     header(stream, filename)
-    
+
     poa = omniidl_be.cxx.header.poa.__init__(stream)
     tree.accept(poa)
 
@@ -256,19 +259,19 @@ def run(tree):
         # build the defs file
         defs_filename = config.basename() + config.defs_fragment_suffix() +\
                         config.hdrsuffix()
-        defs_stream = util.Stream(open(defs_filename, "w"), 2)
+        defs_stream = util.LazyStream(open(defs_filename, "w"), 2)
         defs_fragment(defs_stream, tree)
 
         # build the opers file
         opers_filename = config.basename() + config.opers_fragment_suffix() +\
                          config.hdrsuffix()
-        opers_stream = util.Stream(open(opers_filename, "w"), 2)
+        opers_stream = util.LazyStream(open(opers_filename, "w"), 2)
         opers_fragment(opers_stream, tree)
 
         # build the poa file
         poa_filename = config.basename() + config.poa_fragment_suffix() +\
                        config.hdrsuffix()
-        poa_stream = util.Stream(open(poa_filename, "w"), 2)
+        poa_stream = util.LazyStream(open(poa_filename, "w"), 2)
         poa_fragment(poa_stream, tree)
     else:
         # build the full header file
