@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.8  1998/01/27 16:17:45  ewc
-  Changed version to 2.5
+  Revision 1.9  1998/04/07 19:31:18  sll
+  Updated to use namespace and bool type.
 
+// Revision 1.8  1998/01/27  16:17:45  ewc
+// Changed version to 2.5
+//
 // Revision 1.7  1997/12/12  20:00:00  sll
 // Defined new version variable omniORB_x_y.
 //
@@ -58,7 +61,7 @@ const IOP::ProfileId       IOP::TAG_MULTIPLE_COMPONENTS = 1;
 const IOP::ServiceID       IOP::TransactionService = 0;
 const CORBA::Char          IIOP::current_major = 1;
 const CORBA::Char          IIOP::current_minor = 0;
-const CORBA::Boolean       omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
+const CORBA::Char          omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
 const omni::alignment_t    omni::max_alignment = ALIGN_8;
 
 const CORBA::Char* CORBA::Object::repositoryID = (CORBA::Char*) "IDL:omg.org/CORBA/Object:1.0";
@@ -251,7 +254,14 @@ const GIOP_Basetypes::_SysExceptRepoID
       GIOP_Basetypes::SysExceptRepoID::WRONG_TRANSACTION ((CORBA::Char *)
                                                         "IDL:omg.org/CORBA/WRONG_TRANSACTION");
 
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the constant external linkage otherwise. Its a bug.
+namespace omniORB {
+  extern const unsigned int hash_table_size = 103;
+}
+#else
 const unsigned int omniORB::hash_table_size = 103;
+#endif
 
 #if defined(__GNUG__)
 
