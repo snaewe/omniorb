@@ -10,6 +10,11 @@
 
 /*
   $Log$
+  Revision 1.5  1997/02/17 18:03:46  ewc
+  IDL Compiler now adds a dummy return after some exceptions - this
+  stops some C++ compilers from complaining (e.g. MSVC++ 4.2) about
+  some control paths not returning values.
+
   Revision 1.4  1997/01/24 19:39:04  sll
   The skeleton code for nil object now returns a properly initialised result.
 
@@ -256,6 +261,73 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "// never reach here! Dummy return to keep some compilers happy.\n";
+  {
+    o2be_operation::argMapping mapping;
+    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
+    if (ntype == o2be_operation::tObjref || 
+	ntype == o2be_operation::tString ||
+	(mapping.is_arrayslice) ||
+	(mapping.is_pointer))
+      {
+	IND(s);
+	o2be_operation::declareVarType(s,field_type(),0,mapping.is_arrayslice);
+	s << ((ntype != o2be_operation::tObjref && 
+	       ntype != o2be_operation::tString)?" *":"") 
+	  << " _result" << "= 0;\n";
+      }
+    else
+      {
+	IND(s);
+	o2be_operation::declareVarType(s,field_type());
+	s << " _result";
+	switch (ntype)
+	  {
+	  case o2be_operation::tShort:
+	  case o2be_operation::tLong:
+	  case o2be_operation::tUShort:
+	  case o2be_operation::tULong:
+	  case o2be_operation::tFloat:
+	  case o2be_operation::tDouble:
+	  case o2be_operation::tBoolean:
+	  case o2be_operation::tChar:
+	  case o2be_operation::tOctet:
+	    s << " = 0;\n";
+	    break;
+	  case o2be_operation::tEnum:
+	    {
+	      s << " = ";
+	      AST_Decl *decl = field_type();
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	      UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
+					UTL_Scope::IK_decls);
+	      AST_Decl *eval = i.item();
+	      if (strlen(o2be_name::narrow_and_produce_scopename(decl))) {
+		s << o2be_name::narrow_and_produce_scopename(decl);
+	      }
+	      else {
+		s << "::";
+	      }
+	      s << o2be_name::narrow_and_produce_uqname(eval) << ";\n";
+	    }
+	    break;
+	  case o2be_operation::tStructFixed:
+	    s << ";\n";
+	    s << "memset((void *)&_result,0,sizeof(_result));\n";
+	    break;
+	  default:
+	    s << ";\n";
+	    break;
+	  }
+      }
+  }
+  IND(s); s << "return _result;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
