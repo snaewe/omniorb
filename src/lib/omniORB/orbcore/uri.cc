@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.14  2002/02/01 11:20:40  dpg1
+// Silly bug in string_to_object wil nil objref.
+//
 // Revision 1.2.2.13  2001/12/04 14:32:27  dpg1
 // Minor corbaloc bugs.
 //
@@ -209,7 +212,7 @@ iorURIHandler::toObject(const char* sior, unsigned int)
 {
   omniObjRef* objref = omniObjRef::_fromString(sior);
   if (!objref)
-    OMNIORB_THROW(MARSHAL,MARSHAL_InvalidIOR, CORBA::COMPLETED_NO);
+    return CORBA::Object::_nil();
 
   return (CORBA::Object_ptr)objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
 }
