@@ -1,3 +1,18 @@
+Wed Jul 25 12:35:27 BST 2001 dpg1
+=================================
+
+- Default for omnithread on Solaris is now pthreads. Use
+  -DUseSolarisThreads for Solaris threads. (solaris.h needs to be
+  updated before that will work, though.)
+
+include/omnithread.h
+
+- Generate correct code for operation parameters whose names clash
+  with C++ keywords.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+
+
 Wed Jul 25 11:54:30 BST 2001 dpg1
 =================================
 
