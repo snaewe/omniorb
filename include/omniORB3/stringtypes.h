@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.5  2000/09/19 09:10:33  dpg1
+ String_var, _member, _element operator= now check for self-assignment.
+
  Revision 1.1.2.4  2000/06/27 16:15:08  sll
  New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
  _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
@@ -120,9 +123,11 @@ public:
   }
 
   inline _CORBA_String_var& operator=(const _CORBA_String_var& s) {
-    omni::freeString(_data);
-    _data = 0;
-    if( (const char*)s )  _data = string_dup(s);
+    if (&s != this) {
+      omni::freeString(_data);
+      _data = 0;
+      if( (const char*)s )  _data = string_dup(s);
+    }
     return *this;
   }
 
@@ -210,11 +215,13 @@ public:
   }
 
   inline _CORBA_String_member& operator=(const _CORBA_String_member& s) {
-    omni::freeString(_ptr);
-    if (s._ptr && s._ptr != omni::empty_string)
-      _ptr = _CORBA_String_var::string_dup(s._ptr);
-    else
-      _ptr = s._ptr;
+    if (&s != this) {
+      omni::freeString(_ptr);
+      if (s._ptr && s._ptr != omni::empty_string)
+	_ptr = _CORBA_String_var::string_dup(s._ptr);
+      else
+	_ptr = s._ptr;
+    }
     return *this;
   }
 
@@ -318,14 +325,16 @@ public:
   }
 
   inline _CORBA_String_element& operator=(const _CORBA_String_element& s) {
-    if (pd_rel) {
-      omni::freeString(pd_data);
-      if (s.pd_data && s.pd_data != omni::empty_string)
-	pd_data = _CORBA_String_var::string_dup(s.pd_data);
-      else
+    if (&s != this) {
+      if (pd_rel) {
+	omni::freeString(pd_data);
+	if (s.pd_data && s.pd_data != omni::empty_string)
+	  pd_data = _CORBA_String_var::string_dup(s.pd_data);
+	else
+	  pd_data = (char*)s.pd_data;
+      } else
 	pd_data = (char*)s.pd_data;
-    } else
-      pd_data = (char*)s.pd_data;
+    }
     return *this;
   }
 
