@@ -27,9 +27,12 @@
 
 /*
  $Log$
- Revision 1.7  1997/05/06 13:47:39  sll
- Public release.
+ Revision 1.8  1997/09/20 16:31:29  dpg1
+ Added new name and produce functions for LifeCycle support.
 
+ * Revision 1.7  1997/05/06  13:47:39  sll
+ * Public release.
+ *
 
  */
 
@@ -487,6 +490,30 @@ public:
   void produce_nil_wr_skel(fstream &s);
   // produce the definition of the nil object's method to set this attribute
 
+  void produce_dead_rd_skel(fstream &s);
+  // produce the definition of the dead object's get method
+
+  void produce_dead_wr_skel(fstream &s);
+  // produce the definition of the dead object's set method
+
+  void produce_home_rd_skel(fstream &s,o2be_interface &defined_in);
+  // produce the _wrap_home get method
+
+  void produce_home_wr_skel(fstream &s,o2be_interface &defined_in);
+  // produce the _wrap_home set method
+
+  void produce_lcproxy_rd_skel(fstream &s,o2be_interface &defined_in);
+  // produce the LifeCycle proxy's method to get this attribute
+
+  void produce_lcproxy_wr_skel(fstream &s,o2be_interface &defined_in);
+  // produce the LifeCycle proxy's method to set this attribute
+
+  void produce_wrapproxy_rd_skel(fstream &s,o2be_interface &defined_in);
+  // produce the _wrap_proxy get method
+
+  void produce_wrapproxy_wr_skel(fstream &s,o2be_interface &defined_in);
+  // produce the _wrap_proxy set method
+
 private:
   o2be_attribute();
 };
@@ -521,6 +548,21 @@ public:
 
   void produce_nil_skel(fstream &s,const char* alias_prefix=0);
   // produce the definition of the nil object's method
+
+  void produce_dead_skel(fstream &s,const char* alias_prefix=0);
+  // produce the definition of the dead object's method
+
+  void produce_home_skel(fstream &s,o2be_interface &defined_in,
+			 const char* alias_prefix=0);
+  // produce the _wrap_home method
+
+  void produce_lcproxy_skel(fstream &s,o2be_interface &defined_in,
+			    const char* alias_prefix=0);
+  // produce the LifeCycle proxy's method to invoke this operation
+
+  void produce_wrapproxy_skel(fstream &s,o2be_interface &defined_in,
+			      const char* alias_prefix=0);
+  // produce the _wrap_proxy method
 
   void produce_mapping_with_indirection(fstream& s,
 					const char* alias_prefix);
@@ -660,6 +702,18 @@ public:
   const char *fieldMemberType_fqname() const { return pd_fieldmem_fqname; }
   const char *nil_uqname() const { return pd_nil_uqname; }
   const char *nil_fqname() const { return pd_nil_fqname; }
+
+  const char *lcserver_uqname() const { return pd_lcserver_uqname; }
+  const char *lcserver_fqname() const { return pd_lcserver_fqname; }
+  const char *dead_uqname() const { return pd_dead_uqname; }
+  const char *dead_fqname() const { return pd_dead_fqname; }
+  const char *home_uqname() const { return pd_home_uqname; }
+  const char *home_fqname() const { return pd_home_fqname; }
+  const char *lcproxy_uqname() const { return pd_lcproxy_uqname; }
+  const char *lcproxy_fqname() const { return pd_lcproxy_fqname; }
+  const char *wrapproxy_uqname() const { return pd_wrapproxy_uqname; }
+  const char *wrapproxy_fqname() const { return pd_wrapproxy_fqname; }
+
   const char *IRrepoId() const { return pd_IRrepoId; }
   const size_t IRrepoIdSize() const { return pd_IRrepoIdSize; }
   const char *inout_adptarg_name() const { return pd_inout_adptarg_name; }
@@ -678,6 +732,18 @@ private:
   char *pd_fieldmem_fqname;
   char *pd_nil_uqname;
   char *pd_nil_fqname;
+
+  char *pd_lcserver_uqname;
+  char *pd_lcserver_fqname;
+  char *pd_dead_uqname;
+  char *pd_dead_fqname;
+  char *pd_home_uqname;
+  char *pd_home_fqname;
+  char *pd_lcproxy_uqname;
+  char *pd_lcproxy_fqname;
+  char *pd_wrapproxy_uqname;
+  char *pd_wrapproxy_fqname;
+
   char *pd_IRrepoId;
   size_t pd_IRrepoIdSize;
   char *pd_inout_adptarg_name;
