@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.10.2.3  1999/09/27 13:31:43  djr
+  Updated logging to always issue omniORB: prefix.
+
   Revision 1.10.2.2  1999/09/23 13:47:25  sll
   Fixed a race condition which causes simple programs that exit quickly to
   delay for a maximum of one scan period.
@@ -94,12 +97,9 @@
 #include <objectManager.h>
 #include <scavenger.h>
 
-#define LOGMESSAGE(level,prefix,message) do {\
-   if (omniORB::trace(level)) {\
-     omniORB::logger log("scavenger " ## prefix ## ": ");\
-	log << message ## "\n";\
-   }\
-} while (0)
+
+#define LOGMESSAGE(level,prefix,message)  \
+  omniORB::logs(level, "scavenger " prefix ": " message)
 
 
 static CORBA::ULong ScanPeriod  = 5;		// seconds

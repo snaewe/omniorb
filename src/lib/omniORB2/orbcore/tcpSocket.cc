@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.8.2.2  1999/09/27 13:31:44  djr
+  Updated logging to always issue omniORB: prefix.
+
   Revision 1.8.2.1  1999/09/21 20:37:18  sll
   -Simplified the scavenger code and the mechanism in which connections
    are shutdown. Now only one scavenger thread scans both incoming
@@ -104,8 +107,8 @@ tcpSocketFactoryType::init()
   singleton = new tcpSocketFactoryType;
 
   if (omniORB::trace(2)) {
-    omniORB::logger log("gateKeeper is ");
-    log << gateKeeper::version() << "\n";
+    omniORB::logger log;
+    log << "gateKeeper is " << gateKeeper::version() << "\n";
   }
 }
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.2  1999/09/27 13:31:43  djr
+  Updated logging to always issue omniORB: prefix.
+
   Revision 1.10.2.1  1999/09/21 20:37:17  sll
   -Simplified the scavenger code and the mechanism in which connections
    are shutdown. Now only one scavenger thread scans both incoming
@@ -86,12 +89,9 @@
 #include <scavenger.h>
 #include <ropeFactory.h>
 
-#define LOGMESSAGE(level,prefix,message) do {\
-   if (omniORB::trace(level)) {\
-     omniORB::logger log("strand " ## prefix ## ": ");\
-	log << message ## "\n";\
-   }\
-} while (0)
+
+#define LOGMESSAGE(level,prefix,message)  \
+  omniORB::logs(level, "strand " prefix ": " message)
 
 
 class omniORB_Ripper;
@@ -511,8 +511,9 @@ Rope::incrRefCount(CORBA::Boolean held_anchor_mutex)
     pd_anchor->pd_lock.lock();
   {
     if (omniORB::trace(20)) {
-      omniORB::logger log("strand Rope::incrRefCount: ");
-      log << "old value = " << pd_refcount << "\n";
+      omniORB::logger log;
+      log << "strand Rope::incrRefCount: " << "old value = "
+	<< pd_refcount << "\n";
     }
   }
   assert(pd_refcount >= 0);
@@ -530,8 +531,8 @@ Rope::decrRefCount(CORBA::Boolean held_anchor_mutex)
 
   {
     if (omniORB::trace(20)) {
-      omniORB::logger log("strand Rope::decrRefCount: ");
-      log << "old value = " << pd_refcount << "\n";
+      omniORB::logger log;
+      log << "strand Rope::decrRefCount: old value = " << pd_refcount << "\n";
     }
   }
 
@@ -754,7 +755,8 @@ Rope_iterator::operator() ()
 	  if (rp->is_idle(1)) 
 	    {
 	      // This Rope is not used by any object reference
-	      // First close down all the strands before calling the dtor of the Rope
+	      // First close down all the strands before calling
+	      // the dtor of the Rope.
 	      LOGMESSAGE(10,"Rope_iterator","delete unused Rope.");
 	      CORBA::Boolean can_delete = 1;
 
