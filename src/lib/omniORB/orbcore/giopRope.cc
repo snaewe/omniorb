@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.15  2001/09/03 13:31:45  sll
+  Removed debug trace.
+
   Revision 1.1.4.14  2001/09/03 13:26:35  sll
   In filterAndSortAddressList, change to use the lowest value to represent
   the highest priority.
@@ -663,7 +666,7 @@ giopRope::filterAndSortAddressList(const giopAddressList& addrlist,
 	}
     }
   }
-#if 1
+#if 0
   {
     omniORB::logger log;
     log << "Sorted addresses are: \n";
