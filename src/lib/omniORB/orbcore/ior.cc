@@ -29,6 +29,12 @@
  
 /*
   $Log$
+  Revision 1.10.2.2  2000/09/27 18:20:32  sll
+  Removed obsoluted IOP::iorToEncapStr and IOP::EncapStrToIor.
+  Added new function IOP::IOR::unmarshaltype_id(), IIOP::encodeProfile(),
+  IIOP::decodeProfile(), IIOP::addAlternativeIIOPAddress().
+  Use the new cdrStream abstraction.
+
   Revision 1.10.2.1  2000/07/17 10:35:54  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -76,241 +82,376 @@
 //
   */
 
-#include <omniORB3/CORBA.h>
-
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
+#include <omniORB4/CORBA.h>
 
 #include <exceptiondefs.h>
 
-
-#ifndef Swap16
-#define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
-#else
-#error "Swap16 has already been defined"
-#endif
-
-#ifndef Swap32
-#define Swap32(l) ((((l) & 0xff000000) >> 24) | \
-		   (((l) & 0x00ff0000) >> 8)  | \
-		   (((l) & 0x0000ff00) << 8)  | \
-		   (((l) & 0x000000ff) << 24))
-#else
-#error "Swap32 has already been defined"
-#endif
-
-
-CORBA::Char*
-IOP::iorToEncapStr(const CORBA::Char* type_id,
-		   const IOP::TaggedProfileList* profiles)
-{
-  OMNIORB_ASSERT(type_id);
-  OMNIORB_ASSERT(profiles);
-
-  MemBufferedStream buf;
-
-  CORBA::ULong l = strlen((const char *)type_id) + 1;
-
-  // lets make an effort to ensure that all the padding bytes are zero'ed.
-  {
-    size_t bufsize = 8 + l;
-    bufsize = profiles->_NP_alignedSize(bufsize);
-    CORBA::Char dummy = 0;
-    for (size_t i=0; i < bufsize; i++) dummy >>= buf;
-    buf.rewind_inout_mkr();
-  }
-
-  // create an encapsulation
-  omni::myByteOrder >>= buf;
-  l >>= buf;
-  buf.put_char_array(type_id,l);
-  *profiles >>= buf;
-
-  // turn the encapsulation into a hex string with "IOR:" prepended
-  buf.rewind_in_mkr();
-  size_t s = buf.unRead();
-  CORBA::Char * data = (CORBA::Char *)buf.data();
-
-  char *result = new char[4+s*2+1];
-  if (!result)
-    OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
-  result[4+s*2] = '\0';
-  result[0] = 'I';
-  result[1] = 'O';
-  result[2] = 'R';
-  result[3] = ':';
-  for (int i=0; i < (int)s; i++) {
-    int j = 4 + i*2;
-    int v = (data[i] & 0xf0);
-    v = v >> 4;
-    if (v < 10)
-      result[j] = '0' + v;
-    else
-      result[j] = 'a' + (v - 10);
-    v = ((data[i] & 0xf));
-    if (v < 10)
-      result[j+1] = '0' + v;
-    else
-      result[j+1] = 'a' + (v - 10);
-  }
-  return (CORBA::Char*) result;
+void
+IOP::TaggedProfile::operator>>= (cdrStream &s) const {
+    tag >>= s;
+    profile_data >>= s;
 }
 
 
 void
-IOP::EncapStrToIor(const CORBA::Char* str,
-		   CORBA::Char*& type_id,
-		   IOP::TaggedProfileList*& profiles)
-{
-  size_t s = (str ? strlen((const char *)str) : 0);
-  if (s<4)
-    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
-  const char *p = (const char *) str;
-  if ((p[0] != 'I' && p[0] != 'i') ||
-      (p[1] != 'O' && p[1] != 'o') ||
-      (p[2] != 'R' && p[2] != 'r') ||
-      (p[3] != ':'))
-    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
+IOP::TaggedProfile::operator<<= (cdrStream &s) {
+  tag <<= s;
+  profile_data <<= s;
+}
 
-  s = (s-4)/2;  // how many octets are there in the string
-  p += 4;
 
-  MemBufferedStream buf((int)s);
-  for (int i=0; i<(int)s; i++) {
-    int j = i*2;
-    CORBA::Octet v;
+void
+IOP::TaggedComponent::operator>>= (cdrStream& s) const {
+  tag >>= s;
+  component_data >>= s;
+}
 
-    if (p[j] >= '0' && p[j] <= '9') {
-      v = ((p[j] - '0') << 4);
-    }
-    else if (p[j] >= 'a' && p[j] <= 'f') {
-      v = ((p[j] - 'a' + 10) << 4);
-    }
-    else if (p[j] >= 'A' && p[j] <= 'F') {
-      v = ((p[j] - 'A' + 10) << 4);
-    }
-    else
-      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
+void
+IOP::TaggedComponent::operator<<= (cdrStream& s) {
+  tag <<= s;
+  component_data <<= s;
+}
 
-    if (p[j+1] >= '0' && p[j+1] <= '9') {
-      v += (p[j+1] - '0');
-    }
-    else if (p[j+1] >= 'a' && p[j+1] <= 'f') {
-      v += (p[j+1] - 'a' + 10);
-    }
-    else if (p[j+1] >= 'A' && p[j+1] <= 'F') {
-      v += (p[j+1] - 'A' + 10);
-    }
-    else
-      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
-    v >>= buf;
-  }
+void
+IOP::IOR::operator<<= (cdrStream& s) {
+  type_id = unmarshaltype_id(s);
+  profiles <<= s;
+}
 
-  buf.rewind_in_mkr();
-  CORBA::Boolean b;
-  b <<= buf;
-  buf.byteOrder(b);
+void
+IOP::IOR::operator>>= (cdrStream& s) {
+  type_id >>= s;
+  profiles >>= s;
+}
 
-  type_id = 0;
-  profiles = 0;
-  try {
-    CORBA::ULong l;
-    l <<= buf;
-    if (l > buf.unRead())
-      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
-    switch (l) {
+char*
+IOP::IOR::unmarshaltype_id(cdrStream& s) {
+  CORBA::ULong idlen;
+  CORBA::String_var id;
 
-    case 0:
+  idlen <<= s;
+
+  if (!s.checkInputOverrun(1,idlen))
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+
+  switch (idlen) {
+
+  case 0:
 #ifdef NO_SLOPPY_NIL_REFERENCE
-      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
 #else
-      // According to the CORBA specification 2.0 section 10.6.2:
-      //   Null object references are indicated by an empty set of
-      //   profiles, and by a NULL type ID (a string which contain
-      //   only *** a single terminating character ***).
-      //
-      // Therefore the idlen should be 1.
-      // Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
-      // and sends out a 0 len string.
-      // We quietly accept it here. Turn this off by defining
-      //   NO_SLOPPY_NIL_REFERENCE
-      type_id = new CORBA::Char[1];
-      type_id[0] = (CORBA::Char)'\0';
-#endif
-      break;
+    // According to the CORBA specification 2.0 section 10.6.2:
+    //   Null object references are indicated by an empty set of
+    //   profiles, and by a NULL type ID (a string which contain
+    //   only *** a single terminating character ***).
+    //
+    // Therefore the idlen should be 1.
+    // Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
+    // and sends out a 0 len string.
+    // We quietly accept it here. Turn this off by defining
+    //   NO_SLOPPY_NIL_REFERENCE
+    id = CORBA::string_alloc(1);
+    ((char*)id)[0] = '\0';
+#endif	
+    break;
 
-    case 1:
-      type_id = new CORBA::Char[1];
-      buf.get_char_array(type_id,1);
-      if (type_id[0] != (CORBA::Char)'\0')
-	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
-      break;
+  case 1:
+    id = CORBA::string_alloc(1);
+    ::operator<<=((CORBA::Char&)((char*)id)[0],s);
+    if (((char*)id)[0] != '\0')
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    idlen = 0;
+    break;
+    
+  default:
+    id = CORBA::string_alloc(idlen);
+    s.get_char_array((CORBA::Char*)((const char*)id), idlen);
+    if( ((char*)id)[idlen - 1] != '\0' )
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    break;
+  }
 
-    default:
-      type_id = new CORBA::Char[l];
-      if (!type_id)
-	OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
-      buf.get_char_array(type_id,l);
+  return id._retn();
+}
+
+
+void
+IIOP::addAlternativeIIOPAddress(IOP::MultipleComponentProfile& components,
+				const IIOP::Address& addr)
+{
+
+  CORBA::ULong hlen = strlen(addr.host) + 1;
+  cdrEncapsulationStream s(hlen+8,1);
+  hlen >>= s;
+  s.put_char_array((const CORBA::Char*)(const char*)addr.host,hlen);
+  addr.port >>= s;
+
+  _CORBA_Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+
+  CORBA::ULong index = components.length();
+  components.length(index+1);
+  components[index].tag = IOP::TAG_ALTERNATE_IIOP_ADDRESS;
+  components[index].component_data.replace(max,len,p,1);
+}
+
+
+void
+IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
+{
+  profile.tag = IOP::TAG_INTERNET_IOP;
+
+  CORBA::ULong bufsize;
+  {
+    cdrCountingStream s;
+    omni::myByteOrder >>= s;
+    body.version.major >>= s;
+    body.version.minor >>= s;
+    body.address.host >>= s;
+    body.address.port >>= s;
+    body.object_key >>= s;
+
+    if (body.version.minor > 0) {
+      CORBA::ULong total = body.components.length();
+      if (total) {
+	total >>= s;
+	for (CORBA::ULong index=0; index < total; index++) {
+	  body.components[index] >>= s;
+	}
+      }
+    }
+    bufsize = s.total();
+  }
+
+  {
+    cdrEncapsulationStream s(bufsize,1);
+    omni::myByteOrder >>= s;
+    body.version.major >>= s;
+    body.version.minor >>= s;
+    body.address.host >>= s;
+    body.address.port >>= s;
+    body.object_key >>= s;
+
+    if (body.version.minor > 0) {
+      CORBA::ULong total = body.components.length();
+      total >>= s;
+      for (CORBA::ULong index=0; index < total; index++) {
+	body.components[index] >>= s;
+      }
     }
 
-    profiles = new IOP::TaggedProfileList;
-    if (!profiles)
-      OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
-    *profiles <<= buf;
+    _CORBA_Octet* p;
+    CORBA::ULong max;
+    CORBA::ULong len;
+    s.getOctetStream(p,max,len);
+    profile.profile_data.replace(max,len,p,1);
   }
-  catch (...) {
-    if (type_id) delete [] type_id;
-    if (profiles) delete profiles;
-    throw;
+}
+
+
+void
+IIOP::decodeProfile(const IOP::TaggedProfile& profile,
+		    IIOP::ProfileBody& body)
+{
+  OMNIORB_ASSERT(profile.tag == IOP::TAG_INTERNET_IOP);
+
+  cdrEncapsulationStream s(profile.profile_data.get_buffer(),
+			   profile.profile_data.length(),
+			   1); 
+
+  body.version.major <<= s;
+  body.version.minor <<= s;
+
+  if (body.version.major != 1) 
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+  body.address.host <<= s;
+  body.address.port <<= s;
+  body.object_key <<= s;
+  
+  if (body.version.minor > 0) {
+    CORBA::ULong total;
+    total <<= s;
+    if (total) {
+      if (!s.checkInputOverrun(1,total))
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      body.components.length(total);
+      for (CORBA::ULong index=0; index<total; index++) {
+	body.components[index] <<= s;
+      }
+    }
   }
-  return;
+  // Check if the profile body ends here.
+  if (s.checkInputOverrun(1,1))
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 }
-
 
 void
-IOP::TaggedProfile::operator>>= (NetBufferedStream &s) {
-    tag >>= s;
-    profile_data >>= s;
+IIOP::decodeMultiComponentProfile(const IOP::TaggedProfile& profile,
+				  IIOP::ProfileBody& body)
+{
+  OMNIORB_ASSERT(profile.tag == IOP::TAG_MULTIPLE_COMPONENTS);
+
+  cdrEncapsulationStream s(profile.profile_data.get_buffer(),
+			   profile.profile_data.length(),
+			   1); 
+
+  CORBA::ULong total;
+  total <<= s;
+  if (total) {
+    if (!s.checkInputOverrun(1,total))
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+    CORBA::ULong index = body.components.length();
+    total += index;
+    body.components.length(total);
+    for ( ; index<total; index++) {
+      body.components[index] <<= s;
+    }
+  }
+  // Check if the profile body ends here.
+  if (s.checkInputOverrun(1,1))
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 }
 
+
+#if 0
+//////////////////////////////////////////////////////////////////////////
+static void unmarshal_TAG_ORB_TYPE(cdrStream&,IOP::ComponentId,omniIOR*);
+static void unmarshal_TAG_generic(cdrStream&,IOP::ComponentId,omniIOR*);
+
+//////////////////////////////////////////////////////////////////////////
+// For the TAGs that the ORB will look at, add a handler to the following
+// table. Use unmarshal_TAG_generic just to store the encapsulated octet
+// stream in the omniIOR
+//
+static struct {
+  IOP::ComponentId id;
+  void (*fn)(cdrStream&, IOP::ComponentId, omniIOR*);
+} componentUnmarshalHandlers[] = {
+  // This table must be arranged in ascending order of IOP::ComponentId
+  { IOP::TAG_ORB_TYPE,  unmarshal_TAG_ORB_TYPE },
+  { IOP::TAG_CODE_SETS, 0 },
+  { IOP::TAG_POLICIES, 0 },
+  { IOP::TAG_ALTERNATE_IIOP_ADDRESS, unmarshal_TAG_generic },
+  { IOP::TAG_COMPLETE_OBJECT_KEY, 0 },
+  { IOP::TAG_ENDPOINT_ID_POSITION, 0 },
+  { IOP::TAG_LOCATION_POLICY, 0 },
+  { IOP::TAG_ASSOCIATION_OPTIONS, 0 },
+  { IOP::TAG_SEC_NAME, 0 },
+  { IOP::TAG_SPKM_1_SEC_MECH, 0 },
+  { IOP::TAG_SPKM_2_SEC_MECH, 0 },
+  { IOP::TAG_KERBEROSV5_SEC_MECH, 0 },
+  { IOP::TAG_CSI_ECMA_SECRET_SEC_MECH, 0 },
+  { IOP::TAG_CSI_ECMA_HYBRID_SEC_MECH, 0 },
+  { IOP::TAG_SSL_SEC_TRANS, unmarshal_TAG_generic },
+  { IOP::TAG_CSI_ECMA_PUBLIC_SEC_MECH, 0 },
+  { IOP::TAG_GENERIC_SEC_MECH, 0 },
+  { IOP::TAG_FIREWALL_TRANS, unmarshal_TAG_generic },
+  { IOP::TAG_SCCP_CONTACT_INFO, 0 },
+  { IOP::TAG_JAVA_CODEBASE, 0 },
+  { IOP::TAG_DCE_STRING_BINDING, 0 },
+  { IOP::TAG_DCE_BINDING_NAME, 0 },
+  { IOP::TAG_DCE_NO_PIPES, 0 },
+  { IOP::TAG_DCE_SEC_MECH, 0 },
+  { IOP::TAG_INET_SEC_TRANS, 0 },
+  { 0xffffffff, 0 }
+};
+
+//////////////////////////////////////////////////////////////////////////
+//  Unmarshal IOP Tag components.
+static
+void 
+unmarshalIOPComponent(cdrStream& s,omniIOR* ior)
+{
+  static int tablesize = 0;
+
+  if (!tablesize) {
+    while (componentUnmarshalHandlers[tablesize].id != 0xffffffff) tablesize++;
+  }
+
+  int top = tablesize;
+  int bottom = 0;
+
+  IOP::ComponentId v;
+  v <<= s;
+
+  do {
+    int index = (top + bottom) >> 1;
+    IOP::ComponentId id = componentUnmarshalHandlers[index].id;
+    if (id == v) {
+      if (componentUnmarshalHandlers[index].fn) {
+	componentUnmarshalHandlers[index].fn(s,v,ior);
+	return;
+      }
+      break;
+    }
+    else if (id > v) {
+      top = index;
+    }
+    else {
+      bottom = index + 1;
+    }
+  } while (top != bottom);
+
+  // Default is to skip this component quietly
+  {
+    CORBA::ULong len;
+    len <<= s;
+    s.skipInput(len);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+unmarshal_TAG_ORB_TYPE(cdrStream& s, IOP::ComponentId, omniIOR* ior)
+{
+  _CORBA_Unbounded_Sequence_Octet v;
+  v <<= s;
+
+  cdrEncapsulationStream e(v.get_buffer(),v.length(),1);
+  ior->orb_type <<= e;
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+unmarshal_TAG_generic(cdrStream& s, IOP::ComponentId id, omniIOR* ior)
+{
+  CORBA::ULong index = ior->tag_components.length();
+  ior->tag_components.length(index+1);
+  ior->tag_components[index].tag = id;
+  ior->tag_components[index].component_data <<= s;
+}
 
 void
-IOP::TaggedProfile::operator<<= (NetBufferedStream &s) {
-  tag <<= s;
-  profile_data <<= s;
+tcpSocketFactoryType::insertOptionalIOPComponent(IOP::TaggedComponent& c)
+{
+  CORBA::ULong index = pd_optionalcomponents.length();
+  pd_optionalcomponents.length(index+1);
+  pd_optionalcomponents[index] = c;
 }
 
-
-void
-IOP::TaggedProfile::operator>>= (MemBufferedStream &s) {
-    tag >>= s;
-    profile_data >>= s;
+const IOP::MultipleComponentProfile&
+tcpSocketFactoryType::getOptionalIOPComponents() const
+{
+  return pd_optionalcomponents;
 }
 
+void init() {
+  singleton->pd_optionalcomponents.length(1);
 
-void
-IOP::TaggedProfile::operator<<= (MemBufferedStream &s) {
-  tag <<= s;
-  profile_data <<= s;
+  // Inside TAG_ORB_TYPE to identify omniORB
+  singleton->pd_optionalcomponents[0].tag = IOP::TAG_ORB_TYPE;
+  cdrEncapsulationStream s(8,1);
+  omniORB_TAG_ORB_TYPE >>= s;
+  _CORBA_Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+  singleton->pd_optionalcomponents[0].component_data.replace(max,len,p,1);
 }
-
-
-#undef Swap16
-#undef Swap32
-
-#if defined(__GNUG__)
-
-// The following template classes are defined before the template functions
-// inline void _CORBA_Sequence<T>::operator<<= (NetBufferedStream &s) etc
-// are defined.
-// G++ (2.7.2 or may be later versions as well) does not compile in the
-// template functions as a result.
-// The following is a workaround which explicitly instantiate the classes
-// again.
-
-template class _CORBA_Sequence<IOP::TaggedProfile>;
-template class _CORBA_Unbounded_Sequence<IOP::TaggedProfile>;
 
 #endif
+
+
+
+
