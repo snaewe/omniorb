@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.3  2000/06/05 13:03:56  djs
+# Removed union member name clash (x & pd_x, pd__default, pd__d)
+# Removed name clash when a sequence is called "pd_seq"
+# Nested union within union fix
+# Actually generates BOA non-flattened tie templates
+#
 # Revision 1.6.2.2  2000/04/26 18:22:29  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -99,7 +105,11 @@ def visitStruct(node):
 def visitUnion(node):
     if not(node.mainFile()):
         return
-    
+
+    for n in node.cases():
+        if n.constrType():
+            n.caseType().decl().accept(self)
+
     # Typecode and Any
     if config.TypecodeFlag():
         name = id.Name(node.scopedName())

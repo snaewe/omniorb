@@ -28,6 +28,12 @@
 #
 # $Id$
 # $Log$
+# Revision 1.11.2.5  2000/06/05 13:03:58  djs
+# Removed union member name clash (x & pd_x, pd__default, pd__d)
+# Removed name clash when a sequence is called "pd_seq"
+# Nested union within union fix
+# Actually generates BOA non-flattened tie templates
+#
 # Revision 1.11.2.4  2000/05/31 18:02:58  djs
 # Better output indenting (and preprocessor directives now correctly output at
 # the beginning of lines)
@@ -86,7 +92,7 @@
 
 import string
 
-from omniidl import idlast, idltype, idlutil
+from omniidl import idlast, idltype, idlutil, idlvisitor
 from omniidl_be.cxx import tyutil, id, config, util, types
 from omniidl_be.cxx.header import template
 
@@ -96,51 +102,13 @@ self = tie
 
 def __init__(stream):
     self.stream = stream
-    #self.__environment = name.Environment()
     return self
 
 
-def POA_prefix(nested):
-    if not(nested):
-        return "POA"
-    return ""
-
-
-
-# Control arrives here
-#
-def visitAST(node):
-    for n in node.declarations():
-        n.accept(self)
-
-def visitModule(node):
-
-    for n in node.definitions():
-        n.accept(self)
-
-
-#def template(environment, node, nested = self.__nested):
-def write_template(environment, node, nested = 0):
-
-    scopedName = node.scopedName()
-    iname = id.mapID(node.identifier())
-    
-    prefix = POA_prefix(nested)
-    if prefix != "": prefix = prefix + "_"
-    scopedName = node.scopedName()
-    if config.FlatTieFlag():
-        POA_scopedName = [ prefix + scopedName[0] ] +\
-                          scopedName[1:len(scopedName)]
-        POA_name = id.Name(POA_scopedName).fullyQualify()
-        POA_tie_name = string.join(POA_scopedName, "_") + "_tie"
-    else:
-        POA_name = prefix + id.Name(scopedName).simple()
-        POA_tie_name = POA_name + "_tie"
-        
-    # FIXME: hack because operationArgumentType strips off outermost
-    # scope
-    environment = environment.enter("dummy")
-
+# Write a single tie template class called <name>, inheriting from <inherits>
+# and grab the operations from <node>
+def write_template(name, inherits, node, stream,
+                   Template = template.tie_template):
     # build methods which bind the interface operations and attributes
     # note that this includes inherited callables since tie
     # templates are outside the normal inheritance structure
@@ -148,8 +116,7 @@ def write_template(environment, node, nested = 0):
 
     # defined_so_far contains keys corresponding to method names which
     # have been defined already (and which should not be included twice)
-    def buildCallables(interface, where, environment, continuation,
-                       defined_so_far = {}):
+    def buildCallables(interface, where, continuation, defined_so_far = {}):
         callables = interface.callables()
         operations = filter(lambda x:isinstance(x, idlast.Operation),
                             callables)
@@ -221,57 +188,91 @@ void @attribute_name@(@attr_type_in_name@ _value) { pd_obj->@attribute_name@(_va
                               attr_type_in_name = attrType_name_IN)                    
         # do the recursive bit
         for i in interface.inherits():
-            continuation(i, where, environment, continuation, defined_so_far)
+            continuation(i, where, continuation, defined_so_far)
 
         # done
         return
 
-    buildCallables(node, where, environment, buildCallables)
+    buildCallables(node, where, buildCallables)
                 
-        
-    stream.out(template.tie_template,
-               tie_name = POA_tie_name,
-               inherits = POA_name,
+    stream.out(Template,
+               tie_name = name,
+               inherits = inherits,
                callables = str(where))
-    if config.FlatTieFlag() and config.BOAFlag():
-        tie_name = "_tie_" + string.join(map(id.mapID,scopedName), "_")
-        sk_name = id.Name(scopedName).prefix("_sk_")
+    return
 
-        stream.out(template.tie_template,
-                   tie_name = tie_name,
-                   inherits = sk_name,
-                   callables = str(where))
-    
-def visitInterface(node):
-    if not(node.mainFile()):
-        return
 
-    environment = id.lookup(node)
-    write_template(environment, node)
+# Unflattened BOA tie templates are built in a block out of line.
+# IDL name       template name
+#  ::A             ::_tie_A
+#  ::B             ::_tie_B
+#  ::M::C          ::_tie_M::C
 
-    for n in node.declarations():
-        n.accept(self)
-    
+class BOATieTemplates(idlvisitor.AstVisitor):
+    def __init__(self, stream):
+        self.stream = stream
+    def visitAST(self, node):
+        for d in node.declarations(): d.accept(self)
 
-def visitEnum(node):
-    pass
-def visitStruct(node):
-    for n in node.members():
-        n.accept(self)
+    def visitModule(self, node):
 
-def visitUnion(node):
-    pass
-def visitForward(node):
-    pass
-def visitConst(node):
-    pass
-def visitDeclarator(node):
-    pass
-def visitMember(node):
-    if node.constrType():
-        node.memberType().decl().accept(self)
-    pass
-def visitException(node):
-    pass
-def visitTypedef(node):
-    pass
+        name = id.Name(node.scopedName())
+        
+        self.stream.out(template.module_begin,
+                   name = "_tie_" + name.simple())
+        self.stream.inc_indent()
+        
+        for d in node.definitions(): d.accept(self)
+
+        self.stream.dec_indent()
+        self.stream.out(template.module_end)
+        
+
+    def visitInterface(self, node):
+        if not(node.mainFile()): return
+        
+        name = id.Name(node.scopedName())
+
+        tie_name = name.simple()
+        if len(node.scopedName()) == 1: tie_name = "_tie_" + tie_name
+        
+        sk_name = name.prefix("_sk_")
+        
+        write_template(tie_name, sk_name.fullyQualify(), node, self.stream,
+                       Template = template.tie_template_old)
+
+
+# Flat Tie Templates are all (by definition) in the global scope,
+# so can combine POA and BOA code into one
+class FlatTieTemplates(idlvisitor.AstVisitor):
+    def __init__(self, stream):
+        self.stream = stream
+    def visitAST(self, node):
+        for d in node.declarations(): d.accept(self)
+    def visitModule(self, node):
+        for d in node.definitions(): d.accept(self)
+    def visitInterface(self, node):
+        if not(node.mainFile()): return
+        
+        self.generate_POA_tie(node)
+        if config.BOAFlag():
+            self.generate_BOA_tie(node)
+
+    def generate_BOA_tie(self, node):
+        name = id.Name(node.scopedName())
+        tie_name = "_tie_" + string.join(name.fullName(), "_")
+        sk_name = name.prefix("_sk_")
+
+        write_template(tie_name, sk_name.fullyQualify(), node, self.stream,
+                       Template = template.tie_template_old)
+
+    def generate_POA_tie(self, node):
+        name = id.Name(node.scopedName())
+        tie_name = "POA_" + string.join(name.fullName(), "_") + "_tie"
+        poa_name = "POA_" + name.fullyQualify()
+
+        write_template(tie_name, poa_name, node, self.stream)
+
+
+
+

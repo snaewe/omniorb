@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.9  2000/06/05 13:03:57  djs
+# Removed union member name clash (x & pd_x, pd__default, pd__d)
+# Removed name clash when a sequence is called "pd_seq"
+# Nested union within union fix
+# Actually generates BOA non-flattened tie templates
+#
 # Revision 1.3.2.8  2000/05/31 18:02:58  djs
 # Better output indenting (and preprocessor directives now correctly output at
 # the beginning of lines)
@@ -132,7 +138,7 @@ main = """\
 
 @poa@
 
-@tie@
+@other_tie@
 
 #undef _core_attr
 #undef _dyn_attr
@@ -330,6 +336,7 @@ public:
   inline @name@::_ptr_type _this() {
     return (@name@::_ptr_type) omniOrbBoaServant::_this(@name@::_PD_repoId);
   }
+
 };
 """
 
@@ -510,13 +517,13 @@ inline @name@(_CORBA_ULong _len, @element@* _val, _CORBA_Boolean _rel=0)
 
 sequence_var_array_subscript = """\
 inline @element@_slice* operator [] (_CORBA_ULong s) {
-  return (@element@_slice*) ((pd_seq->NP_data())[s]);
+  return (@element@_slice*) ((_pd_seq->NP_data())[s]);
 }
 """
 
 sequence_var_subscript = """\
 inline @element@ operator [] (_CORBA_ULong s) {
-  return (*pd_seq)[s];
+  return (*_pd_seq)[s];
 }
 """
 
@@ -528,52 +535,52 @@ public:
   typedef @name@ T;
   typedef @name@_var T_var;
     
-  inline @name@_var() : pd_seq(0) {}
-  inline @name@_var(T* s) : pd_seq(s) {}
+  inline @name@_var() : _pd_seq(0) {}
+  inline @name@_var(T* s) : _pd_seq(s) {}
   inline @name@_var(const T_var& s) {
-    if( s.pd_seq )  pd_seq = new T(*s.pd_seq);
-    else             pd_seq = 0;
+    if( s._pd_seq )  _pd_seq = new T(*s._pd_seq);
+    else             _pd_seq = 0;
   }
-  inline ~@name@_var() { if( pd_seq )  delete pd_seq; }
+  inline ~@name@_var() { if( _pd_seq )  delete _pd_seq; }
     
   inline T_var& operator = (T* s) {
-    if( pd_seq )  delete pd_seq;
-    pd_seq = s;
+    if( _pd_seq )  delete _pd_seq;
+    _pd_seq = s;
     return *this;
   }
   inline T_var& operator = (const T_var& s) {
-    if( s.pd_seq ) {
-      if( !pd_seq )  pd_seq = new T;
-      *pd_seq = *s.pd_seq;
-    } else if( pd_seq ) {
-      delete pd_seq;
-      pd_seq = 0;
+    if( s._pd_seq ) {
+      if( !_pd_seq )  _pd_seq = new T;
+      *_pd_seq = *s._pd_seq;
+    } else if( _pd_seq ) {
+      delete _pd_seq;
+      _pd_seq = 0;
     }
     return *this;
   }
 
   @subscript_operator@
 
-  inline T* operator -> () { return pd_seq; }
+  inline T* operator -> () { return _pd_seq; }
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-  inline operator T& () const { return *pd_seq; }
+  inline operator T& () const { return *_pd_seq; }
 #else
-  inline operator const T& () const { return *pd_seq; }
-  inline operator T& () { return *pd_seq; }
+  inline operator const T& () const { return *_pd_seq; }
+  inline operator T& () { return *_pd_seq; }
 #endif
     
-  inline const T& in() const { return *pd_seq; }
-  inline T&       inout()    { return *pd_seq; }
+  inline const T& in() const { return *_pd_seq; }
+  inline T&       inout()    { return *_pd_seq; }
   inline T*&      out() {
-    if( pd_seq ) { delete pd_seq; pd_seq = 0; }
-    return pd_seq;
+    if( _pd_seq ) { delete _pd_seq; _pd_seq = 0; }
+    return _pd_seq;
   }
-  inline T* _retn() { T* tmp = pd_seq; pd_seq = 0; return tmp; }
+  inline T* _retn() { T* tmp = _pd_seq; _pd_seq = 0; return tmp; }
     
   friend class @name@_out;
   
 private:
-  T* pd_seq;
+  T* _pd_seq;
 };
 """
 
@@ -597,7 +604,7 @@ public:
 
   inline @name@_out(T*& s) : _data(s) { _data = 0; }
   inline @name@_out(T_var& s)
-    : _data(s.pd_seq) { s = (T*) 0; }
+    : _data(s._pd_seq) { s = (T*) 0; }
   inline @name@_out(const @name@_out& s) : _data(s._data) {}
   inline @name@_out& operator = (const @name@_out& s) {
     _data = s._data;
@@ -718,23 +725,23 @@ exception_member = """\
 ##
 
 union_ctor_nonexhaustive = """\
-if ((pd__default = _value.pd__default)) {
-  pd__d = _value.pd__d;
+if ((_pd__default = _value._pd__default)) {
+  _pd__d = _value._pd__d;
   @default@
 }
 else {
-  switch(_value.pd__d) {
+  switch(_value._pd__d) {
     @cases@
   }
 }"""
 
 union_ctor_exhaustive = """\
-switch(_value.pd__d) {
+switch(_value._pd__d) {
   @cases@
 }"""
 
 union_ctor_case = """\
-case @discrimvalue@: @name@(_value.pd_@name@); break;
+case @discrimvalue@: @name@(_value._pd_@name@); break;
 """
 
 union_ctor_bool_default = """\
@@ -770,7 +777,7 @@ public:
     return *this;
   }
 
-  @discrimtype@ _d() const { return pd__d;}
+  @discrimtype@ _d() const { return _pd__d;}
   void _d(@discrimtype@ _value) {}
 
   @implicit_default@
@@ -786,8 +793,8 @@ public:
   @tcParser_unionHelper@
 
 private:
-  @discrimtype@ pd__d;
-  CORBA::Boolean pd__default;
+  @discrimtype@ _pd__d;
+  CORBA::Boolean _pd__default;
 
   @union@
   @outsideUnion@
@@ -806,14 +813,14 @@ union_constructor_implicit = """\
 _default();
 """
 union_constructor_default = """\
-pd__default = 1;
-pd__d = @default@;
+_pd__default = 1;
+_pd__d = @default@;
 """
 union_implicit_default = """\
 void _default()
 {
-  pd__d = @arbitraryDefault@;
-  pd__default = 1;
+  _pd__d = @arbitraryDefault@;
+  _pd__default = 1;
 }
 """
 
@@ -827,13 +834,13 @@ friend class ::@private_prefix@_tcParser_unionhelper_@name@;
 
 union_proxy_float = """\
 #ifdef USING_PROXY_FLOAT
-  @type@ pd_@name@@dims@;
+  @type@ _pd_@name@@dims@;
 #endif
 """
 
 union_noproxy_float = """\
 #ifndef USING_PROXY_FLOAT
-  @type@ pd_@name@@dims@;
+  @type@ _pd_@name@@dims@;
 #endif
 """
 
@@ -844,119 +851,119 @@ typedef @memtype@ _@name@_slice@tail_dims@;
 """
 
 union_array = """\
-const @memtype@_slice *@name@ () const { return pd_@name@; }
+const @memtype@_slice *@name@ () const { return _pd_@name@; }
 void @name@ (const @const_type@ _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
   @loop@
 }
 """
 
 union_any = """\
-const @type@ &@name@ () const { return pd_@name@; }
-@type@ &@name@ () { return pd_@name@; }
+const @type@ &@name@ () const { return _pd_@name@; }
+@type@ &@name@ () { return _pd_@name@; }
 void @name@ (const @type@& _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 """
 
 union_typecode = """\
-CORBA::TypeCode_ptr @name@ () const { return pd_@name@._ptr; }
+CORBA::TypeCode_ptr @name@ () const { return _pd_@name@._ptr; }
 void @name@(CORBA::TypeCode_ptr _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = CORBA::TypeCode::_duplicate(_value);
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = CORBA::TypeCode::_duplicate(_value);
 }
 void @name@(const CORBA::TypeCode_member& _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 void @name@(const CORBA::TypeCode_var& _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 """
 
 union_basic = """\
-@type@ @name@ () const { return pd_@name@; }
+@type@ @name@ () const { return _pd_@name@; }
 void @name@ (@type@  _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 """
 
 union_string = """\
-const char * @name@ () const { return (const char*) pd_@name@; }
+const char * @name@ () const { return (const char*) _pd_@name@; }
 void @name@(char* _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 void @name@(const char*  _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 void @name@(const CORBA::String_var& _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 void @name@(const CORBA::String_member& _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 """
 
 union_objref = """\
-@ptr_name@ @member@ () const { return pd_@member@._ptr; }
+@ptr_name@ @member@ () const { return _pd_@member@._ptr; }
 void @member@(@ptr_name@ _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
   @Helper_name@::duplicate(_value);
-  pd_@member@ = _value;
+  _pd_@member@ = _value;
 }
 void @member@(const @memtype@& _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@member@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@member@ = _value;
 }
 void @member@(const @var_name@&  _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@member@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@member@ = _value;
 }
 """
 
 union_constructed = """\
-const @type@ &@name@ () const { return pd_@name@; }
-@type@ &@name@ () { return pd_@name@; }
+const @type@ &@name@ () const { return _pd_@name@; }
+@type@ &@name@ () { return _pd_@name@; }
 void @name@ (const @type@& _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@name@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
 }
 """
 
 union_sequence = """\
 typedef @sequence_template@ _@member@_seq;
-const _@member@_seq& @member@ () const { return pd_@member@; }
-_@member@_seq& @member@ () { return pd_@member@; }
+const _@member@_seq& @member@ () const { return _pd_@member@; }
+_@member@_seq& @member@ () { return _pd_@member@; }
 void @member@ (const _@member@_seq& _value) {
-  pd__d = @discrimvalue@;
-  pd__default = @isDefault@;
-  pd_@member@ = _value;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@member@ = _value;
 }
 """
 
 union_member = """\
-@type@ pd_@name@@dims@;
+@type@ _pd_@name@@dims@;
 """
 
 ##
@@ -1079,32 +1086,32 @@ inline void operator <<= (@name@& _e, MemBufferedStream& s) {
 ## tie template
 ##
 tie_template = """\
-template <class T>
+template <class _T>
 class @tie_name@ : public virtual @inherits@
 {
 public:
-  @tie_name@(T& t)
+  @tie_name@(_T& t)
     : pd_obj(&t), pd_poa(0), pd_rel(0) {}
-  @tie_name@(T& t, PortableServer::POA_ptr p)
+  @tie_name@(_T& t, PortableServer::POA_ptr p)
     : pd_obj(&t), pd_poa(p), pd_rel(0) {}
-  @tie_name@(T* t, CORBA::Boolean r=1)
+  @tie_name@(_T* t, CORBA::Boolean r=1)
     : pd_obj(t), pd_poa(0), pd_rel(r) {}
-  @tie_name@(T* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
+  @tie_name@(_T* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
     : pd_obj(t), pd_poa(p), pd_rel(r) {}
   ~@tie_name@() {
     if( pd_poa )  CORBA::release(pd_poa);
     if( pd_rel )  delete pd_obj;
   }
 
-  T* _tied_object() { return pd_obj; }
+  _T* _tied_object() { return pd_obj; }
 
-  void _tied_object(T& t) {
+  void _tied_object(_T& t) {
     if( pd_rel )  delete pd_obj;
     pd_obj = &t;
     pd_rel = 0;
   }
 
-  void _tied_object(T* t, CORBA::Boolean r=1) {
+  void _tied_object(_T* t, CORBA::Boolean r=1) {
     if( pd_rel )  delete pd_obj;
     pd_obj = t;
     pd_rel = r;
@@ -1121,9 +1128,30 @@ public:
   @callables@
 
 private:
-  T*                      pd_obj;
+  _T*                      pd_obj;
   PortableServer::POA_ptr pd_poa;
   CORBA::Boolean          pd_rel;
+};
+"""
+
+tie_template_old = """\
+template <class _T, CORBA::Boolean release>
+class @tie_name@ : public virtual @inherits@
+{
+public:
+  @tie_name@(_T& t)
+    : pd_obj(&t), pd_rel(release) {}
+  @tie_name@(_T* t)
+    : pd_obj(t),  pd_rel(release) {}
+  ~@tie_name@() {
+    if( pd_rel )  delete pd_obj;
+  }
+
+  @callables@
+
+private:
+  _T*                      pd_obj;
+  CORBA::Boolean           pd_rel;
 };
 """
 

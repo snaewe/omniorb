@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.11  2000/06/05 13:03:55  djs
+# Removed union member name clash (x & pd_x, pd__default, pd__d)
+# Removed name clash when a sequence is called "pd_seq"
+# Nested union within union fix
+# Actually generates BOA non-flattened tie templates
+#
 # Revision 1.31.2.10  2000/05/31 18:02:56  djs
 # Better output indenting (and preprocessor directives now correctly output at
 # the beginning of lines)
@@ -1155,7 +1161,7 @@ def visitUnion(node):
                 if c.isDefault:
                     case_id = c.declarator().identifier()
                     cxx_case_id = id.mapID(case_id)
-                    default = cxx_case_id + "(_value.pd_" + cxx_case_id + ");"
+                    default = cxx_case_id + "(_value._pd_" + cxx_case_id + ");"
 
 
             stream.out(template.union_ctor_nonexhaustive,
@@ -1258,7 +1264,7 @@ def visitUnion(node):
                     def loop(stream = stream, full_dims = full_dims,
                              member = member):
                         index = util.start_loop(stream, full_dims)
-                        stream.out("\npd_" + member + index + " = _value" +\
+                        stream.out("\n_pd_" + member + index + " = _value" +\
                                    index + ";\n")
                         util.finish_loop(stream, full_dims)
                         return

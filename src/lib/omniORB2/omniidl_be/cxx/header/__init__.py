@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.6  2000/06/05 13:03:54  djs
+# Removed union member name clash (x & pd_x, pd__default, pd__d)
+# Removed name clash when a sequence is called "pd_seq"
+# Nested union within union fix
+# Actually generates BOA non-flattened tie templates
+#
 # Revision 1.12.2.5  2000/05/31 18:02:56  djs
 # Better output indenting (and preprocessor directives now correctly output at
 # the beginning of lines)
@@ -205,11 +211,17 @@ def monolithic(stream, tree):
         tree.accept(defs)
 
     def main_poa(stream = stream, tree = tree):
+        # includes inline (non-flat) tie templates
         poa = omniidl_be.cxx.header.poa.__init__(stream)
         tree.accept(poa)
-    def main_tie(stream = stream, tree = tree):
+
+    def other_tie(stream = stream, tree = tree):
+        if config.TieFlag() and config.BOAFlag():
+            tie = omniidl_be.cxx.header.tie.BOATieTemplates(stream)
+            tree.accept(tie)
+        
         if config.FlatTieFlag():
-            tie = omniidl_be.cxx.header.tie.__init__(stream)
+            tie = omniidl_be.cxx.header.tie.FlatTieTemplates(stream)
             tree.accept(tie)
 
     # see o2be_root::produce_hdr and o2be_root::produce_hdr_defs
@@ -228,7 +240,7 @@ def monolithic(stream, tree):
                string_tcParser_declarations = string_tcparser,
                defs = main_defs,
                poa = main_poa,
-               tie = main_tie,
+               other_tie = other_tie,
                operators = main_opers,
                marshalling = main_marshal,
                guard = guard)

@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.6  2000/06/05 13:03:57  djs
+# Removed union member name clash (x & pd_x, pd__default, pd__d)
+# Removed name clash when a sequence is called "pd_seq"
+# Nested union within union fix
+# Actually generates BOA non-flattened tie templates
+#
 # Revision 1.15.2.5  2000/05/30 15:59:25  djs
 # Removed inheritance ambiguity in generated BOA _sk_ and POA_ classes
 #
@@ -206,8 +212,16 @@ def visitInterface(node):
                inherits = inherits_str)
 
     if config.TieFlag():
-        tie.__init__(stream)
-        tie.write_template(environment, node, self.__nested)
+        # Normal tie templates, inline (so already in relevant POA_
+        # module)
+        poa_name = ""
+        if len(scopedName.fullName()) == 1:
+            poa_name = "POA_"
+        poa_name = poa_name + scopedName.simple()
+        tie_name = poa_name + "_tie"
+
+        tie.write_template(tie_name, poa_name, node, stream)
+
     return
 
 def visitTypedef(node):
