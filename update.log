@@ -1,3 +1,15 @@
+Fri Jul 30 11:52:15 BST 2004 dgrisby
+====================================
+
+- Only set HAVE_STD if not already set. Thanks Matej Kenda.
+
+include/omniORB4/CORBA_sysdep_trad.h
+
+- Minor bug forgetting to set the stream back from hex mode.
+
+src/appl/utils/catior/catior.cc
+
+
 Thu Jul 29 11:34:45 BST 2004 dgrisby
 ====================================
 

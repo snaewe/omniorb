@@ -431,7 +431,7 @@ int main(int argc, char* argv[])
 	}
 	else {
 	  cout << "Unrecognised profile tag: 0x"
-	       << hex << (unsigned)(ior.profiles[count].tag)
+	       << hex << (unsigned)(ior.profiles[count].tag) << dec
 	       << endl;
 	}
       }
