@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.8  1999/08/16 19:27:20  sll
+  Added a per-compilation unit initialiser object.
+  This object is called by ORB_init and ORB::shutdown.
+
   Revision 1.7  1999/05/26 11:55:33  sll
   Use WrTestLock instead of the obsoluted WrTimedLock.
 
@@ -229,7 +233,7 @@ inScavenger_t::run_undetached(void *arg)
       }
 
       {
-	ropeFactory_iterator iter(*(omniObjectManager::root()->incomingRopeFactories()));
+	ropeFactory_iterator iter(omniObjectManager::root()->incomingRopeFactories());
 	ropeFactory* rp;
 	while ((rp = (ropeFactory*)iter())) {
 	  scanForIdle(rp->anchor(),"inScavenger");
@@ -362,18 +366,23 @@ omniORB::idleConnectionScanPeriod(omniORB::idleConnType direction)
     }
 }
 
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
 
-// Kill the out scavenger thread.
-
-class OutScavengerThreadKiller {
+class omni_scavenger_initialiser : public omniInitialiser {
 public:
-  ~OutScavengerThreadKiller() {
-    StrandScavenger::killOutScavenger();
+
+  void attach() {
+    StrandScavenger::initOutScavenger();
   }
-  static OutScavengerThreadKiller theInstance;
+
+  void detach() {
+    StrandScavenger::killOutScavenger();
+    StrandScavenger::killInScavenger();
+  }
 };
 
-OutScavengerThreadKiller OutScavengerThreadKiller::theInstance;
+static omni_scavenger_initialiser initialiser;
+
+omniInitialiser& omni_scavenger_initialiser_ = initialiser;
