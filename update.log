@@ -1,3 +1,24 @@
+Fri Oct 19 11:55:21 BST 2001 dpg1
+=================================
+
+- Avoid confusing (to gcc 2.95) inheritance of refcount functions.
+
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/include/dynAnyImpl.h
+
+- ObjectId to/from wstring
+
+include/omniORB4/poa.h
+src/lib/omniORB/orbcore/portableserver.cc
+
+- Principal support for GIOP 1.0. Correct some spelling mistakes.
+
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Thu Oct 18 13:43:01 BST 2001 dpg1
 =================================
 
