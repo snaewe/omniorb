@@ -27,6 +27,10 @@
 //	
 
 /* $Log$
+/* Revision 1.1.2.2  1999/10/05 20:36:32  sll
+/* Added option -ORBgiopTargetAddressMode <0|1|2> to control the
+/* TargetAddress mode used when invoking on a remote object using GIOP 1.2
+/*
 /* Revision 1.1.2.1  1999/10/02 18:21:27  sll
 /* Added support to decode optional tagged components in the IIOP profile.
 /* Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -172,6 +176,17 @@ firewallProxyRopeFactory::findOrCreateOutgoing(Endpoint* addr,
       }
       return 0;
     }
+
+#if 1 // For testing only
+    if (omniORB::giopTargetAddressMode == GIOP::ReferenceAddr) {
+      CORBA::Boolean fwd;
+      GIOPObjectInfo_var pg = proxy->getInvokeInfo(fwd);
+      Rope* nr = pg->rope();
+      nr->incrRefCount();
+      g->rope_ = nr;
+      return nr;
+    }
+#endif
 
     // Create a local redirect object to do the negotiation with
     // the GIOP proxy when the application invokes on this target.

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.22.4.4  1999/10/05 20:36:31  sll
+  Added option -ORBgiopTargetAddressMode <0|1|2> to control the
+  TargetAddress mode used when invoking on a remote object using GIOP 1.2
+
   Revision 1.22.4.3  1999/10/02 18:21:24  sll
   Added support to decode optional tagged components in the IIOP profile.
   Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -677,7 +681,7 @@ _CORBA_MODULE_BEG
   class gateway {                                                       //
   public:                                                               //
     typedef omniObject* (*mapTargetAddressToObject_t) (                 //
-                           const giopStream::requestInfo&);             //
+                           const GIOP::IORAddressingInfo&);             //
                                                                         //
     static void set(mapTargetAddressToObject_t);                        //
   };                                                                    //
@@ -802,6 +806,8 @@ _CORBA_MODULE_BEG
   }
   // Writes log message with prefix, and appends '\n'.
 
+
+ _CORBA_MODULE_VAR _core_attr GIOP::AddressingDisposition giopTargetAddressMode;
 
 #ifndef HAS_Cplusplus_Namespace
   friend class omni;

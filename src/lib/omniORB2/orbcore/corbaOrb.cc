@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.29.4.4  1999/10/05 20:36:31  sll
+  Added option -ORBgiopTargetAddressMode <0|1|2> to control the
+  TargetAddress mode used when invoking on a remote object using GIOP 1.2
+
   Revision 1.29.4.3  1999/10/02 18:31:55  sll
   New internal function internal_init_BOA().
 
@@ -167,17 +171,18 @@
 // MSVC++ does not give the variables external linkage otherwise. Its a bug.
 namespace omniORB {
 
-int                      traceLevel = 1;
-CORBA::Boolean           strictIIOP = 1;
-char*                    serverName = 0;
-CORBA::Boolean           tcAliasExpand = 0;
-unsigned int             maxTcpConnectionPerServer = 5;
-CORBA::Boolean           diiThrowsSysExceptions = 1;
-CORBA::Boolean           useTypeCodeIndirections = 1;
-CORBA::Boolean           acceptMisalignedTcIndirections = 0;
-CORBA::Boolean           verifyObjectExistsAndType = 1;
-CORBA::Boolean           abortOnInternalError = 0;
-CORBA::Boolean           noFirewallNavigation = 0;
+  int                      traceLevel = 1;
+  CORBA::Boolean           strictIIOP = 1;
+  char*                    serverName = 0;
+  CORBA::Boolean           tcAliasExpand = 0;
+  unsigned int             maxTcpConnectionPerServer = 5;
+  CORBA::Boolean           diiThrowsSysExceptions = 1;
+  CORBA::Boolean           useTypeCodeIndirections = 1;
+  CORBA::Boolean           acceptMisalignedTcIndirections = 0;
+  CORBA::Boolean           verifyObjectExistsAndType = 1;
+  CORBA::Boolean           abortOnInternalError = 0;
+  CORBA::Boolean           noFirewallNavigation = 0;
+  GIOP::AddressingDisposition giopTargetAddressMode = GIOP::KeyAddr;
 }
 
 #else
@@ -196,6 +201,7 @@ CORBA::Boolean                  omniORB::acceptMisalignedTcIndirections = 0;
 CORBA::Boolean                  omniORB::verifyObjectExistsAndType = 1;
 CORBA::Boolean                  omniORB::abortOnInternalError = 0;
 CORBA::Boolean                  omniORB::noFirewallNavigation = 0;
+GIOP::AddressingDisposition     omniORB::giopTargetAddressMode = GIOP::KeyAddr;
 #endif
 
 _CORBA_Unbounded_Sequence_Octet omni::myPrincipalID;
@@ -827,10 +833,33 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  "    -ORBclientCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBscanGranularity <n seconds>\n"
+#if 1  // For testing only
+          "    -ORBgiopTargetAddressMode <0|1|2>\n"
+#endif
 	  "    -ORBlcdMode\n";
 	move_args(argc,argv,idx,1);
 	continue;
       }
+
+#if 1    // For testing only
+      // -ORBgiopTargetAddressMode <0|1|2>
+      if( strcmp(argv[idx],"-ORBgiopTargetAddressMode") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBgiopTargetAddressMode parameter.");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1], "%u", &v) != 1 || v > 2 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBgiopTargetAddressMode parameter.");
+	  return 0;
+	}
+	omniORB::giopTargetAddressMode = (GIOP::AddressingDisposition)v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+#endif
 
       // Reach here only if the argument in this form: -ORBxxxxx
       // is not recognised.
