@@ -348,7 +348,7 @@ _0RL_buildDesc_cany(tcDescriptor &desc, const CORBA::Any& data)
 ///////////////////
 
 inline void
-_0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_member& data)
+_0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_member const& data)
 {
   desc.p_string = &data._ptr;
 }
