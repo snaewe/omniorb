@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15  2000/01/17 17:04:12  djs
+# Modified pointer handling in attribute dispatching
+#
 # Revision 1.14  2000/01/13 17:02:05  djs
 # Added support for operation contexts.
 #
@@ -482,11 +485,11 @@ def attribute_read(attribute, id):
     attr_dims = tyutil.typeDims(attrType)
     is_array = attr_dims != []
 
-    is_pointer = 0
+    return_is_pointer = 0
     dereference = 0
 
     if tyutil.isSequence(deref_attrType):
-        is_pointer = 1
+        return_is_pointer = 1
         dereference = 1
 
     # similar code exists in skel/main.py, handling pd_result
@@ -513,14 +516,18 @@ def attribute_read(attribute, id):
            tyutil.isUnion(deref_attrType)  or \
            tyutil.isAny(deref_attrType)    or \
            tyutil.isTypeCode(deref_attrType):
-            is_pointer = 1
+            return_is_pointer = 1
 
             if not(tyutil.isTypeCode(deref_attrType)):
                 dereference = 1
 
+    return_is_pointer = is_pointer(attrType) and not(is_array)
+    dereference = return_is_pointer and not(tyutil.isObjRef(deref_attrType)) \
+                   and not(tyutil.isTypeCode(deref_attrType))
     # ---
     size_calc = skutil.sizeCalculation(environment, attrType,
-                                       None, "msgsize", result_name, 1, is_pointer)
+                                       None, "msgsize", result_name, 1,
+                                       return_is_pointer)
     marshal = util.StringStream()
 
     if dereference:
