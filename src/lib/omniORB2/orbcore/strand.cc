@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4  1998/03/19 19:53:35  sll
+  Bug fixed. WrTimedLock.
+
   Revision 1.3  1997/12/09 17:52:25  sll
   Updated to implement the new rope and strand interface.
   New member Sync::WrTimedLock()
@@ -299,17 +302,19 @@ Sync::WrTimedLock(Strand* s,
 		  unsigned long secs,
 		  unsigned long nanosecs)
 {
+  CORBA::Boolean notimeout;
   // Note: the caller must have got the mutex s->pd_rope->pd_lock 
   while (s->pd_wr_nwaiting < 0) {
     s->pd_wr_nwaiting--;
-    if (!s->pd_wrcond.timedwait(secs,nanosecs)) {
-      // Timeout, give up.
-      return 0;
-    }
+    notimeout = s->pd_wrcond.timedwait(secs,nanosecs);
     if (s->pd_wr_nwaiting >= 0)
       s->pd_wr_nwaiting--;
     else
       s->pd_wr_nwaiting++;
+    if (!notimeout && s->pd_wr_nwaiting < 0) {
+      // give up;
+      return 0;
+    }
   }
   s->pd_wr_nwaiting = -s->pd_wr_nwaiting - 1;
   
