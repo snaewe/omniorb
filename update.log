@@ -1,3 +1,28 @@
+Fri Jun  2 15:13:29 BST 2000 dpg1
+=================================
+
+- SystemException constructors now public so exceptions caught by base
+  class can be rethrown
+
+include/omniORB3/CORBA.h
+
+- Add static install() method to initialiser so extra initialisers /
+  deinitialisers can be added at run time (needed by omniORBpy).
+
+src/lib/omniORB2/initialiser.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+- Race condition in tracedcondition
+
+src/lib/omniORB2/orbcore/tracedthread.cc
+
+- Using boa_lock for the nil BOA's condition variable caused an
+  assertion failure on exit.
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaBoa.h
+
+
 Wed May 31 19:00:00 BST 2000 djs
 ================================
 
