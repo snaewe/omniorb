@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3.2.2  2000/11/01 15:44:56  dpg1
+// Support for forward-declared structs and unions
+//
 // Revision 1.3.2.1  2000/07/17 10:36:05  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -51,10 +54,13 @@ public:
   AstValidateVisitor() {}
   virtual ~AstValidateVisitor() {}
 
-  void visitAST              (AST*          a);
-  void visitModule           (Module*       m);
-  void visitForward          (Forward*      f);
-  void visitValueForward     (ValueForward* f);
+  void visitAST              (AST*           a);
+  void visitModule           (Module*        m);
+  void visitInterface        (Interface*     i);
+  void visitForward          (Forward*       f);
+  void visitValueForward     (ValueForward*  f);
+  void visitStructForward    (StructForward* f);
+  void visitUnionForward     (UnionForward*  f);
 };
 
 

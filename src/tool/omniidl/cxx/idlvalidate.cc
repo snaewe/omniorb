@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.2  2000/11/01 15:44:56  dpg1
+// Support for forward-declared structs and unions
+//
 // Revision 1.4.2.1  2000/07/17 10:36:05  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -67,6 +70,14 @@ visitModule(Module* m)
 
 void
 AstValidateVisitor::
+visitInterface(Interface* i)
+{
+  for (Decl* d = i->contents(); d; d = d->next())
+    d->accept(*this);
+}
+
+void
+AstValidateVisitor::
 visitForward(Forward* f)
 {
   if (Config::forwardWarning) {
@@ -92,5 +103,29 @@ visitValueForward(ValueForward* f)
 		 ssn);
       delete [] ssn;
     }
+  }
+}
+
+void
+AstValidateVisitor::
+visitStructForward(StructForward* f)
+{
+  if (f->isFirst() && !f->definition()) {
+    char* ssn = f->scopedName()->toString();
+    IdlError(f->file(), f->line(),
+	     "Forward declared struct `%s' was never fully defined", ssn);
+    delete [] ssn;
+  }
+}
+
+void
+AstValidateVisitor::
+visitUnionForward(UnionForward* f)
+{
+  if (f->isFirst() && !f->definition()) {
+    char* ssn = f->scopedName()->toString();
+    IdlError(f->file(), f->line(),
+	     "Forward declared union `%s' was never fully defined", ssn);
+    delete [] ssn;
   }
 }
