@@ -19,5 +19,5 @@ export:: example.py
 export::
 	@(set -x; \
 	cd $(PYLIBDIR); \
-	$(PYTHON) -c 'import compileall; compileall.compile_dir(".")'; \
+	$(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
 	)
