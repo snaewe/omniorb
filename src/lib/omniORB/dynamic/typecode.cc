@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.8  1998/04/18 10:11:17  sll
+ * Corrected signature of one TypeCode ctor.
+ *
  * Revision 1.7  1998/04/08 16:07:50  sll
  * Minor change to help some compiler to find the right TypeCode ctor.
  *
@@ -134,8 +137,8 @@ CORBA::TypeCode::TypeCode(CORBA::TCKind t, CORBA::ULong length,
 }
   
 
-CORBA::TypeCode::TypeCode(CORBA::TCKind t, const char* repoId, 
-			  const char* name,const StructMemberSeq& members)
+CORBA::TypeCode::TypeCode(CORBA::TCKind t, const char* repoId,
+			  const char* name,const CORBA::StructMemberSeq& members)
 {
   if (t != CORBA::tk_struct && t != CORBA::tk_except)
     {
