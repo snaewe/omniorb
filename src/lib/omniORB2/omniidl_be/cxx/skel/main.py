@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.24  2000/01/17 17:05:38  djs
+# Marshalling and constructed types fixes
+#
 # Revision 1.23  2000/01/14 15:57:20  djs
 # Added MSVC workaround for interface inheritance
 #
@@ -599,7 +602,7 @@ const @pof_name@ _the_pof_@idname@;""",
     # be referred to by their fully/partially qualified names. If
     # that is necessary, we generate a typedef to define an alias for
     # this base interface. This alias is used in the stub generated below
-    for i in all_inherits:
+    for i in node.inherits():
        i_scopedName = i.scopedName()
        relName = environment.relName(i_scopedName)
        # does this name have scope :: qualifiers?
@@ -745,6 +748,9 @@ def visitTypedef(node):
 
     aliasType = node.aliasType()
     alias_dims = tyutil.typeDims(aliasType)
+
+    if node.constrType():
+        aliasType.decl().accept(self)
 
     fq_aliased = environment.principalID(aliasType)
 
@@ -932,7 +938,8 @@ void
     stream.reset_indent()
     
 def visitUnion(node):
-    environment = env.lookup(node)
+    outer_environment = env.lookup(node)
+    environment = outer_environment.enterScope(node.identifier())
     
     name = map(tyutil.mapID, node.scopedName())
     name = string.join(name, "::")
@@ -954,6 +961,12 @@ def visitUnion(node):
     booleanWrap = tyutil.isBoolean(switchType) and exhaustive
 
 
+    # deal with types constructed here
+    if node.constrType():
+        node.switchType().decl().accept(self)
+    for n in node.cases():
+        if n.constrType():
+            n.caseType().decl().accept(self)
 
     # --------------------------------------------------------------
     # union::_NP_alignedSize(size_t initialoffset) const
@@ -1419,7 +1432,9 @@ void @scoped_name@::_NP_marshal(MemBufferedStream& _s) const {
         deref_memberType = tyutil.deref(memberType)
         for d in m.declarators():
             decl_name = tyutil.mapID(tyutil.name(d.scopedName()))
-            if tyutil.isString(memberType):
+            is_array_declarator = d.sizes() != []
+            
+            if tyutil.isString(memberType) and not(is_array_declarator):
                 tmp = skutil.unmarshal_string_via_temporary(decl_name, "_n")
                 mem_unmarshal.out(tmp)
                 net_unmarshal.out(tmp)
@@ -1446,10 +1461,15 @@ void @scoped_name@::_NP_marshal(MemBufferedStream& _s) const {
                 skutil.marshall_struct_union(net_marshal, environment,
                                              memberType, d, decl_name, "_n")
             else:
+                exception = "BAD_PARAM"
+                if is_array_declarator:
+                    exception = "MARSHAL"
                 skutil.marshall(mem_marshal, environment,
-                                memberType, d, decl_name, "_n")
+                                memberType, d, decl_name, "_n",
+                                exception = exception)
                 skutil.marshall(net_marshal, environment,
-                                memberType, d, decl_name, "_n")
+                                memberType, d, decl_name, "_n",
+                                exception = exception)
 
             aligned_size.out(skutil.sizeCalculation(environment, memberType,
                                                     d, "_msgsize", decl_name,
