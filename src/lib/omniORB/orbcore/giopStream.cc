@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.23  2002/11/12 16:40:11  dgrisby
+  Fix incorrect delete.
+
   Revision 1.1.4.22  2002/02/25 11:17:13  dpg1
   Use tracedmutexes everywhere.
 
@@ -684,7 +687,8 @@ void
 giopStream::releaseInputBuffer(giopStream_Buffer* p) {
 
   if (!pd_rdlocked || pd_strand->spare || (p->end - p->start) < giopStream::bufferSize ) {
-    delete p;
+    char* c = (char*)p;
+    delete [] c;
     return;
   }
   p->next = pd_strand->spare;
