@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.16  2001/11/12 13:15:07  dpg1
+ _unchecked_narrow support. Thanks to Lars Immisch.
+
  Revision 1.1.2.15  2001/06/01 13:56:57  sll
  Long long define for HPUX.
  External CPP define guard for IR.h
@@ -1500,6 +1503,9 @@ _CORBA_MODULE_BEG
 
     static _ptr_type        _duplicate(_ptr_type);
     static inline _ptr_type _narrow(Object_ptr o) { return _duplicate(o); }
+    static inline _ptr_type _unchecked_narrow(Object_ptr o) {
+      return _duplicate(o);
+    }
     static _ptr_type        _nil();
 
     //////////////////////

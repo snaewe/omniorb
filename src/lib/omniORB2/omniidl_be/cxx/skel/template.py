@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.12  2001/11/12 13:15:08  dpg1
+# _unchecked_narrow support. Thanks to Lars Immisch.
+#
 # Revision 1.1.2.11  2001/04/27 11:03:56  dpg1
 # Fix scoping bug in MSVC work-around for external constant linkage.
 #
@@ -138,7 +141,6 @@ interface_class = """\
   return obj;
 }
 
-
 @name@_ptr
 @name@::_narrow(CORBA::Object_ptr obj)
 {
@@ -147,6 +149,13 @@ interface_class = """\
   return e ? e : _nil();
 }
 
+@name@_ptr
+@name@::_unchecked_narrow(CORBA::Object_ptr obj)
+{
+  if( !obj || obj->_NP_is_nil() || obj->_NP_is_pseudo() ) return _nil();
+  _ptr_type e = (_ptr_type) obj->_PR_getobj()->_uncheckedNarrow(_PD_repoId);
+  return e ? e : _nil();
+}
 
 @name@_ptr
 @name@::_nil()

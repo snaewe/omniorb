@@ -1,3 +1,15 @@
+Mon Nov 12 12:43:10 GMT 2001 dpg1
+=================================
+
+- _unchecked_narrow support. Thanks to Lars Immisch.
+
+include/omniORB3/CORBA.h
+include/omniORB3/omniObjRef.h
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+src/lib/omniORB2/orbcore/omniObjRef.cc
+
+
 Mon Oct 29 17:20:21 GMT 2001 dpg1
 =================================
 
