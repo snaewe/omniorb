@@ -82,6 +82,18 @@ for source in $sources; do
 done
 
 
+#
+# Find the last argument to omake (the target) and cope with spaces, quotes,
+# etc inside arguments.
+#
+
+while [ "$1" != "" ]; do
+  quotedArg=`echo $1 | sed "s/'/'\\\\\''/g"`
+  allArgs="$allArgs${allArgs+ }'$quotedArg'"
+  target=$1
+  shift
+done
+
 
 #
 # Finally run make
@@ -94,7 +106,8 @@ else
 fi
 
 makeCmd="$makeCmd -r -f ${topslash}config/config.mk $makefileSearchPath"
-makeCmd="$makeCmd VPATH=$vpath TOP=$top CURRENT=$current MAKEARG1=$1 $*"
+makeCmd="$makeCmd VPATH=$vpath TOP=$top CURRENT=$current OMAKE_TARGET=$target"
+makeCmd="$makeCmd $allArgs"
 
 if [ ! "$quiet" ]; then
   echo
@@ -102,4 +115,4 @@ if [ ! "$quiet" ]; then
   echo
 fi
 
-$makeCmd
+eval $makeCmd
