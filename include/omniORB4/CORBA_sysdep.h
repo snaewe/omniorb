@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.10  2001/06/15 10:23:40  sll
+ Added wchar size for HPUX.
+
  Revision 1.2.2.9  2001/06/08 17:12:08  dpg1
  Merge all the bug fixes from omni3_develop.
 
@@ -459,6 +462,8 @@
 #    define SIZEOF_WCHAR 4
 #  elif defined(__WIN32__)
 #    define SIZEOF_WCHAR 2
+#  elif defined(__hpux__)
+#    define SIZEOF_WCHAR 4
 #  else
 #    error "sizeof wchar_t not known for this platform"
 #  endif
