@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2002/02/25 11:17:12  dpg1
+  Use tracedmutexes everywhere.
+
   Revision 1.1.4.4  2002/02/11 17:09:48  dpg1
   Fix Windows brokenness caused by autoconf stuff.
 
@@ -81,7 +84,7 @@ public:
 #ifdef _HAS_NETDB_
   class hostent_var;
 
-  static omni_mutex non_reentrant;
+  static omni_tracedmutex non_reentrant;
   static int gethostbyname(const char *,hostent_var &,int &);
   static int isipaddr(const char* hname);
 

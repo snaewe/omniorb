@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.7  2002/02/25 11:17:13  dpg1
+  Use tracedmutexes everywhere.
+
   Revision 1.19.2.6  2002/01/15 16:38:13  dpg1
   On the road to autoconf. Dependencies refactored, configure.ac
   written. No makefiles yet.
@@ -113,7 +116,7 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 
-omni_mutex LibcWrapper::non_reentrant;
+omni_tracedmutex LibcWrapper::non_reentrant;
 
 
 int

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.3.2.6  2002/02/25 11:17:14  dpg1
+  Use tracedmutexes everywhere.
+
   Revision 1.3.2.5  2002/01/16 11:32:00  dpg1
   Race condition in use of registerNilCorbaObject/registerTrackedObject.
   (Reported by Teemu Torma).
@@ -86,7 +89,7 @@ OMNI_USING_NAMESPACE(omni)
 //////////////////////////// CORBA::Policy ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-static omni_mutex ref_count_lock;
+static omni_tracedmutex ref_count_lock;
 
 
 CORBA::Policy::~Policy() {}

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2002/02/25 11:17:11  dpg1
+  Use tracedmutexes everywhere.
+
   Revision 1.1.2.3  2001/09/14 11:10:35  sll
   Do the right dllimport for win32.
 
@@ -121,11 +124,11 @@ class sslContext {
 
   virtual void internal_initialise();
 
-  const char* pd_cafile;
-  const char* pd_keyfile;
-  const char* pd_password;
-  SSL_CTX*    pd_ctx;
-  omni_mutex* pd_locks;
+  const char* 	    pd_cafile;
+  const char* 	    pd_keyfile;
+  const char* 	    pd_password;
+  SSL_CTX*    	    pd_ctx;
+  omni_tracedmutex* pd_locks;
 };
 
 #endif // __SSLCONTEXT_H__

@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.24  2002/02/25 11:17:12  dpg1
+ * Use tracedmutexes everywhere.
+ *
  * Revision 1.38.2.23  2002/01/16 11:31:57  dpg1
  * Race condition in use of registerNilCorbaObject/registerTrackedObject.
  * (Reported by Teemu Torma).
@@ -1254,7 +1257,7 @@ TypeCode_base::NP_aliasExpand(TypeCode_pairlist*)
 }
 
 
-static omni_mutex* aliasExpandedTc_lock = 0;
+static omni_tracedmutex* aliasExpandedTc_lock = 0;
 
 
 TypeCode_base*
@@ -4208,7 +4211,7 @@ TypeCode_pairlist::search(const TypeCode_pairlist* pl, const TypeCode_base* tc)
 // list data, which is stored in typecodes when they are first marshalled.
 
 // Initialised in check_static_data_is_initialised().
-static omni_mutex* pd_cached_paramlist_lock = 0;
+static omni_tracedmutex* pd_cached_paramlist_lock = 0;
 
 
 void
@@ -4274,7 +4277,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 
 	  // Is there already a cached form of the parameter list?
 	  if( !tc->pd_loop_member ) {
-	    omni_mutex_lock l(*pd_cached_paramlist_lock);
+	    omni_tracedmutex_lock l(*pd_cached_paramlist_lock);
 
 	    has_cached_paramlist = tc->pd_cached_paramlist != 0;
 	  }
@@ -4325,7 +4328,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	    if( tc->pd_loop_member ){
 	      delete paramlist;
 	    }else{
-	      omni_mutex_lock l(*pd_cached_paramlist_lock);
+	      omni_tracedmutex_lock l(*pd_cached_paramlist_lock);
 
 	      // Check some other thread hasn't made the parameter list ...
 	      if( tc->pd_cached_paramlist == 0 )
@@ -4604,7 +4607,7 @@ TypeCode_marshaller::paramListType(CORBA::ULong kind)
 // in progress at any one time.
 
 // Initialised in check_static_data_is_initialised().
-static omni_mutex* pd_refcount_lock = 0;
+static omni_tracedmutex* pd_refcount_lock = 0;
 
 
 // Duplicating typecodes
@@ -4612,7 +4615,7 @@ static omni_mutex* pd_refcount_lock = 0;
 TypeCode_base*
 TypeCode_collector::duplicateRef(TypeCode_base* tc)
 {
-  omni_mutex_lock l(*pd_refcount_lock);
+  omni_tracedmutex_lock l(*pd_refcount_lock);
 
   //  if (tc->pd_tck == CORBA::tk_null) abort();
 
@@ -4629,7 +4632,7 @@ TypeCode_collector::releaseRef(TypeCode_base* tc)
   CORBA::Boolean node_can_be_freed = 0;
 
   {
-    omni_mutex_lock l(*pd_refcount_lock);
+    omni_tracedmutex_lock l(*pd_refcount_lock);
 
     // If the reference count is already zero then this node is already
     // being deleted
@@ -4674,7 +4677,7 @@ void
 TypeCode_collector::markLoopMembers(TypeCode_base* tc)
 {
   // Lock the typecode space before doing this
-  omni_mutex_lock l(*pd_refcount_lock);
+  omni_tracedmutex_lock l(*pd_refcount_lock);
 
   markLoops(tc, 0);
 }
@@ -5750,9 +5753,9 @@ static void check_static_data_is_initialised()
   registerTrackedObject(the_tc_list);
 
   // Mutexes
-  aliasExpandedTc_lock = new omni_mutex();
-  pd_cached_paramlist_lock = new omni_mutex();
-  pd_refcount_lock = new omni_mutex();
+  aliasExpandedTc_lock = new omni_tracedmutex();
+  pd_cached_paramlist_lock = new omni_tracedmutex();
+  pd_refcount_lock = new omni_tracedmutex();
 
   // Primitive TypeCodes
   CORBA::_tc_null = new TypeCode_base(CORBA::tk_null);

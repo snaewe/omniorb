@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2002/02/25 11:17:11  dpg1
+  Use tracedmutexes everywhere.
+
   Revision 1.1.4.1  2001/04/18 17:18:17  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -63,7 +66,7 @@ public:
   void*                   sysexcpt_hdr;
   void*                   sysexcpt_cookie;
   static omniExHandlers** Table;
-  static omni_mutex       TableLock;
+  static omni_tracedmutex TableLock;
   friend class omniExHandlers_iterator;
 private:
   omniExHandlers();

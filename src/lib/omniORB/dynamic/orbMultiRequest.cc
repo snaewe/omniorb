@@ -52,10 +52,10 @@ static RequestLink* incoming_q_tail = 0;  // undefined if incoming_q == 0
 static unsigned queue_waiters = 0;
 // The number of threads waiting for responses.
 
-static omni_mutex q_lock;
+static omni_tracedmutex q_lock;
 // Lock for accessing the above data.
 
-static omni_condition q_cv(&q_lock);
+static omni_tracedcondition q_cv(&q_lock);
 // This is signalled if( queue_waiters > 0 ) and there might be
 // something to receive now.                           =====
 
@@ -83,7 +83,7 @@ CORBA::ORB::send_multiple_requests_deferred(const RequestSeq& rs)
   unsigned nwaiters;
 
   {
-    omni_mutex_lock sync(q_lock);
+    omni_tracedmutex_lock sync(q_lock);
 
     for( CORBA::ULong i = 0; i < rs.length(); i++ ) {
       rs[i]->send_deferred();
@@ -114,7 +114,7 @@ CORBA::ORB::poll_next_response()
   // Transfer anything that has completed to the incoming queue, and
   // then return true or false appropriately.
 
-  omni_mutex_lock sync(q_lock);
+  omni_tracedmutex_lock sync(q_lock);
 
   if( incoming_q )  return 1;
 
@@ -168,7 +168,7 @@ void
 CORBA::ORB::get_next_response(Request_out req_out)
 {
   {
-    omni_mutex_lock sync(q_lock);
+    omni_tracedmutex_lock sync(q_lock);
 
     // Complain if there's nothing pending
     if( !(outgoing_q || incoming_q) ) {

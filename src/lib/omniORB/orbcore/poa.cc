@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.30  2002/02/25 11:17:13  dpg1
+  Use tracedmutexes everywhere.
+
   Revision 1.2.2.29  2002/02/13 17:39:58  dpg1
   Don't put POA in DISCARDING state during destroy().
 
@@ -3536,8 +3539,8 @@ generateUniqueId(CORBA::Octet* k)
 {
   OMNIORB_ASSERT(k);
 
-  static omni_mutex lock;
-  omni_mutex_lock sync(lock);
+  static omni_tracedmutex lock;
+  omni_tracedmutex_lock sync(lock);
 
   static CORBA::ULong hi = 0;
   static CORBA::ULong lo = 0;
