@@ -1,3 +1,23 @@
+Wed Apr 22 16:17:07 BST 1998 sll
+================================
+
+- Updated omnithread library so that native threads can call any operations
+  in the library and vice versa. Previously, native threads cannot call
+  omni_thread::join and on nt cannot wait on omni_condition.
+- The semantics of omni_thread::self() is clarified. If the caling thread
+  is not the main thread and is not created using the omnithread library,
+  omni_thread::self() returns 0.
+
+include/omnithread.h
+include/omnithread/nt.h
+src/lib/omnithread/posix.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/mach.cc
+
+src/lib/omniORB2/tcpSocketMTfactory.cc
+
+
 Sat Apr 18 11:05:10 BST 1998 sll
 ================================
 
