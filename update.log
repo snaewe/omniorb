@@ -1,3 +1,13 @@
+
+Thu Jan 27 15:01:18 GMT 2000 djr
+================================
+
+- Fixed bug in _CORBA_String_member.  Default constructor now initialises
+  with an empty string (not zero pointer).
+
+include/omniORB2/stringtypes.h
+
+
 Tue Jan 25 15:41:11 GMT 2000 sll
 ================================
 

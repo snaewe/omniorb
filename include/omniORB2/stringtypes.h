@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.1  2000/01/27 15:05:18  djr
+ String_member now initialised to empty string by default.
+
  Revision 1.5  1999/08/30 17:14:59  sll
  Added workaround for gcc-2.95 in the conversion operators for string_var
  and string_member.
@@ -165,7 +168,7 @@ class _CORBA_String_member {
 public:
   typedef char* ptr_t;
 
-  inline _CORBA_String_member() : pd_data(0), pd_rel(1), _ptr(pd_data) {}
+  inline _CORBA_String_member() : pd_data(""), pd_rel(0), _ptr(pd_data) {}
 
   inline _CORBA_String_member(char*& p, _CORBA_Boolean rel) 
     : pd_data(0), pd_rel(rel), _ptr(p) {}
