@@ -337,19 +337,24 @@ main(int argc, char **argv)
       // nobject before allowing unbind.
       //
 
+      CosNaming::NamingContext_var context;
       int len = name.length();
       CORBA::String_var id = name[len-1].id;
       CORBA::String_var kind = name[len-1].kind;
-      name.length(len-1);
 
-      CORBA::Object_var obj = rootContext->resolve(name);
+      if (len > 1) {
+	name.length(len-1);
 
-      CosNaming::NamingContext_var context
-	= CosNaming::NamingContext::_narrow(obj);
+	CORBA::Object_var obj = rootContext->resolve(name);
 
-      if (CORBA::is_nil(context)) {
-	cerr << "unbind: parent is not a naming context" << endl;
-	exit(1);
+	context = CosNaming::NamingContext::_narrow(obj);
+
+	if (CORBA::is_nil(context)) {
+	  cerr << "unbind: parent is not a naming context" << endl;
+	  exit(1);
+	}
+      } else {
+	context = rootContext;
       }
 
       CosNaming::BindingIterator_var bi;
