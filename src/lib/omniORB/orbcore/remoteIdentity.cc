@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 18:05:51  sll
+  Use the new giop engine APIs to drive a remote call.
+
   Revision 1.2.2.1  2000/07/17 10:35:58  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -57,14 +60,14 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
 #include <remoteIdentity.h>
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
 
@@ -93,6 +96,31 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////
+//////////////////////// Call Marshaller      ////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class RemoteIdentityCallArgumentsMarshaller : public giopMarshaller {
+public:
+  RemoteIdentityCallArgumentsMarshaller(cdrStream& s,
+					omniCallDescriptor& desc) : 
+    pd_s(s), pd_desc(desc) {}
+
+  void marshalData() {
+    pd_desc.marshalArguments(pd_s);
+  }
+
+  size_t dataSize(size_t initialoffset) {
+    cdrCountingStream s(initialoffset);
+    pd_desc.marshalArguments(s);
+    return s.total();
+  }
+
+private:
+  cdrStream&     pd_s;
+  omniCallDescriptor& pd_desc;
+};
+
+//////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -108,81 +136,73 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
     l << "Invoke '" << call_desc.op() << "' on remote: " << this << '\n';
   }
 
-  CORBA::Boolean reuse = 0; //?? move this up into transport
-  const omniCallDescriptor::ContextInfo* ctxt_info = call_desc.context_info();
+  GIOP_C giop_client(pd_ior,pd_rope);
+  cdrStream& s = (cdrStream&)giop_client;
 
-  try {
-    GIOP_C giop_c(rope());
-    reuse = giop_c.isReUsingExistingConnection();
+ again:
+  call_desc.initialiseCall(s);
 
-    // Calculate the size of the message.
-    CORBA::ULong msgsize =
-      GIOP_C::RequestHeaderSize(keysize(), call_desc.op_len());
+  omniClientCallMarshaller m(call_desc);
 
-    msgsize = call_desc.alignedSize(msgsize);
-    if( ctxt_info )
-      msgsize = omniDynamicLib::ops->context_aligned_size(msgsize,
-						  ctxt_info->context,
-						  ctxt_info->expected,
-						  ctxt_info->num_expected);
+  giop_client.InitialiseRequest(call_desc.op(),
+				call_desc.op_len(),
+				call_desc.is_oneway(),
+				!call_desc.is_oneway(),
+				m);
 
-    giop_c.InitialiseRequest(key(), keysize(), call_desc.op(),
-			     call_desc.op_len(), msgsize,
-			     call_desc.is_oneway());
+  // Wait for the reply.
+  GIOP::ReplyStatusType rc;
 
-    // Marshal the arguments to the operation.
-    call_desc.marshalArguments(giop_c);
-    if( ctxt_info )
-      omniDynamicLib::ops->marshal_context(giop_c, ctxt_info->context,
-					   ctxt_info->expected,
-					   ctxt_info->num_expected);
+  switch( (rc = giop_client.ReceiveReply()) ) {
+  case GIOP::NO_EXCEPTION:
+    // Unmarshal any result and out/inout arguments.
+    call_desc.unmarshalReturnedValues(s);
+    giop_client.RequestCompleted();
+    break;
 
-    // Wait for the reply.
+  case GIOP::USER_EXCEPTION:
+    {
+      // Retrieve the Interface Repository ID of the exception.
+      CORBA::ULong repoIdLen;
+      repoIdLen <<= s;
+      if (!s.checkInputOverrun(1,repoIdLen))
+	OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
+      CORBA::String_var repoId(_CORBA_String_helper::alloc(repoIdLen - 1));
+      s.get_char_array((CORBA::Char*)(char*) repoId, repoIdLen);
 
-    switch( giop_c.ReceiveReply() ) {
-    case GIOP::NO_EXCEPTION:
-      // Unmarshal any result and out/inout arguments.
-      call_desc.unmarshalReturnedValues(giop_c);
-      giop_c.RequestCompleted();
-      break;
-
-    case GIOP::USER_EXCEPTION:
-      {
-	// Retrieve the Interface Repository ID of the exception.
-	CORBA::ULong repoIdLen;
-	repoIdLen <<= giop_c;
-	if( repoIdLen > giop_c.RdMessageUnRead() )
-	  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-	CORBA::String_var repoId(omni::allocString(repoIdLen - 1));
-	giop_c.get_char_array((CORBA::Char*)(char*) repoId, repoIdLen);
-
-	call_desc.userException(giop_c, repoId);
-	// Never get here - this must throw either a user exception
-	// or CORBA::MARSHAL.
-	OMNIORB_ASSERT(0);
-      }
-
-    case GIOP::LOCATION_FORWARD:
-      {
-	CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(giop_c));
-	giop_c.RequestCompleted();
-	throw omniORB::LOCATION_FORWARD(obj._retn());
-      }
-
-    case GIOP::SYSTEM_EXCEPTION:
+      call_desc.userException(giop_client, repoId);
+      // Never get here - this must throw either a user exception
+      // or CORBA::MARSHAL.
       OMNIORB_ASSERT(0);
-      break;
+    }
 
+  case GIOP::LOCATION_FORWARD:
+  case GIOP::LOCATION_FORWARD_PERM:
+    {
+      CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(s));
+      giop_client.RequestCompleted();
+      throw omniORB::LOCATION_FORWARD(obj._retn(),
+			       (rc == GIOP::LOCATION_FORWARD_PERM) ? 0 : 1);
     }
-  }
-  catch(omniConnectionBroken& ex) {
-    if( reuse ){
-      CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-      throw ex2;
+
+  case GIOP::NEEDS_ADDRESSING_MODE:
+    {
+      GIOP::AddressingDisposition v;
+      v <<= s;
+      pd_ior->addr_mode = v;
+      giop_client.RequestCompleted();
+      if (omniORB::trace(10)) {
+	omniORB::logger log;
+	log << "Remote invocation: GIOP::NEEDS_ADDRESSING_MODE: "
+	    << (int) v << " retry request.\n";
+      }
+      goto again;
     }
-    else {
-      OMNIORB_THROW(COMM_FAILURE, ex.minor(), ex.completed());
-    }
+
+  case GIOP::SYSTEM_EXCEPTION:
+    OMNIORB_ASSERT(0);
+    break;
+
   }
 }
 
@@ -219,41 +239,48 @@ omniRemoteIdentity::locateRequest()
     l << "LocateRequest to remote: " << this << '\n';
   }
 
-  CORBA::Boolean reuse = 0; //?? move this up into transport
+  GIOP_C giop_client(pd_ior,pd_rope);
+  cdrStream& s = (cdrStream&)giop_client;
 
-  try {
-    GIOP_C giop_c(rope());
-    reuse = giop_c.isReUsingExistingConnection();
+  GIOP::LocateStatusType rc;
 
-    CORBA::ULong msgsize = GIOP_C::RequestHeaderSize(keysize(), 14);
+ again:
+  switch( (rc = giop_client.IssueLocateRequest()) ) {
+  case GIOP::OBJECT_HERE:
+    giop_client.RequestCompleted();
+    break;
 
-    switch( giop_c.IssueLocateRequest(key(), keysize()) ) {
-    case GIOP::OBJECT_HERE:
-      giop_c.RequestCompleted();
-      break;
+  case GIOP::UNKNOWN_OBJECT:
+    giop_client.RequestCompleted();
+    OMNIORB_THROW(OBJECT_NOT_EXIST,0,CORBA::COMPLETED_NO);
+    break;        // dummy break
 
-    case GIOP::UNKNOWN_OBJECT:
-      giop_c.RequestCompleted();
-      OMNIORB_THROW(OBJECT_NOT_EXIST,0,CORBA::COMPLETED_NO);
-      break;        // dummy break
+  case GIOP::OBJECT_FORWARD:
+  case GIOP::OBJECT_FORWARD_PERM:
+    {
+      CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef((cdrStream&)giop_client));
+      giop_client.RequestCompleted();
+      throw omniORB::LOCATION_FORWARD(obj._retn(),
+			       (rc == GIOP::OBJECT_FORWARD_PERM) ? 0 : 1);
+    }
 
-    case GIOP::OBJECT_FORWARD:
-      {
-	CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(giop_c));
-	giop_c.RequestCompleted();
-	throw omniORB::LOCATION_FORWARD(obj._retn());
+  case GIOP::LOC_NEEDS_ADDRESSING_MODE:
+    {
+      GIOP::AddressingDisposition v;
+      v <<= s;
+      pd_ior->addr_mode = v;
+      giop_client.RequestCompleted();
+      if (omniORB::trace(10)) {
+	omniORB::logger log;
+	log << "Remote locatRequest: GIOP::NEEDS_ADDRESSING_MODE: "
+	    << (int) v << " retry request.\n";
       }
+      goto again;
+    }
 
-    }
-  }
-  catch(omniConnectionBroken& ex) {
-    if( reuse ){
-      CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-      throw ex2;
-    }
-    else {
-      OMNIORB_THROW(COMM_FAILURE, ex.minor(), ex.completed());
-    }
+  case GIOP::LOC_SYSTEM_EXCEPTION:
+    OMNIORB_ASSERT(0);
+    break;
   }
 }
 
@@ -262,4 +289,5 @@ omniRemoteIdentity::~omniRemoteIdentity()
 {
   omniORB::logs(15, "omniRemoteIdentity deleted.");
   pd_rope->decrRefCount();
+  pd_ior->release();
 }
