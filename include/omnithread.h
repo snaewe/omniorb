@@ -130,6 +130,9 @@ class omni_thread;
 #elif defined(__osr5__)
 #include <omnithread/posix.h>
 
+#elif defined(__irix__)
+#include <omnithread/posix.h>
+
 #else
 #error "No implementation header file"
 #endif
