@@ -98,6 +98,7 @@ public:
       , PT_any		// Predefined type "any"
       , PT_void		// Predefined type "void"
       , PT_pseudo	// Predefined type for pseudo objects
+      , PT_TypeCode     // Predefined type for TypeCode
   };
 
   // Operations
