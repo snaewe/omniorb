@@ -28,7 +28,6 @@
 // ah. the beauty of mach
 //
 
-#include <iostream.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -36,6 +35,7 @@
 #include "omnithread.h"
 
 #define DB(x) // x
+// #include <iostream> or #include <iostream.h> if DB is on.
 
 #define ERRNO(x) (x)
 

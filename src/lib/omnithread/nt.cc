@@ -25,12 +25,12 @@
 // Implementation of OMNI thread abstraction for NT threads
 //
 
-#include <iostream.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <omnithread.h>
 
 #define DB(x) // x 
+// #include <iostream> or #include <iostream.h> if DB is on.
 
 static void get_time_now(unsigned long* abs_sec, unsigned long* abs_nsec);
 

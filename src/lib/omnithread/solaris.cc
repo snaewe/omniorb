@@ -24,12 +24,12 @@
 // Implementation of OMNI thread abstraction for solaris threads.
 //
 
-#include <iostream.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <omnithread.h>
 
 #define DB(x) // x 
+// #include <iostream> or #include <iostream.h> if DB is on.
 
 #define THROW_ERRORS(x) { int rc = (x); \
 			  if (rc != 0) throw omni_thread_fatal(rc); }

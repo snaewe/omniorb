@@ -44,7 +44,6 @@
 // identifies platform that don't.
 //
 
-#include <iostream.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
@@ -61,7 +60,7 @@
 #endif
 
 #define DB(x) // x
-
+// #include <iostream.h> or #include <iostream> if DB is on.
 
 #if (PthreadDraftVersion <= 6)
 #define ERRNO(x) (((x) != 0) ? (errno) : 0)
@@ -328,7 +327,7 @@ omni_thread::init_t::init_t(void)
 
     t->_state = STATE_RUNNING;
 
-    t->posix_thread = pthread_self();
+    t->posix_thread = pthread_self ();
 
     DB(cerr << "initial thread " << t->id() << endl);
 
