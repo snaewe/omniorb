@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.16  1997/12/18 17:37:20  sll
+ Added (const char*) type casting to help strcpy().
+
  Revision 1.15  1997/12/09 20:35:16  sll
  New members BOA::impl_shutdown, BOA::destroy.
 
@@ -114,7 +117,7 @@ typedef _CORBA_Double  Double;
     inline String_var(const String_var &s) {
       if ((const char *)s) {
 	_data = string_alloc((ULong)(strlen(s)+1));
-	strcpy(_data,s);
+	strcpy(_data,(const char*)s);
       }
       else {
 	_data = 0;
@@ -156,7 +159,7 @@ typedef _CORBA_Double  Double;
       }
       if ((const char *)s) {
 	_data = string_alloc((ULong)(strlen(s)+1));
-	strcpy(_data,s);
+	strcpy(_data,(const char*)s);
       }
       return *this;
     }
