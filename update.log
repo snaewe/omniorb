@@ -1,3 +1,17 @@
+Wed Jan  5 18:05:56 GMT 2000 dme
+================================
+
+- Win32: pick up python install paths by asking python instead of assuming "C:"
+- provide Foo_copy() for array types per CORBA 2.3 
+- make o2be_root.cc compile on non-gcc platforms
+
+src/lib/omniORBpy/modules/omnipy/dir.mk
+src/lib/omniORBpy/omniidl/cxx/dir.mk
+
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+
 
 Wed Jan  5 17:15:18 GMT 2000 djr
 ================================
