@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  2000/01/14 11:56:45  djs
+# Marked unused function as redundant. Not deleted as it might be useful
+# later.
+#
 # Revision 1.9  2000/01/13 15:56:34  djs
 # Factored out private identifier prefix rather than hard coding it all through
 # the code.
@@ -116,7 +120,9 @@ def canonDims(d):
     return string.join(canon, "")
 
 
+
 def write_array_desc(where, aliasType, dims):
+    assert(0)
     assert isinstance(aliasType, idltype.Type)
 
     env = name.Environment()
