@@ -1,3 +1,11 @@
+Tue May 25 17:28:39 BST 2004 dgrisby
+====================================
+
+- Typo in bidir changes.
+
+src/lib/omniORB/orbcore/giopBiDir.cc
+
+
 Tue May 25 15:00:10 BST 2004 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2004/05/25 16:25:18  dgrisby
+  Typo in bidir changes.
+
   Revision 1.1.2.16  2004/05/25 14:02:22  dgrisby
   Properly close bidirectional connections.
 
@@ -461,7 +464,7 @@ BiDirServerRope::decrRefCount() {
     for (; p != &pd_strands; p = p->next) {
       giopStrand* g = (giopStrand*)p;
       if (g->state() != giopStrand::DYING) {
-	if (omniORB::trace(30) {
+	if (omniORB::trace(30)) {
 	  omniORB::logger l;
 	  l << "Bi-directional rope is no longer referenced; strand "
 	    << (void*)g << " is a candidate for scavenging.\n";
