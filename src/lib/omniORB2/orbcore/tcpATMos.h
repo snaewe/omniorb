@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2  1998/03/20 12:28:49  sll
+ Added delay connect to tcpATMosStrand
+
  Revision 1.1  1997/12/09 18:43:20  sll
  Initial revision
 
@@ -181,6 +184,7 @@ public:
 private:
   tcpATMosHandle_t pd_filehandle;
   CORBA::Boolean    pd_send_giop_closeConnection;
+  tcpATMosEndpoint* pd_delay_connect;
 };
 
 
