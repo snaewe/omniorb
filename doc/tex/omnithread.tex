@@ -186,6 +186,32 @@ requests that other threads be allowed to run, \texttt{id()} which
 returns an integer id for the thread for use in debugging,
 \texttt{state()}, \texttt{sleep()} and \texttt{get\_time()}.
 
+
+
+\section{Per-thread data}
+
+omnithread supports per-thread data, via member functions of the
+\texttt{omni\_thread} object.
+
+First, you must allocate a key for with the
+\texttt{omni\_thread::allocate\_key()} function. Then, any object
+whose class is derived from \texttt{omni\_thread::value\_t} can be
+stored using the \texttt{set\_value()} function. Values are retrieved
+or removed with \texttt{get\_value()} and \texttt{remove\_value()}
+respectively.
+
+When the thread exits, all per-thread data is deleted (hence the base
+class with virtual destructor).
+
+Note that the per-thread data functions are \textbf{not} thread safe,
+so although you can access one thread's storage from another thread,
+there is no concurrency control. Unless you really know what you are
+doing, it is best to only access per-thread data from the thread it is
+attached to.
+
+
+
+
 \section{Using OMNI threads in your program}
 
 Obviously you need to include the \texttt{omnithread.h} header file in

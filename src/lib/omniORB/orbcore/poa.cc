@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.32  2002/08/16 17:47:40  dgrisby
+  Documentation, message updates. ORB tweaks to match docs.
+
   Revision 1.2.2.31  2002/03/18 15:13:09  dpg1
   Fix bug with old-style ORBInitRef in config file; look for
   -ORBtraceLevel arg before anything else; update Windows registry
@@ -264,8 +267,8 @@ OMNI_USING_NAMESPACE(omni)
   CORBA::ULong orbParameters::poaHoldRequestTimeout = 0;
 //  This variable can be used to set a time-out for calls being held
 //  in a POA which is in the HOLDING state.  It gives the time in
-//  seconds after which a TRANSIENT exception will be thrown if the
-//  POA is not transitioned to a different state.
+//  milliseconds after which a TRANSIENT exception will be thrown if
+//  the POA is not transitioned to a different state.
 //
 //  Valid values = (n >= 0 in milliseconds)
 //                  0 --> no time-out.

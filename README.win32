@@ -1,24 +1,22 @@
-                        omniORB4 on Win32 platforms.
-                        ============================
+                        omniORB on Win32 platforms.
+                        ===========================
 
-This file contains information on installing, building, and using omniORB4
-on Win32 (Windows NT and Windows '9x) platforms.
+This file contains information on installing, building, and using
+omniORB on Win32 (Windows NT and Windows '9x) platforms.
 
-If you are upgrading from 2.7.1 or earlier, please read CHANGES_280 for a
-description of the incompatibility change in the semantics of Any since 2.8.0.
+If you are upgrading from 2.7.1 or earlier, please read CHANGES_280
+for a description of the incompatibility change in the semantics of
+Any since 2.8.0.
 
-OmniORB has been tested with the following software configuration:
+omniORB has been tested with the following software configuration:
 
-- Operating System  : Windows NT 4.0 and Windows 2000
+- Operating System  : Windows NT 4.0, 9x, 2000, XP
 - Architecture      : x86 (and alpha in earlier versions)
 - Compiler          : Visual C++ 5.0 and Visual C++ 6.0
 
-The omniORB binaries, when compiled using VC++ 6.0 on Windows NT, will 
+The omniORB binaries, when compiled using VC++ 6.0 on Windows NT, will
 execute on Windows '95 machines and vice-versa.
 
-As of 2.6.1, Alpha Windows NT is also supported. Unless otherwise stated,
-the description below also applies to Alpha NT. Where appropriate the
-reference to "x86" has to be changed to "alpha".
 
 Roadmap
 =======
@@ -37,7 +35,7 @@ When the omniORB4 distribution is unpacked, the following are created:
 <Top-Level Directory>\include\omnithread\  : Include files for thread library
 
 <Top-Level Directory>\src\                 : Source files
-<Top-Level Directory>\src\lib\omniORB2\    : Source files for ORB run-time 
+<Top-Level Directory>\src\lib\omniORB\     : Source files for ORB run-time 
                                              library
 <Top-Level Directory>\src\lib\omnithread\  : Source files for thread library
 <Top-Level Directory>\src\tool\omniidl\    : Source files for IDL Compiler
@@ -60,41 +58,33 @@ You *should* set up your PATH environment to include
    <Top-Level Directory>\bin\x86_win32
 otherwise the DLLs will not be picked up when omniORB programs are run.
 
-If you have the source-only distribution, you will need to build omniORB2. 
-Please read the  "Building omniORB from the source files" section, below. 
-(If you want the  Win32 binary distribution, but don't have it, you can 
-download it from our web site at 
-http://www.uk.research.att.com/omniORB/omniORB.html)
+If you have the source-only distribution, you will need to build
+omniORB. Please read the "Building omniORB from the source files"
+section, below.  (If you want the Win32 binary distribution, but don't
+have it, you can download it from SourceForge via
+http://omniorb.sourceforge.net/download.html)
 
 omniidl requires Python 1.5.2 or higher. You can download the full
 Python distribution from
 
      http://www.python.org/download/download_windows.html
 
-    or
-
-     ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.exe
 
 Alternatively, for Windows on x86, you can install a minimal version
 of Python which contains just the functionality required by omniidl.
 The Win32 binary distribution of omniORB comes with this minimal
-python package. Download it from
-
-     ftp://ftp.uk.research.att.com/pub/omniORB/python/omnipython-x86_win32.zip
+python package. Again, download it from SourceForge.
 
 Unpack the zip file at the top of the omniORB tree. It places
 files in the bin, lib and include directories.
 
 
-Configure the naming service
-=============================
+Configuring the naming service
+==============================
  
-  If you are upgrading from 2.2.0, please read the important
-  information about omniNames at the end of this note.
-
-  You have to configure the omniORB runtime and the naming service,
-  consult the user guides in ./doc for details. For a quick start,
-  follow these steps:
+You have to configure the omniORB runtime and the naming service,
+consult the user guides in ./doc for details. For a quick start,
+follow these steps:
 
     o Make sure that <Top-Level Directory>\bin\x86_win32 is in your
       PATH environment.
@@ -105,74 +95,55 @@ Configure the naming service
 
     o Start omniNames. The binary is in <Install Location>\bin\win32_x86. 
       For example:
-         omniNames -start 12345
-      Notice that you have to give as a parameter to the option -start
-      the TCP/IP port number omniNames will use to receive IIOP requests.
-
-    o omniNames writes the stringified object reference for its root context 
-      on standard error.
-      Copy the IOR. (including the IOR: prefix).
+         omniNames -start
 
     o Start the tool REGEDT32.EXE (on NT) or REGEDIT.EXE (on Windows '95). 
-      Select the key  HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0 (or create
-      it if it doesn't exist). Add a string value (known as a REG_SZ data type
-      when using REGEDT32) called NAMESERVICE  , and paste the IOR in to the 
-      value field associated with it.
-
-    o Since 2.6.0, an alternative way to set up the configuration data is
-      as follows:
-
-         If omniNames has been started on host wobble and port 1234,
-         use REGEDT32.EXE to enter the following keys into
-
-            HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0
-
-              Name                   Value (REG_SZ)
-         ------------------------------------------
-         ORBInitialHost                 wobble
-         ORBInitialPort                 1234
-
-      Any omniORB clients of release 2.6.0 or later is able to use this
-      information to locate the root context of the Naming Service.
+      Select the key HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\InitRef (or
+      create it if it doesn't exist). Add a string value (known as a
+      REG_SZ data type when using REGEDT32) with key "1", value
+      "NameService=corbaname::my.host.name" (putting the correct host
+      name in, of course).
 
     o The registry entries must be duplicated on all machines that
       will run omniORB programs. It is only necessary to run one
       instance of omniNames on your network.
 
-    o Once you are satisfied the naming service is running properly. You
-      can setup omniNames to run as an NT service. See the description
-      below.
+    o To save manually editing registry entries, you can modify the
+      sample.reg file to contain the configuration you require, then
+      import the whole file into the registry.
+
+    o Once you are satisfied the naming service is running properly.
+      You can choose to setup omniNames to run as an NT service. See
+      the description below.
+
 
 Compiling the examples with nmake
 =================================
 
-Once the installation is completed. You can try compiling and running the
-examples in <Top-Level Directory>\src\examples.
+Once the installation is completed. You can try compiling and running
+the examples in <Top-Level Directory>\src\examples.
 
 Just do the following:
 
   cd <Top-Level Directory>\src\examples
   nmake /f dir.mak
 
-Have a look at the dir.mak file in <Top-Level Directory>\src\examples, it
-should give you some idea about the compiler flags and libraries to compile
-and link omniORB programs.
+Have a look at the dir.mak file in <Top-Level Directory>\src\examples,
+it should give you some idea about the compiler flags and libraries to
+compile and link omniORB programs.
 
 Building Projects using omniORB
 ===============================
 
-Before building anything (or running the examples), you should refer to the 
-omniORB documentation. In particular, you must add the (stringified) object 
-reference of the naming service to the registry (in the (string) value 
-NAMESERVICE, under the key HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0). 
-You should use the tool REGEDT32.EXE on Windows NT, or REGEDIT.EXE on 
-Windows '95. (See above for quickstart instructions on starting the Naming
-Service).
+Before building anything (or running the examples), you should refer
+to the omniORB documentation. In particular, you must configure the
+naming service as described above.
 
-Note that the instructions below are for Microsoft Visual C++ 4.2, using 
-Microsoft Developer Studio. If you are using Microsoft Visual C++ 5.0, the 
-setup will be slightly different. The instructions are for using the DLL
-versions of omniORB and omnithread.
+Note that the instructions below are for Microsoft Visual C++ 4.2,
+using Microsoft Developer Studio. If you are using Microsoft Visual
+C++ 5.0 or 6.0, the setup will be slightly different, but still
+basically the same. The instructions are for using the DLL versions of
+omniORB and omnithread.
 
 a) Add the stub (SK.cpp) files generated by the IDL compiler to the project 
    (Insert->"Files into Project")
@@ -196,63 +167,31 @@ c) Set up macros and libraries:
         "Use run-time library" box, select "Multithreaded DLL".
     4. **This is an import step.** 
        In the "Category" box, select "Preprocessor". In the
-        "Preprocessor" box, add the macros __WIN32__,__x86__,_WIN32_WINNT=0x0400
+       "Preprocessor" box, add the macros
+
+          __WIN32__,__x86__,_WIN32_WINNT=0x0400
+
        If this is NT 4.0, add the macros __NT__ and __OSVERSION__=4 as well.
     
     5. Select the "Link" tab.
-    6. In the "Category" box, select "Input". In the "Object/library modules"
-       box, add the following libraries: ws2_32.lib, mswsock.lib, advapi32.lib, 
-       omniORB400_rt.lib, omniDynamic400_rt.lib, omnithread2_rt.lib
 
-   If you are building a debug executable, the debug version of the libraries:
-   omniORB400_rtd.lib, omniDynamic400_rtd.lib and omnithread2_rtd.lib
-   should be used.
+    6. In the "Category" box, select "Input". In the "Object/library
+       modules" box, add the following libraries: ws2_32.lib,
+       mswsock.lib, advapi32.lib, omniORB400_rt.lib,
+       omniDynamic400_rt.lib, omnithread3_rt.lib
+
+   If you are building a debug executable, the debug version of the
+   libraries: omniORB400_rtd.lib, omniDynamic400_rtd.lib and
+   omnithread3_rtd.lib should be used.
 
 d) Your project is now set up, and you can build it.
 
 
-If you want to use the static versions of omniORB and omnithread, you must
-add the macro _WINSTATIC (see step (c) 4, above), and replace the libraries
-omniORB4_rt.lib, omniDynamic400_rt.lib and omnithread2_rt.lib with
-omniORB4.lib, omniDynamic4.lib and omnithread.lib (see step (c) 6, above).
-
-
-Important Change to omniNames for users upgrading from version 2.2.0
-====================================================================
-
-Since release 2.4.0, the naming service has used the prefix pragma "omg.org" in
-its IDL.
-
-Unfortunately, this is not compatible on-the-wire with clients that are
-linked with the old library, i.e. any programs linked before version 2.4.0
-was released.
-
-The implications of this change are as follows:
-
-a) omniNames built in this release *CANNOT* read the data file of the version
-   2.2.0 omniNames. A new instance must be started from scratch. If you start
-   omniNames and tell it to use the old data file, it will certainly crash.
-
-   Possible migration path:
-     At, we are running the old and the new omniNames in parallel.
-     The new instance is setup to run on a different port. Also the
-     new tree is built to read by default a different configuration file:
-     (/project/omni/var/omniORB_NEW.cfg instead of 
-     /project/omni/var/omniORB.cfg) so that a client will pick up the
-     IOR of the old or the new omniNames depending on whether it is compiled
-     with the old or the new library. When all our services have been
-     recompiled, the old omniNames will be withdrawn.
-
-
-b) If you want to continue to use the old omniNames, you can undo this
-   change with the following steps:
-     1. Edit <Top directory>\src\lib\omniORB2\Naming.idl and remove the 
-        #pragma prefix "omg.org" line.
-     2. Do the same to <Top directory>\idl\Naming.idl.
-     3. Remove <Top directory>\include\omniORB4\Naming.hh.
-     4. Rebuild everything. You should do a make veryclean at the
-        top of <Top directory>\src to make sure that the naming service stubs 
-        are regenerated.
+If you want to use the static versions of omniORB and omnithread, you
+must add the macro _WINSTATIC (see step (c) 4, above), and replace the
+libraries omniORB4_rt.lib, omniDynamic400_rt.lib and
+omnithread3_rt.lib with omniORB4.lib, omniDynamic4.lib and
+omnithread3.lib (see step (c) 6, above).
 
 
 
@@ -265,9 +204,9 @@ some bugs in Microsoft Visual C++ 4.2 (not fixed in Microsoft Visual C++
 come across these bugs if you use modules in your IDL files, and in certain
 other circumstances.
 
-Unlike 2.2.0, this release generates stub code that works around most of
-the MS VC++ bugs. However, it is not possible to avoid the bugs in all
-cases. In particular, the following sample IDL will fail to compile:
+This release generates stub code that works around most of the MS VC++
+bugs. However, it is not possible to avoid the bugs in all cases. In
+particular, the following sample IDL will fail to compile:
 
 // IDL
 
@@ -290,13 +229,11 @@ module A {
 
 
 
-Building omniORB4 from the source files
-=======================================
+Building omniORB from the source files
+======================================
 
- OmniORB4 should be compiled using Visual C++ 5.0 or Visual C++ 6.0.
- The following description only applies to x86 platform. For alpha NT,
- the binary distribution is compiled under Interix (OpenNT) posix subsystem.
- There is no gnu-win32 utilities available under alpha NT at the moment.
+omniORB should be compiled using Visual C++ 5.0 or Visual C++ 6.0.
+The following description only applies to x86 platform.
 
 
  A. Pre-requisites
@@ -317,42 +254,44 @@ Building omniORB4 from the source files
 
        ftp://src.doc.ic.ac.uk/public/gnu/cygnus/gnu-win32/latest
 
-
     The toolkit is big and you don't need all of it to compile
     omniORB. Alternatively, you can download a cutdown version from:
 
-       ftp://ftp.uk.research.att.com/pub/omniORB/gnu-win32-lite.zip
+       http://www.uk.research.att.com/pub/omniORB/gnu-win32-lite.zip
 
     The utilities in this version are all you need to build omniORB.
 
-    Assume that you have downloaded the toolkit and have unpacked/installed
-    it in some sensible subdirectory, say C:\gnuwin32, you then have to go
-    through the following checklist:
+    Assume that you have downloaded the toolkit and have
+    unpacked/installed it in some sensible subdirectory, say
+    C:\gnuwin32, you then have to go through the following checklist:
 
-      1. In a command prompt window, make sure that you have the environment
-         variables and path setup properly to use MS Visual C++ (4.2/5.0).
+      1. In a command prompt window, make sure that you have the
+         environment variables and path setup properly to use MS
+         Visual C++ (4.2/5.0).
 
-         For instance, I have MS VC++ installed in C:\Program Files\DevStudio.
-         The following environment variables should be set to:
+         For instance, I have MS VC++ installed in C:\Program
+         Files\DevStudio.  The following environment variables should
+         be set to:
 
          LIB=C:\Progra~1\DevStudio\VC\lib
-        INCLUDE=C:\Progra~1\DevStudio\VC\include
-        Path=<otherpaths>;C:\Progra~1\DevStudio\VC\bin;C:\Progra~1\DevStudio\SharedIDE\bin;<otherpaths>
+         INCLUDE=C:\Progra~1\DevStudio\VC\include
+         Path=<otherpaths>;C:\Progra~1\DevStudio\VC\bin;C:\Progra~1\DevStudio\SharedIDE\bin;<otherpaths>
 
       2. If you have unpacked gnu-win32-lite.zip in C:\gnuwin32, add
          C:\gnuwin32\bin to your Path environment variable. 
 
-        Warning: If you have installed posix utilities from the Windows 
-            resource kits, make sure that C:\gnuwin32 is searched before the 
-            directory containing these utilities.
+         Warning: If you have installed posix utilities from the
+         Windows resource kits, make sure that C:\gnuwin32 is searched
+         before the directory containing these utilities.
 
-       If you have installed the full gnu-win32 toolkit, just follow its
-       installation instructions and you can skip 3.
+         If you have installed the full gnu-win32 toolkit, just follow
+         its installation instructions and you can skip 3.
 
-      3. Now you have to run a small script *once* to setup in your registry 
-         the necessary 'mount' points. Basically, it tells the gnu-win32 
-         runtime how to translate a path such as /bin/sh to the real path 
-         name Win32  (e.g. C:\gnuwin32\bin\sh.exe) understands.
+      3. Now you have to run a small script *once* to setup in your
+         registry the necessary 'mount' points. Basically, it tells
+         the gnu-win32 runtime how to translate a path such as /bin/sh
+         to the real path name Win32 (e.g. C:\gnuwin32\bin\sh.exe)
+         understands.
 
          Just execute this command in a command prompt window:
   
@@ -364,8 +303,8 @@ Building omniORB4 from the source files
             no /bin/sh.exe, mounting c:\gnuwin32\bin as /bin
             Completed successfully.
 
-      4. Now you are ready. You can now build the distribution by following 
-         the instructions below.
+      4. Now you are ready. You can now build the distribution by
+         following the instructions below.
 
     Python
     ------
@@ -375,19 +314,14 @@ Building omniORB4 from the source files
 
      http://www.python.org/download/download_windows.html
 
-    or
-
-     ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.exe
 
     Alternatively, for Windows on x86, you can install a minimal
     version of Python which contains just the functionality required
-    by omniidl. Download it from
-
-     ftp://ftp.uk.research.att.com/pub/omniORB/python/omnipython-x86_win32.zip
+    by omniidl. Download it from Sourceforge, via
+    http://omniorb.sourceforge.net/download.html
 
     Unpack the zip file at the top of the omniORB tree. It places
     files in the bin, lib and include directories.
-
 
 
   B. Choose the right platform configuration file
@@ -432,16 +366,22 @@ Running omniNames as an NT service
 ==================================
 
   o Use srvany from the NT resource kit.
-  o Follow the instruction provided with srvany to run a program as a service.
+
+  o Follow the instructions provided with srvany to run a program as a
+    service.
+
   o E.g. The binary of omniNames.exe is in C:\omniNames\omniNames.exe
          The log directory is set to C:\omniNames
          The standard error output is to be redirected to 
              C:\omniNames\omniNames.errlog
 
          Set the following registry parameters with the service applet:
-            Application: REG_SZ C:\omniNames\omniNames.exe
-            AppParameters: REG_SZ -logdir C:\omniNames -errlog C:\omniNames\omniNames.errlog
-            AppDirectory: REG_SZ C:\omniNames
+            Application:   REG_SZ C:\omniNames\omniNames.exe
+
+            AppParameters: REG_SZ -logdir C:\omniNames -errlog
+                           C:\omniNames\omniNames.errlog
+
+            AppDirectory:  REG_SZ C:\omniNames
 
 Mailing List
 ============

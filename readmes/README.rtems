@@ -36,9 +36,6 @@ out on your host, and make sure that basic things, such as naming service
 ( omniNames ) and the examples, specially eg3_impl and eg3_clt are working ok. 
 As a second stage, them it is time to go ahead and play with your embedded target.
 
-omniORB can be downloaded from this site:
-http://www.uk.research.att.com/omniORB/omniORB.html.
-
 
 RTEMS and its tools can be downloaded from this site:
 from OARCorp web site at: http://www.oarcorp.com

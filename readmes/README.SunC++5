@@ -1,6 +1,3 @@
-Sun C++ 4.2 is currently what we use to compile code to put into
-service.
-
 We believe that the problems with Sun C++ 5.0 and Forte Workshop v6.0
 have now been worked around.
 

@@ -2,294 +2,820 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
- The IDL compiler
+ omniORB configuration and API
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB004.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB006.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;5&nbsp;&nbsp; The IDL compiler</H1>
-<A NAME="chap:omniidl"></A>omniORB 3 has a brand new IDL compiler, named omniidl. It consists of
-a generic front-end parser written in C++, and a number of back-ends
-written in Python. omniidl is very strict about IDL validity, so you
-may find that it reports errors in IDL which compiles fine with
-earlier versions of omniORB, and with other ORBs.<BR>
+<H1><A NAME="htoc43">Chapter&nbsp;4</A>&nbsp;&nbsp;omniORB configuration and API</H1>
+<A NAME="chap:config"></A>
+omniORB 4.0 has a wide range of parameters that can be
+configured. They can be set in the configuration file / Windows
+registry, as environment variables, on the command line, or within a
+proprietary extra argument to <TT>CORBA::ORB_init()</TT>. A few parameters
+can be configured at run time. This chapter lists all the
+configuration parameters, and how they are used.<BR>
 <BR>
-The general form of an omniidl command line is:<BR>
+<A NAME="toc18"></A>
+<H2><A NAME="htoc44">4.1</A>&nbsp;&nbsp;Setting parameters</H2>
+When <TT>CORBA::ORB_init()</TT> is called, the value for each configuration
+parameter is searched for in the following order:
+<OL type=1><LI>Command line arguments
+<LI><TT>ORB_init()</TT> options
+<LI>Environment variables
+<LI>Configuration file / Windows registry
+<LI>Built-in defaults</OL>
+
+<H3><A NAME="htoc45">4.1.1</A>&nbsp;&nbsp;Command line arguments</H3>
+Command line arguments take the form
+`<TT>-ORB</TT><I>parameter</I>', and usually expect another
+argument. An example is `<TT>-ORBtraceLevel 10</TT>'.<BR>
 <BR>
-<BLOCKQUOTE> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file 1</I>&gt;<TT> </TT>&lt;<I>file 2</I>&gt;<TT> </TT>...</BLOCKQUOTE><A NAME="toc23"></A>
-<H2>5.1&nbsp;&nbsp; Common options</H2>The following options are common to all back-ends:<BR>
+
+<H3><A NAME="htoc46">4.1.2</A>&nbsp;&nbsp;ORB_init() parameter</H3>
+<TT>ORB_init()</TT>'s extra argument accepts an array of two-dimensional
+arrays of strings, like this:
+<PRE>
+const char* options[][2] = { { "traceLevel", "1" }, { 0, 0 } }; 
+orb = CORBA::ORB_init(argc,argv,"omniORB4",options); 
+</PRE>
+
+<H3><A NAME="htoc47">4.1.3</A>&nbsp;&nbsp;Environment variables</H3>
+Environment variables consist of the parameter name prefixed with
+`<TT>ORB</TT>'. Using bash, for example
+<PRE>
+export ORBtraceLevel=10
+</PRE>
+
+<H3><A NAME="htoc48">4.1.4</A>&nbsp;&nbsp;Configuration file</H3>
+The best way to understand the format of the configuration file is to
+look at the <TT>sample.cfg</TT> file in the omniORB distribution. Each
+parameter is set on a single line like
+<PRE>
+traceLevel = 10
+</PRE>
+Some parameters can have more than one value, in which case the
+parameter name may be specified more than once, or you can leave it
+out:
+<PRE>
+InitRef = NameService=corbaname::host1.example.com
+        = InterfaceRepository=corbaloc::host2.example.com:1234/IfR
+</PRE>
+<HR SIZE=2><DL COMPACT=compact><DT><DD>
+Note how command line arguments and environment variables prefix
+parameter names with `-ORB' and `ORB' respectively, but the
+configuration file and the extra argument to <TT>ORB_init()</TT> do not use
+a prefix.
+</DL><HR SIZE=2><BR>
 <BR>
+
+<H3><A NAME="htoc49">4.1.5</A>&nbsp;&nbsp;Windows registry</H3>
+On Windows, configuration parameters can be stored in the registry,
+under the key
+<CODE>HKEY_LOCAL_MACHINE\SOFTWARE\omniORB</CODE>.<BR>
+<BR>
+The file <TT>sample.reg</TT> shows the settings that can be made. It can
+be edited and then imported into regedit.<BR>
+<BR>
+<A NAME="toc19"></A>
+<H2><A NAME="htoc50">4.2</A>&nbsp;&nbsp;Tracing options</H2>
+The following options control debugging trace output.<BR>
+<BR>
+<TT>traceLevel</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1</TT><BR>
+<BR>
+<BR>
+omniORB can output tracing and diagnostic messages to the standard
+error stream. The following levels are defined:<BR>
 <TABLE CELLSPACING=2 CELLPADDING=0>
-<TR><TD ALIGN=left NOWRAP></TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>&nbsp;</TD>
 </TR>
-<TR><TD ALIGN=left NOWRAP><TT>-D</TT><I>name</I>[<TT>=</TT><I>value</I>]</TD>
-<TD ALIGN=left NOWRAP>Define <I>name</I> for the preprocessor.</TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 0</TD>
+<TD VALIGN=top ALIGN=left>critical errors only</TD>
 </TR>
-<TR><TD ALIGN=left NOWRAP><TT>-U</TT><I>name</I></TD>
-<TD ALIGN=left NOWRAP>Undefine <I>name</I> for the preprocessor.</TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 1</TD>
+<TD VALIGN=top ALIGN=left>informational messages only</TD>
 </TR>
-<TR><TD ALIGN=left NOWRAP><TT>-I</TT><I>dir</I></TD>
-<TD ALIGN=left NOWRAP>Include <I>dir</I> in the preprocessor search path.</TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 2</TD>
+<TD VALIGN=top ALIGN=left>configuration information and warnings</TD>
 </TR>
-<TR><TD ALIGN=left NOWRAP><TT>-E</TT></TD>
-<TD ALIGN=left NOWRAP>Only run the preprocessor, sending its output to stdout.</TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 5</TD>
+<TD VALIGN=top ALIGN=left>notifications when server threads are
+ created and communication endpoints are shutdown</TD>
 </TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Y</TT><I>cmd</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>cmd</I> as the preprocessor, rather than the normal C
- preprocessor.</TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 10</TD>
+<TD VALIGN=top ALIGN=left>execution and exception traces</TD>
 </TR>
-<TR><TD ALIGN=left NOWRAP><TT>-N</TT></TD>
-<TD ALIGN=left NOWRAP>Do not run the preprocessor.</TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 25</TD>
+<TD VALIGN=top ALIGN=left>trace each send or receive of a giop message</TD>
 </TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wp</TT><I>arg</I>[,<I>arg</I>...]</TD>
-<TD ALIGN=left NOWRAP>Send arguments to the preprocessor.</TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 30</TD>
+<TD VALIGN=top ALIGN=left>dump up to 128 bytes of each giop message</TD>
 </TR>
-<TR><TD ALIGN=left NOWRAP><TT>-b</TT><I>back-end</I></TD>
-<TD ALIGN=left NOWRAP>Run the specified back-end. For the C++ ORB, use <TT>-bcxx</TT>.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wb</TT><I>arg</I>[,<I>arg</I>...]</TD>
-<TD ALIGN=left NOWRAP>Send arguments to the back-end.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-nf</TT></TD>
-<TD ALIGN=left NOWRAP>Do not warn about unresolved forward declarations.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-k</TT></TD>
-<TD ALIGN=left NOWRAP>Keep comments after declarations, to be used by some back-ends.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-K</TT></TD>
-<TD ALIGN=left NOWRAP>Keep comments before declarations, to be used by some back-ends.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-C</TT><I>dir</I></TD>
-<TD ALIGN=left NOWRAP>Change directory to <I>dir</I> before writing output files.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-d</TT></TD>
-<TD ALIGN=left NOWRAP>Dump the parsed IDL then exit, without running a back-end.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-p</TT><I>dir</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>dir</I> as a path to find omniidl back-ends.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-V</TT></TD>
-<TD ALIGN=left NOWRAP>Print version information then exit.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-u</TT></TD>
-<TD ALIGN=left NOWRAP>Print usage information.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-v</TT></TD>
-<TD ALIGN=left NOWRAP>Verbose: trace compilation stages.</TD>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>level 40</TD>
+<TD VALIGN=top ALIGN=left>dump complete contents of each giop message</TD>
 </TR></TABLE><BR>
-Most of these options are self explanatory, but some are not
-so obvious.<BR>
+The trace level is cumulative, so at level 40, all trace
+messages are output.<BR>
+<BR>
+<TT>traceInvocations</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If the <TT>traceInvocations</TT> parameter is set true, all local and
+remote invocations are logged, in addition to any logging that may
+have been selected with <TT>traceLevel</TT>.<BR>
+<BR>
+<TT>traceThreadId</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If <TT>traceThreadId</TT> is set true, all trace messages are prefixed
+with the id of the thread outputting the message. This can be handy
+for tracking down race conditions, but it adds significant overhead to
+the logging function so it is turned off by default.<BR>
 <BR>
 
-<H3>5.1.1&nbsp;&nbsp; Preprocessor interactions</H3>IDL is processed by the C preprocessor before omniidl parses it.
-Unlike the old IDL compiler, which used different C preprocessors on
-different platforms, omniidl always uses the GNU C preprocessor (which
-it builds with the name omnicpp). The <TT>-D</TT>, <TT>-U</TT>, and
-<TT>-I</TT> options are just sent to the preprocessor. Note that the
-current directory is not on the include search path by default---use
-`<TT>-I.</TT>' for that. The <TT>-Y</TT> option can be used to
-specify a different preprocessor to omnicpp. Beware that line
-directives inserted by other preprocessors are likely to confuse
-omniidl.<BR>
-<BR>
-
-<H3>5.1.2&nbsp;&nbsp; Forward-declared interfaces</H3>If you have an IDL file like:<BR>
-<BR>
+<H3><A NAME="htoc51">4.2.1</A>&nbsp;&nbsp;Tracing API</H3>
+The three tracing parameters can be modified at runtime by assigning
+to the following variables
 <PRE>
-interface I;
-interface J {
-  attribute I the_I;
+namespace omniORB {
+  CORBA::ULong   traceLevel;
+  CORBA::Boolean traceInvocations;
+  CORBA::Boolean traceThreadId;
 };
-</PRE>then omniidl will normally issue a warning:<BR>
-<BR>
+</PRE>
+Log messages can be sent somewhere other than stderr by registering a
+logging function which is called with the text of each log message:
 <PRE>
-  test.idl:1: Warning: Forward declared interface `::I' was never
-  fully defined
-</PRE>It is illegal to declare such IDL in isolation, but it
-<EM>is</EM> valid to define interface <TT>I</TT> in a separate file. If
-you have a lot of IDL with this sort of construct, you will drown
-under the warning messages. Use the <TT>-nf</TT> option to suppress
-them.<BR>
+namespace omniORB {
+  typedef void (*logFunction)(const char*);
+  void setLogFunction(logFunction f);
+};
+</PRE>
+The log function must not make any CORBA calls, since that could lead
+to infinite recursion as outputting a log message caused other log
+messages to be generated, and so on.<BR>
+<BR>
+<A NAME="toc20"></A>
+<H2><A NAME="htoc52">4.3</A>&nbsp;&nbsp;Miscellaneous global options</H2>
+These options control miscellaneous features that affect the whole ORB
+runtime.<BR>
+<BR>
+<TT>dumpConfiguration</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If set true, the ORB dumps the values of all configuration parameters
+at start-up.<BR>
+<BR>
+<TT>scanGranularity</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>5</TT><BR>
+<BR>
+<BR>
+As explained in chapter&nbsp;<A HREF="omniORB009.html#chap:connections">871Connection and Thread Managementchapter.8</A>, omniORB regularly
+scans incoming and outgoing connections, so it can close unused
+ones. This value is the granularity in seconds at which the ORB
+performs its scans. A value of zero turns off the scanning altogether.<BR>
+<BR>
+<TT>nativeCharCodeSet</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>ISO-8859-1</TT><BR>
+<BR>
+<BR>
+The native code set the application is using for <TT>char</TT> and
+<TT>string</TT>. See chapter&nbsp;<A HREF="omniORB010.html#chap:codesets">981Code set conversionchapter.9</A>.<BR>
+<BR>
+<TT>nativeWCharCodeSet</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>UTF-16</TT><BR>
+<BR>
+<BR>
+The native code set the application is using for <TT>wchar</TT> and
+<TT>wstring</TT>. See chapter&nbsp;<A HREF="omniORB010.html#chap:codesets">981Code set conversionchapter.9</A>.<BR>
+<BR>
+<TT>omniORB_27_CompatibleAnyExtraction</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+In omniORB 2.7 and earlier, the Any extraction operators for strings
+and object references returned a copy/duplicate of the value stored in
+the Any, meaning the caller had to release the extracted value. The
+C++ mapping was clarified to state that the Any retains ownership of
+the returned value, so the caller does not need to release it. To aid
+the transition for ancient programs from omniORB 2.7 or earlier,
+setting this flag to true selects the old copying behaviour.<BR>
+<BR>
+<TT>abortOnInternalError</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If this is set true, internal fatal errors will abort immediately,
+rather than throwing the <TT>omniORB::fatalException</TT> exception.
+This can be helpful for tracking down bugs, since it leaves the call
+stack intact.<BR>
+<BR>
+<A NAME="toc21"></A>
+<H2><A NAME="htoc53">4.4</A>&nbsp;&nbsp;Client side options</H2>
+These options control aspects of client-side behaviour.<BR>
+<BR>
+<TT>InitRef</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT><I>none</I></TT><BR>
+<BR>
+<BR>
+Specify the objects available from
+<TT>ORB::resolve_initial_references()</TT>. The arguments take the form
+&lt;<I>key</I>&gt;=&lt;<I>uri</I>&gt;, where the <I>key</I> is the name
+given to <TT>resolve_initial_references()</TT> and
+<I>uri</I> is a valid CORBA object reference URI, as detailed in
+chapter&nbsp;<A HREF="omniORB007.html#chap:ins">661Interoperable Naming Servicechapter.6</A>.<BR>
+<BR>
+<TT>DefaultInitRef</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT><I>none</I></TT><BR>
+<BR>
+<BR>
+Specify the default URI prefix for
+<TT>resolve_initial_references()</TT>, as explained in
+chapter&nbsp;<A HREF="omniORB007.html#chap:ins">661Interoperable Naming Servicechapter.6</A>.<BR>
+<BR>
+<TT>clientTransportRule</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>* unix,tcp,ssl</TT><BR>
+<BR>
+<BR>
+Used to specify the way the client contacts a server, depending on the
+server's address. See section&nbsp;<A HREF="omniORB009.html#sec:clientRule">8.7.177Client transport rulessubsection.8.7.1</A> for details.<BR>
+<BR>
+<TT>clientCallTimeOutPeriod</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+Call timeout in milliseconds for the client side. If a call takes
+longer than the specified number of milliseconds, the ORB closes the
+connection and raises a <TT>COMM_FAILURE</TT> exception. A value
+of zero means no timeout; calls can block for ever.<BR>
+<BR>
+<B>Note</B>: omniORB 3 had timeouts specified in seconds; omniORB
+4.0 uses milliseconds for timeouts.<BR>
+<BR>
+<TT>outConScanPeriod</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>120</TT><BR>
+<BR>
+<BR>
+Idle timeout in seconds for outgoing (i.e. client initiated)
+connections. If a connection has been idle for this amount of time,
+the ORB closes it. See section&nbsp;<A HREF="omniORB009.html#sec:connShutdown">8.574Idle connection shutdownsection.8.5</A>.<BR>
+<BR>
+<TT>maxGIOPConnectionPerServer</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>5</TT><BR>
+<BR>
+<BR>
+The maximum number of concurrent connections the ORB will open to a
+<EM>single</EM> server. If multiple threads on the client call the same
+server, the ORB opens additional connections to the server, up to the
+maximum specified by this parameter. If the maximum is reached,
+threads are blocked until a connection becomes free for them to use.<BR>
+<BR>
+<TT>oneCallPerConnection</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1</TT><BR>
+<BR>
+<BR>
+When this parameter is set to true (the default), the ORB will only
+send a single call on a connection at a time. If multiple client
+threads invoke on the same server, multiple connections are opened, up
+to the limit specified by
+<TT>maxGIOPConnectionPerServer</TT>. With this parameter set to
+false, the ORB will allow concurrent calls on a single
+connection. This saves connection resources, but requires slightly
+more management work for both client and server. Some server-side ORBs
+(including omniORB versions before 4.0) serialise all calls on a
+single connection.<BR>
+<BR>
+<TT>offerBiDirectionalGIOP</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If set true, the client will indicate to servers that it is willing to
+accept callbacks on client-initiated connections using bidirectional
+GIOP, provided the relevant POA policies are set. See
+section&nbsp;<A HREF="omniORB009.html#sec:bidir">8.878Bidirectional GIOPsection.8.8</A>.<BR>
+<BR>
+<TT>diiThrowsSysExceptions</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If this is true, DII functions throw system exceptions; if it is
+false, system exceptions that occur are passed through the
+<TT>Environment</TT> object.<BR>
+<BR>
+<TT>verifyObjectExistsAndType</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1</TT><BR>
+<BR>
+<BR>
+By default, omniORB uses the GIOP <TT>LOCATE_REQUEST</TT> message to
+verify the existence of an object prior to the first invocation. In
+the case that the full type of the object is not known, it instead
+calls the <TT>_is_a()</TT> operation to check the object's type. Some ORBs
+have bugs that mean one or other of these operations fail. Setting
+this parameter false prevents omniORB from making these calls.<BR>
+<BR>
+<TT>giopTargetAddressMode</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+GIOP 1.2 supports three addressing modes for contacting objects. This
+parameter selects the mode that omniORB uses. A value of 0 means
+<TT>GIOP::KeyAddr</TT>; 1 means <TT>GIOP::ProfileAddr</TT>; 2 means
+<TT>GIOP::ReferenceAddr</TT>.<BR>
+<BR>
+<TT>bootstrapAgentHostname</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT><I>none</I></TT><BR>
+<BR>
+<BR>
+If set, this parameter indicates the hostname to use for look-ups
+using the obsolete Sun bootstrap agent. This mechanism is superseded
+by the interoperable naming service.<BR>
+<BR>
+<TT>bootstrapAgentPort</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>900</TT><BR>
+<BR>
+<BR>
+The port number for the obsolete Sun bootstrap agent.<BR>
+<BR>
+<TT>principal</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT><I>none</I></TT><BR>
+<BR>
+<BR>
+GIOP 1.0 and 1.1 have a request header field named `principal', which
+contains a sequence of octets. It was never defined what it should
+mean, and its use is now deprecated; GIOP 1.2 has no such field. Some
+systems (e.g. Gnome) use the principal field as a primitive
+authentication scheme. This parameter sets the data omniORB uses in
+the principal field. The default is an empty sequence.<BR>
+<BR>
+<A NAME="toc22"></A>
+<H2><A NAME="htoc54">4.5</A>&nbsp;&nbsp;Server side options</H2>
+These parameters affect server-side operations.<BR>
+<BR>
+<TT>endPoint&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TT> &nbsp;&nbsp; <I>default</I> = <TT>giop:tcp::</TT><BR>
+<TT>endPointNoListen</TT><BR>
+<TT>endPointNoPublish</TT><BR>
+<TT>endPointPublishAllIFs</TT><BR>
+These options determine the end-points the ORB should listen on, and
+the details that should be published in IORs. See
+chapter&nbsp;<A HREF="omniORB009.html#chap:connections">871Connection and Thread Managementchapter.8</A> for details.<BR>
+<BR>
+<TT>serverTransportRule</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>* unix,tcp,ssl</TT><BR>
+<BR>
+<BR>
+Configure the rules about whether a server should accept an incoming
+connection from a client. See section&nbsp;<A HREF="omniORB009.html#sec:serverRule">??</A> for
+details.<BR>
+<BR>
+<TT>serverCallTimeOutPeriod</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+This timeout is used to catch the situation that the server starts
+receiving a request, but the end of the request never comes. If a
+calls takes longer than the specified number of milliseconds to
+arrive, the ORB shuts the connection. A value of zero means never
+timeout.<BR>
+<BR>
+<TT>inConScanPeriod</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>180</TT><BR>
+<BR>
+<BR>
+Idle timeout in seconds for incoming. If a connection has been idle
+for this amount of time, the ORB closes it. See
+section&nbsp;<A HREF="omniORB009.html#sec:connShutdown">8.574Idle connection shutdownsection.8.5</A>.<BR>
+<BR>
+<TT>threadPerConnectionPolicy</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1</TT><BR>
+<BR>
+<BR>
+If true (the default), the ORB dedicates one server thread to each
+incoming connection. Setting it false means the server should use a
+thread pool.<BR>
+<BR>
+<TT>maxServerThreadPerConnection</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>100</TT><BR>
+<BR>
+<BR>
+If the client multiplexes several concurrent requests on a single
+connection, omniORB uses extra threads to service them. This parameter
+specifies the maximum number of threads that are allowed to service a
+single connection at any one time.<BR>
+<BR>
+<TT>maxServerThreadPoolSize</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>100</TT><BR>
+<BR>
+<BR>
+The maximum number of threads the server will allocate to do various
+tasks, including dispatching calls in the thread pool mode. This
+number does not include threads dispatched under the thread per
+connection server mode.<BR>
+<BR>
+<TT>threadPerConnectionUpperLimit</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>10000</TT><BR>
+<BR>
+<BR>
+If the <TT>threadPerConnectionPolicy</TT> parameter is true, the ORB can
+automatically transition to thread pool mode if too many connections
+arrive. This parameter sets the number of connections at which thread
+pooling is started. The default of 10000 is designed to mean that it
+never happens.<BR>
+<BR>
+<TT>threadPerConnectionLowerLimit</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>9000</TT><BR>
+<BR>
+<BR>
+If thread pooling was started because the number of connections hit
+the upper limit, this parameter determines when thread per connection
+should start again.<BR>
+<BR>
+<TT>threadPoolWatchConnection</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1</TT><BR>
+<BR>
+<BR>
+If true, threads from the pool temporarily behave a bit like thread
+per connection after dispatching a call. See
+section&nbsp;<A HREF="omniORB009.html#sec:watchConn">8.4.273Thread pool modesubsection.8.4.2</A> for details.<BR>
+<BR>
+<TT>acceptBiDirectionalGIOP</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+Determines whether a server will ever accept clients' offers of
+bidirectional GIOP connections. See section&nbsp;<A HREF="omniORB009.html#sec:bidir">8.878Bidirectional GIOPsection.8.8</A>.<BR>
+<BR>
+<TT>unixTransportDirectory</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>/tmp/omni-%u</TT><BR>
+<BR>
+<BR>
+(Unix platforms only). Selects the location used to store Unix domain
+sockets. The `<TT>%u</TT>' is expanded to the user name.<BR>
+<BR>
+<TT>unixTransportPermission</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0777</TT><BR>
+<BR>
+<BR>
+(Unix platforms only). Determines the octal permission bits for Unix
+domain sockets. By default, all users can connect to a server, just as
+with TCP.<BR>
+<BR>
+<TT>supportCurrent</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1</TT><BR>
+<BR>
+<BR>
+omniORB 4.0 supports the <TT>PortableServer::Current</TT> interface that
+provides thread context information to a servant. Supporting current
+has a small but noticeable run-time overhead due to accessing thread
+specific storage, so this option allows it to be turned off.<BR>
+<BR>
+<TT>objectTableSize</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+Hash table size of the Active Object Map. If this is zero, the ORB
+uses a dynamically resized open hash table. This is normally the best
+option, but it leads to less predictable performance since any
+operation which adds or removes a table entry may trigger a resize. If
+set to a non-zero value, the hash table has the specified number of
+entries, and is never resized. Note that the hash table is open, so
+this does not limit the number of active objects, just how efficiently
+they can be located.<BR>
+<BR>
+<TT>poaHoldRequestTimeout</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If a POA is put in the <TT>HOLDING</TT> state, calls to it will be timed
+out after the specified number of milliseconds, by raising a
+<TT>TRANSIENT</TT> exception. Zero means no timeout.<BR>
+<BR>
+<TT>supportBootstrapAgent</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If set true, servers support the Sun bootstrap agent protocol.<BR>
 <BR>
 
-<H3>5.1.3&nbsp;&nbsp; Comments</H3>By default, omniidl discards comments in the input IDL. However, with
-the <TT>-k</TT> and <TT>-K</TT> options, it preserves the comments
-for use by the back-ends. The C++ back-end ignores this information,
-but it is relatively easy to write new back-ends which <EM>do</EM> make
-use of comments.<BR>
-<BR>
-The two different options relate to how comments are attached to
-declarations within the IDL. Given IDL like:<BR>
-<BR>
+<H3><A NAME="htoc55">4.5.1</A>&nbsp;&nbsp;Main thread selection</H3>
+There is one server-side parameter that must be set with an API
+function, rather than a normal configuration parameter:
 <PRE>
-interface I {
-  void op1();
-  // A comment
-  void op2();
+namespace omniORB {
+  void setMainThread();
 };
-</PRE>the <TT>-k</TT> flag will attach the comment to <TT>op1()</TT>;
-the <TT>-K</TT> flag will attach it to <TT>op2()</TT>.<BR>
+</PRE>
+POAs with the <TT>MAIN_THREAD</TT> policy dispatch calls on the `main'
+thread. By default, omniORB assumes that the thread that initialised
+the omnithread library is the `main' thread. To choose a different
+thread, call this function from the desired `main' thread. The calling
+thread must have an <TT>omni_thread</TT> associated with it (i.e. it
+must have been created by omnithread, or
+<TT>omni_thread::create_dummy()</TT> must have been called). If it
+does not, the function throws <TT>CORBA::INITIALIZE</TT>.<BR>
+<BR>
+Note that calls are only actually dispatched to the `main' thread if
+<TT>ORB::run()</TT> or <TT>ORB::perform_work()</TT> is called from that thread.<BR>
+<BR>
+<A NAME="toc23"></A>
+<H2><A NAME="htoc56">4.6</A>&nbsp;&nbsp;GIOP and interoperability options</H2>
+These options control omniORB's use of GIOP, and cover some areas
+where omniORB can work around buggy behaviour by other ORBs.<BR>
+<BR>
+<TT>maxGIOPVerson</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1.2</TT><BR>
+<BR>
+<BR>
+Choose the maximum GIOP version the ORB should support. Valid values
+are 1.0, 1.1 and 1.2.<BR>
+<BR>
+<TT>giopMaxMsgSize</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>2097152</TT><BR>
+<BR>
+<BR>
+The largest message, in bytes, that the ORB will send or receive, to
+avoid resource starvation. If the limit is exceeded, a <TT>MARSHAL</TT>
+exception is thrown. The size must be &gt;= 8192.<BR>
+<BR>
+<TT>strictIIOP</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1</TT><BR>
+<BR>
+<BR>
+If true, be strict about interpretation of the IIOP specification; if
+false, permit some buggy behaviour to pass.<BR>
+<BR>
+<TT>lcdMode</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If true, select `Lowest Common Denominator' mode. This disables
+various IIOP and GIOP features that are known to cause problems with
+some ORBs.<BR>
+<BR>
+<TT>tcAliasExpand</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+This flag is used to indicate whether TypeCodes associated with Anys
+should have aliases removed. This functionality is included because
+some ORBs will not recognise an Any containing a TypeCode with aliases
+to be the same as the actual type contained in the Any. Note that
+omniORB will always remove top-level aliases, but will not remove
+aliases from TypeCodes that are members of other TypeCodes (e.g.
+TypeCodes for members of structs etc.), unless <TT>tcAliasExpand</TT> is
+set to 1. There is a performance penalty when inserting into an Any if
+<TT>tcAliasExpand</TT> is set to 1.<BR>
+<BR>
+<TT>useTypeCodeIndirections</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>1</TT><BR>
+<BR>
+<BR>
+TypeCode Indirections reduce the size of marshalled TypeCodes, and are
+essential for recursive types, but some ORBs do not support them.
+Setting this flag to false prevents the use of indirections (and,
+therefore, recursive TypeCodes).<BR>
+<BR>
+<TT>acceptMisalignedTcIndirections</TT> &nbsp;&nbsp; <I>default</I> =
+ <TT>0</TT><BR>
+<BR>
+<BR>
+If true, try to fix a mis-aligned indirection in a typecode. This is
+used to work around a bug in some versions of Visibroker's Java ORB.<BR>
 <BR>
 <A NAME="toc24"></A>
-<H2>5.2&nbsp;&nbsp; C++ back-end options</H2>When you specify the C++ back-end (with <TT>-bcxx</TT>), the
-following <TT>-Wb</TT> options are available. Note that the
-<TT>-Wb</TT> options must be specified <EM>after</EM> the
-<TT>-bcxx</TT> option, so omniidl knows which back-end to give the
-arguments to.<BR>
+<H2><A NAME="htoc57">4.7</A>&nbsp;&nbsp;System Exception Handlers</H2>
+By default, all system exceptions that are raised during an operation
+invocation, with the exception of some cases of
+<TT>CORBA::TRANSIENT</TT>, are propagated to the application code. Some
+applications may prefer to trap these exceptions within the proxy
+objects so that the application logic does not have to deal with the
+error condition. For example, when a <TT>CORBA::COMM_FAILURE</TT> is
+received, an application may just want to retry the invocation until
+it finally succeeds. This approach is useful for objects that are
+persistent and have idempotent operations.<BR>
 <BR>
-<TABLE CELLSPACING=2 CELLPADDING=0>
-<TR><TD ALIGN=left NOWRAP></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbh=</TT><I>suffix</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated header files. Default
- `<TT>.hh</TT>'.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbs=</TT><I>suffix</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated stub files. Default
- `<TT>SK.cc</TT>.'</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbd=</TT><I>suffix</I></TD>
-<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated dynamic files. Default
- `<TT>DynSK.cc</TT>.'</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wba</TT></TD>
-<TD ALIGN=left NOWRAP>Generate stubs for TypeCode and Any.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbtp</TT></TD>
-<TD ALIGN=left NOWRAP>Generate `tie' implementation skeletons.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbtf</TT></TD>
-<TD ALIGN=left NOWRAP>Generate flattened `tie' implementation skeletons.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbsplice-modules</TT></TD>
-<TD ALIGN=left NOWRAP>Splice together multiply-opened modules into one.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbexample</TT></TD>
-<TD ALIGN=left NOWRAP>Generate example implementation code.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-WbF</TT></TD>
-<TD ALIGN=left NOWRAP>Generate code fragments (for experts only).</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-WbBOA</TT></TD>
-<TD ALIGN=left NOWRAP>Generate BOA compatible skeletons.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbold</TT></TD>
-<TD ALIGN=left NOWRAP>Generate old CORBA 2.1 signatures for skeletons.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbold_prefix</TT></TD>
-<TD ALIGN=left NOWRAP>Map C++ reserved words with prefix `<TT>_</TT>' rather than
- `<TT>_cxx_</TT>'.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbkeep_inc_path</TT></TD>
-<TD ALIGN=left NOWRAP>Preserve IDL `<TT>#include</TT>' paths in generated
- 	`<TT>#include</TT>' directives.</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP><TT>-Wbuse_quotes</TT></TD>
-<TD ALIGN=left NOWRAP>Use quotes in `<TT>#include</TT>' directives 
- (e.g. <TT>"foo"</TT> rather than <TT>&lt;foo&gt;</TT>.)</TD>
-</TR></TABLE><BR>
-Again, most of these are self-explanatory.<BR>
+omniORB provides a set of functions to install exception handlers.
+Once they are installed, proxy objects will call these handlers when
+the associated system exceptions are raised by the ORB runtime.
+Handlers can be installed for <TT>CORBA::TRANSIENT</TT>,
+<TT>CORBA::COMM_FAILURE</TT> and <TT>CORBA::SystemException</TT>. This
+last handler covers all system exceptions other than the two covered
+by the first two handlers. An exception handler can be installed for
+individual proxy objects, or it can be installed for all proxy objects
+in the address space.<BR>
 <BR>
 
-<H3>5.2.1&nbsp;&nbsp; Module splicing</H3>On C++ compilers without namespace support, IDL modules map to C++
-classes, and so cannot be reopened. For some IDL, it is possible to
-`splice' reopened modules on to the first occurrence of the module, so
-all module definitions are in a single class. It is possible in this
-sort of situation:<BR>
+<H3><A NAME="htoc58">4.7.1</A>&nbsp;&nbsp;Minor codes</H3>
+A new feature in omniORB 4.0 is extensive use of exception minor codes
+to indicate the specific circumstances surrounding a system exception.
+The file <TT>include/omniORB4/minorCode.h</TT> contains definitions of
+all the minor codes used in omniORB, covering codes allocated in the
+CORBA specification, and ones specific to omniORB. In compilers with
+namespace support, the minor code constants appear in namespace
+<TT>omni</TT>; otherwise they are in the global scope.<BR>
 <BR>
+Applications can use minor codes to adjust their behaviour according
+to the condition, e.g.
 <PRE>
-module M1 {
-  interface I {};
-};
-module M2 {
-  interface J {
-    attribute M1::I ok;
-  };
-};
-module M1 {
-  interface K {
-    attribute I still_ok;
-  };
-};
-</PRE>but not if there are cross-module dependencies:<BR>
+try {
+  ...
+}
+catch (CORBA::TRANSIENT&amp; ex) {
+  if (ex.minor() == omni::TRANSIENT_ConnectFailed) {
+    // retry with a different object reference...
+  }
+  else {
+    // print an error message...
+  }
+}
+</PRE>
+
+<H3><A NAME="htoc59">4.7.2</A>&nbsp;&nbsp;CORBA::TRANSIENT handlers</H3>
+<TT>TRANSIENT</TT> exceptions can occur in many circumstances. One
+circumstance is as follows:
+<OL type=1><LI>The client invokes on an object reference.
+<LI>The object replies with a <TT>LOCATION_FORWARD</TT> message.
+<LI>The client caches the new location and retries to the new location.
+<LI>Time passes...
+<LI>The client tries to invoke on the object again, using the
+ cached, forwarded location. 
+<LI>The attempt to contact the object fails.
+<LI>The ORB runtime resets the location cache and throws a
+ <TT>TRANSIENT</TT> exception with minor code
+ <TT>TRANSIENT_FailedOnForwarded</TT>.</OL>
+In this situation, the default <TT>TRANSIENT</TT> exception handler
+retries the call, using the object's original location. If the retry
+results in another <TT>LOCATION_FORWARD</TT>, to the same or a
+different location, and <EM>that</EM> forwarded location fails
+immediately, the <TT>TRANSIENT</TT> exception will occur again, and the
+pattern will repeat. With repeated exceptions, the handler starts
+adding delays before retries, with exponential back-off.<BR>
 <BR>
+In all other circumstances, the default <TT>TRANSIENT</TT> handler just
+passes the exception on to the caller.<BR>
+<BR>
+Applications can override the default behaviour by installing their
+own exception handler. The API to do so is summarised below:
 <PRE>
-module M1 {
-  interface I {};
-};
-module M2 {
-  interface J {
-    attribute M1::I ok;
-  };
-};
-module M1 {
-  interface K {
-    attribute M2::J oh_dear;
-  };
-};
-</PRE>In both of these cases, the <TT>-Wbsplice-modules</TT>
-option causes omniidl to put all of the definitions for module
-<TT>M1</TT> into a single C++ class. For the first case, this will work
-fine. For the second case, class <TT>M1::K</TT> will contain a reference
-to <TT>M2::J</TT>, which has not yet been defined; the C++ compiler will
-complain.<BR>
+namespace omniORB {
+  
+typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
+                                                CORBA::ULong n_retries,
+                                                const CORBA::TRANSIENT&amp; ex);
+
+void installTransientExceptionHandler(void* cookie,
+                                      transientExceptionHandler_t fn);
+
+void installTransientExceptionHandler(CORBA::Object_ptr obj,
+                                      void* cookie,
+                                      transientExceptionHandler_t fn);
+  
+}
+</PRE>
+The overloaded function <TT>installTransientExceptionHandler()</TT> can be
+used to install the exception handlers for <TT>CORBA::TRANSIENT</TT>.
+Two forms are available: the first form installs an exception handler
+for all object references except for those which have an exception
+handler installed by the second form, which takes an additional
+argument to identify the target object reference. The argument
+<TT>cookie</TT> is an opaque pointer which will be passed on by the ORB
+when it calls the exception handler.<BR>
+<BR>
+An exception handler will be called by proxy objects with three
+arguments. The <TT>cookie</TT> is the opaque pointer registered by
+<TT>installTransientExceptionHandler()</TT>. The argument <TT>n_retries</TT>
+is the number of times the proxy has called this handler for the same
+invocation. The argument <TT>ex</TT> is the value of the exception
+caught. The exception handler is expected to do whatever is
+appropriate and returns a boolean value. If the return value is
+TRUE(1), the proxy object retries the operation. If the return value
+is FALSE(0), the <TT>CORBA::TRANSIENT</TT> exception is propagated into
+the application code.<BR>
+<BR>
+The following sample code installs a simple exception handler for all
+objects and for a specific object:
+<PRE>
+CORBA::Boolean my_transient_handler1 (void* cookie,
+                                      CORBA::ULong retries,
+                                      const CORBA::TRANSIENT&amp; ex)
+{
+   cerr &lt;&lt; "transient handler 1 called." &lt;&lt; endl;
+   return 1;           // retry immediately.
+}
+ 
+CORBA::Boolean my_transient_handler2 (void* cookie,
+                                      CORBA::ULong retries,
+                                      const CORBA::TRANSIENT&amp; ex)
+{
+   cerr &lt;&lt; "transient handler 2 called." &lt;&lt; endl;
+   return 1;           // retry immediately.
+}
+
+
+static Echo_ptr myobj;
+
+void installhandlers()
+{
+   omniORB::installTransientExceptionHandler(0,my_transient_handler1);
+   // All proxy objects will call my_transient_handler1 from now on.
+
+   omniORB::installTransientExceptionHandler(myobj,0,my_transient_handler2);
+   // The proxy object of myobj will call my_transient_handler2 from now on.
+}
+</PRE>
+
+<H3><A NAME="htoc60">4.7.3</A>&nbsp;&nbsp;CORBA::COMM_FAILURE</H3>
+If the ORB has successfully contacted an object at some point, and
+access to it subsequently fails (and the condition for
+<TT>TRANSIENT</TT> described above does not occur), the ORB raises a
+<TT>CORBA::COMM_FAILURE</TT> exception.<BR>
+<BR>
+The default behaviour of the proxy objects is to propagate this
+exception to the application. Applications can override the default
+behaviour by installing their own exception handlers. The API to do so
+is summarised below:
+<PRE>
+class omniORB {
+public:
+
+typedef CORBA::Boolean (*commFailureExceptionHandler_t)(void* cookie,
+                                                CORBA::ULong n_retries,
+                                                const CORBA::COMM_FAILURE&amp; ex);
+
+static void installCommFailureExceptionHandler(void* cookie,
+                                             commFailureExceptionHandler_t fn);
+
+static void installCommFailureExceptionHandler(CORBA::Object_ptr obj,
+                                             void* cookie,
+                                             commFailureExceptionHandler_t
+                                             fn);
+}
+</PRE>
+The functions are equivalent to their counterparts for
+<TT>CORBA::TRANSIENT</TT>.<BR>
 <BR>
 
-<H3>5.2.2&nbsp;&nbsp; Flattened tie classes</H3>Another problem with mapping IDL modules to C++ classes arises with
-tie templates. The C++ mapping says that for the interface
-<TT>M::I</TT>, the C++ tie template class should be named
-<TT>POA_M::I_tie</TT>. However, since template classes cannot be
-declared inside other classes, this naming scheme cannot be used with
-compilers without namespace support.<BR>
-<BR>
-The standard solution is to produce `flattened' tie class names, using
-the <TT>-Wbtf</TT> command line argument. With that flag, the
-template class is declared at global scope with the name
-<TT>POA_M_I_tie</TT>. i.e. all occurrences of `<TT>::</TT>' are
-replaced by `<TT>_</TT>'.<BR>
-<BR>
+<H3><A NAME="htoc61">4.7.4</A>&nbsp;&nbsp;CORBA::SystemException</H3>
+If a system exception that is neither <TT>CORBA::TRANISENT</TT> nor
+<TT>CORBA::COMM_FAILURE</TT> occurs, the default behaviour of the proxy
+objects is to propagate this exception to the application.
+Applications can override the default behaviour by installing their
+own exception handlers. The API to do so is summarised below:
+<PRE>
+class omniORB {
+public:
 
-<H3>5.2.3&nbsp;&nbsp; Generating example implementations</H3>If you use the <TT>-Wbexample</TT> flag, omniidl will generate an
-example implementation file as well as the stubs and skeletons. For
-IDL file <TT>foo.idl</TT>, the example code is written to
-<TT>foo_i.cc</TT>. The example file contains class and method
-declarations for the operations of all interfaces in the IDL file,
-along with a <TT>main()</TT> function which creates an instance of each
-object. You still have to fill in the operation implementations, of
-course.<BR>
+typedef CORBA::Boolean (*systemExceptionHandler_t)(void* cookie,
+                                            CORBA::ULong n_retries,
+                                            const CORBA::SystemException&amp; ex);
+
+static void installSystemExceptionHandler(void* cookie,
+                                          systemExceptionHandler_t fn);
+
+static void installSystemExceptionHandler(CORBA::Object_ptr obj,
+                                          void* cookie,
+                                          systemExceptionHandler_t fn);
+}
+</PRE>
+The functions are equivalent to their counterparts for
+<TT>CORBA::TRANSIENT</TT>.<BR>
 <BR>
 <A NAME="toc25"></A>
-<H2>5.3&nbsp;&nbsp; Examples</H2>Generate the C++ headers and stubs for a file <TT>a.idl</TT>:<BR>
+<H2><A NAME="htoc62">4.8</A>&nbsp;&nbsp;Location forwarding</H2>
+<A NAME="sec:locationForward"></A>
+Any CORBA operation invocation can return a <TT>LOCATION_FORWARD</TT>
+message to the caller, indicating that it should retry the invocation
+on a new object reference. The standard allows ServantManagers to
+trigger <TT>LOCATION_FORWARD</TT>s by raising the
+<TT>PortableServer::ForwardRequest</TT> exception, but it does not
+provide a similar mechanism for normal servants. omniORB provides the
+<TT>omniORB::LOCATION_FORWARD</TT> exception for this purpose. It
+can be thrown by any operation implementation.
+<PRE>
+namespace omniORB {
+  class LOCATION_FORWARD {
+  public:
+    LOCATION_FORWARD(CORBA::Object_ptr objref);
+  };
+};
+</PRE>
+The exception object consumes the object reference it is
+passed.<BR>
 <BR>
-<BLOCKQUOTE>
-<TT>omniidl -bcxx a.idl</TT>
-</BLOCKQUOTE>Generate with Any support:<BR>
-<BR>
-<BLOCKQUOTE>
-<TT>omniidl -bcxx -Wba a.idl</TT>
-</BLOCKQUOTE>Compile two files with Any support:<BR>
-<BR>
-<BLOCKQUOTE>
-<TT>omniidl -bcxx -Wba a.idl b.idl</TT>
-</BLOCKQUOTE>As above, but also generate Python stubs for the files
-(assuming omniORBpy is installed):<BR>
-<BR>
-<BLOCKQUOTE>
-<TT>omniidl -bcxx -Wba -bpython a.idl b.idl</TT>
-</BLOCKQUOTE>Just check the IDL files for validity, generating no output:<BR>
-<BR>
-<BLOCKQUOTE>
-<TT>omniidl a.idl b.idl</TT>
-</BLOCKQUOTE><HR>
+<HR>
 <A HREF="omniORB004.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB006.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

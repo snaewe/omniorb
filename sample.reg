@@ -1,6 +1,6 @@
 REGEDIT4
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;           omniORB (4.0 or above) configuration file                      ;
@@ -175,17 +175,6 @@ REGEDIT4
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; supportCurrent
-;
-;   If the value of this variable is TRUE, per-thread information is
-;   made available through the Current interfaces, e.g.
-;   PortableServer::Current. If you do not need this information, you
-;   can set the value to 0, resulting in a small performance
-;   improvement.
-;
-"supportCurrent" = "1"
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; nativeCharCodeSet
 ;
 ;   set the native code set for char and string
@@ -256,20 +245,18 @@ REGEDIT4
 ;
 ;   Specify the root context of the Naming Service.
 ;
-; [HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\InitRef]
+; [HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\InitRef]
 ; "0"="NameService=IOR:010000002800000049444c3a6f6d672e6f72672f436f734e616d696e672f4e616d696e67436f6e746578743a312e300001000000000000002c000000010102000c0000003139322e3136382e312e3000f90a00000c000000349568c45cb1e6780000000100000000"
 ;
 ;
 ;   Specify the Trading service and the interface repository using corbaloc:
 ;
-; [HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\InitRef]
+; [HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\InitRef]
 ; "1" = "TradingService=corbaloc:iiop:marrow:5009/MyObjectKey"
 ; "2" = "InterfaceRepository=corbaloc::1.2@marrow:5009/Intf"
 ;
 ;   The default for the set of initial references is empty.
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\InitRef]
-"0" = "NameService=IOR:00fff3880000002849444c3a6f6d672e6f72672f436f734e616d696e672f4e616d696e67436f6e746578743a312e3000000000010000000000000028000100000000000e3135382e3132342e36342e36310013910000000c349568c45cb1e67800000001"
-
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\InitRef]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; DefaultInitRef
@@ -285,7 +272,7 @@ REGEDIT4
 ;   reference denoted by `corbaloc::myhost.example.com/MyService'.
 ;
 ;   The default is empty.
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\DefaultInitRef]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\DefaultInitRef]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; clientTransportRule
@@ -350,7 +337,7 @@ REGEDIT4
 ;                               =       *                    none
 ;     
 ;             
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\clientTransportRule]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\clientTransportRule]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; clientCallTimeOutPeriod
@@ -362,7 +349,7 @@ REGEDIT4
 ;    Valid values = (n >= 0 in milliseconds) 
 ;                    0 --> no timeout. Block till a reply comes back
 ;
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB]
 "clientCallTimeOutPeriod" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -472,6 +459,14 @@ REGEDIT4
 "bootstrapAgentPort" = "900"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; principal
+;
+; The value of the principal field in GIOP 1.0 and 1.1 requests
+;
+; principal = me
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                          ;
@@ -483,6 +478,7 @@ REGEDIT4
 ; endPoint
 ; endPointNoPublish
 ; endPointNoListen
+; endPointPublishAllIFs
 ;
 ;    There are 3 possible way to specify the endpoints a server should create.
 ;    The 3 forms differ in the following ways:
@@ -495,7 +491,7 @@ REGEDIT4
 ;
 ;    Each configuration line can start with the key 'endPoint', e.g.
 ;
-;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\endPoint]
+;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPoint]
 ;"0" = "giop:tcp:neem:12345"
 ;"1" = "giop:ssl:neem:23456"
 ;
@@ -549,24 +545,28 @@ REGEDIT4
 ;
 ;   Here are some examples of valid endPoint configurations:
 ;
-;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\endPoint]
+;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPoint]
 ;"0" = "giop:tcp::"
 ;"1" = "giop:unix:"
 ;"2" = "giop:ssl::"
 ;
-;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\endPointNoPublish]
+;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPointNoPublish]
 ;"0" = "giop:tcp::"
 ;"1" = "giop:unix:"
 ;"2" = "giop:ssl::"
 ;
-;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\endPointNoListen]
+;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPointNoListen]
 ;"0" = "giop:tcp:192.168.1.1:12345"
 ;
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\endPoint]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPoint]
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\endPointNoPublish]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPointNoPublish]
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\endPointNoListen]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPointNoListen]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB]
+; "endPointPublishAllIFs" = "1"
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; serverTransportRule
@@ -580,7 +580,7 @@ REGEDIT4
 ;    in the order they are defined until one matching rule is found. 
 ;
 ;    The syntax of a rule is as follows:
-;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\serverTransportRule]
+;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\serverTransportRule]
 ;"(n>=0)" =  "[^]<address mask>      [action]+"
 ;
 ;        <address mask> can be:
@@ -602,7 +602,7 @@ REGEDIT4
 ;
 ;    By default, no rule is defined. The ORB implicitly uses the following
 ;    rule:
-;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\serverTransportRule]
+;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\serverTransportRule]
 ;"0" = "* unix,tcp,ssl"
 ;
 ;    If any rule is specified, the implicit rule will not be applied.
@@ -611,19 +611,19 @@ REGEDIT4
 ;
 ;    A) Only accept connections from our intranet
 ;
-;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\serverTransportRule]
+;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\serverTransportRule]
 ;        "0"                 = "localhost              unix,tcp,ssl"
 ;        "1"                 = "172.16.0.0/255.240.0.0 tcp,ssl"
 ;        "2"                 = "*                      none"
 ;
 ;    B) Only accept ssl connections if the client is not on our intranet
 ;
-;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\serverTransportRule]
+;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\serverTransportRule]
 ;
 ;        "0"                 = "localhost              unix,tcp,ssl"
 ;        "1"                 = "172.16.0.0/255.240.0.0 tcp,ssl"
 ;        "2"                 = "*                      bidir,ssl"
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\serverTransportRule]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\serverTransportRule]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; serverCallTimeOutPeriod
@@ -635,7 +635,7 @@ REGEDIT4
 ;    Valid values = (n >= 0 in milliseconds) 
 ;                    0 --> no timeout.
 ;
-[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB]
+[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB]
 "serverCallTimeOutPeriod" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -672,17 +672,6 @@ REGEDIT4
 ;   Valid values = (n >= 1) 
 ;
 "maxServerThreadPerConnection" = "100"
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; maxInterleavedCallsPerConnection
-;
-;   No. of interleaved calls per connection the server is prepared
-;   to accept. If this number is exceeded, the connection is closed.
-;
-;   Valid values = (n >= 1) 
-;
-"maxInterleavedCallsPerConnection" = "5"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -746,25 +735,15 @@ REGEDIT4
 "acceptBiDirectionalGIOP" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; unixTransportDirectory
+; supportCurrent
 ;
-;   Applies to the server side. Determine the directory in which
-;   the unix domain socket is to be created.
+;   If the value of this variable is TRUE, per-thread information is
+;   made available through the Current interfaces, e.g.
+;   PortableServer::Current. If you do not need this information, you
+;   can set the value to 0, resulting in a small performance
+;   improvement.
 ;
-;   Valid values = a valid pathname for a directory
-;
-;"unixTransportDirectory" = "/tmp/omni-%u"
-; %u is expanded into user name.
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; unixTransportPermission
-;
-;   Applies to the server side. Determine the permission mode bits
-;   the unix domain socket is set to.
-;
-;   Valid values = unix permission mode bits in octal radix (e.g. 0755)
-;
-;"unixTransportPermission" = "0777"
+"supportCurrent" = "1"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; objectTableSize
@@ -803,4 +782,5 @@ REGEDIT4
 ; bootstrap agent protocol.  This enables interoperability between omniORB
 ; servers and Sun's javaIDL clients. When this option is enabled, an
 ; omniORB server will response to a bootstrap agent request.
-"supportBootstrapAgent" = "1"
+;
+"supportBootstrapAgent" = "0"

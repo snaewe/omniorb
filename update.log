@@ -1,3 +1,77 @@
+Fri Aug 16 18:35:14 BST 2002 dgrisby
+====================================
+
+- Documentation, message updates. ORB tweaks to match docs.
+
+CHANGES_240   	   -- deleted
+CHANGES_250   	   -- deleted
+CHANGES_261   	   -- deleted
+CHANGES_271   	   -- deleted
+CHANGES_280   	   -- deleted
+PORTING            -- deleted
+README.ETSKernel   -- deleted
+README.FIRST
+README.FreeBSD     -- deleted
+README.Linux       -- deleted
+README.SGI         -- deleted
+README.SunC++5     -- deleted
+README.aix         -- deleted
+README.egcs        -- deleted
+README.hpux11      -- deleted
+README.openvms     -- deleted
+README.openvms_v6  -- deleted
+README.rtems       -- deleted
+README.unix
+README.win32
+configure
+configure.ac
+sample.cfg
+sample.reg
+doc/omniORB.pdf
+doc/omniORB.ps
+doc/omnithread.html
+doc/omnithread.pdf
+doc/omnithread.ps
+doc/omniORB/index.html
+doc/omniORB/omniORB001.html
+doc/omniORB/omniORB002.html
+doc/omniORB/omniORB003.html
+doc/omniORB/omniORB004.html
+doc/omniORB/omniORB005.html
+doc/omniORB/omniORB006.html
+doc/omniORB/omniORB007.html
+doc/omniORB/omniORB008.html
+doc/omniORB/omniORB009.html
+doc/omniORB/omniORB010.html
+doc/omniORB/omniORB011.html
+doc/omniORB/omniORB012.html
+doc/omniORB/omniORB013.html
+doc/omniORB/omniORB014.html   -- deleted
+doc/tex/omniORB.bib
+doc/tex/omniORB.tex
+doc/tex/omnithread.tex
+include/omniORB4/omniORB.h
+readmes/CHANGES_240   	   	      -- new
+readmes/CHANGES_250   	   	      -- new
+readmes/CHANGES_261   	   	      -- new
+readmes/CHANGES_271   	   	      -- new
+readmes/CHANGES_280   	   	      -- new
+readmes/PORTING            	      -- new
+readmes/README.ETSKernel   	      -- new
+readmes/README.SGI         	      -- new
+readmes/README.SunC++5     	      -- new
+readmes/README.egcs        	      -- new
+readmes/README.hpux11      	      -- new
+readmes/README.openvms     	      -- new
+readmes/README.openvms_v6  	      -- new
+readmes/README.rtems       	      -- new
+src/lib/omniORB/orbcore/exception.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
+
 Fri Aug 16 16:48:43 BST 2002 dgrisby
 ====================================
 

@@ -1,7 +1,7 @@
 omniORB on OpenVMS platforms
 ============================
 
-This file contains information on building omniORB on OpenVMS (Alpha and
+This file contains information on building omniORB on OpenVMS (Alpha
 and VAX) platforms.
 
 Changes in 3.0.0 prerelease

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.10  2002/08/16 17:47:39  dgrisby
+  Documentation, message updates. ORB tweaks to match docs.
+
   Revision 1.10.2.9  2002/02/25 11:17:12  dpg1
   Use tracedmutexes everywhere.
 
@@ -158,8 +161,8 @@ omni_defaultTransientExcHandler(void*,
   if (ex.minor() == TRANSIENT_FailedOnForwarded) {
     if (omniORB::trace(10)) {
       omniORB::logger log;
-      log << "Invocation on a location forwarded object has failed. Retry "
-	  << n_retries << "th times.\n";
+      log << "Invocation on a location forwarded object has failed. "
+	  << n_retries << " retries.\n";
     }
     unsigned long secs;
     secs = ((n_retries < 30) ? n_retries : 30);

@@ -2,234 +2,299 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
- Interface Type Checking
+ Interoperable Naming Service
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB006.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB008.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;7&nbsp;&nbsp; Interface Type Checking</H1>
-<A NAME="ch_intf"></A>This chapter describes the mechanism used by omniORB to ensure type
-safety when object references are exchanged across the network. This
-mechanism is handled completely within the ORB. There is no
-programming interface visible at the application level. However, for
-the sake of diagnosing the problem when there is a type violation, it
-is useful to understand the underlying mechanism in order to interpret
-the error conditions reported by the ORB.<BR>
+<H1><A NAME="htoc74">Chapter&nbsp;6</A>&nbsp;&nbsp;Interoperable Naming Service</H1>
+<A NAME="chap:ins"></A>
+omniORB 4.0 supports the Interoperable Naming Service (INS). The
+following is a summary of its facilities.<BR>
 <BR>
-<A NAME="toc38"></A>
-<H2>7.1&nbsp;&nbsp; Introduction</H2>In GIOP/IIOP, an object reference is encoded as an Interoperable
-Object Reference (IOR) when it is sent across a network connection.
-The IOR contains a Repository ID (RepoId) and one or more
-communication profiles. The communication profiles describe where and
-how the object can be contacted. The RepoId is a string which uniquely
-identifies the IDL interface of the object.<BR>
+<A NAME="toc29"></A>
+<H2><A NAME="htoc75">6.1</A>&nbsp;&nbsp;Object URIs</H2>
+As well as accepting IOR-format strings, <TT>ORB::string_to_object()</TT>
+also supports two Uniform Resource Identifier (URI)&nbsp;[<A HREF="omniORB013.html#rfc2396"><CITE>BLFIM98</CITE></A>]
+formats, which can be used to specify objects in a convenient
+human-readable form. IOR-format strings are now also considered URIs.<BR>
 <BR>
-Unless the <TT>ID</TT> pragma is specified in the IDL, the ORB generates
-the RepoId string in the so-called OMG IDL Format<A NAME="text19" HREF="#note19"><SUP><FONT SIZE=2>1</FONT></SUP></A>. For instance, the RepoId for the <TT>Echo</TT>
-interface used in the examples of chapter&nbsp;<A HREF="omniORB002.html#ch_basic">2</A> is
-<TT>IDL:Echo:1.0</TT>.<BR>
+
+<H3><A NAME="htoc76">6.1.1</A>&nbsp;&nbsp;corbaloc</H3>
+<TT>corbaloc</TT> URIs allow you to specify object references which
+can be contacted by IIOP, or found through
+<TT>ORB::resolve_initial_references()</TT>. To specify an IIOP object
+reference, you use a URI of the form:
+<BLOCKQUOTE>
+<TT>corbaloc:iiop:</TT>&lt;<I>host</I>&gt;<TT>:</TT>&lt;<I>port</I>&gt;<TT>/</TT>&lt;<I>object key</I>&gt;
+</BLOCKQUOTE>
+for example:
+<BLOCKQUOTE>
+<TT>corbaloc:iiop:myhost.example.com:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+which specifies an object with key `MyObjectKey' within a
+process running on myhost.example.com listening on port 1234. Object
+keys containing non-ASCII characters can use the standard URI %
+escapes:
+<BLOCKQUOTE>
+<TT>corbaloc:iiop:myhost.example.com:1234/My</TT><TT>%</TT><TT>efObjectKey</TT>
+</BLOCKQUOTE>
+denotes an object key with the value 239 (hex ef) in the
+third octet.<BR>
 <BR>
-When interface inheritance is used in the IDL, the ORB always sends the
-RepoId of the most derived interface. For example:<BR>
+The protocol name `<TT>iiop</TT>' can be abbreviated to the empty
+string, so the original URI can be written:
+<BLOCKQUOTE>
+<TT>corbaloc::myhost.example.com:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+The IANA has assigned port number 2809<SUP><A NAME="text13" HREF="#note13"><FONT SIZE=2>1</FONT></A></SUP> for use by <TT>corbaloc</TT>, so if
+the server is listening on that port, you can leave the port number
+out. The following two URIs refer to the same object:
+<BLOCKQUOTE>
+<TT>corbaloc::myhost.example.com:2809/MyObjectKey</TT><BR>
+<TT>corbaloc::myhost.example.com/MyObjectKey</TT>
+</BLOCKQUOTE>
+You can specify an object which is available at more than
+one location by separating the locations with commas:
+<BLOCKQUOTE>
+<TT>corbaloc::myhost.example.com,:localhost:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+Note that you must restate the protocol for each address,
+hence the `<TT>:</TT>' before `<TT>localhost</TT>'. It could
+equally have been written `<TT>iiop:localhost</TT>'.<BR>
 <BR>
+You can also specify an IIOP version number:
+<BLOCKQUOTE>
+<TT>corbaloc::1.2@myhost.example.com/MyObjectKey</TT>
+</BLOCKQUOTE>
+Specifying IIOP versions above 1.0 is slightly risky since higher
+versions make use of various information stored in IORs that is not
+present in a corbaloc URI. It is generally best to contact initial
+corbaloc objects with IIOP 1.0, and rely on higher versions for all
+other object references.<BR>
+<BR>
+Alternatively, to use <TT>resolve_initial_references()</TT>, you
+use a URI of the form:
+<BLOCKQUOTE>
+<TT>corbaloc:rir:/NameService</TT>
+</BLOCKQUOTE>
+
+<H3><A NAME="htoc77">6.1.2</A>&nbsp;&nbsp;corbaname</H3>
+<A NAME="sec:corbaname"></A>
+<TT>corbaname</TT> URIs cause <TT>string_to_object()</TT> to look-up a
+name in a CORBA Naming service. They are an extension of the
+<TT>corbaloc</TT> syntax:
+<BLOCKQUOTE>
+<TT>corbaname:</TT>&lt;<I>corbaloc location</I>&gt;<TT>/</TT>&lt;<I>object key</I>&gt;<TT>#</TT>&lt;<I>stringified name</I>&gt;
+</BLOCKQUOTE>
+for example:
+<BLOCKQUOTE>
+<TT>corbaname::myhost/NameService#project/example/echo.obj</TT><BR>
+<TT>corbaname:rir:/NameService#project/example/echo.obj</TT>
+</BLOCKQUOTE>
+Note that the object found with the
+<TT>corbaloc</TT>-style portion must be of type
+<TT>CosNaming::NamingContext</TT>, or something derived from it. If the
+object key (or <TT>rir</TT> name) is `<TT>NameService</TT>', it
+can be left out:
+<BLOCKQUOTE>
+<TT>corbaname::myhost#project/example/echo.obj</TT><BR>
+<TT>corbaname:rir:#project/example/echo.obj</TT>
+</BLOCKQUOTE>
+The stringified name portion can also be left out, in which
+case the URI denotes the <TT>CosNaming::NamingContext</TT> which would
+have been used for a look-up:
+<BLOCKQUOTE>
+<TT>corbaname::myhost.example.com</TT><BR>
+<TT>corbaname:rir:</TT>
+</BLOCKQUOTE>
+The first of these examples is the easiest way of specifying
+the location of a naming service.<BR>
+<BR>
+<A NAME="toc30"></A>
+<H2><A NAME="htoc78">6.2</A>&nbsp;&nbsp;Configuring resolve_initial_references</H2>
+<A NAME="sec:insargs"></A>
+The INS specified two standard command line arguments which provide a
+portable way of configuring <TT>ORB::resolve_initial_references()</TT>:<BR>
+<BR>
+
+<H3><A NAME="htoc79">6.2.1</A>&nbsp;&nbsp;ORBInitRef</H3>
+<TT>-ORBInitRef</TT> takes an argument of the form
+&lt;<I>ObjectId</I>&gt;<TT>=</TT>&lt;<I>ObjectURI</I>&gt;. So, for example,
+with command line arguments of:
+<BLOCKQUOTE>
+<TT>-ORBInitRef NameService=corbaname::myhost.example.com</TT>
+</BLOCKQUOTE>
+<TT>resolve_initial_references("NameService")</TT> will
+return a reference to the object with key `NameService' available on
+myhost.example.com, port 2809. Since IOR-format strings are considered
+URIs, you can also say things like:
+<BLOCKQUOTE>
+<TT>-ORBInitRef NameService=IOR:00ff...</TT>
+</BLOCKQUOTE>
+
+<H3><A NAME="htoc80">6.2.2</A>&nbsp;&nbsp;ORBDefaultInitRef</H3>
+<TT>-ORBDefaultInitRef</TT> provides a prefix string which is used to
+resolve otherwise unknown names. When
+<TT>resolve_initial_references()</TT> is unable to resolve a name which
+has been specifically configured (with <TT>-ORBInitRef</TT>), it
+constructs a string consisting of the default prefix, a `<TT>/</TT>'
+character, and the name requested. The string is then fed to
+<TT>string_to_object()</TT>. So, for example, with a command line of:
+<BLOCKQUOTE>
+<TT>-ORBDefaultInitRef corbaloc::myhost.example.com</TT>
+</BLOCKQUOTE>
+a call to <TT>resolve_initial_references("MyService")</TT>
+will return the object reference denoted by
+`<TT>corbaloc::myhost.example.com/MyService</TT>'.<BR>
+<BR>
+Similarly, a <TT>corbaname</TT> prefix can be used to cause
+look-ups in the naming service. Note, however, that since a
+`<TT>/</TT>' character is always added to the prefix, it is
+impossible to specify a look-up in the root context of the naming
+service---you have to use a sub-context, like:
+<BLOCKQUOTE>
+<TT>-ORBDefaultInitRef corbaname::myhost.example.com#services</TT>
+</BLOCKQUOTE>
+<A NAME="toc31"></A>
+<H2><A NAME="htoc81">6.3</A>&nbsp;&nbsp;omniNames</H2>
+
+<H3><A NAME="htoc82">6.3.1</A>&nbsp;&nbsp;NamingContextExt</H3>
+omniNames supports the extended <TT>CosNaming::NamingContextExt</TT>
+interface:
 <PRE>
-   // IDL
-   interface A {
-     ...
-   };
-   interface B : A {
-     ...
-   };
-   interface C {
-      void op(in A arg);
-   };
-</PRE><PRE>
-   // C++
-   C_ptr server;
-   B_ptr objB;
-   A_ptr objA = objB;
-   server-&gt;op(objA);  // Send B as A
-</PRE>In the example, the operation <TT>C::op()</TT> accepts an object reference
-of type <TT>A</TT>. The real type of the reference passed to <TT>C::op()</TT>
-is <TT>B</TT>, which inherits from <TT>A</TT>. In this case, the RepoId of
-<TT>B</TT>, and not that of <TT>A</TT>, is sent across the network.<BR>
-<BR>
-The GIOP/IIOP specification allows an ORB to send a null string in the
-RepoId field of an IOR. It is up to the receiving end to work out the
-real type of the object. omniORB never sends out null strings as
-RepoId. However, it may receive null RepoId from other ORBs. In that
-case, it will use the mechanism described below to ensure type safety.<BR>
-<BR>
-<A NAME="toc39"></A>
-<H2>7.2&nbsp;&nbsp; Basic Interface Type Checking</H2>
-<A NAME="sec_intf"></A>The ORB is provided with the interface information by the stubs via
-the <TT>proxyObjectFactory</TT> class. For an interface <TT>A</TT>, the
-stub of <TT>A</TT> contains a <TT>_pof_A</TT> class. This class is
-derived from the <TT>proxyObjectFactory</TT> class. The
-<TT>proxyObjectFactory</TT> is an abstract class which contains 3
-functions of interest:<BR>
-<BR>
-<PRE>
-class proxyObjectFactory {
-public:
+module CosNaming {
+  interface NamingContextExt : NamingContext {
+    typedef string StringName;
+    typedef string Address;
+    typedef string URLString;
 
-  const char *irRepoId() const;
+    StringName  to_string(in Name n)        raises(InvalidName);
+    Name        to_name  (in StringName sn) raises(InvalidName);
 
-  virtual CORBA::Boolean is_a(const char *base_repoId) const = 0;
-       
-  virtual CORBA::Object_ptr newObjRef(const char* mostDerivedTypeId,
-                                      IOP::TaggedProfileList* profiles,
-                                      omniIdentity* id,
-                                      omniLocalIdentity* lid) = 0;
-};
-</PRE><UL>
-<LI>
- <TT>irRepoId()</TT> returns the RepoId of the interface.
+    exception InvalidAddress {};
 
-<LI> <TT>is_a()</TT> returns true(1) if the argument is the RepoId of the
-interface itself or it is that of its base interfaces.<BR>
-<BR>
+    URLString   to_url(in Address addr, in StringName sn)
+      raises(InvalidAddress, InvalidName);
 
-<LI> <TT>newObjRef()</TT> returns an object reference based on the
-information supplied in the arguments.
-</UL>A single instance of every <TT>_pof_*</TT> is instantiated at runtime.
-The instances are entered into a list inside the ORB. The list
-constitutes all the interface information known to the ORB.<BR>
-<BR>
-When the ORB receives an IOR from the network, it unmarshals and
-extracts the RepoId from the IOR. At this point, the ORB has two
-pieces of information in hand:<BR>
-<BR>
-<OL type=1>
-<LI>
- The RepoId of the object reference received from the network.
-
-<LI> The RepoId the ORB is expecting. This comes from the unmarshal
- function that tells the ORB to receive the object reference.
-</OL>Using the RepoId received, the ORB searches its proxyObjectFactory
-list for an exact match. If there is an exact match, all is well
-because the runtime can use the <TT>is_a()</TT> method of the proxyFactory
-to check if the expected RepoId is the same as the received RepoId or
-if it is one of its base interfaces. If the answer is positive, the
-IOR passes the type checking test and the ORB can proceed to create an
-object reference in its own address space to represent the IOR.<BR>
-<BR>
-However, the ORB may fail to find a match in its proxyObjectFactory
-list. This means that the ORB has no local knowledge of the RepoId.
-There are three possible causes:<BR>
-<BR>
-<OL type=1>
-<LI>
- The remote end is another ORB and it sends a null string as the RepoId.
-
-<LI> The ORB is expecting an object reference of interface A. The remote
- end sends the RepoId of B which is an interface that inherits from A.
- The stubs of A are linked into the executable but the stubs of B are
- not.
-
-<LI> The remote end has sent a duff IOR.
-</OL>To handle this situation, the ORB must find out the type information
-dynamically. This is explained in the next section.<BR>
-<BR>
-<A NAME="toc40"></A>
-<H2>7.3&nbsp;&nbsp; Interface Inheritance</H2>When the ORB receives an IOR of interface type B when it expects the
-type to be A, it must find out if B inherits from A. When the ORB has
-no local knowledge of the type B, it must work out the type of B
-dynamically.<BR>
-<BR>
-The CORBA specification defines an Interface Repository (IR) from
-which IDL interfaces can be queried dynamically. In the above
-situation, the ORB could contact the IR to find out the type of B.
-However, this approach assumes that an IR is always available and
-contains the up-to-date information of all the interfaces used in the
-domain. This assumption may not be valid in many applications.<BR>
-<BR>
-An alternative is to use the <TT>_is_a()</TT> operation to work out the
-actual type of an object. This approach is simpler and more robust
-than the previous one because no 3rd party is involved.<BR>
-<BR>
-<PRE>
-class Object{
-    CORBA::Boolean _is_a(const char* type_id);
-};
-</PRE>The <TT>_is_a()</TT> operation is part of the <TT>CORBA::Object</TT>
-interface and must be implemented by every object. The input argument
-is a RepoId. The function returns true(1) if the object is really an
-instance of that type, including if that type is a base type of the
-most derived type of that object.<BR>
-<BR>
-In the situation above, the ORB would invoke the <TT>_is_a()</TT>
-operation on the object and ask if the object is of type A
-<EM>before</EM> it processes any application invocation on the object.<BR>
-<BR>
-Notice that the <TT>_is_a()</TT> call is <EM>not</EM> performed when the IOR
-is unmarshalled. It is performed just prior to the first application
-invocation on the object. This leads to some interesting failure modes
-if B reports that it is not an A. Consider the following example:<BR>
-<BR>
-<PRE>
-// IDL
-interface A { ... };
-interface B : A { ... };
-interface D { ... };
-interface C {
-  A      op1();
-  Object op2();
+    Object      resolve_str(in StringName n)
+      raises(NotFound, CannotProceed, InvalidName, AlreadyBound);
+  };
 };
 </PRE>
+<TT>to_string()</TT> and <TT>to_name()</TT> convert from <TT>CosNaming::Name</TT>
+sequences to flattened strings and vice-versa. Note that calling
+these operations involves remote calls to the naming service, so they
+are not particularly efficient. You can use the omniORB specific local
+<TT>omniURI::nameToString()</TT> and <TT>omniURI::stringToName()</TT>
+functions instead.<BR>
+<BR>
+A <TT>CosNaming::Name</TT> is stringified by separating name components
+with `<TT>/</TT>' characters. The <TT>kind</TT> and <TT>id</TT> fields of
+each component are separated by `<TT>.</TT>' characters. If the
+<TT>kind</TT> field is empty, the representation has no trailing
+`<TT>.</TT>'; if the <TT>id</TT> is empty, the representation starts
+with a `<TT>.</TT>' character; if both <TT>id</TT> and <TT>kind</TT>
+are empty, the representation is just a `<TT>.</TT>'. The backslash
+`<TT>\</TT>' is used to escape the meaning of
+`<TT>/</TT>', `<TT>.</TT>' and `<TT>\</TT>' itself.<BR>
+<BR>
+<TT>to_url()</TT> takes a <TT>corbaloc</TT> style address and key string
+(but without the <TT>corbaloc:</TT> part), and a stringified name,
+and returns a <TT>corbaname</TT> URI (incorrectly called a URL)
+string, having properly escaped any invalid characters. The
+specification does not make it clear whether or not the address string
+should also be escaped by the operation; omniORB does not escape
+it. For this reason, it is best to avoid calling <TT>to_url()</TT> if the
+address part contains escapable characters. omniORB provides the
+equivalent local function <TT>omniURI::addrAndNameToURI()</TT>.<BR>
+<BR>
+<TT>resolve_str()</TT> is equivalent to calling <TT>to_name()</TT> followed by
+the inherited <TT>resolve()</TT> operation. There are no string-based
+equivalents of the various bind operations.<BR>
+<BR>
+
+<H3><A NAME="htoc83">6.3.2</A>&nbsp;&nbsp;Use with corbaname</H3>
+To make it easy to use omniNames with <TT>corbaname</TT> URIs, it
+starts with the default port of 2809, and an object key of
+`<TT>NameService</TT>' for the root naming context.<BR>
+<BR>
+<A NAME="toc32"></A>
+<H2><A NAME="htoc84">6.4</A>&nbsp;&nbsp;omniMapper</H2>
+
+omniMapper is a simple daemon which listens on port 2809 (or any other
+port), and redirects IIOP requests for configured object keys to
+associated persistent IORs. It can be used to make a naming service
+(even an old non-INS aware version of omniNames or other ORB's naming
+service) appear on port 2809 with the object key
+`<TT>NameService</TT>'. The same goes for any other service you may
+wish to specify, such as an interface repository. omniMapper is
+started with a command line of:
+<BLOCKQUOTE>
+<TT>omniMapper [-port </TT>&lt;<I>port</I>&gt;<TT>] [-config </TT>&lt;<I>config file</I>&gt;<TT>] [-v]</TT>
+</BLOCKQUOTE>
+The <TT>-port</TT> option allows you to choose a port other
+than 2809 to listen on. The <TT>-config</TT> option specifies a
+location for the configuration file. The default name is
+<TT>/etc/omniMapper.cfg</TT>, or
+<CODE>C:\omniMapper.cfg</CODE>
+on Windows. omniMapper does not normally print anything; the
+<TT>-v</TT> option makes it verbose so it prints configuration
+information and a record of the redirections it makes, to standard
+output.<BR>
+<BR>
+The configuration file is very simple. Each line contains a string to
+be used as an object key, some white space, and an IOR (or any valid
+URI) that it will redirect that object key to. Comments should be
+prefixed with a `<TT>#</TT>' character. For example:
+<BLOCKQUOTE>
 <PRE>
- 1  // C++
- 2  C_ptr objC;
- 3  A_ptr objA;
- 4  CORBA::Object_ptr objR;
- 5
- 6  objA =  objC-&gt;op1();
- 7  (void) objA-&gt;_non_existent();
- 8
- 9  objR =  objC-&gt;op2();
-10  objA =  A::_narrow(objR);
-</PRE>If the stubs of A,B,C,D are linked into the executable and:<BR>
+# Example omniMapper.cfg
+NameService         IOR:000f...
+InterfaceRepository IOR:0100...
+</PRE></BLOCKQUOTE>
+omniMapper can either be run on a single machine, in much the same way
+as omniNames, or it can be run on <EM>every</EM> machine, with a common
+configuration file. That way, each machine's omniORB configuration
+file could contain the line:
+<BLOCKQUOTE>
+<PRE>
+ORBDefaultInitRef corbaloc::localhost
+</PRE></BLOCKQUOTE>
+<A NAME="toc33"></A>
+<H2><A NAME="htoc85">6.5</A>&nbsp;&nbsp;Creating objects with simple object keys</H2>
+In normal use, omniORB creates object keys containing various
+information including POA names and various non-ASCII characters.
+Since object keys are supposed to be opaque, this is not usually a
+problem. The INS breaks this opacity and requires servers to create
+objects with human-friendly keys.<BR>
 <BR>
-<DL COMPACT=compact>
-<DT>
-Case 1<DD> <TT>C::op1()</TT> and <TT>C::op2()</TT> return a B. Lines 6--10
-complete successfully. The remote object is only contacted at line 7.<BR>
+If you wish to make your objects available with human-friendly URIs,
+there are two options. The first is to use omniMapper as described
+above, in conjunction with a <TT>PERSISTENT</TT> POA. The second is to
+create objects with the required keys yourself. You do this with a
+special POA with the name `<TT>omniINSPOA</TT>', acquired from
+<TT>resolve_initial_references()</TT>. This POA has the <TT>USER_ID</TT>
+and <TT>PERSISTENT</TT> policies, and the special property that the
+object keys it creates contain only the object ids given to the POA,
+and no other data. It is a normal POA in all other respects, so you
+can activate/deactivate it, create children, and so on, in the usual
+way.<BR>
 <BR>
-
-<DT>Case 2<DD> <TT>C::op1()</TT> and <TT>C::op2()</TT> return a D. This condition
-only occurs if the runtime of the remote end is buggy. The ORB raises
-a CORBA::Marshal exception at line 1 because it knows it has received
-an interface of the wrong type.
-</DL>If only the stubs of A are linked into the executable and:<BR>
-<BR>
-<DL COMPACT=compact>
-<DT>
-Case 1<DD> <TT>C::op1()</TT> and <TT>C::op2()</TT> return a B. Lines 6--10
-complete successfully. When lines 7 and 10 are executed, the object is
-contacted to ask if it is an A.<BR>
-<BR>
-
-<DT>Case 2<DD> <TT>C::op1()</TT> and <TT>C::op2()</TT> return a D. This condition
-only occurs if the runtime of the remote end is buggy. Line 6
-completes and no exception is raised. At line 7, the object is
-contacted to ask if it is an A. If the answer is no, a
-<TT>CORBA::INV_OBJREF</TT> exception is raised. The application will
-also see a <TT>CORBA::INV_OBJREF</TT> at line 10.
-</DL><HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note19" HREF="#text19"><FONT SIZE=5>1</FONT></A><DD> For further
-details of the repository ID formats, see section 10.6 in the CORBA
-2.3 specification.
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note13" HREF="#text13"><FONT SIZE=5>1</FONT></A><DD>Not 2089 as
+printed in [<A HREF="omniORB013.html#inschapters"><CITE>OMG00b</CITE></A>]!
 </DL>
 <HR>
 <A HREF="omniORB006.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB008.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.18  2002/08/16 17:47:39  dgrisby
+  Documentation, message updates. ORB tweaks to match docs.
+
   Revision 1.2.2.17  2002/01/09 11:39:22  dpg1
   New omniORB::setLogFunction() function.
 
@@ -373,29 +376,42 @@ _CORBA_MODULE_BEG
   // When an operation is invoked via an object reference, a            //
   // CORBA::TRANSIENT exception may be raised. 				//
   //									//
-  // By default, the operation will be retried transparently. The ORB 	//
-  // will retry indefinitely if the operation continues to raise the	//
-  // CORBA::TRANSIENT exception. Successive retries will be delayed	//
-  // progressively by multiples of					//
-  // omniORB::defaultTransientRetryDelayIncment.  The value is in number//
-  // of seconds. The delay will be limited to a maximum specified by	//
-  // omniORB::defaultTransientRetryDelayMaximum.			//
+  // One circumstance in which a TRANSIENT exception can arise is as    //
+  // follows:                                                           //
+  //                                                                    //
+  //     1. The client invokes on an object reference.                  //
+  //     2. The object replies with a LOCATION_FORWARD message.         //
+  //     3. The client caches the new location and retries to the new   //
+  //        location.                                                   //
+  //     4. Time passes...                                              //
+  //     5. The client tries to invoke on the object again, using the   //
+  //        cached, forwarded location.                                 //
+  //     6. The attempt to contact the object fails.                    //
+  //     7. The ORB runtime resets the location cache and throws a      //
+  //        TRANSIENT exception with minor code                         //
+  //        TRANSIENT_FailedOnForwarded.                                //
+  //                                                                    //
+  // In this situation, the default TRANSIENT exception handler retries //
+  // the request.                                                       //
+  //                                                                    //
+  // In all other circumstances, TRANSIENT exceptions are propagated to //
+  // the application.                                                   //
   //									//
   // This retry behaviour can be overridden by installing an exception	//
   // handler.  An exception handler is a function with the same 	//
   // signature as omniORB::transientExceptionHandler_t. The handler 	//
   // will be called when a CORBA::TRANSIENT exception is caught by the 	//
-  // ORB. The handler is passed with three arguments: a <cookie>, the 	//
+  // ORB. The handler is passed three arguments: a <cookie>, the 	//
   // no. of retries <n_retries> and the value of the exception caught 	//
   // <ex>. The handler is expected to do whatever is appropriate and 	//
-  // returns a boolean value. If the return value is TRUE (1), the ORB 	//
+  // return a boolean value. If the return value is TRUE (1), the ORB 	//
   // would retry the operation again. If the return value is FALSE (0),	//
-  // the CORBA::TRANSIENT exception would be re-throw and is expected to//
-  // be caught by the application code.					//
+  // the CORBA::TRANSIENT exception would be re-throw and is expected   //
+  // to be caught by the application code.			      	//
   //									//
   // The overloaded functions omniORB::installTransientExceptionHandler //
   // can be used to install the exception handlers for CORBA::TRANSIENT.//
-  // Two overloaded forms are available. The first form install an 	//
+  // Two overloaded forms are available. The first form installs an 	//
   // exception handler for all object references except for those which //
   // have an exception handler installed by the second form, which takes//
   // an addition argument <obj> to identify the target object reference.//
@@ -414,8 +430,6 @@ _CORBA_MODULE_BEG
 				 void* cookie,                          //
 				 transientExceptionHandler_t fn);       //
     									//
-  _CORBA_MODULE_VAR _core_attr CORBA::ULong defaultTransientRetryDelayIncrement;
-  _CORBA_MODULE_VAR _core_attr CORBA::ULong defaultTransientRetryDelayMaximum;
   ////////////////////////////////////////////////////////////////////////
 
 
@@ -448,15 +462,16 @@ _CORBA_MODULE_BEG
 
   ////////////////////////////////////////////////////////////////////////
   // When an operation is invoked via an object reference, a system	//
-  // exception may be raised. If the exception is either CORBA::TRANSIENT//
-  // and CORBA::COMM_FAILURE, the handling of this exception is described//
-  // above.								//
+  // exception may be raised. If the exception is either                //
+  // CORBA::TRANSIENT or CORBA::COMM_FAILURE, the handling of this      //
+  // exception is as described above.			                //
   //									//
   // By default, if the exception is neither CORBA::TRANSIENT and	//
   // CORBA::COMM_FAILURE, the ORB will pass this exception on to the	//
   // application. 							//
   //									//
-  // This behaviour can be overridden by installing an exception handler//
+  // This behaviour can be overridden by installing an exception        //
+  // handler.                                                           //
   // The function signature of the handler should be the same as	//
   // omniORB::systemExceptionHandler_t. The handlers can be installed   //
   // using the overloaded functions					//

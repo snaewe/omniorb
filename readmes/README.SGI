@@ -1,6 +1,6 @@
-omniORB 3 should run on IRIX 6.4 and 6.5 with the latest MIPSpro 7.2.1
-compiler. It is recommended that you also apply the latest patches to the 
-compiler - see mips_irix_6.5.n32.mk for more details on patches.
+omniORB should run on IRIX 6.4 and 6.5 with the latest MIPSpro 7.2.1
+compiler. It is recommended that you also apply the latest patches to
+the compiler - see mips_irix_6.5.n32.mk for more details on patches.
 
 According to the information provided by smant@nlr.nl (Geert Albert Smant),
 and James Riden <jamesr@europe.com>, the SGI linker has some peculiar
@@ -9,7 +9,9 @@ command line:
 
     1. Two libraries cross reference each other, as it is the case with 
        -lomniORB2 and -ltcpwrapGK means that -lomniORB2 has to be
-       repeated after -ltcpwrapGK
+       repeated after -ltcpwrapGK. (This info is obsolete with omniORB
+       4.0)
+
     2. Multi-threaded programs must have -lpthread as the last option
        on the command line.
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2002/08/16 17:47:39  dgrisby
+  Documentation, message updates. ORB tweaks to match docs.
+
   Revision 1.1.4.15  2002/07/04 15:14:41  dgrisby
   Correct usage of MessageErrors, fix log messages.
 
@@ -1154,7 +1157,7 @@ giopImpl11::marshalRequestHeader(giopStream* g) {
   s.put_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
 
   // principal
-  operator>>= ((CORBA::ULong)0,s);
+  omni::myPrincipalID >>= s;
 }
 
 ////////////////////////////////////////////////////////////////////////

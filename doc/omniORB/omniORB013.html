@@ -2,398 +2,57 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
- hosts_access(5)
+ References
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB012.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
-<A HREF="omniORB014.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <HR>
 
-<H1>Appendix&nbsp;A&nbsp;&nbsp; hosts_access(5)</H1>
-<A NAME="apx:hostsaccess"></A>
-<H3>DESCRIPTION</H3>This manual page describes a simple access control language that is
-based on client (host name/address, user name), and server (process
-name, host name/address) patterns. Examples are given at the end. The
-impatient reader is encouraged to skip to the EXAMPLES section for a
-quick introduction.<BR>
+<H1>References</H1><DL COMPACT=compact><DT><A NAME="rfc2396"><FONT COLOR=purple>[BLFIM98]</FONT></A><DD>
+T. Berners-Lee, R. Fielding, U.C. Irvine, and L. Masinter.
+<EM>Uniform Resource Identifiers (URI): Generic Syntax</EM>.
+RFC 2396, August 1998.<BR>
 <BR>
-An extended version of the access control language is described in the
-hosts_options(5) document. The extensions are turned on at
-program build time by building with -DPROCESS_OPTIONS.<BR>
+<DT><A NAME="henning1999"><FONT COLOR=purple>[HV99]</FONT></A><DD>
+Michi Henning and Steve Vinoski.
+<EM>Advanced CORBA Programming with C++</EM>.
+Addison-Wesley professional computing series, 1999.<BR>
 <BR>
-In the following text, <I>daemon</I> is the process name of a network
-daemon process, and <I>client</I> is the name and/or address of a host
-requesting service. Network daemon process names are specified in the
-inetd configuration file.<BR>
+<DT><A NAME="corbaservices"><FONT COLOR=purple>[OMG98]</FONT></A><DD>
+Object Management Group.
+<EM>CORBAServices: Common Object Services Specification</EM>, December
+ 1998.<BR>
 <BR>
+<DT><A NAME="cxxmapping"><FONT COLOR=purple>[OMG00a]</FONT></A><DD>
+Object Management Group.
+<EM>C++ Language Mapping</EM>, 2.0 edition, 2000.
+From <A HREF="http://www.omg.org/cgi-bin/doc?ptc/00-01-02"><TT>http://www.omg.org/cgi-bin/doc?ptc/00-01-02</TT></A>.<BR>
+<BR>
+<DT><A NAME="inschapters"><FONT COLOR=purple>[OMG00b]</FONT></A><DD>
+Object Management Group.
+<EM>Interoperable Naming Service revised chapters</EM>, August 2000.
+From <A HREF="http://cgi.omg.org/cgi-bin/doc?ptc/00-08-07"><TT>http://cgi.omg.org/cgi-bin/doc?ptc/00-08-07</TT></A>.<BR>
+<BR>
+<DT><A NAME="corba26-spec"><FONT COLOR=purple>[OMG01]</FONT></A><DD>
+Object Management Group.
+<EM>The Common Object Request Broker: Architecture and
+ Specification</EM>, 2.6 edition, December 2001.
+From <A HREF="http://www.omg.org/cgi-bin/doc?formal/01-12-01"><TT>http://www.omg.org/cgi-bin/doc?formal/01-12-01</TT></A>.<BR>
+<BR>
+<DT><A NAME="tjr96a"><FONT COLOR=purple>[Ric96]</FONT></A><DD>
+Tristan Richardson.
+<EM>The OMNI Thread Abstraction</EM>.
+AT&amp;T Laboratories Cambridge, October 1996.</DL>
 
-<H3>ACCESS CONTROL FILES</H3>The access control software consults two files. The search stops
-at the first match:<BR>
-<BR>
-<UL>
-<LI>
- Access will be granted when a (daemon,client) pair matches an
-entry in the <TT>/etc/hosts.allow</TT> file.<BR>
-<BR>
 
-<LI> Otherwise, access will be denied when a (daemon,client) pair
-matches an entry in the <TT>/etc/hosts.deny</TT> file.<BR>
-<BR>
-
-<LI> Otherwise, access will be granted.</UL>A non-existing access control file is treated as if it were an empty
-file. Thus, access control can be turned off by providing no access
-control files.<BR>
-<BR>
-
-<H3>ACCESS CONTROL RULES</H3>Each access control file consists of zero or more lines of text.
-These lines are processed in order of appearance. The search
-terminates when a match is found.<BR>
-<BR>
-<UL>
-<LI> A newline character is ignored when it is preceded by a
-backslash character. This permits you to break up long lines so that
-they are easier to edit.<BR>
-<BR>
-
-<LI> Blank lines or lines that begin with a <TT>#</TT> character are
-ignored. This permits you to insert comments and whitespace so that
-the tables are easier to read.<BR>
-<BR>
-
-<LI> All other lines should satisfy the following format, things
-between [] being optional: <TT>daemon_list : client_list [ :
-shell_command ] </TT></UL><TT>daemon_list</TT> is a list of one or more daemon process names
-(argv[0] values) or wildcards (see below). <BR>
-<BR>
-<TT>client_list</TT> is a list of one or more host names, host
-addresses, patterns or wildcards (see below) that will be matched
-against the client host name or address.<BR>
-<BR>
-The more complex forms <TT>daemon@host</TT> and <TT>user@host</TT> are
-explained in the sections on server endpoint patterns and on client
-username lookups, respectively.<BR>
-<BR>
-List elements should be separated by blanks and/or commas. <BR>
-<BR>
-With the exception of NIS (YP) netgroup lookups, all access control
-checks are case insensitive.<BR>
-<BR>
-
-<H3>PATTERNS</H3>The access control language implements the following patterns:<BR>
-<BR>
-<UL>
-<LI> A string that begins with a <TT>.</TT> character. A host name is
-matched if the last components of its name match the specified
-pattern. For example, the pattern <TT>.tue.nl</TT> matches the host
-name <TT>wzv.win.tue.nl</TT>.<BR>
-<BR>
-
-<LI> A string that ends with a <TT>.</TT> character. A host address
-is matched if its first numeric fields match the given string. For
-example, the pattern <TT>131.155.</TT> matches the address of (almost)
-every host on the Eindhoven University network (<TT>131.155.x.x</TT>).<BR>
-<BR>
-
-<LI> A string that begins with an  character is treated as
-an NIS (formerly YP) netgroup name. A host name is matched if it is a
-host member of the specified netgroup. Netgroup matches are not
-supported for daemon process names or for client user names.<BR>
-<BR>
-
-<LI> An expression of the form <TT>n.n.n.n/m.m.m.m</TT> is
-interpreted as a `net/mask' pair. A host address is matched if `net'
-is equal to the bitwise AND of the address and the `mask'. For
-example, the net/mask pattern
-<TT>131.155.72.0/255.255.254.0</TT> matches every address in the
-range <TT>131.155.72.0</TT> to <TT>131.155.73.255</TT>.</UL>
-<H3>WILDCARDS</H3>The access control language supports explicit wildcards:<BR>
-<BR>
-<DL COMPACT=compact>
-<DT>
-<TT>ALL</TT><DD><BR>The universal wildcard, always matches.<BR>
-<BR>
-
-<DT><TT>LOCAL</TT><DD><BR>Matches any host whose name does not contain a dot
-character.<BR>
-<BR>
-
-<DT><TT>UNKNOWN</TT><DD><BR>Matches any user whose name is unknown, and matches
-any host whose name or address are unknown. This pattern should be
-used with care: host names may be unavailable due to temporary name
-server problems. A network address will be unavailable when the
-software cannot figure out what type of network it is talking to.<BR>
-<BR>
-
-<DT><TT>KNOWN</TT><DD><BR>Matches any user whose name is known, and matches any
-host whose name and address are known. This pattern should be used
-with care: host names may be unavailable due to temporary name server
-problems. A network address will be unavailable when the software
-cannot figure out what type of network it is talking to.<BR>
-<BR>
-
-<DT><TT>PARANOID</TT><DD><BR>Matches any host whose name does not match its
-address. When tcpd is built with -DPARANOID (default mode), it drops
-requests from such clients even before looking at the access control
-tables. Build without -DPARANOID when you want more control over such
-requests.</DL>
-<H3>OPERATORS</H3><DL COMPACT=compact>
-<DT><TT>EXCEPT</TT><DD><BR>Intended use is of the form: <TT>list_1</TT> <TT>EXCEPT</TT>
-<TT>list_2</TT>; this construct matches anything that matches
-<TT>list_1</TT> unless it matches <TT>list_2</TT>. The
-<TT>EXCEPT</TT> operator can be used in <TT>daemon_lists</TT> and in
-<TT>client_lists</TT>. The <TT>EXCEPT</TT> operator can be nested: if
-the control language would permit the use of parentheses, <TT>a
-EXCEPT b EXCEPT c</TT> would parse as <TT>(a EXCEPT (b EXCEPT c))</TT>.</DL>
-<H3>SHELL COMMANDS</H3>If the first-matched access control rule contains a shell command,
-that command is subjected to <TT>%&lt;letter&gt;</TT> substitutions (see
-next section). The result is executed by a /bin/sh child process with
-standard input, output and error connected to /dev/null. Specify an
-<TT>&amp;</TT> at the end of the command if you do not want to wait until
-it has completed.<BR>
-<BR>
-Shell commands should not rely on the PATH setting of the inetd.
-Instead, they should use absolute path names, or they should begin
-with an explicit <TT>PATH=whatever</TT> statement.<BR>
-<BR>
-The hosts_options(5) document describes an alternative language that
-uses the shell command field in a different and incompatible way.<BR>
-<BR>
-
-<H3>% EXPANSIONS</H3>The following expansions are available within shell commands:<BR>
-<BR>
-<UL>
-<LI><TT>%a (%A)</TT> The client (server) host address.
-
-<LI><TT>%c</TT> Client information: user@host, user@address, a host
-name, or just an address, depending on how much information is
-available.
-
-<LI><TT>%d</TT> The daemon process name (argv[0] value).
-
-<LI><TT>%h (%H)</TT>
-The client (server) host name or address, if the host name is
-unavailable.
-
-<LI><TT>%n (%N)</TT> The client (server) host name (or "unknown" or
-"paranoid").
-
-<LI><TT>%p</TT> The daemon process id.
-
-<LI><TT>%s</TT> Server information: daemon@host, daemon@address, or
-just a daemon name, depending on how much information is available.
-
-<LI><TT>%u</TT> The client user name (or "unknown").
-
-<LI><TT>%%</TT> Expands to a single <TT>%</TT> character.</UL>Characters in % expansions that may confuse the shell are replaced by
-underscores.<BR>
-<BR>
-
-<H3>SERVER ENDPOINT PATTERNS</H3>In order to distinguish clients by the network address that they
-connect to, use patterns of the form:<BR>
-<BR>
-<TT>process_name@host_pattern : client_list ... </TT><BR>
-<BR>
-Patterns like these can be used when the machine has different
-internet addresses with different internet hostnames. Service
-providers can use this facility to offer FTP, GOPHER or WWW archives
-with internet names that may even belong to different
-organisations. See also the `twist' option in the hosts_options(5)
-document. Some systems (Solaris, FreeBSD) can have more than one
-internet address on one physical interface; with other systems you may
-have to resort to SLIP or PPP pseudo interfaces that live in a
-dedicated network address space. The <TT>host_pattern</TT> obeys
-the same syntax rules as host names and addresses in
-<TT>client_list</TT> context. Usually, server endpoint information is
-available only with connection-oriented services.<BR>
-<BR>
-
-<H3>CLIENT USERNAME LOOKUP</H3>When the client host supports the RFC 931 protocol or one of its
-descendants (TAP, IDENT, RFC 1413) the wrapper programs can retrieve
-additional information about the owner of a connection. Client
-username information, when available, is logged together with the
-client host name, and can be used to match patterns like:<BR>
-<BR>
-<TT>daemon_list : ... user_pattern@host_pattern ...</TT><BR>
-<BR>
-The daemon wrappers can be configured at compile time to perform
-rule-driven username lookups (default) or to always interrogate the
-client host. In the case of rule-driven username lookups, the above
-rule would cause username lookup only when both the
-<TT>daemon_list</TT> and the <TT>host_pattern</TT> match.<BR>
-<BR>
-A user pattern has the same syntax as a daemon process pattern, so the
-same wildcards apply (netgroup membership is not supported). One
-should not get carried away with username lookups, though.<BR>
-<BR>
-<UL>
-<LI> The client username information cannot be trusted when it is
-needed most, i.e. when the client system has been compromised. In
-general, ALL and (UN)KNOWN are the only user name patterns that make
-sense.<BR>
-<BR>
-
-<LI> Username lookups are possible only with TCP-based services, and
-only when the client host runs a suitable daemon; in all other cases
-the result is `unknown'.<BR>
-<BR>
-
-<LI> A well-known UNIX kernel bug may cause loss of service when
-username lookups are blocked by a firewall. The wrapper README
-document describes a procedure to find out if your kernel has this
-bug.<BR>
-<BR>
-
-<LI> Username lookups may cause noticeable delays for non-UNIX users.
-The default timeout for username lookups is 10 seconds: too short to
-cope with slow networks, but long enough to irritate PC users.</UL>Selective username lookups can alleviate the last problem. For
-example, a rule like:<BR>
-<BR>
-<TT>daemon_list : @pcnetgroup ALL@ALL </TT><BR>
-<BR>
-would match members of the pc netgroup without doing username lookups,
-but would perform username lookups with all other systems.<BR>
-<BR>
-
-<H3>DETECTING ADDRESS SPOOFING ATTACKS</H3>A flaw in the sequence number generator of many TCP/IP implementations
-allows intruders to easily impersonate trusted hosts and to break in
-via, for example, the remote shell service. The IDENT (RFC931 etc.)
-service can be used to detect such and other host address spoofing
-attacks.<BR>
-<BR>
-Before accepting a client request, the wrappers can use the IDENT
-service to find out that the client did not send the request at all.
-When the client host provides IDENT service, a negative IDENT lookup
-result (the client matches <TT>UNKNOWN@host</TT>) is strong evidence
-of a host spoofing attack.<BR>
-<BR>
-A positive IDENT lookup result (the client matches
-<TT>KNOWN@host</TT>) is less trustworthy. It is possible for an
-intruder to spoof both the client connection and the IDENT lookup,
-although doing so is much harder than spoofing just a client
-connection. It may also be that the client's IDENT server is lying.<BR>
-<BR>
-Note: IDENT lookups don't work with UDP services. <BR>
-<BR>
-
-<H3>EXAMPLES</H3>The language is flexible enough that different types of access control
-policy can be expressed with a minimum of fuss. Although the language
-uses two access control tables, the most common policies can be
-implemented with one of the tables being trivial or even empty.<BR>
-<BR>
-When reading the examples below it is important to realise that the
-allow table is scanned before the deny table, that the search
-terminates when a match is found, and that access is granted when no
-match is found at all.<BR>
-<BR>
-The examples use host and domain names. They can be improved by
-including address and/or network/netmask information, to reduce the
-impact of temporary name server lookup failures.<BR>
-<BR>
-
-<H3>MOSTLY CLOSED</H3>In this case, access is denied by default. Only explicitly authorised
-hosts are permitted access.<BR>
-<BR>
-The default policy (no access) is implemented with a trivial deny
-file:<BR>
-<BR>
-<PRE>
-/etc/hosts.deny:
-    ALL: ALL
-</PRE>This denies all service to all hosts, unless they are permitted access
-by entries in the allow file.<BR>
-<BR>
-The explicitly authorised hosts are listed in the allow file. For
-example:<BR>
-<BR>
-<PRE>
-/etc/hosts.allow:
-   ALL: LOCAL @some_netgroup
-   ALL: .foobar.edu EXCEPT terminalserver.foobar.edu
-</PRE>The first rule permits access from hosts in the local domain (no . in
-the host name) and from members of the <TT>some_netgroup</TT>
-netgroup. The second rule permits access from all hosts in the
-<TT>foobar.edu</TT> domain (notice the leading dot), with the
-exception of <TT>terminalserver.foobar.edu</TT>.<BR>
-<BR>
-
-<H3>MOSTLY OPEN</H3>Here, access is granted by default; only explicitly specified hosts
-are refused service.<BR>
-<BR>
-The default policy (access granted) makes the allow file redundant so
-that it can be omitted. The explicitly non-authorised hosts are
-listed in the deny file. For example:<BR>
-<BR>
-<PRE>
-/etc/hosts.deny:
-   ALL: some.host.name, .some.domain
-   ALL EXCEPT in.fingerd: other.host.name, .other.domain
-</PRE>The first rule denies some hosts and domains all services; the second
-rule still permits finger requests from other hosts and domains.<BR>
-<BR>
-
-<H3>BOOBY TRAPS</H3>The next example permits tftp requests from hosts in the local domain
-(notice the leading dot). Requests from any other hosts are denied.
-Instead of the requested file, a finger probe is sent to the offending
-host. The result is mailed to the superuser.<BR>
-<BR>
-<PRE>
-/etc/hosts.allow:
-   in.tftpd: LOCAL, .my.domain
-
-/etc/hosts.deny:
-   in.tftpd: ALL: (/some/where/safe\_finger -l @%h | \
-       /usr/ucb/mail -s %d-%h root) &amp;
-</PRE>The <TT>safe_finger</TT> command comes with the tcpd wrapper and
-should be installed in a suitable place. It limits possible damage
-from data sent by the remote finger server. It gives better
-protection than the standard finger command.<BR>
-<BR>
-The expansion of the %h (client host) and %d (service name)
-sequences is described in the section on shell commands.<BR>
-<BR>
-Warning: do not booby-trap your finger daemon, unless you are prepared
-for infinite finger loops.<BR>
-<BR>
-On network firewall systems this trick can be carried even further.
-The typical network firewall only provides a limited set of services
-to the outer world. All other services can be "bugged" just like the
-above tftp example. The result is an excellent early-warning system.<BR>
-<BR>
-
-<H3>DIAGNOSTICS</H3>An error is reported when a syntax error is found in a host access
-control rule; when the length of an access control rule exceeds the
-capacity of an internal buffer; when an access control rule is not
-terminated by a newline character; when the result of expansion would overflow an internal buffer; when a system call fails
-that shouldnt. All problems are reported via the syslog daemon.<BR>
-<BR>
-
-<H3>FILES</H3><TT>/etc/hosts.allow</TT>, (daemon,client) pairs that are granted access.<BR>
-<BR>
-<TT>/etc/hosts.deny</TT>, (daemon,client) pairs that are denied access.<BR>
-<BR>
-
-<H3>SEE ALSO</H3>tcpd(8) tcp/ip daemon wrapper program.<BR>
-<BR>
-tcpdchk(8), tcpdmatch(8), test programs.<BR>
-<BR>
-
-<H3>BUGS</H3>If a name server lookup times out, the host name will not be available
-to the access control software, even though the host is registered.<BR>
-<BR>
-Domain name server lookups are case insensitive; NIS (formerly YP)
-netgroup lookups are case sensitive.<BR>
-<BR>
-
-<H3>AUTHOR</H3>Wietse Venema (wietse@wzv.win.tue.nl)<BR>Department of Mathematics and Computing Science<BR>Eindhoven University of Technology<BR>Den Dolech 2, P.O. Box 513,<BR>5600 MB Eindhoven, The Netherlands<BR><BR>
-<BR>
 <HR>
 <A HREF="omniORB012.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
-<A HREF="omniORB014.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 </BODY>
 </HTML>

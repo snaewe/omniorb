@@ -1,17 +1,20 @@
-This file provides some pointers to port omniORB3 to a new platform.
+This file provides some pointers to port omniORB to a new platform.
 
-It should be straightforward to port omniORB3 to any platform which
-support POSIX style threads, BSD style sockets and has a decent C++
-compiler which supports exceptions and templates. The description
-below assumes the port is to a unix platform but the information
-provided is valid for any platforms.
+It should be straightforward to port omniORB to any platform which
+supports POSIX style threads, BSD style sockets and has a decent C++
+compiler which supports thread safe exceptions and templates. The
+description below assumes the port is to a Unix platform but the
+information provided is valid for any platforms.
 
-To start a port, you must create a platform configuration file in
-./mk/platforms for the new platform. It is better to copy an existing
-one and modify to suit the new platform. Next, edit the file
-./mk/config.mk to set the platform variable to the new platform.
-Suppose you have created a new file called x_y_z.mk. You should put a
-line like this in ./mk/config.mk:
+To start a port, try the Autoconf configure script. If that works,
+life will be easy. If it fails, you can either try to figure out how
+to fix it, or fall back to the old-style platform file build. To do
+that, create a platform configuration file in ./mk/platforms for the
+new platform. It is better to copy an existing one and modify to suit
+the new platform. Next, edit the file ./mk/config.mk to set the
+platform variable to the new platform.  Suppose you have created a new
+file called x_y_z.mk. You should put a line like this in
+./mk/config.mk:
 
 platform = x_y_z
 
@@ -43,10 +46,10 @@ files. The details are as follows:
 
      ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.tgz
 
-   On Unix platforms, omniidl is a shared library which is dynamically
-   loaded by Python. It should be relatively easy to come up with the
-   make rules to build the shared library, based upon the existing
-   platforms.
+   On most Unix platforms, omniidl is a shared library which is
+   dynamically loaded by Python. It should be relatively easy to come
+   up with the make rules to build the shared library, based upon the
+   existing platforms.
 
    If you have difficulties building a shared library omniidl, you can
    build an executable which is statically linked to the Python
@@ -71,12 +74,13 @@ files. The details are as follows:
    o -DNoNanoSleep
 
 
-4. Porting omniORB3 library
+4. Porting omniORB library
 
-   The file ./include/omniORB3/CORBA_sysdep.h contains #if
-   conditionals that define the size of primitive data types, CPU
-   endian and other platform specific information. You should add to
-   this file the information about the new platform.
+   The file ./include/omniORB4/CORBA_sysdep.h contains #if
+   conditionals (and #includes of other files) that define the size of
+   primitive data types, CPU endian and other platform specific
+   information. You should add to this file the information about the
+   new platform.
 
 
 Good Luck.

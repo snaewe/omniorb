@@ -2,273 +2,245 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
- Introduction
+ Table of Contents
 </TITLE>
 </HEAD>
 <BODY >
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB002.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;1&nbsp;&nbsp; Introduction</H1>
-omniORB is an Object Request Broker (ORB) that implements the 2.3
-specification of the Common Object Request Broker Architecture
-(CORBA)&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99a</CITE></A>]<A NAME="text1" HREF="#note1"><SUP><FONT SIZE=2>1</FONT></SUP></A>. It has passed the Open
-Group CORBA compliant testsuite and is one of the three ORBs to have
-been granted the CORBA brand in June 1999<A NAME="text2" HREF="#note2"><SUP><FONT SIZE=2>2</FONT></SUP></A>.<BR>
-<BR>
-This user guide tells you how to use omniORB to develop CORBA
-applications. It assumes a basic understanding of CORBA.<BR>
-<BR>
-In this chapter, we give an overview of the main features of omniORB
-and what you need to do to setup your environment to run omniORB.<BR>
-<BR>
-<A NAME="toc1"></A>
-<H2>1.1&nbsp;&nbsp; Features</H2>
-<H3>1.1.1&nbsp;&nbsp; CORBA 2.3 compliant</H3>omniORB implements the Internet Inter-ORB Protocol (IIOP). This
-protocol provides omniORB the means of achieving interoperability with
-the ORBs implemented by other vendors. In fact, this is the native
-protocol used by omniORB for the communication amongst its objects
-residing in different address spaces. Moreover, the IDL to C++
-language mapping provided by omniORB conforms to the latest revision
-of the CORBA specification. Type Any and TypeCode are now supported
-(introduced in version 2.5.0). DynAny is supported since 2.6.0. The
-Dynamic Invocation Interface and Dynamic Skeleton Interface are
-supported since 2.7.0. The C++ mapping has been updated to the CORBA
-2.3 specification since 2.8.0. The POA was introduced with 3.0.<BR>
-<BR>
+<H1>Table of Contents</H1>
+<UL><LI>
+<A HREF="omniORB002.html#htoc1">Chapter&nbsp;1&nbsp;&nbsp;Introduction</A>
+<UL><LI>
+<A HREF="omniORB002.html#htoc2">1.1&nbsp;&nbsp;Features</A>
+<UL><LI>
+<A HREF="omniORB002.html#htoc3">1.1.1&nbsp;&nbsp;Multithreading</A>
+<LI><A HREF="omniORB002.html#htoc4">1.1.2&nbsp;&nbsp;Portability</A>
+<LI><A HREF="omniORB002.html#htoc5">1.1.3&nbsp;&nbsp;Missing features</A>
+</UL>
+<LI><A HREF="omniORB002.html#htoc6">1.2&nbsp;&nbsp;Setting Up Your Environment</A>
+<LI><A HREF="omniORB002.html#htoc7">1.3&nbsp;&nbsp;Platform specific variables</A>
+</UL>
+<LI><A HREF="omniORB003.html#htoc8">Chapter&nbsp;2&nbsp;&nbsp;The Basics</A>
+<UL><LI>
+<A HREF="omniORB003.html#htoc9">2.1&nbsp;&nbsp;The Echo Object Example</A>
+<LI><A HREF="omniORB003.html#htoc10">2.2&nbsp;&nbsp;Specifying the Echo interface in IDL</A>
+<LI><A HREF="omniORB003.html#htoc11">2.3&nbsp;&nbsp;Generating the C++ stubs</A>
+<LI><A HREF="omniORB003.html#htoc12">2.4&nbsp;&nbsp;Object References and Servants</A>
+<LI><A HREF="omniORB003.html#htoc13">2.5&nbsp;&nbsp;A Quick Tour of the C++ stubs</A>
+<UL><LI>
+<A HREF="omniORB003.html#htoc14">2.5.1&nbsp;&nbsp;Servant Object Implementation</A>
+</UL>
+<LI><A HREF="omniORB003.html#htoc15">2.6&nbsp;&nbsp;Writing the servant implementation</A>
+<LI><A HREF="omniORB003.html#htoc16">2.7&nbsp;&nbsp;Writing the client</A>
+<LI><A HREF="omniORB003.html#htoc17">2.8&nbsp;&nbsp;Example 1 --- Colocated Client and Implementation</A>
+<UL><LI>
+<A HREF="omniORB003.html#htoc18">2.8.1&nbsp;&nbsp;ORB initialisation</A>
+<LI><A HREF="omniORB003.html#htoc19">2.8.2&nbsp;&nbsp;Obtaining the Root POA</A>
+<LI><A HREF="omniORB003.html#htoc20">2.8.3&nbsp;&nbsp;Object initialisation</A>
+<LI><A HREF="omniORB003.html#htoc21">2.8.4&nbsp;&nbsp;Activating the POA</A>
+<LI><A HREF="omniORB003.html#htoc22">2.8.5&nbsp;&nbsp;Performing a call</A>
+<LI><A HREF="omniORB003.html#htoc23">2.8.6&nbsp;&nbsp;ORB destruction</A>
+</UL>
+<LI><A HREF="omniORB003.html#htoc24">2.9&nbsp;&nbsp;Example 2 --- Different Address Spaces</A>
+<UL><LI>
+<A HREF="omniORB003.html#htoc25">2.9.1&nbsp;&nbsp;Object Implementation: Generating a Stringified Object Reference</A>
+<LI><A HREF="omniORB003.html#htoc26">2.9.2&nbsp;&nbsp;Client: Using a Stringified Object Reference</A>
+<LI><A HREF="omniORB003.html#htoc27">2.9.3&nbsp;&nbsp;Catching System Exceptions</A>
+<LI><A HREF="omniORB003.html#htoc28">2.9.4&nbsp;&nbsp;Lifetime of a CORBA object</A>
+</UL>
+<LI><A HREF="omniORB003.html#htoc29">2.10&nbsp;&nbsp;Example 3 --- Using the Naming Service</A>
+<UL><LI>
+<A HREF="omniORB003.html#htoc30">2.10.1&nbsp;&nbsp;Obtaining the Root Context Object Reference</A>
+<LI><A HREF="omniORB003.html#htoc31">2.10.2&nbsp;&nbsp;The Naming Service Interface</A>
+</UL>
+<LI><A HREF="omniORB003.html#htoc32">2.11&nbsp;&nbsp;Example 4 --- Using tie implementation templates</A>
+<LI><A HREF="omniORB003.html#htoc33">2.12&nbsp;&nbsp;Source Listings</A>
+<UL><LI>
+<A HREF="omniORB003.html#htoc34">2.12.1&nbsp;&nbsp;eg1.cc</A>
+<LI><A HREF="omniORB003.html#htoc35">2.12.2&nbsp;&nbsp;eg2_impl.cc</A>
+<LI><A HREF="omniORB003.html#htoc36">2.12.3&nbsp;&nbsp;eg2_clt.cc</A>
+<LI><A HREF="omniORB003.html#htoc37">2.12.4&nbsp;&nbsp;eg3_impl.cc</A>
+<LI><A HREF="omniORB003.html#htoc38">2.12.5&nbsp;&nbsp;eg3_clt.cc</A>
+<LI><A HREF="omniORB003.html#htoc39">2.12.6&nbsp;&nbsp;eg3_tieimpl.cc</A>
+</UL>
+</UL>
+<LI><A HREF="omniORB004.html#htoc40">Chapter&nbsp;3&nbsp;&nbsp;C++ language mapping</A>
+<UL><LI>
+<A HREF="omniORB004.html#htoc41">3.1&nbsp;&nbsp;BOA compatibility</A>
+</UL>
+<LI><A HREF="omniORB004.html#htoc42">Chapter&nbsp;4&nbsp;&nbsp;Interoperable Naming Service</A>
+<UL><LI>
+<A HREF="omniORB005.html#htoc43">4.1&nbsp;&nbsp;Object URIs</A>
+<UL><LI>
+<A HREF="omniORB005.html#htoc44">4.1.1&nbsp;&nbsp;corbaloc</A>
+<LI><A HREF="omniORB005.html#htoc45">4.1.2&nbsp;&nbsp;corbaname</A>
+</UL>
+<LI><A HREF="omniORB005.html#htoc46">4.2&nbsp;&nbsp;Configuring resolve_initial_references</A>
+<UL><LI>
+<A HREF="omniORB005.html#htoc47">4.2.1&nbsp;&nbsp;ORBInitRef</A>
+<LI><A HREF="omniORB005.html#htoc48">4.2.2&nbsp;&nbsp;ORBDefaultInitRef</A>
+</UL>
+<LI><A HREF="omniORB005.html#htoc49">4.3&nbsp;&nbsp;omniNames</A>
+<UL><LI>
+<A HREF="omniORB005.html#htoc50">4.3.1&nbsp;&nbsp;NamingContextExt</A>
+<LI><A HREF="omniORB005.html#htoc51">4.3.2&nbsp;&nbsp;Use with corbaname</A>
+</UL>
+<LI><A HREF="omniORB005.html#htoc52">4.4&nbsp;&nbsp;omniMapper</A>
+<LI><A HREF="omniORB005.html#htoc53">4.5&nbsp;&nbsp;Creating objects with simple object keys</A>
+</UL>
+<LI><A HREF="omniORB005.html#htoc54">Chapter&nbsp;5&nbsp;&nbsp;The IDL compiler</A>
+<UL><LI>
+<A HREF="omniORB005.html#htoc55">5.1&nbsp;&nbsp;Common options</A>
+<UL><LI>
+<A HREF="omniORB005.html#htoc56">5.1.1&nbsp;&nbsp;Preprocessor interactions</A>
+<LI><A HREF="omniORB005.html#htoc57">5.1.2&nbsp;&nbsp;Forward-declared interfaces</A>
+<LI><A HREF="omniORB005.html#htoc58">5.1.3&nbsp;&nbsp;Comments</A>
+</UL>
+<LI><A HREF="omniORB005.html#htoc59">5.2&nbsp;&nbsp;C++ back-end options</A>
+<UL><LI>
+<A HREF="omniORB005.html#htoc60">5.2.1&nbsp;&nbsp;Module splicing</A>
+<LI><A HREF="omniORB005.html#htoc61">5.2.2&nbsp;&nbsp;Flattened tie classes</A>
+<LI><A HREF="omniORB005.html#htoc62">5.2.3&nbsp;&nbsp;Generating example implementations</A>
+</UL>
+<LI><A HREF="omniORB006.html#htoc63">5.3&nbsp;&nbsp;Examples</A>
+</UL>
+<LI><A HREF="omniORB006.html#htoc64">Chapter&nbsp;6&nbsp;&nbsp;omniORB configuration</A>
+<UL><LI>
+<A HREF="omniORB006.html#htoc65">6.1&nbsp;&nbsp;Setting parameters</A>
+<UL><LI>
+<A HREF="omniORB006.html#htoc66">6.1.1&nbsp;&nbsp;Command line arguments</A>
+<LI><A HREF="omniORB006.html#htoc67">6.1.2&nbsp;&nbsp;ORB_init() parameter</A>
+<LI><A HREF="omniORB006.html#htoc68">6.1.3&nbsp;&nbsp;Environment variables</A>
+<LI><A HREF="omniORB006.html#htoc69">6.1.4&nbsp;&nbsp;Configuration file</A>
+</UL>
+<LI><A HREF="omniORB006.html#htoc70">6.2&nbsp;&nbsp;Tracing options</A>
+<UL><LI>
+<A HREF="omniORB006.html#htoc71">6.2.1&nbsp;&nbsp;Tracing API</A>
+</UL>
+<LI><A HREF="omniORB006.html#htoc72">6.3&nbsp;&nbsp;GIOP and interoperability options</A>
+<LI><A HREF="omniORB006.html#htoc73">6.4&nbsp;&nbsp;Miscellaneous global options</A>
+<LI><A HREF="omniORB007.html#htoc74">6.5&nbsp;&nbsp;Client side options</A>
+<LI><A HREF="omniORB007.html#htoc75">6.6&nbsp;&nbsp;Server side options</A>
+</UL>
+<LI><A HREF="omniORB007.html#htoc76">Chapter&nbsp;7&nbsp;&nbsp;The omniORB API</A>
+<UL><LI>
+<A HREF="omniORB007.html#htoc77">7.1&nbsp;&nbsp;ORB initialisation options</A>
+<LI><A HREF="omniORB007.html#htoc78">7.2&nbsp;&nbsp;Hostname and port</A>
+<LI><A HREF="omniORB007.html#htoc79">7.3&nbsp;&nbsp;Run-time Tracing and Diagnostic Messages</A>
+<LI><A HREF="omniORB007.html#htoc80">7.4&nbsp;&nbsp;Server Name</A>
+<LI><A HREF="omniORB007.html#htoc81">7.5&nbsp;&nbsp;GIOP Message Size</A>
+<LI><A HREF="omniORB007.html#htoc82">7.6&nbsp;&nbsp;Object table size</A>
+<LI><A HREF="omniORB007.html#htoc83">7.7&nbsp;&nbsp;POA request holding timeout</A>
+<LI><A HREF="omniORB007.html#htoc84">7.8&nbsp;&nbsp;Obsolete Initial Object Reference Bootstrapping</A>
+<LI><A HREF="omniORB007.html#htoc85">7.9&nbsp;&nbsp;GIOP Lowest Common Denominator Mode</A>
+<LI><A HREF="omniORB008.html#htoc86">7.10&nbsp;&nbsp;GIOP Requesting Principal field</A>
+<LI><A HREF="omniORB008.html#htoc87">7.11&nbsp;&nbsp;Trapping omniORB Internal Errors</A>
+<LI><A HREF="omniORB008.html#htoc88">7.12&nbsp;&nbsp;System Exception Handlers</A>
+<UL><LI>
+<A HREF="omniORB009.html#htoc89">7.12.1&nbsp;&nbsp;CORBA::TRANSIENT handlers</A>
+<LI><A HREF="omniORB009.html#htoc90">7.12.2&nbsp;&nbsp;CORBA::COMM_FAILURE</A>
+<LI><A HREF="omniORB009.html#htoc91">7.12.3&nbsp;&nbsp;CORBA::SystemException</A>
+</UL>
+<LI><A HREF="omniORB009.html#htoc92">7.13&nbsp;&nbsp;Location forwarding</A>
+</UL>
+<LI><A HREF="omniORB009.html#htoc93">Chapter&nbsp;8&nbsp;&nbsp;Interface Type Checking</A>
+<UL><LI>
+<A HREF="omniORB009.html#htoc94">8.1&nbsp;&nbsp;Introduction</A>
+<LI><A HREF="omniORB009.html#htoc95">8.2&nbsp;&nbsp;Interface Inheritance</A>
+</UL>
+<LI><A HREF="omniORB009.html#htoc96">Chapter&nbsp;9&nbsp;&nbsp;Connection Management</A>
+<UL><LI>
+<A HREF="omniORB009.html#htoc97">9.1&nbsp;&nbsp;Background</A>
+<LI><A HREF="omniORB009.html#htoc98">9.2&nbsp;&nbsp;The Model</A>
+<LI><A HREF="omniORB009.html#htoc99">9.3&nbsp;&nbsp;Idle Connection Shutdown and Remote Call Timeout</A>
+<LI><A HREF="omniORB009.html#htoc100">9.4&nbsp;&nbsp;Interoperability Considerations</A>
+<LI><A HREF="omniORB009.html#htoc101">9.5&nbsp;&nbsp;Connection Acceptance</A>
+</UL>
+<LI><A HREF="omniORB009.html#htoc102">Chapter&nbsp;10&nbsp;&nbsp;Type Any and TypeCode</A>
+<UL><LI>
+<A HREF="omniORB009.html#htoc103">10.1&nbsp;&nbsp;Example using type Any</A>
+<UL><LI>
+<A HREF="omniORB009.html#htoc104">10.1.1&nbsp;&nbsp;Type Any in IDL</A>
+<LI><A HREF="omniORB009.html#htoc105">10.1.2&nbsp;&nbsp;Inserting and Extracting Basic Types from an Any</A>
+<LI><A HREF="omniORB010.html#htoc106">10.1.3&nbsp;&nbsp;Inserting and Extracting Constructed Types from an Any</A>
+</UL>
+<LI><A HREF="omniORB010.html#htoc107">10.2&nbsp;&nbsp;Type Any in omniORB</A>
+<LI><A HREF="omniORB010.html#htoc108">10.3&nbsp;&nbsp;TypeCode in omniORB</A>
+<LI><A HREF="omniORB010.html#htoc109">10.4&nbsp;&nbsp;Source Listing</A>
+<UL><LI>
+<A HREF="omniORB011.html#htoc110">10.4.1&nbsp;&nbsp;anyExample_impl.cc</A>
+<LI><A HREF="omniORB011.html#htoc111">10.4.2&nbsp;&nbsp;anyExample_clt.cc</A>
+</UL>
+</UL>
+<LI><A HREF="omniORB011.html#htoc112">Chapter&nbsp;11&nbsp;&nbsp;Dynamic Management of Any Values</A>
+<UL><LI>
+<A HREF="omniORB012.html#htoc113">11.1&nbsp;&nbsp;C++ mapping</A>
+<LI><A HREF="omniORB012.html#htoc114">11.2&nbsp;&nbsp;The DynAny Interface</A>
+<UL><LI>
+<A HREF="omniORB012.html#htoc115">11.2.1&nbsp;&nbsp;Example: extract data values from an Any</A>
+<LI><A HREF="omniORB012.html#htoc116">11.2.2&nbsp;&nbsp;Example: insert data values into an Any</A>
+</UL>
+<LI><A HREF="omniORB012.html#htoc117">11.3&nbsp;&nbsp;The DynStruct Interface</A>
+<LI><A HREF="omniORB012.html#htoc118">11.4&nbsp;&nbsp;The DynSequence Interface</A>
+<LI><A HREF="omniORB012.html#htoc119">11.5&nbsp;&nbsp;The DynArray Interface</A>
+<LI><A HREF="omniORB012.html#htoc120">11.6&nbsp;&nbsp;The DynEnum Interface</A>
+<LI><A HREF="omniORB012.html#htoc121">11.7&nbsp;&nbsp;The DynUnion Interface</A>
+<UL><LI>
+<A HREF="omniORB012.html#htoc122">11.7.1&nbsp;&nbsp;Three Categories of Union</A>
+<LI><A >11.7.2&nbsp;&nbsp;Example: extract data values from a union</A>
+<LI><A >11.7.3&nbsp;&nbsp;Example: insert data values into a union</A>
+</UL>
+<LI><A >11.8&nbsp;&nbsp;Duplicate DynAny References</A>
+<LI><A >11.9&nbsp;&nbsp;Other Operations</A>
+</UL>
+<LI><A >Chapter&nbsp;12&nbsp;&nbsp;The Dynamic Invocation Interface</A>
+<UL><LI>
+<A >12.1&nbsp;&nbsp;Overview</A>
+<LI><A >12.2&nbsp;&nbsp;Pseudo Objects</A>
+<UL><LI>
+<A >12.2.1&nbsp;&nbsp;Request</A>
+<LI><A >12.2.2&nbsp;&nbsp;NamedValue</A>
+<LI><A >12.2.3&nbsp;&nbsp;NVList</A>
+<LI><A >12.2.4&nbsp;&nbsp;Context</A>
+<LI><A >12.2.5&nbsp;&nbsp;ContextList</A>
+<LI><A >12.2.6&nbsp;&nbsp;ExceptionList</A>
+<LI><A >12.2.7&nbsp;&nbsp;UnknownUserException</A>
+<LI><A >12.2.8&nbsp;&nbsp;Environment</A>
+</UL>
+<LI><A >12.3&nbsp;&nbsp;Creating Requests</A>
+<UL><LI>
+<A >12.3.1&nbsp;&nbsp;Examples</A>
+</UL>
+<LI><A >12.4&nbsp;&nbsp;Invoking Operations</A>
+<LI><A >12.5&nbsp;&nbsp;Multiple Requests</A>
+</UL>
+<LI><A >Chapter&nbsp;13&nbsp;&nbsp;The Dynamic Skeleton Interface</A>
+<UL><LI>
+<A >13.1&nbsp;&nbsp;Overview</A>
+<LI><A >13.2&nbsp;&nbsp;DSI Types</A>
+<UL><LI>
+<A >13.2.1&nbsp;&nbsp;PortableServer::DynamicImplementation</A>
+<LI><A >13.2.2&nbsp;&nbsp;ServerRequest</A>
+</UL>
+<LI><A >13.3&nbsp;&nbsp;Creating Dynamic Implementations</A>
+<UL><LI>
+<A >13.3.1&nbsp;&nbsp;Operations on the ServerRequest</A>
+</UL>
+<LI><A >13.4&nbsp;&nbsp;Registering Dynamic Objects</A>
+<LI><A >13.5&nbsp;&nbsp;Example</A>
+</UL>
+<LI><A >Appendix&nbsp;A&nbsp;&nbsp;hosts_access(5)</A>
+</UL>
 
-<H3>1.1.2&nbsp;&nbsp; Multithreading</H3>omniORB is fully multithreaded. To achieve low IIOP call overhead,
-unnecessary call-multiplexing is eliminated. At any time, there is at
-most one call in-flight in each communication channel between two
-address spaces. To do so without limiting the level of concurrency,
-new channels connecting the two address spaces are created on demand
-and cached when there are more concurrent calls in progress. Each
-channel is served by a dedicated thread. This arrangement provides
-maximal concurrency and eliminates any thread switching in either of
-the address spaces to process a call. Furthermore, to maximise the
-throughput in processing large call arguments, large data elements are
-sent as soon as they are processed while the other arguments are being
-marshalled.<BR>
-<BR>
-
-<H3>1.1.3&nbsp;&nbsp; Portability</H3>At AT&amp;T Laboratories, the ability to target a single source tree to
-multiple platforms is very important. This is difficult to achieve if
-the IDL to C++ mapping for these platforms are different. We avoid
-this problem by making sure that only one IDL to C++ mapping is used.
-We run several flavours of Unix, Windows NT, Windows 95 and our
-in-house developed systems for our own hardware. omniORB has been
-ported to all these platforms. <B>The IDL to C++ mapping for
-all these targets is the same</B>.<BR>
-<BR>
-omniORB uses real C++ exceptions and nested classes. We keep to the
-CORBA specification's standard mapping as much as possible and do not
-use the alternative mappings for C++ dialects. The only exception is
-the mapping of <B>modules</B>.<BR>
-<BR>
-Starting with 2.6.0, the code generated by the IDL compiler of omniORB
-can be compiled using <B>C++ classes</B> or <B>namespaces</B> to
-represent IDL <B>modules</B> depending on the availability of
-namespace support in the compiler.<BR>
-<BR>
-omniORB relies on the native thread libraries to provide the
-multithreading capability. A small class library
-(omnithread&nbsp;[<A HREF="omniORB014.html#tjr96a"><CITE>Ric96b</CITE></A>]) is used to encapsulate the (possibly
-different) APIs of the native thread libraries. In application code,
-it is recommended but not mandatory to use this class library for
-thread management. It should be easy to port omnithread to any
-platform that either supports the POSIX thread standard or has a
-thread package that supports similar capabilities.<BR>
-<BR>
-
-<H3>1.1.4&nbsp;&nbsp; Missing features</H3>
-<A NAME="missing"></A>omniORB is not (yet) a complete implementation of the CORBA 2.3 core.
-The following is a list of the missing features.<BR>
-<BR>
-<UL>
-<LI> omniORB does not have its own Interface Repository. However, it
-can act as a client to an IR.<BR>
-<BR>
-
-<LI> The IDL types wchar, wstring, fixed, and valuetype are not
-supported in this release.<BR>
-<BR>
-
-<LI> The <TT>PortableServer::Current</TT> interface is not yet
-supported.<BR>
-<BR>
-
-<LI> The DSI interface has changed significantly. Old code will have
-to be re-written to the new interface. There is no support for using
-the DSI with the BOA. This part of the ORB is incomplete, since it
-depends in part on <TT>PortableServer::Current</TT>. See
-chapter&nbsp;<A HREF="omniORB012.html#chap:dsi">12</A> for a way to workaround this problem for now.</UL>These features may be implemented in the short to medium term. It is
-best to check out the latest status on the omniORB home page
-(<A HREF="http://www.uk.research.att.com/omniORB/"><TT>http://www.uk.research.att.com/omniORB/</TT></A>).<BR>
-<BR>
-<A NAME="toc2"></A>
-<H2>1.2&nbsp;&nbsp; Setting Up Your Environment</H2>
-<A NAME="setup"></A>At AT&amp;T Laboratories Cambridge, you should use the OMNI Development
-Environment (ODE)&nbsp;[<A HREF="omniORB014.html#tjr96b"><CITE>Ric96a</CITE></A>] and the OMNI tree version 5.0 or above
-to compile your programs. If this is the case, there is no extra setup
-you have to do other than those described in the ODE documentation.<BR>
-<BR>
-If you are running omniORB at other sites, you (or your system
-administrator) should install omniORB by following the instructions in
-the installation notes.<BR>
-<BR>
-<UL>
-<LI> On Unix platforms, the omniORB runtime looks for the environment
-variable <TT>OMNIORB_CONFIG</TT>. If this variable is defined, it
-contains the pathname of the omniORB configuration file. If the
-variable is not set, omniORB will use the compiled-in pathname to
-locate the file.<BR>
-<BR>
-
-<LI> On ARM/ATMos, the omniORB runtime looks for configuration
-information in the file <TT>omniORB.cfg</TT>.<BR>
-<BR>
-
-<LI> On Win32 platforms (Windows NT, 2000, 95, 98), omniORB first
-checks the environment variable <TT>OMNIORB_CONFIG</TT> to obtain the
-pathname of the configuration file. If this is not set, it then
-attempts to obtain configuration data in the system registry. It
-searches for the data under the key
-<CODE>HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0</CODE>.</UL>The configuration file is used to obtain an object reference for the
-Naming Service, via either a stringified IOR or an Interoperable
-Naming Service URI. The entry in the configuration file should be
-specified in the form:<BR>
-<BR>
-<PRE>
-   ORBInitRef NameService=&lt;URI for the Naming Service&gt;
-</PRE>The easiest way of specifying the Naming Service is with a
-<TT>corbaname:</TT> URI, as described in
-section&nbsp;<A HREF="omniORB004.html#sec:corbaname">4.1.2</A>.<BR>
-<BR>
-Comments in the configuration file should be prefixed with a
-`<TT>#</TT>' character.<BR>
-<BR>
-On Win32 platforms, the naming service reference can be placed in the
-system registry, in the (string) value <TT>ORBInitRef</TT>, under the
-key
-<CODE>HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0</CODE>.<BR>
-<BR>
-
-<H3>1.2.1&nbsp;&nbsp; Deprecated configuration file entries</H3><TT>ORBInitRef</TT> is new with omniORB 3.0. The omniORB 2 formats are
-still supported, so you can specify the Naming Service IOR using a
-line of the form:<BR>
-<BR>
-<PRE>
-   NAMESERVICE &lt;IOR for the Naming Service&gt;
-</PRE>Since 2.6.0, two other entries have been supported, but are now made
-obsolete by the Interoperable Naming Service URIs:<BR>
-<BR>
-<PRE>
-   ORBInitialHost &lt;hostname string&gt;
-   ORBInitialPort &lt;port number (1-65535)&gt;
-</PRE>The corresponding entries under the Win32 system registry are the keys
-named <TT>ORBInitialHost</TT> and <TT>ORBInitialPort</TT>.<BR>
-<BR>
-The two entries provide information to the ORB to locate a
-(proprietary) bootstrap service at runtime. The bootstrap service is
-able to return the initial object reference for the Naming Service and
-others.<BR>
-<BR>
-<A NAME="toc3"></A>
-<H2>1.3&nbsp;&nbsp; Platform specific variables</H2>To compile omniORB programs correctly, several C++ preprocessor defines
-<B>must</B> be specified to identify the target platform.<BR>
-<BR>
-<DIV ALIGN=left>
-<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=1>
-<TR><TD ALIGN=left NOWRAP>Platform</TD>
-<TD ALIGN=left NOWRAP>CPP defines</TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Sun Solaris 2.5</TD>
-<TD ALIGN=left NOWRAP><CODE>__sparc__   __sunos__    __OSVERSION__=5</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Digital Unix 3.2</TD>
-<TD ALIGN=left NOWRAP><CODE>__alpha__   __osf1__     __OSVERSION__=3</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>HPUX 10.x</TD>
-<TD ALIGN=left NOWRAP><CODE>__hppa__    __hpux__     __OSVERSION__=10</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>HPUX 11.x</TD>
-<TD ALIGN=left NOWRAP><CODE>__hppa__    __hpux__     __OSVERSION__=11</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>IBM AIX 4.x</TD>
-<TD ALIGN=left NOWRAP><CODE>__aix__     __powerpc__  __OSVERSION__=4</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Linux 2.0 (x86)</TD>
-<TD ALIGN=left NOWRAP><CODE>__x86__     __linux__    __OSVERSION__=2</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Linux 2.0 (alpha)</TD>
-<TD ALIGN=left NOWRAP><CODE>__alpha__   __linux__    __OSVERSION__=2</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Linux 2.0 (powerpc)</TD>
-<TD ALIGN=left NOWRAP><CODE>__powerpc__ __linux__    __OSVERSION__=2</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Windows/NT 3.5</TD>
-<TD ALIGN=left NOWRAP><CODE>__x86__     __NT__       __OSVERSION__=3  __WIN32__</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Windows/NT 4.0</TD>
-<TD ALIGN=left NOWRAP><CODE>__x86__     __NT__       __OSVERSION__=4  __WIN32__</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Windows/95</TD>
-<TD ALIGN=left NOWRAP><CODE>__x86__     __WIN32__</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>OpenVMS 6.x (alpha)</TD>
-<TD ALIGN=left NOWRAP><CODE>__alpha__   __vms        __OSVERSION__=6 </CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>OpenVMS 6.x (vax)</TD>
-<TD ALIGN=left NOWRAP><CODE>__vax__     __vms        __OSVERSION__=6 </CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>SGI Irix 6.x</TD>
-<TD ALIGN=left NOWRAP><CODE>__mips__    __irix__     __OSVERSION__=6 </CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Reliant Unix 5.43</TD>
-<TD ALIGN=left NOWRAP><CODE>__mips__    __SINIX__    __OSVERSION__=5 </CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>ATMos 4.0</TD>
-<TD ALIGN=left NOWRAP><CODE>__arm__     __atmos__    __OSVERSION__=4</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>NextStep 3.x</TD>
-<TD ALIGN=left NOWRAP><CODE>__m68k__    __nextstep__ __OSVERSION__=3</CODE></TD>
-</TR>
-<TR><TD ALIGN=left NOWRAP>Unixware 7</TD>
-<TD ALIGN=left NOWRAP><CODE>__x86__     __uw7__      __OSVERSION__=5</CODE></TD>
-</TR></TABLE>
-</DIV><BR>
-The preprocessor defines for new platform ports not listed above can
-be found in the corresponding platform configuration files. For
-instance, the platform configuration file for Sun Solaris 2.6 is in
-<TT>mk/platforms/sun4_sosV_5.6.mk</TT>. The preprocessor defines to
-identify a platform are in the make variable
-<TT>IMPORT_CPPFLAGS</TT>.<BR>
-<BR>
-In a single source multi-target environment, you can put the
-preprocessor defines as the command-line arguments for the compiler.
-Alternately, you could create a sitedef.h file in the same directory
-as <TT>omniORB3/CORBA.h</TT>. Write into the file the appropriate set of
-preprocessor defines and add<BR>
-<BR>
-<PRE>
-#include &lt;omniORB3/sitedef.h&gt;
-</PRE>at the beginning of <TT>omniORB3/CORBA_sysdep.h</TT>.<BR>
-<BR>
-<HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note1" HREF="#text1"><FONT SIZE=5>1</FONT></A><DD> Most of the 2.3 features have
-been implemented. The features still missing in this release are listed
-in section&nbsp;<A HREF="#missing">1.1.4</A>. Where possible, backward compatibility has
-been maintained up to specification 2.0.
-
-<DT><A NAME="note2" HREF="#text2"><FONT SIZE=5>2</FONT></A><DD> More information
-can be found at <A HREF="http://www.opengroup.org/press/7jun99_b.htm"><TT>http://www.opengroup.org/press/7jun99_b.htm</TT></A>
-</DL>
 <HR>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB002.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>
