@@ -11,14 +11,18 @@
 
 /*
   $Log$
-  Revision 1.7  1997/03/10 16:43:05  sll
-  - New member function produce_mapping_with_indirection. This function produce
-    the mapping for an operation that uses the adaptation classes for passing
-    variable length INOUT and OUT arguments.
-  - New boolean member functions has_variable_out_arg, has_pointer_inout_arg
-    to tell whether the operation contains these argument types.
-  - Minor changes to accommodate the creation of a public API for omniORB2.
+  Revision 1.8  1997/04/23 14:31:16  sll
+  - added support for LOCATION_FORWARD message
+  - added code to assert object existent when first do a remote call.
 
+// Revision 1.7  1997/03/10  16:43:05  sll
+// - New member function produce_mapping_with_indirection. This function produce
+//   the mapping for an operation that uses the adaptation classes for passing
+//   variable length INOUT and OUT arguments.
+// - New boolean member functions has_variable_out_arg, has_pointer_inout_arg
+//   to tell whether the operation contains these argument types.
+// - Minor changes to accommodate the creation of a public API for omniORB2.
+//
 // Revision 1.6  1997/02/17  18:11:33  ewc
 // IDL Compiler now adds a dummy return after some exceptions - this
 //  stops some C++ compilers from complaining (e.g. MSVC++ 4.2) about
@@ -193,10 +197,66 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   s << "\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "GIOP_C _c(_rope());\n";
+  IND(s); s << "assertObjectExistent();\n";
+  IND(s); s << "omniRopeAndKey _r;\n";
+  IND(s); s << "CORBA::Boolean _fwd = getRopeAndKey(_r);\n";
+
+  // Declare a local variable for result and variable length OUT arguments.
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	if (a->direction() == AST_Argument::dir_OUT)
+	  {
+	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	    if (ntype == tObjref || ntype == tString ||
+		(mapping.is_arrayslice) ||
+		(mapping.is_reference && mapping.is_pointer)) 
+	      {
+		hasVariableLenOutArgs = I_TRUE;
+		// Declare a local pointer variable
+		IND(s);
+		declareVarType(s,a->field_type(),0,mapping.is_arrayslice);
+		s << ((ntype != tObjref && ntype != tString)?" *":"") 
+		  << " _" << a->uqname() << "= 0;\n";
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (!return_is_void()) 
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      if (ntype == tObjref || ntype == tString ||
+	  (mapping.is_arrayslice) ||
+	  (mapping.is_pointer))
+	{
+	  hasVariableLenOutArgs = I_TRUE;
+	  IND(s);
+	  declareVarType(s,return_type(),0,mapping.is_arrayslice);
+	  s << ((ntype != tObjref && ntype != tString)?" *":"") 
+	    << " _result" << "= 0;\n";
+	}
+      else
+	{
+	  IND(s);
+	  declareVarType(s,return_type());
+	  s << " _result;\n";
+	}
+    }
+
+  IND(s); s << "try {\n";
+  INC_INDENT_LEVEL();
+
+  IND(s); s << "GIOP_C _c(_r.rope());\n";
   
   // calculate request message size
-  IND(s); s << "CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),"
+  IND(s); s << "CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),"
 	    << strlen(uqname()) + 1 
 	    << ");\n";
 
@@ -225,50 +285,14 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	      break;
 	    }
 	  case AST_Argument::dir_OUT:
-	    {
-	      ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-	      if (ntype == tObjref || ntype == tString ||
-		  (mapping.is_arrayslice) ||
-		  (mapping.is_reference && mapping.is_pointer)) 
-		{
-		  hasVariableLenOutArgs = I_TRUE;
-		  // Declare a local pointer variable
-		  IND(s);
-		  declareVarType(s,a->field_type(),0,mapping.is_arrayslice);
-		  s << ((ntype != tObjref && ntype != tString)?" *":"") 
-		    << " _" << a->uqname() << "= 0;\n";
-		}
-
-	      break;
-	    }
+	    break;
 	  }
 	i.next();
       }
   }
 
-  if (!return_is_void()) 
-    {
-      argMapping mapping;
-      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
-      if (ntype == tObjref || ntype == tString ||
-	  (mapping.is_arrayslice) ||
-	  (mapping.is_pointer))
-	{
-	  hasVariableLenOutArgs = I_TRUE;
-	  IND(s);
-	  declareVarType(s,return_type(),0,mapping.is_arrayslice);
-	  s << ((ntype != tObjref && ntype != tString)?" *":"") 
-	    << " _result" << "= 0;\n";
-	}
-      else
-	{
-	  IND(s);
-	  declareVarType(s,return_type());
-	  s << " _result;\n";
-	}
-    }
 
-  IND(s); s << "_c.InitialiseRequest(objkey(),objkeysize(),(char *)\""
+  IND(s); s << "_c.InitialiseRequest(_r.key(),_r.keysize(),(char *)\""
 	    << uqname() << "\"," << strlen(uqname()) + 1 << ",_msgsize,"
 	    << ((flags() == AST_Operation::OP_oneway)?"1":"0")
 	    << ");\n";
@@ -315,8 +339,6 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   // unmarshall results
   if (hasVariableLenOutArgs)
     {
-      IND(s); s << "try {\n";
-      INC_INDENT_LEVEL();
       {
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
 	while (!i.is_done())
@@ -484,69 +506,6 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
       if (!return_is_void()) {
 	IND(s); s << "return _result;\n";
       }
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      IND(s); s << "catch (...) {\n";
-      INC_INDENT_LEVEL();
-      {
-	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-	while (!i.is_done())
-	  {
-	    argMapping mapping;
-	    argType ntype;
-
-	    o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
-	    if (a->direction() == AST_Argument::dir_OUT)
-	      {
-		ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
-		if (mapping.is_arrayslice)
-		  {
-		    IND(s); s << "if (_" << a->uqname() << ") delete [] _" << a->uqname() << ";\n";
-		  }
-		else if (mapping.is_reference && mapping.is_pointer)
-		  {
-		    IND(s); s << "if (_" << a->uqname() << ") delete _" << a->uqname() << ";\n";
-		  }
-		else if (ntype == tObjref)
-		  {
-		    IND(s); s << "if (_" << a->uqname() 
-			      << ") CORBA::release(_" << a->uqname() <<");\n";
-		  }
-		else if (ntype == tString)
-		  {
-		    IND(s); s << "if (_" << a->uqname() 
-			      << ") CORBA::string_free(_"
-			      << a->uqname() << ");\n";
-		  }
-	      }
-	    i.next();
-	  }
-      }
-      if (!return_is_void())
-	{
-	  argMapping mapping;
-	  argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
-
-	  if (mapping.is_arrayslice)
-	    {
-	      IND(s); s << "if (_result) delete [] _result;\n";
-	    }
-	  else if (ntype == tObjref)
-	    {
-	      IND(s); s << "if (_result) CORBA::release(_result);\n";
-	    }
-	  else if (ntype == tString)
-	    {
-	      IND(s); s << "if (_result) CORBA::string_free(_result);\n";
-	    }
-	  else if (mapping.is_pointer)
-	    {
-	      IND(s); s << "if (_result) delete _result;\n";
-	    }
-	}
-      IND(s); s << "throw;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
     }
   else
     {
@@ -636,30 +595,178 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   IND(s); s << "case GIOP::LOCATION_FORWARD:\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-#if 1
-  IND(s); s << "_c.RequestCompleted(1);\n";
-  IND(s); s << "throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);\n";
-#else
-  IND(s); s << "IOP::IOR *newref = new IOP::IOR();\n";
-  IND(s); s << "newref <<= _c;\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);\n";
   IND(s); s << "_c.RequestCompleted();\n";
-  IND(s); s << "this->newObjRef(newref);\n";
+  IND(s); s << "if (CORBA::is_nil(obj)) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "if (omniORB::traceLevel > 10) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "cerr << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\" << endl;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "omniRopeAndKey __r;\n";
+  IND(s); s << "obj->PR_getobj()->getRopeAndKey(__r);\n";
+  IND(s); s << "setRopeAndKey(__r);\n";
   IND(s); s << "_c.~GIOP_C();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "if (omniORB::traceLevel > 10) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "cerr << \"GIOP::LOCATION_FORWARD: retry request.\" << endl;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
   IND(s);
   if (!return_is_void()) {
     s << "return ";
     produce_invoke(s);
-    s << "\n";
+    s << ";\n";
   }
   else {
     produce_invoke(s);
-    s << "\n";
-    IND(s); s << "return\n";
+    s << ";\n";
+    IND(s); s << "return;\n";
   }
-#endif
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "catch (const CORBA::COMM_FAILURE& ex) {\n";
+  INC_INDENT_LEVEL();
+
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+	
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	if (a->direction() == AST_Argument::dir_OUT)
+	  {
+	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	    if (mapping.is_arrayslice)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete [] _" << a->uqname() << ";\n";
+	      }
+	    else if (mapping.is_reference && mapping.is_pointer)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete _" << a->uqname() << ";\n";
+	      }
+	    else if (ntype == tObjref)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::release(_" << a->uqname() <<");\n";
+		  }	
+	    else if (ntype == tString)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::string_free(_"
+			  << a->uqname() << ");\n";
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      
+      if (mapping.is_arrayslice)
+	{
+	  IND(s); s << "if (_result) delete [] _result;\n";
+	}
+      else if (ntype == tObjref)
+	{
+	  IND(s); s << "if (_result) CORBA::release(_result);\n";
+	}
+      else if (ntype == tString)
+	{
+	  IND(s); s << "if (_result) CORBA::string_free(_result);\n";
+	}
+      else if (mapping.is_pointer)
+	{
+	  IND(s); s << "if (_result) delete _result;\n";
+	}
+    }
+  IND(s); s << "if (_fwd) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "resetRopeAndKey();\n";
+  IND(s); s << "throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  IND(s); s << "catch (...) {\n";
+  INC_INDENT_LEVEL();
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+	
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	if (a->direction() == AST_Argument::dir_OUT)
+	  {
+	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	    if (mapping.is_arrayslice)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete [] _" << a->uqname() << ";\n";
+	      }
+	    else if (mapping.is_reference && mapping.is_pointer)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete _" << a->uqname() << ";\n";
+	      }
+	    else if (ntype == tObjref)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::release(_" << a->uqname() <<");\n";
+		  }	
+	    else if (ntype == tString)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::string_free(_"
+			  << a->uqname() << ");\n";
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      
+      if (mapping.is_arrayslice)
+	{
+	  IND(s); s << "if (_result) delete [] _result;\n";
+	}
+      else if (ntype == tObjref)
+	{
+	  IND(s); s << "if (_result) CORBA::release(_result);\n";
+	}
+      else if (ntype == tString)
+	{
+	  IND(s); s << "if (_result) CORBA::string_free(_result);\n";
+	}
+      else if (mapping.is_pointer)
+	{
+	  IND(s); s << "if (_result) delete _result;\n";
+	}
+    }
+  IND(s); s << "throw;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 

@@ -10,11 +10,15 @@
 
 /*
   $Log$
-  Revision 1.5  1997/02/17 18:03:46  ewc
-  IDL Compiler now adds a dummy return after some exceptions - this
-  stops some C++ compilers from complaining (e.g. MSVC++ 4.2) about
-  some control paths not returning values.
+  Revision 1.6  1997/04/23 14:28:40  sll
+  - added support for LOCATION_FORWARD message
+  - added code to assert object existent when first do a remote call.
 
+// Revision 1.5  1997/02/17  18:03:46  ewc
+// IDL Compiler now adds a dummy return after some exceptions - this
+// stops some C++ compilers from complaining (e.g. MSVC++ 4.2) about
+// some control paths not returning values.
+//
   Revision 1.4  1997/01/24 19:39:04  sll
   The skeleton code for nil object now returns a properly initialised result.
 
@@ -118,12 +122,9 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
   IND(s); produce_decl_rd(s,defined_in.proxy_fqname(),I_FALSE);
   s << " {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "GIOP_C _c(_rope());\n";
-  
-  // calculate request message size
-  IND(s); s << "CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),"
-	    << strlen("_get_") + strlen(uqname()) + 1 
-	    << ");\n";
+  IND(s); s << "assertObjectExistent();\n";
+  IND(s); s << "omniRopeAndKey _r;\n";
+  IND(s); s << "CORBA::Boolean _fwd = getRopeAndKey(_r);\n";
 
   {
     o2be_operation::argMapping mapping;
@@ -148,7 +149,17 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
       }
   }
 
-  IND(s); s << "_c.InitialiseRequest(objkey(),objkeysize(),(char *)\""
+  IND(s); s << "try {\n";
+  INC_INDENT_LEVEL();
+
+  IND(s); s << "GIOP_C _c(_r.rope());\n";
+
+  // calculate request message size
+  IND(s); s << "CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),"
+	    << strlen("_get_") + strlen(uqname()) + 1 
+	    << ");\n";
+
+  IND(s); s << "_c.InitialiseRequest(_r.key(),_r.keysize(),(char *)\""
 	    << "_get_" << uqname() << "\"," << strlen("_get_") + strlen(uqname()) + 1 << ",_msgsize,0);\n";
 
   IND(s); s << "switch (_c.ReceiveReply())\n";  // invoke method
@@ -161,8 +172,6 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
   // unmarshall results
   if (hasVariableLenOutArgs)
     {
-      IND(s); s << "try {\n";
-      INC_INDENT_LEVEL();
       o2be_operation::argMapping mapping;
       o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
       if (mapping.is_arrayslice) {
@@ -191,39 +200,12 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
 
   if (hasVariableLenOutArgs)
     {
-      IND(s); s << "return _result;";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      IND(s); s << "catch (...) {\n";
-      INC_INDENT_LEVEL();
-      {
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
-	
-	if (mapping.is_arrayslice)
-	  {
-	    IND(s); s << "if (_result) delete [] _result;\n";
-	  }
-	else if (mapping.is_reference && mapping.is_pointer)
-	  {
-	    IND(s); s << "if (_result) delete _result;\n";
-	  }
-	else if (ntype == o2be_operation::tObjref)
-	  {
-	    IND(s); s << "if (_result) CORBA::release(_result);\n";
-	  }
-	else if (ntype == o2be_operation::tString)
-	  {
-	    IND(s); s << "if (_result) CORBA::string_free(_result);\n";
-	  }
-      }
-      IND(s); s << "throw;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
+      IND(s); s << "return _result;\n";
+
     }
   else
     {
-      IND(s); s << "return _result;";
+      IND(s); s << "return _result;\n";
     }
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
@@ -247,22 +229,101 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
   IND(s); s << "case GIOP::LOCATION_FORWARD:\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-#if 1
-  IND(s); s << "_c.RequestCompleted(1);\n";
-  IND(s); s << "throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);\n";
-#else
-  IND(s); s << "IOP::IOR *newref = new IOP::IOR();\n";
-  IND(s); s << "newref <<= _c;\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);\n";
   IND(s); s << "_c.RequestCompleted();\n";
-  IND(s); s << "this->newObjRef(newref);\n";
+  IND(s); s << "if (CORBA::is_nil(obj)) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "if (omniORB::traceLevel > 10) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "cerr << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\" << endl;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "omniRopeAndKey __r;\n";
+  IND(s); s << "obj->PR_getobj()->getRopeAndKey(__r);\n";
+  IND(s); s << "setRopeAndKey(__r);\n";
   IND(s); s << "_c.~GIOP_C();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "if (omniORB::traceLevel > 10) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "cerr << \"GIOP::LOCATION_FORWARD: retry request.\" << endl;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
   IND(s); s << "return " << uqname() << "();\n";
-#endif
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
+
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "catch (const CORBA::COMM_FAILURE& ex) {\n";
+  INC_INDENT_LEVEL();
+  {
+    o2be_operation::argMapping mapping;
+    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
+	
+    if (mapping.is_arrayslice)
+      {
+	IND(s); s << "if (_result) delete [] _result;\n";
+      }
+    else if (mapping.is_reference && mapping.is_pointer)
+      {
+	IND(s); s << "if (_result) delete _result;\n";
+      }
+    else if (ntype == o2be_operation::tObjref)
+      {
+	IND(s); s << "if (_result) CORBA::release(_result);\n";
+      }
+    else if (ntype == o2be_operation::tString)
+      {
+	IND(s); s << "if (_result) CORBA::string_free(_result);\n";
+      }
+  }
+  IND(s); s << "if (_fwd) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "resetRopeAndKey();\n";
+  IND(s); s << "throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  if (hasVariableLenOutArgs) {
+    IND(s); s << "catch (...) {\n";
+    INC_INDENT_LEVEL();
+    {
+      o2be_operation::argMapping mapping;
+      o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
+	
+      if (mapping.is_arrayslice)
+	{
+	  IND(s); s << "if (_result) delete [] _result;\n";
+	}
+      else if (mapping.is_reference && mapping.is_pointer)
+	{
+	  IND(s); s << "if (_result) delete _result;\n";
+	}
+      else if (ntype == o2be_operation::tObjref)
+	{
+	  IND(s); s << "if (_result) CORBA::release(_result);\n";
+	}
+      else if (ntype == o2be_operation::tString)
+	{
+	  IND(s); s << "if (_result) CORBA::string_free(_result);\n";
+	}
+    }
+    IND(s); s << "throw;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+  }
 
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
@@ -344,10 +405,16 @@ o2be_attribute::produce_proxy_wr_skel(fstream &s,o2be_interface &defined_in)
   IND(s); produce_decl_wr(s,defined_in.proxy_fqname(),I_FALSE);
   s << " {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "GIOP_C _c(_rope());\n";
+  IND(s); s << "assertObjectExistent();\n";
+  IND(s); s << "omniRopeAndKey _r;\n";
+  IND(s); s << "CORBA::Boolean _fwd = getRopeAndKey(_r);\n";
+  IND(s); s << "try {\n";
+  INC_INDENT_LEVEL();
+
+  IND(s); s << "GIOP_C _c(_r.rope());\n";
   
   // calculate request message size
-  IND(s); s << "CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),"
+  IND(s); s << "CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),"
 	    << strlen("_set_") + strlen(uqname()) + 1 
 	    << ");\n";
 
@@ -358,7 +425,7 @@ o2be_attribute::produce_proxy_wr_skel(fstream &s,o2be_interface &defined_in)
 					   "_value",ntype,mapping);
   }
 
-  IND(s); s << "_c.InitialiseRequest(objkey(),objkeysize(),(char *)\""
+  IND(s); s << "_c.InitialiseRequest(_r.key(),_r.keysize(),(char *)\""
 	    << "_set_" << uqname() << "\"," << strlen("_set_") + strlen(uqname()) + 1 << ",_msgsize,0);\n";
 
   // marshall arguments;
@@ -400,21 +467,48 @@ o2be_attribute::produce_proxy_wr_skel(fstream &s,o2be_interface &defined_in)
   IND(s); s << "case GIOP::LOCATION_FORWARD:\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-#if 1
-  IND(s); s << "_c.RequestCompleted(1);\n";
-  IND(s); s << "throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);\n";
-#else
-  IND(s); s << "IOP::IOR *newref = new IOP::IOR();\n";
-  IND(s); s << "newref <<= _c;\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);\n";
   IND(s); s << "_c.RequestCompleted();\n";
-  IND(s); s << "this->newObjRef(newref);\n";
-  IND(s); s << "_c.~GIOP_C();\n";
-  IND(s); s << uqname() << "(_value);\n";
-  IND(s); s << "return;\n";
-#endif
+  IND(s); s << "if (CORBA::is_nil(obj)) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "if (omniORB::traceLevel > 10) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "cerr << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\" << endl;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
-
+  IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "omniRopeAndKey __r;\n";
+  IND(s); s << "obj->PR_getobj()->getRopeAndKey(__r);\n";
+  IND(s); s << "setRopeAndKey(__r);\n";
+  IND(s); s << "_c.~GIOP_C();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "if (omniORB::traceLevel > 10) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "cerr << \"GIOP::LOCATION_FORWARD: retry request.\" << endl;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << uqname() << "(_value);\n";
+  IND(s); s << "return;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "catch (const CORBA::COMM_FAILURE& ex) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "if (_fwd) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "resetRopeAndKey();\n";
+  IND(s); s << "throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
