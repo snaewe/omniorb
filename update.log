@@ -48,6 +48,7 @@ include/omniORB2/rope.h
 src/lib/omniORB2/orbcore/sharedlib/dir.mk
 src/lib/omniORB2/orbcore/strand.cc
 src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
 
 
 Wed Jan 20 11:38:36 GMT 1999 tjr
