@@ -45,6 +45,10 @@ struct @name@: public Messaging::ExceptionHolder{
   void operator>>=(NetBufferedStream &) const;
   void operator>>=(MemBufferedStream &) const;
 };
+
+typedef Messaging::ExceptionHolder_var @name@_var;
+typedef Messaging::ExceptionHolder_out @name@_out;
+
 """
 
 # ExceptionHolder valuetype implementation ###########################

@@ -39,16 +39,17 @@ class @classname@: public omniAMICall{
 private:
   @target_t@_var  _PD_target;
   @handler_t@_var _PD_handler;
-
+  @exceptionholder@_var _PD_holder;
+  
   // Argument storage
   @arg_storage@
 
 public:
-  @classname@(@constructor_args@){
+  @classname@(@constructor_args@):_PD_holder(NULL){
     @constructor@
   }
   
-  ~@classname@() { } // FIXME: delete things?
+  ~@classname@() { }
 
   omniCallDescriptor* get_request_cd(){
     request = new @request_calldesc@
@@ -57,7 +58,8 @@ public:
     return request;
   }
   omniCallDescriptor* get_reply_cd(){
-    @request_calldesc@ *derived_request = (@request_calldesc@*)request;
+    @request_calldesc@ *derived_request =
+       (@request_calldesc@*)request;
 
     @result_store@
 
@@ -72,11 +74,12 @@ public:
         @exc_args@);
     return exc;
   }
-  inline omniObjRef* get_target(){ return @target_t@::_duplicate(_PD_target); }
-  inline omniObjRef* get_handler(){ return @handler_t@::_duplicate(_PD_handler); }
+  inline omniObjRef* get_target(){ return _PD_target; }
+  inline omniObjRef* get_handler(){ return _PD_handler; }
 
   inline Messaging::ExceptionHolder* get_exception_holder(){
-    return new @exceptionholder@();
+    _PD_holder = new @exceptionholder@();
+    return _PD_holder.operator->();
   }
 };
 """
