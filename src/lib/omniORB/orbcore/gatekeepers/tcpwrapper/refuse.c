@@ -14,7 +14,6 @@ static char sccsid[] = "@(#) refuse.c 1.5 94/12/28 17:42:39";
 /* System libraries. */
 
 #include <stdio.h>
-#include <syslog.h>
 
 /* Local stuff. */
 
@@ -25,7 +24,7 @@ static char sccsid[] = "@(#) refuse.c 1.5 94/12/28 17:42:39";
 void    refuse(request)
 struct request_info *request;
 {
-    syslog(deny_severity, "refused connect from %s", eval_client(request));
+    fakesyslog(deny_severity, "refused connect from %s", eval_client(request));
     clean_exit(request);
     /* NOTREACHED */
 }

@@ -32,7 +32,6 @@ static char sccsid[] = "@(#) tli.c 1.15 97/03/21 19:27:25";
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <syslog.h>
 #include <errno.h>
 #include <netconfig.h>
 #include <netdir.h>

@@ -28,7 +28,6 @@ static char sccsid[] = "@(#) hosts_access.c 1.21 97/02/12 02:13:22";
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
-#include <syslog.h>
 #include <ctype.h>
 #include <errno.h>
 #include <setjmp.h>
@@ -165,7 +164,7 @@ struct request_info *request;
     }
     if (match) {
 	if (hosts_access_verbose > 1)
-	    syslog(LOG_DEBUG, "matched:  %s line %d",
+	    fakesyslog(LOG_DEBUG, "matched:  %s line %d",
 		   tcpd_context.file, tcpd_context.line);
 	if (sh_cmd) {
 #ifdef PROCESS_OPTIONS

@@ -16,7 +16,7 @@ static char sccsid[] = "@(#) fix_options.c 1.6 97/04/08 02:29:19";
 #include <netinet/ip.h>
 #include <netdb.h>
 #include <stdio.h>
-#include <syslog.h>
+
 
 #ifndef IPOPT_OPTVAL
 #define IPOPT_OPTVAL	0
@@ -78,7 +78,7 @@ struct request_info *request;
 	for (cp = optbuf + ADDR_LEN; cp < optbuf + optsize; cp += optlen) {
 	    opt = cp[IPOPT_OPTVAL];
 	    if (opt == IPOPT_LSRR || opt == IPOPT_SSRR) {
-		syslog(LOG_WARNING,
+		fakesyslog(LOG_WARNING,
 		   "refused connect from %s with IP source routing options",
 		       eval_client(request));
 		shutdown(fd, 2);
@@ -97,11 +97,11 @@ struct request_info *request;
 	lp = lbuf;
 	for (cp = optbuf; optsize > 0; cp++, optsize--, lp += 3)
 	    sprintf(lp, " %2.2x", *cp);
-	syslog(LOG_NOTICE,
+	fakesyslog(LOG_NOTICE,
 	       "connect from %s with IP options (ignored):%s",
 	       eval_client(request), lbuf);
 	if (setsockopt(fd, ipproto, IP_OPTIONS, (char *) 0, optsize) != 0) {
-	    syslog(LOG_ERR, "setsockopt IP_OPTIONS NULL: %m");
+	    fakesyslog(LOG_ERR, "setsockopt IP_OPTIONS NULL: %m");
 	    shutdown(fd, 2);
 	}
     }

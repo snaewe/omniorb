@@ -27,7 +27,6 @@ static char sccsid[] = "@(#) socket.c 1.15 97/03/21 19:27:24";
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdio.h>
-#include <syslog.h>
 #include <string.h>
 
 extern char *inet_ntoa();

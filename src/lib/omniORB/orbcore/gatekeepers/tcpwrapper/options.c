@@ -41,7 +41,6 @@ static char sccsid[] = "@(#) options.c 1.17 96/02/11 17:01:31";
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdio.h>
-#include <syslog.h>
 #include <pwd.h>
 #include <grp.h>
 #include <ctype.h>
@@ -184,7 +183,7 @@ struct request_info *request;
 	if (value && expand_arg(op))
 	    value = chop_string(percent_x(bf, sizeof(bf), value, request));
 	if (hosts_access_verbose)
-	    syslog(LOG_DEBUG, "option:   %s %s", key, value ? value : "");
+	    fakesyslog(LOG_DEBUG, "option:   %s %s", key, value ? value : "");
 	(*(op->func)) (value, request);
     }
 }
@@ -378,7 +377,7 @@ struct request_info *request;
 	if (resident > 0)
 	    tcpd_jump("twist option in resident process");
 
-	syslog(deny_severity, "twist %s to %s", eval_client(request), value);
+	fakesyslog(deny_severity, "twist %s to %s", eval_client(request), value);
 
 	/* Before switching to the shell, set up stdin, stdout and stderr. */
 
@@ -440,12 +439,12 @@ struct request_info *request;
   * #ifdefs and tables.
   */
 
-struct syslog_names {
+struct fakesyslog_names {
     char   *name;
     int     value;
 };
 
-static struct syslog_names log_fac[] = {
+static struct fakesyslog_names log_fac[] = {
 #ifdef LOG_KERN
     "kern", LOG_KERN,
 #endif
@@ -500,7 +499,7 @@ static struct syslog_names log_fac[] = {
     0,
 };
 
-static struct syslog_names log_sev[] = {
+static struct fakesyslog_names log_sev[] = {
 #ifdef LOG_EMERG
     "emerg", LOG_EMERG,
 #endif
@@ -531,15 +530,15 @@ static struct syslog_names log_sev[] = {
 /* severity_map - lookup facility or severity value */
 
 static int severity_map(table, name)
-struct syslog_names *table;
+struct fakesyslog_names *table;
 char   *name;
 {
-    struct syslog_names *t;
+    struct fakesyslog_names *t;
 
     for (t = table; t->name; t++)
 	if (STR_EQ(t->name, name))
 	    return (t->value);
-    tcpd_jump("bad syslog facility or severity: \"%s\"", name);
+    tcpd_jump("bad fakesyslog facility or severity: \"%s\"", name);
     /* NOTREACHED */
 }
 

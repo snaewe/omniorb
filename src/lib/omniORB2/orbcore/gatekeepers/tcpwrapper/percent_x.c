@@ -17,7 +17,6 @@ static char sccsid[] = "@(#) percent_x.c 1.4 94/12/28 17:42:37";
 /* System libraries. */
 
 #include <stdio.h>
-#include <syslog.h>
 #include <string.h>
 
 extern void exit();

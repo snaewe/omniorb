@@ -15,7 +15,7 @@ static char sccsid[] = "@(#) diag.c 1.1 94/12/28 17:42:20";
 
 /* System libraries */
 
-#include <syslog.h>
+
 #include <stdio.h>
 #include <setjmp.h>
 
