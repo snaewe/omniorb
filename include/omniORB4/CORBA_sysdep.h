@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.14  2001/10/17 16:26:50  dpg1
+ Support for Sun CC > 5 in 4.x compatibility mode.
+
  Revision 1.2.2.13  2001/08/15 10:14:41  dpg1
  Remove obsolete USE_omniORB_logStream.
 
@@ -325,8 +328,10 @@
 #  if __SUNPRO_CC < 0x420
 #    define NEED_DUMMY_RETURN
 #  elif __SUNPRO_CC >= 0x500
-#    define HAS_Cplusplus_Namespace
-#    define HAS_Std_Namespace
+#    if __SUNPRO_CC_COMPAT >= 5
+#      define HAS_Cplusplus_Namespace
+#      define HAS_Std_Namespace
+#    endif
 #  endif
 
 #  define HAS_LongLong
