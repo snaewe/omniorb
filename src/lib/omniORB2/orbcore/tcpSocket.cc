@@ -28,8 +28,8 @@
 
 /*
   $Log$
-  Revision 1.9  1999/09/22 19:21:48  sll
-  omniORB 2.8.0 public release.
+  Revision 1.10  1999/09/27 13:36:07  djr
+  Update from omni2_8_develop
 
   Revision 1.8.2.1  1999/09/21 20:37:18  sll
   -Simplified the scavenger code and the mechanism in which connections
@@ -107,8 +107,8 @@ tcpSocketFactoryType::init()
   singleton = new tcpSocketFactoryType;
 
   if (omniORB::trace(2)) {
-    omniORB::logger log("gateKeeper is ");
-    log << gateKeeper::version() << "\n";
+    omniORB::logger log;
+    log << "gateKeeper is " << gateKeeper::version() << "\n";
   }
 }
 

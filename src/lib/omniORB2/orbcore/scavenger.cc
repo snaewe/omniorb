@@ -28,8 +28,12 @@
  
 /*
   $Log$
-  Revision 1.12  1999/09/23 14:36:33  sll
+  Revision 1.13  1999/09/27 13:36:06  djr
   Update from omni2_8_develop
+
+  Revision 1.10.2.2  1999/09/23 13:47:25  sll
+  Fixed a race condition which causes simple programs that exit quickly to
+  delay for a maximum of one scan period.
 
   Revision 1.10.2.1  1999/09/21 20:37:17  sll
   -Simplified the scavenger code and the mechanism in which connections
@@ -93,12 +97,9 @@
 #include <objectManager.h>
 #include <scavenger.h>
 
-#define LOGMESSAGE(level,prefix,message) do {\
-   if (omniORB::trace(level)) {\
-     omniORB::logger log("scavenger " ## prefix ## ": ");\
-	log << message ## "\n";\
-   }\
-} while (0)
+
+#define LOGMESSAGE(level,prefix,message)  \
+  omniORB::logs(level, "scavenger " prefix ": " message)
 
 
 static CORBA::ULong ScanPeriod  = 5;		// seconds

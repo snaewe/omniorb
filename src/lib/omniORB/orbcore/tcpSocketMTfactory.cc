@@ -29,9 +29,11 @@
 
 /*
   $Log$
-  Revision 1.24  1999/09/22 20:22:50  sll
-  *** empty log message ***
+  Revision 1.25  1999/09/27 13:36:07  djr
+  Update from omni2_8_develop
 
+  Revision 1.22.2.4  1999/09/27 13:31:44  djr
+  Updated logging to always issue omniORB: prefix.
 
   Revision 1.23  1999/09/22 19:21:48  sll
   omniORB 2.8.0 public release.
@@ -221,14 +223,10 @@ extern "C" int gethostname(char *name, int namelen);
 #define send(a,b,c,d) tcpSocketVaxSend(a,b,c,d)
 #endif
 
-#define LOGMESSAGE(level,prefix,message) do {\
-   if (omniORB::trace(level)) {\
-     omniORB::logger log("tcpSocketMTfactory " ## prefix ## ": ");\
-	log << message ## "\n";\
-   }\
-} while (0)
 
-#define PTRACE(prefix,message) LOGMESSAGE(15,prefix,message)
+#define PTRACE(prefix,message)  \
+  omniORB::logs(15, "tcpSocketMTfactory " prefix ": " message)
+
 
 class tcpSocketRendezvouser : public omni_thread {
 public:
@@ -646,12 +644,11 @@ tcpSocketIncomingRope::cancelThreads()
     if ((tmp_sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) 
       {
 	// If we cannot create a socket, we cannot shutdown the rendezvouser
-	if (omniORB::traceLevel > 0) {
-	  omniORB::logger log("tcpSocketMTfactory cancelThreads:");
-	  log << " cannot create a socket to connect to the rendezvous socket.\n"
-	      << "The rendezvous thread may or may not have exited.\n"
-	      << "If this is temporary resource exhaustion, try again later.\n";
-	}
+	omniORB::logs(1,
+	      "tcpSocketIncomingRope::cancelThreads() cannot create\n"
+	      " a socket to connect to the rendezvous socket.  The\n"
+	      " rendezvous thread may or may not have exited.  If this is\n"
+	      " a temporary resource exhaustion, try again later.");
 	return;
       }
     if (connect(tmp_sock,(struct sockaddr *)&myaddr,
@@ -801,8 +798,8 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketIncomingRope *r,
 tcpSocketStrand::~tcpSocketStrand() 
 {
   if (omniORB::trace(5)) {
-    omniORB::logger log("tcpSocketMTfactory ~tcpScoketStrand: ");
-    log << "close socket no. " << pd_socket << "\n";
+    omniORB::logger l;
+    l << "tcpSocketStrand::~Strand() close socket no. " << pd_socket << '\n';
   }
   if (pd_socket != RC_INVALID_SOCKET)
     CLOSESOCKET(pd_socket);
@@ -996,8 +993,8 @@ tcpSocketStrand::real_shutdown()
   _setStrandIsDying();
   SHUTDOWNSOCKET(pd_socket);
   if (omniORB::trace(15)) {
-    omniORB::logger log("tcpSocketMTfactory real_shutdown: ");
-    log << "fd no. " << pd_socket << "\n";
+    omniORB::logger l;
+    l << "tcpSocketStrand::real_shutdown() fd no. " << pd_socket << " Done\n";
   }
   return;
 }
@@ -1210,7 +1207,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
       }
     }
-    catch(const CORBA::COMM_FAILURE &) {
+    catch(CORBA::COMM_FAILURE&) {
       // XXX accepts failed. The probable cause is that the number of
       //     file descriptors opened has exceeded the limit.
       //     On unix, the value of this limit can be set and get using the
@@ -1223,32 +1220,29 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       omni_thread::sleep(1,0);
       continue;
     }
-    catch(const omniORB::fatalException &ex) {
+    catch(omniORB::fatalException& ex) {
       if (omniORB::trace(0)) {
-	omniORB::logger log("tcpSocketMTfactory Rendezvouser: ");
-	log << "#### You have caught an omniORB2 bug, details are as follows:\n"
-	    << ex.file() << " " << ex.line() << ":" << ex.errmsg()
-	    << "\n"
-	    << "No new connection will be accepted.\n";
+	omniORB::logger l;
+	l << "You have caught an omniORB bug, details are as follows:\n" <<
+	  " file: " << ex.file() << "\n"
+	  " line: " << ex.line() << "\n"
+	  " mesg: " << ex.errmsg() << "\n"
+	  " tcpSocketMT Rendezvouser thread will not accept new connection.\n";
       }
       die = 1;
     }
     catch(...) {
-      if (omniORB::trace(0)) {
-	omniORB::logger log("tcpSocketMTfactory Rendezvouser: ");
-	log << "######## Unexpected exception caught\n"
-	    << "No new connection will be accepted.\n";
-      }
+      omniORB::logs(0,
+       "Unexpected exception caught by tcpSocketMT Rendezvouser\n"
+       " tcpSocketMT Rendezvouser thread will not accept new connection.");
       die = 1;
     }
     if (die && newSt) {
       newSt->decrRefCount();
       newSt->real_shutdown();
       if (!newthr) {
-	if (omniORB::trace(0)) {
-	  omniORB::logger log("tcpSocketMTfactory Rendezvouser: ");
-	  log << "cannot spawn a new server thread.\n";
-	}
+	omniORB::logs(5, "tcpSocketMT Rendezvouser thread cannot spawn a"
+		      " new server thread.");
       }
     }
   }
@@ -1349,24 +1343,23 @@ tcpSocketWorker::_realRun(void *arg)
       try {
 	GIOP_S::dispatcher(s);
       }
-      catch (const CORBA::COMM_FAILURE &) {
+      catch (CORBA::COMM_FAILURE&) {
 	PTRACE("Worker","#### Communication failure. Connection closed.");
 	break;
       }
-      catch(const omniORB::fatalException &ex) {
-	if (omniORB::trace(0)) {
-	  omniORB::logger log("tcpSocketMTfactory Worker: ");
-	  log << "#### You have caught an omniORB2 bug, details are as follows:\n"
-	      << ex.file() << " " << ex.line() << ":" << ex.errmsg()
-	      << "\n";
-	    }
+      catch(const omniORB::fatalException& ex) {
+	if( omniORB::trace(0) ) {
+	  omniORB::logger l;
+	  l << "You have caught an omniORB bug, details are as follows:\n"
+	    " file: " << ex.file() << "\n"
+	    " line: " << ex.line() << "\n"
+	    " mesg: " << ex.errmsg() << "\n";
+	}
 	break;
       }
       catch (...) {
-	if (omniORB::trace(0)) {
-	  omniORB::logger log("tcpSocketMTfactory Worker: ");
-	  log << "#### Caught a system exception.\n";
-	}
+	omniORB::logs(0, "An exception has occured and was caught by"
+		      " tcpSocketMT Worker thread.");
 	break;
       }
     }
