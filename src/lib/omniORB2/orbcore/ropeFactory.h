@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.4  1998/11/09 10:55:19  sll
+ Removed the use of reserved keyword "export".
+
  Revision 1.3  1997/12/09 18:44:43  sll
  New and extended ropeFactory interface.
 
@@ -221,16 +224,16 @@ public:
   virtual CORBA::Boolean isOutgoing(Endpoint* addr) const { return 0; }
 
   virtual void instantiateIncoming(Endpoint* addr,
-				   CORBA::Boolean export) = 0;
+				   CORBA::Boolean exportflag) = 0;
   // Create an incoming rope to receive on the endpoint <addr>.
   // The endpoint type must be supported by this factory. Otherwise, a
   // omniORB::fatalException is raised.
   // If startIncoming() has already been called on this factory, incoming
   // requests on this rope will be served by the factory immediately.
   //
-  // The value of <export> determines whether this endpoint is added to
+  // The value of <exportflag> determines whether this endpoint is added to
   // the profile list returned by getIncomingIopProfiles() (see below).
-  // If <export> is TRUE (1), the endpoint is added to the list.
+  // If <exportflag> is TRUE (1), the endpoint is added to the list.
   //
   // This function may raise a CORBA::SystemException.
   //
