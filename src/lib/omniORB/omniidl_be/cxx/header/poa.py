@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15  2000/01/20 18:26:13  djs
+# Tie template output order problem
+#
 # Revision 1.14  2000/01/20 12:46:40  djs
 # Renamed a function to avoid a name clash with a module.
 #
@@ -165,6 +168,7 @@ def visitInterface(node):
                impl_scopedID = impl_scopedID)
 
     if config.TieFlag():
+        tie.__init__(stream)
         tie.write_template(environment, node, self.__nested)
     return
 
