@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/12/26 16:41:28  djs
+# Fix to output TypeCode information on Enums #included from another IDL
+# file. Mimics behaviour of the old BE
+#
 # Revision 1.5  1999/12/24 18:16:39  djs
 # Array handling and TypeCode building fixes (esp. across multiple files)
 #
@@ -409,7 +413,7 @@ def visitMember(node):
         node.memberType().decl().accept(self)
 
 def visitEnum(node):
-    if not(node.mainFile()):
+    if not(node.mainFile()) and not(self.__override):
         return
     
     scopedName = node.scopedName()
