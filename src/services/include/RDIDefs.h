@@ -51,8 +51,8 @@ inline char* RDI_StringDupl(const char* string)
 #endif
   if ( string && (ptr = new char [ strlen(string) + 1 ]) != (char *) 0 )
     strcpy(ptr, string);
-  if (string) cerr << flush << "XXX Allocd for [" << string << "]   " << (void*)ptr << endl << flush;
-  else cerr << flush << "XXX Alloc called on null string" << endl << flush;
+  //   if (string) cerr << flush << "XXX Allocd for [" << string << "]   " << (void*)ptr << endl << flush;
+  //   else cerr << flush << "XXX Alloc called on null string" << endl << flush;
 #ifdef RDI_DBG_ALLOC
   RDI_DbgAlloc_is_string = 0;
 #endif
@@ -65,7 +65,7 @@ inline char* RDI_StringAlloc(unsigned int size)
   RDI_DbgAlloc_is_string = 1;
 #endif
 char* ptr = new char [ size + 1];
-cerr << flush << "XXX Allocd " << (void*)ptr << endl << flush;
+// cerr << flush << "XXX Allocd " << (void*)ptr << endl << flush;
 #ifdef RDI_DBG_ALLOC
   RDI_DbgAlloc_is_string = 0;
 #endif
@@ -74,8 +74,8 @@ cerr << flush << "XXX Allocd " << (void*)ptr << endl << flush;
 
 inline void RDI_StringFree(char* string)
 {
-  if (string) cerr << flush << "XXX Freeing [" << string << "]   " << (void*)string << endl << flush;
-  else cerr << flush << "XXX Freeing null ptr" << endl << flush;
+  //   if (string) cerr << flush << "XXX Freeing [" << string << "]   " << (void*)string << endl << flush;
+  //   else cerr << flush << "XXX Freeing null ptr" << endl << flush;
   if ( string ) delete [] string;
 }
 
