@@ -9,7 +9,7 @@
 
 class EchoLag_i :
   public virtual _lc_sk_EchoLag,
-  public virtual _threadControl
+  public virtual omniLC::_threadControl
 {
 private:
   char *s;
@@ -35,7 +35,7 @@ EchoLag_i::~EchoLag_i() {
 
 char *
 EchoLag_i::echoStringLag(const char *str) {
-  ThreadOp zz(this);
+  omniLC::ThreadOp zz(this);
 
   char *p = CORBA::string_dup(s);
   CORBA::string_free(s);
@@ -46,7 +46,7 @@ EchoLag_i::echoStringLag(const char *str) {
 
 void
 EchoLag_i::move(EchoLagFactory_ptr there) {
-  ThreadLC zz(this);
+  omniLC::ThreadLC zz(this);
 
   // Create a copy of ourselves:
   char *p = CORBA::string_dup(s);
@@ -61,7 +61,7 @@ EchoLag_i::move(EchoLagFactory_ptr there) {
 
 void
 EchoLag_i::remove() {
-  ThreadLC zz(this);
+  omniLC::ThreadLC zz(this);
 
   _remove();
 

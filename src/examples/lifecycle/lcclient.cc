@@ -43,7 +43,8 @@ main(int argc, char **argv) {
     cerr << "Caught OBJECT_NOT_EXIST" << endl;
   }
   catch(CORBA::TRANSIENT &ex) {
-    cout << "Caught TRANSIENT, retrying..." << endl;
+    cout << "Caught TRANSIENT!  Where's the TRANSIENT handler gone?" << endl;
+    cout << " Retrying..." << endl;
     try {
       cout << endl << "EchoLag::echoStringLag() returned: "
 	   << elag->echoStringLag(argv[1]) << endl;
