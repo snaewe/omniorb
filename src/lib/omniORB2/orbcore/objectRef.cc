@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.13  1997/12/10 13:23:41  sll
+  Removed dependency on omniLC.h.
+
   Revision 1.12  1997/12/10 11:39:19  sll
   Updated life cycle runtime.
 
@@ -53,7 +56,6 @@
 #include <omniORB2/CORBA.h>
 #include <omniORB2/proxyFactory.h>
 #include <ropeFactory.h>
-#include <omniORB2/omniLC.h>
 
 // The points to note are:
 //
@@ -578,7 +580,7 @@ omniObject::globalInit()
     omniObject::localObjectTable[i] = 0;
 
   omniObject::wrappedObjectTable = (void **)
-    (new omniLC::_wrap_proxy *[omniORB::hash_table_size]);
+    (new void *[omniORB::hash_table_size]);
 
   for (i=0; i<omniORB::hash_table_size; i++)
     omniObject::wrappedObjectTable[i] = 0;
