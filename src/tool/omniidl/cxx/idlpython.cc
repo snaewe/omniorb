@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.17.2.6  2000/12/05 17:45:19  dpg1
+// omniidl case sensitivity updates from omni3_develop.
+//
 // Revision 1.17.2.5  2000/11/01 15:57:03  dpg1
 // More updates for 2.4.
 //
@@ -1449,6 +1452,13 @@ extern "C" {
     return Py_None;
   }
 
+  static PyObject* IdlPyCaseSensitive(PyObject* self, PyObject* args)
+  {
+    if (!PyArg_ParseTuple(args, (char*)"")) return 0;
+    Config::caseSensitive = 1;
+    Py_INCREF(Py_None); return Py_None;
+  }
+
   static PyMethodDef omniidl_methods[] = {
     {(char*)"compile",            IdlPyCompile,            METH_VARARGS},
     {(char*)"clear",              IdlPyClear,              METH_VARARGS},
@@ -1458,6 +1468,7 @@ extern "C" {
     {(char*)"keepComments",       IdlPyKeepComments,       METH_VARARGS},
     {(char*)"relativeScopedName", IdlPyRelativeScopedName, METH_VARARGS},
     {(char*)"runInteractiveLoop", IdlPyRunInteractiveLoop, METH_VARARGS},
+    {(char*)"caseSensitive",      IdlPyCaseSensitive,      METH_VARARGS},
     {NULL, NULL}
   };
 

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.13.2.4  2000/12/05 17:45:19  dpg1
+// omniidl case sensitivity updates from omni3_develop.
+//
 // Revision 1.13.2.3  2000/10/27 16:31:10  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -96,6 +99,7 @@
 #include <idlast.h>
 #include <idlerr.h>
 #include <idlutil.h>
+#include <idlconfig.h>
 
 #include <string.h>
 
@@ -532,8 +536,14 @@ iFind(const char* identifier) const
   Entry* e;
   if (identifier[0] == '_') ++identifier;
   for (e = entries_; e; e = e->next()) {
-    if (!(strcasecmp(identifier, e->identifier())))
-      return e;
+    if (Config::caseSensitive) {
+      if (!(strcmp(identifier, e->identifier())))
+	return e;
+    }
+    else {
+      if (!(strcasecmp(identifier, e->identifier())))
+	return e;
+    }
   }
   return 0;
 }
@@ -1269,18 +1279,27 @@ keywordClash(const char* identifier, const char* file, int line)
     "abstract", "any", "attribute", "boolean", "case", "char", "const",
     "context", "custom", "default", "double", "enum", "exception",
     "factory", "FALSE", "fixed", "float", "in", "inout", "interface",
-    "long", "module", "native", "Object", "octet", "oneway", "out",
-    "private", "public", "raises", "readonly", "sequence", "short",
-    "string", "struct", "supports", "switch", "TRUE", "truncatable",
-    "typedef", "union", "unsigned", "ValueBase", "valuetype", "void",
-    "wchar", "wstring", 0
+    "local", "long", "module", "native", "Object", "octet", "oneway",
+    "out", "private", "public", "raises", "readonly", "sequence",
+    "short", "string", "struct", "supports", "switch", "TRUE",
+    "truncatable", "typedef", "union", "unsigned", "ValueBase",
+    "valuetype", "void", "wchar", "wstring", 0
   };
 
   for (const char** k = keywords; *k; k++) {
-    if (!strcasecmp(*k, identifier)) {
-      IdlError(file, line, "Identifier `%s' clashes with keyword `%s'",
-	       identifier, *k);
-      return 1;
+    if (Config::caseSensitive) {
+      if (!strcmp(*k, identifier)) {
+	IdlError(file, line, "Identifier `%s' is identical to keyword `%s'",
+		 identifier, *k);
+	return 1;
+      }
+    }
+    else {
+      if (!strcasecmp(*k, identifier)) {
+	IdlError(file, line, "Identifier `%s' clashes with keyword `%s'",
+		 identifier, *k);
+	return 1;
+      }
     }
   }
   return 0;

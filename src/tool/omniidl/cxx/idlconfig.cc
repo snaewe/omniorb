@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.3  2000/12/05 17:45:19  dpg1
+// omniidl case sensitivity updates from omni3_develop.
+//
 // Revision 1.2.2.2  2000/10/27 16:31:08  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -52,3 +55,4 @@ IDL_Boolean Config::quiet          = 0;
 IDL_Boolean Config::forwardWarning = 1;
 IDL_Boolean Config::keepComments   = 0;
 IDL_Boolean Config::commentsFirst  = 0;
+IDL_Boolean Config::caseSensitive  = 0;

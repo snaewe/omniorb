@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.3  2000/12/05 17:45:19  dpg1
+// omniidl case sensitivity updates from omni3_develop.
+//
 // Revision 1.2.2.2  2000/10/27 16:31:08  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -57,6 +60,8 @@ public:
   static IDL_Boolean forwardWarning;  // Warn about unresolved forwards
   static IDL_Boolean keepComments;    // Keep comments from source
   static IDL_Boolean commentsFirst;   // Comments come before declarations
+  static IDL_Boolean caseSensitive;   // Do not treat identifiers differing
+                                      //  only in case as errors
 };
 
 

@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.3  2000/12/05 17:45:22  dpg1
+# omniidl case sensitivity updates from omni3_develop.
+#
 # Revision 1.17.2.2  2000/10/10 10:18:54  dpg1
 # Update omniidl front-end from omni3_develop.
 #
@@ -82,6 +85,7 @@ The supported flags are:
   -bback_end      Select a back-end to be used. More than one permitted
   -Wbarg[,arg...] Send args to the back-end
   -nf             Do not warn about unresolved forward declarations
+  -nc             Do not treat identifiers differing only in case as an error
   -k              Comments after declarations are kept for the back-ends
   -K              Comments before declarations are kept for the back-ends
   -Cdir           Change directory to dir before writing output
@@ -199,9 +203,15 @@ def parseArgs(args):
         elif o == "-n":
             if a == "f":
                 _omniidl.noForwardWarning()
+            elif a == "c":
+                sys.stderr.write(cmdname + \
+                                 ": Warning: -nc option means omniidl will " \
+                                 "silently accept invalid IDL.\n")
+                _omniidl.caseSensitive()
             else:
                 if not quiet:
-                    sys.stderr.write(cmdname + ": unknown warning option `" + \
+                    sys.stderr.write(cmdname + \
+                                     ": unknown error suppresion option `" + \
                                      a + "'\n")
                     sys.stderr.write("Use " + cmdname + " -u for usage\n")
                 sys.exit(1)
