@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.24  1999/05/26 16:08:59  sll
+  Moved DRV_cpp_init() to the end of BE_parse_args.
+
   Revision 1.23  1999/05/26 12:46:38  sll
   *** empty log message ***
 
@@ -308,7 +311,6 @@ BE_parse_args(int argc, char **argv)
 
 #endif
 
-  DRV_cpp_init();
   idl_global->set_prog_name(argv[0]);
   while ((c = getopt(argc,argv,"D:EI:U:VY:uvwh:s:lamt")) != EOF)
     {
@@ -404,5 +406,7 @@ BE_parse_args(int argc, char **argv)
       idl_global->set_compile_flags(idl_global->compile_flags() |
 				    IDL_CF_ONLY_USAGE);
     }
+  DRV_cpp_init();
+
   return;
 }
