@@ -35,6 +35,7 @@ Roadmap
 
 The directory structure of this distribution looks as follows:
 
+./readmes                         : platform specific readme files
 ./doc                             : omniORB documentation
 ./man                             : omniORB manual pages
 ./mk                              : make configuration files
@@ -260,41 +261,44 @@ programs:
 1. Compiler flags:
 
 To compile omniORB programs correctly, several C++ preprocessor defines
-must be specified to identify the target platform.
+must be specified to identify the target platform. With an Autoconf
+based build, the file include/omniconfig.h sets the defines for you,
+so you do not need to explicitly set anything. With non-Autoconf
+builds, you must set the following processor defines:
 
-Sun Solaris 2.5     |__sparc__  __sunos__  __OSVERSION__=5           |
-Digital Unix 3.2    |__alpha__  __osf1__   __OSVERSION__=3           |
-HPUX 10.x           |__hppa__  __hpux__   __OSVERSION__=10           |
-HPUX 11.x           |__hppa__  __hpux__   __OSVERSION__=11           |
-IBM AIX 4.x &       |__aix__  __powerpc__   __OSVERSION__=4          |
-Linux 2.0 (x86)     |__x86__    __linux__  __OSVERSION__=2           |
-Linux 2.0 (alpha)   |__alpha__  __linux__  __OSVERSION__=2           |
-Windows/NT 3.5      |__x86__    __NT__     __OSVERSION__=3  __WIN32__|
-Windows/NT 4.0      |__x86__    __NT__     __OSVERSION__=4  __WIN32__|
-Windows 2000        |__x86__    __NT__     __OSVERSION__=5  __WIN32__|
-Windows/95          |__x86__    __WIN32__                            |
-OpenVMS 6.x (alpha) |__alpha__  __vms      __OSVERSION__=6           |
-OpenVMS 6.x (vax)   |__vax__    __vms      __OSVERSION__=6           |
-ATMos 4.0           |__arm__    __atmos__  __OSVERSION__=4           |
-NextStep 3.x        |__m68k__  __nextstep__   __OSVERSION__=3        |
-Unixware 7          |__x86__   __uw7__     __OSVERSION__=5           |
+Sun Solaris 2.5     |__sparc__  __sunos__     __OSVERSION__=5            |
+Digital Unix 3.2    |__alpha__  __osf1__      __OSVERSION__=3            |
+HPUX 10.x           |__hppa__   __hpux__      __OSVERSION__=10           |
+HPUX 11.x           |__hppa__   __hpux__      __OSVERSION__=11           |
+IBM AIX 4.x &       |__aix__    __powerpc__   __OSVERSION__=4            |
+Linux 2.0 (x86)     |__x86__    __linux__     __OSVERSION__=2            |
+Linux 2.0 (alpha)   |__alpha__  __linux__     __OSVERSION__=2            |
+Windows/NT 3.5      |__x86__    __NT__        __OSVERSION__=3  __WIN32__ |
+Windows/NT 4.0      |__x86__    __NT__        __OSVERSION__=4  __WIN32__ |
+Windows 2000        |__x86__    __NT__        __OSVERSION__=5  __WIN32__ |
+Windows 95          |__x86__    __WIN32__                                |
+OpenVMS 6.x (alpha) |__alpha__  __vms         __OSVERSION__=6            |
+OpenVMS 6.x (vax)   |__vax__    __vms         __OSVERSION__=6            |
+ATMos 4.0           |__arm__    __atmos__     __OSVERSION__=4            |
+NextStep 3.x        |__m68k__   __nextstep__  __OSVERSION__=3            |
+Unixware 7          |__x86__    __uw7__       __OSVERSION__=5            |
 
 You should also specify the preprocessor defines (e.g. -D\_REENTRANT) for
 compiling multithreaded programs.
 
-Have a look at the <platform>.mk file in <top>/mk/platforms. And see what
-OMNITHREAD_LIB and OMNIORB2_LIB is set to. 
 
 2. Libraries:
 
-The runtime libraries that you have to link to your executables are:
+The runtime libraries that you have to link to your executables are
+usually:
 
-libomnithread.so    - omnithread share library
+libomnithread.so    - omnithread shared library
 libomniORB4.so      - omniORB runtime shared library
 libomniDynamic4.so  - omniORB runtime shared library for dynamic features
 libomniCodeSets4.so - extra code sets for string transformation
-libomnisslTP.so     - SSL transport (build if OpenSSL is available)
+libomnisslTP.so     - SSL transport (built if OpenSSL is available)
 libCOS4.so          - stubs and skeletons for the COS service interfaces
+libCOSDynamic4.so   - dynamic stubs for the COS service interfaces
 
 The name of the libraries may be have different suffixes on different
 platforms. You can figure it out.
