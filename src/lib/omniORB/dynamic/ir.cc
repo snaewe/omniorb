@@ -50,9 +50,9 @@ Object::_get_interface()
   if( CORBA::is_nil(repository) )
     throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
 
-  CORBA::Contained_ptr interface =
+  CORBA::Contained_ptr interf =
     repository->lookup_id(pd_obj->NP_IRRepositoryId());
-  return CORBA::InterfaceDef::_narrow(interface);
+  return CORBA::InterfaceDef::_narrow(interf);
 }
 
 
