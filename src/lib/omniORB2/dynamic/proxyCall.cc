@@ -95,7 +95,7 @@ _again:
 	  // Retrieve the Interface Repository ID of the exception.
 	  CORBA::ULong repoIdLen;
 	  repoIdLen <<= giop_client;
-	  CORBA::String_var repoId = CORBA::string_alloc(repoIdLen - 1);
+	  CORBA::String_var repoId(CORBA::string_alloc(repoIdLen - 1));
 	  giop_client.get_char_array((CORBA::Char*)(char*)repoId,
 				     repoIdLen);
 
@@ -112,8 +112,7 @@ _again:
 
       case GIOP::LOCATION_FORWARD:
 	{
-	  CORBA::Object_var obj =
-	    CORBA::Object::unmarshalObjRef(giop_client);
+	  CORBA::Object_var obj(CORBA::Object::unmarshalObjRef(giop_client));
 	  giop_client.RequestCompleted();
 	  if( CORBA::is_nil(obj) ){
 	    if( omniORB::traceLevel > 10 ){

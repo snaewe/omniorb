@@ -65,7 +65,6 @@ ServerRequestImpl::ctx()
   }
 
   pd_context = new ContextImpl("", CORBA::Context::_nil());
-  if( !pd_context )   _CORBA_new_operator_return_null();
 
   if( pd_giopS->RdMessageUnRead() >= 4 ){
     CORBA::ULong num_strings;
@@ -81,13 +80,11 @@ ServerRequestImpl::ctx()
 
     for( CORBA::ULong i = 0; i < num_ctxts; i++ ){
       len <<= *pd_giopS;
-      CORBA::String_var name = CORBA::string_alloc(len - 1);
-      if( !(char*)name )  _CORBA_new_operator_return_null();
+      CORBA::String_var name(CORBA::string_alloc(len - 1));
       pd_giopS->get_char_array((CORBA::Char*)(char*)name, len);
 
       len <<= *pd_giopS;
-      CORBA::String_var value = CORBA::string_alloc(len - 1);
-      if( !(char*)value )  _CORBA_new_operator_return_null();
+      CORBA::String_var value(CORBA::string_alloc(len - 1));
       pd_giopS->get_char_array((CORBA::Char*)(char*)value, len);
 
       ((ContextImpl*)(CORBA::Context_ptr)pd_context)->

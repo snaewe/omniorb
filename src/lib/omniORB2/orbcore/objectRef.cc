@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.22  1999/02/01 15:40:53  djr
+  Replace copy-initialisation of _var types with direct initialisation.
+
   Revision 1.21  1999/01/11 09:55:53  djr
   *** empty log message ***
 
@@ -901,8 +904,9 @@ ProxyObjectTableCleaner::~ProxyObjectTableCleaner()
 
       if( omniORB::traceLevel >= 15 ) {
 	const char* repoId = (*p)->NP_IRRepositoryId();
-	CORBA::String_var obj_ref = (char*)
-	  IOP::iorToEncapStr((const CORBA::Char*) repoId, (*p)->iopProfiles());
+	CORBA::String_var obj_ref((char*)
+                            IOP::iorToEncapStr((const CORBA::Char*) repoId,
+					       (*p)->iopProfiles()));
 
 	omniORB::log <<
 	  "omniORB: WARNING - Proxy object not released.\n"

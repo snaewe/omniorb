@@ -114,7 +114,7 @@ ContextImpl::set_one_value(const char* prop_name, const CORBA::Any& value)
   if( !prop_name )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
   check_property_name(prop_name);
 
-  CORBA::String_var name = CORBA::string_dup(prop_name);
+  CORBA::String_var name(CORBA::string_dup(prop_name));
 
   char* strval;
   if( !(value >>= strval) )
