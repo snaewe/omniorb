@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/07 15:42:17  sll
+  Make unix domain connections distinguishable on both the server and client
+  side.
+
   Revision 1.1.2.1  2001/08/06 15:47:44  sll
   Added support to use the unix domain socket as the local transport.
 
@@ -94,7 +98,7 @@ unixAddress::Connect(unsigned long, unsigned long) const {
     CLOSESOCKET(sock);
     return 0;
   }
-  return new unixActiveConnection(sock);
+  return new unixActiveConnection(sock,pd_filename);
 }
 
 

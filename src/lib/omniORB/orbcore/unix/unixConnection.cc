@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/07 15:42:17  sll
+  Make unix domain connections distinguishable on both the server and client
+  side.
+
   Revision 1.1.2.1  2001/08/06 15:47:44  sll
   Added support to use the unix domain socket as the local transport.
 
@@ -223,27 +227,25 @@ unixConnection::peeraddress() {
 
 /////////////////////////////////////////////////////////////////////////
 unixConnection::unixConnection(SocketHandle_t sock, 
-			     SocketCollection* belong_to) : 
+			       SocketCollection* belong_to,
+			       const char* filename,
+			       CORBA::Boolean isActive) : 
   SocketLink(sock), pd_belong_to(belong_to) {
 
-  struct sockaddr_un addr;
-  SOCKNAME_SIZE_T l;
+  static CORBA::ULong suffix = 0;
 
-  l = sizeof(struct sockaddr_un);
-  if (getsockname(pd_socket,
-		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
-    pd_myaddress = (const char*)"giop:unix:<not bound>";
+  CORBA::String_var filename_1;
+  filename_1 = CORBA::string_alloc(strlen(filename)+8);
+  sprintf(filename_1,"%s %08x",filename,(unsigned int)++suffix);
+
+  if (isActive) {
+    pd_myaddress = unToString(filename_1);
+    pd_peeraddress = unToString(filename);
   }
-
-  pd_myaddress = unToString(addr.sun_path);
-
-  l = sizeof(struct sockaddr_un);
-  if (getpeername(pd_socket,
-		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
-    pd_peeraddress = (const char*)"giop:unix:<not bound>";
+  else {
+    pd_myaddress = unToString(filename);
+    pd_peeraddress = unToString(filename_1);
   }
-
-  pd_peeraddress = unToString(addr.sun_path);
 
   belong_to->addSocket(this);
 }

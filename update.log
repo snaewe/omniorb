@@ -1,3 +1,16 @@
+Tue Aug  7 16:39:47 BST 2001 sll
+================================
+
+- Make unix domain connections distinguishable on both the server and
+  client side.
+
+src/lib/omniORB/orbcore/unix/unixActive.cc
+src/lib/omniORB/orbcore/unix/unixAddress.cc
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.h
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+
+
 Mon Aug  6 16:44:02 BST 2001 sll
 ================================
 
