@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2003/11/12 16:04:17  dgrisby
+  Set sockets to close on exec.
+
   Revision 1.1.2.12  2003/04/15 10:40:47  dgrisby
   Timeouts ignored in some cases when scan granularity set to zero.
 
@@ -352,6 +355,8 @@ sslConnection::sslConnection(SocketHandle_t sock,::SSL* ssl,
 			       (CORBA::ULong)addr.sin_addr.s_addr,
 			       (CORBA::UShort)addr.sin_port,"giop:ssl:");
   }
+  SocketSetCloseOnExec(sock);
+
   belong_to->addSocket(this);
 }
 

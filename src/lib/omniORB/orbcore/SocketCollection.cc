@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2003/11/12 16:04:17  dgrisby
+  Set sockets to close on exec.
+
   Revision 1.1.2.15  2003/07/25 16:04:57  dgrisby
   vxWorks patches.
 
@@ -161,6 +164,25 @@ SocketSetblocking(SocketHandle_t sock) {
 # else
   int fl = 0;
   if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
+# endif
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+int
+SocketSetCloseOnExec(SocketHandle_t sock) {
+# if defined(__vxWorks__)
+  // Not supported on vxWorks
+  return 0;
+# elif defined(__WIN32__)
+  SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0);
+  return 0;
+# else
+  int fl = FD_CLOEXEC;
+  if (fcntl(sock,F_SETFD,fl) == RC_SOCKET_ERROR) {
     return RC_INVALID_SOCKET;
   }
   return 0;

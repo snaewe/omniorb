@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.22  2003/11/12 16:04:17  dgrisby
+  Set sockets to close on exec.
+
   Revision 1.1.2.21  2003/07/25 16:04:57  dgrisby
   vxWorks patches.
 
@@ -186,6 +189,8 @@ tcpEndpoint::Bind() {
       return 0;
     }
   }
+
+  SocketSetCloseOnExec(pd_socket);
 
   const char* host;
   if ((char*)pd_address.host && strlen(pd_address.host) != 0) {

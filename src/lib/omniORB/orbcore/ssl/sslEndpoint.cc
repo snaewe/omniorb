@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.20  2003/11/12 16:04:17  dgrisby
+  Set sockets to close on exec.
+
   Revision 1.1.2.19  2003/02/17 02:03:10  dgrisby
   vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 
@@ -184,6 +187,8 @@ sslEndpoint::Bind() {
       return 0;
     }
   }
+
+  SocketSetCloseOnExec(pd_socket);
 
   const char* host;
   if ((char*)pd_address.host && strlen(pd_address.host) != 0) {

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2003/11/12 16:04:16  dgrisby
+  Set sockets to close on exec.
+
   Revision 1.1.2.7  2003/04/15 10:40:47  dgrisby
   Timeouts ignored in some cases when scan granularity set to zero.
 
@@ -269,6 +272,8 @@ unixConnection::unixConnection(SocketHandle_t sock,
     pd_myaddress = unToString(filename);
     pd_peeraddress = unToString(filename_1);
   }
+
+  SocketSetCloseOnExec(sock);
 
   belong_to->addSocket(this);
 }

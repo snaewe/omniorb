@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2003/11/12 16:04:17  dgrisby
+  Set sockets to close on exec.
+
   Revision 1.1.2.13  2003/07/25 16:04:57  dgrisby
   vxWorks patches.
 
@@ -345,6 +348,9 @@ tcpConnection::tcpConnection(SocketHandle_t sock,
     pd_peeraddress = ip4ToString((CORBA::ULong)addr.sin_addr.s_addr,
 				 (CORBA::UShort)addr.sin_port,"giop:tcp:");
   }
+
+  SocketSetCloseOnExec(sock);
+
   belong_to->addSocket(this);
 }
 

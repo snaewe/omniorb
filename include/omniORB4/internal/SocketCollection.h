@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2003/11/12 16:04:18  dgrisby
+  Set sockets to close on exec.
+
   Revision 1.1.2.16  2003/02/17 01:45:50  dgrisby
   Pipe to kick select thread (on Unix).
 
@@ -249,6 +252,7 @@ extern int SocketSetnonblocking(SocketHandle_t sock);
 
 extern int SocketSetblocking(SocketHandle_t sock);
 
+extern int SocketSetCloseOnExec(SocketHandle_t sock);
 
 class SocketLink {
 

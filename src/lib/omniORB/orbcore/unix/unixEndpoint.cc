@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2003/11/12 16:04:16  dgrisby
+  Set sockets to close on exec.
+
   Revision 1.1.2.9  2002/04/16 12:44:27  dpg1
   Fix SSL accept bug, clean up logging.
 
@@ -131,6 +134,8 @@ unixEndpoint::Bind() {
   }
 
   unlink(pd_filename);
+
+  SocketSetCloseOnExec(pd_socket);
 
   struct sockaddr_un addr;
 
