@@ -1,3 +1,62 @@
+Fri Feb 23 16:24:43 GMT 2001 sll
+================================
+
+- SLL work in progress snapshot
+
+ALL these files are NEW!
+
+include/omniAsyncInvoker.h
+include/omniORB4/giopEndpoint.h
+include/omniORB4/minorCode.h
+include/omniORB4/omniTransport.h
+include/omniORB4/omniutilities.h
+src/lib/omniORB/include/GIOP_C.h
+src/lib/omniORB/include/GIOP_S.h
+src/lib/omniORB/include/anonObject.h
+src/lib/omniORB/include/codeSetUtil.h
+src/lib/omniORB/include/corbaBoa.h
+src/lib/omniORB/include/corbaOrb.h
+src/lib/omniORB/include/dynamicLib.h
+src/lib/omniORB/include/excepthandler.h
+src/lib/omniORB/include/exceptiondefs.h
+src/lib/omniORB/include/gatekeeper.h
+src/lib/omniORB/include/giopRendezvouser.h
+src/lib/omniORB/include/giopRope.h
+src/lib/omniORB/include/giopServer.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/include/giopStream.h
+src/lib/omniORB/include/giopStreamImpl.h
+src/lib/omniORB/include/giopWorker.h
+src/lib/omniORB/include/initFile.h
+src/lib/omniORB/include/initRefs.h
+src/lib/omniORB/include/initialiser.h
+src/lib/omniORB/include/invoker.h
+src/lib/omniORB/include/libcWrapper.h
+src/lib/omniORB/include/localIdentity.h
+src/lib/omniORB/include/objectAdapter.h
+src/lib/omniORB/include/objectStub.h
+src/lib/omniORB/include/omniIdentity.h
+src/lib/omniORB/include/poaimpl.h
+src/lib/omniORB/include/poamanager.h
+src/lib/omniORB/include/remoteIdentity.h
+src/lib/omniORB/include/taskqueue.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopRendezvouser.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/giopWorker.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+src/lib/omniORB/orbcore/transport.txt
+
+
 Fri Feb 23 16:19:47 GMT 2001 sll
 ================================
 
@@ -33,6 +92,19 @@ src/lib/omniORB/orbcore/tcpSocket.cc
 src/lib/omniORB/orbcore/tcpSocket.h
 src/lib/omniORB/orbcore/tcpSocketAux.cc
 src/lib/omniORB/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB/orbcore/anonObject.h
+src/lib/omniORB/orbcore/corbaBoa.h
+src/lib/omniORB/orbcore/corbaOrb.h
+src/lib/omniORB/orbcore/excepthandler.h
+src/lib/omniORB/orbcore/gatekeeper.h
+src/lib/omniORB/orbcore/initFile.h
+src/lib/omniORB/orbcore/libcWrapper.h
+src/lib/omniORB/orbcore/localIdentity.h
+src/lib/omniORB/orbcore/objectAdapter.h
+src/lib/omniORB/orbcore/objectStub.h
+src/lib/omniORB/orbcore/poaimpl.h
+src/lib/omniORB/orbcore/poamanager.h
+src/lib/omniORB/orbcore/taskqueue.h
 
 
 Thu Jan 25 12:59:58 GMT 2001 sll
