@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.14  2004/07/01 19:15:17  dgrisby
+// Fix fixed point. It was broken point. Thanks Simone Viani.
+//
 // Revision 1.1.2.13  2003/06/02 13:26:14  dgrisby
 // Silly bug in fixed division when result has leading zeros.
 //
@@ -225,10 +228,16 @@ CORBA::Fixed::Fixed(const CORBA::Octet* val,
   OMNIORB_ASSERT(digits <= OMNI_FIXED_DIGITS);
   OMNIORB_ASSERT(scale  <= digits);
 
-  if (digits == 0) pd_negative = 0;
+  while (pd_digits > 0 && pd_scale > 0 && val[0] == 0) {
+    pd_digits--;
+    pd_scale--;
+    val++;
+  }
+
+  if (pd_digits == 0) pd_negative = 0;
 
   memcpy(pd_val, val, digits);
-  memset(pd_val + digits, 0, OMNI_FIXED_DIGITS - digits);
+  memset(pd_val + pd_digits, 0, OMNI_FIXED_DIGITS - pd_digits);
 }
 
 
@@ -348,15 +357,14 @@ CORBA::Fixed::round(CORBA::UShort scale) const
 
     int i = cut;
     for (i = cut; i < OMNI_FIXED_DIGITS; ++i) {
-      if (++work[cut] <= 9) break;
-      work[cut] = 0;
+      if (++work[i] <= 9) break;
+      work[i] = 0;
     }
-    if (i == OMNI_FIXED_DIGITS) {
-      // Overflow
-      OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_RangeError,
-		    CORBA::COMPLETED_NO);
-    }
-    return CORBA::Fixed(work + cut, pd_digits - cut, scale, pd_negative);
+    int new_digits = pd_digits - cut;
+    if (i == pd_digits)
+      new_digits ++;
+
+    return CORBA::Fixed(work + cut, new_digits, scale, pd_negative);
   }
   else
     return CORBA::Fixed(pd_val + cut, pd_digits - cut, scale, pd_negative);
@@ -686,8 +694,8 @@ absCmp(const CORBA::Fixed& a, const CORBA::Fixed& b)
     if (c) return c;
     --ai; --bi;
   }
-  if (ai > 0) return  1;
-  if (bi > 0) return -1;
+  if (ai >= 0) return  1;
+  if (bi >= 0) return -1;
   return 0;
 }
 
