@@ -1,4 +1,10 @@
 
+Wed Nov 26 14:27:08 GMT 1997 tjr
+================================
+
+src/lib/omnithread/nt.cc - fix NULL arg to join()
+
+
 Tue Nov 18 19:21:56 GMT 1997 tjr
 ================================
 
