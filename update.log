@@ -1,3 +1,11 @@
+Wed Feb 21 10:14:15 GMT 2001 dpg1
+=================================
+
+- AIX patch doesn't understand unified diffs. Changed to context diff.
+
+external_merge/patches/aix_xlC_5.0.patch
+
+
 Tue Feb 20 17:38:06 GMT 2001 dpg1
 =================================
 
