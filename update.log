@@ -1,3 +1,18 @@
+Wed Aug  6 21:32:42 BST 2003 dgrisby
+====================================
+
+- More vxWorks patches.
+
+mk/vxWorks.mk
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/uri.cc
+
+- Shorten assertion failure message.
+
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Wed Jul 30 15:18:52 BST 2003 dgrisby
 ====================================
 

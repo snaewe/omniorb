@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.33  2003/08/06 20:36:49  dgrisby
+  Shorten assertion failure message.
+
   Revision 1.2.2.32  2003/07/02 11:01:06  dgrisby
   Race condition in POA destruction.
 
@@ -1203,8 +1206,7 @@ omni::assertFail(const char* file, int line, const char* expr)
   if( omniORB::trace(1) ) {
     omniORB::logger l;
     l << "Assertion failed.  This indicates a bug in the application using\n"
-      "omniORB, or maybe in omniORB itself. e.g. using the ORB after it has\n"
-      "been shut down.\n"
+      "omniORB, or maybe in omniORB itself.\n"
       " file: " << file << "\n"
       " line: " << line << "\n"
       " info: " << expr << "\n";
