@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2003/01/22 11:43:52  dgrisby
+  Minor error message fixes in registry code.
+
   Revision 1.1.2.8  2002/07/03 15:46:40  dgrisby
   Minor registry code bugfix.
 
@@ -286,11 +289,15 @@ void parseConfigReg(orbOptions& opt, HKEY rootkey) {
     DWORD subkeylen = subkeybufsize + 1;
     if ( RegEnumKeyEx(rootkey,index,
 		      (LPTSTR) ((char*)subkeybuf),&subkeylen,
-		      NULL,NULL,NULL,NULL) != ERROR_SUCCESS ) {
-      omniORB::logger log;
-      log << "Cannot red subkey name for index " << index << "\n";
+		      NULL,NULL,NULL,NULL) == ERROR_SUCCESS ) {
+      parseConfigInSubKey(opt,rootkey,subkeybuf);
     }
-    parseConfigInSubKey(opt,rootkey,subkeybuf);
+    else {
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Cannot read subkey name for index " << index << "\n";
+      }
+    }
     index++;
   }
 }

@@ -1,3 +1,17 @@
+Wed Jan 22 11:32:38 GMT 2003 dgrisby
+====================================
+
+- Correct serverSendException interceptor use.
+
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+- Minor error message fixes in registry code.
+
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+
+
 Thu Jan 16 12:45:04 GMT 2003 dgrisby
 ====================================
 
