@@ -47,7 +47,7 @@ static void hello(Echo_ptr e)
 int main(int argc, char** argv)
 {
   try {
-    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
 
     {
       CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");

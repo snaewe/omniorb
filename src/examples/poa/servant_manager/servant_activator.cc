@@ -67,7 +67,7 @@ public:
 int main(int argc, char** argv)
 {
   try {
-    orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    orb = CORBA::ORB_init(argc, argv);
 
     {
       // Get hold of the root poa, and activate it.

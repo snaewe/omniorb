@@ -69,7 +69,7 @@ CORBA::Any* anyExample_i::testOp(const CORBA::Any& a)
 int main(int argc, char** argv)
 {
   try {
-    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
 
     CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
     PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);

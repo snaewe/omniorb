@@ -32,8 +32,8 @@ char* Echo_i::echoString(const char* mesg)
 int main(int argc, char** argv)
 {
   try {
-    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
-    CORBA::BOA_var boa = orb->BOA_init(argc, argv, "omniORB3_BOA");
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
+    CORBA::BOA_var boa = orb->BOA_init(argc, argv, "omniORB4_BOA");
 
     Echo_i* myecho = new Echo_i();
     myecho->_obj_is_ready(boa);

@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     
     if( argc < 3 )  usage();
 
-    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
 
     if( argc != 1 )  usage();
 

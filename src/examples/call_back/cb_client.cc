@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 {
   try {
 
-    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
 
     if( argc != 2 && argc != 4 ) {
       cerr << "usage:  cb_client <object reference> [<call-back period>"
