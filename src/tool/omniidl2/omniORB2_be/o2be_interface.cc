@@ -10,6 +10,11 @@
 
 /*
   $Log$
+  Revision 1.4  1997/01/24 19:42:16  sll
+  New member function check_opname_clash().
+  The class definition of the stub code <X>_proxyObjectFactory() is moved
+  from the SK file to the header file.
+
   Revision 1.3  1997/01/23 17:08:29  sll
   Changed <X>_proxyObjectFactory() class to include a new static member
   function that returns a nil object of X.
@@ -158,6 +163,62 @@ o2be_interface_fwd::o2be_interface_fwd(UTL_ScopedName *n, UTL_StrList *p)
     AST_Decl(AST_Decl::NT_interface_fwd, n, p),
     o2be_name(this)
 {
+}
+
+idl_bool
+o2be_interface::check_opname_clash(o2be_interface *p,char *opname)
+{
+  {
+    UTL_ScopeActiveIterator i(p,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	AST_Decl *d = i.item();
+	switch(d->node_type()) {
+	case AST_Decl::NT_op:
+	  if (strcmp(opname,o2be_operation::narrow_from_decl(d)->uqname())==0)
+	    return I_TRUE;
+	  break;
+	case AST_Decl::NT_attr:
+	  {
+	    char *attrop = new char[strlen(o2be_attribute::narrow_from_decl(d)->uqname())+6];
+	    strcpy(attrop,"_get_");
+	    strcat(attrop,o2be_attribute::narrow_from_decl(d)->uqname());
+	    if (strcmp(opname,attrop)==0)
+	      {
+		delete [] attrop;
+		return I_TRUE;
+	      }
+	    strcpy(attrop,"_set_");
+	    strcat(attrop,o2be_attribute::narrow_from_decl(d)->uqname());
+	    if (strcmp(opname,attrop)==0)
+	      {
+		delete [] attrop;
+		return I_TRUE;
+	      }
+	    delete [] attrop;
+	  }
+	  break;
+	default:
+	  break;
+	}
+	i.next();
+      }
+  }
+  {
+    int ni,j;
+    AST_Interface **intftable;
+    if ((ni = p->n_inherits()) != 0)
+      {
+	intftable = p->inherits();
+	for (j=0; j< ni; j++)
+	  {
+	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	    if (o2be_interface::check_opname_clash(intf,opname))
+	      return I_TRUE;
+	  }
+      }
+  }
+  return I_FALSE;
 }
 
 void 
@@ -520,6 +581,34 @@ o2be_interface::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 
+  // proxyObjectFactory
+  IND(s); s << "class " << uqname() << PROXY_OBJ_FACTORY_POSTFIX
+	    << " : public proxyObjectFactory {\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n";
+  IND(s); s << "virtual ~" << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n";
+  IND(s); s << "virtual const char *irRepoId() const;\n";
+  IND(s); s << "virtual CORBA::Object_ptr newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release);\n";
+  IND(s); s << "virtual CORBA::Boolean is_a(const char *base_repoId) const;\n";
+  // _nil()
+  IND(s); s << "static " << objref_fqname() << " _nil() {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "if (!_" << nil_uqname() << ") {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_" << nil_uqname() << " = new " << nil_fqname() << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "return _" << nil_uqname() << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "private:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "static " << objref_fqname() << " _" << nil_uqname() << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
+
   produce_seq_hdr_if_defined(s);
   return;
 }
@@ -864,38 +953,9 @@ o2be_interface::produce_skel(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  s << "#include <omniORB2/proxyFactory.h>\n\n";
-
-  // proxyObjectFactory
-  IND(s); s << "class " << _fqname() << PROXY_OBJ_FACTORY_POSTFIX
-	    << " : public proxyObjectFactory {\n";
-  IND(s); s << "public:\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n";
-  IND(s); s << "virtual ~" << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n";
-  IND(s); s << "virtual const char *irRepoId() const;\n";
-  IND(s); s << "virtual CORBA::Object_ptr newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release);\n";
-  IND(s); s << "virtual CORBA::Boolean is_a(const char *base_repoId) const;\n";
-  // _nil()
-  IND(s); s << "static " << objref_fqname() << " _nil() {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "if (!_" << nil_uqname() << ") {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "_" << nil_uqname() << " = new " << nil_fqname() << ";\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  IND(s); s << "return _" << nil_uqname() << ";\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "private:\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "static " << objref_fqname() << " _" << nil_uqname() << ";\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "};\n\n";
   // _irRepoId()
   IND(s); s << "const char *\n";
-  IND(s); s << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::irRepoId() const\n";
+  IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::irRepoId() const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "return (const char *)" << IRrepoId() << ";\n";
@@ -903,7 +963,7 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << "}\n\n";
   // _newProxyObject()
   IND(s); s << "CORBA::Object_ptr\n";
-  IND(s); s << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release)\n";
+  IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << proxy_fqname() << " *p = new " << proxy_fqname()
@@ -918,7 +978,7 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << "}\n\n";
   // _is_a()
   IND(s); s << "CORBA::Boolean\n";
-  IND(s); s << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::is_a(const char *base_repoId) const\n";
+  IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::is_a(const char *base_repoId) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "return " << fqname() << "::_is_a(base_repoId);\n\n";
@@ -928,16 +988,16 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << objref_fqname() << "\n";
   IND(s); s << fqname() << "::_nil() {\n";
   INC_INDENT_LEVEL()
-    IND(s); s << "return " << _fqname() 
+    IND(s); s << "return " << fqname() 
 	      << PROXY_OBJ_FACTORY_POSTFIX << "::_nil();\n";
   DEC_INDENT_LEVEL()
   IND(s); s << "}\n\n";
 
   // single const instance
-  IND(s); s << "static const " << _fqname() << PROXY_OBJ_FACTORY_POSTFIX
+  IND(s); s << "static const " << fqname() << PROXY_OBJ_FACTORY_POSTFIX
 	    << " " << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << ";\n";
   IND(s); s << objref_fqname() << " " 
-	    << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::_"
+	    << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::_"
 	    << nil_uqname() << " = 0;\n\n";
 }
 
