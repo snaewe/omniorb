@@ -1,3 +1,42 @@
+Fri Aug 21 20:00:38 BST 1998 sll
+================================
+
+- Added support for javaIDL bootstrap protocol
+     The ORB obtain the initial object reference for the NameService
+     through this IDL interface:
+
+          module CORBA {
+               interface InitialReferences {
+                  Object get(in ORB::ObjectId id);
+                  ORB::ObjectIdList list();
+               };
+          };
+     This interface is implemented by a special object whoise object key
+     is 4 bytes long and contains the word 'INIT'.
+     The command line option:
+             -ORBInitialHost <hostname> -ORBInitialPort <port>
+     tells the ORB to contact the special object at the hostname+port.
+     This overrides the initial object reference read from omniORB.cfg.
+
+     Two additional key can be added to omniORB.cfg:
+           ORBInitialHost   <hostname>
+           ORBInitialPort   <port 1-65535>
+     which correspond to the command line options.
+
+include/omniORB2/CORBA.h
+include/omniORB2/omniInternal.h
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omniORB2/giopServer.cc
+src/lib/omniORB2/initFile.cc
+src/lib/omniORB2/initFile.h
+src/lib/omniORB2/corbaOrb.cc
+src/lib/omniORB2/corbaBoa.cc
+src/lib/omniORB2/bootstrap.idl
+src/lib/omniORB2/bootstrap_i.h
+src/lib/omniORB2/bootstrap_i.cc
+src/appl/omniNames/log.cc
+
 Wed Aug 19 20:09:17 BST 1998 sll
 ================================
 
