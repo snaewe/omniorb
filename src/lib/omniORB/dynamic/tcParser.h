@@ -109,6 +109,11 @@ public:
   // Return a pointer to the TC currently used to control
   // the behaviour of this parser.
 
+  void replaceTC(CORBA::TypeCode_ptr tc);
+  // If TypeCode::equivalent test on tc returns true when compared
+  // with pd_tc, replace pd_tc with the value of tc.
+  // Otherwise raises the BAD_TYPECODE exception
+
   static void skip(MemBufferedStream&, CORBA::TypeCode_ptr tc);
   static void skip(NetBufferedStream&, CORBA::TypeCode_ptr tc);
   // Read and discard a value of type <tc> from the stream.
