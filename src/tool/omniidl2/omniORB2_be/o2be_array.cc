@@ -10,6 +10,11 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/13 15:35:19  sll
+  Added code to implement isVariable() properly.
+  New member function produce_typedef_hdr(). This is called when a typedef
+  declaration is encountered.
+
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -28,6 +33,38 @@ o2be_array::o2be_array(UTL_ScopedName *n,
     AST_Decl(AST_Decl::NT_array, n, NULL),
     o2be_name(this)
 {
+}
+
+idl_bool
+o2be_array::isVariable()
+{
+  idl_bool isvar;
+
+  AST_Decl *decl = getElementType();
+  switch (decl->node_type())
+    {
+    case AST_Decl::NT_interface:
+    case AST_Decl::NT_string:
+    case AST_Decl::NT_sequence:
+      isvar = I_TRUE;
+      break;
+    case AST_Decl::NT_union:
+      isvar = o2be_union::narrow_from_decl(decl)->isVariable();
+      break;
+    case AST_Decl::NT_struct:
+      isvar = o2be_structure::narrow_from_decl(decl)->isVariable();
+      break;
+    case AST_Decl::NT_pre_defined:
+      if (o2be_predefined_type::narrow_from_decl(decl)->pt() ==
+	  AST_PredefinedType::PT_any)
+	isvar = I_TRUE;
+      else
+	isvar = I_FALSE;
+      break;
+    default:
+      isvar = I_FALSE;
+    }
+  return isvar;
 }
 
 size_t
@@ -188,7 +225,7 @@ dim_iterator::operator() ()
 }
 
 void
-o2be_array::produce_typedef_hdr (fstream &s, o2be_typedef *tdef)
+o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
 {
   AST_Decl *decl = base_type();
 
@@ -368,12 +405,38 @@ o2be_array::produce_typedef_hdr (fstream &s, o2be_typedef *tdef)
   IND(s); s << "typedef _CORBA_Array_Forany<"
 	    << tdef->uqname() << "_copyHelper,"
 	    << tdef->uqname() << "_slice> "
-	    << tdef->uqname() << "_forany;\n";
+	    << tdef->uqname() << "_forany;\n\n";
 }
 
 void
-o2be_array::produce_typedef_skel (fstream &s, o2be_typedef *tdef)
+o2be_array::produce_skel (fstream &s, o2be_typedef *tdef)
 {
+}
+
+void
+o2be_array::produce_typedef_hdr(fstream &s, o2be_typedef *tdef1,
+				o2be_typedef *tdef2)
+{
+  IND(s); s << "typedef " << tdef2->fqname() << " " << tdef1->uqname() << ";\n";
+  IND(s); s << "typedef " << tdef2->fqname() << "_slice " << tdef1->uqname() 
+	    << "_slice;\n";
+  IND(s); s << "typedef " << tdef2->fqname() << "_copyHelper "
+	    << tdef1->uqname() << "_copyHelper;\n";
+  IND(s); s << "typedef " << tdef2->fqname() << "_var "
+	    << tdef1->uqname() << "_var;\n";
+  IND(s); s << "typedef " << tdef2->fqname() << "_forany "
+	    << tdef1->uqname() << "_forany;\n";
+  IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
+	    << tdef1->uqname() << "_slice* "<< tdef1->uqname() << "_alloc() "
+	    << "{ return " << tdef2->fqname() << "_alloc(); }\n";
+  IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
+	    << tdef1->uqname() << "_slice* "<< tdef1->uqname() << "_dup(const "
+	    << tdef1->uqname() << "_slice* p) "
+	    << "{ return " << tdef2->fqname() << "_dup(p); }\n";
+  IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
+	    << "void " << tdef1->uqname() << "_free( "
+	    << tdef1->uqname() << "_slice* p) "
+	    << "{ " << tdef2->fqname() << "_free(p); }\n\n";
 }
 
 void
