@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.9  1997/12/09 20:41:02  sll
+  Updated sequence array templates.
+
   Revision 1.8  1997/08/21 22:22:45  sll
   New templates for sequence of array.
 
@@ -284,6 +287,45 @@ private:
   T* pd_data;
 };
 
+template <class T,class T_slice>
+class _CORBA_Sequence_Array_Var {
+public:
+  typedef T* ptr_t;
+  inline _CORBA_Sequence_Array_Var() { pd_data = 0; }
+  inline _CORBA_Sequence_Array_Var(T* p) { pd_data = p; }
+  inline _CORBA_Sequence_Array_Var(const _CORBA_Sequence_Array_Var<T,T_slice> &p);
+  inline ~_CORBA_Sequence_Array_Var() {  if (pd_data) delete pd_data; }
+  inline _CORBA_Sequence_Array_Var<T,T_slice> &operator= (T* p);
+  inline _CORBA_Sequence_Array_Var<T,T_slice> &operator= (const _CORBA_Sequence_Array_Var<T,T_slice> &p);
+  inline T_slice* operator[] (_CORBA_ULong index) { return (T_slice*)((pd_data->NP_data())[index]); }
+  inline const T_slice* operator[] (_CORBA_ULong index) const {
+    return (const T_slice*)((pd_data->NP_data())[index]);
+  }
+  inline T* operator->() const { return (T*)pd_data; }
+
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+  inline operator T& () const { return *pd_data; }
+#else
+  inline operator const T& () const { return *pd_data; }
+  inline operator T& () { return *pd_data; }
+#endif
+  // This conversion operator is necessary to support the implicit conversion
+  // when this var type is used as the IN or INOUT argument of an operation.
+
+  // The following coversion operators are needed to support the casting
+  // of this var type to a const T* or a T*. The CORBA spec. doesn't say
+  // these castings must be supported so they are deliberately left out.
+  // In fact, the operator->() can always be used to get to the T*.
+  //
+  // inline operator const T* () const { return pd_data; }
+  // inline operator T* () { return pd_data; }
+
+  friend class _CORBA_Sequence_OUT_arg<T,_CORBA_Sequence_Array_Var<T,T_slice> >;
+
+private:
+  T* pd_data;
+};
+
 
 template <class T, class T_var>
 class _CORBA_Sequence_OUT_arg {
@@ -372,25 +414,25 @@ _CORBA_Bounded_Sequence<T,max>::length(_CORBA_ULong len)
   return;
 }
 
-template <class T,class Telm,int dimension,int max>
+template <class T,class T_slice,class Telm,int dimension,int max>
 inline 
-_CORBA_Bounded_Sequence_Array<T,Telm,dimension,max>&
-_CORBA_Bounded_Sequence_Array<T,Telm,dimension,max>::operator= (const _CORBA_Bounded_Sequence_Array<T,Telm,dimension,max> &s)
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>&
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator= (const _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max> &s)
 {
-  _CORBA_Sequence_Array<T,Telm,dimension>::operator= (s);
+  _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator= (s);
   return *this;
 }
 
-template <class T,class Telm,int dimension,int max>
+template <class T,class T_slice,class Telm,int dimension,int max>
 inline 
 void
-_CORBA_Bounded_Sequence_Array<T,Telm,dimension,max>::length(_CORBA_ULong len)
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::length(_CORBA_ULong len)
 {
   if (len > max) {
     _CORBA_bound_check_error();
     // never reach here
   }
-  _CORBA_Sequence_Array<T,Telm,dimension>::length(len);
+  _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length(len);
   return;
 }
 
@@ -426,34 +468,34 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::length(_CO
   return;
 }
 
-template <class T,class Telm,int dimension,int max,int elmSize, int elmAlignment>
+template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>&
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>::operator=(const 
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>& s) 
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>&
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator=(const 
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>& s) 
 {
-  _CORBA_Sequence_Array<T,Telm,dimension>::operator=(s);
+  _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator=(s);
   return *this;
 }
 
-template <class T,class Telm,int dimension,int max,int elmSize, int elmAlignment>
+template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
 _CORBA_ULong
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>::length() const
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::length() const
 { 
-  return _CORBA_Sequence_Array<T,Telm,dimension>::length();
+  return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length();
 }
 
-template <class T,class Telm,int dimension,int max,int elmSize, int elmAlignment>
+template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>::length(_CORBA_ULong len)
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::length(_CORBA_ULong len)
 {
   if (len > max) {
     _CORBA_bound_check_error();
     // never reach here
   }
-  _CORBA_Sequence_Array<T,Telm,dimension>::length(len);
+  _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length(len);
   return;
 }
 
@@ -669,6 +711,28 @@ _CORBA_ConstrType_Variable_Var<T>::operator= (const _CORBA_ConstrType_Variable_V
 }
 
 template <class T,class ElmType>
+inline
+_CORBA_Sequence_Var<T,ElmType> &
+_CORBA_Sequence_Var<T,ElmType>::operator= (const _CORBA_Sequence_Var<T,ElmType> &p)
+{
+  if (p.pd_data) {
+    if (!pd_data) {
+      pd_data = new T;
+      if (!pd_data) {
+	_CORBA_new_operator_return_null();
+	// never reach here
+      }
+    }
+    *pd_data = *p.pd_data;
+  }
+  else {
+    if (pd_data) delete pd_data;
+    pd_data = 0;
+  }
+  return *this;
+}
+
+template <class T,class ElmType>
 inline 
 _CORBA_Sequence_Var<T,ElmType>::_CORBA_Sequence_Var(const _CORBA_Sequence_Var<T,ElmType> &p) 
 {
@@ -696,10 +760,10 @@ _CORBA_Sequence_Var<T,ElmType>::operator= (T* p)
   return *this;
 }
 
-template <class T,class ElmType>
+template <class T,class T_slice>
 inline
-_CORBA_Sequence_Var<T,ElmType> &
-_CORBA_Sequence_Var<T,ElmType>::operator= (const _CORBA_Sequence_Var<T,ElmType> &p)
+_CORBA_Sequence_Array_Var<T,T_slice> &
+_CORBA_Sequence_Array_Var<T,T_slice>::operator= (const _CORBA_Sequence_Array_Var<T,T_slice> &p)
 {
   if (p.pd_data) {
     if (!pd_data) {
@@ -717,6 +781,35 @@ _CORBA_Sequence_Var<T,ElmType>::operator= (const _CORBA_Sequence_Var<T,ElmType> 
   }
   return *this;
 }
+
+template <class T,class T_slice>
+inline 
+_CORBA_Sequence_Array_Var<T,T_slice>::_CORBA_Sequence_Array_Var(const _CORBA_Sequence_Array_Var<T,T_slice> &p) 
+{
+  if (!p.pd_data) {
+    pd_data = 0;
+    return;
+  }
+  else {
+    pd_data = new T;
+    if (!pd_data) {
+      _CORBA_new_operator_return_null();
+      // never reach here
+    }
+    *pd_data = *p.pd_data;
+  }
+}
+
+template <class T,class T_slice>
+inline
+_CORBA_Sequence_Array_Var<T,T_slice> &
+_CORBA_Sequence_Array_Var<T,T_slice>::operator= (T* p)
+{
+  if (pd_data) delete pd_data;
+  pd_data = p;
+  return *this;
+}
+
 
 template <class T_Helper,class T>
 inline
