@@ -1,3 +1,12 @@
+Tue May  8 15:57:07 BST 2001 dpg1
+=================================
+
+- Bug in exception downcasting. Downcasting exception FooBar to
+  exception Foo would incorrectly succeed since they share a prefix.
+
+src/lib/omniORB2/orbcore/exceptn.cc
+
+
 Fri May  4 17:51:59 BST 2001 dpg1
 =================================
 
