@@ -1,3 +1,12 @@
+Mon Jul 10 17:47:18 BST 2000 dpg1
+=================================
+
+- Change repoId of CORBA::CompletionStatus to
+  IDL:omg.org/CORBA/completion_status:1.0
+
+src/lib/omniORB2/dynamic/dynException.cc
+
+
 Mon Jul 10 14:03:49 BST 2000 dpg1
 =================================
 
