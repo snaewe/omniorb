@@ -1,3 +1,11 @@
+Wed Feb 11 18:05:03 GMT 2004 dgrisby
+====================================
+
+- Call base constructor for pedantic compilers.
+
+include/omniORB4/poa.h
+
+
 Wed Feb 11 16:59:08 GMT 2004 dgrisby
 ====================================
 
