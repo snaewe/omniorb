@@ -820,40 +820,37 @@ implementation.
 
 It's best to set up the GNU-WIN32 tools on a machine's local disk as this makes
 a noticeable difference to the speed at which they operate.  The tools are
-usually put into \verb|C:\gnuwin32| and take up about 15 Mbytes.  If you need
-to install them on a new machine you can use a gzip'd tar file from
-\verb|/project/omni/misc/gw18.tar.gz|:
+usually put into \verb|C:\gnuwin32| and take up just over a megabyte.  If you
+need to install them on a new machine you can use a gzip'd tar file from
+\verb|/project/omni/misc/gnu-win32-lite.tar.gz|:
 
 {\footnotesize \begin{verbatim}
-C:\>\\hazel\win32app\x86\bin\gunzip -c \\shallot\omni\misc\gw18.tar.gz | \\haz
-el\win32app\x86\bin\tar xf -
+C:\>mkdir gnuwin32
+C:\>cd gnuwin32
+C:\gnuwin32>\\hazel\win32app\x86\bin\gunzip -c \\shallot\omni\misc\gnu-win32-l
+ite.tar.gz | \\hazel\win32app\x86\bin\tar xf -
 \end{verbatim}}
 
-This should create the directory \verb|C:\gnuwin32|.
+This should create the directories \verb|C:\gnuwin32\bin| and
+\verb|C:\gnuwin32\tmp|.
 
 \subsection{Setting your path and mounting directories}
 
 Having made sure the tools are installed on the local machine you now need to
-set up your personal environment.  Firstly you need to put
-\verb|C:\gnuwin32\b18\H-i386-cygwin32\bin| on your path (while you're at it you
-may as well add \verb|C:\gnuwin32\b18\usr\local\bin| as well).  If you also
-have \verb|\\hazel\win32app\x86\bin| on your path you should make sure that
-this is searched after the GNU-WIN32 directories since it contains several
-unix-like programs which conflict with the GNU-WIN32 tools.  The next thing to
-do is ``mount'' the {\tt bin}, {\tt usr} and {\tt tmp} directories at the root:
+set up your personal environment.  First you need to put \verb|C:\gnuwin32\bin|
+on your path.  If you also have \verb|\\hazel\win32app\x86\bin| on your path
+you should make sure that this is searched after the GNU-WIN32 directories
+since it contains several unix-like programs which conflict with the GNU-WIN32
+tools.  The next thing to do is ``mount'' the {\tt bin} and {\tt tmp}
+directories at the root:
 
 {\footnotesize \begin{verbatim}
-C:\>set path=c:\gnuwin32\b18\H-i386-cygwin32\bin;c:\gnuwin32\b18\usr\local\bi
-n;%path%
-
-C:\>mount c:/gnuwin32/b18/H-i386-cygwin32/bin /bin
-
-C:\>mount c:/gnuwin32/b18/usr /usr
-
-C:\>mount c:/gnuwin32/b18/tmp /tmp
+C:\>set path=c:\gnuwin32\bin;%path%
+C:\>mount c:/gnuwin32/bin /bin
+C:\>mount c:/gnuwin32/tmp /tmp
 \end{verbatim}}
 
-You should now be able to run {\tt bash} and all the other tools.  
+You should now be able to run the shell {\tt sh} and all the other tools.
 
 The next stage is to ``mount'' any other unix file systems you require.  These
 should be mounted with the same pathname as on unix machines.  For example say
@@ -870,7 +867,7 @@ root this is the normal place for it to be installed on a machine).
 Now that you have all the right directories mounted you need to finish off
 setting your environment variables.  You need to make sure that the Visual C++
 tools are available by adding the \verb|/msdev/bin| directory to your path.
-You can either add it to your path inside {\tt bash}, in which case you can use
+You can either add it to your path inside {\tt sh}, in which case you can use
 the unix-style directory names, or inside MSDOS / Control Panel in which case
 you need to use NT-style names (either using drive letters or the {\it
 \verb|\\|machine\verb|\|directory} form depending on how you've mounted each
