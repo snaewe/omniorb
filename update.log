@@ -1,3 +1,126 @@
+Mon Aug 21 12:29:33 BST 2000 djs
+================================
+
+- General omniIDL/C++ improvements
+
+-   Restructuring of utility functions
+
+src/lib/omniORB2/omniidl_be/cxx/ast.py			(NEW)
+src/lib/omniORB2/omniidl_be/cxx/cxx.py			(NEW)
+src/lib/omniORB2/omniidl_be/cxx/util.py 
+src/lib/omniORB2/omniidl_be/cxx/output.py		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py		(REMOVED)
+src/lib/omniORB2/omniidl_be/cxx/env.py			(REMOVED)
+src/lib/omniORB2/omniidl_be/cxx/name.py			(REMOVED)
+
+(almost everything uses these)
+
+-   Deletes all partial output files on a fatal error
+
+src/lib/omniORB2/omniidl_be/cxx/output.py
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/skel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/impl/__init__.py
+
+-   Unified handling of IDL operations and attributes
+-   python classes representing C++ output classes, to keep related code
+    together (eg ensuring method signatures always match)
+
+src/lib/omniORB2/omniidl_be/cxx/call.py			(NEW)
+src/lib/omniORB2/omniidl_be/cxx/iface.py		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/skel/mangler.py
+src/lib/omniORB2/omniidl_be/cxx/skel/dispatch.py	(REMOVED)
+src/lib/omniORB2/omniidl_be/cxx/skel/proxy.py		(REMOVED)
+
+-   Moved flattened name work around into id.py
+
+-   merged #pragma hh code from omni3_develop
+
+-   merged hh storing of USE_core_stub_in_nt_dll + USE_dyn_stub_in_nt_dll
+    between header includes
+
+-   merged scan of AST looking for unsupported nodes from omni3_develop
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/support.py		(NEW)
+
+-   removed 0000 special case in union discriminator code
+    An explicit discriminator value of \0 -> 0000 whereas an implicit one 
+    (value String) \0 -> '\000' (an archaeological inconsistency)
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+
+-   Code to generate _var, _ptr, copy and delete routines for C++ analogues
+    of IDL types. (experimental)
+
+src/lib/omniORB2/omniidl_be/cxx/types.py
+
+-   Removed stale profile results and modified TODO list
+
+src/lib/omniORB2/omniidl_be/cxx/PROFILE			(REMOVED)
+src/lib/omniORB2/omniidl_be/cxx/TODO
+
+-   Removed "showast" which is both out of date and functionally redundant
+    (it was only meant as a quick test and nolonger has any purpose)
+
+src/lib/omniORB2/omniidl_be/dir.mk
+src/lib/omniORB2/omniidl_be/showast.py
+
+- Initial support for AMI from the CORBA Messaging spec
+
+-   Messaging::ReplyHandler and Messaging::ExceptionHolder "valuetype"
+
+idl/omniMessaging.idl					(NEW)
+
+-   CORBA::Pollable, CORBA::PollableSet
+
+idl/Pollablle.idl					(NEW)
+
+-   Runtime modifications (new exceptions, new call descriptor type, etc)
+
+include/queue.h
+include/omniORB3/CORBA.h
+include/omniORB3/giopDriver.h
+include/omniORB3/userexception.h
+include/omniORB3/omniAMI.h				(NEW)
+include/omniORB3/Messaging.h				(NEW)
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/dynamic/dir.mk
+src/lib/omniORB2/dynamic/messagingdynstub.cc		(NEW)
+src/lib/omniORB2/orbcore/constants.cc
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/orbcore/Messaging.cc			(NEW)
+src/lib/omniORB2/orbcore/PollableSet.h			(NEW)
+src/lib/omniORB2/orbcore/PollableSet.cc			(NEW)
+src/lib/omniORB2/orbcore/omniAMI.cc			(NEW)
+src/lib/omniORB2/orbcore/messagingstub.cc		(NEW)
+src/lib/omniORB2/orbcore/pollablestub.cc		(NEW)
+
+-   Initial omniidl/C++ backend support
+
+src/lib/omniORB2/omniidl_be/cxx/ami			(NEW)
+src/lib/omniORB2/omniidl_be/cxx/ami/dir.mk		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/ami/main.py		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/ami/ami.py		(NEW)	
+src/lib/omniORB2/omniidl_be/cxx/ami/hooks.py		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/ami/exholder.py		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/ami/poller.py		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/ami/rhandler.py		(NEW)
+src/lib/omniORB2/omniidl_be/cxx/ami/objref.py		(NEW)
+
+-   Initial AMI example
+
+src/examples/dir.mk
+src/examples/ami					(NEW)
+src/examples/ami/echo.cc				(NEW)
+src/examples/ami/echo_ami.idl				(NEW)
+
+
 Mon Aug 21 12:24:40 BST 2000 sll
 ================================
 
@@ -20,6 +143,7 @@ external_merge/src/dir.mk
 external_merge/src/lib/omniORB2/orbcore/gatekeepers/dir.mk
 
 external_merge/mk/platforms/pc486_rtems_4.5.0.mk  NEW
+
 
 Thu Aug 17 16:50:13 BST 2000 sll
 ================================
