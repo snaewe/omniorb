@@ -1,4 +1,13 @@
 
+Tue Feb 15 13:50:03 GMT 2000 djr
+================================
+
+- Strip aliases from sequence elements when determining whether we can	
+  optimise inserion into / extraction from Anys.
+
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+
+
 Tue Feb 15 11:01:09 GMT 2000 djr
 ================================
 

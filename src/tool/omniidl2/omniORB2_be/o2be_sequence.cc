@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.5  2000/02/15 13:52:03  djr
+  Strip aliases off seq elements when considering Any optimisations.
+
   Revision 1.29.6.4  2000/02/10 14:07:59  djr
   Added missing scope.
 
@@ -1311,13 +1314,18 @@ o2be_sequence::produce_buildDesc_support(std::fstream& s)
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
 
+  AST_Decl* true_base_type = base_type();
+  while( true_base_type->node_type() == AST_Decl::NT_typedef )
+    true_base_type =
+      o2be_typedef::narrow_from_decl(true_base_type)->base_type();
+
   // Lovely Super Hacky optimisation ... (jnw and djr's faults)
   int do_contiguous_optimisation = 0;
-  if( base_type()->node_type() == AST_Decl::NT_pre_defined ) {
+  if( true_base_type->node_type() == AST_Decl::NT_pre_defined ) {
     o2be_operation::argMapping dummymapping;
-    o2be_operation::argType atype = o2be_operation::ast2ArgMapping(base_type(),
-							   o2be_operation::wIN,
-							   dummymapping);
+    o2be_operation::argType atype =
+      o2be_operation::ast2ArgMapping(true_base_type, o2be_operation::wIN,
+				     dummymapping);
     switch( atype ) {
     case o2be_operation::tBoolean:
     case o2be_operation::tChar:
