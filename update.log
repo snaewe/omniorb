@@ -1,3 +1,20 @@
+Sun Apr  3 13:30:25 BST 2005 dgrisby
+====================================
+
+- Work-around gcc operator issue.
+
+include/omniORB4/templatedecls.h
+
+- Extra logging on deferred requests.
+
+src/lib/omniORB/dynamic/deferredRequest.cc
+
+- Handle Unicode escapes properly.
+
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/tool/omniidl/python/omniidl/idlutil.py
+
+
 Tue Mar 29 17:08:40 BST 2005 dgrisby
 ====================================
 
