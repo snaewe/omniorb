@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/20 08:19:22  sll
+  Read the new ORB configuration file format. Can still read old format.
+  Can also set configuration parameters from environment variables.
+
   Revision 1.1.2.1  2001/08/17 17:12:34  sll
   Modularise ORB configuration parameters.
 
@@ -177,6 +181,17 @@ class orbOptions {
   //
   // Thread Safety preconditions:
   //    Not thread safe
+
+  ////////////////////////////////////////////////////////////////////////
+  void importFromFile(const char* filename) throw (Unknown,BadParam);
+
+#if defined(NTArchitecture)
+  ////////////////////////////////////////////////////////////////////////
+  void importFromRegistry() throw (Unknown,BadParam);
+#endif
+
+  ////////////////////////////////////////////////////////////////////////
+  void importFromEnv() throw (Unknown,BadParam);
 
   ////////////////////////////////////////////////////////////////////////
   sequenceString* usage() const;

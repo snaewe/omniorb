@@ -51,7 +51,6 @@ BUILTIN_STUB_SRCS = \
 	    Namingstub.cc
 
 ORB_SRCS =  \
-            orbOptions.cc \
 	    anonObject.cc \
 	    callDescriptor.cc \
 	    constants.cc \
@@ -65,7 +64,6 @@ ORB_SRCS =  \
 	    dynamicLib.cc \
 	    exception.cc \
 	    exceptn.cc \
-	    initFile.cc \
 	    initRefs.cc \
 	    interceptors.cc \
 	    ior.cc \
@@ -79,6 +77,8 @@ ORB_SRCS =  \
 	    omniObjRef.cc \
 	    omniORB.cc \
 	    omniServant.cc \
+            orbOptions.cc \
+            orbOptionsFile.cc \
 	    poa.cc \
 	    poamanager.cc \
 	    policy.cc \
@@ -127,6 +127,14 @@ endif
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 
 ##########################################################################
+ifdef OMNIORB_CONFIG_ENV
+  CONFIG_ENV = $(OMNIORB_CONFIG_ENV)
+else
+  CONFIG_ENV = OMNIORB_CONFIG
+endif
+DIR_CPPFLAGS += -DCONFIG_ENV='"$(CONFIG_ENV)"'
+
+##########################################################################
 ifdef UnixPlatform
 #  CXXDEBUGFLAGS = -g
   DIR_CPPFLAGS += -DUnixArchitecture
@@ -142,6 +150,7 @@ ifdef Win32Platform
   SHARED_ONLY_OBJS = msvcdllstub.o
   MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
   MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC
+  ORB_SRCS += orbOptionsReg.cc
 endif
 
 #########################################################################

@@ -1,3 +1,20 @@
+Mon Aug 20 09:03:33 BST 2001 sll
+================================
+
+- New orb configuration file format. Can still read old format.
+  Can also set configuration parameters from envirnoment variables.
+  Not tested on NT yet.
+
+
+sample.cfg                                      NEW
+src/lib/omniORB/include/orbOptions.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/orbOptions.cc
+src/lib/omniORB/orbcore/orbOptionsFile.cc       NEW
+src/lib/omniORB/orbcore/orbOptionsReg.cc        NEW
+
+
 Sat Aug 18 18:27:35 BST 2001 sll
 ================================
 
