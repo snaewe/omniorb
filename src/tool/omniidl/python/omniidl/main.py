@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/11/17 14:33:55  dpg1
+# Clean up of usage info.
+#
 # Revision 1.5  1999/11/15 15:49:22  dpg1
 # Documentation strings.
 #
@@ -61,20 +64,19 @@ def usage():
     print """
 The supported flags are:
 
-  -Dname[=value]  Defines name for preprocessor
-  -Idir           Includes dir in search path for preprocessor
-  -Uname          Undefines name for preprocessor
-  -E              Runs preprocessor only, prints of stdout
-  -Ycmd           Sets command for the preprocessor
-  -N              Does not run pre-processor
-  -Wparg          Sends arg to the preprocessor
-  -bback_end      Selects the back-end to be used. More than one permitted.
-  -Wbarg          Sends arg to the back-end
-  -d              Dumps the syntax tree then exits
-  -V              Prints version info then exits
-  -u              Prints usage message and exits
-  -v              Traces compilation stages
-  -q              Quiet -- does not print anything
+  -Dname[=value]  Define name for preprocessor
+  -Uname          Undefine name for preprocessor
+  -Idir           Include dir in search path for preprocessor
+  -E              Run preprocessor only, print on stdout
+  -Ycmd           Set command for the preprocessor
+  -N              Do not run preprocessor
+  -Wparg          Send arg to the preprocessor
+  -bback_end      Select a back-end to be used. More than one permitted.
+  -Wbarg          Send arg to the back-end
+  -d              Dump the parsed IDL then exit
+  -V              Print version info then exit
+  -u              Print this usage message and exit
+  -v              Trace compilation stages
 """
 
 preprocessor_args = []
