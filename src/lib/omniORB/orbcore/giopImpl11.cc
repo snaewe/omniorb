@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2001/09/10 17:46:10  sll
+  When a connection is broken, check if it has been shutdown orderly. If so,
+  do a retry.
+
   Revision 1.1.4.10  2001/09/04 14:38:51  sll
   Added the boolean argument to notifyCommFailure to indicate if
   omniTransportLock is held by the caller.
@@ -135,6 +139,8 @@ public:
   // voilation was detected.  This function *always* raise a
   // giopStream::CommFailure exception.  Therefore the caller should not
   // expect this function to return.
+
+  static void inputRaiseCommFailure(giopStream* g);
 
   static void outputNewMessage(giopStream* g);
 
@@ -246,8 +252,9 @@ giopImpl11::inputReplyBegin(giopStream* g,
       CORBA::Boolean retry;
       g->notifyCommFailure(0,minor,retry);
       g->pd_strand->state(giopStrand::DYING);
+      g->pd_strand->orderly_closed = 1;
       giopStream::CommFailure::_raise(minor,
-				      (CORBA::CompletionStatus)g->completion(),
+				      CORBA::COMPLETED_NO,
 				      retry,__FILE__,__LINE__);
       // never reach here.
       break;
@@ -514,6 +521,9 @@ giopImpl11::unmarshalWildCardRequestHeader(giopStream* g) {
   case GIOP::Request:
   case GIOP::LocateRequest:
   case GIOP::CancelRequest:
+    break;
+  case GIOP::CloseConnection:
+    inputRaiseCommFailure(g);
     break;
   default:
     inputTerminalProtocolError(g);
@@ -938,6 +948,12 @@ giopImpl11::inputTerminalProtocolError(giopStream* g) {
       <<". Detected GIOP 1.1 protocol error in input message. "
       << "Connection is closed.\n";
   }
+  inputRaiseCommFailure(g);
+}
+
+////////////////////////////////////////////////////////////////////////
+void
+giopImpl11::inputRaiseCommFailure(giopStream* g) {
 
   CORBA::ULong minor;
   CORBA::Boolean retry;
