@@ -1,3 +1,30 @@
+Fri May 11 15:22:01 BST 2001 sll
+================================
+
+- GIOP message size limit is enforced with GIOP 1.0
+
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/exception.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+
+- separate minor code MARSHAL_MessageSizeExceedLimit into distinct client and 
+  server side codes.
+
+include/omniORB4/minorCode.h
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+- Added operator for omniORB::logger to report system exception status and
+  minor code.
+
+include/omniORB4/omniORB.h
+src/lib/omniORB/orbcore/exceptn.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
+
 Thu May 10 16:00:48 BST 2001 dpg1
 =================================
 
