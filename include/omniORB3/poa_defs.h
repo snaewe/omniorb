@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/06/27 16:15:08  sll
+  New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+  _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+  sequence of string and a sequence of object reference.
+
   Revision 1.1.2.4  1999/10/21 11:29:45  djr
   Added _core_attr to declaration of _PD_repoId in exceptions & interfaces.
 
@@ -56,7 +61,7 @@
 
 class ForwardRequest : public CORBA::UserException {
 public:
-  CORBA::Object_member forward_reference;
+  CORBA::Object_Member forward_reference;
 
   inline ForwardRequest() {
     pd_insertToAnyFn    = insertToAnyFn;

@@ -29,6 +29,11 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  2000/06/27 16:15:08  sll
+ New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+ _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+ sequence of string and a sequence of object reference.
+
  Revision 1.1.2.3  2000/02/09 15:01:28  djr
  Fixed _CORBA_String_member bug.
 
@@ -57,6 +62,7 @@
 
 
 class _CORBA_String_member;
+class _CORBA_String_element;
 class _CORBA_String_inout;
 class _CORBA_String_out;
 
@@ -66,10 +72,15 @@ class _CORBA_String_out;
 
 class _CORBA_String_var {
 public:
+  // Note: default constructor of String_var initialises its managed pointer
+  //       to 0. This differs from String_member, which initialises its
+  //       internal pointer to omni::empty_string. 
+
+
   typedef char* ptr_t;
 
   static inline char* string_dup(const char* p) {
-    char* r = new char[strlen(p) + 1];
+    char* r = omni::allocString(strlen(p));
     strcpy(r, p);
     return r;
   }
@@ -89,35 +100,35 @@ public:
 
   inline _CORBA_String_var(const _CORBA_String_member& s);
 
+  inline _CORBA_String_var(const _CORBA_String_element& s);
+
   inline ~_CORBA_String_var() {
-    if( _data )  delete[] _data;
+    omni::freeString(_data);
   }
 
   inline _CORBA_String_var& operator=(char* p) {
-    if (_data)  delete[] _data;
+    omni::freeString(_data);
     _data = p;
     return *this;
   }
 
   inline _CORBA_String_var& operator=(const char* p) {
-    if (_data){
-      delete[] _data;
-      _data = 0;
-    }
+    omni::freeString(_data);
+    _data = 0;
     if (p)  _data = string_dup(p);
     return *this;
   }
 
   inline _CORBA_String_var& operator=(const _CORBA_String_var& s) {
-    if (_data){
-      delete[] _data;
-      _data = 0;
-    }
+    omni::freeString(_data);
+    _data = 0;
     if( (const char*)s )  _data = string_dup(s);
     return *this;
   }
 
   inline _CORBA_String_var& operator=(const _CORBA_String_member& s);
+
+  inline _CORBA_String_var& operator=(const _CORBA_String_element& s);
 
 #if ! (defined(__GNUG__) && __GNUC_MINOR__ == 95)
   inline operator char* ()             { return _data; }
@@ -144,7 +155,7 @@ public:
   inline char*& inout()         { return _data; }
   inline char*& out() {
     if( _data ){
-      delete[] _data;
+      omni::freeString(_data);
       _data = 0;
     }
     return _data;
@@ -171,74 +182,64 @@ public:
   typedef char* ptr_t;
 
   inline _CORBA_String_member()
-    : pd_data((char*) omni::empty_string), pd_rel(0), _ptr(pd_data) {}
-
-  inline _CORBA_String_member(char*& p, _CORBA_Boolean rel) 
-    : pd_data(0), pd_rel(rel), _ptr(p) {}
+    : _ptr((char*) omni::empty_string) {}
 
   inline _CORBA_String_member(const _CORBA_String_member& s) 
-           : pd_data(0), pd_rel(1), _ptr(pd_data) {
-    if (s._ptr)  _ptr = _CORBA_String_var::string_dup(s._ptr);
+           : _ptr((char*)omni::empty_string) {
+    if (s._ptr && s._ptr != omni::empty_string)
+      _ptr = _CORBA_String_var::string_dup(s._ptr);
   }
 
   inline ~_CORBA_String_member() {
-    if (pd_rel && pd_data)  delete[] pd_data; // Not _ptr! Only call delete
-                                              // when this is not a 
-                                              // sequence member.
+    omni::freeString(_ptr);
   }
 
   inline _CORBA_String_member& operator=(char* s) {
-    if (pd_rel && ((char*)_ptr))  delete[] _ptr;
+    omni::freeString(_ptr);
     _ptr = s;
-    pd_rel = 1;
     return *this;
   }
 
   inline _CORBA_String_member& operator= (const char* s) {
-    if (pd_rel && ((char*)_ptr)) {
-      delete[] _ptr;
-      _ptr = 0;
-    }
-    if( s ) {
+    omni::freeString(_ptr);
+    if (s)
       _ptr = _CORBA_String_var::string_dup(s);
-      pd_rel = 1;
-    }
+    else
+      _ptr = 0;
     return *this;
   }
 
   inline _CORBA_String_member& operator=(const _CORBA_String_member& s) {
-    if (pd_rel && ((char*)_ptr)) {
-      delete[] _ptr;
-      _ptr = 0;
-    }
-    if( s._ptr ) {
+    omni::freeString(_ptr);
+    if (s._ptr && s._ptr != omni::empty_string)
       _ptr = _CORBA_String_var::string_dup(s._ptr);
-      pd_rel = 1;
-    }
+    else
+      _ptr = s._ptr;
     return *this;
   }
 
   inline _CORBA_String_member& operator=(const _CORBA_String_var& s) {
-    if (pd_rel && ((char*)_ptr)) {
-      delete[] _ptr;
-      _ptr = 0;
-    }
+    omni::freeString(_ptr);
     if( (const char*)s ) {
       _ptr = _CORBA_String_var::string_dup((const char*)s);
-      pd_rel = 1;
+    }
+    else {
+      _ptr = (char*) 0;
     }
     return *this;
   }
 
+  inline _CORBA_String_member& operator=(const _CORBA_String_element& s);
+
   inline char& operator[] (_CORBA_ULong index) {
-    if (!((char*)_ptr) || (_CORBA_ULong)strlen(_ptr) < index) {
+    if (!_ptr || (_CORBA_ULong)strlen(_ptr) < index) {
       _CORBA_bound_check_error();	// never return
     }
     return _ptr[index];
   }
 
   inline char operator[] (_CORBA_ULong index) const {
-    if (!((char*)_ptr) || (_CORBA_ULong)strlen(_ptr) < index) {
+    if (!_ptr || (_CORBA_ULong)strlen(_ptr) < index) {
       _CORBA_bound_check_error();	// never return
     }
     return _ptr[index];
@@ -251,16 +252,18 @@ public:
   inline operator char* () const { return _ptr; }
 #endif
 
+  inline const char* in() const { return _ptr; }
+  inline char*& inout()         { return _ptr; }
+  inline char*& out() {
+    omni::freeString(_ptr);
+    _ptr = 0;
+    return _ptr;
+  }
+
   inline char* _retn() {
     char *tmp;
-    if (pd_rel) {
-      tmp = _ptr;
-      _ptr = 0;
-    }
-    else {
-      tmp = _CORBA_String_var::string_dup(_ptr);
-      _ptr = 0;
-    }
+    tmp = _ptr;
+    _ptr = 0;
     return tmp;
   }
 
@@ -270,14 +273,139 @@ public:
   void operator <<= (MemBufferedStream& s);
   size_t _NP_alignedSize(size_t initialoffset) const;
 
-private:
-  char* pd_data;
+  inline char*& _NP_ref() {return _ptr;}
 
-public:
-  _CORBA_Boolean pd_rel;
-  char*&         _ptr;
+  char* _ptr;
+
 };
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// String_element ///////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class _CORBA_String_element {
+
+public:
+
+  inline _CORBA_String_element(char*& p, _CORBA_Boolean rel) 
+    : pd_rel(rel), pd_data(p) {}
+
+  inline _CORBA_String_element(const _CORBA_String_element& s) 
+  : pd_rel(s.pd_rel), pd_data(s.pd_data) {}
+
+  inline ~_CORBA_String_element() {
+  // intentionally does nothing.
+  }
+
+  inline _CORBA_String_element& operator=(char* s) {
+    if (pd_rel) 
+      omni::freeString(pd_data);
+    pd_data = s;
+    return *this;
+  }
+
+  inline _CORBA_String_element& operator= (const char* s) {
+    if (pd_rel) {
+      omni::freeString(pd_data);
+      if (s)
+	pd_data = _CORBA_String_var::string_dup(s);
+      else
+	pd_data = 0;
+    } else {
+      pd_data = (char*)s;
+    }
+    return *this;
+  }
+
+  inline _CORBA_String_element& operator=(const _CORBA_String_element& s) {
+    if (pd_rel) {
+      omni::freeString(pd_data);
+      if (s.pd_data && s.pd_data != omni::empty_string)
+	pd_data = _CORBA_String_var::string_dup(s.pd_data);
+      else
+	pd_data = (char*)s.pd_data;
+    } else
+      pd_data = (char*)s.pd_data;
+    return *this;
+  }
+
+  inline _CORBA_String_element& operator=(const _CORBA_String_var& s) {
+    if (pd_rel) {
+      omni::freeString(pd_data);
+      if( (const char*)s )
+	pd_data = _CORBA_String_var::string_dup((const char*)s);
+      else
+	pd_data = 0;
+    } else
+      pd_data = (char*)(const char*)s;
+    return *this;
+  }
+
+  inline _CORBA_String_element& operator=(const _CORBA_String_member& s) {
+    if (pd_rel) {
+      omni::freeString(pd_data);
+      if( (const char*)s && (const char*) s != omni::empty_string)
+	pd_data = _CORBA_String_var::string_dup((const char*)s);
+      else
+	pd_data = (char*)(const char*)s;
+    } else
+      pd_data = (char*)(const char*)s;
+    return *this;
+  }
+
+  inline char& operator[] (_CORBA_ULong index) {
+    if (!((char*)pd_data) || (_CORBA_ULong)strlen(pd_data) < index) {
+      _CORBA_bound_check_error();	// never return
+    }
+    return pd_data[index];
+  }
+
+  inline char operator[] (_CORBA_ULong index) const {
+    if (!((char*)pd_data) || (_CORBA_ULong)strlen(pd_data) < index) {
+      _CORBA_bound_check_error();	// never return
+    }
+    return pd_data[index];
+  }
+
+#if ! (defined(__GNUG__) && __GNUC_MINOR__ == 95)
+  inline operator char* ()             { return pd_data; }
+  inline operator const char* () const { return pd_data; }
+#else
+  inline operator char* () const { return pd_data; }
+#endif
+
+  inline const char* in() const { return pd_data; }
+  inline char*& inout()         { return pd_data; }
+  inline char*& out() {
+    if (pd_rel) {
+      omni::freeString(pd_data);
+      pd_data = 0;
+    }
+    else {
+      pd_data = 0;
+    }
+    return pd_data;
+  }
+  inline char* _retn() {
+    char *tmp;
+    if (pd_rel) {
+      tmp = pd_data;
+      pd_data = 0;
+    }
+    else {
+      tmp = (((char*)pd_data) ? _CORBA_String_var::string_dup(pd_data) : 0);
+      pd_data = 0;
+    }
+    return tmp;
+  }
+
+
+  inline char*& _NP_ref() const {return pd_data;}
+  inline _CORBA_Boolean _NP_release() const {return pd_rel;}
+
+  _CORBA_Boolean pd_rel;
+  char*&         pd_data;
+};
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// String_var   ////////////////////////////
@@ -295,14 +423,44 @@ inline _CORBA_String_var::_CORBA_String_var(const _CORBA_String_member& s)
     _data = 0;
 }
 
+inline _CORBA_String_var::_CORBA_String_var(const _CORBA_String_element& s)
+{
+  if ((const char*)s) {
+    _data = _CORBA_String_var::string_dup(s);
+  }
+  else
+    _data = 0;
+}
+
 inline _CORBA_String_var&
 _CORBA_String_var::operator= (const _CORBA_String_member& s)
 {
-  if (_data) {
-    delete [] _data;
+  omni::freeString(_data);
+  if ((const char*)s) 
+    _data = _CORBA_String_var::string_dup(s);
+  else
     _data = 0;
-  }
-  if ((const char*)s) _data = _CORBA_String_var::string_dup(s);
+  return *this;
+}
+
+inline _CORBA_String_var&
+_CORBA_String_var::operator= (const _CORBA_String_element& s)
+{
+  omni::freeString(_data);
+  if ((const char*)s)
+    _data = _CORBA_String_var::string_dup(s);
+  else
+    _data = 0;
+  return *this;
+}
+
+inline _CORBA_String_member& 
+_CORBA_String_member::operator=(const _CORBA_String_element& s) {
+  omni::freeString(_ptr);
+  if( (const char*)s )
+    _ptr = _CORBA_String_var::string_dup((const char*)s);
+  else
+    _ptr = 0;
   return *this;
 }
 
@@ -315,15 +473,17 @@ class _CORBA_String_inout {
 public:
   inline _CORBA_String_inout(char*& p) : _data(p) {}
   inline _CORBA_String_inout(_CORBA_String_var& p) : _data(p._data) {}
-  inline _CORBA_String_inout(_CORBA_String_member& p) : _data(p._ptr) {
-  // If the String_member is part of a sequence and the pd_rel == 0,
+  inline _CORBA_String_inout(_CORBA_String_member& p) : _data(p._ptr) {}
+  inline _CORBA_String_inout(_CORBA_String_element& p) : _data(p._NP_ref()) {
+  // If the String_element has pd_rel == 0,
   // the string buffer is not owned by the sequence and should not
   // be freed. Since this is an inout argument and the callee may call
   // string_free, we create a copy to pass to the callee. This will result
   // in a memory leak! This only occurs when there is a programming error
   // and cannot be trapped by the compiler.
-    if (!p.pd_rel && (p._ptr)) {
-      p._ptr = _CORBA_String_var::string_dup(p._ptr);
+    if (!p._NP_release() && (p._NP_ref())) {
+      p._NP_ref() = ((p._NP_ref()) ?
+		     _CORBA_String_var::string_dup(p._NP_ref()) : 0);
     }
   }
   inline ~_CORBA_String_inout() {}
@@ -345,6 +505,7 @@ public:
   inline _CORBA_String_out(char*& p) : _data(p) { _data = 0; }
   inline _CORBA_String_out(_CORBA_String_var& p) : _data(p._data) { p = (char*)0; }
   inline _CORBA_String_out(_CORBA_String_member& p) : _data(p._ptr) { p = (char*)0; }
+  inline _CORBA_String_out(_CORBA_String_element& p) : _data(p._NP_ref()) { p = (char*)0; }
   inline ~_CORBA_String_out() {}
   inline _CORBA_String_out(const _CORBA_String_out& p) : _data(p._data) {}
   inline _CORBA_String_out& operator=(const _CORBA_String_out& p) {
@@ -354,8 +515,9 @@ public:
     _data = p; return *this;
   }
   inline _CORBA_String_out& operator=(const char* p) {
-    _data = _CORBA_String_var::string_dup(p); return *this;
+    _data = ((p) ? _CORBA_String_var::string_dup(p) : 0); return *this;
   }
+
   operator char*& () { return _data; }
   char*& ptr()       { return _data; }
 
@@ -365,6 +527,7 @@ private:
   _CORBA_String_out();
   _CORBA_String_out& operator=(const _CORBA_String_var& );
   _CORBA_String_out& operator=(const _CORBA_String_member& );
+  _CORBA_String_out& operator=(const _CORBA_String_element& );
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -374,7 +537,7 @@ private:
 class _CORBA_Sequence__String
 {
 public:
-  typedef _CORBA_String_member ElemT;
+  typedef _CORBA_String_element ElemT;
   typedef _CORBA_Sequence__String SeqT;
 
   inline _CORBA_ULong maximum() const { return pd_max; }
@@ -386,7 +549,8 @@ public:
     }
 
     // If we've shrunk we need to clear the entries at the top.
-    for( _CORBA_ULong i = len; i < pd_len; i++ )  operator[](i) = (char*) 0;
+    for( _CORBA_ULong i = len; i < pd_len; i++ ) 
+      operator[](i) = (char*) omni::empty_string;
 
     if (len) {
       // Allocate buffer on-demand. Either pd_data == 0 
@@ -411,9 +575,10 @@ public:
     if (!nelems) return 0;
     char** b = new char*[nelems+2];
     omni::ptr_arith_t l = nelems;
-    memset(b,0,sizeof(*b)*(nelems+2));
     b[0] = (char*) ((omni::ptr_arith_t) 0x53515354U);
     b[1] = (char*) l;
+    for (_CORBA_ULong index = 2; index < (nelems+2); index++)
+      b[index] = (char*)omni::empty_string;
     return b+2;
   }
 
@@ -426,8 +591,7 @@ public:
     }
     omni::ptr_arith_t l = (omni::ptr_arith_t) b[1];
     for (_CORBA_ULong i = 0; i < (_CORBA_ULong) l; i++) {
-      if (buf[i])
-	delete [] (buf[i]);
+      omni::freeString(buf[i]);
     }
     b[0] = (char*) 0;
     delete [] b;
@@ -469,7 +633,11 @@ public:
 #endif
       s->copybuffer(pd_max);
     }
+#if !defined(__DECCXX) || (__DECCXX_VER > 60000000)
     return pd_data; 
+#else
+    return (char const* const*)pd_data; 
+#endif
   }
 
 
@@ -556,11 +724,12 @@ private:
 	pd_data[i] = 0;
       }
       else {
-	newdata[i] = _CORBA_String_var::string_dup(pd_data[i]);
+	newdata[i] = ((pd_data[i]) ? 
+		      _CORBA_String_var::string_dup(pd_data[i]) : 0);
       }
     }
-    if (pd_rel && pd_data) {
-      freebuf(pd_data);
+    if (pd_rel) {
+      if (pd_data) freebuf(pd_data);
     }
     else {
       pd_rel = 1;

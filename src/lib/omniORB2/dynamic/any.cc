@@ -30,6 +30,11 @@
 
 /*
  * $Log$
+ * Revision 1.18.6.6  2000/06/27 16:15:09  sll
+ * New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+ * _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+ * sequence of string and a sequence of object reference.
+ *
  * Revision 1.18.6.5  2000/02/09 12:04:52  djr
  * Fixed memory allocation bug in Any insertion/extraction of strings.
  * Optimisation for insertion/extraction of sequence of simple types.
@@ -669,10 +674,9 @@ CORBA::Any::operator>>=(char*& s) const
   }
   else {
     char* p = 0;
-    _CORBA_Boolean rel = 0;
     tcDescriptor tcd;
     tcd.p_string.ptr = &p;
-    tcd.p_string.release = &rel;
+    tcd.p_string.release = 0;
 
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
@@ -695,10 +699,9 @@ CORBA::Any::operator>>=(const char*& s) const
 {
   char* sp = (char*) PR_getCachedData();
   if (sp == 0) {
-    _CORBA_Boolean rel = 0;
     tcDescriptor tcd;
     tcd.p_string.ptr = &sp;
-    tcd.p_string.release = &rel;
+    tcd.p_string.release = 0;
 
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
@@ -727,10 +730,9 @@ CORBA::Any::operator>>=(to_string s) const
 
   char* sp = (char*) PR_getCachedData();
   if (sp == 0) {
-    _CORBA_Boolean rel = 0;
     tcDescriptor tcd;
     tcd.p_string.ptr = &sp;
-    tcd.p_string.release = &rel;
+    tcd.p_string.release = 0;
 
     if (pdAnyP()->getData(newtc, tcd))
     {

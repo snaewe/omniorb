@@ -28,6 +28,11 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  2000/06/27 16:15:08  sll
+ New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+ _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+ sequence of string and a sequence of object reference.
+
  Revision 1.1.2.2  1999/10/13 12:44:35  djr
  Added definition of TypeCode_out.
 
@@ -40,22 +45,25 @@
 ///////////////////////////// Object_var /////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class Object_member;
+class Object_Member;
+class Object_Element;
 class Object_INOUT_arg;
 class Object_OUT_arg;
-
+class Object_tcDesc_arg;
 
 class Object_var {
 public:
   typedef Object        T;
   typedef Object_ptr    T_ptr;
   typedef Object_var    T_var;
-  typedef Object_member T_member;
+  typedef Object_Member T_member;
+  typedef Object_Element T_element;
 
   inline Object_var() : pd_ref(T::_nil()) {}
   inline Object_var(T_ptr p) { pd_ref = p; }
   inline Object_var(const T_var& p) : pd_ref(T::_duplicate(p.pd_ref)) {}
   inline Object_var(const T_member& p);
+  inline Object_var(const T_element& p);
   inline ~Object_var() { release(pd_ref); }
 
   inline T_var& operator= (T_ptr p) {
@@ -71,6 +79,8 @@ public:
     return *this;
   }
   inline T_var& operator= (const T_member& p);
+
+  inline T_var& operator= (const T_element& p);
 
   inline T_ptr operator->() const { return pd_ref; }
   inline operator T_ptr() const   { return pd_ref; }
@@ -90,53 +100,55 @@ public:
     return tmp;
   }
 
-  friend class Object_member;
+  friend class Object_Member;
   friend class Object_INOUT_arg;
   friend class Object_OUT_arg;
+  friend class Object_tcDesc_arg;
 
 private:
   T_ptr pd_ref;
 };
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////// Object_member ///////////////////////////
+//////////////////////////// Object_Member ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class Object_member {
+class Object_Member {
 public:
   typedef Object        T;
   typedef Object_ptr    T_ptr;
   typedef Object_var    T_var;
-  typedef Object_member T_member;
+  typedef Object_Member T_member;
+  typedef Object_Element T_element;
 
-  inline Object_member() : pd_data(T::_nil()), pd_rel(1), _ptr(pd_data) {}
-  inline Object_member(T_ptr& p, _CORBA_Boolean rel)
-    : pd_data(T::_nil()), pd_rel(rel), _ptr(p) {}
-  inline Object_member(T_ptr p) : pd_data(p), pd_rel(1), _ptr(pd_data) {}
-  inline Object_member(const T_member& p)
-    : pd_data(T::_duplicate(p._ptr)), pd_rel(1), _ptr(pd_data) {}
-  inline ~Object_member() {
-    if( pd_rel )  CORBA::release(pd_data);
-    // Not _ptr! Only call release when this is not a sequence member
+  inline Object_Member() : _ptr(T::_nil()) {}
+  inline Object_Member(const T_member& p) {
+    _ptr = T::_duplicate(p._ptr);
+  }
+  inline ~Object_Member() {
+    CORBA::release(_ptr);
   }
 
   inline T_member& operator= (T_ptr p) {
-    if( pd_rel )  CORBA::release(_ptr);
+    CORBA::release(_ptr);
     _ptr = p;
     return *this;
   }
   inline T_member& operator= (const T_member& p) {
     if( &p != this ) {
-      if( pd_rel )  CORBA::release(_ptr);
+      CORBA::release(_ptr);
       _ptr = T::_duplicate(p._ptr);
     }
     return *this;
   }
+
   inline T_member& operator= (const T_var& p) {
-    if( pd_rel )  CORBA::release(_ptr);
+    CORBA::release(_ptr);
     _ptr = T::_duplicate(p);
     return *this;
   }
+
+  inline T_member& operator= (const T_element& p);
 
   inline size_t _NP_alignedSize(size_t initialoffset) const {
     return CORBA::Object::_NP_alignedSize(_ptr,initialoffset);
@@ -158,24 +170,108 @@ public:
     _ptr = _result;
   }
 
-  inline T_ptr operator->() const { return _ptr; }
-  inline operator T_ptr () const  { return _ptr; }
+  inline Object_ptr operator->() const { return _ptr; }
+  inline operator Object_ptr () const  { return _ptr; }
 
-  // omniORB private
-  inline T_ptr _retn() {
-    T_ptr tmp;
-    if (!pd_rel) { T::_duplicate(_ptr); }
+  inline Object_ptr  in() const { return _ptr; }
+  inline Object_ptr& inout()    { return _ptr; }
+  inline Object_ptr& out() {
+    CORBA::release(_ptr);
+    _ptr = CORBA::Object::_nil();
+    return _ptr;
+  }
+  inline Object_ptr _retn() {
+    Object_ptr tmp;
     tmp = _ptr;
-    _ptr = T::_nil();
+    _ptr = CORBA::Object::_nil();
     return tmp;
   }
 
-private:
-  T_ptr pd_data;
+  Object_ptr _ptr;
+};
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// Object_Element //////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class Object_Element {
 public:
+  typedef Object        T;
+  typedef Object_ptr    T_ptr;
+  typedef Object_var    T_var;
+  typedef Object_Member T_member;
+  typedef Object_Element T_element;
+
+  inline Object_Element(T_ptr& p, _CORBA_Boolean rel)
+    : pd_rel(rel), pd_data(p) {}
+
+  inline Object_Element(const T_element& p)
+    : pd_rel(p.pd_rel), pd_data(p.pd_data) {}
+
+  inline ~Object_Element() {
+  // intentionally does nothing.
+  }
+
+  inline T_element& operator= (T_ptr p) {
+    if( pd_rel )  CORBA::release(pd_data);
+    pd_data = p;
+    return *this;
+  }
+
+  inline T_element& operator= (const T_element& p) {
+    if( pd_rel ) {
+      CORBA::release(pd_data);
+      T::_duplicate(p.pd_data);
+      pd_data = p.pd_data;
+    }
+    else
+      pd_data = p.pd_data;
+    return *this;
+  }
+
+  inline T_element& operator= (const T_member& p) {
+    if( pd_rel ) {
+      CORBA::release(pd_data);
+      T::_duplicate(p);
+    }
+    pd_data = (T_ptr) p;
+    return *this;
+  }
+
+  inline T_element& operator= (const T_var& p) {
+    if( pd_rel ) {
+      CORBA::release(pd_data);
+      T::_duplicate(p);
+    }
+    pd_data = (T_ptr)p;
+    return *this;
+  }
+
+  inline T_ptr operator->() const { return pd_data; }
+  inline operator T_ptr () const  { return pd_data; }
+
+  inline T_ptr in() const { return pd_data; }
+  inline T_ptr& inout()         { return pd_data; }
+  inline T_ptr& out() {
+    if (pd_rel) {
+      CORBA::release(pd_data);
+    }
+    pd_data = T::_nil();
+    return pd_data;
+  }
+
+  inline T_ptr _retn() {
+    T_ptr tmp = pd_data;
+    if (!pd_rel) { T::_duplicate(pd_data); }
+    pd_data = T::_nil();
+    return tmp;
+  }
+
+  inline T_ptr& _NP_ref() const {return pd_data;}
+  inline _CORBA_Boolean _NP_release() const {return pd_rel;}
+
   _CORBA_Boolean pd_rel;
-  T_ptr& _ptr;
+  T_ptr& pd_data;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -186,16 +282,16 @@ class Object_INOUT_arg {
 public:
   inline Object_INOUT_arg(Object_ptr& p) : _data(p) {}
   inline Object_INOUT_arg(Object_var& p) : _data(p.pd_ref) {}
-  inline Object_INOUT_arg(Object_member& p) : _data(p._ptr) {
-    // If the Object_member is part of a sequence and the pd_rel == 0,
+  inline Object_INOUT_arg(Object_Member& p) : _data(p._ptr) {}
+  inline Object_INOUT_arg(Object_Element& p) : _data(p._NP_ref()) {
+    // If the Object_Element has pd_rel == 0,
     // the ObjRef is not owned by the sequence and should not
     // be freed. Since this is an inout argument and the callee may call
     // release, we duplicate the ObjRef and pass it to the callee. This will
     // result in a memory leak! This only occurs when there is a programming
     // error and cannot be trapped by the compiler.
-    if (!p.pd_rel && !CORBA::is_nil(p._ptr) ) {
-      Object::_duplicate(p);
-    }
+    if( !p._NP_release() )
+      Object::_duplicate(p._NP_ref());
   }
   inline ~Object_INOUT_arg() {}
 
@@ -216,7 +312,9 @@ public:
   typedef Object        T;
   typedef Object_ptr    T_ptr;
   typedef Object_var    T_var;
-  typedef Object_member T_member;
+  typedef Object_Member T_member;
+  typedef Object_Element T_element;
+  typedef Object_OUT_arg T_out;
 
   inline Object_OUT_arg(T_ptr& p) : _data(p) { _data = T::_nil(); }
   inline Object_OUT_arg(T_var& p) : _data(p.pd_ref) {
@@ -225,15 +323,16 @@ public:
   inline Object_OUT_arg(T_member& p) : _data(p._ptr) {
     p = T::_nil();
   }
+  inline Object_OUT_arg(T_element& p) : _data(p._NP_ref()) {
+    p = T::_nil();
+  }
+  inline Object_OUT_arg(const T_out& p) : _data(p._data) {}
   inline ~Object_OUT_arg() {}
-
-  inline Object_OUT_arg& operator=(const Object_OUT_arg& p) { 
-    _data = p._data; return *this;
-  }
+ 
+  inline Object_OUT_arg& operator=(const T_out& p) { 
+    _data = p._data; return *this;  }
   inline Object_OUT_arg& operator=(T_ptr p) { _data = p; return *this; }
-  inline Object_OUT_arg& operator=(const T_member& p) {
-    _data = T::_duplicate(p); return *this;
-  }
+
   inline operator T_ptr&()  { return _data; }
   inline T_ptr& ptr()       { return _data; }
   inline T_ptr operator->() { return _data; }
@@ -242,10 +341,42 @@ public:
 
 private:
   Object_OUT_arg();
+  T_out& operator=(const T_member& p);
+  T_out& operator=(const T_element& p);
+  T_out& operator=(const T_var& p);
+  // CORBA 2.3 p23-26 says that T_var assignment should be disallowed.
 };
 
 
 typedef Object_OUT_arg Object_out;
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////// Object_tcDesc_arg        /////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class Object_tcDesc_arg {
+public:
+  // The sole purpose of this class is for passing as an argument
+  // to the tc build descriptor function of an interface.
+  // It provides the necessary conversions from T_var, T_member,
+  // T_element so that only one tc build description function is needed.
+  // The alternative is to have 3 overloaded build description functions
+  // which makes the stub code even more bloated.
+  typedef Object_Member T_member;
+  typedef Object_Element T_element;
+  typedef Object_var     T_var;
+  inline Object_tcDesc_arg(T_var& p) : _data(p.pd_ref), _rel(1) {}
+  inline Object_tcDesc_arg(T_member& p) : _data(p._ptr), _rel(1) {}
+  inline Object_tcDesc_arg(T_element p) 
+    : _data(p._NP_ref()), _rel(p._NP_release()) {}
+  inline ~Object_tcDesc_arg() {}
+
+  Object_ptr& _data;
+  _CORBA_Boolean _rel;
+
+private:
+  Object_tcDesc_arg();
+};
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// TypeCode_var ////////////////////////////

@@ -1,3 +1,33 @@
+Tue Jun 27 17:00:42 BST 2000 sll
+================================
+
+- Fixed assignment to an element of a sequence of string and a sequence of
+  object reference. Previous version does not work if the compiler
+  does not do the obvious optimisation. Only DEC v5.6 C++ compiler is known
+  to be affected by this bug.
+
+  The fix involves changing the stub and the runtime API. Rebuild the
+  whole tree is necessary
+
+include/omniORB3/CORBA.h
+include/omniORB3/CORBA_vartypes.h
+include/omniORB3/omniInternal.h
+include/omniORB3/poa.h
+include/omniORB3/poa_defs.h
+include/omniORB3/stringtypes.h
+include/omniORB3/tcDescriptor.h
+include/omniORB3/templatedecls.h
+include/omniORB3/templatedefns.h
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/tcParser.cc
+src/lib/omniORB2/omniidl_be/cxx/types.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/orbcore/corbaString.cc
+src/lib/omniORB2/orbcore/initRefs.cc
+
+
 Tue Jun 27 16:53:15 BST 2000 sll
 ================================
 

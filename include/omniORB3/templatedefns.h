@@ -200,26 +200,47 @@ _CORBA_PseudoObj_Member<T,T_var>::operator=(const T_var& v)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// Object_var   ////////////////////////////
-//////////////////////////// Object_member////////////////////////////
+//////////////////////////// Object_Member////////////////////////////
 //////////////////////////// operator=    ////////////////////////////
 //////////////////////////// copy ctors   ////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 inline
-CORBA::Object_var::Object_var(const CORBA::Object_member& p)
-  : pd_ref(T::_duplicate(p._ptr))
+CORBA::Object_var::Object_var(const CORBA::Object_Member& p)
+  : pd_ref(T::_duplicate(p))
+{
+}
+
+inline
+CORBA::Object_var::Object_var(const CORBA::Object_Element& p)
+  : pd_ref(T::_duplicate(p))
 {
 }
 
 
 inline CORBA::Object_var&
-CORBA::Object_var::operator= (const CORBA::Object_member& p)
+CORBA::Object_var::operator= (const CORBA::Object_Member& p)
 {
   release(pd_ref);
-  pd_ref = T::_duplicate(p._ptr);
+  pd_ref = T::_duplicate(p);
   return *this;
 }
 
+inline CORBA::Object_var&
+CORBA::Object_var::operator= (const CORBA::Object_Element& p)
+{
+  release(pd_ref);
+  pd_ref = T::_duplicate(p);
+  return *this;
+}
+
+inline CORBA::Object_Member&
+CORBA::Object_Member::operator=(const CORBA::Object_Element& p)
+{
+  release(_ptr);
+  _ptr = T::_duplicate(p);
+  return *this;
+}
 
 #undef __INLINE_CTOR_DEFN__
 #undef __INLINE_DTOR_DEFN__

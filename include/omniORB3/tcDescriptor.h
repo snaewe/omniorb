@@ -250,13 +250,16 @@ union tcDescriptor {
   //   if the _ptr still points to valid storage then that storage is lost
   CORBA::PrincipalID*  p_Principal;
 
+  // Note: release is now passed by value since it is no longer allowed to
+  // change the state of release to 1.
   // appendItem() will read in the string from string pointer
   // fetchItem() will overwrite the string pointer to a new string - 
   //   if( *ptr && release )  existing string will be freed.
-  //   If new memory is allocated for the string, release is set to true.
+  //   If new memory is allocated for the string and release is not 1 then it is
+  //   the callers responsibility to free.
   struct {
     char**          ptr;
-    _CORBA_Boolean* release;
+    _CORBA_Boolean release;
   } p_string;
 
   // CONSTRUCTED types
@@ -357,8 +360,16 @@ _0RL_buildDesc_cany(tcDescriptor &desc, const CORBA::Any& data)
 inline void
 _0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_member const& data)
 {
-  desc.p_string.ptr = &data._ptr;
-  desc.p_string.release = (_CORBA_Boolean*) &data.pd_rel;
+  desc.p_string.ptr = (char**)&data._ptr;
+  desc.p_string.release
+    = (data._ptr==omni::empty_string) ? 0 : 1;
+}
+
+inline void
+_0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_element const& data)
+{
+  desc.p_string.ptr = (char**) &data.pd_data;
+  desc.p_string.release = data.pd_rel;
 }
 
 ///////////////////
@@ -372,29 +383,14 @@ extern CORBA::Object_ptr
 _0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc);
 
 inline void
-_0RL_buildDesc_cCORBA_mObject(tcDescriptor& desc, const CORBA::Object_member& data)
+_0RL_buildDesc_cCORBA_mObject(tcDescriptor& desc, 
+			      const CORBA::Object_tcDesc_arg& d)
 {
-  desc.p_objref.opq_objref = (void*) &data._ptr;
-  desc.p_objref.opq_release = data.pd_rel;
+  desc.p_objref.opq_objref = (void*) &d._data;
+  desc.p_objref.opq_release = d._rel;
   desc.p_objref.setObjectPtr = _0RL_tcParser_objref_setObjectPtr;
   desc.p_objref.getObjectPtr = _0RL_tcParser_objref_getObjectPtr;
 }
-
-#if 0
-extern void
-_0RL_tcParser_objref2_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr);
-
-extern CORBA::Object_ptr
-_0RL_tcParser_objref2_getObjectPtr(tcObjrefDesc* desc);
-
-inline void
-_0RL_buildDesc_cCORBA_mObject(tcDescriptor& desc, const _CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>& data)
-{
-  desc.p_objref.opq_objref = (void*) &data._ptr;
-  desc.p_objref.setObjectPtr = _0RL_tcParser_objref2_setObjectPtr;
-  desc.p_objref.getObjectPtr = _0RL_tcParser_objref2_getObjectPtr;
-}
-#endif
 
 /////////////////////
 // TypeCode_member //

@@ -413,7 +413,7 @@ class Type:
         type = self.deref().__type
         name = type.decl().scopedName()
         if name == ["CORBA", "Object"]:
-            return "CORBA::Object_member"
+            return "CORBA::Object_" + suffix
 
         name = id.Name(name)
         uname = name.unambiguous(environment)
@@ -555,7 +555,10 @@ class Type:
            
             objref_name = scopedName.unambiguous(environment)
 
-            objref_template = d_SeqType.objRefTemplate("Member", environment)
+            if not(is_array):
+                objref_template = d_SeqType.objRefTemplate("Element", environment)
+            else:
+                objref_template = d_SeqType.objRefTemplate("Member", environment)
             template["objref_name"]     = objref_name
             template["objref_template"] = objref_template
             template["objref_helper"]   = SeqTypeID + "_Helper"

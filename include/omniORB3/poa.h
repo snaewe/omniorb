@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2000/06/27 16:15:08  sll
+  New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+  _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+  sequence of string and a sequence of object reference.
+
   Revision 1.1.2.6  1999/11/23 10:48:07  djr
   Added _ptr_type and _var_type to POA.
 
@@ -99,18 +104,18 @@ _CORBA_MODULE_BEG
 
   class POAList_var;
  
-  class POAList : public _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Member<POA, POA_Helper>, POA_Helper> {
+  class POAList : public _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Element<POA, POA_Helper>, POA_Helper> {
   public:
     typedef POAList_var _var_type;
     inline POAList() {}
     inline POAList(const POAList& s)
-      : _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Member<POA, POA_Helper>, POA_Helper>(s) {}
+      : _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Element<POA, POA_Helper>, POA_Helper>(s) {}
     inline POAList(_CORBA_ULong _max)
-      : _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Member<POA, POA_Helper>, POA_Helper>(_max) {}
+      : _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Element<POA, POA_Helper>, POA_Helper>(_max) {}
     inline POAList(_CORBA_ULong _max, _CORBA_ULong _len, POA_ptr* _val, _CORBA_Boolean _rel=0)
-      : _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Member<POA, POA_Helper>, POA_Helper>(_max, _len, _val, _rel) {}
+      : _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Element<POA, POA_Helper>, POA_Helper>(_max, _len, _val, _rel) {}
     inline POAList& operator = (const POAList& s) {
-      _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Member<POA, POA_Helper>, POA_Helper>::operator=(s);
+      _CORBA_Unbounded_Sequence_ObjRef<POA, _CORBA_ObjRef_Element<POA, POA_Helper>, POA_Helper>::operator=(s);
       return *this;
     }
   };
@@ -145,7 +150,7 @@ _CORBA_MODULE_BEG
       return *this;
     }
  
-    inline _CORBA_ObjRef_Member<POA, POA_Helper> operator [] (_CORBA_ULong s) {
+    inline _CORBA_ObjRef_Element<POA, POA_Helper> operator [] (_CORBA_ULong s) {
       return (*pd_seq)[s];
     }
     inline T* operator -> () { return pd_seq; }

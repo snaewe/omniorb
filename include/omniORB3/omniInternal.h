@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2000/06/27 16:15:08  sll
+  New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+  _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+  sequence of string and a sequence of object reference.
+
   Revision 1.1.2.9  2000/04/27 10:36:48  dpg1
   Interoperable Naming Service
 
@@ -228,7 +233,9 @@ public:
   // we don't initialise to empty string.
   //  <len> does not include nul terminator.
 
-  static inline void freeString(char* s) { delete[] s; }
+  static inline void freeString(char* s) { 
+    if (s && s != empty_string) delete[] s; 
+  }
   // As CORBA::string_free().
 
   static omni_tracedmutex& nilRefLock();

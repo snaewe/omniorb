@@ -94,7 +94,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	  }
 
 	case CORBA::tk_objref:
-	  { CORBA::Object_member d; d <<= ibuf; d >>= obuf; break; }
+	  { CORBA::Object_Member d; d <<= ibuf; d >>= obuf; break; }
 
 	case CORBA::tk_TypeCode:
 	  { CORBA::TypeCode_member d; d <<= ibuf; d >>= obuf; break; }
@@ -250,7 +250,7 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
       }
 
     case CORBA::tk_objref:
-      { CORBA::Object_member d; d <<= ibuf; d >>= obuf; return; }
+      { CORBA::Object_Member d; d <<= ibuf; d >>= obuf; return; }
 
     case CORBA::tk_TypeCode:
       { CORBA::TypeCode_member d; d <<= ibuf; d >>= obuf; return; }
@@ -383,7 +383,7 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	  }
 
 	case CORBA::tk_objref:
-	  { CORBA::Object_member d; d <<= buf; break; }
+	  { CORBA::Object_Member d; d <<= buf; break; }
 
 	case CORBA::tk_TypeCode:
 	  { CORBA::TypeCode_member d; d <<= buf; break; }
@@ -966,18 +966,16 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
   case CORBA::tk_string:
     {
-      if( *tcdata.p_string.ptr && *tcdata.p_string.release )
+      if(tcdata.p_string.release )
 	omni::freeString(*tcdata.p_string.ptr);
       CORBA::ULong len;
       len <<= pd_mbuf;
       if( len ) {
 	*tcdata.p_string.ptr = omni::allocString(len - 1);
-	*tcdata.p_string.release = 1;
 	pd_mbuf.get_char_array((unsigned char*) *tcdata.p_string.ptr, len);
       }
       else {
 	*tcdata.p_string.ptr = (char*) omni::empty_string;
-	*tcdata.p_string.release = 0;
       }
       break;
     }
@@ -1220,7 +1218,7 @@ tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
 
 	case CORBA::tk_objref:
 	  {
-	    CORBA::Object_member tmp;
+	    CORBA::Object_Member tmp;
 	    tmp <<= pd_mbuf;
 	    offset = tmp._NP_alignedSize(offset);
 	    break;
@@ -1357,17 +1355,3 @@ _0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc)
   return *((CORBA::Object_ptr*)desc->opq_objref);
 }
 
-#if 0
-void
-_0RL_tcParser_objref2_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
-{
-  *((_CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>*)desc->opq_objref) = ptr;
-}
-
-
-CORBA::Object_ptr
-_0RL_tcParser_objref2_getObjectPtr(tcObjrefDesc* desc)
-{
-  return (CORBA::Object_ptr) ((_CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>*)desc->opq_objref)->_ptr;
-}
-#endif

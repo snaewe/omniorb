@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.8  2000/06/27 16:15:10  sll
+# New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+# _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+# sequence of string and a sequence of object reference.
+#
 # Revision 1.1.2.7  2000/06/26 16:23:27  djs
 # Refactoring of configuration state mechanism.
 #
@@ -232,10 +237,10 @@ static CORBA::Object_ptr
   return (CORBA::Object_ptr) *((@fqname@_ptr*)_desc->opq_objref);
 }
 
-void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor& _desc, const @objref_member@& _data)
+void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor& _desc, const @objref_member@& _d)
 {
-  _desc.p_objref.opq_objref = (void*) &_data._ptr;
-  _desc.p_objref.opq_release = _data.pd_rel;
+  _desc.p_objref.opq_objref = (void*) &_d._data;
+  _desc.p_objref.opq_release = _d._rel;
   _desc.p_objref.setObjectPtr = @private_prefix@_tcParser_setObjectPtr_@guard_name@;
   _desc.p_objref.getObjectPtr = @private_prefix@_tcParser_getObjectPtr_@guard_name@;
 }
@@ -261,14 +266,14 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s) {
   @fqname@_ptr sp = (@fqname@_ptr) _a.PR_getCachedData();
   if (sp == 0) {
     tcDescriptor tcd;
-    @objref_member@ tmp;
+    @fqname@_var tmp;
     @private_prefix@_buildDesc_c@guard_name@(tcd, tmp);
     if( _a.PR_unpackTo(@tc_name@, &tcd) ) {
       if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
-        ((CORBA::Any*)&_a)->PR_setCachedData((void*)tmp._ptr,@private_prefix@_delete_@guard_name@);
+        ((CORBA::Any*)&_a)->PR_setCachedData((void*)(@fqname@_ptr)tmp,@private_prefix@_delete_@guard_name@);
       }
-      _s = tmp._ptr;
-      tmp._ptr = @fqname@::_nil(); return 1;
+      _s = tmp._retn();
+      return 1;
     } else {
       _s = @fqname@::_nil(); return 0;
     }

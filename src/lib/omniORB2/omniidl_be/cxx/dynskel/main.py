@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.10  2000/06/27 16:15:09  sll
+# New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+# _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+# sequence of string and a sequence of object reference.
+#
 # Revision 1.12.2.9  2000/06/26 16:23:26  djs
 # Refactoring of configuration state mechanism.
 #
@@ -219,9 +224,9 @@ def visitInterface(node):
     objref_name = scopedName.prefix("_objref_").fullyQualify()
     tc_name = scopedName.prefix("_tc_").fullyQualify()
     helper_name = scopedName.suffix("_Helper").fullyQualify()
-
-    objref_member = "_CORBA_ObjRef_Member<" + objref_name + ", " +\
-                    helper_name + ">"
+    interface_type = types.Type(idltype.Declared(node,node.scopedName(),
+                                                 idltype.tk_objref));
+    objref_member = interface_type.objRefTemplate("tcDesc_arg")
     prefix = config.state['Private Prefix']
 
     # <--- Check we have the necessary definitions already output
@@ -358,7 +363,7 @@ def visitDeclaredType(type):
     mem_name = None
     d_type = type.deref()
     if d_type.objref():
-        mem_name = d_type.objRefTemplate("Member")
+        mem_name = d_type.objRefTemplate("tcDesc_arg")
     
     # make an extern/ forward declaration
     if isRecursive(decl):
@@ -986,7 +991,7 @@ def visitForward(node):
         stream.out("// forward declaration of interface")
         interface_type = types.Type(idltype.Declared(node, node.scopedName(),
                                           idltype.tk_objref))
-        mem_name = interface_type.objRefTemplate("Member")
+        mem_name = interface_type.objRefTemplate("tcDesc_arg")
 
         forward(node, mem_name)
 

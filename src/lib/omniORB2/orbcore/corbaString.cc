@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.14.6.6  2000/06/27 16:15:10  sll
+  New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+  _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+  sequence of string and a sequence of object reference.
+
   Revision 1.14.6.5  2000/06/22 10:40:14  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some
   platforms.
@@ -155,7 +160,7 @@ _CORBA_String_member::operator >>= (NetBufferedStream& s) const
 void
 _CORBA_String_member::operator <<= (NetBufferedStream& s)
 {
-  if( pd_rel && _ptr )  omni::freeString(_ptr);
+  if( _ptr && _ptr != omni::empty_string )  omni::freeString(_ptr);
   _ptr = 0;
 
   CORBA::ULong len;
@@ -180,7 +185,6 @@ _CORBA_String_member::operator <<= (NetBufferedStream& s)
   else  *p = '\0';
 
   _ptr = p;
-  pd_rel = 1;
 }
 
 
@@ -205,7 +209,7 @@ _CORBA_String_member::operator >>= (MemBufferedStream& s) const
 void
 _CORBA_String_member::operator <<= (MemBufferedStream& s)
 {
-  if( pd_rel && _ptr )  omni::freeString(_ptr);
+  if( _ptr && _ptr != omni::empty_string )  omni::freeString(_ptr);
   _ptr = 0;
 
   CORBA::ULong len;
@@ -222,7 +226,6 @@ _CORBA_String_member::operator <<= (MemBufferedStream& s)
   }
 
   _ptr = p;
-  pd_rel = 1;
 }
 
 
@@ -340,6 +343,11 @@ _CORBA_Sequence__String::operator <<= (NetBufferedStream& s)
     _CORBA_marshal_error();
     // never reach here
   }
+  if (!pd_rel && slen <= pd_max) {
+    // obtain ownership of the array and its elements (note that this isn't
+    // the most effecient solution, but neither is invoking length!)
+    copybuffer(pd_len);
+  }
   length(slen);
   unmarshal_ss(pd_data, slen, pd_rel, s);
 }
@@ -353,6 +361,11 @@ _CORBA_Sequence__String::operator <<= (MemBufferedStream& s)
   if (s.unRead() < slen || (pd_bounded && slen > pd_max)) {
     _CORBA_marshal_error();
     // never reach here
+  }
+  if (!pd_rel && slen <= pd_max) {
+    // obtain ownership of the array and its elements (note that this isn't
+    // the most effecient solution, but neither is invoking length!)
+    copybuffer(pd_len);
   }
   length(slen);
   unmarshal_ss(pd_data, slen, pd_rel, s);

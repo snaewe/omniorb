@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.15  2000/06/27 16:15:10  sll
+# New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
+# _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
+# sequence of string and a sequence of object reference.
+#
 # Revision 1.31.2.14  2000/06/26 16:23:57  djs
 # Better handling of #include'd files (via new commandline options)
 # Refactoring of configuration state mechanism.
@@ -651,7 +656,7 @@ def visitTypedef(node):
                 templateName = d_type.sequenceTemplate(environment)
 
                 if d_seqType.string():
-                    element = "_CORBA_String_member"
+                    element = "_CORBA_String_element"
                     element_IN = "char *"
                 elif d_seqType.objref():
                     element = seqType.base(environment) + "_ptr"
@@ -729,7 +734,7 @@ def visitTypedef(node):
                         # special case alert
                         element_reference = element
                     elif d_seqType.objref():
-                        element_reference = d_seqType.objRefTemplate("Member",
+                        element_reference = d_seqType.objRefTemplate("Element",
                                                                      environment)
                     # only if an anonymous sequence
                     elif seqType.sequence():
