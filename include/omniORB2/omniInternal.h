@@ -29,11 +29,15 @@
 
 /*
   $Log$
-  Revision 1.11  1997/09/20 16:23:53  dpg1
-  Added second argument, is_cxx_type to _widenFromTheMostDerivedIntf().
-  Added a new hash table of wrapped objects, and a mutex for it, for
-  LifeCycle support.
+  Revision 1.12  1997/12/09 20:45:54  sll
+  Added support for system exception handlers.
+  Added support for late bindings.
 
+ * Revision 1.11  1997/09/20  16:23:53  dpg1
+ * Added second argument, is_cxx_type to _widenFromTheMostDerivedIntf().
+ * Added a new hash table of wrapped objects, and a mutex for it, for
+ * LifeCycle support.
+ *
  * Revision 1.10  1997/08/26  15:25:26  sll
  * Removed initFile.h include.
  *
@@ -70,6 +74,10 @@ class GIOPobjectLocation;
 class omniObject;
 class initFile;
 class omniORB;
+class omniObjectManager;
+class _wrap_proxy;
+
+#include <omniORB2/rope.h>
 
 struct omniObjectKey {
   _CORBA_ULong hi;
@@ -90,13 +98,6 @@ public:
 #endif
 
   static const _CORBA_Boolean myByteOrder;
-  static const char*          myORBId;
-  static const char*          myBOAId;
-  static omni_mutex initLock;
-  static _CORBA_Boolean orb_initialised;
-  static _CORBA_Boolean boa_initialised;
-  static initFile*      configFile;
-  static _CORBA_ULong   traceLevel;
 
   enum alignment_t { ALIGN_1 = 1, ALIGN_2 = 2, ALIGN_4 = 4, ALIGN_8 = 8 };
   static const alignment_t max_alignment;  // Maximum value of alignment_t
@@ -106,12 +107,6 @@ public:
   }
 
   static _CORBA_Unbounded_Sequence_Octet myPrincipalID;
-
-  static void init(int &argc,char **argv,const char *orb_identifier);
-  static void boaInit(int &argc,char **argv,const char *boa_identifier);
-
-  static omniObject* resolveInitRef(const char* identifier);  
-  static unsigned long listInitServices(char**& servicelist);
 
   static void objectIsReady(omniObject *obj);
   static void objectDuplicate(omniObject *obj);
@@ -131,7 +126,7 @@ public:
   //          else defer calling the delete operator until a subsequent
   //          call to BOA::dispose().
 
-  static omniObject *locateObject(omniObjectKey &k);
+  static omniObject *locateObject(omniObjectManager*,omniObjectKey &k);
   static void disposeObject(omniObject *obj);
   // If the reference count of the object is 0, call the delete operator
   // to remove the object.
@@ -151,24 +146,9 @@ public:
   // (ref CORBA 2 spec. 10.6.5)
   // returns 0 if this is a null object reference
 
-  static Rope *iopProfilesToRope(const IOP::TaggedProfileList *profiles,
-				 _CORBA_Octet *&objkey,
-				 size_t &keysize);
-  // Look at the IOP tagged profile list <profiles>, returns the most
-  // most suitable Rope to talk to the object and its object key.
-  // If the object is a local object, return 0 but still fills in the object
-  // key value. If no suitable Rope can be found, throw an exception.
-
-  static IOP::TaggedProfileList *objectToIopProfiles(omniObject *obj);
-  // Returns a heap allocated IOP tagged profile list for the object.
-  // If the object is local, the profile list contains the profile
-  // for each of the supported IOPs.
-  // If the object is a proxy, the profile list only contain one IOP profile,
-  // which comes from the rope that is used to talk to the object.
-
   static omniObject * createObjRef(const char *mostDerivedRepoId,
 				   const char *targetRepoId,
-				   IOP::TaggedProfileList *profiles,
+				   IOP::TaggedProfileList* profiles,
 				   _CORBA_Boolean release);
   // Returns an object pointer identified by <mostDerivedRepoId> & <profiles>.
   // If release is TRUE, the returned object assumes resposibility of
@@ -181,8 +161,6 @@ public:
   // would be raised.
   // If <targetRepoId> == 0, then the desired interface is the pseudo object
   // CORBA::Object from which all interfaces derived.
-  
-  static void  orbIsReady();
 };
 
 class omniRopeAndKey {
@@ -239,13 +217,11 @@ private:
   omniRopeAndKey(const omniRopeAndKey&);
 };
 
-class _wrap_proxy;
-
 class omniObject {
 
 protected:
 
-  omniObject();                    // ctor local object
+  omniObject(omniObjectManager*p =0); // ctor local object
   omniObject(const char *repoId,   // ctor for proxy object
 	 Rope *r,
 	 _CORBA_Octet *key,
@@ -258,35 +234,100 @@ protected:
   virtual ~omniObject();
 
   void  PR_IRRepositoryId(const char *s);
-
+  // Set the IR repository ID of this object to <s>.
+  // NOTE: this function is **not thread-safe**. It *should not* be called
+  //       if there is any chance that the object might be accessed
+  //       concurrently by another thread.
+  // If this is a local object
+  //    1. If omni::objectIsReady() has been called for this object,
+  //       this function will throw a omniORB::fatalException().
+  //    2. otherwise, <s> is recorded as the current IR repository ID.
+  //
+  // If this is a proxy object
+  //    1. The IR repository ID of this object was initialised by the
+  //       ctor for proxy objects. This value is preserved.
+  //    2. <s> is then recorded as the current IR repository ID.
+  //    3. An internal flag (pd_flags.existent_and_type_verified) is set to 0.
+  //       This will cause assertObjectExistent() to check the type and
+  //       verify the existent of the object before it performs the next
+  //       invocation.
 
 public:
 
   void setRopeAndKey(const omniRopeAndKey& l,_CORBA_Boolean keepIOP=1);
   // Set new values to the rope and key. If keepIOP is true, keep the
   // original IOP profile. Otherwise update the profile as well.
+  // This function is thread-safe.
 
   void resetRopeAndKey();
   // If this is a proxy object, reset the rope and key to the values
   // stored in the IOP profile.
   // This function has no effect on local objects and is silently ignored.
+  // This function is thread-safe.
 
   _CORBA_Boolean getRopeAndKey(omniRopeAndKey& l) const;
   // Get the current value of the rope and key. If the values are the same
   // as those stored in the IOP profile, the return value is 0. Otherwise
   // the return value is 1.
+  // This function is thread-safe.
+
+  void getKey(_CORBA_Octet*& key,_CORBA_ULong& ksize) const {
+    // This is a non-thread safe function to read the key of this object.
+    // The object continues to own the storage of <key>.
+    // If the key is modified concurrently by another thread's call to
+    // setRopeAndKey(), the behaviour is underfine.
+    if (is_proxy()) {
+      key = pd_objkey.foreign;
+    }
+    else {
+      key = (_CORBA_Octet*) &pd_objkey.native;
+    }
+    ksize = pd_objkeysize;
+  }
+  
 
   void assertObjectExistent();
+  // If this is a local object, 
+  //       returns.
+  // If this is a proxy object
+  //     if the internal flag (pd_flags.existent_and_type_verified) is 0
+  //          contact the remote object to verify that it exists
+  //          and is of the type identified by the IR repository ID
+  //          given as the argument to the ctor of this object.
+  //          Set pd_flags.existent_and_type_verified to 1
+  //          returns
+  //     else
+  //          returns
+  //
+  // This function may throw a CORBA::SystemException if 
+  //    1. the object does not exist - CORBA::OBJECT_NOT_EXIST
+  //    2. non-transient communication failure - CORBA::COMM_FAILURE
+  //    3. the object is of the wrong type - CORBA::INV_OBJREF
+  //    4. other system errors.
+  //
+  // This function is thread-safe.
 
   virtual _CORBA_Boolean dispatch(GIOP_S &,const char *operation,
 				  _CORBA_Boolean response_expected);
+  // Normally, this function is overridden by a dispatch function in the
+  // skeleton implementation stub. The function is called by the dispatcher
+  // of GIOP_S.
+  // This function is thread-safe.
 
-  inline _CORBA_Boolean is_proxy() const { return pd_proxy; }
+  inline _CORBA_Boolean is_proxy() const { 
+    return (_CORBA_Boolean)pd_flags.proxy; 
+  }
+  // Return 1 if this is a proxy object, 0 if this is a local object.
+  // This function is thread-safe.
 
   inline const char *NP_IRRepositoryId() const { return pd_repoId; }
+  // Return the IR repository ID of this object. The value is returned 
+  // is either the value given to the ctor or set by the most recent
+  // call to PR_IRRepositoryID().
+  // This function is thread-safe.
 
   virtual void *_widenFromTheMostDerivedIntf(const char *type_id,
-                                           _CORBA_Boolean is_cxx_type_id=0);
+					     _CORBA_Boolean is_cxx_type_id=0);
   // The most derived class which override this virtual function will be
   // called to return a pointer to the base class object identified by
   // the type id <type_id>. 
@@ -307,16 +348,98 @@ public:
   // If the object cannot be widened to the class specified, a
   // null pointer will be returned.
   // This function DO NOT throw any exception under any circumstance.
+  // This function is thread-safe.
 
   inline IOP::TaggedProfileList * iopProfiles() const { 
+    // This function is thread-safe.
     return pd_iopprofile; 
   }
+
+  _CORBA_Boolean _real_is_a(const char *repoId);
+  // Returns 1 if the object is really an instance of the type identified
+  // by the IR repository ID <repoId>. If the stub for the object type is
+  // linked into the executable, the ORB can fully determine the _is_a
+  // relation without the need to contact the object remotely. Otherwise,
+  // the ORB will use the CORBA::Object::_is_a operation to query the
+  // remote object to find out its actual type.
+  //
+  // This function is thread-safe.
+
+  void* _realNarrow(const char* repoId);
+  // If the actual type of the object can be widened to the requested interface
+  // type identified by the IR repository ID <repoId>, return a valid
+  // object reference. Otherwise, return 0. The return value is of type void*
+  // and can be casted to the T_ptr type of the interface T directly.
+  // The resulting T_ptr instance should be released using CORBA::release()
+  // when it is no longer needed.
+  // This function is thread-safe.
+
+  void* _transientExceptionHandler(void*& cookie);
+  // If a transientExceptionHandler_t has been installed for this object
+  // by _transientExceptionHandler(void*,void*), returns this handler and its
+  // associated opaque argument in cookie.
+  // Otherwise return 0.
+  // This function is thread-safe.
+
+  void _transientExceptionHandler(void* new_handler,void* cookie);
+  // Set the transientExceptionHandler_t of this object.  By default,
+  // i.e. when this function is not called for an object, the global
+  // transientExceptionHandler_t will be invoked when a CORBA::TRANSIENT
+  // exception is caught in a remote call from a proxy object.
+  // The argument <cookie> is an opaque argument that will be passed
+  // to the exception handler.
+  // This function is thread-safe.
+
+  void* _commFailureExceptionHandler(void*& cookie);
+  // If a commFailureExceptionHandler_t has been installed for this object
+  // by _commFailureExceptionHandler(void*,void*), returns this handler and its
+  // associated opaque argument in cookie.
+  // Otherwise return 0.
+  // This function is thread-safe.
+
+  void _commFailureExceptionHandler(void* new_handler,void* cookie);
+  // Set the commFailureExceptionHandler_t of this object.  By default,
+  // i.e. when this function is not called for an object, the global
+  // commFailureExceptionHandler_t will be invoked when a CORBA::COMM_FAILURE
+  // exception is caught in a remote call from a proxy object.
+  // The argument <cookie> is an opaque argument that will be passed
+  // to the exception handler.
+  // This function is thread-safe.
+
+  void* _systemExceptionHandler(void*& cookie);
+  // If a systemExceptionHandler_t has been installed for this object
+  // by _systemExceptionHandler(void*,void*), returns this handler and its
+  // associated opaque argument in cookie.
+  // Otherwise return 0.
+  // This function is thread-safe.
+
+  void _systemExceptionHandler(void* new_handler,void* cookie);
+  // Set the systemExceptionHandler_t of this object.  By default,
+  // i.e. when this function is not called for an object, the global
+  // systemExceptionHandler_t will be invoked when a CORBA::SystemException
+  // exception, other than CORBA::TRANSIENT and CORBA::COMM_FAILURE is caught 
+  // in a remote call from a proxy object. The handlers for CORBA::TRANSIENT
+  // and CORBA::COMM_FAILURE are installed their own install functions.
+  // The argument <cookie> is an opaque argument that will be passed
+  // to the exception handler.
+  // This function is thread-safe.
+
+  omniObjectManager* manager() const { return pd_manager; }
+  // This function should only be called for local object.
+  // Returns the object manager of this object.
+  // Calling this function for a proxy object would result in undefined
+  // behaviour.
 
   static omni_mutex          objectTableLock;
   static omniObject*         proxyObjectTable;
   static omniObject**        localObjectTable;
   static omni_mutex          wrappedObjectTableLock;
   static _wrap_proxy**       wrappedObjectTable;
+
+  static void                globalInit();
+  // This function is not thread-safe and should be called once only.
+
+  static omniObjectManager*  nilObjectManager();
 
 private:
   union {
@@ -325,13 +448,24 @@ private:
   }                             pd_objkey;
   size_t                        pd_objkeysize;
   char *                        pd_repoId;
-  Rope *                        pd_rope;
-  _CORBA_Boolean                pd_proxy;
+  size_t                        pd_repoIdsize;
+  char *                        pd_original_repoId;
+  union {
+    Rope *                      pd_rope;
+    omniObjectManager*          pd_manager;
+  };
   int                           pd_refCount;
   omniObject *                      pd_next;
-  _CORBA_Boolean                pd_disposed;
-  _CORBA_Boolean                pd_existentverified;
-  _CORBA_Boolean               	pd_forwardlocation;
+
+  struct {
+    _CORBA_UShort              proxy                       : 1;
+    _CORBA_UShort              disposed                    : 1;
+    _CORBA_UShort              existent_and_type_verified  : 1;
+    _CORBA_UShort              forwardlocation             : 1;
+    _CORBA_UShort              transient_exception_handler : 1;
+    _CORBA_UShort              commfail_exception_handler  : 1;
+    _CORBA_UShort              system_exception_handler    : 1;
+  } pd_flags;
   
   IOP::TaggedProfileList *      pd_iopprofile;
   
@@ -339,17 +473,18 @@ private:
   inline void setRefCount(int count) { pd_refCount = count; return; }
 
   friend void omni::objectIsReady(omniObject *obj);
-  friend char * omni::objectToString(const omniObject *obj);
   friend void omni::objectDuplicate(omniObject *obj);
-  friend omniObject *omni::locateObject(omniObjectKey &k);
+  friend omniObject *omni::locateObject(omniObjectManager*,omniObjectKey &k);
   friend void omni::disposeObject(omniObject *obj);
   friend void omni::objectRelease(omniObject *obj);
-  friend char *objectToString(const omniObject *obj);
-  friend omniObject *stringToObject(const char *str);
-  friend IOP::TaggedProfileList *omni::objectToIopProfiles(omniObject *obj);
+  friend char* omni::objectToString(const omniObject *obj);
+  friend omniObject* omni::stringToObject(const char *str);
+  friend omniObject * omni::createObjRef(const char *mostDerivedRepoId,
+					 const char *targetRepoId,
+					 IOP::TaggedProfileList *profiles,
+					 _CORBA_Boolean release);
 };
 
-#include <omniORB2/rope.h>
 #include <omniORB2/bufferedStream.h>
 #include <omniORB2/giopDriver.h>
 
