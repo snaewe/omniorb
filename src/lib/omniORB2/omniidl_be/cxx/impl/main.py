@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.3  2000/03/09 15:21:53  djs
+# Better handling of internal compiler exceptions (eg attempts to use
+# wide string types)
+#
 # Revision 1.1.2.2  2000/02/18 23:01:25  djs
 # Updated example implementation code generating module
 #
@@ -197,6 +201,7 @@ class BuildInterfaceImplementations(idlvisitor.AstVisitor):
                 operations.append(return_type + " " + cxx_fqname + "_i::" +\
                                   opname + "(" + arguments + ")")
             else:
+                util.fatalError("Internal error generating interface member")
                 raise "No code for interface member: " + repr(c)
 
         # the class definition has no actual code...

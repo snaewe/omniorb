@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.3  2000/03/09 15:21:40  djs
+# Better handling of internal compiler exceptions (eg attempts to use
+# wide string types)
+#
 # Revision 1.12.2.2  2000/02/18 23:01:20  djs
 # Updated example implementation code generating module
 #
@@ -84,7 +88,23 @@
 from omniidl import idlutil, idltype
 from omniidl_be.cxx import config
 
-import re, string
+import sys, re, string
+
+# -----------------------------------------------------------------
+# Fatal error handling function
+def fatalError(explanation):
+    if config.DEBUG():
+        # don't exit the program in debug mode...
+        return
+    
+    lines = string.split(explanation, "\n")
+    lines = [ "Fatal error in C++ backend", "" ] + lines
+
+    for line in lines:
+        sys.stderr.write("omniidl: " + line + "\n")
+
+    sys.exit(-1)
+        
 
 # ------------------------------------------------------------------
 # Generic formatting functions

@@ -30,6 +30,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.13.2.3  2000/03/09 15:21:57  djs
+# Better handling of internal compiler exceptions (eg attempts to use
+# wide string types)
+#
 # Revision 1.13.2.2  2000/02/16 16:30:03  djs
 # Fix to proxy call descriptor code- failed to handle special case of
 #   Object method(in string x)
@@ -244,6 +248,9 @@ def canonTypeName(type, decl = None, useScopedName = 0):
             return bound + "string"
         if isinstance(type, idltype.Declared):
             return produce_idname(type.scopedName())
+        if isinstance(type, idltype.WString):
+            util.fatalError("Wide-strings are not supported")
+            
         raise "Don't know how to generate a simple name for type: " +\
               repr(type) + " (kind = " + repr(type.kind()) + ")"
 

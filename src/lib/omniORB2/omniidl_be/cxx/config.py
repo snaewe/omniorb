@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.2  2000/03/09 15:21:42  djs
+# Better handling of internal compiler exceptions (eg attempts to use
+# wide string types)
+#
 # Revision 1.12.2.1  2000/02/18 23:01:20  djs
 # Updated example implementation code generating module
 #
@@ -220,7 +224,10 @@ def include_file_names():
 def EMULATE_BUGS():
     return 1
 
-
+# in DEBUG mode, we prefer to throw nasty internal exceptions because then
+# we get to examine the traceback. Otherwise just print a general error mesg
+def DEBUG():
+    return 0
 
 
 # Traverses the AST compiling the list of files #included by the main

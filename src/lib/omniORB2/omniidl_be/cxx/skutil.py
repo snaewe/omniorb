@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.2  2000/03/09 15:21:40  djs
+# Better handling of internal compiler exceptions (eg attempts to use
+# wide string types)
+#
 # Revision 1.15.2.1  2000/02/14 18:34:57  dpg1
 # New omniidl merged in.
 #
@@ -323,6 +327,7 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
             pass
         # not sure how to handle other basic types
         elif isinstance(deref_type, idltype.Base):
+            util.fatalError("Internal error generating marshalling code")
             raise "Don't know how to marshall type: " + repr(deref_type) +\
               "(kind = " + str(deref_type.kind()) + ") array"
 

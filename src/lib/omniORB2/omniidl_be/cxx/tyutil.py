@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.2  2000/03/09 15:21:41  djs
+# Better handling of internal compiler exceptions (eg attempts to use
+# wide string types)
+#
 # Revision 1.30.2.1  2000/02/14 18:34:57  dpg1
 # New omniidl merged in.
 #
@@ -358,7 +362,11 @@ def isVariableType(type):
     elif (isinstance(type, idltype.Declared)):
         return isVariableDecl(type.decl())
     else:
-        raise ("An illegal type: " + repr(type))
+        if isinstance(type, idltype.WString):
+            util.fatalError("Wide-strings are not supported")
+        
+        util.fatalError("Type is unknown to the C++ backend: " + repr(type))
+        raise "unknown type: " + repr(type)
 
 def isVariableDecl(node):
     assert isinstance(node, idlast.Decl)
@@ -403,6 +411,7 @@ def isVariableDecl(node):
         return isVariableType(node.alias().aliasType())
 
     else:
+        util.fatalError("Backend doesn't recognise node: " + repr(node))
         raise "util.isVariable called with a " + repr(node) + \
               ". Case match incomplete."
 
@@ -929,6 +938,7 @@ def valueString(type, value, environment):
     if type.kind() == idltype.tk_octet:
         return str(value)
 
+    util.fatalError("Internal error when handling value (" + repr(value) +")" )
     raise "Cannot convert a value (" + repr(value) + ") of type: " +\
           repr(type) + "(kind == " + repr(type.kind()) + ") into a string."
         
@@ -1124,6 +1134,7 @@ def exhaustiveMatch(switchType, allCaseValues):
         difference = util.minus(s, used)
         return (len(difference) == 0)
     else:
+        util.fatalError("Internal error processing union")
         raise "exhaustiveMatch type="+repr(switchType)+ \
               " val="+repr(discrimvalue)
 

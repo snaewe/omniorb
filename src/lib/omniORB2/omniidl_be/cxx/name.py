@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.2  2000/03/09 15:21:40  djs
+# Better handling of internal compiler exceptions (eg attempts to use
+# wide string types)
+#
 # Revision 1.8.2.1  2000/02/14 18:34:57  dpg1
 # New omniidl merged in.
 #
@@ -290,8 +294,10 @@ class Environment:
 
         # ----- IMPLEMENT ME -----
         if isinstance(type, idltype.WString):
+            util.fatalError("Wide-strings are not supported")
             raise "No code for wide strings"
         if isinstance(type, idltype.Fixed):
+            util.fatalError("Fixed types are not supported")
             raise "No code for Fixed type"
         # ----- IMPLEMENT ME -----
 
