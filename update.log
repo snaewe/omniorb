@@ -1,3 +1,17 @@
+Wed Jan 21 12:09:24 GMT 1998 sll
+================================
+
+- Now accepts null pointer as marshalling argument. Substituted with a
+  proper nil string.  Print a warning if traceLevel > 1.
+- Now unmarshal zero size string. Substituted with a proper nil string.
+  Print a warning if traceLevel > 1.
+
+include/omniORB2/CORBA_basetypes.h
+src/lib/omniORB2/corbaString.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+
+
 Tue Jan 20 10:10:21 GMT 1998 sll
 ================================
 
