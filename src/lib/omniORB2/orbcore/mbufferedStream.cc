@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.4  1997/05/06 15:24:09  sll
-  Public release.
+  Revision 1.5  1998/01/27 15:34:47  ewc
+  Added support for TypeCode and type any
 
+// Revision 1.4  1997/05/06  15:24:09  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -42,6 +45,8 @@ const int MemBufferedStream::pd_inline_buf_size = MEMBUFFEREDSTREAM_INLINE_BUF_S
 
 MemBufferedStream::MemBufferedStream(size_t initialBufsize) {
   pd_bufp = NULL;     // default is to use the in-line buffer
+  pd_dupl = 0;
+  pd_noboundcheck = 0;
   pd_bufend = (void *) (pd_buffer + pd_inline_buf_size);
   rewind_inout_mkr();
   if (initialBufsize > size()) {
@@ -53,26 +58,66 @@ MemBufferedStream::MemBufferedStream(size_t initialBufsize) {
 }
 
 
-MemBufferedStream::MemBufferedStream(const MemBufferedStream& m) {
+MemBufferedStream::MemBufferedStream(const MemBufferedStream& m, 
+				        _CORBA_Boolean dupl) {
   size_t bsize = (omni::ptr_arith_t)m.pd_out_mkr - (omni::ptr_arith_t)m.startofstream();
-
-  pd_bufp = NULL;     // default is to use the in-line buffer
-  pd_bufend = (void *) (pd_buffer + pd_inline_buf_size);
-  rewind_inout_mkr();
-  if (bsize > size()) {
-    bsize -= size();
-    grow(bsize);
+  
+  if (dupl == 0) {
+    pd_bufp = NULL;     // default is to use the in-line buffer
+    pd_noboundcheck = 0;
+    pd_dupl = 0;
+    pd_bufend = (void *) (pd_buffer + pd_inline_buf_size);
+    rewind_inout_mkr();
+    if (bsize > size()) {
+      bsize -= size();
+      grow(bsize);
+    }
+    copy(m);
+    pd_byte_order = m.byteOrder();
   }
-  copy(m);
-  pd_byte_order = m.byteOrder();
-  return;
+  else {
+    pd_bufp = m.pd_bufp;
+    if (!pd_bufp) pd_bufp = m.startofstream();
+
+    pd_bufend = m.pd_bufend;
+    pd_out_mkr = m.pd_out_mkr;
+    
+    pd_in_mkr = startofstream();
+    pd_byte_order = m.pd_byte_order;
+    pd_noboundcheck = 0;
+    pd_dupl = 1;
+  }
 }
+
+
+MemBufferedStream::MemBufferedStream(_CORBA_Char* data) {
+  pd_bufp = NULL;
+  pd_bufend = (void*) (pd_buffer + pd_inline_buf_size);
+  rewind_inout_mkr();
+
+  
+  pd_bufp = data;
+  pd_bufend = 0;
+  pd_out_mkr = 0;
+
+  pd_in_mkr = pd_bufp;
+  pd_byte_order = omni::myByteOrder;
+  pd_noboundcheck = 1;
+  pd_dupl = 1;
+}
+
 
 MemBufferedStream &
 MemBufferedStream::operator= (const MemBufferedStream & m) {
   // Determine whether we have sufficent buffer space to store the original
   // buffer stream.
+  if (pd_dupl || pd_noboundcheck) 
+    throw omniORB::fatalException(__FILE__,__LINE__,
+				  "MemBufferedStream::operator=()");
+
   size_t bsize = (omni::ptr_arith_t)m.pd_out_mkr - (omni::ptr_arith_t)m.startofstream();
+  pd_noboundcheck = 0;
+  pd_dupl = 0;
   rewind_inout_mkr();
   if (bsize > size()) {
     bsize -= size();
@@ -84,15 +129,38 @@ MemBufferedStream::operator= (const MemBufferedStream & m) {
 }
 
 
+void MemBufferedStream::shallowCopy(const MemBufferedStream& m) {
+  if (pd_noboundcheck)
+    throw omniORB::fatalException(__FILE__,__LINE__,
+				  "MemBufferedStream::shallowCOpy");
+  if (!pd_dupl) reset();
+
+  pd_bufp = m.pd_bufp;  
+  if (!pd_bufp) pd_bufp = m.startofstream();
+  pd_bufend = m.pd_bufend;
+  pd_out_mkr = m.pd_out_mkr;
+  
+  pd_in_mkr = startofstream();
+  pd_byte_order = m.pd_byte_order;
+  pd_noboundcheck = 0;
+  pd_dupl = 1;
+}
+
+
 MemBufferedStream::~MemBufferedStream() {
-  if (pd_bufp) {
+  if (pd_bufp && !pd_dupl && !pd_noboundcheck) {
     delete [] (char *)pd_bufp;
   }
   return;
 }
 
+
 void
 MemBufferedStream::grow(size_t minimum) {
+  if (pd_dupl || pd_noboundcheck) 
+    throw omniORB::fatalException(__FILE__,__LINE__,
+				  "MemBufferedStream::grow()");
+
   size_t newsize = size() + minimum + (size_t) omni::ALIGN_8;
   if (newsize < 1024) {
     // Pick the closest 2^N bytes
@@ -165,7 +233,7 @@ MemBufferedStream::startofstream() const {
 }
 
 size_t
-MemBufferedStream::size() {
+MemBufferedStream::size() const {
   return (omni::ptr_arith_t) pd_bufend - (omni::ptr_arith_t) startofstream();
 }
 
@@ -174,6 +242,10 @@ MemBufferedStream::copy(const MemBufferedStream &m) {
   // The new buffer may be on a different alignment. Hence we don't
   // just copy from the beginning of the buffer. Copy from the beginning
   // of the buffer stream instead.
+  if (pd_dupl || pd_noboundcheck) 
+    throw omniORB::fatalException(__FILE__,__LINE__, 
+				  "MemBufferedStream::copy()");
+  
   rewind_inout_mkr();
   memcpy(startofstream(),m.startofstream(),
 	 (omni::ptr_arith_t)m.pd_out_mkr - (omni::ptr_arith_t)m.startofstream());
@@ -187,16 +259,30 @@ MemBufferedStream::copy(const MemBufferedStream &m) {
 }
 
 void
-MemBufferedStream::skip(CORBA::ULong size)
+MemBufferedStream::reset() {
+  if (pd_dupl || pd_noboundcheck) 
+    throw omniORB::fatalException(__FILE__,__LINE__, 
+				    "MemBufferedStream::reset()");
+  if (pd_bufp) {
+    delete [] (char *)pd_bufp;
+    pd_bufp = NULL;
+  }
+
+  pd_bufend = (void *) (pd_buffer + pd_inline_buf_size);
+  rewind_inout_mkr();
+
+  pd_byte_order = omni::myByteOrder;
+}
+
+void
+MemBufferedStream::skip(CORBA::ULong size,omni::alignment_t align)
 {
-  align_and_get_bytes(omni::ALIGN_1,size);
+  align_and_get_bytes(align,size);
   return;
 }
 
 void *
 MemBufferedStream::overrun_error() {
-  throw omniORB::fatalException(__FILE__,__LINE__,
-     "MemBufferedStream::overrun_error()");
-  // never reach here
+  throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   return 0;
 }
