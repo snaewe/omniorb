@@ -1,3 +1,15 @@
+
+Thu Jul  1 11:17:57 BST 1999 djr
+================================
+
+- Fixed implementation of alias expansion for TypeCodes.
+- Added omg.org to a number of repository IDs.
+
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+src/lib/omniORB2/dynamic/dynException.cc
+
+
 Mon Jun 28 18:35:45 BST 1999 sll
 ================================
 
