@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.5  1998/04/07 19:33:40  sll
+  Replace cerr with omniORB::log.
+  Use namespce when available.
+
   Revision 1.4  1997/12/09 18:06:37  sll
   Added support for system exception handlers.
 
@@ -45,6 +49,23 @@
 #include <omniORB2/CORBA.h>
 #include <excepthandler.h>
 
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the variables external linkage otherwise. Its a bug.
+namespace omniORB {
+
+CORBA::ULong defaultTransientRetryDelayMaximum = 30;
+
+CORBA::ULong defaultTransientRetryDelayIncrement = 1;
+}
+#else
+
+CORBA::ULong
+omniORB::defaultTransientRetryDelayMaximum = 30;
+
+CORBA::ULong
+omniORB::defaultTransientRetryDelayIncrement = 1;
+
+#endif
 
 omniORB::transientExceptionHandler_t
 omni_globalTransientExcHandler = omni_defaultTransientExcHandler;
@@ -64,12 +85,6 @@ omni_globalCommFailureExcHandlerCookie =0;
 void*
 omni_globalSystemExcHandlerCookie = 0;
 
-CORBA::ULong
-omniORB::defaultTransientRetryDelayMaximum = 30;
-
-CORBA::ULong
-omniORB::defaultTransientRetryDelayIncrement = 1;
-
 omniExHandlers**
 omniExHandlers::Table = 0;
 
@@ -83,8 +98,9 @@ omni_defaultTransientExcHandler(void*,
 				const CORBA::TRANSIENT& ex)
 {
   if (omniORB::traceLevel > 10) {
-    cerr << "omniORB::defaultTransientExceptionHandler: retry "
-	 << n_retries << "th times." << endl;
+    omniORB::log << "omniORB::defaultTransientExceptionHandler: retry "
+		 << n_retries << "th times.\n";
+    omniORB::log.flush();
   }
 
   unsigned long secs = n_retries*omniORB::defaultTransientRetryDelayIncrement;
@@ -319,8 +335,8 @@ CORBA::Boolean
 _CORBA_use_nil_ptr_as_nil_objref()
 {
   if (omniORB::traceLevel > 10) {
-    cerr << "Warning: omniORB2 detects that a nil pointer is wrongly used as a nil object reference."
-	 << endl;
+    omniORB::log << "Warning: omniORB2 detects that a nil pointer is wrongly used as a nil object reference.\n";
+    omniORB::log.flush();
   }
   return 1;
 }
