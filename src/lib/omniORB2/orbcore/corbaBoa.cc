@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.5  1999/09/30 12:24:48  djr
+  Implemented the '_interface' operation for BOA servants.
+
   Revision 1.13.6.4  1999/09/28 10:54:32  djr
   Removed pretty-printing of object keys from object adapters.
 
@@ -53,6 +56,8 @@
 #include <corbaBoa.h>
 #include <omniORB3/callDescriptor.h>
 #include <localIdentity.h>
+#include <bootstrap_i.h>
+#include <dynamicLib.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -851,8 +856,23 @@ omniOrbBoaServant::_this(const char* repoId)
 omniObjRef*
 omniOrbBoaServant::_do_get_interface()
 {
-  OMNIORB_ASSERT(0);//??
-  return 0;
+  // repoId should not be empty for statically defined
+  // servants.  We do not support dynamic BOA servants.
+  const char* repoId = _mostDerivedRepoId();
+  OMNIORB_ASSERT(repoId && *repoId);
+
+  // Obtain the object reference for the interface repository.
+  CORBA::Object_var repository =
+    omniInitialReferences::get("InterfaceRepository");
+  if( CORBA::is_nil(repository) )
+    throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
+
+  // Make a call to the interface repository.
+  omniStdCallDesc::_cCORBA_mObject_i_cstring
+    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, 0, repoId);
+  repository->_PR_getobj()->_invoke(call_desc);
+
+  return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
 }
 
 //////////////////////////////////////////////////////////////////////
