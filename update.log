@@ -1,3 +1,29 @@
+Sun Oct 17 22:43:44 BST 2004 dgrisby
+====================================
+
+- Support .exe files in makedeffile.py.
+
+bin/scripts/makedeffile.py
+
+- Mingw threading patch from Al Slater.
+
+mk/mingw.mk
+
+- Reset any in NP_unmarshalDataOnly.
+
+src/lib/omniORB/dynamic/any.cc
+
+- Fully qualify scopes in _ptrToObjRef and _ptrToInterface.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+- Support CancelRequest better.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+
+
 Sun Oct 17 20:57:23 BST 2004 dgrisby
 ====================================
 
