@@ -29,17 +29,6 @@ CXXMAKEDEPEND   = $(OMKDEPEND)
 CMAKEDEPEND     = $(OMKDEPEND)
 
 #
-# Replacements for implicit rules
-#
-
-%.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-
-%.o: %.cc
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
-
-
-#
 # General rules for cleaning.
 #
 
@@ -326,3 +315,15 @@ static/%.o: %.c
 
 shared/%.o: %.c
 	$(CC) -c $(SHAREDLIB_CPPFLAGS) $(CFLAGS)  -o $@ $<
+
+#
+# Replacements for implicit rules
+#
+
+%.o: %.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+%.o: %.cc
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+

@@ -1,3 +1,12 @@
+Tue Aug 15 12:20:54 BST 2000 sll
+================================
+
+- Make rules overhaul. Rearranged pattern rules ordering. This is necessary
+  to keep gnumake 3.78 happy when compiling the COS library. 
+
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+
 Tue Aug 15 10:30:06 BST 2000 sll
 ================================
 

@@ -110,17 +110,6 @@ SOCKET_LIB = wsock32.lib
 
 
 #
-# Replacements for implicit rules
-#
-
-%.o: %.c
-	$(CC) -c $(CFLAGS) -Fo$@ $<
-
-%.o: %.cc
-	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
-
-
-#
 # General rule for cleaning.
 #
 
@@ -399,6 +388,18 @@ shared/%.o: %.c
 
 shareddebug/%.o: %.c
 	$(CC) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+
+
+#
+# Replacements for implicit rules
+#
+
+%.o: %.c
+	$(CC) -c $(CFLAGS) -Fo$@ $<
+
+%.o: %.cc
+	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
+
 
 
 #################################################################################
