@@ -11,7 +11,9 @@
 
 #if defined(__alpha__) && defined(__osf1__)
 // stop unnecessary definitions of TRY, etc on OSF
+#ifndef EXC_HANDLING
 #define EXC_HANDLING
+#endif
 #endif
 
 #include <pthread.h>
