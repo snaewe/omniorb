@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/12/24 18:16:39  djs
+# Array handling and TypeCode building fixes (esp. across multiple files)
+#
 # Revision 1.3  1999/12/16 16:09:30  djs
 # TypeCode fixes
 # Enum scope special case fixed
@@ -210,17 +213,20 @@ _0RL_buildDesc@decl_cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@
 
 # dont_do_tail is a hack, set to 1 if the type has a corresponding
 # array declarator.
-def docast(type, string, dont_do_tail = 0):
+def docast(type, decl, string):
     assert isinstance(type, idltype.Type)
     env = name.Environment()
     dims = tyutil.typeDims(type)
+    if decl:
+        assert isinstance(decl, idlast.Declarator)
+        decl_dims = decl.sizes()
+        dims = decl_dims + dims
+        
     tail_dims_string = ""
     if dims != []:
-        if dont_do_tail:
-            tail_dims = dims[:]
-        else:
-            tail_dims = dims[1:] 
+        tail_dims = dims[1:]
         tail_dims_string = tyutil.dimsToString(tail_dims)
+    
     deref_type = tyutil.deref(type)
     cast_to = env.principalID(deref_type, fully_scope = 1)
     if tyutil.isObjRef(deref_type):
@@ -268,7 +274,7 @@ def sequence(type):
     # something very strange happens here with strings and casting
     thing = "(*((" + sequence_template + "*)_desc->opq_seq))[_index]"
     if is_array:
-        thing = docast(seqType, thing)
+        thing = docast(seqType, None, thing)
 
     desc = util.StringStream()
 
@@ -382,7 +388,7 @@ def member(node, modify_for_exception = 0):
             # something strange happening here too
             thing = "((" + fqname + "*)_desc->opq_struct)->" + member_name
             if is_array:
-                thing = docast(memberType, thing)
+                thing = docast(memberType, d, thing)
 
             cases.out("""\
 case @n@:

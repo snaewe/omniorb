@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/12/24 18:16:39  djs
+# Array handling and TypeCode building fixes (esp. across multiple files)
+#
 # Revision 1.3  1999/12/10 18:26:36  djs
 # Moved most #ifdef buildDesc code into a separate module
 # General tidying up
@@ -69,10 +72,16 @@ def visitAST(node):
         n.accept(self)
 
 def visitModule(node):
+    # consider reopening modules spanning files here
+    if not(node.mainFile()):
+        return
+    
     for n in node.definitions():
         n.accept(self)
 
 def visitInterface(node):
+    if not(node.mainFile()):
+        return
 
     for n in node.declarations():
         n.accept(self)
@@ -163,6 +172,9 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s) {
 
 
 def visitTypedef(node):
+    if not(node.mainFile()):
+        return
+    
     aliasType = node.aliasType()
     deref_aliasType = tyutil.deref(aliasType)
     type_dims = tyutil.typeDims(aliasType)
@@ -321,6 +333,9 @@ CORBA::Boolean operator >>= (const CORBA::Any& a, const @fqname@*& s_out)
 
 
 def visitEnum(node):
+    if not(node.mainFile()):
+        return
+    
     scopedName = node.scopedName()
     guard_name = tyutil.guardName(scopedName)
     env = name.Environment()
@@ -351,6 +366,8 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@& _s)
 
    
 def visitStruct(node):
+    if not(node.mainFile()):
+        return
 
     scopedName = node.scopedName()
     guard_name = tyutil.guardName(scopedName)
@@ -417,6 +434,9 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp) {
 
     
 def visitUnion(node):
+    if not(node.mainFile()):
+        return
+    
     scopedName = node.scopedName()
     guard_name = tyutil.guardName(scopedName)
     env = name.Environment()
@@ -436,13 +456,18 @@ def visitUnion(node):
                 break
     switch = util.StringStream()
     if default_case:
+        default_decl = default_case.declarator()
         default_type = default_case.caseType()
-        default_is_array = tyutil.typeDims(default_type) != []
-        mem_cname = mangler.canonTypeName(default_type)
-        mem_name = tyutil.name(default_case.declarator().scopedName())
+        default_dims = tyutil.typeDims(default_type)
+        decl_dims = default_decl.sizes()
+        full_dims = decl_dims + default_dims
+    
+        default_is_array = full_dims != []
+        mem_cname = mangler.canonTypeName(default_type, default_decl)
+        mem_name = tyutil.name(default_decl.scopedName())
         thing = "_u->pd_" + mem_name
         if default_is_array:
-            thing = bdesc.docast(default_type, thing)
+            thing = bdesc.docast(default_type, default_decl, thing)
         
         switch.out("""\
     if( _u->pd__default ) {
@@ -472,7 +497,7 @@ def visitUnion(node):
         union_member = "_u->pd_" + mem_name
         cast = union_member
         if is_array:
-            cast = bdesc.docast(caseType, cast, is_array_declarator)
+            cast = bdesc.docast(caseType, declarator, cast)
 
         # handle cases which are themselves anonymous array
         # or sequence declarators
@@ -604,6 +629,9 @@ def visitMember(node):
         memberType.decl().accept(self)
         
 def visitException(node):
+    if not(node.mainFile()):
+        return
+    
     scopedName = node.scopedName()
     guard_name = tyutil.guardName(scopedName)
     env = name.Environment()
