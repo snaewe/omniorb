@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.19.2.6  2004/07/31 23:45:44  dgrisby
+# ifdef for forward declared union typecodes.
+#
 # Revision 1.19.2.5  2004/07/04 23:53:38  dgrisby
 # More ValueType TypeCode and Any support.
 #
@@ -658,6 +661,9 @@ def visitUnion(node):
 static CORBA::PR_unionMember @unionmember_mangled_name@[] = {
   @members@
 };
+#ifdef @mangled_name@
+#  undef @mangled_name@
+#endif
 static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_union_tc("@repoID@", "@name@", @discrim_tc@, @unionmember_mangled_name@, @labels@, @default_str@, &@pprefix@_tcTrack);""",
                 mangled_name = mangled_name,
                 repoID = repoID,
