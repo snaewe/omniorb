@@ -55,7 +55,7 @@ MKDIRHIER = mkdirhier
 CPP = gcc
 #
 CXX = g++
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = 
 CXXOPTIONS    =  -fhandle-exceptions -Wall -Wno-unused
 CXXMTFLAG     =
@@ -64,7 +64,7 @@ CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 
 CC                = gcc
-CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND       += -D__GNUC__
 CDEBUGFLAGS       = -O
 COPTIONS	  = -fpcc-struct-return
 

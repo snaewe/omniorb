@@ -8,6 +8,8 @@ x86Processor = 1
 BINDIR = bin/x86_win32
 LIBDIR = lib/x86_win32
 
+ABSTOP = $(shell cd $(TOP); pwd)
+
 #
 # Python set-up
 #
@@ -16,7 +18,7 @@ LIBDIR = lib/x86_win32
 # Python from ftp://ftp.uk.research.att.com/pub/omniORB/python/
 # In that case, uncomment the first line below.
 
-#PYTHON = $(TOP)/$(BINDIR)/omnipython
+#PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
 #PYTHON = //c/progra~1/Python/python
 
 

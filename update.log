@@ -1,3 +1,39 @@
+Wed Aug  9 16:35:37 BST 2000 sll
+================================
+
+- Make rules overhaul (part II). 
+
+external_merge/mk/platforms/alpha_linux_2.0.mk
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/mk/platforms/hppa_hpux_10.20.mk
+external_merge/mk/platforms/i586_linux_2.0.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc.mk
+external_merge/mk/platforms/m68k_nextstep_3.3.mk
+external_merge/mk/platforms/mips_irix_6.2_n32.mk
+external_merge/mk/platforms/mips_sinux_5.43.mk
+external_merge/mk/platforms/sun4_sosV_5.6.mk
+external_merge/mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/platforms/x86_freebsd_3.2.mk
+external_merge/mk/platforms/x86_freebsd_4.0.mk
+external_merge/mk/platforms/x86_nextstep_3.3.mk
+external_merge/mk/platforms/x86_osr5.mk
+external_merge/mk/platforms/x86_sosV_5.5.mk
+external_merge/mk/platforms/x86_win95.mk
+
+mk/platforms/alpha_linux_2.0.mk
+mk/platforms/alpha_nt_4.0.mk
+mk/platforms/i586_linux_2.0.mk
+mk/platforms/i586_linux_2.0_glibc.mk
+mk/platforms/mips_irix_6.2_n32.mk
+mk/platforms/mips_irix_6.4_64.mk
+mk/platforms/mips_irix_6.4_n32.mk
+mk/platforms/mips_irix_6.5_64.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+mk/platforms/x86_nt_3.5.mk
+mk/platforms/x86_win95.mk
+
 Wed Aug  9 16:15:40 BST 2000 sll
 ================================
 

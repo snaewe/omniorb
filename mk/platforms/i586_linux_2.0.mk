@@ -30,7 +30,7 @@ AR = ar cq
 CPP = /usr/bin/cpp
 
 CXX = g++
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = 
 CXXOPTIONS    =  -fhandle-exceptions -Wall -Wno-unused
 
@@ -39,7 +39,7 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) \
 		$(patsubst %,-Wl$(comma)-rpath$(comma)%,$(IMPORT_LIBRARY_DIRS))
 
 CC           = gcc
-CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND  += -D__GNUC__
 CDEBUGFLAGS  = -O
 
 CLINK        = $(CC)
