@@ -215,7 +215,7 @@ do_make() {
       echo $sourceFromShadow >$shadowDir/$pfname
     fi
 
-    if [ `expr substr "$sourceFromShadow" 1 1` = "/" ]; then
+    if expr "$sourceFromShadow" : "/.*" >/dev/null; then
       sourceDir=$sourceFromShadow
     else
       sourceDir=$shadowDir/$sourceFromShadow
@@ -259,7 +259,7 @@ do_for_each_arg() {
     base=`basename $file`
     sourceFromShadow=`head -1 $shadowDir/$pfname`
 
-    if [ `expr substr "$sourceFromShadow" 1 1` = "/" ]; then
+    if expr "$sourceFromShadow" : "/.*" >/dev/null; then
       sourceDir=$sourceFromShadow
     else
       sourceDir=$shadowDir/$sourceFromShadow
