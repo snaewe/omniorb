@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.3  2000/03/24 16:24:22  djs
+# Produced 2 invalid typedefs in the case of a typedef to an object reference
+# (it transformed a " " into a "_" by mistake)
+#
 # Revision 1.31.2.2  2000/03/20 11:50:18  djs
 # Removed excess buffering- output templates have code attached which is
 # lazily evaluated when required.
@@ -589,9 +593,9 @@ def visitTypedef(node):
                     impl_name = environment.nameToString(impl_scopedName)
                     objref_name = environment.nameToString(objref_scopedName)
                     
-                    impl_base = "typedef " + impl_name + "_impl_" +\
+                    impl_base = "typedef " + impl_name + " impl_" +\
                                 derivedName + ";"
-                    objref_base = "typedef " + objref_name + "_objref_" + \
+                    objref_base = "typedef " + objref_name + " objref_" + \
                                   derivedName + ";"
 
                 stream.out(template.typedef_simple_objref,
