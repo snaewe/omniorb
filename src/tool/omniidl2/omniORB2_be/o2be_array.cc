@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.12  1998/08/13 22:35:13  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available
+
   Revision 1.11  1998/04/07 18:39:39  sll
   Use std::fstream instead of fstream.
 
@@ -55,6 +59,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #define ADPT_CLASS_TEMPLATE "_CORBA_Array_OUT_arg"
 

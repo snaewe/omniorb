@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.18  1998/08/13 22:35:48  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available
+
   Revision 1.17  1998/04/07 18:40:29  sll
   Use std::fstream instead of fstream.
   Stub now use omniORB::log to log error messages.
@@ -65,6 +69,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 o2be_attribute::o2be_attribute(idl_bool ro,
 			       AST_Type *ft, 

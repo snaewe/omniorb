@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.7  1998/08/13 22:36:24  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available
+
   Revision 1.6  1998/08/10 16:55:08  sll
   Remove redundent quote ' from constant char definition.
 
@@ -48,6 +52,10 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 o2be_constant::o2be_constant(AST_Expression::ExprType et,
 			 AST_Expression *v,
