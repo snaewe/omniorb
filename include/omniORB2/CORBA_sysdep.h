@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.30  1999/04/06 08:30:03  djr
+ MSVC 6.0 is also not FD compliant regarding declaration of static const
+ integral and enum types.
+
  Revision 1.29  1999/01/07 18:17:51  djr
  Enable namespaces on egcs 1.1.1
  MSVC and VMS platforms do not have strcasecmp and strncasecmp.
@@ -428,7 +432,8 @@ strdup (char* str)
 // be specified with a constant-initializer whereas ARM does not.
 // The _init_in_decl_ and _init_in_def_ macros are defined so that the same 
 // stub will compile on both FD and ARM compilers.
-// MSVC++ 5.0 is somewhere between FD and ARM.
+// MSVC++ 5.0 (and 6.0) is somewhere between FD and ARM.
+//  _MSC_VER = 1100 for 5.0, 1200 for 6.0.
 //
 #ifndef _init_in_decl_
 #define _init_in_decl_(x) x
@@ -443,7 +448,7 @@ strdup (char* str)
 #endif
 
 #ifndef _init_in_cldecl_
-#  if !defined(_MSC_VER) || _MSC_VER > 1199
+#  if !defined(_MSC_VER)
 #    define _init_in_cldecl_(x) x
 #  else
 #    define _init_in_cldecl_(x) 
@@ -453,7 +458,7 @@ strdup (char* str)
 #endif
 
 #ifndef _init_in_cldef_
-#  if !defined(_MSC_VER) || _MSC_VER > 1199
+#  if !defined(_MSC_VER)
 #    define _init_in_cldef_(x)
 #  else
 #    define _init_in_cldef_(x) x 
