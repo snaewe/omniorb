@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.3  2000/11/03 19:26:01  sll
+# Simplified the marshalling functions.
+#
 # Revision 1.17.2.2  2000/10/12 15:37:48  sll
 # Updated from omni3_1_develop.
 #
@@ -123,495 +126,188 @@ from omniidl_be.cxx import util, types, id, ast, output, cxx
 
 # Code for marshalling and unmarshalling various data types.
 
-# marshalling for struct, union and exception types
-def marshall_struct_union(string, environment, type, decl, argname, to="_n"):
-    assert isinstance(type, types.Type)
-    if decl:
-        assert isinstance(decl, idlast.Declarator)
-        dims = decl.sizes()
-    else:
-        dims = []
-    type_dims = type.dims()
-    full_dims = dims + type_dims
-    is_array        = full_dims != []
-
-    if not(is_array):
-        # marshall the simple way
-        string.out("""\
-@name@ >>= @to@;""", name = argname, to = to)
-    else:
-        # do it the normal way
-        marshall(string, environment, type, decl, argname, to,
-                 exception = "MARSHAL")
-        
-
-def marshall(string, environment, type, decl, argname, to="_n",
+def marshall(to, environment, type, decl, argname, to_where,
              exception = "BAD_PARAM"):
     assert isinstance(type, types.Type)
     if decl:
         assert isinstance(decl, idlast.Declarator)
-        dims = decl.sizes()
+        dims = decl.sizes() + type.dims()
     else:
-        dims = []
-        
+        dims = type.dims()
+
     d_type = type.deref()
 
-    type_dims = type.dims()
-    full_dims = dims + type_dims
-
-    # for some reason, a char[10][20][30] x
-    # becomes put_char_array(.... x[0][0]...)
-    zero_dims_string = "[0]" * (len(full_dims) - 1)
-
-    anonymous_array = dims      != []
-    is_array        = full_dims != []
-    alias_array     = type_dims != []
-
-    num_elements = reduce(lambda x,y:x*y, full_dims, 1)
-
-    type_name = d_type.base(environment)
-
-    # marshall an array of basic things
-    if is_array:
-        if types.typeSizeAlignMap.has_key(d_type.type().kind()):
-            (size, align) = types.typeSizeAlignMap[d_type.type().kind()]
-            num_bytes = size * num_elements
-            if align != 1:
-                align_str = ", omni::ALIGN_" + str(align)
+    if dims != []:
+        n_elements = reduce(lambda x,y:x*y, dims, 1)
+        array_marshal_helpers = {
+          idltype.tk_octet:   ("omni::ALIGN_1",1),
+          idltype.tk_boolean: ("omni::ALIGN_1",1),
+          idltype.tk_short:   ("omni::ALIGN_2",2),
+          idltype.tk_long:    ("omni::ALIGN_4",4),
+          idltype.tk_ushort:  ("omni::ALIGN_2",2),
+          idltype.tk_ulong:   ("omni::ALIGN_4",4),
+          idltype.tk_float:   ("omni::ALIGN_4",4),
+          idltype.tk_double:  ("omni::ALIGN_8",8),
+          idltype.tk_longlong: ("omni::ALIGN_8",8),
+          idltype.tk_ulonglong: ("omni::ALIGN_8",8)
+        }
+        if array_marshal_helpers.has_key(d_type.type().kind()):
+            (alignment,elmsize) = array_marshal_helpers[d_type.type().kind()]
+            if alignment != "omni::ALIGN_1":
+                to.out("""\
+if (! @where@.marshal_byte_swap()) {
+  @where@.put_octet_array((CORBA::Octet*)&@name@[0],@num@,@align@);
+}
+else """,
+                       where = to_where,
+                       name = argname,
+                       num = str(n_elements * elmsize),
+                       align = alignment)
+                # Do not return here.
+                # let the code below to deal with the else block.
             else:
-                align_str = ""
-                
-            string.out("""\
-@to@.put_char_array((const _CORBA_Char*) ((const @type@*) @argname@@dims_string@), @size@@align@);""",
-                       type = type_name, argname = argname,
-                       dims_string = zero_dims_string,
-                       size = str(num_bytes), align = align_str, to = to)
-            return
+                to.out("@where@.put_octet_array((CORBA::Octet*)&@name@[0],@num@);",
+                       where = to_where,
+                       name = argname,
+                       num = str(n_elements))
+                return
 
-    if d_type.typecode():
-        # same as obj ref
-        indexing_string = ""
-        if is_array:
-            block = cxx.Block(string)
-            loop = cxx.For(string, full_dims)
-            indexing_string = loop.index() + "._ptr"
-        string.out("""\
-CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
-                   argname = argname, to = to,
-                   indexing_string = indexing_string)
-        if is_array:
-            loop.end()
-            block.end()
-       
-    elif d_type.string():
-        block = cxx.Block(string)
-        loop = cxx.For(string, full_dims)
-        indexing_string = loop.index()
-        bounds = output.StringStream()
-        if d_type.type().bound() != 0:
-            bounds.out("""\
-if (_len > @n@+1) {
-  throw CORBA::@exception@(0, CORBA::COMPLETED_MAYBE);
-}""", n = str(d_type.type().bound()),
-                       exception = exception)
-
-        string.out("""\
-CORBA::ULong _len = (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);
-@bound@
-_len >>= @to@;
-if (_len > 1)
-  @to@.put_char_array((const CORBA::Char *)((const char*)@argname@@indexing_string@),_len);
-else {
-  if ((const char*) @argname@@indexing_string@ == 0 && omniORB::traceLevel > 1)
-    _CORBA_null_string_ptr(0);
-  CORBA::Char('\\0') >>= @to@;
-}""",
-                   bound = str(bounds),
-                   argname = argname,
-                   indexing_string = indexing_string,
-                   to = to)
-        loop.end()
-        block.end()
-    elif d_type.objref():
-        indexing_string = ""
-        if is_array:
-            block = cxx.Block(string)
-            loop = cxx.For(string, full_dims)
-            indexing_string = loop.index() + "._ptr"
-        string.out("""\
-@type_name@_Helper::marshalObjRef(@argname@@indexing_string@,@to@);""",
-                   type_name = type_name,
-                   argname = argname,
-                   indexing_string = indexing_string,
-                   to = to)
-        if is_array:
-            loop.end()
-            block.end()
-    else:
-        if is_array:
-            block = cxx.Block(string)
-            loop = cxx.For(string, full_dims)
-            indexing_string = loop.index()
-        else:
-            indexing_string = ""
-        string.out("""\
-@argname@@indexing_string@ >>= @to@;""",
-                   argname = argname, indexing_string = indexing_string,
-                   to = to)
-        if is_array:
-            loop.end()
-            block.end()
-    
-    return
-
-def unmarshall_struct_union(string, environment, type, decl, argname,
-                            can_throw_marshall, from_where="_n"):
-    assert isinstance(type, types.Type)
-    if decl:
-        assert isinstance(decl, idlast.Declarator)
-        dims = decl.sizes()
-    else:
-        dims = []
-    type_dims = type.dims()
-    full_dims = dims + type_dims
-    is_array        = full_dims != []
-
-    if not(is_array):
-        # unmarshall the simple way
-        string.out("""\
-@name@ <<= @from_where@;""", name = argname, from_where = from_where)
-    else:
-        # do it the normal way
-        unmarshall(string, environment, type, decl, argname,
-                   can_throw_marshall, from_where)
-
-
-
-def unmarshall(to, environment, type, decl, name,
-               can_throw_marshall, from_where = "_n",
-               string_via_member = 0):
-    assert isinstance(type, types.Type)
-    if decl:
-        assert isinstance(decl, idlast.Declarator)
-        dims = decl.sizes()
-    else:
-        dims = []
-    
-    d_type = type.deref()
-
-    type_dims = type.dims()
-    full_dims = dims + type_dims
-
-    # for some reason, a char[10][20][30] x
-    # becomes put_char_array(.... x[0][0]...)
-    zero_dims_string = "[0]" * (len(full_dims) - 1)
-
-    anonymous_array = dims      != []
-    is_array        = full_dims != []
-    alias_array     = type_dims != []
-
-    num_elements = reduce(lambda x,y:x*y, full_dims, 1)
-
-    type_name = d_type.base(environment)
-
-    element_name = name + zero_dims_string
-
-    if is_array:
-        # BASIC things
-        # octets, chars and booleans are handled via
-        # get_char_array
-        if d_type.type().kind() in \
-           [ idltype.tk_octet, idltype.tk_char, idltype.tk_boolean ]:
-            to.out("""\
-@from_where@.get_char_array((_CORBA_Char*) ((@type@*) @element_name@), @num@);""",
-                   element_name = element_name,
-                   type = type_name,
-                   num = str(num_elements),
-                   from_where = from_where)
-            return
-        # other basic types are handled via a CdrStreamHelper 
-        array_helper_suffix = {
-            idltype.tk_short:  "Short",
-            idltype.tk_long:   "Long",
-            idltype.tk_ushort: "UShort",
-            idltype.tk_ulong:  "ULong",
-            idltype.tk_float:  "Float",
-            idltype.tk_double: "Double",
-            idltype.tk_enum:   "ULong",
-            idltype.tk_longlong: "LongLong",
-            idltype.tk_ulonglong: "ULongLong"
-            }
-        if array_helper_suffix.has_key(d_type.type().kind()):
-            typecast = "((" + type_name + "*) " + element_name + ")"
-            # use the most dereferenced type
-            if d_type.enum():
-                typecast = "(_CORBA_ULong*) " + typecast
-            to.out("""\
-CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
-                       suffix = array_helper_suffix[d_type.type().kind()],
-                       where = from_where, typecast = typecast,
-                       num = str(num_elements))
-            return
-        if d_type.type().kind() in [idltype.tk_any, idltype.tk_TypeCode]:
-            pass
-        # not sure how to handle other basic types
-        elif isinstance(d_type.type(), idltype.Base):
-            util.fatalError("Internal error generating marshalling code")
-
-
-    # superfluous bracketting
-    if is_array:
+        # No quick route, generate iteration loop
         block = cxx.Block(to)
 
-    loop = cxx.For(to, full_dims)
+    loop = cxx.For(to, dims)
     indexing_string = loop.index()
-    element_name = name + indexing_string
+    element_name = argname + indexing_string
 
-    if d_type.typecode():
-        to.out("""\
-@element_name@ = CORBA::TypeCode::unmarshalTypeCode(@from_where@);""",
-               element_name = element_name,
-               from_where = from_where)
-    elif d_type.string():
-        if not(is_array) and string_via_member:
-            # go via temporary. why?
-            to.out("""\
-{
-  CORBA::String_member _0RL_str_tmp;
-  _0RL_str_tmp <<=  @where@;
-  @name@ = _0RL_str_tmp._ptr;
-  _0RL_str_tmp._ptr = 0;
-}""", where = from_where, name = element_name)
-        else:
-            to.out("""\
-CORBA::ULong _len;
-_len <<= @from_where@;
-if (!_len) {
-  if (omniORB::traceLevel > 1)
-    _CORBA_null_string_ptr(1);
-  _len = 1;
-}""", from_where = from_where)
-            if can_throw_marshall:
-                to.out("""\
-else if ( @from_where@.RdMessageUnRead() < _len)
-  throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);""",
-                       from_where = from_where)
-                to.dec_indent()
+    type_name = d_type.base(environment)
+    bounded = ""
+    if d_type.objref():
+        type_name = string.replace(type_name,"_ptr","")
+    elif d_type.string() or d_type.wstring():
+        bounded = str(d_type.type().bound())
 
-            if d_type.type().bound() != 0:
-                to.out("""\
-if (_len > @n@+1) {
-  throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-}""", n = str(d_type.type().bound()))
-
-               
-            to.out("""\
-if (!(char*)(@element_name@ = CORBA::string_alloc(_len-1)))
-  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-if (_len > 1)
-  @from_where@.get_char_array((CORBA::Char *)((char *)@element_name@),_len);
-else
-  *((CORBA::Char*)((char*) @element_name@)) <<= @from_where@ ;""",
-                   element_name = element_name,
-                   from_where = from_where)
-            to.dec_indent()
-    elif d_type.objref():
-        base_type_name = d_type.base(environment)
-        to.out("""\
-@element_name@ = @type@_Helper::unmarshalObjRef(@from_where@);""",
-                   type = base_type_name,
-                   element_name = element_name,
-                   from_where = from_where)
-
+    if not d_type.is_basic_data_types() and not d_type.enum():
+        type_cast = "(const " + type_name + "&) "
     else:
-        to.out("""\
-@element_name@ <<= @from_where@;""",
-                   element_name = element_name,
-                   from_where = from_where)
+        type_cast = ""
 
+    special_marshal_functions = {
+      idltype.tk_boolean:
+      "@to_where@.marshalBoolean(@element_name@);",
+      idltype.tk_octet:
+      "@to_where@.marshalOctet(@element_name@);",
+      idltype.tk_char:
+      "@to_where@.marshalChar(@element_name@);",
+      idltype.tk_wchar:
+      "@to_where@.marshalWChar(@element_name@);",
+      idltype.tk_string:
+      "@to_where@.marshalString(@element_name@,@bounded@);",
+      idltype.tk_wstring:
+      "@to_where@.marshalWString(@element_name@,@bounded@);",
+      idltype.tk_objref:
+      "@type@::_marshalObjRef(@element_name@,@to_where@);",
+      idltype.tk_TypeCode:
+      "CORBA::TypeCode::marshalTypeCode(@element_name@,@to_where@);",
+      }
+    if special_marshal_functions.has_key(d_type.type().kind()):
+        out_template = special_marshal_functions[d_type.type().kind()]
+    else:
+        out_template = "@type_cast@@element_name@ >>= @to_where@;"
+
+    to.out(out_template,
+           to_where = to_where,
+           element_name = element_name,
+           bounded = bounded,
+           type = type_name,
+           type_cast = type_cast)
     loop.end()
-    
-    if is_array:
+
+    if dims != []:
         block.end()
 
-    
-# ------------------------------------------------------------------
 
-# FIXME - parameter is 1 when producing the size calc for an interface
-# argument (not a struct member)
-# (is this why tObjrefMember != tObjref in the old BE?)
-def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
-                    is_pointer = 0):
-    #o2be_operation::produceSizeCalculation
+        
+def unmarshall(to, environment, type, decl, name, from_where):
     assert isinstance(type, types.Type)
-    
-    # if decl == None then ignore
     if decl:
         assert isinstance(decl, idlast.Declarator)
+        dims = decl.sizes() + type.dims()
+    else:
+        dims = type.dims()
 
     d_type = type.deref()
 
-    if decl:
-        dims = decl.sizes()
-    else:
-        dims = []
-        
-    type_dims = type.dims()
-    full_dims = dims + type_dims
+    if dims != []:
+        n_elements = reduce(lambda x,y:x*y, dims, 1)
+        array_unmarshal_helpers = {
+          idltype.tk_octet:  ("get_octet_array","(CORBA::Octet*)"),
+          idltype.tk_boolean: ("get_octet_array","(CORBA::Octet*)"),
+          idltype.tk_short:  ("unmarshalArrayShort","(CORBA::Short*)"),
+          idltype.tk_long:   ("unmarshalArrayLong","(CORBA::Long*)"),
+          idltype.tk_ushort: ("unmarshalArrayUShort","(CORBA::UShort*)"),
+          idltype.tk_ulong:  ("unmarshalArrayULong","(CORBA::ULong*)"),
+          idltype.tk_float:  ("unmarshalArrayFloat","(CORBA::Float*)"),
+          idltype.tk_double: ("unmarshalArrayDouble","(CORBA::Double*)"),
+          idltype.tk_longlong:("unmarshalArrayLongLong","(CORBA::LongLong*)"),
+          idltype.tk_ulonglong:("unmarshalArrayULongLong","(CORBA::ULongLong*)")
+          }
+        if array_unmarshal_helpers.has_key(d_type.type().kind()):
+            (helper,typecast) = array_unmarshal_helpers[d_type.type().kind()]
+            to.out("@where@.@helper@(@typecast@&@name@[0], @num@);",
+                   helper = helper,
+                   where = from_where, typecast = typecast,
+                   name = name,
+                   num = str(n_elements))
+            return
 
-    anonymous_array = dims      != []
-    is_array        = full_dims != []
-    alias_array     = type_dims != []
+        # No quick route, generate iteration loop
+        block = cxx.Block(to)
 
-    num_elements = reduce(lambda x,y:x*y, full_dims, 1)
-
-    isVariable = type.variable()
-
-    if is_pointer:
-        dereference = "->"
-    else:
-        dereference = "."
-
-    string = output.StringStream()
-
-    if not(is_array):
-        if types.typeSizeAlignMap.has_key(d_type.type().kind()):
-            size = types.typeSizeAlignMap[d_type.type().kind()][0]
-            
-            if size == 1:
-                string.out("""\
-@sizevar@ += 1;""", sizevar = sizevar)
-                return str(string)
-
-            string.out("""\
-@sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_@n@) + @n@;""",
-                       sizevar = sizevar, n = str(size))
-            return str(string)
-
-        # FIXME:
-        if fixme:
-            if d_type.string():
-                string.out("""\
-@sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_4) + 4;
-@sizevar@ += ((const char*) @argname@) ? strlen((const char*) @argname@) + 1 : 1;""",
-                           sizevar = sizevar, argname = argname)
-                return str(string)
-
-        # FIXME:
-        # this corresponds to case tObjref in the old BE
-        # what is the difference between tObjrefMember and tObjref?
-        if fixme:
-            if d_type.objref():
-                #name = environment.principalID(deref_type)
-                name = d_type.base(environment)
-                string.out("""\
-@sizevar@ = @name@_Helper::NP_alignedSize(@argname@, @sizevar@);""",
-                           sizevar = sizevar, name = name, argname = argname)
-                return str(string)
-
-        # typecodes may be an exception here
-        string.out("""\
-@sizevar@ = @argname@@deref@_NP_alignedSize(@sizevar@);""",
-                   sizevar = sizevar, argname = argname, deref = dereference)
-        return str(string)
-
-
-    # thing is an array
-    if not(isVariable):
-        if d_type.octet():
-            string.out("""\
-@sizevar@ += @num_elements@;""", sizevar = sizevar,
-                       num_elements = str(num_elements))
-            return str(string)
-        if types.typeSizeAlignMap.has_key(d_type.type().kind()):
-            size = types.typeSizeAlignMap[d_type.type().kind()][0]
-
-            if size == 1:
-                string.out("""\
-@sizevar@ += @num_elements@;""", sizevar = sizevar,
-                           num_elements = str(num_elements))
-                return str(string)
-
-            string.out("""\
-@sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_@n@);
-@sizevar@ += @num_elements@ * @n@;""",
-                       sizevar = sizevar,
-                       n = str(size),
-                       num_elements = str(num_elements))
-            return str(string)
-
-        # must be an array of fixed structs or unions
-        block = cxx.Block(string)
-        loop = cxx.For(string, full_dims)
-        indexing_string = loop.index()
-
-        # do the actual calculation
-        string.out("""\
-@sizevar@ = @argname@@indexing_string@@deref@_NP_alignedSize(@sizevar@);""",
-                   sizevar = sizevar, argname = argname,
-                   indexing_string = indexing_string,
-                   deref = dereference)
-
-        loop.end()
-        block.end()
-
-        return str(string)
-
-
-    # thing is an array of variable sized elements
-    block = cxx.Block(string)
-    loop = cxx.For(string, full_dims)
+    loop = cxx.For(to, dims)
     indexing_string = loop.index()
-
-    if d_type.string():
-        string.out("""\
-@sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_4);
-@sizevar@ += 4 + (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);""",
-                   sizevar = sizevar, argname = argname,
-                   indexing_string = indexing_string)
+    element_name = name + indexing_string
+    
+    type_name = d_type.base(environment)
+    bounded = ""
+    if d_type.objref():
+        type_name = string.replace(type_name,"_ptr","")
+    elif d_type.string() or d_type.wstring():
+        bounded = str(d_type.type().bound())
         
+    special_unmarshal_functions = {
+      idltype.tk_boolean:
+      "@element_name@ = @where@.unmarshalBoolean();",
+      idltype.tk_octet:
+      "@element_name@ = @where@.unmarshalOctet();",
+      idltype.tk_char:
+      "@element_name@ = @where@.unmarshalChar();",
+      idltype.tk_wchar:
+      "@element_name@ = @where@.unmarshalWChar();",
+      idltype.tk_string:
+      "@element_name@ = @where@.unmarshalString(@bounded@);",
+      idltype.tk_wstring:
+      "@element_name@ = @where@.unmarshalWString(@bounded@);",
+      idltype.tk_objref:
+      "@element_name@ = @type@::_unmarshalObjRef(@where@);",
+      idltype.tk_TypeCode:
+      "@element_name@ = CORBA::TypeCode::unmarshalTypeCode(@where@);",
+      }
 
-    elif d_type.objref():
-        #name = environment.principalID(deref_type)
-        name = d_type.base(environment)
-        string.out("""\
-@sizevar@ = @name@_Helper::NP_alignedSize(@argname@@indexing_string@._ptr,@sizevar@);""",
-                   sizevar = sizevar, name = name, argname = argname,
-                   indexing_string = indexing_string)
-    elif d_type.typecode():
-        string.out("""\
-@sizevar@ = ((@argname@@indexing_string@._ptr)->_NP_alignedSize(@sizevar@));""",
-                   sizevar = sizevar, argname = argname,
-                   indexing_string = indexing_string)
-
+    if special_unmarshal_functions.has_key(d_type.type().kind()):
+        out_template = special_unmarshal_functions[d_type.type().kind()]
     else:
-        # typecodes may be an exception here
-        string.out("""\
-@sizevar@ = @argname@@indexing_string@@deref@_NP_alignedSize(@sizevar@);""",
-                   sizevar = sizevar, argname = argname,
-                   indexing_string = indexing_string,
-                   deref = dereference)
-               
+        out_template = "(@type@&)@element_name@ <<= @where@;"
+
+    to.out(out_template,
+           type = type_name,
+           element_name = element_name,
+           where = from_where,
+           bounded = bounded)
 
     loop.end()
-    block.end()
 
-    return str(string)
-
-
-def unmarshal_string_via_temporary(variable_name, stream_name):
-    stream = output.StringStream()
-    stream.out("""\
-{
-  CORBA::String_member _0RL_str_tmp;
-  _0RL_str_tmp <<= @stream_name@;
-  @variable_name@ = _0RL_str_tmp._ptr;
-  _0RL_str_tmp._ptr = 0;
-}""",  variable_name = variable_name, stream_name = stream_name)
-
-    return str(stream)
-    
-    
+    if dims != []:
+        block.end()
 
 
 def sort_exceptions(ex):
