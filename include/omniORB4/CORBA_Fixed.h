@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/10/17 16:44:00  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.1.2.1  2001/08/17 13:39:46  dpg1
   Split CORBA.h into separate bits.
 
@@ -114,9 +117,11 @@ public:
   // Return a string containing the fixed. Caller frees with
   // CORBA::string_free().
 
-  void NP_fromString(const char* val, Boolean ignore_end = 0);
+  CORBA::Boolean NP_fromString(const char* val, Boolean ignore_end = 0);
   // Set the value from the given string.
   // If ignore_end is true, do not complain about trailing garbage.
+  // Return true if the value fit without truncation; false if the
+  // value had to be truncated.
 
   static int NP_cmp(const Fixed& a, const Fixed& b);
   // Compare a and b. Returns -1 if a < b, 1 if a > b, 0 if a == b.
@@ -131,11 +136,13 @@ public:
   Boolean PR_negative() const { return pd_negative; }
   // True if the value is negative, false if positive or zero.
 
-  void PR_checkLimits();
+  CORBA::Boolean PR_checkLimits();
   // Function to check that this fixed point value fits in the
   // digits/scale limits declared in the IDL. Truncates the value,
   // or throws DATA_CONVERSION if the value is too big. Does nothing
   // for base CORBA::Fixed, where there are no limits.
+  // Returns true if the value fit without truncation; false if the
+  // value had to be truncated.
 
   void PR_setLimits(UShort idl_digits, UShort idl_scale);
   // Set and check the digits/scale limits.

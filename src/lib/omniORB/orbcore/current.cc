@@ -37,6 +37,7 @@
 #include <objectTable.h>
 #include <exceptiondefs.h>
 #include <orbOptions.h>
+#include <initRefs.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -227,12 +228,11 @@ void
 omniOrbPOACurrent::_NP_decrRefCount()
 {
   omni::poRcLock->lock();
-  int done = --pd_refCount > 0;
-  if (done)
-    thePOACurrent = 0;
+  int dead = --pd_refCount == 0;
+  if (dead) thePOACurrent = 0;
   omni::poRcLock->unlock();
 
-  if( done )  return;
+  if( !dead )  return;
 
   delete this;
 }
@@ -377,10 +377,16 @@ static supportCurrentHandler supportCurrentHandler_;
 
 OMNI_NAMESPACE_BEGIN(omni)
 
+static CORBA::Object_ptr resolvePOACurrentFn() {
+  return omniOrbPOACurrent::theCurrent();
+}
+
 class omni_omniCurrent_initialiser : public omniInitialiser {
 public:
   omni_omniCurrent_initialiser() {
     orbOptions::singleton().registerHandler(supportCurrentHandler_);
+    omniInitialReferences::registerPseudoObjFn("POACurrent",
+					       resolvePOACurrentFn);
   }
 
   void attach() {

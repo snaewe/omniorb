@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.20  2001/10/17 16:44:03  dpg1
+ * Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+ *
  * Revision 1.38.2.19  2001/09/24 10:41:09  dpg1
  * Minor codes for Dynamic library and omniORBpy.
  *
@@ -1573,15 +1576,28 @@ TypeCode_objref::NP_extendedEqual(const TypeCode_base*  TCp,
 				  CORBA::Boolean is_equivalent,
 				  const TypeCode_pairlist* ) const
 {
-  if ((NP_kind() != TCp->NP_kind()) || (strcmp(NP_id(), TCp->NP_id()) != 0)) {
+  if (NP_kind() != TCp->NP_kind())
     return 0;
+
+  if (!omni::ptrStrMatch(NP_id(), TCp->NP_id())) {
+    if (is_equivalent) {
+      // Empty string is equivalent to CORBA::Object repoId
+
+      if (NP_id()[0] == '\0' &&
+	  omni::ptrStrMatch(TCp->NP_id(), CORBA::Object::_PD_repoId))
+	return 1;
+
+      if (TCp->NP_id()[0] == '\0' &&
+	  omni::ptrStrMatch(NP_id(), CORBA::Object::_PD_repoId))
+	return 1;
+      
+      return 0;
+    }
   }
-  else if (!is_equivalent) {
+  if (!is_equivalent)
     return NP_namesEqual(NP_name(), TCp->NP_name());
-  }
-  else {
+  else
     return 1;
-  }
 }
 
 
@@ -4977,7 +4993,7 @@ TypeCode_union_helper::has_implicit_default(TypeCode_base* tc)
     npossible = ToTcBase(aedtc)->NP_member_count();
     break;
   default:
-    throw CORBA::DynAny::InvalidValue();
+    OMNIORB_THROW(BAD_TYPECODE, BAD_TYPECODE_UnknownKind, CORBA::COMPLETED_NO);
   }
 
   return npossible > tc->NP_member_count();
@@ -5341,6 +5357,8 @@ static void check_static_data_is_initialised()
 //
 omniTypeCodeList::~omniTypeCodeList()
 {
+  CORBA::TypeCode_ptr t = CORBA::_tc_short;
+
   int tcs = 0;
   omnivector<CORBA::TypeCode_ptr>::iterator i = pd_list.begin();
   for (; i != pd_list.end(); i++, tcs++)

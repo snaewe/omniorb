@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2001/10/17 16:44:00  dpg1
+ Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
  Revision 1.2.2.3  2001/08/17 13:39:49  dpg1
  Split CORBA.h into separate bits.
 
@@ -280,32 +283,3 @@ public:
 private:
   T_ptr pd_ref;
 };
-
-//////////////////////////////////////////////////////////////////////
-/////////////////////////////// DynAny ///////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-// DynAny interface _var types.
-typedef _CORBA_PseudoObj_Var<DynAny>      DynAny_var;
-typedef _CORBA_PseudoObj_Var<DynEnum>     DynEnum_var;
-typedef _CORBA_PseudoObj_Var<DynStruct>   DynStruct_var;
-typedef _CORBA_PseudoObj_Var<DynUnion>    DynUnion_var;
-typedef _CORBA_PseudoObj_Var<DynSequence> DynSequence_var;
-typedef _CORBA_PseudoObj_Var<DynArray>    DynArray_var;
-
-// DynAny interface _member types.
-typedef _CORBA_PseudoObj_Member<DynAny,DynAny_var>       DynAny_member;
-typedef _CORBA_PseudoObj_Member<DynEnum,DynEnum_var>     DynEnum_member;
-typedef _CORBA_PseudoObj_Member<DynStruct,DynStruct_var> DynStruct_member;
-typedef _CORBA_PseudoObj_Member<DynUnion,DynUnion_var>   DynUnion_member;
-typedef _CORBA_PseudoObj_Member<DynSequence,DynSequence_var>
-                                                         DynSequence_member;
-typedef _CORBA_PseudoObj_Member<DynArray,DynArray_var>   DynArray_member;
-
-// DynAny interface _out types.
-typedef _CORBA_PseudoObj_Out<DynAny,DynAny_var>           DynAny_out;
-typedef _CORBA_PseudoObj_Out<DynEnum,DynEnum_var>         DynEnum_out;
-typedef _CORBA_PseudoObj_Out<DynStruct,DynStruct_var>     DynStruct_out;
-typedef _CORBA_PseudoObj_Out<DynUnion,DynUnion_var>       DynUnion_out;
-typedef _CORBA_PseudoObj_Out<DynSequence,DynSequence_var> DynSequence_out;
-typedef _CORBA_PseudoObj_Out<DynArray,DynArray_var>       DynArray_out;

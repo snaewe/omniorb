@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2001/10/17 16:44:02  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.2.2.2  2000/09/27 17:25:40  sll
   Changed include/omniORB3 to include/omniORB4.
 
@@ -58,10 +61,10 @@
 
 const CORBA::ULong CORBA::Context::PR_magic         = 0x43545854U; // CTXT
 const CORBA::ULong CORBA::ContextList::PR_magic     = 0x4354584CU; // CTXL
-const CORBA::ULong CORBA::DynAny::PR_magic          = 0x44594E54U; // DYNT
 const CORBA::ULong CORBA::Environment::PR_magic     = 0x454E564CU; // ENVI
 const CORBA::ULong CORBA::ExceptionList::PR_magic   = 0x4558434CU; // EXCL
 const CORBA::ULong CORBA::NamedValue::PR_magic      = 0x4E56414CU; // NVAL
 const CORBA::ULong CORBA::NVList::PR_magic          = 0x4E564C54U; // NVLT
 const CORBA::ULong CORBA::Request::PR_magic         = 0x52455154U; // REQT
 const CORBA::ULong CORBA::TypeCode::PR_magic        = 0x54594F4CU; // TCOL
+const CORBA::ULong DynamicAny::DynAny::PR_magic     = 0x44594E54U; // DYNT

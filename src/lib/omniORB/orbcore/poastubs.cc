@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.8  2001/10/17 16:44:07  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.2.2.7  2001/09/19 17:26:52  dpg1
   Full clean-up after orb->destroy().
 
@@ -107,7 +110,7 @@ PortableServer::ForwardRequest& PortableServer::ForwardRequest::operator=(const 
 
 PortableServer::ForwardRequest::~ForwardRequest() {}
 
-void PortableServer::ForwardRequest::_raise() { throw *this; }
+void PortableServer::ForwardRequest::_raise() const { throw *this; }
 
 PortableServer::ForwardRequest* PortableServer::ForwardRequest::_downcast(CORBA::Exception* e) {
   return (ForwardRequest*) _NP_is_a(e, "Exception/UserException/PortableServer::ForwardRequest");

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/10/17 16:44:05  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.1.4.2  2001/05/29 17:03:49  dpg1
   In process identity.
 
@@ -106,6 +109,16 @@ public:
 
   static CORBA::ORB::ObjectIdList* list();
   // Real implementation of ORB::list_initial_services().
+
+
+  typedef CORBA::Object_ptr (*pseudoObj_fn)();
+  static void registerPseudoObjFn(const char* identifier, pseudoObj_fn fn);
+  // Function to register a pseudo object. If resolve() is called with
+  // the given identifier, the function is called. The registered
+  // function must return a suitable pseudo object when called, and
+  // must be thread safe. The identifier string must exist for the
+  // lifetime of the initRefs module.
+  //  This function is NOT thread safe.
 
 
   // Deprecated INIT bootagent functions:

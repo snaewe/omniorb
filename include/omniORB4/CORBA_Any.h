@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/10/17 16:43:59  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.1.2.1  2001/08/17 13:39:44  dpg1
   Split CORBA.h into separate bits.
 
@@ -227,8 +230,9 @@ public:
   Boolean operator>>=(to_string s) const;
 #endif
   Boolean operator>>=(to_wstring s) const;
-  Boolean operator>>=(to_fixed s) const;
+  Boolean operator>>=(to_fixed f) const;
   Boolean operator>>=(to_object o) const;
+  Boolean operator>>=(const CORBA::SystemException*& e) const;
 
   void replace(TypeCode_ptr TCp, void* value, Boolean release = 0);
 

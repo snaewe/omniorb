@@ -35,7 +35,7 @@ extern void operator<<=(CORBA::Any&, const CORBA::Exception*);
 #define EXCEPTION_OPERATORS(fqname) \
 extern void operator<<=(CORBA::Any&, const CORBA::fqname&); \
 extern void operator<<=(CORBA::Any&, const CORBA::fqname*); \
-extern CORBA::Boolean operator>>=(const CORBA::Any&, CORBA::fqname*&);
+extern CORBA::Boolean operator>>=(const CORBA::Any&, const CORBA::fqname*&);
 
 
 OMNIORB_FOR_EACH_SYS_EXCEPTION(EXCEPTION_OPERATORS)
@@ -46,10 +46,6 @@ EXCEPTION_OPERATORS (ExceptionList::Bounds)
 EXCEPTION_OPERATORS (NVList::Bounds)
 EXCEPTION_OPERATORS (TypeCode::Bounds)
 EXCEPTION_OPERATORS (TypeCode::BadKind)
-EXCEPTION_OPERATORS (DynAny::Invalid)
-EXCEPTION_OPERATORS (DynAny::InvalidValue)
-EXCEPTION_OPERATORS (DynAny::TypeMismatch)
-EXCEPTION_OPERATORS (DynAny::InvalidSeq)
 EXCEPTION_OPERATORS (ORB::InconsistentTypeCode)
 EXCEPTION_OPERATORS (ORB::InvalidName)
 

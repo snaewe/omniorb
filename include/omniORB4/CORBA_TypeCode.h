@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/10/17 16:44:00  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.1.2.2  2001/09/19 17:29:04  dpg1
   Cosmetic changes.
 
@@ -287,3 +290,14 @@ _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_ulonglong;
 #ifdef HAS_LongDouble
 _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_longdouble;
 #endif
+
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////// TypeCodes of System Exceptions ///////////////
+//////////////////////////////////////////////////////////////////////
+
+#define DECLARE_SYS_EXC_TYPECODE(name) \
+_CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_##name;
+
+OMNIORB_FOR_EACH_SYS_EXCEPTION(DECLARE_SYS_EXC_TYPECODE)
+#undef DECLARE_SYS_EXC_TYPECODE

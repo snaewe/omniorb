@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.6  2001/10/17 16:44:01  dpg1
+ Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
  Revision 1.2.2.5  2001/09/19 17:44:20  sll
  Remove obsolute system exception WRONG_TRANSACTION
 
@@ -89,7 +92,7 @@ public:  \
     * (CORBA::UserException*) this = _ex;  return *this;  \
   }  \
   virtual ~name();  \
-  virtual void _raise();  \
+  virtual void _raise() const;  \
   static name* _downcast(CORBA::Exception*);  \
   static const name* _downcast(const CORBA::Exception*);  \
   static inline name* _narrow(CORBA::Exception* _ex) {  \
@@ -125,7 +128,7 @@ public:  \
     * (UserException*) this = _ex;  return *this;  \
   }  \
   virtual ~name();  \
-  virtual void _raise();  \
+  virtual void _raise() const;  \
   static name* _downcast(Exception*);  \
   static const name* _downcast(const Exception*);  \
   static inline name* _narrow(Exception* _ex) {  \

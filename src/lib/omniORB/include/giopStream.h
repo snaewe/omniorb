@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/10/17 16:44:05  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.1.4.6  2001/09/04 14:38:09  sll
   Added the boolean argument to notifyCommFailure to indicate if
   omniTransportLock is held by the caller.
@@ -91,13 +94,19 @@ struct giopStream_Buffer {
 };
 
 class giopStream : public cdrStream {
- public:
+public:
 
   giopStream(giopStrand*);
   // No thread safety precondition
 
   ~giopStream();
   // No thread safety precondition
+
+  virtual void* ptrToClass(int* cptr);
+  static inline giopStream* downcast(cdrStream* s) {
+    return (giopStream*)s->ptrToClass(&_classid);
+  }
+  static _core_attr int _classid;
 
   void reset();
 

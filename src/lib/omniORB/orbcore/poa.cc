@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.22  2001/10/17 16:44:07  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.2.2.21  2001/09/20 09:27:44  dpg1
   Remove assertion failure on exit if not all POAs are deleted.
 
@@ -193,6 +196,7 @@
 #include <initialiser.h>
 #include <orbOptions.h>
 #include <orbParameters.h>
+#include <initRefs.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -2151,7 +2155,6 @@ omniOrbPOA::rootPOA(int init_if_none)
   return theRootPOA;
 }
 
-
 PortableServer::POA_ptr
 omniOrbPOA::omniINSPOA()
 {
@@ -3592,14 +3595,21 @@ static poaHoldRequestTimeoutHandler poaHoldRequestTimeoutHandler_;
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
+
+static CORBA::Object_ptr resolveRootPOAFn(){ return omniOrbPOA::rootPOA(); }
+static CORBA::Object_ptr resolveINSPOAFn() { return omniOrbPOA::omniINSPOA(); }
+
 class omni_poa_initialiser : public omniInitialiser {
 public:
 
   omni_poa_initialiser() {
     orbOptions::singleton().registerHandler(poaHoldRequestTimeoutHandler_);
+    omniInitialReferences::registerPseudoObjFn("RootPOA",    resolveRootPOAFn);
+    omniInitialReferences::registerPseudoObjFn("omniINSPOA", resolveINSPOAFn);
   }
 
-  void attach() { }
+  void attach() {
+  }
   void detach() { }
 };
 

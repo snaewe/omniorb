@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.10  2001/10/17 16:44:01  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.2.2.9  2001/08/01 10:08:20  dpg1
   Main thread policy.
 
@@ -474,7 +477,7 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ThreadPolicyValue;
       InvalidPolicy(CORBA::UShort  i_index);
       InvalidPolicy& operator=(const InvalidPolicy&);
       virtual ~InvalidPolicy();
-      virtual void _raise();
+      virtual void _raise() const;
       static InvalidPolicy* _downcast(CORBA::Exception*);
       static const InvalidPolicy* _downcast(const CORBA::Exception*);
       static inline InvalidPolicy* _narrow(CORBA::Exception* e) {

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/10/17 16:44:00  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.1.2.2  2001/08/17 17:00:50  sll
   ORB_init now takes an extra options argument.
 
@@ -60,17 +63,16 @@ public:
   typedef char* ObjectId;
   typedef String_var ObjectId_var;
 
-  typedef _CORBA_Pseudo_Unbounded_Sequence<Request,Request_member>
-  RequestSeq;
+  typedef _CORBA_Pseudo_Unbounded_Sequence<Request,Request_member> RequestSeq;
 
   OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InvalidName, _core_attr)
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InconsistentTypeCode, _dyn_attr)
+  OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InconsistentTypeCode, _dyn_attr)
 
-    ///////////////////////
-    // ORB::ObjectIdList //
-    ///////////////////////
+  ///////////////////////
+  // ORB::ObjectIdList //
+  ///////////////////////
 
-    class ObjectIdList_var;
+  class ObjectIdList_var;
 
   class ObjectIdList : public _CORBA_Unbounded_Sequence_String {
   public:
@@ -235,16 +237,6 @@ public:
 #if 0
   // Not supported yet
   TypeCode_ptr create_recursive_tc(const char* id);
-#endif
-  DynAny_ptr create_dyn_any(const Any& value);
-  DynAny_ptr create_basic_dyn_any(TypeCode_ptr tc);
-  DynStruct_ptr create_dyn_struct(TypeCode_ptr tc);
-  DynSequence_ptr create_dyn_sequence(TypeCode_ptr tc);
-  DynArray_ptr create_dyn_array(TypeCode_ptr tc);
-  DynUnion_ptr create_dyn_union(TypeCode_ptr tc);
-  DynEnum_ptr create_dyn_enum(TypeCode_ptr tc);
-#if 0
-  DynFixed_ptr create_dyn_fixed(TypeCode_ptr tc);
 #endif
 
   Policy_ptr create_policy(PolicyType,const Any&);

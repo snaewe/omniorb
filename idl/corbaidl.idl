@@ -6,30 +6,47 @@
 module CORBA {
 //////////////////////////////////////////////////////////////////////
 
+  interface IDLType;
 
-interface IDLType;
-
-typedef string Identifier;
-
-
-struct StructMember {
-  Identifier name;
-  TypeCode type;
-  IDLType type_def;
-};
-typedef sequence<StructMember> StructMemberSeq;
+  typedef string Identifier;
 
 
-struct UnionMember {
-  Identifier name;
-  any label;
-  TypeCode type;
-  IDLType type_def;
-};
-typedef sequence<UnionMember> UnionMemberSeq;
+  struct StructMember {
+    Identifier name;
+    TypeCode type;
+    IDLType type_def;
+  };
+  typedef sequence<StructMember> StructMemberSeq;
 
 
-typedef sequence<Identifier> EnumMemberSeq;
+  struct UnionMember {
+    Identifier name;
+    any label;
+    TypeCode type;
+    IDLType type_def;
+  };
+  typedef sequence<UnionMember> UnionMemberSeq;
+
+
+  typedef sequence<Identifier> EnumMemberSeq;
+
+
+  // Sequences of basic types
+  typedef sequence<short>              ShortSeq;
+  typedef sequence<long>               LongSeq;
+  typedef sequence<unsigned short>     UShortSeq;
+  typedef sequence<unsigned long>      ULongSeq;
+  typedef sequence<float>              FloatSeq;
+  typedef sequence<double>             DoubleSeq;
+  typedef sequence<boolean>            BooleanSeq;
+  typedef sequence<char>               CharSeq;
+  typedef sequence<octet>              OctetSeq;
+  typedef sequence<long long>          LongLongSeq;
+  typedef sequence<unsigned long long> ULongLongSeq;
+#ifdef HAS_LongDouble
+  typedef sequence<long double>        LongDoubleSeq;
+#endif
+  typedef sequence<wchar>              WCharSeq;
 
 
 //////////////////////////////////////////////////////////////////////

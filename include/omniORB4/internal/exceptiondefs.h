@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/10/17 16:44:05  dpg1
+  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
   Revision 1.1.4.2  2001/08/03 17:45:09  sll
   Moved OMNIORB_THROW so that it can be used in stub headers
 
@@ -82,7 +85,7 @@ CORBA::Exception::insertExceptionToAnyNCP scope::name::insertToAnyFnNCP = 0; \
  \
 scope::name::~name() {} \
  \
-void scope::name::_raise() { throw *this; } \
+void scope::name::_raise() const { throw *this; } \
  \
 scope::name* scope::name::_downcast(CORBA::Exception* e) { \
   return (name*)_NP_is_a(e, "Exception/UserException/"#scope"::"#name); \

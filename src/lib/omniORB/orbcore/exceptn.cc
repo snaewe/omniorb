@@ -162,7 +162,7 @@ CORBA::UserException::_downcast(const Exception* e)
 CORBA::name::~name() {} \
  \
 void \
-CORBA::name::_raise() \
+CORBA::name::_raise() const \
 { \
   throw *this; \
 } \

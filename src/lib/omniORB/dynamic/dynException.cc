@@ -84,16 +84,15 @@ OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::TypeCode, Bounds,
 		       "IDL:omg.org/CORBA/TypeCode/Bounds:1.0")
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::TypeCode, BadKind,
 		       "IDL:omg.org/CORBA/TypeCode/BadKind:1.0")
-OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::DynAny, Invalid,
-		       "IDL:omg.org/CORBA/DynAny/Invalid:1.0")
-OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::DynAny, InvalidValue,
-		       "IDL:omg.org/CORBA/DynAny/InvalidValue:1.0")
-OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::DynAny, TypeMismatch,
-		       "IDL:omg.org/CORBA/DynAny/TypeMismatch:1.0")
-OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::DynAny, InvalidSeq,
-		       "IDL:omg.org/CORBA/DynAny/InvalidSeq:1.0")
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::ORB, InconsistentTypeCode,
 		       "IDL:omg.org/CORBA/ORB/InconsistentTypeCode:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(DynamicAny::DynAny, InvalidValue,
+		       "IDL:omg.org/DynamicAny/DynAny/InvalidValue:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(DynamicAny::DynAny, TypeMismatch,
+		       "IDL:omg.org/DynamicAny/DynAny/TypeMismatch:1.0")
+OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(DynamicAny::DynAnyFactory,
+				       InconsistentTypeCode,
+             "IDL:omg.org/DynamicAny/DynAnyFactory/InconsistentTypeCode:1.0")
 
 //////////////////////////////////////////////////////////////////////
 ////////////// Implementation of User   Exception Any operators //////
@@ -241,10 +240,6 @@ USER_EXCEPTION_2 (ExceptionList,Bounds)
 USER_EXCEPTION_2 (NVList,Bounds)
 USER_EXCEPTION_2 (TypeCode,Bounds)
 USER_EXCEPTION_2 (TypeCode,BadKind)
-USER_EXCEPTION_2 (DynAny,Invalid)
-USER_EXCEPTION_2 (DynAny,InvalidValue)
-USER_EXCEPTION_2 (DynAny,TypeMismatch)
-USER_EXCEPTION_2 (DynAny,InvalidSeq)
 USER_EXCEPTION_2 (ORB,InconsistentTypeCode)
 USER_EXCEPTION_2 (ORB,InvalidName)
 USER_EXCEPTION_MOD_2 (PortableServer,POAManager,AdapterInactive)
@@ -257,6 +252,9 @@ USER_EXCEPTION_MOD_2 (PortableServer,POA,ServantAlreadyActive)
 USER_EXCEPTION_MOD_2 (PortableServer,POA,ServantNotActive)
 USER_EXCEPTION_MOD_2 (PortableServer,POA,WrongAdapter)
 USER_EXCEPTION_MOD_2 (PortableServer,POA,WrongPolicy)
+USER_EXCEPTION_MOD_2 (DynamicAny,DynAny,InvalidValue)
+USER_EXCEPTION_MOD_2 (DynamicAny,DynAny,TypeMismatch)
+USER_EXCEPTION_MOD_2 (DynamicAny,DynAnyFactory,InconsistentTypeCode)
 
 #undef USER_EXCEPTION
 #undef USER_EXCEPTION_1
@@ -564,28 +562,28 @@ extractSystemExceptionFromAny(const CORBA::Any& a, CORBA::TypeCode_ptr tc,
 
 
 #define STD_EXCEPTION(name) \
-static const CORBA::TypeCode_ptr _tc_##name = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/CORBA/" #name ":1.0", #name, mSystemException, 2); \
+CORBA::TypeCode_ptr CORBA::_tc_##name = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/CORBA/" #name ":1.0", #name, mSystemException, 2); \
  \
 void operator<<=(CORBA::Any& _a, const CORBA::name & _s) { \
-  insertSystemExceptionToAny(_a,_tc_##name,_s); \
+  insertSystemExceptionToAny(_a,CORBA::_tc_##name,_s); \
 }  \
  \
 void operator<<=(CORBA::Any& _a, const CORBA::name * _sp) { \
-  insertSystemExceptionToAny(_a,_tc_##name,_sp); \
+  insertSystemExceptionToAny(_a,CORBA::_tc_##name,_sp); \
 }\
  \
 CORBA::Boolean \
-operator>>=(const CORBA::Any& _a, CORBA::name *& _sp) \
+operator>>=(const CORBA::Any& _a, const CORBA::name *& _sp) \
 { \
   CORBA::SystemException* s = 0; \
-  if (extractSystemExceptionFromAny(_a,_tc_##name,s,1)) { \
+  if (extractSystemExceptionFromAny(_a,CORBA::_tc_##name,s,1)) { \
     _sp = (CORBA::name *)s; \
     return 1; \
   } \
   else { \
     if (s == 0) { \
       s = new CORBA::name; \
-      if (extractSystemExceptionFromAny(_a,_tc_##name,s,0)) { \
+      if (extractSystemExceptionFromAny(_a,CORBA::_tc_##name,s,0)) { \
 	_sp = (CORBA::name *)s; \
 	return 1; \
       } \
@@ -603,7 +601,7 @@ void \
 name##_insertToAny(CORBA::Any& a,const CORBA::Exception& e) \
 { \
   const CORBA::name & ex = (const CORBA::name &) e; \
-  insertSystemExceptionToAny(a,_tc_##name,ex); \
+  insertSystemExceptionToAny(a,CORBA::_tc_##name,ex); \
 } \
  \
 static \
@@ -611,7 +609,7 @@ void \
 name##_insertToAnyNCP(CORBA::Any& a,const CORBA::Exception* e) \
 { \
   const CORBA::name * ex = (const CORBA::name *) e; \
-  insertSystemExceptionToAny(a,_tc_##name,ex); \
+  insertSystemExceptionToAny(a,CORBA::_tc_##name,ex); \
 }
 
 
@@ -662,10 +660,6 @@ module::fqname::insertToAnyFnNCP = module##_##_fqname##_insertToAnyNCP
     USER_EXCEPTION_2 (NVList,Bounds);
     USER_EXCEPTION_2 (TypeCode,Bounds);
     USER_EXCEPTION_2 (TypeCode,BadKind);
-    USER_EXCEPTION_2 (DynAny,Invalid);
-    USER_EXCEPTION_2 (DynAny,InvalidValue);
-    USER_EXCEPTION_2 (DynAny,TypeMismatch);
-    USER_EXCEPTION_2 (DynAny,InvalidSeq);
     USER_EXCEPTION_2 (ORB,InconsistentTypeCode);
     USER_EXCEPTION_2 (ORB,InvalidName);
     USER_EXCEPTION_MOD_1 (PortableServer,ForwardRequest);
@@ -680,6 +674,9 @@ module::fqname::insertToAnyFnNCP = module##_##_fqname##_insertToAnyNCP
     USER_EXCEPTION_MOD_2 (PortableServer,POA,ServantNotActive);
     USER_EXCEPTION_MOD_2 (PortableServer,POA,WrongAdapter);
     USER_EXCEPTION_MOD_2 (PortableServer,POA,WrongPolicy);
+    USER_EXCEPTION_MOD_2 (DynamicAny,DynAny,InvalidValue);
+    USER_EXCEPTION_MOD_2 (DynamicAny,DynAny,TypeMismatch);
+    USER_EXCEPTION_MOD_2 (DynamicAny,DynAnyFactory,InconsistentTypeCode);
 
 #undef USER_EXCEPTION_1
 #undef USER_EXCEPTION_2

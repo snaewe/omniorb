@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.20  2001/10/17 16:43:59  dpg1
+ Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+
  Revision 1.2.2.19  2001/08/17 13:39:43  dpg1
  Split CORBA.h into separate bits.
 
@@ -369,7 +372,6 @@ _CORBA_MODULE_BEG
   //////////////////////////////////////////////////////////////////////
 
 # include "CORBA_TypeCode.h"
-# include "CORBA_DynAny.h"
 # include "CORBA_Request.h"
 # include "CORBA_ServerRequest.h"
 # include "CORBA_UnknownUserException.h"
@@ -432,6 +434,7 @@ extern void _omni_set_NameService(CORBA::Object_ptr);
 #include <omniORB4/poa.h>
 #include <omniORB4/fixed.h>
 #include <omniORB4/BiDirPolicy.h>
+#include <omniORB4/dynAny.h>
 
 #include <omniORB4/minorCode.h>
 

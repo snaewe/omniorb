@@ -34,7 +34,7 @@
 #pragma hdrstop
 #endif
 
-#include <dynAny.h>
+#include <dynAnyImpl.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -45,14 +45,15 @@ OMNI_NAMESPACE_BEGIN(omni)
 //////////////////////////// omniNilDynAny ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynAny : public virtual CORBA::DynAny,
-		      public omniTrackedObject {
+class omniNilDynAny : public virtual DynamicAny::DynAny {
 public:
+  omniNilDynAny() : DynamicAny::DynAny(1) {}
+
   virtual CORBA::TypeCode_ptr type() const {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void assign(CORBA::DynAny_ptr dyn_any) {
+  virtual void assign(DynamicAny::DynAny_ptr dyn_any) {
     _CORBA_invoked_nil_pseudo_ref();
   }
   virtual void from_any(const CORBA::Any& value) {
@@ -62,10 +63,14 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
+  virtual CORBA::Boolean equal(DynamicAny::DynAny_ptr dyn_any) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
   virtual void destroy() {
     _CORBA_invoked_nil_pseudo_ref();
   }
-  virtual CORBA::DynAny_ptr copy() {
+  virtual DynamicAny::DynAny_ptr copy() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
@@ -76,9 +81,6 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
   }
   virtual void insert_char(CORBA::Char value) {
-    _CORBA_invoked_nil_pseudo_ref();
-  }
-  virtual void insert_wchar(CORBA::WChar value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
   virtual void insert_short(CORBA::Short value) {
@@ -93,14 +95,6 @@ public:
   virtual void insert_ulong(CORBA::ULong value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
-#ifdef HAS_LongLong
-  virtual void insert_longlong(CORBA::LongLong value) {
-    _CORBA_invoked_nil_pseudo_ref();
-  }
-  virtual void insert_ulonglong(CORBA::ULongLong value) {
-    _CORBA_invoked_nil_pseudo_ref();
-  }
-#endif
 #ifndef NO_FLOAT
   virtual void insert_float(CORBA::Float value) {
     _CORBA_invoked_nil_pseudo_ref();
@@ -108,16 +102,8 @@ public:
   virtual void insert_double(CORBA::Double value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
-#ifdef HAS_LongDouble
-  virtual void insert_longdouble(CORBA::LongDouble value) {
-    _CORBA_invoked_nil_pseudo_ref();
-  }
-#endif
 #endif
   virtual void insert_string(const char* value) {
-    _CORBA_invoked_nil_pseudo_ref();
-  }
-  virtual void insert_wstring(const CORBA::WChar* value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
   virtual void insert_reference(CORBA::Object_ptr value) {
@@ -126,7 +112,29 @@ public:
   virtual void insert_typecode(CORBA::TypeCode_ptr value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
+#ifdef HAS_LongLong
+  virtual void insert_longlong(CORBA::LongLong value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_ulonglong(CORBA::ULongLong value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif
+#ifdef HAS_LongDouble
+  virtual void insert_longdouble(CORBA::LongDouble value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif
+  virtual void insert_wchar(CORBA::WChar value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_wstring(const CORBA::WChar* value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
   virtual void insert_any(const CORBA::Any& value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_dyn_any(DynamicAny::DynAny_ptr value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
   virtual CORBA::Boolean get_boolean() {
@@ -138,10 +146,6 @@ public:
     return 0;
   }
   virtual CORBA::Char get_char() {
-    _CORBA_invoked_nil_pseudo_ref();
-    return 0;
-  }
-  virtual CORBA::WChar get_wchar() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
@@ -161,16 +165,6 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-#ifdef HAS_LongLong
-  virtual CORBA::LongLong get_longlong() {
-    _CORBA_invoked_nil_pseudo_ref();
-    return 0;
-  }
-  virtual CORBA::ULongLong get_ulonglong() {
-    _CORBA_invoked_nil_pseudo_ref();
-    return 0;
-  }
-#endif
 #ifndef NO_FLOAT
   virtual CORBA::Float get_float() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -180,18 +174,8 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0.0;
   }
-#ifdef HAS_LongDouble
-  virtual CORBA::LongDouble get_longdouble() {
-    _CORBA_invoked_nil_pseudo_ref();
-    return 0.0;
-  }
-#endif
 #endif
   virtual char* get_string() {
-    _CORBA_invoked_nil_pseudo_ref();
-    return 0;
-  }
-  virtual CORBA::WChar* get_wstring() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
@@ -203,15 +187,138 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
+#ifdef HAS_LongLong
+  virtual CORBA::LongLong get_longlong() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::ULongLong get_ulonglong() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+#endif
+#ifdef HAS_LongDouble
+  virtual CORBA::LongDouble get_longdouble() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0.0;
+  }
+#endif
+  virtual CORBA::WChar get_wchar() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::WChar* get_wstring() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
   virtual CORBA::Any* get_any() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual CORBA::DynAny_ptr current_component() {
+  virtual DynamicAny::DynAny_ptr get_dyn_any() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual CORBA::Boolean next() {
+  virtual void insert_boolean_seq(CORBA::BooleanSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_octet_seq(CORBA::OctetSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_char_seq(CORBA::CharSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_short_seq(CORBA::ShortSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_ushort_seq(CORBA::UShortSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_long_seq(CORBA::LongSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_ulong_seq(CORBA::ULongSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#ifndef NO_FLOAT
+  virtual void insert_float_seq(CORBA::FloatSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_double_seq(CORBA::DoubleSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif
+#ifdef HAS_LongLong
+  virtual void insert_longlong_seq(CORBA::LongLongSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_ulonglong_seq(CORBA::ULongLongSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif
+#ifdef HAS_LongDouble						 
+  virtual void insert_longdouble_seq(CORBA::LongDoubleSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif								 
+  virtual void insert_wchar_seq(CORBA::WCharSeq&) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual CORBA::BooleanSeq* get_boolean_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::OctetSeq* get_octet_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::CharSeq* get_char_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::ShortSeq* get_short_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::UShortSeq* get_ushort_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::LongSeq* get_long_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::ULongSeq* get_ulong_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+#ifndef NO_FLOAT
+  virtual CORBA::FloatSeq* get_float_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::DoubleSeq* get_double_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+#endif
+#ifdef HAS_LongLong
+  virtual CORBA::LongLongSeq* get_longlong_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::ULongLongSeq* get_ulonglong_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+#endif
+#ifdef HAS_LongDouble
+  virtual CORBA::LongDoubleSeq* get_longdouble_seq() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+#endif
+  virtual CORBA::WCharSeq* get_wchar_seq() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
@@ -222,29 +329,92 @@ public:
   virtual void rewind() {
     _CORBA_invoked_nil_pseudo_ref();
   }
-  virtual CORBA::Boolean NP_is_nil() const {
-    return 1;
+  virtual CORBA::Boolean next() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::ULong component_count() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual DynamicAny::DynAny_ptr current_component() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
   }
   virtual int NP_nodetype() const {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void* NP_narrow() {
+  virtual void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
+  }
+  virtual void _NP_incrRefCount() {}
+  virtual void _NP_decrRefCount() {}
+};
+
+OMNI_NAMESPACE_END(omni)
+
+DynamicAny::DynAny_ptr
+DynamicAny::DynAny::_nil()
+{
+  static omniNilDynAny* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynAny;
+    registerNilCorbaObject(_the_nil_ptr);
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
+}
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// omniNilDynFixed //////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class omniNilDynFixed : public DynamicAny::DynFixed, public omniNilDynAny {
+public:
+  omniNilDynFixed() : DynamicAny::DynAny(1) {}
+
+  virtual char* get_value() {
     _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::Boolean set_value(const char* val) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynFixed::_PD_repoId) )
+      return (DynamicAny::DynFixed_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
     return 0;
   }
 };
 
 OMNI_NAMESPACE_END(omni)
 
-CORBA::DynAny_ptr
-CORBA::DynAny::_nil()
+DynamicAny::DynFixed_ptr
+DynamicAny::DynFixed::_nil()
 {
-  static omniNilDynAny* _the_nil_ptr = 0;
+  static omniNilDynFixed* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynAny;
-    registerTrackedObject(_the_nil_ptr);
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynFixed;
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -256,34 +426,48 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////// omniNilDynEnum ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynEnum : public CORBA::DynEnum, public omniNilDynAny {
+class omniNilDynEnum : public DynamicAny::DynEnum, public omniNilDynAny {
 public:
-  virtual char* value_as_string() {
+  omniNilDynEnum() : DynamicAny::DynAny(1) {}
+
+  virtual char* get_as_string() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void value_as_string(const char* value) {
+  virtual void set_as_string(const char* value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
-  virtual CORBA::ULong value_as_ulong() {
+  virtual CORBA::ULong get_as_ulong() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void value_as_ulong(CORBA::ULong value) {
+  virtual void set_as_ulong(CORBA::ULong value) {
     _CORBA_invoked_nil_pseudo_ref();
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynEnum::_PD_repoId) )
+      return (DynamicAny::DynEnum_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
   }
 };
 
 OMNI_NAMESPACE_END(omni)
 
-CORBA::DynEnum_ptr
-CORBA::DynEnum::_nil()
+DynamicAny::DynEnum_ptr
+DynamicAny::DynEnum::_nil()
 {
   static omniNilDynEnum* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynEnum;
-    registerTrackedObject(_the_nil_ptr);
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -295,8 +479,10 @@ OMNI_NAMESPACE_BEGIN(omni)
 ////////////////////////// omniNilDynStruct //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynStruct : public CORBA::DynStruct, public omniNilDynAny {
+class omniNilDynStruct : public DynamicAny::DynStruct, public omniNilDynAny {
 public:
+  omniNilDynStruct() : DynamicAny::DynAny(1) {}
+
   virtual char*  current_member_name() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
@@ -305,25 +491,44 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return CORBA::tk_null;
   }
-  virtual CORBA::NameValuePairSeq* get_members() {
+  virtual DynamicAny::NameValuePairSeq* get_members() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void set_members(const CORBA::NameValuePairSeq& NVSeqVal) {
+  virtual void set_members(const DynamicAny::NameValuePairSeq& NVSeqVal) {
     _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual DynamicAny::NameDynAnyPairSeq* get_members_as_dyn_any() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_members_as_dyn_any(const DynamicAny::NameDynAnyPairSeq& NVSeqVal) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynStruct::_PD_repoId) )
+      return (DynamicAny::DynStruct_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
   }
 };
 
 OMNI_NAMESPACE_END(omni)
 
-CORBA::DynStruct_ptr
-CORBA::DynStruct::_nil()
+DynamicAny::DynStruct_ptr
+DynamicAny::DynStruct::_nil()
 {
   static omniNilDynStruct* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynStruct;
-    registerTrackedObject(_the_nil_ptr);
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -335,16 +540,24 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////// omniNilDynUnion //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynUnion : public CORBA::DynUnion, public omniNilDynAny {
+class omniNilDynUnion : public DynamicAny::DynUnion, public omniNilDynAny {
 public:
-  virtual CORBA::Boolean set_as_default() {
+  omniNilDynUnion() : DynamicAny::DynAny(1) {}
+
+  virtual DynamicAny::DynAny_ptr get_discriminator() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void set_as_default(CORBA::Boolean value) {
+  virtual void set_discriminator(DynamicAny::DynAny_ptr d) {
     _CORBA_invoked_nil_pseudo_ref();
   }
-  virtual CORBA::DynAny_ptr discriminator() {
+  virtual void set_to_default_member() {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void set_to_no_active_member() {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual CORBA::Boolean has_no_active_member() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
@@ -352,33 +565,46 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return CORBA::tk_null;
   }
-  virtual CORBA::DynAny_ptr member() {
+  virtual DynamicAny::DynAny_ptr member() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual char*  member_name() {
+  virtual char* member_name() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
-  }
-  virtual void member_name(const char* value) {
-    _CORBA_invoked_nil_pseudo_ref();
   }
   virtual CORBA::TCKind member_kind() {
     _CORBA_invoked_nil_pseudo_ref();
     return CORBA::tk_null;
   }
+  virtual CORBA::Boolean is_set_to_default_member() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynUnion::_PD_repoId) )
+      return (DynamicAny::DynUnion_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
+  }
 };
 
 OMNI_NAMESPACE_END(omni)
 
-CORBA::DynUnion_ptr
-CORBA::DynUnion::_nil()
+DynamicAny::DynUnion_ptr
+DynamicAny::DynUnion::_nil()
 {
   static omniNilDynUnion* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynUnion;
-    registerTrackedObject(_the_nil_ptr);
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -390,34 +616,55 @@ OMNI_NAMESPACE_BEGIN(omni)
 ///////////////////////// omniNilDynSequence /////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynSequence : public CORBA::DynSequence, public omniNilDynAny {
+class omniNilDynSequence : public DynamicAny::DynSequence, public omniNilDynAny {
 public:
-  virtual CORBA::ULong length() {
+  omniNilDynSequence() : DynamicAny::DynAny(1) {}
+
+  virtual CORBA::ULong get_length() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void length (CORBA::ULong value) {
+  virtual void set_length(CORBA::ULong value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
-  virtual CORBA::AnySeq* get_elements() {
+  virtual DynamicAny::AnySeq* get_elements() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void set_elements(const CORBA::AnySeq& value) {
+  virtual void set_elements(const DynamicAny::AnySeq& value) {
     _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual DynamicAny::DynAnySeq* get_elements_as_dyn_any() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_elements_as_dyn_any(const DynamicAny::DynAnySeq& value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynSequence::_PD_repoId) )
+      return (DynamicAny::DynSequence_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
   }
 };
 
 OMNI_NAMESPACE_END(omni)
 
-CORBA::DynSequence_ptr
-CORBA::DynSequence::_nil()
+DynamicAny::DynSequence_ptr
+DynamicAny::DynSequence::_nil()
 {
   static omniNilDynSequence* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynSequence;
-    registerTrackedObject(_the_nil_ptr);
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -429,27 +676,94 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////// omniNilDynArray //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynArray : public CORBA::DynArray, public omniNilDynAny {
+class omniNilDynArray : public DynamicAny::DynArray, public omniNilDynAny {
 public:
-  virtual CORBA::AnySeq* get_elements() {
+  omniNilDynArray() : DynamicAny::DynAny(1) {}
+
+  virtual DynamicAny::AnySeq* get_elements() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual void set_elements(const CORBA::AnySeq& value) {
+  virtual void set_elements(const DynamicAny::AnySeq& value) {
     _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual DynamicAny::DynAnySeq* get_elements_as_dyn_any() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_elements_as_dyn_any(const DynamicAny::DynAnySeq& value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynArray::_PD_repoId) )
+      return (DynamicAny::DynArray_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
   }
 };
 
 OMNI_NAMESPACE_END(omni)
 
-CORBA::DynArray_ptr
-CORBA::DynArray::_nil()
+DynamicAny::DynArray_ptr
+DynamicAny::DynArray::_nil()
 {
   static omniNilDynArray* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynArray;
-    registerTrackedObject(_the_nil_ptr);
+    registerNilCorbaObject(_the_nil_ptr);
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
+}
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// omniNilDynAnyFactory /////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class omniNilDynAnyFactory : public virtual DynamicAny::DynAnyFactory {
+public:
+  omniNilDynAnyFactory() : DynamicAny::DynAnyFactory(1) {}
+
+  virtual DynamicAny::DynAny_ptr
+  create_dyn_any(const CORBA::Any& value) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual DynamicAny::DynAny_ptr
+  create_dyn_any_from_type_code(CORBA::TypeCode_ptr type) {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAnyFactory::_PD_repoId) )
+      return (DynamicAny::DynAnyFactory_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
+  }
+};
+
+OMNI_NAMESPACE_END(omni)
+
+DynamicAny::DynAnyFactory_ptr
+DynamicAny::DynAnyFactory::_nil()
+{
+  static omniNilDynAnyFactory* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynAnyFactory;
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

@@ -57,7 +57,7 @@ CORBA::UnknownUserException::exception()
 
 
 void
-CORBA::UnknownUserException::_raise()
+CORBA::UnknownUserException::_raise() const
 {
   throw *this;
 }

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.14  2001/10/17 16:44:06  dpg1
+# Update DynAny to CORBA 2.5 spec, const Any exception extraction.
+#
 # Revision 1.3.2.13  2001/09/19 17:26:47  dpg1
 # Full clean-up after orb->destroy().
 #
@@ -636,7 +639,7 @@ CORBA::Exception::insertExceptionToAnyNCP @scoped_name@::insertToAnyFnNCP = 0;
 
 @scoped_name@::~@name@() {}
 
-void @scoped_name@::_raise() { throw *this; }
+void @scoped_name@::_raise() const { throw *this; }
 
 @scoped_name@* @scoped_name@::_downcast(CORBA::Exception* _e) {
   return (@name@*) _NP_is_a(_e, \"Exception/UserException/@scoped_name@\");
