@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14  2000/01/20 18:26:45  djs
+# Moved large C++ output strings into an external template file
+#
 # Revision 1.13  2000/01/19 09:35:48  djs
 # *** empty log message ***
 #
@@ -81,10 +84,8 @@
 import string, re
 
 from omniidl import idlast, idltype, idlutil
-
 from omniidl.be.cxx import tyutil, util, config, name
-
-from omniidl.be.cxx.dynskel import tcstring
+from omniidl.be.cxx.dynskel import tcstring, template
 
 import typecode
 
@@ -191,7 +192,8 @@ def external_linkage(decl, mangled_name = ""):
     tc_unscoped_name = "_tc_" + tyutil.name(scopedName)
 
     if mangled_name == "":
-        mangled_name = mangleName(config.privatePrefix() + "_tc_", decl.scopedName())
+        mangled_name = mangleName(config.privatePrefix() + "_tc_",
+                                  decl.scopedName())
 
     if alreadyDefined(tc_name):
         return
@@ -207,31 +209,25 @@ const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
                   tc_name = tc_name, mangled_name = mangled_name)
         return
 
-    where.out("""\
-#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
-// MSVC++ does not give the constant external linkage otherwise.""")
+    # do we need to make a namespace alias?
+    namespace = ""
     if len(scope) > 1:
         flatscope = string.join(scope, "_")
         realscope = string.join(scope, "::")
-        where.out("""\
-  namespace @flat_scope@ = @real_scope@;""",
-                   flat_scope = flatscope, real_scope = realscope)
+        namespace = "namespace " + flatscope + " = " + realscope + ";"
     elif scope == []:
         return
     else:
         flatscope = scope[0]
 
-    env = name.Environment()
-            
-    where.out("""\
-namespace @scope@ {
-  const CORBA::TypeCode_ptr @tc_unscoped_name@ = @mangled_name@;
-}
-#else
-const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
-#endif
-""", scope = flatscope, tc_name = tc_name, mangled_name = mangled_name,
-               tc_unscoped_name = tc_unscoped_name)
+    where.out(template.external_linkage,
+              namespace = namespace,
+              scope = flatscope,
+              tc_name = tc_name,
+              mangled_name = mangled_name,
+              tc_unscoped_name = tc_unscoped_name)
+    
+
         
 
 # Gets a TypeCode instance for a type
