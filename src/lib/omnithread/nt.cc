@@ -518,6 +518,8 @@ omni_thread::~omni_thread(void)
     DB(cerr << "destructor called for thread " << id() << endl);
     if (!CloseHandle(handle))
 	throw omni_thread_fatal(GetLastError());
+    if (!CloseHandle(cond_semaphore))
+	throw omni_thread_fatal(GetLastError());
 }
 
 
