@@ -1,3 +1,12 @@
+Thu Sep 21 12:06:06 BST 2000 dpg1
+=================================
+
+- Add a user check to RefCountServantBase::_add_ref() which complains
+  if it is called when the reference count is zero.
+
+src/lib/omniORB2/orbcore/portableserver.cc
+
+
 Thu Sep 21 09:46:16 BST 2000 djs
 ================================
 
