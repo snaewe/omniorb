@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.8  1998/01/20 19:13:46  sll
+  Added support for OpenVMS.
+
   Revision 1.7  1997/12/12 20:02:33  sll
   Generate reference to version variable omniORB_x_y in skel file.
 
@@ -55,7 +58,13 @@
 #include <stdio.h>
 #else
 #include <unistd.h>
+
+#if defined(__VMS) && __VMS_VER < 70000000
+#include <omniVms/unlink.hxx>
 #endif
+
+#endif
+
 
 o2be_root::o2be_root(UTL_ScopedName *n, UTL_StrList *p)
   : AST_Root(n,p),

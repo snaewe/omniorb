@@ -73,6 +73,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 ** 4. Otherwise, for the single file, invoke DRV_drive
 */
 
+#include <stdlib.h>
 #include <stdio.h>
 
 #include	<idl.hh>
@@ -80,6 +81,14 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<drv_private.hh>
 #include    <drv_link.hh>
+
+#if defined(__VMS) && __VMS_VER < 70000000
+#include <omniVms/unlink.hxx>
+#endif
+
+#ifndef EXIT_FAILURE
+#define EXIT_FAILURE 1
+#endif
 
 static void
 DRV_version()
@@ -152,8 +161,22 @@ DRV_drive(char *s)
 	 << GTDEVEL(": Could not remove cpp output file ")
 	 << (idl_global->temp_filename())->get_string()
 	 << "\n";
-     exit(99);
+     exit(EXIT_FAILURE);
 	 }
+#endif
+
+#ifdef __VMS
+
+    // Remove the temporary file (containing the preprocessor output).
+ 
+  if (unlink((idl_global->temp_filename())->get_string()) == -1) {
+    cerr << idl_global->prog_name()
+         << GTDEVEL(": Could not remove cpp output file ")
+         << (idl_global->temp_filename())->get_string()
+         << "\n";
+    exit(EXIT_FAILURE);
+  }
+
 #endif
 
 
@@ -174,7 +197,7 @@ DRV_drive(char *s)
      * Call BE_abort to allow a BE to clean up after itself
      */
     (*DRV_BE_abort)();
-    exit((int) idl_global->err_count());
+    exit(EXIT_FAILURE);
   }
   /*
    * Dump the code
@@ -248,12 +271,12 @@ main(int argc, char **argv)
    */
   if (DRV_nfiles > 1) {
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__VMS)
 
 	  cerr << idl_global->prog_name()
 		   << ": Only one IDL file may be specified at the command line."
 	 	   << endl;
-	  exit(-1);
+	  exit(EXIT_FAILURE);
 #else
 
 	 

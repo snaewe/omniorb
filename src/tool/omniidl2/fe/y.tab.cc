@@ -96,7 +96,7 @@ typedef union
 # define PRAGMA_VERSION 302
 # define PRAGMA_PREFIX 303
 
-#ifdef __STDC__
+#if defined(__STDC__) || defined(__cplusplus)
 #include <stdlib.h>
 #include <string.h>
 #else
@@ -104,7 +104,7 @@ typedef union
 #include <memory.h>
 #endif
 
-#if !defined(__WIN32__) && !defined(__nextstep__)
+#if !defined(__WIN32__) && !defined(__nextstep__) && !defined(__VMS)
 #include <values.h>
 #endif
 
@@ -3345,3 +3345,6 @@ case 295:
 	goto yystack;		/* reset registers in driver code */
 }
 
+#ifdef __VMS
+# line 3349 "y_tab.cc"
+#endif

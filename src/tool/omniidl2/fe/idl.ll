@@ -264,9 +264,22 @@ stripped_name(UTL_String *fn)
     if (n == NULL)
 	return NULL;
     l = strlen(n);
-#ifdef __NT__
+#if defined(__WIN32__)
     for (n += l; l > 0 && *n != 92; l--, n--);
     if (*n == 92) n++;
+#elif defined(__VMS)
+
+    for (n += l; l > 0 && *n != ';'; l--, n--);
+    if (*n == ';') {
+        static UTL_String temp;
+        temp = UTL_String(fn);
+        n = temp.get_string();
+        n[l] = 0;
+    }
+
+    for (n += l; l > 0 && *n != ']' && *n != ':'; l--, n--);
+    if (*n == ']' || *n==':') n++;
+
 #else
     for (n += l; l > 0 && *n != '/'; l--, n--);
     if (*n == '/') n++;

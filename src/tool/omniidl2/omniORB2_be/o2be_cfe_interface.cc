@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.9  1998/01/20 19:13:38  sll
+  Added support for OpenVMS.
+
   Revision 1.8  1997/12/09 19:55:22  sll
   *** empty log message ***
 
@@ -55,7 +58,7 @@
 #include <o2be.h>
 
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__VMS) && __VMS_VER < 60200000
 
 // NT doesn't have an implementation of getopt() - supply a getopt() for this program:
 

@@ -197,7 +197,7 @@ UTL_Scope::UTL_Scope(AST_Decl::NodeType nt)
 	   pd_parents_allocated(0),
 	   pd_parents_used(0)
 {
-};
+}
 
 /*
  * Private operations

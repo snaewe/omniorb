@@ -98,9 +98,12 @@ FE_yyparse()
     idl_global->root()->call_add();
   }
 
-#ifdef __WIN32__
+#if defined(__WIN32__)
 	fclose(yyin);
    _close(1); // Close the file [stdin points to the file] -- so NT can delete it.
+#elif defined(__VMS)
+   fclose((FILE*)yyin); // likewise for VMS
+   close(1);
 #endif
 
   return result;

@@ -90,10 +90,14 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #endif
 #endif
 
-#if defined(__osf1__)
+#if defined(__osf1__) || defined(__VMS)
 #include	<unistd.h>		// POSIX standard types
 #include	<wait.h>		// POSIX definition of wait()
 extern "C" char * mktemp(char *);
+
+#if defined(__VMS) && __VMS_VER < 70000000
+#include <omniVms/unlink.hxx>
+#endif
 
 #endif
 
@@ -126,6 +130,10 @@ extern "C" char * mktemp(char *);
 #include <io.h>
 #include <process.h>
 #include <sys/stat.h>
+#endif
+
+#ifndef EXIT_FAILURE
+#define EXIT_FAILURE 1
 #endif
 
 #undef	MAX_ARGLIST
@@ -224,12 +232,12 @@ DRV_copy_input(FILE *fin, char *fn)
 	 << GTDEVEL(": cannot open temp file ")
 	 << fn
 	 << GTDEVEL(" for writing\n");
-    exit(99);
+    exit(EXIT_FAILURE);
   }
   if (fin == NULL) {
       cerr << idl_global->prog_name()
            << GTDEVEL(": cannot open input file\n");
-      exit(99);
+      exit(EXIT_FAILURE);
   }
   while (DRV_get_line(fin))
     fprintf(f, "%s\n", drv_line);
@@ -249,9 +257,12 @@ DRV_stripped_name(char *fn)
     if (n == NULL)
 	return NULL;
     l = strlen(n);
-#ifdef __WIN32__
+#if defined(__WIN32__)
     for (n += l; l > 0 && *n != '\\'; l--, n--);
     if (*n == '\\') n++;
+#elif defined(__VMS)
+    for (n += l; l > 0 && *n != ']' && *n != ':'; l--, n--);
+    if (*n == ']' || *n == ':') n++;
 #else
     for (n += l; l > 0 && *n != '/'; l--, n--);
     if (*n == '/') n++;
@@ -267,7 +278,7 @@ static char	tmp_file[128];
 static char	tmp_ifile[128];
 
 
-#ifndef __WIN32__
+#if !defined(__WIN32__) && !defined(__VMS)
 /*
  * Pass input through preprocessor
  */
@@ -330,14 +341,14 @@ DRV_pre_proc(char *myfile)
         cerr << idl_global->prog_name()
     	  << GTDEVEL(": cannot open temp file ")
  	  << tmp_file << " for writing\n";
-        exit(99);
+        exit(EXIT_FAILURE);
       }
       int result = dup2(fd, 1);
       if (result < 0) {
         cerr << idl_global->prog_name()
     	  << GTDEVEL(": temp file ")
   	  << tmp_file << " dup error\n";
-        exit(99);
+        exit(EXIT_FAILURE);
       }
       close(fd);
     }
@@ -346,10 +357,10 @@ DRV_pre_proc(char *myfile)
          << GTDEVEL(": execvp of ")
 	 << arglist[0]
 	 << GTDEVEL(" failed\n");
-    exit(99);
+    exit(EXIT_FAILURE);
   case -1:
     cerr << idl_global->prog_name() << GTDEVEL(": fork failed\n");
-    exit(99);
+    exit(EXIT_FAILURE);
   default:	/* Parent - wait */
 #if defined(hpux) || defined(__hpux)
     sleep(1);  // try to get around libc_r defect
@@ -405,7 +416,7 @@ DRV_pre_proc(char *myfile)
 	 << GTDEVEL(": Could not open cpp output file ")
 	 << tmp_file
 	 << "\n";
-    exit(99);
+    exit(EXIT_FAILURE);
   }
   (*DRV_FE_set_yyin)((File *) yyin);
   if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC) {
@@ -418,7 +429,7 @@ DRV_pre_proc(char *myfile)
 	   << GTDEVEL(": Could not remove cpp input file ")
 	   << tmp_ifile
 	   << "\n";
-      exit(99);
+      exit(EXIT_FAILURE);
     }
   }
   if (unlink(tmp_file) != 0) {
@@ -426,13 +437,13 @@ DRV_pre_proc(char *myfile)
 	 << GTDEVEL(": Could not remove cpp output file ")
 	 << tmp_file
 	 << "\n";
-    exit(99);
+    exit(EXIT_FAILURE);
   }
   if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC)
     exit(0);
 }
 
-#else
+#elif defined(__WIN32__)
 
 // WIN 32 Version
 
@@ -524,14 +535,14 @@ DRV_pre_proc(char *myfile)
         cerr << idl_global->prog_name()
     	  << GTDEVEL(": cannot open temp file ")
  	  << tmp_file << " for writing\n";
-        exit(99);
+        exit(EXIT_FAILURE);
       }
       int result = _dup2(fd, _fileno(stdout));
       if (result < 0) {
         cerr << idl_global->prog_name()
     	  << GTDEVEL(": temp file ")
   	  << tmp_file << " dup error\n";
-        exit(99);
+        exit(EXIT_FAILURE);
       }
       _close(fd);
     }
@@ -552,7 +563,7 @@ DRV_pre_proc(char *myfile)
 						 << GTDEVEL(": Could not remove cpp input file ")
 						 << tmp_ifile
 						 << "\n";
-					exit(99);	
+					exit(EXIT_FAILURE);	
 					}
 			 }
 
@@ -561,11 +572,11 @@ DRV_pre_proc(char *myfile)
 					  << GTDEVEL(": Could not remove cpp output file ")
 					  << tmp_file
 					  << "\n";
-			     exit(99);
+			     exit(EXIT_FAILURE);
 			}
 
 
-		    exit(99);
+		    exit(EXIT_FAILURE);
 		}
   }
   FILE * yyin = fopen(tmp_file, "r+");
@@ -574,7 +585,7 @@ DRV_pre_proc(char *myfile)
 	 << GTDEVEL(": Could not open cpp output file ")
 	 << tmp_file
 	 << "\n";
-    exit(99);
+    exit(EXIT_FAILURE);
   }
 
   (*DRV_FE_set_yyin)((File *) yyin);
@@ -590,7 +601,7 @@ DRV_pre_proc(char *myfile)
 	   << GTDEVEL(": Could not remove cpp input file ")
 	   << tmp_ifile
 	   << "\n";
-      exit(99);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -607,10 +618,186 @@ DRV_pre_proc(char *myfile)
 	 << GTDEVEL(": Could not remove cpp output file ")
 	 << (idl_global->temp_filename())->get_string()
 	 << "\n";
-     exit(99);
+     exit(EXIT_FAILURE);
 	 }
   
     exit(0);
   }
+}
+#elif defined(__VMS)
+
+// OpenVMS Version
+
+#include <string>
+
+#if defined(__DECCXX) && __DECCXX_VER < 60000000 && !defined(std)
+// pretend we have an std namespace
+#define std
+#endif
+
+/*
+ * Pass input through preprocessor
+ */
+void
+DRV_pre_proc(char *myfile)
+{
+    int	wait_status;
+
+    long	readfromstdin = I_FALSE;
+
+    char	catbuf[512];
+
+
+    strcpy(tmp_file, "idlf_XXXXXX");
+    strcpy(tmp_ifile, "idli_XXXXXX");
+
+    (void) mktemp(tmp_file); strcat(tmp_file, ".cc");
+    (void) mktemp(tmp_ifile); strcat(tmp_ifile, ".cc");
+
+    if (strcmp(myfile, "standard input") == 0) {
+	idl_global->set_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+	idl_global->set_main_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+	idl_global->
+	    set_stripped_filename(
+		(*DRV_FE_new_UTL_String)(DRV_stripped_name(tmp_ifile))
+	    );
+	idl_global->set_real_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+	DRV_copy_input(stdin, tmp_ifile);
+	idl_global->set_read_from_stdin(I_TRUE);
+    } else {
+	if (copy_src) {
+	  FILE *fd = fopen(myfile, "r");
+	  DRV_copy_input(fd, tmp_ifile);
+	  fclose(fd);
+	}
+	idl_global->set_read_from_stdin(I_FALSE);
+	idl_global->set_filename((*DRV_FE_new_UTL_String)(myfile));
+	idl_global->set_main_filename((*DRV_FE_new_UTL_String)(myfile));
+	idl_global->
+	    set_stripped_filename(
+		(*DRV_FE_new_UTL_String)(DRV_stripped_name(myfile))
+	    );
+	if (copy_src) {
+	  idl_global->set_real_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+	}
+	else {
+	  idl_global->set_real_filename((*DRV_FE_new_UTL_String)(myfile));
+	}
+    }
+
+
+    {
+	if (copy_src)
+	  DRV_cpp_putarg(tmp_ifile);
+	else 
+	  DRV_cpp_putarg(myfile);
+	std::string commandLine(arglist[0]);
+	for (int i(1); arglist[i]; ++i) {
+	    std::string unixArg(arglist[i]);
+	    std::string vmsArg;
+
+	    if (unixArg[0]=='-') {
+		switch(unixArg[1]) {
+		    case 'E': {
+			vmsArg = std::string("/Prep=") + tmp_file;
+		    } break;
+		    case 'I': {
+			vmsArg = "/Incl=\"";
+			std::string includePath(unixArg.substr(2));
+			if (!includePath.empty() && includePath != ".") {
+			    vmsArg += includePath;
+			}
+			vmsArg += "\"";
+		    } break;
+		    case 'D': {
+			vmsArg = "/Defi=\"" + unixArg.substr(2) + "\"";
+		    } break;
+		    default: {
+			cerr << "Unix preprocessor switch: "
+			     << unixArg
+			     << " does not have corresponding VMS qualifier."
+			     << endl;
+		    }
+		}
+	    } else {
+		vmsArg = unixArg;
+	    }
+	    commandLine += " ";
+	    commandLine += vmsArg;
+	}
+
+	int spawn_rc = system(commandLine.c_str());
+	if (spawn_rc != 0 && spawn_rc & 1==0) {
+	    cerr << idl_global->prog_name() 
+		     << GTDEVEL(": command ")
+		     << commandLine
+		     << GTDEVEL(" failed\n");
+	    cerr << "Preprocessor returned non-zero status " << spawn_rc
+		 << endl;
+			
+	    if (copy_src) {
+		if (unlink(tmp_ifile) == -1) {
+		    cerr << idl_global->prog_name()
+			     << GTDEVEL(": Could not remove cpp input file ")
+			     << tmp_ifile
+			     << "\n";
+		    exit(EXIT_FAILURE);	
+		}
+	    }
+
+	    if (unlink(tmp_file) == -1) {
+		     cerr << idl_global->prog_name()
+			      << GTDEVEL(": Could not remove cpp output file ")
+			      << tmp_file
+			      << "\n";
+		 exit(EXIT_FAILURE);
+	    }
+
+
+	    exit(EXIT_FAILURE);
+	}   // system(...) failed
+    }	// scope for no apparent reason.
+    FILE * yyin = fopen(tmp_file, "r+");
+    if (yyin == NULL) {
+	cerr << idl_global->prog_name()
+	     << GTDEVEL(": Could not open cpp output file ")
+	     << tmp_file
+	     << "\n";
+	exit(EXIT_FAILURE);
+    }
+
+    (*DRV_FE_set_yyin)((File *) yyin);
+    if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC) {
+	std::string command(
+	    std::string("type ") + tmp_file
+	);
+	system(command.c_str());
+    }
+    if (copy_src) {
+	if (unlink(tmp_ifile) == -1) {
+	    cerr << idl_global->prog_name()
+	       << GTDEVEL(": Could not remove cpp input file ")
+	       << tmp_ifile
+	       << "\n";
+	    exit(EXIT_FAILURE);
+	}
+    }
+
+
+    idl_global->set_temp_filename((*DRV_FE_new_UTL_String)(tmp_file));
+
+    if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC) {
+	/* Remove the temporary file [containing the preprocessor output. */
+	fclose(yyin);
+	if (unlink((idl_global->temp_filename())->get_string()) == -1) {
+	    cerr << idl_global->prog_name()
+	    << GTDEVEL(": Could not remove cpp output file ")
+	    << (idl_global->temp_filename())->get_string()
+	    << "\n";
+	    exit(EXIT_FAILURE);
+	}
+  
+	exit(0);
+    }
 }
 #endif

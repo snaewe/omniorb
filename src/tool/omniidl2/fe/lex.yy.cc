@@ -152,8 +152,10 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include <fe_private.hh>
 
-#ifdef __WIN32__
+#if defined(__WIN32__)
 #include "y.tab.hh"
+#elif defined(__VMS)
+#include "y_tab.hh"
 #else
 #include <y.tab.hh>
 #endif
@@ -599,9 +601,22 @@ stripped_name(UTL_String *fn)
     if (n == NULL)
 	return NULL;
     l = strlen(n);
-#ifdef __WIN32__
+#if defined(__WIN32__)
     for (n += l; l > 0 && *n != 92; l--, n--);
     if (*n == 92) n++;
+#elif defined(__VMS)
+
+    for (n += l; l > 0 && *n != ';'; l--, n--);
+    if (*n == ';') {
+        static UTL_String temp;
+        temp = UTL_String(fn);
+        n = temp.get_string();
+        n[l] = 0;
+    }
+
+    for (n += l; l > 0 && *n != ']' && *n != ':'; l--, n--);
+    if (*n == ']' || *n==':') n++;
+
 #else
     for (n += l; l > 0 && *n != '/'; l--, n--);
     if (*n == '/') n++;
@@ -642,8 +657,21 @@ idl_parse_line_and_file(char *buf)
   *r = 0;
   if (*h == '\0')
     idl_global->set_filename(new String("standard input"));
-  else
+  else {
+#ifdef __VMS
+    // kill version
+    char* v(r);
+    for(--v; v != h && *v != ';'; --v);
+    if (*v==';') *v = 0;
+    else v = r;
+    // kill device/directory:
+    for(r=v; r != h && *r != ']' && *r != ':'; --r) {
+        if(isalpha(*r)) *r = tolower(*r);
+    }
+    if (*r==']' || *r==':') h = r+1;
+#endif
     idl_global->set_filename(new String(h));
+  }
 
   idl_global->set_in_main_file(
     (idl_global->filename()->compare(idl_global->real_filename())) ?
@@ -2637,3 +2665,6 @@ yyunput(c)
 {
 	unput(c);
 	}
+#ifdef __VMS
+# line 2669 "lex_yy.cc"
+#endif
