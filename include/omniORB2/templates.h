@@ -28,9 +28,12 @@
 
 /*
   $Log$
-  Revision 1.14  1998/03/05 11:20:21  sll
-  Backoff previous change to Sequence_Array_Var.
+  Revision 1.15  1998/03/09 17:15:33  ewc
+  New NP_getSlice() function in _Forany template.
 
+ * Revision 1.14  1998/03/05  11:20:21  sll
+ * Backoff previous change to Sequence_Array_Var.
+ *
   Revision 1.13  1998/03/04 15:07:50  ewc
   Small bug fix to Sequence_Var types
 
@@ -410,6 +413,8 @@ public:
   inline const T& operator[] (_CORBA_ULong index) const { return *( (const T*) (pd_data + index)); }
   inline operator T* () const { return pd_data; }
   inline operator const T* () const { return (const T*) pd_data; }
+
+  inline T* NP_getSlice() const { return pd_data; }
 private:
   T* pd_data;
 };
