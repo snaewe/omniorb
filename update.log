@@ -1,3 +1,20 @@
+Thu Jul 10 22:44:36 BST 2003 dgrisby
+====================================
+
+- Value chunks should start after URL / repoids.
+
+include/omniORB4/cdrStream.h
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+- Missed methods in ValueAbs.
+
+src/tool/omniidl/python/omniidl/idlast.py
+
+- Use re-entrant GIOP 1.0 size calc.
+
+src/lib/omniORB/orbcore/giopImpl10.cc
+
+
 Tue May 20 17:35:21 BST 2003 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2003/07/10 21:55:56  dgrisby
+  Use re-entrant GIOP 1.0 size calc.
+
   Revision 1.1.6.1  2003/03/23 21:02:16  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -118,9 +121,10 @@
 // the total size of the message before the actual marshalling.
 // The implementation can actually avoid this calculation if full message
 // can be fully buffered.
-// We however have to force pre-calculation because at the moment, the Any
-// marshalling implementation is not re-entrant. 
-#define PRE_CALCULATE_MESSAGE_SIZE
+// The version without pre-calculation can only work if all
+// marshalling code is re-entrant.
+
+//#define PRE_CALCULATE_MESSAGE_SIZE
 
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -1041,6 +1045,7 @@ giopImpl10::marshalRequestHeader(giopStream* g) {
     *((CORBA::ULong*)(hdr+8)) = cs.total();
 
 #if defined(PRE_CALCULATE_MESSAGE_SIZE)
+    omniORB::logs(30, "Pre-calculating GIOP 1.0 message size.");
     giop_c.calldescriptor()->marshalArguments(cs);
     CORBA::ULong msgsz = cs.total() - 12;
     *((CORBA::ULong*)(hdr + 8)) = msgsz;
@@ -1130,6 +1135,7 @@ giopImpl10::marshalReplyHeader(giopStream* g) {
     *((CORBA::ULong*)(hdr+8)) = cs.total();
 
 #if defined(PRE_CALCULATE_MESSAGE_SIZE)
+    omniORB::logs(30, "Pre-calculating GIOP 1.0 message size.");
     giop_s.calldescriptor()->marshalReturnedValues(cs);
     CORBA::ULong msgsz = cs.total() - 12;
     *((CORBA::ULong*)(hdr + 8)) = msgsz;
