@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/11/15 17:16:23  sll
+  Added char, wchar codeset convertor support to cdrStream.
+
   Revision 1.1.2.4  2000/11/09 12:27:49  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -89,8 +92,10 @@ class cdrStream {
 public:
 
   cdrStream() : pd_unmarshal_byte_swap(0), pd_marshal_byte_swap(0),
-                pd_inb_end(0), pd_inb_mkr(0),
-                pd_outb_end(0), pd_outb_mkr(0) {}
+		pd_inb_end(0), pd_inb_mkr(0),
+		pd_outb_end(0), pd_outb_mkr(0),
+		pd_tcs_c(0), pd_tcs_w(0) { }
+    
   virtual ~cdrStream() {}
 
 #ifndef CdrMarshal
@@ -130,13 +135,19 @@ public:
 #endif
 
   inline void marshalChar(_CORBA_Char a) {
-    CdrMarshal((*this),_CORBA_Char,omni::ALIGN_1,a);
+    ncs_c->marshalChar(*this,pd_tcs_c,a);
   }
 
   inline _CORBA_Char unmarshalChar() {
-    _CORBA_Char a;
-    CdrUnMarshal((*this),_CORBA_Char,omni::ALIGN_1,a);
-    return a;
+    return ncs_c->unmarshalChar(*this,pd_tcs_c);
+  }
+
+  inline void marshalWChar(_CORBA_WChar a) {
+    ncs_w->marshalWChar(*this,pd_tcs_w,a);
+  }
+
+  inline _CORBA_WChar unmarshalWChar() {
+    return ncs_w->unmarshalWChar(*this,pd_tcs_w);
   }
 
   inline void marshalOctet(_CORBA_Octet a) {
@@ -312,13 +323,25 @@ public:
 
 #endif
 
-  void marshalString(const char*,int bounded=0);
-  char* unmarshalString(int bounded=0);
+  inline void marshalString(const char* s,int bounded=0) {
+    ncs_c->marshalString(*this,pd_tcs_c,bounded,s);
+  }
 
-  // void marshalWChar(WChar a);
-  // WChar unmarshalWChar();
-  // void marshalWString(const WChar*,int bounded=0);
-  // char* unmarshalWString(int bounded=0);
+  inline char* unmarshalString(int bounded=0) {
+    char* s;
+    ncs_c->unmarshalString(*this,pd_tcs_c,bounded,s);
+    return s;
+  }
+  
+  inline void marshalWString(const _CORBA_WChar* s,int bounded=0) {
+    ncs_w->marshalWString(*this,pd_tcs_w,bounded,s);
+  }
+
+  inline _CORBA_WChar* unmarshalWString(int bounded=0) {
+    _CORBA_WChar* s;
+    ncs_w->unmarshalWString(*this,pd_tcs_w,bounded,s);
+    return s;
+  }
 
   virtual void put_octet_array(const _CORBA_Octet* b, int size,
 			       omni::alignment_t align=omni::ALIGN_1) = 0;
@@ -493,8 +516,23 @@ protected:
   // Return the maximum size that can be asked with reserveOutputSpace().
   // The data block should start at alignment <align>.
 
+  omniCodeSet::TCS_C* pd_tcs_c;
+  // Transmission code set convertor for char and string
+
+  omniCodeSet::TCS_W* pd_tcs_w;
+  // Transmission code set convertor for wchar and wstring
 
 public:
+
+  // Access functions to the char and wchar code set convertors
+  inline omniCodeSet::TCS_C* TCS_C() const { return pd_tcs_c; }
+  inline void TCS_C(omniCodeSet::TCS_C* c) { pd_tcs_c = c; }
+  inline omniCodeSet::TCS_W* TCS_W() const { return pd_tcs_w; }
+  inline void TCS_W(omniCodeSet::TCS_W* c) { pd_tcs_w = c; }
+
+  // ORB wide native codes convertor
+  static _core_attr omniCodeSet::NCS_C* ncs_c;
+  static _core_attr omniCodeSet::NCS_W* ncs_w;
 
   inline void
   unmarshalArrayChar(_CORBA_Short* a, int length)
@@ -637,6 +675,11 @@ public:
   // Constructors for a read-only buffered stream.
 
 
+  // By default, all cdrMemoryStream are initialised to use these two
+  // tcs.
+  static _core_attr omniCodeSet::TCS_C* default_tcs_c;
+  static _core_attr omniCodeSet::TCS_W* default_tcs_w;
+
 protected:
   _CORBA_Boolean pd_readonly_and_external_buffer;
   _CORBA_Boolean pd_clear_memory;
@@ -683,7 +726,14 @@ public:
 
 class cdrCountingStream : public cdrStream {
 public:
-  cdrCountingStream(size_t initialoffset = 0) : pd_total(initialoffset) {}
+  cdrCountingStream(omniCodeSet::TCS_C* tcs_c,
+		    omniCodeSet::TCS_W* tcs_w,
+		    size_t initialoffset = 0) : 
+    pd_total(initialoffset) { 
+    pd_tcs_c = tcs_c;
+    pd_tcs_w = tcs_w;
+  }
+
   ~cdrCountingStream() {}
 
   size_t total() { return pd_total; }
@@ -714,6 +764,7 @@ public:
 
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;
+
 private:
   size_t pd_total;
   
