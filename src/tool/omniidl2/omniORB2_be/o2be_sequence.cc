@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.28  1999/08/09 12:27:39  sll
+  Updated how _out name is generated
+
   Revision 1.27  1999/07/03 14:37:09  sll
   *** empty log message ***
 
@@ -216,7 +219,6 @@ o2be_sequence::o2be_sequence(AST_Expression* v, AST_Type* t)
 {
   pd_have_produced_tcParser_buildDesc_code = I_FALSE;
   pd_have_calc_rec_seq_offset = I_FALSE;
-  pd_out_adptarg_name = 0;
 }
 
 
@@ -1141,14 +1143,10 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
 const char*
 o2be_sequence::out_adptarg_name(o2be_typedef* tdef, AST_Decl* used_in)
 {
-  if( pd_out_adptarg_name )  return pd_out_adptarg_name;
-
   StringBuf out_type;
   out_type += tdef->unambiguous_name(used_in);
   out_type += "_out";
-  pd_out_adptarg_name = out_type.release();
-
-  return pd_out_adptarg_name;
+  return out_type.release();
 }
 
 

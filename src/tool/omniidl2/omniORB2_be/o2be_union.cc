@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.29  1999/08/09 12:27:57  sll
+  Updated how _out name is generated
+
   Revision 1.28  1999/07/02 19:14:38  sll
   Typedef of a typedef of a union now translates to a C++ typedef of a
   typedef.
@@ -115,77 +118,11 @@
 //
   */
 
-/*
-  Example:
-
-  // IDL
-  typedef octet Bytes[64];
-  Struct S { long len; };
-  interface A;
-  union U switch (long) {
-      case 1: long x;
-      case 2: Bytes y;
-      case 3: string z;
-      case 4:
-      case 5: S w;
-      default: A obj;
-  };
-  
-  // C++
-  typedef CORBA::Octet Bytes[64];
-  typedef CORBA::Octet Bytes_slice;
-  class Bytes_forany { ... };
-  struct S { CORBA::Long len; };
-  typedef ... A_ptr;
-
-  class U {
-  public:
-    U();
-    U(const U&);
-    ~U();
-    U &operator= (const U&);
-    
-    void _d(CORBA::Long);
-    Long _d() const;
-
-    void x(CORBA::Long);
-    CORBA::Long x() const;
-
-    void y(Bytes);
-    Bytes_slice *y() const;
-    
-    void z(char *);
-    void z(const char *);
-    void z(const CORBA::String_var &);
-    const char *z() const;
-
-    void w(const S &);
-    const S &w() const;
-    S &w();
-
-    void obj(A_ptr); 	 // release old objref, duplicate
-    A_ptr obj() const;   // no duplicate
-  };
-
-
-  class U_var {
-  public:
-    U_var();
-    U_var(U *);
-    U_var(const U_var &);
-    ~U_var();
-    U_var & operator= (U *);
-    U_var & operator= (const U_var &);
-    U *operator->();
-    operator U *&();
-    operator U &();
-    operator const U *() const;
-  };
-*/
 
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
+#include <o2be_stringbuf.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -345,21 +282,14 @@ o2be_union::produce_hdr(std::fstream& s)
 
 
   idl_bool has_fix_member = I_FALSE;
-#if 0
-  IND(s); s << "class " << uqname() << "_var;\n\n";
-#endif
   IND(s); s << "class " << uqname() << " {\n";
   IND(s); s << "public:\n\n";
   INC_INDENT_LEVEL();
 
-#if 0
-  IND(s); s << "typedef " << uqname() << "_var _var_type;\n";
-#else
   IND(s); s << "typedef _CORBA_ConstrType_"
 	    << ((isVariable())?"Variable":"Fix")
 	    << "_Var<" << uqname() << "> " 
 	      << "_var_type;\n";
-#endif
 
   o2be_nested_typedef::produce_hdr(s,this);
 
@@ -1286,44 +1216,18 @@ o2be_union::produce_hdr(std::fstream& s)
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 
-#if 1
   IND(s); s << "typedef " << uqname() << "::_var_type " 
 	    << uqname() << "_var;\n\n";
-#else
-  IND(s); s << "class " << uqname() << "_var : public _CORBA_ConstrType_"
-	    << ((isVariable())?"Variable":"Fix")
-	    << "_Var<" << uqname() << "> {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "public:\n";
-  IND(s); s << "inline " << uqname() << "_var() {}\n";
-  IND(s); s << "inline " << uqname() << "_var(" 
-	    << uqname() << "* p) : _CORBA_ConstrType_"
-	    << ((isVariable())?"Variable":"Fix")
-	    << "_Var<" << uqname() << ">(p) {}\n";
-  IND(s); s << "inline " << uqname() << "_var(const " 
-	    << uqname() << "_var& p) : _CORBA_ConstrType_"
-	    << ((isVariable())?"Variable":"Fix")
-	    << "_Var<" << uqname() << ">(p) {}\n";
-  IND(s); s << "inline " << uqname() << "_var& operator= (" 
-	    << uqname() << "* p) {\n";
-  IND(s); s << "_CORBA_ConstrType_"
-	    << ((isVariable())?"Variable":"Fix")
-	    << "_Var<" << uqname() << ">::operator=(p); return *this; \n";
-  IND(s); s << "}\n";
-  IND(s); s << "inline " << uqname() << "_var& operator= (const " 
-	    << uqname() << "_var& p) {\n";
-  IND(s); s << "_CORBA_ConstrType_"
-	    << ((isVariable())?"Variable":"Fix")
-	    << "_Var<" << uqname() << ">::operator=(p); return *this; \n";
-  IND(s); s << "}\n";
-  IND(s); s << "friend class " << out_adptarg_name(this) << ";\n";
 
-  DEC_INDENT_LEVEL();
-  IND(s); s << "};\n\n";
-#endif
-  IND(s); s << "typedef " << out_adptarg_name(this)  << " "
-	    << uqname()
-	    <<"_out;\n\n";
+  IND(s); s << "typedef ";
+  if (isVariable()) {
+    s << "_CORBA_ConstrType_Variable_OUT_arg";
+  }
+  else {
+    s << "_CORBA_ConstrType_Fix_OUT_arg";
+  }
+  s << "< " << uqname() << "," << uqname() << "_var > " 
+    << out_adptarg_name(this) << ";\n\n";
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
@@ -2771,48 +2675,10 @@ produce_default_break(o2be_union& u, std::fstream& s)
 const char*
 o2be_union::out_adptarg_name(AST_Decl* used_in)
 {
-  const char* tname;
-
-  if (isVariable()) {
-    tname = "_CORBA_ConstrType_Variable_OUT_arg";
-  }
-  else {
-    tname = "_CORBA_ConstrType_Fix_OUT_arg";
-  }
-
-  if (!pd_out_adptarg_name) {
-    pd_out_adptarg_name = new char[strlen(tname)+strlen("<,>")+
-				  strlen(fqname())+
-				  strlen(fqname())+strlen("_var")+1];
-    strcpy(pd_out_adptarg_name,tname);
-    strcat(pd_out_adptarg_name,"<");
-    strcat(pd_out_adptarg_name,fqname());
-    strcat(pd_out_adptarg_name,",");
-    strcat(pd_out_adptarg_name,fqname());
-    strcat(pd_out_adptarg_name,"_var>");  
-  }
-
-  if (o2be_global::qflag()) {
-    return pd_out_adptarg_name;
-  }
-  else {
-    const char* ubname = unambiguous_name(used_in);
-    if (strcmp(fqname(),ubname) == 0) {
-      return pd_out_adptarg_name;
-    }
-    else {
-      char* result = new char[strlen(tname)+strlen("<,>")+
-		       strlen(ubname)+
-		       strlen(ubname)+strlen("_var")+1];
-      strcpy(result,tname);
-      strcat(result,"<");
-      strcat(result,ubname);
-      strcat(result,",");
-      strcat(result,ubname);
-      strcat(result,"_var>");  
-      return result;
-    }
-  }
+  StringBuf out_type;
+  out_type += unambiguous_name(used_in);
+  out_type += "_out";
+  return out_type.release();
 }
 
 
