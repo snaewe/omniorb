@@ -64,6 +64,15 @@ public:
   }
   // Routine to check the TypeCode and get the data from the mbuf.
 
+  inline CORBA::Boolean getObjRef(tcDescriptor& data) {
+    if( pd_parser->getTC()->kind() != CORBA::tk_objref )  return 0;
+    pd_parser->copyTo(data);
+    return 1;
+  }
+  // Routine to extract an object reference from the Any. Checks that we
+  // contain an object ref, but not that the interface repo id is correct.
+  // This is done further down the line ...
+
   inline void setData(CORBA::TypeCode_ptr tc, tcDescriptor &data) {
     setTC_and_reset(tc);
     pd_parser->copyFrom(data);
