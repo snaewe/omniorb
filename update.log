@@ -1,3 +1,15 @@
+Fri Apr  8 01:05:09 BST 2005 dgrisby
+====================================
+
+- Remove all remaining uses of logf.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/exception.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/proxyFactory.cc
+
+
 Sun Apr  3 13:30:25 BST 2005 dgrisby
 ====================================
 

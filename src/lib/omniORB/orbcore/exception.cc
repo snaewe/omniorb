@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.11  2005/04/08 00:06:15  dgrisby
+  Remove all remaining uses of logf.
+
   Revision 1.10.2.10  2002/08/16 17:47:39  dgrisby
   Documentation, message updates. ORB tweaks to match docs.
 
@@ -457,11 +460,12 @@ _CORBA_invoked_nil_pseudo_ref()
 CORBA::Boolean
 _CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType)
 {
-  if( omniORB::trace(10) )
-    omniORB::logf("WARNING -- a nil (0) pointer is wrongly used as a\n"
-		  " nil CORBA::%s object reference.\n"
-		  " Use CORBA::%s::_nil()", objType, objType);
-
+  if( omniORB::trace(1) ) {
+    omniORB::logger l;
+    l << "WARNING -- a nil (0) pointer is wrongly used as a\n"
+      << " nil CORBA::" << objType << " object reference.\n"
+      << " Use CORBA::" << objType << "::_nil()\n";
+  }
   return 1;
 }
 

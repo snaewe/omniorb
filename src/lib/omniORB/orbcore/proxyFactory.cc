@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2005/04/08 00:06:12  dgrisby
+  Remove all remaining uses of logf.
+
   Revision 1.2.2.7  2003/08/15 10:55:07  dgrisby
   Rearrange code to avoid SGI compiler bug.
 
@@ -107,8 +110,10 @@ proxyObjectFactory::proxyObjectFactory(const char* repoId)
     else if( cmp > 0 )  bottom = middle + 1;
     else {
       ofl[middle] = this;
-      if( omniORB::trace(15) )
-	  omniORB::logf("Replaced proxyObjectFactory for %s.", repoId);
+      if(omniORB::trace(15)) {
+	omniORB::logger l;
+	l << "Replaced proxyObjectFactory for " << repoId << ".\n";
+      }
       return;
     }
   }

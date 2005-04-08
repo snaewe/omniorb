@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.43  2005/04/08 00:06:13  dgrisby
+  Remove all remaining uses of logf.
+
   Revision 1.2.2.42  2004/02/13 16:37:34  dgrisby
   Bug with system id and default servant / servant managers.
 
@@ -3116,8 +3119,7 @@ omniEtherealiser::doit()
 		       pd_cleanup, !pd_is_last);
   }
   catch(...) {
-    if( omniORB::trace(5) )
-      omniORB::logf("Servant etherealisation raised an exception!");
+    omniORB::logs(5, "Servant etherealisation raised an exception!");
   }
   omni::internalLock->lock();
   pd_entry->setDead();
@@ -3505,10 +3507,11 @@ omniOrbPOA::attempt_to_activate_adapter(const char* name)
 
   poa_lock.unlock();
 
-  if( omniORB::trace(10) )
-    omniORB::logf("Attempting to activate POA '%s' using an AdapterActivator",
-		  name);
-
+  if( omniORB::trace(10) ) {
+    omniORB::logger l;
+    l << "Attempting to activate POA '" << name
+      << "' using an AdapterActivator\n";
+  }
   CORBA::Boolean ret = 0;
 
   try {
