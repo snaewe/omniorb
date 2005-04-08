@@ -497,6 +497,11 @@ RequestImpl::get_response()
 		  BAD_INV_ORDER_RequestIsSynchronous,
 		  CORBA::COMPLETED_NO);
 
+  if( pd_state == RS_DONE )
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_ResultAlreadyReceived,
+		  CORBA::COMPLETED_NO);
+
   if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
 
   if( pd_state == RS_POLLED_DONE ) pd_state = RS_DONE;
