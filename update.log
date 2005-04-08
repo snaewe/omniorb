@@ -1,3 +1,19 @@
+Fri Apr  8 16:04:53 BST 2005 dgrisby
+====================================
+
+- Attach child DynAnys properly.
+
+src/lib/omniORB/dynamic/dynAny.cc
+
+- Throw BAD_INV_ORDER if get_response() is called more than once.
+
+src/lib/omniORB/dynamic/request.cc
+
+- ValueBoxes containing anonymous sequences were not marshalled properly.
+
+src/lib/omniORB/omniidl_be/cxx/value.py
+
+
 Fri Apr  8 01:34:13 BST 2005 dgrisby
 ====================================
 

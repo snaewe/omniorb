@@ -2805,6 +2805,7 @@ class ValueBox (mapping.Decl):
         outer_environment = id.lookup(astdecl)
         self._environment = outer_environment
         self._fullname    = id.Name(astdecl.scopedName())
+        self._anonSeq     = 0
 
     # Methods to make this look enough like a cxx.Class to make
     # cxx.Method happy.
@@ -2829,11 +2830,10 @@ class ValueBox (mapping.Decl):
 
         boxedType = types.Type(astdecl.boxedType())
 
-        anonSeq = 0
         if astdecl.boxedType().kind() == idltype.tk_sequence:
             # Boxed anonymous sequence. We create a pretend typedef to
             # the sequence, mangling the name of the valuebox.
-            anonSeq = 1
+            self._anonSeq = 1
             dname = "_0RL_boxed_" + astdecl.identifier()
             
             declarator = idlast.Declarator(astdecl.file(), astdecl.line(),
@@ -2853,6 +2853,7 @@ class ValueBox (mapping.Decl):
             newtype = idltype.Declared(declarator, [dname],
                                        idltype.tk_alias, 0)
             boxedType = types.Type(newtype)
+            self._anonBoxedType = boxedType
             typedef.accept(visitor)
 
         member_funcs = output.StringStream()
@@ -2938,7 +2939,7 @@ class ValueBox (mapping.Decl):
             d_seqType    = seqType.deref()
             bounded      = d_boxedType.type().bound()
 
-            if anonSeq:
+            if self._anonSeq:
                 assert btype[:2] == "::"
                 assert boxed_member[:2] == "::"
                 btype = btype[2:]
@@ -3207,7 +3208,11 @@ class ValueBox (mapping.Decl):
         repoId = astdecl.repoId()
         idhash = hashval(repoId)
 
-        boxedType   = types.Type(astdecl.boxedType())
+        if self._anonSeq:
+            boxedType = self._anonBoxedType
+        else:
+            boxedType = types.Type(astdecl.boxedType())
+
         d_boxedType = boxedType.deref()
 
         marshal_content = output.StringStream()
