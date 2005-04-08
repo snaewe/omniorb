@@ -1,3 +1,19 @@
+Fri Apr  8 01:34:13 BST 2005 dgrisby
+====================================
+
+- Merging again.
+
+include/omniORB4/templatedecls.h
+src/lib/omniORB/dynamic/deferredRequest.cc
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/exception.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/proxyFactory.cc
+src/tool/omniidl/python/omniidl/idlutil.py
+
+
 Thu Mar 31 00:34:29 BST 2005 dgrisby
 ====================================
 

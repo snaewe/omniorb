@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.12.2.2  2005/04/08 00:35:46  dgrisby
+  Merging again.
+
   Revision 1.12.2.1  2003/03/23 21:02:17  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -460,11 +463,12 @@ _CORBA_invoked_nil_pseudo_ref()
 CORBA::Boolean
 _CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType)
 {
-  if( omniORB::trace(10) )
-    omniORB::logf("WARNING -- a nil (0) pointer is wrongly used as a\n"
-		  " nil CORBA::%s object reference.\n"
-		  " Use CORBA::%s::_nil()", objType, objType);
-
+  if( omniORB::trace(1) ) {
+    omniORB::logger l;
+    l << "WARNING -- a nil (0) pointer is wrongly used as a\n"
+      << " nil CORBA::" << objType << " object reference.\n"
+      << " Use CORBA::" << objType << "::_nil()\n";
+  }
   return 1;
 }
 

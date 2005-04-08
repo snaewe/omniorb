@@ -523,7 +523,7 @@ class Type:
             return "'" + idlutil.escapifyString(value) + "'"
 
         if kind in [ idltype.tk_wchar ]:
-            return "L'" + idlutil.escapifyWString([value]) + "'"
+            return "L'" + idlutil.escapifyWString([value], "x") + "'"
         
         # booleans are straightforward
         if kind in [ idltype.tk_boolean ]:
@@ -539,7 +539,7 @@ class Type:
             return '"' + idlutil.escapifyString(value) + '"'
 
         if kind in [ idltype.tk_wstring ]:
-            return 'L"' + idlutil.escapifyWString(value) + '"'
+            return 'L"' + idlutil.escapifyWString(value, "x") + '"'
 
         if kind in [ idltype.tk_octet ]:
             return str(value)

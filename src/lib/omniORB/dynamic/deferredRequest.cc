@@ -59,6 +59,8 @@ DeferredRequest::execute()
   // thrown, it is saved so that it can be thrown to the thread
   // which calls poll_response() or get_response().
 
+  omniORB::logs(25, "DeferredRequest execute.");
+
   try{
     try{
       pd_request->deferred_invoke();
@@ -85,11 +87,13 @@ DeferredRequest::execute()
     // we will just have to silently ignore it.
   }
 
+  omniORB::logs(25, "DeferredRequest signal...");
   {
     omni_tracedmutex_lock lock(pd_readyMutex);
     pd_ready = 1;
     pd_readyCondition.signal();
   }
+  omniORB::logs(25, "DeferredRequest complete.");
 }
 
 OMNI_NAMESPACE_END(omni)

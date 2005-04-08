@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2005/04/08 00:35:46  dgrisby
+  Merging again.
+
   Revision 1.1.6.4  2005/01/06 23:10:11  dgrisby
   Big merge from omni4_0_develop.
 
@@ -342,9 +345,11 @@ GIOP_S::handleRequest() {
     // a location forward exception to re-direct the request
     // to another location.
 
-    if( omniORB::traceInvocations )
-      omniORB::logf("Implementation of \'%s\' generated LOCATION_FORWARD.",
-		    operation());
+    if( omniORB::traceInvocations ) {
+      omniORB::logger l;
+      l << "Implementation of '" << operation()
+	<< "' generated LOCATION_FORWARD.\n";
+    }
 
     CORBA::Object_var release_it(ex.get_obj());
     if (pd_state == RequestIsBeingProcessed) {
