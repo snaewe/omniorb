@@ -29,6 +29,10 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.32  2005/04/10 22:37:39  dgrisby
+ * Bug prevented creation of alias to incomplete type. Reported by Renzo
+ * Tomaselli.
+ *
  * Revision 1.38.2.31  2004/10/17 22:29:06  dgrisby
  * WChar TypeCode unmarshalling was missing. Thanks Luke Deller.
  *
@@ -2032,7 +2036,8 @@ TypeCode_sequence::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
 {
   if (!pd_complete && !CORBA::is_nil(pd_content)) {
     pd_complete = ToTcBase(pd_content)->NP_complete_recursive(tc, repoId);
-    TypeCode_collector::markLoopMembers(tc);
+    if (pd_complete)
+      TypeCode_collector::markLoopMembers(tc);
   }
   return pd_complete;
 }
