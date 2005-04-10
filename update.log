@@ -1,3 +1,17 @@
+Sun Apr 10 23:16:04 BST 2005 dgrisby
+====================================
+
+- Fixes to connection management. Thanks Jon Biggar.
+
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+
+
 Fri Apr  8 01:05:09 BST 2005 dgrisby
 ====================================
 

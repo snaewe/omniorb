@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.24  2005/04/10 22:17:19  dgrisby
+  Fixes to connection management. Thanks Jon Biggar.
+
   Revision 1.1.4.23  2004/07/01 19:16:24  dgrisby
   Client call interceptor oneway and response expected flipped. Thanks
   John Fardo.
@@ -232,6 +235,7 @@ giopImpl11::inputMessageBegin(giopStream* g,
       // This is a GIOP 1.0 message, switch to the implementation of giop 1.0
       // and dispatch again.
       GIOP::Version v = { 1, 0 };
+      ((giopStrand &)*g).version = v;
       g->impl(giopStreamImpl::matchVersion(v));
       OMNIORB_ASSERT(g->impl());
       g->impl()->inputMessageBegin(g,g->impl()->unmarshalWildCardRequestHeader);
@@ -300,9 +304,9 @@ giopImpl11::inputReplyBegin(giopStream* g,
     {
       CORBA::ULong minor;
       CORBA::Boolean retry;
+      g->pd_strand->orderly_closed = 1;
       g->notifyCommFailure(0,minor,retry);
       g->pd_strand->state(giopStrand::DYING);
-      g->pd_strand->orderly_closed = 1;
       giopStream::CommFailure::_raise(minor,
 				      CORBA::COMPLETED_NO,
 				      retry,__FILE__,__LINE__);

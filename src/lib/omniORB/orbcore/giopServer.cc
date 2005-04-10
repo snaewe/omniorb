@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.37  2005/04/10 22:17:19  dgrisby
+  Fixes to connection management. Thanks Jon Biggar.
+
   Revision 1.22.2.36  2005/03/10 11:28:29  dgrisby
   Race condition between setSelectable / clearSelectable.
 
@@ -666,6 +669,7 @@ giopServer::csInsert(giopConnection* conn)
 
 
   giopStrand* s = new giopStrand(conn,this);
+  s->version.major = 1; s->version.minor = 0;
   {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
     omni_tracedmutex_lock sync(*omniTransportLock);

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.24  2005/04/10 22:17:18  dgrisby
+  Fixes to connection management. Thanks Jon Biggar.
+
   Revision 1.1.2.23  2004/10/18 11:47:02  dgrisby
   accept() error handling didn't work on MacOS X.
 
@@ -329,8 +332,12 @@ sslEndpoint::Poke() {
 
   sslAddress* target = new sslAddress(pd_address,pd_ctx);
   giopActiveConnection* conn;
-  if ((conn = target->Connect()) == 0) {
-    if (omniORB::trace(1)) {
+
+  unsigned long timeout_sec, timeout_nsec;
+  omni_thread::get_time(&timeout_sec, &timeout_nsec, 1);
+
+  if ((conn = target->Connect(timeout_sec, timeout_nsec)) == 0) {
+    if (omniORB::trace(5)) {
       omniORB::logger log;
       log << "Warning: Fail to connect to myself (" 
 	  << (const char*) pd_address_string << ") via ssl!\n";

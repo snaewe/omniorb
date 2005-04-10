@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.29  2005/04/10 22:17:19  dgrisby
+  Fixes to connection management. Thanks Jon Biggar.
+
   Revision 1.1.4.28  2005/02/02 00:21:07  dgrisby
   Memory leak with CloseConnection or error received in a queued message.
 
@@ -238,11 +241,14 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
     // rather the equivalent place in GIOP 1.3+) due to receiving a
     // reply message on the receiver thread of a bidirectional
     // connection.
-    giopStream_Buffer::deleteBuffer(b);
-    inputTerminalProtocolError(g, __FILE__, __LINE__);
-    // never reach here
-  }
 
+    // We accept a CloseConnection message with any GIOP version.
+    if ((GIOP::MsgType)hdr[7] != GIOP::CloseConnection) {
+      giopStream_Buffer::deleteBuffer(b);
+      inputTerminalProtocolError(g, __FILE__, __LINE__);
+      // never reach here
+    }
+  }
 
   CORBA::ULong reqid;
 
@@ -268,9 +274,9 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
     CORBA::ULong minor;
     CORBA::Boolean retry;
     giopStream_Buffer::deleteBuffer(b);
+    g->pd_strand->orderly_closed = 1;
     g->notifyCommFailure(0,minor,retry);
     g->pd_strand->state(giopStrand::DYING);
-    g->pd_strand->orderly_closed = 1;
     giopStream::CommFailure::_raise(minor,
 				    CORBA::COMPLETED_NO,
 				    retry,__FILE__,__LINE__);
@@ -715,6 +721,7 @@ giopImpl12::inputMessageBegin(giopStream* g,
     GIOP::Version v;
     v.major = 1;
     v.minor = hdr[5];
+    ((giopStrand &)*g).version = v;
     g->impl(giopStreamImpl::matchVersion(v));
     OMNIORB_ASSERT(g->impl());
     g->impl()->inputMessageBegin(g,g->impl()->unmarshalWildCardRequestHeader);
