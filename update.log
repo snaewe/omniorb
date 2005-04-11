@@ -1,3 +1,17 @@
+Mon Apr 11 13:08:31 BST 2005 dgrisby
+====================================
+
+- Another merge.
+
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+
+
 Fri Apr  8 16:04:53 BST 2005 dgrisby
 ====================================
 

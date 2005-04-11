@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/04/11 12:09:40  dgrisby
+  Another merge.
+
   Revision 1.1.4.3  2005/01/13 21:10:01  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -329,8 +332,12 @@ sslEndpoint::Poke() {
 
   sslAddress* target = new sslAddress(pd_address,pd_ctx);
   giopActiveConnection* conn;
-  if ((conn = target->Connect()) == 0) {
-    if (omniORB::trace(1)) {
+
+  unsigned long timeout_sec, timeout_nsec;
+  omni_thread::get_time(&timeout_sec, &timeout_nsec, 1);
+
+  if ((conn = target->Connect(timeout_sec, timeout_nsec)) == 0) {
+    if (omniORB::trace(5)) {
       omniORB::logger log;
       log << "Warning: Fail to connect to myself (" 
 	  << (const char*) pd_address_string << ") via ssl!\n";

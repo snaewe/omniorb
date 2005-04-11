@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2005/04/11 12:09:42  dgrisby
+  Another merge.
+
   Revision 1.1.6.2  2005/01/06 23:10:15  dgrisby
   Big merge from omni4_0_develop.
 
@@ -225,6 +228,7 @@ giopImpl11::inputMessageBegin(giopStream* g,
       // This is a GIOP 1.0 message, switch to the implementation of giop 1.0
       // and dispatch again.
       GIOP::Version v = { 1, 0 };
+      ((giopStrand &)*g).version = v;
       g->impl(giopStreamImpl::matchVersion(v));
       OMNIORB_ASSERT(g->impl());
       g->impl()->inputMessageBegin(g,g->impl()->unmarshalWildCardRequestHeader);
@@ -293,9 +297,9 @@ giopImpl11::inputReplyBegin(giopStream* g,
     {
       CORBA::ULong minor;
       CORBA::Boolean retry;
+      g->pd_strand->orderly_closed = 1;
       g->notifyCommFailure(0,minor,retry);
       g->pd_strand->state(giopStrand::DYING);
-      g->pd_strand->orderly_closed = 1;
       giopStream::CommFailure::_raise(minor,
 				      CORBA::COMPLETED_NO,
 				      retry,__FILE__,__LINE__);
