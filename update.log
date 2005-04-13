@@ -1,3 +1,11 @@
+Wed Apr 13 10:07:01 BST 2005 dgrisby
+====================================
+
+- peekChunkTag forgot to byteswap when it needed to.
+
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Mon Apr 11 13:08:31 BST 2005 dgrisby
 ====================================
 

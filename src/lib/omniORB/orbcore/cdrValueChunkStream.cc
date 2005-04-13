@@ -29,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.6  2005/04/13 09:11:04  dgrisby
+// peekChunkTag forgot to byteswap when it needed to.
+//
 // Revision 1.1.2.5  2005/01/13 21:55:56  dgrisby
 // Turn off -g debugging; suppress some compiler warnings.
 //
@@ -47,6 +50,15 @@
 
 
 #include <omniORB4/CORBA.h>
+
+#ifndef Swap32
+#define Swap32(l) ((((l) & 0xff000000) >> 24) | \
+		   (((l) & 0x00ff0000) >> 8)  | \
+		   (((l) & 0x0000ff00) << 8)  | \
+		   (((l) & 0x000000ff) << 24))
+#else
+#error "Swap32 has already been defined"
+#endif
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -787,7 +799,13 @@ peekChunkTag()
     pd_actual.fetchInputData(omni::ALIGN_4, 4);
   }
   copyStateFromActual();
-  return *((_CORBA_Long*)p1);
+
+  _CORBA_Long tag = *((_CORBA_Long*)p1);
+
+  if (pd_unmarshal_byte_swap)
+    return Swap32(tag);
+  else
+    return tag;
 }
 
 
