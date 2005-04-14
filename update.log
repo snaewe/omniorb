@@ -1,3 +1,22 @@
+Thu Apr 14 00:53:58 BST 2005 dgrisby
+====================================
+
+- New traceInvocationReturns and traceTime options; remove logf function.
+
+configure
+configure.ac
+sample.cfg
+sample.reg
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/acconfig.h.in
+include/omniORB4/omniORB.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+
+
 Wed Apr 13 10:07:01 BST 2005 dgrisby
 ====================================
 

@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2005/04/14 00:04:00  dgrisby
+  New traceInvocationReturns and traceTime options; remove logf function.
+
   Revision 1.1.4.4  2005/01/25 11:17:49  dgrisby
   Merge from omni4_0_develop.
 
@@ -107,6 +110,12 @@
 #  define HAVE_GETPID 1
 #endif
 // Unset if no getpid() function
+
+#define HAVE_LOCALTIME 1
+// Unset if no localtime() function
+
+#define HAVE_STRFTIME 1
+// Unset if no strftime() function
 
 #define HAVE_GETTIMEOFDAY 1
 // Unset if no gettimeofday() function

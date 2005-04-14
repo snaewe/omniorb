@@ -91,9 +91,9 @@ dnl ** Functions
 
 AC_LANG(C)
 AC_CHECK_FUNCS(getaddrinfo gethostname getopt getpid gettimeofday)
-AC_CHECK_FUNCS(isinf insinff isinfl nanosleep poll sigaction sigvec snprintf)
-AC_CHECK_FUNCS(strcasecmp strdup strerror stricmp strncasecmp strtoul)
-AC_CHECK_FUNCS(strtoull strtouq uname vprintf vsnprintf)
+AC_CHECK_FUNCS(isinf insinff isinfl localtime nanosleep poll sigaction)
+AC_CHECK_FUNCS(sigvec snprintf strcasecmp strdup strerror strftime stricmp)
+AC_CHECK_FUNCS(strncasecmp strtoul strtoull strtouq uname vprintf vsnprintf)
 AC_LANG(C++)
 
 OMNI_HAVE_ISNANORINF

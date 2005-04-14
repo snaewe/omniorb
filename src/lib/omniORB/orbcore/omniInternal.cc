@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.6  2005/04/14 00:03:58  dgrisby
+  New traceInvocationReturns and traceTime options; remove logf function.
+
   Revision 1.5.2.5  2005/04/08 00:35:46  dgrisby
   Merging again.
 
@@ -249,10 +252,22 @@ CORBA::Boolean  omniORB::traceInvocations = 0;
 //
 //    Valid values = 0 or 1
 
+CORBA::Boolean  omniORB::traceInvocationReturns = 0;
+//    If true, then each local and remote invocation will generate a trace 
+//    message when it returns.
+//
+//    Valid values = 0 or 1
+
 CORBA::Boolean  omniORB::traceThreadId = 0;
 //    If true, then the log messages will contain the thread id.
 //
 //    Valid values = 0 or 1
+
+CORBA::Boolean  omniORB::traceTime = 0;
+//    If true, then the log messages will contain the time.
+//
+//    Valid values = 0 or 1
+
 
 
 const CORBA::Char                omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
@@ -1361,6 +1376,35 @@ public:
 static traceInvocationsHandler traceInvocationsHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
+class traceInvocationReturnsHandler : public orbOptions::Handler {
+public:
+
+  traceInvocationReturnsHandler() : 
+    orbOptions::Handler("traceInvocationReturns",
+			"traceInvocationReturns = 0 or 1",
+			1,
+			"-ORBtraceInvocationReturns < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    omniORB::traceInvocationReturns = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),omniORB::traceInvocationReturns,
+			     result);
+  }
+};
+
+static traceInvocationReturnsHandler traceInvocationReturnsHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
 class traceThreadIdHandler : public orbOptions::Handler {
 public:
 
@@ -1388,6 +1432,35 @@ public:
 };
 
 static traceThreadIdHandler traceThreadIdHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class traceTimeHandler : public orbOptions::Handler {
+public:
+
+  traceTimeHandler() : 
+    orbOptions::Handler("traceTime",
+			"traceTime = 0 or 1",
+			1,
+			"-ORBtraceTime < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    omniORB::traceTime = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),omniORB::traceTime,
+			     result);
+  }
+};
+
+static traceTimeHandler traceTimeHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
 class objectTableSizeHandler : public orbOptions::Handler {
@@ -1459,7 +1532,9 @@ public:
     orbOptions::singleton().registerHandler(traceLevelHandler_);
     orbOptions::singleton().registerHandler(traceExceptionsHandler_);
     orbOptions::singleton().registerHandler(traceInvocationsHandler_);
+    orbOptions::singleton().registerHandler(traceInvocationReturnsHandler_);
     orbOptions::singleton().registerHandler(traceThreadIdHandler_);
+    orbOptions::singleton().registerHandler(traceTimeHandler_);
     orbOptions::singleton().registerHandler(objectTableSizeHandler_);
     orbOptions::singleton().registerHandler(abortOnInternalErrorHandler_);
   }

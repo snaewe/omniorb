@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2005/04/14 00:03:59  dgrisby
+  New traceInvocationReturns and traceTime options; remove logf function.
+
   Revision 1.1.6.5  2005/04/11 12:09:42  dgrisby
   Another merge.
 
@@ -178,6 +181,10 @@ GIOP_C::ReceiveReply() {
 
   GIOP::ReplyStatusType rc = replyStatus();
   if (rc == GIOP::SYSTEM_EXCEPTION) { 
+    if (omniORB::traceInvocationReturns) {
+      omniORB::logger l;
+      l << "Finish '" << calldescriptor()->op() << "' (system exception)\n";
+    }
     UnMarshallSystemException();
     // never reaches here
   }

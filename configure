@@ -11107,8 +11107,7 @@ done
 
 
 
-
-for ac_func in isinf insinff isinfl nanosleep poll sigaction sigvec snprintf
+for ac_func in isinf insinff isinfl localtime nanosleep poll sigaction
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -11215,7 +11214,8 @@ done
 
 
 
-for ac_func in strcasecmp strdup strerror stricmp strncasecmp strtoul
+
+for ac_func in sigvec snprintf strcasecmp strdup strerror strftime stricmp
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -11321,7 +11321,9 @@ done
 
 
 
-for ac_func in strtoull strtouq uname vprintf vsnprintf
+
+
+for ac_func in strncasecmp strtoul strtoull strtouq uname vprintf vsnprintf
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5

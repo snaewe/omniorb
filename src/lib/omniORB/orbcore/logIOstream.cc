@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.11.2.3  2005/04/14 00:03:59  dgrisby
+  New traceInvocationReturns and traceTime options; remove logf function.
+
   Revision 1.11.2.2  2005/01/06 23:10:32  dgrisby
   Big merge from omni4_0_develop.
 
@@ -113,8 +116,8 @@
 #include <remoteIdentity.h>
 #include <inProcessIdentity.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <ctype.h>
+#include <time.h>
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// omniORB::logger //////////////////////////
@@ -125,7 +128,7 @@
 #endif
 #define INIT_BUF_SIZE  256
 
-#define PREFIX           "omniORB: "
+#define PREFIX "omniORB: "
 
 
 static inline omniORB::logFunction& logfunc()
@@ -157,6 +160,19 @@ omniORB::logger::logger(const char* prefix)
     else
       *this << "(?) ";
   }
+
+#if defined(HAVE_STRFTIME) && defined(HAVE_LOCALTIME)
+  if (omniORB::traceTime) {
+    char tbuf[40];
+    unsigned long s, ns;
+    omni_thread::get_time(&s, &ns);
+    time_t ts = s;
+    strftime(tbuf, 39, "%Y-%m-%d %H:%M:%S", localtime(&ts));
+    *this << tbuf;
+    sprintf(tbuf, ".%06d: ", (int)ns / 1000);
+    *this << tbuf;
+  }
+#endif
 }
 
 
@@ -393,62 +409,6 @@ omniORB::logger::more(int n)
 #endif
 #define INLINE_BUF_SIZE  256
 
-#ifndef __CIAO__
-void
-omniORB::logf(const char* fmt ...)
-{
-  char inlinebuf[INLINE_BUF_SIZE];
-  char* buf = inlinebuf;
-  size_t fmtlen = strlen(fmt) + sizeof(PREFIX) + 15;
-
-  if( fmtlen > INLINE_BUF_SIZE )  buf = new char[fmtlen];
-
-  if (traceThreadId) {
-    omni_thread* self = omni_thread::self();
-    if (self)
-      sprintf(buf, "%s(%d) %s\n", PREFIX, self->id(), fmt);
-    else
-      sprintf(buf, "%s(?) %s\n", PREFIX, fmt);
-  }
-  else
-    sprintf(buf, "%s%s\n", PREFIX, fmt);
-
-  va_list args;
-  va_start(args, fmt);
-
-  if (logfunc()) {
-    char  oinline[INLINE_BUF_SIZE * 4];
-    char* obuf = oinline;
-    int   obufsize = INLINE_BUF_SIZE * 4;
-    int   nchars;
-#ifdef HAVE_SNPRINTF
-    while (1) {
-      nchars = vsnprintf(obuf, obufsize, buf, args);
-      if (nchars > -1 && nchars < obufsize)
-	break;
-      if (nchars > -1)
-	obufsize = nchars + 1;
-      else
-	obufsize += 2;
-      if (obuf != oinline) delete [] obuf;
-      obuf = new char[obufsize];
-    }
-#else
-    nchars = vsprintf(obuf, buf, args);
-    OMNIORB_ASSERT(nchars >= 0 && nchars < obufsize);
-#endif
-    logfunc()(obuf);
-    if (obuf != oinline) delete [] obuf;
-  }
-  else {
-    vfprintf(stderr, buf, args);
-  }
-  va_end(args);
-
-  if( buf != inlinebuf )  delete[] buf;
-}
-#endif
-
 
 void
 omniORB::do_logs(const char* mesg)
@@ -457,24 +417,44 @@ omniORB::do_logs(const char* mesg)
   char* buf = inlinebuf;
   size_t fmtlen = strlen(mesg) + sizeof(PREFIX) + 15;
 
-  if( fmtlen > INLINE_BUF_SIZE )  buf = new char[fmtlen];
+#if defined(HAVE_STRFTIME) && defined(HAVE_LOCALTIME)
+  if (traceTime)
+    fmtlen += 30;
+#endif
+
+  if (fmtlen > INLINE_BUF_SIZE)
+    buf = new char[fmtlen];
+
+  strcpy(buf, PREFIX);
+  char* cbuf = buf + sizeof(PREFIX) - 1;
 
   if (traceThreadId) {
     omni_thread* self = omni_thread::self();
     if (self)
-      sprintf(buf, "%s(%d) %s\n", PREFIX, self->id(), mesg);
+      cbuf += sprintf(cbuf, "(%d) ", self->id());
     else
-      sprintf(buf, "%s(?) %s\n", PREFIX, mesg);
+      cbuf += sprintf(cbuf, "(?) ");
   }
-  else
-    sprintf(buf, "%s%s\n", PREFIX, mesg);
+
+#if defined(HAVE_STRFTIME) && defined(HAVE_LOCALTIME)
+  if (traceTime) {
+    unsigned long s, ns;
+    omni_thread::get_time(&s, &ns);
+    time_t ts = s;
+    cbuf += strftime(cbuf, fmtlen - (cbuf-buf),
+		     "%Y-%m-%d %H:%M:%S", localtime(&ts));
+    cbuf += sprintf(cbuf, ".%06d: ", (int)ns / 1000);
+  }
+#endif
+
+  sprintf(cbuf, "%s\n", mesg);
 
   if (logfunc())
     logfunc()(buf);
   else
     fputs(buf, stderr);
 
-  if( buf != inlinebuf )  delete[] buf;
+  if (buf != inlinebuf) delete[] buf;
 }
 
 //////////////////////////////////////////////////////////////////////

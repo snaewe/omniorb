@@ -52,6 +52,32 @@ REGEDIT4
 "traceInvocations" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Trace Invocation returns
+;     If true, then each local and remote invocation will generate a trace 
+;     message as it returns.
+;
+;     Valid values = 0 or 1
+;
+traceInvocationReturns = "0"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Trace thread id
+;     If true, all trace messages include the thread id of the thread doing
+;     the logging.
+;
+;     Valid values = 0 or 1
+;
+traceThreadId = "0"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Trace time
+;     If true, all trace messages include the current time.
+;
+;     Valid values = 0 or 1
+;
+traceTime = "0"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; dumpConfiguration
 ;     Set to 1 to cause the ORB to dump the current set of configuration
 ;     parameters.
