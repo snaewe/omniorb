@@ -5,8 +5,8 @@
 
 Summary: Object Request Broker (ORB)
 Name:    omniORB
-Version: 4.0.5
-Release: 2
+Version: 4.0.6
+Release: 1
 License: GPL / LGPL
 Group:   System/Libraries
 Source0: %{name}-%{version}.tar.gz

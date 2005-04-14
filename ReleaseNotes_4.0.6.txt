@@ -1,9 +1,18 @@
-RELEASE NOTES for omniORB 4.0.5
+RELEASE NOTES for omniORB 4.0.6
 ===============================
 
-This is omniORB 4.0.5. It is a stable release.
+This is omniORB 4.0.6. It is a stable release.
 
 See README.unix or README.win32.txt for building instructions.
+
+
+New features since omniORB 4.0.5
+--------------------------------
+
+ - Bug fixes.
+ - Ability to watch connections from more than one thread in thread
+   pool mode.
+ - New omniORB::versionString() and versionHex() functions.
 
 
 New features since omniORB 4.0.4

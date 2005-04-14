@@ -1,3 +1,29 @@
+Thu Apr 14 16:02:51 BST 2005 dgrisby
+====================================
+
+- Updates for 4.0.6 release.
+
+README.FIRST.txt
+ReleaseNotes_4.0.5.txt
+ReleaseNotes_4.0.6.txt
+THIS_IS_OMNIORB_4_0_5
+THIS_IS_OMNIORB_4_0_6
+bugfixes-405.xml
+configure
+configure.ac
+contrib/RPMs/omniORB.spec
+mk/version.mk
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/echo/dir.mak
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+
+
 Sun Apr 10 23:36:27 BST 2005 dgrisby
 ====================================
 

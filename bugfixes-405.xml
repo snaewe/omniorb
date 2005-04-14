@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.0.5     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.0.5">
+
+<bug id="1" date="Mon Dec 20 18:06:02 GMT 2004" user="dgrisby">
+  <summary>Race conditions in connection disconnection</summary>
+</bug>
+
+<bug id="2" date="Tue Jan  4 14:47:42 GMT 2005" user="dgrisby">
+  <summary>Segfault in omniCurrent::get</summary>
+  <text>
+  omniCurrent::get would segfault if called before the ORB is initialised.
+  </text>
+</bug>
+
+<bug id="3" date="Tue Jan  4 18:05:35 GMT 2005" user="dgrisby">
+  <summary>Requests missed after skipping one.</summary>
+  <text>
+  If multiple requests were received in a single buffer, and one of
+  them was skipped (because the object did not exist, for example),
+  subsequence requests would be ignored.
+  </text>
+</bug>
+
+<bug id="4" date="Wed Feb  2 00:20:01 GMT 2005" user="dgrisby">
+  <summary>Memory leaks with CloseConnection messages</summary>
+  <text>
+  Some CloseConnection messages and other connection closures could
+  result in memory leaks.
+  </text>
+</bug>
+
+<bug id="5" date="Thu Mar  3 12:44:46 GMT 2005" user="dgrisby">
+  <summary>Fixed point bugs</summary>
+  <reported>Simone Viani</reported>
+  <text>
+  A number of bugs in multiplication and truncation of fixed point
+  values.
+  </text>
+</bug>
+
+<bug id="6" date="Wed Mar 16 09:15:35 GMT 2005" user="dgrisby">
+  <summary>Server side connection shutdown</summary>
+  <reported>Dirk Siebnich</reported>
+  <text>
+  A problem introduced by a previous bug-fix meant that servers would
+  never close idle connections.
+  </text>
+</bug>
+
+<bug id="7" date="Sun Apr 10 23:16:04 BST 2005" user="dgrisby">
+  <summary>Connection management problems</summary>
+  <reported>Jon Biggar</reported>
+  <text>
+  A number of connection management situations were not handled well.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-dev/2005-April/000177.html"/>
+</bug>
+
+<bug id="8" date="Sun Apr 10 23:36:27 BST 2005" user="dgrisby">
+  <summary>Could not create an alias TypeCode to an incomplete
+  type</summary>
+  <reported>Renzo Tomaselli</reported>
+</bug>
+
+</buglist>

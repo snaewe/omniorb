@@ -1,5 +1,5 @@
 dnl -*- M4 -*-
-AC_INIT(omniORB, 4.0.5, bugs@omniorb-support.com)
+AC_INIT(omniORB, 4.0.6, bugs@omniorb-support.com)
 
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(bin/scripts/omkdirhier)
