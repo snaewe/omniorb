@@ -1,3 +1,11 @@
+Mon Apr 25 18:41:00 BST 2005 dgrisby
+====================================
+
+- Bug in marshalling nested chunks on a buffer boundary.
+
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Thu Apr 14 00:53:58 BST 2005 dgrisby
 ====================================
 
