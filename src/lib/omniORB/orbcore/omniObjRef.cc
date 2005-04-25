@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2005/04/25 18:26:18  dgrisby
+  After handling a transient due to a failed forwarded reference,
+  rethrow the original exception, rather than the transient, if the
+  exception handler returns false.
+
   Revision 1.4.2.2  2003/11/06 11:56:57  dgrisby
   Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 
@@ -697,7 +702,7 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
   omni::revertToOriginalProfile(this); \
   CORBA::TRANSIENT ex2(TRANSIENT_FailedOnForwarded, ex.completed()); \
   if( !_omni_callTransientExceptionHandler(this, retries++, ex2) ) \
-    throw ex2; \
+    throw; \
 } while(0)
 
 

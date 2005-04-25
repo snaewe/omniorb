@@ -1,3 +1,22 @@
+Mon Apr 25 19:22:47 BST 2005 dgrisby
+====================================
+
+- Always release per thread data in the thread it belongs to.
+
+mk/version.mk
+src/lib/omnithread/mach.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/vxWorks.cc
+
+- After handling a transient due to a failed forwarded reference,
+  rethrow the original exception, rather than the transient, if the
+  exception handler returns false.
+
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Mon Apr 25 18:41:00 BST 2005 dgrisby
 ====================================
 
