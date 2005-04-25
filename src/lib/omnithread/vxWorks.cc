@@ -6,6 +6,9 @@
 // Notes:		 Munching strategy is imperative
 //////////////////////////////////////////////////////////////////////////////
 // $Log$
+// Revision 1.1.4.3  2005/04/25 18:24:23  dgrisby
+// Always release per thread data in the thread it belongs to.
+//
 // Revision 1.1.4.2  2005/01/06 23:11:01  dgrisby
 // Big merge from omni4_0_develop.
 //
@@ -581,16 +584,7 @@ void omni_thread::common_constructor(void* arg, priority_t pri, int det)
 //
 omni_thread::~omni_thread(void)
 {
-      DBG_TRACE(cout<<"omni_thread::~omni_thread for thread "<<id()<<endl);
-
-    if (_values) {
-        for (key_t i=0; i < _value_alloc; i++) {
-          if (_values[i]) {
-              delete _values[i];
-          }
-        }
-      delete [] _values;
-    }
+    DBG_TRACE(cout<<"omni_thread::~omni_thread for thread "<<id()<<endl);
 
     // glblock -- added this to prevent problem with unitialized running_cond
     if(running_cond)
@@ -765,6 +759,16 @@ void omni_thread::exit(void* return_value)
 		me->mutex.unlock();
 
 		DBG_TRACE(cout<<"omni_thread::exit: thread "<<me->id()<<" detached "<<me->detached<<" return value "<<(int)return_value<<endl);
+
+		if (me->_values) {
+		  for (key_t i=0; i < me->_value_alloc; i++) {
+		    if (me->_values[i]) {
+		      delete me->_values[i];
+		    }
+		  }
+		  delete [] me->_values;
+		  me->_values = 0;
+		}
 
 		if(me->detached)
 			delete me;
