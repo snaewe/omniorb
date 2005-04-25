@@ -1,3 +1,16 @@
+Mon Apr 25 19:14:24 BST 2005 dgrisby
+====================================
+
+- Always release per thread data in the thread it belongs to.
+
+mk/version.mk
+src/lib/omnithread/mach.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/vxWorks.cc
+
+
 Mon Apr 25 18:58:39 BST 2005 dgrisby
 ====================================
 

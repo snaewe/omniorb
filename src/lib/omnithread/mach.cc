@@ -405,14 +405,6 @@ void omni_thread::common_constructor(void* arg, priority_t pri, int det)
 omni_thread::~omni_thread(void)
 {
   DB(cerr << "destructor called for thread " << id() << endl);
-  if (_values) {
-    for (key_t i=0; i < _value_alloc; i++) {
-      if (_values[i]) {
-	delete _values[i];
-      }
-    }
-    delete [] _values;
-  }
 }
 
 
@@ -559,6 +551,17 @@ void omni_thread::exit(void* return_value)
 
       DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
 	 << me->detached << " return value " << return_value << endl);
+
+
+      if (me->_values) {
+	for (key_t i=0; i < me->_value_alloc; i++) {
+	  if (me->_values[i]) {
+	    delete me->_values[i];
+	  }
+	}
+	delete [] me->_values;
+	me->_values = 0;
+      }
 
       if (me->detached)
 	delete me;
