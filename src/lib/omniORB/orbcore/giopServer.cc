@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.22.2.38  2005/05/03 10:10:48  dgrisby
+  Avoid deadlock caused by trying to deactivation SSL rendezvouser more
+  than once.
+
   Revision 1.22.2.37  2005/04/10 22:17:19  dgrisby
   Fixes to connection management. Thanks Jon Biggar.
 
@@ -503,75 +507,97 @@ giopServer::deactivate()
 
   pd_state = INFLUX;
 
- again:
-  CORBA::Boolean waitforcompletion = 0;
-  {
-    for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
-      connectionState** head = &(pd_connectionState[i]);
-      while (*head) {
-	{
-	  // Send close connection message.
-	  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
-	  char hdr[12];
-	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
-	  hdr[4] = ver.major;   hdr[5] = ver.minor;
-	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
-	  hdr[7] = (char)GIOP::CloseConnection;
-	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
-	  (*head)->connection->Send(hdr,12);
+  CORBA::Boolean waitforcompletion;
+  CORBA::Boolean rendezvousers_terminated = 0;
+
+  omniORB::logs(25, "giopServer deactivate...");
+
+  int count;
+
+  for (count = 0; count < 5; count++) {
+    waitforcompletion = 0;
+
+    // Close connections
+    {
+      for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
+	connectionState** head = &(pd_connectionState[i]);
+	while (*head) {
+	  {
+	    // Send close connection message.
+	    GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+	    char hdr[12];
+	    hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+	    hdr[4] = ver.major;   hdr[5] = ver.minor;
+	    hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+	    hdr[7] = (char)GIOP::CloseConnection;
+	    hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+	    (*head)->connection->Send(hdr,12);
+	  }
+	  (*head)->connection->Shutdown();
+	  head = &((*head)->next);
 	}
-	(*head)->connection->Shutdown();
-	head = &((*head)->next);
+      }
+      if (pd_nconnections) waitforcompletion = 1;
+    }
+
+    // Stop rendezvousers
+    {
+      Link* p = pd_rendezvousers.next;
+      if (p != &pd_rendezvousers) waitforcompletion = 1;
+
+      if (!pd_nconnections && !rendezvousers_terminated) {
+	//rendezvousers_terminated = 1;
+	for (; p != &pd_rendezvousers; p = p->next) {
+	  ((giopRendezvouser*)p)->terminate();
+	}
       }
     }
-    if (pd_nconnections) waitforcompletion = 1;
-  }
-  {
-    Link* p = pd_rendezvousers.next;
-    if (p != &pd_rendezvousers) waitforcompletion = 1;
 
-    if (!pd_nconnections) {
-      for (; p != &pd_rendezvousers; p = p->next) {
-        ((giopRendezvouser*)p)->terminate();
+    // Stop bidir monitors
+    if (!Link::is_empty(pd_bidir_monitors)) {
+      waitforcompletion = 1;
+
+      Link* m = pd_bidir_monitors.next;
+      for (; m != &pd_bidir_monitors; m = m->next) {
+	((giopMonitor*)m)->deactivate();
       }
     }
-  }
 
-  if (!Link::is_empty(pd_bidir_monitors)) {
-    waitforcompletion = 1;
+    // Close bidir connections
+    {
+      omnivector<giopStrand*>::iterator i = pd_bidir_strands.begin();
 
-    Link* m = pd_bidir_monitors.next;
-    for (; m != &pd_bidir_monitors; m = m->next) {
-      ((giopMonitor*)m)->deactivate();
+      while (i != pd_bidir_strands.end()) {
+	giopStrand* g = *i;
+	pd_bidir_strands.erase(i);
+	g->connection->Shutdown();
+	g->deleteStrandAndConnection();
+      }
+    }
+
+    if (waitforcompletion) {
+      // Here we relinquish the mutex to give the rendezvousers and workers
+      // a chance to remove themselves from the lists. Notice that the server
+      // is now in the INFLUX state. This means that no start, stop, remove,
+      // instantiate can progress until we are done here.
+      omniORB::logs(25, "giopServer waits for completion of rendezvousers "
+		    "and workers...");
+
+      unsigned long s, ns;
+      omni_thread::get_time(&s, &ns, 5);
+      pd_cond.timedwait(s, ns);
+
+      omniORB::logs(25, "giopServer back from waiting.");
+    }
+    else {
+      pd_state = IDLE;
+      break;
     }
   }
-
-
-  {
-    omnivector<giopStrand*>::iterator i = pd_bidir_strands.begin();
-
-    while (i != pd_bidir_strands.end()) {
-      giopStrand* g = *i;
-      pd_bidir_strands.erase(i);
-      g->connection->Shutdown();
-      g->deleteStrandAndConnection();
-    }
+  if (count == 5) {
+    omniORB::logs(15, "giopServer could not be cleanly deactivated.");
   }
-
-  if (waitforcompletion) {
-    // Here we relinquish the mutex to give the rendezvousers and workers
-    // a chance to remove themselves from the lists. Notice that the server
-    // is now in the INFLUX state. This means that no start, stop, remove,
-    // instantiate can progress until we are done here.
-    omniORB::logs(25, "giopServer waits for completion of rendezvousers "
-		  "and workers");
-    pd_cond.wait();
-    omniORB::logs(25, "giopServer back from waiting.");
-    goto again;
-  }
-  else {
-    pd_state = IDLE;
-  }
+  omniORB::logs(25, "giopServer deactivated.");
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -803,6 +829,11 @@ giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
       break;
     }
   default:
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "giopServer terminate connection from "
+	<< conn->peeraddress() << ".\n";
+    }
     throw Terminate();
   }
 }
@@ -824,6 +855,11 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
   }
 
   giopEndpoint* ept = r->endpoint();
+
+  if (omniORB::trace(25)) {
+    omniORB::logger l;
+    l << "giopRendezvouser for endpoint " << ept->address() << " exit.\n";
+  }
 
   r->remove();
 
