@@ -1,3 +1,19 @@
+Tue May  3 11:08:59 BST 2005 dgrisby
+====================================
+
+- Avoid deadlock caused by trying to deactivation SSL rendezvouser
+  more than once.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+- Trying to redefine built in CORBA module types led to a segfault.
+
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+src/tool/omniidl/cxx/idlrepoId.h
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Mon Apr 25 19:14:24 BST 2005 dgrisby
 ====================================
 

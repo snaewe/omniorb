@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.13  2005/05/03 10:12:40  dgrisby
+// Trying to redefine built in CORBA module types led to a segfault.
+//
 // Revision 1.16.2.12  2002/04/30 14:59:37  dgrisby
 // omniidl segfault when checking a non-existent identifier is not a forward.
 //
@@ -340,6 +343,8 @@ process(FILE* f, const char* name)
   if (Config::keepComments && Config::commentsFirst)
     tree()->comments_ = Comment::grabSaved();
 
+  Prefix::endOuterFile();
+
   return IdlReportErrors();
 }
 
@@ -602,6 +607,7 @@ Interface(const char* file, int line, IDL_Boolean mainFile,
 
   if (se &&
       se->kind() == Scope::Entry::E_DECL &&
+      se->decl() &&
       se->decl()->kind() == Decl::D_FORWARD) {
 
     Forward* f = (Forward*)se->decl();

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.13.2.10  2005/05/03 10:12:34  dgrisby
+// Trying to redefine built in CORBA module types led to a segfault.
+//
 // Revision 1.13.2.9  2003/04/09 10:26:48  dgrisby
 // Silly variable reuse bug in new CORBA 3 keyword check.
 //
@@ -115,12 +118,17 @@
 #include <idlerr.h>
 #include <idlutil.h>
 #include <idlconfig.h>
+#include <idlrepoId.h>
 
 #include <string.h>
 
 // Global Scope pointers
 Scope* Scope::global_  = 0;
 Scope* Scope::current_ = 0;
+
+int n_builtins = 0;
+static Decl** builtins = 0;
+
 
 // ScopedName implementation
 ScopedName::
@@ -359,14 +367,24 @@ init()
 
   assert(global_ == 0);
 
+  Prefix::newFile();
+
   global_  = new Scope(0, Scope::S_GLOBAL, 0, file, 0);
   Scope* s = global_->newModuleScope("CORBA", file, 1);
 
-  s->addDecl("TypeCode",  0, 0, BaseType::TypeCodeType,  file, 2);
-  s->addDecl("Principal", 0, 0, BaseType::PrincipalType, file, 3);
-
   global_->addModule("CORBA", s, 0, file, 1);
   current_ = global_;
+
+  n_builtins  = 2;
+  assert (builtins == 0);
+  builtins    = new Decl*[n_builtins];
+  builtins[0] = new Native(file, 2, 0, "TypeCode");
+  builtins[1] = new Native(file, 3, 0, "Principal");
+
+  s->addDecl("TypeCode",  0, builtins[0], BaseType::TypeCodeType,  file, 2);
+  s->addDecl("Principal", 0, builtins[1], BaseType::PrincipalType, file, 3);
+
+  Prefix::endOuterFile();
 }
 
 void
@@ -376,6 +394,12 @@ clear()
   assert(global_ != 0);
   delete global_;
   global_ = 0;
+
+  for (int i=0; i < n_builtins; i++)
+    delete builtins[i];
+
+  delete [] builtins;
+  builtins = 0;
 }
 
 void

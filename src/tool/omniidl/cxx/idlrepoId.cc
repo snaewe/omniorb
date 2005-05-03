@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.8  2005/05/03 10:12:40  dgrisby
+// Trying to redefine built in CORBA module types led to a segfault.
+//
 // Revision 1.5.2.7  2003/04/25 15:54:28  dgrisby
 // Remove unnecessary iostream.h include.
 //
@@ -153,6 +156,17 @@ endFile()
   else
     IdlWarning(currentFile, yylineno,
 	       "Confused by pre-processor line directives");
+}
+
+void
+Prefix::
+endOuterFile()
+{
+  if (current_->parent_)
+    IdlWarning(currentFile, yylineno,
+	       "Confused by pre-processor line directives");
+  else
+    delete current_;
 }
 
 const char*
