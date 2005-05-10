@@ -1,3 +1,11 @@
+Tue May 10 15:44:04 BST 2005 dgrisby
+====================================
+
+- Use varargs prototypes on all platforms.
+
+src/tool/omkdepend/def.h
+
+
 Tue May  3 11:08:59 BST 2005 dgrisby
 ====================================
 
