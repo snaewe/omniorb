@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.9.2.3  2005/05/10 22:07:31  dgrisby
+// Merge again.
+//
 // Revision 1.9.2.2  2005/01/06 23:11:14  dgrisby
 // Big merge from omni4_0_develop.
 //
@@ -156,6 +159,17 @@ endFile()
   else
     IdlWarning(currentFile, yylineno,
 	       "Confused by pre-processor line directives");
+}
+
+void
+Prefix::
+endOuterFile()
+{
+  if (current_->parent_)
+    IdlWarning(currentFile, yylineno,
+	       "Confused by pre-processor line directives");
+  else
+    delete current_;
 }
 
 const char*

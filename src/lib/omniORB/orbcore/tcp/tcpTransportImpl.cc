@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/05/10 22:07:32  dgrisby
+  Merge again.
+
   Revision 1.1.4.2  2005/01/06 23:10:56  dgrisby
   Big merge from omni4_0_develop.
 
@@ -455,11 +458,10 @@ void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs) {
 	s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
 	ifaddrs.push_back(s._retn());
       }
-      
-      // ifreq structures have variable lengths
-      entryLength -= offset;
-      ifr = (struct ifreq *)((char *)ifr + offset);
-    }
+    }      
+    // ifreq structures have variable lengths
+    entryLength -= offset;
+    ifr = (struct ifreq *)((char *)ifr + offset);
   }
   close (s);
 }

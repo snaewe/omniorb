@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.2  2005/05/10 22:07:31  dgrisby
+// Merge again.
+//
 // Revision 1.7.2.1  2003/03/23 21:01:45  dgrisby
 // Start of omniORB 4.1.x development branch.
 //
@@ -69,6 +72,7 @@ public:
   // Finish with a scope or file, reverting to the previous prefix
   static void endScope();
   static void endFile();
+  static void endOuterFile();
 
 
 protected:
