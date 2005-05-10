@@ -1,3 +1,29 @@
+Tue May 10 23:06:34 BST 2005 dgrisby
+====================================
+
+- Merge again.
+
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/tool/omkdepend/def.h
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+src/tool/omniidl/cxx/idlrepoId.h
+src/tool/omniidl/cxx/idlscope.cc
+
+- Update version numbers in Windows example makefiles.
+
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/echo/dir.mak
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+
+
 Tue Apr 26 18:06:35 BST 2005 dgrisby
 ====================================
 
