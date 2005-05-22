@@ -40,6 +40,10 @@
 #  include <unistd.h>
 #endif
 
+// unistd.h on some platforms, Mac OS X 10.4 for example, defines a
+// macro called minor.
+#undef minor
+
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
 #else

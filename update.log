@@ -1,3 +1,14 @@
+Sun May 22 13:38:56 BST 2005 dgrisby
+====================================
+
+- Merge Mac OS X and POA fixes.
+
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omnithread/posix.cc
+
+
 Tue May 10 23:06:34 BST 2005 dgrisby
 ====================================
 

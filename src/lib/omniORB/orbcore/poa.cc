@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.6  2005/05/22 12:39:43  dgrisby
+  Merge Mac OS X and POA fixes.
+
   Revision 1.4.2.5  2005/04/14 00:03:56  dgrisby
   New traceInvocationReturns and traceTime options; remove logf function.
 
@@ -2136,18 +2139,33 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   ASSERT_OMNI_TRACEDMUTEX_HELD(poa_lock, 0);
   OMNIORB_ASSERT(pd_dying);
 
-  while( pd_children.length() ) {
-    try {
-      pd_children[0]->destroy(etherealize_objects, 1);
+  PortableServer::POA_var child;
+  while (1) {
+    {
+      omni_tracedmutex_lock sync(poa_lock);
+      if (pd_children.length())
+	child = PortableServer::POA::_duplicate(pd_children[0]);
+      else
+	child = PortableServer::POA::_nil();
     }
-    catch(CORBA::OBJECT_NOT_EXIST& ex) {
-      // Race with another thread destroying a child POA.
-      omni_thread::sleep(0, 100000000);
+    if (!CORBA::is_nil(child)) {
+      try {
+	child->destroy(etherealize_objects, 1);
+      }
+      catch(CORBA::OBJECT_NOT_EXIST& ex) {
+	// Race with another thread destroying a child POA.
+	omni_thread::sleep(0, 100000000);
+      }
+      catch (...) {
+	omniORB::logs(2, "Unexpected exception in do_destroy.");
+      }
     }
-    catch (...) {
-      omniORB::logs(2, "Unexpected exception in do_destroy.");
+    else {
+      // No more children
+      break;
     }
   }
+  child = PortableServer::POA::_nil();
 
   OMNIORB_ASSERT(pd_children.length() == 0);
 
