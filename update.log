@@ -1,3 +1,17 @@
+Sun May 22 13:31:51 BST 2005 dgrisby
+====================================
+
+- Race condition in POA destroy.
+
+src/lib/omniORB/orbcore/poa.cc
+
+- Small changes for Mac OS X Tiger. Thanks Eric Noyau.
+
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/lib/omnithread/posix.cc
+
+
 Tue May 10 15:44:04 BST 2005 dgrisby
 ====================================
 

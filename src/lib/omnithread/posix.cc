@@ -78,7 +78,7 @@
 #include <time.h>
 #include <omnithread.h>
 
-#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(__SCO_VERSION__) || defined(__aix__) || defined (__cygwin__)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(__SCO_VERSION__) || defined(__aix__) || defined (__cygwin__) || defined(__darwin__) || defined(__macos__)
 // typedef of struct timeval and gettimeofday();
 #include <sys/time.h>
 #include <unistd.h>
