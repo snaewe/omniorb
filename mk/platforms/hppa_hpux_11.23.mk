@@ -135,7 +135,7 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 # Platform specific customerisation.
 # everything else is default from unix.mk
 #
-SHAREDLIB_SUFFIX   = so
+SHAREDLIB_SUFFIX   = sl
 
 ifeq ($(notdir $(CXX)),aCC)
 
