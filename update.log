@@ -1,3 +1,16 @@
+Wed Jun  1 11:41:28 BST 2005 dgrisby
+====================================
+
+- HPUX changes from Matej Kenda.
+
+mk/platforms/hppa_hpux_11.23.mk
+mk/platforms/ia64_hpux_11.23.mk
+
+- rmutex fix from Alex Tingle.
+
+src/lib/omniORB/orbcore/rmutex.cc
+
+
 Sun May 22 13:31:51 BST 2005 dgrisby
 ====================================
 
