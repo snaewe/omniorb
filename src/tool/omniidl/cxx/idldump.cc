@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.3  2005/06/08 09:40:38  dgrisby
+// Update example code, IDL dumping.
+//
 // Revision 1.16.2.2  2003/09/04 14:00:28  dgrisby
 // ValueType IDL updates.
 //
@@ -881,6 +884,23 @@ visitDeclaredType(DeclaredType* t)
 	printf("Object");
       break;
     }
+  case IdlType::tk_value:
+    {
+      if (t->decl()) {
+	if (t->decl()->kind() == Decl::D_VALUE) {
+	  Value* v = (Value*)t->decl();
+	  printScopedName(v->scopedName());
+	}
+	else {
+	  assert(t->decl()->kind() == Decl::D_VALUEFORWARD);
+	  ValueForward* f = (ValueForward*)t->decl();
+	  printScopedName(f->scopedName());
+	}
+      }
+      else
+	printf("Object");
+      break;
+    }
   DTCASE(tk_struct,        Struct,            D_STRUCT)
   DTCASE(ot_structforward, StructForward,     D_STRUCTFORWARD)
   DTCASE(tk_union,  	   Union,      	      D_UNION)
@@ -888,6 +908,7 @@ visitDeclaredType(DeclaredType* t)
   DTCASE(tk_enum,   	   Enum,       	      D_ENUM)
   DTCASE(tk_alias,  	   Declarator, 	      D_DECLARATOR)
   DTCASE(tk_native, 	   Native,     	      D_NATIVE)
+  DTCASE(tk_value_box,     ValueBox,          D_VALUEBOX)
   default:
     printf("%s", t->kindAsString());
   }

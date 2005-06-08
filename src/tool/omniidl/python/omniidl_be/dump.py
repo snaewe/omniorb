@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.2  2005/06/08 09:40:37  dgrisby
+# Update example code, IDL dumping.
+#
 # Revision 1.12.2.1  2003/03/23 21:01:37  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -109,7 +112,7 @@ module @id@ {""", id = node.identifier())
             for i in node.inherits():
                 inheritl.append("::" + idlutil.ccolonName(i.scopedName()))
 
-                inherits = ": " + string.join(inheritl, ", ") + " "
+            inherits = ": " + string.join(inheritl, ", ") + " "
         else:
             inherits = ""
 
@@ -119,7 +122,7 @@ module @id@ {""", id = node.identifier())
         
         self.st.out("""\
 @qual@interface @id@ @inherits@{""",
-               id = node.identifier(), inherits=inherits, qual=qual)
+                    id = node.identifier(), inherits=inherits, qual=qual)
 
         self.st.inc_indent()
 
@@ -375,6 +378,99 @@ enum @id@ {@enums@};""",
         self.st.out("""\
 native @id@;""",
                     id=node.identifier())
+
+    def visitValue(self, node):
+        if node.inherits():
+            inheritl = []
+            for i in node.inherits():
+                inheritl.append("::" + idlutil.ccolonName(i.scopedName()))
+
+            if node.truncatable():
+                truncatable = "truncatable "
+            else:
+                truncatable = ""
+
+            inherits = ": " + truncatable + string.join(inheritl, ", ") + " "
+        else:
+            inherits = ""
+
+        if node.supports():
+            inheritl = []
+            for i in node.supports():
+                inheritl.append("::" + idlutil.ccolonName(i.scopedName()))
+
+            inherits = (inherits + "supports " +
+                        string.join(inheritl, ", ") + " ")
+
+        if node.custom():
+            custom = "custom "
+        else:
+            custom = ""
+
+        self.st.out("""\
+@custom@valuetype @id@ @inherits@{""",
+                    id = node.identifier(), inherits=inherits, custom=custom)
+
+        self.st.inc_indent()
+        for n in node.contents():
+            n.accept(self)
+
+        self.st.dec_indent()
+        self.st.out("""\
+};""")
+
+    def visitStateMember(self, node):
+        access = {0: "public", 1: "private"}[node.memberAccess()]
+
+        if node.constrType():
+            node.memberType().decl().accept(self)
+
+        node.memberType().accept(self)
+        type = self.__result_type
+        decll = []
+        for d in node.declarators():
+            d.accept(self)
+            decll.append(self.__result_declarator)
+        decls = string.join(decll, ", ")
+
+        self.st.out("""\
+@access@ @type@ @decls@;""",
+                    access=access, type=type, decls=decls)
+
+    def visitValueAbs(self, node):
+        if node.inherits():
+            inheritl = []
+            for i in node.inherits():
+                inheritl.append("::" + idlutil.ccolonName(i.scopedName()))
+
+            inherits = ": " + string.join(inheritl, ", ") + " "
+        else:
+            inherits = ""
+
+        if node.supports():
+            inheritl = []
+            for i in node.supports():
+                inheritl.append("::" + idlutil.ccolonName(i.scopedName()))
+
+            inherits = (inherits + "supports " +
+                        string.join(inheritl, ", ") + " ")
+
+        self.st.out("""\
+abstract valuetype @id@ @inherits@{""",
+                    id = node.identifier(), inherits=inherits)
+
+        self.st.inc_indent()
+        for n in node.contents():
+            n.accept(self)
+
+        self.st.dec_indent()
+        self.st.out("""\
+};""")
+
+    def visitValueForward(self, node):  return
+    def visitValueBox(self, node):      return
+
+    def visitFactory(self, node):       return
 
 
     def visitDeclarator(self, node):

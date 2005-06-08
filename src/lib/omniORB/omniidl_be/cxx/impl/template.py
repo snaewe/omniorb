@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.3  2005/06/08 09:40:39  dgrisby
+# Update example code, IDL dumping.
+#
 # Revision 1.5.2.2  2005/01/06 23:10:07  dgrisby
 # Big merge from omni4_0_develop.
 #
@@ -61,8 +64,7 @@ interface_def = """\
 //
 // Example class implementing IDL interface @fq_name@
 //
-class @impl_fqname@: public @fq_POA_name@,
-                public PortableServer::RefCountServantBase {
+class @impl_fqname@: public @fq_POA_name@ {
 private:
   // Make sure all instances are built on the heap by making the
   // destructor non-public
@@ -143,22 +145,22 @@ int main(int argc, char** argv)
     orb->run();
     orb->destroy();
   }
-  catch(CORBA::SystemException&) {
-    std::cerr << "Caught CORBA::SystemException." << std::endl;
+  catch(CORBA::TRANSIENT&) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "server." << endl;
   }
-  catch(CORBA::Exception&) {
-    std::cerr << "Caught CORBA::Exception." << std::endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name() << endl;
+  }
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
-    std::cerr << "Caught omniORB::fatalException:" << std::endl;
-    std::cerr << "  file: " << fe.file() << std::endl;
-    std::cerr << "  line: " << fe.line() << std::endl;
-    std::cerr << "  mesg: " << fe.errmsg() << std::endl;
+    cerr << "Caught omniORB::fatalException:" << endl;
+    cerr << "  file: " << fe.file() << endl;
+    cerr << "  line: " << fe.line() << endl;
+    cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    std::cerr << "Caught unknown exception." << std::endl;
-  }
-
   return 0;
 }
 """
