@@ -1,4 +1,4 @@
-\documentclass[11pt,twoside,a4paper]{book}
+\documentclass[draft,11pt,twoside,a4paper]{book}
 \usepackage[T1]{fontenc}
 \usepackage{palatino}
 
@@ -62,8 +62,8 @@
 
 % URL-like things:
 \usepackage[T1]{url}
-\newcommand{\weburl}{\url}
-\newcommand{\email}{\begingroup \urlstyle{rm}\Url}
+\newcommand{\weburl}{\begingroup \urlstyle{sf}\Url}
+\newcommand{\email}{\begingroup \urlstyle{sf}\Url}
 \newcommand{\file}{\begingroup \urlstyle{tt}\Url}
 \newcommand{\envvar}{\begingroup \urlstyle{tt}\Url}
 \newcommand{\makevar}{\begingroup \urlstyle{tt}\Url}
@@ -91,24 +91,42 @@
 \setcounter{tocdepth}{3}
 
 \usepackage{listings}
+
+\makeatletter
+\let\lst@ifdraft\iffalse
+\makeatother
+
 \lstdefinelanguage{idl}%
-  {keywords={any,attribute,boolean,case,char,const,context,default,double,enum,exception,FALSE,float,in,inout,interface,long,module,Object,octet,oneway,out,raises,readonly,sequence,short,string,struct,switch,TRUE,typedef,unsigned,union,void},%
+  {keywords={abstract,any,attribute,boolean,case,char,const,context,custom,default,double,enum,exception,factory,FALSE,fixed,float,in,inout,interface,local,long,module,native,Object,octet,oneway,out,private,public,raises,readonly,sequence,short,string,struct,supports,switch,TRUE,truncatable,typedef,unsigned,union,ValueBase,valuetype,void,wchar,wstring},%
   sensitive,%
-  singlecomment={/*}{*/},%
-  commentline=//,%
-  stringizer=[b]",%
-  directives={define,elif,else,endif,error,if,ifdef,ifndef,line,include,pragma,undef,warning}%
-  }[keywords,comments,strings,directives]
+  morecomment=[s]{/*}{*/},%
+  morecomment=[l]//,%
+  morestring=[b]",%
+  morestring=[b]',%
+  moredirectives={define,elif,else,endif,error,if,ifdef,ifndef,line,%
+     include,pragma,undef,warning}%
+ }[keywords,comments,strings,directives]%
+
+%% \lstset{basicstyle=\ttfamily\small,
+%%         keywordstyle=,
+%%         commentstyle=\itshape,
+%%         labelstyle=\tiny,
+%%         stringspaces=false,
+%%         abovecaptionskip=0pt,
+%%         belowcaptionskip=0pt,
+%%         indent=\parindent,
+%%         fontadjust}
 
 \lstset{basicstyle=\ttfamily\small,
         keywordstyle=,
         commentstyle=\itshape,
-        labelstyle=\tiny,
-        stringspaces=false,
+        numberstyle=\tiny,
+        showstringspaces=false,
         abovecaptionskip=0pt,
         belowcaptionskip=0pt,
-        indent=\parindent,
+        xleftmargin=\parindent,
         fontadjust}
+
 
 \lstnewenvironment{idllisting}{\lstset{language=idl}}{}
 \lstnewenvironment{cxxlisting}{\lstset{language=C++}}{}
@@ -158,7 +176,7 @@
 \vfill
 
 { \Huge
-The omniORB version 4.0\\[4mm]
+The omniORB version 4.1\\[4mm]
 User's Guide
 }
 
@@ -182,12 +200,19 @@ AT\&T Laboratories Cambridge\\
 
 \vfill
 \vfill
-October 2004
+June 2005
 \vfill
 
 \end{center}
 
 \clearpage
+
+{\Large \bf Changes and Additions, June 2005}
+\begin{itemize}
+\item New omniORB 4.1 features.
+\end{itemize}
+
+\vspace{\baselineskip}
 
 {\Large \bf Changes and Additions, October 2004}
 \begin{itemize}
@@ -273,18 +298,18 @@ while the other arguments are being marshalled. With GIOP 1.2, large
 messages are fragmented, so the marshaller can start transmission
 before it knows how large the entire message will be.
 
-New in version 4.0, omniORB also supports a flexible thread pooling
-policy, and supports sending multiple interleaved calls on a single
-connection. This policy leads to a small amount of additional call
-overhead, compared to the default thread per connection model, but
-allows omniORB to scale to extremely large numbers of concurrent
+From version 4.0 onwards, omniORB also supports a flexible thread
+pooling policy, and supports sending multiple interleaved calls on a
+single connection. This policy leads to a small amount of additional
+call overhead, compared to the default thread per connection model,
+but allows omniORB to scale to extremely large numbers of concurrent
 clients.
 
 \subsection{Portability}
 
 omniORB has always been designed to be portable. It runs on many
 flavours of Unix, Windows, several embedded operating systems, and
-relatively obscure systems such as OpenVMS, Fujitsu-Siemens BS2000.
+relatively obscure systems such as OpenVMS and Fujitsu-Siemens BS2000.
 It is designed to be easy to port to new platforms. The IDL to C++
 mapping for all target platforms is the same.
 
@@ -314,9 +339,6 @@ The following is a list of the most significant missing features.
 can act as a client to an IfR. The omniifr project
 (\weburl{http://omniifr.sourceforge.net/}) aims to create an IfR for
 omniORB.
-
-\item Objects by value (IDL valuetype) is not supported in this
-release.
 
 \item Local interfaces are not supported.
 
@@ -352,7 +374,7 @@ variable is not set, omniORB will use the compiled-in pathname to
 locate the file (by default \file{/etc/omniORB.cfg}).
 
 \item On Win32 platforms (Windows NT, 2000, 95, 98), omniORB first
-checks the environment variable \envvar{OMNIORB_CONFIG} to obtain the
+checks the environment variable \envvar{OMNIORB_CONFIG}~to obtain the
 pathname of the configuration file. If this is not set, it then
 attempts to obtain configuration data in the system registry. It
 searches for the data under the key
@@ -579,7 +601,7 @@ or 4.x, even under the BOA compatibility mode.
 
 \section{A Quick Tour of the C++ stubs}
 
-The C++ stubs conform to the mapping defined in the CORBA
+The C++ stubs conform to the standard mapping defined in the CORBA
 specification~\cite{cxxmapping}. It is important to understand the
 mapping before you start writing any serious CORBA applications.
 Before going any further, it is worth knowing what the mapping looks
@@ -824,8 +846,7 @@ upcalls to your implementation.
 Here is a simple implementation of the Echo object.
 
 \begin{cxxlisting}
-class Echo_i : public POA_Echo,
-	       public PortableServer::RefCountServantBase
+class Echo_i : public POA_Echo
 {
 public:
   inline Echo_i() {}
@@ -872,23 +893,28 @@ calls to that POA are processed sequentially.
 
 \item[Reference Counting]\mbox{}\\
 %
-As well as inheriting from the Echo skeleton class, the servant class
-is also derived from \type{PortableServer::RefCountServantBase} which,
-as the name suggests, is a mixin class which provides reference
-counting for the servant object. This means that an \type{Echo\_i}
-instance will be deleted when no more references to it are held by
-application code or the POA itself. Note that this is totally separate
-from the reference counting which is associated with object
-references---a servant object is \emph{never} deleted due to a CORBA
-object reference being released.
+All servant objects are reference counted. The base
+\type{PortableServer::\dsc{}ServantBase} class from which all servant
+skeleton classes derive defines member functions named \op{\_add\_ref}
+and \op{\_remove\_ref}\footnote{In the previous 1.0 version of the C++
+mapping, servant reference counting was optional, chosen by inheriting
+from a mixin class named \type{RefCountServantBase}. That has been
+deprecated in the 1.1 version of the C++ mapping, but the class is
+still available as an empty struct, so existing code that inherits
+from \type{RefCountServantBase} will continue to work.}. The reference
+counting means that an \type{Echo\_i} instance will be deleted when no
+more references to it are held by application code or the POA
+itself. Note that this is totally separate from the reference counting
+which is associated with object references---a servant object is
+\emph{never} deleted due to a CORBA object reference being released.
 
 \item[Instantiation]\mbox{}\\
 %
-Servants that derive from \type{PortableServer::RefCountServantBase}
-must not be instantiated as automatic variables (i.e.\ on the stack).
-Instead, you should always instantiate them using the \code{new}
-operator, i.e.\ their storage is allocated on the heap. Otherwise, the
-POA may attempt to delete an object on the stack.
+Servants are usually instantiated on the heap, i.e.\ using the
+\code{new} operator. However, they can also be created on the stack as
+automatic variables. If you do that, it is vital to make sure that the
+servant has been deactivated, and thus released by the POA, before the
+variable goes out of scope and is destroyed.
 
 \end{description}
 
@@ -897,7 +923,7 @@ POA may attempt to delete an object on the stack.
 Here is an example of how an \type{Echo\_ptr} object reference is
 used.
 
-\lstset{labelstep=1,gobble=4}
+\lstset{stepnumber=1,gobble=4}
 \begin{cxxlisting}
  1  void
  2  hello(CORBA::Object_ptr obj)
@@ -919,7 +945,7 @@ used.
 18         << " The Object said,\"" << dest <<"\"" << endl;
 19  }
 \end{cxxlisting}
-\lstset{labelstep=0,gobble=0}
+\lstset{stepnumber=0,gobble=0}
 
 Briefly, the \op{hello} function accepts a generic object reference.
 The object reference (\code{obj}) is narrowed to \type{Echo\_ptr}. If
@@ -976,7 +1002,7 @@ address spaces.
 The code for this example is reproduced below:
 
 
-\lstset{labelstep=1,gobble=4}
+\lstset{stepnumber=1,gobble=4}
 \begin{cxxlisting}
  1  int
  2  main(int argc, char **argv)
@@ -1001,7 +1027,7 @@ The code for this example is reproduced below:
 21    return 0;
 22  }
 \end{cxxlisting}
-\lstset{labelstep=0,gobble=0}
+\lstset{stepnumber=0,gobble=0}
 
 The example illustrates several important interactions among the ORB,
 the POA, the servant, and the client. Here are the details:
@@ -1016,7 +1042,7 @@ The ORB is initialised by calling the \op{CORBA::ORB\_init}
 function. The function uses the optional 3rd argument to determine
 which ORB should be returned. Unless you are using omniORB specific
 features, it is usually best to leave it out, and get the default
-ORB. To explicitly ask for omniORB 4.0, this argument must be
+ORB. To explicitly ask for omniORB 4.x, this argument must be
 `omniORB4'\footnote{For backwards compatibility, the ORB identifiers
 `omniORB2' and `omniORB3' are also accepted.}.
 
@@ -1175,7 +1201,7 @@ The \op{main} function of the server side is reproduced below. The
 full listing (\file{eg2_impl.cc}) can be found at the end of this
 chapter.
 
-\lstset{labelstep=1,gobble=4}
+\lstset{stepnumber=1,gobble=4}
 \begin{cxxlisting}
  1  int main(int argc, char** argv)
  2  {
@@ -1202,7 +1228,7 @@ chapter.
 23    return 0;
 24  }
 \end{cxxlisting}
-\lstset{labelstep=0,gobble=0}
+\lstset{stepnumber=0,gobble=0}
 
 The stringified object reference is obtained by calling the ORB's
 \op{object\_to\_\dsc{}string} function (line 13). This results in a
@@ -1228,8 +1254,8 @@ try {
   CORBA::Object_var obj = orb->string_to_object(argv[1]);
   hello(obj);
 }
-catch(CORBA::COMM_FAILURE& ex) {
-  ... // code to handle communication failure
+catch(CORBA::TRANSIENT&) {
+  ... // code to handle transient exception...
 }
 \end{cxxlisting}
 
@@ -1244,9 +1270,9 @@ condition\footnote{If a system exception is not caught, the C++
 runtime will call the \op{terminate} function. This function is
 defaulted to abort the whole process and on some systems will cause a
 core file to be produced.}. For instance, the code fragment, shown in
-section~\ref{clnt2}, catches the \code{COMM\_FAILURE} system exception
-which indicates that communication with the object implementation in
-another address space has failed.
+section~\ref{clnt2}, catches the \code{TRANSIENT} system exception
+which indicates that the object could not be contacted at the time of
+the call, usually meaning the server is not running.
 
 All system exceptions inherit from \type{CORBA::SystemException}. With
 compilers that properly support RTTI\footnote{Run Time Type
@@ -1422,14 +1448,18 @@ see the CORBA C++ mapping specification.
 // Usage: eg1
 //
 
-#include <iostream.h>
 #include <echo.hh>
 
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 // This is the object implementation.
 
-class Echo_i : public POA_Echo,
-	       public PortableServer::RefCountServantBase
+class Echo_i : public POA_Echo
 {
 public:
   inline Echo_i() {}
@@ -1442,6 +1472,7 @@ char* Echo_i::echoString(const char* mesg)
 {
   return CORBA::string_dup(mesg);
 }
+
 
 //////////////////////////////////////////////////////////////////////
 
@@ -1463,7 +1494,7 @@ static void hello(Echo_ptr e)
 
   CORBA::String_var dest = e->echoString(src);
 
-  cerr << "I said, \"" << (char*)src << "\"." << endl
+  cout << "I said, \"" << (char*)src << "\"." << endl
        << "The Echo object replied, \"" << (char*)dest <<"\"." << endl;
 }
 
@@ -1509,15 +1540,11 @@ int main(int argc, char** argv)
     // Clean up all the resources.
     orb->destroy();
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
-  }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -1525,10 +1552,6 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }
 \end{cxxlisting}
@@ -1550,12 +1573,16 @@ int main(int argc, char** argv)
 //        eg2_clt.
 //
 
-#include <iostream.h>
 #include <echo.hh>
 
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
-class Echo_i : public POA_Echo,
-	       public PortableServer::RefCountServantBase
+class Echo_i : public POA_Echo
 {
 public:
   inline Echo_i() {}
@@ -1566,7 +1593,7 @@ public:
 
 char* Echo_i::echoString(const char* mesg)
 {
-  cerr << "Upcall " << mesg << endl;
+  cout << "Upcall " << mesg << endl;
   return CORBA::string_dup(mesg);
 }
 
@@ -1588,7 +1615,7 @@ int main(int argc, char** argv)
     // stringified IOR.
     obj = myecho->_this();
     CORBA::String_var sior(orb->object_to_string(obj));
-    cerr << "'" << (char*)sior << "'" << endl;
+    cout << (char*)sior << endl;
 
     myecho->_remove_ref();
 
@@ -1597,11 +1624,11 @@ int main(int argc, char** argv)
 
     orb->run();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -1609,10 +1636,6 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }
 \end{cxxlisting}
@@ -1631,8 +1654,15 @@ int main(int argc, char** argv)
 // Usage: eg2_clt <object reference>
 //
 
-#include <iostream.h>
 #include <echo.hh>
+
+#ifdef HAVE_STD
+#  include <iostream>
+#  include <fstream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 
 static void hello(Echo_ptr e)
@@ -1641,7 +1671,7 @@ static void hello(Echo_ptr e)
 
   CORBA::String_var dest = e->echoString(src);
 
-  cerr << "I said, \"" << (char*)src << "\"." << endl
+  cout << "I said, \"" << (char*)src << "\"." << endl
        << "The Echo object replied, \"" << (char*)dest <<"\"." << endl;
 }
 
@@ -1670,24 +1700,21 @@ int main(int argc, char** argv)
 
     orb->destroy();
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+  catch(CORBA::TRANSIENT&) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "server." << endl;
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
     cerr << "  file: " << fe.file() << endl;
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
-  }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
   }
   return 0;
 }
@@ -1717,15 +1744,19 @@ int main(int argc, char** argv)
 //              Echo  [object]  kind [Object]
 //
 
-#include <iostream.h>
 #include <echo.hh>
 
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr, CORBA::Object_ptr);
 
 
-class Echo_i : public POA_Echo,
-	       public PortableServer::RefCountServantBase
+class Echo_i : public POA_Echo
 {
 public:
   inline Echo_i() {}
@@ -1760,7 +1791,7 @@ main(int argc, char **argv)
 
     CORBA::String_var x;
     x = orb->object_to_string(obj);
-    cerr << x << "\n";
+    cout << x << endl;
 
     if( !bindObjectToName(orb, obj) )
       return 1;
@@ -1772,11 +1803,11 @@ main(int argc, char **argv)
 
     orb->run();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -1784,10 +1815,6 @@ main(int argc, char **argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }
 
@@ -1810,7 +1837,13 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
       return 0;
     }
   }
-  catch(CORBA::ORB::InvalidName& ex) {
+  catch (CORBA::NO_RESOURCES&) {
+    cerr << "Caught NO_RESOURCES exception. You must configure omniORB "
+	 << "with the location" << endl
+	 << "of the naming service." << endl;
+    return 0;
+  }
+  catch (CORBA::ORB::InvalidName&) {
     // This should not happen!
     cerr << "Service required is invalid [does not exist]." << endl;
     return 0;
@@ -1868,17 +1901,19 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     // the Name has not already been bound. [This is incorrect behaviour -
     // it should just bind].
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
-    return 0;
-  }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
-    return 0;
-  }
+  catch(CORBA::TRANSIENT& ex) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "naming service." << endl
+	 << "Make sure the naming server is running and that omniORB is "
+	 << "configured correctly." << endl;
 
+    return 0;
+  }
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name()
+	 << " while using the naming service." << endl;
+    return 0;
+  }
   return 1;
 }
 \end{cxxlisting}
@@ -1908,8 +1943,14 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
 //              Echo  [object]  kind [Object]
 //
 
-#include <iostream.h>
 #include <echo.hh>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 static CORBA::Object_ptr getObjectReference(CORBA::ORB_ptr orb);
 
@@ -1945,15 +1986,15 @@ main (int argc, char **argv)
 
     orb->destroy();
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+  catch(CORBA::TRANSIENT&) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "server." << endl;
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -1961,10 +2002,6 @@ main (int argc, char **argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }
 
@@ -1986,6 +2023,12 @@ getObjectReference(CORBA::ORB_ptr orb)
       cerr << "Failed to narrow the root naming context." << endl;
       return CORBA::Object::_nil();
     }
+  }
+  catch (CORBA::NO_RESOURCES&) {
+    cerr << "Caught NO_RESOURCES exception. You must configure omniORB "
+	 << "with the location" << endl
+	 << "of the naming service." << endl;
+    return 0;
   }
   catch(CORBA::ORB::InvalidName& ex) {
     // This should not happen!
@@ -2014,13 +2057,17 @@ getObjectReference(CORBA::ORB_ptr orb)
     // path [contexts or the object] aren't found:
     cerr << "Context not found." << endl;
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
+  catch(CORBA::TRANSIENT& ex) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "naming service." << endl
+	 << "Make sure the naming server is running and that omniORB is "
+	 << "configured correctly." << endl;
+
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name()
+	 << " while using the naming service." << endl;
+    return 0;
   }
 
   return CORBA::Object::_nil();
@@ -2051,9 +2098,14 @@ getObjectReference(CORBA::ORB_ptr orb)
 //              Echo  [object]  kind [Object]
 //
 
-#include <iostream.h>
 #include <echo.hh>
 
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);
 
@@ -2084,14 +2136,11 @@ int main(int argc, char** argv)
     CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
     PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
-    // Note that the <myecho> object is constructed on the stack here.
-    // This is because tie implementations do not inherit from the
-    // PortableServer::RefCountServantBase mixin class -- and so are
-    // not automatically deleted by the POA.
-    // However, it will delete its implementation (myimpl) when it
-    // it itself destroyed (when it goes out of scope).  It is
-    // essential however to ensure that such objects are not deleted
-    // whilst still activated.
+    // Note that the <myecho> tie object is constructed on the stack
+    // here. It will delete its implementation (myimpl) when it it
+    // itself destroyed (when it goes out of scope).  It is essential
+    // however to ensure that such servants are not deleted whilst
+    // still activated.
     Echo_i* myimpl = new Echo_i();
     POA_Echo_tie<Echo_i> myecho(myimpl);
 
@@ -2108,11 +2157,11 @@ int main(int argc, char** argv)
 
     orb->run();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -2120,10 +2169,6 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }
 
@@ -2146,7 +2191,13 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
       return 0;
     }
   }
-  catch(CORBA::ORB::InvalidName& ex) {
+  catch (CORBA::NO_RESOURCES&) {
+    cerr << "Caught NO_RESOURCES exception. You must configure omniORB "
+	 << "with the location" << endl
+	 << "of the naming service." << endl;
+    return 0;
+  }
+  catch (CORBA::ORB::InvalidName&) {
     // This should not happen!
     cerr << "Service required is invalid [does not exist]." << endl;
     return 0;
@@ -2204,17 +2255,19 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     // the Name has not already been bound. [This is incorrect behaviour -
     // it should just bind].
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
-    return 0;
-  }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
-    return 0;
-  }
+  catch(CORBA::TRANSIENT& ex) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "naming service." << endl
+	 << "Make sure the naming server is running and that omniORB is "
+	 << "configured correctly." << endl;
 
+    return 0;
+  }
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name()
+	 << " while using the naming service." << endl;
+    return 0;
+  }
   return 1;
 }
 \end{cxxlisting}
@@ -2247,7 +2300,7 @@ If you use the \cmdline{-WbBOA} option to omniidl, it will generate
 skeleton code with the same interface as the old omniORB 2 BOA
 mapping, as well as code to be used with the POA. Note that since the
 major problem with the BOA specification was that server code was not
-portable between ORBs, it is unlikely that omniORB 4.0's BOA
+portable between ORBs, it is unlikely that omniORB 4.1's BOA
 compatibility will help you much if you are moving from a different
 BOA-based ORB.
 
@@ -2320,7 +2373,7 @@ old interfaces will have to be rewritten.
 
 \section{omniORB 3.0 compatibility}
 
-omniORB 4.0 is almost completely source-code compatible with omniORB
+omniORB 4.1 is almost completely source-code compatible with omniORB
 3.0. There are two main cases where code may have to change. The first
 is code that uses the omniORB API, some aspects of which have
 changed. The omniORB configuration file also has a new format. See the
@@ -2329,9 +2382,31 @@ next chapter for details of the new API and configuration file.
 The second case of code that may have to change is code using the
 Dynamic Any interfaces. The standard changed quite significantly
 between CORBA 2.2 and CORBA 2.3; omniORB 3.0 supported the old CORBA
-2.2 interfaces; omniORB 4.0 uses the new mapping. The changes are
+2.2 interfaces; omniORB 4.1 uses the new mapping. The changes are
 largely syntax changes, rather than semantic differences.
 
+
+\section{omniORB 4.0 compatibility}
+
+omniORB 4.1 is source-code compatible with omniORB 4.0, with two minor
+exceptions:
+
+\begin{enumerate}
+
+\item As required by the 1.1 version of the CORBA C++ mapping
+  specification, the \type{RefCountServantBase} class has been
+  deprecated, and the reference counting functionality moved into
+  \type{ServantBase}. For backwards compatibility,
+  \type{RefCountServantBase} still exists, but is now defined as an
+  empty struct. Most code will continue to work unchanged, but code
+  that explicitly calls \op{RefCountServantBase::\_add\_ref} or
+  \op{\_remove\_ref} will no longer compile.
+
+\item omniORB 4.0 had an option for Any extraction semantics that was
+  compatible with omniORB 2.7, where ownership of extracted values was
+  not maintained by the Any. That option is no longer available.
+
+\end{enumerate}
 
 
 
@@ -2340,7 +2415,7 @@ largely syntax changes, rather than semantic differences.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{chap:config}
 
-omniORB 4.0 has a wide range of parameters that can be
+omniORB 4.1 has a wide range of parameters that can be
 configured. They can be set in the configuration file / Windows
 registry, as environment variables, on the command line, or within a
 proprietary extra argument to \op{CORBA::ORB\_init}. A few parameters
@@ -2481,6 +2556,15 @@ remote invocations are logged, in addition to any logging that may
 have been selected with \code{traceLevel}.
 
 
+\confopt{traceInvocationReturns}{0}
+
+If the \code{traceInvocationReturns} parameter is set true, a log
+message is output as an operation invocation returns. In conjunction
+with \code{traceInvocations} and \code{traceTime} (described below),
+this provides a simple way of timing CORBA calls within your
+application.
+
+
 \confopt{traceThreadId}{0}
 
 If \code{traceThreadId} is set true, all trace messages are prefixed
@@ -2489,17 +2573,27 @@ for tracking down race conditions, but it adds significant overhead to
 the logging function so it is turned off by default.
 
 
+\confopt{traceTime}{0}
+
+If \code{traceTime} is set true, all trace messages are prefixed with
+the time. This is useful, but on some platforms it adds a very large
+overhead, so it is turned off by default.
+
+
+
 \subsection{Tracing API}
 
-The four tracing parameters can be modified at runtime by assigning to
-the following variables
+The tracing parameters can be modified at runtime by assigning to the
+following variables
 
 \begin{cxxlisting}
 namespace omniORB {
   CORBA::ULong   traceLevel;
   CORBA::Boolean traceExceptions;
   CORBA::Boolean traceInvocations;
+  CORBA::Boolean traceInvocationReturns;
   CORBA::Boolean traceThreadId;
+  CORBA::Boolean traceTime;
 };
 \end{cxxlisting}
 
@@ -2553,15 +2647,10 @@ The native code set the application is using for \type{wchar} and
 \type{wstring}. See chapter~\ref{chap:codesets}.
 
 
-\confopt{omniORB\_27\_CompatibleAnyExtraction}{0}
+\confopt{copyValuesInLocalCalls}{1}
 
-In omniORB 2.7 and earlier, the Any extraction operators for strings
-and object references returned a copy/duplicate of the value stored in
-the Any, meaning the caller had to release the extracted value. The
-C++ mapping was clarified to state that the Any retains ownership of
-the returned value, so the caller does not need to release it. To aid
-the transition for ancient programs from omniORB 2.7 or earlier,
-setting this flag to true selects the old copying behaviour.
+Determines whether valuetype parameters in local calls are copied or
+not. See chapter~\ref{chap:valuetype}.
 
 
 \confopt{abortOnInternalError}{0}
@@ -2579,11 +2668,11 @@ These options control aspects of client-side behaviour.
 
 \confopt{InitRef}{\textit{none}}
 
-Specify the objects available from
+Specify objects available from
 \op{ORB::resolve\_initial\_references}. The arguments take the form
-<\textit{key}>=<\textit{uri}>, where the \textit{key} is the name
-given to \op{resolve\_\dsc{}initial\_\dsc{}references} and
-\textit{uri} is a valid CORBA object reference URI, as detailed in
+<\textit{key}>=<\textit{uri}>, where \textit{key} is the name given to
+\op{resolve\_\dsc{}initial\_\dsc{}references} and \textit{uri} is a
+valid CORBA object reference URI, as detailed in
 chapter~\ref{chap:ins}.
 
 
@@ -2604,8 +2693,8 @@ server's address. See section~\ref{sec:clientRule} for details.
 
 Call timeout in milliseconds for the client side. If a call takes
 longer than the specified number of milliseconds, the ORB closes the
-connection and raises a \code{TRANSIENT} exception. A value of zero
-means no timeout; calls can block for ever. See
+connection to the server and raises a \code{TRANSIENT} exception. A
+value of zero means no timeout; calls can block for ever. See
 section~\ref{sec:timeoutAPI} for more information about timeouts.
 
 \vspace{.5\baselineskip}
@@ -2791,8 +2880,8 @@ should start again.
 
 \confopt{threadPoolWatchConnection}{1}
 
-If true, threads from the pool temporarily behave a bit like thread
-per connection after dispatching a call. See
+If non-zero, threads from the pool temporarily behave a bit like
+thread per connection after dispatching a call. See
 section~\ref{sec:watchConn} for details.
 
 
@@ -2960,11 +3049,11 @@ in the address space.
 
 \subsection{Minor codes}
 
-A new feature in omniORB 4.0 is extensive use of exception minor codes
-to indicate the specific circumstances surrounding a system exception.
-The file \file{include/omniORB4/minorCode.h} contains definitions of
-all the minor codes used in omniORB, covering codes allocated in the
-CORBA specification, and ones specific to omniORB. In compilers with
+omniORB makes extensive use of exception minor codes to indicate the
+specific circumstances surrounding a system exception.  The file
+\file{include/omniORB4/minorCode.h} contains definitions of all the
+minor codes used in omniORB, covering codes allocated in the CORBA
+specification, and ones specific to omniORB. In compilers with
 namespace support, the minor code constants appear in namespace
 \code{omni}; otherwise they are in the global scope.
 
@@ -3009,7 +3098,7 @@ circumstance is as follows:
 
 In this situation, the default \code{TRANSIENT} exception handler
 retries the call, using the object's original location. If the retry
-results in another \code{LOCATION\_FORWARD}, to the same or a
+results in another \code{LOCATION\_\dsc{}FORWARD}, to the same or a
 different location, and \emph{that} forwarded location fails
 immediately, the \code{TRANSIENT} exception will occur again, and the
 pattern will repeat. With repeated exceptions, the handler starts
@@ -3024,16 +3113,19 @@ own exception handler. The API to do so is summarised below:
 \begin{cxxlisting}
 namespace omniORB {
   
-  typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
-                                                  CORBA::ULong n_retries,
-                                                  const CORBA::TRANSIENT& ex);
+  typedef CORBA::Boolean 
+  (*transientExceptionHandler_t)(void* cookie,
+                                 CORBA::ULong n_retries,
+                                 const CORBA::TRANSIENT& ex);
 
-  void installTransientExceptionHandler(void* cookie,
-                                        transientExceptionHandler_t fn);
+  void 
+  installTransientExceptionHandler(void* cookie,
+                                   transientExceptionHandler_t fn);
 
-  void installTransientExceptionHandler(CORBA::Object_ptr obj,
-                                        void* cookie,
-                                        transientExceptionHandler_t fn);
+  void
+  installTransientExceptionHandler(CORBA::Object_ptr obj,
+                                   void* cookie,
+                                   transientExceptionHandler_t fn);
 }
 \end{cxxlisting}
 
@@ -3052,10 +3144,17 @@ arguments. The \code{cookie} is the opaque pointer registered by
 \code{n\_retries} is the number of times the proxy has called this
 handler for the same invocation. The argument \code{ex} is the value
 of the exception caught.  The exception handler is expected to do
-whatever is appropriate and returns a boolean value. If the return
+whatever is appropriate and return a boolean value. If the return
 value is TRUE(1), the proxy object retries the operation. If the
-return value is FALSE(0), the \code{CORBA::TRANSIENT} exception is
-propagated into the application code.
+return value is FALSE(0), the original exception is propagated into
+the application code. In the case of a \code{TRANSIENT} exception due
+to a failed location forward, the exception propagated to the
+application is the \emph{original} exception that caused the
+\code{TRANSIENT} (e.g.\ a \code{COMM\_FAILURE} or
+\code{OBJECT\_NOT\_EXIST}), rather than the \code{TRANSIENT}
+exception\footnote{This is a change from omniORB 4.0 and earlier,
+where it was the \code{TRANSIENT} exception that was propagated to the
+application.}.
 
 The following sample code installs a simple exception handler for all
 objects and for a specific object:
@@ -3104,21 +3203,19 @@ behaviour by installing their own exception handlers. The API to do so
 is summarised below:
 
 \begin{cxxlisting}
-class omniORB {
-public:
+typedef CORBA::Boolean
+(*commFailureExceptionHandler_t)(void* cookie,
+                                 CORBA::ULong n_retries,
+                                 const CORBA::COMM_FAILURE& ex);
 
-typedef CORBA::Boolean (*commFailureExceptionHandler_t)(void* cookie,
-                                                CORBA::ULong n_retries,
-                                                const CORBA::COMM_FAILURE& ex);
+void
+installCommFailureExceptionHandler(void* cookie,
+                                   commFailureExceptionHandler_t fn);
 
-static void installCommFailureExceptionHandler(void* cookie,
-                                             commFailureExceptionHandler_t fn);
-
-static void installCommFailureExceptionHandler(CORBA::Object_ptr obj,
-                                             void* cookie,
-                                             commFailureExceptionHandler_t
-                                             fn);
-}
+void
+installCommFailureExceptionHandler(CORBA::Object_ptr obj,
+                                   void* cookie,
+                                   commFailureExceptionHandler_t fn);
 \end{cxxlisting}
 
 The functions are equivalent to their counterparts for
@@ -3127,28 +3224,27 @@ The functions are equivalent to their counterparts for
 
 \subsection{CORBA::SystemException}
 
-If a system exception other than \code{CORBA::TRANISENT} or
-\code{CORBA::COMM\_FAILURE} occurs, the default behaviour of the proxy
+If a system exceptions other than \code{TRANSIENT} or
+\code{COMM\_FAILURE} occurs, the default behaviour of the proxy
 objects is to propagate this exception to the application.
 Applications can override the default behaviour by installing their
 own exception handlers. The API to do so is summarised below:
 
 
 \begin{cxxlisting}
-class omniORB {
-public:
+typedef CORBA::Boolean
+(*systemExceptionHandler_t)(void* cookie,
+                            CORBA::ULong n_retries,
+                            const CORBA::SystemException& ex);
 
-typedef CORBA::Boolean (*systemExceptionHandler_t)(void* cookie,
-                                            CORBA::ULong n_retries,
-                                            const CORBA::SystemException& ex);
+void
+installSystemExceptionHandler(void* cookie,
+                              systemExceptionHandler_t fn);
 
-static void installSystemExceptionHandler(void* cookie,
-                                          systemExceptionHandler_t fn);
-
-static void installSystemExceptionHandler(CORBA::Object_ptr obj,
-                                          void* cookie,
-                                          systemExceptionHandler_t fn);
-}
+void
+installSystemExceptionHandler(CORBA::Object_ptr obj,
+                              void* cookie,
+                              systemExceptionHandler_t fn);
 \end{cxxlisting}
 
 The functions are equivalent to their counterparts for
@@ -3427,10 +3523,10 @@ By default, omniidl separates the normal stub and skeleton file (the
 \file{SK.cc} file) from the `dynamic' stubs (the \file{DynSK.cc}
 file), so applications that do not need support for Any and TypeCode
 for a particular IDL file do not waste space with unnecessary
-definitions. New in omniORB 4.0, it is possible to output both the
-normal stubs \emph{and} the dynamic stubs to a single file, by simply
-specifying the same extension for both files. This command places
-both the normal stubs and the dynamic stubs in \file{aSK.cc}:
+definitions. It is possible to output both the normal stubs \emph{and}
+the dynamic stubs to a single file, by simply specifying the same
+extension for both files. This command places both the normal stubs
+and the dynamic stubs in \file{aSK.cc}:
 
 \begin{quote}
 \cmdline{omniidl -bcxx -Wba -Wbd=SK.cc a.idl}
@@ -3440,11 +3536,11 @@ both the normal stubs and the dynamic stubs in \file{aSK.cc}:
 
 \subsection{Module splicing}
 
-On C++ compilers without namespace support, IDL modules map to C++
-classes, and so cannot be reopened. For some IDL, it is possible to
-`splice' reopened modules on to the first occurrence of the module, so
-all module definitions are in a single class. It is possible in this
-sort of situation:
+On ancient C++ compilers without namespace support, IDL modules map to
+C++ classes, and so cannot be reopened. For some IDL, it is possible
+to `splice' reopened modules on to the first occurrence of the module,
+so all module definitions are in a single class. It is possible in
+this sort of situation:
 
 \begin{idllisting}
 module M1 {
@@ -3552,7 +3648,7 @@ is installed):
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{chap:ins}
 
-omniORB 4.0 supports the Interoperable Naming Service (INS). The
+omniORB 4.1 supports the Interoperable Naming Service (INS). The
 following is a summary of its facilities.
 
 \section{Object URIs}
@@ -3820,9 +3916,9 @@ starts with the default port of 2809, and an object key of
 
 omniMapper is a simple daemon which listens on port 2809 (or any other
 port), and redirects IIOP requests for configured object keys to
-associated persistent IORs. It can be used to make a naming service
-(even an old non-INS aware version of omniNames or other ORB's naming
-service) appear on port 2809 with the object key
+associated persistent object references. It can be used to make a
+naming service (even an old non-INS aware version of omniNames or
+other ORB's naming service) appear on port 2809 with the object key
 `\texttt{NameService}'. The same goes for any other service you may
 wish to specify, such as an interface repository. omniMapper is
 started with a command line of:
@@ -3892,7 +3988,13 @@ and no other data. It is a normal POA in all other respects, so you
 can activate/deactivate it, create children, and so on, in the usual
 way.
 
-
+Children of the omniINSPOA do not inherit its special properties of
+creating simple object keys. If the omniINSPOA's policies are not
+suitable for your application, you cannot create a POA with different
+policies (such as single threading, for example), and still generate
+simple object keys. Instead, you can activate a servant in the
+omniINSPOA that uses location forwarding to redirect requests to
+objects in a different POA.
 
 
 
@@ -3922,7 +4024,7 @@ identifies the IDL interface of the object.
 Unless the \code{ID} pragma is specified in the IDL, the ORB generates
 the RepoId string in the so-called OMG IDL Format\footnote{For further
 details of the repository ID formats, see section 10.6 in the CORBA
-2.3 specification.}. For instance, the RepoId for the \intf{Echo}
+2.6 specification.}. For instance, the RepoId for the \intf{Echo}
 interface used in the examples of chapter~\ref{chap:basic} is
 \texttt{IDL:Echo:1.0}.
 
@@ -3958,8 +4060,8 @@ is \type{B}, which inherits from \type{A}. In this case, the RepoId of
 The GIOP/IIOP specification allows an ORB to send a null string in the
 RepoId field of an IOR. It is up to the receiving end to work out the
 real type of the object. omniORB never sends out null strings as
-RepoId, but it may receive null RepoIds from other ORBs. In that case,
-it will use the mechanism described below to ensure type safety.
+RepoIds, but it may receive null RepoIds from other ORBs. In that
+case, it will use the mechanism described below to ensure type safety.
 
 
 \section{Interface Inheritance}
@@ -4013,7 +4115,7 @@ interface C {
 };
 \end{idllisting}
 
-\lstset{labelstep=1,gobble=4}
+\lstset{stepnumber=1,gobble=4}
 \begin{cxxlisting}
  1  // C++
  2  C_ptr objC;
@@ -4026,7 +4128,7 @@ interface C {
  9  objR =  objC->op2();
 10  objA =  A::_narrow(objR);
 \end{cxxlisting}
-\lstset{labelstep=0,gobble=0}
+\lstset{stepnumber=0,gobble=0}
 
 \noindent If the stubs of A,B,C,D are linked into the executable and:
 
@@ -4035,9 +4137,13 @@ interface C {
 complete successfully. The remote object is only contacted at line 7.
 
 \item[Case 2] \op{C::op1} and \op{C::op2} return a D. This condition
-only occurs if the runtime of the remote end is buggy. The ORB raises
-a \code{CORBA::MARSHAL} exception at line 1 because it knows it has
-received an interface of the wrong type.
+only occurs if the runtime of the remote end is buggy. Even though the
+IDL definitions show that D is not derived from A, omniORB gives it
+the benefit of the doubt, in case it actually has a more derived
+interface that is derived from both A and D. At line 7, the object is
+contacted to ask if it is an A. The answer is no, so a
+\code{CORBA::INV\_OBJREF} exception is raised. At line 10, the narrow
+operation will fail, and objA will be set to nil.
 \end{description}
 
 \noindent If only the stubs of A are linked into the executable and:
@@ -4051,8 +4157,8 @@ contacted to ask if it is an A.
 only occurs if the runtime of the remote end is buggy. Line 6
 completes and no exception is raised. At line 7, the object is
 contacted to ask if it is an A. If the answer is no, a
-\code{CORBA::INV\_OBJREF} exception is raised. The application will
-also see a \code{CORBA::INV\_OBJREF} at line 10.
+\code{CORBA::INV\_OBJREF} exception is raised. At line 10, the narrow
+operation will fail, and objA will be set to nil.
 \end{description}
 
 
@@ -4150,9 +4256,13 @@ themselves.
 
 In the default one call per connection mode, there is a limit to the
 number of concurrent connections that are opened, set with the
-\code{maxGIOPConnection\dsc{}PerServer} parameter. To tell the ORB to
-multiplex calls on a single connection, set the
-\code{oneCallPerConnection} parameter to zero.
+\code{maxGIOPConnection\dsc{}PerServer} parameter. To tell the ORB
+that it may multiplex calls on a single connection, set the
+\code{oneCallPerConnection} parameter to zero. If the
+\code{oneCallPer\dsc{}Connection} parameter is set to the default
+value of one, and there are more concurrent calls than specified by
+\code{maxGIOPConnectionPerServer}, calls block waiting for connections
+to become free.
 
 Note that some server-side ORBs, including omniORB versions before
 version 4.0, are unable to deal with concurrent calls multiplexed on a
@@ -4228,7 +4338,7 @@ The \code{maxServerThreadPerConnection} parameter can be set to limit
 the number of threads that can be allocated to a single connection
 containing concurrent calls. Setting the parameter to 1 mimics the
 behaviour of omniORB versions before 4.0, that did not support
-multiplexed calls.
+calls multiplexed on one connection.
 
 
 \subsection{Thread pool mode}
@@ -4243,9 +4353,9 @@ therefore at least one thread switch for each call.
 
 The thread pool is not pre-initialised. Instead, threads are started
 on demand, and idle threads are stopped after a period of inactivity.
-The maximum number of threads that can be started in the pool is
-selected with the \code{maxServerThreadPool\dsc{}Size} parameter. The
-default is 100.
+The maximum number of threads that can be started in the pool is set
+with the \code{maxServerThreadPool\dsc{}Size} parameter. The default
+is 100.
 
 A common pattern in CORBA applications is for a client to make several
 calls to a single object in quick succession. To handle this situation
@@ -4260,6 +4370,14 @@ size of the thread pool), this policy can delay a call coming from
 another connection. If the \code{threadPoolWatch\dsc{}Connection}
 parameter is set to zero, connection watching is disabled and threads
 return to the pool immediately after finishing a single request.
+
+In the face of multiplexed calls on a single connection, multiple
+threads from the pool can be dispatched for one connection, just as in
+thread per connection mode. With \code{threadPoolWatchConnection} set
+to the default value of 1, only the last thread servicing a connection
+will watch it when it finishes a request. Setting the parameter to a
+larger number allows the last \emph{n} connections to watch the
+connection.
 
 
 \subsection{Policy transition}
@@ -4299,10 +4417,10 @@ stay in that mode until they are closed.
 It is wasteful to leave a connection open when it has been left unused
 for a considerable time. Too many idle connections could block out new
 connections when it runs out of spare communication channels. For
-example, most Unix platforms have a limit on the number of file
-handles a process can open. 64 is the usual default limit. The value
-can be increased to a maximum of a thousand or more by changing the
-`ulimit' in the shell.
+example, most platforms have a limit on the number of file handles a
+process can open. Many platforms have a very small default limit like
+64. The value can often be increased to a maximum of a thousand or
+more by changing the `ulimit' in the shell.
 
 Every so often, a thread scans all open connections to see which are
 idle. The scanning period (in seconds) is set with the
@@ -4372,7 +4490,7 @@ TCP end points have the format:
 It determines the network interface on which the server listens. The
 port selects the TCP port to listen on, which must be unoccupied.
 Either the host or port, or both can be left empty. If the host is
-empty, the ORB published the IP address of the first non-loopback
+empty, the ORB publishes the IP address of the first non-loopback
 network interface it can find (or the loopback if that is the only
 interface), but listens on \emph{all} network interfaces. If the port
 is empty, the operating system chooses a port.
@@ -4478,7 +4596,7 @@ tried. Each rule has the form:
 \vspace{\baselineskip}
 
 \noindent The transport-selecting actions form a prioritised list, so
-an action of `\code{unix,tcp,ssl}' means to use a Unix transport if
+an action of `\code{unix,tcp,\dsc{}ssl}' means to use a Unix transport if
 there is one, failing that a TCP transport, failing \emph{that} an SSL
 transport. In the absence of any explicit rules, the client uses the
 implicit rule of `\code{* unix,tcp,ssl}'.
@@ -4576,9 +4694,9 @@ correctly. On the client side, these conditions must be met:
 
 \section{SSL transport}
 
-omniORB 4.0 supports an SSL transport, using OpenSSL. It is only built
-if OpenSSL is available. On platforms using Autoconf, it is
-autodetected in many locations, or its location can be given with the
+omniORB supports an SSL transport, using OpenSSL. It is only built if
+OpenSSL is available. On platforms using Autoconf, it is autodetected
+in many locations, or its location can be given with the
 \code{-{}-with-openssl=} argument to \code{configure}. On other
 platforms, the \code{OPEN\_SSL\_ROOT} make variable must be set in the
 platform file.
@@ -4597,7 +4715,7 @@ contains a \file{README} file with more details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{chap:codesets}
 
-omniORB 4.0 supports full code set negotiation, used to select and
+omniORB supports full code set negotiation, used to select and
 translate between different character code sets, for the transmission
 of chars, strings, wchars and wstrings. The support is mostly
 transparent to application code, but there are a number of options
@@ -4658,10 +4776,10 @@ use to implement code sets, plus some derived classes that use look-up
 tables to convert simple 8-bit and 16-bit code sets to Unicode.
 
 When sending or receiving string data, there are a total of four code
-sets in action: a native char code set, and transmission char code
-set, a native wchar code set, and a transmission wchar code set. The
-native code sets are as described above; the transmission code sets
-are the ones selected to communicate with a remote machine. They are
+sets in action: a native char code set, a transmission char code set,
+a native wchar code set, and a transmission wchar code set. The native
+code sets are as described above; the transmission code sets are the
+ones selected to communicate with a remote machine. They are
 responsible for understanding the GIOP marshalling formats, as well as
 the code sets themselves. Each of the four code sets has an object
 associated with it which contains methods for converting data.
@@ -4691,7 +4809,7 @@ entirely of data and no code, since they are driven by look-up tables.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{chap:interceptors}
 
-omniORB 4.0 supports interceptors that allow the application to insert
+omniORB supports interceptors that allow the application to insert
 processing in various points along the call chain, and in various
 other locations. It does not support the standard Portable
 Interceptors API.
@@ -4753,10 +4871,11 @@ header files within \file{include/omniORB4} and
 \section{Interceptor registration}
 
 All the interceptor singletons are registered within another singleton
-object of class \code{omniInterceptors}. You retrieve a pointer to
-that singleton with the \op{omniORB::\dsc{}getInterceptors} function,
-which must be called after \op{CORBA::ORB\_init}, but before the ORB
-is used. The code to register an interceptor looks, for example, like:
+object of class \code{omniInterceptors}. You retrieve a pointer to the
+object with the \op{omniORB::\dsc{}getInterceptors} function, which
+must be called after the ORB has been initialised with
+\op{CORBA::ORB\_init}, but before the ORB is used. The code to
+register an interceptor looks, for example, like:
 
 \begin{cxxlisting}
 omniInterceptors* interceptors = omniORB::getInterceptors();
@@ -4912,25 +5031,6 @@ on TypeCode, refer to the Interface Repository chapter in the CORBA
 core section of the CORBA specification.
 
 
-\begin{statement}
-\centerline{\textbf{Warning}}
-
-Since 2.8.0, omniORB has been updated to CORBA 2.3 and above. In order
-to comply with the 2.3 specification, it was necessary to change the
-semantics of \emph{the extraction of string, object reference and
-typecode from an Any}. The memory of the extracted values of these
-types now belongs to the Any value. The storage is freed when the Any
-value is deallocated.  Previously the extracted value was a copy and
-the application was responsible for releasing the storage. It is not
-possible to detect the old usage at compile time. In particular,
-unmodified code that uses the affected Any extraction operators will
-most certainly cause runtime errors to occur.  To smooth the
-transition from the old usage to the new, an ORB configuration
-parameter \code{omniORB\_27\_CompatibleAnyExtraction} can be set to
-revert the Any extraction operators to the old semantics.
-
-\end{statement}
-
 
 \section{Example using type Any}
 
@@ -4947,7 +5047,6 @@ operation until run-time. To use type any in IDL, use the keyword
 
 \begin{idllisting}
 // IDL
-
 interface anyExample {
   any testOp(in any mesg);
 };
@@ -5031,23 +5130,20 @@ extract values from an Any is as follows:
 // C++
 CORBA::Long l;
 CORBA::Double d;
-const char* str;     // From CORBA 2.3 onwards, uses const char*
-                     // instead of char*. 
+const char* str;
 
 if (an_any >>= l) {
-    cout << "Long: " << l << endl;
+  cout << "Long: " << l << endl;
 }
 else if (an_any >>= d) {
-    cout << "Double: " << d << endl;
+  cout << "Double: " << d << endl;
 }
 else if (an_any >>= str) {
-    cout << "String: " << str << endl;
-    // Since 2.8.0 the storage of the extracted string is still
-    // owned by the any.
-    // In pre-omniORB 2.8.0 releases, the string returned is a copy.
+  cout << "String: " << str << endl;
+  // The storage of the extracted string is still owned by the any.
 }
 else {
-    cout << "Unknown value." << endl;
+  cout << "Unknown value." << endl;
 }
 \end{cxxlisting}
 
@@ -5110,8 +5206,7 @@ The third operator, \emph{(3)}, is used to extract the constructed
 type from the Any, and can be used as follows:
 
 \begin{cxxlisting}
-const testStruct* tp;   // From CORBA 2.3 onwards, use 
-                        // const testStruct* instead of testStruct*
+const testStruct* tp;
 
 if (an_any >>= tp) {
     cout << "testStruct: l: " << tp->l << endl;
@@ -5149,20 +5244,16 @@ Mapping specification for further information.
 This section contains some notes on the use and behaviour of type Any
 in omniORB.
 
-\paragraph*{Generating Insertion and Extraction Operators.}
+\subsection{Generating Insertion and Extraction Operators.}
 To generate type Any insertion and extraction operators for
 constructed types and interfaces, the \texttt{-Wba} command line flag
 should be specified when running omniidl.
 
-\paragraph*{TypeCode comparison when extracting from an Any.}
+\subsection{TypeCode comparison when extracting from an Any.}
 When an attempt is made to extract a type from an Any, the TypeCode of
 the type is checked for \emph{equivalence} with the TypeCode of the
 type stored by the Any. The \op{equivalent} test in the TypeCode
-interface is used for this purpose\footnote{In pre-omniORB 2.8.0
-releases, omniORB performs an equality test and will ignore any alias
-TypeCodes (\code{tk\_alias}) when making this comparison. The
-semantics is similar to the \op{equivalent} test in the TypeCode
-interface of CORBA 2.3.}.
+interface is used for this purpose.
 
 Examples:
 
@@ -5188,21 +5279,11 @@ If an attempt is made to extract the type \type{Test1} defined in IDL
 1 from an Any containing the \type{Test1} defined in IDL 2, this will
 succeed (and vice-versa), as the two types differ only by an alias.
 
-\paragraph*{Top-level aliases.}
+\subsection{Top-level aliases.}
 When a type is inserted into an Any, the Any stores both the value of
-the type and the TypeCode for that type. The treatment of top-level
-aliases from omniORB 2.8.0 onwards is different from pre-omniORB 2.8.0
-releases.
-
-In pre-omniORB 2.8.0 releases, if there are any top-level
-\code{tk\_alias} TypeCodes in the TypeCode, they will be removed from
-the TypeCode stored in the Any. Note that this does not affect the
-\code{\_tc\_} TypeCode generated to represent the type (see section on
-TypeCode, below). This behaviour is necessary, as two types that
-differ only by a top-level alias can use the same insertion and
-extraction operators. If the \code{tk\_alias} is not removed, one of
-the types could be transmitted with an incorrect \code{tk\_alias}
-TypeCode. Example:
+the type and the TypeCode for that type. However, in some cases, a
+top-level alias can be lost due to the details of the C++ mapping. For
+example, consider these IDL definitions:
 
 \begin{idllisting}
 // IDL 3
@@ -5211,44 +5292,43 @@ typedef sequence<double> seqDouble2;
 typedef seqDouble2       seqDouble3;
 \end{idllisting}
 
-If either \type{seqDouble1} or \type{seqDouble2} is inserted into an
-Any, the TypeCode stored in the Any will be for a
-\code{sequence<double>}, and not for an alias to a
-\code{sequence<double>}.
+omniidl generates distinct types for \type{seqDouble1} and
+\type{seqDouble2}, and therefore each has its own set of C++ operators
+for Any insertion and extraction. That means inserting a
+\type{seqDouble1} into an Any sets the Any's TypeCode to include the
+alias `seqDouble1', and inserting a \type{seqDouble2} sets the
+TypeCode to the alias `seqDouble2'.
 
-From omniORB 2.8.0 onwards, there are two changes. Firstly, in the
-example, \type{seqDouble1} and \type{seqDouble2} are now distinct
-types and therefore each has its own set of C++ operators for Any
-insertion and extraction. Secondly, the top level aliases are not
-removed. For example, if \type{seqDouble3} is inserted into an Any,
-the insertion operator for \type{seqDouble2} is invoked (because
-\type{seqDouble3} is just a C++ typedef of
-\type{seqDouble2}). Therefore, the TypeCode in the Any would be that
-of seqDouble2. If this is not desirable, one can use the new member
-function `\code{void type(TypeCode\_ptr)}' of the Any interface to
-explicitly set the TypeCode to the correct one.
+However, in the C++ mapping, \type{seqDouble3} is required to be just
+a C++ typedef to \type{seqDouble2}, so the C++ compiler uses the Any
+insertion operator for \type{seqDouble2}. Therefore, inserting a
+\type{seqDouble3} sets the Any's TypeCode to the \type{seqDouble2}
+alias. If this is not desirable, you can use the member function
+`\code{void type(TypeCode\_ptr)}' of the Any interface to explicitly
+set the TypeCode to the correct one.
 
 
-\paragraph*{Removing aliases from TypeCodes.}
-Some ORBs (such as Orbix) will not accept TypeCodes containing
-\code{tk\_alias} TypeCodes. When using type Any while interoperating
-with these ORBs, it is necessary to remove \code{tk\_alias} TypeCodes
-from throughout the TypeCode representing a constructed type.
+\subsection{Removing aliases from TypeCodes.}
+Some ORBs (such as old versions of Orbix) will not accept TypeCodes
+containing \code{tk\_alias} TypeCodes. When using type Any while
+interoperating with these ORBs, it is necessary to remove
+\code{tk\_alias} TypeCodes from throughout the TypeCode representing a
+constructed type.
 
-To remove all \code{tk\_alias} TypeCodes from TypeCodes stored in
+To remove all \code{tk\_alias} TypeCodes from TypeCodes transmitted in
 Anys, supply the \texttt{-ORBtcAliasExpand 1} command-line flag when
 running an omniORB executable. There will be some (small) performance
-penalty when inserting values into an Any.
+penalty when transmitting Any values.
 
 Note that the \code{\_tc\_} TypeCodes generated for all constructed
 types will contain the complete TypeCode for the type (including any
 \code{tk\_alias} TypeCodes), regardless of whether the
-\texttt{-ORBtcAliasExpand} flag is set to 1 or not.
+\texttt{-ORBtcAliasExpand} flag is set to 1 or not. It is only when
+Anys are transmitted that the aliases are stripped.
 
-\paragraph*{Recursive TypeCodes.}
-omniORB (as of version 2.7) supports recursive TypeCodes. This means
-that types such as the following can be inserted or extracted from an
-Any:
+\subsection{Recursive TypeCodes.}
+omniORB supports recursive TypeCodes. This means that types such as
+the following can be inserted or extracted from an Any:
 
 \begin{idllisting}
 // IDL 4
@@ -5258,14 +5338,14 @@ struct Test4 {
 \end{idllisting}
 
 
-\paragraph*{Threads and type Any.}
+\subsection{Threads and type Any.}
 Inserting and extracting simultaneously from the same Any (in 2
-different threads) is undefined behaviour.
+different threads) results in undefined behaviour.
 
-Extracting simultaneously from the same Any (in 2 or more different
-threads) also leads to undefined behaviour.  It was decided not to
-protect the Any with a mutex, as this condition should rarely arise,
-and adding a mutex would lead to performance penalties.
+In versions of omniORB before 4.0, extracting simultaneously from the
+same Any (in 2 or more different threads) also led to undefined
+behaviour. That is no longer the case---Any extraction is now thread
+safe.
 
 
 \section{TypeCode in omniORB}
@@ -5273,7 +5353,7 @@ and adding a mutex would lead to performance penalties.
 This section contains some notes on the use and behaviour of TypeCode
 in omniORB
 
-\paragraph*{TypeCodes in IDL.}
+\subsection{TypeCodes in IDL.}
 
 When using TypeCodes in IDL, note that they are defined in the CORBA
 scope.  Therefore, \type{CORBA::TypeCode} should be used. Example:
@@ -5286,18 +5366,19 @@ struct Test5 {
 };
 \end{idllisting}
 
-\paragraph*{orb.idl}
+\subsection{orb.idl}
 
-Inclusion of the file \file{orb.idl} in IDL using
-\type{CORBA::TypeCode} is optional.  An empty \file{orb.idl} file is
-provided for compatibility purposes.
+The CORBA specification says that IDL using \type{CORBA::TypeCode}
+must include the file \file{orb.idl}. That is not required in omniORB,
+but a suitable \file{orb.idl} is available.
 
-\paragraph*{Generating TypeCodes for constructed types.}
+
+\subsection{Generating TypeCodes for constructed types.}
 
 To generate a TypeCode for constructed types, specify the
 \texttt{-Wba} command-line flag when running omniidl. This will
 generate a \code{\_tc\_} TypeCode describing the type, at the same
-scope as the type (as per the CORBA 2.3 specification). Example:
+scope as the type. Example:
 
 \begin{idllisting}
 // IDL 6
@@ -5312,40 +5393,6 @@ struct \type{Test6}. The operations defined in the TypeCode interface
 can be used to query the TypeCode about the type it represents.
 
 
-\paragraph*{TypeCode equality.}
-
-The behaviour of \op{CORBA::TypeCode::equal} member function from
-omniORB 2.8.0 onwards is different from pre-omniORB 2.8.0 releases.
-In summary, the pre-omniORB 2.8.0 is close to the semantics of the new
-\op{CORBA::TypeCode::equivalent} member function. Details are as
-follows:
-
-The \op{CORBA::TypeCode::equal} member function will now return true
-only if the two TypeCodes are \emph{exactly} the same.
-\code{tk\_alias} TypeCodes are included in this comparison, unlike the
-comparison made when values are extracted from an Any (see section on
-Any, above).
-
-In pre-omniORB 2.8.0 releases, equality test would ignore the optional
-fields when one of the fields in the two typecodes is empty. For
-example, if one of the TypeCodes being checked is a \code{tk\_struct},
-\code{tk\_union}, \code{tk\_enum}, or \code{tk\_alias}, and has an
-empty repository ID parameter, then the repository ID parameter will
-be ignored when checking for equality.  Similarly, if the \code{name}
-or \code{member\_name} parameters of a TypeCode are empty strings,
-they will be ignored for equality checking purposes. This is because a
-CORBA 2 ORB does not have to include these parameters in a TypeCode
-(see the Interoperability section of the CORBA specification). Note
-that these (optional) parameters are included in TypeCodes generated
-by omniORB.
-
-Since CORBA 2.3, the issue of TypeCode equality has been clarified.
-There is now a new member \op{CORBA::TypeCode::equivalent} which
-provides the semantics of the \op{CORBA::TypeCode::equal} as
-implemented in omniORB releases prior to 2.8.0. So from omniORB 2.8.0
-onwards, the \op{CORBA::TypeCode::\dsc{}equal} function has been
-changed to enforce strict equality.  The pre-2.8.0 behaviour can be
-obtained with \op{equivalent}.
 
 
 \clearpage
@@ -5363,13 +5410,19 @@ obtained with \op{equivalent}.
 //
 // Usage: anyExample_impl
 //
-//        On startup, the object reference is printed to cerr as a
+//        On startup, the object reference is printed to cout as a
 //        stringified IOR. This string should be used as the argument to 
 //        anyExample_clt.
 //
 
-#include <iostream.h>
 #include <anyExample.hh>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 class anyExample_i : public POA_anyExample {
 public:
@@ -5377,6 +5430,7 @@ public:
   virtual ~anyExample_i() {}
   virtual CORBA::Any* testOp(const CORBA::Any& a);
 };
+
 
 CORBA::Any* anyExample_i::testOp(const CORBA::Any& a)
 {
@@ -5391,12 +5445,15 @@ CORBA::Any* anyExample_i::testOp(const CORBA::Any& a)
 
   testStruct* tp;
 
+
   if (a >>= l) {
     cout << "Long: " << l << endl;
   }
 #ifndef NO_FLOAT
+  // XXX - should we provide stream ops for _CORBA_Double_ and
+  // _CORBA_Float_on VMS??
   else if (a >>= d) {
-    cout << "Double: " << d << endl;
+    cout << "Double: " << (double)d << endl;
   }
 #endif
   else if (a >>= str) {
@@ -5423,7 +5480,7 @@ CORBA::Any* anyExample_i::testOp(const CORBA::Any& a)
 int main(int argc, char** argv)
 {
   try {
-    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
 
     CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
     PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
@@ -5434,7 +5491,7 @@ int main(int argc, char** argv)
 
     obj = myobj->_this();
     CORBA::String_var sior(orb->object_to_string(obj));
-    cerr << "'" << (char*)sior << "'" << endl;
+    cout << (char*)sior << endl;
 
     myobj->_remove_ref();
 
@@ -5444,20 +5501,17 @@ int main(int argc, char** argv)
     orb->run();
     orb->destroy();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
     cerr << "  file: " << fe.file() << endl;
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
-  }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
   }
   return 0;
 }
@@ -5470,7 +5524,7 @@ int main(int argc, char** argv)
 
 \begin{cxxlisting}
 // anyExample_clt.cc -  This is the source code of the example used in 
-//                      Chapter 9 "Type Any and TypeCode" of the omniORB 
+//                      Chapter 9 "Type Any and TypeCode" of the omniORB
 //                      users guide.
 //
 //                      This is the client.
@@ -5478,8 +5532,15 @@ int main(int argc, char** argv)
 // Usage: anyExample_clt <object reference>
 //
 
-#include <iostream.h>
 #include <anyExample.hh>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
+
 
 static void invokeOp(anyExample_ptr& tobj, const CORBA::Any& a)
 {
@@ -5498,6 +5559,7 @@ static void invokeOp(anyExample_ptr& tobj, const CORBA::Any& a)
     cout << "Unknown value." << "\n" << endl;
   }
 }
+
 
 static void hello(anyExample_ptr tobj)
 {
@@ -5538,42 +5600,40 @@ static void hello(anyExample_ptr tobj)
 int main(int argc, char** argv)
 {
   try {
-    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
 
     if( argc != 2 ) {
       cerr << "usage:  anyExample_clt <object reference>" << endl;
       return 1;
     }
 
-    CORBA::Object_var obj = orb->string_to_object(argv[1]);
-    anyExample_var ref = anyExample::_narrow(obj);
-    if( CORBA::is_nil(ref) ) {
-      cerr << "Can't narrow reference to type anyExample (or it was nil)."
-	   << endl;
-      return 1;
+    {
+      CORBA::Object_var obj = orb->string_to_object(argv[1]);
+      anyExample_var ref = anyExample::_narrow(obj);
+      if( CORBA::is_nil(ref) ) {
+	cerr << "Can't narrow reference to type anyExample (or it was nil)."
+	     << endl;
+	return 1;
+      }
+      hello(ref);
     }
-    hello(ref);
-
     orb->destroy();
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+  catch(CORBA::TRANSIENT&) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "server." << endl;
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
     cerr << "  file: " << fe.file() << endl;
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
-  }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
   }
   return 0;
 }
@@ -5759,7 +5819,205 @@ module ModuleOne {
 \end{enumerate}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Objects by value}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\label{chap:valuetype}
 
+omniORB 4.1 supports objects by value, declared with the
+\code{valuetype} keyword in IDL. This chapter outlines some issues to
+do with using valuetypes in omniORB. You are assumed to have read the
+relevant parts of the CORBA specification, specifically chapters 4 and
+5 of the CORBA 2.6 specification, and sections 1.17 and 1.18 of the
+C++ mapping specification, version 1.1.
+
+
+\section{Features}
+
+omniORB supports the complete objects by value specification, with the
+exception of custom valuetypes. All other features including value
+boxes, value sharing semantics, abstract valuetypes, and abstract
+interfaces are supported.
+
+
+\section{Reference counting}
+
+Values are reference counted. This means that, as long as your
+application properly manages reference counts, values are usually
+automatically deleted when they are no longer required. However, one
+of the features of valuetypes is that they support the representation
+of cyclic graph structures. In that kind of situation, the reference
+counting garbage collection does not work, because references internal
+to the graph prevent the reference counts ever becoming zero.
+
+To avoid memory leaks, application code must explicitly break any
+reference cycles in values it manipulates. This includes graphs of
+values received as parameters and return values from CORBA operations.
+
+
+\section{Value sharing and local calls}
+
+When valuetypes are passed as parameters in CORBA calls (i.e.\ calls
+on CORBA objects declared with \code{interface} in IDL), the structure
+of related values is maintained. Consider, for example, the following
+IDL definitions (which are from the example code in
+\file{src/examples/valuetype/simple}:
+
+\begin{idllisting}
+module ValueTest {
+  valuetype One {
+    public string s;
+    public long   l;
+  };
+
+  interface Test {
+    One op1(in One a, in One b);
+  };
+};
+\end{idllisting}
+
+If the client to the \type{Test} object passes the same value in both
+parameters, just one value is transmitted, and the object
+implementation receives a copy of the single value, with references to
+it in both parameters.
+
+In the case that the object is remote from the client, there is
+obviously a copying step involved. In the case that the object is in
+the same address space as the client, the same copying semantics must
+be maintained so that the object implementation can modify the values
+it receives without the client seeing the modifications. To support
+that, omniORB must copy the entire parameter list in one operation, in
+case there is sharing between different parameters. Such copying is a
+rather more time-consuming process than the parameter-by-parameter
+copy that takes place in calls not involving valuetypes.
+
+To avoid the overhead of copying parameters in this way, applications
+can choose to relax the semantics of value copying in local calls, so
+values are not copied at all, but are passed by reference. In that
+case, the client to a call \emph{will} see any modifications to the
+values it passes as parameters (and similarly, the object
+implementation will see any changes the client makes to returned
+values). To choose this option, set the \code{copyValuesInLocalCalls}
+configuration parameter to zero.
+
+
+\section{Value box factories}
+
+With normal valuetypes, omniidl generates factory classes (with names
+ending \code{\_init}) as required by the C++ mapping specification.
+The application is responsible for registering the factories with the
+ORB.
+
+Unfortunately, the C++ mapping makes no mention of factories for value
+boxes. In omniORB, factories for value boxes are automatically
+registered with the ORB, and there are no application-visible factory
+classes generated for them. Some other CORBA implementations generate
+application visible factories, and the application \emph{does} have to
+register the factories with the ORB.
+
+
+\section{Standard value boxes}
+
+The standard \type{CORBA::StringValue} and \type{CORBA::WStringValue}
+value boxes are available to application code. To make the definitions
+available in IDL, \#include the standard \file{orb.idl}.
+
+
+\section{Covariant returns}
+
+As required by the C++ mapping, on C++ compilers that support
+covariant return types, omniidl generates code for the
+\op{\_copy\_value} function that returns the most derived type of the
+value. On older compilers, \op{\_copy\_value} returns
+\type{CORBA::ValueBase}.
+
+If you write code that calls \op{\_copy\_value}, and you need to
+support older compilers, you should assign the result to a variable of
+type \type{CORBA::ValueBase*} and downcast to the target type, rather
+than using the covariant return.
+
+If you are overriding \op{\_copy\_value}, you must correctly take
+account of the \code{OMNI\_HAVE\_COVARIANT\_RETURNS} preprocessor
+definition.
+
+
+
+\section{Values inside Anys}
+
+Valuetypes inserted into Anys cause a number of interesting issues.
+Even when inside Anys, values are required to support complete sharing
+semantics. Take this IDL for example:
+
+\begin{idllisting}
+module ValueTest {
+  valuetype One {
+    public string s;
+    public long   l;
+  };
+
+  interface AnyTest {
+    void op1(in One v, in Any a);
+  };
+};
+\end{idllisting}
+
+Now, suppose the client behaves as follows:
+
+\begin{cxxlisting}
+ValueTest::One* v = new One_impl("hello", 123);
+CORBA::Any a;
+a <<= v;
+obj->op1(v, a);
+\end{cxxlisting}
+
+then on the server side:
+
+\begin{cxxlisting}
+void AnyTest_impl::op1(ValueTest::One* v, CORBA::Any& a)
+{
+  ValueTest::One* v2;
+  a >>= v2;
+  assert(v2 == v);
+}
+\end{cxxlisting}
+
+This is all very well in this kind of simple situation, but problems
+can arise if truncatable valuetypes are used. Imagine this derived
+value:
+
+\begin{idllisting}
+module ValueTest {
+  valuetype Two : truncatable One {
+    public double d;
+  };
+};
+\end{idllisting}
+
+Now, suppose that the client shown above sends an instance of
+valuetype \type{Two} in both parameters, and suppose that the server
+has not seen the definition of valuetype \type{Two}. In this
+situation, as the first parameter is unmarshalled, it will be
+truncated to valuetype \type{One}, as required. Now, when the Any is
+unmarshalled, it refers to the same value, which has been truncated.
+So, even though the TypeCode in the Any indicates that the value has
+type \type{Two}, the stored value actually has type \type{One}. If the
+receiver of the Any tries to pass it on, transmission will fail
+because the Any's value does not match its TypeCode.
+
+In the opposite situation, where an Any parameter comes before a
+valuetype parameter, a different problem occurs. In that case, as the
+Any is unmarshalled, there is no type information available for
+valuetype \type{Two}, so the value inside the Any has an internal
+omniORB type used for unknown valuetypes. As the next parameter is
+unmarshalled, omniORB sees that the shared value is unknown, and is
+able to convert it to the target \type{One} valuetype with
+truncation. In this case, the Any and the plain valuetype both have
+the correct types and values, but the fact that both should have
+referred to the same value has been lost.
+
+Because of these issues, it is best to avoid defining interfaces that
+mix valuetypes and Anys in a single operation, and certainly to avoid
+trying to share plain values with values inside Anys.
 
 
 
