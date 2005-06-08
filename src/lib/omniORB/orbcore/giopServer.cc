@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.9  2005/06/08 09:41:06  dgrisby
+  Update comment.
+
   Revision 1.25.2.8  2005/05/10 22:07:33  dgrisby
   Merge again.
 
@@ -1052,10 +1055,8 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 
     if (!select_and_return) {
       // Call Peek(). This thread will be used for a short time to
-      // monitor the connection. If the connection is available for
-      // reading, the callback function peekCallBack is called. We can
-      // probably afford to call Peek() here because this thread is
-      // otherwise idle.
+      // monitor the connection. We can probably afford to call Peek()
+      // here because this thread is otherwise idle.
 
       if (conn->Peek()) {
 	// There is data to be read. Tell the worker to go around again.

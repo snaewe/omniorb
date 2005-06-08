@@ -1,3 +1,61 @@
+Wed Jun  8 10:29:18 BST 2005 dgrisby
+====================================
+
+- Update documentation.
+
+doc/tex/omniORB.tex
+
+- Update examples / utils for cleanliness and use of new C++ mapping.
+
+src/appl/utils/nameclt/nameclt.cc
+src/examples/anyExample/anyExample_clt.cc
+src/examples/anyExample/anyExample_impl.cc
+src/examples/bidir/bd_client.cc
+src/examples/bidir/bd_server.cc
+src/examples/bidir/bd_shutdown.cc
+src/examples/boa/eg2_clt.cc
+src/examples/boa/eg2_impl.cc
+src/examples/call_back/cb_client.cc
+src/examples/call_back/cb_server.cc
+src/examples/call_back/cb_shutdown.cc
+src/examples/dii/echo_diiclt.cc
+src/examples/dsi/echo_dsiimpl.cc
+src/examples/echo/eg1.cc
+src/examples/echo/eg2_clt.cc
+src/examples/echo/eg2_impl.cc
+src/examples/echo/eg3_clt.cc
+src/examples/echo/eg3_impl.cc
+src/examples/echo/eg3_tieimpl.cc
+src/examples/poa/implicit_activation/eg1.cc
+src/examples/poa/persistent_objref/eg2_impl.cc
+src/examples/poa/servant_manager/servant_activator.cc
+src/examples/poa/servant_manager/servant_locator.cc
+src/examples/poa/threading/mainthread.cc
+src/examples/ssl_echo/eg2_clt.cc
+src/examples/ssl_echo/eg2_impl.cc
+src/examples/thread/diner.cc
+src/examples/thread/prodcons.cc
+src/examples/thread/thrspecdata.cc
+src/examples/valuetype/simple/valimpl.h
+src/examples/valuetype/simple/vclient.cc
+src/examples/valuetype/simple/vcoloc.cc
+src/examples/valuetype/simple/vserver.cc
+
+- Leak of a value reference if a factory made the wrong type of value.
+
+src/lib/omniORB/dynamic/valueType.cc
+
+- Update example code, IDL dumping.
+
+src/lib/omniORB/omniidl_be/cxx/impl/template.py
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/python/omniidl_be/dump.py
+
+- Update comment.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Sun May 22 13:38:56 BST 2005 dgrisby
 ====================================
 
