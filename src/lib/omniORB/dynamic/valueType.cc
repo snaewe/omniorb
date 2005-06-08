@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2005/06/08 09:37:47  dgrisby
+  Leak of a value reference if a factory made the wrong type of value.
+
   Revision 1.1.2.6  2004/10/13 17:58:21  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -601,8 +604,10 @@ handleIncompatibleValue(const char* repoId, CORBA::ULong hashval,
     }
 
     // Factory is now available. Did it make a suitable value?
-    if (!result->_ptrToValue(repoId))
+    if (!result->_ptrToValue(repoId)) {
+      CORBA::remove_ref(result);
       OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure, completion);
+    }
 
     if (omniORB::trace(25)) {
       omniORB::logger l;
