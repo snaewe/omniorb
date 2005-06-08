@@ -151,9 +151,15 @@ main(int argc, char **argv)
     try {
       rootContext = CosNaming::NamingContext::_narrow(initServ);
     }
-    catch (CORBA::COMM_FAILURE& ex) {
-      cerr << "Caught a COMM_FAILURE when trying to validate the type of the "
-	   << "NamingContext." << endl;
+    catch (CORBA::TRANSIENT& ex) {
+      cerr << "Caught a TRANSIENT exception when trying to validate the "
+	   << "type of the " << endl
+	   << "NamingContext. Is the naming service running?" << endl;
+      exit(1);
+    }
+    catch (CORBA::Exception& ex) {
+      cerr << "Unexpected CORBA " << ex._name()
+	   << " exception when trying to narrow the NamingContext." << endl;
       exit(1);
     }
     catch(...) {
@@ -617,10 +623,19 @@ main(int argc, char **argv)
       cerr << command << ": CannotProceed exception" << endl;
       goto error_return;
     }
-    catch (CORBA::COMM_FAILURE) {
+
+    catch (CORBA::TRANSIENT) {
       cerr << command 
-	   << ": Cannot contact the Naming Service because of COMM_FAILURE."
-	   << endl;
+	   << ": Cannot contact the Naming Service because of "
+	   << "TRANSIENT exception." << endl
+	   << "Is the naming service running?" << endl;
+      goto error_return;
+    }
+
+    catch (CORBA::Exception& ex) {
+      cerr << command 
+	   << ": Cannot contact the Naming Service because of "
+	   << ex._name() << " exception." << endl;
       goto error_return;
     }
 

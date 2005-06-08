@@ -1,8 +1,6 @@
 // -*- c++ -*-
 
-#include <iostream.h>
 #include "value.hh"
-
 
 class One_i : public virtual OBV_ValueTest::One,
 	      public virtual CORBA::DefaultValueRefCountBase

@@ -24,7 +24,7 @@ static void hello(Echo_ptr e)
 
   CORBA::String_var dest = e->echoString(src);
 
-  cerr << "I said, \"" << (char*)src << "\"." << endl
+  cout << "I said, \"" << (char*)src << "\"." << endl
        << "The Echo object replied, \"" << (char*)dest <<"\"." << endl;
 }
 
@@ -53,24 +53,21 @@ int main(int argc, char** argv)
 
     orb->destroy();
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+  catch(CORBA::TRANSIENT&) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "server." << endl;
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
     cerr << "  file: " << fe.file() << endl;
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
-  }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
   }
   return 0;
 }

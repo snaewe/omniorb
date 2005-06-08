@@ -61,15 +61,15 @@ main (int argc, char **argv)
 
     orb->destroy();
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+  catch(CORBA::TRANSIENT&) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "server." << endl;
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -77,10 +77,6 @@ main (int argc, char **argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }
 
@@ -102,6 +98,12 @@ getObjectReference(CORBA::ORB_ptr orb)
       cerr << "Failed to narrow the root naming context." << endl;
       return CORBA::Object::_nil();
     }
+  }
+  catch (CORBA::NO_RESOURCES&) {
+    cerr << "Caught NO_RESOURCES exception. You must configure omniORB "
+	 << "with the location" << endl
+	 << "of the naming service." << endl;
+    return 0;
   }
   catch(CORBA::ORB::InvalidName& ex) {
     // This should not happen!
@@ -130,13 +132,17 @@ getObjectReference(CORBA::ORB_ptr orb)
     // path [contexts or the object] aren't found:
     cerr << "Context not found." << endl;
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
+  catch(CORBA::TRANSIENT& ex) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "naming service." << endl
+	 << "Make sure the naming server is running and that omniORB is "
+	 << "configured correctly." << endl;
+
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name()
+	 << " while using the naming service." << endl;
+    return 0;
   }
 
   return CORBA::Object::_nil();

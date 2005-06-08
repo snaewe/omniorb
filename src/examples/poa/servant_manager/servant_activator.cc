@@ -25,8 +25,7 @@ static CORBA::ORB_var orb;
 
 //////////////////////////////////////////////////////////////////////
 
-class Echo_i : public POA_Echo,
-	       public PortableServer::RefCountServantBase
+class Echo_i : public POA_Echo
 {
 public:
   virtual ~Echo_i() { cout << "Echo_i::~Echo_i()" << endl; }
@@ -41,8 +40,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////
 
-class MyActivator_i : public POA_PortableServer::ServantActivator,
-		      public PortableServer::RefCountServantBase
+class MyActivator_i : public POA_PortableServer::ServantActivator
 {
 public:
   virtual ~MyActivator_i()
@@ -102,17 +100,17 @@ int main(int argc, char** argv)
       // Print out a reference to an object.
       CORBA::Object_var ref = poa->create_reference("IDL:Echo:1.0");
       CORBA::String_var sior(orb->object_to_string(ref));
-      cout << "'" << (char*) sior << "'" << endl;
+      cout << (char*) sior << endl;
 
       orb->run();
     }
     orb->destroy();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -120,9 +118,5 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }

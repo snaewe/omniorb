@@ -44,10 +44,10 @@ server_thread::run(void* arg)
     }
   }
   catch(...) {
-    cerr << "cb_server: Lost a client!" << endl;
+    cout << "cb_server: Lost a client!" << endl;
   }
 
-  cerr << "cb_server: Worker thread is exiting." << endl;
+  cout << "cb_server: Worker thread is exiting." << endl;
 
   mu.lock();
   int do_signal = --num_active_servers == 0;
@@ -59,8 +59,7 @@ server_thread::run(void* arg)
 
 // Implementation of cb::Server.
 
-class server_i : public POA_cb::Server,
-		 public PortableServer::RefCountServantBase
+class server_i : public POA_cb::Server
 {
 public:
   inline server_i() {}
@@ -80,7 +79,7 @@ public:
 
 server_i::~server_i()
 {
-  cerr << "bd_server: The server object has been destroyed." << endl;
+  cout << "bd_server: The server object has been destroyed." << endl;
 }
 
 
@@ -92,7 +91,7 @@ server_i::one_time(cb::CallBack_ptr cb, const char* mesg)
     return;
   }
 
-  cerr << "bd_server: Doing a single call-back: " << mesg << endl;
+  cout << "bd_server: Doing a single call-back: " << mesg << endl;
 
   cb->call_back(mesg);
 }
@@ -107,7 +106,7 @@ server_i::_cxx_register(cb::CallBack_ptr cb, const char* mesg,
     return;
   }
 
-  cerr << "bd_server: Starting a new worker thread" << endl;
+  cout << "bd_server: Starting a new worker thread" << endl;
 
   mu.lock();
   num_active_servers++;
@@ -124,7 +123,7 @@ server_i::shutdown()
   omni_mutex_lock sync(mu);
 
   if( !dying ) {
-    cerr << "bd_server: I am being shutdown!" << endl;
+    cout << "bd_server: I am being shutdown!" << endl;
 
     // Tell the servers to exit, and wait for them to do so.
     dying = 1;
@@ -165,18 +164,18 @@ int main(int argc, char** argv)
       myserver->_remove_ref();
 
       CORBA::String_var sior(orb->object_to_string(obj));
-      cerr << "'" << (char*) sior << "'" << endl;
+      cout << (char*) sior << endl;
       orb->run();
     }
 
-    cerr << "bd_server: Returned from orb->run()." << endl;
+    cout << "bd_server: Returned from orb->run()." << endl;
     orb->destroy();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -184,9 +183,5 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }

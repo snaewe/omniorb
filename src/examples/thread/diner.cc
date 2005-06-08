@@ -16,6 +16,9 @@
 
 /*
  $Log$
+ Revision 1.7.2.3  2005/06/08 09:35:33  dgrisby
+ Update examples / utils for cleanliness and use of new C++ mapping.
+
  Revision 1.7.2.2  2005/01/06 23:09:40  dgrisby
  Big merge from omni4_0_develop.
 
@@ -113,18 +116,18 @@ class philosopher : public omni_thread {
 	    r = t;
 	}
 
-	PRINTMSG(cerr << "Philosopher #" << id << " has entered the room." << endl);
+	PRINTMSG(cout << "Philosopher #" << id << " has entered the room." << endl);
 
 	int count = random_l() % 10 + 1;
 	while (count--)
 	{
 	    chopsticks[l].lock();
 	    chopsticks[r].lock();
-	    PRINTMSG(cerr << "Philosopher #" << id << " is eating spaghetti now." << endl);
+	    PRINTMSG(cout << "Philosopher #" << id << " is eating spaghetti now." << endl);
 	    omni_thread::sleep(random_l()%2,random_l()%1000000000);
 	    chopsticks[l].unlock();
 	    chopsticks[r].unlock();
-	    PRINTMSG(cerr << "Philosopher #" << id << " is pondering about life." << endl);
+	    PRINTMSG(cout << "Philosopher #" << id << " is pondering about life." << endl);
 	    omni_thread::sleep(random_l()%2,random_l()%1000000000);
 	}
 
@@ -133,7 +136,7 @@ class philosopher : public omni_thread {
 	phillies[id] = NULL;
 	room_mutex.unlock();
 	room_cond.signal();
-	PRINTMSG(cerr << "Philosopher #" << id << " has left the room (" << room_occupancy << " left)." << endl);
+	PRINTMSG(cout << "Philosopher #" << id << " has left the room (" << room_occupancy << " left)." << endl);
     }
 
     // the destructor of a class that inherits from omni_thread should never be
@@ -165,7 +168,7 @@ main(int argc, char ** argv)
 
     while (1) {
 	while (room_occupancy == N_DINERS) {
-	    PRINTMSG(cerr << "main thread about to block " << room_occupancy << endl);
+	    PRINTMSG(cout << "main thread about to block " << room_occupancy << endl);
 	    room_cond.wait();
 	}
 
@@ -175,17 +178,17 @@ main(int argc, char ** argv)
 
 	// Sleep for a while and then create a new philosopher
 
-        PRINTMSG(cerr << "main thread sleep" << endl);
+        PRINTMSG(cout << "main thread sleep" << endl);
 	omni_thread::sleep(1,200000000);
-        PRINTMSG(cerr << "main thread wake up" << endl);
+        PRINTMSG(cout << "main thread wake up" << endl);
 
 	room_mutex.lock();
 	for (i=0; i<N_DINERS; i++)
 	    if (phillies[i] == NULL)
 		break;
 	if (i == N_DINERS) {
-	    PRINTMSG(cerr << "Contrary to what I was told, no one has left the room!!!!\n");
-	    PRINTMSG(cerr << "I give up!!!" << endl);
+	    PRINTMSG(cout << "Contrary to what I was told, no one has left the room!!!!\n");
+	    PRINTMSG(cout << "I give up!!!" << endl);
 	    exit(1);
 	}
 	phillies[i] = new philosopher(i);

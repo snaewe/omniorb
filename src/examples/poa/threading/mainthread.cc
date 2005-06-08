@@ -13,8 +13,7 @@
 CORBA::ORB_ptr orb;
 
 
-class Echo_i : public POA_Echo,
-	       public PortableServer::RefCountServantBase
+class Echo_i : public POA_Echo
 {
 public:
   inline Echo_i() {}
@@ -25,7 +24,7 @@ public:
 
 char* Echo_i::echoString(const char* mesg)
 {
-  cerr << "Upcall " << mesg << endl;
+  cout << "Upcall " << mesg << endl;
   if (!strcmp(mesg, "shutdown"))
     orb->shutdown(0);
 
@@ -58,7 +57,7 @@ int main(int argc, char** argv)
       // stringified IOR.
       obj = myecho->_this();
       CORBA::String_var sior(orb->object_to_string(obj));
-      cerr << "'" << (char*)sior << "'" << endl;
+      cout << (char*)sior << endl;
 
       myecho->_remove_ref();
 
@@ -79,11 +78,11 @@ int main(int argc, char** argv)
     }
     orb->destroy();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -91,9 +90,5 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }

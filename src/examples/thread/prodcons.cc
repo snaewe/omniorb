@@ -31,23 +31,23 @@ static const char* msgs[] = { "wibble", "wobble", "jelly", "plate" };
 
 int main(int argc, char** argv)
 {
-    cerr << "main: creating producer1\n";
+    cout << "main: creating producer1\n";
 
     omni_thread::create(producer,(void*)"producer1");
 
-    cerr << "main: creating producer2\n";
+    cout << "main: creating producer2\n";
 
     omni_thread::create(producer,(void*)"producer2");
 
-    cerr << "main: creating consumer1\n";
+    cout << "main: creating consumer1\n";
 
     omni_thread::create(consumer,(void*)"consumer1");
 
-    cerr << "main: creating consumer2\n";
+    cout << "main: creating consumer2\n";
 
     omni_thread::create(consumer,(void*)"consumer2");
 
-    cerr << "main: creating consumer3\n";
+    cout << "main: creating consumer3\n";
 
     consumer((void*)"consumer3");
 
@@ -74,17 +74,17 @@ static void consumer(void* arg)
 	omni_thread::get_time(&s,&n,0,500000000); // 1/2 second from now
 
 	while (empty_flag) {
-	    cerr << name << ": waiting for message\n";
+	    cout << name << ": waiting for message\n";
 
 	    if (!full.timedwait(s,n)) {
-		cerr << name << ": timed out, trying again\n";
+		cout << name << ": timed out, trying again\n";
 		omni_thread::get_time(&s,&n,0,500000000);
 	    } else if (empty_flag) {
-		cerr << name << ": woken but message already comsumed\n";
+		cout << name << ": woken but message already comsumed\n";
 	    }
 	}
 
-	cerr << name << ": got message: '" << message << "'\n";
+	cout << name << ": got message: '" << message << "'\n";
 
 	empty_flag = 1;
 
@@ -104,7 +104,7 @@ static void producer(void* arg)
 	m.lock();
 
 	while (!empty_flag) {
-	    cerr << name << ": having to wait for consumer\n";
+	    cout << name << ": having to wait for consumer\n";
 	    empty.wait();
 	}
 
@@ -113,7 +113,7 @@ static void producer(void* arg)
 
 	full.signal();
 
-	cerr << name << ": put message: '" << message << "'\n";
+	cout << name << ": put message: '" << message << "'\n";
 
 	m.unlock();
 

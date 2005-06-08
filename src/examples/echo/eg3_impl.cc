@@ -29,8 +29,7 @@
 static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr, CORBA::Object_ptr);
 
 
-class Echo_i : public POA_Echo,
-	       public PortableServer::RefCountServantBase
+class Echo_i : public POA_Echo
 {
 public:
   inline Echo_i() {}
@@ -65,7 +64,7 @@ main(int argc, char **argv)
 
     CORBA::String_var x;
     x = orb->object_to_string(obj);
-    cerr << x << "\n";
+    cout << x << endl;
 
     if( !bindObjectToName(orb, obj) )
       return 1;
@@ -77,11 +76,11 @@ main(int argc, char **argv)
 
     orb->run();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -89,10 +88,6 @@ main(int argc, char **argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }
 
@@ -115,7 +110,13 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
       return 0;
     }
   }
-  catch(CORBA::ORB::InvalidName& ex) {
+  catch (CORBA::NO_RESOURCES&) {
+    cerr << "Caught NO_RESOURCES exception. You must configure omniORB "
+	 << "with the location" << endl
+	 << "of the naming service." << endl;
+    return 0;
+  }
+  catch (CORBA::ORB::InvalidName&) {
     // This should not happen!
     cerr << "Service required is invalid [does not exist]." << endl;
     return 0;
@@ -173,16 +174,18 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     // the Name has not already been bound. [This is incorrect behaviour -
     // it should just bind].
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
-    return 0;
-  }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
-    return 0;
-  }
+  catch(CORBA::TRANSIENT& ex) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "naming service." << endl
+	 << "Make sure the naming server is running and that omniORB is "
+	 << "configured correctly." << endl;
 
+    return 0;
+  }
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name()
+	 << " while using the naming service." << endl;
+    return 0;
+  }
   return 1;
 }

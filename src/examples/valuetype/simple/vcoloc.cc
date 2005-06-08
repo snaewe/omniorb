@@ -1,12 +1,17 @@
-#include <iostream.h>
 #include <omniORB4/CORBA.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 #include "value.hh"
 #include "valimpl.h"
 
 
-class Test_i : public virtual POA_ValueTest::Test,
-	       public virtual PortableServer::RefCountServantBase
+class Test_i : public virtual POA_ValueTest::Test
 {
 public:
   virtual ~Test_i() {}

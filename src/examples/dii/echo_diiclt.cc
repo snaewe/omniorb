@@ -35,7 +35,7 @@ static void hello(CORBA::Object_ptr obj)
   const char* ret;
   req->return_value() >>= ret;
 
-  cerr << "I said, \"" << (char*)arg << "\"." << endl
+  cout << "I said, \"" << (char*)arg << "\"." << endl
        << "The Echo object replied, \"" << ret <<"\"." << endl;
 }
 
@@ -48,10 +48,10 @@ static void hello_deferred(CORBA::Object_ptr obj)
   req->set_return_type(CORBA::_tc_string);
 
   req->send_deferred();
-  cerr << "Sending deferred request: ";
+  cout << "Sending deferred request: ";
   while( !req->poll_response() )
-    cerr << '#';
-  cerr << endl << "Response received." << endl;
+    cout << '#';
+  cout << endl << "Response received." << endl;
 
   if( req->env()->exception() ) {
     cout << "echo_diiclt: An exception was thrown!" << endl;
@@ -61,7 +61,7 @@ static void hello_deferred(CORBA::Object_ptr obj)
   const char* ret;
   req->return_value() >>= ret;
 
-  cerr << "I said, \"" << (char*)arg << "\"." << endl
+  cout << "I said, \"" << (char*)arg << "\"." << endl
        << "The Echo object replied, \"" << ret <<"\"." << endl;
 }
 
@@ -85,15 +85,15 @@ int main(int argc, char** argv)
 
     orb->destroy();
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+  catch(CORBA::TRANSIENT&) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "server." << endl;
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -101,9 +101,5 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }

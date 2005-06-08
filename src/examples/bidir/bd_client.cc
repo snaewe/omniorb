@@ -12,15 +12,14 @@
 
 // Implementation of cb::CallBack.
 
-class cb_i : public virtual POA_cb::CallBack,
-	     public virtual PortableServer::RefCountServantBase
+class cb_i : public virtual POA_cb::CallBack
 {
 public:
   inline cb_i() {}
   virtual ~cb_i() {}
 
   virtual void call_back(const char* mesg) {
-    cerr << "cb_client: call_back(\"" << mesg << "\")" << endl;
+    cout << "cb_client: call_back(\"" << mesg << "\")" << endl;
   }
 };
 
@@ -33,9 +32,9 @@ static void do_single(cb::Server_ptr server, cb::CallBack_ptr cb)
     return;
   }
 
-  cerr << "cb_client: server->one_time(call_back, \"Hello!\")" << endl;
+  cout << "cb_client: server->one_time(call_back, \"Hello!\")" << endl;
   server->one_time(cb, "Hello!");
-  cerr << "cb_client: Returned." << endl;
+  cout << "cb_client: Returned." << endl;
 }
 
 
@@ -47,13 +46,13 @@ static void do_register(cb::Server_ptr server, cb::CallBack_ptr cb,
     return;
   }
 
-  cerr << "cb_client: server->register(call_back, \"Hello!\", "
+  cout << "cb_client: server->register(call_back, \"Hello!\", "
        << period << ")" << endl;
   server->_cxx_register(cb, "Hello!", period);
-  cerr << "cb_client: Returned." << endl;
+  cout << "cb_client: Returned." << endl;
 
   omni_thread::sleep(time_to_shutdown);
-  cerr << "cb_client: Finished." << endl;
+  cout << "cb_client: Finished." << endl;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -107,15 +106,15 @@ int main(int argc, char** argv)
     // Clean-up.  This also destroys the call-back object.
     orb->destroy();
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+  catch(CORBA::TRANSIENT&) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "server." << endl;
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -123,9 +122,5 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }

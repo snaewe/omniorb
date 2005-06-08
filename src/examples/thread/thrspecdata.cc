@@ -22,12 +22,12 @@ class thread_with_data : public omni_thread {
     void* run_undetached(void* ptr) {
 	int arg = *(int*)ptr;
 	delete (int*)ptr;
-	cerr << "thread: run invoked with arg " << arg << endl;
-	cerr << "thread: my id is " << id() << endl;
-	cerr << "thread: my private data (id plus 2) is "
+	cout << "thread: run invoked with arg " << arg << endl;
+	cout << "thread: my id is " << id() << endl;
+	cout << "thread: my private data (id plus 2) is "
 	     << my_thread_id_plus_two << endl;
 	int* rv = new int(my_thread_id_plus_two + 1);
-	cerr << "thread: returning " << *rv << endl;
+	cout << "thread: returning " << *rv << endl;
 	return (void*)rv;
     }
 
@@ -52,12 +52,12 @@ int main(int argc, char** argv)
 {
     thread_with_data* t = new thread_with_data;
 
-    cerr << "main: joining\n";
+    cout << "main: joining\n";
 
     int* rv;
     t->join((void**)&rv);
 
-    cerr << "main: joined - got return value " << *rv << endl;
+    cout << "main: joined - got return value " << *rv << endl;
 
     delete rv;
 

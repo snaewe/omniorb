@@ -5,7 +5,7 @@
 //
 // Usage: eg2_impl
 //
-//        On startup, the object reference is printed to cerr as a
+//        On startup, the object reference is printed to cout as a
 //        stringified IOR. This string should be used as the argument to 
 //        eg2_clt.
 //
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 
     Echo_var myechoref = myecho->_this();
     CORBA::String_var sior(orb->object_to_string(myechoref));
-    cerr << "'" << (char*)sior << "'" << endl;
+    cout << (char*)sior << endl;
 
     boa->impl_is_ready();
     // Tell the BOA we are ready. The BOA's default behaviour is to block
@@ -61,11 +61,11 @@ int main(int argc, char** argv)
     // boa->destroy();
     // orb->destroy();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -73,9 +73,5 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }

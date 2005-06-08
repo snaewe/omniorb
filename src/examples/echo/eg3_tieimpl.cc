@@ -55,14 +55,11 @@ int main(int argc, char** argv)
     CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
     PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
-    // Note that the <myecho> object is constructed on the stack here.
-    // This is because tie implementations do not inherit from the
-    // PortableServer::RefCountServantBase mixin class -- and so are
-    // not automatically deleted by the POA.
-    // However, it will delete its implementation (myimpl) when it
-    // it itself destroyed (when it goes out of scope).  It is
-    // essential however to ensure that such objects are not deleted
-    // whilst still activated.
+    // Note that the <myecho> tie object is constructed on the stack
+    // here. It will delete its implementation (myimpl) when it it
+    // itself destroyed (when it goes out of scope).  It is essential
+    // however to ensure that such servants are not deleted whilst
+    // still activated.
     Echo_i* myimpl = new Echo_i();
     POA_Echo_tie<Echo_i> myecho(myimpl);
 
@@ -79,11 +76,11 @@ int main(int argc, char** argv)
 
     orb->run();
   }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught CORBA::" << ex._name() << endl;
   }
-  catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+  catch(CORBA::Exception& ex) {
+    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
     cerr << "Caught omniORB::fatalException:" << endl;
@@ -91,10 +88,6 @@ int main(int argc, char** argv)
     cerr << "  line: " << fe.line() << endl;
     cerr << "  mesg: " << fe.errmsg() << endl;
   }
-  catch(...) {
-    cerr << "Caught unknown exception." << endl;
-  }
-
   return 0;
 }
 
@@ -117,7 +110,13 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
       return 0;
     }
   }
-  catch(CORBA::ORB::InvalidName& ex) {
+  catch (CORBA::NO_RESOURCES&) {
+    cerr << "Caught NO_RESOURCES exception. You must configure omniORB "
+	 << "with the location" << endl
+	 << "of the naming service." << endl;
+    return 0;
+  }
+  catch (CORBA::ORB::InvalidName&) {
     // This should not happen!
     cerr << "Service required is invalid [does not exist]." << endl;
     return 0;
@@ -175,16 +174,18 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     // the Name has not already been bound. [This is incorrect behaviour -
     // it should just bind].
   }
-  catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
-    return 0;
-  }
-  catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
-    return 0;
-  }
+  catch(CORBA::TRANSIENT& ex) {
+    cerr << "Caught system exception TRANSIENT -- unable to contact the "
+         << "naming service." << endl
+	 << "Make sure the naming server is running and that omniORB is "
+	 << "configured correctly." << endl;
 
+    return 0;
+  }
+  catch(CORBA::SystemException& ex) {
+    cerr << "Caught a CORBA::" << ex._name()
+	 << " while using the naming service." << endl;
+    return 0;
+  }
   return 1;
 }
