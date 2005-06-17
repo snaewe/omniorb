@@ -1,3 +1,11 @@
+Fri Jun 17 11:55:30 BST 2005 dgrisby
+====================================
+
+- Explicitly initialise omniServant. Thanks Thomas Richter.
+
+include/omniORB4/poa.h
+
+
 Wed Jun  1 11:41:28 BST 2005 dgrisby
 ====================================
 
