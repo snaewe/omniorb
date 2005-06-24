@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2005/06/24 14:31:31  dgrisby
+  Allow multiple threads to Peek() without clashing. Not yet tested on
+  Windows.
+
   Revision 1.1.4.5  2005/03/02 12:10:50  dgrisby
   setSelectable / Peek fixes.
 
@@ -269,6 +273,8 @@ public:
       pd_selectable(0),
       pd_data_in_buffer(0),
       pd_selected(0),
+      pd_peeking(0),
+      pd_peek_cond(0),
 #ifdef __WIN32__
       pd_fd_index(-1),
 #endif
@@ -300,28 +306,32 @@ public:
   // Indicate that this socket should not be watched any more.
 
   CORBA::Boolean Peek();
-  // Do nothing and return immediately if the socket has not been set
-  // to be watched by a previous setSelectable(). Otherwise, monitor
-  // the socket's status for a short time. Mark the socket as no
-  // longer selectable and return true if the socket becomes readable,
-  // otherwise return false.
+  // Watch the socket for a while to see if any data arrives. If the
+  // socket is not already selectable, wait for a bit in case it
+  // becomes selectable. Mark the socket as no longer selectable and
+  // return true if the socket becomes readable, otherwise return
+  // false.
 
   friend class SocketCollection;
 
 protected:
-  SocketHandle_t    pd_socket;
-  SocketCollection* pd_belong_to;
-  CORBA::Boolean    pd_shutdown;
+  SocketHandle_t       	pd_socket;
+  SocketCollection*    	pd_belong_to;
+  CORBA::Boolean       	pd_shutdown;
 
 private:
-  CORBA::Boolean    pd_selectable;
-  CORBA::Boolean    pd_data_in_buffer;
-  CORBA::Boolean    pd_selected;
+  CORBA::Boolean       	pd_selectable;     // True if socket is selectable
+  CORBA::Boolean       	pd_data_in_buffer; // True if data already available
+  CORBA::Boolean       	pd_selected;       // True if select thread is watching
+  CORBA::Boolean       	pd_peeking;        // True if a thread is currently
+					   // peeking
+  omni_tracedcondition* pd_peek_cond;      // Condition to signal a waiting
+					   // peeker
 #ifdef __WIN32__
-  int               pd_fd_index;
+  int                  	pd_fd_index;
 #endif
-  SocketHolder*     pd_next;
-  SocketHolder**    pd_prev;
+  SocketHolder*        	pd_next;
+  SocketHolder**       	pd_prev;
 };
 
 
