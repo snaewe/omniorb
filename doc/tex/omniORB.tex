@@ -1,4 +1,4 @@
-\documentclass[draft,11pt,twoside,a4paper]{book}
+\documentclass[11pt,twoside,a4paper]{book}
 \usepackage[T1]{fontenc}
 \usepackage{palatino}
 
@@ -29,6 +29,7 @@
 % Semantic mark-up:
 \newcommand{\type}[1]{\texttt{#1}}
 \newcommand{\intf}[1]{\texttt{#1}}
+\newcommand{\module}[1]{\texttt{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\op}[1]{\texttt{#1()}}
 \newcommand{\cmdline}[1]{\texttt{#1}}
@@ -2699,8 +2700,8 @@ section~\ref{sec:timeoutAPI} for more information about timeouts.
 
 \vspace{.5\baselineskip}
 
-\noindent\textbf{Note}: omniORB 3 had timeouts specified in seconds; omniORB
-4.0 uses milliseconds for timeouts.
+\noindent\textbf{Note}: omniORB 3 had timeouts specified in seconds;
+omniORB 4.0 and later use milliseconds for timeouts.
 
 
 \confopt{supportPerThreadTimeOut}{0}
@@ -2906,9 +2907,9 @@ with TCP.
 
 \confopt{supportCurrent}{1}
 
-omniORB 4.0 supports the \type{PortableServer::Current} interface that
-provides thread context information to a servant. Supporting current
-has a small but noticeable run-time overhead due to accessing thread
+omniORB supports the \type{PortableServer::Current} interface to
+provide thread context information to servants. Supporting current has
+a small but noticeable run-time overhead due to accessing thread
 specific storage, so this option allows it to be turned off.
 
 
@@ -3010,7 +3011,7 @@ set to 1. There is a performance penalty when inserting into an Any if
 \confopt{useTypeCodeIndirections}{1}
 
 TypeCode Indirections reduce the size of marshalled TypeCodes, and are
-essential for recursive types, but some ORBs do not support them.
+essential for recursive types, but some old ORBs do not support them.
 Setting this flag to false prevents the use of indirections (and,
 therefore, recursive TypeCodes).
 
@@ -3018,7 +3019,8 @@ therefore, recursive TypeCodes).
 \confopt{acceptMisalignedTcIndirections}{0}
 
 If true, try to fix a mis-aligned indirection in a typecode. This is
-used to work around a bug in some versions of Visibroker's Java ORB.
+used to work around a bug in some old versions of Visibroker's Java
+ORB.
 
 
 \vspace{2\baselineskip}
@@ -3374,11 +3376,10 @@ so obvious.
 \subsection{Preprocessor interactions}
 
 IDL is processed by the C preprocessor before omniidl parses it.
-Unlike the old IDL compiler, which used different C preprocessors on
-different platforms, omniidl always uses the GNU C preprocessor (which
-it builds with the name omnicpp). The \cmdline{-D}, \cmdline{-U}, and
-\cmdline{-I} options are just sent to the preprocessor. Note that the
-current directory is not on the include search path by default---use
+omniidl always uses the GNU C preprocessor (which it builds with the
+name omnicpp). The \cmdline{-D}, \cmdline{-U}, and \cmdline{-I}
+options are just sent to the preprocessor. Note that the current
+directory is not on the include search path by default---use
 `\cmdline{-I.}' for that. The \cmdline{-Y} option can be used to
 specify a different preprocessor to omnicpp. Beware that line
 directives inserted by other preprocessors are likely to confuse
@@ -3790,7 +3791,7 @@ the location of a naming service.
 \section{Configuring resolve\_initial\_references}
 \label{sec:insargs}
 
-The INS specified two standard command line arguments which provide a
+The INS specifies two standard command line arguments which provide a
 portable way of configuring \op{ORB::resolve\_initial\_references}:
 
 
@@ -4630,7 +4631,7 @@ indicate that the connect failed.
 \subsection{Server transport rules}
 \label{sec:serverRule}
 
-The server transport rules gave the same format as client transport
+The server transport rules have the same format as client transport
 rules. Rather than being used to select which of a set of ways to
 contact a machine, they are used to determine whether or not to accept
 connections from particular clients. In this example, we only allow
@@ -4642,7 +4643,7 @@ connections from our intranet:
                       = *                          none
 \end{verbatim}
 
-\noindent And in this one, we only accept SSL connections if the
+\noindent And in this one, we accept only SSL connections if the
 client is not on the intranet:
 
 \begin{verbatim}
@@ -4811,7 +4812,7 @@ entirely of data and no code, since they are driven by look-up tables.
 
 omniORB supports interceptors that allow the application to insert
 processing in various points along the call chain, and in various
-other locations. It does not support the standard Portable
+other locations. It does not yet support the standard Portable
 Interceptors API.
 
 The interceptor interfaces are defined in a single header,
