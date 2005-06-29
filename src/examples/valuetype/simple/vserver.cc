@@ -22,20 +22,24 @@ public:
 ValueTest::One*
 Test_i::op1(ValueTest::One* a, ValueTest::One* b)
 {
+  cout << endl;
+
   if (a)
-    cout << "op1: a " << a->s() << ", " << a->l() << endl;
+    cout << "op1: a: " << a->s() << ", " << a->l() << endl;
   else
-    cout << "op1: a nil" << endl;
+    cout << "op1: a: nil" << endl;
 
   if (b)
-    cout << "op1: b " << b->s() << ", " << b->l() << endl;
+    cout << "op1: b: " << b->s() << ", " << b->l() << endl;
   else
-    cout << "op1: b nil" << endl;
+    cout << "op1: b: nil" << endl;
 
   if (a == b)
     cout << "op1: a==b" << endl;
   else
     cout << "op1: a!=b" << endl;
+
+  cout << endl;
 
   CORBA::add_ref(a);
   return a;

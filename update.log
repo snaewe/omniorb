@@ -1,3 +1,11 @@
+Wed Jun 29 18:21:45 BST 2005 dgrisby
+====================================
+
+- Reformat some output in value example.
+
+src/examples/valuetype/simple/vserver.cc
+
+
 Fri Jun 24 15:29:33 BST 2005 dgrisby
 ====================================
 
