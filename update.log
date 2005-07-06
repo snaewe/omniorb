@@ -1,3 +1,15 @@
+Wed Jul  6 13:22:55 BST 2005 dgrisby
+====================================
+
+- Per thread data changes from April meant main thread's data was leaked.
+
+src/lib/omnithread/mach.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/vxWorks.cc
+
+
 Fri Jun 17 11:55:30 BST 2005 dgrisby
 ====================================
 
