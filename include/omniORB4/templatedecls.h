@@ -1231,7 +1231,7 @@ public:
     return *( (const T*) (pd_data + index_));
   }
 
-#if defined(__GNUG__) && __GNUG__ == 3 && __GNUC_MINOR__ >= 4
+#if defined(__GNUG__) && __GNUG__ == 3 && __GNUC_MINOR__ >= 3
   // g++ thinks the operators with ULong arguments are ambiguous when
   // used with int literals. This sorts it out.
   inline T& operator[] (int index_) { return *(pd_data + index_); }

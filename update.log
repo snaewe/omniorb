@@ -1,3 +1,12 @@
+Fri Jul  8 17:24:56 BST 2005 dgrisby
+====================================
+
+- g++ 3.3 doesn't like array operators either.
+
+include/omniORB4/templatedecls.h
+
+
+
 Wed Jun 29 18:21:45 BST 2005 dgrisby
 ====================================
 
