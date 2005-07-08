@@ -143,7 +143,7 @@ BuildSharedLibrary = 1
 
 SHAREDLIB_CPPFLAGS += +z 
 
-SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,-E -Wl,-s -mt +DD64
+SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,-E -mt +DD64
 
 # May need  $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS))
 

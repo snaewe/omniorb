@@ -522,6 +522,14 @@ omni_thread::common_constructor(void* arg, priority_t pri, int det)
 omni_thread::~omni_thread(void)
 {
     DB(cerr << "destructor called for thread " << id() << endl);
+    if (_values) {
+        for (key_t i=0; i < _value_alloc; i++) {
+	    if (_values[i]) {
+	        delete _values[i];
+	    }
+        }
+	delete [] _values;
+    }
 }
 
 

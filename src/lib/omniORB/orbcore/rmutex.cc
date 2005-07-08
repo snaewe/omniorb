@@ -49,12 +49,13 @@ void
 omni_rmutex::lock()
 {
   omni_thread* me = omni_thread::self();
+  int dummy = 0;
 
   if (!me) {
     // Create a dummy thread
     omniORB::logs(15, "Create dummy omni_thread in rmutex lock.");
     me = omni_thread::create_dummy();
-    pd_dummy = 1;
+    dummy = 1;
   }
 
   omni_mutex_lock sync(pd_lock);
@@ -68,6 +69,7 @@ omni_rmutex::lock()
 
   OMNIORB_ASSERT(pd_depth == 0);
   pd_holder = me;
+  pd_dummy  = dummy;
   pd_depth  = 1;
 }
 

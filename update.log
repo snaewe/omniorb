@@ -1,3 +1,18 @@
+Fri Jul  8 18:01:50 BST 2005 dgrisby
+====================================
+
+- Merge from omni4_0_develop again.
+
+mk/platforms/hppa_hpux_11.23.mk
+mk/platforms/ia64_hpux_11.23.mk
+src/lib/omniORB/orbcore/rmutex.cc
+src/lib/omnithread/mach.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/vxWorks.cc
+
+
 Fri Jul  8 17:31:39 BST 2005 dgrisby
 ====================================
 
