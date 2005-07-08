@@ -29,6 +29,10 @@
 //
 
 // $Log$
+// Revision 1.1.2.8  2005/07/08 16:39:36  dgrisby
+// get_octet_array in cdrValueChunkStream failed if called just after the
+// end of a nested value.
+//
 // Revision 1.1.2.7  2005/04/25 17:42:25  dgrisby
 // Bug in marshalling nested chunks on a buffer boundary.
 //
@@ -96,7 +100,7 @@ cdrValueChunkStream::initialiseInput()
 void
 cdrValueChunkStream::startOutputChunk()
 {
-  omniORB::logs(25, "Start writing value chunk");
+  omniORB::logs(25, "Start writing value chunk.");
 
   OMNIORB_ASSERT(!pd_reader);
   OMNIORB_ASSERT(!pd_inChunk);
@@ -151,7 +155,7 @@ cdrValueChunkStream::endOutputChunk()
 
   if (omniORB::trace(25)) {
     omniORB::logger l;
-    l << "End writing value chunk. Length = " << *pd_lengthPtr << "\n";
+    l << "End writing value chunk. Length = " << *pd_lengthPtr << ".\n";
   }
   pd_lengthPtr = 0;
   pd_inChunk   = 0;
@@ -176,7 +180,7 @@ cdrValueChunkStream::maybeStartNewChunk(omni::alignment_t align, size_t size)
     // OK to end here
     if (omniORB::trace(25)) {
       omniORB::logger l;
-      l << "End writing value chunk. Length = " << *pd_lengthPtr << "\n";
+      l << "End writing value chunk. Length = " << *pd_lengthPtr << ".\n";
     }
     pd_lengthPtr  = 0;
     pd_inChunk    = 0;
@@ -188,7 +192,7 @@ cdrValueChunkStream::maybeStartNewChunk(omni::alignment_t align, size_t size)
     if (omniORB::trace(25)) {
       omniORB::logger l;
       l << "Cannot end value chunk with zero length; extending to "
-	<< size << " octets\n";
+	<< size << " octets.\n";
     }
     OMNIORB_ASSERT(size);
     chunkStreamDeclareArrayLength(align, size);
@@ -228,7 +232,7 @@ cdrValueChunkStream::startOutputValueBody()
   if (omniORB::trace(25)) {
     omniORB::logger l;
     l << "Start writing chunked value body. Nest level = "
-      << pd_nestLevel << "\n";
+      << pd_nestLevel << ".\n";
   }
   pd_outb_end = pd_outb_mkr;
 }
@@ -249,7 +253,7 @@ cdrValueChunkStream::endOutputValue()
     if (omniORB::trace(25)) {
       omniORB::logger l;
       l << "End writing nested chunked value. Nest level = "
-	<< pd_nestLevel << "\n";
+	<< pd_nestLevel << ".\n";
     }
 
     CORBA::Long* endp = (CORBA::Long*)((omni::ptr_arith_t)pd_outb_mkr - 4);
@@ -259,7 +263,7 @@ cdrValueChunkStream::endOutputValue()
   else {
     if (omniORB::trace(25)) {
       omniORB::logger l;
-      l << "End writing chunked value. Nest level = " << pd_nestLevel << "\n";
+      l << "End writing chunked value. Nest level = " << pd_nestLevel << ".\n";
     }
 
     // Marshal the end tag into the actual stream
@@ -556,7 +560,7 @@ chunkStreamDeclareArrayLength(omni::alignment_t align, size_t size)
     if (omniORB::trace(25)) {
       omniORB::logger l;
       l << "End writing value chunk inside declareArrayLength. Length = "
-	<< *pd_lengthPtr << ", remaining = " << pd_remaining << "\n";
+	<< *pd_lengthPtr << ", remaining = " << pd_remaining << ".\n";
     }
     pd_lengthPtr = 0;
     pd_inChunk   = 0;
@@ -747,7 +751,7 @@ startInputChunk()
 
     if (omniORB::trace(25)) {
       omniORB::logger l;
-      l << "Start reading value chunk. Length = " << len << "\n";
+      l << "Start reading value chunk. Length = " << len << ".\n";
     }
   }
   copyStateFromActual();
@@ -776,7 +780,7 @@ endInputValue()
 
   if (omniORB::trace(25)) {
     omniORB::logger l;
-    l << "End reading value chunk. Nest level = " << -tag << "\n";
+    l << "End reading value chunk. Nest level = " << -tag << ".\n";
   }
 
   if (tag >= 0)
@@ -821,8 +825,9 @@ peekChunkTag()
 
 void
 cdrValueChunkStream::
-get_octet_array(_CORBA_Octet* b,int size, omni::alignment_t align)
+get_octet_array(_CORBA_Octet* b, int size, omni::alignment_t align)
 {
+  int orig_size = size;
   omni::ptr_arith_t p1, p2;
 
   p1 = omni::align_to((omni::ptr_arith_t)pd_inb_mkr, align);
@@ -841,6 +846,11 @@ get_octet_array(_CORBA_Octet* b,int size, omni::alignment_t align)
     return;
   }
 
+  // If we're not in a header, we should be in a chunk
+  if (!pd_inChunk)
+    OMNIORB_THROW(MARSHAL, MARSHAL_InvalidChunkedEncoding,
+		  (CORBA::CompletionStatus)completion());
+
   // Copy as much as possible out of the buffer
   CORBA::Long inbuf = (omni::ptr_arith_t)pd_inb_end - p1;
   if (inbuf) {
@@ -851,7 +861,7 @@ get_octet_array(_CORBA_Octet* b,int size, omni::alignment_t align)
   }
 
   if (pd_remaining) {
-    // More octets left in this chunk
+    // More octets left in this chunk (but not in the buffer)
     copyStateToActual();
     pd_actual.get_octet_array(b, pd_remaining, align);
     size -= pd_remaining;
@@ -861,6 +871,19 @@ get_octet_array(_CORBA_Octet* b,int size, omni::alignment_t align)
   }
 
   copyStateToActual();
+
+  if (size == orig_size) {
+    // If we have not yet read any data, we may reach here in a
+    // situation that a chunk has just ended, but we have not yet read
+    // the chunk end tag. That happens if an array of primitive types
+    // follows a nested value, for example. In that case, we end the
+    // value and continue reading the next chunk.
+    CORBA::Long tag = peekChunkTag();
+    if (tag < 0) {
+      endInputValue();
+      pd_inChunk = 1;
+    }
+  }
 
   while (size) {
     // More chunks to come
@@ -874,12 +897,14 @@ get_octet_array(_CORBA_Octet* b,int size, omni::alignment_t align)
       p1 = (omni::ptr_arith_t)pd_actual.pd_inb_mkr;
       p2 = omni::align_to(p1, omni::ALIGN_8);
       if (p2 > p1)
-	size -= 4;
+	len -= 4;
     }
 
-    if (len <= 0 || len >= 0x7fffff00)
+    if (len <= 0 || len >= 0x7fffff00) {
+      OMNIORB_ASSERT(0);
       OMNIORB_THROW(MARSHAL, MARSHAL_InvalidChunkedEncoding,
 		    (CORBA::CompletionStatus)completion());
+    }
 
     if (len < size) {
       pd_actual.get_octet_array(b, len, align);
@@ -910,6 +935,7 @@ void
 cdrValueChunkStream::
 skipInput(_CORBA_ULong size)
 {
+  _CORBA_ULong orig_size = size;
   omni::ptr_arith_t p1, p2;
 
   p1 = (omni::ptr_arith_t)pd_inb_mkr;
@@ -927,7 +953,12 @@ skipInput(_CORBA_ULong size)
     return;
   }
 
-  // Copy as much as possible out of the buffer
+  // If we're not in a header, we should be in a chunk
+  if (!pd_inChunk)
+    OMNIORB_THROW(MARSHAL, MARSHAL_InvalidChunkedEncoding,
+		  (CORBA::CompletionStatus)completion());
+
+  // Skip as much as possible from the buffer
   CORBA::Long inbuf = (omni::ptr_arith_t)pd_inb_end - p1;
   if (inbuf) {
     size -= inbuf;
@@ -944,6 +975,18 @@ skipInput(_CORBA_ULong size)
   }
 
   copyStateToActual();
+
+  if (size == orig_size) {
+    // If we have not yet handled any data, we may reach here in a
+    // situation that a chunk has just ended, but we have not yet read
+    // the chunk end tag. In that case, we end the value and continue
+    // reading the next chunk.
+    CORBA::Long tag = peekChunkTag();
+    if (tag < 0) {
+      endInputValue();
+      pd_inChunk = 1;
+    }
+  }
 
   while (size) {
     // More chunks to come

@@ -1,10 +1,18 @@
+Fri Jul  8 17:31:39 BST 2005 dgrisby
+====================================
+
+- get_octet_array in cdrValueChunkStream failed if called just after
+  the end of a nested value.
+
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Fri Jul  8 17:24:56 BST 2005 dgrisby
 ====================================
 
 - g++ 3.3 doesn't like array operators either.
 
 include/omniORB4/templatedecls.h
-
 
 
 Wed Jun 29 18:21:45 BST 2005 dgrisby
