@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.3  2005/07/11 17:47:31  dgrisby
+ VMS changes from Bruce Visscher.
+
  Revision 1.5.2.2  2005/01/06 23:08:07  dgrisby
  Big merge from omni4_0_develop.
 
@@ -124,6 +127,7 @@
 
 #if defined(__DECCXX)
 // DEC C++ compiler
+#  define NEED_DUMMY_RETURN
 #  if __DECCXX_VER < 60000000
 //    Compaq C++ 5.x
 //    Work-around for OpenVMS VAX Compaq C++ 5.6 compiler problem with
@@ -133,7 +137,6 @@
 #     ifdef __VMS
 #       pragma message disable CANTCOMPLETE
 #     endif
-#     define NEED_DUMMY_RETURN
 #     define OMNI_OPERATOR_REFPTR_REQUIRES_TYPEDEF
 #     define OMNI_PREMATURE_INSTANTIATION
 //    Extra macros from the Compaq C++ 5.x patch (in <top>/patches/) to be

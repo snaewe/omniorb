@@ -1,3 +1,12 @@
+Mon Jul 11 18:46:20 BST 2005 dgrisby
+====================================
+
+- VMS changes from Bruce Visscher.
+
+etc/openvms.zip
+include/omniORB4/CORBA_sysdep.h
+
+
 Fri Jul  8 18:01:50 BST 2005 dgrisby
 ====================================
 
