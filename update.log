@@ -1,3 +1,11 @@
+Mon Jul 18 12:25:39 BST 2005 dgrisby
+====================================
+
+- Raise OBJ_ADAPTER in _this if called before ORB_init.
+
+src/lib/omniORB/orbcore/portableserver.cc
+
+
 Wed Jul  6 13:22:55 BST 2005 dgrisby
 ====================================
 

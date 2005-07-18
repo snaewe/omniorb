@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.13  2005/07/18 11:26:24  dgrisby
+  Raise OBJ_ADAPTER in _this if called before ORB_init.
+
   Revision 1.2.2.12  2004/03/30 09:40:54  dgrisby
   Bug in _do_get_interface. Thanks Alex Tingle.
 
@@ -258,6 +261,12 @@ void*
 PortableServer::ServantBase::_do_this(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
+
+  if (!omni::internalLock) {
+    // Not initalised yet
+    OMNIORB_THROW(OBJ_ADAPTER,OBJ_ADAPTER_POANotInitialised,
+		  CORBA::COMPLETED_NO);
+  }
 
   omniCurrent* current = omniCurrent::get();
   if (current) {
