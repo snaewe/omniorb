@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+
+<HEAD>
+
+
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.08">
+<LINK rel="stylesheet" type="text/css" href="omniORB.css">
+</HEAD>
+
+<BODY >
+<!--HEVEA command line is: hevea omniORB -->
+<!--HACHA command line is: hacha omniORB.html -->
+
+<BR>
+<BR>
+
+<BR>
+<BR>
+<DIV CLASS="center"><BR>
+<BR>
+ <FONT SIZE=7>The omniORB version 4.1<BR>
+User's Guide
+</FONT><BR>
+<BR>
+ <FONT SIZE=5>Duncan Grisby<BR>
+<FONT SIZE=3>(<I>email: </I></FONT></FONT><A HREF="mailto:dgrisby@apasphere.com"><FONT SIZE=3><I><FONT COLOR=purple>dgrisby@apasphere.com</FONT></I></FONT></A><FONT SIZE=3>)</FONT><FONT SIZE=5><BR>
+Apasphere Ltd.<BR>
+Sai-Lai Lo<BR>
+David Riddoch<BR>
+AT&amp;T Laboratories Cambridge<BR>
+</FONT><BR>
+<BR>
+July 2005
+</DIV><BR>
+<BR>
+<FONT SIZE=5><B>Changes and Additions, June 2005</B></FONT>
+<UL CLASS="itemize"><LI CLASS="li-itemize">
+New omniORB 4.1 features.
+</UL>
+<FONT SIZE=5><B>Changes and Additions, October 2004</B></FONT>
+<UL CLASS="itemize"><LI CLASS="li-itemize">
+Packaging stubs into DLLs.
+</UL>
+<FONT SIZE=5><B>Changes and Additions, July 2004</B></FONT>
+<UL CLASS="itemize"><LI CLASS="li-itemize">
+Minor updates.
+</UL>
+<FONT SIZE=5><B>Changes and Additions, November 2002</B></FONT>
+<UL CLASS="itemize"><LI CLASS="li-itemize">
+Per thread timeouts.
+<LI CLASS="li-itemize">Implement missing interceptors.
+<LI CLASS="li-itemize">Minor fixes.
+</UL>
+<FONT SIZE=5><B>Changes and Additions, June 2002</B></FONT>
+<UL CLASS="itemize"><LI CLASS="li-itemize">
+Updated to omniORB 4.0.
+</UL>
+
+
+<FONT SIZE=5><B>Contents</B></FONT><BR>
+<BR>
+<UL>
+<LI><A HREF="omniORB001.html">Introduction</A>
+<UL>
+<LI><A HREF="omniORB001.html#toc1">Features</A>
+<LI><A HREF="omniORB001.html#toc2">Setting Up Your Environment</A>
+<LI><A HREF="omniORB001.html#toc3">Platform specific variables</A>
+</UL>
+<LI><A HREF="omniORB002.html">The Basics</A>
+<UL>
+<LI><A HREF="omniORB002.html#toc4">The Echo Object Example</A>
+<LI><A HREF="omniORB002.html#toc5">Specifying the Echo interface in IDL</A>
+<LI><A HREF="omniORB002.html#toc6">Generating the C++ stubs</A>
+<LI><A HREF="omniORB002.html#toc7">Object References and Servants</A>
+<LI><A HREF="omniORB002.html#toc8">A Quick Tour of the C++ stubs</A>
+<LI><A HREF="omniORB002.html#toc9">Writing the servant implementation</A>
+<LI><A HREF="omniORB002.html#toc10">Writing the client</A>
+<LI><A HREF="omniORB002.html#toc11">Example 1 &mdash; Colocated Client and Implementation</A>
+<LI><A HREF="omniORB002.html#toc12">Example 2 &mdash; Different Address Spaces</A>
+<LI><A HREF="omniORB002.html#toc13">Example 3 &mdash; Using the Naming Service</A>
+<LI><A HREF="omniORB002.html#toc14">Example 4 &mdash; Using tie implementation templates</A>
+<LI><A HREF="omniORB002.html#toc15">Source Listings</A>
+</UL>
+<LI><A HREF="omniORB003.html">C++ language mapping</A>
+<UL>
+<LI><A HREF="omniORB003.html#toc16">omniORB 2 BOA compatibility</A>
+<LI><A HREF="omniORB003.html#toc17">omniORB 3.0 compatibility</A>
+<LI><A HREF="omniORB003.html#toc18">omniORB 4.0 compatibility</A>
+</UL>
+<LI><A HREF="omniORB004.html">omniORB configuration and API</A>
+<UL>
+<LI><A HREF="omniORB004.html#toc19">Setting parameters</A>
+<LI><A HREF="omniORB004.html#toc20">Tracing options</A>
+<LI><A HREF="omniORB004.html#toc21">Miscellaneous global options</A>
+<LI><A HREF="omniORB004.html#toc22">Client side options</A>
+<LI><A HREF="omniORB004.html#toc23">Server side options</A>
+<LI><A HREF="omniORB004.html#toc24">GIOP and interoperability options</A>
+<LI><A HREF="omniORB004.html#toc25">System Exception Handlers</A>
+<LI><A HREF="omniORB004.html#toc26">Location forwarding</A>
+</UL>
+<LI><A HREF="omniORB005.html">The IDL compiler</A>
+<UL>
+<LI><A HREF="omniORB005.html#toc27">Common options</A>
+<LI><A HREF="omniORB005.html#toc28">C++ back-end options</A>
+<LI><A HREF="omniORB005.html#toc29">Examples</A>
+</UL>
+<LI><A HREF="omniORB006.html">Interoperable Naming Service</A>
+<UL>
+<LI><A HREF="omniORB006.html#toc30">Object URIs</A>
+<LI><A HREF="omniORB006.html#toc31">Configuring resolve_initial_references</A>
+<LI><A HREF="omniORB006.html#toc32">omniNames</A>
+<LI><A HREF="omniORB006.html#toc33">omniMapper</A>
+<LI><A HREF="omniORB006.html#toc34">Creating objects with simple object keys</A>
+</UL>
+<LI><A HREF="omniORB007.html">Interface Type Checking</A>
+<UL>
+<LI><A HREF="omniORB007.html#toc35">Introduction</A>
+<LI><A HREF="omniORB007.html#toc36">Interface Inheritance</A>
+</UL>
+<LI><A HREF="omniORB008.html">Connection and Thread Management</A>
+<UL>
+<LI><A HREF="omniORB008.html#toc37">Background</A>
+<LI><A HREF="omniORB008.html#toc38">The model</A>
+<LI><A HREF="omniORB008.html#toc39">Client side behaviour</A>
+<LI><A HREF="omniORB008.html#toc40">Server side behaviour</A>
+<LI><A HREF="omniORB008.html#toc41">Idle connection shutdown</A>
+<LI><A HREF="omniORB008.html#toc42">Transports and endpoints</A>
+<LI><A HREF="omniORB008.html#toc43">Connection selection and acceptance</A>
+<LI><A HREF="omniORB008.html#toc44">Bidirectional GIOP</A>
+<LI><A HREF="omniORB008.html#toc45">SSL transport</A>
+</UL>
+<LI><A HREF="omniORB009.html">Code set conversion</A>
+<UL>
+<LI><A HREF="omniORB009.html#toc46">Native code sets</A>
+<LI><A HREF="omniORB009.html#toc47">Code set library</A>
+<LI><A HREF="omniORB009.html#toc48">Implementing new code sets</A>
+</UL>
+<LI><A HREF="omniORB010.html">Interceptors</A>
+<UL>
+<LI><A HREF="omniORB010.html#toc49">Interceptor registration</A>
+<LI><A HREF="omniORB010.html#toc50">Available interceptors</A>
+</UL>
+<LI><A HREF="omniORB011.html">Type Any and TypeCode</A>
+<UL>
+<LI><A HREF="omniORB011.html#toc51">Example using type Any</A>
+<LI><A HREF="omniORB011.html#toc52">Type Any in omniORB</A>
+<LI><A HREF="omniORB011.html#toc53">TypeCode in omniORB</A>
+<LI><A HREF="omniORB011.html#toc54">Source Listing</A>
+</UL>
+<LI><A HREF="omniORB012.html">Packaging stubs into DLLs</A>
+<UL>
+<LI><A HREF="omniORB012.html#toc55">Dynamic loading and unloading</A>
+<LI><A HREF="omniORB012.html#toc56">Windows DLLs</A>
+</UL>
+<LI><A HREF="omniORB013.html">Objects by value</A>
+<UL>
+<LI><A HREF="omniORB013.html#toc57">Features</A>
+<LI><A HREF="omniORB013.html#toc58">Reference counting</A>
+<LI><A HREF="omniORB013.html#toc59">Value sharing and local calls</A>
+<LI><A HREF="omniORB013.html#toc60">Value box factories</A>
+<LI><A HREF="omniORB013.html#toc61">Standard value boxes</A>
+<LI><A HREF="omniORB013.html#toc62">Covariant returns</A>
+<LI><A HREF="omniORB013.html#toc63">Values inside Anys</A>
+</UL>
+<LI><A HREF="omniORB014.html">References</A>
+</UL>
+<!--FOOTER-->
+<HR SIZE=2><BLOCKQUOTE CLASS="quote"><EM>This document was translated from L<sup>A</sup>T<sub>E</sub>X by
+</EM><A HREF="http://pauillac.inria.fr/~maranget/hevea/index.html"><EM>H<FONT SIZE=2><sup>E</sup></FONT>V<FONT SIZE=2><sup>E</sup></FONT>A</EM></A><EM>.</EM></BLOCKQUOTE></BODY>
+</HTML>

@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+
+
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.08">
+<LINK rel="stylesheet" type="text/css" href="omniORB.css">
+<TITLE>
+Interface Type Checking
+</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORB006.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB008.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<HR>
+
+<H1 CLASS="chapter"><A NAME="htoc88">Chapter&nbsp;7</A>&nbsp;&nbsp;Interface Type Checking</H1>
+<A NAME="ch_intf"></A>
+This chapter describes the mechanism used by omniORB to ensure type
+safety when object references are exchanged across the network. This
+mechanism is handled completely within the ORB. There is no
+programming interface visible at the application level. However, for
+the sake of diagnosing the problem when there is a type violation, it
+is useful to understand the underlying mechanism in order to interpret
+the error conditions reported by the ORB.<BR>
+<BR>
+<A NAME="toc35"></A>
+<H2 CLASS="section"><A NAME="htoc89">7.1</A>&nbsp;&nbsp;Introduction</H2>
+In GIOP/IIOP, an object reference is encoded as an Interoperable
+Object Reference (IOR) when it is sent across a network connection.
+The IOR contains a Repository ID (RepoId) and one or more
+communication profiles. The communication profiles describe where and
+how the object can be contacted. The RepoId is a string which uniquely
+identifies the IDL interface of the object.<BR>
+<BR>
+Unless the <TT>ID</TT> pragma is specified in the IDL, the ORB generates
+the RepoId string in the so-called OMG IDL Format<SUP><A NAME="text16" HREF="#note16">1</A></SUP>. For instance, the RepoId for the <TT>Echo</TT>
+interface used in the examples of chapter&nbsp;<A HREF="omniORB002.html#chap:basic">2</A> is
+<TT>IDL:Echo:1.0</TT>.<BR>
+<BR>
+When interface inheritance is used in the IDL, the ORB always sends the
+RepoId of the most derived interface. For example:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT>   <I>// IDL</I></TT><TT>
+</TT><TT>   <B>interface</B> A {</TT><TT>
+</TT><TT>     ...</TT><TT>
+</TT><TT>   };</TT><TT>
+</TT><TT>   <B>interface</B> B : A {</TT><TT>
+</TT><TT>     ...</TT><TT>
+</TT><TT>   };</TT><TT>
+</TT><TT>   <B>interface</B> C {</TT><TT>
+</TT><TT>      <B>void</B> op(<B>in</B> A arg);</TT><TT>
+</TT><TT>   };</TT></DIV><BR>
+<BR>
+<DIV CLASS="lstlisting"><TT>   <I>// C++</I></TT><TT>
+</TT><TT>   C_ptr server;</TT><TT>
+</TT><TT>   B_ptr objB;</TT><TT>
+</TT><TT>   A_ptr objA = objB;</TT><TT>
+</TT><TT>   server-&gt;op(objA);  <I>// Send B as A</I></TT></DIV><BR>
+<BR>
+In the example, the operation <TT>C::op()</TT> accepts an object reference
+of type <TT>A</TT>. The real type of the reference passed to <TT>C::op()</TT>
+is <TT>B</TT>, which inherits from <TT>A</TT>. In this case, the RepoId of
+<TT>B</TT>, and not that of <TT>A</TT>, is sent across the network.<BR>
+<BR>
+The GIOP/IIOP specification allows an ORB to send a null string in the
+RepoId field of an IOR. It is up to the receiving end to work out the
+real type of the object. omniORB never sends out null strings as
+RepoIds, but it may receive null RepoIds from other ORBs. In that
+case, it will use the mechanism described below to ensure type safety.<BR>
+<BR>
+<A NAME="toc36"></A>
+<H2 CLASS="section"><A NAME="htoc90">7.2</A>&nbsp;&nbsp;Interface Inheritance</H2>
+When the ORB receives an IOR of interface type B when it expects the
+type to be A, it must find out if B inherits from A. When the ORB has
+no local knowledge of the type B, it must work out the type of B
+dynamically.<BR>
+<BR>
+The CORBA specification defines an Interface Repository (IR) from
+which IDL interfaces can be queried dynamically. In the above
+situation, the ORB could contact the IR to find out the type of B.
+However, this approach assumes that an IR is always available and
+contains the up-to-date information of all the interfaces used in the
+domain. This assumption may not be valid in many applications.<BR>
+<BR>
+An alternative is to use the <TT>_is_a()</TT> operation to work out the
+actual type of an object. This approach is simpler and more robust
+than the previous one because no 3rd party is involved, so this is
+what omniORB does.<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><B>class</B> Object{</TT><TT>
+</TT><TT>    CORBA::Boolean _is_a(<B>const</B> <B>char</B>* type_id);</TT><TT>
+</TT><TT>};</TT></DIV><BR>
+<BR>
+The <TT>_is_a()</TT> operation is part of the <TT>CORBA::Object</TT>
+interface and must be implemented by every object. The input argument
+is a RepoId. The function returns true(1) if the object is really an
+instance of that type, including if that type is a base type of the
+most derived type of that object.<BR>
+<BR>
+In the situation above, the ORB would invoke the <TT>_is_a()</TT>
+operation on the object and ask if the object is of type A
+<EM>before</EM> it processes any application invocation on the object.<BR>
+<BR>
+Notice that the <TT>_is_a()</TT> call is <EM>not</EM> performed when the IOR
+is unmarshalled. It is performed just prior to the first application
+invocation on the object. This leads to some interesting failure modes
+if B reports that it is not an A. Consider the following example:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><I>// IDL</I></TT><TT>
+</TT><TT><B>interface</B> A { ... };</TT><TT>
+</TT><TT><B>interface</B> B : A { ... };</TT><TT>
+</TT><TT><B>interface</B> D { ... };</TT><TT>
+</TT><TT><B>interface</B> C {</TT><TT>
+</TT><TT>  A      op1();</TT><TT>
+</TT><TT>  <B>Object</B> op2();</TT><TT>
+</TT><TT>};</TT></DIV><BR>
+<BR>
+<DIV CLASS="lstlisting"><TT> 1  <I>// C++</I></TT><TT>
+</TT><TT> 2  C_ptr objC;</TT><TT>
+</TT><TT> 3  A_ptr objA;</TT><TT>
+</TT><TT> 4  CORBA::Object_ptr objR;</TT><TT>
+</TT><TT> 5</TT><TT>
+</TT><TT> 6  objA =  objC-&gt;op1();</TT><TT>
+</TT><TT> 7  (<B>void</B>) objA-&gt;_non_existent();</TT><TT>
+</TT><TT> 8</TT><TT>
+</TT><TT> 9  objR =  objC-&gt;op2();</TT><TT>
+</TT><TT>10  objA =  A::_narrow(objR);</TT></DIV><BR>
+<BR>
+If the stubs of A,B,C,D are linked into the executable and:
+<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description">
+<B>Case 1</B><DD CLASS="dd-description"> <TT>C::op1()</TT> and <TT>C::op2()</TT> return a B. Lines 6&ndash;10
+complete successfully. The remote object is only contacted at line 7.<BR>
+<BR>
+<DT CLASS="dt-description"><B>Case 2</B><DD CLASS="dd-description"> <TT>C::op1()</TT> and <TT>C::op2()</TT> return a D. This condition
+only occurs if the runtime of the remote end is buggy. Even though the
+IDL definitions show that D is not derived from A, omniORB gives it
+the benefit of the doubt, in case it actually has a more derived
+interface that is derived from both A and D. At line 7, the object is
+contacted to ask if it is an A. The answer is no, so a
+<TT>CORBA::INV_OBJREF</TT> exception is raised. At line 10, the narrow
+operation will fail, and objA will be set to nil.
+</DL>
+If only the stubs of A are linked into the executable and:
+<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description">
+<B>Case 1</B><DD CLASS="dd-description"> <TT>C::op1()</TT> and <TT>C::op2()</TT> return a B. Lines 6&ndash;10
+complete successfully. When lines 7 and 10 are executed, the object is
+contacted to ask if it is an A.<BR>
+<BR>
+<DT CLASS="dt-description"><B>Case 2</B><DD CLASS="dd-description"> <TT>C::op1()</TT> and <TT>C::op2()</TT> return a D. This condition
+only occurs if the runtime of the remote end is buggy. Line 6
+completes and no exception is raised. At line 7, the object is
+contacted to ask if it is an A. If the answer is no, a
+<TT>CORBA::INV_OBJREF</TT> exception is raised. At line 10, the narrow
+operation will fail, and objA will be set to nil.
+</DL>
+<HR WIDTH="50%" SIZE=1><DL CLASS="list"><DT CLASS="dt-list"><A NAME="note16" HREF="#text16"><FONT SIZE=5>1</FONT></A><DD CLASS="dd-list">For further
+details of the repository ID formats, see section 10.6 in the CORBA
+2.6 specification.
+</DL>
+<HR>
+<A HREF="omniORB006.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB008.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

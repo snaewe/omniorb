@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+
+
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.08">
+<LINK rel="stylesheet" type="text/css" href="omniORB.css">
+<TITLE>
+Interoperable Naming Service
+</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORB005.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB007.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<HR>
+
+<H1 CLASS="chapter"><A NAME="htoc76">Chapter&nbsp;6</A>&nbsp;&nbsp;Interoperable Naming Service</H1>
+<A NAME="chap:ins"></A>
+omniORB 4.1 supports the Interoperable Naming Service (INS). The
+following is a summary of its facilities.<BR>
+<BR>
+<A NAME="toc30"></A>
+<H2 CLASS="section"><A NAME="htoc77">6.1</A>&nbsp;&nbsp;Object URIs</H2>
+As well as accepting IOR-format strings, <TT>ORB::string_to_object()</TT>
+also supports two Uniform Resource Identifier (URI)&nbsp;[<A HREF="omniORB014.html#rfc2396"><CITE>BLFIM98</CITE></A>]
+formats, which can be used to specify objects in a convenient
+human-readable form. IOR-format strings are now also considered URIs.<BR>
+<BR>
+
+<H3 CLASS="subsection"><A NAME="htoc78">6.1.1</A>&nbsp;&nbsp;corbaloc</H3>
+<TT>corbaloc</TT> URIs allow you to specify object references which
+can be contacted by IIOP, or found through
+<TT>ORB::resolve_initial_references()</TT>. To specify an IIOP object
+reference, you use a URI of the form:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaloc:iiop:</TT>&lt;<I>host</I>&gt;<TT>:</TT>&lt;<I>port</I>&gt;<TT>/</TT>&lt;<I>object key</I>&gt;
+</BLOCKQUOTE>
+for example:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaloc:iiop:myhost.example.com:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+which specifies an object with key `MyObjectKey' within a
+process running on myhost.example.com listening on port 1234. Object
+keys containing non-ASCII characters can use the standard URI %
+escapes:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaloc:iiop:myhost.example.com:1234/My</TT><TT>%</TT><TT>efObjectKey</TT>
+</BLOCKQUOTE>
+denotes an object key with the value 239 (hex ef) in the
+third octet.<BR>
+<BR>
+The protocol name `<TT>iiop</TT>' can be abbreviated to the empty
+string, so the original URI can be written:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaloc::myhost.example.com:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+The IANA has assigned port number 2809<SUP><A NAME="text15" HREF="#note15">1</A></SUP> for use by <TT>corbaloc</TT>, so if
+the server is listening on that port, you can leave the port number
+out. The following two URIs refer to the same object:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaloc::myhost.example.com:2809/MyObjectKey</TT><BR>
+<TT>corbaloc::myhost.example.com/MyObjectKey</TT>
+</BLOCKQUOTE>
+You can specify an object which is available at more than
+one location by separating the locations with commas:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaloc::myhost.example.com,:localhost:1234/MyObjectKey</TT>
+</BLOCKQUOTE>
+Note that you must restate the protocol for each address,
+hence the `<TT>:</TT>' before `<TT>localhost</TT>'. It could
+equally have been written `<TT>iiop:localhost</TT>'.<BR>
+<BR>
+You can also specify an IIOP version number:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaloc::1.2@myhost.example.com/MyObjectKey</TT>
+</BLOCKQUOTE>
+Specifying IIOP versions above 1.0 is slightly risky since higher
+versions make use of various information stored in IORs that is not
+present in a corbaloc URI. It is generally best to contact initial
+corbaloc objects with IIOP 1.0, and rely on higher versions for all
+other object references.<BR>
+<BR>
+Alternatively, to use <TT>resolve_initial_references()</TT>, you
+use a URI of the form:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaloc:rir:/NameService</TT>
+</BLOCKQUOTE>
+
+<H3 CLASS="subsection"><A NAME="htoc79">6.1.2</A>&nbsp;&nbsp;corbaname</H3>
+<A NAME="sec:corbaname"></A>
+<TT>corbaname</TT> URIs cause <TT>string_to_object()</TT> to look-up a
+name in a CORBA Naming service. They are an extension of the
+<TT>corbaloc</TT> syntax:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaname:</TT>&lt;<I>corbaloc location</I>&gt;<TT>/</TT>&lt;<I>object key</I>&gt;<TT>#</TT>&lt;<I>stringified name</I>&gt;
+</BLOCKQUOTE>
+for example:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaname::myhost/NameService#project/example/echo.obj</TT><BR>
+<TT>corbaname:rir:/NameService#project/example/echo.obj</TT>
+</BLOCKQUOTE>
+The object found with the <TT>corbaloc</TT>-style portion
+must be of type <TT>CosNaming::NamingContext</TT>, or something
+derived from it. If the object key (or <TT>rir</TT> name) is
+`<TT>NameService</TT>', it can be left out:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaname::myhost#project/example/echo.obj</TT><BR>
+<TT>corbaname:rir:#project/example/echo.obj</TT>
+</BLOCKQUOTE>
+The stringified name portion can also be left out, in which
+case the URI denotes the <TT>CosNaming::NamingContext</TT> which would
+have been used for a look-up:
+<BLOCKQUOTE CLASS="quote">
+<TT>corbaname::myhost.example.com</TT><BR>
+<TT>corbaname:rir:</TT>
+</BLOCKQUOTE>
+The first of these examples is the easiest way of specifying
+the location of a naming service.<BR>
+<BR>
+<A NAME="toc31"></A>
+<H2 CLASS="section"><A NAME="htoc80">6.2</A>&nbsp;&nbsp;Configuring resolve_initial_references</H2>
+<A NAME="sec:insargs"></A>
+The INS specifies two standard command line arguments which provide a
+portable way of configuring <TT>ORB::resolve_initial_references()</TT>:<BR>
+<BR>
+
+<H3 CLASS="subsection"><A NAME="htoc81">6.2.1</A>&nbsp;&nbsp;ORBInitRef</H3>
+<TT>-ORBInitRef</TT> takes an argument of the form
+&lt;<I>ObjectId</I>&gt;<TT>=</TT>&lt;<I>ObjectURI</I>&gt;. So, for example,
+with command line arguments of:
+<BLOCKQUOTE CLASS="quote">
+<TT>-ORBInitRef NameService=corbaname::myhost.example.com</TT>
+</BLOCKQUOTE>
+<TT>resolve_initial_references("NameService")</TT> will
+return a reference to the object with key `NameService' available on
+myhost.example.com, port 2809. Since IOR-format strings are considered
+URIs, you can also say things like:
+<BLOCKQUOTE CLASS="quote">
+<TT>-ORBInitRef NameService=IOR:00ff...</TT>
+</BLOCKQUOTE>
+
+<H3 CLASS="subsection"><A NAME="htoc82">6.2.2</A>&nbsp;&nbsp;ORBDefaultInitRef</H3>
+<TT>-ORBDefaultInitRef</TT> provides a prefix string which is used to
+resolve otherwise unknown names. When
+<TT>resolve_initial_references()</TT> is unable to resolve a name which
+has been specifically configured (with <TT>-ORBInitRef</TT>), it
+constructs a string consisting of the default prefix, a `<TT>/</TT>'
+character, and the name requested. The string is then fed to
+<TT>string_to_object()</TT>. So, for example, with a command line of:
+<BLOCKQUOTE CLASS="quote">
+<TT>-ORBDefaultInitRef corbaloc::myhost.example.com</TT>
+</BLOCKQUOTE>
+a call to <TT>resolve_initial_references("MyService")</TT>
+will return the object reference denoted by
+`<TT>corbaloc::myhost.example.com/MyService</TT>'.<BR>
+<BR>
+Similarly, a <TT>corbaname</TT> prefix can be used to cause
+look-ups in the naming service. Note, however, that since a
+`<TT>/</TT>' character is always added to the prefix, it is
+impossible to specify a look-up in the root context of the naming
+service&mdash;you have to use a sub-context, like:
+<BLOCKQUOTE CLASS="quote">
+<TT>-ORBDefaultInitRef corbaname::myhost.example.com#services</TT>
+</BLOCKQUOTE>
+<A NAME="toc32"></A>
+<H2 CLASS="section"><A NAME="htoc83">6.3</A>&nbsp;&nbsp;omniNames</H2>
+
+<H3 CLASS="subsection"><A NAME="htoc84">6.3.1</A>&nbsp;&nbsp;NamingContextExt</H3>
+omniNames supports the extended <TT>CosNaming::NamingContextExt</TT>
+interface:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><B>module</B> CosNaming {</TT><TT>
+</TT><TT>  <B>interface</B> NamingContextExt : NamingContext {</TT><TT>
+</TT><TT>    <B>typedef</B> <B>string</B> StringName;</TT><TT>
+</TT><TT>    <B>typedef</B> <B>string</B> Address;</TT><TT>
+</TT><TT>    <B>typedef</B> <B>string</B> URLString;</TT><TT>
+</TT><TT>
+</TT><TT>    StringName  to_string(<B>in</B> Name n)        <B>raises</B>(InvalidName);</TT><TT>
+</TT><TT>    Name        to_name  (<B>in</B> StringName sn) <B>raises</B>(InvalidName);</TT><TT>
+</TT><TT>
+</TT><TT>    <B>exception</B> InvalidAddress {};</TT><TT>
+</TT><TT>
+</TT><TT>    URLString   to_url(<B>in</B> Address addr, <B>in</B> StringName sn)</TT><TT>
+</TT><TT>      <B>raises</B>(InvalidAddress, InvalidName);</TT><TT>
+</TT><TT>
+</TT><TT>    <B>Object</B>      resolve_str(<B>in</B> StringName n)</TT><TT>
+</TT><TT>      <B>raises</B>(NotFound, CannotProceed, InvalidName, AlreadyBound);</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>};</TT></DIV><BR>
+<BR>
+<TT>to_string()</TT> and <TT>to_name()</TT> convert from <TT>CosNaming::Name</TT>
+sequences to flattened strings and vice-versa. Note that calling
+these operations involves remote calls to the naming service, so they
+are not particularly efficient. You can use the omniORB specific local
+<TT>omniURI::nameToString()</TT> and <TT>omniURI::stringToName()</TT>
+functions instead.<BR>
+<BR>
+A <TT>CosNaming::Name</TT> is stringified by separating name components
+with `<TT>/</TT>' characters. The <TT>kind</TT> and <TT>id</TT> fields of
+each component are separated by `<TT>.</TT>' characters. If the
+<TT>kind</TT> field is empty, the representation has no trailing
+`<TT>.</TT>'; if the <TT>id</TT> is empty, the representation starts
+with a `<TT>.</TT>' character; if both <TT>id</TT> and <TT>kind</TT>
+are empty, the representation is just a `<TT>.</TT>'. The backslash
+`<TT>\</TT>' is used to escape the meaning of
+`<TT>/</TT>', `<TT>.</TT>' and `<TT>\</TT>' itself.<BR>
+<BR>
+<TT>to_url()</TT> takes a <TT>corbaloc</TT> style address and key string
+(but without the <TT>corbaloc:</TT> part), and a stringified name,
+and returns a <TT>corbaname</TT> URI (incorrectly called a URL)
+string, having properly escaped any invalid characters. The
+specification does not make it clear whether or not the address string
+should also be escaped by the operation; omniORB does not escape
+it. For this reason, it is best to avoid calling <TT>to_url()</TT> if the
+address part contains escapable characters. omniORB provides the
+equivalent local function <TT>omniURI::addrAndNameToURI()</TT>.<BR>
+<BR>
+<TT>resolve_str()</TT> is equivalent to calling <TT>to_name()</TT> followed by
+the inherited <TT>resolve()</TT> operation. There are no string-based
+equivalents of the various bind operations.<BR>
+<BR>
+
+<H3 CLASS="subsection"><A NAME="htoc85">6.3.2</A>&nbsp;&nbsp;Use with corbaname</H3>
+To make it easy to use omniNames with <TT>corbaname</TT> URIs, it
+starts with the default port of 2809, and an object key of
+`<TT>NameService</TT>' for the root naming context.<BR>
+<BR>
+<A NAME="toc33"></A>
+<H2 CLASS="section"><A NAME="htoc86">6.4</A>&nbsp;&nbsp;omniMapper</H2>
+
+omniMapper is a simple daemon which listens on port 2809 (or any other
+port), and redirects IIOP requests for configured object keys to
+associated persistent object references. It can be used to make a
+naming service (even an old non-INS aware version of omniNames or
+other ORB's naming service) appear on port 2809 with the object key
+`<TT>NameService</TT>'. The same goes for any other service you may
+wish to specify, such as an interface repository. omniMapper is
+started with a command line of:
+<BLOCKQUOTE CLASS="quote">
+<TT>omniMapper [-port </TT>&lt;<I>port</I>&gt;<TT>] [-config </TT>&lt;<I>config file</I>&gt;<TT>] [-v]</TT>
+</BLOCKQUOTE>
+The <TT>-port</TT> option allows you to choose a port other
+than 2809 to listen on. The <TT>-config</TT> option specifies a
+location for the configuration file. The default name is
+<TT>/etc/omniMapper.cfg</TT>, or <TT>C:\omniMapper.cfg</TT> on
+Windows. omniMapper does not normally print anything; the <TT>-v</TT>
+option makes it verbose so it prints configuration information and a
+record of the redirections it makes, to standard output.<BR>
+<BR>
+The configuration file is very simple. Each line contains a string to
+be used as an object key, some white space, and an IOR (or any valid
+URI) that it will redirect that object key to. Comments should be
+prefixed with a `<TT>#</TT>' character. For example:
+<BLOCKQUOTE CLASS="quote">
+<PRE CLASS="verbatim">
+# Example omniMapper.cfg
+NameService         IOR:000f...
+InterfaceRepository IOR:0100...
+</PRE></BLOCKQUOTE>
+omniMapper can either be run on a single machine, in much the same way
+as omniNames, or it can be run on <EM>every</EM> machine, with a common
+configuration file. That way, each machine's omniORB configuration
+file could contain the line:
+<BLOCKQUOTE CLASS="quote">
+<PRE CLASS="verbatim">
+ORBDefaultInitRef corbaloc::localhost
+</PRE></BLOCKQUOTE>
+<A NAME="toc34"></A>
+<H2 CLASS="section"><A NAME="htoc87">6.5</A>&nbsp;&nbsp;Creating objects with simple object keys</H2>
+In normal use, omniORB creates object keys containing various
+information including POA names and various non-ASCII characters.
+Since object keys are supposed to be opaque, this is not usually a
+problem. The INS breaks this opacity and requires servers to create
+objects with human-friendly keys.<BR>
+<BR>
+If you wish to make your objects available with human-friendly URIs,
+there are two options. The first is to use omniMapper as described
+above, in conjunction with a <TT>PERSISTENT</TT> POA. The second is to
+create objects with the required keys yourself. You do this with a
+special POA with the name `<TT>omniINSPOA</TT>', acquired from
+<TT>resolve_initial_references()</TT>. This POA has the <TT>USER_ID</TT>
+and <TT>PERSISTENT</TT> policies, and the special property that the
+object keys it creates contain only the object ids given to the POA,
+and no other data. It is a normal POA in all other respects, so you
+can activate/deactivate it, create children, and so on, in the usual
+way.<BR>
+<BR>
+Children of the omniINSPOA do not inherit its special properties of
+creating simple object keys. If the omniINSPOA's policies are not
+suitable for your application, you cannot create a POA with different
+policies (such as single threading, for example), and still generate
+simple object keys. Instead, you can activate a servant in the
+omniINSPOA that uses location forwarding to redirect requests to
+objects in a different POA.<BR>
+<BR>
+<HR WIDTH="50%" SIZE=1><DL CLASS="list"><DT CLASS="dt-list"><A NAME="note15" HREF="#text15"><FONT SIZE=5>1</FONT></A><DD CLASS="dd-list">Not 2089 as
+printed in [<A HREF="omniORB014.html#inschapters"><CITE>OMG00</CITE></A>]!
+</DL>
+<HR>
+<A HREF="omniORB005.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB007.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

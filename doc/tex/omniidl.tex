@@ -45,42 +45,54 @@
 
 % URL-like things:
 \usepackage[T1]{url}
-\newcommand{\weburl}{\url}
-\newcommand{\email}{\begingroup \urlstyle{rm}\Url}
+\newcommand{\email}{\begingroup \urlstyle{sf}\Url}
 \newcommand{\file}{\begingroup \urlstyle{tt}\Url}
 \newcommand{\envvar}{\begingroup \urlstyle{tt}\Url}
 \newcommand{\makevar}{\begingroup \urlstyle{tt}\Url}
 \newcommand{\corbauri}{\begingroup \urlstyle{tt}\Url}
-
-
-% HeVeA barfs at the following:
-
 %BEGIN LATEX
+\newcommand{\weburl}{\begingroup \urlstyle{sf}\Url}
+%END LATEX
+%HEVEA\def\weburl{\begingroup%
+%HEVEA\def\UrlLeft##1\UrlRight{\ahrefurl{##1}}%
+%HEVEA\urlstyle{tt}%
+%HEVEA\Url}
+
 
 \addtolength{\oddsidemargin}{-0.2in}
 \addtolength{\evensidemargin}{-0.6in}
 \addtolength{\textwidth}{0.5in}
 
+%BEGIN LATEX
 \newcommand{\dsc}{\discretionary{}{}{}}
+%END LATEX
+%HEVEA\newcommand{\dsc}{}
+
 \usepackage{listings}
 
+\makeatletter
+\let\lst@ifdraft\iffalse
+\makeatother
+
 \lstdefinelanguage{idl}%
-  {keywords={any,attribute,boolean,case,char,const,context,default,double,enum,exception,FALSE,float,in,inout,interface,long,module,Object,octet,oneway,out,raises,readonly,sequence,short,string,struct,switch,TRUE,typedef,unsigned,union,void},%
+  {keywords={abstract,any,attribute,boolean,case,char,const,context,custom,default,double,enum,exception,factory,FALSE,fixed,float,in,inout,interface,local,long,module,native,Object,octet,oneway,out,private,public,raises,readonly,sequence,short,string,struct,supports,switch,TRUE,truncatable,typedef,unsigned,union,ValueBase,valuetype,void,wchar,wstring},%
   sensitive,%
-  singlecomment={/*}{*/},%
-  commentline=//,%
-  stringizer=[b]",%
-  directives={define,elif,else,endif,error,if,ifdef,ifndef,line,include,pragma,undef,warning}%
-  }[keywords,comments,strings,directives]
+  morecomment=[s]{/*}{*/},%
+  morecomment=[l]//,%
+  morestring=[b]",%
+  morestring=[b]',%
+  moredirectives={define,elif,else,endif,error,if,ifdef,ifndef,line,%
+     include,pragma,undef,warning}%
+ }[keywords,comments,strings,directives]%
 
 \lstset{basicstyle=\ttfamily\small,
         keywordstyle=,
         commentstyle=\itshape,
-        labelstyle=\tiny,
-        stringspaces=false,
+        numberstyle=\tiny,
+        showstringspaces=false,
         abovecaptionskip=0pt,
         belowcaptionskip=0pt,
-        indent=\parindent,
+        xleftmargin=\parindent,
         fontadjust}
 
 \lstnewenvironment{idllisting}{\lstset{language=idl}}{}
@@ -91,13 +103,9 @@
 
 % These things make up for HeVeA's lack of understanding:
 
-%HEVEA\newcommand{\dsc}{}
-%HEVEA\newcommand{\lstset}[1]{}
-%HEVEA\usepackage{verbatim}
-%HEVEA\newenvironment{idllisting}{\verbatim}{\endverbatim}
-%HEVEA\newenvironment{cxxlisting}{\verbatim}{\endverbatim}
-%HEVEA\newenvironment{makelisting}{\verbatim}{\endverbatim}
-%HEVEA\newenvironment{pylisting}{\verbatim}{\endverbatim}
+%HEVEA\newcommand{\vfill}{}
+%HEVEA\newcommand{\mainmatter}{}
+%HEVEA\newcommand{\backmatter}{}
 
 % Hyperref things for pdf and html:
 \usepackage{hyperref}
@@ -131,9 +139,7 @@ AT\&T Laboratories Cambridge\\
 
 This manual describes \omniidl, the omniORB IDL compiler. It is
 intended for developers who wish to write their own IDL compiler
-back-ends, or to modify existing ones. It also documents the design of
-the compiler front-end for those poor souls who have to track the IDL
-specification.
+back-ends, or to modify existing ones.
 
 If you just wish to use \omniidl\ to create stubs for C++ or Python,
 you should read the omniORB or omniORBpy manuals instead of this one.
@@ -1309,11 +1315,6 @@ there will be no error if you accidentally miss a node type. In those
 situations it is better to declare a visitor class which does not
 derive from the visitor base classes.
 
-
-
-\section{Front-end architecture}
-
-Not here yet.
 
 
 \end{document}

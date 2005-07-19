@@ -63,29 +63,41 @@
 
 % URL-like things:
 \usepackage[T1]{url}
-\newcommand{\weburl}{\begingroup \urlstyle{sf}\Url}
 \newcommand{\email}{\begingroup \urlstyle{sf}\Url}
 \newcommand{\file}{\begingroup \urlstyle{tt}\Url}
 \newcommand{\envvar}{\begingroup \urlstyle{tt}\Url}
 \newcommand{\makevar}{\begingroup \urlstyle{tt}\Url}
 \newcommand{\corbauri}{\begingroup \urlstyle{tt}\Url}
+%BEGIN LATEX
+\newcommand{\weburl}{\begingroup \urlstyle{sf}\Url}
+%END LATEX
+%HEVEA\def\weburl{\begingroup%
+%HEVEA\def\UrlLeft##1\UrlRight{\ahrefurl{##1}}%
+%HEVEA\urlstyle{tt}%
+%HEVEA\Url}
+
 
 % Mark-up for configuration options
-\makeatletter
 \newcommand{\confopt}[2]
+  {\vspace{\baselineskip}\par\noindent\code{#1} ~~ \textit{default} =
+   \code{#2}}
+
+%BEGIN LATEX
+\makeatletter
+\renewcommand{\confopt}[2]
   {\vspace{\baselineskip}\par\noindent\code{#1} ~~ \textit{default} =
    \code{#2}\\[-1ex]\@afterheading}
 \makeatother
-
-% HeVeA barfs at the following:
-
-%BEGIN LATEX
+%END LATEX
 
 \addtolength{\oddsidemargin}{-0.2in}
 \addtolength{\evensidemargin}{-0.6in}
 \addtolength{\textwidth}{0.5in}
 
+%BEGIN LATEX
 \newcommand{\dsc}{\discretionary{}{}{}}
+%END LATEX
+%HEVEA\newcommand{\dsc}{}
 
 \pagestyle{headings}
 \setcounter{secnumdepth}{3}
@@ -108,16 +120,6 @@
      include,pragma,undef,warning}%
  }[keywords,comments,strings,directives]%
 
-%% \lstset{basicstyle=\ttfamily\small,
-%%         keywordstyle=,
-%%         commentstyle=\itshape,
-%%         labelstyle=\tiny,
-%%         stringspaces=false,
-%%         abovecaptionskip=0pt,
-%%         belowcaptionskip=0pt,
-%%         indent=\parindent,
-%%         fontadjust}
-
 \lstset{basicstyle=\ttfamily\small,
         keywordstyle=,
         commentstyle=\itshape,
@@ -133,21 +135,11 @@
 \lstnewenvironment{cxxlisting}{\lstset{language=C++}}{}
 \lstnewenvironment{makelisting}{\lstset{language=[gnu]make}}{}
 
-%END LATEX
-
 % These things make up for HeVeA's lack of understanding:
 
-%HEVEA\newcommand{\dsc}{}
 %HEVEA\newcommand{\vfill}{}
 %HEVEA\newcommand{\mainmatter}{}
 %HEVEA\newcommand{\backmatter}{}
-%HEVEA\newcommand{\lstset}[1]{}
-%HEVEA\newcommand{\textbackslash}{$\backslash$}
-%HEVEA\usepackage{verbatim}
-%HEVEA\newenvironment{idllisting}{\verbatim}{\endverbatim}
-%HEVEA\newenvironment{cxxlisting}{\verbatim}{\endverbatim}
-%HEVEA\newenvironment{makelisting}{\verbatim}{\endverbatim}
-
 
 % Hyperref things for pdf and html:
 \usepackage{hyperref}
@@ -201,7 +193,7 @@ AT\&T Laboratories Cambridge\\
 
 \vfill
 \vfill
-June 2005
+July 2005
 \vfill
 
 \end{center}
@@ -246,18 +238,19 @@ June 2005
 
 \cleardoublepage
 
-%HEVEA{\Large \bf Contents}
 %BEGIN LATEX
 \tableofcontents
-%END LATEX
 
 \cleardoublepage
+%END LATEX
 
 \pagestyle{headings}
 
 \pagenumbering{arabic}
 
 \mainmatter
+
+%HEVEA{\LARGE \bf Contents}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
@@ -379,10 +372,7 @@ checks the environment variable \envvar{OMNIORB_CONFIG}~to obtain the
 pathname of the configuration file. If this is not set, it then
 attempts to obtain configuration data in the system registry. It
 searches for the data under the key
-%BEGIN LATEX
 \file{HKEY_LOCAL_MACHINE\SOFTWARE\omniORB}.
-%END LATEX
-%HEVEA \verb|HKEY_LOCAL_MACHINE\SOFTWARE\omniORB|.
 
 \end{itemize}
 
@@ -702,7 +692,7 @@ must call the \op{CORBA::release} operation. Its signature is as
 follows:
 
 \begin{cxxlisting}
-namespaceCORBA {
+namespace CORBA {
   void release(CORBA::Object_ptr obj);
   ... // other methods
 };
@@ -924,7 +914,9 @@ variable goes out of scope and is destroyed.
 Here is an example of how an \type{Echo\_ptr} object reference is
 used.
 
+%BEGIN LATEX
 \lstset{stepnumber=1,gobble=4}
+%END LATEX
 \begin{cxxlisting}
  1  void
  2  hello(CORBA::Object_ptr obj)
@@ -1003,7 +995,9 @@ address spaces.
 The code for this example is reproduced below:
 
 
+%BEGIN LATEX
 \lstset{stepnumber=1,gobble=4}
+%END LATEX
 \begin{cxxlisting}
  1  int
  2  main(int argc, char **argv)
@@ -1196,13 +1190,15 @@ into a proper object reference.  This method is used in this
 example. In the next example, we shall introduce a better way of
 passing the object reference using the CORBA Naming Service.
 
-\subsection{Object Implementation: Generating a Stringified Object Reference}
+\subsection{Object Implementation: Making a Stringified Object Reference}
 
 The \op{main} function of the server side is reproduced below. The
 full listing (\file{eg2_impl.cc}) can be found at the end of this
 chapter.
 
+%BEGIN LATEX
 \lstset{stepnumber=1,gobble=4}
+%END LATEX
 \begin{cxxlisting}
  1  int main(int argc, char** argv)
  2  {
@@ -2497,11 +2493,7 @@ a prefix.
 \subsection{Windows registry}
 
 On Windows, configuration parameters can be stored in the registry,
-under the key
-%BEGIN LATEX
-\file{HKEY_LOCAL_MACHINE\SOFTWARE\omniORB}.
-%END LATEX
-%HEVEA \verb|HKEY_LOCAL_MACHINE\SOFTWARE\omniORB|.
+under the key \file{HKEY_LOCAL_MACHINE\SOFTWARE\omniORB}.
 
 The file \file{sample.reg} shows the settings that can be made. It can
 be edited and then imported into regedit.
@@ -3933,15 +3925,10 @@ started with a command line of:
 \noindent The \cmdline{-port} option allows you to choose a port other
 than 2809 to listen on. The \cmdline{-config} option specifies a
 location for the configuration file. The default name is
-\file{/etc/omniMapper.cfg}, or
-%BEGIN LATEX
-\file{C:\omniMapper.cfg}
-%END LATEX
-%HEVEA\verb|C:\omniMapper.cfg|
-on Windows. omniMapper does not normally print anything; the
-\cmdline{-v} option makes it verbose so it prints configuration
-information and a record of the redirections it makes, to standard
-output.
+\file{/etc/omniMapper.cfg}, or \file{C:\omniMapper.cfg} on
+Windows. omniMapper does not normally print anything; the \cmdline{-v}
+option makes it verbose so it prints configuration information and a
+record of the redirections it makes, to standard output.
 
 The configuration file is very simple. Each line contains a string to
 be used as an object key, some white space, and an IOR (or any valid
@@ -4116,7 +4103,9 @@ interface C {
 };
 \end{idllisting}
 
+%BEGIN LATEX
 \lstset{stepnumber=1,gobble=4}
+%END LATEX
 \begin{cxxlisting}
  1  // C++
  2  C_ptr objC;

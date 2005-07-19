@@ -3,56 +3,203 @@
 <HTML>
 <HEAD>
 
+
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.06">
+<META name="GENERATOR" content="hevea 1.08">
+<LINK rel="stylesheet" type="text/css" href="omniORB.css">
 <TITLE>
- References
+Objects by value
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB012.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
 <A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB014.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>References</H1><DL COMPACT=compact><DT><A NAME="rfc2396"><FONT COLOR=purple>[BLFIM98]</FONT></A><DD>
-T. Berners-Lee, R. Fielding, U.C. Irvine, and L. Masinter.
-<EM>Uniform Resource Identifiers (URI): Generic Syntax</EM>.
-RFC 2396, August 1998.<BR>
+<H1 CLASS="chapter"><A NAME="htoc140">Chapter&nbsp;13</A>&nbsp;&nbsp;Objects by value</H1>
+<A NAME="chap:valuetype"></A>
+omniORB 4.1 supports objects by value, declared with the
+<TT>valuetype</TT> keyword in IDL. This chapter outlines some issues to
+do with using valuetypes in omniORB. You are assumed to have read the
+relevant parts of the CORBA specification, specifically chapters 4 and
+5 of the CORBA 2.6 specification, and sections 1.17 and 1.18 of the
+C++ mapping specification, version 1.1.<BR>
 <BR>
-<DT><A NAME="henning1999"><FONT COLOR=purple>[HV99]</FONT></A><DD>
-Michi Henning and Steve Vinoski.
-<EM>Advanced CORBA Programming with C++</EM>.
-Addison-Wesley professional computing series, 1999.<BR>
+<A NAME="toc57"></A>
+<H2 CLASS="section"><A NAME="htoc141">13.1</A>&nbsp;&nbsp;Features</H2>
+omniORB supports the complete objects by value specification, with the
+exception of custom valuetypes. All other features including value
+boxes, value sharing semantics, abstract valuetypes, and abstract
+interfaces are supported.<BR>
 <BR>
-<DT><A NAME="corbaservices"><FONT COLOR=purple>[OMG98]</FONT></A><DD>
-Object Management Group.
-<EM>CORBAServices: Common Object Services Specification</EM>, December
- 1998.<BR>
+<A NAME="toc58"></A>
+<H2 CLASS="section"><A NAME="htoc142">13.2</A>&nbsp;&nbsp;Reference counting</H2>
+Values are reference counted. This means that, as long as your
+application properly manages reference counts, values are usually
+automatically deleted when they are no longer required. However, one
+of the features of valuetypes is that they support the representation
+of cyclic graph structures. In that kind of situation, the reference
+counting garbage collection does not work, because references internal
+to the graph prevent the reference counts ever becoming zero.<BR>
 <BR>
-<DT><A NAME="inschapters"><FONT COLOR=purple>[OMG00]</FONT></A><DD>
-Object Management Group.
-<EM>Interoperable Naming Service revised chapters</EM>, August 2000.
-From <A HREF="http://cgi.omg.org/cgi-bin/doc?ptc/00-08-07"><TT>http://cgi.omg.org/cgi-bin/doc?ptc/00-08-07</TT></A>.<BR>
+To avoid memory leaks, application code must explicitly break any
+reference cycles in values it manipulates. This includes graphs of
+values received as parameters and return values from CORBA operations.<BR>
 <BR>
-<DT><A NAME="corba26-spec"><FONT COLOR=purple>[OMG01]</FONT></A><DD>
-Object Management Group.
-<EM>The Common Object Request Broker: Architecture and
- Specification</EM>, 2.6 edition, December 2001.
-From <A HREF="http://www.omg.org/cgi-bin/doc?formal/01-12-01"><TT>http://www.omg.org/cgi-bin/doc?formal/01-12-01</TT></A>.<BR>
+<A NAME="toc59"></A>
+<H2 CLASS="section"><A NAME="htoc143">13.3</A>&nbsp;&nbsp;Value sharing and local calls</H2>
+When valuetypes are passed as parameters in CORBA calls (i.e. calls
+on CORBA objects declared with <TT>interface</TT> in IDL), the structure
+of related values is maintained. Consider, for example, the following
+IDL definitions (which are from the example code in
+<TT>src/examples/valuetype/simple</TT>:<BR>
 <BR>
-<DT><A NAME="cxxmapping"><FONT COLOR=purple>[OMG03]</FONT></A><DD>
-Object Management Group.
-<EM>C++ Language Mapping</EM>, 1.1 edition, 2003.
-From <A HREF="http://www.omg.org/cgi-bin/doc?formal/03-06-03"><TT>http://www.omg.org/cgi-bin/doc?formal/03-06-03</TT></A>.<BR>
+<DIV CLASS="lstlisting"><TT><B>module</B> ValueTest {</TT><TT>
+</TT><TT>  <B>valuetype</B> One {</TT><TT>
+</TT><TT>    <B>public</B> <B>string</B> s;</TT><TT>
+</TT><TT>    <B>public</B> <B>long</B>   l;</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>
+</TT><TT>  <B>interface</B> Test {</TT><TT>
+</TT><TT>    One op1(<B>in</B> One a, <B>in</B> One b);</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>};</TT></DIV><BR>
 <BR>
-<DT><A NAME="tjr96a"><FONT COLOR=purple>[Ric96]</FONT></A><DD>
-Tristan Richardson.
-<EM>The OMNI Thread Abstraction</EM>.
-AT&amp;T Laboratories Cambridge, October 1996.</DL>
-
-
+If the client to the <TT>Test</TT> object passes the same value in both
+parameters, just one value is transmitted, and the object
+implementation receives a copy of the single value, with references to
+it in both parameters.<BR>
+<BR>
+In the case that the object is remote from the client, there is
+obviously a copying step involved. In the case that the object is in
+the same address space as the client, the same copying semantics must
+be maintained so that the object implementation can modify the values
+it receives without the client seeing the modifications. To support
+that, omniORB must copy the entire parameter list in one operation, in
+case there is sharing between different parameters. Such copying is a
+rather more time-consuming process than the parameter-by-parameter
+copy that takes place in calls not involving valuetypes.<BR>
+<BR>
+To avoid the overhead of copying parameters in this way, applications
+can choose to relax the semantics of value copying in local calls, so
+values are not copied at all, but are passed by reference. In that
+case, the client to a call <EM>will</EM> see any modifications to the
+values it passes as parameters (and similarly, the object
+implementation will see any changes the client makes to returned
+values). To choose this option, set the <TT>copyValuesInLocalCalls</TT>
+configuration parameter to zero.<BR>
+<BR>
+<A NAME="toc60"></A>
+<H2 CLASS="section"><A NAME="htoc144">13.4</A>&nbsp;&nbsp;Value box factories</H2>
+With normal valuetypes, omniidl generates factory classes (with names
+ending <TT>_init</TT>) as required by the C++ mapping specification.
+The application is responsible for registering the factories with the
+ORB.<BR>
+<BR>
+Unfortunately, the C++ mapping makes no mention of factories for value
+boxes. In omniORB, factories for value boxes are automatically
+registered with the ORB, and there are no application-visible factory
+classes generated for them. Some other CORBA implementations generate
+application visible factories, and the application <EM>does</EM> have to
+register the factories with the ORB.<BR>
+<BR>
+<A NAME="toc61"></A>
+<H2 CLASS="section"><A NAME="htoc145">13.5</A>&nbsp;&nbsp;Standard value boxes</H2>
+The standard <TT>CORBA::StringValue</TT> and <TT>CORBA::WStringValue</TT>
+value boxes are available to application code. To make the definitions
+available in IDL, #include the standard <TT>orb.idl</TT>.<BR>
+<BR>
+<A NAME="toc62"></A>
+<H2 CLASS="section"><A NAME="htoc146">13.6</A>&nbsp;&nbsp;Covariant returns</H2>
+As required by the C++ mapping, on C++ compilers that support
+covariant return types, omniidl generates code for the
+<TT>_copy_value()</TT> function that returns the most derived type of the
+value. On older compilers, <TT>_copy_value()</TT> returns
+<TT>CORBA::ValueBase</TT>.<BR>
+<BR>
+If you write code that calls <TT>_copy_value()</TT>, and you need to
+support older compilers, you should assign the result to a variable of
+type <TT>CORBA::ValueBase*</TT> and downcast to the target type, rather
+than using the covariant return.<BR>
+<BR>
+If you are overriding <TT>_copy_value()</TT>, you must correctly take
+account of the <TT>OMNI_HAVE_COVARIANT_RETURNS</TT> preprocessor
+definition.<BR>
+<BR>
+<A NAME="toc63"></A>
+<H2 CLASS="section"><A NAME="htoc147">13.7</A>&nbsp;&nbsp;Values inside Anys</H2>
+Valuetypes inserted into Anys cause a number of interesting issues.
+Even when inside Anys, values are required to support complete sharing
+semantics. Take this IDL for example:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><B>module</B> ValueTest {</TT><TT>
+</TT><TT>  <B>valuetype</B> One {</TT><TT>
+</TT><TT>    <B>public</B> <B>string</B> s;</TT><TT>
+</TT><TT>    <B>public</B> <B>long</B>   l;</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>
+</TT><TT>  <B>interface</B> AnyTest {</TT><TT>
+</TT><TT>    <B>void</B> op1(<B>in</B> One v, <B>in</B> Any a);</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>};</TT></DIV><BR>
+<BR>
+Now, suppose the client behaves as follows:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT>ValueTest::One* v = <B>new</B> One_impl("hello", 123);</TT><TT>
+</TT><TT>CORBA::Any a;</TT><TT>
+</TT><TT>a &lt;&lt;= v;</TT><TT>
+</TT><TT>obj-&gt;op1(v, a);</TT></DIV><BR>
+<BR>
+then on the server side:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><B>void</B> AnyTest_impl::op1(ValueTest::One* v, CORBA::Any&amp; a)</TT><TT>
+</TT><TT>{</TT><TT>
+</TT><TT>  ValueTest::One* v2;</TT><TT>
+</TT><TT>  a &gt;&gt;= v2;</TT><TT>
+</TT><TT>  assert(v2 == v);</TT><TT>
+</TT><TT>}</TT></DIV><BR>
+<BR>
+This is all very well in this kind of simple situation, but problems
+can arise if truncatable valuetypes are used. Imagine this derived
+value:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><B>module</B> ValueTest {</TT><TT>
+</TT><TT>  <B>valuetype</B> Two : <B>truncatable</B> One {</TT><TT>
+</TT><TT>    <B>public</B> <B>double</B> d;</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>};</TT></DIV><BR>
+<BR>
+Now, suppose that the client shown above sends an instance of
+valuetype <TT>Two</TT> in both parameters, and suppose that the server
+has not seen the definition of valuetype <TT>Two</TT>. In this
+situation, as the first parameter is unmarshalled, it will be
+truncated to valuetype <TT>One</TT>, as required. Now, when the Any is
+unmarshalled, it refers to the same value, which has been truncated.
+So, even though the TypeCode in the Any indicates that the value has
+type <TT>Two</TT>, the stored value actually has type <TT>One</TT>. If the
+receiver of the Any tries to pass it on, transmission will fail
+because the Any's value does not match its TypeCode.<BR>
+<BR>
+In the opposite situation, where an Any parameter comes before a
+valuetype parameter, a different problem occurs. In that case, as the
+Any is unmarshalled, there is no type information available for
+valuetype <TT>Two</TT>, so the value inside the Any has an internal
+omniORB type used for unknown valuetypes. As the next parameter is
+unmarshalled, omniORB sees that the shared value is unknown, and is
+able to convert it to the target <TT>One</TT> valuetype with
+truncation. In this case, the Any and the plain valuetype both have
+the correct types and values, but the fact that both should have
+referred to the same value has been lost.<BR>
+<BR>
+Because of these issues, it is best to avoid defining interfaces that
+mix valuetypes and Anys in a single operation, and certainly to avoid
+trying to share plain values with values inside Anys.<BR>
+<BR>
 <HR>
 <A HREF="omniORB012.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
 <A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB014.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>
