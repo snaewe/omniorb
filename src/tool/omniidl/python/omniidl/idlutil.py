@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9.2.3  2005/07/21 09:54:59  dgrisby
+# Typo in docstring.
+#
 # Revision 1.9.2.2  2005/04/08 00:35:45  dgrisby
 # Merging again.
 #
@@ -163,7 +166,7 @@ def reprFloat(f):
     """reprFloat(float) -> string
 
 Return the string representation of an IDL float type (float, double,
-long double), with enough precision to completely reconstuct the bit
+long double), with enough precision to completely reconstruct the bit
 pattern."""
     # *** Deal with long double
 
