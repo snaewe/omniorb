@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.25  2005/07/21 15:25:09  dgrisby
+# Silence some gcc 4 warnings / errors.
+#
 # Revision 1.5.2.24  2004/10/18 02:44:37  dgrisby
 # New -Wbdll_includes option.
 #
@@ -1010,7 +1013,7 @@ void _default()
 """
 
 union_tcParser_friend = """\
-#if defined(__GNUG__) || defined(__DECCXX) && (__DECCXX_VER < 60000000)
+#if defined(__GNUG__) && (__GNUG__ < 4) || defined(__DECCXX) && (__DECCXX_VER < 60000000)
 friend class @private_prefix@_tcParser_unionhelper_@name@;
 #else
 friend class ::@private_prefix@_tcParser_unionhelper_@name@;

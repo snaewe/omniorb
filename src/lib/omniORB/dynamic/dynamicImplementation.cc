@@ -153,7 +153,7 @@ namespace {
   };
 
 #ifdef HAS_Cplusplus_Namespace
-};
+}
 #endif
 
 

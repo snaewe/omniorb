@@ -1,3 +1,19 @@
+Thu Jul 21 16:23:13 BST 2005 dgrisby
+====================================
+
+- Silence some gcc 4 warnings / errors.
+
+include/omniORB4/callHandle.h
+include/omniORB4/omniURI.h
+include/omniORB4/internal/poaimpl.h
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/orbcore/callHandle.cc
+src/lib/omniORB/orbcore/uri.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+
+
 Mon Jul 18 12:25:39 BST 2005 dgrisby
 ====================================
 

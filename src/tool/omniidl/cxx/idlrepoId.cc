@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.9  2005/07/21 15:25:08  dgrisby
+// Silence some gcc 4 warnings / errors.
+//
 // Revision 1.5.2.8  2005/05/03 10:12:40  dgrisby
 // Trying to redefine built in CORBA module types led to a segfault.
 //
@@ -267,7 +270,7 @@ setRepoId(const char* repoId, const char* file, int line)
       if (*c++ == '\0') goto invalid;
 
       // c should now point to a string of the form maj.min
-      if (sscanf(c, "%hu.%hu", &maj_, &min_) != 2)
+      if (sscanf(c, "%hd.%hd", &maj_, &min_) != 2)
 	goto invalid;
 
       // Check there's no trailing garbage

@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.8  2005/07/21 15:25:10  dgrisby
+  Silence some gcc 4 warnings / errors.
+
   Revision 1.1.2.7  2004/11/04 14:44:00  dgrisby
   Fix VxWorks issues. Thanks Dirk Siebnich.
 
@@ -168,7 +171,7 @@ _init_in_def_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY_VALUE = 4; )
 
 
 OMNIORB_DEFINE_USER_EX_COMMON_FNS(CORBA, PolicyError,
-				  "IDL:omg.org/CORBA/PolicyError:1.0");
+				  "IDL:omg.org/CORBA/PolicyError:1.0")
 
 
 CORBA::PolicyError::PolicyError(const CORBA::PolicyError& _s) : CORBA::UserException(_s)

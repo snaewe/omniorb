@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2005/07/21 15:25:11  dgrisby
+  Silence some gcc 4 warnings / errors.
+
   Revision 1.1.4.12  2002/11/08 17:26:25  dgrisby
   Hang on shutdown with servant locators.
 
@@ -391,7 +394,9 @@ private:
 
     virtual void postinvoke();
 
-    virtual ~SLPostInvokeHook();
+    ~SLPostInvokeHook(); // Non-virtual because hook is created on the
+			 // stack and therefore always deleted by its
+			 // most derived type.
 
   private:
     omniOrbPOA*                            pd_poa;

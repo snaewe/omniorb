@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.6  2005/07/21 15:25:11  dgrisby
+ Silence some gcc 4 warnings / errors.
+
  Revision 1.1.2.5  2003/01/14 11:48:15  dgrisby
  Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
 
@@ -97,6 +100,7 @@ public:
   class PostInvokeHook {
   public:
     virtual void postinvoke() = 0;
+    virtual ~PostInvokeHook();
   };
 
   inline void postinvoke_hook(PostInvokeHook* hook) {

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.7  2005/07/21 15:25:09  dgrisby
+ Silence some gcc 4 warnings / errors.
+
  Revision 1.1.2.6  2001/08/17 13:42:49  dpg1
  callDescriptor::userException() no longer has to throw an exception.
 
@@ -117,7 +120,7 @@ namespace {
   };
 
 #ifdef HAS_Cplusplus_Namespace
-};
+}
 #endif
 
 
@@ -247,6 +250,8 @@ omniCallHandle::SkipRequestBody()
   if (pd_iop_s)
     pd_iop_s->SkipRequestBody();
 }
+
+omniCallHandle::PostInvokeHook::~PostInvokeHook() {}
 
 
 void

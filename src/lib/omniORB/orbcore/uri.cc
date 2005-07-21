@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.20  2005/07/21 15:25:09  dgrisby
+// Silence some gcc 4 warnings / errors.
+//
 // Revision 1.2.2.19  2004/09/13 09:43:11  dgrisby
 // Limited support for ssliop scheme in corbaloc. Thanks Martin Laporte.
 //
@@ -201,6 +204,8 @@ omniURI::uriSyntaxIsValid(const char* uri)
   if (handler) return handler->syntaxIsValid(uri);
   return 0;
 }
+
+omniURI::URIHandler::~URIHandler() {}
 
 
 /////////////////////////////////////////////////////////////////////////////

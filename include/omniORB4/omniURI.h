@@ -29,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.2.2.6  2005/07/21 15:25:11  dgrisby
+// Silence some gcc 4 warnings / errors.
+//
 // Revision 1.2.2.5  2001/08/17 17:03:53  sll
 // Remove addURIHandler.
 //
@@ -106,6 +109,8 @@ public:
     virtual CORBA::Boolean syntaxIsValid(const char* uri) = 0;
     // Return true if the URI is syntactically valid.
     //  Does not throw any exceptions.
+
+    virtual ~URIHandler();
   };
 
   // The following functions implement the stringified name operations
