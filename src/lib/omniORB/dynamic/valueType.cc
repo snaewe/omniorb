@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2005/07/21 10:00:17  dgrisby
+  Bugs with valuetypes in Anys.
+
   Revision 1.1.2.7  2005/06/08 09:37:47  dgrisby
   Leak of a value reference if a factory made the wrong type of value.
 
@@ -173,7 +176,9 @@ marshal(CORBA::ValueBase* val, const char* repoId, cdrStream& stream)
     }
   }
   else {
-    // Value is derived from IDL / TypeCode type
+    // Value is derived from IDL / TypeCode type. Alternatively, it
+    // may be a less derived type in an Any. In that case, we send the
+    // wrong value, and hope the receiver copes sensibly.
     valTruncIds = val->_NP_truncatableIds();
     if (valTruncIds)
       tag |= REPOID_LIST;

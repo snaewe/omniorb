@@ -1,3 +1,16 @@
+Thu Jul 21 10:51:55 BST 2005 dgrisby
+====================================
+
+- Typo in docstring.
+
+src/tool/omniidl/python/omniidl/idlutil.py
+
+- Bugs with valuetypes in Anys.
+
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/valueType.cc
+
+
 Thu Jul 21 10:08:39 BST 2005 dgrisby
 ====================================
 
