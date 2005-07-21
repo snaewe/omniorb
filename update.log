@@ -1,3 +1,11 @@
+Thu Jul 21 16:52:04 BST 2005 dgrisby
+====================================
+
+- VC++ 7.1 supports constants in class declarations. Thanks Tim Theisen.
+
+include/omniORB4/CORBA_sysdep.h
+
+
 Thu Jul 21 16:23:13 BST 2005 dgrisby
 ====================================
 

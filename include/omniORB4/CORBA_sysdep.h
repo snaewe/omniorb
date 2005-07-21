@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.27  2005/07/21 15:53:02  dgrisby
+ VC++ 7.1 supports constants in class declarations. Thanks Tim Theisen.
+
  Revision 1.2.2.26  2004/10/17 20:14:28  dgrisby
  Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -389,7 +392,7 @@
 #endif
 
 #ifndef _init_in_cldecl_
-#  if !defined(_MSC_VER)
+#  if !defined(_MSC_VER) || _MSC_VER >= 1310
 #    define _init_in_cldecl_(x) x
 #  else
 #    define _init_in_cldecl_(x) 
@@ -399,7 +402,7 @@
 #endif
 
 #ifndef _init_in_cldef_
-#  if !defined(_MSC_VER)
+#  if !defined(_MSC_VER) || _MSC_VER >= 1310
 #    define _init_in_cldef_(x)
 #  else
 #    define _init_in_cldef_(x) x 
