@@ -282,10 +282,10 @@ CORBA::ORB::create_list(Long count, NVList_out new_list)
 		  BAD_PARAM_InvalidInitialSize,
 		  CORBA::COMPLETED_NO);
 
-  new_list = new NVListImpl();
+  // <count> is a hint about how long the list will become. We choose
+  // to ignore it.
 
-  for( Long i = 0; i < count; i++ )
-    new_list._data->add(CORBA::Flags(0));
+  new_list = new NVListImpl();
 }
 
 

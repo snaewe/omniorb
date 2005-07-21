@@ -1,3 +1,11 @@
+Thu Jul 21 10:08:39 BST 2005 dgrisby
+====================================
+
+- ORB::create_list misinterpreted the count parameter.
+
+src/lib/omniORB/dynamic/nvList.cc
+
+
 Tue Jul 19 11:31:45 BST 2005 dgrisby
 ====================================
 
