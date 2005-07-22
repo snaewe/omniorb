@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/07/22 17:18:39  dgrisby
+  Another merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:03:43  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -394,7 +397,9 @@ private:
 
     virtual void postinvoke();
 
-    virtual ~SLPostInvokeHook();
+    ~SLPostInvokeHook(); // Non-virtual because hook is created on the
+			 // stack and therefore always deleted by its
+			 // most derived type.
 
   private:
     omniOrbPOA*                            pd_poa;

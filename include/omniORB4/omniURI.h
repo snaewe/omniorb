@@ -29,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.4.2.2  2005/07/22 17:18:40  dgrisby
+// Another merge from omni4_0_develop.
+//
 // Revision 1.4.2.1  2003/03/23 21:04:07  dgrisby
 // Start of omniORB 4.1.x development branch.
 //
@@ -109,6 +112,8 @@ public:
     virtual CORBA::Boolean syntaxIsValid(const char* uri) = 0;
     // Return true if the URI is syntactically valid.
     //  Does not throw any exceptions.
+
+    virtual ~URIHandler();
   };
 
   // The following functions implement the stringified name operations

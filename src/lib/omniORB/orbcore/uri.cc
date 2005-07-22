@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.4.2.3  2005/07/22 17:18:36  dgrisby
+// Another merge from omni4_0_develop.
+//
 // Revision 1.4.2.2  2005/01/06 23:10:41  dgrisby
 // Big merge from omni4_0_develop.
 //
@@ -198,6 +201,8 @@ omniURI::uriSyntaxIsValid(const char* uri)
   if (handler) return handler->syntaxIsValid(uri);
   return 0;
 }
+
+omniURI::URIHandler::~URIHandler() {}
 
 
 /////////////////////////////////////////////////////////////////////////////

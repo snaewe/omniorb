@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.4.5  2005/07/22 17:18:38  dgrisby
+  Another merge from omni4_0_develop.
+
   Revision 1.1.4.4  2005/01/06 23:09:46  dgrisby
   Big merge from omni4_0_develop.
 
@@ -174,7 +177,7 @@ _init_in_def_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY_VALUE = 4; )
 
 
 OMNIORB_DEFINE_USER_EX_COMMON_FNS(CORBA, PolicyError,
-				  "IDL:omg.org/CORBA/PolicyError:1.0");
+				  "IDL:omg.org/CORBA/PolicyError:1.0")
 
 
 CORBA::PolicyError::PolicyError(const CORBA::PolicyError& _s) : CORBA::UserException(_s)

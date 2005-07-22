@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.2  2005/07/22 17:18:40  dgrisby
+ Another merge from omni4_0_develop.
+
  Revision 1.1.4.1  2003/03/23 21:04:17  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -100,6 +103,7 @@ public:
   class PostInvokeHook {
   public:
     virtual void postinvoke() = 0;
+    virtual ~PostInvokeHook();
   };
 
   inline void postinvoke_hook(PostInvokeHook* hook) {
