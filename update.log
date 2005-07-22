@@ -1,3 +1,12 @@
+Fri Jul 22 17:56:07 BST 2005 dgrisby
+====================================
+
+- Avoid strict aliasing issues in floating point marshalling, but
+  remain compatible with VMS's proxy floats.
+
+include/omniORB4/cdrStream.h
+
+
 Fri Jul 22 12:18:42 BST 2005 dgrisby
 ====================================
 

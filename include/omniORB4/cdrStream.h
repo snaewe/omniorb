@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.23  2005/07/22 16:57:17  dgrisby
+  Avoid strict aliasing issues in floating point marshalling, but remain
+  compatible with VMS's proxy floats.
+
   Revision 1.1.2.22  2004/10/17 20:14:28  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -165,6 +169,7 @@ inline void operator>>= (_CORBA_ULongLong  a, cdrStream& s);
 inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s);
 #endif
 
+
 class cdrStreamAdapter;
 
 class cdrStream {
@@ -177,7 +182,7 @@ public:
 #ifndef CdrMarshal
 #define CdrMarshal(s,type,align,arg) do {\
    again: \
-   omni::ptr_arith_t p1 =omni::align_to((omni::ptr_arith_t)s.pd_outb_mkr,align);\
+   omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)s.pd_outb_mkr,align);\
    omni::ptr_arith_t p2 = p1 + sizeof(type);\
    if( (void*)p2 > s.pd_outb_end ) {\
      if (s.reserveOutputSpaceForPrimitiveType(align,sizeof(type)))\
@@ -208,6 +213,34 @@ public:
 } while(0)
 #else
 #error "CdrUnMarshal has already been defined"
+#endif
+
+  // Macros to convert floats to integers or arrays of integers so they
+  // may be byte-swapped. The default version uses a union to do the
+  // conversion, but that fails for VMS which uses classes to represent
+  // float types. The version with reinterpret_cast<> fails on some
+  // platforms with strict aliasing.
+
+#ifndef USING_PROXY_FLOAT
+
+#define convertFromFloat(float_t, int_t) \
+  union { float_t a; int_t l; } u; \
+  u.a = a; \
+  int_t l = u.l
+
+#define convertToFloat(float_t, int_t) \
+  union { float_t a; int_t l; } u; \
+  u.l = l; \
+  a = u.a
+
+#else
+
+#define convertFromFloat(float_t, int_t) \
+  int_t l = OMNI_REINTERPRET_CAST(int_t, a)
+
+#define convertToFloat(float_t, int_t) \
+  a = OMNI_REINTERPRET_CAST(float_t, l)
+
 #endif
 
   inline void marshalChar(_CORBA_Char a) {
@@ -370,11 +403,11 @@ public:
 
 #ifndef OMNI_NO_INLINE_FRIENDS
   friend inline void operator>>= (_CORBA_Float a, cdrStream& s) {
-    _CORBA_ULong l = OMNI_REINTERPRET_CAST(_CORBA_ULong, a);
+    convertFromFloat(_CORBA_Float, _CORBA_ULong);
     if (s.pd_marshal_byte_swap) {
       l = Swap32(l);
     }
-    CdrMarshal(s,_CORBA_Long,omni::ALIGN_4,l);
+    CdrMarshal(s,_CORBA_ULong,omni::ALIGN_4,l);
   }
 
   friend inline void operator<<= (_CORBA_Float& a, cdrStream& s) {
@@ -383,14 +416,12 @@ public:
     if (s.pd_unmarshal_byte_swap) {
       l = Swap32(l);
     }
-    a = OMNI_REINTERPRET_CAST(_CORBA_Float, l);
+    convertToFloat(_CORBA_Float, _CORBA_ULong);
   }
 
   friend inline void operator>>= (_CORBA_Double a, cdrStream& s) {
-    struct LongArray2 {
-      _CORBA_ULong l[2];
-    } l;
-    l = OMNI_REINTERPRET_CAST(LongArray2, a);
+    struct LongArray2 { _CORBA_ULong l[2]; };
+    convertFromFloat(_CORBA_Double, LongArray2);
     if (s.pd_marshal_byte_swap) {
       LongArray2 m;
       m.l[0] = Swap32(l.l[1]);
@@ -401,9 +432,7 @@ public:
   }
 
   friend inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
-    struct LongArray2 {
-      _CORBA_ULong l[2];
-    } l;
+    struct LongArray2 { _CORBA_ULong l[2]; } l;
     CdrUnMarshal(s,LongArray2,omni::ALIGN_8,l);
     if (s.pd_unmarshal_byte_swap) {
       LongArray2 m;
@@ -411,7 +440,7 @@ public:
       m.l[1] = Swap32(l.l[0]);
       l = m;
     }
-    a = OMNI_REINTERPRET_CAST(_CORBA_Double, l);
+    convertToFloat(_CORBA_Double, LongArray2);
   }
 #else
   friend inline void operator>>= (_CORBA_Float      a, cdrStream& s);
@@ -427,10 +456,8 @@ public:
 
 #ifndef OMNI_NO_INLINE_FRIENDS
   friend inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
-    struct LongArray4 {
-      _CORBA_ULong l[4];
-    } l;
-    l = OMNI_REINTERPRET_CAST(LongArray4, a);
+    struct LongArray4 { _CORBA_ULong l[4]; };
+    convertFromFloat(_CORBA_LongDouble, LongArray4);
     if (s.pd_marshal_byte_swap) {
       LongArray4 m;
       m.l[0] = Swap32(l.l[3]);
@@ -443,9 +470,7 @@ public:
   }
 
   friend inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
-    struct LongArray4 {
-      _CORBA_ULong l[4];
-    } l;
+    struct LongArray4 { _CORBA_ULong l[4]; } l;
     CdrUnMarshal(s,LongArray4,omni::ALIGN_8,l);
     if (s.pd_unmarshal_byte_swap) {
       LongArray4 m;
@@ -455,7 +480,7 @@ public:
       m.l[3] = Swap32(l.l[0]);
       l = m;
     }
-    a = OMNI_REINTERPRET_CAST(_CORBA_LongDouble, l);
+    convertToFloat(_CORBA_LongDouble, LongArray4);
   }
 #else
   friend inline void operator>>= (_CORBA_LongDouble  a, cdrStream& s);
@@ -907,11 +932,11 @@ inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s) {
 #if !defined(NO_FLOAT)
 
 inline void operator>>= (_CORBA_Float a, cdrStream& s) {
-  _CORBA_ULong l = OMNI_REINTERPRET_CAST(_CORBA_ULong, a);
+  convertFromFloat(_CORBA_Float, _CORBA_ULong);
   if (s.pd_marshal_byte_swap) {
     l = Swap32(l);
   }
-  CdrMarshal(s,_CORBA_Long,omni::ALIGN_4,l);
+  CdrMarshal(s,_CORBA_ULong,omni::ALIGN_4,l);
 }
 
 inline void operator<<= (_CORBA_Float& a, cdrStream& s) {
@@ -920,14 +945,12 @@ inline void operator<<= (_CORBA_Float& a, cdrStream& s) {
   if (s.pd_unmarshal_byte_swap) {
     l = Swap32(l);
   }
-  a = OMNI_REINTERPRET_CAST(_CORBA_Float, l);
+  convertToFloat(_CORBA_Float, _CORBA_ULong);
 }
 
 inline void operator>>= (_CORBA_Double a, cdrStream& s) {
-  struct LongArray2 {
-    _CORBA_ULong l[2];
-  } l;
-  l = OMNI_REINTERPRET_CAST(LongArray2, a);
+  struct LongArray2 { _CORBA_ULong l[2]; };
+  convertFromFloat(_CORBA_Double, LongArray2);
   if (s.pd_marshal_byte_swap) {
     LongArray2 m;
     m.l[0] = Swap32(l.l[1]);
@@ -938,9 +961,7 @@ inline void operator>>= (_CORBA_Double a, cdrStream& s) {
 }
 
 inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
-  struct LongArray2 {
-    _CORBA_ULong l[2];
-  } l;
+  struct LongArray2 { _CORBA_ULong l[2]; } l;
   CdrUnMarshal(s,LongArray2,omni::ALIGN_8,l);
   if (s.pd_unmarshal_byte_swap) {
     LongArray2 m;
@@ -948,7 +969,7 @@ inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
     m.l[1] = Swap32(l.l[0]);
     l = m;
   }
-  a = OMNI_REINTERPRET_CAST(_CORBA_Double, l);
+  convertToFloat(_CORBA_Double, LongArray2);
 }
 
 #endif
@@ -956,10 +977,8 @@ inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
 #ifdef HAS_LongDouble
 #if SIZEOF_LONG_DOUBLE == 16
 inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
-  struct LongArray4 {
-    _CORBA_ULong l[4];
-  } l;
-  l = OMNI_REINTERPRET_CAST(LongArray4, a);
+  struct LongArray4 { _CORBA_ULong l[4]; };
+  convertFromFloat(_CORBA_LongDouble, LongArray4);
   if (s.pd_marshal_byte_swap) {
     LongArray4 m;
     m.l[0] = Swap32(l.l[3]);
@@ -972,9 +991,7 @@ inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
 }
 
 inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
-  struct LongArray4 {
-    _CORBA_ULong l[4];
-  } l;
+  struct LongArray4 { _CORBA_ULong l[4]; } l;
   CdrUnMarshal(s,LongArray4,omni::ALIGN_8,l);
   if (s.pd_unmarshal_byte_swap) {
     LongArray4 m;
@@ -984,7 +1001,7 @@ inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
     m.l[3] = Swap32(l.l[0]);
     l = m;
   }
-  a = OMNI_REINTERPRET_CAST(_CORBA_LongDouble, l);
+  convertToFloat(_CORBA_LongDouble, LongArray4);
 }
 #endif
 #endif
@@ -993,6 +1010,8 @@ inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
 
 #undef CdrMarshal
 #undef CdrUnMarshal
+#undef convertFromFloat
+#undef convertToFloat
 #undef Swap16
 #undef Swap32
 #undef Swap64
