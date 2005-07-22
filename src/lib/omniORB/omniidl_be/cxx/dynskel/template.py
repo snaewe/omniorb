@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.13  2005/07/22 09:52:56  dgrisby
+# Remove more gcc warnings. Thanks Matej Kenda.
+#
 # Revision 1.3.2.12  2001/10/29 17:42:39  dpg1
 # Support forward-declared structs/unions, ORB::create_recursive_tc().
 #
@@ -181,7 +184,7 @@ static void
 @private_prefix@_buildDesc@decl_cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@)
 {
   _desc.p_array.getElementDesc = @private_prefix@_tcParser_getElementDesc@decl_cname@;
-  _desc.p_array.opq_array = (void*) _data;
+  _desc.p_array.opq_array = OMNI_CONST_VOID_CAST(_data);
 }
 #endif
 """
@@ -246,7 +249,7 @@ static CORBA::Boolean
 static void
 @private_prefix@_buildDesc@cname@(tcDescriptor &_desc, const @sequence_template@& _data)
 {
-  _desc.p_sequence.opq_seq = (void*) &_data;
+  _desc.p_sequence.opq_seq = OMNI_CONST_VOID_CAST(&_data);
   _desc.p_sequence.setElementCount =
     @private_prefix@_tcParser_setElementCount@cname@;
   _desc.p_sequence.getElementCount =
@@ -272,7 +275,7 @@ void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor &_desc, const @fqname
 {
   _desc.p_struct.getMemberDesc = @private_prefix@_tcParser_getMemberDesc_@guard_name@;
   _desc.p_struct.getMemberCount = @private_prefix@_tcParser_getMemberCount_@guard_name@;
-  _desc.p_struct.opq_struct = (void *)&_data;
+  _desc.p_struct.opq_struct = OMNI_CONST_VOID_CAST(&_data);
 }
 """
 
@@ -304,7 +307,7 @@ static CORBA::Object_ptr
 
 void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor& _desc, const @objref_member@& _d)
 {
-  _desc.p_objref.opq_objref = (void*) &_d._data;
+  _desc.p_objref.opq_objref = OMNI_CONST_VOID_CAST(&_d._data);
   _desc.p_objref.opq_release = _d._rel;
   _desc.p_objref.setObjectPtr = @private_prefix@_tcParser_setObjectPtr_@guard_name@;
   _desc.p_objref.getObjectPtr = @private_prefix@_tcParser_getObjectPtr_@guard_name@;
@@ -335,7 +338,7 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s) {
     @private_prefix@_buildDesc_c@guard_name@(tcd, tmp);
     if( _a.PR_unpackTo(@tc_name@, &tcd) ) {
       if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
-        ((CORBA::Any*)&_a)->PR_setCachedData((void*)(@fqname@_ptr)tmp,@private_prefix@_delete_@guard_name@);
+        (OMNI_CONST_CAST(CORBA::Any*, &_a))->PR_setCachedData((void*)(@fqname@_ptr)tmp,@private_prefix@_delete_@guard_name@);
       }
       _s = tmp._retn();
       return 1;
@@ -391,7 +394,7 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s) {
       _s = 0;
       return 0;
     }
-    ((CORBA::Any*)&_a)->PR_setCachedData(@private_prefix@_s, @private_prefix@_delete_@guard_name@);
+    (OMNI_CONST_CAST(CORBA::Any*, &_a))->PR_setCachedData(@private_prefix@_s, @private_prefix@_delete_@guard_name@);
   } else {
     CORBA::TypeCode_var @private_prefix@_tc = _a.type();
     if( !@private_prefix@_tc->equivalent(@tcname@) ) {
@@ -436,11 +439,11 @@ CORBA::Boolean operator >>= (const CORBA::Any& _a, const @fqname@*& _s_out)
     stmp = new @fqname@;
     @private_prefix@_buildDesc@decl_cname@(tcdesc, *stmp);
     if( _a.PR_unpackTo(@tcname@, &tcdesc)) {
-      ((CORBA::Any*)&_a)->PR_setCachedData((void*)stmp, @private_prefix@_seq_delete_@guard_name@);
+      (OMNI_CONST_CAST(CORBA::Any*, &_a))->PR_setCachedData(OMNI_CONST_VOID_CAST(stmp), @private_prefix@_seq_delete_@guard_name@);
       _s_out = stmp;
       return 1;
     } else {
-      delete (@fqname@ *)stmp;
+      delete stmp;
       return 0;
     }
   } else {
@@ -462,7 +465,7 @@ CORBA::Boolean operator >>= (const CORBA::Any& _a, const @fqname@*& _s_out)
 enum = """\
 void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor& _desc, const @fqname@& _data)
 {
-  _desc.p_enum.data = (void*)&_data;
+  _desc.p_enum.data = OMNI_CONST_VOID_CAST(&_data);
   _desc.p_enum.size = sizeof(_data);
 }
 
@@ -517,10 +520,10 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp) {
     _sp = new @fqname@;
     @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
     if (_a.PR_unpackTo(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc)) {
-      ((CORBA::Any *)&_a)->PR_setCachedData((void*)_sp, @private_prefix@_delete_@guard_name@);
+      (OMNI_CONST_CAST(CORBA::Any *, &_a))->PR_setCachedData(OMNI_CONST_VOID_CAST(_sp), @private_prefix@_delete_@guard_name@);
       return 1;
     } else {
-      delete (@fqname@ *)_sp; _sp = 0;
+      delete _sp; _sp = 0;
       return 0;
     }
   } else {
@@ -571,7 +574,7 @@ void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor& _desc, const @fqname
   _desc.p_union.getDiscriminator = @private_prefix@_tcParser_unionhelper_@guard_name@::getDiscriminator;
   _desc.p_union.setDiscriminator = @private_prefix@_tcParser_unionhelper_@guard_name@::setDiscriminator;
   _desc.p_union.getValueDesc = @private_prefix@_tcParser_unionhelper_@guard_name@::getValueDesc;
-  _desc.p_union.opq_union = (void*)&_data;
+  _desc.p_union.opq_union = OMNI_CONST_VOID_CAST(&_data);
 }
 
 void @private_prefix@_delete_@guard_name@(void* _data)
@@ -606,10 +609,10 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp) {
     _sp = new @fqname@;
     @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
     if( _a.PR_unpackTo(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc) ) {
-      ((CORBA::Any*)&_a)->PR_setCachedData((void*)_sp, @private_prefix@_delete_@guard_name@);
+      (OMNI_CONST_CAST(CORBA::Any*, &_a))->PR_setCachedData(OMNI_CONST_VOID_CAST(_sp), @private_prefix@_delete_@guard_name@);
       return 1;
     } else {
-      delete ( @fqname@*)_sp;
+      delete _sp;
       _sp = 0;
       return 0;
     }
@@ -642,7 +645,7 @@ void operator<<=(CORBA::Any& _a, const @fqname@* _sp) {
   tcDescriptor @private_prefix@_tcdesc;
   @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
   _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc);
-  delete (@fqname@ *)_sp;
+  delete _sp;
 }
 
 CORBA::Boolean operator>>=(const CORBA::Any& _a,const @fqname@*& _sp) {
@@ -652,16 +655,16 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a,const @fqname@*& _sp) {
     _sp = new @fqname@;
     @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
     if (_a.PR_unpackTo(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc)) {
-      ((CORBA::Any *)&_a)->PR_setCachedData((void*)_sp, @private_prefix@_delete_@guard_name@);
+      (OMNI_CONST_CAST(CORBA::Any *, &_a))->PR_setCachedData(OMNI_CONST_VOID_CAST(_sp), @private_prefix@_delete_@guard_name@);
       return 1;
     } else {
-      delete (@fqname@ *)_sp;_sp = 0;
+      delete _sp; _sp = 0;
       return 0;
     }
   } else {
     CORBA::TypeCode_var @private_prefix@_tctmp = _a.type();
     if (@private_prefix@_tctmp->equivalent(@private_prefix@_tc_@guard_name@)) return 1;
-    delete (@fqname@ *)_sp;_sp = 0;
+    delete _sp; _sp = 0;
     return 0;
   }
 }

@@ -319,63 +319,62 @@ union tcDescriptor {
 inline void
 _0RL_buildDesc_cboolean(tcDescriptor &desc, const CORBA::Boolean& data)
 {
-  desc.p_boolean = (CORBA::Boolean*)&data;
+  desc.p_boolean = OMNI_CONST_CAST(CORBA::Boolean*, &data);
 }
 
 inline void
 _0RL_buildDesc_coctet(tcDescriptor &desc, const CORBA::Octet& data)
 {
-  desc.p_octet = (CORBA::Octet*)&data;
+  desc.p_octet = OMNI_CONST_CAST(CORBA::Octet*, &data);
 }
 
 inline void
 _0RL_buildDesc_cchar(tcDescriptor &desc, const CORBA::Char &data)
 {
-  desc.p_char = (CORBA::Char *)&data;
+  desc.p_char = OMNI_CONST_CAST(CORBA::Char *, &data);
 }
 
 inline void
 _0RL_buildDesc_cwchar(tcDescriptor &desc, const CORBA::WChar &data)
 {
-  desc.p_wchar = (CORBA::WChar *)&data;
+  desc.p_wchar = OMNI_CONST_CAST(CORBA::WChar *, &data);
 }
 
 inline void
 _0RL_buildDesc_cshort(tcDescriptor &desc, const CORBA::Short &data)
 {
-  desc.p_short = (CORBA::Short *)&data;
+  desc.p_short = OMNI_CONST_CAST(CORBA::Short *, &data);
 }
 
 inline void
 _0RL_buildDesc_cunsigned_pshort(tcDescriptor &desc, const CORBA::UShort &data)
 {
-  desc.p_ushort = (CORBA::UShort *)&data;
+  desc.p_ushort = OMNI_CONST_CAST(CORBA::UShort *, &data);
 }
 
 inline void
 _0RL_buildDesc_clong(tcDescriptor &desc, const CORBA::Long &data)
 {
-  desc.p_long = (CORBA::Long *)&data;
+  desc.p_long = OMNI_CONST_CAST(CORBA::Long *, &data);
 }
 
 inline void
 _0RL_buildDesc_cunsigned_plong(tcDescriptor &desc, const CORBA::ULong &data)
 {
-  desc.p_ulong = (CORBA::ULong *)&data;
+  desc.p_ulong = OMNI_CONST_CAST(CORBA::ULong *, &data);
 }
 
 #ifdef HAS_LongLong
 inline void
 _0RL_buildDesc_clonglong(tcDescriptor &desc, const CORBA::LongLong &data)
 {
-  desc.p_longlong = (CORBA::LongLong *)&data;
+  desc.p_longlong = OMNI_CONST_CAST(CORBA::LongLong *, &data);
 }
 
 inline void
-_0RL_buildDesc_cunsigned_plonglong(tcDescriptor &desc,
-				   const CORBA::ULongLong &data)
+_0RL_buildDesc_cunsigned_plonglong(tcDescriptor &desc, const CORBA::ULongLong &data)
 {
-  desc.p_ulonglong = (CORBA::ULongLong *)&data;
+  desc.p_ulonglong = OMNI_CONST_CAST(CORBA::ULongLong *, &data);
 }
 #endif
 
@@ -383,7 +382,7 @@ _0RL_buildDesc_cunsigned_plonglong(tcDescriptor &desc,
 inline void
 _0RL_buildDesc_clongdouble(tcDescriptor &desc, const CORBA::LongDouble &data)
 {
-  desc.p_longdouble = (CORBA::LongDouble *)&data;
+  desc.p_longdouble = OMNI_CONST_CAST(CORBA::LongDouble *, &data);
 }
 #endif
 
@@ -391,13 +390,13 @@ _0RL_buildDesc_clongdouble(tcDescriptor &desc, const CORBA::LongDouble &data)
 inline void
 _0RL_buildDesc_cfloat(tcDescriptor &desc, const CORBA::Float &data)
 {
-  desc.p_float = (CORBA::Float *)&data;
+  desc.p_float = OMNI_CONST_CAST(CORBA::Float *, &data);
 }
 
 inline void
 _0RL_buildDesc_cdouble(tcDescriptor &desc, const CORBA::Double &data)
 {
-  desc.p_double = (CORBA::Double *)&data;
+  desc.p_double = OMNI_CONST_CAST(CORBA::Double *, &data);
 }
 #endif
 
@@ -408,7 +407,7 @@ _0RL_buildDesc_cdouble(tcDescriptor &desc, const CORBA::Double &data)
 inline void
 _0RL_buildDesc_cany(tcDescriptor &desc, const CORBA::Any& data)
 {
-  desc.p_any = (CORBA::Any *)&data;
+  desc.p_any = OMNI_CONST_CAST(CORBA::Any *, &data);
 }
 
 ///////////////////
@@ -418,7 +417,7 @@ _0RL_buildDesc_cany(tcDescriptor &desc, const CORBA::Any& data)
 inline void
 _0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_member const& data)
 {
-  desc.p_string.ptr = (char**)&data._ptr;
+  desc.p_string.ptr = OMNI_CONST_CAST(char**, &data._ptr);
   desc.p_string.release
     = (data._ptr==_CORBA_String_helper::empty_string) ? 0 : 1;
 }
@@ -426,7 +425,7 @@ _0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_member const& data)
 inline void
 _0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_element const& data)
 {
-  desc.p_string.ptr = (char**) &data.pd_data;
+  desc.p_string.ptr = OMNI_CONST_CAST(char**, &data.pd_data);
   desc.p_string.release = data.pd_rel;
 }
 
@@ -437,7 +436,7 @@ _0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_element const& data)
 inline void
 _0RL_buildDesc_cwstring(tcDescriptor &desc,_CORBA_WString_member const& data)
 {
-  desc.p_wstring.ptr = (_CORBA_WChar**)&data._ptr;
+  desc.p_wstring.ptr = OMNI_CONST_CAST(_CORBA_WChar**, &data._ptr);
   desc.p_wstring.release
     = (data._ptr==_CORBA_WString_helper::empty_wstring) ? 0 : 1;
 }
@@ -445,7 +444,7 @@ _0RL_buildDesc_cwstring(tcDescriptor &desc,_CORBA_WString_member const& data)
 inline void
 _0RL_buildDesc_cwstring(tcDescriptor &desc,_CORBA_WString_element const& data)
 {
-  desc.p_wstring.ptr = (_CORBA_WChar**) &data.pd_data;
+  desc.p_wstring.ptr = OMNI_CONST_CAST(_CORBA_WChar**, &data.pd_data);
   desc.p_wstring.release = data.pd_rel;
 }
 
@@ -456,7 +455,7 @@ _0RL_buildDesc_cwstring(tcDescriptor &desc,_CORBA_WString_element const& data)
 inline void
 _0RL_buildDesc_cfixed(tcDescriptor &desc, const CORBA::Fixed &data)
 {
-  desc.p_fixed = (CORBA::Fixed *)&data;
+  desc.p_fixed = OMNI_CONST_CAST(CORBA::Fixed *, &data);
 }
 
 
@@ -476,7 +475,7 @@ inline void
 _0RL_buildDesc_cCORBA_mObject(tcDescriptor& desc, 
 			      const CORBA::Object_tcDesc_arg& d)
 {
-  desc.p_objref.opq_objref = (void*) &d._data;
+  desc.p_objref.opq_objref = OMNI_CONST_VOID_CAST(&d._data);
   desc.p_objref.opq_release = d._rel;
   desc.p_objref.setObjectPtr = _0RL_tcParser_objref_setObjectPtr;
   desc.p_objref.getObjectPtr = _0RL_tcParser_objref_getObjectPtr;
@@ -489,7 +488,7 @@ _0RL_buildDesc_cCORBA_mObject(tcDescriptor& desc,
 inline void
 _0RL_buildDesc_cTypeCode(tcDescriptor& desc, const CORBA::TypeCode_member& data)
 {
-  desc.p_TypeCode = (CORBA::TypeCode_member*) &data;
+  desc.p_TypeCode = OMNI_CONST_CAST(CORBA::TypeCode_member*, &data);
 }
 
 OMNI_NAMESPACE_END(omni)
