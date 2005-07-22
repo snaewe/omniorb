@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2005/07/22 11:22:06  dgrisby
+  Async worker could add itself to the idle list more than once.
+  Thanks Hartmut Raschick
+
   Revision 1.1.2.6  2002/09/11 20:40:15  dgrisby
   Call thread interceptors from etherealiser queue.
 
@@ -152,8 +156,11 @@ public:
 	  pd_task->deq();
 	}
 	else {
-	  pd_next = pd_pool->pd_idle_threads;
-	  pd_pool->pd_idle_threads = this;
+	  if (!pd_next) {
+	    // Add to the idle queue
+	    pd_next = pd_pool->pd_idle_threads;
+	    pd_pool->pd_idle_threads = this;
+	  }
 	  unsigned long abs_sec,abs_nanosec;
 	  omni_thread::get_time(&abs_sec,&abs_nanosec,
 				omniAsyncInvoker::idle_timeout);
@@ -169,7 +176,9 @@ public:
 	    pd_next = 0;
 	    break;
 	  }
-	  // Dequeue by omniAsyncInvoker.
+	  // If signalled, we have been dequeued by the
+	  // omniAsyncInvoker, and will have a task to process next
+	  // time around the while loop.
 	  continue;
 	}
       }

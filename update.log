@@ -1,3 +1,12 @@
+Fri Jul 22 12:18:42 BST 2005 dgrisby
+====================================
+
+- Async worker could add itself to the idle list more than once.
+  Thanks Hartmut Raschick
+
+src/lib/omniORB/orbcore/invoker.cc
+
+
 Fri Jul 22 10:51:47 BST 2005 dgrisby
 ====================================
 
