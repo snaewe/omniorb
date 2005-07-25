@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2005/07/25 16:29:20  dgrisby
+  Async worker could still add itself to the idle list more than once.
+
   Revision 1.1.2.7  2005/07/22 11:22:06  dgrisby
   Async worker could add itself to the idle list more than once.
   Thanks Hartmut Raschick
@@ -108,7 +111,7 @@ class omniAsyncWorker : public omni_thread {
 public:
 
   omniAsyncWorker(omniAsyncInvoker* pool, omniTask* task) :
-    pd_pool(pool), pd_task(task), pd_next(0), pd_id(id())
+    pd_pool(pool), pd_task(task), pd_next(0), pd_id(id()), pd_in_idle_queue(0)
   {
     pd_cond = new omni_tracedcondition(pool->pd_lock);
     start();
@@ -156,24 +159,40 @@ public:
 	  pd_task->deq();
 	}
 	else {
-	  if (!pd_next) {
-	    // Add to the idle queue
-	    pd_next = pd_pool->pd_idle_threads;
-	    pd_pool->pd_idle_threads = this;
-	  }
+	  // Add to the idle queue
+	  OMNIORB_ASSERT(!pd_in_idle_queue);
+	  pd_next = pd_pool->pd_idle_threads;
+	  pd_pool->pd_idle_threads = this;
+	  pd_in_idle_queue = 1;
+
 	  unsigned long abs_sec,abs_nanosec;
 	  omni_thread::get_time(&abs_sec,&abs_nanosec,
 				omniAsyncInvoker::idle_timeout);
-	  if ( pd_cond->timedwait(abs_sec,abs_nanosec) == 0 && !pd_task) {
-	    // Has timeout and has not been assigned a task.
 
-	    // Remove this thread from the idle queue
+	  int signalled = pd_cond->timedwait(abs_sec,abs_nanosec);
+
+	  if (pd_in_idle_queue) {
+	    // Remove from the idle queue
 	    omniAsyncWorker** pp = &pd_pool->pd_idle_threads;
 	    while (*pp && *pp != this) {
 	      pp = &((*pp)->pd_next);
 	    }
-	    if (*pp) *pp = pd_next;
+	    if (*pp) {
+	      *pp = pd_next;
+	    }
+	    else {
+	      if (omniORB::trace(1)) {
+		omniORB::logger l;
+		l << "AsyncInvoker: Warning: thread " << pd_id
+		  << " thought it was in the idle queue but it was not.\n";
+	      }
+	    }
 	    pd_next = 0;
+	    pd_in_idle_queue = 0;
+	  }
+	  if (!signalled && !pd_task) {
+	    // We have timed out and have not been assigned a task.
+	    // Break out from the while loop and exit.
 	    break;
 	  }
 	  // If signalled, we have been dequeued by the
@@ -219,6 +238,7 @@ private:
   omni_tracedcondition* pd_cond;
   omniAsyncWorker*      pd_next;
   int                   pd_id;
+  CORBA::Boolean        pd_in_idle_queue;
 
   omniAsyncWorker();
   omniAsyncWorker(const omniAsyncWorker&);
@@ -260,6 +280,7 @@ omniAsyncInvoker::~omniAsyncInvoker() {
     omniAsyncWorker* t = pd_idle_threads;
     pd_idle_threads = t->pd_next;
     t->pd_next = 0;
+    t->pd_in_idle_queue = 0;
     t->pd_cond->signal();
   }
   // Wait for threads to exit
@@ -286,7 +307,9 @@ omniAsyncInvoker::insert(omniTask* t) {
 	omniAsyncWorker* w = pd_idle_threads;
 	pd_idle_threads = w->pd_next;
 	w->pd_next = 0;
+	OMNIORB_ASSERT(w->pd_task == 0);
 	w->pd_task = t;
+	w->pd_in_idle_queue = 0;
 	w->pd_cond->signal();
       }
       else {
@@ -319,7 +342,9 @@ omniAsyncInvoker::insert(omniTask* t) {
 	omniAsyncWorker* w = pd_idle_threads;
 	pd_idle_threads = w->pd_next;
 	w->pd_next = 0;
+	OMNIORB_ASSERT(w->pd_task == 0);
 	w->pd_task = t;
+	w->pd_in_idle_queue = 0;
 	w->pd_cond->signal();
 	pd_nthreads--;
       }
