@@ -1,3 +1,11 @@
+Tue Jul 26 09:58:29 BST 2005 dgrisby
+====================================
+
+- Another minor merge.
+
+src/lib/omniORB/orbcore/invoker.cc
+
+
 Fri Jul 22 18:17:38 BST 2005 dgrisby
 ====================================
 
