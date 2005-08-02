@@ -1,3 +1,16 @@
+Tue Aug  2 10:37:03 BST 2005 dgrisby
+====================================
+
+- Bug in Servant_var if assigning to itself.
+
+include/omniORB4/poa.h
+
+- Two threads could be dispatched for one call, one by Peek, one by Select.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Tue Jul 26 09:58:29 BST 2005 dgrisby
 ====================================
 

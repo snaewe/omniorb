@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2005/08/02 09:42:53  dgrisby
+  Two threads could be dispatched for one call, one by Peek, one by Select.
+
   Revision 1.1.4.8  2005/06/24 14:31:30  dgrisby
   Allow multiple threads to Peek() without clashing. Not yet tested on
   Windows.
@@ -445,18 +448,29 @@ SocketCollection::Select() {
 	  SocketHolder* s = pd_pollsockets[index];
 
 	  if (s) {
-	    // If a thread is peeking the socket, let that thread handle it.
-	    if (!s->pd_peeking) {
-	      s->pd_selectable = s->pd_data_in_buffer = s->pd_selected = 0;
+	    // Remove from pollfds by swapping in the last item in the array
+	    pd_pollfd_n--;
+	    pd_pollfds[index]     = pd_pollfds[pd_pollfd_n];
+	    pd_pollsockets[index] = pd_pollsockets[pd_pollfd_n];
+	    s->pd_selected        = 0;
 
-	      // Remove from pollfds by swapping in the last item in the array
-	      pd_pollfd_n--;
-	      pd_pollfds[index]     = pd_pollfds[pd_pollfd_n];
-	      pd_pollsockets[index] = pd_pollsockets[pd_pollfd_n];
-
-	      notifyReadable(s);
-	      continue; // without incrementing index
+	    if (s->pd_peeking) {
+	      // A thread is monitoring the socket with Peek(). We do
+	      // not notify from this thread, otherwise a thread would
+	      // be dispatched to handle the data, and either that
+	      // thread or the peeker would find itself with nothing
+	      // to do. To avoid a race condition where the Peek()
+	      // thread has timed out, we set a flag to tell it there
+	      // is data available.
+	      s->pd_peek_go = 1;
 	    }
+	    else {
+	      if (s->pd_selectable) {
+		s->pd_selectable = s->pd_data_in_buffer = 0;
+		notifyReadable(s);
+	      }
+	    }
+	    continue; // without incrementing index
 	  }
 	  else {
 	    OMNIORB_ASSERT(pd_pollfds[index].fd == pd_pipe_read);
@@ -603,10 +617,8 @@ SocketHolder::Peek()
 	if (s == ns == 0) {
 	  // Set timeout for condition wait
 	  unsigned long rs, rns;
-	  rs  = SocketCollection::scan_interval_sec  / 2;
-	  rns = SocketCollection::scan_interval_nsec / 2;
-	  if (SocketCollection::scan_interval_sec % 2)
-	    rns += 500000000;
+	  rs  = SocketCollection::scan_interval_sec;
+	  rns = SocketCollection::scan_interval_nsec;
 	  omni_thread::get_time(&s, &ns, rs, rns);
 	}
 	int signalled = pd_peek_cond->timedwait(s, ns);
@@ -629,10 +641,11 @@ SocketHolder::Peek()
       return 1;
     }
     pd_peeking = 1;
+    pd_peek_go = 0;
   }
 
   int timeout = (SocketCollection::scan_interval_sec * 1000 +
-		 SocketCollection::scan_interval_nsec / 1000000) / 2;
+		 SocketCollection::scan_interval_nsec / 1000000);
 
   pollfd pfd;
   pfd.fd = pd_socket;
@@ -662,7 +675,14 @@ SocketHolder::Peek()
       }
       else if (r == 0) {
 	// Timed out
-	retval = 0;
+	if (pd_peek_go) {
+	  // Select thread has seen that we should return true
+	  pd_selectable = 0;
+	  retval = 1;
+	}
+	else {
+	  retval = 0;
+	}
       }
       else {
 	// Error return
@@ -795,17 +815,15 @@ SocketCollection::Select() {
 
       if (s->pd_selectable) {
 
-	// The call the FD_ISSET here is a linear search through all
+	// The call to FD_ISSET here is a linear search through all
 	// the readable sockets, but that should usually be a
 	// reasonably small number, so it's probably OK.
-	if (FD_ISSET(s->pd_socket, &rfds) && !s->pd_peeking) {
-	  s->pd_selectable = s->pd_data_in_buffer = s->pd_selected = 0;
 
-	  OMNIORB_ASSERT(s->pd_fd_index >= 0);
-
+	if (FD_ISSET(s->pd_socket, &rfds)) {
 	  // Remove socket from pd_fd_set by swapping last item.
 	  // We don't use FD_CLR since that is incredibly inefficient
 	  // with large sets.
+	  OMNIORB_ASSERT(s->pd_fd_index >= 0);
 	  int to_i   = s->pd_fd_index;
 	  int from_i = --pd_fd_set.fd_count;
 	  
@@ -814,8 +832,22 @@ SocketCollection::Select() {
 	  pd_fd_sockets[to_i]->pd_fd_index = to_i;
 
 	  s->pd_fd_index = -1;
+	  s->pd_selected = 0;
 
-	  notifyReadable(s);
+	  if (s->pd_peeking) {
+	    // A thread is monitoring the socket with Peek(). We do
+	    // not notify from this thread, otherwise a thread would
+	    // be dispatched to handle the data, and either that
+	    // thread or the peeker would find itself with nothing
+	    // to do. To avoid a race condition where the Peek()
+	    // thread has timed out, we set a flag to tell it there
+	    // is data available.
+	    s->pd_peek_go = 1;
+	  }
+	  else {
+	    s->pd_selectable = s->pd_data_in_buffer = 0;
+	    notifyReadable(s);
+	  }
 	  count--;
 	}
       }
@@ -929,10 +961,8 @@ SocketHolder::Peek()
 	if (s == ns == 0) {
 	  // Set timeout for condition wait
 	  unsigned long rs, rns;
-	  rs  = SocketCollection::scan_interval_sec  / 2;
-	  rns = SocketCollection::scan_interval_nsec / 2;
-	  if (SocketCollection::scan_interval_sec % 2)
-	    rns += 500000000;
+	  rs  = SocketCollection::scan_interval_sec;
+	  rns = SocketCollection::scan_interval_nsec;
 	  omni_thread::get_time(&s, &ns, rs, rns);
 	}
 	int signalled = pd_peek_cond->timedwait(s, ns);
@@ -955,12 +985,12 @@ SocketHolder::Peek()
       return 1;
     }
     pd_peeking = 1;
+    pd_peek_go = 0;
   }
 
   struct timeval timeout;
-  timeout.tv_sec  = SocketCollection::scan_interval_sec / 2;
-  timeout.tv_usec = SocketCollection::scan_interval_nsec / 1000 / 2;
-  if (SocketCollection::scan_interval_sec % 2) timeout.tv_usec += 500000;
+  timeout.tv_sec  = SocketCollection::scan_interval_sec;
+  timeout.tv_usec = SocketCollection::scan_interval_nsec / 1000;
   fd_set rfds;
 
   int retval = -1;
@@ -990,7 +1020,14 @@ SocketHolder::Peek()
       }
       else if (r == 0) {
 	// Timed out
-	retval = 0;
+	if (pd_peek_go) {
+	  // Select thread has seen that we should return true
+	  pd_selectable = 0;
+	  retval = 1;
+	}
+	else {
+	  retval = 0;
+	}
       }
       else {
 	if (ERRNO != RC_EINTR)
@@ -1141,11 +1178,24 @@ SocketCollection::Select() {
     for (SocketHolder* s = pd_collection; s; s = s->pd_next) {
 
       if (s->pd_selectable) {
-	if (FD_ISSET(s->pd_socket, &rfds) && !s->pd_peeking) {
-	  s->pd_selectable = s->pd_data_in_buffer = s->pd_selected = 0;
+	if (FD_ISSET(s->pd_socket, &rfds)) {
+	  s->pd_selected = 0;
 	  FD_CLR(s->pd_socket, &pd_fd_set);
-
-	  notifyReadable(s);
+	  
+	  if (s->pd_peeking) {
+	    // A thread is monitoring the socket with Peek(). We do
+	    // not notify from this thread, otherwise a thread would
+	    // be dispatched to handle the data, and either that
+	    // thread or the peeker would find itself with nothing
+	    // to do. To avoid a race condition where the Peek()
+	    // thread has timed out, we set a flag to tell it there
+	    // is data available.
+	    s->pd_peek_go = 1;
+	  }
+	  else {
+	    s->pd_selectable = s->pd_data_in_buffer = 0;
+	    notifyReadable(s);
+	  }
 	}
 	else if (pd_fd_set_n <= s->pd_socket) {
 	  pd_fd_set_n = s->pd_socket + 1;
@@ -1303,6 +1353,7 @@ SocketHolder::Peek()
       return 1;
     }
     pd_peeking = 1;
+    pd_peek_go = 0;
   }
 
   struct timeval timeout;
@@ -1338,7 +1389,14 @@ SocketHolder::Peek()
       }
       else if (r == 0) {
 	// Timed out
-	retval = 0;
+	if (pd_peek_go) {
+	  // Select thread has seen that we should return true
+	  pd_selectable = 0;
+	  retval = 1;
+	}
+	else {
+	  retval = 0;
+	}
       }
       else {
 	if (ERRNO != RC_EINTR)
