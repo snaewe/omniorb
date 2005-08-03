@@ -1,3 +1,17 @@
+Wed Aug  3 10:38:58 BST 2005 dgrisby
+====================================
+
+- setSelectable could cause a readable socket to be handled twice.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+- Make sure accept() never blocks.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+
+
 Tue Aug  2 10:37:03 BST 2005 dgrisby
 ====================================
 
