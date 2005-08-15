@@ -1,3 +1,11 @@
+Mon Aug 15 12:09:16 BST 2005 dgrisby
+====================================
+
+- Changes on 22 July broke the stubs for MSVC and maybe other compilers.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+
+
 Mon Jul 25 17:25:55 BST 2005 dgrisby
 ====================================
 
