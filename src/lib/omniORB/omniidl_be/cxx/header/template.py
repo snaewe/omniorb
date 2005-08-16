@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.11  2005/08/16 13:51:21  dgrisby
+# Problems with valuetype / abstract interface C++ mapping.
+#
 # Revision 1.8.2.10  2005/07/22 17:18:37  dgrisby
 # Another merge from omni4_0_develop.
 #
@@ -496,13 +499,13 @@ public:
     }
   }
 
+  // Other IDL defined within this scope.
+  @Other_IDL@
+
   // Operations declared in this abstract interface
   @operations@  
 
   static _core_attr const char* _PD_repoId;
-
-  // Other IDL defined within this scope.
-  @Other_IDL@
 };
 """
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.19.2.8  2005/08/16 13:51:21  dgrisby
+# Problems with valuetype / abstract interface C++ mapping.
+#
 # Revision 1.19.2.7  2004/10/13 17:58:23  dgrisby
 # Abstract interfaces support; values support interfaces; value bug fixes.
 #
@@ -404,6 +407,14 @@ def mkTypeCode(type, declarator = None, node = None):
         repoID = type.decl().repoId()
         iname = scopedName.simple()
         return (prefix + 'interface_tc("' + repoID + '", "' +
+                iname + '"' + tctrack + ')')
+
+    elif type.kind() == idltype.tk_abstract_interface:
+        scopedName = id.Name(type.decl().scopedName())
+        
+        repoID = type.decl().repoId()
+        iname = scopedName.simple()
+        return (prefix + 'abstract_interface_tc("' + repoID + '", "' +
                 iname + '"' + tctrack + ')')
 
     guard_name = id.Name(type.scopedName()).guard()

@@ -150,7 +150,10 @@ class Type:
             # from short to enum the entries are the same
             return ( (0, 0, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
 
-        if kind in [ idltype.tk_objref, idltype.tk_TypeCode ]:
+        if kind in [ idltype.tk_objref,
+                     idltype.tk_TypeCode,
+                     idltype.tk_abstract_interface ]:
+
             # objref_ptr objref_ptr& objref_ptr& objref_ptr
             return ( (0, 0, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
 
@@ -172,8 +175,7 @@ class Type:
             return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
 
         if kind in [ idltype.tk_value,
-                     idltype.tk_value_box,
-                     idltype.tk_abstract_interface]:
+                     idltype.tk_value_box ]:
 
             return ( (0, 0, 1), (0, 1, 1), (0, 1, 1), (0, 0, 1) )[direction]
 
@@ -244,7 +246,7 @@ class Type:
             assert environment is None
             name = "::" + name
 
-        if d_type.objref() or d_type.typecode():
+        if d_type.objref() or d_type.abstract_interface() or d_type.typecode():
             return name + "_ptr"
         else:
             return name
@@ -271,17 +273,6 @@ class Type:
         name = id.Name(type.scopedName())
         uname = name.unambiguous(environment)
 
-        if d_type.objref():
-            name = id.Name(d_type.type().scopedName())
-            objref_name = name.prefix("_objref_")
-            uname = name.unambiguous(environment)
-            
-            if d_type.__type.scopedName() == ["CORBA", "Object"]:
-                return "CORBA::Object_OUT_arg"
-
-            return "_CORBA_ObjRef_OUT_arg< " + objref_name.fullyQualify() + \
-                   ", " + name.unambiguous(environment) + "_Helper >"
-
         return uname + "_out"
 
     def __base_type_INOUT(self, environment = None):
@@ -301,15 +292,25 @@ class Type:
         name = id.Name(self.type().scopedName())
         uname = name.unambiguous(environment)
         
-        if d_type.objref():
+        if d_type.objref() or d_type.abstract_interface():
             name = id.Name(d_type.type().scopedName())
-            objref_name = name.prefix("_objref_")
-            uname = name.unambiguous(environment)
+
+            if d_type.objref():
+                objref_name = name.prefix("_objref_")
+            else:
+                objref_name = name
+
             if d_type.type().scopedName() == ["CORBA", "Object"]:
                 return "CORBA::Object_INOUT_arg"
 
             return "_CORBA_ObjRef_INOUT_arg< " + objref_name.fullyQualify() + \
                    ", " + name.unambiguous(environment) + "_Helper >"
+
+        if d_type.value() or d_type.valuebox():
+            name = id.Name(d_type.type().scopedName())
+            return "_CORBA_Value_INOUT_arg< " + name.fullyQualify() + \
+                   ", " + name.unambiguous(environment) + "_Helper >"
+
         return uname + "_INOUT_arg"
 
     def op(self, direction, environment = None, use_out = 1):
@@ -367,6 +368,8 @@ class Type:
                     return self.__base_type_OUT(environment)
                 if d_type.objref() and not old_sig:
                     return self.__base_type_OUT(environment)
+                if d_type.abstract_interface() and not old_sig:
+                    return self.__base_type_OUT(environment)
                 if d_type.typecode() and not old_sig:
                     return self.__base_type_OUT(environment)
                 if d_type.any() and not old_sig:
@@ -380,6 +383,8 @@ class Type:
                 if d_type.typecode():
                     return self.__base_type_OUT(environment)
                 if d_type.objref():
+                    return self.__base_type_OUT(environment)
+                if d_type.abstract_interface():
                     return self.__base_type_OUT(environment)
                 if d_type.any() and (not old_sig or use_out):
                     return self.__base_type_OUT(environment)
@@ -395,8 +400,9 @@ class Type:
                     return self.__base_type_INOUT(environment)
                 if d_type.objref() and use_out:
                     return self.__base_type_INOUT(environment)
+                if d_type.abstract_interface() and use_out:
+                    return self.__base_type_INOUT(environment)
                 
-
         if d_type.string() and not type.array():
             base = d_type.base(environment)
 
@@ -432,7 +438,7 @@ class Type:
                 return "CORBA::String_member"
             if d_type.wstring():
                 return "CORBA::WString_member"
-            if d_type.objref():
+            if d_type.objref() or d_type.abstract_interface():
                 return d_type.objRefTemplate("Member", environment,
                                              gscope=gscope)
             if d_type.typecode():
@@ -464,8 +470,12 @@ class Type:
 
         name = id.Name(name)
         uname = name.unambiguous(environment)
-        objref_name = name.prefix("_objref_")
-        objref_uname = objref_name.unambiguous(environment)
+        if self.objref():
+            objref_name = name.prefix("_objref_")
+            objref_uname = objref_name.unambiguous(environment)
+        else:
+            objref_uname = uname
+
         if gscope:
             uname = "::" + uname
             objref_uname = "::" + objref_uname
@@ -483,7 +493,8 @@ class Type:
         if gscope:
             uname = "::" + uname
 
-        return "_CORBA_Value_%s< %s> " % (suffix, uname)
+        return "_CORBA_Value_%s< %s, %s > " % (suffix, uname,
+                                               uname + "_Helper")
 
     def literal(self, value, environment = None):
         """literal(types.Type, value any, id.Environment option): string
@@ -567,7 +578,7 @@ class Type:
         if d_SeqType.typecode():
             d_SeqTypeID = "CORBA::TypeCode_member"
             SeqTypeID = "CORBA::TypeCode_member"
-        elif d_SeqType.objref():
+        elif d_SeqType.objref() or d_SeqType.abstract_interface():
             d_SeqTypeID = string.replace(d_SeqTypeID,"_ptr","")
             SeqTypeID = string.replace(SeqTypeID,"_ptr","")
         elif d_SeqType.string():
@@ -627,12 +638,12 @@ class Type:
             template["forward"] = 1
         elif typeSizeAlignMap.has_key(d_SeqType.type().kind()):
             template["fixed"] = typeSizeAlignMap[d_SeqType.type().kind()]
-        elif d_SeqType.objref():
+        elif d_SeqType.objref() or d_SeqType.abstract_interface():
             scopedName = d_SeqType.type().decl().scopedName()
             is_CORBA_Object = scopedName == ["CORBA", "Object"]
             scopedName = id.Name(scopedName)
             
-            if not is_CORBA_Object:
+            if not is_CORBA_Object and d_SeqType.objref():
                 # CORBA::Object doesn't have an _objref_xxx
                 scopedName = scopedName.prefix("_objref_")
            
@@ -660,6 +671,7 @@ class Type:
 
             template["value_name"]     = value_name
             template["value_template"] = value_template
+            template["value_helper"]   = SeqTypeID + "_Helper"
             template["value"]          = 1
 
         return self.__templateToString(template)
@@ -724,7 +736,8 @@ class Type:
 
         elif template.has_key("value"):
             args.extend([template["value_name"],
-                         template["value_template"]])
+                         template["value_template"],
+                         template["value_helper"]])
 
         elif not template.has_key("suffix"):
             # see above
@@ -790,7 +803,7 @@ class Type:
 
         d_T = self.deref()
 
-        if d_T.objref() or d_T.typecode():
+        if d_T.objref() or d_T.abstract_interface() or d_T.typecode():
             return "CORBA::release(" + thing + ");"
         if d_T.string():   return "CORBA::string_free(" + thing + ");"
 
@@ -817,7 +830,7 @@ class Type:
         d_T = self.deref()
         if d_T.typecode():
             return dest + " = CORBA::TypeCode::_duplicate(" + src + ");"
-        if d_T.objref():
+        if d_T.objref() or d_T.abstract_interface():
             # Use the internal omniORB duplicate function in case the
             # normal one isn't available
             name = id.Name(self.type().decl().scopedName()).suffix("_Helper")
@@ -840,7 +853,7 @@ class Type:
         if d_T.enum() or self.is_basic_data_types():
             return dest + " = " + src + ";"
 
-        raise "Don't know how to free type, kind = " + str(d_T.kind())
+        raise "Don't know how to copy type, kind = " + str(d_T.kind())
                
     def representable_by_int(self):
         """representable_by_int(types.Type): boolean

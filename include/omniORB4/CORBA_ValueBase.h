@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2005/08/16 13:51:21  dgrisby
+  Problems with valuetype / abstract interface C++ mapping.
+
   Revision 1.1.2.5  2005/01/17 18:08:41  dgrisby
   Small tweaks to compile with Sun CC.
 
@@ -126,6 +129,22 @@ private:
   // Not implemented.
 
   ULong _pd_magic;
+};
+
+class ValueBase_Helper {
+public:
+  static inline void add_ref(ValueBase* v) {
+    if (v) v->_add_ref();
+  }
+  static inline void remove_ref(ValueBase* v) {
+    if (v) v->_remove_ref();
+  }
+  static inline void marshal(ValueBase* v, cdrStream& s) {
+    ValueBase::_NP_marshal(v, s);
+  }
+  static inline ValueBase* unmarshal(cdrStream& s) {
+    return ValueBase::_NP_unmarshal(s);
+  }
 };
 
 _CORBA_MODULE_FN inline void add_ref(ValueBase* vb) {

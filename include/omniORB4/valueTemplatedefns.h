@@ -32,18 +32,18 @@
 
 
 
-template <class T, class ElemT>
+template <class T, class ElemT, class T_Helper>
 inline void
-_CORBA_Sequence_Value<T,ElemT>::operator>>= (cdrStream& s) const
+_CORBA_Sequence_Value<T,ElemT,T_Helper>::operator>>= (cdrStream& s) const
 {
   ::operator>>=(_CORBA_ULong(pd_len), s);
   for (int i = 0; i < (int)pd_len; i++)
-    T::_NP_marshal(pd_data[i], s);
+    T_Helper::marshal(pd_data[i], s);
 }
 
-template <class T, class ElemT>
+template <class T, class ElemT, class T_Helper>
 inline void
-_CORBA_Sequence_Value<T,ElemT>::operator<<= (cdrStream &s) {
+_CORBA_Sequence_Value<T,ElemT,T_Helper>::operator<<= (cdrStream &s) {
   _CORBA_ULong l;
   l <<= s;
   if (!s.checkInputOverrun(1,l) || (pd_bounded && l > pd_max)) {
@@ -52,7 +52,7 @@ _CORBA_Sequence_Value<T,ElemT>::operator<<= (cdrStream &s) {
   }
   length(l);
   for( _CORBA_ULong i = 0; i < l; i++ )
-    operator[](i) = T::_NP_unmarshal(s);
+    operator[](i) = T_Helper::unmarshal(s);
 }
 
 

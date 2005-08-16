@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.9  2005/08/16 13:51:20  dgrisby
+# Problems with valuetype / abstract interface C++ mapping.
+#
 # Revision 1.32.2.8  2005/01/13 21:55:56  dgrisby
 # Turn off -g debugging; suppress some compiler warnings.
 #
@@ -732,7 +735,9 @@ def visitException(node):
 @member_name@@index@ = _s.@member_name@@index@;""", member_name = decl_name,
                                index = index)
 
-            if d_memberType.objref() and not is_array:
+            if ((d_memberType.objref() or d_memberType.abstract_interface())
+                and not is_array):
+
                 # these are special resources which need to be explicitly
                 # duplicated (but not if an array?)
                 duplicate = string.replace(memberType_fqname,"_ptr","") + \

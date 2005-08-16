@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.7  2005/08/16 13:51:21  dgrisby
+# Problems with valuetype / abstract interface C++ mapping.
+#
 # Revision 1.1.6.6  2005/03/30 23:36:11  dgrisby
 # Another merge from omni4_0_develop.
 #
@@ -396,8 +399,7 @@ class CallDescriptor:
                 rvalue = args[n]
                 if argtype.array():
                     rvalue = "&" + rvalue + "[0]"
-                if (argtype.value() or argtype.valuebox() or
-                    argtype.abstract_interface()):
+                if argtype.value() or argtype.valuebox():
                     star = "*"
                 else:
                     star = ""
@@ -515,8 +517,7 @@ class CallDescriptor:
                     holder = holder + "_slice*"
                 if h_is_ptr:
                     holder = holder + "*"
-                if (argtype.value() or argtype.valuebox() or
-                    argtype.abstract_interface()):
+                if argtype.value() or argtype.valuebox():
                     holder = holder + "*"
 
                 data_members.append(holder + " " + holder_n + ";")
@@ -739,7 +740,7 @@ class CallDescriptor:
                     marshal_block.out(arg_n + "_ = *" + arg_n + ";\n"+ \
                                       "*" + arg_n + " = " + \
                                       "CORBA::TypeCode::_nil();")
-                elif d_type.objref():
+                elif d_type.objref() or d_type.abstract_interface():
                     nilobjref = string.replace(d_type.base(),"_ptr","::_nil()")
                     if isinstance(d_type.type().decl(),idlast.Forward):
                         nilobjref = string.replace(nilobjref,\

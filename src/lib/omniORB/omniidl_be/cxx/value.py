@@ -3,7 +3,7 @@
 # value.py                  Created on: 2003/09/29
 #			    Author    : Duncan Grisby
 #
-#    Copyright (C) 2003 Apasphere Ltd.
+#    Copyright (C) 2003-2005 Apasphere Ltd.
 #
 #  This file is part of omniidl.
 #
@@ -39,9 +39,18 @@ value_forward = """\
 #define __@guard@__
 
 class @name@;
-typedef _CORBA_Value_Var<@name@>     @name@_var;
-typedef _CORBA_Value_Member<@name@>  @name@_member;
-typedef _CORBA_Value_OUT_arg<@name@> @name@_out;
+
+class @name@_Helper {
+public:
+  static void add_ref(@name@*);
+  static void remove_ref(@name@*);
+  static void marshal(@name@*, cdrStream&);
+  static @name@* unmarshal(cdrStream&);
+};
+
+typedef _CORBA_Value_Var    <@name@,@name@_Helper> @name@_var;
+typedef _CORBA_Value_Member <@name@,@name@_Helper> @name@_member;
+typedef _CORBA_Value_OUT_arg<@name@,@name@_Helper> @name@_out;
 
 #endif // __@guard@__
 """
@@ -180,6 +189,18 @@ private:
 value_functions = """\
 // valuetype @name@
 
+void
+@fqname@_Helper::add_ref(::@fqname@* _v)
+{
+  if (_v) _v->_add_ref();
+}
+
+void
+@fqname@_Helper::remove_ref(::@fqname@* _v)
+{
+  if (_v) _v->_remove_ref();
+}
+
 @fqname@*
 @fqname@::_downcast(CORBA::ValueBase* _b)
 {
@@ -235,6 +256,12 @@ void
   omniValueType::marshal(_v, @fqname@::_PD_repoId, _0s);
 }
 
+void
+@fqname@_Helper::marshal(::@fqname@* _v, cdrStream& _0s)
+{
+  @fqname@::_NP_marshal(_v,_0s);
+}
+
 @fqname@*
 @fqname@::_NP_unmarshal(cdrStream& _0s)
 {
@@ -248,6 +275,12 @@ void
     _d = @fqname@::_downcast(_b);
   }
   return _d;
+}
+
+@fqname@*
+@fqname@_Helper::unmarshal(cdrStream& _0s)
+{
+  return @fqname@::_NP_unmarshal(_0s);
 }
 
 void
@@ -1743,6 +1776,18 @@ virtual void @name@(@type@* _value)
 valuebox_functions = """\
 // value box @name@
 
+void
+@fqname@_Helper::add_ref(::@fqname@* _v)
+{
+  if (_v) _v->_add_ref();
+}
+
+void
+@fqname@_Helper::remove_ref(::@fqname@* _v)
+{
+  if (_v) _v->_remove_ref();
+}
+
 @fqname@*
 @fqname@::_downcast(CORBA::ValueBase* _b)
 {
@@ -1806,6 +1851,12 @@ void
   omniValueType::marshal(_v, @fqname@::_PD_repoId, _0s);
 }
 
+void
+@fqname@_Helper::marshal(::@fqname@* _v, cdrStream& _0s)
+{
+  @fqname@::_NP_marshal(_v,_0s);
+}
+
 @fqname@*
 @fqname@::_NP_unmarshal(cdrStream& _0s)
 {
@@ -1818,6 +1869,12 @@ void
 		  (CORBA::CompletionStatus)_0s.completion());
   }
   return _d;
+}
+
+@fqname@*
+@fqname@_Helper::unmarshal(cdrStream& _0s)
+{
+  return @fqname@::_NP_unmarshal(_0s);
 }
 
 void
@@ -2263,7 +2320,7 @@ class ValueType (mapping.Decl):
             decl._cxx_holder = omemtype + " _pd_" + member + ";"
             decl._cxx_init_arg = "const CORBA::WChar* _" + member
 
-        elif d_mType.objref():
+        elif d_mType.objref() or d_mType.abstract_interface():
             scopedName = d_mType.type().decl().scopedName()
 
             name     = id.Name(scopedName)
@@ -2903,7 +2960,7 @@ class ValueBox (mapping.Decl):
             boxed_member = "CORBA::WChar*"
             member_funcs.out(valuebox_member_funcs_wstring, name=cxx_name)
 
-        elif d_boxedType.objref():
+        elif d_boxedType.objref() or d_boxedType.abstract_interface():
             scopedName   = d_boxedType.type().decl().scopedName()
             name         = id.Name(scopedName)
             boxedif      = name.unambiguous(environment)
@@ -2955,7 +3012,7 @@ class ValueBox (mapping.Decl):
                 elif d_seqType.wstring():
                     element = "_CORBA_WString_element"
                     element_ptr = "CORBA::WChar*"
-                elif d_seqType.objref():
+                elif d_seqType.objref() or d_seqType.abstract_interface():
                     element = seqType.base(environment)
                     element_ptr = element
                 elif seqType.sequence():
@@ -2976,7 +3033,7 @@ class ValueBox (mapping.Decl):
                 elif d_seqType.wstring():
                     # special case alert
                     element_reference = element
-                elif d_seqType.objref():
+                elif d_seqType.objref() or d_seqType.abstract_interface():
                     element_reference = d_seqType.objRefTemplate("Element",
                                                                  environment)
                 # only if an anonymous sequence
@@ -3083,7 +3140,7 @@ class ValueBox (mapping.Decl):
                 elif d_mType.wstring():
                     stream.out(valuebox_structmember_wstring, name=member)
 
-                elif d_mType.objref():
+                elif d_mType.objref() or d_mType.abstract_interface():
                     scopedName = d_mType.type().decl().scopedName()
 
                     env      = self._environment
@@ -3166,7 +3223,7 @@ class ValueBox (mapping.Decl):
             elif d_mType.wstring():
                 stream.out(valuebox_unionmember_wstring, name=member)
 
-            elif d_mType.objref():
+            elif d_mType.objref() or d_mType.abstract_interface():
                 scopedName = d_mType.type().decl().scopedName()
 
                 env      = self._environment

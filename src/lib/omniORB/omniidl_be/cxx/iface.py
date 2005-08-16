@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.7  2005/08/16 13:51:21  dgrisby
+# Problems with valuetype / abstract interface C++ mapping.
+#
 # Revision 1.1.6.6  2005/01/06 23:09:50  dgrisby
 # Big merge from omni4_0_develop.
 #
@@ -376,11 +379,14 @@ class _objref_I(Class):
     else:
       if self.interface().abstract():
         objref_inherits = [ "public virtual CORBA::_omni_AbstractBaseObjref",
-                            "public virtual omniObjRef",
-                            "public virtual " + self.interface().name().simple() ]
+                            "public virtual omniObjRef" ]
       else:
         objref_inherits = [ "public virtual CORBA::Object",
                             "public virtual omniObjRef" ]
+
+    if self.interface().abstract():
+      objref_inherits.append("public virtual " +
+                             self.interface().name().simple())
 
     methods = []
     for method in self.methods():
