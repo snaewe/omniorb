@@ -1,3 +1,11 @@
+Thu Aug 18 13:53:10 BST 2005 dgrisby
+====================================
+
+- -ORBendPointPublishAllIFs incorrectly listed in help output.
+
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Mon Aug 15 12:09:16 BST 2005 dgrisby
 ====================================
 
