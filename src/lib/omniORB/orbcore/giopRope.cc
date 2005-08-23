@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.27  2005/08/23 11:46:05  dgrisby
+  Race condition in strand selection could lead to an assertion failure.
+
   Revision 1.1.4.26  2004/12/20 20:13:21  dgrisby
   Log when switching addresses in a rope.
 
@@ -351,7 +354,7 @@ giopRope::acquireClient(const omniIOR* ior,
     // Pick a random non-dying strand.
     OMNIORB_ASSERT(nbusy);  // There must be a non-dying strand that can
                             // serve this GIOP version
-    int n = rand() % max;
+    int n = rand() % nbusy;
     // Pick a random and non-dying strand
     RopeLink* p = pd_strands.next;
     giopStrand* q = 0;
@@ -371,12 +374,15 @@ giopRope::acquireClient(const omniIOR* ior,
       p = p->next;
     }
     s = (s) ? s : q;
-    OMNIORB_ASSERT(s);
-    GIOP_C* g = new GIOP_C(this,s);
-    g->impl(s->giopImpl);
-    g->initialise(ior,key,keysize,calldesc);
-    g->giopStreamList::insert(s->clients);
-    return g;
+    // By the time we look for busy strands, it's possible that they
+    // are all dying, in which case we have to start again.
+    if (s) {
+      GIOP_C* g = new GIOP_C(this,s);
+      g->impl(s->giopImpl);
+      g->initialise(ior,key,keysize,calldesc);
+      g->giopStreamList::insert(s->clients);
+      return g;
+    }
   }
   goto again;
 }
