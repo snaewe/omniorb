@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2005/08/23 11:45:05  dgrisby
+  New maxSocketSend and maxSocketRecv parameters.
+
   Revision 1.1.2.11  2005/03/10 11:28:27  dgrisby
   Race condition between setSelectable / clearSelectable.
 
@@ -88,12 +91,8 @@ unixConnection::Send(void* buf, size_t sz,
 		    unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) {
 
-
-#ifdef __VMS
-  // OpenVMS socket library cannot handle more than 64K buffer.
-  // Does OpenVMS have unix socket???
-  if (sz > 65535) sz = 65536-8;
-#endif
+  if (sz > orbParameters::maxSocketSend)
+    sz = orbParameters::maxSocketSend;
 
   int tx;
 
@@ -160,11 +159,8 @@ unixConnection::Recv(void* buf, size_t sz,
 		    unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) {
 
-#ifdef __VMS
-  // OpenVMS socket library cannot handle more than 64K buffer.
-  // Does OpenVMS has unix socket???
-  if (sz > 65535) sz = 65536-8;
-#endif
+  if (sz > orbParameters::maxSocketRecv)
+    sz = orbParameters::maxSocketRecv;
 
   int rx;
 
