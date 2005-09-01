@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2005/09/01 14:52:12  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.5  2005/03/02 12:39:17  dgrisby
   Merge from omni4_0_develop.
 
@@ -109,10 +112,8 @@ sslConnection::Send(void* buf, size_t sz,
 		    unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) {
 
-#ifdef __VMS
-  // OpenVMS socket library cannot handle more than 64K buffer.
-  if (sz > 65535) sz = 65536-8;
-#endif
+  if (sz > orbParameters::maxSocketSend)
+    sz = orbParameters::maxSocketSend;
 
   int tx;
   int rc;
@@ -201,10 +202,8 @@ sslConnection::Recv(void* buf, size_t sz,
 		    unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) {
 
-#ifdef __VMS
-  // OpenVMS socket library cannot handle more than 64K buffer.
-  if (sz > 65535) sz = 65536-8;
-#endif
+  if (sz > orbParameters::maxSocketRecv)
+    sz = orbParameters::maxSocketRecv;
 
   int rx;
   int rc;

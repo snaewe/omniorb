@@ -1,3 +1,18 @@
+Thu Sep  1 15:49:19 BST 2005 dgrisby
+====================================
+
+- Merge from omni4_0_develop.
+
+sample.cfg
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+
+
 Tue Aug 16 14:49:19 BST 2005 dgrisby
 ====================================
 

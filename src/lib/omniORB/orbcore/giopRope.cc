@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2005/09/01 14:52:12  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.2  2005/01/06 23:10:27  dgrisby
   Big merge from omni4_0_develop.
 
@@ -348,7 +351,7 @@ giopRope::acquireClient(const omniIOR* ior,
     // Pick a random non-dying strand.
     OMNIORB_ASSERT(nbusy);  // There must be a non-dying strand that can
                             // serve this GIOP version
-    int n = rand() % max;
+    int n = rand() % nbusy;
     // Pick a random and non-dying strand
     RopeLink* p = pd_strands.next;
     giopStrand* q = 0;
@@ -368,12 +371,15 @@ giopRope::acquireClient(const omniIOR* ior,
       p = p->next;
     }
     s = (s) ? s : q;
-    OMNIORB_ASSERT(s);
-    GIOP_C* g = new GIOP_C(this,s);
-    g->impl(s->giopImpl);
-    g->initialise(ior,key,keysize,calldesc);
-    g->giopStreamList::insert(s->clients);
-    return g;
+    // By the time we look for busy strands, it's possible that they
+    // are all dying, in which case we have to start again.
+    if (s) {
+      GIOP_C* g = new GIOP_C(this,s);
+      g->impl(s->giopImpl);
+      g->initialise(ior,key,keysize,calldesc);
+      g->giopStreamList::insert(s->clients);
+      return g;
+    }
   }
   goto again;
 }

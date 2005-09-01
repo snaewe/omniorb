@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2005/09/01 14:52:12  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.4  2005/03/02 12:39:23  dgrisby
   Merge from omni4_0_develop.
 
@@ -112,6 +115,13 @@ _CORBA_MODULE_VAR _core_attr CORBA::ULong giopMaxMsgSize;
 //
 //   Valid values = (n >= 8192)
 //
+
+_CORBA_MODULE_VAR _core_attr size_t maxSocketSend;
+_CORBA_MODULE_VAR _core_attr size_t maxSocketRecv;
+//   These values set the maximum size that is used in an individual
+//   socket send() or recv() call.
+//
+//   Valid values = (n >= 8192)
 
 
 _CORBA_MODULE_VAR _core_attr omniCodeSet::NCS_C* nativeCharCodeSet;

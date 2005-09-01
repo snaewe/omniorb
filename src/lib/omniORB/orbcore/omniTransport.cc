@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/09/01 14:52:12  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:02:08  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -56,10 +59,32 @@
 #include <omniORB4/omniTransport.h>
 #include <omniORB4/IOP_C.h>
 #include <initialiser.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
 omni_tracedmutex* omniTransportLock     = 0;
+
+////////////////////////////////////////////////////////////////////////////
+// Maximum sizes for socket sends / recvs
+
+#if defined(__WIN32__)
+// Windows has a bug that sometimes means large sends fail
+size_t orbParameters::maxSocketSend = 131072;
+size_t orbParameters::maxSocketRecv = 131072;
+
+#elif defined(__VMS)
+// VMS has a hard limit
+size_t orbParameters::maxSocketSend = 65528;
+size_t orbParameters::maxSocketRecv = 65528;
+
+#else
+// Other platforms have no limit
+size_t orbParameters::maxSocketSend = 0x7fffffff;
+size_t orbParameters::maxSocketRecv = 0x7fffffff;
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////
 IOP_C_Holder::IOP_C_Holder(const omniIOR* ior,
@@ -139,11 +164,75 @@ StrandList::is_empty(StrandList& head)
 
 
 /////////////////////////////////////////////////////////////////////////////
+class maxSocketSendHandler : public orbOptions::Handler {
+public:
+
+  maxSocketSendHandler() : 
+    orbOptions::Handler("maxSocketSend",
+			"maxSocketSend = n >= 8192",
+			1,
+			"-ORBmaxSocketSend < n >= 8192 >") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || v < 8192) {
+      throw orbOptions::BadParam(key(),value,
+				 "Invalid value, expect n >= 8192");
+    }
+    orbParameters::maxSocketSend = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::maxSocketSend,
+			   result);
+  }
+
+};
+
+static maxSocketSendHandler maxSocketSendHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+class maxSocketRecvHandler : public orbOptions::Handler {
+public:
+
+  maxSocketRecvHandler() : 
+    orbOptions::Handler("maxSocketRecv",
+			"maxSocketRecv = n >= 8192",
+			1,
+			"-ORBmaxSocketRecv < n >= 8192 >") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || v < 8192) {
+      throw orbOptions::BadParam(key(),value,
+				 "Invalid value, expect n >= 8192");
+    }
+    orbParameters::maxSocketRecv = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::maxSocketRecv,
+			   result);
+  }
+
+};
+
+static maxSocketRecvHandler maxSocketRecvHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
 class omni_omniTransport_initialiser : public omniInitialiser {
 public:
+  omni_omniTransport_initialiser() {
+    orbOptions::singleton().registerHandler(maxSocketSendHandler_);
+    orbOptions::singleton().registerHandler(maxSocketRecvHandler_);
+  }
 
   void attach() {
     if (!omniTransportLock) omniTransportLock = new omni_tracedmutex;
