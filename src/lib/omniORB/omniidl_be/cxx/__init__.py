@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.23.2.4  2005/09/05 17:22:09  dgrisby
+# Reference counted local call shortcut.
+#
 # Revision 1.23.2.3  2005/01/06 23:09:47  dgrisby
 # Big merge from omni4_0_develop.
 #
@@ -211,9 +214,6 @@ def process_args(args):
             config.state['Splice Modules']    = 1
         elif arg == "example":
             config.state['Example Code']      = 1
-#        elif arg == "AMI":
-#            config.state['AMI']               = 1
-#        Not ported yet.
         elif arg == "F":
             config.state['Fragment']          = 1
         elif arg == "BOA":
@@ -242,6 +242,13 @@ def process_args(args):
             config.state['Inline Includes']   = 1
         elif arg == "shortcut":
             config.state['Shortcut']          = 1
+        elif arg[:9] == "shortcut=":
+            if arg[9:] == "refcount":
+                config.state['Shortcut']      = 2
+            elif arg[9:] == "simple":
+                config.state['Shortcut']      = 1
+            else:
+                util.fatalError('Unknown shortcut option "%s"' % arg[9:])
         elif arg == "dll_includes":
             config.state['DLLIncludes']       = 1
         else:

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.8  2005/09/05 17:22:09  dgrisby
+# Reference counted local call shortcut.
+#
 # Revision 1.1.6.7  2005/08/16 13:51:21  dgrisby
 # Problems with valuetype / abstract interface C++ mapping.
 #
@@ -394,7 +397,7 @@ class _objref_I(Class):
         methods.append(method.hh(virtual = 1, pure = 0))
       else:
         methods.append(method.hh())
-            
+
     if config.state['Shortcut']:
       shortcut = output.StringStream()
       shortcut.out(omniidl_be.cxx.header.template.interface_shortcut,
@@ -482,6 +485,12 @@ class _objref_I(Class):
     else:
       init_shortcut = ""
 
+    if config.state['Shortcut'] == 2:
+      release_shortcut = omniidl_be.cxx.skel.template.\
+                         interface_release_refcount_shortcut
+    else:
+      release_shortcut = ""
+
     stream.out(omniidl_be.cxx.skel.template.interface_objref,
                name = self.interface().name().fullyQualify(),
                fq_objref_name = self.name().fullyQualify(),
@@ -490,9 +499,12 @@ class _objref_I(Class):
                comma = comma,
                _ptrToObjRef_ptr = _ptrToObjRef_ptr,
                _ptrToObjRef_str = _ptrToObjRef_str,
-               init_shortcut = init_shortcut)
+               init_shortcut = init_shortcut,
+               release_shortcut = release_shortcut)
 
-    if config.state['Shortcut']:
+    shortcut_mode = config.state['Shortcut']
+
+    if shortcut_mode:
       inherited = output.StringStream()
       for i in self.interface().inherits():
         objref_name = i.name().prefix("_objref_")
@@ -504,8 +516,13 @@ class _objref_I(Class):
 
         inherited.out(omniidl_be.cxx.skel.template.interface_shortcut_inh,
                       parent=objref_str)
+
+      if shortcut_mode == 1:
+        tmpl = omniidl_be.cxx.skel.template.interface_shortcut
+      else:
+        tmpl = omniidl_be.cxx.skel.template.interface_shortcut_refcount
         
-      stream.out(omniidl_be.cxx.skel.template.interface_shortcut,
+      stream.out(tmpl,
                  name = self.interface().name().fullyQualify(),
                  basename = self.interface().name().simple(),
                  fq_objref_name = self.name().fullyQualify(),

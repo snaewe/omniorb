@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.4.2.2  2005/09/05 17:22:09  dgrisby
+  Reference counted local call shortcut.
+
   Revision 1.4.2.1  2003/03/23 21:04:10  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -153,6 +156,11 @@ public:
     return pd_activations;
   }
   // Must hold <omni::internalLock>.
+
+  virtual void _add_ref();
+  virtual void _remove_ref();
+  // Base omniServant versions do nothing; overridden in
+  // PortableServer::ServantBase to perform reference counting.
 
 private:
 

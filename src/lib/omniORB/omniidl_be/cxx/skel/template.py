@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.7  2005/09/05 17:22:09  dgrisby
+# Reference counted local call shortcut.
+#
 # Revision 1.6.2.6  2005/03/30 23:36:11  dgrisby
 # Another merge from omni4_0_develop.
 #
@@ -356,7 +359,9 @@ const char* @name@::_PD_repoId = "@repoID@";
 
 
 interface_objref = """\
-@fq_objref_name@::~@objref_name@() {}
+@fq_objref_name@::~@objref_name@() {
+  @release_shortcut@
+}
 
 
 @fq_objref_name@::@objref_name@(omniIOR* ior, omniIdentity* id) :
@@ -386,6 +391,13 @@ void*
 }
 """
 
+interface_release_refcount_shortcut = """\
+if (_shortcut) {
+  _shortcut->_remove_ref();
+  _shortcut = 0;
+}
+"""
+
 interface_objref_repoID_ptr = """\
 if( id == ::@inherits_fqname@::_PD_repoId )
   return (::@inherits_fqname@_ptr) this;
@@ -405,6 +417,25 @@ void
   else
     _shortcut = 0;
   _invalid  = _inv;
+  @inherited@
+}
+"""
+
+interface_shortcut_refcount = """\
+void
+@fq_objref_name@::_enableShortcut(omniServant* _svt, const _CORBA_Boolean* _inv)
+{
+  if (_shortcut)
+    _shortcut->_remove_ref();
+
+  if (_svt) {
+    _svt->_add_ref();
+    _shortcut = (_impl_@basename@*)_svt->_ptrToInterface(::@name@::_PD_repoId);
+  }
+  else {
+    _shortcut = 0;
+  }
+  _invalid = _inv;
   @inherited@
 }
 """

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2005/09/05 17:22:09  dgrisby
+  Reference counted local call shortcut.
+
   Revision 1.4.2.1  2003/03/23 21:02:08  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -218,3 +221,7 @@ omniServant::_removeActivation(omniObjTableEntry* entry)
   }
   OMNIORB_ASSERT(activation_found);
 }
+
+
+void omniServant::_add_ref()    {}
+void omniServant::_remove_ref() {}
