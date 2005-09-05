@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2005/09/05 14:31:08  dgrisby
+  SSL transport extensions from Jon Biggar; SSL command line options.
+
   Revision 1.1.2.14  2005/03/14 13:37:09  dgrisby
   Reorder includes for compilers with pre-compiled headers.
 
@@ -104,6 +107,9 @@ static void report_error();
 const char* sslContext::certificate_authority_file = 0;
 const char* sslContext::key_file = 0;
 const char* sslContext::key_file_password = 0;
+int         sslContext::verify_mode = (SSL_VERIFY_PEER |
+				       SSL_VERIFY_FAIL_IF_NO_PEER_CERT);
+
 sslContext* sslContext::singleton = 0;
 
 
@@ -201,12 +207,12 @@ sslContext::set_certificate() {
   {
     struct stat buf;
     if (!pd_keyfile || stat(pd_keyfile,&buf) < 0) {
-      if (omniORB::trace(1)) {
+      if (omniORB::trace(5)) {
 	omniORB::logger log;
-	log << "Error: sslContext certificate file is not set "
+	log << "sslContext certificate file is not set "
 	    << "or cannot be found\n";
       }
-      OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
+      return;
     }
   }
 
@@ -238,11 +244,11 @@ void
 sslContext::set_privatekey() {
 
   if (!pd_password) {
-    if (omniORB::trace(1)) {
+    if (omniORB::trace(5)) {
       omniORB::logger log;
-      log << "Error: sslContext private key file is not set\n";
+      log << "sslContext private key is not set\n";
     }
-    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
+    return;
   }
 
   ssl_password = pd_password;
@@ -290,7 +296,7 @@ sslContext::seed_PRNG() {
       log << "SSL: the pseudo random number generator has not been seeded.\n"
 	  << "A seed is generated but it is not consided to be of crypto strength.\n"
 	  << "The application should call one of the OpenSSL seed functions,\n"
-	  << "e.g. RAND_event() to initialise the PRNG before calling sslTransportImpl::initiailse().\n";
+	  << "e.g. RAND_event() to initialise the PRNG before calling sslTransportImpl::initialise().\n";
     }
   }
 }
@@ -345,7 +351,7 @@ sslContext::set_ephemeralRSA() {
 /////////////////////////////////////////////////////////////////////////
 int
 sslContext::set_verify_mode() {
-  return SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+  return sslContext::verify_mode;
 }
 
 

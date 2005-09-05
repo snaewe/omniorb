@@ -233,6 +233,52 @@ REGEDIT4
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; maxSocketSend
+; maxSocketRecv
+;
+;   On some platforms, calls to send() and recv() have a limit on the
+;   buffer size that can be used. These parameters set the limits in
+;   bytes that omniORB uses when sending / receiving bulk data.
+;
+;   The default values are platform specific. It is unlikely that you
+;   will need to change the values from the defaults.
+;
+;   The minimum valid limit is 8KB, 8192 bytes.
+;
+;   e.g. to limit to 64KB sends / receives:
+;
+;     "maxSocketSend" = "65536"
+;     "maxSocketRecv" = "65536"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; sslCAFile
+; sslKeyFile
+; sslKeyPassword
+; sslVerifyMode
+;
+;   SSL transport options
+;
+;   sslCAFile specifies the file containing the SSL Certificate
+;   Authority certificate.
+;
+;   sslKeyFile specifies the file containing the SSL key.
+;
+;   sslKeyPassword specifies the password to unlock the key.
+;
+;   sslVerifyMode specifies the verify mode, as given to
+;   SSL_CTX_set_verify. Valid values are "none", representing
+;   SSL_VERIFY_NONE, and "peer", representing SSL_VERIFY_PEER. If peer
+;   is selected, additional options "fail" and "once" can also be
+;   specified, corresponding to SSL_VERIFY_FAIL_IF_NO_PEER_CERT and
+;   SSL_VERIFY_CLIENT_ONCE respectively. e.g.
+;
+;     "sslVerifyMode" = "peer,fail"
+;
+;   These options are only available if the SSL transport is linked.
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                          ;

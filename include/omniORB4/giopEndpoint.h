@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2005/09/05 14:32:04  dgrisby
+  SSL transport extensions from Jon Biggar; SSL command line options.
+
   Revision 1.1.4.10  2005/03/10 11:28:30  dgrisby
   Race condition between setSelectable / clearSelectable.
 
@@ -98,6 +101,17 @@ public:
   virtual const char* myaddress() = 0;
   virtual const char* peeraddress() = 0;
 
+#if 0
+  // This function is not currently exposed, to maintain binary
+  // compatibility with older versions of the omniORB 4.0.x library.
+  // Remove the #if 0 here and in src/lib/omniORB/orbcore/
+  // giopEndpoint.cc if you need the function.
+
+  virtual const char* peeridentity();
+  // Return a string identifying the peer, if appropriate for the
+  // connection type. By default returns zero to indicate no peer
+  // identification is possible.
+#endif
 
   virtual void setSelectable(int now = 0,
 			     _CORBA_Boolean data_in_buffer = 0) = 0;

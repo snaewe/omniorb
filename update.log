@@ -1,3 +1,30 @@
+Mon Sep  5 15:26:18 BST 2005 dgrisby
+====================================
+
+- omniNames error log is no longer unbuffered. Thanks Jon Biggar.
+
+src/appl/omniNames/omniNames.cc
+
+- SSL transport extensions from Jon Biggar; SSL command line options.
+
+sample.cfg
+sample.reg
+update.log
+include/omniORB4/giopEndpoint.h
+include/omniORB4/sslContext.h
+src/examples/ssl_echo/README
+src/examples/ssl_echo/client.pem
+src/examples/ssl_echo/root.pem
+src/examples/ssl_echo/server.pem
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+src/lib/omniORB/orbcore/ssl/README.txt           -- new
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+
 Tue Aug 23 12:39:04 BST 2005 dgrisby
 ====================================
 

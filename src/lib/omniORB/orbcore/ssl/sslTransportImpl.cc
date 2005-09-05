@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2005/09/05 14:31:08  dgrisby
+  SSL transport extensions from Jon Biggar; SSL command line options.
+
   Revision 1.1.2.10  2005/03/14 13:37:09  dgrisby
   Reorder includes for compilers with pre-compiled headers.
 
@@ -77,6 +80,7 @@
 #include <openssl/rand.h>
 #include <initialiser.h>
 #include <exceptiondefs.h>
+#include <orbOptions.h>
 #include <omniORB4/minorCode.h>
 #include <omniORB4/linkHacks.h>
 
@@ -193,6 +197,157 @@ sslTransportImpl::getInterfaceAddress() {
 }
 
 
+/////////////////////////////////////////////////////////////////////////////
+class sslCAFileHandler : public orbOptions::Handler {
+public:
+
+  sslCAFileHandler() : 
+    orbOptions::Handler("sslCAFile",
+			"sslCAFile = <certificate authority file>",
+			1,
+			"-ORBsslCAFile <certificate authority file>") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam)
+  {    
+    sslContext::certificate_authority_file = CORBA::string_dup(value);
+  }
+
+  void dump(orbOptions::sequenceString& result)
+  {
+    orbOptions::addKVString(key(),
+			    sslContext::certificate_authority_file ?
+			    sslContext::certificate_authority_file : "<unset>",
+			    result);
+  }
+};
+
+static sslCAFileHandler sslCAFileHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+class sslKeyFileHandler : public orbOptions::Handler {
+public:
+
+  sslKeyFileHandler() : 
+    orbOptions::Handler("sslKeyFile",
+			"sslKeyFile = <key file>",
+			1,
+			"-ORBsslKeyFile <key file>") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam)
+  {    
+    sslContext::key_file = CORBA::string_dup(value);
+  }
+
+  void dump(orbOptions::sequenceString& result)
+  {
+    orbOptions::addKVString(key(),
+			    sslContext::key_file ?
+			    sslContext::key_file : "<unset>",
+			    result);
+  }
+};
+
+static sslKeyFileHandler sslKeyFileHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+class sslKeyPasswordHandler : public orbOptions::Handler {
+public:
+
+  sslKeyPasswordHandler() : 
+    orbOptions::Handler("sslKeyPassword",
+			"sslKeyPassword = <key file password>",
+			1,
+			"-ORBsslKeyPassword <key file password>") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam)
+  {    
+    sslContext::key_file_password = CORBA::string_dup(value);
+  }
+
+  void dump(orbOptions::sequenceString& result)
+  {
+    orbOptions::addKVString(key(),
+			    sslContext::key_file_password ? "****" : "<unset>",
+			    result);
+  }
+};
+
+static sslKeyPasswordHandler sslKeyPasswordHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+class sslVerifyModeHandler : public orbOptions::Handler {
+public:
+
+  sslVerifyModeHandler() : 
+    orbOptions::Handler("sslVerifyMode",
+			"sslVerifyMode = <mode>",
+			1,
+			"-ORBsslVerifyMode < \"none\" | \"peer[,fail][,once]\" >")
+  {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam)
+  {    
+    if (!strcmp(value, "none")) {
+      sslContext::verify_mode = 0;
+      return;
+    }
+
+    int mode = 0;
+    CORBA::String_var val(value); // Copy
+    char* valc = (char*)val;
+    char* c;
+
+    while (*valc) {
+      for (c=valc; *c && *c != ','; ++c) {}
+
+      if (*c == ',')
+	*c++ = '\0';
+
+      if (!strcmp(valc, "peer"))
+	mode |= SSL_VERIFY_PEER;
+
+      else if (!strcmp(valc, "fail"))
+	mode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+
+      else if (!strcmp(valc, "once"))
+	mode |= SSL_VERIFY_CLIENT_ONCE;
+
+      else
+	throw orbOptions::BadParam(key(), valc, "Invalid verify option");
+      
+      valc = c;
+    }
+    sslContext::verify_mode = mode;
+  }
+
+  void dump(orbOptions::sequenceString& result)
+  {
+    char buf[20];
+
+    buf[0] = '\0';
+
+    if (sslContext::verify_mode & SSL_VERIFY_PEER)
+      strcpy(buf, "peer");
+    else
+      strcpy(buf, "none");
+      
+    if (sslContext::verify_mode & SSL_VERIFY_FAIL_IF_NO_PEER_CERT)
+      strcat(buf, ",fail");
+
+    if (sslContext::verify_mode & SSL_VERIFY_CLIENT_ONCE)
+      strcat(buf, ",once");
+
+    orbOptions::addKVString(key(), buf, result);
+  }
+};
+
+static sslVerifyModeHandler sslVerifyModeHandler_;
+
+
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 static sslTransportImpl* _the_sslTransportImpl = 0;
@@ -201,6 +356,10 @@ class omni_sslTransport_initialiser : public omniInitialiser {
 public:
 
   omni_sslTransport_initialiser() {
+    orbOptions::singleton().registerHandler(sslCAFileHandler_);
+    orbOptions::singleton().registerHandler(sslKeyFileHandler_);
+    orbOptions::singleton().registerHandler(sslKeyPasswordHandler_);
+    orbOptions::singleton().registerHandler(sslVerifyModeHandler_);
     omniInitialiser::install(this);
   }
 
@@ -226,23 +385,6 @@ public:
 	return;
       }
       
-      if (!sslContext::key_file || stat(sslContext::key_file,&sb) < 0) {
-	if (omniORB::trace(1)) {
-	  omniORB::logger log;
-	  log << "Warning: SSL private key and certificate file is not set "
-	      << "or cannot be found. SSL transport disabled.\n";
-	}
-	return;
-      }
-      if (!sslContext::key_file_password) {
-	if (omniORB::trace(1)) {
-	  omniORB::logger log;
-	  log << "Warning: SSL password for private key and certificate "
-	      << "file is not set. SSL transport disabled.\n";
-	}
-	return;
-      }
-
       // Create the default singleton
       sslContext::singleton =
 	new sslContext(sslContext::certificate_authority_file,

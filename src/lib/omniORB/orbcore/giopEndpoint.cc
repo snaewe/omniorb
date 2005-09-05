@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2005/09/05 14:31:08  dgrisby
+  SSL transport extensions from Jon Biggar; SSL command line options.
+
   Revision 1.1.2.16  2004/02/11 18:33:20  dgrisby
   Windows / MSVC 7 fixes.
 
@@ -278,6 +281,16 @@ giopConnection::decrRefCount(CORBA::Boolean forced) {
     delete this;
   return rc;
 }
+
+////////////////////////////////////////////////////////////////////////
+#if 0
+// Disabled for library binary compatibility.
+
+const char*
+giopConnection::peeridentity() {
+  return 0;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 const omnivector<const char*>*
