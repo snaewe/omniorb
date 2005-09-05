@@ -150,12 +150,13 @@ main(int argc, char **argv)
       int fd = _open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
       if (fd < 0 || _dup2(fd,2)) {
 #else
-      int fd = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
+      int fd = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0666);
       if (fd < 0 || dup2(fd,2) < 0) {
 #endif
 	cerr << "Cannot open error log file: " << argv[2] << endl;
 	usage();
       }
+      setvbuf(stderr, 0, _IOLBF, 0);
       removeArgs(argc, argv, 1, 2);
     }
     else if ((strncmp(argv[1], "-ORB", 4) != 0)) {
