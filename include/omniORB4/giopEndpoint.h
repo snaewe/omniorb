@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2005/09/05 17:12:20  dgrisby
+  Merge again. Mainly SSL transport changes.
+
   Revision 1.1.6.4  2005/03/02 12:10:50  dgrisby
   setSelectable / Peek fixes.
 
@@ -105,6 +108,10 @@ public:
   virtual const char* myaddress() = 0;
   virtual const char* peeraddress() = 0;
 
+  virtual const char* peeridentity();
+  // Return a string identifying the peer, if appropriate for the
+  // connection type. By default returns zero to indicate no peer
+  // identification is possible.
 
   virtual void setSelectable(int now = 0,
 			     _CORBA_Boolean data_in_buffer = 0) = 0;

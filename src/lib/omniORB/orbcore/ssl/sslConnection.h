@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2005/09/05 17:12:20  dgrisby
+  Merge again. Mainly SSL transport changes.
+
   Revision 1.1.4.4  2005/03/02 12:10:48  dgrisby
   setSelectable / Peek fixes.
 
@@ -90,6 +93,8 @@ class sslConnection : public giopConnection, public SocketHolder {
 
   const char* peeraddress();
 
+  const char *peeridentity();
+
   void setSelectable(int now = 0,CORBA::Boolean data_in_buffer = 0);
 
   void clearSelectable();
@@ -99,7 +104,7 @@ class sslConnection : public giopConnection, public SocketHolder {
   CORBA::Boolean Peek();
 
   SocketHandle_t handle() const { return pd_socket; }
-  ::SSL*            ssl_handle() const { return pd_ssl; }
+  ::SSL*         ssl_handle() const { return pd_ssl; }
 
   sslConnection(SocketHandle_t,::SSL*,SocketCollection*);
 
@@ -110,7 +115,7 @@ class sslConnection : public giopConnection, public SocketHolder {
   ::SSL*            pd_ssl;
   CORBA::String_var pd_myaddress;
   CORBA::String_var pd_peeraddress;
-
+  CORBA::String_var pd_peeridentity;
 };
 
 

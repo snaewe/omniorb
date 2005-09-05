@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/09/05 17:12:20  dgrisby
+  Merge again. Mainly SSL transport changes.
+
   Revision 1.1.4.2  2005/01/06 23:08:22  dgrisby
   Big merge from omni4_0_develop.
 
@@ -86,11 +89,12 @@ class sslContext {
 
   SSL_CTX* get_SSL_CTX() const { return pd_ctx; }
   
-  // These three parameters must be set or else the default way to
+  // These four parameters must be set or else the default way to
   // initialise a sslContext singleton will not be used.
   static _core_attr const char* certificate_authority_file; // In PEM format
   static _core_attr const char* key_file;                   // In PEM format
   static _core_attr const char* key_file_password;
+  static _core_attr int         verify_mode;
 
   static _core_attr sslContext* singleton;
 
@@ -117,7 +121,7 @@ class sslContext {
 
   virtual void set_privatekey();
   // Default to read the private key of this server from the file named
-  // by the statci member key_file. Notice that this file also contains
+  // by the static member key_file. Notice that this file also contains
   // the server's certificate.
 
   virtual void seed_PRNG();

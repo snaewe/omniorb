@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/09/05 17:12:20  dgrisby
+  Merge again. Mainly SSL transport changes.
+
   Revision 1.1.4.2  2005/01/06 23:10:15  dgrisby
   Big merge from omni4_0_develop.
 
@@ -274,6 +277,12 @@ giopConnection::decrRefCount(CORBA::Boolean forced) {
   if (rc == 0)
     delete this;
   return rc;
+}
+
+////////////////////////////////////////////////////////////////////////
+const char*
+giopConnection::peeridentity() {
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
