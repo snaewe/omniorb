@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2005/09/07 16:15:03  dgrisby
+  poll() does not work on Mac OS X.
+
   Revision 1.1.4.7  2005/08/02 09:42:53  dgrisby
   Two threads could be dispatched for one call, one by Peek, one by Select.
 
@@ -122,6 +125,11 @@
 
 #ifdef HAVE_POLL
 #   define USE_POLL
+#endif
+
+#if defined(__darwin__)
+    // Darwin implementation of poll() is completely broken
+#   undef USE_POLL
 #endif
 
 #if defined(__hpux__)

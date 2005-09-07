@@ -1,3 +1,11 @@
+Wed Sep  7 17:13:26 BST 2005 dgrisby
+====================================
+
+- poll() does not work on Mac OS X.
+
+include/omniORB4/internal/SocketCollection.h
+
+
 Mon Sep  5 18:15:12 BST 2005 dgrisby
 ====================================
 
