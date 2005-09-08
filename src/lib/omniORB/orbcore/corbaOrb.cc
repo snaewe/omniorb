@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.47  2005/09/08 14:26:17  dgrisby
+  New -ORBconfigFile command line argument.
+
   Revision 1.33.2.46  2005/03/14 13:36:02  dgrisby
   Call detach() not attach() on shutdown!
 
@@ -392,6 +395,14 @@ static CORBA::Boolean       invoker_shutting_down     = 0;
 extern "C" int sigaction(int, const struct sigaction *, struct sigaction *);
 #endif
 
+// Config file
+#if defined(NTArchitecture) && !defined(__ETS_KERNEL__)
+static const char* config_fname = 0;
+#else
+static const char* config_fname = CONFIG_DEFAULT_LOCATION;
+#endif
+
+
 
 ///////////////////////////////////////////////////////////////////////
 //          Per module initialisers.
@@ -518,7 +529,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
   const char* option_src_3 = "argument";
   const char* option_src_4 = "option list";
   const char* option_src_5 = "-ORB arguments";
-  const char* option_source;
+  const char* option_source= 0;
   try {
 
     orbOptions::singleton().reset();
@@ -527,18 +538,17 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
     option_source = option_src_5;
     orbOptions::singleton().getTraceLevel(argc,argv);
 
-    // Parse configuration file
-    option_source = option_src_1;
-
-#if defined(NTArchitecture) && !defined(__ETS_KERNEL__)
-    const char* config_fname = 0;
-#else
-    const char* config_fname = CONFIG_DEFAULT_LOCATION;
-#endif
     {
       const char* f = getenv(CONFIG_ENV);
       if (f) config_fname = f;
     }
+    // Configuration file name can be overriden by command line.
+    config_fname = orbOptions::singleton().getConfigFileName(argc, argv,
+							     config_fname);
+
+    // Parse configuration file
+    option_source = option_src_1;
+
     if (config_fname) {
       orbOptions::singleton().importFromFile(config_fname);
     }
@@ -1472,6 +1482,30 @@ public:
 static poa_iiop_name_portHandler poa_iiop_name_portHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
+class configFileHandler : public orbOptions::Handler {
+public:
+
+  configFileHandler() :
+    orbOptions::Handler("configFile",
+			"configFile = <filename>",
+			1,
+			"-ORBconfigFile <filename>") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+    // Do nothing -- already handled before normal arguments are processed
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVString(key(), config_fname ? config_fname : "[none]",
+			    result);
+  }
+};
+
+static configFileHandler configFileHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1486,6 +1520,7 @@ public:
     orbOptions::singleton().registerHandler(principalHandler_);
     orbOptions::singleton().registerHandler(poa_iiop_portHandler_);
     orbOptions::singleton().registerHandler(poa_iiop_name_portHandler_);
+    orbOptions::singleton().registerHandler(configFileHandler_);
   }
 
 

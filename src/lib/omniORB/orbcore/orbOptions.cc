@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2005/09/08 14:26:17  dgrisby
+  New -ORBconfigFile command line argument.
+
   Revision 1.1.2.11  2005/09/05 14:31:08  dgrisby
   SSL transport extensions from Jon Biggar; SSL command line options.
 
@@ -283,6 +286,26 @@ orbOptions::getTraceLevel(int argc, char** argv)
       return;
     }
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+const char*
+orbOptions::getConfigFileName(int argc, char** argv, const char* fname)
+  throw (orbOptions::Unknown,orbOptions::BadParam) {
+
+  const char* key = "configFile";
+
+  for (int i=0; i<argc; i++) {
+    if (!strcmp(argv[i], "-ORBconfigFile")) {
+      if (i+1 == argc) {
+	throw orbOptions::BadParam(key, "<missing>",
+				   "Expected parameter missing");
+      }
+      return argv[i+1];
+    }
+  }
+  return fname;
 }
 
 

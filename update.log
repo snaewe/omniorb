@@ -1,3 +1,13 @@
+Thu Sep  8 15:24:28 BST 2005 dgrisby
+====================================
+
+- New -ORBconfigFile command line argument.
+
+include/omniORB4/internal/orbOptions.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Mon Sep  5 15:26:18 BST 2005 dgrisby
 ====================================
 
