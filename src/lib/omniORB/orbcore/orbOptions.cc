@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/09/08 14:49:40  dgrisby
+  Merge -ORBconfigFile argument.
+
   Revision 1.1.4.3  2005/09/05 17:12:20  dgrisby
   Merge again. Mainly SSL transport changes.
 
@@ -277,6 +280,26 @@ orbOptions::getTraceLevel(int argc, char** argv)
       return;
     }
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+const char*
+orbOptions::getConfigFileName(int argc, char** argv, const char* fname)
+  throw (orbOptions::Unknown,orbOptions::BadParam) {
+
+  const char* key = "configFile";
+
+  for (int i=0; i<argc; i++) {
+    if (!strcmp(argv[i], "-ORBconfigFile")) {
+      if (i+1 == argc) {
+	throw orbOptions::BadParam(key, "<missing>",
+				   "Expected parameter missing");
+      }
+      return argv[i+1];
+    }
+  }
+  return fname;
 }
 
 

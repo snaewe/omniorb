@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/09/08 14:49:40  dgrisby
+  Merge -ORBconfigFile argument.
+
   Revision 1.1.4.2  2005/01/06 23:08:26  dgrisby
   Big merge from omni4_0_develop.
 
@@ -214,6 +217,16 @@ class orbOptions {
   // Look for an -ORBtraceLevel argument very early on, so the trace
   // level can affect later option logging. Does not remove the
   // arguments -- that is done by extractInitOptions() later.
+  //
+  // Thread Safety preconditions:
+  //    Not thread safe
+
+  ////////////////////////////////////////////////////////////////////////
+  const char* getConfigFileName(int argc, char** argv, const char* fname)
+    throw (Unknown,BadParam);
+  // Look for an -ORBconfigFile argument before processing the config
+  // file. Does not remove the arguments -- that is done by
+  // extractInitOptions() later.
   //
   // Thread Safety preconditions:
   //    Not thread safe

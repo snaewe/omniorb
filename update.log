@@ -1,3 +1,13 @@
+Thu Sep  8 15:47:46 BST 2005 dgrisby
+====================================
+
+- Merge -ORBconfigFile argument.
+
+include/omniORB4/internal/orbOptions.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Wed Sep  7 17:13:26 BST 2005 dgrisby
 ====================================
 
