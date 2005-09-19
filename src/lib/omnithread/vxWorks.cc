@@ -6,6 +6,9 @@
 // Notes:		 Munching strategy is imperative
 //////////////////////////////////////////////////////////////////////////////
 // $Log$
+// Revision 1.1.2.6  2005/09/19 15:02:11  dgrisby
+// Updated vxWorks omnithread options. Thanks Dirk Siebnich.
+//
 // Revision 1.1.2.5  2005/07/06 12:25:55  dgrisby
 // Per thread data changes from April meant main thread's data was leaked.
 //
@@ -626,13 +629,13 @@ void omni_thread::start(void)
 
 	// Allocate memory for the task. (The returned id cannot be trusted by the task)
 	tid = taskSpawn(
-		NULL,								 // Task name
+		NULL,				// Task name
 		vxworks_priority(_priority),	// Priority
-		0,									 // Option
-		stack_size,						 // Stack size
-		(FUNCPTR)omni_thread_wrapper, // Priority
-		(int)this,							// First argument is this
-		0,0,0,0,0,0,0,0,0				 // Remaining unused args
+		VX_FP_TASK | VX_NO_STACK_FILL,	// Option
+		stack_size,			// Stack size
+		(FUNCPTR)omni_thread_wrapper,	// Entry point
+		(int)this,			// First argument is this
+		0,0,0,0,0,0,0,0,0		// Remaining unused args
 		);
 
 	DBG_ASSERT(assert(tid!=ERROR));
