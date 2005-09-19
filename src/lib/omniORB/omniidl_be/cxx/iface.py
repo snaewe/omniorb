@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.9  2005/09/19 15:36:35  dgrisby
+# Refcount shortcut now throws INV_OBJREF when the servant is
+# deactivated, rather than deactivating the shortcut, which could lead
+# to a race condition.
+#
 # Revision 1.1.6.8  2005/09/05 17:22:09  dgrisby
 # Reference counted local call shortcut.
 #
@@ -566,8 +571,15 @@ class _objref_I(Class):
         objref_class = method.parent_class()
         interface = objref_class.interface()
         implname = interface.name().prefix("_impl_").unambiguous(self._environment)
+
+        if config.state['Shortcut'] == 2:
+          tmpl = omniidl_be.cxx.skel.template.\
+                 interface_operation_shortcut_refcount
+        else:
+          tmpl = omniidl_be.cxx.skel.template.\
+                 interface_operation_shortcut
         
-        body.out(omniidl_be.cxx.skel.template.interface_operation_shortcut,
+        body.out(tmpl,
                  impl_type = implname,
                  callreturn = callreturn,
                  voidreturn = voidreturn,

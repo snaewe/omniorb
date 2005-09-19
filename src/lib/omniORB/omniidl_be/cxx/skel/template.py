@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.8  2005/09/19 15:36:35  dgrisby
+# Refcount shortcut now throws INV_OBJREF when the servant is
+# deactivated, rather than deactivating the shortcut, which could lead
+# to a race condition.
+#
 # Revision 1.6.2.7  2005/09/05 17:22:09  dgrisby
 # Reference counted local call shortcut.
 #
@@ -587,6 +592,19 @@ if (_s) {
   else {
     _enableShortcut(0,0);
     // drop through to normal invoke
+  }
+}\
+"""
+
+interface_operation_shortcut_refcount = """\
+@impl_type@* _s = _shortcut;
+if (_s) {
+  if (!*_invalid) {
+    @callreturn@_s->@name@(@args@);@voidreturn@
+  }
+  else {
+    OMNIORB_THROW(INV_OBJREF, INV_OBJREF_ShortcutServantDeactivated,
+                  CORBA::COMPLETED_NO);
   }
 }\
 """

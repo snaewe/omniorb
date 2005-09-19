@@ -1,3 +1,15 @@
+Mon Sep 19 16:10:25 BST 2005 dgrisby
+====================================
+
+- Refcount shortcut now throws INV_OBJREF when the servant is
+  deactivated, rather than deactivating the shortcut, which could lead
+  to a race condition.
+
+include/omniORB4/minorCode.h
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+
 Thu Sep  8 15:47:46 BST 2005 dgrisby
 ====================================
 
