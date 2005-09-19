@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2005/09/19 18:26:33  dgrisby
+  Merge from omni4_0_develop again.
+
   Revision 1.1.4.4  2005/09/08 14:49:40  dgrisby
   Merge -ORBconfigFile argument.
 
@@ -264,20 +267,32 @@ void
 orbOptions::getTraceLevel(int argc, char** argv)
   throw (orbOptions::Unknown,orbOptions::BadParam) {
 
-  const char* key = "traceLevel";
-
   for (int i=0; i<argc; i++) {
     if (!strcmp(argv[i], "-ORBtraceLevel")) {
       if (i+1 == argc) {
-	throw orbOptions::BadParam(key, "<missing>",
+	throw orbOptions::BadParam("traceLevel", "<missing>",
 				   "Expected parameter missing");
       }
       CORBA::ULong v;
       if (!orbOptions::getULong(argv[i+1], v))
-	throw orbOptions::BadParam(key, argv[i+1],
+	throw orbOptions::BadParam("traceLevel", argv[i+1],
 				   orbOptions::expect_ulong_msg);
       omniORB::traceLevel = v;
-      return;
+      if (v >= 10)
+	omniORB::traceExceptions = 1;
+
+      break;
+    }
+  }
+  
+  for (int i=0; i<argc; i++) {
+    if (!strcmp(argv[i], "-ORBtraceFile")) {
+      if (i+1 == argc) {
+	throw orbOptions::BadParam("traceFile", "<missing>",
+				   "Expected parameter missing");
+      }
+      omniORB::setLogFilename(argv[i+1]);
+      break;
     }
   }
 }
@@ -288,12 +303,10 @@ const char*
 orbOptions::getConfigFileName(int argc, char** argv, const char* fname)
   throw (orbOptions::Unknown,orbOptions::BadParam) {
 
-  const char* key = "configFile";
-
   for (int i=0; i<argc; i++) {
     if (!strcmp(argv[i], "-ORBconfigFile")) {
       if (i+1 == argc) {
-	throw orbOptions::BadParam(key, "<missing>",
+	throw orbOptions::BadParam("configFile", "<missing>",
 				   "Expected parameter missing");
       }
       return argv[i+1];

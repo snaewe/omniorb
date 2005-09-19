@@ -1,3 +1,17 @@
+Mon Sep 19 19:24:22 BST 2005 dgrisby
+====================================
+
+- Merge from omni4_0_develop again.
+
+include/omniORB4/minorCode.h
+include/omniORB4/omniORB.h
+include/omniORB4/internal/orbOptions.h
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+src/lib/omnithread/vxWorks.cc
+
+
 Mon Sep 19 16:10:25 BST 2005 dgrisby
 ====================================
 
