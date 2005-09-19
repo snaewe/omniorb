@@ -1,3 +1,16 @@
+Mon Sep 19 15:21:07 BST 2005 dgrisby
+====================================
+
+- New traceFile configuration parameter.
+
+include/omniORB4/minorCode.h
+include/omniORB4/omniORB.h
+include/omniORB4/internal/orbOptions.h
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Thu Sep  8 15:24:28 BST 2005 dgrisby
 ====================================
 

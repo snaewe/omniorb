@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.39  2005/09/19 14:23:56  dgrisby
+  New traceFile configuration parameter.
+
   Revision 1.2.2.38  2005/04/08 00:06:14  dgrisby
   Remove all remaining uses of logf.
 
@@ -1403,6 +1406,29 @@ public:
 static traceThreadIdHandler traceThreadIdHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
+class traceFileHandler : public orbOptions::Handler {
+public:
+
+  traceFileHandler() :
+    orbOptions::Handler("traceFile",
+			"traceFile = <filename>",
+			1,
+			"-ORBtraceFile <filename>") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+    omniORB::setLogFilename(value);
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    const char* n = omniORB::getLogFilename();
+    orbOptions::addKVString(key(), n ? n : "[stderr]", result);
+  }
+};
+
+static traceFileHandler traceFileHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
 class objectTableSizeHandler : public orbOptions::Handler {
 public:
 
@@ -1473,6 +1499,7 @@ public:
     orbOptions::singleton().registerHandler(traceExceptionsHandler_);
     orbOptions::singleton().registerHandler(traceInvocationsHandler_);
     orbOptions::singleton().registerHandler(traceThreadIdHandler_);
+    orbOptions::singleton().registerHandler(traceFileHandler_);
     orbOptions::singleton().registerHandler(objectTableSizeHandler_);
     orbOptions::singleton().registerHandler(abortOnInternalErrorHandler_);
   }

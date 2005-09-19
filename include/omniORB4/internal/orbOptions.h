@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2005/09/19 14:23:56  dgrisby
+  New traceFile configuration parameter.
+
   Revision 1.1.2.8  2005/09/08 14:26:17  dgrisby
   New -ORBconfigFile command line argument.
 
@@ -211,9 +214,10 @@ class orbOptions {
 
   ////////////////////////////////////////////////////////////////////////
   void getTraceLevel(int argc, char** argv) throw (Unknown,BadParam);
-  // Look for an -ORBtraceLevel argument very early on, so the trace
-  // level can affect later option logging. Does not remove the
-  // arguments -- that is done by extractInitOptions() later.
+  // Look for -ORBtraceLevel and -ORBtraceFile arguments very early
+  // on, so the trace level can affect later option logging. Does not
+  // remove the arguments -- that is done by extractInitOptions()
+  // later.
   //
   // Thread Safety preconditions:
   //    Not thread safe

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.17  2005/09/19 14:23:56  dgrisby
+  New traceFile configuration parameter.
+
   Revision 1.1.4.16  2004/05/05 21:04:01  dgrisby
   Change COMMA define to avoid clashes with other systems.
 
@@ -202,6 +205,8 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_107 OMNIORBMinorCode(107)
 #define OMNIORBMinorCode_108 OMNIORBMinorCode(108)
 #define OMNIORBMinorCode_109 OMNIORBMinorCode(109)
+// Gap here to keep synchronisation with omniORB 4.1.x minor codes.
+#define OMNIORBMinorCode_118 OMNIORBMinorCode(118)
 
 #define OMNI_COMMA ,
 #define DeclareValue(name,value) name = value
@@ -540,7 +545,8 @@ code( INITIALIZE_FailedPOAInit        , OMNIORBMinorCode_32 ) sep \
 code( INITIALIZE_FailedORBInit        , OMNIORBMinorCode_44 ) sep \
 code( INITIALIZE_FailedLoadLibrary    , OMNIORBMinorCode_45 ) sep \
 code( INITIALIZE_ConfigFileError      , OMNIORBMinorCode_50 ) sep \
-code( INITIALIZE_NotOmniThread        , OMNIORBMinorCode_56 )
+code( INITIALIZE_NotOmniThread        , OMNIORBMinorCode_56 ) sep \
+code( INITIALIZE_CannotOpenLogFile    , OMNIORBMinorCode_118 )
 
 
 enum INITIALIZE_minor {

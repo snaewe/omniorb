@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.23  2005/09/19 14:23:56  dgrisby
+  New traceFile configuration parameter.
+
   Revision 1.2.2.22  2005/03/14 13:38:26  dgrisby
   Add omniORB::versionString() and versionHex() functions.
 
@@ -365,6 +368,19 @@ _CORBA_MODULE_BEG
   // provided function is called for all omniORB log messages.          //
   //                                                                    //
   _CORBA_MODULE_FN void setLogFunction(logFunction f);                  //
+  ////////////////////////////////////////////////////////////////////////
+
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // setLogFilename()                                                   //
+  //                                                                    //
+  // Set a logging file to use instead of stderr. The file is opened    //
+  // for appending. If the file cannot be opened, CORBA::INITIALIZE is  //
+  // thrown.                                                            //
+  //                                                                    //
+  _CORBA_MODULE_FN void setLogFilename(const char* n);                  //
+  _CORBA_MODULE_FN const char* getLogFilename();                        //
   ////////////////////////////////////////////////////////////////////////
 
 
