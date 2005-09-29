@@ -1,3 +1,11 @@
+Thu Sep 29 12:31:08 BST 2005 dgrisby
+====================================
+
+- For loop scoping problem.
+
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Mon Sep 19 16:00:35 BST 2005 dgrisby
 ====================================
 

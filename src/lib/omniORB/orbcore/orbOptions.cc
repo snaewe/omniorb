@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2005/09/29 11:31:51  dgrisby
+  For loop scoping problem.
+
   Revision 1.1.2.13  2005/09/19 14:23:56  dgrisby
   New traceFile configuration parameter.
 
@@ -273,7 +276,8 @@ void
 orbOptions::getTraceLevel(int argc, char** argv)
   throw (orbOptions::Unknown,orbOptions::BadParam) {
 
-  for (int i=0; i<argc; i++) {
+  int i;
+  for (i=0; i<argc; i++) {
     if (!strcmp(argv[i], "-ORBtraceLevel")) {
       if (i+1 == argc) {
 	throw orbOptions::BadParam("traceLevel", "<missing>",
@@ -291,7 +295,7 @@ orbOptions::getTraceLevel(int argc, char** argv)
     }
   }
   
-  for (int i=0; i<argc; i++) {
+  for (i=0; i<argc; i++) {
     if (!strcmp(argv[i], "-ORBtraceFile")) {
       if (i+1 == argc) {
 	throw orbOptions::BadParam("traceFile", "<missing>",
