@@ -1,3 +1,11 @@
+Tue Oct 11 14:26:22 BST 2005 dgrisby
+====================================
+
+- Sun CC supports bool. Thanks Wernke zur Borg.
+
+include/omniORB4/CORBA_sysdep_trad.h
+
+
 Tue Oct 11 14:15:07 BST 2005 dgrisby
 ====================================
 
