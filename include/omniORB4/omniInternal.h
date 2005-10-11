@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.18  2005/10/11 13:17:01  dgrisby
+  Win64 support, thanks Peter Klotz. sizeof(long) < sizeof(void*) !!
+
   Revision 1.2.2.17  2004/08/31 15:20:38  dgrisby
   Cast to ptr_arith_t not int in align_to. Thanks Alex Tingle.
 
@@ -266,6 +269,8 @@ _CORBA_MODULE_BEG
   typedef unsigned long ptr_arith_t;
 #elif SIZEOF_PTR == SIZEOF_INT
   typedef unsigned int ptr_arith_t;
+#elif defined (_WIN64)
+  typedef size_t ptr_arith_t;
 #else
 #error "No suitable type to do pointer arithmetic"
 #endif

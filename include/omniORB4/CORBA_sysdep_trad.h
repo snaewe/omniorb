@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.19  2005/10/11 13:17:01  dgrisby
+  Win64 support, thanks Peter Klotz. sizeof(long) < sizeof(void*) !!
+
   Revision 1.1.2.18  2005/01/24 18:29:53  dgrisby
   HPUX 11.23 support. Thanks Matej Kenda.
 
@@ -253,6 +256,10 @@
 #    ifndef HAVE_STD
 #        define HAVE_STD 1
 #    endif
+#  endif
+
+#  if defined(_WIN64)
+#    define SIZEOF_PTR  8
 #  endif
 
 #  define HAS_LongLong

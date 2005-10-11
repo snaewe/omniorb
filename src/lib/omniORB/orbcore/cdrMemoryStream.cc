@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2005/10/11 13:17:01  dgrisby
+  Win64 support, thanks Peter Klotz. sizeof(long) < sizeof(void*) !!
+
   Revision 1.1.4.11  2004/10/22 20:46:22  dgrisby
   Fix theoretical attempt to free stack data.
 
@@ -331,6 +334,8 @@ cdrMemoryStream::cdrMemoryStream(void* databuffer)
   pd_inb_end = (void *) ULONG_MAX;
 #elif (SIZEOF_INT == SIZEOF_PTR)
   pd_inb_end = (void *) UINT_MAX;
+#elif defined (_WIN64)
+  pd_inb_end = (void *) _UI64_MAX;
 #else
 #error "No suitable integer type available to calculate maximum" \
   " pointer value from"

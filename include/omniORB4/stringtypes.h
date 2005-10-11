@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.16  2005/10/11 13:17:01  dgrisby
+ Win64 support, thanks Peter Klotz. sizeof(long) < sizeof(void*) !!
+
  Revision 1.2.2.15  2004/04/30 15:58:33  dgrisby
  Make ptr_arith_t unsigned.
 
@@ -654,6 +657,8 @@ public:
   typedef unsigned long ptr_arith_t;
 #elif SIZEOF_PTR == SIZEOF_INT
   typedef unsigned int ptr_arith_t;
+#elif defined (_WIN64)
+  typedef size_t ptr_arith_t;
 #else
 #error "No suitable type to do pointer arithmetic"
 #endif

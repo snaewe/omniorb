@@ -1,3 +1,16 @@
+Tue Oct 11 14:15:07 BST 2005 dgrisby
+====================================
+
+- Win64 support, thanks Peter Klotz. sizeof(long) < sizeof(void*) !!
+
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/omniInternal.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+
+
 Thu Sep 29 12:31:08 BST 2005 dgrisby
 ====================================
 
