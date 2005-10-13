@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.29  2005/10/13 11:37:07  dgrisby
+ VC++ 8 doesn't like inline friend functions.
+
  Revision 1.2.2.28  2005/07/22 09:52:59  dgrisby
  Remove more gcc warnings. Thanks Matej Kenda.
 
@@ -212,7 +215,7 @@
 // VC.NET 2003 (v. 7.1) has problems recognizing inline friend
 // operators.
 
-#  if (_MSC_VER == 1310)
+#  if (_MSC_VER >= 1310)
 #    define OMNI_NO_INLINE_FRIENDS
 #  endif
 
