@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.24  2005/10/13 11:38:16  dgrisby
+  Dump CloseConnection messages.
+
   Revision 1.1.4.23  2005/04/10 22:17:18  dgrisby
   Fixes to connection management. Thanks Jon Biggar.
 
@@ -172,6 +175,30 @@ private:
 
   void removeIdle(StrandList& src,StrandList& dest, CORBA::Boolean skip_bidir);
 };
+
+////////////////////////////////////////////////////////////////////////
+static inline void
+sendCloseConnection(giopStrand* s)
+{
+  // Send close connection message.
+  char hdr[12];
+  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
+  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+  hdr[7] = (char)GIOP::CloseConnection;
+  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    log << "sendCloseConnection: to " << s->connection->peeraddress()
+	<< " 12 bytes\n";
+  }
+  if (omniORB::trace(30))
+    giopStream::dumpbuf((unsigned char*)hdr, 12);
+
+  s->connection->Send(hdr,12);
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 giopStrand::giopStrand(const giopAddress* addr) :
@@ -709,13 +736,7 @@ Scavenger::execute()
 	if ( s->version.minor >= 2 ) {
 	  // GIOP 1.2 or above requires the client send a closeconnection
 	  // message.
-	  char hdr[12];
-	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
-	  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
-	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
-	  hdr[7] = (char)GIOP::CloseConnection;
-	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
-	  s->connection->Send(hdr,12);
+	  sendCloseConnection(s);
 	}
 	s->safeDelete(1);
       }
@@ -737,16 +758,7 @@ Scavenger::execute()
 	  log << "Scavenger close connection from " 
 	      << s->connection->peeraddress() << "\n";
 	}	
-	{
-	  // Send close connection message.
-	  char hdr[12];
-	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
-	  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
-	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
-	  hdr[7] = (char)GIOP::CloseConnection;
-	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
-	  s->connection->Send(hdr,12);
-	}
+	sendCloseConnection(s);
 	s->connection->Shutdown();
       }
     }
@@ -967,13 +979,7 @@ public:
 	if ( s->version.minor >= 2 ) {
 	  // GIOP 1.2 or above requires the client send a closeconnection
 	  // message.
-	  char hdr[12];
-	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
-	  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
-	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
-	  hdr[7] = (char)GIOP::CloseConnection;
-	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
-	  s->connection->Send(hdr,12);
+	  sendCloseConnection(s);
 	}
 	s->safeDelete(1);
       }
@@ -994,13 +1000,7 @@ public:
 	if ( s->version.minor >= 2 ) {
 	  // GIOP 1.2 or above requires the client send a closeconnection
 	  // message.
-	  char hdr[12];
-	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
-	  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
-	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
-	  hdr[7] = (char)GIOP::CloseConnection;
-	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
-	  s->connection->Send(hdr,12);
+	  sendCloseConnection(s);
 	}
 	s->safeDelete(1);
       }
@@ -1019,16 +1019,7 @@ public:
 	  log << "Shutdown close connection from " 
 	      << s->connection->peeraddress() << "\n";
 	}	
-	{
-	  // Send close connection message.
-	  char hdr[12];
-	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
-	  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
-	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
-	  hdr[7] = (char)GIOP::CloseConnection;
-	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
-	  s->connection->Send(hdr,12);
-	}
+	sendCloseConnection(s);
 	s->connection->Shutdown();
       }
     }

@@ -1,3 +1,18 @@
+Thu Oct 13 12:34:39 BST 2005 dgrisby
+====================================
+
+- VC++ 8 doesn't like inline friend functions.
+
+include/omniORB4/CORBA_sysdep.h
+
+- Dump CloseConnection messages.
+
+include/omniORB4/internal/giopStream.h
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Tue Oct 11 14:26:22 BST 2005 dgrisby
 ====================================
 

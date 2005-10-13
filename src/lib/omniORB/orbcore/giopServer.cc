@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.39  2005/10/13 11:38:16  dgrisby
+  Dump CloseConnection messages.
+
   Revision 1.22.2.38  2005/05/03 10:10:48  dgrisby
   Avoid deadlock caused by trying to deactivation SSL rendezvouser more
   than once.
@@ -148,6 +151,7 @@
 #include <giopRendezvouser.h>
 #include <giopMonitor.h>
 #include <giopStrand.h>
+#include <giopStream.h>
 #include <giopStreamImpl.h>
 #include <initialiser.h>
 #include <omniORB4/omniInterceptors.h>
@@ -531,6 +535,16 @@ giopServer::deactivate()
 	    hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
 	    hdr[7] = (char)GIOP::CloseConnection;
 	    hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+
+	    if (omniORB::trace(25)) {
+	      omniORB::logger log;
+	      log << "sendCloseConnection: to "
+		  << (*head)->connection->peeraddress()
+		  << " 12 bytes\n";
+	    }
+	    if (omniORB::trace(30))
+	      giopStream::dumpbuf((unsigned char*)hdr, 12);
+
 	    (*head)->connection->Send(hdr,12);
 	  }
 	  (*head)->connection->Shutdown();
