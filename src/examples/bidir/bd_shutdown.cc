@@ -38,7 +38,7 @@ int main(int argc, char** argv)
          << "object." << endl;
   }
   catch(CORBA::SystemException& ex) {
-    cerr << "Caught a CORBA::SystemException." << ex.minor() << ", " << ex.NP_minorString() << endl;
+    cerr << "Caught a CORBA::SystemException." << endl;
   }
   catch(CORBA::Exception&) {
     cerr << "Caught CORBA::Exception." << endl;
