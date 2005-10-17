@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.30  2005/10/17 15:49:10  dgrisby
+  Missing newline at end of log message.
+
   Revision 1.1.4.29  2005/04/10 22:17:19  dgrisby
   Fixes to connection management. Thanks Jon Biggar.
 
@@ -962,7 +965,7 @@ giopImpl12::unmarshalWildCardRequestHeader(giopStream* g) {
       if (omniORB::trace(30)) {
 	omniORB::logger l;
 	l << "Server has closed a bi-directional connection on strand "
-	  << (void*)g->pd_strand << ". Will scavenge it.";
+	  << (void*)g->pd_strand << ". Will scavenge it.\n";
       }
       g->pd_strand->startIdleCounter();
     }
