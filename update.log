@@ -1,3 +1,27 @@
+Fri Nov  4 14:21:28 GMT 2005 dgrisby
+====================================
+
+- Update Windows build tools to look in HKEY_LOCAL_MACHINE for cygwin keys.
+
+bin/x86_win32/clwrapper.exe
+bin/x86_win32/libwrapper.exe
+bin/x86_win32/linkwrapper.exe
+bin/x86_win32/oidlwrapper.exe
+src/tool/win32/clwrapper.c
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/oidlwrapper.c
+
+- Update ssl readme.
+
+src/lib/omniORB/orbcore/ssl/README.txt
+
+- Open connections would prevent shutdown on Windows.
+
+src/lib/omniORB/orbcore/giopRendezvouser.cc
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Mon Oct 17 16:46:43 BST 2005 dgrisby
 ====================================
 
