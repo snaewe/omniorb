@@ -234,7 +234,7 @@ GetCygwinMounts()
     char        c;
     char*       drvprefix;
 
-    if (RegOpenKeyEx (HKEY_CURRENT_USER, key, 0, KEY_READ, &hkey)
+    if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, key, 0, KEY_READ, &hkey)
 	!= ERROR_SUCCESS)
 	return 0;
 
