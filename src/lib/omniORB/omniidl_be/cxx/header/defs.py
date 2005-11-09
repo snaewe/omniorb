@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.10  2005/11/09 12:22:17  dgrisby
+# Local interfaces support.
+#
 # Revision 1.36.2.9  2005/08/16 13:51:21  dgrisby
 # Problems with valuetype / abstract interface C++ mapping.
 #
@@ -428,21 +431,21 @@ def visitInterface(node):
     Ibase = iface.instance("I")(I,Other_IDL)
     Ibase.hh(stream)
 
-    _objref_I = iface.instance("_objref_I")(I)
-    _objref_I.hh(stream)
+    if not node.local():
+        _objref_I = iface.instance("_objref_I")(I)
+        _objref_I.hh(stream)
 
+        _pof_I = iface.instance("_pof_I")(I)
+        _pof_I.hh(stream)
 
-    _pof_I = iface.instance("_pof_I")(I)
-    _pof_I.hh(stream)
+        # Skeleton class
+        _impl_I = iface.instance("_impl_I")(I)
+        _impl_I.hh(stream)
 
-    # Skeleton class
-    _impl_I = iface.instance("_impl_I")(I)
-    _impl_I.hh(stream)
-
-    # Generate BOA compatible skeletons?
-    if config.state['BOA Skeletons']:
-        _sk_I = iface.instance("_sk_I")(I)
-        _sk_I.hh(stream)
+        # Generate BOA compatible skeletons?
+        if config.state['BOA Skeletons']:
+            _sk_I = iface.instance("_sk_I")(I)
+            _sk_I.hh(stream)
 
     # pop self.__insideInterface
     # pop self.__insideClass
@@ -480,6 +483,11 @@ def visitForward(node):
     # output the definition
     if node.abstract():
         stream.out(template.abstract_interface_Helper,
+                   guard = guard,
+                   class_sk_name = class_sk,
+                   name = name.unambiguous(environment))
+    elif node.local():
+        stream.out(template.local_interface_Helper,
                    guard = guard,
                    class_sk_name = class_sk,
                    name = name.unambiguous(environment))
@@ -627,7 +635,7 @@ def visitTypedef(node):
                            name = derivedName)
                     
             # Non-array of object reference
-            elif d_type.objref() or d_type.abstract_interface():
+            elif d_type.interface():
                 derefTypeID = string.replace(derefTypeID,"_ptr","")
                 # Note that the base name is fully flattened
                 is_CORBA_Object = d_type.type().scopedName() ==\
@@ -715,7 +723,7 @@ def visitTypedef(node):
                         elif d_seqType.wstring():
                             element = "_CORBA_WString_element"
                             element_ptr = "CORBA::WChar*"
-                        elif d_seqType.objref() or d_seqType.abstract_interface():
+                        elif d_seqType.interface():
                             element = seqType.base(environment)
                             element_ptr = element
                         elif d_seqType.value() or d_seqType.valuebox():
@@ -783,7 +791,7 @@ def visitTypedef(node):
                     elif d_seqType.wstring():
                         # special case alert
                         element_reference = element
-                    elif d_seqType.objref() or d_seqType.abstract_interface():
+                    elif d_seqType.interface():
                         element_reference = d_seqType.objRefTemplate("Element",
                                                                      environment)
                     elif d_seqType.value() or d_seqType.valuebox():
@@ -1509,7 +1517,7 @@ def visitUnion(node):
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
 
-                elif d_caseType.objref() or d_caseType.abstract_interface():
+                elif d_caseType.interface():
                     scopedName = d_caseType.type().decl().scopedName()
 
                     name = id.Name(scopedName)
@@ -1609,19 +1617,26 @@ def visitUnion(node):
                 used_inside = 1
             else:
                 if d_caseType.type().kind() in \
-                   [ idltype.tk_struct, idltype.tk_union,
-                     idltype.tk_except, idltype.tk_string,
+                   [ idltype.tk_struct,
+                     idltype.tk_union,
+                     idltype.tk_except,
+                     idltype.tk_string,
                      idltype.tk_wstring,
-                     idltype.tk_sequence, idltype.tk_any,
-                     idltype.tk_TypeCode, idltype.tk_objref,
-                     idltype.tk_value, idltype.tk_value_box,
-                     idltype.tk_abstract_interface ]:
+                     idltype.tk_sequence,
+                     idltype.tk_any,
+                     idltype.tk_TypeCode,
+                     idltype.tk_objref,
+                     idltype.tk_value,
+                     idltype.tk_value_box,
+                     idltype.tk_abstract_interface,
+                     idltype.tk_local_interface ]:
                                                  
                     this_stream = outside
                     used_outside = 1
                 else:
                     this_stream = inside
                     used_inside = 1
+
             this_stream.out(template.union_member,
                             type = type_str,
                             name = member_name,

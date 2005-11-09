@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.5  2005/11/09 12:22:17  dgrisby
+# Local interfaces support.
+#
 # Revision 1.8.2.4  2004/10/13 17:58:24  dgrisby
 # Abstract interfaces support; values support interfaces; value bug fixes.
 #
@@ -136,7 +139,10 @@ def visitInterface(node):
     name = id.Name(node.scopedName())
     cxx_name = name.fullyQualify()
 
-    if node.abstract():
+    if node.local():
+        pass
+
+    elif node.abstract():
         stream.out(template.abstract_interface_marshal_forward,
                    name = cxx_name)
     else:

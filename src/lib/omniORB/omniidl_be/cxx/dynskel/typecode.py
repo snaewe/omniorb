@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.19.2.9  2005/11/09 12:22:17  dgrisby
+# Local interfaces support.
+#
 # Revision 1.19.2.8  2005/08/16 13:51:21  dgrisby
 # Problems with valuetype / abstract interface C++ mapping.
 #
@@ -417,6 +420,14 @@ def mkTypeCode(type, declarator = None, node = None):
         return (prefix + 'abstract_interface_tc("' + repoID + '", "' +
                 iname + '"' + tctrack + ')')
 
+    elif type.kind() == idltype.tk_local_interface:
+        scopedName = id.Name(type.decl().scopedName())
+        
+        repoID = type.decl().repoId()
+        iname = scopedName.simple()
+        return (prefix + 'local_interface_tc("' + repoID + '", "' +
+                iname + '"' + tctrack + ')')
+
     guard_name = id.Name(type.scopedName()).guard()
 
     return config.state['Private Prefix'] + "_tc_" + guard_name
@@ -788,6 +799,8 @@ def visitInterface(node):
 
     if node.abstract():
         func = "PR_abstract_interface_tc"
+    elif node.local():
+        func = "PR_local_interface_tc"
     else:
         func = "PR_interface_tc"
 

@@ -800,8 +800,8 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 			       CORBA::Request_out request,
 			       CORBA::Flags req_flags)
 {
-  if( _NP_is_pseudo() )  OMNIORB_THROW(BAD_PARAM,
-				       BAD_PARAM_IsPseudoObject,
+  if( _NP_is_pseudo() )  OMNIORB_THROW(NO_IMPLEMENT,
+				       NO_IMPLEMENT_DIIOnLocalObject,
 				       CORBA::COMPLETED_NO);
 
   // NB. req_flags is ignored - ref. CORBA 2.2 section 20.28
@@ -836,8 +836,8 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 			       CORBA::Request_out request,
 			       CORBA::Flags req_flags)
 {
-  if( _NP_is_pseudo() )  OMNIORB_THROW(BAD_PARAM,
-				       BAD_PARAM_IsPseudoObject,
+  if( _NP_is_pseudo() )  OMNIORB_THROW(NO_IMPLEMENT,
+				       NO_IMPLEMENT_DIIOnLocalObject,
 				       CORBA::COMPLETED_NO);
 
   // NB. req_flags is ignored - ref. CORBA 2.2 section 20.28
@@ -874,8 +874,8 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 CORBA::Request_ptr
 CORBA::Object::_request(const char* operation) 
 {
-  if( _NP_is_pseudo() )  OMNIORB_THROW(BAD_PARAM,
-				       BAD_PARAM_IsPseudoObject,
+  if( _NP_is_pseudo() )  OMNIORB_THROW(NO_IMPLEMENT,
+				       NO_IMPLEMENT_DIIOnLocalObject,
 				       CORBA::COMPLETED_NO);
 
   if( !operation )  OMNIORB_THROW(BAD_PARAM,

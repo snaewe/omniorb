@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2005/11/09 12:22:18  dgrisby
+  Local interfaces support.
+
   Revision 1.4.2.1  2003/03/23 21:04:12  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -179,7 +182,7 @@ public:
   //  This function is thread-safe.
 
   _CORBA_Boolean _remote_is_a(const char* repoId);
-  // Contacts to object implementation to determine whether it is an
+  // Contacts the object implementation to determine whether it is an
   // instance of the type identified by <repoId>.  It is possible that
   // the implementation is a local servant of course.
   //  May throw system exceptions.
@@ -425,8 +428,8 @@ private:
   struct {
     unsigned forward_location            : 1;
     // True if we have had a LOCATION_FORWARD.  In this case the
-    // implementation (pd_impl) is not the same as the one
-    // referred to in the iop profiles.
+    // identity (pd_id) is not the same as the one referred to in the
+    // iop profiles.
 
     unsigned type_verified               : 1;
     // True if we believe that the object implementation supports

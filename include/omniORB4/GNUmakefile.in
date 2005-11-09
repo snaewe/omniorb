@@ -11,10 +11,11 @@ HEADERS = acconfig.h BiDirPolicy.h CORBA.h CORBA_AbstractBase.h		\
           CORBA_BOA.h CORBA_Context.h CORBA_Current.h			\
           CORBA_DomainManager.h						\
           CORBA_Environment.h CORBA_Exception.h CORBA_ExceptionList.h	\
-          CORBA_Fixed.h CORBA_NamedValue.h CORBA_ORB.h CORBA_Object.h	\
-          CORBA_Object_vartypes.h CORBA_Policy.h CORBA_Principal.h	\
-          CORBA_Request.h CORBA_ServerRequest.h CORBA_String.h		\
-          CORBA_TypeCode.h CORBA_TypeCode_member.h			\
+          CORBA_Fixed.h CORBA_LocalObject.h				\
+          CORBA_LocalObject_vartypes.h CORBA_NamedValue.h CORBA_ORB.h	\
+          CORBA_Object.h CORBA_Object_vartypes.h CORBA_Policy.h		\
+          CORBA_Principal.h CORBA_Request.h CORBA_ServerRequest.h	\
+          CORBA_String.h CORBA_TypeCode.h CORBA_TypeCode_member.h	\
           CORBA_UnknownUserException.h CORBA_ValueBase.h		\
           CORBA_ValueBase_vartypes.h CORBA_basetypes.h			\
           CORBA_primitive_types.h CORBA_static_fns.h CORBA_sysdep.h	\

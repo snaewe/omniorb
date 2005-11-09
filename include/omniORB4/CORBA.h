@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.9  2005/11/09 12:22:18  dgrisby
+ Local interfaces support.
+
  Revision 1.5.2.8  2005/01/17 14:33:22  dgrisby
  Standard StringValue and WStringValue typedefs.
 
@@ -382,6 +385,8 @@ _CORBA_MODULE_BEG
 # include "CORBA_TypeCode_member.h"
 # include "CORBA_Object.h"
 # include "CORBA_Object_vartypes.h"
+# include "CORBA_LocalObject.h"
+# include "CORBA_LocalObject_vartypes.h"
 # include "CORBA_Any.h"
 # include "CORBA_Any_vartypes.h"
 

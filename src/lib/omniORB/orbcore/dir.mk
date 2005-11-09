@@ -79,6 +79,7 @@ ORB_SRCS =  \
 	    libcWrapper.cc \
             omniIdentity.cc \
 	    localIdentity.cc \
+	    localObject.cc \
 	    logIOstream.cc \
             minorCode.cc \
 	    objectAdapter.cc \

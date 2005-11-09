@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.12  2005/11/09 12:22:17  dgrisby
+# Local interfaces support.
+#
 # Revision 1.8.2.11  2005/08/16 13:51:21  dgrisby
 # Problems with valuetype / abstract interface C++ mapping.
 #
@@ -367,6 +370,7 @@ public:
 ##
 ## Interfaces
 ##
+
 interface_Helper = """\
 #ifndef __@guard@__
 #define __@guard@__
@@ -499,15 +503,103 @@ public:
     }
   }
 
+  static _core_attr const char* _PD_repoId;
+
   // Other IDL defined within this scope.
   @Other_IDL@
 
   // Operations declared in this abstract interface
   @operations@  
-
-  static _core_attr const char* _PD_repoId;
 };
 """
+
+##
+## Local Interfaces
+##
+
+local_interface_Helper = """\
+#ifndef __@guard@__
+#define __@guard@__
+
+class @name@;
+typedef @name@* @name@_ptr;
+typedef @name@_ptr @name@Ref;
+
+class @name@_Helper {
+public:
+  typedef @name@_ptr _ptr_type;
+
+  static _ptr_type _nil();
+  static _CORBA_Boolean is_nil(_ptr_type);
+  static void release(_ptr_type);
+  static void duplicate(_ptr_type);
+  static void marshalObjRef(_ptr_type, cdrStream&);
+  static _ptr_type unmarshalObjRef(cdrStream&);
+};
+
+typedef _CORBA_ObjRef_Var<@name@, @name@_Helper> @name@_var;
+typedef _CORBA_ObjRef_OUT_arg<@name@,@name@_Helper > @name@_out;
+
+#endif
+"""
+
+local_interface_type = """\
+// local interface @name@
+class @name@ :
+  @inherits@
+{
+public:
+  // Declarations for this interface type.
+  typedef @name@_ptr _ptr_type;
+  typedef @name@_var _var_type;
+
+  static _ptr_type _duplicate(_ptr_type);
+  static _ptr_type _narrow(CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
+  @abstract_narrows@
+  static _ptr_type _nil();
+
+  static inline void _marshalObjRef(_ptr_type, cdrStream& s) {
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+  }
+  static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+#ifdef NEED_DUMMY_RETURN
+    return 0;
+#endif
+  }
+
+  static _core_attr const char* _PD_repoId;
+
+  // Other IDL defined within this scope.
+  @Other_IDL@
+
+  // Operations declared in this local interface
+  @operations@  
+
+private:
+  virtual void* _ptrToObjRef(const char*);
+
+protected:
+  @name@();
+  virtual ~@name@();
+};
+
+class _nil_@name@ : public virtual @name@
+{
+  public:
+    @nil_operations@
+
+    inline _nil_@name@() { _PR_setobj(0); }
+
+  protected:
+    virtual ~_nil_@name@();
+};
+"""
+
+
 
 ##
 ## Object reference

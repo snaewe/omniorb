@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.3  2005/11/09 12:22:17  dgrisby
+# Local interfaces support.
+#
 # Revision 1.1.6.2  2003/10/23 11:25:54  dgrisby
 # More valuetype support.
 #
@@ -199,7 +202,7 @@ class Method:
 }""", proto = proto, body = body)
         
 
-# dimsToStirng: takes a list of int dimensions (eg [1,2,3]) and a prefix string
+# dimsToString: takes a list of int dimensions (eg [1,2,3]) and a prefix string
 # returning a strings "[prefix1][prefix2]..."
 def dimsToString(dims, prefix = ""):
     new_dims = []

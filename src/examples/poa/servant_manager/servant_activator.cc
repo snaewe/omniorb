@@ -40,7 +40,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////
 
-class MyActivator_i : public POA_PortableServer::ServantActivator
+class MyActivator_i : public PortableServer::ServantActivator
 {
 public:
   virtual ~MyActivator_i()
@@ -90,12 +90,9 @@ int main(int argc, char** argv)
 
       // Activate a servant activator in the root poa.
       MyActivator_i* sa = new MyActivator_i;
-      PortableServer::ObjectId_var id = root_poa->activate_object(sa);
-      PortableServer::ServantActivator_var saref = sa->_this();
-      sa->_remove_ref();
 
       // Register the servant activator with our new poa.
-      poa->set_servant_manager(saref);
+      poa->set_servant_manager(sa);
 
       // Print out a reference to an object.
       CORBA::Object_var ref = poa->create_reference("IDL:Echo:1.0");

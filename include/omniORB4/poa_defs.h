@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2005/11/09 12:22:18  dgrisby
+  Local interfaces support.
+
   Revision 1.4.2.1  2003/03/23 21:04:04  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -132,8 +135,8 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ForwardRequest;
 #ifndef __PortableServer_mAdapterActivator__
 #define __PortableServer_mAdapterActivator__
 
-class _objref_AdapterActivator;
-typedef _objref_AdapterActivator* AdapterActivator_ptr;
+class AdapterActivator;
+typedef AdapterActivator* AdapterActivator_ptr;
 typedef AdapterActivator_ptr AdapterActivatorRef;
 
 class AdapterActivator_Helper {
@@ -148,13 +151,15 @@ public:
   static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
-typedef _CORBA_ObjRef_Var<_objref_AdapterActivator, AdapterActivator_Helper> AdapterActivator_var;
-typedef _CORBA_ObjRef_OUT_arg<_objref_AdapterActivator,AdapterActivator_Helper > AdapterActivator_out;
+typedef _CORBA_ObjRef_Var<AdapterActivator, AdapterActivator_Helper> AdapterActivator_var;
+typedef _CORBA_ObjRef_OUT_arg<AdapterActivator,AdapterActivator_Helper > AdapterActivator_out;
 
 #endif
 
 
-class AdapterActivator {
+class AdapterActivator :
+  public virtual CORBA::LocalObject
+{
 public:
   // Declarations for this interface type.
   typedef AdapterActivator_ptr _ptr_type;
@@ -162,27 +167,43 @@ public:
 
   static _ptr_type _duplicate(_ptr_type);
   static _ptr_type _narrow(CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline void _marshalObjRef(_ptr_type, cdrStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream& s) {
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+  }
 
   static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
-    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
-    if (o)
-      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
-    else
-      return _nil();
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+#ifdef NEED_DUMMY_RETURN
+    return 0;
+#endif
   }
 
   static _core_attr const char* _PD_repoId;
 
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+
   // Other IDL defined within this scope.
 
+  // Operations declared in this local interface
+  virtual CORBA::Boolean unknown_adapter(POA_ptr parent, const char* name) = 0;
+
+private:
+  virtual void* _ptrToObjRef(const char*);
+
+protected:
+  AdapterActivator();
+  virtual ~AdapterActivator();
 };
 
 
 class _objref_AdapterActivator :
-  public virtual CORBA::Object, public virtual omniObjRef
+  public virtual AdapterActivator, public virtual omniObjRef
 {
 public:
   CORBA::Boolean unknown_adapter(POA_ptr parent, const char* name);
@@ -238,8 +259,8 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_AdapterActivator;
 #ifndef __PortableServer_mServantManager__
 #define __PortableServer_mServantManager__
 
-class _objref_ServantManager;
-typedef _objref_ServantManager* ServantManager_ptr;
+class ServantManager;
+typedef ServantManager* ServantManager_ptr;
 typedef ServantManager_ptr ServantManagerRef;
 
 class ServantManager_Helper {
@@ -254,13 +275,15 @@ public:
   static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
-typedef _CORBA_ObjRef_Var<_objref_ServantManager, ServantManager_Helper> ServantManager_var;
-typedef _CORBA_ObjRef_OUT_arg<_objref_ServantManager,ServantManager_Helper > ServantManager_out;
+typedef _CORBA_ObjRef_Var<ServantManager, ServantManager_Helper> ServantManager_var;
+typedef _CORBA_ObjRef_OUT_arg<ServantManager,ServantManager_Helper > ServantManager_out;
 
 #endif
 
 
-class ServantManager {
+class ServantManager :
+  public virtual CORBA::LocalObject
+{
 public:
   // Declarations for this interface type.
   typedef ServantManager_ptr _ptr_type;
@@ -268,27 +291,42 @@ public:
 
   static _ptr_type _duplicate(_ptr_type);
   static _ptr_type _narrow(CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline void _marshalObjRef(_ptr_type, cdrStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream& s) {
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+  }
 
   static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
-    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
-    if (o)
-      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
-    else
-      return _nil();
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+#ifdef NEED_DUMMY_RETURN
+    return 0;
+#endif
   }
 
   static _core_attr const char* _PD_repoId;
 
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+
   // Other IDL defined within this scope.
 
+  // Operations declared in this local interface
+
+private:
+  virtual void* _ptrToObjRef(const char*);
+
+protected:
+  ServantManager();
+  virtual ~ServantManager();
 };
 
 
 class _objref_ServantManager :
-  public virtual CORBA::Object, public virtual omniObjRef
+  public virtual ServantManager, public virtual omniObjRef
 {
 public:
 
@@ -342,8 +380,8 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ServantManager;
 #ifndef __PortableServer_mServantActivator__
 #define __PortableServer_mServantActivator__
 
-class _objref_ServantActivator;
-typedef _objref_ServantActivator* ServantActivator_ptr;
+class ServantActivator;
+typedef ServantActivator* ServantActivator_ptr;
 typedef ServantActivator_ptr ServantActivatorRef;
 
 class ServantActivator_Helper {
@@ -358,13 +396,15 @@ public:
   static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
-typedef _CORBA_ObjRef_Var<_objref_ServantActivator, ServantActivator_Helper> ServantActivator_var;
-typedef _CORBA_ObjRef_OUT_arg<_objref_ServantActivator,ServantActivator_Helper > ServantActivator_out;
+typedef _CORBA_ObjRef_Var<ServantActivator, ServantActivator_Helper> ServantActivator_var;
+typedef _CORBA_ObjRef_OUT_arg<ServantActivator,ServantActivator_Helper > ServantActivator_out;
 
 #endif
 
 
-class ServantActivator {
+class ServantActivator :
+  public virtual ServantManager
+{
 public:
   // Declarations for this interface type.
   typedef ServantActivator_ptr _ptr_type;
@@ -372,28 +412,42 @@ public:
 
   static _ptr_type _duplicate(_ptr_type);
   static _ptr_type _narrow(CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline void _marshalObjRef(_ptr_type, cdrStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream& s) {
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+  }
 
   static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
-    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
-    if (o)
-      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
-    else
-      return _nil();
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+#ifdef NEED_DUMMY_RETURN
+    return 0;
+#endif
   }
 
   static _core_attr const char* _PD_repoId;
 
   // Other IDL defined within this scope.
 
+  // Operations declared in this local interface
+  virtual Servant incarnate(const ObjectId& oid, POA_ptr adapter) = 0;
+  virtual void etherealize(const ObjectId& oid, POA_ptr adapter, Servant serv, CORBA::Boolean cleanup_in_progress, CORBA::Boolean remaining_activations) = 0;
+
+private:
+  virtual void* _ptrToObjRef(const char*);
+
+protected:
+  ServantActivator();
+  virtual ~ServantActivator();
 };
 
 class _impl_ServantActivator;
 
 class _objref_ServantActivator :
-  public virtual _objref_ServantManager
+  public virtual ServantActivator, public virtual _objref_ServantManager
 {
 public:
   Servant incarnate(const ObjectId& oid, POA_ptr adapter);
@@ -455,8 +509,8 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ServantActivator;
 #ifndef __PortableServer_mServantLocator__
 #define __PortableServer_mServantLocator__
 
-class _objref_ServantLocator;
-typedef _objref_ServantLocator* ServantLocator_ptr;
+class ServantLocator;
+typedef ServantLocator* ServantLocator_ptr;
 typedef ServantLocator_ptr ServantLocatorRef;
 
 class ServantLocator_Helper {
@@ -471,13 +525,15 @@ public:
   static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
-typedef _CORBA_ObjRef_Var<_objref_ServantLocator, ServantLocator_Helper> ServantLocator_var;
-typedef _CORBA_ObjRef_OUT_arg<_objref_ServantLocator,ServantLocator_Helper > ServantLocator_out;
+typedef _CORBA_ObjRef_Var<ServantLocator, ServantLocator_Helper> ServantLocator_var;
+typedef _CORBA_ObjRef_OUT_arg<ServantLocator,ServantLocator_Helper > ServantLocator_out;
 
 #endif
 
 
-class ServantLocator {
+class ServantLocator :
+  public virtual ServantManager
+{
 public:
   // Declarations for this interface type.
   typedef ServantLocator_ptr _ptr_type;
@@ -485,16 +541,20 @@ public:
 
   static _ptr_type _duplicate(_ptr_type);
   static _ptr_type _narrow(CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline void _marshalObjRef(_ptr_type, cdrStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream& s) {
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+  }
 
   static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
-    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
-    if (o)
-      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
-    else
-      return _nil();
+    OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
+                  (CORBA::CompletionStatus)s.completion());
+#ifdef NEED_DUMMY_RETURN
+    return 0;
+#endif
   }
 
   static _core_attr const char* _PD_repoId;
@@ -503,12 +563,23 @@ public:
 
   static _dyn_attr const CORBA::TypeCode_ptr _tc_Cookie;
   typedef void* Cookie;
+
+  // Operations declared in this local interface
+  virtual Servant preinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, Cookie& the_cookie) = 0;
+  virtual void postinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, Cookie the_cookie, Servant the_servant) = 0;
+
+private:
+  virtual void* _ptrToObjRef(const char*);
+
+protected:
+  ServantLocator();
+  virtual ~ServantLocator();
 };
 
 class _impl_ServantLocator;
 
 class _objref_ServantLocator :
-  public virtual _objref_ServantManager
+  public virtual ServantLocator, public virtual _objref_ServantManager
 {
 public:
   Servant preinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, ServantLocator::Cookie& the_cookie);

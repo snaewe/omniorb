@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.8  2005/11/09 12:22:18  dgrisby
+  Local interfaces support.
+
   Revision 1.4.2.7  2005/08/02 09:41:13  dgrisby
   Bug in Servant_var if assigning to itself.
 
@@ -426,8 +429,8 @@ _CORBA_MODULE_BEG
   ///////////////////////////////// POA ////////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  class _objref_AdapterActivator;
-  class _objref_ServantManager;
+  class AdapterActivator;
+  class ServantManager;
 
 
   class POA : public CORBA::Object {
@@ -520,13 +523,13 @@ _CORBA_MODULE_BEG
     virtual POA_ptr the_parent() = 0;
     virtual POAList* the_children() = 0;
     virtual POAManager_ptr the_POAManager() = 0;
-    virtual _objref_AdapterActivator* the_activator() = 0;
-    virtual void the_activator(_objref_AdapterActivator* aa) = 0;
+    virtual AdapterActivator* the_activator() = 0;
+    virtual void the_activator(AdapterActivator* aa) = 0;
 
     // Servant Manager registration
 
-    virtual _objref_ServantManager* get_servant_manager() = 0;
-    virtual void set_servant_manager(_objref_ServantManager* imgr) = 0;
+    virtual ServantManager* get_servant_manager() = 0;
+    virtual void set_servant_manager(ServantManager* imgr) = 0;
 
     // Operations for the USE_DEFAULT_SERVANT policy
 
@@ -544,7 +547,7 @@ _CORBA_MODULE_BEG
 
     virtual CORBA::Object_ptr create_reference(const char* intf) = 0;
     virtual CORBA::Object_ptr create_reference_with_id(const ObjectId& oid,
-					       const char* intf) = 0;
+						       const char* intf) = 0;
 
     // Identity mapping operations
 

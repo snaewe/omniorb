@@ -40,7 +40,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////
 
-class MyLocator_i : public POA_PortableServer::ServantLocator
+class MyLocator_i : public PortableServer::ServantLocator
 {
 public:
   virtual ~MyLocator_i()
@@ -92,12 +92,9 @@ int main(int argc, char** argv)
 
       // Activate a servant locator in the root poa.
       MyLocator_i* sl = new MyLocator_i;
-      PortableServer::ObjectId_var id = root_poa->activate_object(sl);
-      PortableServer::ServantLocator_var slref = sl->_this();
-      sl->_remove_ref();
 
       // Register the servant activator with our new poa.
-      poa->set_servant_manager(slref);
+      poa->set_servant_manager(sl);
 
       // Print out a reference to an object.
       CORBA::Object_var ref = poa->create_reference("IDL:Echo:1.0");

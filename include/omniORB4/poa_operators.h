@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2005/11/09 12:22:18  dgrisby
+  Local interfaces support.
+
   Revision 1.4.2.2  2005/01/25 11:17:48  dgrisby
   Merge from omni4_0_develop.
 
@@ -58,26 +61,6 @@
 
 #ifndef __OMNI_POA_OPERATORS_H__
 #define __OMNI_POA_OPERATORS_H__
-
-inline void
-PortableServer::AdapterActivator::_marshalObjRef(PortableServer::AdapterActivator_ptr obj, cdrStream& s) {
-  omniObjRef::_marshal(obj->_PR_getobj(),s);
-}
-
-inline void
-PortableServer::ServantManager::_marshalObjRef(PortableServer::ServantManager_ptr obj, cdrStream& s) {
-  omniObjRef::_marshal(obj->_PR_getobj(),s);
-}
-
-inline void
-PortableServer::ServantActivator::_marshalObjRef(PortableServer::ServantActivator_ptr obj, cdrStream& s) {
-  omniObjRef::_marshal(obj->_PR_getobj(),s);
-}
-
-inline void
-PortableServer::ServantLocator::_marshalObjRef(PortableServer::ServantLocator_ptr obj, cdrStream& s) {
-  omniObjRef::_marshal(obj->_PR_getobj(),s);
-}
 
 OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(ThreadPolicy))
 OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(LifespanPolicy))

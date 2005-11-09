@@ -1,3 +1,53 @@
+Wed Nov  9 12:11:05 GMT 2005 dgrisby
+====================================
+
+- Remove obsolete omniLifeCycle.idl.
+
+idl/omniLifeCycle.idl  -- deleted
+
+- Remove obsolete tcDesc helper classes.
+
+include/omniORB4/CORBA_Object_vartypes.h
+include/omniORB4/CORBA_ValueBase_vartypes.h
+include/omniORB4/templatedecls.h
+
+- Local interfaces support.
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_LocalObject.h               -- new
+include/omniORB4/CORBA_LocalObject_vartypes.h      -- new
+include/omniORB4/GNUmakefile.in
+include/omniORB4/omniObjRef.h
+include/omniORB4/poa.h
+include/omniORB4/poa_defs.h
+include/omniORB4/poa_operators.h
+src/examples/poa/servant_manager/servant_activator.cc
+src/examples/poa/servant_manager/servant_locator.cc
+src/lib/omniORB/dynamic/ir.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/cxx.py
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/value.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/marshal.py
+src/lib/omniORB/omniidl_be/cxx/header/poa.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/poa.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/localObject.cc             -- new
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poastubs.cc
+src/lib/omniORB/orbcore/uri.cc
+
+
 Thu Sep 29 12:31:55 BST 2005 dgrisby
 ====================================
 
@@ -37,6 +87,13 @@ Thu Sep  8 15:47:46 BST 2005 dgrisby
 
 - Merge -ORBconfigFile argument.
 
+include/omniORB4/internal/orbOptions.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
+Wed Sep  7 17:13:26 BST 2005 dgrisby
+=============================
 include/omniORB4/internal/orbOptions.h
 src/lib/omniORB/orbcore/corbaOrb.cc
 src/lib/omniORB/orbcore/orbOptions.cc

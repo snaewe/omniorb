@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.8  2005/11/09 12:22:17  dgrisby
+# Local interfaces support.
+#
 # Revision 1.20.2.7  2005/08/16 13:51:21  dgrisby
 # Problems with valuetype / abstract interface C++ mapping.
 #
@@ -276,7 +279,7 @@ else """,
     bounded = ""
     kind = d_type.type().kind()
     
-    if d_type.objref() or d_type.abstract_interface():
+    if d_type.interface():
         type_name = string.replace(type_name,"_ptr","")
         if isinstance(d_type.type().decl(),idlast.Forward):
             # hack to denote an interface forward declaration
@@ -321,6 +324,8 @@ else """,
       idltype.tk_value_box:
       "@type@::_NP_marshal(@element_name@,@to_where@);",
       idltype.tk_abstract_interface:
+      "@type@::_marshalObjRef(@element_name@,@to_where@);",
+      idltype.tk_local_interface:
       "@type@::_marshalObjRef(@element_name@,@to_where@);",
       }
     if special_marshal_functions.has_key(kind):
@@ -412,7 +417,7 @@ def unmarshall(to, environment, type, decl, name, from_where):
     bounded = ""
     kind = d_type.type().kind()
 
-    if d_type.objref() or d_type.abstract_interface():
+    if d_type.interface():
         type_name = string.replace(type_name,"_ptr","")
         if isinstance(d_type.type().decl(),idlast.Forward):
             # hack to denote an interface forward declaration
@@ -452,6 +457,8 @@ def unmarshall(to, environment, type, decl, name, from_where):
       idltype.tk_value_box:
       "@element_name@ = @type@::_NP_unmarshal(@where@);",
       idltype.tk_abstract_interface:
+      "@element_name@ = @type@::_unmarshalObjRef(@where@);",
+      idltype.tk_local_interface:
       "@element_name@ = @type@::_unmarshalObjRef(@where@);",
       }
 

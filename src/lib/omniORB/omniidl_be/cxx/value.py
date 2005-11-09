@@ -2320,7 +2320,7 @@ class ValueType (mapping.Decl):
             decl._cxx_holder = omemtype + " _pd_" + member + ";"
             decl._cxx_init_arg = "const CORBA::WChar* _" + member
 
-        elif d_mType.objref() or d_mType.abstract_interface():
+        elif d_mType.interface():
             scopedName = d_mType.type().decl().scopedName()
 
             name     = id.Name(scopedName)
@@ -2487,7 +2487,7 @@ class ValueType (mapping.Decl):
 
         if astdecl.supports():
             for intf in astdecl.supports():
-                if intf.abstract():
+                if intf.abstract() or intf.local():
                     iname = id.Name(intf.scopedName())
                     uname = iname.unambiguous(environment)
                     inheritl.append("public virtual " + uname)
@@ -2582,7 +2582,8 @@ class ValueType (mapping.Decl):
     def poa_module_decls(self, stream, visitor):
         astdecl = self._astdecl
 
-        if astdecl.supports() and not astdecl.supports()[0].abstract():
+        if astdecl.supports() and not (astdecl.supports()[0].abstract() or
+                                       astdecl.supports()[0].local()):
             name       = astdecl.identifier()
             poa_name   = visitor.POA_prefix() + name
             value_name = self._fullname.fullyQualify()
@@ -2774,7 +2775,8 @@ class ValueType (mapping.Decl):
                            base_init=base_init,
                            member_initialisers=member_initialisers)
 
-        if astdecl.supports() and not astdecl.supports()[0].abstract():
+        if astdecl.supports() and not (astdecl.supports()[0].abstract() or
+                                       astdecl.supports()[0].local()):
             # POA functions
             vname = cxx_name
             if vname == value_name:
@@ -2960,7 +2962,7 @@ class ValueBox (mapping.Decl):
             boxed_member = "CORBA::WChar*"
             member_funcs.out(valuebox_member_funcs_wstring, name=cxx_name)
 
-        elif d_boxedType.objref() or d_boxedType.abstract_interface():
+        elif d_boxedType.interface():
             scopedName   = d_boxedType.type().decl().scopedName()
             name         = id.Name(scopedName)
             boxedif      = name.unambiguous(environment)
@@ -3012,7 +3014,7 @@ class ValueBox (mapping.Decl):
                 elif d_seqType.wstring():
                     element = "_CORBA_WString_element"
                     element_ptr = "CORBA::WChar*"
-                elif d_seqType.objref() or d_seqType.abstract_interface():
+                elif d_seqType.interface():
                     element = seqType.base(environment)
                     element_ptr = element
                 elif seqType.sequence():
@@ -3033,7 +3035,7 @@ class ValueBox (mapping.Decl):
                 elif d_seqType.wstring():
                     # special case alert
                     element_reference = element
-                elif d_seqType.objref() or d_seqType.abstract_interface():
+                elif d_seqType.interface():
                     element_reference = d_seqType.objRefTemplate("Element",
                                                                  environment)
                 # only if an anonymous sequence
@@ -3140,7 +3142,7 @@ class ValueBox (mapping.Decl):
                 elif d_mType.wstring():
                     stream.out(valuebox_structmember_wstring, name=member)
 
-                elif d_mType.objref() or d_mType.abstract_interface():
+                elif d_mType.interface():
                     scopedName = d_mType.type().decl().scopedName()
 
                     env      = self._environment
@@ -3223,7 +3225,7 @@ class ValueBox (mapping.Decl):
             elif d_mType.wstring():
                 stream.out(valuebox_unionmember_wstring, name=member)
 
-            elif d_mType.objref() or d_mType.abstract_interface():
+            elif d_mType.interface():
                 scopedName = d_mType.type().decl().scopedName()
 
                 env      = self._environment

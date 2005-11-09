@@ -289,6 +289,10 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	    break;
 	  }
 
+	case CORBA::tk_local_interface:
+	  OMNIORB_THROW(MARSHAL, MARSHAL_LocalObject,
+			(CORBA::CompletionStatus)ibuf.completion());
+
 	default:
 	  OMNIORB_ASSERT(0);
 	}

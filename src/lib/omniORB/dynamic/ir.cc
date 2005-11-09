@@ -43,9 +43,14 @@ CORBA::
 Object::_get_interface()
 {
   if( _NP_is_nil() )  _CORBA_invoked_nil_objref();
+
   if( !_PR_is_valid(this) )  OMNIORB_THROW(BAD_PARAM,
 					   BAD_PARAM_InvalidObjectRef,
 					   CORBA::COMPLETED_NO);
+
+  if( _NP_is_pseudo() ) OMNIORB_THROW(NO_IMPLEMENT,
+				      NO_IMPLEMENT_DIIOnLocalObject,
+				      CORBA::COMPLETED_NO);
 
   // Try asking the object itself...
   omni_interface_CallDesc call_desc("_interface", sizeof("_interface"));

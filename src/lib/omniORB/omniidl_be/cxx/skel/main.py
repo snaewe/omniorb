@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.10  2005/11/09 12:22:17  dgrisby
+# Local interfaces support.
+#
 # Revision 1.32.2.9  2005/08/16 13:51:20  dgrisby
 # Problems with valuetype / abstract interface C++ mapping.
 #
@@ -313,14 +316,22 @@ def visitInterface(node):
 
     # the class itself
     node_name = id.Name(node.scopedName())
-    objref_name = node_name.prefix("_objref_")
+
+    if node.local():
+        objref_name = node_name.prefix("_nil_")
+    else:
+        objref_name = node_name.prefix("_objref_")
 
     if node.abstract():
         stream.out(template.abstract_interface_duplicate_narrow,
                    name = node_name.fullyQualify())
     else:
-        stream.out(template.interface_duplicate_narrow,
-                   name = node_name.fullyQualify())
+        if node.local():
+            stream.out(template.local_interface_duplicate_narrow,
+                       name = node_name.fullyQualify())
+        else:
+            stream.out(template.interface_duplicate_narrow,
+                       name = node_name.fullyQualify())
 
         for i in I.allInherits():
             if i.abstract():
@@ -336,6 +347,7 @@ def visitInterface(node):
     # Output flattened aliases to inherited classes, to workaround an
     # MSVC bug.
     for i in ast.allInherits(node):
+        # *** HERE: fix this for local interfaces
         inherits_name = id.Name(i.scopedName())
         if inherits_name.needFlatName(environment):
             guard_name = inherits_name.guard()
@@ -355,22 +367,27 @@ def visitInterface(node):
                        objref_fqname = inherits_objref_name.fullyQualify(),
                        objref_flat_fqname = objref_flat_fqname)
 
-    _objref_I = omniidl_be.cxx.iface.instance("_objref_I")(I)
-    _objref_I.cc(stream)
- 
-    _pof_I = omniidl_be.cxx.iface.instance("_pof_I")(I)
-    _pof_I.cc(stream)
+    if node.local():
+        _nil_I = omniidl_be.cxx.iface.instance("_nil_I")(I)
+        _nil_I.cc(stream)
 
-    _impl_I = omniidl_be.cxx.iface.instance("_impl_I")(I)
-    _impl_I.cc(stream)
+    else:
+        _objref_I = omniidl_be.cxx.iface.instance("_objref_I")(I)
+        _objref_I.cc(stream)
 
-    
-    # BOA compatible skeletons
-    if config.state['BOA Skeletons']:
-        sk_name = node_name.prefix("_sk_")
-        stream.out(template.interface_sk,
-                   sk_fqname = sk_name.fullyQualify(),
-                   sk_name = sk_name.unambiguous(environment))
+        _pof_I = omniidl_be.cxx.iface.instance("_pof_I")(I)
+        _pof_I.cc(stream)
+
+        _impl_I = omniidl_be.cxx.iface.instance("_impl_I")(I)
+        _impl_I.cc(stream)
+
+
+        # BOA compatible skeletons
+        if config.state['BOA Skeletons']:
+            sk_name = node_name.prefix("_sk_")
+            stream.out(template.interface_sk,
+                       sk_fqname = sk_name.fullyQualify(),
+                       sk_name = sk_name.unambiguous(environment))
 
 
 def visitTypedef(node):
@@ -735,8 +752,7 @@ def visitException(node):
 @member_name@@index@ = _s.@member_name@@index@;""", member_name = decl_name,
                                index = index)
 
-            if ((d_memberType.objref() or d_memberType.abstract_interface())
-                and not is_array):
+            if (d_memberType.interface() and not is_array):
 
                 # these are special resources which need to be explicitly
                 # duplicated (but not if an array?)

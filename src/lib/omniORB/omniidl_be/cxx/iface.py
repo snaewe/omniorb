@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.10  2005/11/09 12:22:17  dgrisby
+# Local interfaces support.
+#
 # Revision 1.1.6.9  2005/09/19 15:36:35  dgrisby
 # Refcount shortcut now throws INV_OBJREF when the servant is
 # deactivated, rather than deactivating the shortcut, which could lead
@@ -290,6 +293,8 @@ class I_Helper(Class):
 
     if self.interface().abstract():
       helper_tpl = omniidl_be.cxx.header.template.abstract_interface_Helper
+    elif self.interface().local():
+      helper_tpl = omniidl_be.cxx.header.template.local_interface_Helper
     else:
       helper_tpl = omniidl_be.cxx.header.template.interface_Helper
 
@@ -334,6 +339,61 @@ class I(Class):
                  Other_IDL = self._other_idl,
                  inherits = string.join(inheritl, ",\n"),
                  operations = string.join(methodl, "\n"))
+
+    elif self.interface().local():
+      abstract_base = 0
+      for i in self.interface().allInherits():
+        if i.abstract():
+          abstract_base = 1
+          break
+
+      if abstract_base:
+        abstract_narrows = omniidl_be.cxx.header.template.\
+                           interface_abstract_narrows
+      else:
+        abstract_narrows = ""
+
+      for callable in self.interface().callables():
+        method = _impl_Method(callable, self)
+        self._methods.append(method)
+        self._callables[method] = callable
+
+      # Override methods from inherited non-local interfaces
+      for i in self.interface().allInherits():
+        for callable in i.callables():
+          if not i.local():
+            method = _impl_Method(callable, self)
+            self._methods.append(method)
+            self._callables[method] = callable
+
+      bmethodl = []
+      nmethodl = []
+      for method in self.methods():
+          bmethodl.append(method.hh(virtual = 1, pure = 1))
+          nmethodl.append(method.hh(virtual = 1, pure = 0))
+
+      local_base = 0
+      inheritl   = []
+
+      for i in self.interface().inherits():
+        if i.local():
+          local_base = 1
+          iname = i.name().unambiguous(self._environment)
+        else:
+          iname = i.name().prefix("_objref_").unambiguous(self._environment)
+
+        inheritl.append("public virtual " + iname)
+
+      if not local_base:
+        inheritl.append("public virtual CORBA::LocalObject")
+
+      stream.out(omniidl_be.cxx.header.template.local_interface_type,
+                 name=self.interface().name().simple(),
+                 abstract_narrows = abstract_narrows,
+                 Other_IDL = self._other_idl,
+                 inherits = string.join(inheritl, ",\n"),
+                 operations = string.join(bmethodl, "\n"),
+                 nil_operations = string.join(nmethodl, "\n"))
 
     else:
       abstract_base = 0
@@ -593,6 +653,92 @@ class _objref_I(Class):
                                      localcall_fn,
                                      self._environment)
       method.cc(stream, body)
+
+
+class _nil_I(Class):
+  def __init__(self, I):
+    Class.__init__(self, I)
+    self._name = self._name.prefix("_nil_")
+
+    for callable in self.interface().callables():
+      method = _impl_Method(callable, self)
+      self._methods.append(method)
+      self._callables[method] = callable
+
+    for i in self.interface().allInherits():
+      for callable in i.callables():
+        if not i.local():
+          method = _impl_Method(callable, self)
+          self._methods.append(method)
+          self._callables[method] = callable
+
+  def hh(self, stream):
+    pass
+
+  def cc(self, stream):
+
+    def _ptrToObjRef_ptr(self = self, stream = stream):
+      has_abstract = 0
+
+      for i in self.interface().allInherits():
+        if i.abstract(): has_abstract = 1
+
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_ptr,
+                   inherits_fqname = i.name().fullyQualify())
+
+      stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_ptr,
+                 inherits_fqname = "CORBA::LocalObject")
+
+      if has_abstract:
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_ptr,
+                   inherits_fqname = "CORBA::AbstractBase")
+
+    def _ptrToObjRef_str(self = self, stream = stream):
+      has_abstract = 0
+
+      for i in self.interface().allInherits():
+        if i.abstract(): has_abstract = 1
+
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_str,
+                   inherits_fqname = i.name().fullyQualify())
+
+      stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_str,
+                 inherits_fqname = "CORBA::LocalObject")
+
+      if has_abstract:
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_str,
+                   inherits_fqname = "CORBA::AbstractBase")
+
+    stream.out(omniidl_be.cxx.skel.template.local_interface_objref,
+               name = self.interface().name().fullyQualify(),
+               sname = self.interface().name().simple(),
+               fq_nil_name = self.name().fullyQualify(),
+               nil_name = self.name().simple(),
+               _ptrToObjRef_ptr = _ptrToObjRef_ptr,
+               _ptrToObjRef_str = _ptrToObjRef_str)
+
+    for method in self.methods():
+      callable = self._callables[method]
+
+      # signature is a text string form of the complete operation signature
+      signature = callable.signature()
+
+      # produce member function for this operation/attribute.
+      body = output.StringStream()
+
+      argnames = method.arg_names()
+
+      body.out(omniidl_be.cxx.skel.template.local_interface_nil_operation)
+
+      if not method.return_type().void():
+        body.out(omniidl_be.cxx.skel.template.local_interface_nil_dummy_return,
+                 method = method.name(),
+                 args   = string.join(method.arg_names(),", "))
+      
+      method.cc(stream, body)
+      stream.out("\n")
+
+
 
 class _pof_I(Class):
   def __init__(self, I):
