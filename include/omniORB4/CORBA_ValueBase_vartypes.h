@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2005/11/09 12:16:46  dgrisby
+  Remove obsolete tcDesc helper classes.
+
   Revision 1.1.2.3  2004/10/13 17:58:18  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -48,7 +51,6 @@ class ValueBase_Member;
 class ValueBase_Element;
 class ValueBase_INOUT_arg;
 class ValueBase_OUT_arg;
-class ValueBase_tcDesc_arg;
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// ValueBase_var ///////////////////////////
@@ -109,7 +111,6 @@ public:
   friend class ValueBase_Element;
   friend class ValueBase_INOUT_arg;
   friend class ValueBase_OUT_arg;
-  friend class ValueBase_tcDesc_arg;
 
 private:
   T* _pd_val;

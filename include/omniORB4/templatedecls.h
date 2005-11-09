@@ -381,9 +381,6 @@ class _CORBA_ObjRef_INOUT_arg;
 template <class T,class T_Helper>
 class _CORBA_ObjRef_OUT_arg;
 
-template <class T,class T_Helper>
-class _CORBA_ObjRef_tcDesc_arg;
-
 template <class T, class T_Helper>
 class _CORBA_ObjRef_Var : public _CORBA_ObjRef_Var_base {
 public:
@@ -445,7 +442,6 @@ public:
 
   friend class _CORBA_ObjRef_INOUT_arg<T,T_Helper>;
   friend class _CORBA_ObjRef_OUT_arg<T,T_Helper>;
-  friend class _CORBA_ObjRef_tcDesc_arg<T,T_Helper>;
 
 private:
   T_ptr pd_objref;
@@ -770,38 +766,6 @@ private:
   T_out& operator=(const T_var& p);
   // CORBA 2.3 p23-26 says that T_var assignment should be disallowed.
 
-};
-
-//////////////////////////////////////////////////////////////////////
-/////////////////////// _CORBA_ObjRef_tcDesc_arg /////////////////////
-//////////////////////////////////////////////////////////////////////
-
-template <class T,class T_Helper>
-class _CORBA_ObjRef_tcDesc_arg {
-public:
-  // The sole purpose of this class is for passing as an argument
-  // to the tc build descriptor function of an interface.
-  // It provides the necessary conversions from T_var, T_member,
-  // T_element so that only one tc build description function is needed.
-  // The alternative is to have 3 overloaded build description functions
-  // which makes the stub code even more bloated.
-  typedef T* T_ptr;
-  typedef _CORBA_ObjRef_Member<T,T_Helper> T_member;
-  typedef _CORBA_ObjRef_Element<T,T_Helper> T_element;
-  typedef _CORBA_ObjRef_Var<T,T_Helper>    T_var;
-  inline _CORBA_ObjRef_tcDesc_arg(T_ptr& p, _CORBA_Boolean rel) 
-    : _data(p), _rel(rel) {}
-  inline _CORBA_ObjRef_tcDesc_arg(T_var& p) : _data(p.pd_objref), _rel(1) {}
-  inline _CORBA_ObjRef_tcDesc_arg(T_member& p) : _data(p._ptr), _rel(1) {}
-  inline _CORBA_ObjRef_tcDesc_arg(T_element p) 
-    : _data(p._NP_ref()), _rel(p._NP_release()) {}
-  inline ~_CORBA_ObjRef_tcDesc_arg() {}
-
-  T*& _data;
-  _CORBA_Boolean _rel;
-
-private:
-  _CORBA_ObjRef_tcDesc_arg();
 };
 
 
