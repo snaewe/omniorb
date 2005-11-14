@@ -1,0 +1,58 @@
+RELEASE NOTES
+=============
+
+This is omniORB 4.1.0 beta 1.
+
+See README.unix or README.win32.txt for building instructions.
+See the documentation in the doc directory for more information.
+
+
+Changes since omniORB 4.0.x
+---------------------------
+
+ - Objects by value support.
+
+     omniORB now supports the full objects by value specification,
+     with the exception of custom valuetypes. See chapter 13 of the
+     omniORB manual for information about valuetype in omniORB.
+
+ - Abstract interfaces support.
+
+ - New simpler and more efficient Any implementation.
+
+ - New socket collection implementation.
+
+     Uses poll() on platforms where it is available to avoid limiting
+     the number of connections to FD_SETSIZE. Windows specific version
+     that better manages the unusual Windows fd_set.
+
+ - New tracing options traceTime and traceInvocationReturns.
+
+     See section 4.2 of the omniORB manual.
+
+ - C++ mapping updated to version 1.1.
+
+     Deprecation of RefCountServantBase; Servant_var template type.
+
+ - Support for local interfaces.
+
+     In particular, ServantManagers and AdapterActivators no longer
+     need to be activated in a POA, but can be simple C++ objects. See
+     the examples in src/examples/poa/servant_manager.
+
+     Note that to use local interfaces derived from unconstrained
+     interfaces, you must compile the idl for the base interfaces
+     using the -Wbvirtual_objref -Wbimpl_mapping omniidl flags.
+
+
+
+Known issues
+------------
+
+This release has the following known issues and omissions:
+
+ - valuetypes supporting local interfaces generate invalid C++. This
+   is an issue with the C++ mapping.
+
+ - iostream insertion and extraction operators for CORBA types are not
+   implemented.
