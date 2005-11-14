@@ -1,3 +1,18 @@
+Mon Nov 14 10:51:37 GMT 2005 dgrisby
+====================================
+
+- Minor comment fix.
+
+include/omniORB4/internal/orbParameters.h
+
+- Better connection / thread shutdown behaviour.
+
+include/omniORB4/internal/giopServer.h
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Fri Nov  4 14:21:28 GMT 2005 dgrisby
 ====================================
 

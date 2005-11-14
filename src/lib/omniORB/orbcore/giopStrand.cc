@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.25  2005/11/14 10:58:23  dgrisby
+  Better connection / thread shutdown behaviour.
+
   Revision 1.1.4.24  2005/10/13 11:38:16  dgrisby
   Dump CloseConnection messages.
 
@@ -958,9 +961,12 @@ public:
     Scavenger::initialise();
   }
   void detach() {
+    omniORB::logs(25, "Terminate strand scavenger.");
     Scavenger::terminate();
 
     omni_tracedmutex_lock sync(*omniTransportLock);
+
+    omniORB::logs(25, "Close remaining strands.");
 
     // Close client strands
     {
@@ -971,7 +977,7 @@ public:
 	s->StrandList::remove();
 	s->RopeLink::remove();
 	s->state(giopStrand::DYING);
-	if (omniORB::trace(30)) {
+	if (omniORB::trace(25)) {
 	  omniORB::logger log;
 	  log << "Shutdown close connection to "
 	      << s->address->address() << "\n";
@@ -992,7 +998,7 @@ public:
 	s->StrandList::remove();
 	s->RopeLink::remove();
 	s->state(giopStrand::DYING);
-	if (omniORB::trace(30)) {
+	if (omniORB::trace(25)) {
 	  omniORB::logger log;
 	  log << "Shutdown close connection to "
 	      << s->address->address() << "\n";
@@ -1014,7 +1020,7 @@ public:
 	s->StrandList::remove();
 	s->RopeLink::remove();
 	s->state(giopStrand::DYING);
-	if (omniORB::trace(30)) {
+	if (omniORB::trace(25)) {
 	  omniORB::logger log;
 	  log << "Shutdown close connection from " 
 	      << s->connection->peeraddress() << "\n";

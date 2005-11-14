@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2005/11/14 10:58:23  dgrisby
+  Better connection / thread shutdown behaviour.
+
   Revision 1.1.4.8  2002/02/13 16:02:38  dpg1
   Stability fixes thanks to Bastiaan Bakker, plus threading
   optimisations inspired by investigating Bastiaan's bug reports.
@@ -139,6 +142,7 @@ private:
   omni_tracedcondition                   pd_cond;
   CORBA::Boolean                         pd_thread_per_connection;
   CORBA::ULong                           pd_n_temporary_workers;
+  CORBA::ULong                           pd_n_dedicated_workers;
 
   omnivector<giopStrand*>                pd_bidir_strands;
   omnivector<giopActiveCollection*>      pd_bidir_collections;
