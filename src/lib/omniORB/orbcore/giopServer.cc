@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.22.2.42  2005/11/14 15:20:08  dgrisby
+  Race between giopServer destruction and closure of connections in
+  thread pool mode.
+
   Revision 1.22.2.41  2005/11/14 10:58:23  dgrisby
   Better connection / thread shutdown behaviour.
 
@@ -148,7 +152,6 @@
 
 
 */
-
 
 #include <omniORB4/CORBA.h>
 #include <invoker.h>
@@ -533,56 +536,56 @@ giopServer::deactivate()
   else
     timeout = 5;
 
-  if (pd_nconnections) {
+  if (pd_n_dedicated_workers) {
     if (omniORB::trace(25)) {
       omniORB::logger l;
-      l << "Close " << pd_nconnections << " connection"
-	<< (pd_nconnections == 1 ? "" : "s") << "...\n";
+      l << "Close " << pd_n_dedicated_workers << " dedicated worker connection"
+	<< (pd_n_dedicated_workers == 1 ? "" : "s") << "...\n";
     }
     for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
       connectionState** head = &(pd_connectionState[i]);
       while (*head) {
-	{
-	  // Send close connection message.
-	  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
-	  char hdr[12];
-	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
-	  hdr[4] = ver.major;   hdr[5] = ver.minor;
-	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
-	  hdr[7] = (char)GIOP::CloseConnection;
-	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+	if ((*head)->connection->pd_has_dedicated_thread) {
+	  {
+	    // Send close connection message.
+	    GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+	    char hdr[12];
+	    hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+	    hdr[4] = ver.major;   hdr[5] = ver.minor;
+	    hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+	    hdr[7] = (char)GIOP::CloseConnection;
+	    hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
 
-	  if (omniORB::trace(25)) {
-	    omniORB::logger log;
-	    log << "sendCloseConnection: to "
-		<< (*head)->connection->peeraddress()
-		<< " 12 bytes\n";
+	    if (omniORB::trace(25)) {
+	      omniORB::logger log;
+	      log << "sendCloseConnection: to "
+		  << (*head)->connection->peeraddress()
+		  << " 12 bytes\n";
+	    }
+	    if (omniORB::trace(30))
+	      giopStream::dumpbuf((unsigned char*)hdr, 12);
+
+	    (*head)->connection->Send(hdr,12);
 	  }
-	  if (omniORB::trace(30))
-	    giopStream::dumpbuf((unsigned char*)hdr, 12);
-
-	  (*head)->connection->Send(hdr,12);
+	  (*head)->connection->Shutdown();
 	}
-	(*head)->connection->Shutdown();
 	head = &((*head)->next);
       }
     }
-    if (pd_n_dedicated_workers) {
-      omniORB::logs(25, "Wait for connections to close...");
-      omni_thread::get_time(&s, &ns, timeout);
+    omniORB::logs(25, "Wait for connections to close...");
+    omni_thread::get_time(&s, &ns, timeout);
 
-      int go = 1;
-      while (go && pd_n_dedicated_workers) {
-	go = pd_cond.timedwait(s, ns);
-      }
-      if (omniORB::trace(25)) {
-	omniORB::logger l;
-	l << "Finished waiting. " << pd_nconnections
-	  << " connection" << (pd_nconnections == 1 ? "" : "s")
-	  << " and " << pd_n_dedicated_workers << " dedicated worker"
-	  << (pd_n_dedicated_workers == 1 ? "" : "s") << " remaining.\n";
-      }
-    }  
+    int go = 1;
+    while (go && pd_n_dedicated_workers) {
+      go = pd_cond.timedwait(s, ns);
+    }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Finished waiting. " << pd_nconnections
+	<< " connection" << (pd_nconnections == 1 ? "" : "s")
+	<< " and " << pd_n_dedicated_workers << " dedicated worker"
+	<< (pd_n_dedicated_workers == 1 ? "" : "s") << " remaining.\n";
+    }
   }
 
   // Stop rendezvousers

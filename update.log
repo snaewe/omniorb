@@ -1,3 +1,12 @@
+Mon Nov 14 15:19:04 GMT 2005 dgrisby
+====================================
+
+- Race between giopServer destruction and closure of connections in
+  thread pool mode.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Mon Nov 14 10:51:37 GMT 2005 dgrisby
 ====================================
 
