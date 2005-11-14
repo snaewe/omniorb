@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2005/11/14 10:57:18  dgrisby
+  Minor comment fix.
+
   Revision 1.1.2.7  2005/08/23 11:45:06  dgrisby
   New maxSocketSend and maxSocketRecv parameters.
 
@@ -322,7 +325,7 @@ _CORBA_MODULE_VAR _core_attr timeValue clientCallTimeOutPeriod;
 //   than the timeout value, the ORB will shutdown the connection and
 //   raise a COMM_FAILURE.
 //
-//   Valid values = (n >= 0 in seconds) 
+//   Valid values = (n >= 0 in milliseconds) 
 //                   0 --> no timeout. Block till a reply comes back
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportPerThreadTimeOut;
