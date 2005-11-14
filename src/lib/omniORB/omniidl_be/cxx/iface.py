@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.11  2005/11/14 11:02:16  dgrisby
+# Local interface fixes.
+#
 # Revision 1.1.6.10  2005/11/09 12:22:17  dgrisby
 # Local interfaces support.
 #
@@ -360,8 +363,19 @@ class I(Class):
 
       # Override methods from inherited non-local interfaces
       for i in self.interface().allInherits():
-        for callable in i.callables():
-          if not i.local():
+        if not i.local():
+          for c in i.callables():
+            # Make new callable with ref to this interface instead of
+            # inherited interface
+            callable = call.Callable(self.interface(),
+                                     c.operation_name(),
+                                     c.method_name(),
+                                     c.returnType(),
+                                     c.parameters(),
+                                     c.oneway(),
+                                     c.raises(),
+                                     c.contexts())
+
             method = _impl_Method(callable, self)
             self._methods.append(method)
             self._callables[method] = callable
@@ -374,11 +388,14 @@ class I(Class):
 
       local_base = 0
       inheritl   = []
+      ninheritl  = []
 
       for i in self.interface().inherits():
         if i.local():
           local_base = 1
           iname = i.name().unambiguous(self._environment)
+          niname = i.name().prefix("_nil_").unambiguous(self._environment)
+          ninheritl.append(niname)
         else:
           iname = i.name().prefix("_objref_").unambiguous(self._environment)
 
@@ -387,13 +404,19 @@ class I(Class):
       if not local_base:
         inheritl.append("public virtual CORBA::LocalObject")
 
+      if ninheritl:
+        nil_inherits = string.join(ninheritl, ",\n") + ","
+      else:
+        nil_inherits = ""
+
       stream.out(omniidl_be.cxx.header.template.local_interface_type,
                  name=self.interface().name().simple(),
                  abstract_narrows = abstract_narrows,
                  Other_IDL = self._other_idl,
                  inherits = string.join(inheritl, ",\n"),
                  operations = string.join(bmethodl, "\n"),
-                 nil_operations = string.join(nmethodl, "\n"))
+                 nil_operations = string.join(nmethodl, "\n"),
+                 nil_inherits = nil_inherits)
 
     else:
       abstract_base = 0
@@ -666,8 +689,19 @@ class _nil_I(Class):
       self._callables[method] = callable
 
     for i in self.interface().allInherits():
-      for callable in i.callables():
-        if not i.local():
+      if not i.local():
+        for c in i.callables():
+          # Make new callable with ref to this interface instead of
+          # inherited interface
+          callable = call.Callable(self.interface(),
+                                   c.operation_name(),
+                                   c.method_name(),
+                                   c.returnType(),
+                                   c.parameters(),
+                                   c.oneway(),
+                                   c.raises(),
+                                   c.contexts())
+
           method = _impl_Method(callable, self)
           self._methods.append(method)
           self._callables[method] = callable

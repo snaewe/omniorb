@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.11  2005/11/14 11:02:16  dgrisby
+# Local interface fixes.
+#
 # Revision 1.32.2.10  2005/11/09 12:22:17  dgrisby
 # Local interfaces support.
 #
@@ -347,25 +350,37 @@ def visitInterface(node):
     # Output flattened aliases to inherited classes, to workaround an
     # MSVC bug.
     for i in ast.allInherits(node):
-        # *** HERE: fix this for local interfaces
         inherits_name = id.Name(i.scopedName())
         if inherits_name.needFlatName(environment):
             guard_name = inherits_name.guard()
             flat_fqname = inherits_name.flatName()
-            inherits_impl_name = inherits_name.prefix("_impl_")
-            inherits_objref_name = inherits_name.prefix("_objref_")
 
-            impl_flat_fqname = inherits_impl_name.flatName()
-            objref_flat_fqname = inherits_objref_name.flatName()
-            
-            stream.out(template.interface_ALIAS,
-                       guard_name = guard_name,
-                       fqname = inherits_name.fullyQualify(),
-                       flat_fqname = flat_fqname,
-                       impl_fqname = inherits_impl_name.fullyQualify(),
-                       impl_flat_fqname = impl_flat_fqname,
-                       objref_fqname = inherits_objref_name.fullyQualify(),
-                       objref_flat_fqname = objref_flat_fqname)
+            if i.local():
+                inherits_nil_name  = inherits_name.prefix("_nil_")
+                nil_flat_fqname    = inherits_nil_name.flatName()
+
+                stream.out(template.local_interface_ALIAS,
+                           guard_name = guard_name,
+                           fqname = inherits_name.fullyQualify(),
+                           flat_fqname = flat_fqname,
+                           nil_fqname = inherits_nil_name.fullyQualify(),
+                           nil_flat_fqname = nil_flat_fqname)
+
+            else:
+                inherits_impl_name   = inherits_name.prefix("_impl_")
+                inherits_objref_name = inherits_name.prefix("_objref_")
+
+                impl_flat_fqname   = inherits_impl_name.flatName()
+                objref_flat_fqname = inherits_objref_name.flatName()
+
+                stream.out(template.interface_ALIAS,
+                           guard_name = guard_name,
+                           fqname = inherits_name.fullyQualify(),
+                           flat_fqname = flat_fqname,
+                           impl_fqname = inherits_impl_name.fullyQualify(),
+                           impl_flat_fqname = impl_flat_fqname,
+                           objref_fqname = inherits_objref_name.fullyQualify(),
+                           objref_flat_fqname = objref_flat_fqname)
 
     if node.local():
         _nil_I = omniidl_be.cxx.iface.instance("_nil_I")(I)

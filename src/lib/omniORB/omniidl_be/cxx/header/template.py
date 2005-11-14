@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.13  2005/11/14 11:02:16  dgrisby
+# Local interface fixes.
+#
 # Revision 1.8.2.12  2005/11/09 12:22:17  dgrisby
 # Local interfaces support.
 #
@@ -587,7 +590,9 @@ protected:
   virtual ~@name@();
 };
 
-class _nil_@name@ : public virtual @name@
+class _nil_@name@ :
+  @nil_inherits@
+  public virtual @name@
 {
   public:
     @nil_operations@

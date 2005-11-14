@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.10  2005/11/14 11:02:16  dgrisby
+# Local interface fixes.
+#
 # Revision 1.6.2.9  2005/11/09 12:22:17  dgrisby
 # Local interfaces support.
 #
@@ -715,6 +718,11 @@ interface_ALIAS = """\
 typedef @fqname@ @flat_fqname@;
 typedef @impl_fqname@ @impl_flat_fqname@;
 typedef @objref_fqname@ @objref_flat_fqname@;
+"""
+
+local_interface_ALIAS = """\
+typedef @fqname@ @flat_fqname@;
+typedef @nil_fqname@ @nil_flat_fqname@;
 """
 
 interface_impl = """\

@@ -1,3 +1,14 @@
+Mon Nov 14 10:56:16 GMT 2005 dgrisby
+====================================
+
+- Local interface fixes.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+
 Wed Nov  9 12:11:05 GMT 2005 dgrisby
 ====================================
 
