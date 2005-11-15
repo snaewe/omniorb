@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.45  2005/11/15 11:07:56  dgrisby
+  More shutdown cleanup.
+
   Revision 1.2.2.44  2005/05/22 12:32:23  dgrisby
   Race condition in POA destroy.
 
@@ -1818,9 +1821,30 @@ omniOrbPOA::dispatch(omniCallHandle& handle,
   }
   switch( pd_policy.req_processing ) {
   case RPP_ACTIVE_OBJ_MAP:
-    OMNIORB_THROW(OBJECT_NOT_EXIST,
-		  OBJECT_NOT_EXIST_NoMatch,
-		  CORBA::COMPLETED_NO);
+    {
+      omni_tracedmutex_lock sync(*omni::internalLock);
+      switch (pd_rq_state) {
+      case (int) PortableServer::POAManager::HOLDING:
+	// *** We should block here until we leave the HOLDING state,
+	// then check if the object now exists. For now we fall
+	// through as if ACTIVE...
+	  
+      case (int) PortableServer::POAManager::ACTIVE:
+	OMNIORB_THROW(OBJECT_NOT_EXIST,
+		      OBJECT_NOT_EXIST_NoMatch,
+		      CORBA::COMPLETED_NO);
+
+      case (int) PortableServer::POAManager::DISCARDING:
+	OMNIORB_THROW(TRANSIENT,
+		      TRANSIENT_POANoResource,
+		      CORBA::COMPLETED_NO);
+
+      case (int) PortableServer::POAManager::INACTIVE:
+	OMNIORB_THROW(OBJ_ADAPTER,
+		      OBJ_ADAPTER_POAUnknownAdapter,
+		      CORBA::COMPLETED_NO);
+      }
+    }
     break;
 
   case RPP_DEFAULT_SERVANT:

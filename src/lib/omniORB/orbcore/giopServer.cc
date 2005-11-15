@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.43  2005/11/15 11:07:56  dgrisby
+  More shutdown cleanup.
+
   Revision 1.22.2.42  2005/11/14 15:20:08  dgrisby
   Race between giopServer destruction and closure of connections in
   thread pool mode.
@@ -222,6 +225,13 @@ CORBA::ULong   orbParameters::threadPoolWatchConnection      = 1;
 //   connection, and so on.
 //
 //  Valid values = (n >= 0)
+
+
+////////////////////////////////////////////////////////////////////////////
+static const char* plural(CORBA::ULong val)
+{
+  return val == 1 ? "" : "s";
+}
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -540,7 +550,7 @@ giopServer::deactivate()
     if (omniORB::trace(25)) {
       omniORB::logger l;
       l << "Close " << pd_n_dedicated_workers << " dedicated worker connection"
-	<< (pd_n_dedicated_workers == 1 ? "" : "s") << "...\n";
+	<< plural(pd_n_dedicated_workers) << "...\n";
     }
     for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
       connectionState** head = &(pd_connectionState[i]);
@@ -572,7 +582,12 @@ giopServer::deactivate()
 	head = &((*head)->next);
       }
     }
-    omniORB::logs(25, "Wait for connections to close...");
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Wait for " << pd_n_dedicated_workers
+	<< " dedicated thread" << plural(pd_n_dedicated_workers)
+	<< " to finish...\n";
+    }
     omni_thread::get_time(&s, &ns, timeout);
 
     int go = 1;
@@ -582,9 +597,9 @@ giopServer::deactivate()
     if (omniORB::trace(25)) {
       omniORB::logger l;
       l << "Finished waiting. " << pd_nconnections
-	<< " connection" << (pd_nconnections == 1 ? "" : "s")
+	<< " connection" << plural(pd_nconnections)
 	<< " and " << pd_n_dedicated_workers << " dedicated worker"
-	<< (pd_n_dedicated_workers == 1 ? "" : "s") << " remaining.\n";
+	<< plural(pd_n_dedicated_workers) << " remaining.\n";
     }
   }
 
@@ -611,7 +626,26 @@ giopServer::deactivate()
     }
   }
 
-    // Stop bidir monitors
+  if (pd_n_temporary_workers) {
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Wait for " << pd_n_temporary_workers << " temporary worker"
+	<< plural(pd_n_temporary_workers) << "...\n";
+    }
+    int go = 1;
+    while (go && pd_n_temporary_workers) {
+      go = pd_cond.timedwait(s, ns);
+    }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      if (!go)
+	l << "Timed out. ";
+      l << pd_n_temporary_workers << " temporary worker"
+	<< plural(pd_n_temporary_workers) << " remaining.\n";
+    }
+  }
+
+  // Stop bidir monitors
   if (!Link::is_empty(pd_bidir_monitors)) {
     omniORB::logs(25, "Deactivate bidirectional monitors...");
 
@@ -1021,10 +1055,12 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     // is therefore safe to delete this record.
     pd_lock.lock();
 
+    int workers;
+
     if (w->singleshot())
-      pd_n_temporary_workers--;
+      workers = --pd_n_temporary_workers;
     else
-      pd_n_dedicated_workers--;
+      workers = --pd_n_dedicated_workers;
 
     w->remove();
     delete w;
@@ -1037,7 +1073,7 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     }
 
     if (pd_state == INFLUX) {
-      if (pd_nconnections == 0 || pd_n_dedicated_workers == 0) {
+      if (workers == 0) {
 	pd_cond.broadcast();
       }
     }
@@ -1098,6 +1134,8 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       delete w;
       conn->pd_n_workers--;
       pd_n_temporary_workers--;
+      if (pd_state == INFLUX && pd_n_temporary_workers == 0)
+	pd_cond.broadcast();
       return 0;
     }
   }
@@ -1147,31 +1185,21 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       conn->setSelectable(2);
 
     // Worker is no longer needed.
-    CORBA::Boolean dying = 0;
     {
       omni_tracedmutex_lock sync(pd_lock);
 
-      if (conn->pd_n_workers == 1) {
-	if (conn->pd_dying) {
-	  // Connection is dying. Go round again so this thread spots
-	  // the condition.
-	  omniORB::logs(25, "Last worker sees connection is dying.");
-	  dying = 1;
-	}
-	if (pd_state == INFLUX) {
-	  // In flux. Go around again.
-	  omniORB::logs(25, "Last worker sees server state in flux.");
-	  dying = 1;
-	}
-      }
-      if (!dying) {
-	w->remove();
-	delete w;
-	conn->pd_n_workers--;
-	pd_n_temporary_workers--;
+      w->remove();
+      delete w;
+      conn->pd_n_workers--;
+      pd_n_temporary_workers--;
+
+      if (pd_state == INFLUX) {
+	omniORB::logs(25, "Temporary worker finishing.");
+	if (pd_n_temporary_workers == 0)
+	  pd_cond.broadcast();
       }
     }
-    return dying ? 1 : 0;
+    return 0;
   }
 #ifndef __DECCXX
   // Never reach here (and the hp/compaq/dec compiler is smart enough

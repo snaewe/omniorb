@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.20  2005/11/15 11:07:56  dgrisby
+ More shutdown cleanup.
+
  Revision 1.2.2.19  2005/11/14 10:58:23  dgrisby
  Better connection / thread shutdown behaviour.
 
@@ -193,6 +196,14 @@ omniObjAdapter::isInitialised()
   omni_tracedmutex_lock sync(oa_lock);
 
   return initialised;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+_CORBA_Boolean
+omniObjAdapter::isDeactivating()
+{
+  return !num_active_oas;
 }
 
 
