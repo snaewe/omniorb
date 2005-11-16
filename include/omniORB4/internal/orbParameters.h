@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2005/11/16 17:35:25  dgrisby
+  New connectionWatchPeriod and connectionWatchImmediate parameters.
+
   Revision 1.1.2.8  2005/11/14 10:57:18  dgrisby
   Minor comment fix.
 
@@ -469,6 +472,11 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportBootstrapAgent;
 _CORBA_MODULE_VAR _core_attr _CORBA_Unbounded_Sequence_Octet persistentId;
 //  Persistent identifier used to detect object references that should
 //  be considered to be in this process.
+
+_CORBA_MODULE_VAR _core_attr CORBA::Boolean connectionWatchImmediate;
+//  If true, connections are watched immediately while an upcall is
+//  handled; otherwise, they are not watched until the
+//  SocketCollection next scans the connection list.
 
 _CORBA_MODULE_END
 

@@ -1,3 +1,15 @@
+Wed Nov 16 17:31:01 GMT 2005 dgrisby
+====================================
+
+- New connectionWatchPeriod and connectionWatchImmediate parameters.
+
+sample.cfg
+sample.reg
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+
+
 Tue Nov 15 11:06:54 GMT 2005 dgrisby
 ====================================
 

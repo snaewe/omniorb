@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.44  2005/11/16 17:35:25  dgrisby
+  New connectionWatchPeriod and connectionWatchImmediate parameters.
+
   Revision 1.22.2.43  2005/11/15 11:07:56  dgrisby
   More shutdown cleanup.
 
@@ -225,6 +228,21 @@ CORBA::ULong   orbParameters::threadPoolWatchConnection      = 1;
 //   connection, and so on.
 //
 //  Valid values = (n >= 0)
+
+CORBA::Boolean orbParameters::connectionWatchImmediate      = 0;
+//   When a thread handles an incoming call, it unmarshals the
+//   arguments then marks the connection as watchable by the connection
+//   watching thread, in case the client sends a concurrent call on the
+//   same connection. If this parameter is set to the default false,
+//   the connection is not actually watched until the next connection
+//   watch period (determined by the connectionWatchPeriod parameter).
+//   If connectionWatchImmediate is set true, the connection watching
+//   thread is immediately signalled to watch the connection. That
+//   leads to faster interactive response to clients that multiplex
+//   calls, but adds significant overhead along the call chain.
+//
+//   Note that this setting has no effect on Windows, since it has no
+//   mechanism for signalling the connection watching thread.
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1241,7 +1259,8 @@ giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
 	// If only one thread per connection is allowed, there is no
 	// need to setSelectable, since we won't be able to act on any
 	// interleaved calls that arrive.
-	conn->setSelectable(0,data_in_buffer);
+	conn->setSelectable(orbParameters::connectionWatchImmediate,
+			    data_in_buffer);
       }
     }
     else {
@@ -1253,13 +1272,15 @@ giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
 	n = conn->pd_dedicated_thread_in_upcall;
       }
       if (n) {
-	conn->setSelectable(0,data_in_buffer);
+	conn->setSelectable(orbParameters::connectionWatchImmediate,
+			    data_in_buffer);
       }
     }
   }
   else {
     // This connection is managed with the thread-pool policy
-    conn->setSelectable(0,data_in_buffer);
+    conn->setSelectable(orbParameters::connectionWatchImmediate,
+			data_in_buffer);
   }
 }
 
@@ -1519,6 +1540,37 @@ public:
 
 static threadPoolWatchConnectionHandler threadPoolWatchConnectionHandler_;
 
+/////////////////////////////////////////////////////////////////////////////
+class connectionWatchImmediateHandler : public orbOptions::Handler {
+public:
+
+  connectionWatchImmediateHandler() : 
+    orbOptions::Handler("connectionWatchImmediate",
+			"connectionWatchImmediate = 0 or 1",
+			1,
+			"-ORBconnectionWatchImmediate < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::connectionWatchImmediate = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::connectionWatchImmediate,
+			     result);
+  }
+};
+
+static connectionWatchImmediateHandler connectionWatchImmediateHandler_;
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -1534,6 +1586,7 @@ public:
     orbOptions::singleton().registerHandler(maxServerThreadPerConnectionHandler_);
     orbOptions::singleton().registerHandler(maxServerThreadPoolSizeHandler_);
     orbOptions::singleton().registerHandler(threadPoolWatchConnectionHandler_);
+    orbOptions::singleton().registerHandler(connectionWatchImmediateHandler_);
   }
 
   void attach() {
