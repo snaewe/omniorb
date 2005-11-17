@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2005/11/17 11:35:52  dgrisby
+  In thread pool mode, bidir workers become wedged waiting for incoming
+  calls, so they must be closed in giopServer::deactivate.
+
   Revision 1.1.2.3  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -75,6 +79,7 @@ giopMonitor::execute()
   };
 
   pd_server->notifyMrDone(this,exit_on_error);
+  omniORB::logs(25, "giopMonitor task finish.");
 }
 
 

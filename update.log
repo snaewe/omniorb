@@ -1,3 +1,13 @@
+Thu Nov 17 11:34:20 GMT 2005 dgrisby
+====================================
+
+- In thread pool mode, bidir workers become wedged waiting for
+  incoming calls, so they must be closed in giopServer::deactivate.
+
+src/lib/omniORB/orbcore/giopMonitor.cc
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Wed Nov 16 17:31:01 GMT 2005 dgrisby
 ====================================
 
