@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:15  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -78,6 +81,7 @@ giopMonitor::execute()
   };
 
   pd_server->notifyMrDone(this,exit_on_error);
+  omniORB::logs(25, "giopMonitor task finish.");
 }
 
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.10  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.25.2.9  2005/06/08 09:41:06  dgrisby
   Update comment.
 
@@ -122,7 +125,6 @@
 
 */
 
-
 #include <omniORB4/CORBA.h>
 #include <invoker.h>
 #include <giopServer.h>
@@ -130,6 +132,7 @@
 #include <giopRendezvouser.h>
 #include <giopMonitor.h>
 #include <giopStrand.h>
+#include <giopStream.h>
 #include <giopStreamImpl.h>
 #include <initialiser.h>
 #include <omniORB4/omniInterceptors.h>
@@ -192,10 +195,34 @@ CORBA::ULong   orbParameters::threadPoolWatchConnection      = 1;
 //
 //  Valid values = (n >= 0)
 
+CORBA::Boolean orbParameters::connectionWatchImmediate      = 0;
+//   When a thread handles an incoming call, it unmarshals the
+//   arguments then marks the connection as watchable by the connection
+//   watching thread, in case the client sends a concurrent call on the
+//   same connection. If this parameter is set to the default false,
+//   the connection is not actually watched until the next connection
+//   watch period (determined by the connectionWatchPeriod parameter).
+//   If connectionWatchImmediate is set true, the connection watching
+//   thread is immediately signalled to watch the connection. That
+//   leads to faster interactive response to clients that multiplex
+//   calls, but adds significant overhead along the call chain.
+//
+//   Note that this setting has no effect on Windows, since it has no
+//   mechanism for signalling the connection watching thread.
+
+
+////////////////////////////////////////////////////////////////////////////
+static const char* plural(CORBA::ULong val)
+{
+  return val == 1 ? "" : "s";
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 giopServer::giopServer() : pd_state(IDLE), pd_nconnections(0),
-			   pd_cond(&pd_lock), pd_n_temporary_workers(0)
+			   pd_cond(&pd_lock),
+			   pd_n_temporary_workers(0),
+			   pd_n_dedicated_workers(0)
 {
   pd_thread_per_connection = orbParameters::threadPerConnectionPolicy;
   pd_connectionState = new connectionState*[connectionState::hashsize];
@@ -445,6 +472,7 @@ giopServer::activate()
       }
       task->insert(cs->workers);
       cs->connection->pd_n_workers++;
+      pd_n_dedicated_workers++;
     }
     else {
       pd_lock.unlock();
@@ -494,16 +522,24 @@ giopServer::deactivate()
 
   omniORB::logs(25, "giopServer deactivate...");
 
-  int count;
+  unsigned long s, ns;
 
-  for (count = 0; count < 5; count++) {
-    waitforcompletion = 0;
+  unsigned long timeout;
+  if (orbParameters::scanGranularity)
+    timeout = orbParameters::scanGranularity;
+  else
+    timeout = 5;
 
-    // Close connections
-    {
-      for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
-	connectionState** head = &(pd_connectionState[i]);
-	while (*head) {
+  if (pd_nconnections) {
+    omniORB::logs(25, "Close connections with threads and monitors...");
+
+    CORBA::ULong closed_count = 0;
+
+    for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
+      connectionState** head = &(pd_connectionState[i]);
+      while (*head) {
+	if ((*head)->connection->pd_has_dedicated_thread ||
+	    (*head)->strand->biDir) {
 	  {
 	    // Send close connection message.
 	    GIOP::Version ver = giopStreamImpl::maxVersion()->version();
@@ -513,72 +549,139 @@ giopServer::deactivate()
 	    hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
 	    hdr[7] = (char)GIOP::CloseConnection;
 	    hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+
+	    if (omniORB::trace(25)) {
+	      omniORB::logger log;
+	      log << "sendCloseConnection: to "
+		  << (*head)->connection->peeraddress()
+		  << " 12 bytes\n";
+	    }
+	    if (omniORB::trace(30))
+	      giopStream::dumpbuf((unsigned char*)hdr, 12);
+
 	    (*head)->connection->Send(hdr,12);
 	  }
 	  (*head)->connection->Shutdown();
-	  head = &((*head)->next);
+	  ++closed_count;
 	}
-      }
-      if (pd_nconnections) waitforcompletion = 1;
-    }
-
-    // Stop rendezvousers
-    {
-      Link* p = pd_rendezvousers.next;
-      if (p != &pd_rendezvousers) waitforcompletion = 1;
-
-      if (!pd_nconnections && !rendezvousers_terminated) {
-	//rendezvousers_terminated = 1;
-	for (; p != &pd_rendezvousers; p = p->next) {
-	  ((giopRendezvouser*)p)->terminate();
-	}
+	head = &((*head)->next);
       }
     }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Closed " << closed_count << " connection" << plural(closed_count)
+	<< " out of " << pd_nconnections << ".\n";
+    }
 
-    // Stop bidir monitors
-    if (!Link::is_empty(pd_bidir_monitors)) {
-      waitforcompletion = 1;
-
-      Link* m = pd_bidir_monitors.next;
-      for (; m != &pd_bidir_monitors; m = m->next) {
-	((giopMonitor*)m)->deactivate();
+    if (pd_n_dedicated_workers) {
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	l << "Wait for " << pd_n_dedicated_workers
+	  << " dedicated thread" << plural(pd_n_dedicated_workers)
+	  << " to finish...\n";
       }
-    }
 
-    // Close bidir connections
-    {
-      omnivector<giopStrand*>::iterator i = pd_bidir_strands.begin();
+      omni_thread::get_time(&s, &ns, timeout);
 
-      while (i != pd_bidir_strands.end()) {
-	giopStrand* g = *i;
-	pd_bidir_strands.erase(i);
-	g->connection->Shutdown();
-	g->deleteStrandAndConnection();
+      int go = 1;
+      while (go && pd_n_dedicated_workers) {
+	go = pd_cond.timedwait(s, ns);
       }
-    }
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	if (!go)
+	  l << "Timed out. ";
 
-    if (waitforcompletion) {
-      // Here we relinquish the mutex to give the rendezvousers and workers
-      // a chance to remove themselves from the lists. Notice that the server
-      // is now in the INFLUX state. This means that no start, stop, remove,
-      // instantiate can progress until we are done here.
-      omniORB::logs(25, "giopServer waits for completion of rendezvousers "
-		    "and workers...");
-
-      unsigned long s, ns;
-      omni_thread::get_time(&s, &ns, 5);
-      pd_cond.timedwait(s, ns);
-
-      omniORB::logs(25, "giopServer back from waiting.");
-    }
-    else {
-      pd_state = IDLE;
-      break;
+	l << pd_nconnections << " connection" << plural(pd_nconnections)
+	  << " and " << pd_n_dedicated_workers << " dedicated worker"
+	  << plural(pd_n_dedicated_workers) << " remaining.\n";
+      }
     }
   }
-  if (count == 5) {
-    omniORB::logs(15, "giopServer could not be cleanly deactivated.");
+
+  // Stop rendezvousers
+  Link* p = pd_rendezvousers.next;
+  if (p != &pd_rendezvousers) {
+    omniORB::logs(25, "Terminate rendezvousers...");
+
+    for (; p != &pd_rendezvousers; p = p->next) {
+      ((giopRendezvouser*)p)->terminate();
+    }
+
+    omni_thread::get_time(&s, &ns, timeout);
+    int go = 1;
+    while (go && pd_rendezvousers.next != & pd_rendezvousers) {
+      go = pd_cond.timedwait(s, ns);
+    }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      if (go)
+	l << "Rendezvousers terminated.\n";
+      else
+	l << "Timed out waiting for rendezvousers to terminate.\n";
+    }
   }
+
+  if (pd_n_temporary_workers) {
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Wait for " << pd_n_temporary_workers << " temporary worker"
+	<< plural(pd_n_temporary_workers) << "...\n";
+    }
+    int go = 1;
+    while (go && pd_n_temporary_workers) {
+      go = pd_cond.timedwait(s, ns);
+    }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      if (!go)
+	l << "Timed out. ";
+      l << pd_n_temporary_workers << " temporary worker"
+	<< plural(pd_n_temporary_workers) << " remaining.\n";
+    }
+  }
+
+  // Stop bidir monitors
+  if (!Link::is_empty(pd_bidir_monitors)) {
+    omniORB::logs(25, "Deactivate bidirectional monitors...");
+
+    Link* m = pd_bidir_monitors.next;
+    for (; m != &pd_bidir_monitors; m = m->next) {
+      ((giopMonitor*)m)->deactivate();
+    }
+
+    omni_thread::get_time(&s, &ns, timeout);
+    int go = 1;
+    while (go && !Link::is_empty(pd_bidir_monitors)) {
+      go = pd_cond.timedwait(s, ns);
+    }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      if (go)
+	l << "Monitors deactivated.\n";
+      else
+	l << "Timed out waiting for monitors to deactivate.\n";
+    }
+  }
+
+  // Close bidir connections
+  if (pd_bidir_strands.size()) {
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Close " << pd_bidir_strands.size()
+	<< " bidirectional connections...\n";
+    }
+
+    omnivector<giopStrand*>::iterator i = pd_bidir_strands.begin();
+    while (i != pd_bidir_strands.end()) {
+      giopStrand* g = *i;
+      pd_bidir_strands.erase(i);
+      g->connection->Shutdown();
+      g->deleteStrandAndConnection();
+    }
+  }
+  pd_state = IDLE;
+  pd_cond.broadcast();
   omniORB::logs(25, "giopServer deactivated.");
 }
 
@@ -760,8 +863,7 @@ giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
       connectionState* cs = csInsert(conn);
 
       if (conn->pd_has_dedicated_thread) {
-	giopWorker* task = new giopWorker(cs->strand,this,
-					  !conn->pd_has_dedicated_thread);
+	giopWorker* task = new giopWorker(cs->strand, this, 0);
 	if (!orbAsyncInvoker->insert(task)) {
 	  // Cannot start serving this new connection.
 	  if (omniORB::trace(1)) {
@@ -786,6 +888,7 @@ giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
 	}
 	task->insert(cs->workers);
 	conn->pd_n_workers++;
+	pd_n_dedicated_workers++;
       }
       else {
 	if (!conn->isSelectable()) {
@@ -863,8 +966,7 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
   }
 
   if (pd_state == INFLUX) {
-    if ((Link::is_empty(pd_rendezvousers) || pd_nconnections == 0) &&
-	Link::is_empty(pd_bidir_monitors)) {
+    if (Link::is_empty(pd_rendezvousers)) {
       pd_cond.broadcast();
     }
   }
@@ -949,7 +1051,12 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     // is therefore safe to delete this record.
     pd_lock.lock();
 
-    if (w->singleshot()) pd_n_temporary_workers--;
+    int workers;
+
+    if (w->singleshot())
+      workers = --pd_n_temporary_workers;
+    else
+      workers = --pd_n_dedicated_workers;
 
     w->remove();
     delete w;
@@ -962,8 +1069,7 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     }
 
     if (pd_state == INFLUX) {
-      if ( ( Link::is_empty(pd_rendezvousers) || pd_nconnections == 0 ) &&
-	   Link::is_empty(pd_bidir_monitors ) ) {
+      if (workers == 0) {
 	pd_cond.broadcast();
       }
     }
@@ -1024,6 +1130,8 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       delete w;
       conn->pd_n_workers--;
       pd_n_temporary_workers--;
+      if (pd_state == INFLUX && pd_n_temporary_workers == 0)
+	pd_cond.broadcast();
       return 0;
     }
   }
@@ -1069,31 +1177,21 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       conn->setSelectable(2);
 
     // Worker is no longer needed.
-    CORBA::Boolean dying = 0;
     {
       omni_tracedmutex_lock sync(pd_lock);
 
-      if (conn->pd_n_workers == 1) {
-	if (conn->pd_dying) {
-	  // Connection is dying. Go round again so this thread spots
-	  // the condition.
-	  omniORB::logs(25, "Last worker sees connection is dying.");
-	  dying = 1;
-	}
-	if (pd_state == INFLUX) {
-	  // In flux. Go around again.
-	  omniORB::logs(25, "Last worker sees server state in flux.");
-	  dying = 1;
-	}
-      }
-      if (!dying) {
-	w->remove();
-	delete w;
-	conn->pd_n_workers--;
-	pd_n_temporary_workers--;
+      w->remove();
+      delete w;
+      conn->pd_n_workers--;
+      pd_n_temporary_workers--;
+
+      if (pd_state == INFLUX) {
+	omniORB::logs(25, "Temporary worker finishing.");
+	if (pd_n_temporary_workers == 0)
+	  pd_cond.broadcast();
       }
     }
-    return dying ? 1 : 0;
+    return 0;
   }
 #ifndef __DECCXX
   // Never reach here (and the hp/compaq/dec compiler is smart enough
@@ -1135,7 +1233,8 @@ giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
 	// If only one thread per connection is allowed, there is no
 	// need to setSelectable, since we won't be able to act on any
 	// interleaved calls that arrive.
-	conn->setSelectable(0,data_in_buffer);
+	conn->setSelectable(orbParameters::connectionWatchImmediate,
+			    data_in_buffer);
       }
     }
     else {
@@ -1147,13 +1246,15 @@ giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
 	n = conn->pd_dedicated_thread_in_upcall;
       }
       if (n) {
-	conn->setSelectable(0,data_in_buffer);
+	conn->setSelectable(orbParameters::connectionWatchImmediate,
+			    data_in_buffer);
       }
     }
   }
   else {
     // This connection is managed with the thread-pool policy
-    conn->setSelectable(0,data_in_buffer);
+    conn->setSelectable(orbParameters::connectionWatchImmediate,
+			data_in_buffer);
   }
 }
 
@@ -1186,8 +1287,7 @@ giopServer::notifyMrDone(giopMonitor* m, CORBA::Boolean exit_on_error)
   m->remove();
   delete m;
   if (pd_state == INFLUX) {
-    if ( ( Link::is_empty(pd_rendezvousers) || pd_nconnections == 0 ) &&
-	   Link::is_empty(pd_bidir_monitors ) ) {
+    if (Link::is_empty(pd_bidir_monitors)) {
       pd_cond.broadcast();
     }
   }
@@ -1414,6 +1514,37 @@ public:
 
 static threadPoolWatchConnectionHandler threadPoolWatchConnectionHandler_;
 
+/////////////////////////////////////////////////////////////////////////////
+class connectionWatchImmediateHandler : public orbOptions::Handler {
+public:
+
+  connectionWatchImmediateHandler() : 
+    orbOptions::Handler("connectionWatchImmediate",
+			"connectionWatchImmediate = 0 or 1",
+			1,
+			"-ORBconnectionWatchImmediate < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::connectionWatchImmediate = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::connectionWatchImmediate,
+			     result);
+  }
+};
+
+static connectionWatchImmediateHandler connectionWatchImmediateHandler_;
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -1429,6 +1560,7 @@ public:
     orbOptions::singleton().registerHandler(maxServerThreadPerConnectionHandler_);
     orbOptions::singleton().registerHandler(maxServerThreadPoolSizeHandler_);
     orbOptions::singleton().registerHandler(threadPoolWatchConnectionHandler_);
+    orbOptions::singleton().registerHandler(connectionWatchImmediateHandler_);
   }
 
   void attach() {

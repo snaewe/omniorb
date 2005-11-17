@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:03:46  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -295,6 +298,11 @@ public:
   };
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
+
+  static void dumpbuf(unsigned char* buf, size_t sz);
+  // Dump the buffer to the log. Logs just the first 128 bytes unless
+  // omniORB::traceLevel >= 40.
+
 
 protected:
   giopStrand*                pd_strand;

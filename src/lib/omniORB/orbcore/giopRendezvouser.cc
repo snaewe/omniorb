@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:02:15  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -122,9 +125,13 @@ giopRendezvouser::execute()
 
 void
 giopRendezvouser::terminate() {
+  if (omniORB::trace(25)) {
+    omniORB::logger l;
+    l << "giopRendezvouser for " << pd_endpoint->address()
+      << " terminate...\n";
+  }
   pd_endpoint->Poke();
 }
-
 
 
 OMNI_NAMESPACE_END(omni)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.4  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.3  2005/01/06 23:10:12  dgrisby
   Big merge from omni4_0_develop.
 
@@ -338,6 +341,8 @@ cdrMemoryStream::cdrMemoryStream(void* databuffer)
   pd_inb_end = (void *) ULONG_MAX;
 #elif (SIZEOF_INT == SIZEOF_PTR)
   pd_inb_end = (void *) UINT_MAX;
+#elif defined (_WIN64)
+  pd_inb_end = (void *) _UI64_MAX;
 #else
 #error "No suitable integer type available to calculate maximum" \
   " pointer value from"

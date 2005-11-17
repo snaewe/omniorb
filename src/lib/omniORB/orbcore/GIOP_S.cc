@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.5  2005/04/08 00:35:46  dgrisby
   Merging again.
 
@@ -335,9 +338,14 @@ GIOP_S::handleRequest() {
 
     // Oh dear.
 
-    OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
-		  CORBA::COMPLETED_NO);
-
+    if (omniObjAdapter::isDeactivating())
+      OMNIORB_THROW(OBJ_ADAPTER,
+		    OBJ_ADAPTER_POAUnknownAdapter,
+		    CORBA::COMPLETED_NO);
+    else
+      OMNIORB_THROW(OBJECT_NOT_EXIST,
+		    OBJECT_NOT_EXIST_NoMatch,
+		    CORBA::COMPLETED_NO);
   }
   catch(omniORB::LOCATION_FORWARD& ex) {
     // This is here to provide a convenient way to implement

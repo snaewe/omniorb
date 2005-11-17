@@ -19,7 +19,7 @@ certificate:
 
   mkdir demoCA demoCA/private demoCA/newcerts
 
-  openssl req -config openssl.cnf -x509 -newkey rsa:2048 -keyout demoCA/private/cakey.pem -out demoCA/cacert.pem
+  openssl req -config openssl.cnf -x509 -newkey rsa:2048 -keyout demoCA/private/cakey.pem -out demoCA/cacert.pem -days 3650
 
   echo 01 >demoCA/serial
   touch demoCA/index.txt

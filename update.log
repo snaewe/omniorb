@@ -1,3 +1,46 @@
+Thu Nov 17 17:02:16 GMT 2005 dgrisby
+====================================
+
+- Merge from omni4_0_develop.
+
+sample.cfg
+sample.reg
+bin/x86_win32/clwrapper.exe
+bin/x86_win32/libwrapper.exe
+bin/x86_win32/linkwrapper.exe
+bin/x86_win32/oidlwrapper.exe
+bin/x86_win32/omkdepend.exe
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/omniInternal.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+include/omniORB4/internal/giopServer.h
+include/omniORB4/internal/giopStream.h
+include/omniORB4/internal/objectAdapter.h
+include/omniORB4/internal/orbParameters.h
+src/examples/bidir/bd_shutdown.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopMonitor.cc
+src/lib/omniORB/orbcore/giopRendezvouser.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/ssl/README.txt
+src/tool/win32/clwrapper.c
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/oidlwrapper.c
+
+
 Mon Nov 14 11:36:32 GMT 2005 dgrisby
 ====================================
 

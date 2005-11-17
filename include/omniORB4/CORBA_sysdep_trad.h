@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2005/11/17 17:03:27  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.5  2005/04/14 00:04:00  dgrisby
   New traceInvocationReturns and traceTime options; remove logf function.
 
@@ -225,6 +228,7 @@
 #    if __SUNPRO_CC_COMPAT >= 5
 #      define HAS_Cplusplus_Namespace
 #      define HAS_Std_Namespace
+#      define HAS_Cplusplus_Bool
 #    endif
 #  endif
 
@@ -248,6 +252,10 @@
 #    ifndef HAVE_STD
 #        define HAVE_STD 1
 #    endif
+#  endif
+
+#  if defined(_WIN64)
+#    define SIZEOF_PTR  8
 #  endif
 
 #  define HAS_LongLong

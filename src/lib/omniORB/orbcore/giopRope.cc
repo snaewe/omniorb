@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.4  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.3  2005/09/01 14:52:12  dgrisby
   Merge from omni4_0_develop.
 
@@ -458,7 +461,7 @@ giopRope::releaseClient(IOP_C* iop_c) {
     giop_c->giopStreamList::insert(s->clients);
     // The strand is definitely idle from this point onwards, we
     // reset the idle counter so that it will be retired at the right time.
-    if ( s->isClient() && !s->biDir ) 
+    if ( s->isClient() && !s->biDir_has_callbacks ) 
       s->startIdleCounter();
   }
 

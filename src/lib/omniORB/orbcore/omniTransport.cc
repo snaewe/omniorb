@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.2  2005/09/01 14:52:12  dgrisby
   Merge from omni4_0_develop.
 
@@ -61,10 +64,12 @@
 #include <initialiser.h>
 #include <orbOptions.h>
 #include <orbParameters.h>
+#include <SocketCollection.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
-omni_tracedmutex* omniTransportLock     = 0;
+omni_tracedmutex* omniTransportLock = 0;
+
 
 ////////////////////////////////////////////////////////////////////////////
 // Maximum sizes for socket sends / recvs
@@ -224,6 +229,38 @@ static maxSocketRecvHandler maxSocketRecvHandler_;
 
 
 /////////////////////////////////////////////////////////////////////////////
+class connectionWatchPeriodHandler : public orbOptions::Handler {
+public:
+
+  connectionWatchPeriodHandler() : 
+    orbOptions::Handler("connectionWatchPeriod",
+			"connectionWatchPeriod = n >= 0 in microsecs",
+			1,
+			"-ORBconnectionWatchPeriod < n >= 0 in microsecs >") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 "Expect n >= 0 in microsecs");
+    }
+    SocketCollection::scan_interval_sec  = v / 1000000;
+    SocketCollection::scan_interval_nsec = (v % 1000000) * 1000;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    CORBA::ULong v = (SocketCollection::scan_interval_sec * 1000000 +
+		      SocketCollection::scan_interval_nsec / 1000);
+    orbOptions::addKVULong(key(),v,result);
+  }
+
+};
+
+static connectionWatchPeriodHandler connectionWatchPeriodHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -232,6 +269,7 @@ public:
   omni_omniTransport_initialiser() {
     orbOptions::singleton().registerHandler(maxSocketSendHandler_);
     orbOptions::singleton().registerHandler(maxSocketRecvHandler_);
+    orbOptions::singleton().registerHandler(connectionWatchPeriodHandler_);
   }
 
   void attach() {

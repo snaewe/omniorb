@@ -801,6 +801,40 @@ traceTime = "0"
 
 "threadPoolWatchConnection" = "1"
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; connectionWatchPeriod
+;
+;   For each endpoint, the ORB allocates a thread to watch for new
+;   connections and to monitor existing connections for calls that
+;   should be handed by the thread pool. The thread blocks in select()
+;   or similar for a period, after which it re-scans the lists of
+;   connections it should watch. This parameter is specified in
+;   microseconds.
+;
+;   Valid values = (n >= 0 in microseconds)
+;
+"connectionWatchPeriod" = "50000"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; connectionWatchImmediate
+;
+;   When a thread handles an incoming call, it unmarshals the
+;   arguments then marks the connection as watchable by the connection
+;   watching thread, in case the client sends a concurrent call on the
+;   same connection. If this parameter is set to the default false,
+;   the connection is not actually watched until the next connection
+;   watch period (determined by the connectionWatchPeriod parameter).
+;   If connectionWatchImmediate is set true, the connection watching
+;   thread is immediately signalled to watch the connection. That
+;   leads to faster interactive response to clients that multiplex
+;   calls, but adds significant overhead along the call chain.
+;
+;   Note that this setting has no effect on Windows, since it has no
+;   mechanism for signalling the connection watching thread.
+;
+;   Valid values = 0 or 1
+;
+"connectionWatchImmediate" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; acceptBiDirectionalGIOP

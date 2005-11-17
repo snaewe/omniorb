@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.4  2005/03/30 23:36:09  dgrisby
   Another merge from omni4_0_develop.
 
@@ -126,8 +129,6 @@
 #include <stdio.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
-
-static void dumpbuf(unsigned char* buf, size_t sz);
 
 ////////////////////////////////////////////////////////////////////////
 CORBA::ULong giopStream::directSendCutOff = 16384;
@@ -1194,7 +1195,8 @@ static inline char printable_char(char c) {
 }
 
 /////////////////////////////////////////////////////////////////////////
-static void dumpbuf(unsigned char* buf, size_t sz)
+void 
+giopStream::dumpbuf(unsigned char* buf, size_t sz)
 {
   static omni_tracedmutex lock;
   omni_tracedmutex_lock sync(lock);

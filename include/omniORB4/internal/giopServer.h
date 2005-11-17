@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:03:47  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -142,6 +145,7 @@ private:
   omni_tracedcondition                   pd_cond;
   CORBA::Boolean                         pd_thread_per_connection;
   CORBA::ULong                           pd_n_temporary_workers;
+  CORBA::ULong                           pd_n_dedicated_workers;
 
   omnivector<giopStrand*>                pd_bidir_strands;
   omnivector<giopActiveCollection*>      pd_bidir_collections;

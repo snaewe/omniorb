@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/11/17 17:03:27  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.3  2005/03/30 23:36:14  dgrisby
   Another merge from omni4_0_develop.
 
@@ -626,6 +629,8 @@ public:
   typedef unsigned long ptr_arith_t;
 #elif SIZEOF_PTR == SIZEOF_INT
   typedef unsigned int ptr_arith_t;
+#elif defined (_WIN64)
+  typedef size_t ptr_arith_t;
 #else
 #error "No suitable type to do pointer arithmetic"
 #endif

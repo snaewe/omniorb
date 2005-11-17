@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.6.2  2005/11/17 17:03:26  dgrisby
+ Merge from omni4_0_develop.
+
  Revision 1.1.6.1  2003/03/23 21:03:45  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -102,6 +105,7 @@ public:
   //  Must be called without any ORB locks held.
 
   static _CORBA_Boolean isInitialised();
+  static _CORBA_Boolean isDeactivating();
 
   static void initialise();
   // Initialises incoming rope factories.  May be called multiple

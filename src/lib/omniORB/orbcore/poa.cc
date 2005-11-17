@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.8  2005/11/17 17:03:26  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.4.2.7  2005/11/09 12:22:17  dgrisby
   Local interfaces support.
 
@@ -1831,9 +1834,30 @@ omniOrbPOA::dispatch(omniCallHandle& handle,
   }
   switch( pd_policy.req_processing ) {
   case RPP_ACTIVE_OBJ_MAP:
-    OMNIORB_THROW(OBJECT_NOT_EXIST,
-		  OBJECT_NOT_EXIST_NoMatch,
-		  CORBA::COMPLETED_NO);
+    {
+      omni_tracedmutex_lock sync(*omni::internalLock);
+      switch (pd_rq_state) {
+      case (int) PortableServer::POAManager::HOLDING:
+	// *** We should block here until we leave the HOLDING state,
+	// then check if the object now exists. For now we fall
+	// through as if ACTIVE...
+	  
+      case (int) PortableServer::POAManager::ACTIVE:
+	OMNIORB_THROW(OBJECT_NOT_EXIST,
+		      OBJECT_NOT_EXIST_NoMatch,
+		      CORBA::COMPLETED_NO);
+
+      case (int) PortableServer::POAManager::DISCARDING:
+	OMNIORB_THROW(TRANSIENT,
+		      TRANSIENT_POANoResource,
+		      CORBA::COMPLETED_NO);
+
+      case (int) PortableServer::POAManager::INACTIVE:
+	OMNIORB_THROW(OBJ_ADAPTER,
+		      OBJ_ADAPTER_POAUnknownAdapter,
+		      CORBA::COMPLETED_NO);
+      }
+    }
     break;
 
   case RPP_DEFAULT_SERVANT:
