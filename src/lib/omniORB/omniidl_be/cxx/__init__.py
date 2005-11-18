@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.23.2.5  2005/11/18 18:23:06  dgrisby
+# New -Wbimpl_mapping option.
+#
 # Revision 1.23.2.4  2005/09/05 17:22:09  dgrisby
 # Reference counted local call shortcut.
 #
@@ -188,14 +191,16 @@ usage_string = """\
   -Wbtf             Generate flattened 'tie' implementation skeletons
   -Wbsplice-modules Splice together multiply opened modules into one 
   -Wbexample        Generate example implementation code
-  -WbF              Generate code fragments (for expert only)
+  -WbF              Generate code fragments (for experts only)
   -WbBOA            Generate BOA compatible skeletons
   -Wbold            Generate old CORBA 2.1 signatures for skeletons
-  -Wbold_prefix     Map C++ reserved words with prefix _
+  -Wbold_prefix     Map C++ reserved words with prefix _ instead of _cxx_
   -Wbinline         Generate code for #included files inline with the main file
   -Wbkeep_inc_path  Preserve IDL #include path in header #includes
   -Wbuse_quotes     Use quotes in #includes: "foo" rather than <foo>
-  -Wbdll_includes   Extra support for #included IDL in DLLs"""
+  -Wbdll_includes   Extra support for #included IDL in DLLs
+  -Wbvirtual_objref Use virtual functions in object references
+  -Wbimpl_mapping   Use 'impl' mapping for object reference methods"""
 
 # Encountering an unknown AST node will cause an AttributeError exception
 # to be thrown in one of the visitors. Store a list of those not-supported
@@ -228,6 +233,8 @@ def process_args(args):
             config.state['Use Quotes']        = 1
         elif arg == "virtual_objref":
             config.state['Virtual Objref Methods'] = 1
+        elif arg == "impl_mapping":
+            config.state['Impl Mapping'] = 1
         elif arg == "debug":
             config.state['Debug']             = 1
         elif arg[:2] == "h=":

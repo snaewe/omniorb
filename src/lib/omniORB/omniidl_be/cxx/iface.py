@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.12  2005/11/18 18:23:06  dgrisby
+# New -Wbimpl_mapping option.
+#
 # Revision 1.1.6.11  2005/11/14 11:02:16  dgrisby
 # Local interface fixes.
 #
@@ -235,7 +238,8 @@ class _objref_Method(cxx.Method):
   def callable(self): return self._callable
 
   def from_Callable(self):
-    self._from_Callable(use_out = 1)
+    use_out = not config.state["Impl Mapping"]
+    self._from_Callable(use_out = use_out)
 
   def _from_Callable(self, use_out):
     # Grab the IDL environment
