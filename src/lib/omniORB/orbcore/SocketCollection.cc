@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2005/11/18 18:25:57  dgrisby
+  Race condition between connection deletion and Select.
+
   Revision 1.1.4.10  2005/08/03 09:43:13  dgrisby
   setSelectable could cause a readable socket to be handled twice.
 
@@ -412,7 +415,6 @@ SocketCollection::Select() {
 	    }
 	    else {
 	      // Add to the pollfds
-	      s->pd_selected = 1;
 	      if (index == pd_pollfd_len)
 		growPollLists();
 
@@ -420,6 +422,7 @@ SocketCollection::Select() {
 	      pd_pollfds[index].events  = POLLIN;
 	      pd_pollfds[index].revents = 0;
 	      pd_pollsockets[index]     = s;
+	      s->pd_fd_index            = index;
 	      index++;
 	    }
 	  }
@@ -463,9 +466,11 @@ SocketCollection::Select() {
 	  if (s) {
 	    // Remove from pollfds by swapping in the last item in the array
 	    pd_pollfd_n--;
-	    pd_pollfds[index]     = pd_pollfds[pd_pollfd_n];
-	    pd_pollsockets[index] = pd_pollsockets[pd_pollfd_n];
-	    s->pd_selected        = 0;
+	    pd_pollfds[index]     	       = pd_pollfds[pd_pollfd_n];
+	    pd_pollsockets[index] 	       = pd_pollsockets[pd_pollfd_n];
+	    s->pd_fd_index                     = -1;
+	    if (pd_pollsockets[index])
+	      pd_pollsockets[index]->pd_fd_index = index;
 
 	    if (s->pd_peeking) {
 	      // A thread is monitoring the socket with Peek(). We do
@@ -485,13 +490,21 @@ SocketCollection::Select() {
 	    }
 	    continue; // without incrementing index
 	  }
-	  else {
-	    OMNIORB_ASSERT(pd_pollfds[index].fd == pd_pipe_read);
+	  else if (pd_pollfds[index].fd == pd_pipe_read) {
 #ifdef UnixArchitecture
 	    char data;
 	    read(pd_pipe_read, &data, 1);
 	    pd_pipe_full = 0;
 #endif
+	  }
+	  else {
+	    // Socket is no longer selectable -- remove from pollfds.
+	    pd_pollfd_n--;
+	    pd_pollfds[index]     = pd_pollfds[pd_pollfd_n];
+	    pd_pollsockets[index] = pd_pollsockets[pd_pollfd_n];
+	    if (pd_pollsockets[index])
+	      pd_pollsockets[index]->pd_fd_index = index;
+	    continue; // without incrementing index
 	  }
 	}
 	else {
@@ -542,10 +555,8 @@ SocketHolder::setSelectable(int            now,
   if (now == 2 && !pd_selectable)
     return;
 
-  if (now && !pd_selected) {
+  if (now && pd_fd_index == -1) {
     // Add socket to the list of pollfds
-    pd_selected = 1;
-
     unsigned index = pd_belong_to->pd_pollfd_n;
 
     if (index == pd_belong_to->pd_pollfd_len)
@@ -556,6 +567,7 @@ SocketHolder::setSelectable(int            now,
     pd_belong_to->pd_pollfds[index].revents = 0;
     pd_belong_to->pd_pollsockets[index]     = this;
     pd_belong_to->pd_pollfd_n = index + 1;
+    pd_fd_index = index;
   }
 
   pd_selectable      = 1;
@@ -591,6 +603,11 @@ SocketHolder::clearSelectable()
   OMNIORB_ASSERT(pd_belong_to);
   omni_tracedmutex_lock l(pd_belong_to->pd_collection_lock);
   pd_selectable = 0;
+
+  if (pd_fd_index >= 0) {
+    //pd_belong_to->pd_pollsockets[pd_fd_index] = 0;
+    pd_fd_index = -1;
+  }
 
 #ifdef UnixArchitecture
   if (pd_belong_to->pd_idle_count == 0) {
@@ -794,7 +811,6 @@ SocketCollection::Select() {
 			      "descriptors. Some connections may be ignored.");
 		break;
 	      }
-	      s->pd_selected = 1;
 	      s->pd_fd_index = pd_fd_set.fd_count;
 	      pd_fd_set.fd_array[pd_fd_set.fd_count] = s->pd_socket;
 	      pd_fd_sockets[pd_fd_set.fd_count] = s;
@@ -846,7 +862,6 @@ SocketCollection::Select() {
 	  pd_fd_sockets[to_i]->pd_fd_index = to_i;
 
 	  s->pd_fd_index = -1;
-	  s->pd_selected = 0;
 
 	  if (s->pd_peeking) {
 	    // A thread is monitoring the socket with Peek(). We do
@@ -903,7 +918,7 @@ SocketHolder::setSelectable(int            now,
   if (now == 2 && !pd_selectable)
     return;
 
-  if (now && !pd_selected) {
+  if (now && pd_fd_index == -1) {
     // Add socket to the fd_set
     if (pd_belong_to->pd_fd_set.fd_count == FD_SETSIZE) {
       omniORB::logs(1, "Reached the limit of selectable file "
@@ -1144,7 +1159,7 @@ SocketCollection::Select() {
 	    }
 	    else {
 	      // Add to the fd_set
-	      s->pd_selected = 1;
+	      s->pd_fd_index = 1;
 
 	      if (IS_SELECTABLE(s->pd_socket)) {
 		FD_SET(s->pd_socket, &pd_fd_set);
@@ -1193,7 +1208,7 @@ SocketCollection::Select() {
 
       if (s->pd_selectable) {
 	if (FD_ISSET(s->pd_socket, &rfds)) {
-	  s->pd_selected = 0;
+	  s->pd_fd_index = -1;
 	  FD_CLR(s->pd_socket, &pd_fd_set);
 	  
 	  if (s->pd_peeking) {
@@ -1256,9 +1271,9 @@ SocketHolder::setSelectable(int            now,
   if (now == 2 && !pd_selectable)
     return;
 
-  if (now && !pd_selected) {
+  if (now && pd_fd_index == -1) {
     // Add socket to the fd_set
-    pd_selected = 1;
+    pd_fd_index = 1;
 
     if (IS_SELECTABLE(pd_socket)) {
       FD_SET(pd_socket, &pd_belong_to->pd_fd_set);

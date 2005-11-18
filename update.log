@@ -1,3 +1,18 @@
+Fri Nov 18 18:22:10 GMT 2005 dgrisby
+====================================
+
+- New -Wbimpl_mapping option.
+
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+src/lib/omniORB/omniidl_be/cxx/config.py
+src/lib/omniORB/omniidl_be/cxx/iface.py
+
+- Race condition between connection deletion and Select.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Thu Nov 17 17:02:16 GMT 2005 dgrisby
 ====================================
 
