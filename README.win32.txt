@@ -308,17 +308,18 @@ with Visual C++ 5.
     also requires the scripting language Python to be able to compile
     IDL to C++.
 
-    gnu-win32
-    ---------
+    Cygwin
+    ------
 
     The full Cygwin distribution is freely available at:
 
        http://www.cygwin.com/
 
+
     The toolkit is big and you don't need all of it to compile
     omniORB. Alternatively, you can download a cutdown version from:
 
-       http://www.uk.research.att.com/pub/omniORB/gnu-win32-lite.zip
+       http://omniorb.sourceforge.net/att_packages/gnu-win32-lite.zip
 
     The utilities in this version are all you need to build omniORB.
 
@@ -374,7 +375,8 @@ with Visual C++ 5.
     Alternatively, for Windows on x86, you can install a minimal
     version of Python which contains just the functionality required
     by omniidl. Download it from Sourceforge, via
-    http://omniorb.sourceforge.net/download.html
+
+       http://omniorb.sourceforge.net/att_packages/omnipython-x86_win32.zip
 
     Unpack the zip file at the top of the omniORB tree. It places
     files in the bin, lib and include directories.
@@ -452,6 +454,8 @@ Running omniNames as an NT service
                            C:\omniNames\omniNames.errlog
 
             AppDirectory:  REG_SZ C:\omniNames
+
+
 
 Mailing List
 ============
