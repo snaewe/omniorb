@@ -1,3 +1,12 @@
+Sun Nov 20 15:31:36 GMT 2005 dgrisby
+====================================
+
+- New connection cleanup meant some connection state was not
+  completely deleted.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Sat Nov 19 23:50:02 GMT 2005 dgrisby
 ====================================
 
