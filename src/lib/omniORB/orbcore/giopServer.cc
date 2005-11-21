@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.11  2005/11/21 11:02:57  dgrisby
+  Another merge.
+
   Revision 1.25.2.10  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -507,6 +510,29 @@ giopServer::activate()
   }
 }
 
+////////////////////////////////////////////////////////////////////////
+static inline void
+sendCloseConnection(giopStrand* s)
+{
+  // Send close connection message.
+  char hdr[12];
+  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
+  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+  hdr[7] = (char)GIOP::CloseConnection;
+  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    log << "sendCloseConnection: to " << s->connection->peeraddress()
+	<< " 12 bytes\n";
+  }
+  if (omniORB::trace(30))
+    giopStream::dumpbuf((unsigned char*)hdr, 12);
+
+  s->connection->Send(hdr,12);
+}
+
 ////////////////////////////////////////////////////////////////////////////
 void
 giopServer::deactivate()
@@ -540,27 +566,8 @@ giopServer::deactivate()
       while (*head) {
 	if ((*head)->connection->pd_has_dedicated_thread ||
 	    (*head)->strand->biDir) {
-	  {
-	    // Send close connection message.
-	    GIOP::Version ver = giopStreamImpl::maxVersion()->version();
-	    char hdr[12];
-	    hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
-	    hdr[4] = ver.major;   hdr[5] = ver.minor;
-	    hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
-	    hdr[7] = (char)GIOP::CloseConnection;
-	    hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
 
-	    if (omniORB::trace(25)) {
-	      omniORB::logger log;
-	      log << "sendCloseConnection: to "
-		  << (*head)->connection->peeraddress()
-		  << " 12 bytes\n";
-	    }
-	    if (omniORB::trace(30))
-	      giopStream::dumpbuf((unsigned char*)hdr, 12);
-
-	    (*head)->connection->Send(hdr,12);
-	  }
+	  sendCloseConnection((*head)->strand);
 	  (*head)->connection->Shutdown();
 	  ++closed_count;
 	}
@@ -622,25 +629,6 @@ giopServer::deactivate()
     }
   }
 
-  if (pd_n_temporary_workers) {
-    if (omniORB::trace(25)) {
-      omniORB::logger l;
-      l << "Wait for " << pd_n_temporary_workers << " temporary worker"
-	<< plural(pd_n_temporary_workers) << "...\n";
-    }
-    int go = 1;
-    while (go && pd_n_temporary_workers) {
-      go = pd_cond.timedwait(s, ns);
-    }
-    if (omniORB::trace(25)) {
-      omniORB::logger l;
-      if (!go)
-	l << "Timed out. ";
-      l << pd_n_temporary_workers << " temporary worker"
-	<< plural(pd_n_temporary_workers) << " remaining.\n";
-    }
-  }
-
   // Stop bidir monitors
   if (!Link::is_empty(pd_bidir_monitors)) {
     omniORB::logs(25, "Deactivate bidirectional monitors...");
@@ -661,6 +649,56 @@ giopServer::deactivate()
 	l << "Monitors deactivated.\n";
       else
 	l << "Timed out waiting for monitors to deactivate.\n";
+    }
+  }
+
+  if (pd_nconnections) {
+    omniORB::logs(25, "Close remaining connections...");
+    CORBA::ULong closed_count = 0;
+
+    for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
+      connectionState** head = &(pd_connectionState[i]);
+      while (*head) {
+	if (!((*head)->connection->pd_has_dedicated_thread ||
+	      (*head)->strand->biDir)) {
+
+	  sendCloseConnection((*head)->strand);
+	  (*head)->connection->Shutdown();
+
+	  // Start a worker to notice the connection closure.
+	  giopWorker* task = new giopWorker((*head)->strand, this, 1);
+	  orbAsyncInvoker->insert(task);
+	  task->insert((*head)->workers);
+	  ++(*head)->connection->pd_n_workers;
+	  ++pd_n_temporary_workers;
+	  ++closed_count;
+	}
+	head = &((*head)->next);
+      }
+    }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Closed " << closed_count << " connection" << plural(closed_count)
+	<< " out of " << pd_nconnections << ".\n";
+    }
+  }
+
+  if (pd_n_temporary_workers) {
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Wait for " << pd_n_temporary_workers << " temporary worker"
+	<< plural(pd_n_temporary_workers) << "...\n";
+    }
+    int go = 1;
+    while (go && pd_n_temporary_workers) {
+      go = pd_cond.timedwait(s, ns);
+    }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      if (!go)
+	l << "Timed out. ";
+      l << pd_n_temporary_workers << " temporary worker"
+	<< plural(pd_n_temporary_workers) << " remaining.\n";
     }
   }
 
