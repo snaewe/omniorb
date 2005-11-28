@@ -1,3 +1,14 @@
+Mon Nov 28 14:56:54 GMT 2005 dgrisby
+====================================
+
+- New abortOnNativeException parameter for Windows.
+
+sample.cfg
+sample.reg
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Sun Nov 20 15:31:36 GMT 2005 dgrisby
 ====================================
 

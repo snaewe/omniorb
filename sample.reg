@@ -231,6 +231,19 @@ REGEDIT4
 ;
 "abortOnInternalError" = "0"
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; abortOnNativeException
+;
+;   On Windows, "native" exceptions such as segmentation faults and
+;   divide by zero appear as C++ exceptions that can be caught with
+;   catch (...). Setting this parameter to TRUE causes such exceptions
+;   to abort the process instead.
+;
+;   This parameter has no effect on other platforms.
+;
+;   Valid values = 0 or 1
+;
+"abortOnNativeException" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; maxSocketSend
