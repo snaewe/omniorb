@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.9  2005/11/29 13:33:35  dgrisby
+  INS POA leaked a reference to the Root POA. Thanks Dirk Siebnich.
+
   Revision 1.4.2.8  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -2262,8 +2265,13 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   if( pd_parent ) {
     pd_parent->lose_child(this);
     pd_parent = 0;
-    if (theINSPOA == this) theINSPOA = 0;
-  } else {
+    if (theINSPOA == this) {
+      if (theRootPOA)
+	theRootPOA->decrRefCount();
+      theINSPOA = 0;
+    }
+  }
+  else {
     OMNIORB_ASSERT(theRootPOA == this);
     theRootPOA = 0;
   }
