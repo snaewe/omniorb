@@ -1,3 +1,11 @@
+Tue Nov 29 13:31:38 GMT 2005 dgrisby
+====================================
+
+- INS POA leaked a reference to the Root POA. Thanks Dirk Siebnich.
+
+src/lib/omniORB/orbcore/poa.cc
+
+
 Mon Nov 28 14:56:54 GMT 2005 dgrisby
 ====================================
 
