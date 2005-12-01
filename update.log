@@ -1,3 +1,11 @@
+Thu Dec  1 23:13:24 GMT 2005 dgrisby
+====================================
+
+- Remove unsafe log message from native exception handler.
+
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Tue Nov 29 13:31:38 GMT 2005 dgrisby
 ====================================
 

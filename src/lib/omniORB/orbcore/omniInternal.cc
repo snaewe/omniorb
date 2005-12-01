@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.41  2005/12/01 23:14:24  dgrisby
+  Remove unsafe log message from native exception handler.
+
   Revision 1.2.2.40  2005/11/28 14:57:51  dgrisby
   New abortOnNativeException parameter for Windows.
 
@@ -1533,7 +1536,6 @@ static abortOnNativeExceptionHandler abortOnNativeExceptionHandler_;
 #ifdef __WIN32__
 extern "C" void omniORB_rethrow_exception(unsigned, EXCEPTION_POINTERS*)
 {
-  omniORB::logs(1, "Rethrow native Windows exception.");
   throw;
 }
 static void abortOnNativeExceptionInterceptor(omniInterceptors::
