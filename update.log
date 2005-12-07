@@ -1,3 +1,12 @@
+Wed Dec  7 14:29:45 GMT 2005 dgrisby
+====================================
+
+- Numbers in string constants were unnecessarily escaped. Thanks Brian
+  Neal.
+
+src/tool/omniidl/python/omniidl/idlutil.py
+
+
 Thu Dec  1 23:13:24 GMT 2005 dgrisby
 ====================================
 

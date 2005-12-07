@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.8  2005/12/07 14:30:50  dgrisby
+# Numbers in string constants were unnecessarily escaped. Thanks Brian
+# Neal.
+#
 # Revision 1.5.2.7  2005/04/03 13:35:31  dgrisby
 # Handle Unicode escapes properly.
 #
@@ -121,7 +125,7 @@ with any prefix it shares with B removed.
     return tscope
 
 _valid_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" \
-               " _!$%^&*()-=+[]{};#:@~,./<>?|`"
+               " 0123456789_!$%^&*()-=+[]{};#:@~,./<>?|`"
 
 _valid_unichars = map(ord, list(_valid_chars))
 
