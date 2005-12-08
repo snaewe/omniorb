@@ -1,3 +1,25 @@
+Thu Dec  8 13:49:51 GMT 2005 dgrisby
+====================================
+
+- Better string marshalling performance; other minor optimisations.
+
+include/omniORB4/cdrStream.h
+include/omniORB4/codeSets.h
+include/omniORB4/omniInternal.h
+src/lib/omniORB/codesets/cs-UCS-4.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Tue Nov 29 13:31:38 GMT 2005 dgrisby
 ====================================
 

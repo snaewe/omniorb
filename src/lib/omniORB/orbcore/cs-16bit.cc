@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.1.4.2  2003/05/20 16:53:16  dgrisby
   Valuetype marshalling support.
 
@@ -136,7 +139,7 @@ omniCodeSet::NCS_W_16bit::marshalWString(cdrStream&          stream,
 				 (CORBA::CompletionStatus)stream.completion());
     us[i] = uc;
   }
-  tcs->marshalWString(stream, len, us);
+  tcs->marshalWString(stream, bound, len, us);
 }
 
 _CORBA_WChar
@@ -234,6 +237,7 @@ omniCodeSet::TCS_W_16bit::marshalWChar(cdrStream& stream,
 
 void
 omniCodeSet::TCS_W_16bit::marshalWString(cdrStream& stream,
+					 _CORBA_ULong bound,
 					 _CORBA_ULong len,
 					 const omniCodeSet::UniChar* us)
 {

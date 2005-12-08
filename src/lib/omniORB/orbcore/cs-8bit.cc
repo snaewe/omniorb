@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.1.4.2  2003/05/20 16:53:16  dgrisby
   Valuetype marshalling support.
 
@@ -119,12 +122,11 @@ omniCodeSet::NCS_C_8bit::marshalString(cdrStream&          stream,
 			  BAD_INV_ORDER_CodeSetNotKnownYet,
 			  (CORBA::CompletionStatus)stream.completion());
 
-  if (tcs->fastMarshalString(stream, this, bound, len, s)) return;
+  if (tcs->fastMarshalString(stream, this, bound, len, s))
+    return;
 
-  if (bound && len > bound)
-    OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
-		  (CORBA::CompletionStatus)stream.completion());
-
+  if (len == 0)
+    len = strlen(s);
 
   omniCodeSet::UniChar*    us = omniCodeSetUtil::allocU(len+1);
   omniCodeSetUtil::HolderU uh(us);
@@ -132,12 +134,13 @@ omniCodeSet::NCS_C_8bit::marshalString(cdrStream&          stream,
 
   for (_CORBA_ULong i=0; i<=len; i++) {
     uc = pd_toU[(_CORBA_Char)(s[i])];
-    if (s[i] && !uc) OMNIORB_THROW(DATA_CONVERSION, 
-				   DATA_CONVERSION_BadInput,
-				   (CORBA::CompletionStatus)stream.completion());
+    if (!uc && s[i])
+      OMNIORB_THROW(DATA_CONVERSION, 
+		    DATA_CONVERSION_BadInput,
+		    (CORBA::CompletionStatus)stream.completion());
     us[i] = uc;
   }
-  tcs->marshalString(stream, len, us);
+  tcs->marshalString(stream, bound, len, us);
 }
 
 _CORBA_Char
@@ -216,9 +219,14 @@ omniCodeSet::TCS_C_8bit::marshalChar(cdrStream& stream,
 
 void
 omniCodeSet::TCS_C_8bit::marshalString(cdrStream& stream,
+				       _CORBA_ULong bound,
 				       _CORBA_ULong len,
 				       const omniCodeSet::UniChar* us)
 {
+  if (bound && len > bound)
+    OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+		  (CORBA::CompletionStatus)stream.completion());
+
   len++;
   len >>= stream;
 
@@ -324,13 +332,21 @@ omniCodeSet::TCS_C_8bit::fastMarshalString(cdrStream&          stream,
 					   const char*         s)
 {
   if (ncs->id() == id()) { // Null transformation
-    if (bound && len > bound)
-      OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
-		    (CORBA::CompletionStatus)stream.completion());
+    if (len == 0) {
+      len = stream.marshalRawString(s);
 
-    len++;
-    len >>= stream;
-    stream.put_octet_array((const _CORBA_Octet*)s, len);
+      if (bound && len-1 > bound)
+	OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+		      (CORBA::CompletionStatus)stream.completion());
+    }
+    else {
+      if (bound && len > bound)
+	OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+		      (CORBA::CompletionStatus)stream.completion());
+      len++;
+      len >>= stream;
+      stream.put_octet_array((const _CORBA_Octet*)s, len);
+    }
     return 1;
   }
   return 0;

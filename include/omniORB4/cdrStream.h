@@ -24,11 +24,14 @@
 //
 //
 // Description:
-//	*** PROPRIETORY INTERFACE ***
+//	*** PROPRIETARY INTERFACE ***
 //
 
 /*
   $Log$
+  Revision 1.1.4.10  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.1.4.9  2005/07/22 17:18:40  dgrisby
   Another merge from omni4_0_develop.
 
@@ -286,12 +289,37 @@ public:
   }
 
   inline void marshalOctet(_CORBA_Octet a) {
-    CdrMarshal((*this),_CORBA_Octet,omni::ALIGN_1,a);
+    // No need to align here
+    do {
+    again:
+      omni::ptr_arith_t p1 = (omni::ptr_arith_t)pd_outb_mkr;
+      omni::ptr_arith_t p2 = p1 + 1;
+      if( (void*)p2 > pd_outb_end ) {
+	if (reserveOutputSpaceForPrimitiveType(omni::ALIGN_1, 1))
+	  goto again;
+	else {
+	  pd_outb_mkr = (void*) p2;
+	  break;
+	}
+      }
+      pd_outb_mkr = (void*) p2;
+      *((_CORBA_Octet*)p1) = a;
+    } while (0);
   }
 
   inline _CORBA_Octet unmarshalOctet() {
     _CORBA_Octet a;
-    CdrUnMarshal((*this),_CORBA_Octet,omni::ALIGN_1,a);
+    do {
+    again:
+      omni::ptr_arith_t p1 = (omni::ptr_arith_t)pd_inb_mkr;
+      omni::ptr_arith_t p2 = p1 + sizeof(_CORBA_Octet);
+      if ((void *)p2 > pd_inb_end) {
+	fetchInputData(omni::ALIGN_1,sizeof(_CORBA_Octet));
+	goto again;
+      }
+      pd_inb_mkr = (void*) p2;
+      a = *((_CORBA_Octet*)p1);
+    } while(0);
     return a;
   }
 
@@ -521,7 +549,7 @@ public:
 
   inline void marshalString(const char* s,int bounded=0) {
     OMNIORB_USER_CHECK(s);
-    pd_ncs_c->marshalString(*this,pd_tcs_c,bounded,strlen(s),s);
+    pd_ncs_c->marshalString(*this,pd_tcs_c,bounded,0,s);
   }
 
   inline char* unmarshalString(int bounded=0) {
@@ -530,14 +558,11 @@ public:
     return s;
   }
 
-  inline void marshalRawString(const char* s) {
-    _CORBA_ULong len = strlen(s) + 1; len >>= *this;
-    put_octet_array((const _CORBA_Octet*)s, len);
-  }
+  _CORBA_ULong marshalRawString(const char* s);
+  // Marshal a raw string, with no code set conversion.
 
   char* unmarshalRawString();
-  // unmarshalRawString() can't be inline since it has to throw
-  // MARSHAL exceptions.
+  // Unmarshal a raw string.
 
   inline void marshalWString(const _CORBA_WChar* s,int bounded=0) {
     OMNIORB_USER_CHECK(s);
@@ -556,42 +581,46 @@ public:
   // <size> must be a multiple of <align>.
   // For instance, if <align> == omni::ALIGN_8 then <size> % 8 == 0.
 
-  virtual void get_octet_array(_CORBA_Octet* b,int size,
+  void put_small_octet_array(const _CORBA_Octet* b, int size);
+  // Put a small octet array which must have ALIGN_1. Since it is
+  // small, we expect it to fit in the stream's current buffer without
+  // having to allocate more space.
+
+  virtual void get_octet_array(_CORBA_Octet* b, int size,
 			       omni::alignment_t align=omni::ALIGN_1) = 0;
-
-
+  // Get array of octets.
 
   virtual void skipInput(_CORBA_ULong size) = 0;
   // Skip <size> bytes from the input stream.
 
   virtual _CORBA_Boolean checkInputOverrun(_CORBA_ULong itemSize,
 				_CORBA_ULong nItems,
-				omni::alignment_t align=omni::ALIGN_1) = 0;
-  // Return TRUE(1) if the input stream contains data for at least one
-  // <nitems> of size <itemSize>. The initial alignment of the data starts
-  // at <align>. Return FALSE(0) otherwise.
+				 omni::alignment_t align=omni::ALIGN_1) = 0;
+  // Return true if the input stream contains data for at least
+  // <nitems> of size <itemSize>. The initial alignment of the data
+  // starts at <align>. Return false otherwise.
 
   virtual _CORBA_ULong currentInputPtr() const = 0;
-  // Return a value that represent the position of the next byte in the
-  // input stream. Later bytes in the stream has a higher return value.
-  // The absolute value of the return value has no meaning.
-  // The only use of this function is to compute the distance between two
-  // bytes in the stream.
+  // Return a value that represents the position of the next byte in
+  // the input stream. Later bytes in the stream has a higher return
+  // value. The absolute value of the return value has no meaning.
+  // The only use of this function is to compute the distance between
+  // two bytes in the stream.
 
   virtual _CORBA_ULong currentOutputPtr() const = 0;
-  // Return a value that represent the position of the next byte in the
-  // output stream. Later bytes in the stream has a higher return value.
-  // The absolute value of the return value has no meaning.
-  // The only use of this function is to compute the distance between two
-  // bytes in the stream.
+  // Return a value that represents the position of the next byte in
+  // the output stream. Later bytes in the stream have a higher return
+  // value.  The absolute value of the return value has no meaning.
+  // The only use of this function is to compute the distance between
+  // two bytes in the stream.
 
 
   virtual _CORBA_Boolean checkOutputOverrun(_CORBA_ULong itemSize,
 				_CORBA_ULong nItems,
 				omni::alignment_t align=omni::ALIGN_1) = 0;
-  // Return TRUE(1) if data of at least  <nitems> of size <itemSize> can be
-  // inserted to the output stream. The initial alignment of the data starts
-  // at <align>. Return FALSE(0) otherwise.
+  // Return true if data of at least <nitems> of size <itemSize> can
+  // be inserted to the output stream. The initial alignment of the
+  // data starts at <align>. Return false otherwise.
 
   virtual void copy_to(cdrStream&,int size,
 		       omni::alignment_t align=omni::ALIGN_1);
@@ -1219,7 +1248,7 @@ public:
   void skipInput(_CORBA_ULong);
 
   _CORBA_Boolean checkInputOverrun(_CORBA_ULong,_CORBA_ULong,
-                                   omni::alignment_t align=omni::ALIGN_1);
+				   omni::alignment_t align=omni::ALIGN_1);
 
   void fetchInputData(omni::alignment_t,size_t);
 

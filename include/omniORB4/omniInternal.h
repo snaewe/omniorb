@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.7  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.5.2.6  2005/11/17 17:03:27  dgrisby
   Merge from omni4_0_develop.
 
@@ -315,7 +318,13 @@ _CORBA_MODULE_BEG
     return (p + ((ptr_arith_t) align - 1)) & ~((ptr_arith_t) align - 1);
   }
 
-  _CORBA_MODULE_FN _CORBA_ULong hash(const _CORBA_Octet* key, int keysize);
+  _CORBA_MODULE_FN inline _CORBA_ULong hash(const _CORBA_Octet* key,
+					    int keysize)
+  {
+    _CORBA_ULong n = 0;
+    while( keysize-- )  n = ((n << 5) ^ (n >> 27)) ^ *key++;
+    return n;
+  }
   // Computes a hash of the object key.  The caller must ensure
   // that the returned value is bounded to the required range.
 

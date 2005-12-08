@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.1.4.2  2005/01/06 23:10:14  dgrisby
   Big merge from omni4_0_develop.
 
@@ -114,7 +117,7 @@ public:
 
   // Unicode based marshalling
   void marshalChar  (cdrStream& stream, omniCodeSet::UniChar uc);
-  void marshalString(cdrStream& stream,
+  void marshalString(cdrStream& stream, _CORBA_ULong bound,
 		     _CORBA_ULong len, const omniCodeSet::UniChar* us);
 
   omniCodeSet::UniChar unmarshalChar(cdrStream& stream);
@@ -283,9 +286,7 @@ NCS_C_UTF_8::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
     // processors. Cases 3, 2 and 1 should drop through with no
     // branching code.
     switch (bytes) {
-    case 6: OMNIORB_THROW(DATA_CONVERSION, 
-			  DATA_CONVERSION_BadInput,
-			  (CORBA::CompletionStatus)stream.completion());
+    case 6:
     case 5:
     case 4: OMNIORB_THROW(DATA_CONVERSION, 
 			  DATA_CONVERSION_BadInput,
@@ -315,8 +316,9 @@ NCS_C_UTF_8::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
     }
   }
   // Null terminator
+  len = ub.length();
   ub.insert(0);
-  tcs->marshalString(stream, ub.length() - 1, ub.buffer());
+  tcs->marshalString(stream, bound, len, ub.buffer());
 }
 
 
@@ -401,8 +403,8 @@ NCS_C_UTF_8::unmarshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
     }
     else if (uc < 0xe000) {
       // Second half of surrogate pair not allowed on its own
-      OMNIORB_THROW(BAD_INV_ORDER, 
-		    BAD_INV_ORDER_CodeSetNotKnownYet,
+      OMNIORB_THROW(DATA_CONVERSION,
+		    DATA_CONVERSION_BadInput,
 		    (CORBA::CompletionStatus)stream.completion());
     }
     else {
@@ -437,6 +439,7 @@ TCS_C_UTF_8::marshalChar(cdrStream& stream, omniCodeSet::UniChar uc)
 
 void
 TCS_C_UTF_8::marshalString(cdrStream& stream,
+			   _CORBA_ULong bound,
 			   _CORBA_ULong len,
 			   const omniCodeSet::UniChar* us)
 {
@@ -494,6 +497,11 @@ TCS_C_UTF_8::marshalString(cdrStream& stream,
     }
   }
   _CORBA_ULong mlen = b.length();
+
+  if (bound && mlen-1 > bound)
+    OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+		  (CORBA::CompletionStatus)stream.completion());
+
   mlen >>= stream;
   stream.put_octet_array((const _CORBA_Octet*)b.buffer(), mlen);
 }
@@ -630,14 +638,22 @@ TCS_C_UTF_8::fastMarshalString(cdrStream&          stream,
 			       const char*         s)
 {
   if (ncs->id() == id()) { // Null transformation
-    if (bound && len > bound)
-      OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
-		    (CORBA::CompletionStatus)stream.completion());
+    if (len == 0) {
+      len = stream.marshalRawString(s);
 
+      if (bound && len-1 > bound)
+	OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+		      (CORBA::CompletionStatus)stream.completion());
+    }
+    else {
+      if (bound && len > bound)
+	OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+		      (CORBA::CompletionStatus)stream.completion());
 
-    _CORBA_ULong mlen = len + 1;
-    mlen >>= stream;
-    stream.put_octet_array((const _CORBA_Octet*)s, mlen);
+      _CORBA_ULong mlen = len + 1;
+      mlen >>= stream;
+      stream.put_octet_array((const _CORBA_Octet*)s, mlen);
+    }
     return 1;
   }
   else if (ncs->kind() == omniCodeSet::CS_8bit) { // Simple 8 bit code set

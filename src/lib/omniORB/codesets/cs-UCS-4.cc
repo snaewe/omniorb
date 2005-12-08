@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.1.4.3  2005/01/06 23:09:43  dgrisby
   Big merge from omni4_0_develop.
 
@@ -108,6 +111,7 @@ public:
 
   virtual void marshalWChar  (cdrStream& stream, omniCodeSet::UniChar uc);
   virtual void marshalWString(cdrStream& stream,
+			      _CORBA_ULong bound,
 			      _CORBA_ULong len,
 			      const omniCodeSet::UniChar* us);
 
@@ -199,7 +203,7 @@ NCS_W_UCS_4::marshalWString(cdrStream&          stream,
       OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_CannotMapChar,
 		    (CORBA::CompletionStatus)stream.completion());
   }
-  tcs->marshalWString(stream, len, ub.extract());
+  tcs->marshalWString(stream, bound, len, ub.extract());
 }
 
 
@@ -326,6 +330,7 @@ TCS_W_UCS_4::marshalWChar(cdrStream& stream,
 
 void
 TCS_W_UCS_4::marshalWString(cdrStream& stream,
+			    _CORBA_ULong bound,
 			    _CORBA_ULong len,
 			    const omniCodeSet::UniChar* us)
 {

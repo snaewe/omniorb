@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.8  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.5.2.7  2005/09/19 18:26:33  dgrisby
   Merge from omni4_0_develop again.
 
@@ -432,19 +435,6 @@ omniObjTable::resize()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////// omni ////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-
-_CORBA_ULong
-omni::hash(const CORBA::Octet* key, int keysize)
-{
-  //?? This is from Knuth.  We may be able to do better!
-
-  _CORBA_ULong n = 0;
-
-  while( keysize-- )  n = ((n << 5) ^ (n >> 27)) ^ *key++;
-
-  return n;
-}
-
 
 omni_tracedmutex&
 omni::nilRefLock()

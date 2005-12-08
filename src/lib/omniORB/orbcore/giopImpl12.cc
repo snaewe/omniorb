@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.1.6.5  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -204,6 +207,15 @@ private:
   giopImpl12(const giopImpl12&);
   giopImpl12& operator=(const giopImpl12&);
 };
+
+////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopImpl12::outputHasReachedLimit(giopStream* g) {
+
+  return ( (omni::ptr_arith_t) g->pd_outb_end == 
+          ((omni::ptr_arith_t) g->pd_currentOutputBuffer + 
+		  	       g->pd_currentOutputBuffer->start + 12) );
+}
 
 ////////////////////////////////////////////////////////////////////////
 void
@@ -1185,9 +1197,9 @@ giopImpl12::copyInputData(giopStream* g,void* b, size_t sz,
       g->pd_inb_mkr = (void*)((omni::ptr_arith_t)g->pd_inb_mkr + avail);
     }
     sz -= avail;
-    if (b) b = (void*)((omni::ptr_arith_t)b + avail);
-
     if (!sz) break;
+
+    if (b) b = (void*)((omni::ptr_arith_t)b + avail);
 
     if (g->pd_inb_mkr == g->pd_inb_end) {
 
@@ -1444,14 +1456,27 @@ giopImpl12::marshalRequestHeader(giopStream* g) {
   omniInterceptorP::visit(info);
 
   CORBA::Octet v = 0;
-  {
-    // calculate the request header size
-    cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12);
-    operator>>= ((CORBA::ULong)0,cs);
-    cs.marshalOctet(v);
-    cs.marshalOctet(v);
-    cs.marshalOctet(v);
-    cs.marshalOctet(v);
+  CORBA::ULong sc_len = info.service_contexts.length();
+
+  if (sc_len == 0 && giop_c.ior()->addr_mode() == GIOP::KeyAddr) {
+
+    // Simple fast case to calculate request header size
+    //
+    // GIOP header (12) + req_id (4) + flags (1) + pad(3) +
+    // KeyAddr(2) + pad(2) + key_len (4) + key (n) + pad (<=3) +
+    // op_len (4) + op (n) + pad (<=3) + service_ctx list len (4)
+
+    CORBA::ULong total;
+    total = 12 + 4 + 1 + 3 + 2 + 2 + 4 + giop_c.keysize();
+    total = (total + 3) & ~((CORBA::ULong)3);
+    total = (total + 4 + calldesc.op_len() + 3) & ~((CORBA::ULong)3);
+    total = total + 4;
+
+    *((CORBA::ULong*)(hdr+8)) = total;
+  }
+  else {
+    // Calculate the request header size
+    cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12 + 4 + 1 + 3);
 
     if (giop_c.ior()->addr_mode() == GIOP::KeyAddr) {
       giop_c.ior()->addr_mode() >>= cs;
@@ -1465,6 +1490,7 @@ giopImpl12::marshalRequestHeader(giopStream* g) {
     operator>>= ((CORBA::ULong) calldesc.op_len(),cs);
     cs.put_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
     info.service_contexts >>= cs;
+
     *((CORBA::ULong*)(hdr+8)) = cs.total();
   }
 
@@ -1485,7 +1511,7 @@ giopImpl12::marshalRequestHeader(giopStream* g) {
   if (giop_c.ior()->addr_mode() == GIOP::KeyAddr) {
     giop_c.ior()->addr_mode() >>= s;
     giop_c.keysize() >>= s;
-    s.put_octet_array(giop_c.key(),giop_c.keysize());
+    s.put_small_octet_array(giop_c.key(),giop_c.keysize());
   }
   else {
     giop_c.ior()->marshalIORAddressingInfo(s);
@@ -1493,10 +1519,13 @@ giopImpl12::marshalRequestHeader(giopStream* g) {
 
   // operation
   operator>>= ((CORBA::ULong) calldesc.op_len(),s);
-  s.put_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
+  s.put_small_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
 
   // service context
-  info.service_contexts >>= s;
+  if (sc_len)
+    info.service_contexts >>= s;
+  else
+    CORBA::ULong(0) >>= s;
 
   s.alignOutput(omni::ALIGN_8);
 }
@@ -1545,8 +1574,13 @@ giopImpl12::marshalReplyHeader(giopStream* g) {
   GIOP_S& giop_s = *(GIOP_S*)g;
   cdrStream& s = (cdrStream&) *g;
 
+  CORBA::ULong sc_len = giop_s.service_contexts().length();
   CORBA::ULong rc = GIOP::NO_EXCEPTION;
-  {
+  if (sc_len == 0) {
+    CORBA::ULong total = 12 + 4 + 4 + 4;
+    *((CORBA::ULong*)(hdr+8)) = total;
+  }
+  else {
     // calculate the reply header size
     cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12);
     operator>>= ((CORBA::ULong)0,cs);
@@ -1562,8 +1596,11 @@ giopImpl12::marshalReplyHeader(giopStream* g) {
   rc >>= s;
 
   // Service context
-  giop_s.service_contexts() >>= s;
-  
+  if (sc_len)
+    giop_s.service_contexts() >>= s;
+  else
+    CORBA::ULong(0) >>= s;
+
   s.alignOutput(omni::ALIGN_8);
 }
 
@@ -1648,7 +1685,7 @@ giopImpl12::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 
   // RepoId
   CORBA::ULong(repoid_size) >>= s;
-  s.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+  s.put_small_octet_array((const CORBA::Octet*) repoid, repoid_size);
 
   // system exception value
   ex.minor() >>= s;
@@ -1710,7 +1747,7 @@ giopImpl12::sendUserException(giopStream* g,const CORBA::UserException& ex) {
 
   // RepoId
   CORBA::ULong(repoid_size) >>= s;
-  s.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+  s.put_small_octet_array((const CORBA::Octet*) repoid, repoid_size);
 
   // Exception value
   ex._NP_marshal(s);
@@ -1831,7 +1868,7 @@ giopImpl12::sendLocateReply(giopStream* g,GIOP::LocateStatusType rc,
   }
   else if (rc == GIOP::LOC_SYSTEM_EXCEPTION) {
     CORBA::ULong(repoid_size) >>= s;
-    s.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+    s.put_small_octet_array((const CORBA::Octet*) repoid, repoid_size);
     p->minor() >>= s;
     operator>>= ((CORBA::ULong)p->completed(),s);
   }
@@ -2084,15 +2121,6 @@ giopImpl12::outputSetFragmentSize(giopStream* g,CORBA::ULong msz) {
 		  (CORBA::CompletionStatus)g->completion());
   }
   g->outputFragmentSize(msz);
-}
-
-////////////////////////////////////////////////////////////////////////
-CORBA::Boolean
-giopImpl12::outputHasReachedLimit(giopStream* g) {
-
-  return ( (omni::ptr_arith_t) g->pd_outb_end == 
-          ((omni::ptr_arith_t) g->pd_currentOutputBuffer + 
-		  	       g->pd_currentOutputBuffer->start + 12) );
 }
 
 ////////////////////////////////////////////////////////////////////////

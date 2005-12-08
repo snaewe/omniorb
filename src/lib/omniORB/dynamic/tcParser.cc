@@ -144,7 +144,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	      omniCodeSet::UniChar* us;
 	      CORBA::ULong len = ibuf.TCS_C()->unmarshalString(ibuf, 0, us);
 	      omniCodeSetUtil::HolderU uh(us);
-	      obuf.TCS_C()->marshalString(obuf, len, us);
+	      obuf.TCS_C()->marshalString(obuf, 0, len, us);
 	    }
 	    break;
 	  }
@@ -163,7 +163,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	      omniCodeSet::UniChar* us;
 	      CORBA::ULong len = ibuf.TCS_W()->unmarshalWString(ibuf, 0, us);
 	      omniCodeSetUtil::HolderU uh(us);
-	      obuf.TCS_W()->marshalWString(obuf, len, us);
+	      obuf.TCS_W()->marshalWString(obuf, 0, len, us);
 	    }
 	    break;
 	  }
@@ -398,7 +398,7 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	omniCodeSet::UniChar* us;
 	CORBA::ULong len = ibuf.TCS_C()->unmarshalString(ibuf, 0, us);
 	omniCodeSetUtil::HolderU uh(us);
-	obuf.TCS_C()->marshalString(obuf, len, us);
+	obuf.TCS_C()->marshalString(obuf, 0, len, us);
 	return;
       }
       
@@ -409,7 +409,7 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	omniCodeSet::UniChar* us;
 	CORBA::ULong len = ibuf.TCS_W()->unmarshalWString(ibuf, 0, us);
 	omniCodeSetUtil::HolderU uh(us);
-	obuf.TCS_W()->marshalWString(obuf, len, us);
+	obuf.TCS_W()->marshalWString(obuf, 0, len, us);
 	return;
       }
 

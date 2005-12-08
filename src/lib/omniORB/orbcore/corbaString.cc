@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.2  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.19.2.1  2003/03/23 21:02:21  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -169,8 +172,9 @@ CORBA::string_dup(const char* p)
   return 0;
 }
 
-// Function to unmarshal a raw string can't be inline since it needs
-// to be able to throw MARSHAL exceptions. Define it here.
+//////////////////////////////////////////////////////////////////////
+///////////////////////// cdrStream raw string ///////////////////////
+//////////////////////////////////////////////////////////////////////
 
 char*
 cdrStream::unmarshalRawString() {
@@ -190,6 +194,44 @@ cdrStream::unmarshalRawString() {
   return s;
 }
 
+_CORBA_ULong
+cdrStream::marshalRawString(const char* s)
+{
+  // In the common case that the string fits inside the stream's
+  // buffer, we make a single pass over the string. If the string does
+  // not fit inside the bufer, we have to find the length of the
+  // remaining portion before marshalling it, meaning some of the
+  // string is passed over twice.
+
+  _CORBA_ULong len = 0;
+  len >>= *this;
+  _CORBA_ULong* lenp = (_CORBA_ULong*)(((omni::ptr_arith_t)pd_outb_mkr) - 4);
+
+  char* current = (char*)pd_outb_mkr;
+  char* limit   = (char*)pd_outb_end;
+  while(*s && current < limit) {
+    *current++ = *s++;
+  }
+  if (current < limit) {
+    // Good -- the whole string fit in the buffer.
+    *current++ = *s;
+
+    len = (omni::ptr_arith_t)current - (omni::ptr_arith_t)pd_outb_mkr;
+    pd_outb_mkr = (void*)current;
+    *lenp = len;
+  }
+  else {
+    // Some (or all) of the string did not fit.
+    len = (omni::ptr_arith_t)current - (omni::ptr_arith_t)pd_outb_mkr;
+    pd_outb_mkr = (void*)current;
+    _CORBA_ULong rest = strlen(s) + 1;
+    len += rest;
+    if ((omni::ptr_arith_t)lenp < (omni::ptr_arith_t)pd_outb_end)
+      *lenp = len;
+    put_octet_array((const _CORBA_Octet*)s, rest);
+  }
+  return len;
+}
 
 
 //////////////////////////////////////////////////////////////////////

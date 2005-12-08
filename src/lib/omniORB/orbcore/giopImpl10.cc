@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2005/12/08 14:22:31  dgrisby
+  Better string marshalling performance; other minor optimisations.
+
   Revision 1.1.6.4  2005/04/11 12:09:42  dgrisby
   Another merge.
 
@@ -1073,11 +1076,11 @@ giopImpl10::marshalRequestHeader(giopStream* g) {
 
   // object key
   giop_c.keysize() >>= s;
-  s.put_octet_array(giop_c.key(),giop_c.keysize());
+  s.put_small_octet_array(giop_c.key(),giop_c.keysize());
 
   // operation
   operator>>= ((CORBA::ULong)calldesc.op_len(),s);
-  s.put_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
+  s.put_small_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
 
   // principal
   omni::myPrincipalID >>= s;
@@ -1115,7 +1118,7 @@ giopImpl10::sendLocateRequest(giopStream* g) {
   
   // object key
   giop_c.keysize() >>= s;
-  s.put_octet_array(giop_c.key(),giop_c.keysize());
+  s.put_small_octet_array(giop_c.key(),giop_c.keysize());
 
   outputMessageEnd(g);
 }
@@ -1239,7 +1242,7 @@ giopImpl10::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 
   // system exception value
   CORBA::ULong(repoid_size) >>= s;
-  s.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+  s.put_small_octet_array((const CORBA::Octet*) repoid, repoid_size);
   ex.minor() >>= s;
   CORBA::ULong(ex.completed()) >>= s;
 
@@ -1297,7 +1300,7 @@ giopImpl10::sendUserException(giopStream* g,const CORBA::UserException& ex) {
 
   // user exception value
   CORBA::ULong(repoid_size) >>= s;
-  s.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+  s.put_small_octet_array((const CORBA::Octet*) repoid, repoid_size);
   ex._NP_marshal(s);
 
   outputMessageEnd(g);
