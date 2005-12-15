@@ -1,3 +1,16 @@
+Thu Dec 15 17:06:30 GMT 2005 dgrisby
+====================================
+
+- VC++ 7.1 doesn't properly support constants inside class
+  declarations after all.
+
+include/omniORB4/CORBA_sysdep.h
+
+- Use registry to determine cygdrive prefix.
+
+src/tool/omkdepend/gnuwin32.c
+
+
 Thu Dec 15 12:00:35 GMT 2005 dgrisby
 ====================================
 
