@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.30  2005/12/15 17:12:21  dgrisby
+ VC++ 7.1 doesn't properly support constants inside class
+ declarations after all.
+
  Revision 1.2.2.29  2005/10/13 11:37:07  dgrisby
  VC++ 8 doesn't like inline friend functions.
 
@@ -400,7 +404,7 @@
 #endif
 
 #ifndef _init_in_cldecl_
-#  if !defined(_MSC_VER) || _MSC_VER >= 1310
+#  if !defined(_MSC_VER)
 #    define _init_in_cldecl_(x) x
 #  else
 #    define _init_in_cldecl_(x) 
@@ -410,7 +414,7 @@
 #endif
 
 #ifndef _init_in_cldef_
-#  if !defined(_MSC_VER) || _MSC_VER >= 1310
+#  if !defined(_MSC_VER)
 #    define _init_in_cldef_(x)
 #  else
 #    define _init_in_cldef_(x) x 
