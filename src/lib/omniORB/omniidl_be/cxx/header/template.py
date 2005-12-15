@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.26  2005/12/15 12:01:36  dgrisby
+# Functions declared extern inline upset the IRIX compiler.
+#
 # Revision 1.5.2.25  2005/07/21 15:25:09  dgrisby
 # Silence some gcc 4 warnings / errors.
 #
@@ -507,10 +510,10 @@ typedef @base@_var @derived@_var;
 typedef @base@_out @derived@_out;
 typedef @base@_forany @derived@_forany;
 
-@qualifier@ inline @derived@_slice* @derived@_alloc() { return @base@_alloc(); }
-@qualifier@ inline @derived@_slice* @derived@_dup(const @derived@_slice* p) { return @base@_dup(p); }
-@qualifier@ inline void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from ) { @base@_copy(_to, _from); }
-@qualifier@ inline void @derived@_free( @derived@_slice* p) { @base@_free(p); }
+@qualifier@ @derived@_slice* @derived@_alloc() { return @base@_alloc(); }
+@qualifier@ @derived@_slice* @derived@_dup(const @derived@_slice* p) { return @base@_dup(p); }
+@qualifier@ void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from ) { @base@_copy(_to, _from); }
+@qualifier@ void @derived@_free( @derived@_slice* p) { @base@_free(p); }
 """
 
 typedef_simple_string = """\
@@ -577,11 +580,11 @@ typedef_array = """\
 typedef @type@ @name@@dims@;
 typedef @type@ @name@_slice@taildims@;
 
-@qualifier@ inline @name@_slice* @name@_alloc() {
+@qualifier@ @name@_slice* @name@_alloc() {
   return new @name@_slice[@firstdim@];
 }
 
-@qualifier@ inline @name@_slice* @name@_dup(const @name@_slice* _s) {
+@qualifier@ @name@_slice* @name@_dup(const @name@_slice* _s) {
   if (!_s) return 0;
   @name@_slice* _data = @name@_alloc();
   if (_data) {
@@ -590,11 +593,11 @@ typedef @type@ @name@_slice@taildims@;
   return _data;
 }
 
-@qualifier@ inline void @name@_copy(@name@_slice* _to, const @name@_slice* _from){
+@qualifier@ void @name@_copy(@name@_slice* _to, const @name@_slice* _from){
   @copy_loop@
 }
 
-@qualifier@ inline void @name@_free(@name@_slice* _s) {
+@qualifier@ void @name@_free(@name@_slice* _s) {
     delete [] _s;
 }
 """
