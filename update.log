@@ -1,3 +1,13 @@
+Thu Dec 15 17:23:38 GMT 2005 dgrisby
+====================================
+
+- Example ssl CA had expired.
+
+src/examples/ssl_echo/client.pem
+src/examples/ssl_echo/root.pem
+src/examples/ssl_echo/server.pem
+
+
 Thu Dec 15 17:06:30 GMT 2005 dgrisby
 ====================================
 
