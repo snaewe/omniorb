@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.8  2005/12/16 12:20:22  dgrisby
+ Threads waiting for a main thread dispatch could block for ever.
+ Thanks Fabrice Ferrand.
+
  Revision 1.1.2.7  2005/07/21 15:25:09  dgrisby
  Silence some gcc 4 warnings / errors.
 
@@ -292,7 +296,7 @@ MainThreadTask::execute()
     // Wake up the dispatch thread
     omni_tracedmutex_lock l(*pd_mu);
     pd_done = 1;
-    pd_cond->signal();
+    pd_cond->broadcast();
   }
 }
 

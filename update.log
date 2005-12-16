@@ -1,3 +1,12 @@
+Fri Dec 16 12:18:21 GMT 2005 dgrisby
+====================================
+
+- Threads waiting for a main thread dispatch could block for ever.
+  Thanks Fabrice Ferrand.
+
+src/lib/omniORB/orbcore/callHandle.cc
+
+
 Thu Dec 15 17:23:38 GMT 2005 dgrisby
 ====================================
 
