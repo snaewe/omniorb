@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.31  2005/12/28 21:13:51  dgrisby
+ Intel compiler on Windows supports constants in headers. Thanks Tim
+ Theisen.
+
  Revision 1.2.2.30  2005/12/15 17:12:21  dgrisby
  VC++ 7.1 doesn't properly support constants inside class
  declarations after all.
@@ -404,7 +408,7 @@
 #endif
 
 #ifndef _init_in_cldecl_
-#  if !defined(_MSC_VER)
+#  if !defined(_MSC_VER) || defined(__INTEL_COMPILER)
 #    define _init_in_cldecl_(x) x
 #  else
 #    define _init_in_cldecl_(x) 
@@ -414,7 +418,7 @@
 #endif
 
 #ifndef _init_in_cldef_
-#  if !defined(_MSC_VER)
+#  if !defined(_MSC_VER) || defined(__INTEL_COMPILER)
 #    define _init_in_cldef_(x)
 #  else
 #    define _init_in_cldef_(x) x 
