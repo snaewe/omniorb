@@ -5,7 +5,7 @@
 
 Summary: Object Request Broker (ORB)
 Name:    omniORB
-Version: 4.0.6
+Version: 4.0.7
 Release: 1
 License: GPL / LGPL
 Group:   System/Libraries
@@ -13,19 +13,17 @@ Source0: %{name}-%{version}.tar.gz
 Prefix:  /usr
 Prereq:  /sbin/ldconfig
 URL:     http://omniorb.sourceforge.net/
-#Provides:       corba
 BuildRequires:  python glibc-devel
 %if "%{_vendor}" == "MandrakeSoft"
-BuildRequires:  python-devel openssl-devel
+BuildRequires:  openssl-devel
 %endif
 %if "%{_vendor}" == "redhat"
 BuildRequires:  python-devel openssl-devel
 %endif
 %if "%{_vendor}" == "suse"
-BuildRequires:  python-devel openssl-devel
+BuildRequires:	openssl-devel
 %endif
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
-#BuildArch:      i586
 
 %description
 %{name} is an Object Request Broker (ORB) which implements
@@ -38,6 +36,11 @@ linked with %{name}.
 %package servers
 Summary: Utility programs
 Group:          Development/C++
+%if "%{_vendor}" == "suse"
+Prereq:         /sbin/insserv
+%else
+Prereq:         /sbin/service /sbin/chkconfig
+%endif
 Prereq:         /usr/sbin/groupadd /usr/sbin/groupdel
 Prereq:         /usr/sbin/useradd /usr/sbin/userdel
 Requires:       %{name} = %{version}-%{release}
@@ -49,11 +52,6 @@ Provides:       libomniorb-servers = %{version}-%{release} %{name}-servers = %{v
 %package bootscripts
 Summary: Utility programs
 Group: Development/C++
-%if "%{_vendor}" == "suse"
-Prereq:         /sbin/insserv
-%else
-Prereq:         /sbin/service /sbin/chkconfig
-%endif
 Requires: %{name}-servers = %{version}-%{release} %{name}-utils = %{version}-%{release}
 Provides: %{name}-bootscripts = %{version}-%{release}
 
@@ -107,7 +105,7 @@ Developer documentation and examples.
 cp -f etc/init.d/omniNames.SuSE.in etc/init.d/omniNames.in
 %endif
 
-./configure --prefix=%{prefix} --with-openssl=%{prefix}
+%configure --with-openssl=%{prefix}
 
 
 %build
@@ -119,6 +117,7 @@ make IMPORT_CPPFLAGS+="$RPM_OPT_FLAGS" all
 make DESTDIR=%{buildroot} install
 
 mkdir -p %{buildroot}%{_initrddir}
+mkdir -p %{buildroot}%{_sysconfdir}
 cp sample.cfg %{buildroot}%{_sysconfdir}/omniORB.cfg
 cp etc/init.d/omniNames %{buildroot}%{_initrddir}
 
@@ -257,14 +256,14 @@ fi
 %{_libdir}/*.a
 %{_libdir}/*.so
 %{_includedir}/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/*.py*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/*.py*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/header/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/skel/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/dynskel/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/impl/*
-%{_libdir}/python%{py_ver}/site-packages/_omniidlmodule.so*
+%{_libdir}*/python%{py_ver}/site-packages/omniidl/*
+%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/*.py*
+%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/*.py*
+%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/header/*
+%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/skel/*
+%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/dynskel/*
+%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/impl/*
+%{_libdir}*/python%{py_ver}/site-packages/_omniidlmodule.so*
 %{_libdir}/pkgconfig/*.pc
 
 
@@ -274,6 +273,12 @@ fi
 
 
 %changelog
+* Thu Apr 21 2005 Sander Steffann <steffann@nederland.net> 4.0.6-2
+- Fixed packaging issues for RHEL and x86_64
+
+* Wed Apr 20 2005 Sander Steffann <steffann@nederland.net> 4.0.6-1
+- Upgrade to version 4.0.6
+
 * Mon Jul 26 2004 Duncan Grisby <duncan@grisby.org> 4.0.4-1
 - Bump version number; integrate SUSE changes. Don't automatically
   start omniNames upon RPM install.
@@ -320,4 +325,3 @@ fi
 * Wed Jul 03 2002 Thomas Lockhart <lockhart@fourpalms.org> 4.0.0beta
 - Start from 3.04 spec files
 - Strip workarounds from the spec file since 4.0 builds more cleanly
-
