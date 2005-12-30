@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2005/12/30 17:41:40  dgrisby
+  Missing #undef _core_attr. Thanks Vsevolod Fedorov.
+
   Revision 1.1.2.8  2005/09/05 14:32:04  dgrisby
   SSL transport extensions from Jon Biggar; SSL command line options.
 
@@ -154,5 +157,7 @@ class sslContext {
   SSL_CTX*    	    pd_ctx;
   omni_tracedmutex* pd_locks;
 };
+
+#undef _core_attr
 
 #endif // __SSLCONTEXT_H__

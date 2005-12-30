@@ -1,3 +1,22 @@
+Fri Dec 30 17:38:22 GMT 2005 dgrisby
+====================================
+
+- Previously extern inline functions are now just inline or static
+  inline when inside classes.
+
+include/omniORB4/CORBA_sysdep.h
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+- Install transport headers on make install.
+
+include/omniORB4/GNUmakefile.in
+
+- Missing #undef _core_attr. Thanks Vsevolod Fedorov.
+
+include/omniORB4/sslContext.h
+
+
 Wed Dec 28 21:12:46 GMT 2005 dgrisby
 ====================================
 
