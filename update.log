@@ -1,3 +1,33 @@
+Mon Jan  9 15:58:44 GMT 2006 dgrisby
+====================================
+
+- Another case of supposedly ambiguous operators from g++.
+
+include/omniORB4/templatedecls.h
+
+- Updates in preparation for 4.0.7 release.
+
+README.win32.txt
+ReleaseNotes_4.0.6.txt   -- deleted
+ReleaseNotes_4.0.7.txt   -- new
+THIS_IS_OMNIORB_4_0_6    -- deleted
+THIS_IS_OMNIORB_4_0_7    -- new
+bugfixes-406.xml         -- new
+configure
+configure.ac
+mk/version.mk
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/dsi/dir.mak
+src/examples/echo/dir.mak
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+
+
 Fri Dec 30 18:38:44 GMT 2005 dgrisby
 ====================================
 

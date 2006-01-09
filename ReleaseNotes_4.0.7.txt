@@ -1,9 +1,28 @@
-RELEASE NOTES for omniORB 4.0.6
+RELEASE NOTES for omniORB 4.0.7
 ===============================
 
-This is omniORB 4.0.6. It is a stable release.
+This is omniORB 4.0.7. It is a stable release.
 
 See README.unix or README.win32.txt for building instructions.
+
+New features since omniORB 4.0.6
+--------------------------------
+
+ - Bug fixes.
+ - New configuration parameters. See sample.cfg for documentation:
+
+     traceFile
+     maxSocketSend
+     maxSocketRecv
+     connectionWatchPeriod
+     connectionWatchImmediate
+     abortOnNativeException
+     sslCAFile
+     sslKeyFile
+     sslKeyPassword
+     sslVerifyMode
+
+ - -ORBconfigFile command line parameter.
 
 
 New features since omniORB 4.0.5

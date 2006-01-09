@@ -29,7 +29,7 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #
 CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ \
                  -D__OSVERSION__=4
-CORBA_LIB      = omniORB404_rt.lib omniDynamic404_rt.lib omnithread30_rt.lib \
+CORBA_LIB      = omniORB407_rt.lib omniDynamic407_rt.lib omnithread32_rt.lib \
                  ws2_32.lib mswsock.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
 CXXFLAGS       = -O2 -MD -GX $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
@@ -44,7 +44,7 @@ CXXLINKOPTIONS =
 # Replace the above with the following:
 #
 #CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniORB404_rtd.lib omniDynamic404_rtd.lib omnithread30_rtd.lib \
+#CORBA_LIB      = omniORB407_rtd.lib omniDynamic407_rtd.lib omnithread32_rtd.lib \
 #                 ws2_32.lib mswsock.lib advapi32.lib \
 #                 -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)

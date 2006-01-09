@@ -50,8 +50,9 @@ Installation
 
 If you downloaded the Win32 binary distribution of omniORB,
 ready-built binaries are provided. The binaries are compiled with VC++
-6. If you are using any other version of VC++, the binaries will not
-work, and you must compile omniORB from source.
+6, 7, or 8, depending on the version you downloaded. If you are using
+any other version of VC++, the binaries will not work, and you must
+compile omniORB from source.
 
 The executables and DLLs are in <Top-Level Directory>\bin\x86_win32.
 The libraries are in            <Top-Level Directory>\lib\x86_win32.
@@ -66,19 +67,35 @@ section, below.  (If you want the Win32 binary distribution, but don't
 have it, you can download it from SourceForge via
 http://omniorb.sourceforge.net/download.html)
 
-omniidl requires Python 1.5.2 or higher. You can download the full
-Python distribution from
 
-     http://www.python.org/download/download_windows.html
+Libraries
+=========
+
+To link against the DLL versions of the omniORB libraries, you should
+use the following libraries:
+
+  omnithread32_rt.lib     -- omnithread library
+  omniORB407_rt.lib       -- omniORB runtime library
+  omniDynamic407_rt.lib   -- omniORB runtime library for dynamic features
+  omniCodeSets407_rt.lib  -- extra code sets for string transformation
+  omnisslTP40_rt.lib      -- SSL transport (if OpenSSL is available)
+  COS407_rt.lib           -- stubs and skeletons for the COS service interfaces
+  COSDynamic407_rt.lib    -- dynamic stubs for the COS service interfaces
+
+If you are building your application code in debug mode, you MUST use
+the debug versions of the omniORB libraries, otherwise you will get
+assertion errors from the Visual C++ runtime about invalid heap
+pointers. The debug DLL versions can be used by linking with the
+_rtd.lib libraries instead of the _rt.lib libraries.
 
 
-Alternatively, you can install a minimal version of Python which
-contains just the functionality required by omniidl. The Win32 binary
-distribution of omniORB comes with this minimal python package. Again,
-download it from SourceForge.
+To link with static libraries, pick the libraries without _rt in their
+names: omnithread.lib, omniORB4.lib, omniDynamic4.lib,
+omniCodeSets4.lib, omnisslTP.lib, COS4.lib and COSDynamic4.lib.
+Again, if you are compiling your application code in debug mode, you
+MUST use the debug versions of the omniORB libraries, omnithreadd.lib,
+omniORB4d.lib, etc.
 
-Unpack the zip omnipython file at the top of the omniORB tree. It
-places files in the bin, lib and include directories.
 
 
 Configuring the naming service
@@ -183,12 +200,12 @@ c) Set up macros and libraries:
 
     6. In the "Category" box, select "Input". In the "Object/library
        modules" box, add the following libraries: ws2_32.lib,
-       mswsock.lib, advapi32.lib, omniORB405_rt.lib,
-       omniDynamic405_rt.lib, omnithread30_rt.lib
+       mswsock.lib, advapi32.lib, omniORB407_rt.lib,
+       omniDynamic407_rt.lib, omnithread32_rt.lib
 
        If you are building a debug executable, the debug version of
-       the libraries: omniORB405_rtd.lib, omniDynamic405_rtd.lib and
-       omnithread30_rtd.lib should be used.
+       the libraries: omniORB407_rtd.lib, omniDynamic407_rtd.lib and
+       omnithread32_rtd.lib should be used.
 
 d) Your project is now set up, and you can build it.
 
@@ -237,12 +254,12 @@ c) Set up macros and libraries:
     7. Select The Input Tab
     8. add The following Libraries to "Additional Dependencies"
 
-       ws2_32.lib, mswsock.lib, advapi32.lib, omniORB405_rt.lib,
-       omniDynamic405_rt.lib, omnithread30_rt.lib
+       ws2_32.lib, mswsock.lib, advapi32.lib, omniORB407_rt.lib,
+       omniDynamic407_rt.lib, omnithread32_rt.lib
 
        If you are building a debug executable, the debug version of
-       the libraries: omniORB405_rtd.lib, omniDynamic405_rtd.lib and
-       omnithread30_rtd.lib should be used.
+       the libraries: omniORB407_rtd.lib, omniDynamic407_rtd.lib and
+       omnithread32_rtd.lib should be used.
 
   d)   Your project is now set up, and you can build it.     
 
@@ -252,8 +269,8 @@ Important:
 
 If you want to use the static versions of omniORB and omnithread, you
 must add the macro _WINSTATIC (see step (c) 4* or 5#, above), and
-replace the libraries omniORB405_rt.lib, omniDynamic405_rt.lib and
-omnithread30_rt.lib with omniORB4.lib, omniDynamic4.lib and
+replace the libraries omniORB407_rt.lib, omniDynamic407_rt.lib and
+omnithread32_rt.lib with omniORB4.lib, omniDynamic4.lib and
 omnithread.lib (see step (c) 6* or 8#, above).
 
 * If Using VC 5/6
@@ -389,6 +406,7 @@ with Visual C++ 5.
 
      platform = x86_nt_4.0
      platform = x86_nt_4.0_vs_7
+     platform = x86_nt_4.0_vs_8
      platform = x86_nt_4.0_mingw
      platform = x86_nt_3.5
      platform = x86_win95

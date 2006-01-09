@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.0.6     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.0.6">
+
+<bug id="1" date="Mon Apr 25 19:14:24 BST 2005" user="dgrisby">
+  <summary>Per-thread data could be released from a different thread</summary>
+  <text>
+  This caused problems in some situations. Per-thread data is now
+  always released from the thread it belongs to.
+  </text>
+</bug>
+
+<bug id="2" date="Tue May  3 11:08:59 BST 2005" user="dgrisby">
+  <summary>Segfault in omniidl</summary>
+  <text>
+  Trying to redefine built-in CORBA module types led to a segfault
+  instead of an error.
+  </text>
+</bug>
+
+<bug id="3" date="Sun May 22 13:31:51 BST 2005" user="dgrisby">
+  <summary>Race condition in POA destroy</summary>
+  <text>
+  Multiple threads creating and destroying POAs could conflict.
+  </text>
+</bug>
+
+<bug id="4" date="Fri Jul 22 12:18:42 BST 2005" user="dgrisby">
+  <summary>Async worker problem</summary>
+  <reported>Hartmut Raschick</reported>
+  <text>
+  A problem with condition variable handling meant that a worker
+  thread could add itself to the idle list more than once, leading to
+  a later crash.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2005-July/026938.html"/>
+</bug>
+
+<bug id="5" date="Fri Jul 22 17:56:07 BST 2005" user="dgrisby">
+  <summary>Floating point marshalling</summary>
+  <text>
+  Floating point values could become corrupted upon marshalling with
+  some compilers. This is due to strict aliasing interacting with the
+  optimiser.
+  </text>
+</bug>
+
+<bug id="6" date="Sun Nov 20 15:31:36 GMT 2005" user="dgrisby">
+  <summary>Multiple shutdown issues</summary>
+  <text>
+  Shutdown suffered from a number of problems, especially on Windows.
+  </text>
+</bug>
+
+<bug id="7" date="Fri Dec 16 12:18:21 GMT 2005" user="dgrisby">
+  <summary>Main thread dispatch block</summary>
+  <reported>Fabrice Ferrand</reported>
+  <text>
+  Threads waiting for a main thread dispatch could block for ever.
+  </text>
+</bug>
+
+</buglist>
