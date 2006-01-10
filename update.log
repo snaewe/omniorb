@@ -1,3 +1,15 @@
+Tue Jan 10 12:56:37 GMT 2006 dgrisby
+====================================
+
+- Updated win32 tools builds.
+
+bin/x86_win32/clwrapper.exe
+bin/x86_win32/libwrapper.exe
+bin/x86_win32/linkwrapper.exe
+bin/x86_win32/oidlwrapper.exe
+bin/x86_win32/omkdepend.exe
+
+
 Tue Jan 10 10:22:55 GMT 2006 dgrisby
 ====================================
 
