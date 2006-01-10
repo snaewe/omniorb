@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2006/01/10 12:24:03  dgrisby
+  Merge from omni4_0_develop pre 4.0.7 release.
+
   Revision 1.1.4.7  2005/12/08 14:22:31  dgrisby
   Better string marshalling performance; other minor optimisations.
 
@@ -616,7 +619,7 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
 
     if (omniORB::trace(25)) {
       omniORB::logger log;
-      log << " send codeset service context: ("
+      log << "Send codeset service context: ("
 	  << tcs_c->name() << "," << ((tcs_w) ? tcs_w->name() : "none")
 	  << ")\n";
     }

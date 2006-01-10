@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.9  2006/01/10 12:24:03  dgrisby
+  Merge from omni4_0_develop pre 4.0.7 release.
+
   Revision 1.5.2.8  2005/12/08 14:22:31  dgrisby
   Better string marshalling performance; other minor optimisations.
 
@@ -231,6 +234,10 @@
 #include <omniORB4/objTracker.h>
 #include <corbaOrb.h>
 
+#ifdef __WIN32__
+#  include <eh.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////
 //             Configuration options                                      //
 ////////////////////////////////////////////////////////////////////////////
@@ -311,6 +318,14 @@ CORBA::Boolean orbParameters::abortOnInternalError = 0;
 //  not be unwound by the exception handler, so a stack trace can be
 //  obtained.
 //  It is hoped that this will not often be needed by users of omniORB!
+//
+//  Valid values = 0 or 1
+
+static CORBA::Boolean abortOnNativeException = 0;
+//  On Windows, "native" exceptions such as segmentation faults and
+//  divide by zero appear as C++ exceptions that can be caught with
+//  catch (...). Setting this parameter to true causes such exceptions
+//  to abort the process instead.
 //
 //  Valid values = 0 or 1
 
@@ -1535,6 +1550,49 @@ public:
 
 static abortOnInternalErrorHandler abortOnInternalErrorHandler_;
 
+
+/////////////////////////////////////////////////////////////////////////////
+class abortOnNativeExceptionHandler : public orbOptions::Handler {
+public:
+
+  abortOnNativeExceptionHandler() : 
+    orbOptions::Handler("abortOnNativeException",
+			"abortOnNativeException = 0 or 1",
+			1,
+			"-ORBabortOnNativeException < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    abortOnNativeException = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),abortOnNativeException,result);
+  }
+};
+
+static abortOnNativeExceptionHandler abortOnNativeExceptionHandler_;
+
+
+#ifdef __WIN32__
+extern "C" void omniORB_rethrow_exception(unsigned, EXCEPTION_POINTERS*)
+{
+  throw;
+}
+static void abortOnNativeExceptionInterceptor(omniInterceptors::
+					      createThread_T::info_T& info)
+{
+  _set_se_translator(omniORB_rethrow_exception);
+  info.run();
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
@@ -1554,6 +1612,7 @@ public:
     orbOptions::singleton().registerHandler(traceFileHandler_);
     orbOptions::singleton().registerHandler(objectTableSizeHandler_);
     orbOptions::singleton().registerHandler(abortOnInternalErrorHandler_);
+    orbOptions::singleton().registerHandler(abortOnNativeExceptionHandler_);
   }
 
   void attach() {
@@ -1576,6 +1635,13 @@ public:
 
     objectTable = new omniObjTableEntry* [objectTableSize];
     for( CORBA::ULong i = 0; i < objectTableSize; i++ )  objectTable[i] = 0;
+
+#ifdef __WIN32__
+    if (abortOnNativeException) {
+      omniInterceptors* interceptors = omniORB::getInterceptors();
+      interceptors->createThread.add(abortOnNativeExceptionInterceptor);
+    }
+#endif
   }
 
   void detach() {

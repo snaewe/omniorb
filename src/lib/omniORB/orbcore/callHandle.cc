@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.5  2006/01/10 12:24:03  dgrisby
+ Merge from omni4_0_develop pre 4.0.7 release.
+
  Revision 1.1.4.4  2005/07/22 17:18:37  dgrisby
  Another merge from omni4_0_develop.
 
@@ -309,7 +312,7 @@ MainThreadTask::execute()
     // Wake up the dispatch thread
     omni_tracedmutex_lock l(*pd_mu);
     pd_done = 1;
-    pd_cond->signal();
+    pd_cond->broadcast();
   }
 }
 

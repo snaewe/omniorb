@@ -1,3 +1,42 @@
+Tue Jan 10 12:19:48 GMT 2006 dgrisby
+====================================
+
+- Merge from omni4_0_develop pre 4.0.7 release.
+
+README.win32.txt
+sample.cfg
+sample.reg
+bin/x86_win32/clwrapper.exe
+bin/x86_win32/libwrapper.exe
+bin/x86_win32/linkwrapper.exe
+bin/x86_win32/oidlwrapper.exe
+bin/x86_win32/omkdepend.exe
+contrib/RPMs/omniORB.spec
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/GNUmakefile.in
+include/omniORB4/sslContext.h
+include/omniORB4/templatedecls.h
+mk/beforeauto.mk.in
+mk/mingw.mk
+mk/unix.mk
+mk/version.mk
+mk/vxWorks.mk
+mk/win32.mk
+src/examples/dsi/dir.mak
+src/examples/ssl_echo/client.pem
+src/examples/ssl_echo/root.pem
+src/examples/ssl_echo/server.pem
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/orbcore/callHandle.cc
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/tool/omkdepend/gnuwin32.c
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/python/omniidl/idlutil.py
+
+
 Tue Jan 10 11:10:24 GMT 2006 dgrisby
 ====================================
 

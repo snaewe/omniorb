@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.6  2006/01/10 12:24:04  dgrisby
+ Merge from omni4_0_develop pre 4.0.7 release.
+
  Revision 1.5.2.5  2005/11/17 17:03:27  dgrisby
  Merge from omni4_0_develop.
 
@@ -324,6 +327,12 @@
 #error "Name conflict: _CORBA_MODULE_VAR is already defined."
 #endif
 
+#ifndef _CORBA_MODULE_INLINE
+#define _CORBA_MODULE_INLINE inline
+#else
+#error "Name conflict: _CORBA_MODULE_INLINE is already defined."
+#endif
+
 #ifndef _CORBA_GLOBAL_VAR
 #define _CORBA_GLOBAL_VAR extern
 #else
@@ -397,7 +406,7 @@
 #endif
 
 #ifndef _init_in_cldecl_
-#  if !defined(_MSC_VER) || _MSC_VER >= 1310
+#  if !defined(_MSC_VER) || defined(__INTEL_COMPILER)
 #    define _init_in_cldecl_(x) x
 #  else
 #    define _init_in_cldecl_(x) 
@@ -407,7 +416,7 @@
 #endif
 
 #ifndef _init_in_cldef_
-#  if !defined(_MSC_VER) || _MSC_VER >= 1310
+#  if !defined(_MSC_VER) || defined(__INTEL_COMPILER)
 #    define _init_in_cldef_(x)
 #  else
 #    define _init_in_cldef_(x) x 
@@ -452,6 +461,12 @@
 #define _CORBA_MODULE_VAR static
 #else
 #error "Name conflict: _CORBA_MODULE_VAR is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_INLINE
+#define _CORBA_MODULE_INLINE static inline
+#else
+#error "Name conflict: _CORBA_MODULE_INLINE is already defined."
 #endif
 
 #ifndef _CORBA_GLOBAL_VAR

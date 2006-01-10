@@ -37,9 +37,20 @@ HEADERS = acconfig.h BiDirPolicy.h CORBA.h CORBA_AbstractBase.h		\
 
 SUBDIRS = internal
 
+
+TRANSPORTS = tcp unix
+ifneq (@OPEN_SSL_ROOT@,)
+TRANSPORTS += ssl
+endif
+
+TRANSPORT_HEADERS := $(shell\
+  for d in $(TRANSPORTS);\
+    do echo $(BASE_OMNI_TREE)/src/lib/omniORB/orbcore/$$d/*.h;\
+  done)
+
 include $(TOP)/mk/beforeauto.mk
 
-install:: $(HEADERS)
+install:: $(HEADERS) $(TRANSPORT_HEADERS)
 	@(dir="$(INSTALLDIR)"; \
           for file in $^; do \
             $(ExportFileToDir) \

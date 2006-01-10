@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2006/01/10 12:24:04  dgrisby
+  Merge from omni4_0_develop pre 4.0.7 release.
+
   Revision 1.1.4.3  2005/09/05 17:12:20  dgrisby
   Merge again. Mainly SSL transport changes.
 
@@ -154,5 +157,7 @@ class sslContext {
   SSL_CTX*    	    pd_ctx;
   omni_tracedmutex* pd_locks;
 };
+
+#undef _core_attr
 
 #endif // __SSLCONTEXT_H__

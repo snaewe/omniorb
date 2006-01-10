@@ -191,8 +191,10 @@ OMNIORB_CODESETS_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 OMNIORB_SSL_VERSION = $(OMNIORB_VERSION)
 OMNIORB_SSL_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_SSL_VERSION)))
 OMNIORB_SSL_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_SSL_VERSION)))
-OMNIORB_SSL_LIB = $(patsubst %,$(LibSearchPattern),omnisslTP)
-lib_depend := $(patsubst %,$(LibPattern),omnisslTP)
+OMNIORB_SSL_LIB = $(patsubst %,$(LibSearchPattern),\
+                    omnisslTP$(OMNIORB_SSL_MAJOR_VERSION))
+
+lib_depend := $(patsubst %,$(LibPattern),omnisslTP$(OMNIORB_SSL_MAJOR_VERSION))
 OMNIORB_SSL_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 #

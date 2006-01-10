@@ -21,6 +21,7 @@ char *dos[MAX_MOUNTS];
 char *unix[MAX_MOUNTS];
 int index[MAX_MOUNTS];
 int nmounts;
+char* drvprefix;
 
 char *TranslateFileNameU2D(char *in, int offset)
 {
@@ -102,8 +103,8 @@ char *TranslateFileNameD2U(char *in, int offset)
     newout[io++] = out[0];
     newout[io++] = '\0';
 #else
-    newout = malloc(strlen(out) + 11);
-    strcpy(newout, "/cygdrive/");
+    newout = malloc(strlen(out) + strlen(drvprefix) + 2);
+    sprintf(newout, "%s/", drvprefix);
     io = strlen(newout);
 #endif
     newout[io++] = out[0];
@@ -117,6 +118,7 @@ char *TranslateFileNameD2U(char *in, int offset)
 
 void GetMounts(int gnuwin)
 {
+  drvprefix = "";
   if (gnuwin) {
 #ifdef __MINGW32__
     GetMinGW32Mounts();
@@ -324,9 +326,8 @@ GetCygwinMounts()
     DWORD	i;
     LONG	rc;
     char        c;
-    char*       drvprefix;
 
-    if (RegOpenKeyEx (HKEY_CURRENT_USER, key, 0, KEY_READ, &hkey)
+    if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, key, 0, KEY_READ, &hkey)
 	!= ERROR_SUCCESS)
 	return 0;
 

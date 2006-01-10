@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.14  2006/01/10 12:24:03  dgrisby
+# Merge from omni4_0_develop pre 4.0.7 release.
+#
 # Revision 1.8.2.13  2005/11/14 11:02:16  dgrisby
 # Local interface fixes.
 #
@@ -754,10 +757,10 @@ typedef @base@_var @derived@_var;
 typedef @base@_out @derived@_out;
 typedef @base@_forany @derived@_forany;
 
-@qualifier@ inline @derived@_slice* @derived@_alloc() { return @base@_alloc(); }
-@qualifier@ inline @derived@_slice* @derived@_dup(const @derived@_slice* p) { return @base@_dup(p); }
-@qualifier@ inline void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from ) { @base@_copy(_to, _from); }
-@qualifier@ inline void @derived@_free( @derived@_slice* p) { @base@_free(p); }
+@inline_qualifier@ @derived@_slice* @derived@_alloc() { return @base@_alloc(); }
+@inline_qualifier@ @derived@_slice* @derived@_dup(const @derived@_slice* p) { return @base@_dup(p); }
+@inline_qualifier@ void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from ) { @base@_copy(_to, _from); }
+@inline_qualifier@ void @derived@_free( @derived@_slice* p) { @base@_free(p); }
 """
 
 typedef_simple_string = """\
@@ -824,11 +827,11 @@ typedef_array = """\
 typedef @type@ @name@@dims@;
 typedef @type@ @name@_slice@taildims@;
 
-@qualifier@ inline @name@_slice* @name@_alloc() {
+@inline_qualifier@ @name@_slice* @name@_alloc() {
   return new @name@_slice[@firstdim@];
 }
 
-@qualifier@ inline @name@_slice* @name@_dup(const @name@_slice* _s) {
+@inline_qualifier@ @name@_slice* @name@_dup(const @name@_slice* _s) {
   if (!_s) return 0;
   @name@_slice* _data = @name@_alloc();
   if (_data) {
@@ -837,11 +840,11 @@ typedef @type@ @name@_slice@taildims@;
   return _data;
 }
 
-@qualifier@ inline void @name@_copy(@name@_slice* _to, const @name@_slice* _from){
+@inline_qualifier@ void @name@_copy(@name@_slice* _to, const @name@_slice* _from){
   @copy_loop@
 }
 
-@qualifier@ inline void @name@_free(@name@_slice* _s) {
+@inline_qualifier@ void @name@_free(@name@_slice* _s) {
     delete [] _s;
 }
 """

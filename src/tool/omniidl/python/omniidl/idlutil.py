@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9.2.4  2006/01/10 12:24:03  dgrisby
+# Merge from omni4_0_develop pre 4.0.7 release.
+#
 # Revision 1.9.2.3  2005/07/21 09:54:59  dgrisby
 # Typo in docstring.
 #
@@ -127,7 +130,7 @@ with any prefix it shares with B removed.
     return tscope
 
 _valid_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" \
-               " _!$%^&*()-=+[]{};#:@~,./<>?|`"
+               " 0123456789_!$%^&*()-=+[]{};#:@~,./<>?|`"
 
 _valid_unichars = map(ord, list(_valid_chars))
 

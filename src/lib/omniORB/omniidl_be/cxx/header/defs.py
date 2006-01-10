@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.11  2006/01/10 12:24:04  dgrisby
+# Merge from omni4_0_develop pre 4.0.7 release.
+#
 # Revision 1.36.2.10  2005/11/09 12:22:17  dgrisby
 # Local interfaces support.
 #
@@ -344,6 +347,15 @@ def const_qualifier(insideModule=None, insideClass=None):
 def func_qualifier():
     return const_qualifier(__insideModule, __insideClass)
 
+# Inline functions are subtly different
+def inline_qualifier():
+    if not __insideModule and not __insideClass:
+        return "inline"
+    elif __insideClass:
+        return "static inline"
+    else:
+        return "_CORBA_MODULE_INLINE"
+
 
 #
 # Control arrives here
@@ -596,7 +608,8 @@ def visitTypedef(node):
                 stream.out(template.typedef_simple_to_array,
                            base = basicReferencedTypeID,
                            derived = derivedName,
-                           qualifier = func_qualifier())
+                           qualifier = func_qualifier(),
+                           inline_qualifier = inline_qualifier())
                            
             # Non-array of string
             elif d_type.string():
@@ -872,7 +885,8 @@ def visitTypedef(node):
                        firstdim = repr(all_dims[0]),
                        dup_loop = dup_loop,
                        copy_loop = copy_loop,
-                       qualifier = func_qualifier())
+                       qualifier = func_qualifier(),
+                       inline_qualifier = inline_qualifier())
 
             # output the _copyHelper class
             if types.variableDecl(node):
