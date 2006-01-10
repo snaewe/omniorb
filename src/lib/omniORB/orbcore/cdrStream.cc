@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.19  2006/01/10 10:24:01  dgrisby
+  Minor log message reformatting.
+
   Revision 1.1.2.18  2005/03/03 12:55:55  dgrisby
   Minor log output clean-up. Thanks Peter Klotz.
 
@@ -568,7 +571,7 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
 
     if (omniORB::trace(25)) {
       omniORB::logger log;
-      log << " send codeset service context: ("
+      log << "Send codeset service context: ("
 	  << tcs_c->name() << "," << ((tcs_w) ? tcs_w->name() : "none")
 	  << ")\n";
     }

@@ -1,3 +1,11 @@
+Tue Jan 10 10:22:55 GMT 2006 dgrisby
+====================================
+
+- Minor log message reformatting.
+
+src/lib/omniORB/orbcore/cdrStream.cc
+
+
 Mon Jan  9 15:58:44 GMT 2006 dgrisby
 ====================================
 
