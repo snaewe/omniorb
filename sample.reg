@@ -430,6 +430,28 @@ traceTime = "0"
 "clientCallTimeOutPeriod" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; clientConnectTimeOutPeriod
+;
+;    Connect timeout. When a client has no existing connection to
+;    communicate with a server, it must open a new connection before
+;    performing the call. If this parameter is non-zero, it sets a
+;    timeout specifically for establishing the connection. If the
+;    timeout specified here is shorter than the overall timeout for
+;    the call (set with clientCallTimeOutPeriod or per-object or
+;    per-thread timeouts), the connect timeout is used for
+;    establishing the connection, then additional time is permitted
+;    for the call to complete. If the connect timeout is longer than
+;    the normal call timeout, the deadline for the entire call is
+;    extended to match the connect timeout.
+; 
+;    If this parameter is zero, the normal call timeout applies to the
+;    total time taken to perform the connect and the subsequent call.
+; 
+;    Valid values = (n >= 0 in milliseconds) 
+;                    0 --> same timeout (if any) as other calls
+"clientConnectTimeOutPeriod" = "0"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; supportPerThreadTimeOut
 ;
 

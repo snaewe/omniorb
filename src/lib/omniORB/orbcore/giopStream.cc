@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2006/01/10 13:59:37  dgrisby
+  New clientConnectTimeOutPeriod configuration parameter.
+
   Revision 1.1.6.5  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -126,6 +129,7 @@
 #include <giopStrand.h>
 #include <giopStreamImpl.h>
 #include <omniORB4/minorCode.h>
+#include <orbParameters.h>
 #include <stdio.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -1062,13 +1066,36 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
     OMNIORB_ASSERT(pd_strand->address);
       
     if (pd_strand->state() != giopStrand::DYING) {
-      if (omniORB::trace(25)) {
+      if (omniORB::trace(20)) {
 	omniORB::logger log;
 	log << "Client attempt to connect to "
 	    << pd_strand->address->address() << "\n";
       }
-      giopActiveConnection* c = pd_strand->address->Connect(pd_deadline_secs,
-							 pd_deadline_nanosecs);
+      unsigned long deadline_secs, deadline_nanosecs;
+
+      if (orbParameters::clientConnectTimeOutPeriod.secs ||
+	  orbParameters::clientConnectTimeOutPeriod.nanosecs) {
+
+	omni_thread::
+	  get_time(&deadline_secs,
+		   &deadline_nanosecs,
+		   orbParameters::clientConnectTimeOutPeriod.secs,
+		   orbParameters::clientConnectTimeOutPeriod.nanosecs);
+
+	if ((pd_deadline_secs && deadline_secs > pd_deadline_secs) ||
+	    (deadline_secs == pd_deadline_secs &&
+	     deadline_nanosecs > pd_deadline_nanosecs)) {
+
+	  pd_deadline_secs     = deadline_secs;
+	  pd_deadline_nanosecs = deadline_nanosecs;
+	}
+      }
+      else {
+	deadline_secs     = pd_deadline_secs;
+	deadline_nanosecs = pd_deadline_nanosecs;
+      }
+      giopActiveConnection* c = pd_strand->address->Connect(deadline_secs,
+							    deadline_nanosecs);
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {
@@ -1118,8 +1145,36 @@ giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
   if (!pd_strand->connection) {
     OMNIORB_ASSERT(pd_strand->address);
     if (pd_strand->state() != giopStrand::DYING) {
-      giopActiveConnection* c = pd_strand->address->Connect(pd_deadline_secs,
-							    pd_deadline_nanosecs);
+      if (omniORB::trace(20)) {
+	omniORB::logger log;
+	log << "Client attempt to connect to "
+	    << pd_strand->address->address() << "\n";
+      }
+      unsigned long deadline_secs, deadline_nanosecs;
+
+      if (orbParameters::clientConnectTimeOutPeriod.secs ||
+	  orbParameters::clientConnectTimeOutPeriod.nanosecs) {
+
+	omni_thread::
+	  get_time(&deadline_secs,
+		   &deadline_nanosecs,
+		   orbParameters::clientConnectTimeOutPeriod.secs,
+		   orbParameters::clientConnectTimeOutPeriod.nanosecs);
+
+	if ((pd_deadline_secs && deadline_secs > pd_deadline_secs) ||
+	    (deadline_secs == pd_deadline_secs &&
+	     deadline_nanosecs > pd_deadline_nanosecs)) {
+
+	  pd_deadline_secs     = deadline_secs;
+	  pd_deadline_nanosecs = deadline_nanosecs;
+	}
+      }
+      else {
+	deadline_secs     = pd_deadline_secs;
+	deadline_nanosecs = pd_deadline_nanosecs;
+      }
+      giopActiveConnection* c = pd_strand->address->Connect(deadline_secs,
+							    deadline_nanosecs);
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {

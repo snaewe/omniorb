@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.4  2006/01/10 13:59:37  dgrisby
+  New clientConnectTimeOutPeriod configuration parameter.
+
   Revision 1.4.2.3  2005/04/25 18:26:18  dgrisby
   After handling a transient due to a failed forwarded reference,
   rethrow the original exception, rather than the transient, if the
@@ -720,48 +723,47 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
   omniCurrent* current;
   unsigned long abs_secs = 0, abs_nanosecs = 0;
 
-  if (pd_timeout_secs || pd_timeout_nanosecs) {
-    omni_thread::get_time(&abs_secs,&abs_nanosecs,
-			  pd_timeout_secs, pd_timeout_nanosecs);
-  }
-  else if (orbParameters::supportPerThreadTimeOut &&
-	   (current = omniCurrent::get()) &&
-	   (current->timeout_secs() || current->timeout_nanosecs())) {
-    
-    if (current->timeout_absolute()) {
-      abs_secs     = current->timeout_secs();
-      abs_nanosecs = current->timeout_nanosecs();
-    }
-    else {
-      omni_thread::get_time(&abs_secs,&abs_nanosecs,
-			    current->timeout_secs(),
-			    current->timeout_nanosecs());
-    }
-  }
-  else if (orbParameters::clientCallTimeOutPeriod.secs ||
-	   orbParameters::clientCallTimeOutPeriod.nanosecs) {
-
-    omni_thread::get_time(&abs_secs,&abs_nanosecs,
-			  orbParameters::clientCallTimeOutPeriod.secs,
-			  orbParameters::clientCallTimeOutPeriod.nanosecs);
-  }
-  if (abs_secs || abs_nanosecs)
-    call_desc.setDeadline(abs_secs,abs_nanosecs);
-
   while(1) {
 
     if( orbParameters::verifyObjectExistsAndType && do_assert )
       _assertExistsAndTypeVerified();
 
-    try{
+    if (!(abs_secs || abs_nanosecs)) {
+      if (pd_timeout_secs || pd_timeout_nanosecs) {
+	omni_thread::get_time(&abs_secs,&abs_nanosecs,
+			      pd_timeout_secs, pd_timeout_nanosecs);
+      }
+      else if (orbParameters::supportPerThreadTimeOut &&
+	       (current = omniCurrent::get()) &&
+	       (current->timeout_secs() || current->timeout_nanosecs())) {
+    
+	if (current->timeout_absolute()) {
+	  abs_secs     = current->timeout_secs();
+	  abs_nanosecs = current->timeout_nanosecs();
+	}
+	else {
+	  omni_thread::get_time(&abs_secs,&abs_nanosecs,
+				current->timeout_secs(),
+				current->timeout_nanosecs());
+	}
+      }
+      else if (orbParameters::clientCallTimeOutPeriod.secs ||
+	       orbParameters::clientCallTimeOutPeriod.nanosecs) {
 
+	omni_thread::get_time(&abs_secs,&abs_nanosecs,
+			      orbParameters::clientCallTimeOutPeriod.secs,
+			      orbParameters::clientCallTimeOutPeriod.nanosecs);
+      }
+      call_desc.setDeadline(abs_secs,abs_nanosecs);
+    }
+
+    try{
       omni::internalLock->lock();
 
       fwd = pd_flags.forward_location;
 
       _identity()->dispatch(call_desc);
       return;
-
     }
     catch(const giopStream::CommFailure& ex) {
       if (ex.retry()) continue;

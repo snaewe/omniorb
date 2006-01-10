@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/01/10 13:59:37  dgrisby
+  New clientConnectTimeOutPeriod configuration parameter.
+
   Revision 1.1.4.4  2005/03/02 13:33:42  dgrisby
   Variable name clash.
 
@@ -97,6 +100,7 @@
 #include <omniORB4/minorCode.h>
 #include <omniORB4/omniInterceptors.h>
 #include <omniORB4/objTracker.h>
+#include <omniORB4/callDescriptor.h>
 #include <exceptiondefs.h>
 #include <giopStrand.h>
 #include <giopRope.h>
@@ -537,8 +541,37 @@ BiDirClientRope::acquireClient(const omniIOR* ior,
   omni_tracedmutex_lock sync(pd_lock);
   giopStrand& s = (giopStrand&)((giopStream&)(*giop_c));
   if (s.connection == 0 && s.state() != giopStrand::DYING) {
-    unsigned long deadline_secs,deadline_nanosecs;
-    giop_c->getDeadline(deadline_secs,deadline_nanosecs);
+    if (omniORB::trace(20)) {
+      omniORB::logger log;
+      log << "Bidirectional client attempt to connect to "
+	  << s.address->address() << "\n";
+    }
+    unsigned long s_deadline_secs, s_deadline_nanosecs;
+    giop_c->getDeadline(s_deadline_secs,s_deadline_nanosecs);
+
+    unsigned long deadline_secs, deadline_nanosecs;
+    if (orbParameters::clientConnectTimeOutPeriod.secs ||
+	orbParameters::clientConnectTimeOutPeriod.nanosecs) {
+
+      omni_thread::
+	get_time(&deadline_secs,
+		 &deadline_nanosecs,
+		 orbParameters::clientConnectTimeOutPeriod.secs,
+		 orbParameters::clientConnectTimeOutPeriod.nanosecs);
+
+      if ((s_deadline_secs && deadline_secs > s_deadline_secs) ||
+	  (deadline_secs == s_deadline_secs &&
+	   deadline_nanosecs > s_deadline_nanosecs)) {
+
+	giop_c->setDeadline(deadline_secs, deadline_nanosecs);
+	calldesc->setDeadline(deadline_secs, deadline_nanosecs);
+      }
+    }
+    else {
+      deadline_secs     = s_deadline_secs;
+      deadline_nanosecs = s_deadline_nanosecs;
+    }
+
     giopActiveConnection* c = s.address->Connect(deadline_secs,
 						 deadline_nanosecs);
     if (c) s.connection = &(c->getConnection());
@@ -546,7 +579,7 @@ BiDirClientRope::acquireClient(const omniIOR* ior,
       s.state(giopStrand::DYING);
     }
     else {
-      // now make the connection manage by the giopServer.
+      // now make the connection managed by the giopServer.
       s.biDir = 1;
       s.gatekeeper_checked = 1;
       giopActiveCollection* watcher = c->registerMonitor();

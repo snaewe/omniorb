@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2006/01/10 13:59:37  dgrisby
+  New clientConnectTimeOutPeriod configuration parameter.
+
   Revision 1.1.4.6  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -338,6 +341,25 @@ _CORBA_MODULE_VAR _core_attr timeValue clientCallTimeOutPeriod;
 //
 //   Valid values = (n >= 0 in milliseconds) 
 //                   0 --> no timeout. Block till a reply comes back
+
+_CORBA_MODULE_VAR _core_attr timeValue clientConnectTimeOutPeriod;
+//   Connect timeout. When a client has no existing connection to
+//   communicate with a server, it must open a new connection before
+//   performing the call. If this parameter is non-zero, it sets a
+//   timeout specifically for establishing the connection. If the
+//   timeout specified here is shorter than the overall timeout for
+//   the call (set with clientCallTimeOutPeriod or per-object or
+//   per-thread timeouts), the connect timeout is used for
+//   establishing the connection, then additional time is permitted
+//   for the call to complete. If the connect timeout is longer than
+//   the normal call timeout, the deadline for the entire call is
+//   extended to match the connect timeout.
+//
+//   If this parameter is zero, the normal call timeout applies to the
+//   total time taken to perform the connect and the subsequent call.
+//
+//   Valid values = (n >= 0 in milliseconds) 
+//                   0 --> same timeout (if any) as other calls
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportPerThreadTimeOut;
 //   If true, each thread may have a timeout associated with it. This

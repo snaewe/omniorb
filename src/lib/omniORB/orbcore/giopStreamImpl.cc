@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2006/01/10 13:59:37  dgrisby
+  New clientConnectTimeOutPeriod configuration parameter.
+
   Revision 1.1.6.2  2005/01/06 23:10:30  dgrisby
   Big merge from omni4_0_develop.
 
@@ -100,6 +103,25 @@ orbParameters::timeValue orbParameters::clientCallTimeOutPeriod = {0,0};
 //
 //   Valid values = (n >= 0 in seconds) 
 //                   0 --> no timeout. Block till a reply comes back
+
+orbParameters::timeValue orbParameters::clientConnectTimeOutPeriod = {0,0};
+//   Connect timeout. When a client has no existing connection to
+//   communicate with a server, it must open a new connection before
+//   performing the call. If this parameter is non-zero, it sets a
+//   timeout specifically for establishing the connection. If the
+//   timeout specified here is shorter than the overall timeout for
+//   the call (set with clientCallTimeOutPeriod or per-object or
+//   per-thread timeouts), the connect timeout is used for
+//   establishing the connection, then additional time is permitted
+//   for the call to complete. If the connect timeout is longer than
+//   the normal call timeout, the deadline for the entire call is
+//   extended to match the connect timeout.
+//
+//   If this parameter is zero, the normal call timeout applies to the
+//   total time taken to perform the connect and the subsequent call.
+//
+//   Valid values = (n >= 0 in milliseconds) 
+//                   0 --> same timeout (if any) as other calls
 
 CORBA::Boolean orbParameters::supportPerThreadTimeOut = 0;
 //   If true, each thread may have a timeout associated with it. This
@@ -380,6 +402,39 @@ public:
 static supportPerThreadTimeOutHandler supportPerThreadTimeOutHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
+class clientConnectTimeOutPeriodHandler : public orbOptions::Handler {
+public:
+
+  clientConnectTimeOutPeriodHandler() : 
+    orbOptions::Handler("clientConnectTimeOutPeriod",
+			"clientConnectTimeOutPeriod = n >= 0 in msecs",
+			1,
+			"-ORBclientConnectTimeOutPeriod < n >= 0 in msecs >") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 "Expect n >= 0 in msecs");
+    }
+    orbParameters::clientConnectTimeOutPeriod.secs = v / 1000;
+    orbParameters::clientConnectTimeOutPeriod.nanosecs = (v % 1000) * 1000000;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    CORBA::ULong v = orbParameters::clientConnectTimeOutPeriod.secs * 1000 +
+      orbParameters::clientConnectTimeOutPeriod.nanosecs / 1000000;
+    orbOptions::addKVULong(key(),v,result);
+  }
+
+};
+
+static clientConnectTimeOutPeriodHandler clientConnectTimeOutPeriodHandler_;
+
+
+
+/////////////////////////////////////////////////////////////////////////////
 class serverCallTimeOutPeriodHandler : public orbOptions::Handler {
 public:
 
@@ -537,6 +592,7 @@ public:
     orbOptions::singleton().registerHandler(giopMaxMsgSizeHandler_);
     orbOptions::singleton().registerHandler(clientCallTimeOutPeriodHandler_);
     orbOptions::singleton().registerHandler(supportPerThreadTimeOutHandler_);
+    orbOptions::singleton().registerHandler(clientConnectTimeOutPeriodHandler_);
     orbOptions::singleton().registerHandler(serverCallTimeOutPeriodHandler_);
     orbOptions::singleton().registerHandler(maxInterleavedCallsPerConnectionHandler_);
     orbOptions::singleton().registerHandler(giopTargetAddressModeHandler_);

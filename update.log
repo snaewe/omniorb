@@ -1,3 +1,19 @@
+Tue Jan 10 13:58:38 GMT 2006 dgrisby
+====================================
+
+- New clientConnectTimeOutPeriod configuration parameter.
+
+sample.cfg
+sample.reg
+include/omniORB4/omniORB.h
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Tue Jan 10 12:19:48 GMT 2006 dgrisby
 ====================================
 
