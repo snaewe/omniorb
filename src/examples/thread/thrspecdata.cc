@@ -8,6 +8,8 @@
 // which returns a value.
 //
 
+#include <omniORB4/CORBA_sysdep.h> // for HAVE_STD
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;

@@ -48,6 +48,8 @@ CC = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/clwrapper $(XLN)
 CLINK = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/linkwrapper $(XLN)
 CMAKEDEPEND = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/omkdepend $(MKDEPOPT) -D_MSC_VER
 
+MANIFESTTOOL    = true
+
 MKDIRHIER	= mkdir -p
 
 INSTALL		= install -c
@@ -131,6 +133,7 @@ endef
 define VeryCleanRule
 $(RM) *.d
 $(RM) *.pyc
+$(RM) *.def *.pdb *.ilk *.exp *.manifest
 $(RM) $(CORBA_STUB_FILES)
 endef
 
@@ -203,6 +206,7 @@ define CXXExecutable
  $(RM) $@; \
  $(CXXLINK) -out:$@ $(CXXLINKOPTIONS) -PDB:$@.pdb $(IMPORT_LIBRARY_FLAGS) \
       $(filter-out $(LibPattern),$^) $$libs; \
+ $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
 )
 endef
 
@@ -210,6 +214,7 @@ define CExecutable
 (set -x; \
  $(RM) $@; \
  $(CLINK) -out:$@ $(CLINKOPTIONS) -PDB:$@.pdb $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibPattern),$^) $$libs; \
+ $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
 )
 endef
 
@@ -361,7 +366,8 @@ endef
 #
 define CleanSharedLibrary
 ( set -x; \
-$(RM) $${dir:-.}/*.dll $${dir:-.}/*.lib $${dir:-.}/*.exp $${dir:-.}/*.def )
+$(RM) $${dir:-.}/*.dll $${dir:-.}/*.lib $${dir:-.}/*.exp $${dir:-.}/*.def \
+      $${dir:-.}/*.dll.manifest $${dir:-.}/*.ilk $${dir:-.}/*.pdb )
 endef
 
 # Pattern rules to build objects files for static and shared library and the

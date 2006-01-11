@@ -25,15 +25,16 @@ ABSTOP = $(shell cd $(TOP); pwd)
 #PYTHON = /cygdrive/c/Python24/python
 
 MSVC7 = "true"
+MSVC8 = "true"
 
 # Use the following set of flags to build and use multithreaded DLLs
 #
-MSVC_DLL_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -Zd -nologo
+MSVC_DLL_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -nologo
 MSVC_DLL_CXXLINKNODEBUGOPTIONS = -nologo -DEBUG
-MSVC_DLL_CNODEBUGFLAGS         = -MD -GS -GR -Zd -nologo
+MSVC_DLL_CNODEBUGFLAGS         = -MD -GS -GR -nologo
 MSVC_DLL_CLINKNODEBUGOPTIONS   = -nologo -DEBUG
 #
-MSVC_DLL_CXXDEBUGFLAGS         = -MDd -EHs -RTC1 -GS -GR -Zd -nologo
+MSVC_DLL_CXXDEBUGFLAGS         = -MDd -EHs -RTC1 -GS -GR -nologo
 MSVC_DLL_CXXLINKDEBUGOPTIONS   = -nologo -DEBUG
 MSVC_DLL_CDEBUGFLAGS           = -MDd -RTC1 -GS -GR -Zd -nologo
 MSVC_DLL_CLINKDEBUGOPTIONS     = -nologo -DEBUG
@@ -42,14 +43,14 @@ MSVC_DLL_CLINKDEBUGOPTIONS     = -nologo -DEBUG
 #
 # Use the following set of flags to build and use multithread static libraries
 #
-MSVC_STATICLIB_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -Zd -nologo
+MSVC_STATICLIB_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -nologo
 MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS = -nologo -DEBUG
-MSVC_STATICLIB_CNODEBUGFLAGS         = -MD -GS -GR -Zd -nologo
+MSVC_STATICLIB_CNODEBUGFLAGS         = -MD -GS -GR -nologo
 MSVC_STATICLIB_CLINKNODEBUGOPTIONS   = -nologo -DEBUG
 
-MSVC_STATICLIB_CXXDEBUGFLAGS         = -MD -EHs -RTC1 -GS -GR -Zd -nologo
+MSVC_STATICLIB_CXXDEBUGFLAGS         = -MD -EHs -RTC1 -GS -GR -nologo
 MSVC_STATICLIB_CXXLINKDEBUGOPTIONS   = -nologo -DEBUG
-MSVC_STATICLIB_CDEBUGFLAGS           = -MD -RTC1 -GS -GR -Zd -nologo
+MSVC_STATICLIB_CDEBUGFLAGS           = -MD -RTC1 -GS -GR -nologo
 MSVC_STATICLIB_CLINKDEBUGOPTIONS     = -nologo -DEBUG
 
 
@@ -78,8 +79,10 @@ endif
 
 include $(THIS_IMPORT_TREE)/mk/win32.mk
 
+MANIFESTTOOL = mt.exe
 
-IMPORT_CPPFLAGS += -D__x86__ -D__NT__ -D__OSVERSION__=4
+IMPORT_CPPFLAGS += -D__x86__ -D__NT__ -D__OSVERSION__=4 \
+                   -D_CRT_SECURE_NO_DEPRECATE=1
 
 
 # Default directory for the omniNames log files.

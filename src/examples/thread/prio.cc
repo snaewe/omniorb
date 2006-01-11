@@ -19,6 +19,8 @@
 // running for a long time if anyone else is using the same machine.
 //
 
+#include <omniORB4/CORBA_sysdep.h> // for HAVE_STD
+
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef HAVE_STD

@@ -1,3 +1,21 @@
+Wed Jan 11 18:15:33 GMT 2006 dgrisby
+====================================
+
+- Support for Visual C++ 8.
+
+config/config.mk
+mk/beforedir.mk
+mk/version.mk
+mk/win32.mk
+mk/platforms/x86_nt_4.0.mk
+mk/platforms/x86_nt_4.0_vs_7.mk
+mk/platforms/x86_nt_4.0_vs_8.mk     -- new
+src/examples/thread/diner.cc
+src/examples/thread/prio.cc
+src/examples/thread/prodcons.cc
+src/examples/thread/thrspecdata.cc
+
+
 Tue Jan 10 12:56:37 GMT 2006 dgrisby
 ====================================
 

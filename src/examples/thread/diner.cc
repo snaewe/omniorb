@@ -16,6 +16,9 @@
 
 /*
  $Log$
+ Revision 1.6.12.2  2006/01/11 18:18:58  dgrisby
+ Support for Visual C++ 8.
+
  Revision 1.6.12.1  2004/10/17 20:14:31  dgrisby
  Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -38,6 +41,8 @@
 // Initial revision
 //
  */
+
+#include <omniORB4/CORBA_sysdep.h> // for HAVE_STD
 
 #ifdef HAVE_STD
 #  include <iostream>
