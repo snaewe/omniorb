@@ -1,17 +1,16 @@
 #ifndef __ANYEXAMPLE_IDL__
 #define __ANYEXAMPLE_IDL__
 
-// Note that when compiling this IDL with omniidl2, the -a command-line flag
-// should be specified.
+// Note that when compiling this IDL with omniidl, the -Wba
+// command-line flag should be specified.
 
 struct testStruct {
   long l;
   short s;
 };
 
-
 interface anyExample {
   any testOp(in any mesg);
 };
 
-#endif 
+#endif // __ANYEXAMPLE_IDL__

@@ -1,3 +1,16 @@
+Thu Jan 12 12:24:33 GMT 2006 dgrisby
+====================================
+
+- Clean up "ambiguous" indexing operators.
+
+include/omniORB4/templatedecls.h
+
+- Sanitise example idl.
+
+idl/anyExample.idl
+idl/echo.idl
+
+
 Wed Jan 11 18:15:33 GMT 2006 dgrisby
 ====================================
 
