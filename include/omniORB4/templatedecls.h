@@ -30,6 +30,18 @@
 #define __TEMPLATEDECLS_H__
 
 
+// Some compilers need an operator[] with an int argument when there
+// is an operator T* defined.
+
+#if defined(__GNUG__) && __GNUG__ == 3 && __GNUC_MINOR__ >= 4
+#  define NEED_INT_INDEX_OPERATOR
+#endif
+
+#if defined(__GNUG__) && __GNUG__ >= 4
+#  define NEED_INT_INDEX_OPERATOR
+#endif
+
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////// _CORBA_PseudoObj_Var ////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1145,7 +1157,7 @@ public:
     return *( (const T*) (pd_data + index_));
   }
 
-#if defined(__GNUG__) && __GNUG__ == 3 && __GNUC_MINOR__ >= 4
+#ifdef NEED_INT_INDEX_OPERATOR
   // g++ thinks the operators with ULong arguments are ambiguous when
   // used with int literals. This sorts it out.
   inline T& operator[] (int index_) { return *(pd_data + index_); }
@@ -1213,7 +1225,7 @@ public:
     return *( (const T*) (pd_data + index_));
   }
 
-#if defined(__GNUG__) && __GNUG__ == 3 && __GNUC_MINOR__ >= 4
+#ifdef NEED_INT_INDEX_OPERATOR
   // g++ thinks the operators with ULong arguments are ambiguous when
   // used with int literals. This sorts it out.
   inline T& operator[] (int index_) { return *(pd_data + index_); }
@@ -1239,5 +1251,7 @@ private:
   _CORBA_Boolean pd_nocopy;
 };
 
+
+#undef NEED_INT_INDEX_OPERATOR
 
 #endif  // __TEMPLATEDECLS_H__
