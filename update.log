@@ -1,3 +1,17 @@
+Wed Jan 18 19:21:28 GMT 2006 dgrisby
+====================================
+
+- Clarifying comment.
+
+src/lib/omniORB/dynamic/valueType.cc
+
+- Code generation problems with valuetype inheritance / typedefs.
+
+src/lib/omniORB/omniidl_be/cxx/value.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/tool/omniidl/python/omniidl/idlast.py
+
+
 Tue Jan 10 13:58:38 GMT 2006 dgrisby
 ====================================
 

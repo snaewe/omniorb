@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.12  2006/01/18 19:23:18  dgrisby
+# Code generation problems with valuetype inheritance / typedefs.
+#
 # Revision 1.36.2.11  2006/01/10 12:24:04  dgrisby
 # Merge from omni4_0_develop pre 4.0.7 release.
 #
@@ -680,7 +683,14 @@ def visitTypedef(node):
                            objref_base = objref_base)
                 if config.state['BOA Skeletons']:
                     stream.out(sk_base)
-                               
+
+            # Non-array of valuetype
+            elif d_type.value() or d_type.valuebox():
+                basicReferencedTypeID = string.replace(basicReferencedTypeID,
+                                                       "_member", "")
+                stream.out(template.typedef_simple_constructed,
+                           base = basicReferencedTypeID,
+                           name = derivedName)
                     
             # Non-array of enum
             elif d_type.enum():
