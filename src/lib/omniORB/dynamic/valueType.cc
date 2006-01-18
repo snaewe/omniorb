@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2006/01/18 19:21:54  dgrisby
+  Clarifying comment.
+
   Revision 1.1.2.8  2005/07/21 10:00:17  dgrisby
   Bugs with valuetypes in Anys.
 
@@ -627,6 +630,8 @@ handleIncompatibleValue(const char* repoId, CORBA::ULong hashval,
     return rholder._retn();
   }
   else {
+    // We reach here if the application-supplied ValueFactory created
+    // a value that could not be downcast to the required type.
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure, completion);
   }
 #ifdef NEED_DUMMY_RETURN
