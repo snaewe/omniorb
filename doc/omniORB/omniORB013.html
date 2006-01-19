@@ -9,7 +9,7 @@
 <META name="GENERATOR" content="hevea 1.08">
 <LINK rel="stylesheet" type="text/css" href="omniORB.css">
 <TITLE>
-Objects by value
+Objects by value, etc.
 </TITLE>
 </HEAD>
 <BODY >
@@ -18,21 +18,24 @@ Objects by value
 <A HREF="omniORB014.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1 CLASS="chapter"><A NAME="htoc140">Chapter&nbsp;13</A>&nbsp;&nbsp;Objects by value</H1>
+<H1 CLASS="chapter"><A NAME="htoc140">Chapter&nbsp;13</A>&nbsp;&nbsp;Objects by value, abstract interfaces and local interfaces</H1>
 <A NAME="chap:valuetype"></A>
 omniORB 4.1 supports objects by value, declared with the
-<TT>valuetype</TT> keyword in IDL. This chapter outlines some issues to
-do with using valuetypes in omniORB. You are assumed to have read the
-relevant parts of the CORBA specification, specifically chapters 4 and
-5 of the CORBA 2.6 specification, and sections 1.17 and 1.18 of the
-C++ mapping specification, version 1.1.<BR>
+<TT>valuetype</TT> keyword in IDL, and both abstract and local
+interfaces. This chapter outlines some issues to do with using these
+types in omniORB. You are assumed to have read the relevant parts of
+the CORBA specification, specifically chapters 3, 4, 5 and 6 of the
+CORBA 2.6 specification, and sections 1.17, 1.18 and 1.35 of the C++
+mapping specification, version 1.1.<BR>
 <BR>
 <A NAME="toc57"></A>
 <H2 CLASS="section"><A NAME="htoc141">13.1</A>&nbsp;&nbsp;Features</H2>
 omniORB supports the complete objects by value specification, with the
-exception of custom valuetypes. All other features including value
-boxes, value sharing semantics, abstract valuetypes, and abstract
-interfaces are supported.<BR>
+exception of custom valuetypes. All other valuetype features including
+value boxes, value sharing semantics, abstract valuetypes, and
+abstract interfaces are supported. Local interfaces are supported,
+with a number of caveats outlined in
+section&nbsp;<A HREF="#sec:LocalInterfaces">13.8</A>.<BR>
 <BR>
 <A NAME="toc58"></A>
 <H2 CLASS="section"><A NAME="htoc142">13.2</A>&nbsp;&nbsp;Reference counting</H2>
@@ -196,6 +199,114 @@ referred to the same value has been lost.<BR>
 Because of these issues, it is best to avoid defining interfaces that
 mix valuetypes and Anys in a single operation, and certainly to avoid
 trying to share plain values with values inside Anys.<BR>
+<BR>
+<A NAME="toc64"></A>
+<H2 CLASS="section"><A NAME="htoc148">13.8</A>&nbsp;&nbsp;Local Interfaces</H2>
+<A NAME="sec:LocalInterfaces"></A>
+Local interfaces are somewhat under-specified in the C++ mapping. This
+section outlines the way local interfaces are supported in omniORB,
+and details the limitations and issues.<BR>
+<BR>
+
+<H3 CLASS="subsection"><A NAME="htoc149">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3>
+With simple IDL, there are no particular issues:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><B>module</B> Test {</TT><TT>
+</TT><TT>  <B>local</B> <B>interface</B> Example {</TT><TT>
+</TT><TT>    <B>string</B> hello(<B>in</B> <B>string</B> arg);</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>};</TT></DIV><BR>
+<BR>
+The IDL compiler generates an abstract base class
+<TT>Test::Example</TT>. The application defines a class derived from it
+that implements the abstract <TT>hello()</TT> member function. Instances of
+that class can then be used where the IDL specifies interface
+<TT>Example</TT>.<BR>
+<BR>
+Note that, by default, local interface implementations have no
+reference counting behaviour. If the local object should be deleted
+when the last reference is released, the application must implement
+the <TT>_add_ref()</TT> and <TT>_remove_ref()</TT> virtual member functions
+within the implementation class. Make sure that the implementations
+are thread safe.<BR>
+<BR>
+
+<H3 CLASS="subsection"><A NAME="htoc150">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3>
+Local interfaces can inherit from unconstrained (i.e. non-local)
+interfaces:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><B>module</B> Test {</TT><TT>
+</TT><TT>  <B>interface</B> One {</TT><TT>
+</TT><TT>    <B>void</B> problem(<B>inout</B> <B>string</B> arg);</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>  <B>local</B> <B>interface</B> Two : One {</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>
+</TT><TT>  <B>interface</B> Receiver {</TT><TT>
+</TT><TT>    <B>void</B> setOne(<B>in</B> One a);</TT><TT>
+</TT><TT>  };</TT><TT>
+</TT><TT>};</TT></DIV><BR>
+<BR>
+IDL like this leads to two issues to do with omniORB's C++ mapping
+implementation.<BR>
+<BR>
+First, an instance of local interface <TT>Two</TT> should be suitable to
+pass as the argument to the <TT>setOne()</TT> method of a <TT>Receiver</TT>
+object (as long as the object is in the same address space as the
+caller). Therefore, the <TT>Two</TT> abstract base class has to inherit
+from the internal class omniORB uses to map object references of type
+<TT>One</TT>. For performance reasons, the class that implements
+<TT>One</TT> object references normally has non-virtual member
+functions. That means that the application-supplied <TT>problem()</TT>
+member function for the implementation of local interface <TT>Two</TT>
+will not override the base class's version. To overcome this, the IDL
+for the base unconstrained interface must be compiled with the
+-Wbvirtual_objref switch to omniidl. That makes the member functions
+of the mapping of <TT>One</TT> into virtual functions, so they can be
+overridden.<BR>
+<BR>
+The second problem is that, in some cases, omniORB uses a different
+mapping for object reference member functions than the mapping used in
+servant classes. For example, in the <TT>problem()</TT> operation, it uses
+an internal type for the inout string argument that avoids memory
+issues if the application uses a String_var in the argument. This
+means that the abstract member function declared in the <TT>Two</TT>
+class (and implemented by the application) has a different signature
+to the member function in the base class. The application-supplied
+class will therefore not properly override the base class method. In
+all likelihood, the C++ compiler will also complain that the two
+member functions are ambiguous. The solution to this problem is to use
+the implementation mapping in the base object reference class, rather
+than the normal object reference mapping, using the -Wbimpl_mapping
+switch to omniidl. The consequence of this is that some uses of _var
+types for inout arguments that are normally acceptable in omniORB now
+lead to memory problems.<BR>
+<BR>
+In summary, to use local interfaces derived from normal unconstrained
+interfaces, you should compile all your IDL with the omniidl flags:
+<BLOCKQUOTE CLASS="quote">
+<TT>-Wbvirtual_objref -Wbimpl_mapping</TT>
+</BLOCKQUOTE>
+
+<H3 CLASS="subsection"><A NAME="htoc151">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3>
+According to the IDL specification, it should be possible to declare a
+valuetype that supports a local interface:<BR>
+<BR>
+<DIV CLASS="lstlisting"><TT><B>local</B> <B>interface</B> I {</TT><TT>
+</TT><TT>  <B>void</B> my_operation();</TT><TT>
+</TT><TT>};</TT><TT>
+</TT><TT><B>valuetype</B> V <B>supports</B> I {</TT><TT>
+</TT><TT>  <B>public</B> <B>string</B> s;</TT><TT>
+</TT><TT>};</TT></DIV><BR>
+<BR>
+omniidl accepts the IDL, but unfortunately the resulting C++ code does
+not compile. The C++ mapping specification has a problem in that both
+the <TT>CORBA::LocalObject</TT> and <TT>CORBA::ValueBase</TT>
+classes have <TT>add_ref()</TT> and <TT>remove_ref()</TT> member functions
+defined. The classes generated for the valuetype inherit from both
+these base classes, and therefore have an ambiguity. Until the C++
+mapping resolves this conflict, valuetypes supporting local interfaces
+cannot be used in omniORB.<BR>
 <BR>
 <HR>
 <A HREF="omniORB012.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>

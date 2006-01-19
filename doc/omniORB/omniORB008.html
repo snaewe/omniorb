@@ -125,6 +125,7 @@ Timeouts are set using this API:<BR>
 </TT><TT>  <B>void</B> setClientCallTimeout(CORBA::ULong millisecs);</TT><TT>
 </TT><TT>  <B>void</B> setClientCallTimeout(CORBA::Object_ptr obj, CORBA::ULong millisecs);</TT><TT>
 </TT><TT>  <B>void</B> setClientThreadCallTimeout(CORBA::ULong millisecs);</TT><TT>
+</TT><TT>  <B>void</B> setClientConnectTimeout(CORBA::ULong millisecs);</TT><TT>
 </TT><TT>};</TT></DIV><BR>
 <BR>
 <TT>setClientCallTimeout()</TT> sets either the global timeout or the
@@ -141,6 +142,51 @@ them.<BR>
 To choose the timeout value to use for a call, the ORB first looks to
 see if there is a timeout for the object reference, then to the
 calling thread, and finally to the global timeout.<BR>
+<BR>
+When a client has no existing connection to communicate with a server,
+it must open a new connection before performing the
+call. <TT>setClientConnectTimeout()</TT> sets an overriding timeout for
+cases where a new connection must be established. The effect of the
+connect timeout depends upon whether the connect timeout is greater
+or less than the timeout that would otherwise be used.<BR>
+<BR>
+As an example, imagine that the usual call timeout is 10 seconds:<BR>
+<BR>
+
+<H4 CLASS="subsubsection">Connect timeout &gt; usual timeout</H4>
+If the connect timeout is set to 20 seconds, then a call that
+establishes a new connection will be permitted 20 seconds before it
+times out. Subsequent calls using the same connection have the normal
+10 second timeout. If establishing the connection takes 8 seconds,
+then the call itself takes 5 seconds, the call succeeds despite having
+taken 13 seconds in total, longer than the usual timeout.<BR>
+<BR>
+This kind of configuration is good when connections are slow to be
+established.<BR>
+<BR>
+
+<H4 CLASS="subsubsection">Connect timeout &lt; usual timeout</H4>
+If the connect timeout is set to 2 seconds, the actual network-level
+connect is only permitted to take 2 seconds. As long as the connection
+is established in less than 2 seconds, the call can proceed. The 10
+second call timeout still applies to the time taken for the whole call
+(including the connection establishment). So, if establishing the
+connection takes 1.5 seconds, and the call itself takes 9.5 seconds,
+the call will time out because although it met the connection timeout,
+it exceeded the 10 second total call timeout. On the other hand, if
+establishing the connection takes 3 seconds, the call will fail after
+only 2 seconds, since only 2 seconds are permitted for the connect.<BR>
+<BR>
+If an object reference has multiple possible endpoints available, the
+client will attempt to connect to them in turn, until one succeeds.
+The connect timeout applies to each connection attempt. So with a
+connect timeout of 2 seconds, the client will spend up to 2 seconds
+attempting to connect to the first address and then, if that fails, up
+to 2 seconds trying the second address, and so on.<BR>
+<BR>
+This kind of configuration is useful where calls may take a long time
+to complete (so call timeouts are long), but a fast indication of
+connection failure is required.<BR>
 <BR>
 <A NAME="toc40"></A>
 <H2 CLASS="section"><A NAME="htoc96">8.4</A>&nbsp;&nbsp;Server side behaviour</H2>
