@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2006/01/19 16:05:02  dgrisby
+  Windows build fixes.
+
   Revision 1.1.4.3  2005/12/08 14:22:31  dgrisby
   Better string marshalling performance; other minor optimisations.
 
@@ -199,7 +202,7 @@ NCS_W_UTF_16::marshalWString(cdrStream&          stream,
 
 
 #if (SIZEOF_WCHAR == 2)
-  tcs->marshalWString(stream, len, ws);
+  tcs->marshalWString(stream, bound, len, ws);
 #else
   omniCodeSet::UniChar*    us = omniCodeSetUtil::allocU(len+1);
   omniCodeSetUtil::HolderU uh(us);

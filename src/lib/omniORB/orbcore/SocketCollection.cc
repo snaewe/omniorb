@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2006/01/19 16:05:02  dgrisby
+  Windows build fixes.
+
   Revision 1.1.4.12  2005/11/19 17:33:28  dgrisby
   Previous fix for the race condition was stupidly commented out...
 
@@ -929,7 +932,6 @@ SocketHolder::setSelectable(int            now,
     }
     else {
       OMNIORB_ASSERT(pd_fd_index == -1);
-      pd_selected = 1;
       pd_fd_index = pd_belong_to->pd_fd_set.fd_count;
       pd_belong_to->pd_fd_set.fd_array[pd_fd_index] = pd_socket;
       pd_belong_to->pd_fd_sockets[pd_fd_index] = this;
