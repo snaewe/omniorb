@@ -1,10 +1,6 @@
 This file contains information on installing, building and using
 omniORB on Unix platforms.
 
-If you are upgrading from 2.7.1 or earlier, please read CHANGES_280
-for a description of the incompatibility change in the semantics of
-Any since 2.8.0.
-
 Unless specified otherwise, the information applies to all Unix
 platforms. Platform specific information is also available in separate
 files.
@@ -110,13 +106,13 @@ There are various omniORB specific options:
                      shortens the build process.
 
   --enable-thread-tracing
-                     Turns on thread a mutex tracing that can help
+                     Turns on thread and mutex tracing that can help
                      track down threading bugs in omniORB, but gives a
                      significant performance hit.
 
-                     In beta releases, thread tracing is turned on by
-                     default, so you may wish to turn it off with
-                     --disable-thread-tracing.
+                     In some beta releases, thread tracing is turned
+                     on by default, so you may wish to turn it off
+                     with --disable-thread-tracing.
 
   --with-openssl=    Specify a location to find the OpenSSL
                      installation, required by the SSL transport.
@@ -154,9 +150,9 @@ steps:
 
   If you are using gcc or the default compiler for your platform is
   gcc, it is most likely that you have to edit the CXX and CC make
-  variables in the platform file. Only relatively recent versions of
-  gcc, e.g. gcc 2.95 and gcc 3.x have proper support for multithreaded
-  exception handling. Moreover, the gcc compiler has to be configured
+  variables in the platform file. Some old versions of gcc do not have
+  proper support for multithreaded exception handling, and thus cannot
+  be used for omniORB. Moreover, the gcc compiler has to be configured
   with the --enable-threads option or else the code generated does not
   work reliably. The default version of gcc compiler that comes with
   your platform may not be the right version.
@@ -190,8 +186,8 @@ steps:
   3. Building and installing
   --------------------------
 
-  The makefiles in this distribution only work with GNUmake. Make sure
-  that you have the program installed and invoke it directly.
+  The makefiles in this distribution only work with GNU make. Make
+  sure that you have the program installed and invoke it directly.
 
   You can skip this step if this is a pre-compiled binary
   distribution.  To build and install everything, go into the

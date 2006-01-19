@@ -58,6 +58,8 @@ specification 2.6 of the Common Object Request Broker Architecture
 
 - The Dynamic Invocation and Dynamic Skeleton interfaces are supported.
 
+- Valuetype and abstract interfaces are supported.
+
 - A COS Naming Service, omniNames, is provided.
 
 - Many platforms are supported, including most Unix platforms and
@@ -79,7 +81,6 @@ omniORB is not yet a complete implementation of the CORBA core. The
 following features are not supported in the current release.
 
 - Portable Interceptors.
-- Local interfaces.
 
 
 Missing features

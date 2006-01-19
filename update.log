@@ -1,3 +1,22 @@
+Thu Jan 19 17:16:11 GMT 2006 dgrisby
+====================================
+
+- Avoid member name conflict in DefaultValueRefCountBase.
+
+include/omniORB4/CORBA_ValueBase.h
+src/lib/omniORB/dynamic/valueBase.cc
+
+- Updates for 4.1.0 beta 1.
+
+README.FIRST.txt
+README.unix
+README.win32.txt
+THIS_IS_ALPHA_CODE                   -- deleted
+THIS_IS_OMNIORB_4_1_0_BETA_1         -- new
+THIS_IS_OMNIORB_4_1_DEVELOPMENT_TREE -- deleted
+src/examples/dir.mk
+
+
 Thu Jan 19 16:43:25 GMT 2006 dgrisby
 ====================================
 
