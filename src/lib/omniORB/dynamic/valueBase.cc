@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2006/01/19 17:21:59  dgrisby
+  Avoid member name conflict in DefaultValueRefCountBase.
+
   Revision 1.1.2.7  2005/01/17 14:36:56  dgrisby
   Heap allocate value refcount lock so it is not deallocated too early.
 
@@ -151,7 +154,7 @@ CORBA::DefaultValueRefCountBase::_add_ref()
 {
   init_lock();
   omni_tracedmutex_lock sync(*ref_count_lock);
-  _pd_refCount++;
+  _pd__refCount++;
 }
 
 void
@@ -160,9 +163,9 @@ CORBA::DefaultValueRefCountBase::_remove_ref()
   init_lock();
   {
     omni_tracedmutex_lock sync(*ref_count_lock);
-    OMNIORB_ASSERT(_pd_refCount > 0);
+    OMNIORB_ASSERT(_pd__refCount > 0);
 
-    if (--_pd_refCount > 0)
+    if (--_pd__refCount > 0)
       return;
   }
   delete this;
@@ -173,11 +176,11 @@ CORBA::DefaultValueRefCountBase::_refcount_value()
 {
   init_lock();
   omni_tracedmutex_lock sync(*ref_count_lock);
-  return _pd_refCount;
+  return _pd__refCount;
 }
 
 CORBA::DefaultValueRefCountBase::~DefaultValueRefCountBase() {
-  OMNIORB_ASSERT(_pd_refCount == 0);
+  OMNIORB_ASSERT(_pd__refCount == 0);
 }
 
 
