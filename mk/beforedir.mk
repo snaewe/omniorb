@@ -275,9 +275,6 @@ define NoPythonError
  echo 'You have not told me where to find a Python interpreter.'; \
  echo 'Please edit $$TOP/mk/platforms/$(platform).mk to set'; \
  echo 'the PYTHON make variable to the location of a suitable python.'; \
- echo; \
- echo 'If you do not have Python 1.5.2, you can download a minimal version'; \
- echo 'from ftp://ftp.uk.research.att.com/pub/omniORB/python/'; \
  echo; echo; echo; \
  exit 1; \
 )

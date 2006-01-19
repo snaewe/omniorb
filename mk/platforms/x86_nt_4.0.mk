@@ -15,14 +15,14 @@ ABSTOP = $(shell cd $(TOP); pwd)
 #
 # Python set-up
 #
-# You must set a path to a Python 1.5.2 (or later) interpreter. If you
+# You must set a path to a Python 1.5.2 or later interpreter. If you
 # do not wish to make a complete installation, you may download a
 # minimal Python from
-# http://sourceforge.net/project/showfiles.php?group_id=51138
+# http://sourceforge.net/project/showfiles.php?group_id=51138&package_id=48638
 # In that case, uncomment the first line below.
 
 #PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
-#PYTHON = /cygdrive/c/Python23/python
+#PYTHON = /cygdrive/c/Python24/python
 
 
 #

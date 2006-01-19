@@ -16,6 +16,9 @@
 
 /*
  $Log$
+ Revision 1.7.2.4  2006/01/19 16:44:28  dgrisby
+ Merge from omni4_0_develop.
+
  Revision 1.7.2.3  2005/06/08 09:35:33  dgrisby
  Update examples / utils for cleanliness and use of new C++ mapping.
 
@@ -44,6 +47,8 @@
 // Initial revision
 //
  */
+
+#include <omniORB4/CORBA_sysdep.h> // for HAVE_STD
 
 #ifdef HAVE_STD
 #  include <iostream>

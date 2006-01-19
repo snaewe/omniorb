@@ -1,3 +1,24 @@
+Thu Jan 19 16:43:25 GMT 2006 dgrisby
+====================================
+
+- Merge from omni4_0_develop.
+
+config/config.mk
+contrib/RPMs/omniORB_new.spec
+idl/anyExample.idl
+include/omniORB4/templatedecls.h
+mk/beforedir.mk
+mk/version.mk
+mk/win32.mk
+mk/platforms/x86_nt_4.0.mk
+mk/platforms/x86_nt_4.0_vs_7.mk
+mk/platforms/x86_nt_4.0_vs_8.mk
+src/examples/thread/diner.cc
+src/examples/thread/prio.cc
+src/examples/thread/prodcons.cc
+src/examples/thread/thrspecdata.cc
+
+
 Thu Jan 19 16:04:34 GMT 2006 dgrisby
 ====================================
 
