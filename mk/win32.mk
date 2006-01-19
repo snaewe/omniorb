@@ -235,6 +235,7 @@ endif
 
 SharedLibraryFullNameTemplate = $(SharedLibraryLibNameTemplate).lib
 SharedLibraryLibNameTemplate  = $$1$$2$$3$$4_rt$${extrasuffix:-}
+SharedLibraryShortLibName = $$1$$2$$3_rt$${extrasuffix:-}.lib
 SharedLibraryExportSymbolFileNameTemplate = $$1$$2$${extrasuffix:-}.def
 SharedLibraryVersionStringTemplate = $$3.$$4
 SharedLibrarySymbolRefLibraryTemplate = $${symrefdir:-static}/$$1$$2$${extrasuffix:-}.lib
@@ -313,6 +314,7 @@ $(ParseNameSpec); \
 extrasuffix=$${debug:+d}; \
 targetdir=$(@D); \
 libname=$(SharedLibraryLibNameTemplate); \
+slibname=$(SharedLibraryShortLibName); \
 dllname=$$targetdir/$$libname.dll; \
 defname=$$targetdir/$(SharedLibraryExportSymbolFileNameTemplate); \
 version=$(SharedLibraryVersionStringTemplate); \
@@ -329,7 +331,8 @@ set -x; \
 $(RM) $@; \
 $(CXXLINK) -out:$$dllname -DLL $$extralinkoption \
 $$defflag -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
-$^ $$extralibs;
+$^ $$extralibs; \
+$(CP) $@ $$slibname;
 endef
 
 # Export SharedLibrary
@@ -345,13 +348,19 @@ $(ParseNameSpec); \
 extrasuffix=$${debug:+d}; \
 targetdir=$(<D); \
 libname=$(SharedLibraryLibNameTemplate); \
+slibname=$(SharedLibraryShortLibName); \
 dllname=$$targetdir/$$libname.dll; \
 (dir="$(EXPORT_TREE)/$(LIBDIR)"; \
  file="$^"; \
  $(ExportFileToDir); \
+); \
+(dir="$(EXPORT_TREE)/$(LIBDIR)"; \
+ file="$$slibname"; \
+ $(ExportFileToDir); \
+); \
 (dir="$(EXPORT_TREE)/$(BINDIR)"; \
  file="$$dllname"; \
- $(ExportExecutableFileToDir); ); \
+ $(ExportExecutableFileToDir); \
 );
 endef
 

@@ -1,3 +1,17 @@
+Thu Jan 19 16:04:34 GMT 2006 dgrisby
+====================================
+
+- Windows build fixes.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+
+- Copy shared library .lib files to have a micro-version-independent
+  name.
+
+mk/win32.mk
+
+
 Thu Jan 19 13:08:45 GMT 2006 dgrisby
 ====================================
 
