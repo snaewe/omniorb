@@ -1,3 +1,11 @@
+Mon Jan 23 15:36:56 GMT 2006 dgrisby
+====================================
+
+- Fix version number in new spec file.
+
+contrib/RPMs/omniORB_new.spec
+
+
 Thu Jan 19 22:46:23 GMT 2006 dgrisby
 ====================================
 

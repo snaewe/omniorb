@@ -5,7 +5,7 @@
 
 %define _name omniORB
 
-%define lib_name %{?mklibname:%mklibname %{_name} 4.0}%{!?mklibname:lib%{_name}4.0}
+%define lib_name %{?mklibname:%mklibname %{_name} 4.1}%{!?mklibname:lib%{_name}4.1}
 
 Summary: Object Request Broker (ORB)
 Name:    %{_name}
