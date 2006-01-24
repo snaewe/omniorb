@@ -1,3 +1,12 @@
+Tue Jan 24 11:44:27 GMT 2006 dgrisby
+====================================
+
+- Interfaces inheriting from a typedef caused an omniidl compiler
+  error. Thanks Renzo Tomaselli.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+
+
 Mon Jan 23 16:06:20 GMT 2006 dgrisby
 ====================================
 
