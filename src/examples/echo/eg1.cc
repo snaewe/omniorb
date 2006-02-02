@@ -71,16 +71,16 @@ int main(int argc, char** argv)
     CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
     PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
-      // We allocate the object on the heap.  Since this is a reference
-      // counted object, it will be deleted by the POA when it is no
-      // longer needed.
+    // We allocate the object on the heap.  Since this is a reference
+    // counted object, it will be deleted by the POA when it is no
+    // longer needed.
     Echo_i* myecho = new Echo_i();
 
     // Activate the object.  This tells the POA that this object is
     // ready to accept requests.
     PortableServer::ObjectId_var myechoid = poa->activate_object(myecho);
 
-      // Obtain a reference to the object.
+    // Obtain a reference to the object.
     Echo_var myechoref = myecho->_this();
 
     // Decrement the reference count of the object implementation, so

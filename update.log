@@ -1,3 +1,11 @@
+Thu Feb  2 12:22:46 GMT 2006 dgrisby
+====================================
+
+- Fix comment indenting.
+
+src/examples/echo/eg1.cc
+
+
 Tue Jan 24 11:44:27 GMT 2006 dgrisby
 ====================================
 
