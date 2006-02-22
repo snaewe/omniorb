@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.8  2006/02/22 14:56:37  dgrisby
+  New endPointPublishHostname and endPointResolveNames parameters.
+
   Revision 1.5.2.7  2005/12/08 14:22:31  dgrisby
   Better string marshalling performance; other minor optimisations.
 
@@ -364,12 +367,6 @@ _CORBA_MODULE_BEG
 							 int keysize);
   // Returns an omniIdentity to contact an object in this address
   // space which is unsuitable for contact through a localIdentity.
-
-  _CORBA_MODULE_FN omniIdentity* createLoopBackIdentity(omniIOR* ior,
-							const _CORBA_Octet* k,
-							int keysize);
-  // Returns an instance of omniRemoteIdentity to contact a local
-  // object identified by the call arguments. <ior> is consumed.
 
    _CORBA_MODULE_FN omniObjRef* createObjRef(const char* targetRepoId,
 					     omniIOR* ior,

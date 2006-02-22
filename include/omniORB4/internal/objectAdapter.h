@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.6.3  2006/02/22 14:56:37  dgrisby
+ New endPointPublishHostname and endPointResolveNames parameters.
+
  Revision 1.1.6.2  2005/11/17 17:03:26  dgrisby
  Merge from omni4_0_develop.
 
@@ -235,7 +238,7 @@ public:
   static const omnivector<const char*>& listMyEndpoints();
 
   struct Options {
-    inline Options() : publish_all(0) {}
+    inline Options() : publish_all(0), publish_hostname(0), publish_names(0) {}
     ~Options();
 
     struct EndpointURI {
@@ -246,6 +249,8 @@ public:
     typedef omnivector<EndpointURI*> EndpointURIList;
     EndpointURIList   endpoints;
     CORBA::Boolean    publish_all;
+    CORBA::ULong      publish_hostname;
+    CORBA::ULong      publish_names;
   };
 
   static Options options;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/02/22 14:56:36  dgrisby
+  New endPointPublishHostname and endPointResolveNames parameters.
+
   Revision 1.1.4.4  2005/08/03 09:43:51  dgrisby
   Make sure accept() never blocks.
 
@@ -106,11 +109,16 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
 #include <SocketCollection.h>
+#include <orbParameters.h>
+#include <objectAdapter.h>
+#include <libcWrapper.h>
 #include <tcp/tcpConnection.h>
 #include <tcp/tcpAddress.h>
 #include <tcp/tcpEndpoint.h>
 #include <stdio.h>
 #include <omniORB4/linkHacks.h>
+
+#define OMNIORB_HOSTNAME_MAX 512
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpEndpoint);
 
@@ -226,9 +234,9 @@ tcpEndpoint::Bind() {
     }
   }
   if (omniORB::trace(25)) {
-    omniORB::logger l;
+    omniORB::logger log;
     CORBA::String_var addr(ai->asString());
-    l << "Bind to address " << addr << ".\n";
+    log << "Bind to address " << addr << ".\n";
   }
   if (::bind(pd_socket, ai->addr(), ai->addrSize()) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
@@ -254,53 +262,154 @@ tcpEndpoint::Bind() {
 
   if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
 
-    // Try to find the first interface that isn't the loopback
+    CORBA::Boolean done = 0;
 
-    const omnivector<const char*>* ifaddrs
-      = giopTransportImpl::getInterfaceAddress("giop:tcp");
+    if (omniObjAdapter::options.publish_hostname) {
+      char self[OMNIORB_HOSTNAME_MAX];
 
-    if (ifaddrs && !ifaddrs->empty()) {
-      // TCP transport successfully gave us a list of interface addresses
-
-      omnivector<const char*>::const_iterator i;
-      for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
-	if (strcmp(*i, "127.0.0.1"))
-	  break;
-      }
-      if (i == ifaddrs->end()) {
-	// Only interface was the loopback -- we'll have to use that
-	i = ifaddrs->begin();
-      }
-      pd_address.host = CORBA::string_dup(*i);
-    }
-    else {
-      omniORB::logs(5, "No list of interface addresses; fall back to "
-		    "system hostname.");
-      char self[64];
-
-      if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+      if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR) {
 	omniORB::logs(1, "Cannot get the name of this host.");
 	CLOSESOCKET(pd_socket);
 	return 0;
       }
-      if (omniORB::trace(10)) {
-	omniORB::logger l;
-	l << "My hostname is " << self << ".\n";
+      if (orbParameters::dumpConfiguration || omniORB::trace(10)) {
+	omniORB::logger log;
+	log << "My hostname is '" << self << "'.\n";
       }
-      LibcWrapper::AddrInfo_var ai;
-      ai = LibcWrapper::getAddrInfo(self, pd_address.port);
-      if ((LibcWrapper::AddrInfo*)ai == 0) {
-	if (omniORB::trace(1)) {
-	  omniORB::logger log;
-	  log << "Cannot get the address of my hostname " << self << ".\n";
+      if (omniObjAdapter::options.publish_hostname == 2) {
+	// Look up name to make sure it is fully qualified
+	LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(self, 0);
+	if ((LibcWrapper::AddrInfo*)ai) {
+	  char* name = ai->name();
+	  if (name) {
+	    if (orbParameters::dumpConfiguration || omniORB::trace(10)) {
+	      omniORB::logger log;
+	      log << "My hostname fully qualifies to '" << name << "'.\n";
+	    }
+	    // Make sure it hasn't resolved to something stupid...
+	    if (!omni::strMatch(name, "localhost") &&
+		!omni::strMatch(name, "localhost.localdomain")) {
+	      done = 1;
+	      pd_address.host = name;
+	    }
+	    else {
+	      CORBA::string_free(name);
+	    }
+	  }
 	}
-	CLOSESOCKET(pd_socket);
-	return 0;
       }
-      pd_address.host = ai->asString();
+      if (!done) {
+	pd_address.host = CORBA::string_dup(self);
+      }
+    }
+    else {
+      // Ask the TCP transport for its list of interface addresses
+
+      const omnivector<const char*>* ifaddrs
+	= giopTransportImpl::getInterfaceAddress("giop:tcp");
+
+      if (ifaddrs && !ifaddrs->empty()) {
+	// TCP transport successfully gave us a list of interface addresses
+
+	omnivector<const char*>::const_iterator i;
+
+	if (omniObjAdapter::options.publish_names) {
+
+	  // Find the first one that resolves to a name
+
+	  for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
+	    LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(*i, 0);
+	    OMNIORB_ASSERT((LibcWrapper::AddrInfo*)ai);
+
+	    char* name = ai->name();
+	    if (name) {
+	      if (orbParameters::dumpConfiguration || omniORB::trace(20)) {
+		omniORB::logger log;
+		log << "My address '" << *i << "' is '" << name << "'.\n";
+	      }
+	      if (!(omni::strMatch(name, "localhost") ||
+		    omni::strMatch(name, "localhost.localdomain"))) {
+		pd_address.host = name;
+		done = 1;
+
+		if (!omni::strMatch(*i, "127.0.0.1")) {
+		  // If the address was 127.0.0.1, we want to try
+		  // another address, even if we got a name other than
+		  // localhost.
+		  break;
+		}
+	      }
+	    }
+	    else {
+	      if (omniORB::trace(20)) {
+		omniORB::logger log;
+		log << "My address '" << *i << "' has no name.\n";
+	      }
+	    }
+	  }
+	  if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
+	    if (omniObjAdapter::options.publish_names == 1) {
+	      omniORB::logs(1, "Unable to resolve any addresses to names.");
+	      CLOSESOCKET(pd_socket);
+	      return 0;
+	    }
+	    else
+	      omniORB::logs(10, "Unable to resolve any addresses to names. "
+			    "Using a numerical address.");
+	  }
+	}
+	if (!done) {
+	  // Use the first non-loopback IP address.
+
+	  for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
+	    if (strcmp(*i, "127.0.0.1"))
+	      break;
+	  }
+	  if (i == ifaddrs->end()) {
+	    // Only interface was the loopback -- we'll have to use that
+	    i = ifaddrs->begin();
+	  }
+	  pd_address.host = CORBA::string_dup(*i);
+	}
+      }
+      else {
+	omniORB::logs(5, "No list of interface addresses; fall back to "
+		      "system hostname.");
+	char self[OMNIORB_HOSTNAME_MAX];
+
+	if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR) {
+	  omniORB::logs(1, "Cannot get the name of this host.");
+	  CLOSESOCKET(pd_socket);
+	  return 0;
+	}
+	if (orbParameters::dumpConfiguration || omniORB::trace(10)) {
+	  omniORB::logger log;
+	  log << "My hostname is '" << self << "'.\n";
+	}
+	if (omniObjAdapter::options.publish_names) {
+	  pd_address.host = CORBA::string_dup(self);
+	}
+	else {
+	  LibcWrapper::AddrInfo_var ai;
+	  ai = LibcWrapper::getAddrInfo(self, pd_address.port);
+	  if ((LibcWrapper::AddrInfo*)ai == 0) {
+	    if (omniORB::trace(1)) {
+	      omniORB::logger log;
+	      log << "Cannot get the address of my hostname '"
+		  << self << "'.\n";
+	    }
+	    CLOSESOCKET(pd_socket);
+	    return 0;
+	  }
+	  pd_address.host = ai->asString();
+	}
+      }
     }
   }
-  if (omniORB::trace(1) && strcmp(pd_address.host,"127.0.0.1") == 0) {
+  if (omniORB::trace(1) &&
+      (omni::strMatch(pd_address.host, "127.0.0.1") ||
+       omni::strMatch(pd_address.host, "localhost"))) {
+
     omniORB::logger log;
     log << "Warning: the local loop back interface (127.0.0.1) is used as\n"
 	<< "this server's address. Only clients on this machine can talk to\n"

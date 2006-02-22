@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.5  2006/02/22 14:56:36  dgrisby
+ New endPointPublishHostname and endPointResolveNames parameters.
+
  Revision 1.5.2.4  2005/11/17 17:03:26  dgrisby
  Merge from omni4_0_develop.
 
@@ -143,6 +146,7 @@
 #include <initialiser.h>
 #include <orbOptions.h>
 #include <orbParameters.h>
+#include <libcWrapper.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -154,8 +158,6 @@ static int                              num_active_oas = 0;
 static omni_tracedmutex                 oa_lock;
 static omnivector<_OMNI_NS(orbServer)*> oa_servers;
 static omnivector<const char*>          oa_endpoints;
-static _OMNI_NS(Rope)*                  oa_loopback = 0;
-static void instantiate_defaultloopback(omnivector<const char*>& endpoints);
 static const char* pick_endpoint(omnivector<const char*>&, const char*);
 
 omni_tracedmutex     omniObjAdapter::sd_detachedObjectLock;
@@ -210,8 +212,15 @@ omniObjAdapter::isDeactivating()
 static
 const char*
 instantiate_endpoint(const char* uri,CORBA::Boolean no_publish,
-		     CORBA::Boolean no_listen) {
-
+		     CORBA::Boolean no_listen)
+{
+  if (omniORB::trace(20)) {
+    omniORB::logger l;
+    l << "Instantiate endpoint '" << uri << "'"
+      << (no_publish ? " (no publish)" : "")
+      << (no_listen  ? " (no listen)"  : "")
+      << "\n";
+  }
   omnivector<orbServer*>::iterator j,last;
   const char* address = 0;
   j = oa_servers.begin();
@@ -314,13 +323,40 @@ omniObjAdapter::initialise()
 	    const char* format1 = "giop:tcp:%s:";
 	    const char* format2 = "giop:tcp:%s:%d";
 
-	    CORBA::String_var estr(CORBA::string_alloc(strlen(*i)+
+	    const char* name = *i;
+
+	    CORBA::String_var name_var;
+	    if (options.publish_names) {
+	      LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(*i,port);
+	      if ((LibcWrapper::AddrInfo*)ai) {
+		name_var = ai->name();
+		if ((const char*)name_var) {
+		  name = name_var;
+		}
+	      }
+	      if (name == *i) {
+		if (options.publish_names == 1) {
+		  if (omniORB::trace(20)) {
+		    omniORB::logger l;
+		    l << "No name for my address '" << *i
+		      << "'. Will not publish.\n";
+		  }
+		  continue;
+		}
+		else {
+		  omniORB::logger l;
+		  l << "No name for my address '" << *i
+		    << "'. Publishing address.\n";
+		}
+	      }
+	    }
+	    CORBA::String_var estr(CORBA::string_alloc(strlen(name)+
 						       strlen(format2) + 6));
-	    sprintf(estr,format1,*i);
+	    sprintf(estr,format1,name);
 
 	    if (!pick_endpoint(oa_endpoints, estr)) {
 
-	      sprintf(estr,format2,*i,port);
+	      sprintf(estr,format2,name,port);
 	      const char* address = instantiate_endpoint(estr, 0, 1);
 
 	      // instantiate_endpoint usually returns the same string
@@ -347,8 +383,6 @@ omniObjAdapter::initialise()
 		      "there are no TCP endPoints.");
       }
     }
-
-    instantiate_defaultloopback(myendpoints);
 
     if( orbParameters::supportBootstrapAgent )
       omniInitialReferences::initialise_bootstrap_agentImpl();
@@ -393,11 +427,6 @@ omniObjAdapter::shutdown()
   }
 
   oa_endpoints.erase(oa_endpoints.begin(),oa_endpoints.end());
-
-  if( oa_loopback ) {
-    oa_loopback->decrRefCount();
-    oa_loopback = 0;
-  }
 
   initialised = 0;
 }
@@ -529,22 +558,6 @@ omniObjAdapter::wait_for_detached_objects()
 }
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-Rope*
-omniObjAdapter::defaultLoopBack()
-{
-  omni_tracedmutex_lock sync(oa_lock);
-
-  if (!oa_loopback) {
-    // This is tough!!! Haven't got a loop back!
-    // May be the object adaptor has been destroyed!!!
-    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
-		  CORBA::COMPLETED_NO);
-  }
-  return oa_loopback;
-}
-
-//////////////////////////////////////////////////////////////////////
 static
 const char*
 pick_endpoint(omnivector<const char*>& endpoints,const char* prefix) {
@@ -562,55 +575,6 @@ pick_endpoint(omnivector<const char*>& endpoints,const char* prefix) {
   }
   return 0;
 }
-
-//////////////////////////////////////////////////////////////////////
-static
-void
-instantiate_defaultloopback(omnivector<const char*>& endpoints) {
-
-  // Until we have a fast in-memory loop back. We use a stream loopback to
-  // talk to ourself.
-
-  // XXX We are restricting ourselves to just giop:* transports.
-  //     We can generalise this to allow other (and faster) loopback to
-  //     be used but that is probably not very useful because in the
-  //     long run we would like to have a in-memory loopback.
-
-
-  const char* loopback_endpoint = 0;
-
-  // We prefer unix to tcp. ssl is the last choice.
-  loopback_endpoint = pick_endpoint(endpoints,"giop:unix");
-
-  if (!loopback_endpoint) {
-    loopback_endpoint = pick_endpoint(endpoints,"giop:tcp");
-  }
-
-  if (!loopback_endpoint) {
-    loopback_endpoint = pick_endpoint(endpoints,"giop:ssl");
-  }
-
-  if (loopback_endpoint) {
-    giopAddress* addr = giopAddress::str2Address(loopback_endpoint);
-    if (addr) {
-      omni_tracedmutex_lock sync(*omniTransportLock);
-      oa_loopback = new giopRope(addr,1);
-    }
-  }
-
-  if (!oa_loopback) {
-    if (omniORB::trace(1)) {
-      omniORB::logger log;
-      log << "Warning: Unable to create a loopback transport to talk to this ORB.\n"
-	     "         Any attempt to talk to a local object may fail.\n"
-	     "         This error is caused by the lack of a suitable endpoint\n"
-             "         that is layered on top of TCP, SSL or UNIX socket.\n"
-             "         To correct this problem, check if the -ORBendPoint\n"
-	     "         options are consistent.\n";
-    }
-  }
-}
-
 
 
 //////////////////////////////////////////////////////////////////////
@@ -661,6 +625,7 @@ Options::~Options() {
     delete (*i);
   }
 }
+
 
 /////////////////////////////////////////////////////////////////////////////
 //            Handlers for Configuration Options                           //
@@ -814,6 +779,62 @@ public:
 static endpointPublishAllIFsHandler endpointPublishAllIFsHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
+static const char* resolvenames_msg = "Expect a value of 0, 1 or 2";
+
+class endpointPublishHostnameHandler : public orbOptions::Handler {
+public:
+
+  endpointPublishHostnameHandler() : 
+    orbOptions::Handler("endPointPublishHostname",
+			"endPointPublishHostname = 0,1,2",
+			1,
+			"-ORBendPointPublishHostname < 0 | 1 | 2 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || v > 2) {
+      throw orbOptions::BadParam(key(),value,resolvenames_msg);
+    }
+    omniObjAdapter::options.publish_hostname = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    orbOptions::addKVULong(key(),omniObjAdapter::options.publish_hostname,
+			   result);
+  }
+};
+
+static endpointPublishHostnameHandler endpointPublishHostnameHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class endpointResolveNamesHandler : public orbOptions::Handler {
+public:
+
+  endpointResolveNamesHandler() : 
+    orbOptions::Handler("endPointResolveNames",
+			"endPointResolveNames = 0,1,2",
+			1,
+			"-ORBendPointResolveNames < 0 | 1 | 2 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || v > 2) {
+      throw orbOptions::BadParam(key(),value,resolvenames_msg);
+    }
+    omniObjAdapter::options.publish_names = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    orbOptions::addKVULong(key(),omniObjAdapter::options.publish_names,
+			   result);
+  }
+};
+
+static endpointResolveNamesHandler endpointResolveNamesHandler_;
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -827,6 +848,8 @@ public:
     orbOptions::singleton().registerHandler(endpointNoPublishHandler_);
     orbOptions::singleton().registerHandler(endpointNoListenHandler_);
     orbOptions::singleton().registerHandler(endpointPublishAllIFsHandler_);
+    orbOptions::singleton().registerHandler(endpointPublishHostnameHandler_);
+    orbOptions::singleton().registerHandler(endpointResolveNamesHandler_);
   }
 
   void attach() { 
@@ -862,7 +885,6 @@ public:
 		      CORBA::COMPLETED_NO);
       }
     }
-    
   }
   void detach() {
     omniORB::logs(20, "Clear endPoint options.");
@@ -875,7 +897,9 @@ public:
       omniObjAdapter::options.endpoints.begin(),
       omniObjAdapter::options.endpoints.end());
 
-    omniObjAdapter::options.publish_all = 0;
+    omniObjAdapter::options.publish_all      = 0;
+    omniObjAdapter::options.publish_hostname = 0;
+    omniObjAdapter::options.publish_names    = 0;
   }
 };
 

@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2006/02/22 14:56:37  dgrisby
+  New endPointPublishHostname and endPointResolveNames parameters.
+
   Revision 1.1.6.2  2005/01/06 23:08:25  dgrisby
   Big merge from omni4_0_develop.
 
@@ -101,14 +104,11 @@ public:
   static int isipaddr(const char* node);
   // True if node is an IPv4 address.
 
-  // On VMS getaddrinfo is a macro in <netdb.h> as of VMS 7.3-1.  So,
-  // made this mixed case:
   static AddrInfo* getAddrInfo(const char* node, CORBA::UShort port);
   // Return an AddrInfo object for the specified node and port. If
   // node is zero, address is INADDR_ANY. If node is invalid, returns
   // zero.
 
-  // made this mixed case for consistency:
   static void freeAddrInfo(AddrInfo* ai);
   // Release the AddrInfo object returned by getAddrInfo(), and any in
   // its linked list.
@@ -127,6 +127,9 @@ public:
 
     virtual char* asString() = 0;
     // String form of address. Free with CORBA::string_free().
+
+    virtual char* name() = 0;
+    // Name relating to address. Returns zero if name cannot be found.
 
     virtual AddrInfo* next() = 0;
     // Linked list of AddrInfos for multi-homed hosts.

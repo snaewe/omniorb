@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.21.2.3  2006/02/22 14:56:36  dgrisby
+  New endPointPublishHostname and endPointResolveNames parameters.
+
   Revision 1.21.2.2  2005/01/06 23:10:31  dgrisby
   Big merge from omni4_0_develop.
 
@@ -128,9 +131,12 @@
 #  include <ctype.h>  //  for toupper and tolower.
 #endif
 
+#define HAVE_GETHOSTBYADDR
+
 #ifdef __vxWorks__
 #  include <hostLib.h>
 #  include <resolvLib.h>
+#  undef HAVE_GETHOSTBYADDR
 #endif
 
 #include "libcWrapper.h"
@@ -150,20 +156,27 @@ LibcWrapper::AddrInfo::~AddrInfo() {}
 class IP4AddrInfo : public LibcWrapper::AddrInfo
 {
 public:
-  IP4AddrInfo(CORBA::ULong ip4addr, CORBA::UShort port);
+  IP4AddrInfo(const char* name, CORBA::ULong ip4addr, CORBA::UShort port);
   virtual ~IP4AddrInfo();
 
   virtual struct sockaddr* addr();
   virtual int addrSize();
   virtual char* asString();
+  virtual char* name();
   virtual LibcWrapper::AddrInfo* next();
 
 private:
   struct sockaddr_in pd_addr;
+  CORBA::String_var  pd_name;
 };
 
-IP4AddrInfo::IP4AddrInfo(CORBA::ULong ip4addr, CORBA::UShort port)
+IP4AddrInfo::IP4AddrInfo(const char* name,
+			 CORBA::ULong ip4addr,
+			 CORBA::UShort port)
 {
+  if (name)
+    pd_name = CORBA::string_dup(name);
+
   pd_addr.sin_family      = INETSOCKET;
   pd_addr.sin_addr.s_addr = ip4addr;
   pd_addr.sin_port        = htons(port);
@@ -203,6 +216,23 @@ IP4AddrInfo::asString()
   return result;
 }
 
+char*
+IP4AddrInfo::name()
+{
+  if ((const char*)pd_name) {
+    return CORBA::string_dup(pd_name);
+  }
+#ifdef HAVE_GETHOSTBYADDR
+  omni_tracedmutex_lock sync(non_reentrant);
+  struct hostent* ent = gethostbyaddr((const char*)&pd_addr.sin_addr.s_addr,
+				      sizeof(struct sockaddr_in),
+				      AF_INET);
+  if (ent)
+    return CORBA::string_dup(ent->h_name);
+#endif
+  return 0;
+}
+
 
 LibcWrapper::AddrInfo*
 IP4AddrInfo::next()
@@ -224,7 +254,7 @@ LibcWrapper::AddrInfo* LibcWrapper::getAddrInfo(const char* node,
 {
   if (!node) {
     // No node address -- used to bind to INADDR_ANY
-    return new IP4AddrInfo(INADDR_ANY, port);
+    return new IP4AddrInfo(0, INADDR_ANY, port);
   }
   if (isipaddr(node)) {
     // Already an IPv4 address.
@@ -233,7 +263,7 @@ LibcWrapper::AddrInfo* LibcWrapper::getAddrInfo(const char* node,
     if (ip4 == RC_INADDR_NONE)
       return 0;
     else
-      return new IP4AddrInfo(ip4, port);
+      return new IP4AddrInfo(0, ip4, port);
   }
 
 #if defined(__sunos__) && __OSVERSION__ >= 5
@@ -260,7 +290,7 @@ again:
     }
   }
   else {
-    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+    ret = new IP4AddrInfo(ent.h_name, hostent_to_ip4(&ent), port);
   }
   delete [] buffer;
   return ret;
@@ -289,7 +319,7 @@ again:
     }
   }
   else {
-    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+    ret = new IP4AddrInfo(ent.h_name, hostent_to_ip4(&ent), port);
   }
   delete [] buffer;
   return ret;
@@ -320,7 +350,7 @@ again:
     }
   }
   else {
-    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+    ret = new IP4AddrInfo(ent.h_name, hostent_to_ip4(&ent), port);
   }
   delete [] buffer;
   return ret;
@@ -342,7 +372,7 @@ again:
   if (gethostbyname_r(node,&ent,(struct hostent_data *)buffer) < 0)
     ret = 0;
   else
-    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+    ret = new IP4AddrInfo(ent.h_name, hostent_to_ip4(&ent), port);
 
   delete [] buffer;
   return ret;
@@ -371,7 +401,7 @@ again:
   if (gethostbyname_r(node,&ent,(hostent_data*)buffer) == -1)
     ret = 0;
   else
-    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+    ret = new IP4AddrInfo(ent.h_name, hostent_to_ip4(&ent), port);
 
   delete [] buffer;
   return ret;
@@ -381,7 +411,7 @@ again:
 #elif defined(__vxWorks__)
   int ip4 = hostGetByName(const_cast<char*>(node)); // grep /etc/hosts
   if (ip4 == ERROR) return 0;
-  return new IP4AddrInfo(ip4, port);
+  return new IP4AddrInfo(0, ip4, port);
 
 #else
   // Use non-reentrant gethostbyname()
@@ -397,7 +427,7 @@ again:
     return 0;
 # endif
 
-  return new IP4AddrInfo(hostent_to_ip4(hp), port);
+  return new IP4AddrInfo(hp->h_name, hostent_to_ip4(hp), port);
 #endif
 }
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.11  2006/02/22 14:56:36  dgrisby
+  New endPointPublishHostname and endPointResolveNames parameters.
+
   Revision 1.5.2.10  2006/01/23 16:05:41  dgrisby
   Another merge from omni4_0_develop.
 
@@ -956,13 +959,6 @@ omni::createInProcessIdentity(const _CORBA_Octet* key, int keysize) {
   return new omniInProcessIdentity(key,keysize);
 }
 
-
-omniIdentity*
-omni::createLoopBackIdentity(omniIOR* ior,const _CORBA_Octet* key,int keysize){
-  Rope* rope = omniObjAdapter::defaultLoopBack();
-  rope->incrRefCount();
-  return new omniRemoteIdentity(ior,key,keysize,rope);
-}
 
 omniObjRef*
 omni::createObjRef(const char* targetRepoId,

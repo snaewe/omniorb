@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.4  2006/02/22 14:56:36  dgrisby
+  New endPointPublishHostname and endPointResolveNames parameters.
+
   Revision 1.1.6.3  2006/01/10 13:59:37  dgrisby
   New clientConnectTimeOutPeriod configuration parameter.
 
@@ -505,7 +508,7 @@ public:
     orbOptions::Handler("giopTargetAddressMode",
 			"giopTargetAddressMode = 0,1,2",
 			1,
-			"-ORBgiopTargetAddressMode < 0,1,2 >") {}
+			"-ORBgiopTargetAddressMode < 0 | 1 | 2 >") {}
 
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 

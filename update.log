@@ -1,3 +1,20 @@
+Wed Feb 22 14:55:26 GMT 2006 dgrisby
+====================================
+
+- New endPointPublishHostname and endPointResolveNames parameters.
+
+sample.cfg
+sample.reg
+include/omniORB4/omniInternal.h
+include/omniORB4/internal/libcWrapper.h
+include/omniORB4/internal/objectAdapter.h
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Thu Feb  2 12:22:46 GMT 2006 dgrisby
 ====================================
 
