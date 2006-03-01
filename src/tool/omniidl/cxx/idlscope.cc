@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.13.2.11  2006/03/01 13:59:23  dgrisby
+// Pragmas at top-level went missing. Thanks Bartosz Zembrzuski.
+//
 // Revision 1.13.2.10  2005/05/03 10:12:34  dgrisby
 // Trying to redefine built in CORBA module types led to a segfault.
 //
@@ -383,6 +386,9 @@ init()
 
   s->addDecl("TypeCode",  0, builtins[0], BaseType::TypeCodeType,  file, 2);
   s->addDecl("Principal", 0, builtins[1], BaseType::PrincipalType, file, 3);
+
+  // Creating the Decls sets the most recent decl pointer; clear it here.
+  Decl::clear();
 
   Prefix::endOuterFile();
 }

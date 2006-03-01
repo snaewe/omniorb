@@ -1,3 +1,11 @@
+Wed Mar  1 13:56:37 GMT 2006 dgrisby
+====================================
+
+- Pragmas at top-level went missing. Thanks Bartosz Zembrzuski.
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Mon Jan 23 15:48:15 GMT 2006 dgrisby
 ====================================
 
