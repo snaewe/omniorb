@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.21  2006/03/10 16:21:36  dgrisby
+ New limited endPointPublish parameter, currently only supports
+ fail-if-multiple.
+
  Revision 1.2.2.20  2005/11/15 11:07:56  dgrisby
  More shutdown cleanup.
 
@@ -816,6 +820,38 @@ static endpointPublishAllIFsHandler endpointPublishAllIFsHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
 
+class endpointPublishHandler : public orbOptions::Handler {
+public:
+
+  endpointPublishHandler() : 
+    orbOptions::Handler("endPointPublish",
+			"endPointPublish = <publish options>",
+			1,
+			"-ORBendPointPublish <publish options>") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+    // In omniORB 4.1, endPointPublish will support a large range of
+    // publishing options; here, we just support fail-if-multiple.
+
+    if (!strcasecmp(value, "fail-if-multiple")) {
+      omniObjAdapter::options.fail_if_multiple = 1;
+    }
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    // For now, only dump the option if fail-if-multiple is set.
+    if (omniObjAdapter::options.fail_if_multiple)
+      orbOptions::addKVString(key(), "fail-if-multiple", result);
+  }
+};
+
+static endpointPublishHandler endpointPublishHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -828,6 +864,7 @@ public:
     orbOptions::singleton().registerHandler(endpointNoPublishHandler_);
     orbOptions::singleton().registerHandler(endpointNoListenHandler_);
     orbOptions::singleton().registerHandler(endpointPublishAllIFsHandler_);
+    orbOptions::singleton().registerHandler(endpointPublishHandler_);
   }
 
   void attach() { 
