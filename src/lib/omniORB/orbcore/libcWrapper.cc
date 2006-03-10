@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.17  2006/03/10 16:20:39  dgrisby
+  Buffer overflow in IP address validation.
+
   Revision 1.19.2.16  2004/10/17 20:14:33  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -440,9 +443,12 @@ int LibcWrapper::isipaddr(const char* hname)
   c = hname;
 
   for (i=0; i < 4; i++) {
-    for (j=0; *c && *c != '.'; j++, c++)
-      comp[j] = *c;
+    for (j=0; *c && *c != '.'; j++, c++) {
+      if (j == 3)
+        return 0;
 
+      comp[j] = *c;
+    }
     comp[j] = '\0';
 
     val = atoi(comp);
