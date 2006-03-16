@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.22  2006/03/16 09:30:30  dgrisby
+ Need to include libcWrapper.h on Windows for strcasecmp.
+
  Revision 1.2.2.21  2006/03/10 16:21:36  dgrisby
  New limited endPointPublish parameter, currently only supports
  fail-if-multiple.
@@ -148,6 +151,7 @@
 #include <initialiser.h>
 #include <orbOptions.h>
 #include <orbParameters.h>
+#include <libcWrapper.h>
 
 #include <stdlib.h>
 #include <stdio.h>
