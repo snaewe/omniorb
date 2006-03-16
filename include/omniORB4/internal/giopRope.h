@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2006/03/16 09:53:48  dgrisby
+  Race condition in address switching combined with failed location
+  forwarding.
+
   Revision 1.1.4.7  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -154,6 +158,13 @@ class giopRope : public Rope, public RopeLink {
   // Thread Safety preconditions:
   //    Caller must not hold omniTransportLock, it is used internally for
   //    synchronisation.
+
+  CORBA::Boolean hasAddress(const giopAddress*);
+  // Returns true if the address is in this rope's address list; false
+  // otherwise.
+  //
+  // Thread Safety preconditions:
+  //    None: the list of addresses is constant once set.
 
   virtual const giopAddress* notifyCommFailure(const giopAddress*,
 					       CORBA::Boolean heldlock);

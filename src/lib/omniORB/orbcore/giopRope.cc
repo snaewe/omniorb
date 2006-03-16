@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.29  2006/03/16 09:53:48  dgrisby
+  Race condition in address switching combined with failed location
+  forwarding.
+
   Revision 1.1.4.28  2005/10/17 15:50:55  dgrisby
   Permit clients to scavenge bidir connections if no object references
   have been transmitted.
@@ -550,6 +554,20 @@ giopRope::decrRefCount() {
       }
     }
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopRope::hasAddress(const giopAddress* addr)
+{
+  giopAddressList::const_iterator ai;
+  for (ai = pd_addresses.begin(); ai != pd_addresses.end(); ++ai) {
+    if (*ai == addr) {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////

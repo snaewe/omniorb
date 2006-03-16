@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2006/03/16 09:53:48  dgrisby
+  Race condition in address switching combined with failed location
+  forwarding.
+
   Revision 1.1.4.11  2005/04/10 22:17:19  dgrisby
   Fixes to connection management. Thanks Jon Biggar.
 
@@ -263,7 +267,8 @@ GIOP_C::notifyCommFailure(CORBA::Boolean heldlock,
   if (pd_strand->first_use) {
     const giopAddress* firstaddr = pd_calldescriptor->firstAddressUsed();
     const giopAddress* currentaddr; 
-    if (!firstaddr) {
+
+    if (!firstaddr || !pd_rope->hasAddress(firstaddr)) {
       firstaddr = pd_strand->address;
       pd_calldescriptor->firstAddressUsed(firstaddr);
       currentaddr = firstaddr;

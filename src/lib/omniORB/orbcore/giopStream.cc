@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.31  2006/03/16 09:53:48  dgrisby
+  Race condition in address switching combined with failed location
+  forwarding.
+
   Revision 1.1.4.30  2005/10/13 11:38:16  dgrisby
   Dump CloseConnection messages.
 
@@ -1181,6 +1185,18 @@ giopStream::errorOnSend(int rc, const char* filename, CORBA::ULong lineno,
   else if (rc == TRANSIENT_ConnectFailed) {
     pd_strand->state(giopStrand::DYING);
     minor = rc;
+
+    if (pd_deadline_secs || pd_deadline_nanosecs) {
+      // Did we timeout?
+      unsigned long s, ns;
+      omni_thread::get_time(&s, &ns);
+      if (s > pd_deadline_secs ||
+          (s == pd_deadline_secs && ns > pd_deadline_nanosecs)) {
+        
+        retry = 0;
+        minor = TRANSIENT_CallTimedout;
+      }
+    }
   }
   else {
     pd_strand->state(giopStrand::DYING);
