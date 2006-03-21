@@ -1,3 +1,11 @@
+Tue Mar 21 11:34:01 GMT 2006 dgrisby
+====================================
+
+- fail-if-multiple was ignored by the ssl transport.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+
+
 Thu Mar 16 09:52:44 GMT 2006 dgrisby
 ====================================
 
