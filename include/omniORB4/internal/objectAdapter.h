@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.10  2006/03/21 15:57:21  dgrisby
+ Export object adapter options from DLL.
+
  Revision 1.1.4.9  2006/03/10 16:21:36  dgrisby
  New limited endPointPublish parameter, currently only supports
  fail-if-multiple.
@@ -85,6 +88,16 @@
 
 #ifndef OMNIORB_USEHOSTNAME_VAR
 #define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
+#endif
+
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
+#endif
+
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
 #endif
 
 class omniCallDescriptor;
@@ -250,7 +263,7 @@ public:
     CORBA::Boolean    fail_if_multiple;
   };
 
-  static Options options;
+  static _core_attr Options options;
 
 
 protected:
@@ -332,5 +345,7 @@ private:
 };
 
 OMNI_NAMESPACE_END(omni)
+
+#undef _core_attr
 
 #endif // __OMNI_OBJECTADAPTER_H__

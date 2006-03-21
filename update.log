@@ -1,3 +1,11 @@
+Tue Mar 21 15:56:28 GMT 2006 dgrisby
+====================================
+
+- Export object adapter options from DLL.
+
+include/omniORB4/internal/objectAdapter.h
+
+
 Tue Mar 21 11:34:01 GMT 2006 dgrisby
 ====================================
 
