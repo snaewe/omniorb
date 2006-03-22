@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.9  2006/03/22 15:55:14  dgrisby
+  VC++ 6 doesn't like explicit calls to default base constructors.
+
   Revision 1.4.2.8  2005/11/09 12:22:18  dgrisby
   Local interfaces support.
 
@@ -691,10 +694,10 @@ _CORBA_MODULE_BEG
       public virtual ServantBase
   {
   public:
-    ValueRefCountBase() : CORBA::ValueBase(), omniServant(), ServantBase() {}
+    ValueRefCountBase() {}
 
-    virtual void  _add_ref();
-    virtual void  _remove_ref();
+    virtual void _add_ref();
+    virtual void _remove_ref();
     virtual CORBA::ULong _refcount_value();
 
   protected:
