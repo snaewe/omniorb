@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2006/03/25 18:54:03  dgrisby
+  Initial IPv6 support.
+
   Revision 1.1.4.1  2003/03/23 21:01:58  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -54,7 +57,6 @@ class tcpAddress : public giopAddress {
  public:
 
   tcpAddress(const IIOP::Address& address);
-  tcpAddress(const char* address);
   const char* type() const;
   const char* address() const;
   giopAddress* duplicate() const;

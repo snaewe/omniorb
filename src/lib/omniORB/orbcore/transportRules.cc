@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/03/25 18:54:03  dgrisby
+  Initial IPv6 support.
+
   Revision 1.1.4.2  2005/01/06 23:10:41  dgrisby
   Big merge from omni4_0_develop.
 
@@ -180,6 +183,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////
+// *** HERE: IPv6
 static char* extractIPv4(const char* endpoint) {
   // returns the ipv4 address if there is one in the endpoint string.
   // To maximise the kind of endpoint we understand,
@@ -198,7 +202,7 @@ static char* extractIPv4(const char* endpoint) {
       CORBA::String_var ipv4(CORBA::string_alloc(l));
       strncpy(ipv4,p,l);
       *((char*)ipv4+l) = '\0';
-      if ( LibcWrapper::isipaddr(ipv4) ) 
+      if ( LibcWrapper::isip4addr(ipv4) ) 
 	return ipv4._retn();
       else if (strncmp(endpoint,"giop",4) == 0) {
 	// try treating this as a hostname
@@ -267,7 +271,7 @@ public:
     }
 
     if (strncmp(endpoint,"giop:unix",9) == 0) {
-      // local transport. Does this rule applies to this  host's 
+      // local transport. Does this rule applies to this host's 
       // IP address(es)? 
       const omnivector<const char*>* ifaddrs;
       ifaddrs = giopTransportImpl::getInterfaceAddress("giop:tcp");
@@ -333,10 +337,10 @@ public:
       mask = (char*) "255.255.255.255";
     }
 
-    if ( ! LibcWrapper::isipaddr(cp) ) return 0;
+    if ( ! LibcWrapper::isip4addr(cp) ) return 0;
     network = inet_addr((const char*)cp);
 
-    if ( ! LibcWrapper::isipaddr(mask) ) return 0;
+    if ( ! LibcWrapper::isip4addr(mask) ) return 0;
     netmask = inet_addr(mask);
 
     return 1;

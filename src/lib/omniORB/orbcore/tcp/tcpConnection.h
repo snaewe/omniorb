@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/03/25 18:54:03  dgrisby
+  Initial IPv6 support.
+
   Revision 1.1.4.4  2005/03/02 12:10:48  dgrisby
   setSelectable / Peek fixes.
 
@@ -107,8 +110,9 @@ public:
 
   ~tcpConnection();
 
-  static char* ip4ToString(CORBA::ULong);
-  static char* ip4ToString(CORBA::ULong,CORBA::UShort,const char* prefix=0);
+  static char* addrToString(sockaddr* addr);
+  static char* addrToURI(sockaddr* addr, const char* prefix);
+  static CORBA::UShort addrToPort(sockaddr* addr);
 
   friend class tcpEndpoint;
 

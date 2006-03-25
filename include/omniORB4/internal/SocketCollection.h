@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2006/03/25 18:54:03  dgrisby
+  Initial IPv6 support.
+
   Revision 1.1.4.9  2005/11/18 18:25:57  dgrisby
   Race condition between connection deletion and Select.
 
@@ -122,9 +125,17 @@
 ////////////////////////////////////////////////////////////////////////
 //  Platform feature selection
 
-#define SOCKNAME_SIZE_T OMNI_SOCKNAME_SIZE_T
+#if !defined(OMNI_DISABLE_IPV6) && defined(HAVE_STRUCT_SOCKADDR_IN6) && defined(HAVE_STRUCT_SOCKADDR_STORAGE) && defined(HAVE_GETADDRINFO) && defined(HAVE_GETNAMEINFO)
+#  define OMNI_SUPPORT_IPV6
+#  define SOCKADDR_STORAGE sockaddr_storage
+#else
+#  define SOCKADDR_STORAGE sockaddr_in
+#endif
 
+#define SOCKNAME_SIZE_T OMNI_SOCKNAME_SIZE_T
 #define USE_NONBLOCKING_CONNECT
+#define OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
+#define OMNIORB_HOSTNAME_MAX 512
 
 #ifdef HAVE_POLL
 #   define USE_POLL
@@ -144,6 +155,7 @@
 
 #if defined(__WIN32__)
 #   define USE_FAKE_INTERRUPTABLE_RECV
+#   undef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
 #endif
 
 ////////////////////////////////////////////////////////////////////////

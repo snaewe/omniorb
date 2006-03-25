@@ -1,3 +1,34 @@
+Sat Mar 25 18:51:51 GMT 2006 dgrisby
+====================================
+
+- Initial IPv6 support.
+
+configure
+configure.ac
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/acconfig.h.in
+include/omniORB4/omniURI.h
+include/omniORB4/internal/SocketCollection.h
+include/omniORB4/internal/libcWrapper.h
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/transportRules.cc
+src/lib/omniORB/orbcore/uri.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.h
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.h
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omniORB/orbcore/unix/unixAddress.cc
+
+
 Wed Mar 22 15:54:16 GMT 2006 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.4.2.5  2006/03/25 18:54:03  dgrisby
+// Initial IPv6 support.
+//
 // Revision 1.4.2.4  2005/11/09 12:22:17  dgrisby
 // Local interfaces support.
 //
@@ -119,6 +122,7 @@
 //
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <omniORB4/CORBA.h>
 #include <initialiser.h>
 #include <exceptiondefs.h>
@@ -134,6 +138,108 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 static omnivector<omniURI::URIHandler*> handlers;
 
+
+//
+// URI building / parsing functions
+//
+
+char*
+omniURI::buildURI(const char* prefix, const char* host, CORBA::UShort port)
+{
+  const char* ip4format = "%s%s:%d";
+  const char* ip6format = "%s[%s]:%d";
+
+  const char* format = ip4format;
+  CORBA::ULong len = strlen(prefix);
+  for (const char* c = host; *c; ++c, ++len) {
+    if (*c == ':')
+      format = ip6format;
+  }
+
+  if (len == 0) return 0;
+  len += strlen(format) + 6;
+  CORBA::String_var addrstr(CORBA::string_alloc(len));
+  sprintf((char*)addrstr, format, prefix, host, port);
+
+  return addrstr._retn();
+}
+
+char*
+omniURI::extractHostPort(const char*    addr,
+			 CORBA::UShort& port,
+			 const char**   rest)
+{
+  CORBA::String_var host;
+
+  const char* p;
+  if (*addr == '[') {
+    // IPv6 address
+    ++addr;
+    p = strchr(addr, ']');
+    if (!p || addr == p || *p == '\0') return 0;
+    host = CORBA::string_alloc(p-addr);
+    strncpy(host, addr, p-addr);
+    ((char*)host)[p-addr] = '\0';
+    ++p;
+    if (*p != ':') return 0;
+  }
+  else {
+    // Name or IPv4 address
+    p = strchr(addr,':');
+    if (!p) return 0;
+    host = CORBA::string_alloc(p-addr);
+    strncpy(host,addr,p-addr);
+    ((char*)host)[p-addr] = '\0';
+  }
+  ++p;
+
+  int n = 0;
+
+  if (*p != '\0') {
+    int v;
+    if (sscanf(p,"%d%n", &v, &n) == 0) return 0;
+    if (v < 0 || v > 65536) return 0;
+    port = v;
+  }
+  else {
+    port = 0;
+  }
+
+  if (rest)
+    *rest = p + n;
+
+  return host._retn();
+}
+
+CORBA::Boolean
+omniURI::validHostPort(const char* addr)
+{
+  const char* p;
+  if (*addr == '[') {
+    // IPv6 address
+    ++addr;
+    p = strchr(addr, ']');
+    if (!p || addr == p || *p == '\0') return 0;
+    ++p;
+    if (*p != ':') return 0;
+    ++p;
+  }
+  else {
+    // IPv4 or hostname
+    p = strchr(addr,':');
+    if (!p || addr == p || *p == '\0') return 0;
+    ++p;
+  }
+  int v;
+  if (sscanf(p,"%d",&v) != 1) return 0;
+  if (v < 0 || v > 65536) return 0;
+  return 1;
+}
+
+
+//
+// corbaloc and friends
+//
 
 char*
 omniURI::objectToString(CORBA::Object_ptr obj)
@@ -521,10 +627,20 @@ corbalocURIHandler::IiopObjAddr::IiopObjAddr(const char*& c)
     return;
   }
 
+  CORBA::Boolean is_ipv6 = 0;
   const char* p;
   ParseVersionNumber(c, majver_, minver_);
 
-  for (p=c; *p && *p != ':' && *p != ',' && *p != '/' && *p != '#'; p++);
+  if (*c == '[') {
+    // IPv6 address
+    is_ipv6 = 1;
+    ++c;
+    for (p=c; *p && *p != ']'; p++);
+  }
+  else {
+    // IPv4 address or hostname
+    for (p=c; *p && *p != ':' && *p != ',' && *p != '/' && *p != '#'; p++);
+  }
 
   if (p == c) OMNIORB_THROW(BAD_PARAM,
 			    BAD_PARAM_BadSchemeSpecificPart,
@@ -535,6 +651,12 @@ corbalocURIHandler::IiopObjAddr::IiopObjAddr(const char*& c)
 
   for (; c != p; c++, h++) *h = *c;
   *h = '\0';
+
+  if (is_ipv6) {
+    if (*c != ']')
+      OMNIORB_THROW(BAD_PARAM, BAD_PARAM_BadAddress, CORBA::COMPLETED_NO);
+    ++c;
+  }
 
   if (*c == ':') {
     // Port number follows

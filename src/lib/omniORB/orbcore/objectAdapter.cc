@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.6  2006/03/25 18:54:03  dgrisby
+ Initial IPv6 support.
+
  Revision 1.5.2.5  2006/02/22 14:56:36  dgrisby
  New endPointPublishHostname and endPointResolveNames parameters.
 
@@ -142,6 +145,7 @@
 #include <giopServer.h>
 #include <giopRope.h>
 #include <omniORB4/omniInterceptors.h>
+#include <omniORB4/omniURI.h>
 #include <interceptors.h>
 #include <initialiser.h>
 #include <orbOptions.h>
@@ -279,10 +283,8 @@ omniObjAdapter::initialise()
       // instantiate a default tcp port.
       const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
       if( !hostname )  hostname = "";
-      const char* format = "giop:tcp:%s:%d";
-      CORBA::String_var estr(CORBA::string_alloc(strlen(hostname)+
-						 strlen(format) + 6));
-      sprintf(estr,format,hostname,0);
+
+      CORBA::String_var estr = omniURI::buildURI("giop:tcp:", hostname, 0);
 
       const char* address = instantiate_endpoint(estr,0,0);
 
@@ -306,6 +308,8 @@ omniObjAdapter::initialise()
 
       if (first_tcp) {
 	int port;
+
+	// *** HERE: IPv6
 	sscanf(first_tcp, "giop:tcp:%*[^:]:%d", &port);
 
 	const omnivector<const char*>* ifaddrs

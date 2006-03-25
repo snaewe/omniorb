@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2006/03/25 18:54:03  dgrisby
+  Initial IPv6 support.
+
   Revision 1.1.4.3  2005/05/10 22:07:32  dgrisby
   Merge again.
 
@@ -95,6 +98,7 @@
 #include <stdio.h>
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <omniORB4/omniURI.h>
 #include <objectAdapter.h>
 #include <SocketCollection.h>
 #include <tcp/tcpConnection.h>
@@ -147,26 +151,20 @@ tcpTransportImpl::~tcpTransportImpl() {
 giopEndpoint*
 tcpTransportImpl::toEndpoint(const char* param) {
 
-  const char* p = strchr(param,':');
-  if (!p) return 0;
   IIOP::Address address;
-  if (param == p) {
+
+  char* host = omniURI::extractHostPort(param, address.port);
+  if (!host)
+    return 0;
+
+  if (*host == '\0') {
+    // No name in param -- try environment variable.
     const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
-    if (hostname) address.host = hostname;
+    if (hostname)
+      address.host = hostname;
   }
   else {
-    address.host = CORBA::string_alloc(p-param);
-    strncpy(address.host,param,p-param);
-    ((char*)address.host)[p-param] = '\0';
-  }
-  if (*(++p) != '\0') {
-    int v;
-    if (sscanf(p,"%d",&v) != 1) return 0;
-    if (v < 0 || v > 65536) return 0;
-    address.port = v;
-  }
-  else {
-    address.port = 0;
+    address.host = host;
   }
   return (giopEndpoint*)(new tcpEndpoint(address));
 }
@@ -175,28 +173,18 @@ tcpTransportImpl::toEndpoint(const char* param) {
 CORBA::Boolean
 tcpTransportImpl::isValid(const char* param) {
 
-  const char* p = strchr(param,':');
-  if (!p || param == p || *p == '\0') return 0;
-  int v;
-  if (sscanf(p+1,"%d",&v) != 1) return 0;
-  if (v < 0 || v > 65536) return 0;
-  return 1;
+  return omniURI::validHostPort(param);
 }
 
 /////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 tcpTransportImpl::parseAddress(const char* param, IIOP::Address& address) {
 
-  const char* p = strchr(param,':');
-  if (!p || param == p || *p == '\0') return 0;
-  address.host = CORBA::string_alloc(p-param);
-  strncpy(address.host,param,p-param);
-  ((char*) address.host)[p-param] = '\0';
-  ++p;
-  int v;
-  if (sscanf(p,"%d",&v) != 1) return 0;
-  if (v < 0 || v > 65536) return 0;
-  address.port = v;
+  char* host = omniURI::extractHostPort(param, address.port);
+  if (!host)
+    return 0;
+
+  address.host = host;
   return 1;
 }
 
@@ -218,6 +206,7 @@ CORBA::Boolean
 tcpTransportImpl::addToIOR(const char* param) {
 
   IIOP::Address address;
+
   if (parseAddress(param,address)) {
     omniIOR::add_IIOP_ADDRESS(address);
     return 1;
@@ -234,6 +223,8 @@ static void ifaddrs_get_ifinfo(omnivector<const char*>& addrs);
 static void unix_get_ifinfo(omnivector<const char*>& ifaddrs);
 #elif defined(NTArchitecture)
 static void win32_get_ifinfo(omnivector<const char*>& ifaddrs);
+static void win32_get_ifinfo4(omnivector<const char*>& ifaddrs);
+static void win32_get_ifinfo6(omnivector<const char*>& ifaddrs);
 #endif
 
 /////////////////////////////////////////////////////////////////////////
@@ -251,6 +242,16 @@ tcpTransportImpl::initialise() {
   win32_get_ifinfo(ifAddresses);
 #endif
 
+  if ( orbParameters::dumpConfiguration || omniORB::trace(20) ) {
+    omniORB::logger log;
+    omnivector<const char*>::iterator i    = ifAddresses.begin();
+    omnivector<const char*>::iterator last = ifAddresses.end();
+    log << "My addresses are: \n";
+    while ( i != last ) {
+      log << "omniORB: " << (const char*)(*i) << "\n";
+      i++;
+    }
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -266,8 +267,8 @@ const tcpTransportImpl _the_tcpTransportImpl;
 /////////////////////////////////////////////////////////////////////////
 #if defined(HAVE_IFADDRS_H)
 static
-void ifaddrs_get_ifinfo(omnivector<const char*>& addrs) {
-
+void ifaddrs_get_ifinfo(omnivector<const char*>& addrs)
+{
   struct ifaddrs *ifa_list;
 
   if ( getifaddrs(&ifa_list) < 0 ) {
@@ -281,38 +282,45 @@ void ifaddrs_get_ifinfo(omnivector<const char*>& addrs) {
 
   struct ifaddrs *p;
   for (p = ifa_list; p != 0; p = p->ifa_next) {
-    if (p->ifa_addr && p->ifa_addr->sa_family == AF_INET) {
-      struct sockaddr_in* iaddr = (struct sockaddr_in*)p->ifa_addr;
-      CORBA::String_var s;
-      s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
-      addrs.push_back(s._retn());
-    }
-  } 
-  freeifaddrs(ifa_list);
+    if (p->ifa_addr) {
+      if (p->ifa_addr->sa_family == AF_INET) {
+        CORBA::String_var s = tcpConnection::addrToString(p->ifa_addr);
+        addrs.push_back(s._retn());
+      }
+#if defined(OMNI_SUPPORT_IPV6)
+      else if (p->ifa_addr->sa_family == AF_INET6) {
+        if (IN6_IS_ADDR_LINKLOCAL(&((sockaddr_in6*)p->ifa_addr)->sin6_addr))
+          continue;
 
-  if ( orbParameters::dumpConfiguration || omniORB::trace(20) ) {
-    omniORB::logger log;
-    omnivector<const char*>::iterator i = addrs.begin();
-    omnivector<const char*>::iterator last = addrs.end();
-    log << "My addresses are: \n";
-    while ( i != last ) {
-      log << "omniORB: " << (const char*)(*i) << "\n";
-      i++;
+        CORBA::String_var s = tcpConnection::addrToString(p->ifa_addr);
+        addrs.push_back(s._retn());
+      }
+#endif
     }
   }
+  freeifaddrs(ifa_list);
 }
 
 #elif defined(UnixArchitecture) && !defined(__vxWorks__)
 
-#ifdef __aix__
-#  define OMNI_SIOCGIFCONF OSIOCGIFCONF
-#else
-#  define OMNI_SIOCGIFCONF SIOCGIFCONF
-#endif
+#  if defined(HAVE_STRUCT_LIFCONF) && defined(OMNI_SUPPORT_IPV6)
+#    define OMNI_SIOCGIFCONF SIOCGLIFCONF
+#    define ifconf   lifconf
+#    define ifreq    lifreq
+#    define ifc_len  lifc_len
+#    define ifc_buf  lifc_buf
+#    define ifr_addr lifr_addr
+#  else
+#    ifdef __aix__
+#      define OMNI_SIOCGIFCONF OSIOCGIFCONF
+#    else
+#      define OMNI_SIOCGIFCONF SIOCGIFCONF
+#    endif
+#  endif
 
 static
-void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
-
+void unix_get_ifinfo(omnivector<const char*>& addrs)
+{
   SocketHandle_t sock;
 
   sock = socket(INETSOCKET,SOCK_STREAM,0);
@@ -359,30 +367,29 @@ void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
       struct sockaddr_in* iaddr = (struct sockaddr_in*)&ifr[i].ifr_addr;
 
       if ( iaddr->sin_addr.s_addr != 0 ) {
-	CORBA::String_var s;
-	s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
-	ifaddrs.push_back(s._retn());
+	CORBA::String_var s = tcpConnection::addrToString((sockaddr*)iaddr);
+	addrs.push_back(s._retn());
       }
     }
+#if defined(OMNI_SUPPORT_IPV6)
+    else if ( ifr[i].ifr_addr.sa_family == AF_INET6 ) {
+      struct sockaddr_in6* iaddr6 = (struct sockaddr_in6*)&ifr[i].ifr_addr;
+      if (IN6_IS_ADDR_UNSPECIFIED(&iaddr6->sin6_addr) ||
+	  IN6_IS_ADDR_LINKLOCAL(&iaddr6->sin6_addr))
+	continue;
+
+      CORBA::String_var s = tcpConnection::addrToString((sockaddr*)iaddr6);
+      addrs.push_back(s._retn());
+    }
+#endif
   }
   free(ifc.ifc_buf);
-
-  if ( orbParameters::dumpConfiguration || omniORB::trace(20) ) {
-    omniORB::logger log;
-    omnivector<const char*>::iterator i = ifaddrs.begin();
-    omnivector<const char*>::iterator last = ifaddrs.end();
-    log << "My addresses are: \n";
-    while ( i != last ) {
-      log << "omniORB: " << (const char*)(*i) << "\n";
-      i++;
-    }
-  }
 }
 
 /////////////////////////////////////////////////////////////////////////
 #elif defined(__vxWorks__)
-void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs) {
-
+void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs)
+{
   const int iMAX_ADDRESS_ENTRIES = 50;
   // Max. number of interface addresses.  There is 1 link layer address
   // (AF_LINK) and at least 1 internet address (more if ifAddrAdd has been
@@ -487,8 +494,17 @@ extern "C" int WSAAPI ETS_WSAIoctl(
 #define WSAIoctl ETS_WSAIoctl
 #endif
 
+void win32_get_ifinfo(omnivector<const char*>& ifaddrs)
+{
+  win32_get_ifinfo4(ifaddrs);
+  win32_get_ifinfo6(ifaddrs);
+}
+
+
 static
-void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
+void win32_get_ifinfo4(omnivector<const char*>& ifaddrs)
+{
+  // Get Windows IPv4 interfaces.
 
   SocketHandle_t sock;
 
@@ -504,7 +520,7 @@ void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
       omniORB::logger log;
       int err = WSAGetLastError();
       log << "Warning: WSAIoctl SIO_GET_INTERFACE_LIST failed.\n"
-	  << "Unable to obtain the list of all interface addresses.\n"
+	  << "Unable to obtain the list of all IPv4 interface addresses.\n"
 	  << "WSAGetLastError() = " << err << "\n";
     }
     return;
@@ -516,9 +532,8 @@ void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
     // Only add the address if the interface is running
     if (info[i].iiFlags & IFF_UP) {
       if (info[i].iiAddress.Address.sa_family == INETSOCKET) {
-	struct sockaddr_in* iaddr = &info[i].iiAddress.AddressIn;
-	CORBA::String_var s;
-	s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+	struct sockaddr* addr = (struct sockaddr*)&info[i].iiAddress.AddressIn;
+	CORBA::String_var s = tcpConnection::addrToString(addr);
 
 	// Just to catch us out, Windows ME apparently sometimes
 	// returns 0.0.0.0 as one of its interfaces...
@@ -528,17 +543,57 @@ void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
       }
     }
   }
+}
 
-  if ( orbParameters::dumpConfiguration || omniORB::trace(20) ) {
-    omniORB::logger log;
-    omnivector<const char*>::iterator i = ifaddrs.begin();
-    omnivector<const char*>::iterator last = ifaddrs.end();
-    log << "My addresses are: \n";
-    while ( i != last ) {
-      log << "omniORB: " << (const char*)(*i) << "\n";
-      i++;
+
+static
+void win32_get_ifinfo6(omnivector<const char*>& ifaddrs)
+{
+  // Get Windows IPv6 interfaces.
+
+#ifdef OMNI_SUPPORT_IPV6
+
+  SocketHandle_t sock;
+
+  sock = socket(AF_INET6,SOCK_STREAM,0);
+
+  int buflen = sizeof(SOCKET_ADDRESS_LIST) + 63 * sizeof(SOCKET_ADDRESS);
+  char *buffer = new char[buflen];
+  LPSOCKET_ADDRESS_LIST addrlist = (LPSOCKET_ADDRESS_LIST)buffer;
+  DWORD retlen;
+  
+  if ( WSAIoctl(sock, SIO_ADDRESS_LIST_QUERY, NULL,0,
+                (LPVOID)addrlist, buflen, (LPDWORD)&retlen,
+		NULL,NULL) == SOCKET_ERROR ) {
+    
+    delete[] buffer;
+    if ( omniORB::trace(2) ) {
+      omniORB::logger log;
+      int err = WSAGetLastError();
+      log << "Warning: WSAIoctl SIO_ADDRESS_LIST_QUERY failed.\n"
+	  << "Unable to obtain the list of all IPv6 interface addresses.\n"
+	  << "WSAGetLastError() = " << err << "\n";
+    }
+    return;
+  }
+  CLOSESOCKET(sock);
+
+  for (int i = 0; i < addrlist->iAddressCount; i++) {
+    // Only add the address if the interface is running
+    struct sockaddr* addr = addrlist->Address[i].lpSockaddr;
+
+    if (addr->sa_family == AF_INET6) {
+      // Skip link-local addresses.
+      if (IN6_IS_ADDR_LINKLOCAL(&((sockaddr_in6*)addr)->sin6_addr))
+	continue;
+
+      CORBA::String_var s = tcpConnection::addrToString(addr);
+      ifaddrs.push_back(s._retn());
     }
   }
+  delete [] buffer;
+
+#endif // OMNI_SUPPORT_IPV6
 }
 
 #endif

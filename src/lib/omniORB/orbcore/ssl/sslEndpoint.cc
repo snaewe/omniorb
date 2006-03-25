@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2006/03/25 18:54:03  dgrisby
+  Initial IPv6 support.
+
   Revision 1.1.4.5  2005/08/03 09:43:51  dgrisby
   Make sure accept() never blocks.
 
@@ -113,8 +116,10 @@
 #include <stdio.h>
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <omniORB4/omniURI.h>
 #include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
+#include <libcWrapper.h>
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <ssl/sslEndpoint.h>
@@ -186,7 +191,52 @@ sslEndpoint::Bind() {
 
   OMNIORB_ASSERT(pd_socket == RC_INVALID_SOCKET);
 
-  if ((pd_socket = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
+  const char* host;
+  int passive_host; // 0 for explicit, 1 for unspecified passive, 2
+		    // for IPv4 passive, 3 for IPv6 passive.
+
+  if ((char*)pd_address.host && strlen(pd_address.host) != 0) {
+    host = pd_address.host;
+
+    if (omni::strMatch(pd_address.host, "0.0.0.0")) {
+      passive_host = 2;
+    }
+#if defined(OMNI_SUPPORT_IPV6)
+    else if (omni::strMatch(pd_address.host, "::")) {
+      passive_host = 3;
+    }
+#endif
+    else {
+      if (omniORB::trace(25)) {
+	omniORB::logger log;
+	log << "Explicit bind to host " << pd_address.host << ".\n";
+      }
+      passive_host = 0;
+    }
+  }
+  else {
+    host = 0;
+#ifdef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
+    passive_host = 1;
+#else
+    passive_host = 2;
+#endif
+  }
+
+  LibcWrapper::AddrInfo_var ai;
+  ai = LibcWrapper::getAddrInfo(host, pd_address.port);
+
+  if ((LibcWrapper::AddrInfo*)ai == 0) {
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      log << "Cannot get the address of host " << host << ".\n";
+    }
+    CLOSESOCKET(pd_socket);
+    return 0;
+  }
+
+  if ((pd_socket = socket(ai->addrFamily(),
+			  SOCK_STREAM, 0)) == RC_INVALID_SOCKET) {
     return 0;
   }
 
@@ -203,29 +253,6 @@ sslEndpoint::Bind() {
 
   SocketSetCloseOnExec(pd_socket);
 
-  const char* host;
-  if ((char*)pd_address.host && strlen(pd_address.host) != 0) {
-    if (omniORB::trace(25)) {
-      omniORB::logger log;
-      log << "Explicit bind to host " << pd_address.host << ".\n";
-    }
-    host = pd_address.host;
-  }
-  else {
-    host = 0;
-  }
-
-  LibcWrapper::AddrInfo_var ai;
-  ai = LibcWrapper::getAddrInfo(host, pd_address.port);
-
-  if ((LibcWrapper::AddrInfo*)ai == 0) {
-    if (omniORB::trace(1)) {
-      omniORB::logger log;
-      log << "Cannot get the address of host " << host << ".\n";
-    }
-    CLOSESOCKET(pd_socket);
-    return 0;
-  }
   if (pd_address.port) {
     int valtrue = 1;
     if (setsockopt(pd_socket,SOL_SOCKET,SO_REUSEADDR,
@@ -238,7 +265,7 @@ sslEndpoint::Bind() {
   if (omniORB::trace(25)) {
     omniORB::logger l;
     CORBA::String_var addr(ai->asString());
-    l << "Bind to address " << addr << ".\n";
+    l << "Bind to address " << addr << "\n";
   }
   if (::bind(pd_socket, ai->addr(), ai->addrSize()) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
@@ -252,43 +279,66 @@ sslEndpoint::Bind() {
 
   // Now figure out the details to put in IORs
 
-  struct sockaddr_in addr;
+  SOCKADDR_STORAGE addr;
   SOCKNAME_SIZE_T l;
-  l = sizeof(struct sockaddr_in);
+  l = sizeof(SOCKADDR_STORAGE);
   if (getsockname(pd_socket,
 		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
     return 0;
   }
-  pd_address.port = ntohs(addr.sin_port);
+  pd_address.port = tcpConnection::addrToPort((struct sockaddr*)&addr);
 
-  if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
+  if (passive_host) {
 
-    // Try to find the first interface that isn't the loopback
+    // Ask the TCP transport for its list of interface addresses
 
     const omnivector<const char*>* ifaddrs
-      = giopTransportImpl::getInterfaceAddress("giop:ssl");
+      = giopTransportImpl::getInterfaceAddress("giop:tcp");
 
     if (ifaddrs && !ifaddrs->empty()) {
-      // SSL transport successfully gave us a list of interface addresses
+      // TCP transport successfully gave us a list of interface addresses
+
+      // Use the first non-loopback IP address.
+      const char* loopback = 0;
 
       omnivector<const char*>::const_iterator i;
       for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
-	if (strcmp(*i, "127.0.0.1"))
-	  break;
+
+	if (passive_host == 2 && !LibcWrapper::isip4addr(*i))
+	  continue;
+
+	if (passive_host == 3 && !LibcWrapper::isip6addr(*i))
+	  continue;
+
+	if (omni::strMatch(*i, "127.0.0.1") || omni::strMatch(*i, "::1")) {
+	  loopback = *i;
+	  continue;
+	}
+	break;
       }
       if (i == ifaddrs->end()) {
-	// Only interface was the loopback -- we'll have to use that
-	i = ifaddrs->begin();
+	// Did not find a matching address. Fall back to the loopback.
+	if (loopback) {
+	  pd_address.host = CORBA::string_dup(loopback);
+	}
+	else {
+	  omniORB::logs(1, "No suitable address in the list of "
+			"interface addresses.");
+	  CLOSESOCKET(pd_socket);
+	  return 0;
+	}
       }
-      pd_address.host = CORBA::string_dup(*i);
+      else {
+	pd_address.host = CORBA::string_dup(*i);
+      }
     }
     else {
       omniORB::logs(5, "No list of interface addresses; fall back to "
 		    "system hostname.");
-      char self[64];
+      char self[OMNIORB_HOSTNAME_MAX];
 
-      if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+      if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR) {
 	omniORB::logs(1, "Cannot get the name of this host.");
 	CLOSESOCKET(pd_socket);
 	return 0;
@@ -310,18 +360,22 @@ sslEndpoint::Bind() {
       pd_address.host = ai->asString();
     }
   }
-  if (omniORB::trace(1) && strcmp(pd_address.host,"127.0.0.1") == 0) {
+  if (passive_host && omniORB::trace(1) &&
+      (omni::strMatch(pd_address.host, "127.0.0.1") ||
+       omni::strMatch(pd_address.host, "::1") ||
+       omni::strMatch(pd_address.host, "localhost") ||
+       omni::strMatch(pd_address.host, "localhost.localdomain"))) {
+
     omniORB::logger log;
-    log << "Warning: the local loop back interface (127.0.0.1) is used as\n"
+    log << "Warning: the local loop back interface (" << pd_address.host
+	<< ") is used as\n"
 	<< "this server's address. Only clients on this machine can talk to\n"
 	<< "this server.\n";
   }
 
-  const char* format = "giop:ssl:%s:%d";
-  pd_address_string = CORBA::string_alloc(strlen(pd_address.host) +
-					  strlen(format)+6);
-  sprintf((char*)pd_address_string,format,
-	  (const char*)pd_address.host,(int)pd_address.port);
+  pd_address_string = omniURI::buildURI("giop:ssl:",
+					pd_address.host,
+					pd_address.port);
 
   // Never block in accept
   SocketSetnonblocking(pd_socket);

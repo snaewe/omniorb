@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.21.2.4  2006/03/25 18:54:03  dgrisby
+  Initial IPv6 support.
+
   Revision 1.21.2.3  2006/02/22 14:56:36  dgrisby
   New endPointPublishHostname and endPointResolveNames parameters.
 
@@ -131,6 +134,18 @@
 #  include <ctype.h>  //  for toupper and tolower.
 #endif
 
+#include <SocketCollection.h>
+
+#ifdef HAVE_GETADDRINFO
+#  ifdef __WIN32__
+#    include <ws2tcpip.h>
+#  else
+#    include <sys/types.h>
+#    include <sys/socket.h>
+#    include <netdb.h>
+#  endif
+#endif
+
 #define HAVE_GETHOSTBYADDR
 
 #ifdef __vxWorks__
@@ -139,19 +154,347 @@
 #  undef HAVE_GETHOSTBYADDR
 #endif
 
-#include "libcWrapper.h"
-#include "SocketCollection.h"
+#include <libcWrapper.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
 
-static omni_tracedmutex non_reentrant;
+//
+// IP address validation
+//
+
+static inline CORBA::Boolean
+check_number(const char* num, int base, long int max)
+{
+  char* end;
+
+  long int val = strtoul(num, &end, base);
+  if (val > max || *end != '\0')
+    return 0;
+  return 1;
+}
+
+CORBA::Boolean LibcWrapper::isip4addr(const char* node)
+{
+  // Test if string node is an IPv4 address
+  // Return: 0: not ip address,  1: is ip address
+
+  const char* c;
+  char  buf[4];
+  int   bi   = 0;
+  int   dots = 0;
+
+  for (c=node; *c; ++c) {
+    if (*c == '.') {
+      ++dots;
+      if (bi == 0)
+	return 0;
+
+      buf[bi] = '\0';
+      bi = 0;
+      if (!check_number(buf, 10, 255))
+	return 0;
+    }
+    else {
+      if (*c < '0' || *c > '9')
+	return 0;
+
+      buf[bi++] = *c;
+      if (bi == 4)
+	return 0;
+    }
+  }
+  if (dots != 3)
+    return 0;
+
+  buf[bi] = '\0';
+  if (!check_number(buf, 10, 255))
+    return 0;
+
+  return 1;
+}
+
+CORBA::Boolean LibcWrapper::isip6addr(const char* node)
+{
+  // Test if string node is an IPv6 address
+  // Return: 0: not ip address,  1: is ip address
+
+  const char* c;
+  char buf[16];
+  int bi     = 0;
+  int colons = 0;
+  int dots   = 0;
+  CORBA::Boolean seen_blank = 0;
+
+  for (c=node; *c; ++c) {
+    if (*c == ':') {
+      ++colons;
+      if (*(c+1) == ':') {
+	if (seen_blank) {
+	  // Only one :: permitted
+	  return 0;
+	}
+	seen_blank = 1;
+	++c;
+	++colons;
+      }
+      if (bi) {
+	buf[bi] = '\0';
+	bi = 0;
+	if (!check_number(buf, 16, 0xffff))
+	  return 0;
+      }
+    }
+    else if ((*c >= '0' && *c <= '9') ||
+	     (*c >= 'a' && *c <= 'f') ||
+	     (*c >= 'A' && *c <= 'F')) {
+      buf[bi++] = *c;
+      if (dots == 0) {
+	if (bi == 5) {
+	  return 0;
+	}
+      }
+      else {
+	if (bi == 16) {
+	  return 0;
+	}
+      }
+    }
+    else if (*c == '.') {
+      ++dots;
+      buf[bi++] = *c;
+      if (bi == 16)
+	return 0;
+    }
+    else {
+      return 0;
+    }
+  }
+  if (colons < 2 || colons > 7)
+    return 0;
+
+  if (bi == 0) {
+    // No number at the end. Counts equivalent to ::
+    if (seen_blank) {
+      if (colons == 2)
+	return 1;
+      else
+	return 0;
+    }
+    return 1;
+  }
+
+  buf[bi] = '\0';
+  if (dots) {
+    // buf should contain an IPv4 address
+    if (dots == 3) {
+      return isip4addr(buf);
+    }
+    else {
+      return 0;
+    }
+  }
+  else {
+    return check_number(buf, 16, 0xffff);
+  }
+}
+
+CORBA::Boolean LibcWrapper::isipaddr(const char* node)
+{
+  return isip4addr(node) || isip6addr(node);
+}
+
+
+//
+// AddrInfo
+//
 
 LibcWrapper::AddrInfo::~AddrInfo() {}
 
 
-// *** USE ::getaddrinfo() if it's available.
+#ifdef HAVE_GETADDRINFO
 
+class FullAddrInfo : public LibcWrapper::AddrInfo
+{
+public:
+  FullAddrInfo(struct addrinfo* info, CORBA::Boolean do_free)
+    : pd_addrinfo(info), pd_next(0), pd_free(do_free)
+  { }
+
+  virtual ~FullAddrInfo();
+
+  virtual struct sockaddr* addr();
+  virtual int addrSize();
+  virtual int addrFamily();
+  virtual char* asString();
+  virtual char* name();
+  virtual LibcWrapper::AddrInfo* next();
+
+private:
+  struct addrinfo* pd_addrinfo;
+  FullAddrInfo*    pd_next;     // Next in linked list
+  CORBA::Boolean   pd_free;     // If true, pd_addrinfo should be freed on
+				// destruction.
+};
+
+LibcWrapper::AddrInfo* LibcWrapper::getAddrInfo(const char*   node,
+						CORBA::UShort port)
+{
+  char service[6];
+  sprintf(service, "%d", (int)port);
+
+  struct addrinfo hints;
+  hints.ai_flags     = 0;
+#ifdef OMNI_SUPPORT_IPV6
+  hints.ai_family    = PF_UNSPEC;
+#else
+  hints.ai_family    = PF_INET;
+#endif
+  hints.ai_socktype  = SOCK_STREAM;
+  hints.ai_protocol  = 0;
+  hints.ai_addrlen   = 0;
+  hints.ai_addr      = 0;
+  hints.ai_canonname = 0;
+  hints.ai_next      = 0;
+
+  if (node == 0) {
+    hints.ai_flags |= AI_PASSIVE;
+  }
+  else if (omni::strMatch(node, "0.0.0.0") ||
+	   omni::strMatch(node, "::")) {
+    hints.ai_flags |= AI_PASSIVE | AI_NUMERICHOST;
+  }
+  else if (LibcWrapper::isipaddr(node)) {
+    hints.ai_flags |= AI_NUMERICHOST;
+  }
+
+  struct addrinfo* info;
+
+  int result = getaddrinfo(node, service, &hints, &info);
+
+  if (result != 0) {
+    if (omniORB::trace(2)) {
+      omniORB::logger l;
+      l << "getaddrinfo failed for node '" << node << "', port " << port
+	<< ": " << gai_strerror(result) << "\n";
+    }
+    return 0;
+  }
+  return new FullAddrInfo(info, 1);
+}
+
+void
+LibcWrapper::freeAddrInfo(LibcWrapper::AddrInfo* ai)
+{
+  delete ai;
+}
+
+FullAddrInfo::~FullAddrInfo()
+{
+  if (pd_free && pd_addrinfo)
+    freeaddrinfo(pd_addrinfo);
+
+  if (pd_next)
+    delete pd_next;
+}
+
+
+struct sockaddr*
+FullAddrInfo::addr()
+{
+  OMNIORB_ASSERT(pd_addrinfo);
+  return pd_addrinfo->ai_addr;
+}
+
+int
+FullAddrInfo::addrSize()
+{
+  OMNIORB_ASSERT(pd_addrinfo);
+  return pd_addrinfo->ai_addrlen;
+}
+
+int
+FullAddrInfo::addrFamily()
+{
+  OMNIORB_ASSERT(pd_addrinfo);
+  return pd_addrinfo->ai_addr->sa_family;
+}
+
+char*
+FullAddrInfo::asString()
+{
+  char host[NI_MAXHOST];
+
+  OMNIORB_ASSERT(pd_addrinfo);
+
+  while (1) {
+    int result = getnameinfo(pd_addrinfo->ai_addr, pd_addrinfo->ai_addrlen,
+			     host, NI_MAXHOST, 0, 0, NI_NUMERICHOST);
+    if (result == 0) {
+      return CORBA::string_dup(host);
+    }
+    else if (result == EAI_AGAIN) {
+      continue;
+    }
+    else {
+      if (omniORB::trace(1)) {
+	omniORB::logger l;
+	l << "Error calling getnameinfo: " << result << "\n";
+      }
+      return CORBA::string_dup("**invalid**");
+    }
+  }
+}
+
+char*
+FullAddrInfo::name()
+{
+  char host[NI_MAXHOST];
+
+  OMNIORB_ASSERT(pd_addrinfo);
+
+  while (1) {
+    int result = getnameinfo(pd_addrinfo->ai_addr, pd_addrinfo->ai_addrlen,
+			     host, NI_MAXHOST, 0, 0, NI_NAMEREQD);
+    if (result == 0) {
+      return CORBA::string_dup(host);
+    }
+    else if (result == EAI_NONAME) {
+      return 0;
+    }
+    else if (result == EAI_AGAIN) {
+      continue;
+    }
+    else {
+      if (omniORB::trace(1)) {
+	omniORB::logger l;
+	l << "Error calling getnameinfo: " << result << "\n";
+      }
+      return 0;
+    }
+  }
+}
+
+LibcWrapper::AddrInfo*
+FullAddrInfo::next()
+{
+  OMNIORB_ASSERT(pd_addrinfo);
+
+  if (!pd_next && pd_addrinfo->ai_next)
+    pd_next = new FullAddrInfo(pd_addrinfo->ai_next, 0);
+
+  return pd_next;
+}
+
+
+#else // no HAVE_GETADDRINFO
+
+
+//
+// AddrInfo without getaddrinfo()
+//
+
+static omni_tracedmutex non_reentrant;
 
 class IP4AddrInfo : public LibcWrapper::AddrInfo
 {
@@ -161,6 +504,7 @@ public:
 
   virtual struct sockaddr* addr();
   virtual int addrSize();
+  virtual int addrFamily();
   virtual char* asString();
   virtual char* name();
   virtual LibcWrapper::AddrInfo* next();
@@ -200,6 +544,12 @@ int
 IP4AddrInfo::addrSize()
 {
   return sizeof(struct sockaddr_in);
+}
+
+int
+IP4AddrInfo::addrFamily()
+{
+  return PF_INET;
 }
 
 char*
@@ -249,14 +599,14 @@ static inline CORBA::ULong hostent_to_ip4(struct hostent* entp)
 }
 
 
-LibcWrapper::AddrInfo* LibcWrapper::getAddrInfo(const char* node,
+LibcWrapper::AddrInfo* LibcWrapper::getAddrInfo(const char*   node,
 						CORBA::UShort port)
 {
   if (!node) {
     // No node address -- used to bind to INADDR_ANY
     return new IP4AddrInfo(0, INADDR_ANY, port);
   }
-  if (isipaddr(node)) {
+  if (isip4addr(node)) {
     // Already an IPv4 address.
     CORBA::ULong ip4 = inet_addr(node);
 
@@ -436,42 +786,14 @@ void LibcWrapper::freeAddrInfo(LibcWrapper::AddrInfo* ai)
   delete ai;
 }
 
-
-int LibcWrapper::isipaddr(const char* hname)
-{
-  // Test if string hname is an ip address
-  // Return: 0: not ip address,  1: is ip address
-
-  const char* c;
-  int len, dots;
-
-  for (c=hname, len=0, dots=0; *c; c++,len++) {
-    if (*c == '.')
-      dots++;
-    else if (*c < '0' || *c > '9')
-      return 0;
-  }
-  if (dots != 3 || len < 7 || len > 15) return 0;
-
-  char comp[4];
-  int i, j, val;
-  c = hname;
-
-  for (i=0; i < 4; i++) {
-    for (j=0; *c && *c != '.'; j++, c++)
-      comp[j] = *c;
-
-    comp[j] = '\0';
-
-    val = atoi(comp);
-    if (val < 0 || val > 255)
-      return 0;
-  }
-  return 1;
-}
+#endif  // HAVE_GETADDRINFO
 
 OMNI_NAMESPACE_END(omni)
 
+
+//
+// strcasecmp / strncasecmp
+//
 
 #ifndef HAVE_STRCASECMP
 int

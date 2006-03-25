@@ -63,7 +63,13 @@ AC_CHECK_SIZEOF(wchar_t, 4)
 AC_CHECK_SIZEOF(void*, 4)
 
 
-dnl ** Struct members
+dnl ** Structs and members
+
+AC_CHECK_TYPES([struct sockaddr_in6, struct sockaddr_storage, struct lifconf],,,
+[#include <sys/types.h>
+#include <sys/socket.h>
+#include <net/if.h>
+#include <netinet/in.h>])
 
 AC_CHECK_MEMBERS([struct sockaddr_in.sin_len, struct sockaddr_in.sin_zero],,,
 [#include <sys/types.h>
@@ -91,6 +97,7 @@ dnl ** Functions
 
 AC_LANG(C)
 AC_CHECK_FUNCS(getaddrinfo gethostname getopt getpid gettimeofday)
+AC_CHECK_FUNCS(getnameinfo inet_ntop)
 AC_CHECK_FUNCS(isinf insinff isinfl localtime nanosleep poll sigaction)
 AC_CHECK_FUNCS(sigvec snprintf strcasecmp strdup strerror strftime stricmp)
 AC_CHECK_FUNCS(strncasecmp strtoul strtoull strtouq uname vprintf vsnprintf)

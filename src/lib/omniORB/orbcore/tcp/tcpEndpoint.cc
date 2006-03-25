@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2006/03/25 18:54:03  dgrisby
+  Initial IPv6 support.
+
   Revision 1.1.4.5  2006/02/22 14:56:36  dgrisby
   New endPointPublishHostname and endPointResolveNames parameters.
 
@@ -108,6 +111,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <omniORB4/omniURI.h>
 #include <SocketCollection.h>
 #include <orbParameters.h>
 #include <objectAdapter.h>
@@ -117,8 +121,6 @@
 #include <tcp/tcpEndpoint.h>
 #include <stdio.h>
 #include <omniORB4/linkHacks.h>
-
-#define OMNIORB_HOSTNAME_MAX 512
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpEndpoint);
 
@@ -184,33 +186,36 @@ tcpEndpoint::Bind() {
 
   OMNIORB_ASSERT(pd_socket == RC_INVALID_SOCKET);
 
-  if ((pd_socket = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
-    return 0;
-  }
-
-  {
-    // Prevent Nagle's algorithm
-    int valtrue = 1;
-    if (setsockopt(pd_socket,IPPROTO_TCP,TCP_NODELAY,
-		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
-      CLOSESOCKET(pd_socket);
-      pd_socket = RC_INVALID_SOCKET;
-      return 0;
-    }
-  }
-
-  SocketSetCloseOnExec(pd_socket);
-
   const char* host;
+  int passive_host; // 0 for explicit, 1 for unspecified passive, 2
+		    // for IPv4 passive, 3 for IPv6 passive.
+
   if ((char*)pd_address.host && strlen(pd_address.host) != 0) {
-    if (omniORB::trace(25)) {
-      omniORB::logger log;
-      log << "Explicit bind to host " << pd_address.host << ".\n";
-    }
     host = pd_address.host;
+
+    if (omni::strMatch(pd_address.host, "0.0.0.0")) {
+      passive_host = 2;
+    }
+#if defined(OMNI_SUPPORT_IPV6)
+    else if (omni::strMatch(pd_address.host, "::")) {
+      passive_host = 3;
+    }
+#endif
+    else {
+      if (omniORB::trace(25)) {
+	omniORB::logger log;
+	log << "Explicit bind to host " << pd_address.host << ".\n";
+      }
+      passive_host = 0;
+    }
   }
   else {
     host = 0;
+#ifdef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
+    passive_host = 1;
+#else
+    passive_host = 2;
+#endif
   }
 
   LibcWrapper::AddrInfo_var ai;
@@ -224,6 +229,26 @@ tcpEndpoint::Bind() {
     CLOSESOCKET(pd_socket);
     return 0;
   }
+
+  if ((pd_socket = socket(ai->addrFamily(),
+			  SOCK_STREAM, 0)) == RC_INVALID_SOCKET) {
+    return 0;
+  }
+
+  {
+    // Prevent Nagle's algorithm
+    int valtrue = 1;
+    if (setsockopt(pd_socket,IPPROTO_TCP,TCP_NODELAY,
+		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
+
+      CLOSESOCKET(pd_socket);
+      pd_socket = RC_INVALID_SOCKET;
+      return 0;
+    }
+  }
+
+  SocketSetCloseOnExec(pd_socket);
+
   if (pd_address.port) {
     int valtrue = 1;
     if (setsockopt(pd_socket,SOL_SOCKET,SO_REUSEADDR,
@@ -236,7 +261,7 @@ tcpEndpoint::Bind() {
   if (omniORB::trace(25)) {
     omniORB::logger log;
     CORBA::String_var addr(ai->asString());
-    log << "Bind to address " << addr << ".\n";
+    log << "Bind to address " << addr << "\n";
   }
   if (::bind(pd_socket, ai->addr(), ai->addrSize()) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
@@ -250,17 +275,17 @@ tcpEndpoint::Bind() {
 
   // Now figure out the details to put in IORs
 
-  struct sockaddr_in addr;
+  SOCKADDR_STORAGE addr;
   SOCKNAME_SIZE_T l;
-  l = sizeof(struct sockaddr_in);
+  l = sizeof(SOCKADDR_STORAGE);
   if (getsockname(pd_socket,
 		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
     return 0;
   }
-  pd_address.port = ntohs(addr.sin_port);
+  pd_address.port = tcpConnection::addrToPort((struct sockaddr*)&addr);
 
-  if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
+  if (passive_host) {
 
     CORBA::Boolean done = 0;
 
@@ -360,16 +385,37 @@ tcpEndpoint::Bind() {
 	}
 	if (!done) {
 	  // Use the first non-loopback IP address.
+	  const char* loopback = 0;
 
 	  for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
-	    if (strcmp(*i, "127.0.0.1"))
-	      break;
+
+	    if (passive_host == 2 && !LibcWrapper::isip4addr(*i))
+	      continue;
+
+	    if (passive_host == 3 && !LibcWrapper::isip6addr(*i))
+	      continue;
+
+	    if (omni::strMatch(*i, "127.0.0.1") || omni::strMatch(*i, "::1")) {
+	      loopback = *i;
+	      continue;
+	    }
+	    break;
 	  }
 	  if (i == ifaddrs->end()) {
-	    // Only interface was the loopback -- we'll have to use that
-	    i = ifaddrs->begin();
+	    // Did not find a matching address. Fall back to the loopback.
+	    if (loopback) {
+	      pd_address.host = CORBA::string_dup(loopback);
+	    }
+	    else {
+	      omniORB::logs(1, "No suitable address in the list of "
+			    "interface addresses.");
+	      CLOSESOCKET(pd_socket);
+	      return 0;
+	    }
 	  }
-	  pd_address.host = CORBA::string_dup(*i);
+	  else {
+	    pd_address.host = CORBA::string_dup(*i);
+	  }
 	}
       }
       else {
@@ -406,21 +452,22 @@ tcpEndpoint::Bind() {
       }
     }
   }
-  if (omniORB::trace(1) &&
+  if (passive_host && omniORB::trace(1) &&
       (omni::strMatch(pd_address.host, "127.0.0.1") ||
-       omni::strMatch(pd_address.host, "localhost"))) {
+       omni::strMatch(pd_address.host, "::1") ||
+       omni::strMatch(pd_address.host, "localhost") ||
+       omni::strMatch(pd_address.host, "localhost.localdomain"))) {
 
     omniORB::logger log;
-    log << "Warning: the local loop back interface (127.0.0.1) is used as\n"
+    log << "Warning: the local loop back interface (" << pd_address.host
+	<< ") is used as\n"
 	<< "this server's address. Only clients on this machine can talk to\n"
 	<< "this server.\n";
   }
 
-  const char* format = "giop:tcp:%s:%d";
-  pd_address_string = CORBA::string_alloc(strlen(pd_address.host) +
-					  strlen(format)+6);
-  sprintf((char*)pd_address_string,format,
-	  (const char*)pd_address.host,(int)pd_address.port);
+  pd_address_string = omniURI::buildURI("giop:tcp:",
+					pd_address.host,
+					pd_address.port);
 
   // Never block in accept
   SocketSetnonblocking(pd_socket);
