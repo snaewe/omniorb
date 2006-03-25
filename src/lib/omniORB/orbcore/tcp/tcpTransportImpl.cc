@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/03/25 19:18:28  dgrisby
+  Only use interfaces that are up.
+
   Revision 1.1.4.4  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -282,7 +285,7 @@ void ifaddrs_get_ifinfo(omnivector<const char*>& addrs)
 
   struct ifaddrs *p;
   for (p = ifa_list; p != 0; p = p->ifa_next) {
-    if (p->ifa_addr) {
+    if (p->ifa_addr && p->ifa_flags & IFF_UP) {
       if (p->ifa_addr->sa_family == AF_INET) {
         CORBA::String_var s = tcpConnection::addrToString(p->ifa_addr);
         addrs.push_back(s._retn());
