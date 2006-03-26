@@ -1,3 +1,16 @@
+Sun Mar 26 21:58:45 BST 2006 dgrisby
+====================================
+
+- Merge from omni4_0_develop.
+
+include/omniORB4/internal/giopRope.h
+include/omniORB4/internal/objectAdapter.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Sat Mar 25 19:17:48 GMT 2006 dgrisby
 ====================================
 

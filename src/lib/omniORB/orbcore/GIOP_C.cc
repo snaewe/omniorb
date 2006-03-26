@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.7  2006/03/26 20:59:28  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.6  2005/04/14 00:03:59  dgrisby
   New traceInvocationReturns and traceTime options; remove logf function.
 
@@ -284,7 +287,8 @@ GIOP_C::notifyCommFailure(CORBA::Boolean heldlock,
   if (pd_strand->first_use) {
     const giopAddress* firstaddr = pd_calldescriptor->firstAddressUsed();
     const giopAddress* currentaddr; 
-    if (!firstaddr) {
+
+    if (!firstaddr || !pd_rope->hasAddress(firstaddr)) {
       firstaddr = pd_strand->address;
       pd_calldescriptor->firstAddressUsed(firstaddr);
       currentaddr = firstaddr;

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2006/03/26 20:59:28  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.4  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -546,6 +549,20 @@ giopRope::decrRefCount() {
       }
     }
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopRope::hasAddress(const giopAddress* addr)
+{
+  giopAddressList::const_iterator ai;
+  for (ai = pd_addresses.begin(); ai != pd_addresses.end(); ++ai) {
+    if (*ai == addr) {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////

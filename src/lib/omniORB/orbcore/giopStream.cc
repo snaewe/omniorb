@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.7  2006/03/26 20:59:28  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.6.6  2006/01/10 13:59:37  dgrisby
   New clientConnectTimeOutPeriod configuration parameter.
 
@@ -1234,6 +1237,18 @@ giopStream::errorOnSend(int rc, const char* filename, CORBA::ULong lineno,
   else if (rc == TRANSIENT_ConnectFailed) {
     pd_strand->state(giopStrand::DYING);
     minor = rc;
+
+    if (pd_deadline_secs || pd_deadline_nanosecs) {
+      // Did we timeout?
+      unsigned long s, ns;
+      omni_thread::get_time(&s, &ns);
+      if (s > pd_deadline_secs ||
+          (s == pd_deadline_secs && ns > pd_deadline_nanosecs)) {
+        
+        retry = 0;
+        minor = TRANSIENT_CallTimedout;
+      }
+    }
   }
   else {
     pd_strand->state(giopStrand::DYING);
