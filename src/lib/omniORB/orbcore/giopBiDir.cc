@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2006/04/09 19:52:31  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.1.4.5  2006/01/10 13:59:37  dgrisby
   New clientConnectTimeOutPeriod configuration parameter.
 
@@ -783,20 +786,17 @@ setBiDirServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
     return 1;
   }
 
-  const omnivector<const char*>& epts = omniObjAdapter::listMyEndpoints();
-  omnivector<const char*>::const_iterator i = epts.begin();
-  omnivector<const char*>::const_iterator last = epts.end();
+  const orbServer::EndpointList& epts = omniObjAdapter::listMyEndpoints();
+  CORBA::ULong el = epts.length();
 
-  ListenPointList l(epts.size());
+  ListenPointList l(el);
   CORBA::ULong j = 0;
-  for ( ; i != last; i++) {
-    if (strncmp((*i),"giop:tcp",8) == 0 || strncmp((*i),"giop:ssl",8) == 0) {
-      const char* p = strchr((*i),':');
-      OMNIORB_ASSERT(p);
-      p = strchr(p+1,':');
-      OMNIORB_ASSERT(p);
+
+  for (CORBA::ULong i=0 ; i != el; i++) {
+    const char* ep = epts[i];
+    if (strncmp(ep,"giop:tcp:",9) == 0 || strncmp(ep,"giop:ssl:",9) == 0) {
       l.length(j+1);
-      if (!tcpTransportImpl::parseAddress(p+1,l[j])) OMNIORB_ASSERT(0);
+      if (!tcpTransportImpl::parseAddress(ep+9, l[j++])) OMNIORB_ASSERT(0);
     }
   }
   if (l.length()) {
@@ -814,7 +814,7 @@ setBiDirServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
 
     if (omniORB::trace(25)) {
       omniORB::logger log;
-      log << " send bidir IIOP service context: ( ";
+      log << "Send bidir IIOP service context: ( ";
 
       for (CORBA::ULong i = 0; i < l.length(); i++) {
 	log << (const char*) l[i].host << ":" << l[i].port << " ";

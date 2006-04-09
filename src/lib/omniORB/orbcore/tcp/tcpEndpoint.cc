@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2006/04/09 19:52:30  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.1.4.6  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -116,6 +119,7 @@
 #include <orbParameters.h>
 #include <objectAdapter.h>
 #include <libcWrapper.h>
+#include <tcp/tcpTransportImpl.h>
 #include <tcp/tcpConnection.h>
 #include <tcp/tcpAddress.h>
 #include <tcp/tcpEndpoint.h>
@@ -132,32 +136,6 @@ tcpEndpoint::tcpEndpoint(const IIOP::Address& address) :
   pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
   pd_callback_cookie(0), pd_poked(0) {
 
-  pd_address_string = (const char*) "giop:tcp:255.255.255.255:65535";
-  // address string is not valid until bind is called.
-}
-
-/////////////////////////////////////////////////////////////////////////
-tcpEndpoint::tcpEndpoint(const char* address) :
-  SocketHolder(RC_INVALID_SOCKET),
-  pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
-  pd_callback_cookie(0) {
-
-  pd_address_string = address;
-  // OMNIORB_ASSERT(strncmp(address,"giop:tcp:",9) == 0);
-  const char* host = strchr(address,':');
-  host = strchr(host+1,':') + 1;
-  const char* port = strchr(host,':') + 1;
-  CORBA::ULong hostlen = port - host - 1;
-  // OMNIORB_ASSERT(hostlen);
-  pd_address.host = CORBA::string_alloc(hostlen);
-  strncpy(pd_address.host,host,hostlen);
-  ((char*)pd_address.host)[hostlen] = '\0';
-  int rc;
-  unsigned int v;
-  rc = sscanf(port,"%u",&v);
-  // OMNIORB_ASSERT(rc == 1);
-  // OMNIORB_ASSERT(v > 0 && v < 65536);
-  pd_address.port = v;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -177,8 +155,155 @@ tcpEndpoint::type() const {
 /////////////////////////////////////////////////////////////////////////
 const char*
 tcpEndpoint::address() const {
-  return pd_address_string;
+  return pd_addresses[0];
 }
+
+/////////////////////////////////////////////////////////////////////////
+const _CORBA_Unbounded_Sequence_String*
+tcpEndpoint::addresses() const {
+  return &pd_addresses;
+}
+
+/////////////////////////////////////////////////////////////////////////
+static CORBA::Boolean
+publish_one(const char*    	     publish_spec,
+	    const char*    	     ep,
+	    CORBA::Boolean 	     no_publish,
+	    orbServer::EndpointList& published_eps)
+{
+  OMNIORB_ASSERT(!strncmp(ep, "giop:tcp:", 9));
+
+  CORBA::String_var to_add;
+  CORBA::String_var ep_host;
+  CORBA::UShort     ep_port;
+
+  ep_host = omniURI::extractHostPort(ep+9, ep_port);
+
+  if (!strncmp(publish_spec, "giop:tcp:", 9)) {
+    CORBA::UShort port;
+    CORBA::String_var host = omniURI::extractHostPort(publish_spec+9, port, 0);
+    if (!(char*)host) {
+      if (omniORB::trace(1)) {
+	omniORB::logger l;
+	l << "Invalid endpoint '" << publish_spec
+	  << "' in publish specification.";
+      }
+      OMNIORB_THROW(INITIALIZE,
+		    INITIALIZE_InvalidORBInitArgs,
+		    CORBA::COMPLETED_NO);
+    }
+    if (strlen(host) == 0)
+      host = ep_host;
+
+    if (!port)
+      port = ep_port;
+
+    to_add = omniURI::buildURI("giop:tcp:", host, port);
+  }
+  else if (no_publish) {
+    // Suppress all the other options
+    return 0;
+  }
+  else if (omni::strMatch(publish_spec, "addr")) {
+    to_add = ep;
+  }
+  else if (omni::strMatch(publish_spec, "ipv6")) {
+    if (!LibcWrapper::isip6addr(ep_host))
+      return 0;
+    to_add = ep;
+  }
+  else if (omni::strMatch(publish_spec, "ipv4")) {
+    if (!LibcWrapper::isip4addr(ep_host))
+      return 0;
+    to_add = ep;
+  }
+  else if (omni::strMatch(publish_spec, "name")) {
+    LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(ep_host, 0);
+    if (!ai.in())
+      return 0;
+
+    CORBA::String_var name = ai->name();
+    if (!(char*)name)
+      return 0;
+
+    to_add = omniURI::buildURI("giop:tcp:", name, ep_port);
+  }
+  else if (omni::strMatch(publish_spec, "hostname")) {
+    char self[OMNIORB_HOSTNAME_MAX];
+
+    if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR)
+      return 0;
+
+    to_add = omniURI::buildURI("giop:tcp:", self, ep_port);
+  }
+  else if (omni::strMatch(publish_spec, "fqdn")) {
+    char self[OMNIORB_HOSTNAME_MAX];
+
+    if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR)
+      return 0;
+
+    LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(self, 0);
+    if (!ai.in())
+      return 0;
+
+    char* name = ai->name();
+    if (name && !(omni::strMatch(name, "localhost") ||
+		  omni::strMatch(name, "localhost.localdomain"))) {
+      to_add = omniURI::buildURI("giop:tcp:", name, ep_port);
+    }
+    else {
+      to_add = omniURI::buildURI("giop:tcp:", self, ep_port);
+    }
+  }
+  else {
+    // Don't understand the spec.
+    return 0;
+  }
+
+  if (!omniObjAdapter::endpointInList(to_add, published_eps)) {
+    if (omniORB::trace(20)) {
+      omniORB::logger l;
+      l << "Publish endpoint '" << to_add << "'\n";
+    }
+    giopEndpoint::addToIOR(to_add);
+    published_eps.length(published_eps.length() + 1);
+    published_eps[published_eps.length() - 1] = to_add._retn();
+  }
+  return 1;
+}
+
+CORBA::Boolean
+tcpEndpoint::publish(const orbServer::PublishSpecs& publish_specs,
+		     CORBA::Boolean 	      	    all_specs,
+		     CORBA::Boolean 	      	    all_eps,
+		     orbServer::EndpointList& 	    published_eps)
+{
+  CORBA::ULong i, j;
+  CORBA::Boolean result = 0;
+
+  for (i=0; i < pd_addresses.length(); ++i) {
+
+    CORBA::Boolean ok = 0;
+    
+    for (j=0; j < publish_specs.length(); ++j) {
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	l << "Try to publish '" << publish_specs[j]
+	  << "' for endpoint " << pd_addresses[i] << "\n";
+      }
+      ok = publish_one(publish_specs[j], pd_addresses[i], no_publish(),
+		       published_eps);
+      result |= ok;
+
+      if (ok && !all_specs)
+	break;
+    }
+    if (result && !all_eps)
+      break;
+  }
+  return result;
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
@@ -210,10 +335,11 @@ tcpEndpoint::Bind() {
     }
   }
   else {
-    host = 0;
 #ifdef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
+    host = 0;
     passive_host = 1;
 #else
+    host = "0.0.0.0";
     passive_host = 2;
 #endif
   }
@@ -286,10 +412,61 @@ tcpEndpoint::Bind() {
   pd_address.port = tcpConnection::addrToPort((struct sockaddr*)&addr);
 
   if (passive_host) {
+    // Ask the TCP transport for its list of interface addresses
 
-    CORBA::Boolean done = 0;
+    CORBA::ULong   addrs_len = 0;
+    CORBA::Boolean set_host  = 0;
 
-    if (omniObjAdapter::options.publish_hostname) {
+    const omnivector<const char*>* ifaddrs
+      = giopTransportImpl::getInterfaceAddress("giop:tcp");
+
+    if (ifaddrs && !ifaddrs->empty()) {
+      // TCP transport successfully gave us a list of interface addresses
+
+      const char* loopback = 0;
+
+      omnivector<const char*>::const_iterator i;
+      for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
+
+	if (passive_host == 2 && !LibcWrapper::isip4addr(*i))
+	  continue;
+
+	if (passive_host == 3 && !LibcWrapper::isip6addr(*i))
+	  continue;
+
+	if (omni::strMatch(*i, "127.0.0.1") || omni::strMatch(*i, "::1")) {
+	  loopback = *i;
+	  continue;
+	}
+	pd_addresses.length(addrs_len + 1);
+	pd_addresses[addrs_len++] = omniURI::buildURI("giop:tcp:",
+						      *i, pd_address.port);
+
+	if (!set_host) {
+	  pd_address.host = CORBA::string_dup(*i);
+	  set_host = 1;
+	}
+      }
+      if (!set_host) {
+	// No suitable addresses other than the loopback.
+	if (loopback) {
+	  pd_addresses.length(addrs_len + 1);
+	  pd_addresses[addrs_len++] = omniURI::buildURI("giop:tcp:",
+							loopback,
+							pd_address.port);
+	  pd_address.host = CORBA::string_dup(loopback);
+	}
+	else {
+	  omniORB::logs(1, "No suitable address in the list of "
+			"interface addresses.");
+	  CLOSESOCKET(pd_socket);
+	  return 0;
+	}
+      }
+    }
+    else {
+      omniORB::logs(5, "No list of interface addresses; fall back to "
+		    "system hostname.");
       char self[OMNIORB_HOSTNAME_MAX];
 
       if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR) {
@@ -301,173 +478,41 @@ tcpEndpoint::Bind() {
 	omniORB::logger log;
 	log << "My hostname is '" << self << "'.\n";
       }
-      if (omniObjAdapter::options.publish_hostname == 2) {
-	// Look up name to make sure it is fully qualified
-	LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(self, 0);
-	if ((LibcWrapper::AddrInfo*)ai) {
-	  char* name = ai->name();
-	  if (name) {
-	    if (orbParameters::dumpConfiguration || omniORB::trace(10)) {
-	      omniORB::logger log;
-	      log << "My hostname fully qualifies to '" << name << "'.\n";
-	    }
-	    // Make sure it hasn't resolved to something stupid...
-	    if (!omni::strMatch(name, "localhost") &&
-		!omni::strMatch(name, "localhost.localdomain")) {
-	      done = 1;
-	      pd_address.host = name;
-	    }
-	    else {
-	      CORBA::string_free(name);
-	    }
-	  }
-	}
-      }
-      if (!done) {
-	pd_address.host = CORBA::string_dup(self);
-      }
-    }
-    else {
-      // Ask the TCP transport for its list of interface addresses
-
-      const omnivector<const char*>* ifaddrs
-	= giopTransportImpl::getInterfaceAddress("giop:tcp");
-
-      if (ifaddrs && !ifaddrs->empty()) {
-	// TCP transport successfully gave us a list of interface addresses
-
-	omnivector<const char*>::const_iterator i;
-
-	if (omniObjAdapter::options.publish_names) {
-
-	  // Find the first one that resolves to a name
-
-	  for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
-	    LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(*i, 0);
-	    OMNIORB_ASSERT((LibcWrapper::AddrInfo*)ai);
-
-	    char* name = ai->name();
-	    if (name) {
-	      if (orbParameters::dumpConfiguration || omniORB::trace(20)) {
-		omniORB::logger log;
-		log << "My address '" << *i << "' is '" << name << "'.\n";
-	      }
-	      if (!(omni::strMatch(name, "localhost") ||
-		    omni::strMatch(name, "localhost.localdomain"))) {
-		pd_address.host = name;
-		done = 1;
-
-		if (!omni::strMatch(*i, "127.0.0.1")) {
-		  // If the address was 127.0.0.1, we want to try
-		  // another address, even if we got a name other than
-		  // localhost.
-		  break;
-		}
-	      }
-	    }
-	    else {
-	      if (omniORB::trace(20)) {
-		omniORB::logger log;
-		log << "My address '" << *i << "' has no name.\n";
-	      }
-	    }
-	  }
-	  if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
-	    if (omniObjAdapter::options.publish_names == 1) {
-	      omniORB::logs(1, "Unable to resolve any addresses to names.");
-	      CLOSESOCKET(pd_socket);
-	      return 0;
-	    }
-	    else
-	      omniORB::logs(10, "Unable to resolve any addresses to names. "
-			    "Using a numerical address.");
-	  }
-	}
-	if (!done) {
-	  // Use the first non-loopback IP address.
-	  const char* loopback = 0;
-
-	  for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
-
-	    if (passive_host == 2 && !LibcWrapper::isip4addr(*i))
-	      continue;
-
-	    if (passive_host == 3 && !LibcWrapper::isip6addr(*i))
-	      continue;
-
-	    if (omni::strMatch(*i, "127.0.0.1") || omni::strMatch(*i, "::1")) {
-	      loopback = *i;
-	      continue;
-	    }
-	    break;
-	  }
-	  if (i == ifaddrs->end()) {
-	    // Did not find a matching address. Fall back to the loopback.
-	    if (loopback) {
-	      pd_address.host = CORBA::string_dup(loopback);
-	    }
-	    else {
-	      omniORB::logs(1, "No suitable address in the list of "
-			    "interface addresses.");
-	      CLOSESOCKET(pd_socket);
-	      return 0;
-	    }
-	  }
-	  else {
-	    pd_address.host = CORBA::string_dup(*i);
-	  }
-	}
-      }
-      else {
-	omniORB::logs(5, "No list of interface addresses; fall back to "
-		      "system hostname.");
-	char self[OMNIORB_HOSTNAME_MAX];
-
-	if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR) {
-	  omniORB::logs(1, "Cannot get the name of this host.");
-	  CLOSESOCKET(pd_socket);
-	  return 0;
-	}
-	if (orbParameters::dumpConfiguration || omniORB::trace(10)) {
+      LibcWrapper::AddrInfo_var ai;
+      ai = LibcWrapper::getAddrInfo(self, pd_address.port);
+      if ((LibcWrapper::AddrInfo*)ai == 0) {
+	if (omniORB::trace(1)) {
 	  omniORB::logger log;
-	  log << "My hostname is '" << self << "'.\n";
+	  log << "Cannot get the address of my hostname '"
+	      << self << "'.\n";
 	}
-	if (omniObjAdapter::options.publish_names) {
-	  pd_address.host = CORBA::string_dup(self);
-	}
-	else {
-	  LibcWrapper::AddrInfo_var ai;
-	  ai = LibcWrapper::getAddrInfo(self, pd_address.port);
-	  if ((LibcWrapper::AddrInfo*)ai == 0) {
-	    if (omniORB::trace(1)) {
-	      omniORB::logger log;
-	      log << "Cannot get the address of my hostname '"
-		  << self << "'.\n";
-	    }
-	    CLOSESOCKET(pd_socket);
-	    return 0;
-	  }
-	  pd_address.host = ai->asString();
-	}
+	CLOSESOCKET(pd_socket);
+	return 0;
       }
+      pd_address.host = ai->asString();
+      pd_addresses.length(1);
+      pd_addresses[0] = omniURI::buildURI("giop:tcp:",
+					  pd_address.host, pd_address.port);
+    }
+    if (omniORB::trace(1) &&
+	(omni::strMatch(pd_address.host, "127.0.0.1") ||
+	 omni::strMatch(pd_address.host, "::1") ||
+	 omni::strMatch(pd_address.host, "localhost") ||
+	 omni::strMatch(pd_address.host, "localhost.localdomain"))) {
+
+      omniORB::logger log;
+      log << "Warning: the local loop back interface (" << pd_address.host
+	  << ") is used as\n"
+	  << "this server's address. Only clients on this machine can talk\n"
+	  << "to this server.\n";
     }
   }
-  if (passive_host && omniORB::trace(1) &&
-      (omni::strMatch(pd_address.host, "127.0.0.1") ||
-       omni::strMatch(pd_address.host, "::1") ||
-       omni::strMatch(pd_address.host, "localhost") ||
-       omni::strMatch(pd_address.host, "localhost.localdomain"))) {
-
-    omniORB::logger log;
-    log << "Warning: the local loop back interface (" << pd_address.host
-	<< ") is used as\n"
-	<< "this server's address. Only clients on this machine can talk to\n"
-	<< "this server.\n";
+  else {
+    // Specific host
+    pd_addresses.length(1);
+    pd_addresses[0] = omniURI::buildURI("giop:tcp:",
+					pd_address.host, pd_address.port);
   }
-
-  pd_address_string = omniURI::buildURI("giop:tcp:",
-					pd_address.host,
-					pd_address.port);
 
   // Never block in accept
   SocketSetnonblocking(pd_socket);
@@ -488,7 +533,7 @@ tcpEndpoint::Poke() {
     if (omniORB::trace(5)) {
       omniORB::logger log;
       log << "Warning: fail to connect to myself ("
-	  << (const char*) pd_address_string << ") via tcp.\n";
+	  << (const char*) pd_addresses[0] << ") via tcp.\n";
     }
     pd_poked = 1;
   }

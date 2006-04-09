@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2006/04/09 19:52:31  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.1.6.4  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -167,6 +170,7 @@ public:
     }
     inline AddrInfo* operator->() const { return pd_ai; }
     inline operator AddrInfo*() const   { return pd_ai; }
+    inline AddrInfo* in() const         { return pd_ai; }
   private:
     AddrInfo* pd_ai;
   };

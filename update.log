@@ -1,3 +1,27 @@
+Sun Apr  9 20:49:20 BST 2006 dgrisby
+====================================
+
+- More IPv6, endPointPublish parameter.
+
+include/omniORB4/giopEndpoint.h
+include/omniORB4/omniInternal.h
+include/omniORB4/omniServer.h
+include/omniORB4/internal/giopServer.h
+include/omniORB4/internal/libcWrapper.h
+include/omniORB4/internal/objectAdapter.h
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.h
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.h
+
+
 Sun Mar 26 21:58:45 BST 2006 dgrisby
 ====================================
 

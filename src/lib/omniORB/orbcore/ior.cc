@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.12.2.3  2006/04/09 19:52:31  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.12.2.2  2005/01/06 23:10:30  dgrisby
   Big merge from omni4_0_develop.
 
@@ -159,6 +162,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/omniInterceptors.h>
+#include <omniORB4/omniURI.h>
 #include <exceptiondefs.h>
 #include <initialiser.h>
 #include <giopBiDir.h>
@@ -672,14 +676,11 @@ omniIOR::unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c ,
   }
   if (tcpaddr == 0) return;
 
-  const char* host = strchr(tcpaddr,':') + 1; host = strchr(host,':') + 1;
-  CORBA::ULong hostlen = strchr(host,':') - host;
-  CORBA::String_var copyhost(CORBA::string_alloc(hostlen));
-  strncpy(copyhost,host,hostlen);
-  ((char*)copyhost)[hostlen] = '\0';
+  CORBA::UShort     tcp_port;
+  CORBA::String_var tcp_host = omniURI::extractHostPort(tcpaddr+9, tcp_port);
 
   IIOP::Address ssladdr;
-  ssladdr.host = copyhost._retn();
+  ssladdr.host = tcp_host._retn();
   ssladdr.port = port;
   giopAddress* address = giopAddress::fromSslAddress(ssladdr);
   // If we do not have ssl transport linked the return value will be 0

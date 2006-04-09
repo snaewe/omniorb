@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.6.5  2006/04/09 19:52:31  dgrisby
+ More IPv6, endPointPublish parameter.
+
  Revision 1.1.6.4  2006/03/26 20:59:28  dgrisby
  Merge from omni4_0_develop.
 
@@ -87,6 +90,7 @@
 #define __OMNI_OBJECTADAPTER_H__
 
 #include <omniORB4/omniutilities.h>
+#include <omniORB4/omniServer.h>
 
 #ifndef OMNIORB_USEHOSTNAME_VAR
 #define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
@@ -137,6 +141,10 @@ public:
   // this is called.  However, does nothing if we have not already
   // been initialised.
   //  This function is thread safe.
+
+  static _CORBA_Boolean endpointInList(const char* ep,
+				       const orbServer::EndpointList& eps);
+  // Returns true if the endpoint is in the list.
 
   void adapterActive();
   void adapterInactive();
@@ -248,10 +256,10 @@ public:
   // Returns true(1) if the argument is the address of one of my endpoints
   // returns false(0) otherwise.
 
-  static const omnivector<const char*>& listMyEndpoints();
+  static const orbServer::EndpointList& listMyEndpoints();
 
   struct Options {
-    inline Options() : publish_all(0), publish_hostname(0), publish_names(0) {}
+    inline Options() : publish_all(0) {}
     ~Options();
 
     struct EndpointURI {
@@ -261,9 +269,8 @@ public:
     };
     typedef omnivector<EndpointURI*> EndpointURIList;
     EndpointURIList   endpoints;
+    _CORBA_String_var publish;
     CORBA::Boolean    publish_all;
-    CORBA::ULong      publish_hostname;
-    CORBA::ULong      publish_names;
   };
 
   static _core_attr Options options;

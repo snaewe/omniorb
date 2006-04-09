@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/04/09 19:52:31  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.1.4.2  2005/01/13 21:10:01  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -63,6 +66,8 @@
 #ifndef __SSLENDPOINT_H__
 #define __SSLENDPOINT_H__
 
+#include <omniORB4/omniServer.h>
+
 OMNI_NAMESPACE_BEGIN(omni)
 
 class sslConnection;
@@ -73,9 +78,13 @@ class sslEndpoint : public giopEndpoint,
 public:
 
   sslEndpoint(const IIOP::Address& address, sslContext* ctx);
-  sslEndpoint(const char* address, sslContext* ctx);
   const char* type() const;
   const char* address() const;
+  const orbServer::EndpointList* addresses() const;
+  CORBA::Boolean publish(const orbServer::PublishSpecs& publish_specs,
+			 CORBA::Boolean 	  	all_specs,
+			 CORBA::Boolean 	  	all_eps,
+			 orbServer::EndpointList& 	published_eps);
   CORBA::Boolean Bind();
   giopConnection* AcceptAndMonitor(giopConnection::notifyReadable_t,void*);
   void Poke();
@@ -88,9 +97,9 @@ protected:
   // implement SocketCollection::notifyReadable
 
  private:
-  IIOP::Address      pd_address;
-  CORBA::String_var  pd_address_string;
-  sslContext*        pd_ctx;
+  IIOP::Address                    pd_address;
+  orbServer::EndpointList          pd_addresses;
+  sslContext*                      pd_ctx;
 
   SocketHandle_t                   pd_new_conn_socket;
   giopConnection::notifyReadable_t pd_callback_func;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/04/09 19:52:31  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.1.4.4  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -248,6 +251,14 @@ giopTransportImpl::~giopTransportImpl() {
   while (*pp && *pp != this) pp = &((*pp)->next);
 
   if (*pp == this) *pp = this->next;
+}
+
+////////////////////////////////////////////////////////////////////////
+giopTransportImpl*
+giopTransportImpl::str2Transport(const char* endpoint) {
+
+  const char* param;
+  return matchType(endpoint,param,1);
 }
 
 ////////////////////////////////////////////////////////////////////////

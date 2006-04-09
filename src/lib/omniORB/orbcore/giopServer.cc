@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.12  2006/04/09 19:52:31  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.25.2.11  2005/11/21 11:02:57  dgrisby
   Another merge.
 
@@ -243,42 +246,68 @@ giopServer::~giopServer()
 
 
 ////////////////////////////////////////////////////////////////////////////
-const char*
-giopServer::instantiate(const char* uri,
-			CORBA::Boolean no_publish,
-			CORBA::Boolean no_listen)
+CORBA::Boolean
+giopServer::instantiate(const char*              uri,
+			CORBA::Boolean           no_publish,
+			orbServer::EndpointList& listening_endpoints)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,0);
   omni_tracedmutex_lock sync(pd_lock);
 
   ensureNotInFlux();
 
-  if (!no_listen) {
+  giopEndpoint* ept = giopEndpoint::str2Endpoint(uri);
+  if (!ept) return 0;
 
-    giopEndpoint* ept = giopEndpoint::str2Endpoint(uri);
-    if (!ept) return 0;
+  OMNIORB_ASSERT(pd_state != ZOMBIE);
 
-    OMNIORB_ASSERT(pd_state != ZOMBIE);
+  if (no_publish)
+    ept->set_no_publish();
 
-    if (ept->Bind()) {
-      pd_endpoints.push_back(ept);
-      if (pd_state == ACTIVE) activate();
-      uri =  ept->address();
+  if (ept->Bind()) {
+    pd_endpoints.push_back(ept);
+
+    // Add to listening_endpoints
+    const orbServer::EndpointList* addrs = ept->addresses();
+    CORBA::ULong i = 0;
+    CORBA::ULong j = listening_endpoints.length();
+
+    listening_endpoints.length(j + addrs->length());
+    for (; i < addrs->length(); ++i, ++j) {
+      listening_endpoints[j] = (*addrs)[i];
     }
-    else {
-      delete ept;
-      return 0;
-    }
+    if (pd_state == ACTIVE) activate();
   }
-  else if ( !giopEndpoint::strIsValidEndpoint(uri) ) {
+  else {
+    delete ept;
     return 0;
   }
-
-  if (!no_publish) {
-    (void)giopEndpoint::addToIOR(uri);
-  }
-  return uri;
+  return 1;
 }
+
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopServer::publish(const orbServer::PublishSpecs& publish_specs,
+		    CORBA::Boolean           	   all_specs,
+		    CORBA::Boolean           	   all_eps,
+		    orbServer::EndpointList& 	   published_endpoints)
+{
+  omni_tracedmutex_lock sync(pd_lock);
+
+  ensureNotInFlux();
+
+  CORBA::Boolean result = 0;
+  CORBA::Boolean ok;
+
+  giopEndpointList::iterator i;
+  for (i = pd_endpoints.begin(); i != pd_endpoints.end(); ++i) {
+
+    ok = (*i)->publish(publish_specs, all_specs, all_eps, published_endpoints);
+    result |= ok;
+  }
+  return result;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
@@ -419,7 +448,7 @@ giopServer::activate()
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 1);
 
   giopEndpointList::iterator i;
-  i    = pd_endpoints.begin();
+  i = pd_endpoints.begin();
 
   while (i != pd_endpoints.end()) {
     giopRendezvouser* task = new giopRendezvouser(*i,this);

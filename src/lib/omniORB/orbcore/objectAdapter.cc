@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.7  2006/04/09 19:52:31  dgrisby
+ More IPv6, endPointPublish parameter.
+
  Revision 1.5.2.6  2006/03/25 18:54:03  dgrisby
  Initial IPv6 support.
 
@@ -154,6 +157,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -161,8 +165,7 @@ static char                             initialised = 0;
 static int                              num_active_oas = 0;
 static omni_tracedmutex                 oa_lock;
 static omnivector<_OMNI_NS(orbServer)*> oa_servers;
-static omnivector<const char*>          oa_endpoints;
-static const char* pick_endpoint(omnivector<const char*>&, const char*);
+static orbServer::EndpointList          oa_endpoints;
 
 omni_tracedmutex     omniObjAdapter::sd_detachedObjectLock;
 omni_tracedcondition omniObjAdapter::sd_detachedObjectSignal(
@@ -214,27 +217,142 @@ omniObjAdapter::isDeactivating()
 
 //////////////////////////////////////////////////////////////////////
 static
-const char*
-instantiate_endpoint(const char* uri,CORBA::Boolean no_publish,
-		     CORBA::Boolean no_listen)
+CORBA::Boolean
+instantiate_endpoint(const char*              uri,
+		     CORBA::Boolean           no_publish,
+		     orbServer::EndpointList& listening_endpoints)
 {
   if (omniORB::trace(20)) {
     omniORB::logger l;
     l << "Instantiate endpoint '" << uri << "'"
-      << (no_publish ? " (no publish)" : "")
-      << (no_listen  ? " (no listen)"  : "")
-      << "\n";
+      << (no_publish ? " (no publish)" : "") << "\n";
   }
   omnivector<orbServer*>::iterator j,last;
-  const char* address = 0;
+  CORBA::Boolean ok = 0;
   j = oa_servers.begin();
   last = oa_servers.end();
   for ( ; j != last; j++ ) {
-    address = (*j)->instantiate(uri,no_publish,no_listen);
-    if (address) break;
+    ok = (*j)->instantiate(uri, no_publish, listening_endpoints);
+    if (ok) break;
   }
-  return address;
+  return ok;
 }
+
+//////////////////////////////////////////////////////////////////////
+static
+CORBA::Boolean
+publish_endpoints(const char* publish_spec,
+		  orbServer::EndpointList& published_endpoints)
+{
+  if (omniORB::trace(15)) {
+    omniORB::logger l;
+    l << "Publish specification: '" << publish_spec << "'\n";
+  }
+
+  char* buffer = CORBA::string_alloc(strlen(publish_spec));
+  CORBA::String_var buffer_var(buffer);
+
+  CORBA::Boolean result = 0;
+  CORBA::Boolean ok;
+
+  const char* pc = publish_spec;
+  char* bc = buffer;
+
+  orbServer::PublishSpecs pspecs;
+  CORBA::ULong psi = 0;
+
+  CORBA::Boolean all_specs = 0;
+  CORBA::Boolean all_eps   = 0;
+  CORBA::Boolean all_open  = 0;
+
+  while (1) {
+    if (!strncasecmp(pc, "all(", 4)) {
+      all_open = 1;
+      pc += 4;
+      continue;
+    }
+    if (*pc == '|') {
+      if (all_specs || bc == buffer)
+	OMNIORB_THROW(INITIALIZE,
+		      INITIALIZE_InvalidORBInitArgs,
+		      CORBA::COMPLETED_NO);
+      *bc = '\0';
+      if (psi == pspecs.length())
+	pspecs.length((psi + 1) * 2);
+      
+      pspecs[psi++] = CORBA::string_dup(buffer);
+      bc = buffer;
+    }
+    else if (*pc == ')') {
+      if (!all_open)
+	OMNIORB_THROW(INITIALIZE,
+		      INITIALIZE_InvalidORBInitArgs,
+		      CORBA::COMPLETED_NO);
+
+      if (pc[1] != ',' && pc[1] != '\0')
+	OMNIORB_THROW(INITIALIZE,
+		      INITIALIZE_InvalidORBInitArgs,
+		      CORBA::COMPLETED_NO);
+      all_open = 0;
+      all_eps  = 1;
+    }
+    else if (*pc == ',' || *pc == '\0') {
+      if (bc == buffer)
+	OMNIORB_THROW(INITIALIZE,
+		      INITIALIZE_InvalidORBInitArgs,
+		      CORBA::COMPLETED_NO);
+
+      if (all_open) {
+	if ((!all_specs && pspecs.length()))
+	  OMNIORB_THROW(INITIALIZE,
+			INITIALIZE_InvalidORBInitArgs,
+			CORBA::COMPLETED_NO);
+	all_specs = 1;
+	*bc = '\0';
+	if (psi == pspecs.length())
+	  pspecs.length((psi + 1) * 2);
+      
+	pspecs[psi++] = CORBA::string_dup(buffer);
+	bc = buffer;
+      }
+      else {
+	*bc = '\0';
+	if (psi == pspecs.length())
+	  pspecs.length(psi + 1);
+      
+	pspecs[psi++] = CORBA::string_dup(buffer);
+	bc = buffer;
+
+	pspecs.length(psi);
+
+	// Time to actually publish something
+	omnivector<orbServer*>::iterator j,last;
+	j = oa_servers.begin();
+	last = oa_servers.end();
+	for (; j != last; ++j) {
+	  ok = (*j)->publish(pspecs, all_specs, all_eps, published_endpoints);
+	  result |= ok;
+	}
+
+	psi = 0;
+	all_specs = 0;
+	all_eps   = 0;
+      }
+    }
+    else if (isspace(*pc)) {
+      // Do nothing
+    }
+    else {
+      *bc++ = tolower(*pc);
+    }
+    if (*pc == '\0') break;
+
+    ++pc;
+  }
+  return result;
+}
+
+
 
 //////////////////////////////////////////////////////////////////////
 void
@@ -248,22 +366,23 @@ omniObjAdapter::initialise()
 
   try {
 
+    orbServer::EndpointList listening_endpoints;
+    orbServer::EndpointList published_endpoints;
+
     if ( oa_servers.empty() ) {
       omniInterceptors::createORBServer_T::info_T info(oa_servers);
       omniInterceptorP::visit(info);
     }
-
-    omnivector<const char*> myendpoints;
 
     if ( !options.endpoints.empty() ) {
 
       Options::EndpointURIList::iterator i = options.endpoints.begin();
       for ( ; i != options.endpoints.end(); i++ ) {
 
-	const char* address = instantiate_endpoint((*i)->uri,
-						   (*i)->no_publish,
-						   (*i)->no_listen);
-	if (!address) {
+	CORBA::Boolean ok = instantiate_endpoint((*i)->uri,
+						 (*i)->no_publish,
+						 listening_endpoints);
+	if (!ok) {
 	  if (omniORB::trace(1)) {
 	    omniORB::logger log;
 	    log << "Error: Unable to create an endpoint of this description: "
@@ -272,10 +391,6 @@ omniObjAdapter::initialise()
 	  }
 	  OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
 			CORBA::COMPLETED_NO);
-	}
-	oa_endpoints.push_back(address);
-	if ( !(*i)->no_listen ) {
-	  myendpoints.push_back(address);
 	}
       }
     }
@@ -286,9 +401,9 @@ omniObjAdapter::initialise()
 
       CORBA::String_var estr = omniURI::buildURI("giop:tcp:", hostname, 0);
 
-      const char* address = instantiate_endpoint(estr,0,0);
+      CORBA::Boolean ok = instantiate_endpoint(estr, 0, listening_endpoints);
 
-      if (!address) {
+      if (!ok) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;
 	  log << "Error: Unable to create an endpoint of this description: "
@@ -298,96 +413,35 @@ omniObjAdapter::initialise()
 	OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
 		      CORBA::COMPLETED_NO);
       }
-      oa_endpoints.push_back(address);
-      myendpoints.push_back(address);
     }
 
-    if (options.publish_all) {
+    // Handle the publish specification
+    if (!publish_endpoints(options.publish, published_endpoints)) {
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Error: endPointPublish specification '"
+	    << options.publish << "' did not publish any endpoints.\n";
+      }
+      OMNIORB_THROW(INITIALIZE,
+		    INITIALIZE_InvalidORBInitArgs,
+		    CORBA::COMPLETED_NO);
+    }
 
-      const char* first_tcp = pick_endpoint(oa_endpoints, "giop:tcp");
-
-      if (first_tcp) {
-	int port;
-
-	// *** HERE: IPv6
-	sscanf(first_tcp, "giop:tcp:%*[^:]:%d", &port);
-
-	const omnivector<const char*>* ifaddrs
-	  = giopTransportImpl::getInterfaceAddress("giop:tcp");
-
-	if (ifaddrs && !ifaddrs->empty()) {
-
-	  omnivector<const char*>::const_iterator i;
-
-	  for (i = ifaddrs->begin(); i != ifaddrs->end(); i++) {
-
-	    // Skip loopback address
-	    if (omni::strMatch(*i, "127.0.0.1")) continue;
-
-	    const char* format1 = "giop:tcp:%s:";
-	    const char* format2 = "giop:tcp:%s:%d";
-
-	    const char* name = *i;
-
-	    CORBA::String_var name_var;
-	    if (options.publish_names) {
-	      LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(*i,port);
-	      if ((LibcWrapper::AddrInfo*)ai) {
-		name_var = ai->name();
-		if ((const char*)name_var) {
-		  name = name_var;
-		}
-	      }
-	      if (name == *i) {
-		if (options.publish_names == 1) {
-		  if (omniORB::trace(20)) {
-		    omniORB::logger l;
-		    l << "No name for my address '" << *i
-		      << "'. Will not publish.\n";
-		  }
-		  continue;
-		}
-		else {
-		  omniORB::logger l;
-		  l << "No name for my address '" << *i
-		    << "'. Publishing address.\n";
-		}
-	      }
-	    }
-	    CORBA::String_var estr(CORBA::string_alloc(strlen(name)+
-						       strlen(format2) + 6));
-	    sprintf(estr,format1,name);
-
-	    if (!pick_endpoint(oa_endpoints, estr)) {
-
-	      sprintf(estr,format2,name,port);
-	      const char* address = instantiate_endpoint(estr, 0, 1);
-
-	      // instantiate_endpoint usually returns the same string
-	      // we gave it. In that case, the _var must drop
-	      // ownership of it.
-	      if (address == (char*)estr) estr._retn();
-
-	      if (!address) {
-		if (omniORB::trace(1)) {
-		  omniORB::logger log;
-		  log << "Error: Unable to create an endpoint of this "
-		      << "description: " << (const char*)estr << "\n";
-		}
-		OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
-			      CORBA::COMPLETED_NO);
-	      }
-	      oa_endpoints.push_back(address);
-	    }
-	  }
+    // Build master list of all endpoints that relate to this process
+    {
+      oa_endpoints = listening_endpoints;
+      CORBA::ULong i;
+      CORBA::ULong j = oa_endpoints.length();
+      CORBA::ULong l = published_endpoints.length();
+      for (i=0; i<l; ++i) {
+	if (!endpointInList(published_endpoints[i], oa_endpoints)) {
+	  oa_endpoints.length(j+1);
+	  oa_endpoints[j++] = published_endpoints[i];
 	}
       }
-      else {
-	omniORB::logs(1, "Warning: endPointPublishAllIFs option ignored since "
-		      "there are no TCP endPoints.");
-      }
     }
 
+    // Bootstrap agent?
     if( orbParameters::supportBootstrapAgent )
       omniInitialReferences::initialise_bootstrap_agentImpl();
   }
@@ -403,6 +457,22 @@ omniObjAdapter::initialise()
   }
 
   initialised = 1;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+omniObjAdapter::endpointInList(const char* ep,
+			       const orbServer::EndpointList& eps)
+{
+  CORBA::ULong i;
+  CORBA::ULong l = eps.length();
+
+  for (i=0; i < l; ++i) {
+    if (omni::strMatch(ep, eps[i]))
+      return 1;
+  }
+  return 0;
 }
 
 
@@ -430,7 +500,7 @@ omniObjAdapter::shutdown()
     oa_servers.erase(oa_servers.begin(),oa_servers.end());
   }
 
-  oa_endpoints.erase(oa_endpoints.begin(),oa_endpoints.end());
+  oa_endpoints.length(0);
 
   initialised = 0;
 }
@@ -562,38 +632,21 @@ omniObjAdapter::wait_for_detached_objects()
 }
 
 //////////////////////////////////////////////////////////////////////
-static
-const char*
-pick_endpoint(omnivector<const char*>& endpoints,const char* prefix) {
-
-  omnivector<const char*>::iterator i,last;
-
-  i = endpoints.begin();
-  last = endpoints.end();
-
-  int len = strlen(prefix);
-  for ( ; i != last; i++) {
-    if (strncmp((*i),prefix,len) == 0) {
-      return (*i);
-    }
-  }
-  return 0;
-}
-
-
-//////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 omniObjAdapter::matchMyEndpoints(const char* addr)
 {
-  for ( omnivector<const char*>::iterator i = oa_endpoints.begin();
-	i != oa_endpoints.end(); i++) {
-    if (omni::ptrStrMatch((*i),addr)) return 1;
+  CORBA::ULong i;
+  CORBA::ULong l = oa_endpoints.length();
+
+  for (i=0; i < l; ++i) {
+    if (omni::strMatch(addr, oa_endpoints[i]))
+      return 1;
   }
   return 0;
 }
 
 //////////////////////////////////////////////////////////////////////
-const omnivector<const char*>&
+const orbServer::EndpointList&
 omniObjAdapter::listMyEndpoints()
 {
   return oa_endpoints;
@@ -783,62 +836,28 @@ public:
 static endpointPublishAllIFsHandler endpointPublishAllIFsHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
-static const char* resolvenames_msg = "Expect a value of 0, 1 or 2";
 
-class endpointPublishHostnameHandler : public orbOptions::Handler {
+class endpointPublishHandler : public orbOptions::Handler {
 public:
 
-  endpointPublishHostnameHandler() : 
-    orbOptions::Handler("endPointPublishHostname",
-			"endPointPublishHostname = 0,1,2",
+  endpointPublishHandler() : 
+    orbOptions::Handler("endPointPublish",
+			"endPointPublish = <publish options>",
 			1,
-			"-ORBendPointPublishHostname < 0 | 1 | 2 >") {}
+			"-ORBendPointPublish <publish options>") {}
 
 
-  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
-    CORBA::ULong v;
-    if (!orbOptions::getULong(value,v) || v > 2) {
-      throw orbOptions::BadParam(key(),value,resolvenames_msg);
-    }
-    omniObjAdapter::options.publish_hostname = v;
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam)
+  {
+    omniObjAdapter::options.publish = value;
   }
 
   void dump(orbOptions::sequenceString& result) {
-
-    orbOptions::addKVULong(key(),omniObjAdapter::options.publish_hostname,
-			   result);
+    orbOptions::addKVString(key(), omniObjAdapter::options.publish, result);
   }
 };
 
-static endpointPublishHostnameHandler endpointPublishHostnameHandler_;
-
-/////////////////////////////////////////////////////////////////////////////
-class endpointResolveNamesHandler : public orbOptions::Handler {
-public:
-
-  endpointResolveNamesHandler() : 
-    orbOptions::Handler("endPointResolveNames",
-			"endPointResolveNames = 0,1,2",
-			1,
-			"-ORBendPointResolveNames < 0 | 1 | 2 >") {}
-
-
-  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
-    CORBA::ULong v;
-    if (!orbOptions::getULong(value,v) || v > 2) {
-      throw orbOptions::BadParam(key(),value,resolvenames_msg);
-    }
-    omniObjAdapter::options.publish_names = v;
-  }
-
-  void dump(orbOptions::sequenceString& result) {
-
-    orbOptions::addKVULong(key(),omniObjAdapter::options.publish_names,
-			   result);
-  }
-};
-
-static endpointResolveNamesHandler endpointResolveNamesHandler_;
+static endpointPublishHandler endpointPublishHandler_;
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -852,42 +871,15 @@ public:
     orbOptions::singleton().registerHandler(endpointNoPublishHandler_);
     orbOptions::singleton().registerHandler(endpointNoListenHandler_);
     orbOptions::singleton().registerHandler(endpointPublishAllIFsHandler_);
-    orbOptions::singleton().registerHandler(endpointPublishHostnameHandler_);
-    orbOptions::singleton().registerHandler(endpointResolveNamesHandler_);
+    orbOptions::singleton().registerHandler(endpointPublishHandler_);
   }
 
   void attach() { 
 
-    // Make sure that endpointNoListen or endpointNoPublish is not
-    // the only endpoint* option defined.
+    if ((const char*)omniObjAdapter::options.publish == 0 ||
+	strlen(omniObjAdapter::options.publish) == 0) {
 
-    omniObjAdapter::Options::EndpointURIList::iterator last, i;
-    i = omniObjAdapter::options.endpoints.begin();
-    last = omniObjAdapter::options.endpoints.end();
-    if (i != last) {
-      CORBA::Boolean only_listen = 1;
-      CORBA::Boolean only_publish = 1;
-      for ( ; i != last; i++ ) {
-	if ((*i)->no_publish) {
-	  only_listen = 0;
-	}
-	else if ((*i)->no_listen) {
-	  only_publish = 0;
-	}
-	else {
-	  only_listen = only_publish = 0;
-	}
-      }
-      if ( only_listen || only_publish ) {
-	if ( omniORB::trace(1) ) {
-	  omniORB::logger log;
-	  log << "CORBA::ORB_init failed -- endPointNoListen or \n"
-	         "endPointNoPublish cannot be used alone.\n"
-	         "At least 1 endpoint or endPointNoPublish should be specified.\n";
-	}
-	OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
-		      CORBA::COMPLETED_NO);
-      }
+      omniObjAdapter::options.publish = (const char*)"addr";
     }
   }
   void detach() {
@@ -901,9 +893,8 @@ public:
       omniObjAdapter::options.endpoints.begin(),
       omniObjAdapter::options.endpoints.end());
 
-    omniObjAdapter::options.publish_all      = 0;
-    omniObjAdapter::options.publish_hostname = 0;
-    omniObjAdapter::options.publish_names    = 0;
+    omniObjAdapter::options.publish     = (char*)0;
+    omniObjAdapter::options.publish_all = 0;
   }
 };
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/04/09 19:52:29  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.1.4.4  2005/08/03 09:43:51  dgrisby
   Make sure accept() never blocks.
 
@@ -80,6 +83,7 @@
 #include <omniORB4/giopEndpoint.h>
 #include <orbParameters.h>
 #include <SocketCollection.h>
+#include <objectAdapter.h>
 #include <unix/unixConnection.h>
 #include <unix/unixAddress.h>
 #include <unix/unixEndpoint.h>
@@ -109,7 +113,6 @@ unixEndpoint::unixEndpoint(const char* filename) :
   pd_callback_cookie(0) {
 
   pd_filename = filename;
-  pd_address_string = unixConnection::unToString(filename);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -130,8 +133,90 @@ unixEndpoint::type() const {
 /////////////////////////////////////////////////////////////////////////
 const char*
 unixEndpoint::address() const {
-  return pd_address_string;
+  return pd_addresses[0];
 }
+
+/////////////////////////////////////////////////////////////////////////
+const _CORBA_Unbounded_Sequence_String*
+unixEndpoint::addresses() const {
+  return &pd_addresses;
+}
+
+/////////////////////////////////////////////////////////////////////////
+static CORBA::Boolean
+publish_one(const char*    	     publish_spec,
+	    const char*    	     ep,
+	    CORBA::Boolean 	     no_publish,
+	    orbServer::EndpointList& published_eps)
+{
+  OMNIORB_ASSERT(!strncmp(ep, "giop:unix:", 10));
+
+  CORBA::String_var to_add;
+
+  if (!strncmp(publish_spec, "giop:unix:", 10)) {
+    const char* file = publish_spec + 10;
+    if (strlen(file) == 0)
+      to_add = ep;
+    else
+      to_add = publish_spec;
+  }
+  else if (no_publish) {
+    // Suppress all the other options
+    return 0;
+  }
+  else if (omni::strMatch(publish_spec, "addr")) {
+    to_add = ep;
+  }
+  else {
+    // Don't understand the spec.
+    return 0;
+  }
+
+  if (!omniObjAdapter::endpointInList(to_add, published_eps)) {
+    if (omniORB::trace(20)) {
+      omniORB::logger l;
+      l << "Publish endpoint '" << to_add << "'\n";
+    }
+    giopEndpoint::addToIOR(to_add);
+    published_eps.length(published_eps.length() + 1);
+    published_eps[published_eps.length() - 1] = to_add._retn();
+  }
+  return 1;
+}
+
+
+CORBA::Boolean
+unixEndpoint::publish(const orbServer::PublishSpecs& publish_specs,
+		      CORBA::Boolean 	      	     all_specs,
+		      CORBA::Boolean 	      	     all_eps,
+		      orbServer::EndpointList& 	     published_eps)
+{
+  CORBA::ULong i, j;
+  CORBA::Boolean result = 0;
+
+  for (i=0; i < pd_addresses.length(); ++i) {
+
+    CORBA::Boolean ok = 0;
+    
+    for (j=0; j < publish_specs.length(); ++j) {
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	l << "Try to publish '" << publish_specs[j]
+	  << "' for endpoint " << pd_addresses[i] << "\n";
+      }
+      ok = publish_one(publish_specs[j], pd_addresses[i], no_publish(),
+		       published_eps);
+      result |= ok;
+
+      if (ok && !all_specs)
+	break;
+    }
+    if (result && !all_eps)
+      break;
+  }
+  return result;
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
@@ -174,7 +259,8 @@ unixEndpoint::Bind() {
     return 0;
   }
 
-  pd_address_string = unixConnection::unToString(pd_filename);
+  pd_addresses.length(1);
+  pd_addresses[0] = unixConnection::unToString(pd_filename);
 
   // Never block in accept
   SocketSetnonblocking(pd_socket);
@@ -195,8 +281,7 @@ unixEndpoint::Poke() {
     if (omniORB::trace(1)) {
       omniORB::logger log;
       log << "Warning: Fail to connect to myself ("
-	  << (const char*) pd_address_string << ") via tcp!\n";
-      log << "Warning: This is ignored but this may cause the ORB shutdown to hang.\n";
+	  << (const char*) pd_addresses[0] << ") via unix socket!\n";
     }
   }
   else {

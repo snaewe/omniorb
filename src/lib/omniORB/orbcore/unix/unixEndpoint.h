@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2006/04/09 19:52:29  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.1.4.3  2005/01/25 16:44:15  dgrisby
   pd_socket member was not removed as it should have been.
 
@@ -50,6 +53,8 @@
 #ifndef __UNIXENDPOINT_H__
 #define __UNIXENDPOINT_H__
 
+#include <omniORB4/omniServer.h>
+
 OMNI_NAMESPACE_BEGIN(omni)
 
 class unixConnection;
@@ -64,6 +69,11 @@ public:
   // The following implement giopEndpoint abstract functions
   const char* type() const;
   const char* address() const;
+  const orbServer::EndpointList* addresses() const;
+  CORBA::Boolean publish(const orbServer::PublishSpecs& publish_specs,
+			 CORBA::Boolean 	  	all_specs,
+			 CORBA::Boolean 	  	all_eps,
+			 orbServer::EndpointList& 	published_eps);
   CORBA::Boolean Bind();
   giopConnection* AcceptAndMonitor(giopConnection::notifyReadable_t,void*);
   void Poke();
@@ -77,8 +87,8 @@ protected:
   
 
 private:
-  CORBA::String_var pd_filename;
-  CORBA::String_var pd_address_string;
+  CORBA::String_var                pd_filename;
+  orbServer::EndpointList          pd_addresses;
 
   SocketHandle_t                   pd_new_conn_socket;
   giopConnection::notifyReadable_t pd_callback_func;

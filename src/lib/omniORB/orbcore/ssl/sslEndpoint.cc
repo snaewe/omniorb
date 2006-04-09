@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2006/04/09 19:52:31  dgrisby
+  More IPv6, endPointPublish parameter.
+
   Revision 1.1.4.6  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -120,6 +123,8 @@
 #include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
 #include <libcWrapper.h>
+#include <objectAdapter.h>
+#include <orbParameters.h>
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <ssl/sslEndpoint.h>
@@ -137,32 +142,6 @@ sslEndpoint::sslEndpoint(const IIOP::Address& address, sslContext* ctx) :
   pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
   pd_callback_cookie(0), pd_go(1) {
 
-  pd_address_string = (const char*) "giop:ssl:255.255.255.255:65535";
-  // address string is not valid until bind is called.
-}
-
-/////////////////////////////////////////////////////////////////////////
-sslEndpoint::sslEndpoint(const char* address, sslContext* ctx) : 
-  SocketHolder(RC_INVALID_SOCKET), pd_ctx(ctx),
-  pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
-  pd_callback_cookie(0), pd_go(1) {
-
-  pd_address_string = address;
-  // OMNIORB_ASSERT(strncmp(address,"giop:ssl:",9) == 0);
-  const char* host = strchr(address,':');
-  host = strchr(host+1,':') + 1;
-  const char* port = strchr(host,':') + 1;
-  CORBA::ULong hostlen = port - host - 1;
-  // OMNIORB_ASSERT(hostlen);
-  pd_address.host = CORBA::string_alloc(hostlen);
-  strncpy(pd_address.host,host,hostlen);
-  ((char*)pd_address.host)[hostlen] = '\0';
-  int rc;
-  unsigned int v;
-  rc = sscanf(port,"%u",&v);
-  // OMNIORB_ASSERT(rc == 1);
-  // OMNIORB_ASSERT(v > 0 && v < 65536);
-  pd_address.port = v;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -182,8 +161,155 @@ sslEndpoint::type() const {
 /////////////////////////////////////////////////////////////////////////
 const char*
 sslEndpoint::address() const {
-  return pd_address_string;
+  return pd_addresses[0];
 }
+
+/////////////////////////////////////////////////////////////////////////
+const _CORBA_Unbounded_Sequence_String*
+sslEndpoint::addresses() const {
+  return &pd_addresses;
+}
+
+/////////////////////////////////////////////////////////////////////////
+static CORBA::Boolean
+publish_one(const char*    	     publish_spec,
+	    const char*    	     ep,
+	    CORBA::Boolean 	     no_publish,
+	    orbServer::EndpointList& published_eps)
+{
+  OMNIORB_ASSERT(!strncmp(ep, "giop:ssl:", 9));
+
+  CORBA::String_var to_add;
+  CORBA::String_var ep_host;
+  CORBA::UShort     ep_port;
+
+  ep_host = omniURI::extractHostPort(ep+9, ep_port);
+
+  if (!strncmp(publish_spec, "giop:ssl:", 9)) {
+    CORBA::UShort port;
+    CORBA::String_var host = omniURI::extractHostPort(publish_spec+9, port, 0);
+    if (!(char*)host) {
+      if (omniORB::trace(1)) {
+	omniORB::logger l;
+	l << "Invalid endpoint '" << publish_spec
+	  << "' in publish specification.";
+      }
+      OMNIORB_THROW(INITIALIZE,
+		    INITIALIZE_InvalidORBInitArgs,
+		    CORBA::COMPLETED_NO);
+    }
+    if (strlen(host) == 0)
+      host = ep_host;
+
+    if (!port)
+      port = ep_port;
+
+    to_add = omniURI::buildURI("giop:ssl:", host, port);
+  }
+  else if (no_publish) {
+    // Suppress all the other options
+    return 0;
+  }
+  else if (omni::strMatch(publish_spec, "addr")) {
+    to_add = ep;
+  }
+  else if (omni::strMatch(publish_spec, "ipv6")) {
+    if (!LibcWrapper::isip6addr(ep_host))
+      return 0;
+    to_add = ep;
+  }
+  else if (omni::strMatch(publish_spec, "ipv4")) {
+    if (!LibcWrapper::isip4addr(ep_host))
+      return 0;
+    to_add = ep;
+  }
+  else if (omni::strMatch(publish_spec, "name")) {
+    LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(ep_host, 0);
+    if (!ai.in())
+      return 0;
+
+    CORBA::String_var name = ai->name();
+    if (!(char*)name)
+      return 0;
+
+    to_add = omniURI::buildURI("giop:ssl:", name, ep_port);
+  }
+  else if (omni::strMatch(publish_spec, "hostname")) {
+    char self[OMNIORB_HOSTNAME_MAX];
+
+    if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR)
+      return 0;
+
+    to_add = omniURI::buildURI("giop:ssl:", self, ep_port);
+  }
+  else if (omni::strMatch(publish_spec, "fqdn")) {
+    char self[OMNIORB_HOSTNAME_MAX];
+
+    if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR)
+      return 0;
+
+    LibcWrapper::AddrInfo_var ai = LibcWrapper::getAddrInfo(self, 0);
+    if (!ai.in())
+      return 0;
+
+    char* name = ai->name();
+    if (name && !(omni::strMatch(name, "localhost") ||
+		  omni::strMatch(name, "localhost.localdomain"))) {
+      to_add = omniURI::buildURI("giop:ssl:", name, ep_port);
+    }
+    else {
+      to_add = omniURI::buildURI("giop:ssl:", self, ep_port);
+    }
+  }
+  else {
+    // Don't understand the spec.
+    return 0;
+  }
+
+  if (!omniObjAdapter::endpointInList(to_add, published_eps)) {
+    if (omniORB::trace(20)) {
+      omniORB::logger l;
+      l << "Publish endpoint '" << to_add << "'\n";
+    }
+    giopEndpoint::addToIOR(to_add);
+    published_eps.length(published_eps.length() + 1);
+    published_eps[published_eps.length() - 1] = to_add._retn();
+  }
+  return 1;
+}
+
+CORBA::Boolean
+sslEndpoint::publish(const orbServer::PublishSpecs& publish_specs,
+		     CORBA::Boolean 	      	    all_specs,
+		     CORBA::Boolean 	      	    all_eps,
+		     orbServer::EndpointList& 	    published_eps)
+{
+  CORBA::ULong i, j;
+  CORBA::Boolean result = 0;
+
+  for (i=0; i < pd_addresses.length(); ++i) {
+
+    CORBA::Boolean ok = 0;
+    
+    for (j=0; j < publish_specs.length(); ++j) {
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	l << "Try to publish '" << publish_specs[j]
+	  << "' for endpoint " << pd_addresses[i] << "\n";
+      }
+      ok = publish_one(publish_specs[j], pd_addresses[i], no_publish(),
+		       published_eps);
+      result |= ok;
+
+      if (ok && !all_specs)
+	break;
+    }
+    if (result && !all_eps)
+      break;
+  }
+  return result;
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
@@ -245,6 +371,7 @@ sslEndpoint::Bind() {
     int valtrue = 1;
     if (setsockopt(pd_socket,IPPROTO_TCP,TCP_NODELAY,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
+
       CLOSESOCKET(pd_socket);
       pd_socket = RC_INVALID_SOCKET;
       return 0;
@@ -290,8 +417,10 @@ sslEndpoint::Bind() {
   pd_address.port = tcpConnection::addrToPort((struct sockaddr*)&addr);
 
   if (passive_host) {
-
     // Ask the TCP transport for its list of interface addresses
+
+    CORBA::ULong   addrs_len = 0;
+    CORBA::Boolean set_host  = 0;
 
     const omnivector<const char*>* ifaddrs
       = giopTransportImpl::getInterfaceAddress("giop:tcp");
@@ -299,7 +428,6 @@ sslEndpoint::Bind() {
     if (ifaddrs && !ifaddrs->empty()) {
       // TCP transport successfully gave us a list of interface addresses
 
-      // Use the first non-loopback IP address.
       const char* loopback = 0;
 
       omnivector<const char*>::const_iterator i;
@@ -315,11 +443,22 @@ sslEndpoint::Bind() {
 	  loopback = *i;
 	  continue;
 	}
-	break;
+	pd_addresses.length(addrs_len + 1);
+	pd_addresses[addrs_len++] = omniURI::buildURI("giop:ssl:",
+						      *i, pd_address.port);
+
+	if (!set_host) {
+	  pd_address.host = CORBA::string_dup(*i);
+	  set_host = 1;
+	}
       }
-      if (i == ifaddrs->end()) {
-	// Did not find a matching address. Fall back to the loopback.
+      if (!set_host) {
+	// No suitable addresses other than the loopback.
 	if (loopback) {
+	  pd_addresses.length(addrs_len + 1);
+	  pd_addresses[addrs_len++] = omniURI::buildURI("giop:ssl:",
+							loopback,
+							pd_address.port);
 	  pd_address.host = CORBA::string_dup(loopback);
 	}
 	else {
@@ -328,9 +467,6 @@ sslEndpoint::Bind() {
 	  CLOSESOCKET(pd_socket);
 	  return 0;
 	}
-      }
-      else {
-	pd_address.host = CORBA::string_dup(*i);
       }
     }
     else {
@@ -343,7 +479,7 @@ sslEndpoint::Bind() {
 	CLOSESOCKET(pd_socket);
 	return 0;
       }
-      if (omniORB::trace(10)) {
+      if (orbParameters::dumpConfiguration || omniORB::trace(10)) {
 	omniORB::logger l;
 	l << "My hostname is " << self << ".\n";
       }
@@ -352,30 +488,36 @@ sslEndpoint::Bind() {
       if ((LibcWrapper::AddrInfo*)ai == 0) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;
-	  log << "Cannot get the address of my hostname " << self << ".\n";
+	  log << "Cannot get the address of my hostname '"
+	      << self << "'.\n";
 	}
 	CLOSESOCKET(pd_socket);
 	return 0;
       }
       pd_address.host = ai->asString();
+      pd_addresses.length(1);
+      pd_addresses[0] = omniURI::buildURI("giop:ssl:",
+					  pd_address.host, pd_address.port);
+    }
+    if (omniORB::trace(1) &&
+	(omni::strMatch(pd_address.host, "127.0.0.1") ||
+	 omni::strMatch(pd_address.host, "::1") ||
+	 omni::strMatch(pd_address.host, "localhost") ||
+	 omni::strMatch(pd_address.host, "localhost.localdomain"))) {
+
+      omniORB::logger log;
+      log << "Warning: the local loop back interface (" << pd_address.host
+	  << ") is used as\n"
+	  << "this server's address. Only clients on this machine can talk\n"
+	  << "to this server.\n";
     }
   }
-  if (passive_host && omniORB::trace(1) &&
-      (omni::strMatch(pd_address.host, "127.0.0.1") ||
-       omni::strMatch(pd_address.host, "::1") ||
-       omni::strMatch(pd_address.host, "localhost") ||
-       omni::strMatch(pd_address.host, "localhost.localdomain"))) {
-
-    omniORB::logger log;
-    log << "Warning: the local loop back interface (" << pd_address.host
-	<< ") is used as\n"
-	<< "this server's address. Only clients on this machine can talk to\n"
-	<< "this server.\n";
+  else {
+    // Specific host
+    pd_addresses.length(1);
+    pd_addresses[0] = omniURI::buildURI("giop:ssl:",
+					pd_address.host, pd_address.port);
   }
-
-  pd_address_string = omniURI::buildURI("giop:ssl:",
-					pd_address.host,
-					pd_address.port);
 
   // Never block in accept
   SocketSetnonblocking(pd_socket);
@@ -400,7 +542,7 @@ sslEndpoint::Poke() {
     if (omniORB::trace(5)) {
       omniORB::logger log;
       log << "Warning: Fail to connect to myself (" 
-	  << (const char*) pd_address_string << ") via ssl!\n";
+	  << (const char*) pd_addresses[0] << ") via ssl!\n";
     }
     pd_go = 0;
     // No concurrency control on pd_go, but it should be safe to set
