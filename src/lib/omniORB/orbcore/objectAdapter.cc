@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.5.2.8  2006/04/10 12:50:35  dgrisby
+ More endPointPublish; support for deprecated endPointNoListen,
+ endPointPublishAllIFs.
+
  Revision 1.5.2.7  2006/04/09 19:52:31  dgrisby
  More IPv6, endPointPublish parameter.
 
@@ -274,7 +278,7 @@ publish_endpoints(const char* publish_spec,
     if (*pc == '|') {
       if (all_specs || bc == buffer)
 	OMNIORB_THROW(INITIALIZE,
-		      INITIALIZE_InvalidORBInitArgs,
+		      INITIALIZE_EndpointPublishFailure,
 		      CORBA::COMPLETED_NO);
       *bc = '\0';
       if (psi == pspecs.length())
@@ -286,12 +290,12 @@ publish_endpoints(const char* publish_spec,
     else if (*pc == ')') {
       if (!all_open)
 	OMNIORB_THROW(INITIALIZE,
-		      INITIALIZE_InvalidORBInitArgs,
+		      INITIALIZE_EndpointPublishFailure,
 		      CORBA::COMPLETED_NO);
 
       if (pc[1] != ',' && pc[1] != '\0')
 	OMNIORB_THROW(INITIALIZE,
-		      INITIALIZE_InvalidORBInitArgs,
+		      INITIALIZE_EndpointPublishFailure,
 		      CORBA::COMPLETED_NO);
       all_open = 0;
       all_eps  = 1;
@@ -299,13 +303,13 @@ publish_endpoints(const char* publish_spec,
     else if (*pc == ',' || *pc == '\0') {
       if (bc == buffer)
 	OMNIORB_THROW(INITIALIZE,
-		      INITIALIZE_InvalidORBInitArgs,
+		      INITIALIZE_EndpointPublishFailure,
 		      CORBA::COMPLETED_NO);
 
       if (all_open) {
 	if ((!all_specs && pspecs.length()))
 	  OMNIORB_THROW(INITIALIZE,
-			INITIALIZE_InvalidORBInitArgs,
+			INITIALIZE_EndpointPublishFailure,
 			CORBA::COMPLETED_NO);
 	all_specs = 1;
 	*bc = '\0';
@@ -423,7 +427,7 @@ omniObjAdapter::initialise()
 	    << options.publish << "' did not publish any endpoints.\n";
       }
       OMNIORB_THROW(INITIALIZE,
-		    INITIALIZE_InvalidORBInitArgs,
+		    INITIALIZE_EndpointPublishFailure,
 		    CORBA::COMPLETED_NO);
     }
 
@@ -709,7 +713,7 @@ public:
 
     omniObjAdapter::Options::EndpointURI* opt;
     opt = new omniObjAdapter::Options::EndpointURI();
-    opt->no_publish = opt->no_listen = 0;
+    opt->no_publish = 0;
     opt->uri = value;
     omniObjAdapter::options.endpoints.push_back(opt);
   }
@@ -727,7 +731,7 @@ public:
     }
 
     for (; i != last; i++) {
-      if (! ((*i)->no_publish || (*i)->no_listen) ) {
+      if (!(*i)->no_publish) {
 	orbOptions::addKVString(key(),(*i)->uri,result);
       }
     }
@@ -751,7 +755,7 @@ public:
 
     omniObjAdapter::Options::EndpointURI* opt;
     opt = new omniObjAdapter::Options::EndpointURI();
-    opt->no_publish = 1; opt->no_listen = 0;
+    opt->no_publish = 1;
     opt->uri = value;
     omniObjAdapter::options.endpoints.push_back(opt);
   }
@@ -772,6 +776,31 @@ public:
 static endpointNoPublishHandler endpointNoPublishHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
+
+class endpointPublishHandler : public orbOptions::Handler {
+public:
+
+  endpointPublishHandler() : 
+    orbOptions::Handler("endPointPublish",
+			"endPointPublish = <publish options>",
+			1,
+			"-ORBendPointPublish <publish options>") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam)
+  {
+    omniObjAdapter::options.publish = value;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVString(key(), omniObjAdapter::options.publish, result);
+  }
+};
+
+static endpointPublishHandler endpointPublishHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
 class endpointNoListenHandler : public orbOptions::Handler {
 public:
 
@@ -786,20 +815,18 @@ public:
 
     omniObjAdapter::Options::EndpointURI* opt;
     opt = new omniObjAdapter::Options::EndpointURI();
-    opt->no_publish = 0; opt->no_listen = 1;
+    opt->no_publish = 0;
     opt->uri = value;
-    omniObjAdapter::options.endpoints.push_back(opt);
+    omniObjAdapter::options.no_listen.push_back(opt);
   }
 
   void dump(orbOptions::sequenceString& result) {
 
     omniObjAdapter::Options::EndpointURIList::iterator last, i;
-    i = omniObjAdapter::options.endpoints.begin();
-    last = omniObjAdapter::options.endpoints.end();
+    i = omniObjAdapter::options.no_listen.begin();
+    last = omniObjAdapter::options.no_listen.end();
     for (; i != last; i++) {
-      if ( (*i)->no_listen ) {
-	orbOptions::addKVString(key(),(*i)->uri,result);
-      }
+      orbOptions::addKVString(key(),(*i)->uri,result);
     }
   }
 };
@@ -828,37 +855,14 @@ public:
 
   void dump(orbOptions::sequenceString& result) {
 
-    orbOptions::addKVBoolean(key(),omniObjAdapter::options.publish_all,
-			     result);
+    // Deprecated, so only dump if set.
+    if (omniObjAdapter::options.publish_all)
+      orbOptions::addKVBoolean(key(),omniObjAdapter::options.publish_all,
+			       result);
   }
 };
 
 static endpointPublishAllIFsHandler endpointPublishAllIFsHandler_;
-
-/////////////////////////////////////////////////////////////////////////////
-
-class endpointPublishHandler : public orbOptions::Handler {
-public:
-
-  endpointPublishHandler() : 
-    orbOptions::Handler("endPointPublish",
-			"endPointPublish = <publish options>",
-			1,
-			"-ORBendPointPublish <publish options>") {}
-
-
-  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam)
-  {
-    omniObjAdapter::options.publish = value;
-  }
-
-  void dump(orbOptions::sequenceString& result) {
-    orbOptions::addKVString(key(), omniObjAdapter::options.publish, result);
-  }
-};
-
-static endpointPublishHandler endpointPublishHandler_;
-
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -869,9 +873,9 @@ public:
   omni_objadpt_initialiser() {
     orbOptions::singleton().registerHandler(endpointHandler_);
     orbOptions::singleton().registerHandler(endpointNoPublishHandler_);
+    orbOptions::singleton().registerHandler(endpointPublishHandler_);
     orbOptions::singleton().registerHandler(endpointNoListenHandler_);
     orbOptions::singleton().registerHandler(endpointPublishAllIFsHandler_);
-    orbOptions::singleton().registerHandler(endpointPublishHandler_);
   }
 
   void attach() { 
@@ -880,6 +884,40 @@ public:
 	strlen(omniObjAdapter::options.publish) == 0) {
 
       omniObjAdapter::options.publish = (const char*)"addr";
+    }
+
+    // Handle deprecated endPointPublishAllIFs and endPointNoListen
+    if (omniObjAdapter::options.publish_all) {
+      omniORB::logs(1, "The endPointPublishAllIFs parameter is deprecated.");
+      omniORB::logs(1, "Use an endPointPublish specification instead.");
+      char* new_publish =
+	CORBA::string_alloc(strlen(omniObjAdapter::options.publish) +
+			    sizeof(",all(addr)"));
+      strcpy(new_publish, omniObjAdapter::options.publish);
+      strcat(new_publish, ",all(addr)");
+      omniObjAdapter::options.publish = new_publish;
+    }
+
+    if (omniObjAdapter::options.no_listen.size()) {
+      omniORB::logs(1, "The endPointNoListen parameter is deprecated.");
+      omniORB::logs(1, "Use an endPointPublish specification instead.");
+      omniObjAdapter::Options::EndpointURIList::iterator i, end;
+      end = omniObjAdapter::options.no_listen.end();
+
+      int extend = 0;
+      for (i = omniObjAdapter::options.no_listen.begin(); i != end; ++i)
+	extend += strlen((*i)->uri) + 1;
+      
+      char* new_publish =
+	CORBA::string_alloc(strlen(omniObjAdapter::options.publish) + extend);
+
+      strcpy(new_publish, omniObjAdapter::options.publish);
+      
+      for (i = omniObjAdapter::options.no_listen.begin(); i != end; ++i) {
+	strcat(new_publish, ",");
+	strcat(new_publish, (*i)->uri);
+      }
+      omniObjAdapter::options.publish = new_publish;
     }
   }
   void detach() {

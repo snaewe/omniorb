@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.1.6.6  2006/04/10 12:50:35  dgrisby
+ More endPointPublish; support for deprecated endPointNoListen,
+ endPointPublishAllIFs.
+
  Revision 1.1.6.5  2006/04/09 19:52:31  dgrisby
  More IPv6, endPointPublish parameter.
 
@@ -263,13 +267,15 @@ public:
     ~Options();
 
     struct EndpointURI {
-      _CORBA_String_var  uri;
-      _CORBA_Boolean     no_publish;
-      _CORBA_Boolean     no_listen;
+      _CORBA_String_var uri;
+      _CORBA_Boolean    no_publish;
     };
     typedef omnivector<EndpointURI*> EndpointURIList;
     EndpointURIList   endpoints;
     _CORBA_String_var publish;
+
+    // Backwards-compatibility:
+    EndpointURIList   no_listen;
     CORBA::Boolean    publish_all;
   };
 

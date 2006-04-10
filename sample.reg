@@ -587,19 +587,22 @@ traceTime = "0"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; endPoint
 ; endPointNoPublish
-; endPointNoListen
-; endPointPublishAllIFs
 ;
-;    There are 3 possible way to specify the endpoints a server should create.
-;    The 3 forms differ in the following ways:
+;    These options cause the server to listen on specific endpoints,
+;    and provide endpoints to be published in IORs..
+;
+;    There are two possible ways to specify the endpoints a server
+;    should create.
+;
+;    The two forms differ in the following ways:
 ;         endPoint - create, listen on the connection and publish it in IORs
 ;         endPointNoPublish - same as endPoint but do not publish it in IORs
-;         endPointNoListen - only publish it in IORs
 ;
-;    There can be more than one configuration line defining endPoints.
-;    Each line adds one endpoint to the server.
+;    See the endPointPublish parameter for further options about
+;    details to publish in IORs.
 ;
-;    Each configuration line can start with the key 'endPoint', e.g.
+;    There can be more than one entry defining endPoints. Each entry adds
+;    one endpoint to the server. e.g.
 ;
 ;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPoint]
 ;"0" = "giop:tcp:neem:12345"
@@ -672,44 +675,76 @@ traceTime = "0"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPointNoPublish]
 
-[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPointNoListen]
-
 [HKEY_LOCAL_MACHINE\SOFTWARE\omniORB]
-; "endPointPublishAllIFs" = "1"
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; endPointPublishHostname
-; endPointResolveNames
+; endPointPublish
 ;
-;   If the address for a TCP endPoint is not specified, omniORB
-;   normally publishes the server's IP address (or addresses if
-;   endPointPublishAllIFs is true) in object references. These
-;   parameters cause names to be published instead.
+;    Servers listen on a number of endpoints, controlled by the
+;    endPoint and endPointNoPublish parameters. For clients to be able
+;    to connect to the server, details about the endpoints must be
+;    published in the server's IORs. Endpoints to be published are
+;    chosen according to the endPointPublish parameter.
 ;
-;   If endPointPublishHostname is set to 1, omniORB publishes the
-;   result of the gethostname() system call in the primary IIOP
-;   profile.
+;    endPointPublish contains a comma-separated list of publish rules.
+;    The rules are applied in turn to each of the configured
+;    endpoints; if a rule matches an endpoint, it causes one or more
+;    endpoints to be published.
 ;
-;   It is platform and configuration dependent whether the result of
-;   gethostname() is a fully qualified domain name or not. If
-;   endPointPublishHostname is set to 2, the result of gethostname()
-;   is given to gethostbyname() in an attempt to fully qualify the
-;   name. On some misconfigured machines, that may result in an invalid
-;   name.
+;    The following core rules are supported:
 ;
-;   Alternatively, setting endPointResolveNames causes omniORB to
-;   attempt to use gethostbyaddr() to resolve the IP addresses it
-;   would normally publish. In this way, in conjunction with the
-;   endPointPublishAllIFs parameter, names for all network interfaces
-;   can be published. If endPointResolveNames is set to 1, only
-;   addresses that can be resolved to names are published; if it is
-;   set to 2, any addresses that do not resolve to names are published
-;   as addresses.
-
-"endPointPublishHostname" = "0"
-"endPointResolveNames" = "0"
-
+;        addr      -- the first natural address of the endpoint
+;        ipv4      -- the first IPv4 address of a TCP or SSL endpoint
+;        ipv6      -- the first IPv6 address of a TCP or SSL endpoint
+;        name      -- the first address that can be resolved to a name
+;        hostname  -- the result of the gethostname() system call
+;        fqdn      -- the fully-qualified domain name
+;
+;    The core rules can be combined using the vertical bar operator to
+;    try several rules in turn until one succeeds. e.g:
+;
+;        name|ipv6|ipv4
+;                  -- the name of the endpoint if it has one;
+;                     failing that, its first IPv6 address;
+;                     failing that, its first IPv4 address.
+;
+;    Multiple rules can be combined using the comma operator to
+;    publish more than one endpoint. e.g.
+;
+;        name,addr -- the name of the endpoint (if it has one),
+;                     followed by its first address.
+;
+;    For endpoints with multiple addresses (e.g. TCP endpoints on
+;    multi-homed machines), the all() manipulator causes all addresses
+;    to be published. e.g.:
+;
+;        all(addr) -- all addresses are published
+;        all(name) -- all addresses that resolve to names are published
+;
+;        all(name|addr)
+;                  -- all addresses are published by name if they have
+;                     one, address otherwise.
+;
+;        all(name,addr)
+;                  -- all addresses are published by name (if they
+;                     have one), and by address.
+;
+;        all(name),all(addr)
+;                  -- first the names of all addresses are published,
+;                     followed by all the addresses.
+;
+;    A specific endpoint can be published by giving its endpoint URI,
+;    even if the server is not listening on that endpoint. e.g.:
+;
+;        giop:tcp:not.my.host:12345
+;        giop:unix:/not/my/socket-file
+;
+;    If the host or port number for a TCP or SSL URI are missed out,
+;    they are filled in with the details from each listening TCP/SSL
+;    endpoint. This can be used to publish a different name for a
+;    TCP/SSL endpoint that is using an ephemeral port.
+;
+;"endPointPublish" = "addr"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; serverTransportRule

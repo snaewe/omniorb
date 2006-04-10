@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.7  2006/04/10 12:50:35  dgrisby
+  More endPointPublish; support for deprecated endPointNoListen,
+  endPointPublishAllIFs.
+
   Revision 1.1.6.6  2005/09/19 18:26:33  dgrisby
   Merge from omni4_0_develop again.
 
@@ -228,6 +232,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_116 OMNIORBMinorCode(116)
 #define OMNIORBMinorCode_117 OMNIORBMinorCode(117)
 #define OMNIORBMinorCode_118 OMNIORBMinorCode(118)
+#define OMNIORBMinorCode_119 OMNIORBMinorCode(119)
 
 #define OMNI_COMMA ,
 #define DeclareValue(name,value) name = value
@@ -567,15 +572,16 @@ enum INTF_REPOS_minor {
 // INITIALIZE
 #define DECLARE_INITIALIZE_minors(code,sep) \
 \
-code( INITIALIZE_TransportError       , OMNIORBMinorCode_13 ) sep \
-code( INITIALIZE_InvalidORBInitArgs   , OMNIORBMinorCode_30 ) sep \
-code( INITIALIZE_FailedBOAInit        , OMNIORBMinorCode_31 ) sep \
-code( INITIALIZE_FailedPOAInit        , OMNIORBMinorCode_32 ) sep \
-code( INITIALIZE_FailedORBInit        , OMNIORBMinorCode_44 ) sep \
-code( INITIALIZE_FailedLoadLibrary    , OMNIORBMinorCode_45 ) sep \
-code( INITIALIZE_ConfigFileError      , OMNIORBMinorCode_50 ) sep \
-code( INITIALIZE_NotOmniThread        , OMNIORBMinorCode_56 ) sep \
-code( INITIALIZE_CannotOpenLogFile    , OMNIORBMinorCode_118 )
+code( INITIALIZE_TransportError        , OMNIORBMinorCode_13 ) sep \
+code( INITIALIZE_InvalidORBInitArgs    , OMNIORBMinorCode_30 ) sep \
+code( INITIALIZE_FailedBOAInit         , OMNIORBMinorCode_31 ) sep \
+code( INITIALIZE_FailedPOAInit         , OMNIORBMinorCode_32 ) sep \
+code( INITIALIZE_FailedORBInit         , OMNIORBMinorCode_44 ) sep \
+code( INITIALIZE_FailedLoadLibrary     , OMNIORBMinorCode_45 ) sep \
+code( INITIALIZE_ConfigFileError       , OMNIORBMinorCode_50 ) sep \
+code( INITIALIZE_NotOmniThread         , OMNIORBMinorCode_56 ) sep \
+code( INITIALIZE_CannotOpenLogFile     , OMNIORBMinorCode_118 ) sep \
+code( INITIALIZE_EndpointPublishFailure, OMNIORBMinorCode_119 )
 
 
 enum INITIALIZE_minor {

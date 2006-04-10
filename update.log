@@ -1,3 +1,18 @@
+Mon Apr 10 13:44:45 BST 2006 dgrisby
+====================================
+
+- More endPointPublish; support for deprecated endPointNoListen,
+  endPointPublishAllIFs.
+
+sample.cfg
+sample.reg
+include/omniORB4/minorCode.h
+include/omniORB4/internal/objectAdapter.h
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Sun Apr  9 20:49:20 BST 2006 dgrisby
 ====================================
 

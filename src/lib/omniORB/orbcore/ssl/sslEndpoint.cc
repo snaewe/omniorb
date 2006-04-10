@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2006/04/10 12:50:35  dgrisby
+  More endPointPublish; support for deprecated endPointNoListen,
+  endPointPublishAllIFs.
+
   Revision 1.1.4.7  2006/04/09 19:52:31  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -195,7 +199,7 @@ publish_one(const char*    	     publish_spec,
 	  << "' in publish specification.";
       }
       OMNIORB_THROW(INITIALIZE,
-		    INITIALIZE_InvalidORBInitArgs,
+		    INITIALIZE_EndpointPublishFailure,
 		    CORBA::COMPLETED_NO);
     }
     if (strlen(host) == 0)
@@ -287,6 +291,15 @@ sslEndpoint::publish(const orbServer::PublishSpecs& publish_specs,
   CORBA::ULong i, j;
   CORBA::Boolean result = 0;
 
+  if (publish_specs.length() == 1 &&
+      omni::strMatch(publish_specs[0], "fail-if-multiple") &&
+      pd_addresses.length() > 1) {
+
+    omniORB::logs(1, "SSL endpoint has multiple addresses. "
+		  "You must choose one to listen on.");
+    OMNIORB_THROW(INITIALIZE, INITIALIZE_TransportError,
+		  CORBA::COMPLETED_NO);
+  }
   for (i=0; i < pd_addresses.length(); ++i) {
 
     CORBA::Boolean ok = 0;
