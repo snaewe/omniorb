@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.43  2006/04/12 17:28:58  dgrisby
+  Log a message if there are objects in the object table at shutdown time.
+
   Revision 1.2.2.42  2006/01/23 15:49:45  dgrisby
   GCC on Windows doesn't have exception handling functions. Thanks
   Andrew Miller.
@@ -1604,6 +1607,13 @@ public:
   }
 
   void detach() {
+    if (numObjectsInTable && omniORB::trace(1)) {
+      omniORB::logger l;
+      l << "Error: the object table still contains "
+	<< numObjectsInTable << " entr"
+	<< (numObjectsInTable == 1 ? "y" : "ies")
+	<< " at ORB shutdown time.";
+    }
     OMNIORB_ASSERT(numObjectsInTable == 0);
     delete [] objectTable;
     objectTable = 0;
