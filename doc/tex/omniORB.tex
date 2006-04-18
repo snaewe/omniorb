@@ -2807,6 +2807,7 @@ These parameters affect server-side operations.
 \noindent
 \code{endPoint~~~~~~~~~} ~~ \textit{default} = \code{giop:tcp::}\\
 \code{endPointNoListen}\\
+\code{endPointPublish}\\
 \code{endPointNoPublish}\\
 \code{endPointPublishAllIFs}\\[.1ex]
 
@@ -4520,27 +4521,27 @@ when it is useful to publish different information.
 
 Details are selected with the \code{endPoint} family of parameters.
 The simplest is plain \code{endPoint}, which chooses a transport and
-interface details, and publishes the information in IORs. End point
+interface details, and publishes the information in IORs. Endpoint
 parameters are in the form of URIs, with a scheme name of
 `\code{giop:}', followed by the transport name. Different transports
 have different parameters following the transport.
 
-TCP end points have the format:
+TCP endpoints have the format:
 
 \begin{quote}
 \code{giop:tcp:}\textit{<host>}\code{:}\textit{<port>}
 \end{quote}
 
-\noindent The host must be a valid host name for the server machine.
-It determines the network interface on which the server listens. The
-port selects the TCP port to listen on, which must be unoccupied.
-Either the host or port, or both can be left empty. If the host is
-empty, the ORB publishes the IP address of the first non-loopback
-network interface it can find (or the loopback if that is the only
-interface), but listens on \emph{all} network interfaces. If the port
-is empty, the operating system chooses a port.
+\noindent The host must be a valid host name or IP address for the
+server machine.  It determines the network interface on which the
+server listens. The port selects the TCP port to listen on, which must
+be unoccupied.  Either the host or port, or both can be left empty. If
+the host is empty, the ORB publishes the IP address of the first
+non-loopback network interface it can find (or the loopback if that is
+the only interface), but listens on \emph{all} network interfaces. If
+the port is empty, the operating system chooses a port.
 
-Multiple TCP end points can be selected, either to specify multiple
+Multiple TCP endpoints can be selected, either to specify multiple
 network interfaces on which to listen, or (less usefully) to select
 multiple TCP ports on which to listen.
 
@@ -4549,8 +4550,8 @@ parameter of \code{giop:tcp::}, meaning IORs contain the address of
 the first non-loopback network interface, the ORB listens on all
 interfaces, and the OS chooses a port number.
 
-SSL end points have the same format as TCP ones, except `\code{tcp}'
-is replaced with `\code{ssl}'. Unix domain socket end points have the
+SSL endpoints have the same format as TCP ones, except `\code{tcp}'
+is replaced with `\code{ssl}'. Unix domain socket endpoints have the
 format:
 
 \begin{quote}
@@ -4561,31 +4562,146 @@ format:
 filesystem. If the filename is left blank, the ORB chooses a name
 based on the process id and a timestamp.
 
+To listen on an endpoint without publishing it in IORs, specify it
+with the \code{endPointNoPublish} configuration parameter. See below
+for more details about endpoint publishing.
 
-\subsection{End point publishing}
 
-To publish an end point in IORs, without actually listening on that
-end point, the \code{endPointNoListen} parameter can be set. This can
-be useful in fault-tolerant applications where replicas of an object
-can be contacted at more than one server. \code{endPointNoListen} does
-not check that the transport specified is sensible for the current
-machine, so it allows the address of a different machine to be
-specified.
+\subsection{IPv6}
 
-Similarly, but less likely to be useful, it is possible to ask the
-server to listen on an end point, but not publish the details in IORs,
-using the \code{endPointNoPublish} parameter. This should \emph{not}
-be used for security by obscurity!
+On platforms where it is available, omniORB supports IPv6. On most
+Unix platforms, IPv6 sockets accept both IPv6 and IPv4 connections, so
+omniORB's default \code{giop:tcp::} endpoint accepts both IPv4 and
+IPv6 connections. On Windows, each socket type only accepts incoming
+connections of the same type, so an IPv6 socket cannot be used with
+IPv4 clients. For this reason, the default \code{giop:tcp::} endpoint
+only listens for IPv4 connections. Since endpoints with a specific
+host name or address only listen on a single network interface, they
+are inherently limited to just one protocol family.
 
-If a machine has multiple TCP network interfaces, it may be useful to
-publish all interfaces, instead of just the first one. This is
-necessary if different interfaces are on separate non-gatewayed
-subnets, for example. Publishing all addresses could be achieved with
-lots of \code{endPoint} parameters, but a short-hand is to set the
-\code{endPointPublishAllIFs} parameter to 1. That (in conjunction with
-a `\code{giop:tcp::}' transport selection without a specific hostname)
-causes all the machine's non-loopback interfaces to be published in
-IORs.
+To explicitly ask for just IPv4 or just IPv6, an endpoint with the
+wildcard address for the protocol family should be used. For IPv4, the
+wildcard address is `\code{0.0.0.0}', and for IPv6 it is `\code{::}'.
+So, to listen for IPv4 connections on all IPv4 network interfaces, use
+an endpoint of:
+
+\begin{quote}
+\code{giop:tcp:0.0.0.0:}
+\end{quote}
+
+\noindent All IPv6 addresses contain colons, so the address portion in
+URIs must be contained within \code{[]} characters. Therefore, to
+listen just for IPv6 connections on all IPv6 interfaces, use the
+somewhat cryptic:
+
+\begin{quote}
+\code{giop:tcp:[::]:}
+\end{quote}
+
+\noindent To listen for both IPv4 and IPv6 connections on Windows,
+both endpoints must be explicitly provided.
+
+
+\subsection{Endpoint publishing}
+
+For clients to be able to connect to a server, the server publishes
+endpoint information in its IORs (Interoperable Object References).
+Normally, omniORB publishes the first available address for each of
+the endpoints it is listening on.
+
+The endpoint information to publish is determined by the
+\code{endPointPublish} configuration parameter. It contains a
+comma-separated list of publish rules. The rules are applied in turn
+to each of the configured endpoints; if a rule matches an endpoint, it
+causes one or more endpoints to be published.
+
+The following core rules are supported:
+
+\vspace{\baselineskip}
+
+\begin{tabular}{p{.25\textwidth}p{.75\textwidth}}
+\code{addr} &     the first natural address of the endpoint\\
+\code{ipv4} &     the first IPv4 address of a TCP or SSL endpoint\\
+\code{ipv6} &     the first IPv6 address of a TCP or SSL endpoint\\
+\code{name} &     the first address that can be resolved to a name\\
+\code{hostname} & the result of the gethostname() system call\\
+\code{fqdn} &     the fully-qualified domain name\\
+\end{tabular}
+
+\vspace{\baselineskip}
+
+\noindent
+The core rules can be combined using the vertical bar operator to
+try several rules in turn until one succeeds. e.g:
+
+\vspace{\baselineskip}
+
+\begin{tabular}{p{.25\textwidth}p{.65\textwidth}}
+\code{name|ipv6|ipv4} & the name of the endpoint if it has one;
+                 	failing that, its first IPv6 address;
+                 	failing that, its first IPv4 address.
+\end{tabular}
+
+\vspace{\baselineskip}
+
+\noindent
+Multiple rules can be combined using the comma operator to
+publish more than one endpoint. e.g.
+
+\vspace{\baselineskip}
+
+\begin{tabular}{p{.25\textwidth}p{.65\textwidth}}
+\code{name,addr} & the name of the endpoint (if it has one),
+                   followed by its first address.
+\end{tabular}
+
+\vspace{\baselineskip}
+
+\noindent
+For endpoints with multiple addresses (e.g. TCP endpoints on
+multi-homed machines), the \code{all()} manipulator causes all
+addresses to be published. e.g.:
+
+\vspace{\baselineskip}
+
+\begin{tabular}{p{.25\textwidth}p{.65\textwidth}}
+\code{all(addr)} & all addresses are published\\
+\code{all(name)} & all addresses that resolve to names are published\\
+\code{all(name|addr)} & all addresses are published by name if they have
+                        one, address otherwise.\\
+\code{all(name,addr)} & all addresses are published by name (if they
+                        have one), and by address.\\
+\code{all(name), all(addr)} & first the names of all addresses are published,
+                             followed by all the addresses.\\
+\end{tabular}
+
+\vspace{\baselineskip}
+
+\noindent
+A specific endpoint can be published by giving its endpoint URI,
+even if the server is not listening on that endpoint. e.g.:
+
+\vspace{\baselineskip}
+
+\begin{tabular}{p{.25\textwidth}p{.65\textwidth}}
+\code{giop:tcp:not.my.host:12345}\\
+\code{giop:unix:/not/my/socket-file}\\
+\end{tabular}
+
+\vspace{\baselineskip}
+
+\noindent
+If the host or port number for a TCP or SSL URI are missed out,
+they are filled in with the details from each listening TCP/SSL
+endpoint. This can be used to publish a different name for a
+TCP/SSL endpoint that is using an ephemeral port, for example.
+
+omniORB 4.0 supported two options related to endpoint publishing that
+are superseded by the \code{endPointPublish} parameter, and so are now
+deprecated. Setting \code{endPointPublishAllIFs} to 1 is equivalent to
+using an \code{endPointPublish} of `\code{all(addr)}'. The
+\code{endPointNoListen} parameter is equivalent to adding endpoint
+URIs to the \code{endPointPublish} parameter.
 
 
 
