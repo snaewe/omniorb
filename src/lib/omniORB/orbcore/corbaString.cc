@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.17.2.11  2006/04/18 14:55:53  dgrisby
+  More consistent handling of invalid zero-length strings.
+
   Revision 1.17.2.10  2002/01/02 18:15:42  dpg1
   Platform fixes/additions.
 
@@ -172,6 +175,10 @@ CORBA::string_dup(const char* p)
 char*
 cdrStream::unmarshalRawString() {
   _CORBA_ULong len; len <<= *this;
+
+  if (len == 0)
+    OMNIORB_THROW(MARSHAL,MARSHAL_StringNotEndWithNull,
+		  (CORBA::CompletionStatus)completion());
 
   if (!checkInputOverrun(1, len))
     OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
