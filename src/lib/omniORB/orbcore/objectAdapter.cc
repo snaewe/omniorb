@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.9  2006/04/18 14:14:41  dgrisby
+ Compatibility with 4.0's fail-if-multiple option.
+
  Revision 1.5.2.8  2006/04/10 12:50:35  dgrisby
  More endPointPublish; support for deprecated endPointNoListen,
  endPointPublishAllIFs.
@@ -884,6 +887,11 @@ public:
 	strlen(omniObjAdapter::options.publish) == 0) {
 
       omniObjAdapter::options.publish = (const char*)"addr";
+    }
+
+    if (omni::strMatch(omniObjAdapter::options.publish, "fail-if-multiple")) {
+      // Backwards compatibility with 4.0.x.
+      omniObjAdapter::options.publish = (const char*)"fail-if-multiple,addr";
     }
 
     // Handle deprecated endPointPublishAllIFs and endPointNoListen

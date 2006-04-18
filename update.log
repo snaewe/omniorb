@@ -1,3 +1,17 @@
+Tue Apr 18 15:12:39 BST 2006 dgrisby
+====================================
+
+- Document IPv6 changes.
+
+doc/omniORB.pdf
+doc/omniORB.ps
+doc/tex/omniORB.tex
+
+- Compatibility with 4.0's fail-if-multiple option.
+
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Mon Apr 10 13:44:45 BST 2006 dgrisby
 ====================================
 
