@@ -1,3 +1,17 @@
+Tue Apr 18 15:55:18 BST 2006 dgrisby
+====================================
+
+- More consistent handling of invalid zero-length strings.
+
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+- Tweak SSL security options.
+
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+
 Tue Apr 18 11:01:42 BST 2006 dgrisby
 ====================================
 
