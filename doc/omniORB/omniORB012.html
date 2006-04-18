@@ -18,14 +18,14 @@ Packaging stubs into DLLs
 <A HREF="omniORB013.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1 CLASS="chapter"><A NAME="htoc135">Chapter&nbsp;12</A>&nbsp;&nbsp;Packaging stubs into DLLs</H1>
+<H1 CLASS="chapter"><A NAME="htoc136">Chapter&nbsp;12</A>&nbsp;&nbsp;Packaging stubs into DLLs</H1>
 <A NAME="chap:dlls"></A>
 omniORB's stubs can be packaged into shared libraries or DLLs. On Unix
 platforms this is mostly painless, but on Windows things are slightly
 more tricky.<BR>
 <BR>
 <A NAME="toc55"></A>
-<H2 CLASS="section"><A NAME="htoc136">12.1</A>&nbsp;&nbsp;Dynamic loading and unloading</H2>
+<H2 CLASS="section"><A NAME="htoc137">12.1</A>&nbsp;&nbsp;Dynamic loading and unloading</H2>
 As long as your platform supports running static initialisers and
 destructors as libraries are loaded and unloaded, you can package
 stubs into shared libraries / DLLs, and load them dynamically at
@@ -44,14 +44,14 @@ as they are unloaded. You must not create _vars at global scope if
 you are using <TT>OMNI_UNLOADABLE_STUBS</TT>.<BR>
 <BR>
 <A NAME="toc56"></A>
-<H2 CLASS="section"><A NAME="htoc137">12.2</A>&nbsp;&nbsp;Windows DLLs</H2>
+<H2 CLASS="section"><A NAME="htoc138">12.2</A>&nbsp;&nbsp;Windows DLLs</H2>
 On Unix platforms, the linker figures out how to link the symbols
 exported by a library in to the running program. On Windows,
 unfortunately, you have to tell the linker where symbols are coming
 from. This causes all manner of difficulties.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc138">12.2.1</A>&nbsp;&nbsp;Exporting symbols</H3>
+<H3 CLASS="subsection"><A NAME="htoc139">12.2.1</A>&nbsp;&nbsp;Exporting symbols</H3>
 To (statically) link with a DLL file in Windows, you link with a LIB
 file which references the symbols exported from the DLL. To build the
 LIB and DLL files, the correct symbols must be exported. One way to do
@@ -91,7 +91,7 @@ Of course, you can link together many separate C++ files, rather than
 just the one shown here.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc139">12.2.2</A>&nbsp;&nbsp;Importing constant symbols</H3>
+<H3 CLASS="subsection"><A NAME="htoc140">12.2.2</A>&nbsp;&nbsp;Importing constant symbols</H3>
 As if exporting the symbols from a DLL was not complicated enough, any
 constant values exported by a DLL have to be explicitly
 <EM>imported</EM> into the code using them. omniORB's stub files declare

@@ -18,7 +18,7 @@ Objects by value, etc.
 <A HREF="omniORB014.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1 CLASS="chapter"><A NAME="htoc140">Chapter&nbsp;13</A>&nbsp;&nbsp;Objects by value, abstract interfaces and local interfaces</H1>
+<H1 CLASS="chapter"><A NAME="htoc141">Chapter&nbsp;13</A>&nbsp;&nbsp;Objects by value, abstract interfaces and local interfaces</H1>
 <A NAME="chap:valuetype"></A>
 omniORB 4.1 supports objects by value, declared with the
 <TT>valuetype</TT> keyword in IDL, and both abstract and local
@@ -29,7 +29,7 @@ CORBA 2.6 specification, and sections 1.17, 1.18 and 1.35 of the C++
 mapping specification, version 1.1.<BR>
 <BR>
 <A NAME="toc57"></A>
-<H2 CLASS="section"><A NAME="htoc141">13.1</A>&nbsp;&nbsp;Features</H2>
+<H2 CLASS="section"><A NAME="htoc142">13.1</A>&nbsp;&nbsp;Features</H2>
 omniORB supports the complete objects by value specification, with the
 exception of custom valuetypes. All other valuetype features including
 value boxes, value sharing semantics, abstract valuetypes, and
@@ -38,7 +38,7 @@ with a number of caveats outlined in
 section&nbsp;<A HREF="#sec:LocalInterfaces">13.8</A>.<BR>
 <BR>
 <A NAME="toc58"></A>
-<H2 CLASS="section"><A NAME="htoc142">13.2</A>&nbsp;&nbsp;Reference counting</H2>
+<H2 CLASS="section"><A NAME="htoc143">13.2</A>&nbsp;&nbsp;Reference counting</H2>
 Values are reference counted. This means that, as long as your
 application properly manages reference counts, values are usually
 automatically deleted when they are no longer required. However, one
@@ -52,7 +52,7 @@ reference cycles in values it manipulates. This includes graphs of
 values received as parameters and return values from CORBA operations.<BR>
 <BR>
 <A NAME="toc59"></A>
-<H2 CLASS="section"><A NAME="htoc143">13.3</A>&nbsp;&nbsp;Value sharing and local calls</H2>
+<H2 CLASS="section"><A NAME="htoc144">13.3</A>&nbsp;&nbsp;Value sharing and local calls</H2>
 When valuetypes are passed as parameters in CORBA calls (i.e. calls
 on CORBA objects declared with <TT>interface</TT> in IDL), the structure
 of related values is maintained. Consider, for example, the following
@@ -95,7 +95,7 @@ values). To choose this option, set the <TT>copyValuesInLocalCalls</TT>
 configuration parameter to zero.<BR>
 <BR>
 <A NAME="toc60"></A>
-<H2 CLASS="section"><A NAME="htoc144">13.4</A>&nbsp;&nbsp;Value box factories</H2>
+<H2 CLASS="section"><A NAME="htoc145">13.4</A>&nbsp;&nbsp;Value box factories</H2>
 With normal valuetypes, omniidl generates factory classes (with names
 ending <TT>_init</TT>) as required by the C++ mapping specification.
 The application is responsible for registering the factories with the
@@ -109,13 +109,13 @@ application visible factories, and the application <EM>does</EM> have to
 register the factories with the ORB.<BR>
 <BR>
 <A NAME="toc61"></A>
-<H2 CLASS="section"><A NAME="htoc145">13.5</A>&nbsp;&nbsp;Standard value boxes</H2>
+<H2 CLASS="section"><A NAME="htoc146">13.5</A>&nbsp;&nbsp;Standard value boxes</H2>
 The standard <TT>CORBA::StringValue</TT> and <TT>CORBA::WStringValue</TT>
 value boxes are available to application code. To make the definitions
 available in IDL, #include the standard <TT>orb.idl</TT>.<BR>
 <BR>
 <A NAME="toc62"></A>
-<H2 CLASS="section"><A NAME="htoc146">13.6</A>&nbsp;&nbsp;Covariant returns</H2>
+<H2 CLASS="section"><A NAME="htoc147">13.6</A>&nbsp;&nbsp;Covariant returns</H2>
 As required by the C++ mapping, on C++ compilers that support
 covariant return types, omniidl generates code for the
 <TT>_copy_value()</TT> function that returns the most derived type of the
@@ -132,7 +132,7 @@ account of the <TT>OMNI_HAVE_COVARIANT_RETURNS</TT> preprocessor
 definition.<BR>
 <BR>
 <A NAME="toc63"></A>
-<H2 CLASS="section"><A NAME="htoc147">13.7</A>&nbsp;&nbsp;Values inside Anys</H2>
+<H2 CLASS="section"><A NAME="htoc148">13.7</A>&nbsp;&nbsp;Values inside Anys</H2>
 Valuetypes inserted into Anys cause a number of interesting issues.
 Even when inside Anys, values are required to support complete sharing
 semantics. Take this IDL for example:<BR>
@@ -201,14 +201,14 @@ mix valuetypes and Anys in a single operation, and certainly to avoid
 trying to share plain values with values inside Anys.<BR>
 <BR>
 <A NAME="toc64"></A>
-<H2 CLASS="section"><A NAME="htoc148">13.8</A>&nbsp;&nbsp;Local Interfaces</H2>
+<H2 CLASS="section"><A NAME="htoc149">13.8</A>&nbsp;&nbsp;Local Interfaces</H2>
 <A NAME="sec:LocalInterfaces"></A>
 Local interfaces are somewhat under-specified in the C++ mapping. This
 section outlines the way local interfaces are supported in omniORB,
 and details the limitations and issues.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc149">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3>
+<H3 CLASS="subsection"><A NAME="htoc150">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3>
 With simple IDL, there are no particular issues:<BR>
 <BR>
 <DIV CLASS="lstlisting"><TT><B>module</B> Test {</TT><TT>
@@ -231,7 +231,7 @@ within the implementation class. Make sure that the implementations
 are thread safe.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc150">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3>
+<H3 CLASS="subsection"><A NAME="htoc151">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3>
 Local interfaces can inherit from unconstrained (i.e. non-local)
 interfaces:<BR>
 <BR>
@@ -288,7 +288,7 @@ interfaces, you should compile all your IDL with the omniidl flags:
 <TT>-Wbvirtual_objref -Wbimpl_mapping</TT>
 </BLOCKQUOTE>
 
-<H3 CLASS="subsection"><A NAME="htoc151">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3>
+<H3 CLASS="subsection"><A NAME="htoc152">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3>
 According to the IDL specification, it should be possible to declare a
 valuetype that supports a local interface:<BR>
 <BR>
