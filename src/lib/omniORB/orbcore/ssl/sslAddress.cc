@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2006/04/19 11:34:42  dgrisby
+  Poking an address created a new client-side connection object that
+  registered itself in the SocketCollection. Since it did this while
+  holding the giopServer's lock, that violated the partial lock order,
+  and could lead to a deadlock.
+
   Revision 1.1.2.16  2004/10/17 20:14:33  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -390,6 +396,43 @@ sslAddress::Connect(unsigned long deadline_secs,
       OMNIORB_ASSERT(0);
     }
   }
+}
+
+CORBA::Boolean
+sslAddress::Poke() const {
+
+  SocketHandle_t sock;
+
+  if (pd_address.port == 0) return 0;
+
+  LibcWrapper::AddrInfo_var ai;
+  ai = LibcWrapper::getAddrInfo(pd_address.host, pd_address.port);
+
+  if ((LibcWrapper::AddrInfo*)ai == 0)
+    return 0;
+
+  if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET)
+    return 0;
+
+  if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {
+    CLOSESOCKET(sock);
+    return 0;
+  }
+
+  if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
+
+    if (ERRNO != EINPROGRESS) {
+      CLOSESOCKET(sock);
+      return 0;
+    }
+  }
+
+  // The connect has not necessarily completed by this stage, but
+  // we've done enough to poke the endpoint. We do not bother with the
+  // SSL handshake, so the accepting thread will get an error when it
+  // tries to do the SSL accept.
+  CLOSESOCKET(sock);
+  return 1;
 }
 
 

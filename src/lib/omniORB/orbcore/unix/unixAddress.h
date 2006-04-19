@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2006/04/19 11:34:39  dgrisby
+  Poking an address created a new client-side connection object that
+  registered itself in the SocketCollection. Since it did this while
+  holding the giopServer's lock, that violated the partial lock order,
+  and could lead to a deadlock.
+
   Revision 1.1.2.1  2001/08/06 15:47:44  sll
   Added support to use the unix domain socket as the local transport.
 
@@ -48,7 +54,7 @@ class unixAddress : public giopAddress {
   giopAddress* duplicate() const;
   giopActiveConnection* Connect(unsigned long deadline_secs = 0,
 				unsigned long deadline_nanosecs = 0) const;
-
+  CORBA::Boolean Poke() const;
   ~unixAddress() {}
 
  private:

@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.22.2.48  2006/04/19 11:34:42  dgrisby
+  Poking an address created a new client-side connection object that
+  registered itself in the SocketCollection. Since it did this while
+  holding the giopServer's lock, that violated the partial lock order,
+  and could lead to a deadlock.
+
   Revision 1.22.2.47  2006/04/18 10:03:14  dgrisby
   Additional shutdown logging.
 
@@ -658,6 +664,7 @@ giopServer::deactivate()
     }
 
     omni_thread::get_time(&s, &ns, timeout);
+
     int go = 1;
     while (go && pd_rendezvousers.next != & pd_rendezvousers) {
       go = pd_cond.timedwait(s, ns);
@@ -1030,7 +1037,7 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
 
   delete r;
 
-  if (exit_on_error) {
+  if (exit_on_error && pd_state != INFLUX) {
     if (omniORB::trace(1)) {
       omniORB::logger log;
       log << "Unrecoverable error for this endpoint: ";

@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2006/04/19 11:34:39  dgrisby
+  Poking an address created a new client-side connection object that
+  registered itself in the SocketCollection. Since it did this while
+  holding the giopServer's lock, that violated the partial lock order,
+  and could lead to a deadlock.
+
   Revision 1.1.2.2  2002/08/21 06:23:16  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -72,6 +78,7 @@ private:
   SocketHandle_t                   pd_new_conn_socket;
   giopConnection::notifyReadable_t pd_callback_func;
   void*                            pd_callback_cookie;
+  CORBA::Boolean                   pd_poked;
 
   unixEndpoint();
   unixEndpoint(const unixEndpoint&);

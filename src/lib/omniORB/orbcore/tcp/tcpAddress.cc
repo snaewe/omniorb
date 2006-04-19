@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2006/04/19 11:34:41  dgrisby
+  Poking an address created a new client-side connection object that
+  registered itself in the SocketCollection. Since it did this while
+  holding the giopServer's lock, that violated the partial lock order,
+  and could lead to a deadlock.
+
   Revision 1.1.2.16  2004/10/17 20:14:33  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -178,30 +184,6 @@ tcpAddress::Connect(unsigned long deadline_secs,
 
 #if !defined(USE_NONBLOCKING_CONNECT)
 
-#if defined(__VMS)
-  if (deadline_secs || deadline_nanosecs) {
-    SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
-    if (t.tv_sec == 0 && t.tv_usec == 0) {
-      // Already timeout.
-      CLOSESOCKET(sock);
-      return 0;
-    }
-    // Sadly, 1 second is the best we can do (in fact, the tcp docs
-    // are a little hazy on this.  It looks like the sysconfig
-    // settable default value is in half seconds, but the setsockopt
-    // value is in seconds...)
-    int sec=t.tv_sec;
-    if (sec==0)
-      sec=1;
-    else if (tv.tv_usec > 500000)
-      ++sec;
-    if (setsockopt(sock,IPPROTO_TCP,TCP_KEEPINIT,
-                   (char*)&sec,sizeof(sec)) ==  RC_INVALID_SOCKET) {
-      CLOSESOCKET(sock);
-      return 0;
-    }
-  }
-#endif
   if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
     CLOSESOCKET(sock);
     return 0;
@@ -304,5 +286,54 @@ tcpAddress::Connect(unsigned long deadline_secs,
 #endif
 }
 
+
+/////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+tcpAddress::Poke() const {
+
+  SocketHandle_t sock;
+
+  if (pd_address.port == 0) return 0;
+
+  LibcWrapper::AddrInfo_var ai;
+  ai = LibcWrapper::getAddrInfo(pd_address.host, pd_address.port);
+
+  if ((LibcWrapper::AddrInfo*)ai == 0)
+    return 0;
+
+  if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET)
+    return 0;
+
+#if !defined(USE_NONBLOCKING_CONNECT)
+
+  if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
+    CLOSESOCKET(sock);
+    return 0;
+  }
+  CLOSESOCKET(sock);
+  return 1;
+
+#else
+
+  if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {
+    CLOSESOCKET(sock);
+    return 0;
+  }
+
+  if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
+
+    if (ERRNO != EINPROGRESS) {
+      CLOSESOCKET(sock);
+      return 0;
+    }
+  }
+
+  // The connect has not necessarily completed by this stage, but
+  // we've done enough to poke the endpoint.
+  CLOSESOCKET(sock);
+  return 1;
+
+#endif
+}
 
 OMNI_NAMESPACE_END(omni)
