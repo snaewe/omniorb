@@ -1,3 +1,15 @@
+Fri Apr 21 15:37:06 BST 2006 dgrisby
+====================================
+
+- Typo in comment.
+
+include/omniORB4/internal/libcWrapper.h
+
+- IPv6 support in transport rules.
+
+src/lib/omniORB/orbcore/transportRules.cc
+
+
 Tue Apr 18 15:39:13 BST 2006 dgrisby
 ====================================
 

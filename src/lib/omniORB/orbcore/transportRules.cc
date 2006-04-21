@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2006/04/21 14:40:39  dgrisby
+  IPv6 support in transport rules.
+
   Revision 1.1.4.3  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -65,6 +68,7 @@
 */
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/omniURI.h>
 #include <orbOptions.h>
 #include <transportRules.h>
 #include <initialiser.h>
@@ -183,35 +187,16 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// *** HERE: IPv6
-static char* extractIPv4(const char* endpoint) {
-  // returns the ipv4 address if there is one in the endpoint string.
-  // To maximise the kind of endpoint we understand,
-  // we assume that any endpoint which has an IPv4 address would be
-  // of this form:   giop:*:w.x.y.z:*
-  // This is certainly true for giop:tcp and giop:ssl
+static char* extractHost(const char* endpoint) {
+  // Returns the host address if there is one in the endpoint string.
 
-  const char* p = strchr(endpoint,':');
-  if (p) p = strchr(p+1,':');
+  // Skip giop:tcp: or equivalent.
+  const char* p = strchr(endpoint, ':');
+  if (p) p = strchr(p+1, ':');
   if (p) {
-    p++;
-    const char* q = strchr(p,':');
-    if (!q) return 0;
-    CORBA::ULong l = q - p;
-    if (l) {
-      CORBA::String_var ipv4(CORBA::string_alloc(l));
-      strncpy(ipv4,p,l);
-      *((char*)ipv4+l) = '\0';
-      if ( LibcWrapper::isip4addr(ipv4) ) 
-	return ipv4._retn();
-      else if (strncmp(endpoint,"giop",4) == 0) {
-	// try treating this as a hostname
-	LibcWrapper::AddrInfo_var ai;
-	ai = LibcWrapper::getAddrInfo(ipv4, 0);
-	if ((LibcWrapper::AddrInfo*)ai)
-	  return ai->asString();
-      }
-    }
+    ++p;
+    CORBA::UShort port;
+    return omniURI::extractHostPort(p, port, 0);
   }
   return 0;
 }
@@ -229,11 +214,11 @@ public:
 
     if (strncmp(endpoint,"giop:unix",9) == 0) return 1;
 
-    // Otherwise, we want to check if this endpoint is one of those
-    // with an IPv4 address.
-    CORBA::String_var ipv4;
-    ipv4 = extractIPv4(endpoint);
-    if ( (const char*)ipv4 )  {
+    // Otherwise, we want to check if this endpoint matches one of our
+    // addresses.
+    CORBA::String_var host;
+    host = extractHost(endpoint);
+    if ( (const char*)host )  {
       // Get this host's IP addresses and look for a match
       const omnivector<const char*>* ifaddrs;
       ifaddrs = giopTransportImpl::getInterfaceAddress("giop:tcp");
@@ -242,7 +227,7 @@ public:
 	omnivector<const char*>::const_iterator i    = ifaddrs->begin();
 	omnivector<const char*>::const_iterator last = ifaddrs->end();
 	while ( i != last ) {
-	  if ( strcmp((*i),ipv4) == 0 ) return 1;
+	  if ( omni::strMatch((*i),host) ) return 1;
 	  i++;
 	}
       }
@@ -264,14 +249,14 @@ public:
   CORBA::Boolean match(const char* endpoint) { 
 
     CORBA::String_var ipv4;
-    ipv4 = extractIPv4(endpoint);
-    if ((const char*)ipv4) {
+    ipv4 = extractHost(endpoint);
+    if ((const char*)ipv4 && LibcWrapper::isip4addr(ipv4)) {
       CORBA::ULong address = inet_addr((const char*)ipv4);
       return (network_ == (address & netmask_));
     }
 
     if (strncmp(endpoint,"giop:unix",9) == 0) {
-      // local transport. Does this rule applies to this host's 
+      // local transport. Does this rule apply to this host's 
       // IP address(es)? 
       const omnivector<const char*>* ifaddrs;
       ifaddrs = giopTransportImpl::getInterfaceAddress("giop:tcp");
@@ -280,8 +265,10 @@ public:
 	omnivector<const char*>::const_iterator i    = ifaddrs->begin();
 	omnivector<const char*>::const_iterator last = ifaddrs->end();
 	while ( i != last ) {
-	  CORBA::ULong address = inet_addr((*i));
-	  if ( network_ == (address & netmask_) ) return 1;
+	  if (LibcWrapper::isip4addr(*i)) {
+	    CORBA::ULong address = inet_addr((*i));
+	    if ( network_ == (address & netmask_) ) return 1;
+	  }
 	  i++;
 	}
 	return 0;
@@ -293,8 +280,83 @@ public:
 private:
   CORBA::ULong network_;
   CORBA::ULong netmask_;
-  CORBA::Boolean apply_to_localhost_;
 };
+
+/////////////////////////////////////////////////////////////////////////////
+#if defined(OMNI_SUPPORT_IPV6)
+
+class builtinIPv6Rule : public transportRules::Rule {
+public:
+  typedef CORBA::Octet Addr[16];
+
+  builtinIPv6Rule(const char* address_mask,
+		  const Addr& n, CORBA::ULong p) : 
+    transportRules::Rule(address_mask), prefix_(p)
+  {
+    for (int i=0; i < 16; ++i)
+      network_[i] = n[i];
+  }
+
+  ~builtinIPv6Rule() {}
+
+  CORBA::Boolean matchAddr(const char* ipv6)
+  {
+    LibcWrapper::AddrInfo_var ai(LibcWrapper::getAddrInfo(ipv6,0));
+    if (!ai.in()) return 0;
+
+    sockaddr_in6* sa = (sockaddr_in6*)ai->addr();
+    CORBA::Octet* ip6_bytes = (CORBA::Octet*)&sa->sin6_addr.s6_addr;
+
+    CORBA::ULong bits = prefix_;
+    CORBA::ULong i;
+
+    for (i=0; i < 16 && bits > 7; ++i, bits-=8) {
+      if (network_[i] != ip6_bytes[i])
+	return 0;
+    }
+    if (bits) {
+      CORBA::Octet mask = (0xff << (8 - bits)) & 0xff;
+      if ((network_[i] & mask) != (ip6_bytes[i] & mask))
+	return 0;
+    }
+    return 1;
+  }
+
+  CORBA::Boolean match(const char* endpoint)
+  {
+    CORBA::String_var ipv6;
+    ipv6 = extractHost(endpoint);
+
+    if ((const char*)ipv6 && LibcWrapper::isip6addr(ipv6)) {
+      return matchAddr(ipv6);
+    }
+
+    if (strncmp(endpoint,"giop:unix",9) == 0) {
+      // local transport. Does this rule apply to this host's 
+      // IP address(es)? 
+      const omnivector<const char*>* ifaddrs;
+      ifaddrs = giopTransportImpl::getInterfaceAddress("giop:tcp");
+      if (!ifaddrs) return 0;
+      {
+	omnivector<const char*>::const_iterator i    = ifaddrs->begin();
+	omnivector<const char*>::const_iterator last = ifaddrs->end();
+	while ( i != last ) {
+	  if (LibcWrapper::isip6addr(*i) && matchAddr(*i))
+	    return 1;
+	  i++;
+	}
+      }
+    }
+    return 0;
+  }
+
+private:
+  Addr         network_;
+  CORBA::ULong prefix_;
+};
+
+#endif
+
 
 /////////////////////////////////////////////////////////////////////////////
 class builtinRuleType : public transportRules::RuleType {
@@ -308,10 +370,15 @@ public:
     
     CORBA::ULong network, netmask;
 
-    if ( strcmp(address_mask,"*" ) == 0 ) {
+#if defined(OMNI_SUPPORT_IPV6)
+    builtinIPv6Rule::Addr ip6network;
+    CORBA::ULong prefix;
+#endif
+
+    if ( omni::strMatch(address_mask,"*" ) ) {
       return (transportRules::Rule*) new builtinMatchAllRule(address_mask);
     }
-    else if ( strcmp(address_mask,"localhost") == 0 ) {
+    else if ( omni::strMatch(address_mask,"localhost") ) {
       return (transportRules::Rule*) new builtinLocalHostRule(address_mask);
     }
     else if ( parseIPv4AddressMask(address_mask,network,netmask) ) {
@@ -319,6 +386,13 @@ public:
 							 network,
 							 netmask);
     }
+#if defined(OMNI_SUPPORT_IPV6)
+    else if ( parseIPv6AddressMask(address_mask,ip6network,prefix) ) {
+      return (transportRules::Rule*) new builtinIPv6Rule(address_mask,
+							 ip6network,
+							 prefix);
+    }
+#endif
     else {
       return 0;
     }
@@ -340,11 +414,51 @@ public:
     if ( ! LibcWrapper::isip4addr(cp) ) return 0;
     network = inet_addr((const char*)cp);
 
-    if ( ! LibcWrapper::isip4addr(mask) ) return 0;
-    netmask = inet_addr(mask);
-
+    if ( LibcWrapper::isip4addr(mask) ) {
+      netmask = inet_addr(mask);
+    }
+    else {
+      char* maske;
+      CORBA::ULong prefix = strtoul(mask, &maske, 10);
+      if (*maske || prefix > 32)
+	return 0;
+      netmask = 0xffffffffU << (32 - prefix);
+      netmask = htonl(netmask);
+    }
     return 1;
   }
+
+#if defined(OMNI_SUPPORT_IPV6)
+  static CORBA::Boolean parseIPv6AddressMask(const char*            address,
+					     builtinIPv6Rule::Addr& network,
+					     CORBA::ULong&          prefix) {
+    CORBA::String_var cp(address);
+
+    char* mask = strchr((char*)cp,'/');
+    if (mask) {
+      *mask = '\0';
+      mask++;
+      char* maske;
+      prefix = strtoul(mask, &maske, 10);
+
+      if (!*mask || *maske || prefix > 128)
+	return 0;
+    }
+    else {
+      prefix = 128;
+    }
+    if (!LibcWrapper::isip6addr(cp)) return 0;
+
+    LibcWrapper::AddrInfo_var ai(LibcWrapper::getAddrInfo(cp, 0));
+    if (!ai.in())
+      return 0;
+
+    sockaddr_in6* sa = (sockaddr_in6*)ai->addr();
+    memcpy((void*)&network, (const void*)&(sa->sin6_addr.s6_addr), 16);
+    return 1;
+  }
+#endif
+
 };
 
 static builtinRuleType builtinRuleType_;
