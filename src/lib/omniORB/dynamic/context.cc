@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.12.2.14  2006/04/24 15:10:18  dgrisby
+ Make sure values are unsigned in isalnum, etc., to avoid stupid
+ assertion failures in MSVC runtime.
+
  Revision 1.12.2.13  2002/01/16 11:31:56  dpg1
  Race condition in use of registerNilCorbaObject/registerTrackedObject.
  (Reported by Teemu Torma).
@@ -501,8 +505,10 @@ ContextImpl::add_values(ContextImpl* c, CORBA::Flags op_flags,
 
 
 void
-ContextImpl::check_context_name(const char* n)
+ContextImpl::check_context_name(const char* cn)
 {
+  const unsigned char* n = (const unsigned char*)cn;
+
   if( !isalpha(*n++) )  OMNIORB_THROW(BAD_PARAM,
 				      BAD_PARAM_InvalidContextName,
 				      CORBA::COMPLETED_NO);

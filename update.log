@@ -1,3 +1,13 @@
+Mon Apr 24 16:08:37 BST 2006 dgrisby
+====================================
+
+- Make sure values are unsigned in isalnum, etc., to avoid stupid
+  assertion failures in MSVC runtime.
+
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+
+
 Wed Apr 19 12:32:07 BST 2006 dgrisby
 ====================================
 
