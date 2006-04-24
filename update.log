@@ -1,3 +1,22 @@
+Mon Apr 24 15:18:49 BST 2006 dgrisby
+====================================
+
+- Minor documentation updates.
+
+doc/omniORB.pdf
+doc/omniORB.ps
+doc/tex/omniORB.tex
+
+- Match IPv4-in-IPv6 addresses in IPv4 rules.
+
+src/lib/omniORB/orbcore/transportRules.cc
+
+- Include both IPv4 and IPv6 loopbacks in address lists.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Fri Apr 21 15:37:06 BST 2006 dgrisby
 ====================================
 
