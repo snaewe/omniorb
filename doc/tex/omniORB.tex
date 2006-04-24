@@ -193,7 +193,7 @@ AT\&T Laboratories Cambridge\\
 
 \vfill
 \vfill
-July 2005
+April 2006
 \vfill
 
 \end{center}
@@ -334,8 +334,6 @@ can act as a client to an IfR. The omniifr project
 (\weburl{http://omniifr.sourceforge.net/}) aims to create an IfR for
 omniORB.
 
-\item Local interfaces are not supported.
-
 \item omniORB supports interceptors, but not the standard Portable
 Interceptor API.
 
@@ -346,7 +344,9 @@ best to check out the latest status on the omniORB home page
 (\weburl{http://omniorb.sourceforge.net/}).
 
 
-\section{Setting Up Your Environment}
+
+
+\section{Setting up your environment}
 \label{sec:setup}
 
 To get omniORB running, you first need to install omniORB according to
@@ -2444,7 +2444,7 @@ argument. An example is `\cmdline{-ORBtraceLevel 10}'.
 \subsection{ORB\_init() parameter}
 
 \op{ORB\_init}'s extra argument accepts an array of two-dimensional
-arrays of strings, like this:
+string arrays, like this:
 
 \begin{cxxlisting}
 const char* options[][2] = { { "traceLevel", "1" }, { 0, 0 } }; 
@@ -3650,8 +3650,9 @@ is installed):
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \label{chap:ins}
 
-omniORB 4.1 supports the Interoperable Naming Service (INS). The
-following is a summary of its facilities.
+omniORB supports the Interoperable Naming Service (INS). The following
+is a summary of its facilities.
+
 
 \section{Object URIs}
 
@@ -4699,7 +4700,7 @@ TCP/SSL endpoint that is using an ephemeral port, for example.
 omniORB 4.0 supported two options related to endpoint publishing that
 are superseded by the \code{endPointPublish} parameter, and so are now
 deprecated. Setting \code{endPointPublishAllIFs} to 1 is equivalent to
-using an \code{endPointPublish} of `\code{all(addr)}'. The
+setting \code{endPointPublish} to `\code{all(addr)}'. The
 \code{endPointNoListen} parameter is equivalent to adding endpoint
 URIs to the \code{endPointPublish} parameter.
 
@@ -4707,10 +4708,10 @@ URIs to the \code{endPointPublish} parameter.
 
 \section{Connection selection and acceptance}
 
-In the face of IORs containing details about multiple different end
-points, clients have to know how to choose the one to use to connect a
-server. Similarly, servers may wish to restrict which clients can
-connect to particular transports. This is achieved with
+In the face of IORs containing details about multiple different
+endpoints, clients have to know how to choose the one to use to
+connect a server. Similarly, servers may wish to restrict which
+clients can connect to particular transports. This is achieved with
 \term{transport rules}.
 
 
@@ -4733,10 +4734,18 @@ tried. Each rule has the form:
 1. & \code{localhost} & The address of this machine\\
 
 2. & \textit{w.x.y.z}\code{/}\textit{m1.m2.m3.m4} & An IPv4 address
-     with the bits selected by the mask, e.g.\
-     172.16.0.0/255.240.0.0.\\
+     with bits selected by the mask, e.g.\
+     \code{172.16.0.0/255.240.0.0}\\
 
-3. & \code{*} & Wildcard that matches any address\\
+3. & \textit{w.x.y.z}\code{/}\textit{prefixlen} & An IPv4 address with
+     \textit{prefixlen} significant bits, e.g.\
+     \code{172.16.2.0/24}\\
+
+4. & \textit{a:b:c:d:e:f:g:h}\code{/}\textit{prefixlen} & An IPv6
+     address with \textit{prefixlen} significant bits, e.g.\
+     \code{3ffe:505:2:1::/64}\\
+
+5. & \code{*} & Wildcard that matches any address\\
 \end{tabular}
 
 \vspace{\baselineskip}
@@ -4750,17 +4759,17 @@ tried. Each rule has the form:
 2. & \code{tcp}  & Use a TCP transport\\
 3. & \code{ssl}  & Use an SSL transport\\
 4. & \code{unix} & Use a Unix socket transport\\
-5. & \code{bidir}& Any connection to this address should be used
+5. & \code{bidir}& Connections to this address can be used
                    bidirectionally (see section~\ref{sec:bidir})\\
 \end{tabular}
 
 \vspace{\baselineskip}
 
 \noindent The transport-selecting actions form a prioritised list, so
-an action of `\code{unix,tcp,\dsc{}ssl}' means to use a Unix transport if
-there is one, failing that a TCP transport, failing \emph{that} an SSL
+an action of `\code{unix,ssl,\dsc{}tcp}' means to use a Unix transport if
+there is one, failing that a SSL transport, failing \emph{that} a TCP
 transport. In the absence of any explicit rules, the client uses the
-implicit rule of `\code{* unix,tcp,ssl}'.
+implicit rule of `\code{* unix,ssl,tcp}'.
 
 If more than one rule is specified, they are prioritised in the order
 they are specified. For example, the configuration file might contain:
@@ -4776,14 +4785,14 @@ they are specified. For example, the configuration file might contain:
 (172.16.0.0), and connections to other networks are not permitted at
 all.
 
-In general, the result of filtering the end point specifications in an
+In general, the result of filtering the endpoint specifications in an
 IOR with the client transport rule will be a prioritised list of
 transports and networks. (If the transport rules do not prioritise one
-end point over another, the order the end points are listed in the IOR
+endpoint over another, the order the endpoints are listed in the IOR
 is used.)  When trying to contact an object, the ORB tries its
-possible end points in turn, until it finds one with which it can
+possible endpoints in turn, until it finds one with which it can
 contact the object. Only after it has unsuccessfully tried all
-permissible transports will it raise a \code{TRANSIENT} exception to
+permissible endpoints will it raise a \code{TRANSIENT} exception to
 indicate that the connect failed.
 
 
@@ -4812,7 +4821,9 @@ client is not on the intranet:
                       = *                          ssl,bidir
 \end{verbatim}
 
-
+\noindent In the absence of any explicit rules, the server uses the
+implicit rule of `\code{* unix,\dsc{}ssl,tcp}', meaning any kind of
+connection is accepted from any client.
 
 
 \section{Bidirectional GIOP}
