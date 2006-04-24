@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/04/24 14:26:00  dgrisby
+  Match IPv4-in-IPv6 addresses in IPv4 rules.
+
   Revision 1.1.4.4  2006/04/21 14:40:39  dgrisby
   IPv6 support in transport rules.
 
@@ -250,9 +253,18 @@ public:
 
     CORBA::String_var ipv4;
     ipv4 = extractHost(endpoint);
-    if ((const char*)ipv4 && LibcWrapper::isip4addr(ipv4)) {
-      CORBA::ULong address = inet_addr((const char*)ipv4);
-      return (network_ == (address & netmask_));
+    if ((const char*)ipv4) {
+      if (LibcWrapper::isip4addr(ipv4)) {
+	CORBA::ULong address = inet_addr((const char*)ipv4);
+	return (network_ == (address & netmask_));
+      }
+      else if (strncasecmp(ipv4, "::ffff:", 7) == 0 &&
+	       LibcWrapper::isip4addr((const char*)ipv4 + 7)) {
+
+	// IPv4 in IPv6
+	CORBA::ULong address = inet_addr((const char*)ipv4 + 7);
+	return (network_ == (address & netmask_));
+      }
     }
 
     if (strncmp(endpoint,"giop:unix",9) == 0) {
