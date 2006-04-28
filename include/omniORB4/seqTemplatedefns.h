@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2006/04/28 17:01:14  dgrisby
+  Support ARM's strange mixed endian double.
+
   Revision 1.1.2.11  2003/05/22 13:41:39  dgrisby
   HPUX patches.
 
@@ -264,6 +267,48 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<
     }
   }
 }
+
+//////////////////////////////////////////////////////////////////////
+#ifdef OMNI_MIXED_ENDIAN_DOUBLE
+
+// Template member function specializations to use the base
+// marshalling functions for double, so the doubles are properly
+// word-swapped.
+
+template<>
+inline
+void
+_CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Double,8,8>::operator>>= (cdrStream& s) const
+{
+  Base_T_seq::operator>>=(s);
+}
+
+template<>
+inline
+void
+_CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Double,8,8>::operator<<= (cdrStream& s)
+{
+  Base_T_seq::operator<<=(s);
+}
+
+template<int max>
+inline
+void
+_CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Double,max,8,8>::operator>>= (cdrStream& s) const
+{
+  Base_T_seq::operator>>=(s);
+}
+
+template<int max>
+inline
+void
+_CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Double,max,8,8>::operator<<= (cdrStream& s)
+{
+  Base_T_seq::operator<<=(s);
+}
+
+#endif
+
 
 //////////////////////////////////////////////////////////////////////
 inline

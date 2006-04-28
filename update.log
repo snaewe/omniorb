@@ -1,3 +1,15 @@
+Fri Apr 28 17:59:53 BST 2006 dgrisby
+====================================
+
+- Support ARM's strange mixed endian double.
+
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/cdrStream.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/seqTemplatedefns.h
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+
+
 Mon Apr 24 16:08:37 BST 2006 dgrisby
 ====================================
 

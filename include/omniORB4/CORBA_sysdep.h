@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.33  2006/04/28 17:01:14  dgrisby
+ Support ARM's strange mixed endian double.
+
  Revision 1.2.2.32  2005/12/30 17:40:22  dgrisby
  Previously extern inline functions are now just inline or static
  inline when inside classes.
@@ -123,6 +126,15 @@
 #else
 #  define UnixArchitecture 1
 #endif
+
+//
+// Processor dependencies
+//
+
+#if defined(__arm__)
+#  define OMNI_MIXED_ENDIAN_DOUBLE
+#endif
+
 
 //
 // Macro to provide const_cast functionality on all platforms.

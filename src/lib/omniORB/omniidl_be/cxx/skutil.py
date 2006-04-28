@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.11  2006/04/28 17:01:13  dgrisby
+# Support ARM's strange mixed endian double.
+#
 # Revision 1.17.2.10  2003/07/27 19:24:32  dgrisby
 # Avoid name clash in struct marshalling with evil IDL.
 #
@@ -197,6 +200,11 @@ def marshall(to, environment, type, decl, argname, to_where,
         if array_marshal_helpers.has_key(d_type.type().kind()):
             (alignment,elmsize) = array_marshal_helpers[d_type.type().kind()]
             if alignment != "omni::ALIGN_1":
+                is_double = d_type.type().kind() == idltype.tk_double
+                if is_double:
+                    to.out("""
+#ifndef OMNI_MIXED_ENDIAN_DOUBLE""")
+
                 to.out("""\
 if (! @where@.marshal_byte_swap()) {
   @where@.put_octet_array((CORBA::Octet*)(@slice_cast@@name@),@num@,@align@);
@@ -207,6 +215,11 @@ else """,
                        slice_cast = slice_cast,
                        num = str(n_elements * elmsize),
                        align = alignment)
+
+                if is_double:
+                    to.out("""\
+#endif""")
+
                 # Do not return here.
                 # let the code below to deal with the else block.
             else:
