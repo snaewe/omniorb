@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.4  2006/04/09 19:52:29  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -93,6 +96,7 @@ private:
   SocketHandle_t                   pd_new_conn_socket;
   giopConnection::notifyReadable_t pd_callback_func;
   void*                            pd_callback_cookie;
+  CORBA::Boolean                   pd_poked;
 
   unixEndpoint();
   unixEndpoint(const unixEndpoint&);

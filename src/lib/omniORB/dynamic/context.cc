@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.14.2.3  2006/04/28 18:40:46  dgrisby
+ Merge from omni4_0_develop.
+
  Revision 1.14.2.2  2004/10/13 17:58:20  dgrisby
  Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -505,8 +508,10 @@ ContextImpl::add_values(ContextImpl* c, CORBA::Flags op_flags,
 
 
 void
-ContextImpl::check_context_name(const char* n)
+ContextImpl::check_context_name(const char* cn)
 {
+  const unsigned char* n = (const unsigned char*)cn;
+
   if( !isalpha(*n++) )  OMNIORB_THROW(BAD_PARAM,
 				      BAD_PARAM_InvalidContextName,
 				      CORBA::COMPLETED_NO);

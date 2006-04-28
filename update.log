@@ -1,3 +1,33 @@
+Fri Apr 28 19:29:49 BST 2006 dgrisby
+====================================
+
+- Merge from omni4_0_develop.
+
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/cdrStream.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/seqTemplatedefns.h
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixAddress.cc
+src/lib/omniORB/orbcore/unix/unixAddress.h
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.h
+src/tool/omniidl/python/scripts/omniidl.in
+
+
 Fri Apr 28 18:04:37 BST 2006 dgrisby
 ====================================
 

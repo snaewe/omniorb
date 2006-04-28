@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.13  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.25.2.12  2006/04/09 19:52:31  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -645,6 +648,7 @@ giopServer::deactivate()
     }
 
     omni_thread::get_time(&s, &ns, timeout);
+
     int go = 1;
     while (go && pd_rendezvousers.next != & pd_rendezvousers) {
       go = pd_cond.timedwait(s, ns);
@@ -1017,7 +1021,7 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
 
   delete r;
 
-  if (exit_on_error) {
+  if (exit_on_error && pd_state != INFLUX) {
     if (omniORB::trace(1)) {
       omniORB::logger log;
       log << "Unrecoverable error for this endpoint: ";
@@ -1034,6 +1038,7 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
 
   if (pd_state == INFLUX) {
     if (Link::is_empty(pd_rendezvousers)) {
+      omniORB::logs(25, "No remaining rendezvousers.");
       pd_cond.broadcast();
     }
   }
@@ -1119,8 +1124,9 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     pd_lock.lock();
 
     int workers;
+    CORBA::Boolean singleshot = w->singleshot();
 
-    if (w->singleshot())
+    if (singleshot)
       workers = --pd_n_temporary_workers;
     else
       workers = --pd_n_dedicated_workers;
@@ -1136,6 +1142,12 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     }
 
     if (pd_state == INFLUX) {
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	l << "removeConnectionAndWorker for "
+	  << (singleshot ? "temporary" : "dedicated")
+	  << " worker. " << workers << " remaining.\n";
+      }
       if (workers == 0) {
 	pd_cond.broadcast();
       }
@@ -1197,8 +1209,11 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       delete w;
       conn->pd_n_workers--;
       pd_n_temporary_workers--;
-      if (pd_state == INFLUX && pd_n_temporary_workers == 0)
-	pd_cond.broadcast();
+      if (pd_state == INFLUX) {
+	omniORB::logs(25, "Temporary additional worker finishing.");
+	if (pd_n_temporary_workers == 0)
+	  pd_cond.broadcast();
+      }
       return 0;
     }
   }
@@ -1355,6 +1370,7 @@ giopServer::notifyMrDone(giopMonitor* m, CORBA::Boolean exit_on_error)
   delete m;
   if (pd_state == INFLUX) {
     if (Link::is_empty(pd_bidir_monitors)) {
+      omniORB::logs(25, "No remaining bidir monitors.");
       pd_cond.broadcast();
     }
   }

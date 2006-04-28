@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.5  2006/04/09 19:52:29  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -110,8 +113,9 @@ OMNI_NAMESPACE_BEGIN(omni)
 unixEndpoint::unixEndpoint(const char* filename) :
   SocketHolder(RC_INVALID_SOCKET),
   pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
-  pd_callback_cookie(0) {
-
+  pd_callback_cookie(0),
+  pd_poked(0)
+{
   pd_filename = filename;
 }
 
@@ -276,16 +280,13 @@ void
 unixEndpoint::Poke() {
 
   unixAddress* target = new unixAddress(pd_filename);
-  giopActiveConnection* conn;
-  if ((conn = target->Connect()) == 0) {
-    if (omniORB::trace(1)) {
+  pd_poked = 1;
+  if (!target->Poke()) {
+    if (omniORB::trace(5)) {
       omniORB::logger log;
-      log << "Warning: Fail to connect to myself ("
-	  << (const char*) pd_addresses[0] << ") via unix socket!\n";
+      log << "Warning: fail to connect to myself ("
+	  << (const char*) pd_addresses[0] << ") via unix socket.\n";
     }
-  }
-  else {
-    delete conn;
   }
   delete target;
 }
@@ -316,6 +317,8 @@ unixEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
     if (pd_new_conn_socket != RC_INVALID_SOCKET) {
       return  new unixConnection(pd_new_conn_socket,this,pd_filename,0);
     }
+    if (pd_poked)
+      return 0;
   }
   return 0;
 }

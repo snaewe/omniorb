@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.2  2005/01/06 17:31:06  dgrisby
   Changes (mainly from omni4_0_develop) to compile on gcc 3.4.
 
@@ -270,6 +273,48 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<
     }
   }
 }
+
+//////////////////////////////////////////////////////////////////////
+#ifdef OMNI_MIXED_ENDIAN_DOUBLE
+
+// Template member function specializations to use the base
+// marshalling functions for double, so the doubles are properly
+// word-swapped.
+
+template<>
+inline
+void
+_CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Double,8,8>::operator>>= (cdrStream& s) const
+{
+  Base_T_seq::operator>>=(s);
+}
+
+template<>
+inline
+void
+_CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Double,8,8>::operator<<= (cdrStream& s)
+{
+  Base_T_seq::operator<<=(s);
+}
+
+template<int max>
+inline
+void
+_CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Double,max,8,8>::operator>>= (cdrStream& s) const
+{
+  Base_T_seq::operator>>=(s);
+}
+
+template<int max>
+inline
+void
+_CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Double,max,8,8>::operator<<= (cdrStream& s)
+{
+  Base_T_seq::operator<<=(s);
+}
+
+#endif
+
 
 //////////////////////////////////////////////////////////////////////
 inline

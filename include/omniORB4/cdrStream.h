@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.10  2005/12/08 14:22:31  dgrisby
   Better string marshalling performance; other minor optimisations.
 
@@ -482,6 +485,13 @@ public:
       m.l[1] = Swap32(l.l[0]);
       l = m;
     }
+#ifdef OMNI_MIXED_ENDIAN_DOUBLE
+    {
+      _CORBA_ULong v = l.l[0];
+      l.l[0] = l.l[1];
+      l.l[1] = v;
+    }
+#endif
     CdrMarshal(s,LongArray2,omni::ALIGN_8,l);
   }
 
@@ -494,6 +504,13 @@ public:
       m.l[1] = Swap32(l.l[0]);
       l = m;
     }
+#ifdef OMNI_MIXED_ENDIAN_DOUBLE
+    {
+      _CORBA_ULong v = l.l[0];
+      l.l[0] = l.l[1];
+      l.l[1] = v;
+    }
+#endif
     convertToFloat(_CORBA_Double, LongArray2);
   }
 #else
@@ -884,6 +901,19 @@ public:
         p[i] = l;
       }
     }
+#ifdef OMNI_MIXED_ENDIAN_DOUBLE
+    {
+      struct LongArray2 {
+        _CORBA_ULong l[2];
+      };
+      LongArray2* p=(LongArray2*)a;
+      for( int i = 0; i < length; i++ ) {
+        _CORBA_ULong v = p[i].l[0];
+	p[i].l[0] = p[i].l[1];
+	p[i].l[1] = v;
+      }
+    }
+#endif
   }
 #endif
 
@@ -1051,6 +1081,13 @@ inline void operator>>= (_CORBA_Double a, cdrStream& s) {
     m.l[1] = Swap32(l.l[0]);
     l = m;
   }
+#ifdef OMNI_MIXED_ENDIAN_DOUBLE
+  {
+    _CORBA_ULong v = l.l[0];
+    l.l[0] = l.l[1];
+    l.l[1] = v;
+  }
+#endif
   CdrMarshal(s,LongArray2,omni::ALIGN_8,l);
 }
 
@@ -1063,6 +1100,13 @@ inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
     m.l[1] = Swap32(l.l[0]);
     l = m;
   }
+#ifdef OMNI_MIXED_ENDIAN_DOUBLE
+  {
+    _CORBA_ULong v = l.l[0];
+    l.l[0] = l.l[1];
+    l.l[1] = v;
+  }
+#endif
   convertToFloat(_CORBA_Double, LongArray2);
 }
 

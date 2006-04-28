@@ -75,6 +75,10 @@ if binarchdir != "":
         if os.path.isdir(archlibdir):
             sys.path.insert(0, archlibdir)
 
+# Last chance, try a path based on the installation prefixes
+sys.path.append("@prefix@/lib/python" + sys.version[:3] + "/site-packages")
+sys.path.append("@exec_prefix@/lib/python" + sys.version[:3] + "/site-packages")
+
 try:
     import _omniidl
 except ImportError, msg:

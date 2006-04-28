@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.3  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -370,6 +373,43 @@ sslAddress::Connect(unsigned long deadline_secs,
       OMNIORB_ASSERT(0);
     }
   }
+}
+
+CORBA::Boolean
+sslAddress::Poke() const {
+
+  SocketHandle_t sock;
+
+  if (pd_address.port == 0) return 0;
+
+  LibcWrapper::AddrInfo_var ai;
+  ai = LibcWrapper::getAddrInfo(pd_address.host, pd_address.port);
+
+  if ((LibcWrapper::AddrInfo*)ai == 0)
+    return 0;
+
+  if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET)
+    return 0;
+
+  if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {
+    CLOSESOCKET(sock);
+    return 0;
+  }
+
+  if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
+
+    if (ERRNO != EINPROGRESS) {
+      CLOSESOCKET(sock);
+      return 0;
+    }
+  }
+
+  // The connect has not necessarily completed by this stage, but
+  // we've done enough to poke the endpoint. We do not bother with the
+  // SSL handshake, so the accepting thread will get an error when it
+  // tries to do the SSL accept.
+  CLOSESOCKET(sock);
+  return 1;
 }
 
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.9  2006/04/24 14:26:43  dgrisby
   Include both IPv4 and IPv6 loopbacks in address lists.
 
@@ -557,17 +560,14 @@ void
 tcpEndpoint::Poke() {
 
   tcpAddress* target = new tcpAddress(pd_address);
-  giopActiveConnection* conn;
-  if ((conn = target->Connect()) == 0) {
+
+  pd_poked = 1;
+  if (!target->Poke()) {
     if (omniORB::trace(5)) {
       omniORB::logger log;
       log << "Warning: fail to connect to myself ("
 	  << (const char*) pd_addresses[0] << ") via tcp.\n";
     }
-    pd_poked = 1;
-  }
-  else {
-    delete conn;
   }
   delete target;
 }

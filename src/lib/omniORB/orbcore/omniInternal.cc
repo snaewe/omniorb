@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.12  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.5.2.11  2006/02/22 14:56:36  dgrisby
   New endPointPublishHostname and endPointResolveNames parameters.
 
@@ -1648,6 +1651,13 @@ public:
   }
 
   void detach() {
+    if (numObjectsInTable && omniORB::trace(1)) {
+      omniORB::logger l;
+      l << "Error: the object table still contains "
+	<< numObjectsInTable << " entr"
+	<< (numObjectsInTable == 1 ? "y" : "ies")
+	<< " at ORB shutdown time.";
+    }
     OMNIORB_ASSERT(numObjectsInTable == 0);
     delete [] objectTable;
     objectTable = 0;

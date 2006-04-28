@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.3  2006/04/28 18:40:46  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.19.2.2  2005/12/08 14:22:31  dgrisby
   Better string marshalling performance; other minor optimisations.
 
@@ -179,6 +182,10 @@ CORBA::string_dup(const char* p)
 char*
 cdrStream::unmarshalRawString() {
   _CORBA_ULong len; len <<= *this;
+
+  if (len == 0)
+    OMNIORB_THROW(MARSHAL,MARSHAL_StringNotEndWithNull,
+		  (CORBA::CompletionStatus)completion());
 
   if (!checkInputOverrun(1, len))
     OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,

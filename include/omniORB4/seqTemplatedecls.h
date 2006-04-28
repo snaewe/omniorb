@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.4  2006/04/28 18:40:46  dgrisby
+ Merge from omni4_0_develop.
+
  Revision 1.1.4.3  2005/11/17 17:03:27  dgrisby
  Merge from omni4_0_develop.
 
@@ -547,43 +550,6 @@ public:
 };
 
 
-
-//////////////////////////////////////////////////////////////////////
-///////////// _CORBA_Sequence_w_FixSizeElement           /////////////
-//////////////////////////////////////////////////////////////////////
-template <class T,int elmSize,int elmAlignment>
-class _CORBA_Sequence_w_FixSizeElement : public _CORBA_Sequence<T> {
-protected:
-  typedef _CORBA_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>  T_seq;
-  typedef _CORBA_Sequence<T> Base_T_seq ;
-
-
-  inline _CORBA_Sequence_w_FixSizeElement() {}
-
-  inline _CORBA_Sequence_w_FixSizeElement(_CORBA_ULong max,
-					  _CORBA_Boolean bounded=0) :
-    Base_T_seq(max,bounded) {}
-
-  inline _CORBA_Sequence_w_FixSizeElement(const T_seq& s) : Base_T_seq(s) {}
-
-  inline _CORBA_Sequence_w_FixSizeElement(_CORBA_ULong max,
-					  _CORBA_ULong len,
-					  T           *value,
-					  _CORBA_Boolean release_ = 0,
-					  _CORBA_Boolean bounded = 0
-	       )  : Base_T_seq(max,len,value,release_,bounded) {}
-
-  inline T_seq &operator= (const T_seq &s) {
-    Base_T_seq::operator= (s);
-    return *this;
-  }
-
-public:
-  inline void operator>>= (cdrStream &s) const;
-  inline void operator<<= (cdrStream &s);
-};
-
-
 //////////////////////////////////////////////////////////////////////
 ///////////// _CORBA_Unbounded_Sequence_w_FixSizeElement /////////////
 //////////////////////////////////////////////////////////////////////
@@ -664,6 +630,46 @@ public:
   inline void operator>>= (cdrStream &s) const;
   inline void operator<<= (cdrStream &s);
 };
+
+
+#ifdef OMNI_MIXED_ENDIAN_DOUBLE
+
+template <int max>
+class _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Double,max,8,8> : 
+  public _CORBA_Bounded_Sequence<_CORBA_Double,max> {
+public:
+  typedef _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Double,max,8,8> T_seq;
+  typedef _CORBA_Bounded_Sequence<_CORBA_Double,max> Base_T_seq;
+
+
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement() {}
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement(_CORBA_ULong   len,
+						  _CORBA_Double  *value,
+						  _CORBA_Boolean rel = 0) : 
+    Base_T_seq(len,value,rel) {}
+
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement(const T_seq& s) : 
+    Base_T_seq(s) {}
+
+  inline ~_CORBA_Bounded_Sequence_w_FixSizeElement() {}
+
+  inline T_seq& operator=(const T_seq& s) {
+    Base_T_seq::operator= (s);
+    return *this;
+  }
+
+  // CORBA 2.3 additions
+
+  inline void replace(_CORBA_ULong len, _CORBA_Double* data,_CORBA_Boolean release_ = 0) {
+    Base_T_seq::replace(len,data,release_);
+  }
+
+  inline void operator>>= (cdrStream &s) const;
+  inline void operator<<= (cdrStream &s);
+};
+
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////
