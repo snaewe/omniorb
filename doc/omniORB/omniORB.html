@@ -47,7 +47,7 @@ David Riddoch<BR>
 AT&amp;T Laboratories Cambridge<BR>
 </FONT><BR>
 <BR>
-July 2005
+April 2006
 </DIV><BR>
 <BR>
 <FONT SIZE=5><B>Changes and Additions, June 2005</B></FONT>
@@ -160,17 +160,15 @@ can act as a client to an IfR. The omniifr project
 (<A HREF="http://omniifr.sourceforge.net/"><TT>http://omniifr.sourceforge.net/</TT></A>) aims to create an IfR for
 omniORB.<BR>
 <BR>
-<LI CLASS="li-itemize">Local interfaces are not supported.<BR>
-<BR>
 <LI CLASS="li-itemize">omniORB supports interceptors, but not the standard Portable
 Interceptor API.</UL>
 These features may be implemented in the short to medium term. It is
 best to check out the latest status on the omniORB home page
 (<A HREF="http://omniorb.sourceforge.net/"><TT>http://omniorb.sourceforge.net/</TT></A>).<BR>
 <BR>
-<!--TOC section Setting Up Your Environment-->
+<!--TOC section Setting up your environment-->
 
-<H2 CLASS="section"><A NAME="htoc6">1.2</A>&nbsp;&nbsp;Setting Up Your Environment</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc6">1.2</A>&nbsp;&nbsp;Setting up your environment</H2><!--SEC END -->
 
 <A NAME="sec:setup"></A>
 To get omniORB running, you first need to install omniORB according to
@@ -2185,7 +2183,7 @@ argument. An example is `<TT>-ORBtraceLevel 10</TT>'.<BR>
 <H3 CLASS="subsection"><A NAME="htoc47">4.1.2</A>&nbsp;&nbsp;ORB_init() parameter</H3><!--SEC END -->
 
 <TT>ORB_init()</TT>'s extra argument accepts an array of two-dimensional
-arrays of strings, like this:<BR>
+string arrays, like this:<BR>
 <BR>
 <DIV CLASS="lstlisting"><TT><B>const</B> <B>char</B>* options[][2] = { { "traceLevel", "1" }, { 0, 0 } };</TT><TT>
 </TT><TT>orb = CORBA::ORB_init(argc,argv,"omniORB4",options);</TT></DIV><BR>
@@ -3327,8 +3325,8 @@ Just check the IDL files for validity, generating no output:
 <H1 CLASS="chapter"><A NAME="htoc76">Chapter&nbsp;6</A>&nbsp;&nbsp;Interoperable Naming Service</H1><!--SEC END -->
 
 <A NAME="chap:ins"></A>
-omniORB 4.1 supports the Interoperable Naming Service (INS). The
-following is a summary of its facilities.<BR>
+omniORB supports the Interoperable Naming Service (INS). The following
+is a summary of its facilities.<BR>
 <BR>
 <!--TOC section Object URIs-->
 
@@ -4308,7 +4306,7 @@ TCP/SSL endpoint that is using an ephemeral port, for example.<BR>
 omniORB 4.0 supported two options related to endpoint publishing that
 are superseded by the <TT>endPointPublish</TT> parameter, and so are now
 deprecated. Setting <TT>endPointPublishAllIFs</TT> to 1 is equivalent to
-using an <TT>endPointPublish</TT> of `<TT>all(addr)</TT>'. The
+setting <TT>endPointPublish</TT> to `<TT>all(addr)</TT>'. The
 <TT>endPointNoListen</TT> parameter is equivalent to adding endpoint
 URIs to the <TT>endPointPublish</TT> parameter.<BR>
 <BR>
@@ -4316,10 +4314,10 @@ URIs to the <TT>endPointPublish</TT> parameter.<BR>
 
 <H2 CLASS="section"><A NAME="htoc105">8.7</A>&nbsp;&nbsp;Connection selection and acceptance</H2><!--SEC END -->
 
-In the face of IORs containing details about multiple different end
-points, clients have to know how to choose the one to use to connect a
-server. Similarly, servers may wish to restrict which clients can
-connect to particular transports. This is achieved with
+In the face of IORs containing details about multiple different
+endpoints, clients have to know how to choose the one to use to
+connect a server. Similarly, servers may wish to restrict which
+clients can connect to particular transports. This is achieved with
 <I>transport rules</I>.<BR>
 <BR>
 <!--TOC subsection Client transport rules-->
@@ -4342,10 +4340,22 @@ The address mask can be one of<BR>
 <TR><TD VALIGN=top ALIGN=left NOWRAP>2.</TD>
 <TD VALIGN=top ALIGN=left NOWRAP><I>w.x.y.z</I><TT>/</TT><I>m1.m2.m3.m4</I></TD>
 <TD VALIGN=top ALIGN=left>An IPv4 address
- with the bits selected by the mask, e.g.
- 172.16.0.0/255.240.0.0.</TD>
+ with bits selected by the mask, e.g.
+ <TT>172.16.0.0/255.240.0.0</TT></TD>
 </TR>
 <TR><TD VALIGN=top ALIGN=left NOWRAP>3.</TD>
+<TD VALIGN=top ALIGN=left NOWRAP><I>w.x.y.z</I><TT>/</TT><I>prefixlen</I></TD>
+<TD VALIGN=top ALIGN=left>An IPv4 address with
+ <I>prefixlen</I> significant bits, e.g.
+ <TT>172.16.2.0/24</TT></TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>4.</TD>
+<TD VALIGN=top ALIGN=left NOWRAP><I>a:b:c:d:e:f:g:h</I><TT>/</TT><I>prefixlen</I></TD>
+<TD VALIGN=top ALIGN=left>An IPv6
+ address with <I>prefixlen</I> significant bits, e.g.
+ <TT>3ffe:505:2:1::/64</TT></TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>5.</TD>
 <TD VALIGN=top ALIGN=left NOWRAP><TT>*</TT></TD>
 <TD VALIGN=top ALIGN=left>Wildcard that matches any address</TD>
 </TR></TABLE><BR>
@@ -4369,14 +4379,14 @@ The action is one or more of the following:<BR>
 </TR>
 <TR><TD VALIGN=top ALIGN=left NOWRAP>5.</TD>
 <TD VALIGN=top ALIGN=left NOWRAP><TT>bidir</TT></TD>
-<TD VALIGN=top ALIGN=left>Any connection to this address should be used
+<TD VALIGN=top ALIGN=left>Connections to this address can be used
  bidirectionally (see section&nbsp;<A HREF="#sec:bidir">8.8</A>)</TD>
 </TR></TABLE><BR>
 The transport-selecting actions form a prioritised list, so
-an action of `<TT>unix,tcp,ssl</TT>' means to use a Unix transport if
-there is one, failing that a TCP transport, failing <EM>that</EM> an SSL
+an action of `<TT>unix,ssl,tcp</TT>' means to use a Unix transport if
+there is one, failing that a SSL transport, failing <EM>that</EM> a TCP
 transport. In the absence of any explicit rules, the client uses the
-implicit rule of `<TT>* unix,tcp,ssl</TT>'.<BR>
+implicit rule of `<TT>* unix,ssl,tcp</TT>'.<BR>
 <BR>
 If more than one rule is specified, they are prioritised in the order
 they are specified. For example, the configuration file might contain:
@@ -4390,14 +4400,14 @@ This would be useful if there is a fast network
 (172.16.0.0), and connections to other networks are not permitted at
 all.<BR>
 <BR>
-In general, the result of filtering the end point specifications in an
+In general, the result of filtering the endpoint specifications in an
 IOR with the client transport rule will be a prioritised list of
 transports and networks. (If the transport rules do not prioritise one
-end point over another, the order the end points are listed in the IOR
+endpoint over another, the order the endpoints are listed in the IOR
 is used.) When trying to contact an object, the ORB tries its
-possible end points in turn, until it finds one with which it can
+possible endpoints in turn, until it finds one with which it can
 contact the object. Only after it has unsuccessfully tried all
-permissible transports will it raise a <TT>TRANSIENT</TT> exception to
+permissible endpoints will it raise a <TT>TRANSIENT</TT> exception to
 indicate that the connect failed.<BR>
 <BR>
 <!--TOC subsection Server transport rules-->
@@ -4422,6 +4432,10 @@ client is not on the intranet:
                       = 172.16.0.0/255.240.0.0     tcp,ssl
                       = *                          ssl,bidir
 </PRE>
+In the absence of any explicit rules, the server uses the
+implicit rule of `<TT>* unix,ssl,tcp</TT>', meaning any kind of
+connection is accepted from any client.<BR>
+<BR>
 <!--TOC section Bidirectional GIOP-->
 
 <H2 CLASS="section"><A NAME="htoc108">8.8</A>&nbsp;&nbsp;Bidirectional GIOP</H2><!--SEC END -->

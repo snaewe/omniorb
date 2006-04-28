@@ -45,7 +45,7 @@ argument. An example is `<TT>-ORBtraceLevel 10</TT>'.<BR>
 
 <H3 CLASS="subsection"><A NAME="htoc47">4.1.2</A>&nbsp;&nbsp;ORB_init() parameter</H3>
 <TT>ORB_init()</TT>'s extra argument accepts an array of two-dimensional
-arrays of strings, like this:<BR>
+string arrays, like this:<BR>
 <BR>
 <DIV CLASS="lstlisting"><TT><B>const</B> <B>char</B>* options[][2] = { { "traceLevel", "1" }, { 0, 0 } };</TT><TT>
 </TT><TT>orb = CORBA::ORB_init(argc,argv,"omniORB4",options);</TT></DIV><BR>
