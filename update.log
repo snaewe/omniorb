@@ -1,3 +1,21 @@
+Tue May  2 14:04:04 BST 2006 dgrisby
+====================================
+
+- Idle giopMonitor SocketCollections would not exit at shutdown.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/ssl/sslActive.cc
+src/lib/omniORB/orbcore/tcp/tcpActive.cc
+src/lib/omniORB/orbcore/unix/unixActive.cc
+
+- Time out waiting for invoker threads to exit; allow configutation of
+  idle thread timeout.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/invoker.cc
+
+
 Fri Apr 28 19:29:49 BST 2006 dgrisby
 ====================================
 
