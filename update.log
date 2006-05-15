@@ -1,3 +1,15 @@
+Mon May 15 18:09:36 BST 2006 dgrisby
+====================================
+
+- Remove lots of obsolete functionality from environment handling.
+
+src/lib/omniORB/omniidl_be/cxx/id.py
+
+- Limit select timeout in case time goes backwards.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Mon May 15 11:06:52 BST 2006 dgrisby
 ====================================
 

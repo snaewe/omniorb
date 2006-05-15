@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.15  2006/05/15 17:11:15  dgrisby
+  Limit select timeout in case time goes backwards.
+
   Revision 1.1.4.14  2006/05/02 13:07:13  dgrisby
   Idle giopMonitor SocketCollections would not exit at shutdown.
 
@@ -391,7 +394,8 @@ SocketCollection::Select() {
   // process the socket list.
   SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
 
-  if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
+  if ((timeout.tv_sec == 0 && timeout.tv_usec == 0) ||
+      timeout.tv_sec > scan_interval_sec) {
 
     // Time to scan the socket list...
 
@@ -802,7 +806,8 @@ SocketCollection::Select() {
   // process the socket list.
   SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
 
-  if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
+  if ((timeout.tv_sec == 0 && timeout.tv_usec == 0) ||
+      timeout.tv_sec > scan_interval_sec) {
 
     // Time to scan the socket list...
 
@@ -1153,7 +1158,8 @@ SocketCollection::Select() {
   // process the socket list.
   SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
 
-  if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
+  if ((timeout.tv_sec == 0 && timeout.tv_usec == 0) ||
+      timeout.tv_sec > scan_interval_sec) {
 
     // Time to scan the socket list...
 
