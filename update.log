@@ -1,3 +1,15 @@
+Mon May 15 15:11:37 BST 2006 dgrisby
+====================================
+
+- Typo bug in unused Any array marshalling optimisation.
+
+src/lib/omniORB/dynamic/tcParser.cc
+
+- Support mixed endian doubles in sequences in Anys.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+
+
 Fri Apr 28 17:59:53 BST 2006 dgrisby
 ====================================
 

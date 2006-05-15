@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.11  2006/05/15 14:13:23  dgrisby
+# Support mixed endian doubles in sequences in Anys.
+#
 # Revision 1.14.2.10  2001/11/27 14:37:25  dpg1
 # long double TC descriptor.
 #
@@ -474,15 +477,30 @@ def visitSequenceType(type):
 
     elementDesc = output.StringStream()
     prefix = config.state['Private Prefix']
+
     # djr and jnw's "Super-Hacky Optimisation"
     # (amended by dpg1 to be even more hacky, since char/wchar now don't work)
-    if isinstance(d_seqType.type(), idltype.Base) and \
-       not d_seqType.variable() and \
-       not d_seqType.type().kind() in [idltype.tk_char, idltype.tk_wchar] and \
-       not is_array:
+    # (amended again to cope with mixed endian doubles)
+
+    is_double     = d_seqType.type().kind() == idltype.tk_double
+    is_contiguous = (isinstance(d_seqType.type(), idltype.Base) and
+                     not d_seqType.variable() and
+                     not d_seqType.type().kind() in [idltype.tk_char,
+                                                     idltype.tk_wchar] and
+                     not is_array)
+
+    if is_double:
+        elementDesc.out("""
+#ifndef OMNI_MIXED_ENDIAN_DOUBLE""")
+        
+    if is_contiguous:
         elementDesc.out(template.sequence_elementDesc_contiguous,
                         sequence = sequence_desc)
-    else:
+    if is_double:
+        elementDesc.out("""
+#else""")
+    
+    if is_double or not is_contiguous:
         # <---
         required_symbols = [ prefix + "_buildDesc" + seqType_cname ]
         assertDefined(required_symbols)
@@ -491,6 +509,10 @@ def visitSequenceType(type):
                         private_prefix = prefix,
                         thing_cname = seqType_cname,
                         thing = thing)
+
+    if is_double:
+        elementDesc.out("""
+#endif""")
 
     # <---
     cname = memberType_cname
