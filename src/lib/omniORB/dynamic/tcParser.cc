@@ -981,7 +981,7 @@ void appendItem(const TypeCode_base* tc, const tcDescriptor& tcdata, cdrStream& 
 	    // - Pointer to initial element is stored in same
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    buf.get_octet_array((CORBA::Char*)desc.p_streamdata,
+	    buf.put_octet_array((CORBA::Char*)desc.p_streamdata,
 				   contiguous * (alignTable[0].simple.size),
 				   alignTable[0].simple.alignment);
 	    i += contiguous;
