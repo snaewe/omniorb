@@ -1,3 +1,14 @@
+Mon May 15 11:06:52 BST 2006 dgrisby
+====================================
+
+- Data was overwritten when a chunk ended with an array; make
+  declareArrayLength() virtual.
+
+include/omniORB4/cdrStream.h
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Tue May  2 14:04:04 BST 2006 dgrisby
 ====================================
 
@@ -9,7 +20,7 @@ src/lib/omniORB/orbcore/ssl/sslActive.cc
 src/lib/omniORB/orbcore/tcp/tcpActive.cc
 src/lib/omniORB/orbcore/unix/unixActive.cc
 
-- Time out waiting for invoker threads to exit; allow configutation of
+- Time out waiting for invoker threads to exit; allow configuration of
   idle thread timeout.
 
 src/lib/omniORB/orbcore/corbaOrb.cc
