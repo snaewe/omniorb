@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2006/05/16 15:43:52  dgrisby
+  Make sure IPv6 definitions are available on Win32.
+
   Revision 1.1.4.11  2006/05/02 13:07:13  dgrisby
   Idle giopMonitor SocketCollections would not exit at shutdown.
 
@@ -172,6 +175,10 @@
 
 #  include <sys/types.h>
 #  include <libcWrapper.h>
+
+#  if defined(OMNI_SUPPORT_IPV6)
+#    include <ws2tcpip.h>
+#  endif
 
 #  define RC_INADDR_NONE     INADDR_NONE
 #  define RC_INVALID_SOCKET  INVALID_SOCKET

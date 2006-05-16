@@ -1,7 +1,15 @@
+Tue May 16 16:40:12 BST 2006 dgrisby
+====================================
+
+- Make sure IPv6 definitions are available on Win32.
+
+include/omniORB4/internal/SocketCollection.h
+
+
 Tue May 16 15:36:59 BST 2006 dgrisby
 ====================================
 
-- This is omniORB 4.1.0 beta 2.
+- On the way to omniORB 4.1.0 beta 2.
 
 README.FIRST.txt
 ReleaseNotes.txt
