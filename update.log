@@ -1,7 +1,10 @@
-Tue May 16 16:41:05 BST 2006 dgrisby
+Tue May 16 18:00:18 BST 2006 dgrisby
 ====================================
 
-- This is omniORB 4.1.0 beta 2.
+- Make sure _omniidl module is found even if it gets put somewhere
+  strange like lib64.
+
+src/tool/omniidl/python/scripts/omniidl.in
 
 
 Tue May 16 16:40:12 BST 2006 dgrisby

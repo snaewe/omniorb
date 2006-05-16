@@ -39,7 +39,7 @@ if sys.hexversion < 0x10502f0:
     sys.stderr.write("\n\n\n")
     sys.stderr.flush()
 
-import os, os.path
+import os, os.path, string
 
 pylibdir   = archlibdir = None
 binarchdir = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -77,7 +77,16 @@ if binarchdir != "":
 
 # Last chance, try a path based on the installation prefixes
 sys.path.append("@prefix@/lib/python" + sys.version[:3] + "/site-packages")
-sys.path.append("@exec_prefix@/lib/python" + sys.version[:3] + "/site-packages")
+
+paths = [ "@exec_prefix@/lib/python" + sys.version[:3] + "/site-packages",
+          "@pythondir@",
+          "@pyexecdir@" ]
+
+# Autoconf insists on making our life difficult...
+for path in paths:
+    path = string.replace(path, "${exec_prefix}", "@exec_prefix@")
+    path = string.replace(path, "${prefix}", "@prefix@")
+    sys.path.append(path)
 
 try:
     import _omniidl
