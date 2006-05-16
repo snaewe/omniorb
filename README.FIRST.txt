@@ -1,13 +1,11 @@
 READ ME FIRST!
 
-This is the development tree for omniORB 4.1.x.
-
-It is beta code. Do not use it for production applications.
+This is omniORB 4.1.x beta 2.
 
 omniORB is copyright AT&T Laboratories Cambridge, Apasphere Ltd and
 others. It is free software. The programs in omniORB are distributed
 under the GNU General Public Licence as published by the Free Software
-Foundation.  See the file COPYING for copying permission of these
+Foundation. See the file COPYING for copying permission of these
 programs. The libraries in omniORB are distributed under the GNU
 Lesser General Public Licence. See the file COPYING.LIB for copying
 permission of these libraries.
