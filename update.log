@@ -1,3 +1,11 @@
+Tue May 16 14:28:37 BST 2006 dgrisby
+====================================
+
+- Silly bug in setting Peek timeouts with conflicting Peeks.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Mon May 15 18:09:36 BST 2006 dgrisby
 ====================================
 

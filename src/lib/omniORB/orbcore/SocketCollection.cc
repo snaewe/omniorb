@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2006/05/16 13:32:04  dgrisby
+  Silly bug in setting Peek timeouts with conflicting Peeks.
+
   Revision 1.1.4.15  2006/05/15 17:11:15  dgrisby
   Limit select timeout in case time goes backwards.
 
@@ -670,7 +673,7 @@ SocketHolder::Peek()
 	  pd_peek_cond =
 	    new omni_tracedcondition(&pd_belong_to->pd_collection_lock);
 	
-	if (s == ns == 0) {
+	if (s == 0 && ns == 0) {
 	  // Set timeout for condition wait
 	  unsigned long rs, rns;
 	  rs  = SocketCollection::scan_interval_sec;
@@ -1018,7 +1021,7 @@ SocketHolder::Peek()
 	  pd_peek_cond =
 	    new omni_tracedcondition(&pd_belong_to->pd_collection_lock);
 	
-	if (s == ns == 0) {
+	if (s == 0 && ns == 0) {
 	  // Set timeout for condition wait
 	  unsigned long rs, rns;
 	  rs  = SocketCollection::scan_interval_sec;
@@ -1396,7 +1399,7 @@ SocketHolder::Peek()
 	  pd_peek_cond =
 	    new omni_tracedcondition(&pd_belong_to->pd_collection_lock);
 	
-	if (s == ns == 0) {
+	if (s == 0 && ns == 0) {
 	  // Set timeout for condition wait
 	  unsigned long rs, rns;
 	  rs  = SocketCollection::scan_interval_sec  / 2;
