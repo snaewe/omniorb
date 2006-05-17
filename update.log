@@ -1,3 +1,15 @@
+Wed May 17 13:58:01 BST 2006 dgrisby
+====================================
+
+- Preserve path from #include rather than reconstructing it.
+
+src/lib/omniORB/omniidl_be/cxx/header/__init__.py
+
+- Allow Select to wake up even if time goes backwards.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Mon May 15 15:11:37 BST 2006 dgrisby
 ====================================
 

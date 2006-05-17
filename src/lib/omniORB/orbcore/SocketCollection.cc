@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.27  2006/05/17 12:59:20  dgrisby
+  Allow Select to wake up even if time goes backwards.
+
   Revision 1.1.2.26  2005/03/10 11:28:29  dgrisby
   Race condition between setSelectable / clearSelectable.
 
@@ -420,7 +423,8 @@ SocketCollection::Select() {
   // (pd_abs_sec,pd_abs_nsec) define the absolute time when we switch fdset
   SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
 
-  if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
+  if ((timeout.tv_sec == 0 && timeout.tv_usec == 0) ||
+      timeout.tv_sec > scan_interval_sec) {
 
     omni_thread::get_time(&pd_abs_sec,&pd_abs_nsec,
 			  scan_interval_sec,scan_interval_nsec);
