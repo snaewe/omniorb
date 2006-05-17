@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.4  2006/05/17 13:26:59  dgrisby
+# Preserve path from #include rather than reconstructing it.
+#
 # Revision 1.17.2.3  2005/01/06 23:10:01  dgrisby
 # Big merge from omni4_0_develop.
 #
@@ -238,9 +241,10 @@ def monolithic(stream, tree):
         # rather than taking suffix from the config.
         guardname = id.Name([filename]).guard() + "_hh"
 
-        cxx_include = filename + config.state['HH Suffix']
         if config.state['Keep Include Path']:
-            cxx_include = os.path.join(dirname, cxx_include)
+            filename = root
+
+        cxx_include = filename + config.state['HH Suffix']
 
         if config.state['Use Quotes']:
             cxx_include = "\"" + cxx_include + "\""
