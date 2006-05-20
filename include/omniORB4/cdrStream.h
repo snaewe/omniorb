@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2006/05/20 16:23:37  dgrisby
+  Minor cdrMemoryStream and TypeCode performance tweaks.
+
   Revision 1.1.4.12  2006/05/15 10:13:00  dgrisby
   Data was overwritten when a chunk ended with an array; make
   declareArrayLength() virtual.
@@ -1190,8 +1193,9 @@ public:
 protected:
   _CORBA_Boolean pd_readonly_and_external_buffer;
   _CORBA_Boolean pd_clear_memory;
-  char  pd_inline_buffer[32];
   void* pd_bufp;
+  void* pd_bufp_8;
+  char  pd_inline_buffer[32];
 
 public:
   // The following implement the abstract functions defined in cdrStream

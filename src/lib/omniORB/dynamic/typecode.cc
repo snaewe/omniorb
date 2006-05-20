@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.10  2006/05/20 16:23:36  dgrisby
+ * Minor cdrMemoryStream and TypeCode performance tweaks.
+ *
  * Revision 1.40.2.9  2005/11/09 12:22:18  dgrisby
  * Local interfaces support.
  *
@@ -1233,7 +1236,6 @@ OMNI_NAMESPACE_BEGIN(omni)
 TypeCode_base::TypeCode_base(CORBA::TCKind tck)
   : pd_complete(1), pd_mark(0), pd_ref_count(1),
     pd_loop_member(0), pd_internal_ref_count(0),
-    pd_cached_paramlist(0),
     pd_aliasExpandedTc(0), pd_compactTc(0), pd_tck(tck),
     pd_next(0)
 {
@@ -1322,7 +1324,6 @@ TypeCode_base::TypeCode_base(CORBA::TCKind tck)
 
 TypeCode_base::~TypeCode_base()
 {
-  if( pd_cached_paramlist )  delete pd_cached_paramlist;
   if( pd_aliasExpandedTc && pd_aliasExpandedTc != this )
     TypeCode_collector::releaseRef(pd_aliasExpandedTc);
   if( pd_compactTc && pd_compactTc != this )
@@ -5088,12 +5089,6 @@ TypeCode_pairlist::search(const TypeCode_pairlist* pl, const TypeCode_base* tc)
 ///////////////////////// TypeCode_marshaller ////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-// Global typecode lock. This lock is used to protect the cached parameter
-// list data, which is stored in typecodes when they are first marshalled.
-
-// Initialised in check_static_data_is_initialised().
-static omni_tracedmutex* cached_paramlist_lock = 0;
-
 
 void
 TypeCode_marshaller::marshal(TypeCode_base* tc,
@@ -5147,80 +5142,32 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
       case plt_Complex:
 	// Complex parameter list
 	{
-	  CORBA::Boolean has_cached_paramlist = 0;
-	  cdrMemoryStream* paramlist = 0;
-
 	  // The typecode is complex and wasn't found, so add it to the table
 	  otbl->addEntry(otbl->currentOffset(), tc);
 
-#if 0
-	  // This is broken!!!!!
+	  // Build the parameter list
+	  cdrEncapsulationStream paramlist;
 
-	  // Is there already a cached form of the parameter list?
-	  if( !tc->pd_loop_member ) {
-	    omni_tracedmutex_lock l(*cached_paramlist_lock);
+	  // Create a child TypeCode_offsetTable with the correct base
+	  // offset.
+	  //  NB: When the offsetTable is passed to us, the currentOffset
+	  // value will indicate the START of the typecode we're
+	  // marshalling.  Relative to the start of the encapsulated
+	  // data, this location has offset -8, allowing four bytes for
+	  // the TypeCode Kind and four for the encapsulation size.
+	  TypeCode_offsetTable offsetTbl(otbl, -8);
 
-	    has_cached_paramlist = tc->pd_cached_paramlist != 0;
-	  }
-#endif
-
-	  if( has_cached_paramlist ) {
-	    paramlist = tc->pd_cached_paramlist;
-	  } else {
-	    // Create a MemBufferedStream to marshal the data into
-	    paramlist = new cdrMemoryStream();
-
-	    try {
-	      // Create a child TypeCode_offsetTable with the correct base
-	      // offset.
-	      //  NB: When the offsetTable is passed to us, the currentOffset
-	      // value will indicate the START of the typecode we're
-	      // marshalling.  Relative to the start of the encapsulated
-	      // data, this location has offset -8, allowing four bytes for
-	      // the TypeCode Kind and four for the encapsulation size.
-	      TypeCode_offsetTable offsetTbl(otbl, -8);
-
-	      // Write out the byteorder
-	      (*paramlist).marshalOctet(omni::myByteOrder);
-
-	      // Call the supplied typecode object to marshal its complex
-	      // parameter data into the temporary stream.
-	      tc->NP_marshalComplexParams(*paramlist, &offsetTbl);
-
-	      // And we're done!
-	    }
-	    catch (...) {
-	      if( paramlist != 0 )  delete paramlist;
-	      throw;
-	    }
-	  }
+	  // Call the supplied typecode object to marshal its complex
+	  // parameter data into the temporary stream.
+	  tc->NP_marshalComplexParams(paramlist, &offsetTbl);
 
 	  // Now write the size of the encapsulation out to the main stream
-	  ::operator>>= ((CORBA::ULong)paramlist->bufSize(), s);
+	  CORBA::ULong bufsize = paramlist.bufSize();
+	  bufsize >>= s;
 
 	  // And copy the data out to the main stream
-	  s.put_octet_array((CORBA::Char*) paramlist->bufPtr(),
-			    paramlist->bufSize());
+	  s.put_octet_array((CORBA::Char*) paramlist.bufPtr(), bufsize);
 
-#if 0
-	  // Ensure that the paramlist is freed, or saved as a cached
-	  // param list if not a part of a loop.
-	  if( !has_cached_paramlist ){
-	    if( tc->pd_loop_member ){
-	      delete paramlist;
-	    }else{
-	      omni_tracedmutex_lock l(*cached_paramlist_lock);
-
-	      // Check some other thread hasn't made the parameter list ...
-	      if( tc->pd_cached_paramlist == 0 )
-		tc->pd_cached_paramlist = paramlist;
-	      else
-		delete paramlist;
-	    }
-	  }
-#else
-	  delete paramlist;
-#endif
 	  break;
 	}
       } // switch( paramListType(tck) ) {
@@ -6805,7 +6752,6 @@ static void check_static_data_is_initialised()
 
   // Mutexes
   aliasExpandedTc_lock  = new omni_tracedmutex();
-  cached_paramlist_lock = new omni_tracedmutex();
   refcount_lock         = new omni_tracedmutex();
 
   // Primitive TypeCodes
@@ -6952,7 +6898,6 @@ omniTypeCodeCollection::~omniTypeCodeCollection()
 
   // Delete mutexes
   delete aliasExpandedTc_lock;
-  delete cached_paramlist_lock;
   delete refcount_lock;
 }
 

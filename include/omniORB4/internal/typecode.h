@@ -32,6 +32,9 @@
 
 /*
  * $Log$
+ * Revision 1.1.4.4  2006/05/20 16:23:37  dgrisby
+ * Minor cdrMemoryStream and TypeCode performance tweaks.
+ *
  * Revision 1.1.4.3  2004/05/25 14:20:50  dgrisby
  * ValueType TypeCode support.
  *
@@ -432,11 +435,6 @@ protected:
   CORBA::Boolean pd_loop_member;
   CORBA::ULong   pd_internal_ref_count;
   CORBA::ULong   pd_internal_depth;
-
-  // Placeholder for the cached on-the-wire form of the typecode's
-  // parameter list. This is only used for complex typecodes that aren't
-  // part of a loop.
-  cdrMemoryStream* pd_cached_paramlist;
 
   // A pointer to the alias expanded version of this typecode
   // if one has been generated, 0 otherwise. If the alias expanded
