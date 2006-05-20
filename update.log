@@ -1,3 +1,23 @@
+Sat May 20 17:22:31 BST 2006 dgrisby
+====================================
+
+- Minor cdrMemoryStream and TypeCode performance tweaks.
+
+include/omniORB4/cdrStream.h
+include/omniORB4/internal/typecode.h
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+
+- Remove obsolete files.
+
+src/examples/anyExample/anyExample.idl
+src/examples/anyExample/anyExample.pkg
+src/examples/anyExample/anyExample_clt.module
+src/examples/anyExample/anyExample_impl.module
+src/examples/thread/diner.pkg
+src/examples/thread/threadtests.module
+
+
 Wed May 17 18:17:44 BST 2006 dgrisby
 ====================================
 
