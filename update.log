@@ -1,3 +1,20 @@
+Sun May 21 18:41:43 BST 2006 dgrisby
+====================================
+
+- Remove obsolete pd_chunked flag.
+
+include/omniORB4/cdrStream.h
+src/lib/omniORB/orbcore/cdrStream.cc
+
+- Remove unnecessary uses of cdrCountingStream.
+
+src/lib/omniORB/orbcore/ior.cc
+
+- get_octet_array could set chunk end pointer incorrectly.
+
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Sat May 20 17:22:31 BST 2006 dgrisby
 ====================================
 

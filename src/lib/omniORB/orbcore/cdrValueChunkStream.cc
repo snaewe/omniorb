@@ -29,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.10  2006/05/21 17:45:11  dgrisby
+// get_octet_array could set chunk end pointer incorrectly.
+//
 // Revision 1.1.2.9  2006/05/15 10:12:59  dgrisby
 // Data was overwritten when a chunk ended with an array; make
 // declareArrayLength() virtual.
@@ -841,6 +844,7 @@ get_octet_array(_CORBA_Octet* b, int size, omni::alignment_t align)
 
   p1 = omni::align_to((omni::ptr_arith_t)pd_inb_mkr, align);
   p2 = p1 + size;
+
   if (p2 <= (omni::ptr_arith_t)pd_inb_end) {
     memcpy((void*)b, (const void*)p1, size);
     pd_inb_mkr = (void*)p2;
@@ -923,11 +927,11 @@ get_octet_array(_CORBA_Octet* b, int size, omni::alignment_t align)
     else {
       // Finish the read
       pd_actual.get_octet_array(b, size, align);
+      len -= size;
       size = 0;
 
       // Sort out the input pointer
       copyStateFromActual();
-      len -= size;
       p1 = (omni::ptr_arith_t)pd_inb_mkr;
       p2 = p1 + len;
       if (p2 > (omni::ptr_arith_t)pd_inb_end)
