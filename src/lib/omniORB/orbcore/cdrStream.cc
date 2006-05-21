@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2006/05/21 17:43:24  dgrisby
+  Remove obsolete pd_chunked flag.
+
   Revision 1.1.4.9  2006/05/15 10:13:00  dgrisby
   Data was overwritten when a chunk ended with an array; make
   declareArrayLength() virtual.
@@ -147,7 +150,7 @@ cdrStream::cdrStream() : pd_unmarshal_byte_swap(0), pd_marshal_byte_swap(0),
 			 pd_tcs_c(0), pd_tcs_w(0),
 			 pd_ncs_c(orbParameters::nativeCharCodeSet),
 			 pd_ncs_w(orbParameters::nativeWCharCodeSet),
-			 pd_valueTracker(0), pd_chunked(0)
+			 pd_valueTracker(0)
 {
 }
 

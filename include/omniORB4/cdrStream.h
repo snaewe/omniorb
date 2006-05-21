@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2006/05/21 17:43:24  dgrisby
+  Remove obsolete pd_chunked flag.
+
   Revision 1.1.4.13  2006/05/20 16:23:37  dgrisby
   Minor cdrMemoryStream and TypeCode performance tweaks.
 
@@ -762,9 +765,6 @@ protected:
   _OMNI_NS(ValueIndirectionTracker)* pd_valueTracker;
   // Object used to track offsets of indirections in valuetypes.
 
-  _CORBA_Boolean pd_chunked;
-  // True if this is a chunked value stream.
-
 public:
 
   // Access functions to the char and wchar code set convertors
@@ -1410,7 +1410,6 @@ public:
     pd_marshal_byte_swap   = pd_actual.pd_marshal_byte_swap;
     pd_tcs_c               = pd_actual.pd_tcs_c;
     pd_tcs_w               = pd_actual.pd_tcs_w;
-    pd_chunked             = 1;
 
     copyStateFromActual();
   }
