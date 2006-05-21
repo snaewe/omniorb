@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.12.2.4  2006/05/21 17:44:04  dgrisby
+  Remove unnecessary uses of cdrCountingStream.
+
   Revision 1.12.2.3  2006/04/09 19:52:31  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -295,29 +298,8 @@ IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
 {
   profile.tag = IOP::TAG_INTERNET_IOP;
 
-  CORBA::ULong bufsize;
   {
-    cdrCountingStream s(orbParameters::anyCharCodeSet,
-			orbParameters::anyWCharCodeSet);
-    s.marshalOctet(omni::myByteOrder);
-    s.marshalOctet(body.version.major);
-    s.marshalOctet(body.version.minor);
-    s.marshalRawString(body.address.host);
-    body.address.port >>= s;
-    body.object_key >>= s;
-
-    if (body.version.minor > 0) {
-      CORBA::ULong total = body.components.length();
-      total >>= s;
-      for (CORBA::ULong index=0; index < total; index++) {
-	body.components[index] >>= s;
-      }
-    }
-    bufsize = s.total();
-  }
-
-  {
-    cdrEncapsulationStream s(bufsize,1);
+    cdrEncapsulationStream s((CORBA::ULong)0,1);
     s.marshalOctet(body.version.major);
     s.marshalOctet(body.version.minor);
     s.marshalRawString(body.address.host);
@@ -346,23 +328,8 @@ IIOP::encodeMultiComponentProfile(const IOP::MultipleComponentProfile& body,
 {
   profile.tag = IOP::TAG_MULTIPLE_COMPONENTS;
 
-  CORBA::ULong bufsize;
   {
-    cdrCountingStream s(orbParameters::anyCharCodeSet,
-			orbParameters::anyWCharCodeSet);
-    s.marshalOctet(omni::myByteOrder);
-    CORBA::ULong total = body.length();
-    if (total) {
-      total >>= s;
-      for (CORBA::ULong index=0; index < total; index++) {
-	body[index] >>= s;
-      }
-    }
-    bufsize = s.total();
-  }
-
-  {
-    cdrEncapsulationStream s(bufsize,1);
+    cdrEncapsulationStream s((CORBA::ULong)0,1);
     CORBA::ULong total = body.length();
     if (total) {
       total >>= s;
