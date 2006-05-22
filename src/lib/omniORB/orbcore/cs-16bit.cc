@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2006/05/22 15:44:51  dgrisby
+  Make sure string length and body are never split across a chunk
+  boundary.
+
   Revision 1.1.4.3  2005/12/08 14:22:31  dgrisby
   Better string marshalling performance; other minor optimisations.
 
@@ -219,12 +223,12 @@ omniCodeSet::TCS_W_16bit::marshalWChar(cdrStream& stream,
   // since we're not transmitting UTF-16. We assume here that there is
   // no padding, and we use the stream's endianness.
 
+  stream.declareArrayLength(omni::ALIGN_1, 3);
   stream.marshalOctet(2);
 
   _CORBA_Octet* p = (_CORBA_Octet*)&tc;
   _CORBA_Octet  o;
 
-  stream.declareArrayLength(omni::ALIGN_1, 2);
   if (stream.marshal_byte_swap()) {
     o = p[1]; stream.marshalOctet(o);
     o = p[0]; stream.marshalOctet(o);
@@ -244,12 +248,12 @@ omniCodeSet::TCS_W_16bit::marshalWString(cdrStream& stream,
   // Just to be different, wstring is marshalled without a terminating
   // null. Length is in octets.
   _CORBA_ULong mlen = len * 2;
+  stream.declareArrayLength(omni::ALIGN_4, mlen + 4);
   mlen >>= stream;
 
   _CORBA_UShort        tc;
   omniCodeSet::UniChar uc;
   
-  stream.declareArrayLength(omni::ALIGN_2, mlen);
   for (_CORBA_ULong i=0; i<len; i++) {
     uc = us[i];
     tc = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
@@ -357,13 +361,13 @@ omniCodeSet::TCS_W_16bit::fastMarshalWChar(cdrStream&          stream,
 		    (CORBA::CompletionStatus)stream.completion());
 #endif
 
+    stream.declareArrayLength(omni::ALIGN_1, 3);
     stream.marshalOctet(2);
 
     _CORBA_UShort tc = wc;
     _CORBA_Octet* p  = (_CORBA_Octet*)&tc;
     _CORBA_Octet  o;
 
-    stream.declareArrayLength(omni::ALIGN_1, 2);
     if (stream.marshal_byte_swap()) {
       o = p[1]; stream.marshalOctet(o);
       o = p[0]; stream.marshalOctet(o);
@@ -390,11 +394,12 @@ omniCodeSet::TCS_W_16bit::fastMarshalWString(cdrStream&          stream,
       OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
 		    (CORBA::CompletionStatus)stream.completion());
 
-    _CORBA_ULong mlen = len * 2; mlen >>= stream;
+    _CORBA_ULong mlen = len * 2;
+    stream.declareArrayLength(omni::ALIGN_4, mlen+4);
+    mlen >>= stream;
 
 #if (SIZEOF_WCHAR == 2)
     if (stream.marshal_byte_swap()) {
-      stream.declareArrayLength(omni::ALIGN_2, mlen);
       _CORBA_UShort tc;
       for (_CORBA_ULong i=0; i<len; i++) {
 	tc = ws[i]; tc >>= stream;
@@ -404,7 +409,6 @@ omniCodeSet::TCS_W_16bit::fastMarshalWString(cdrStream&          stream,
       stream.put_octet_array((const _CORBA_Char*)ws, mlen, omni::ALIGN_2);
     }
 #else
-    stream.declareArrayLength(omni::ALIGN_2, mlen);
     _CORBA_UShort tc;
     for (_CORBA_ULong i=0; i<len; i++) {
       tc = ws[i]; tc >>= stream;

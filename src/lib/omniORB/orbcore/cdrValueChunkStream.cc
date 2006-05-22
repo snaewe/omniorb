@@ -29,6 +29,10 @@
 //
 
 // $Log$
+// Revision 1.1.2.11  2006/05/22 15:44:51  dgrisby
+// Make sure string length and body are never split across a chunk
+// boundary.
+//
 // Revision 1.1.2.10  2006/05/21 17:45:11  dgrisby
 // get_octet_array could set chunk end pointer incorrectly.
 //
@@ -296,7 +300,9 @@ void
 cdrValueChunkStream::
 startInputValueBody()
 {
-  OMNIORB_ASSERT(pd_inHeader);
+  if (!pd_inHeader)
+    OMNIORB_THROW(MARSHAL, MARSHAL_InvalidChunkedEncoding,
+		  (CORBA::CompletionStatus)completion());
   pd_inHeader = 0;
   startInputChunk();
 }
@@ -501,37 +507,48 @@ put_octet_array(const _CORBA_Octet* b, int size, omni::alignment_t align)
     return;
   }
 
-  if (!pd_inChunk) {
-    // Start a new chunk
-    OMNIORB_ASSERT(pd_nestLevel);
-    OMNIORB_ASSERT(pd_lengthPtr == 0);
-    startOutputChunk();
-  }
-
   p1 = omni::align_to((omni::ptr_arith_t)pd_outb_mkr, align);
   p2 = p1 + size;
 
   if (p2 <= (omni::ptr_arith_t)pd_outb_end) {
-    // Enough space in buffer
+    // Enough space in buffer.
     memcpy((void*)p1, (const void*)b, size);
     pd_outb_mkr = (void*)p2;
+    return;
   }
-  else {
-    // End the chunk, setting its length to include the octet array
-    p1 = (omni::ptr_arith_t)pd_lengthPtr + 4;
-    OMNIORB_ASSERT(p1 < p2);
-    *pd_lengthPtr = (CORBA::Long)(p2 - p1);
 
-    pd_lengthPtr = 0;
-    pd_inChunk   = 0;
+  if (!pd_inChunk) {
+    // Start a new chunk.
+    OMNIORB_ASSERT(pd_nestLevel);
+    OMNIORB_ASSERT(pd_lengthPtr == 0);
+    startOutputChunk();
 
-    copyStateToActual();
-    pd_actual.put_octet_array(b, size, align);
-    copyStateFromActual();
+    p1 = omni::align_to((omni::ptr_arith_t)pd_outb_mkr, align);
+    p2 = p1 + size;
 
-    // Make sure the next insertion causes a new chunk to start.
-    pd_outb_end = pd_outb_mkr;
+    if (p2 <= (omni::ptr_arith_t)pd_outb_end) {
+      // There is now enough space in the buffer.
+      memcpy((void*)p1, (const void*)b, size);
+      pd_outb_mkr = (void*)p2;
+      return;
+    }
   }
+
+  // There was not enough space in the buffer, so end the chunk,
+  // setting its length to include the octet array.
+  p1 = (omni::ptr_arith_t)pd_lengthPtr + 4;
+  OMNIORB_ASSERT(p1 < p2);
+  *pd_lengthPtr = (CORBA::Long)(p2 - p1);
+
+  pd_lengthPtr = 0;
+  pd_inChunk   = 0;
+
+  copyStateToActual();
+  pd_actual.put_octet_array(b, size, align);
+  copyStateFromActual();
+
+  // Make sure the next insertion causes a new chunk to start.
+  pd_outb_end = pd_outb_mkr;
 }
 
 void

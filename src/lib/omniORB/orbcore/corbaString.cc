@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.19.2.4  2006/05/22 15:44:51  dgrisby
+  Make sure string length and body are never split across a chunk
+  boundary.
+
   Revision 1.19.2.3  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -210,12 +214,28 @@ cdrStream::marshalRawString(const char* s)
   // remaining portion before marshalling it, meaning some of the
   // string is passed over twice.
 
-  _CORBA_ULong len = 0;
-  len >>= *this;
-  _CORBA_ULong* lenp = (_CORBA_ULong*)(((omni::ptr_arith_t)pd_outb_mkr) - 4);
-
-  char* current = (char*)pd_outb_mkr;
+  char* current = (char*)omni::align_to((omni::ptr_arith_t)pd_outb_mkr,
+					omni::ALIGN_4);
   char* limit   = (char*)pd_outb_end;
+
+  _CORBA_ULong* lenp = (_CORBA_ULong*)current;
+  current += 4;
+  _CORBA_ULong len;
+
+  if (current >= limit) {
+    // No characters from the string will fit in the current buffer.
+    // The length might fit, but we can't put it in this buffer since
+    // in a chunked stream it must stay with the string contents.
+    len = strlen(s) + 1;
+    declareArrayLength(omni::ALIGN_4, len+4);
+    len >>= *this;
+    put_octet_array((const _CORBA_Octet*)s, len);
+    return len;
+  }
+
+  pd_outb_mkr = (void*)current;
+
+  // At least some of the string fits in the current buffer.
   while(*s && current < limit) {
     *current++ = *s++;
   }
@@ -228,10 +248,11 @@ cdrStream::marshalRawString(const char* s)
     *lenp = len;
   }
   else {
-    // Some (or all) of the string did not fit.
+    // Some of the string did not fit.
     len = (omni::ptr_arith_t)current - (omni::ptr_arith_t)pd_outb_mkr;
     pd_outb_mkr = (void*)current;
     _CORBA_ULong rest = strlen(s) + 1;
+
     len += rest;
     if ((omni::ptr_arith_t)lenp < (omni::ptr_arith_t)pd_outb_end)
       *lenp = len;
