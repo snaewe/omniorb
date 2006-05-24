@@ -1,3 +1,11 @@
+Wed May 24 19:29:39 BST 2006 dgrisby
+====================================
+
+- Segfault with some uses of aliases to unknown types.
+
+src/tool/omniidl/cxx/idlast.cc
+
+
 Mon May 22 16:39:18 BST 2006 dgrisby
 ====================================
 

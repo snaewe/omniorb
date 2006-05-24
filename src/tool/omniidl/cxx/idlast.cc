@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.22.2.5  2006/05/24 18:30:53  dgrisby
+// Segfault with some uses of aliases to unknown types.
+//
 // Revision 1.22.2.4  2005/05/10 22:07:31  dgrisby
 // Merge again.
 //
@@ -1212,6 +1215,9 @@ Member(const char* file, int line, IDL_Boolean mainFile,
 
   IdlType* bareType = memberType->unalias();
 
+  if (!bareType)
+    return;
+
   if (bareType->kind() == IdlType::tk_struct) {
     Struct* s = (Struct*)((DeclaredType*)bareType)->decl();
     if (!s->finished()) {
@@ -1597,6 +1603,9 @@ UnionCase(const char* file, int line, IDL_Boolean mainFile,
   checkNotForward(file, line, caseType);
 
   IdlType* bareType = caseType->unalias();
+
+  if (!bareType)
+    return;
 
   if (bareType->kind() == IdlType::tk_struct) {
     Struct* s = (Struct*)((DeclaredType*)bareType)->decl();
