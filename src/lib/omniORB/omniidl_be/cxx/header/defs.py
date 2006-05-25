@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.13  2006/05/25 18:19:12  dgrisby
+# Incorrect code generated for valuebox containing sequence of value;
+# clean up class nesting tracking.
+#
 # Revision 1.36.2.12  2006/01/18 19:23:18  dgrisby
 # Code generation problems with valuetype inheritance / typedefs.
 #
@@ -307,37 +311,76 @@ from omniidl_be.cxx import output, config, id, types, iface, cxx, ast, util
 from omniidl_be.cxx import value
 from omniidl_be.cxx.header import template
 
+# We behave as if the global code here is really inside a class
 import defs
-
 self = defs
 
-def __init__(stream):
-    defs.stream = stream
+stream = None
+
+_insideClass      = 0
+_insideModule     = 0
+_insideInterface  = 0
+_interfaces       = {}
+_completedModules = {}
+
+def pushInsideClass():
+    global _insideClass
+    _insideClass = _insideClass + 1
+
+def popInsideClass():
+    global _insideClass
+    _insideClass = _insideClass - 1
+
+def pushInsideModule():
+    global _insideModule
+    _insideModule = _insideModule + 1
+
+def popInsideModule():
+    global _insideModule
+    _insideModule = _insideModule - 1
+
+def pushInsideInterface():
+    global _insideInterface
+    _insideInterface = _insideInterface + 1
+
+def popInsideInterface():
+    global _insideInterface
+    _insideInterface = _insideInterface - 1
+
+
+def __init__(_stream):
+    global stream, _insideClass, _insideModule, _insideInterface
+    global _interfaces, _completedModules
+
+    stream = _stream
+
     # Need to keep track of how deep within the AST we are.
     # In a recursive procedure these would be extra arguments,
     # but the visitor pattern necessitates them being global.
-    self.__insideInterface = 0
-    self.__insideModule    = 0
-    self.__insideClass     = 0
+    _insideInterface = 0
+    _insideModule    = 0
+    _insideClass     = 0
 
     # A repository id entry in this hash indicates that an interface
     # has been declared- therefore any more AST forward nodes for this
     # interface are ignored.
-    self.__interfaces = {}
+    _interfaces = {}
 
     # When we first encounter a module, we sometimes deal with all the
     # continuations straight away. Therefore when we reencounter a
     # continuation later, we don't duplicate the definitions.
-    self.__completedModules = {}
+    _completedModules = {}
 
+    import defs
     return defs
+
 
 # Returns the prefix required inside a const declaration (it depends on
 # exactly what the declaration is nested inside)
 def const_qualifier(insideModule=None, insideClass=None):
     if insideModule is None:
-        insideModule = __insideModule
-        insideClass  = __insideClass
+        insideModule = _insideModule
+        insideClass  = _insideClass
 
     if not insideModule and not insideClass:
         return "_CORBA_GLOBAL_VAR"
@@ -348,13 +391,13 @@ def const_qualifier(insideModule=None, insideClass=None):
 
 # Same logic for function qualifiers
 def func_qualifier():
-    return const_qualifier(__insideModule, __insideClass)
+    return const_qualifier(_insideModule, _insideClass)
 
 # Inline functions are subtly different
 def inline_qualifier():
-    if not __insideModule and not __insideClass:
+    if not _insideModule and not _insideClass:
         return "inline"
-    elif __insideClass:
+    elif _insideClass:
         return "static inline"
     else:
         return "_CORBA_MODULE_INLINE"
@@ -364,11 +407,15 @@ def inline_qualifier():
 # Control arrives here
 #
 def visitAST(node):
-    self.__insideInterface  = 0
-    self.__insideModule     = 0
-    self.__insideClass      = 0
-    self.__interfaces       = {}
-    self.__completedModules = {}
+    global stream, _insideClass, _insideModule, _insideInterface
+    global _interfaces, _completedModules
+
+    _insideInterface  = 0
+    _insideModule     = 0
+    _insideClass      = 0
+    _interfaces       = {}
+    _completedModules = {}
+
     for n in node.declarations():
         if ast.shouldGenerateCodeForDecl(n):
             n.accept(self)
@@ -377,9 +424,9 @@ def visitModule(node):
     # Ensure we only output the definitions once.
     # In particular, when the splice-modules flag is set and this is
     # a reopened module, the node will be marked as completed already.
-    if self.__completedModules.has_key(node):
+    if _completedModules.has_key(node):
         return
-    self.__completedModules[node] = 1
+    _completedModules[node] = 1
     
     ident = node.identifier()
     cxx_id = id.mapID(ident)
@@ -389,8 +436,7 @@ def visitModule(node):
         stream.inc_indent()
 
     # push self.__insideModule, true
-    insideModule = self.__insideModule
-    self.__insideModule = 1
+    pushInsideModule()
 
     for n in node.definitions():
         n.accept(self)
@@ -400,10 +446,9 @@ def visitModule(node):
         for c in node.continuations():
             for n in c.definitions():
                 n.accept(self)
-            self.__completedModules[c] = 1
+            _completedModules[c] = 1
 
-    # pop self.__insideModule
-    self.__insideModule = insideModule
+    popInsideModule()
     
     if not config.state['Fragment']:
         stream.dec_indent()
@@ -414,7 +459,7 @@ def visitModule(node):
 def visitInterface(node):
     # It's legal to have a forward interface declaration after
     # the actual interface definition. Make sure we ignore these.
-    self.__interfaces[node.repoId()] = 1
+    _interfaces[node.repoId()] = 1
 
     name = node.identifier()
     cxx_name = id.mapID(name)
@@ -422,12 +467,8 @@ def visitInterface(node):
     outer_environment = id.lookup(node)
     environment = outer_environment.enter(name)
 
-    # push self.__insideInterface, true
-    # push self.__insideClass, true
-    insideInterface = self.__insideInterface
-    self.__insideInterface = 1
-    insideClass = self.__insideClass
-    self.__insideClass = 1
+    pushInsideInterface()
+    pushInsideClass()
 
     # make the necessary forward references, typedefs and define
     # the _Helper class
@@ -462,14 +503,12 @@ def visitInterface(node):
             _sk_I = iface.instance("_sk_I")(I)
             _sk_I.hh(stream)
 
-    # pop self.__insideInterface
-    # pop self.__insideClass
-    self.__insideInterface = insideInterface
-    self.__insideClass = insideClass
+    popInsideClass()
+    popInsideInterface()
 
     # Typecode and Any
     if config.state['Typecode']:
-        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
+        qualifier = const_qualifier(_insideModule, _insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier,
                    name = cxx_name)
@@ -480,9 +519,9 @@ def visitInterface(node):
 def visitForward(node):
     # Note it's legal to have multiple forward declarations
     # of the same name. So ignore the duplicates.
-    if self.__interfaces.has_key(node.repoId()):
+    if _interfaces.has_key(node.repoId()):
         return
-    self.__interfaces[node.repoId()] = 1
+    _interfaces[node.repoId()] = 1
 
     environment = id.lookup(node)
     scope = environment.scope()
@@ -537,7 +576,7 @@ def visitConst(node):
     # depends on whether we are inside a class / in global scope
     # etc
     # should be rationalised with tyutil.const_qualifier
-    if self.__insideClass:
+    if _insideClass:
         if representedByInteger:
             stream.out(template.const_inclass_isinteger,
                        type = type_string, name = cxx_name, val = value)
@@ -546,7 +585,7 @@ def visitConst(node):
                        type = type_string, name = cxx_name)
     else:
         where = "GLOBAL"
-        if self.__insideModule:
+        if _insideModule:
             where = "MODULE"
         if representedByInteger:
             stream.out(template.const_outsideclass_isinteger,
@@ -565,7 +604,7 @@ def visitTypedef(node):
     environment = id.lookup(node)
     scope = environment.scope()
     
-    is_global_scope = not (self.__insideModule or self.__insideInterface)
+    is_global_scope = not (_insideModule or _insideInterface)
     
     aliasType = types.Type(node.aliasType())
     aliasTypeID = aliasType.member(environment)
@@ -595,7 +634,7 @@ def visitTypedef(node):
 
         # Typecode and Any
         if config.state['Typecode']:
-            qualifier = const_qualifier(self.__insideModule,self.__insideClass)
+            qualifier = const_qualifier(_insideModule,_insideClass)
             stream.out(template.typecode,
                        qualifier = qualifier,
                        name = derivedName)
@@ -931,8 +970,7 @@ def visitStruct(node):
     environment = outer_environment.enter(name)
     scope = environment.scope()
     
-    insideClass = self.__insideClass
-    self.__insideClass = 1
+    pushInsideClass()
             
     # Deal with types constructed here
     def Other_IDL(stream = stream, node = node, environment = environment):
@@ -994,12 +1032,12 @@ def visitStruct(node):
                    name = cxx_name)
 
     
-    self.__insideClass = insideClass
+    popInsideClass()
 
     # TypeCode and Any
     if config.state['Typecode']:
         # structs in C++ are classes with different default privacy policies
-        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
+        qualifier = const_qualifier(_insideModule, _insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier,
                    name = cxx_name)
@@ -1019,8 +1057,7 @@ def visitException(node):
     environment = outer_environment.enter(exname)
     scope = environment.scope()
     
-    insideClass = self.__insideClass
-    self.__insideClass = 1
+    pushInsideClass()
 
     # if the exception has no members, inline some no-ops
     no_members = (node.members() == [])
@@ -1113,11 +1150,11 @@ def visitException(node):
                inline = inline,
                body = body)
                
-    self.__insideClass = insideClass
+    popInsideClass()
 
     # Typecode and Any
     if config.state['Typecode']:
-        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
+        qualifier = const_qualifier(_insideModule, _insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier,
                    name = cxx_exname)
@@ -1132,8 +1169,7 @@ def visitUnion(node):
     environment = outer_environment.enter(ident)
     scope = environment.scope()
     
-    insideClass = self.__insideClass
-    self.__insideClass = 1
+    pushInsideClass()
     
     switchType = types.Type(node.switchType())
     d_switchType = switchType.deref()
@@ -1694,11 +1730,11 @@ def visitUnion(node):
         stream.out(template.union_fix_out_type,
                    unionname = cxx_id)
 
-    self.__insideClass = insideClass
+    popInsideClass()
 
     # TypeCode and Any
     if config.state['Typecode']:
-        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
+        qualifier = const_qualifier(_insideModule, _insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier,
                    name = cxx_id)
@@ -1722,7 +1758,7 @@ def visitEnum(node):
 
     # TypeCode and Any
     if config.state['Typecode']:
-        qualifier = const_qualifier(self.__insideModule, self.__insideClass)
+        qualifier = const_qualifier(_insideModule, _insideClass)
         stream.out(template.typecode,
                    qualifier = qualifier, name = name)
     

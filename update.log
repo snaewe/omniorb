@@ -1,3 +1,31 @@
+Thu May 25 19:13:06 BST 2006 dgrisby
+====================================
+
+- spec and pkgconfig updates.
+
+contrib/RPMs/omniORB.spec
+contrib/RPMs/omniORB_new.spec
+contrib/pkgconfig/omniCOS4.pc.in
+contrib/pkgconfig/omniORB4.pc.in
+
+- Standard stream operators for String_var, Fixed, Exception, etc.
+
+include/omniORB4/local_config.h
+include/omniORB4/streamOperators.h  -- new
+
+- Comment fixes.
+
+include/omniORB4/valueTemplatedecls.h
+
+- Incorrect code generated for valuebox containing sequence of value;
+  clean up class nesting tracking.
+
+src/lib/omniORB/omniidl_be/cxx/value.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+
+
+
+
 Wed May 24 19:29:39 BST 2006 dgrisby
 ====================================
 

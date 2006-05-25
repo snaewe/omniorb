@@ -2470,6 +2470,9 @@ class ValueType (mapping.Decl):
 
         environment = self._environment
 
+        from omniidl_be.cxx.header import defs
+        defs.pushInsideClass()
+
         def gen_other_idl(node=astdecl, visitor=visitor):
             for n in node.declarations():
                 n.accept(visitor)
@@ -2575,6 +2578,8 @@ class ValueType (mapping.Decl):
 
         if not (has_callables or has_factories):
             stream.out(valuefactory_class_no_operations, name=cxx_name)
+
+        defs.popInsideClass()
 
         if config.state['Typecode']:
             from omniidl_be.cxx.header import defs, template
@@ -3050,6 +3055,9 @@ class ValueBox (mapping.Decl):
                 elif d_seqType.interface():
                     element = seqType.base(environment)
                     element_ptr = element
+                elif d_seqType.value() or d_seqType.valuebox():
+                    element = seqType.base(environment)
+                    element_ptr = element + "*"
                 elif seqType.sequence():
                     element = d_seqType.sequenceTemplate(environment)
                     element_ptr = element
@@ -3071,6 +3079,9 @@ class ValueBox (mapping.Decl):
                 elif d_seqType.interface():
                     element_reference = d_seqType.objRefTemplate("Element",
                                                                  environment)
+                elif d_seqType.value() or d_seqType.valuebox():
+                    element_reference = d_seqType.valueTemplate("Element",
+                                                                environment)
                 # only if an anonymous sequence
                 elif seqType.sequence():
                     element_reference = d_seqType.\
