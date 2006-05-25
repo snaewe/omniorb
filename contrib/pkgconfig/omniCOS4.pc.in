@@ -1,6 +1,8 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
+datadir=@datadir@
+idldir=${datadir}/idl/COS
 includedir=@includedir@
 
 Name: omniCOS4
