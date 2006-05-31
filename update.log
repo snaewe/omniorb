@@ -1,3 +1,11 @@
+Wed May 31 11:16:21 BST 2006 dgrisby
+====================================
+
+- Allow creation of unknown values in DynAnys.
+
+src/lib/omniORB/dynamic/dynAny.cc
+
+
 Thu May 25 19:13:06 BST 2006 dgrisby
 ====================================
 
@@ -22,8 +30,6 @@ include/omniORB4/valueTemplatedecls.h
 
 src/lib/omniORB/omniidl_be/cxx/value.py
 src/lib/omniORB/omniidl_be/cxx/header/defs.py
-
-
 
 
 Wed May 24 19:29:39 BST 2006 dgrisby

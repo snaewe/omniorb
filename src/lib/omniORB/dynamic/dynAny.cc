@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.13.2.8  2006/05/31 10:17:04  dgrisby
+   Allow creation of unknown values in DynAnys.
+
    Revision 1.13.2.7  2005/04/08 15:05:46  dgrisby
    Attach child DynAnys properly.
 
@@ -163,6 +166,7 @@
 #include <exceptiondefs.h>
 #include <initialiser.h>
 #include <initRefs.h>
+#include <unknownValue.h>
 
 DynamicAny::DynAny::~DynAny() { pd_dynmagic = 0; }
 DynamicAny::DynFixed::~DynFixed() {}
@@ -5078,8 +5082,8 @@ DynValueImpl::copy_to(cdrAnyMemoryStream& mbs)
 
   CORBA::ValueBase_var v(_omni_ValueFactoryManager::
 			 create_for_unmarshal(repoId, hash));
-  if (!v.operator->())
-    OMNIORB_THROW(MARSHAL, MARSHAL_NoValueFactory, CORBA::COMPLETED_NO);
+  if (!v.in())
+    v = new UnknownValue(actualTc());
 
   if (pd_n_in_buf < pd_n_components) {
     // Use an intermediate memory stream
@@ -5389,8 +5393,8 @@ DynValueBoxImpl::copy_to(cdrAnyMemoryStream& mbs)
 
   CORBA::ValueBase_var v(_omni_ValueFactoryManager::
 			 create_for_unmarshal(repoId, hash));
-  if (!v.operator->())
-    OMNIORB_THROW(MARSHAL, MARSHAL_NoValueFactory, CORBA::COMPLETED_NO);
+  if (!v.in())
+    v = new UnknownValue(actualTc());
 
   if (pd_n_in_buf < pd_n_components) {
     // Use an intermediate memory stream
