@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2006/06/02 12:48:32  dgrisby
+  Small code cleanups.
+
   Revision 1.1.4.6  2006/04/09 19:52:31  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -392,7 +395,7 @@ CORBA::Boolean
 BiDirServerRope::match(const char* sendfrom,
 		       const giopAddressList& addrlist) const {
 
-  if (strcmp(pd_sendfrom,sendfrom) != 0) return 0;
+  if (!omni::strMatch(pd_sendfrom,sendfrom)) return 0;
 
   giopAddressList::const_iterator i, last;
   i    = addrlist.begin();

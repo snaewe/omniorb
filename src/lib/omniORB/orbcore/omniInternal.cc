@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.13  2006/06/02 12:48:32  dgrisby
+  Small code cleanups.
+
   Revision 1.5.2.12  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -914,8 +917,7 @@ omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
   CORBA::Boolean is_local = 0;
   Rope* rope;
 
-  if (_OMNI_NS(giopRope)::selectRope(ior->getIORInfo()->addresses(),
-				     info,rope,is_local) == 0) {
+  if (giopRope::selectRope(info->addresses(), info, rope, is_local) == 0) {
     return 0;
   }
 
