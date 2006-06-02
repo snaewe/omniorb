@@ -67,7 +67,4 @@ Known issues
 This release has the following known issues and omissions:
 
  - valuetypes supporting local interfaces generate invalid C++. This
-   is an issue with the C++ mapping.
-
- - iostream insertion and extraction operators for CORBA types are not
-   implemented.
+   is an issue with the standard C++ mapping.
