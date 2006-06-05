@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.14  2006/06/05 13:34:31  dgrisby
+  Make connection thread limit a per-connection value.
+
   Revision 1.25.2.13  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -878,6 +881,7 @@ giopServer::csInsert(giopConnection* conn)
   }
 
   conn->pd_has_dedicated_thread = pd_thread_per_connection;
+  conn->pd_max_workers = orbParameters::maxServerThreadPerConnection;
 
   return cs;
 }
@@ -911,6 +915,7 @@ giopServer::csInsert(giopStrand* s)
   }
 
   conn->pd_has_dedicated_thread = pd_thread_per_connection;
+  conn->pd_max_workers = orbParameters::maxServerThreadPerConnection;
 
   {
     omni_tracedmutex_lock sync(*omniTransportLock);
@@ -1059,8 +1064,7 @@ giopServer::notifyRzReadable(giopConnection* conn,
     {
       if (conn->pd_dying) return;
 
-      if (!force_create &&
-	  conn->pd_n_workers >= (int)orbParameters::maxServerThreadPerConnection) {
+      if (!force_create && conn->pd_n_workers >= conn->pd_max_workers) {
 	conn->pd_has_hit_n_workers_limit = 1;
 	return;
       }
@@ -1311,7 +1315,7 @@ giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
 	omni_tracedmutex_lock sync(pd_lock);
 	conn->pd_dedicated_thread_in_upcall = 1;
       }
-      if (orbParameters::maxServerThreadPerConnection > 1) {
+      if (conn->pd_max_workers > 1) {
 	// If only one thread per connection is allowed, there is no
 	// need to setSelectable, since we won't be able to act on any
 	// interleaved calls that arrive.

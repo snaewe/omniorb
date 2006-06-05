@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.7  2006/06/05 13:34:31  dgrisby
+  Make connection thread limit a per-connection value.
+
   Revision 1.1.6.6  2006/04/09 19:52:31  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -145,17 +148,27 @@ public:
   giopConnection() : pd_refcount(1), pd_dying(0), 
 		     pd_has_dedicated_thread(0), 
 		     pd_dedicated_thread_in_upcall(0),
-                     pd_n_workers(0),
+                     pd_n_workers(0), pd_max_workers(0),
                      pd_has_hit_n_workers_limit(0) {}
 
   int decrRefCount(_CORBA_Boolean forced=0);
   // Thread Safety preconditions:
   //    Caller must hold omniTransportLock unless forced == 1.
 
-
   void incrRefCount();
   // Thread Safety preconditions:
   //    Caller must hold omniTransportLock.
+
+  inline int  max_workers()       { return pd_max_workers; }
+  inline void max_workers(int mw) { pd_max_workers = mw; }
+  // Functions to get/set the maximum number of worker threads that
+  // will service this connection. Interceptors can change the value.
+  //
+  // Thread Safety preconditions:
+  //    None. In a serverReceiveRequest interceptor, the thread has
+  //    exclusive access to the connection, so modifications are safe.
+  //    In other contexts, access is not thread safe.
+
 
   friend class giopServer;
 
@@ -177,6 +190,9 @@ private:
 
   int            pd_n_workers;
   // Initialised to 0. Read and write by giopServer exclusively.
+
+  int            pd_max_workers;
+  // Initialised to 0. Read and write by giopServer and interceptors.
 
   _CORBA_Boolean pd_has_hit_n_workers_limit;
   // Initialised to 0. Read and write by giopServer exclusively.

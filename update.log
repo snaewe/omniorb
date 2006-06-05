@@ -1,3 +1,41 @@
+Mon Jun  5 14:30:47 BST 2006 dgrisby
+====================================
+
+- Make connection thread limit a per-connection value.
+
+include/omniORB4/giopEndpoint.h
+src/lib/omniORB/orbcore/giopServer.cc
+
+- Inline declarations; operation() access function.
+
+include/omniORB4/internal/GIOP_C.h
+
+
+Mon Jun  5 12:24:09 BST 2006 dgrisby
+====================================
+
+- Move codeset initialisation code to a more logical source file.
+
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/codeSets.cc
+
+- Accessor method to change oneway-ness of a call descriptor.
+
+include/omniORB4/callDescriptor.h
+
+- Comment tweak.
+
+include/omniORB4/internal/GIOP_S.h
+
+- Change clientSendRequest interceptor members to a single GIOP_C.
+
+include/omniORB4/omniInterceptors.h
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Fri Jun  2 13:43:13 BST 2006 dgrisby
 ====================================
 
