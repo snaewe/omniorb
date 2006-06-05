@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2006/06/05 11:27:20  dgrisby
+  Comment tweak.
+
   Revision 1.1.6.2  2005/01/06 23:08:23  dgrisby
   Big merge from omni4_0_develop.
 
@@ -153,10 +156,6 @@ class GIOP_S : public IOP_S, public giopStream, public giopStreamList {
   inline void result_expected(CORBA::Boolean v) { 
       pd_result_expected = v;
   }
-  // If result_expected returns 0, then one can skip the
-  // marshalling of the results completely. It is somewhat
-  // redundent information for us because we can make that decision
-  // purely on the value of response_expected.
   inline CORBA::Boolean result_expected() const {
     return pd_result_expected;
   }
