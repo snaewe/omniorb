@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2006/06/05 13:33:25  dgrisby
+  Inline declarations; operation() access function.
+
   Revision 1.1.6.1  2003/03/23 21:03:56  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -53,6 +56,7 @@
 #define __GIOP_C_H__
 
 #include <omniORB4/IOP_C.h>
+#include <omniORB4/callDescriptor.h>
 
 #ifdef _core_attr
 # error "A local CPP macro _core_attr has already been defined."
@@ -103,11 +107,13 @@ class GIOP_C : public IOP_C, public giopStream, public giopStreamList {
 
   void cleanup();
 
-  IOP_C::State state() const { return pd_state; }
-  void state(IOP_C::State s) { pd_state = s; }
+  inline IOP_C::State state() const { return pd_state; }
+  inline void state(IOP_C::State s) { pd_state = s; }
 
-  omniCallDescriptor* calldescriptor() { return pd_calldescriptor; }
-  void calldescriptor(omniCallDescriptor* c) { pd_calldescriptor = c; }
+  inline omniCallDescriptor* calldescriptor() { return pd_calldescriptor; }
+  inline void calldescriptor(omniCallDescriptor* c) { pd_calldescriptor = c; }
+
+  inline const char* operation() { return pd_calldescriptor->op(); }
 
   inline const CORBA::Octet* key() const  { return pd_key;    }
   inline void key(const CORBA::Octet* k)  { pd_key = k; }
@@ -115,14 +121,14 @@ class GIOP_C : public IOP_C, public giopStream, public giopStreamList {
   inline CORBA::ULong keysize() const  { return pd_keysize; }
   inline void keysize(CORBA::ULong sz) { pd_keysize = sz; }
 
-  const omniIOR* ior() const { return pd_ior; }
-  void ior(const omniIOR* c) { pd_ior = c; }
+  inline const omniIOR* ior() const { return pd_ior; }
+  inline void ior(const omniIOR* c) { pd_ior = c; }
 
-  GIOP::ReplyStatusType replyStatus() const { return pd_replyStatus; }
-  void replyStatus(GIOP::ReplyStatusType rc) { pd_replyStatus = rc; }
+  inline GIOP::ReplyStatusType replyStatus() const { return pd_replyStatus; }
+  inline void replyStatus(GIOP::ReplyStatusType rc) { pd_replyStatus = rc; }
 
-  GIOP::LocateStatusType locateStatus() const { return pd_locateStatus; }
-  void locateStatus(GIOP::LocateStatusType rc) { pd_locateStatus = rc; }
+  inline GIOP::LocateStatusType locateStatus() const { return pd_locateStatus; }
+  inline void locateStatus(GIOP::LocateStatusType rc) { pd_locateStatus = rc; }
 
   inline CORBA::ULong  replyId() const { return pd_reply_id; }
   inline void replyId(CORBA::ULong v) { pd_reply_id = v; }
