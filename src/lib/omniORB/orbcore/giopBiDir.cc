@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2006/06/05 11:28:04  dgrisby
+  Change clientSendRequest interceptor members to a single GIOP_C.
+
   Revision 1.1.4.7  2006/06/02 12:48:32  dgrisby
   Small code cleanups.
 
@@ -779,8 +782,8 @@ setBiDirServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
     return 1;
   }
 
-  giopStrand& g = (giopStrand&)(info.giopstream);
-  GIOP::Version ver = info.giopstream.version();
+  giopStrand& g = (giopStrand&)info.giop_c;
+  GIOP::Version ver = info.giop_c.version();
 
   if (ver.minor != 2 || !g.biDir || !g.isClient() || g.biDir_initiated) {
     // Only send service context if the GIOP version is 1.2, this is

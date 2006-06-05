@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2006/06/05 11:28:04  dgrisby
+  Change clientSendRequest interceptor members to a single GIOP_C.
+
   Revision 1.1.4.1  2003/03/23 21:04:14  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -70,6 +73,7 @@
 #endif
 
 class omniLocalIdentity;
+class omniCallDescriptor;
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -139,17 +143,11 @@ public:
 
     class info_T {
     public:
-      giopStream&              giopstream;
-      const omniIOR&           ior;
-      const char*              opname;
-      CORBA::Boolean           oneway;
-      CORBA::Boolean           response_expected;
+      GIOP_C&                  giop_c;
       IOP::ServiceContextList  service_contexts;
 
-      info_T(giopStream& s, const omniIOR& i, const char* op,
-	     CORBA::Boolean ow, CORBA::Boolean re) :
-	giopstream(s),ior(i),opname(op),oneway(ow),response_expected(re),
-	service_contexts(5) {}
+      info_T(GIOP_C& c) :
+        giop_c(c), service_contexts(5) {}
 
     private:
       info_T();
@@ -175,6 +173,7 @@ public:
       
       info_T(GIOP_C& c, IOP::ServiceContextList& sc) :
 	giop_c(c), service_contexts(sc) {}
+
     private:
       info_T();
       info_T(const info_T&);
