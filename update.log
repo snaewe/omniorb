@@ -1,3 +1,14 @@
+Tue Jun  6 17:38:13 BST 2006 dgrisby
+====================================
+
+- marshalRawString and chunking stream did not byte-swap length
+  fields when required to.
+
+include/omniORB4/cdrStream.h
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+src/lib/omniORB/orbcore/corbaString.cc
+
+
 Mon Jun  5 14:30:47 BST 2006 dgrisby
 ====================================
 
