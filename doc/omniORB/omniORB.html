@@ -2133,8 +2133,8 @@ largely syntax changes, rather than semantic differences.<BR>
 
 <H2 CLASS="section"><A NAME="htoc43">3.3</A>&nbsp;&nbsp;omniORB 4.0 compatibility</H2><!--SEC END -->
 
-omniORB 4.1 is source-code compatible with omniORB 4.0, with two minor
-exceptions:
+omniORB 4.1 is source-code compatible with omniORB 4.0, with three
+minor exceptions:
 <OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">As required by the 1.1 version of the CORBA C++ mapping
  specification, the <TT>RefCountServantBase</TT> class has been
  deprecated, and the reference counting functionality moved into
@@ -2146,7 +2146,12 @@ exceptions:
 <BR>
 <LI CLASS="li-enumerate">omniORB 4.0 had an option for Any extraction semantics that was
  compatible with omniORB 2.7, where ownership of extracted values was
- not maintained by the Any. That option is no longer available.</OL>
+ not maintained by the Any. That option is no longer available.<BR>
+<BR>
+<LI CLASS="li-enumerate">The members of the <TT>clientSendRequest</TT> interceptor have
+ been changed, replacing all the separate variables with a single
+ member of type <TT>GIOP_C</TT>. All the values previously available
+ can be accessed through the <TT>GIOP_C</TT> instance.</OL>
 <!--TOC chapter omniORB configuration and API-->
 
 <H1 CLASS="chapter"><A NAME="htoc44">Chapter&nbsp;4</A>&nbsp;&nbsp;omniORB configuration and API</H1><!--SEC END -->
@@ -4219,9 +4224,26 @@ somewhat cryptic:
 To listen for both IPv4 and IPv6 connections on Windows,
 both endpoints must be explicitly provided.<BR>
 <BR>
+<!--TOC subsubsection Link local addresses-->
+
+<H4 CLASS="subsubsection"><A NAME="htoc104">8.6.1.1</A>&nbsp;&nbsp;Link local addresses</H4><!--SEC END -->
+
+In IPv6, all network interfaces are assigned a <I>link local</I>
+address, starting with the digits <TT>fe80</TT>. The link local address
+is only valid on the same `link' as the interface, meaning directly
+connected to the interface, or possibly on the same subnet, depending
+on how the network is switched. To connect to a server's link local
+address, a client has to know which of its network interfaces is on
+the same link as the server. Since there is no way for omniORB to know
+which local interface a remote link local address may be connected to,
+and in extreme circumstances may even end up contacting the wrong
+server if it picks the wrong interface, link local addresses are not
+considered valid. Servers do not publish link local addresses in their
+IORs.<BR>
+<BR>
 <!--TOC subsection Endpoint publishing-->
 
-<H3 CLASS="subsection"><A NAME="htoc104">8.6.2</A>&nbsp;&nbsp;Endpoint publishing</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc105">8.6.2</A>&nbsp;&nbsp;Endpoint publishing</H3><!--SEC END -->
 
 For clients to be able to connect to a server, the server publishes
 endpoint information in its IORs (Interoperable Object References).
@@ -4312,7 +4334,7 @@ URIs to the <TT>endPointPublish</TT> parameter.<BR>
 <BR>
 <!--TOC section Connection selection and acceptance-->
 
-<H2 CLASS="section"><A NAME="htoc105">8.7</A>&nbsp;&nbsp;Connection selection and acceptance</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc106">8.7</A>&nbsp;&nbsp;Connection selection and acceptance</H2><!--SEC END -->
 
 In the face of IORs containing details about multiple different
 endpoints, clients have to know how to choose the one to use to
@@ -4322,7 +4344,7 @@ clients can connect to particular transports. This is achieved with
 <BR>
 <!--TOC subsection Client transport rules-->
 
-<H3 CLASS="subsection"><A NAME="htoc106">8.7.1</A>&nbsp;&nbsp;Client transport rules</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc107">8.7.1</A>&nbsp;&nbsp;Client transport rules</H3><!--SEC END -->
 
 <A NAME="sec:clientRule"></A>
 The <TT>clientTransportRule</TT> parameter is used to filter and
@@ -4412,7 +4434,7 @@ indicate that the connect failed.<BR>
 <BR>
 <!--TOC subsection Server transport rules-->
 
-<H3 CLASS="subsection"><A NAME="htoc107">8.7.2</A>&nbsp;&nbsp;Server transport rules</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc108">8.7.2</A>&nbsp;&nbsp;Server transport rules</H3><!--SEC END -->
 
 <A NAME="sec:serverRule"></A>
 The server transport rules have the same format as client transport
@@ -4438,7 +4460,7 @@ connection is accepted from any client.<BR>
 <BR>
 <!--TOC section Bidirectional GIOP-->
 
-<H2 CLASS="section"><A NAME="htoc108">8.8</A>&nbsp;&nbsp;Bidirectional GIOP</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc109">8.8</A>&nbsp;&nbsp;Bidirectional GIOP</H2><!--SEC END -->
 
 <A NAME="sec:bidir"></A>
 omniORB supports bidirectional GIOP, which allows callbacks to be made
@@ -4465,7 +4487,7 @@ On the server side, these conditions must be met:
  <TT>BOTH</TT>.</UL>
 <!--TOC section SSL transport-->
 
-<H2 CLASS="section"><A NAME="htoc109">8.9</A>&nbsp;&nbsp;SSL transport</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc110">8.9</A>&nbsp;&nbsp;SSL transport</H2><!--SEC END -->
 
 omniORB supports an SSL transport, using OpenSSL. It is only built if
 OpenSSL is available. On platforms using Autoconf, it is autodetected
@@ -4486,7 +4508,7 @@ contains a <TT>README</TT> file with more details.<BR>
 <!--END NOTES-->
 <!--TOC chapter Code set conversion-->
 
-<H1 CLASS="chapter"><A NAME="htoc110">Chapter&nbsp;9</A>&nbsp;&nbsp;Code set conversion</H1><!--SEC END -->
+<H1 CLASS="chapter"><A NAME="htoc111">Chapter&nbsp;9</A>&nbsp;&nbsp;Code set conversion</H1><!--SEC END -->
 
 <A NAME="chap:codesets"></A>
 omniORB supports full code set negotiation, used to select and
@@ -4499,7 +4521,7 @@ ones that come with omniORB are not sufficient.<BR>
 <BR>
 <!--TOC section Native code sets-->
 
-<H2 CLASS="section"><A NAME="htoc111">9.1</A>&nbsp;&nbsp;Native code sets</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc112">9.1</A>&nbsp;&nbsp;Native code sets</H2><!--SEC END -->
 
 For the ORB to know how to handle strings and wstrings given to it by
 the application, it must know what code set they are represented
@@ -4521,7 +4543,7 @@ surrogates<SUP><A NAME="text18" HREF="#note18">1</A></SUP>.<BR>
 <BR>
 <!--TOC section Code set library-->
 
-<H2 CLASS="section"><A NAME="htoc112">9.2</A>&nbsp;&nbsp;Code set library</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc113">9.2</A>&nbsp;&nbsp;Code set library</H2><!--SEC END -->
 
 To save space in the main ORB core library, most of the code set
 implementations are in a separate library named omniCodeSets4. To use
@@ -4537,7 +4559,7 @@ contents to see how to turn off particular features.<BR>
 <BR>
 <!--TOC section Implementing new code sets-->
 
-<H2 CLASS="section"><A NAME="htoc113">9.3</A>&nbsp;&nbsp;Implementing new code sets</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc114">9.3</A>&nbsp;&nbsp;Implementing new code sets</H2><!--SEC END -->
 
 It is quite easy to implement new code sets, if you need support for
 code sets (or marshalling formats) that do not come with the omniORB
@@ -4585,7 +4607,7 @@ to.
 <!--END NOTES-->
 <!--TOC chapter Interceptors-->
 
-<H1 CLASS="chapter"><A NAME="htoc114">Chapter&nbsp;10</A>&nbsp;&nbsp;Interceptors</H1><!--SEC END -->
+<H1 CLASS="chapter"><A NAME="htoc115">Chapter&nbsp;10</A>&nbsp;&nbsp;Interceptors</H1><!--SEC END -->
 
 <A NAME="chap:interceptors"></A>
 omniORB supports interceptors that allow the application to insert
@@ -4605,17 +4627,10 @@ and the definition of an `interceptor info' class. For example:<BR>
 </TT><TT>
 </TT><TT>    <B>class</B> info_T {</TT><TT>
 </TT><TT>    <B>public</B>:</TT><TT>
-</TT><TT>      giopStream&amp;              giopstream;</TT><TT>
-</TT><TT>      <B>const</B> omniIOR&amp;           ior;</TT><TT>
-</TT><TT>      <B>const</B> <B>char</B>*              opname;</TT><TT>
-</TT><TT>      CORBA::Boolean           oneway;</TT><TT>
-</TT><TT>      CORBA::Boolean           response_expected;</TT><TT>
-</TT><TT>      IOP::ServiceContextList  service_contexts;</TT><TT>
+</TT><TT>      GIOP_C&amp;                 giop_c;</TT><TT>
+</TT><TT>      IOP::ServiceContextList service_contexts;</TT><TT>
 </TT><TT>
-</TT><TT>      info_T(giopStream&amp; s, <B>const</B> omniIOR&amp; i, <B>const</B> <B>char</B>* op,</TT><TT>
-</TT><TT>      CORBA::Boolean ow, CORBA::Boolean re) :</TT><TT>
-</TT><TT> giopstream(s),ior(i),opname(op),oneway(ow),response_expected(re),</TT><TT>
-</TT><TT> service_contexts(5) {}</TT><TT>
+</TT><TT>      info_T(GIOP_C&amp; c) : giop_c(c), service_contexts(5) {}</TT><TT>
 </TT><TT>
 </TT><TT>    <B>private</B>:</TT><TT>
 </TT><TT>      info_T();</TT><TT>
@@ -4639,14 +4654,14 @@ processing should continue with subsequent interceptors. If an
 interceptor returns false, later interceptors are not called. You
 should only do that if you really know what you are doing.<BR>
 <BR>
-Notice that the <TT>info_T</TT> contains references to several omniORB
-internal data types. The definitions of these can be found in other
+Notice that the <TT>info_T</TT> contains references to omniORB internal
+data types. The definitions of these types can be found in other
 header files within <TT>include/omniORB4</TT> and
 <TT>include/omniORB4/internal</TT>.<BR>
 <BR>
 <!--TOC section Interceptor registration-->
 
-<H2 CLASS="section"><A NAME="htoc115">10.1</A>&nbsp;&nbsp;Interceptor registration</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc116">10.1</A>&nbsp;&nbsp;Interceptor registration</H2><!--SEC END -->
 
 All the interceptor singletons are registered within another singleton
 object of class <TT>omniInterceptors</TT>. You retrieve a pointer to the
@@ -4660,7 +4675,7 @@ register an interceptor looks, for example, like:<BR>
 <BR>
 <!--TOC section Available interceptors-->
 
-<H2 CLASS="section"><A NAME="htoc116">10.2</A>&nbsp;&nbsp;Available interceptors</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc117">10.2</A>&nbsp;&nbsp;Available interceptors</H2><!--SEC END -->
 
 The following interceptors are available:
 <DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>encodeIOR</B><DD CLASS="dd-description"><BR>
@@ -4757,7 +4772,7 @@ multiple upcalls even when thread pool mode is active.
 <!--END NOTES-->
 <!--TOC chapter Type Any and TypeCode-->
 
-<H1 CLASS="chapter"><A NAME="htoc117">Chapter&nbsp;11</A>&nbsp;&nbsp;Type Any and TypeCode</H1><!--SEC END -->
+<H1 CLASS="chapter"><A NAME="htoc118">Chapter&nbsp;11</A>&nbsp;&nbsp;Type Any and TypeCode</H1><!--SEC END -->
 
 <A NAME="chap:any"></A>
 The CORBA specification provides for a type that can hold the value of
@@ -4774,7 +4789,7 @@ core section of the CORBA specification.<BR>
 <BR>
 <!--TOC section Example using type Any-->
 
-<H2 CLASS="section"><A NAME="htoc118">11.1</A>&nbsp;&nbsp;Example using type Any</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc119">11.1</A>&nbsp;&nbsp;Example using type Any</H2><!--SEC END -->
 
 Before going through this example, you should make sure that you have
 read and understood the examples in chapter&nbsp;<A HREF="#chap:basic">2</A>. The
@@ -4784,7 +4799,7 @@ source code is provided at the end of this chapter.<BR>
 <BR>
 <!--TOC subsection Type Any in IDL-->
 
-<H3 CLASS="subsection"><A NAME="htoc119">11.1.1</A>&nbsp;&nbsp;Type Any in IDL</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc120">11.1.1</A>&nbsp;&nbsp;Type Any in IDL</H3><!--SEC END -->
 
 Type Any allows one to delay the decision on the type used in an
 operation until run-time. To use type any in IDL, use the keyword
@@ -4829,7 +4844,7 @@ So, the above IDL would map to the following C++:<BR>
 <BR>
 <!--TOC subsection Inserting and Extracting Basic Types from an Any-->
 
-<H3 CLASS="subsection"><A NAME="htoc120">11.1.2</A>&nbsp;&nbsp;Inserting and Extracting Basic Types from an Any</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc121">11.1.2</A>&nbsp;&nbsp;Inserting and Extracting Basic Types from an Any</H3><!--SEC END -->
 
 The question now arises as to how values are inserted into and removed
 from an Any. This is achieved using two overloaded operators:
@@ -4883,7 +4898,7 @@ extract values from an Any is as follows:<BR>
 <BR>
 <!--TOC subsection Inserting and Extracting Constructed Types from an Any-->
 
-<H3 CLASS="subsection"><A NAME="htoc121">11.1.3</A>&nbsp;&nbsp;Inserting and Extracting Constructed Types from an Any</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc122">11.1.3</A>&nbsp;&nbsp;Inserting and Extracting Constructed Types from an Any</H3><!--SEC END -->
 
 It is also possible to insert and extract constructed types and object
 references from an Any. omniidl will generate insertion and extraction
@@ -4964,7 +4979,7 @@ Mapping specification for further information.<BR>
 <BR>
 <!--TOC section Type Any in omniORB-->
 
-<H2 CLASS="section"><A NAME="htoc122">11.2</A>&nbsp;&nbsp;Type Any in omniORB</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc123">11.2</A>&nbsp;&nbsp;Type Any in omniORB</H2><!--SEC END -->
 
 <A NAME="anyOmniORB"></A>
 This section contains some notes on the use and behaviour of type Any
@@ -4972,7 +4987,7 @@ in omniORB.<BR>
 <BR>
 <!--TOC subsection Generating Insertion and Extraction Operators.-->
 
-<H3 CLASS="subsection"><A NAME="htoc123">11.2.1</A>&nbsp;&nbsp;Generating Insertion and Extraction Operators.</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc124">11.2.1</A>&nbsp;&nbsp;Generating Insertion and Extraction Operators.</H3><!--SEC END -->
 
 To generate type Any insertion and extraction operators for
 constructed types and interfaces, the <TT>-Wba</TT> command line flag
@@ -4980,7 +4995,7 @@ should be specified when running omniidl.<BR>
 <BR>
 <!--TOC subsection TypeCode comparison when extracting from an Any.-->
 
-<H3 CLASS="subsection"><A NAME="htoc124">11.2.2</A>&nbsp;&nbsp;TypeCode comparison when extracting from an Any.</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc125">11.2.2</A>&nbsp;&nbsp;TypeCode comparison when extracting from an Any.</H3><!--SEC END -->
 
 When an attempt is made to extract a type from an Any, the TypeCode of
 the type is checked for <EM>equivalence</EM> with the TypeCode of the
@@ -5007,7 +5022,7 @@ succeed (and vice-versa), as the two types differ only by an alias.<BR>
 <BR>
 <!--TOC subsection Top-level aliases.-->
 
-<H3 CLASS="subsection"><A NAME="htoc125">11.2.3</A>&nbsp;&nbsp;Top-level aliases.</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc126">11.2.3</A>&nbsp;&nbsp;Top-level aliases.</H3><!--SEC END -->
 
 When a type is inserted into an Any, the Any stores both the value of
 the type and the TypeCode for that type. However, in some cases, a
@@ -5036,7 +5051,7 @@ set the TypeCode to the correct one.<BR>
 <BR>
 <!--TOC subsection Removing aliases from TypeCodes.-->
 
-<H3 CLASS="subsection"><A NAME="htoc126">11.2.4</A>&nbsp;&nbsp;Removing aliases from TypeCodes.</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc127">11.2.4</A>&nbsp;&nbsp;Removing aliases from TypeCodes.</H3><!--SEC END -->
 
 Some ORBs (such as old versions of Orbix) will not accept TypeCodes
 containing <TT>tk_alias</TT> TypeCodes. When using type Any while
@@ -5057,7 +5072,7 @@ Anys are transmitted that the aliases are stripped.<BR>
 <BR>
 <!--TOC subsection Recursive TypeCodes.-->
 
-<H3 CLASS="subsection"><A NAME="htoc127">11.2.5</A>&nbsp;&nbsp;Recursive TypeCodes.</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc128">11.2.5</A>&nbsp;&nbsp;Recursive TypeCodes.</H3><!--SEC END -->
 
 omniORB supports recursive TypeCodes. This means that types such as
 the following can be inserted or extracted from an Any:<BR>
@@ -5069,7 +5084,7 @@ the following can be inserted or extracted from an Any:<BR>
 <BR>
 <!--TOC subsection Threads and type Any.-->
 
-<H3 CLASS="subsection"><A NAME="htoc128">11.2.6</A>&nbsp;&nbsp;Threads and type Any.</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc129">11.2.6</A>&nbsp;&nbsp;Threads and type Any.</H3><!--SEC END -->
 
 Inserting and extracting simultaneously from the same Any (in 2
 different threads) results in undefined behaviour.<BR>
@@ -5081,14 +5096,14 @@ safe.<BR>
 <BR>
 <!--TOC section TypeCode in omniORB-->
 
-<H2 CLASS="section"><A NAME="htoc129">11.3</A>&nbsp;&nbsp;TypeCode in omniORB</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc130">11.3</A>&nbsp;&nbsp;TypeCode in omniORB</H2><!--SEC END -->
 
 This section contains some notes on the use and behaviour of TypeCode
 in omniORB<BR>
 <BR>
 <!--TOC subsection TypeCodes in IDL.-->
 
-<H3 CLASS="subsection"><A NAME="htoc130">11.3.1</A>&nbsp;&nbsp;TypeCodes in IDL.</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc131">11.3.1</A>&nbsp;&nbsp;TypeCodes in IDL.</H3><!--SEC END -->
 
 When using TypeCodes in IDL, note that they are defined in the CORBA
 scope. Therefore, <TT>CORBA::TypeCode</TT> should be used. Example:<BR>
@@ -5101,7 +5116,7 @@ scope. Therefore, <TT>CORBA::TypeCode</TT> should be used. Example:<BR>
 <BR>
 <!--TOC subsection orb.idl-->
 
-<H3 CLASS="subsection"><A NAME="htoc131">11.3.2</A>&nbsp;&nbsp;orb.idl</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc132">11.3.2</A>&nbsp;&nbsp;orb.idl</H3><!--SEC END -->
 
 The CORBA specification says that IDL using <TT>CORBA::TypeCode</TT>
 must include the file <TT>orb.idl</TT>. That is not required in omniORB,
@@ -5109,7 +5124,7 @@ but a suitable <TT>orb.idl</TT> is available.<BR>
 <BR>
 <!--TOC subsection Generating TypeCodes for constructed types.-->
 
-<H3 CLASS="subsection"><A NAME="htoc132">11.3.3</A>&nbsp;&nbsp;Generating TypeCodes for constructed types.</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc133">11.3.3</A>&nbsp;&nbsp;Generating TypeCodes for constructed types.</H3><!--SEC END -->
 
 To generate a TypeCode for constructed types, specify the
 <TT>-Wba</TT> command-line flag when running omniidl. This will
@@ -5128,11 +5143,11 @@ can be used to query the TypeCode about the type it represents.<BR>
 <BR>
 <!--TOC section Source Listing-->
 
-<H2 CLASS="section"><A NAME="htoc133">11.4</A>&nbsp;&nbsp;Source Listing</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc134">11.4</A>&nbsp;&nbsp;Source Listing</H2><!--SEC END -->
 
 <!--TOC subsection anyExample_impl.cc-->
 
-<H3 CLASS="subsection"><A NAME="htoc134">11.4.1</A>&nbsp;&nbsp;anyExample_impl.cc</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc135">11.4.1</A>&nbsp;&nbsp;anyExample_impl.cc</H3><!--SEC END -->
 <BR>
 <BR>
 <DIV CLASS="lstlisting"><TT><I>// anyExample_impl.cc - This is the source code of the example used in</I></TT><TT>
@@ -5251,7 +5266,7 @@ can be used to query the TypeCode about the type it represents.<BR>
 <BR>
 <!--TOC subsection anyExample_clt.cc-->
 
-<H3 CLASS="subsection"><A NAME="htoc135">11.4.2</A>&nbsp;&nbsp;anyExample_clt.cc</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc136">11.4.2</A>&nbsp;&nbsp;anyExample_clt.cc</H3><!--SEC END -->
 <BR>
 <BR>
 <DIV CLASS="lstlisting"><TT><I>// anyExample_clt.cc -  This is the source code of the example used in </I></TT><TT>
@@ -5371,7 +5386,7 @@ can be used to query the TypeCode about the type it represents.<BR>
 <BR>
 <!--TOC chapter Packaging stubs into DLLs-->
 
-<H1 CLASS="chapter"><A NAME="htoc136">Chapter&nbsp;12</A>&nbsp;&nbsp;Packaging stubs into DLLs</H1><!--SEC END -->
+<H1 CLASS="chapter"><A NAME="htoc137">Chapter&nbsp;12</A>&nbsp;&nbsp;Packaging stubs into DLLs</H1><!--SEC END -->
 
 <A NAME="chap:dlls"></A>
 omniORB's stubs can be packaged into shared libraries or DLLs. On Unix
@@ -5380,7 +5395,7 @@ more tricky.<BR>
 <BR>
 <!--TOC section Dynamic loading and unloading-->
 
-<H2 CLASS="section"><A NAME="htoc137">12.1</A>&nbsp;&nbsp;Dynamic loading and unloading</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc138">12.1</A>&nbsp;&nbsp;Dynamic loading and unloading</H2><!--SEC END -->
 
 As long as your platform supports running static initialisers and
 destructors as libraries are loaded and unloaded, you can package
@@ -5401,7 +5416,7 @@ you are using <TT>OMNI_UNLOADABLE_STUBS</TT>.<BR>
 <BR>
 <!--TOC section Windows DLLs-->
 
-<H2 CLASS="section"><A NAME="htoc138">12.2</A>&nbsp;&nbsp;Windows DLLs</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc139">12.2</A>&nbsp;&nbsp;Windows DLLs</H2><!--SEC END -->
 
 On Unix platforms, the linker figures out how to link the symbols
 exported by a library in to the running program. On Windows,
@@ -5410,7 +5425,7 @@ from. This causes all manner of difficulties.<BR>
 <BR>
 <!--TOC subsection Exporting symbols-->
 
-<H3 CLASS="subsection"><A NAME="htoc139">12.2.1</A>&nbsp;&nbsp;Exporting symbols</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc140">12.2.1</A>&nbsp;&nbsp;Exporting symbols</H3><!--SEC END -->
 
 To (statically) link with a DLL file in Windows, you link with a LIB
 file which references the symbols exported from the DLL. To build the
@@ -5452,7 +5467,7 @@ just the one shown here.<BR>
 <BR>
 <!--TOC subsection Importing constant symbols-->
 
-<H3 CLASS="subsection"><A NAME="htoc140">12.2.2</A>&nbsp;&nbsp;Importing constant symbols</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc141">12.2.2</A>&nbsp;&nbsp;Importing constant symbols</H3><!--SEC END -->
 
 As if exporting the symbols from a DLL was not complicated enough, any
 constant values exported by a DLL have to be explicitly
@@ -5542,7 +5557,7 @@ Rather than explicitly listing all the pre-processor code, it
  COS services IDL files in <TT>idl/COS</TT> for an example.</OL>
 <!--TOC chapter Objects by value, etc.-->
 
-<H1 CLASS="chapter"><A NAME="htoc141">Chapter&nbsp;13</A>&nbsp;&nbsp;Objects by value, abstract interfaces and local interfaces</H1><!--SEC END -->
+<H1 CLASS="chapter"><A NAME="htoc142">Chapter&nbsp;13</A>&nbsp;&nbsp;Objects by value, abstract interfaces and local interfaces</H1><!--SEC END -->
 
 <A NAME="chap:valuetype"></A>
 omniORB 4.1 supports objects by value, declared with the
@@ -5555,7 +5570,7 @@ mapping specification, version 1.1.<BR>
 <BR>
 <!--TOC section Features-->
 
-<H2 CLASS="section"><A NAME="htoc142">13.1</A>&nbsp;&nbsp;Features</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc143">13.1</A>&nbsp;&nbsp;Features</H2><!--SEC END -->
 
 omniORB supports the complete objects by value specification, with the
 exception of custom valuetypes. All other valuetype features including
@@ -5566,7 +5581,7 @@ section&nbsp;<A HREF="#sec:LocalInterfaces">13.8</A>.<BR>
 <BR>
 <!--TOC section Reference counting-->
 
-<H2 CLASS="section"><A NAME="htoc143">13.2</A>&nbsp;&nbsp;Reference counting</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc144">13.2</A>&nbsp;&nbsp;Reference counting</H2><!--SEC END -->
 
 Values are reference counted. This means that, as long as your
 application properly manages reference counts, values are usually
@@ -5582,7 +5597,7 @@ values received as parameters and return values from CORBA operations.<BR>
 <BR>
 <!--TOC section Value sharing and local calls-->
 
-<H2 CLASS="section"><A NAME="htoc144">13.3</A>&nbsp;&nbsp;Value sharing and local calls</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc145">13.3</A>&nbsp;&nbsp;Value sharing and local calls</H2><!--SEC END -->
 
 When valuetypes are passed as parameters in CORBA calls (i.e. calls
 on CORBA objects declared with <TT>interface</TT> in IDL), the structure
@@ -5627,7 +5642,7 @@ configuration parameter to zero.<BR>
 <BR>
 <!--TOC section Value box factories-->
 
-<H2 CLASS="section"><A NAME="htoc145">13.4</A>&nbsp;&nbsp;Value box factories</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc146">13.4</A>&nbsp;&nbsp;Value box factories</H2><!--SEC END -->
 
 With normal valuetypes, omniidl generates factory classes (with names
 ending <TT>_init</TT>) as required by the C++ mapping specification.
@@ -5643,7 +5658,7 @@ register the factories with the ORB.<BR>
 <BR>
 <!--TOC section Standard value boxes-->
 
-<H2 CLASS="section"><A NAME="htoc146">13.5</A>&nbsp;&nbsp;Standard value boxes</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc147">13.5</A>&nbsp;&nbsp;Standard value boxes</H2><!--SEC END -->
 
 The standard <TT>CORBA::StringValue</TT> and <TT>CORBA::WStringValue</TT>
 value boxes are available to application code. To make the definitions
@@ -5651,7 +5666,7 @@ available in IDL, #include the standard <TT>orb.idl</TT>.<BR>
 <BR>
 <!--TOC section Covariant returns-->
 
-<H2 CLASS="section"><A NAME="htoc147">13.6</A>&nbsp;&nbsp;Covariant returns</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc148">13.6</A>&nbsp;&nbsp;Covariant returns</H2><!--SEC END -->
 
 As required by the C++ mapping, on C++ compilers that support
 covariant return types, omniidl generates code for the
@@ -5670,7 +5685,7 @@ definition.<BR>
 <BR>
 <!--TOC section Values inside Anys-->
 
-<H2 CLASS="section"><A NAME="htoc148">13.7</A>&nbsp;&nbsp;Values inside Anys</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc149">13.7</A>&nbsp;&nbsp;Values inside Anys</H2><!--SEC END -->
 
 Valuetypes inserted into Anys cause a number of interesting issues.
 Even when inside Anys, values are required to support complete sharing
@@ -5741,7 +5756,7 @@ trying to share plain values with values inside Anys.<BR>
 <BR>
 <!--TOC section Local Interfaces-->
 
-<H2 CLASS="section"><A NAME="htoc149">13.8</A>&nbsp;&nbsp;Local Interfaces</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc150">13.8</A>&nbsp;&nbsp;Local Interfaces</H2><!--SEC END -->
 
 <A NAME="sec:LocalInterfaces"></A>
 Local interfaces are somewhat under-specified in the C++ mapping. This
@@ -5750,7 +5765,7 @@ and details the limitations and issues.<BR>
 <BR>
 <!--TOC subsection Simple local interfaces-->
 
-<H3 CLASS="subsection"><A NAME="htoc150">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc151">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3><!--SEC END -->
 
 With simple IDL, there are no particular issues:<BR>
 <BR>
@@ -5775,7 +5790,7 @@ are thread safe.<BR>
 <BR>
 <!--TOC subsection Inheritance from unconstrained interfaces-->
 
-<H3 CLASS="subsection"><A NAME="htoc151">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc152">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3><!--SEC END -->
 
 Local interfaces can inherit from unconstrained (i.e. non-local)
 interfaces:<BR>
@@ -5834,7 +5849,7 @@ interfaces, you should compile all your IDL with the omniidl flags:
 </BLOCKQUOTE>
 <!--TOC subsection Valuetypes supporting local interfaces-->
 
-<H3 CLASS="subsection"><A NAME="htoc152">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc153">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3><!--SEC END -->
 
 According to the IDL specification, it should be possible to declare a
 valuetype that supports a local interface:<BR>

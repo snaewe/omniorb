@@ -425,7 +425,22 @@ To listen for both IPv4 and IPv6 connections on Windows,
 both endpoints must be explicitly provided.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc104">8.6.2</A>&nbsp;&nbsp;Endpoint publishing</H3>
+<H4 CLASS="subsubsection"><A NAME="htoc104">8.6.1.1</A>&nbsp;&nbsp;Link local addresses</H4>
+In IPv6, all network interfaces are assigned a <I>link local</I>
+address, starting with the digits <TT>fe80</TT>. The link local address
+is only valid on the same `link' as the interface, meaning directly
+connected to the interface, or possibly on the same subnet, depending
+on how the network is switched. To connect to a server's link local
+address, a client has to know which of its network interfaces is on
+the same link as the server. Since there is no way for omniORB to know
+which local interface a remote link local address may be connected to,
+and in extreme circumstances may even end up contacting the wrong
+server if it picks the wrong interface, link local addresses are not
+considered valid. Servers do not publish link local addresses in their
+IORs.<BR>
+<BR>
+
+<H3 CLASS="subsection"><A NAME="htoc105">8.6.2</A>&nbsp;&nbsp;Endpoint publishing</H3>
 For clients to be able to connect to a server, the server publishes
 endpoint information in its IORs (Interoperable Object References).
 Normally, omniORB publishes the first available address for each of
@@ -514,7 +529,7 @@ setting <TT>endPointPublish</TT> to `<TT>all(addr)</TT>'. The
 URIs to the <TT>endPointPublish</TT> parameter.<BR>
 <BR>
 <A NAME="toc43"></A>
-<H2 CLASS="section"><A NAME="htoc105">8.7</A>&nbsp;&nbsp;Connection selection and acceptance</H2>
+<H2 CLASS="section"><A NAME="htoc106">8.7</A>&nbsp;&nbsp;Connection selection and acceptance</H2>
 In the face of IORs containing details about multiple different
 endpoints, clients have to know how to choose the one to use to
 connect a server. Similarly, servers may wish to restrict which
@@ -522,7 +537,7 @@ clients can connect to particular transports. This is achieved with
 <I>transport rules</I>.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc106">8.7.1</A>&nbsp;&nbsp;Client transport rules</H3>
+<H3 CLASS="subsection"><A NAME="htoc107">8.7.1</A>&nbsp;&nbsp;Client transport rules</H3>
 <A NAME="sec:clientRule"></A>
 The <TT>clientTransportRule</TT> parameter is used to filter and
 prioritise the order in which transports specified in an IOR are
@@ -610,7 +625,7 @@ permissible endpoints will it raise a <TT>TRANSIENT</TT> exception to
 indicate that the connect failed.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc107">8.7.2</A>&nbsp;&nbsp;Server transport rules</H3>
+<H3 CLASS="subsection"><A NAME="htoc108">8.7.2</A>&nbsp;&nbsp;Server transport rules</H3>
 <A NAME="sec:serverRule"></A>
 The server transport rules have the same format as client transport
 rules. Rather than being used to select which of a set of ways to
@@ -634,7 +649,7 @@ implicit rule of `<TT>* unix,ssl,tcp</TT>', meaning any kind of
 connection is accepted from any client.<BR>
 <BR>
 <A NAME="toc44"></A>
-<H2 CLASS="section"><A NAME="htoc108">8.8</A>&nbsp;&nbsp;Bidirectional GIOP</H2>
+<H2 CLASS="section"><A NAME="htoc109">8.8</A>&nbsp;&nbsp;Bidirectional GIOP</H2>
 <A NAME="sec:bidir"></A>
 omniORB supports bidirectional GIOP, which allows callbacks to be made
 using a connection opened by the original client, rather than the
@@ -659,7 +674,7 @@ On the server side, these conditions must be met:
  been created with a <TT>BidirectionalPolicy</TT> value of
  <TT>BOTH</TT>.</UL>
 <A NAME="toc45"></A>
-<H2 CLASS="section"><A NAME="htoc109">8.9</A>&nbsp;&nbsp;SSL transport</H2>
+<H2 CLASS="section"><A NAME="htoc110">8.9</A>&nbsp;&nbsp;SSL transport</H2>
 omniORB supports an SSL transport, using OpenSSL. It is only built if
 OpenSSL is available. On platforms using Autoconf, it is autodetected
 in many locations, or its location can be given with the

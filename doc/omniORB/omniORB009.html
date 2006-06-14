@@ -18,7 +18,7 @@ Code set conversion
 <A HREF="omniORB010.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1 CLASS="chapter"><A NAME="htoc110">Chapter&nbsp;9</A>&nbsp;&nbsp;Code set conversion</H1>
+<H1 CLASS="chapter"><A NAME="htoc111">Chapter&nbsp;9</A>&nbsp;&nbsp;Code set conversion</H1>
 <A NAME="chap:codesets"></A>
 omniORB supports full code set negotiation, used to select and
 translate between different character code sets, for the transmission
@@ -29,7 +29,7 @@ some pointers about how to implement your own code sets, in case the
 ones that come with omniORB are not sufficient.<BR>
 <BR>
 <A NAME="toc46"></A>
-<H2 CLASS="section"><A NAME="htoc111">9.1</A>&nbsp;&nbsp;Native code sets</H2>
+<H2 CLASS="section"><A NAME="htoc112">9.1</A>&nbsp;&nbsp;Native code sets</H2>
 For the ORB to know how to handle strings and wstrings given to it by
 the application, it must know what code set they are represented
 with, so it can properly translate them if need be. The defaults are
@@ -49,7 +49,7 @@ select characters outside the first plane without having to use UTF-16
 surrogates<SUP><A NAME="text18" HREF="#note18">1</A></SUP>.<BR>
 <BR>
 <A NAME="toc47"></A>
-<H2 CLASS="section"><A NAME="htoc112">9.2</A>&nbsp;&nbsp;Code set library</H2>
+<H2 CLASS="section"><A NAME="htoc113">9.2</A>&nbsp;&nbsp;Code set library</H2>
 To save space in the main ORB core library, most of the code set
 implementations are in a separate library named omniCodeSets4. To use
 the extra code sets, you must link your application with that
@@ -63,7 +63,7 @@ that header enables several optional features. Look at the file
 contents to see how to turn off particular features.<BR>
 <BR>
 <A NAME="toc48"></A>
-<H2 CLASS="section"><A NAME="htoc113">9.3</A>&nbsp;&nbsp;Implementing new code sets</H2>
+<H2 CLASS="section"><A NAME="htoc114">9.3</A>&nbsp;&nbsp;Implementing new code sets</H2>
 It is quite easy to implement new code sets, if you need support for
 code sets (or marshalling formats) that do not come with the omniORB
 distribution. There are extensive comments in the headers and ORB code

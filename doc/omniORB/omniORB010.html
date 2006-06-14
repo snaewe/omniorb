@@ -18,7 +18,7 @@ Interceptors
 <A HREF="omniORB011.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1 CLASS="chapter"><A NAME="htoc114">Chapter&nbsp;10</A>&nbsp;&nbsp;Interceptors</H1>
+<H1 CLASS="chapter"><A NAME="htoc115">Chapter&nbsp;10</A>&nbsp;&nbsp;Interceptors</H1>
 <A NAME="chap:interceptors"></A>
 omniORB supports interceptors that allow the application to insert
 processing in various points along the call chain, and in various
@@ -37,17 +37,10 @@ and the definition of an `interceptor info' class. For example:<BR>
 </TT><TT>
 </TT><TT>    <B>class</B> info_T {</TT><TT>
 </TT><TT>    <B>public</B>:</TT><TT>
-</TT><TT>      giopStream&amp;              giopstream;</TT><TT>
-</TT><TT>      <B>const</B> omniIOR&amp;           ior;</TT><TT>
-</TT><TT>      <B>const</B> <B>char</B>*              opname;</TT><TT>
-</TT><TT>      CORBA::Boolean           oneway;</TT><TT>
-</TT><TT>      CORBA::Boolean           response_expected;</TT><TT>
-</TT><TT>      IOP::ServiceContextList  service_contexts;</TT><TT>
+</TT><TT>      GIOP_C&amp;                 giop_c;</TT><TT>
+</TT><TT>      IOP::ServiceContextList service_contexts;</TT><TT>
 </TT><TT>
-</TT><TT>      info_T(giopStream&amp; s, <B>const</B> omniIOR&amp; i, <B>const</B> <B>char</B>* op,</TT><TT>
-</TT><TT>      CORBA::Boolean ow, CORBA::Boolean re) :</TT><TT>
-</TT><TT> giopstream(s),ior(i),opname(op),oneway(ow),response_expected(re),</TT><TT>
-</TT><TT> service_contexts(5) {}</TT><TT>
+</TT><TT>      info_T(GIOP_C&amp; c) : giop_c(c), service_contexts(5) {}</TT><TT>
 </TT><TT>
 </TT><TT>    <B>private</B>:</TT><TT>
 </TT><TT>      info_T();</TT><TT>
@@ -71,13 +64,13 @@ processing should continue with subsequent interceptors. If an
 interceptor returns false, later interceptors are not called. You
 should only do that if you really know what you are doing.<BR>
 <BR>
-Notice that the <TT>info_T</TT> contains references to several omniORB
-internal data types. The definitions of these can be found in other
+Notice that the <TT>info_T</TT> contains references to omniORB internal
+data types. The definitions of these types can be found in other
 header files within <TT>include/omniORB4</TT> and
 <TT>include/omniORB4/internal</TT>.<BR>
 <BR>
 <A NAME="toc49"></A>
-<H2 CLASS="section"><A NAME="htoc115">10.1</A>&nbsp;&nbsp;Interceptor registration</H2>
+<H2 CLASS="section"><A NAME="htoc116">10.1</A>&nbsp;&nbsp;Interceptor registration</H2>
 All the interceptor singletons are registered within another singleton
 object of class <TT>omniInterceptors</TT>. You retrieve a pointer to the
 object with the <TT>omniORB::getInterceptors()</TT> function, which
@@ -89,7 +82,7 @@ register an interceptor looks, for example, like:<BR>
 </TT><TT>interceptors-&gt;clientSendRequest.add(myInterceptorFunc);</TT></DIV><BR>
 <BR>
 <A NAME="toc50"></A>
-<H2 CLASS="section"><A NAME="htoc116">10.2</A>&nbsp;&nbsp;Available interceptors</H2>
+<H2 CLASS="section"><A NAME="htoc117">10.2</A>&nbsp;&nbsp;Available interceptors</H2>
 The following interceptors are available:
 <DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>encodeIOR</B><DD CLASS="dd-description"><BR>
 Called when encoding an IOR to represent an object reference. This

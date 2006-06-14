@@ -18,7 +18,7 @@ Type Any and TypeCode
 <A HREF="omniORB012.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1 CLASS="chapter"><A NAME="htoc117">Chapter&nbsp;11</A>&nbsp;&nbsp;Type Any and TypeCode</H1>
+<H1 CLASS="chapter"><A NAME="htoc118">Chapter&nbsp;11</A>&nbsp;&nbsp;Type Any and TypeCode</H1>
 <A NAME="chap:any"></A>
 The CORBA specification provides for a type that can hold the value of
 any OMG IDL type. This type is known as type Any. The OMG also
@@ -33,7 +33,7 @@ on TypeCode, refer to the Interface Repository chapter in the CORBA
 core section of the CORBA specification.<BR>
 <BR>
 <A NAME="toc51"></A>
-<H2 CLASS="section"><A NAME="htoc118">11.1</A>&nbsp;&nbsp;Example using type Any</H2>
+<H2 CLASS="section"><A NAME="htoc119">11.1</A>&nbsp;&nbsp;Example using type Any</H2>
 Before going through this example, you should make sure that you have
 read and understood the examples in chapter&nbsp;<A HREF="omniORB002.html#chap:basic">2</A>. The
 source code for this example is included in the omniORB distribution,
@@ -41,7 +41,7 @@ in the directory <TT>src/examples/anyExample</TT>. A listing of the
 source code is provided at the end of this chapter.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc119">11.1.1</A>&nbsp;&nbsp;Type Any in IDL</H3>
+<H3 CLASS="subsection"><A NAME="htoc120">11.1.1</A>&nbsp;&nbsp;Type Any in IDL</H3>
 Type Any allows one to delay the decision on the type used in an
 operation until run-time. To use type any in IDL, use the keyword
 <TT>any</TT>, as in the following example:<BR>
@@ -84,7 +84,7 @@ So, the above IDL would map to the following C++:<BR>
 </TT><TT>};</TT></DIV><BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc120">11.1.2</A>&nbsp;&nbsp;Inserting and Extracting Basic Types from an Any</H3>
+<H3 CLASS="subsection"><A NAME="htoc121">11.1.2</A>&nbsp;&nbsp;Inserting and Extracting Basic Types from an Any</H3>
 The question now arises as to how values are inserted into and removed
 from an Any. This is achieved using two overloaded operators:
 <TT>&lt;&lt;=</TT> and <TT>&gt;&gt;=</TT>.<BR>
@@ -136,7 +136,7 @@ extract values from an Any is as follows:<BR>
 </TT><TT>}</TT></DIV><BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc121">11.1.3</A>&nbsp;&nbsp;Inserting and Extracting Constructed Types from an Any</H3>
+<H3 CLASS="subsection"><A NAME="htoc122">11.1.3</A>&nbsp;&nbsp;Inserting and Extracting Constructed Types from an Any</H3>
 It is also possible to insert and extract constructed types and object
 references from an Any. omniidl will generate insertion and extraction
 operators for the constructed type. Note that it is necessary to
@@ -215,19 +215,19 @@ bounded strings, booleans, chars, and octets. Please refer to the C++
 Mapping specification for further information.<BR>
 <BR>
 <A NAME="toc52"></A>
-<H2 CLASS="section"><A NAME="htoc122">11.2</A>&nbsp;&nbsp;Type Any in omniORB</H2>
+<H2 CLASS="section"><A NAME="htoc123">11.2</A>&nbsp;&nbsp;Type Any in omniORB</H2>
 <A NAME="anyOmniORB"></A>
 This section contains some notes on the use and behaviour of type Any
 in omniORB.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc123">11.2.1</A>&nbsp;&nbsp;Generating Insertion and Extraction Operators.</H3>
+<H3 CLASS="subsection"><A NAME="htoc124">11.2.1</A>&nbsp;&nbsp;Generating Insertion and Extraction Operators.</H3>
 To generate type Any insertion and extraction operators for
 constructed types and interfaces, the <TT>-Wba</TT> command line flag
 should be specified when running omniidl.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc124">11.2.2</A>&nbsp;&nbsp;TypeCode comparison when extracting from an Any.</H3>
+<H3 CLASS="subsection"><A NAME="htoc125">11.2.2</A>&nbsp;&nbsp;TypeCode comparison when extracting from an Any.</H3>
 When an attempt is made to extract a type from an Any, the TypeCode of
 the type is checked for <EM>equivalence</EM> with the TypeCode of the
 type stored by the Any. The <TT>equivalent()</TT> test in the TypeCode
@@ -252,7 +252,7 @@ Examples:<BR>
 succeed (and vice-versa), as the two types differ only by an alias.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc125">11.2.3</A>&nbsp;&nbsp;Top-level aliases.</H3>
+<H3 CLASS="subsection"><A NAME="htoc126">11.2.3</A>&nbsp;&nbsp;Top-level aliases.</H3>
 When a type is inserted into an Any, the Any stores both the value of
 the type and the TypeCode for that type. However, in some cases, a
 top-level alias can be lost due to the details of the C++ mapping. For
@@ -279,7 +279,7 @@ alias. If this is not desirable, you can use the member function
 set the TypeCode to the correct one.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc126">11.2.4</A>&nbsp;&nbsp;Removing aliases from TypeCodes.</H3>
+<H3 CLASS="subsection"><A NAME="htoc127">11.2.4</A>&nbsp;&nbsp;Removing aliases from TypeCodes.</H3>
 Some ORBs (such as old versions of Orbix) will not accept TypeCodes
 containing <TT>tk_alias</TT> TypeCodes. When using type Any while
 interoperating with these ORBs, it is necessary to remove
@@ -298,7 +298,7 @@ types will contain the complete TypeCode for the type (including any
 Anys are transmitted that the aliases are stripped.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc127">11.2.5</A>&nbsp;&nbsp;Recursive TypeCodes.</H3>
+<H3 CLASS="subsection"><A NAME="htoc128">11.2.5</A>&nbsp;&nbsp;Recursive TypeCodes.</H3>
 omniORB supports recursive TypeCodes. This means that types such as
 the following can be inserted or extracted from an Any:<BR>
 <BR>
@@ -308,7 +308,7 @@ the following can be inserted or extracted from an Any:<BR>
 </TT><TT>};</TT></DIV><BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc128">11.2.6</A>&nbsp;&nbsp;Threads and type Any.</H3>
+<H3 CLASS="subsection"><A NAME="htoc129">11.2.6</A>&nbsp;&nbsp;Threads and type Any.</H3>
 Inserting and extracting simultaneously from the same Any (in 2
 different threads) results in undefined behaviour.<BR>
 <BR>
@@ -318,12 +318,12 @@ behaviour. That is no longer the case&mdash;Any extraction is now thread
 safe.<BR>
 <BR>
 <A NAME="toc53"></A>
-<H2 CLASS="section"><A NAME="htoc129">11.3</A>&nbsp;&nbsp;TypeCode in omniORB</H2>
+<H2 CLASS="section"><A NAME="htoc130">11.3</A>&nbsp;&nbsp;TypeCode in omniORB</H2>
 This section contains some notes on the use and behaviour of TypeCode
 in omniORB<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc130">11.3.1</A>&nbsp;&nbsp;TypeCodes in IDL.</H3>
+<H3 CLASS="subsection"><A NAME="htoc131">11.3.1</A>&nbsp;&nbsp;TypeCodes in IDL.</H3>
 When using TypeCodes in IDL, note that they are defined in the CORBA
 scope. Therefore, <TT>CORBA::TypeCode</TT> should be used. Example:<BR>
 <BR>
@@ -334,13 +334,13 @@ scope. Therefore, <TT>CORBA::TypeCode</TT> should be used. Example:<BR>
 </TT><TT>};</TT></DIV><BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc131">11.3.2</A>&nbsp;&nbsp;orb.idl</H3>
+<H3 CLASS="subsection"><A NAME="htoc132">11.3.2</A>&nbsp;&nbsp;orb.idl</H3>
 The CORBA specification says that IDL using <TT>CORBA::TypeCode</TT>
 must include the file <TT>orb.idl</TT>. That is not required in omniORB,
 but a suitable <TT>orb.idl</TT> is available.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc132">11.3.3</A>&nbsp;&nbsp;Generating TypeCodes for constructed types.</H3>
+<H3 CLASS="subsection"><A NAME="htoc133">11.3.3</A>&nbsp;&nbsp;Generating TypeCodes for constructed types.</H3>
 To generate a TypeCode for constructed types, specify the
 <TT>-Wba</TT> command-line flag when running omniidl. This will
 generate a <TT>_tc_</TT> TypeCode describing the type, at the same
@@ -357,9 +357,9 @@ struct <TT>Test6</TT>. The operations defined in the TypeCode interface
 can be used to query the TypeCode about the type it represents.<BR>
 <BR>
 <A NAME="toc54"></A>
-<H2 CLASS="section"><A NAME="htoc133">11.4</A>&nbsp;&nbsp;Source Listing</H2>
+<H2 CLASS="section"><A NAME="htoc134">11.4</A>&nbsp;&nbsp;Source Listing</H2>
 
-<H3 CLASS="subsection"><A NAME="htoc134">11.4.1</A>&nbsp;&nbsp;anyExample_impl.cc</H3><BR>
+<H3 CLASS="subsection"><A NAME="htoc135">11.4.1</A>&nbsp;&nbsp;anyExample_impl.cc</H3><BR>
 <BR>
 <DIV CLASS="lstlisting"><TT><I>// anyExample_impl.cc - This is the source code of the example used in</I></TT><TT>
 </TT><TT><I>//                      Chapter 9 "Type Any and TypeCode" of the omniORB</I></TT><TT>
@@ -476,7 +476,7 @@ can be used to query the TypeCode about the type it represents.<BR>
 </TT><TT>}</TT></DIV><BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc135">11.4.2</A>&nbsp;&nbsp;anyExample_clt.cc</H3><BR>
+<H3 CLASS="subsection"><A NAME="htoc136">11.4.2</A>&nbsp;&nbsp;anyExample_clt.cc</H3><BR>
 <BR>
 <DIV CLASS="lstlisting"><TT><I>// anyExample_clt.cc -  This is the source code of the example used in </I></TT><TT>
 </TT><TT><I>//                      Chapter 9 "Type Any and TypeCode" of the omniORB</I></TT><TT>

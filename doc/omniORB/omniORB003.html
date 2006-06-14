@@ -111,8 +111,8 @@ largely syntax changes, rather than semantic differences.<BR>
 <BR>
 <A NAME="toc18"></A>
 <H2 CLASS="section"><A NAME="htoc43">3.3</A>&nbsp;&nbsp;omniORB 4.0 compatibility</H2>
-omniORB 4.1 is source-code compatible with omniORB 4.0, with two minor
-exceptions:
+omniORB 4.1 is source-code compatible with omniORB 4.0, with three
+minor exceptions:
 <OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">As required by the 1.1 version of the CORBA C++ mapping
  specification, the <TT>RefCountServantBase</TT> class has been
  deprecated, and the reference counting functionality moved into
@@ -124,7 +124,12 @@ exceptions:
 <BR>
 <LI CLASS="li-enumerate">omniORB 4.0 had an option for Any extraction semantics that was
  compatible with omniORB 2.7, where ownership of extracted values was
- not maintained by the Any. That option is no longer available.</OL>
+ not maintained by the Any. That option is no longer available.<BR>
+<BR>
+<LI CLASS="li-enumerate">The members of the <TT>clientSendRequest</TT> interceptor have
+ been changed, replacing all the separate variables with a single
+ member of type <TT>GIOP_C</TT>. All the values previously available
+ can be accessed through the <TT>GIOP_C</TT> instance.</OL>
 <HR>
 <A HREF="omniORB002.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
 <A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
