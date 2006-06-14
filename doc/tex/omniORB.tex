@@ -2385,8 +2385,8 @@ largely syntax changes, rather than semantic differences.
 
 \section{omniORB 4.0 compatibility}
 
-omniORB 4.1 is source-code compatible with omniORB 4.0, with two minor
-exceptions:
+omniORB 4.1 is source-code compatible with omniORB 4.0, with three
+minor exceptions:
 
 \begin{enumerate}
 
@@ -2402,6 +2402,11 @@ exceptions:
 \item omniORB 4.0 had an option for Any extraction semantics that was
   compatible with omniORB 2.7, where ownership of extracted values was
   not maintained by the Any. That option is no longer available.
+
+\item The members of the \code{clientSendRequest} interceptor have
+  been changed, replacing all the separate variables with a single
+  member of type \code{GIOP\_C}. All the values previously available
+  can be accessed through the \code{GIOP\_C} instance.
 
 \end{enumerate}
 
@@ -4602,6 +4607,21 @@ somewhat cryptic:
 \noindent To listen for both IPv4 and IPv6 connections on Windows,
 both endpoints must be explicitly provided.
 
+\subsubsection{Link local addresses}
+
+In IPv6, all network interfaces are assigned a \term{link local}
+address, starting with the digits \code{fe80}. The link local address
+is only valid on the same `link' as the interface, meaning directly
+connected to the interface, or possibly on the same subnet, depending
+on how the network is switched. To connect to a server's link local
+address, a client has to know which of its network interfaces is on
+the same link as the server. Since there is no way for omniORB to know
+which local interface a remote link local address may be connected to,
+and in extreme circumstances may even end up contacting the wrong
+server if it picks the wrong interface, link local addresses are not
+considered valid. Servers do not publish link local addresses in their
+IORs.
+
 
 \subsection{Endpoint publishing}
 
@@ -4999,17 +5019,10 @@ class omniInterceptors {
 
     class info_T {
     public:
-      giopStream&              giopstream;
-      const omniIOR&           ior;
-      const char*              opname;
-      CORBA::Boolean           oneway;
-      CORBA::Boolean           response_expected;
-      IOP::ServiceContextList  service_contexts;
+      GIOP_C&                 giop_c;
+      IOP::ServiceContextList service_contexts;
 
-      info_T(giopStream& s, const omniIOR& i, const char* op,
-	     CORBA::Boolean ow, CORBA::Boolean re) :
-	giopstream(s),ior(i),opname(op),oneway(ow),response_expected(re),
-	service_contexts(5) {}
+      info_T(GIOP_C& c) : giop_c(c), service_contexts(5) {}
 
     private:
       info_T();
@@ -5034,8 +5047,8 @@ processing should continue with subsequent interceptors. If an
 interceptor returns false, later interceptors are not called. You
 should only do that if you really know what you are doing.
 
-Notice that the \code{info\_T} contains references to several omniORB
-internal data types. The definitions of these can be found in other
+Notice that the \code{info\_T} contains references to omniORB internal
+data types. The definitions of these types can be found in other
 header files within \file{include/omniORB4} and
 \file{include/omniORB4/internal}.
 
