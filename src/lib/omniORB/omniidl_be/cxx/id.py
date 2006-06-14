@@ -234,7 +234,7 @@ class Environment:
         return self._scope
 
     def __str__(self):
-        text = "Environment(%s)" % repr(self._scope)
+        return "Environment(%s)" % repr(self._scope)
 
 
 # Hash of AST nodes -> environments

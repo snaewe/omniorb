@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11.2.5  2006/06/14 10:35:03  dgrisby
+# Problems with nested types in valuetypes.
+#
 # Revision 1.11.2.4  2004/07/04 23:53:38  dgrisby
 # More ValueType TypeCode and Any support.
 #
@@ -187,7 +190,6 @@ def visitInterface(node):
     for d in node.declarations():
         d.accept(self)
 
-
     # Typecode and Any
     if config.state['Typecode']:
         fqname = id.Name(node.scopedName()).fullyQualify()
@@ -245,6 +247,10 @@ def visitException(node):
 
 
 def visitValue(node):
+    # Nested declarations
+    for d in node.declarations():
+        d.accept(self)
+
     # Typecode and Any
     if config.state['Typecode']:
         fqname = id.Name(node.scopedName()).fullyQualify()
@@ -256,6 +262,10 @@ def visitValueForward(node):
     pass
 
 def visitValueAbs(node):
+    # Nested declarations
+    for d in node.declarations():
+        d.accept(self)
+
     # Typecode and Any
     if config.state['Typecode']:
         fqname = id.Name(node.scopedName()).fullyQualify()

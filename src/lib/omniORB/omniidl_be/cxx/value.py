@@ -2565,11 +2565,20 @@ class ValueType (mapping.Decl):
             valtype = idltype.Declared(astdecl, astdecl.scopedName(),
                                        idltype.tk_value, 0)
 
+            # The _init class for factory functions is outside the
+            # scope of the value class being delcared, so we must
+            # temporarily modify this object's environment to be the
+            # containing environment.
+            save_env = self._environment
+            self._environment = self._environment.leave()
+
             for f in astdecl.factories():
                 wrapper = FactoryWrapper(f, valtype)
                 op = call.operation(self, wrapper)
                 method = iface._impl_Method(op, self)
                 funcs.append(method.hh(1,1))
+
+            self._environment = save_env
                 
             factory_funcs = string.join(funcs, "\n")
 
@@ -2711,6 +2720,10 @@ class ValueType (mapping.Decl):
 
         repoId = astdecl.repoId()
         idhash = hashval(repoId)
+
+        # Output code for nested types
+        for n in astdecl.declarations():
+            n.accept(visitor)
 
         if not self._abstract and astdecl.custom():
             custom = "1"
