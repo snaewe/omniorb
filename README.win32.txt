@@ -310,8 +310,8 @@ module A {
 Building omniORB from the source files
 ======================================
 
-omniORB should be compiled using Visual C++ 6.0 or higher. It may work
-with Visual C++ 5.
+omniORB should be compiled using Visual C++ 6.0 or higher. It may
+still work with Visual C++ 5 but that has not been tested.
 
 
  A. Pre-requisites

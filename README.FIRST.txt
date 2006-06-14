@@ -1,6 +1,6 @@
 READ ME FIRST!
 
-This is omniORB 4.1.x beta 2.
+This is omniORB 4.1.0 release candidate 1.
 
 omniORB is copyright AT&T Laboratories Cambridge, Apasphere Ltd and
 others. It is free software. The programs in omniORB are distributed
