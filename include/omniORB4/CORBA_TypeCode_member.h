@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2006/06/14 10:34:19  dgrisby
+  Add missing TypeCode_member in(), inout(), out().
+
   Revision 1.1.4.1  2003/03/23 21:04:22  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -60,6 +63,11 @@ public:
 
   inline TypeCode_ptr operator->() const { return _ptr; }
   inline operator TypeCode_ptr() const   { return _ptr; }
+
+  inline TypeCode_ptr  in() const { return _ptr; }
+  inline TypeCode_ptr& inout()    { return _ptr; }
+  TypeCode_ptr& out();
+  TypeCode_ptr _retn();
 
   TypeCode_ptr _ptr;
 

@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.11  2006/06/14 10:34:19  dgrisby
+ * Add missing TypeCode_member in(), inout(), out().
+ *
  * Revision 1.40.2.10  2006/05/20 16:23:36  dgrisby
  * Minor cdrMemoryStream and TypeCode performance tweaks.
  *
@@ -6310,6 +6313,22 @@ CORBA::TypeCode_member::operator=(const CORBA::TypeCode_var& p)
   CORBA::release(_ptr);
   _ptr = CORBA::TypeCode::_duplicate(p.pd_ref);
   return *this;
+}
+
+CORBA::TypeCode_ptr&
+CORBA::TypeCode_member::out()
+{
+  CORBA::release(_ptr);
+  _ptr = CORBA::TypeCode::_nil();
+  return _ptr;
+}
+
+CORBA::TypeCode_ptr
+CORBA::TypeCode_member::_retn()
+{
+  CORBA::TypeCode_ptr tmp = _ptr;
+  _ptr = CORBA::TypeCode::_nil();
+  return tmp;
 }
 
 void
