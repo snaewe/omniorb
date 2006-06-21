@@ -1,3 +1,11 @@
+Wed Jun 21 15:30:16 BST 2006 dgrisby
+====================================
+
+- Forgot to install the new streamOperators.h.
+
+include/omniORB4/GNUmakefile.in
+
+
 Wed Jun 14 13:50:00 BST 2006 dgrisby
 ====================================
 

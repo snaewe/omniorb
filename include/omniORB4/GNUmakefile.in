@@ -31,9 +31,10 @@ HEADERS = acconfig.h BiDirPolicy.h CORBA.h CORBA_AbstractBase.h		\
           poa.h poa_defs.h poa_enums_defs.h poa_enums_operators.h	\
           poa_operators.h poa_poa.h proxyFactory.h			\
           seqTemplatedecls.h seqTemplatedefns.h sslContext.h		\
-          stringtypes.h templatedecls.h templatedefns.h tracedthread.h	\
-          userexception.h valueFactoryManager.h valueType.h		\
-          valueTemplatedecls.h valueTemplatedefns.h wstringtypes.h
+          streamOperators.h stringtypes.h templatedecls.h		\
+          templatedefns.h tracedthread.h userexception.h		\
+          valueFactoryManager.h valueType.h valueTemplatedecls.h	\
+          valueTemplatedefns.h wstringtypes.h
 
 SUBDIRS = internal
 
