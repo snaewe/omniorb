@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2006/06/22 13:53:49  dgrisby
+  Add flags to strand.
+
   Revision 1.1.6.7  2006/03/26 20:59:28  dgrisby
   Merge from omni4_0_develop.
 
@@ -1098,7 +1101,8 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
 	deadline_nanosecs = pd_deadline_nanosecs;
       }
       giopActiveConnection* c = pd_strand->address->Connect(deadline_secs,
-							    deadline_nanosecs);
+							    deadline_nanosecs,
+							    pd_strand->flags);
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {

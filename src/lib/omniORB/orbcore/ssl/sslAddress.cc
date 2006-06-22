@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/06/22 13:53:49  dgrisby
+  Add flags to strand.
+
   Revision 1.1.4.4  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -94,6 +97,7 @@
 #include <omniORB4/giopEndpoint.h>
 #include <omniORB4/omniURI.h>
 #include <orbParameters.h>
+#include <giopStrandFlags.h>
 #include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
 #include <ssl/sslConnection.h>
@@ -218,7 +222,8 @@ static inline int waitRead(SocketHandle_t sock, struct timeval& t)
 
 giopActiveConnection*
 sslAddress::Connect(unsigned long deadline_secs,
-		    unsigned long deadline_nanosecs) const {
+		    unsigned long deadline_nanosecs,
+		    CORBA::ULong  strand_flags) const {
 
   SocketHandle_t sock;
 
@@ -233,7 +238,7 @@ sslAddress::Connect(unsigned long deadline_secs,
   if ((sock = socket(ai->addrFamily(), SOCK_STREAM,0)) == RC_INVALID_SOCKET)
     return 0;
 
-  {
+  if (!strand_flags & GIOPSTRAND_ENABLE_TRANSPORT_BATCHING) {
     // Prevent Nagle's algorithm
     int valtrue = 1;
     if (setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,

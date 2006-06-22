@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2006/06/22 13:53:49  dgrisby
+  Add flags to strand.
+
   Revision 1.1.4.8  2006/06/05 11:28:04  dgrisby
   Change clientSendRequest interceptor members to a single GIOP_C.
 
@@ -127,15 +130,6 @@
 #include <transportRules.h>
 
 OMNI_USING_NAMESPACE(omni)
-
-// XXX To-do
-// a) BiDirServerRope garbage collection. At the moment, the server
-//    side of a bidirectional connection is garbage collected in
-//    the same way as an ordinary connection. That is, it is closed after
-//    a period of inactivity. In fact, the connection should only be closed
-//    if all the object references unmarshal from the connection have
-//    been released. In other words, the reference count on the
-//    BiDirServerRope instance attached to the connection == 0.
 
 ////////////////////////////////////////////////////////////////////////////
 //             Configuration options                                      //
@@ -582,7 +576,8 @@ BiDirClientRope::acquireClient(const omniIOR* ior,
     }
 
     giopActiveConnection* c = s.address->Connect(deadline_secs,
-						 deadline_nanosecs);
+						 deadline_nanosecs,
+						 s.flags);
     if (c) s.connection = &(c->getConnection());
     if (!s.connection) {
       s.state(giopStrand::DYING);

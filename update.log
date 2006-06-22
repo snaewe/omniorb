@@ -1,3 +1,24 @@
+Thu Jun 22 14:51:26 BST 2006 dgrisby
+====================================
+
+- Add flags to strand.
+
+include/omniORB4/giopEndpoint.h
+include/omniORB4/internal/GNUmakefile.in
+include/omniORB4/internal/giopServer.h
+include/omniORB4/internal/giopStrand.h
+include/omniORB4/internal/giopStrandFlags.h   -- new
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.h
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.h
+src/lib/omniORB/orbcore/unix/unixAddress.cc
+src/lib/omniORB/orbcore/unix/unixAddress.h
+
+
 Thu Jun 22 14:01:06 BST 2006 dgrisby
 ====================================
 

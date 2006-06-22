@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2006/06/22 13:53:49  dgrisby
+  Add flags to strand.
+
   Revision 1.1.6.5  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -111,6 +114,7 @@
 #include <giopStreamImpl.h>
 #include <giopRope.h>
 #include <giopStrand.h>
+#include <giopStrandFlags.h>
 #include <GIOP_S.h>
 #include <GIOP_C.h>
 #include <initialiser.h>
@@ -200,8 +204,8 @@ sendCloseConnection(giopStrand* s)
 giopStrand::giopStrand(const giopAddress* addr) :
   pd_safelyDeleted(0),
   idlebeats(-1),
-  biDir(0), address(addr), connection(0), server(0),
-  gatekeeper_checked(0),first_use(1),orderly_closed(0),
+  address(addr), connection(0), server(0), flags(0),
+  biDir(0), gatekeeper_checked(0),first_use(1),orderly_closed(0),
   biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
   rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
@@ -218,8 +222,8 @@ giopStrand::giopStrand(const giopAddress* addr) :
 giopStrand::giopStrand(giopConnection* conn, giopServer* serv) :
   pd_safelyDeleted(0),
   idlebeats(-1),
-  biDir(0), address(0), connection(conn), server(serv),
-  gatekeeper_checked(0),first_use(0),orderly_closed(0),
+  address(0), connection(conn), server(serv), flags(0),
+  biDir(0), gatekeeper_checked(0),first_use(0),orderly_closed(0),
   biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
   rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
@@ -622,6 +626,11 @@ giopStrand::startIdleCounter() {
   if (idlebeats >= 0) {
     // The idle counter is already active or has already expired.
     return 0;
+  }
+  if (flags & GIOPSTRAND_HOLD_OPEN) {
+    // Flags say we should hold the connection open.
+    idlebeats = -1;
+    return 1;
   }
   if (isClient()) {
     idlebeats = (idleOutgoingBeats) ? (CORBA::Long)idleOutgoingBeats : -1;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2006/06/22 13:53:49  dgrisby
+  Add flags to strand.
+
   Revision 1.1.6.1  2003/03/23 21:03:46  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -102,9 +105,9 @@ public:
   giopStreamList* prev;
 
   giopStreamList() {
-		next = this;
-		prev = this;
-	}
+    next = this;
+    prev = this;
+  }
 
   void insert(giopStreamList& head);
   void remove();
@@ -248,7 +251,7 @@ public:
   // long time and should be deleted.
   // This variable SHOULD NOT be manipulated outside the implementation of
   // giopStrand.
-  CORBA::Long        idlebeats;
+  CORBA::Long         idlebeats;
 
 
   giopStreamList      servers;
@@ -266,9 +269,6 @@ public:
   // end is either a client or a server but not both). With bidirectional GIOP,
   // both list may be populated.
 
-  CORBA::Boolean      biDir;
-  // Indicate if the strand is used for bidirectional GIOP.
-
   inline CORBA::Boolean isClient() { return (address != 0); }
   // Return TRUE if this is an active strand on the client side. Unless
   // biDir is TRUE, only those messages expected by a GIOP client can be
@@ -285,6 +285,14 @@ public:
   giopServer*         server;
   // server is provided as ctor arg if this is a passive strand
   // otherwise it is 0.
+
+  CORBA::ULong        flags;
+  // Flags for use by interceptors. See giopStrandFlags.h for
+  // allocated flags values.
+  // Initialised to 0 in the constructor.
+
+  CORBA::Boolean      biDir;
+  // Indicate if the strand is used for bidirectional GIOP.
 
   CORBA::Boolean      gatekeeper_checked;
   // only applies to passive strand. TRUE(1) means that the serverTransportRule

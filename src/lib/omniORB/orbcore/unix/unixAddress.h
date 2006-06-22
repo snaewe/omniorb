@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/06/22 13:53:49  dgrisby
+  Add flags to strand.
+
   Revision 1.1.4.2  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -53,7 +56,8 @@ class unixAddress : public giopAddress {
   const char* address() const;
   giopAddress* duplicate() const;
   giopActiveConnection* Connect(unsigned long deadline_secs = 0,
-				unsigned long deadline_nanosecs = 0) const;
+				unsigned long deadline_nanosecs = 0,
+				CORBA::ULong  strand_flags = 0) const;
   CORBA::Boolean Poke() const;
   ~unixAddress() {}
 

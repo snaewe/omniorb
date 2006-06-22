@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2006/06/22 13:53:49  dgrisby
+  Add flags to strand.
+
   Revision 1.1.6.7  2006/06/05 13:34:31  dgrisby
   Make connection thread limit a per-connection value.
 
@@ -234,8 +237,10 @@ public:
   // return the string that describe this remote address.
   // The string format is described in str2Address().
 
-  virtual giopActiveConnection* Connect(unsigned long deadline_secs = 0,
-				        unsigned long deadline_nanosecs = 0)const =0;
+  virtual giopActiveConnection*
+  Connect(unsigned long deadline_secs = 0,
+	  unsigned long deadline_nanosecs = 0,
+	  _CORBA_ULong  strand_flags = 0) const = 0;
   // Connect to the remote address.
   // Return 0 if no connection can be established.
 

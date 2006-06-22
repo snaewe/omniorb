@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2006/06/22 13:53:49  dgrisby
+  Add flags to strand.
+
   Revision 1.1.4.3  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -100,7 +103,7 @@ unixAddress::duplicate() const {
 
 /////////////////////////////////////////////////////////////////////////
 giopActiveConnection*
-unixAddress::Connect(unsigned long, unsigned long) const {
+unixAddress::Connect(unsigned long, unsigned long, CORBA::ULong) const {
 
 
   struct sockaddr_un raddr;
