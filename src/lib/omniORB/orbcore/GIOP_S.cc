@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.7  2006/07/02 22:52:05  dgrisby
+  Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
   Revision 1.1.6.6  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -301,7 +305,7 @@ GIOP_S::handleRequest() {
     }
 
     // Create a callHandle object
-    omniCallHandle call_handle(this);
+    omniCallHandle call_handle(this, pd_worker->selfThread());
 
     // Can we find the object in the local object table?
     if (keysize() < 0)

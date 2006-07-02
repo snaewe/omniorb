@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.4  2006/07/02 22:52:05  dgrisby
+  Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
   Revision 1.1.6.3  2006/06/05 11:27:20  dgrisby
   Comment tweak.
 
@@ -218,7 +222,8 @@ class GIOP_S : public IOP_S, public giopStream, public giopStreamList {
     ~terminateProcessing() {}
   };
 
-  void worker(giopWorker* w) { pd_worker = w; }
+  inline void worker(giopWorker* w) { pd_worker = w; }
+  inline giopWorker* worker() { return pd_worker; }
 
 private:
   IOP_S::State             pd_state;

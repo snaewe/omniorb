@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/07/02 22:52:05  dgrisby
+  Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
   Revision 1.1.4.2  2006/06/05 11:25:30  dgrisby
   Move codeset initialisation code to a more logical source file.
 
@@ -693,11 +697,12 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info)
   if (d.tcs_selected) {
     // giopStream::acquireClient never gives out the same strand
     // to run 2 different GIOP versions.
-    OMNIORB_ASSERT(d.version.major == ver.major && 
-		   d.version.minor == ver.minor);
+    //OMNIORB_ASSERT(d.version.major == ver.major && 
+    //               d.version.minor == ver.minor);
 
-    tcs_c = d.tcs_c;
-    tcs_w = d.tcs_w;
+    info.giop_c.TCS_C(d.tcs_c);
+    info.giop_c.TCS_W(d.tcs_w);
+    return 1;
     
     // Notice that we do not check the chosen convertors against the IOR
     // of the object. In fact, the IOR of the object may specify a set

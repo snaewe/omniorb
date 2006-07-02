@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.7  2006/07/02 22:52:05  dgrisby
+  Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
   Revision 1.1.6.6  2006/06/22 13:53:49  dgrisby
   Add flags to strand.
 
@@ -1037,33 +1041,6 @@ public:
 static omni_giopStrand_initialiser initialiser;
 
 omniInitialiser& omni_giopStrand_initialiser_ = initialiser;
-
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-void
-giopStreamList::insert(giopStreamList& head)
-{
-  next = head.prev->next;
-  head.prev->next = this;
-  prev = head.prev;
-  head.prev = this;
-}
-
-////////////////////////////////////////////////////////////////////////////
-void
-giopStreamList::remove()
-{
-  prev->next = next;
-  next->prev = prev;
-  next = prev = this;
-}
-
-////////////////////////////////////////////////////////////////////////////
-CORBA::Boolean
-giopStreamList::is_empty(giopStreamList& head)
-{
-  return (head.next == &head);
-}
 
 OMNI_NAMESPACE_END(omni)
 

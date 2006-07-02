@@ -1,3 +1,23 @@
+Sun Jul  2 23:48:28 BST 2006 dgrisby
+====================================
+
+- Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
+include/omniORB4/callDescriptor.h
+include/omniORB4/callHandle.h
+include/omniORB4/omniAsyncInvoker.h
+include/omniORB4/internal/GIOP_S.h
+include/omniORB4/internal/giopStrand.h
+include/omniORB4/internal/omniCurrent.h
+include/omniORB4/internal/poacurrentimpl.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/callHandle.cc
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/invoker.cc
+
+
 Thu Jun 22 14:51:26 BST 2006 dgrisby
 ====================================
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/07/02 22:52:05  dgrisby
+  Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
   Revision 1.1.4.2  2005/01/06 23:08:25  dgrisby
   Big merge from omni4_0_develop.
 
@@ -104,17 +108,9 @@ public:
   inline CORBA::Boolean timeout_absolute()    { return pd_timeout_absolute; }
 
   // Stack manipulation
-  inline void pushCallDescriptor(omniCallDescriptor* desc)
+  inline void setCallDescriptor(omniCallDescriptor* desc)
   {
-    desc->pd_current = this;
-    desc->pd_current_next = pd_callDescriptor;
     pd_callDescriptor = desc;
-  }
-
-  inline void popCallDescriptor()
-  {
-    pd_callDescriptor->pd_current = 0;
-    pd_callDescriptor = pd_callDescriptor->pd_current_next;
   }
 
   // Timeout setting

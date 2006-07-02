@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2006/07/02 22:52:05  dgrisby
+  Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
   Revision 1.1.4.1  2003/03/23 21:03:43  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -93,32 +97,38 @@ private:
 
 class poaCurrentStackInsert {
 public:
-  inline poaCurrentStackInsert(omniCallDescriptor* desc)
-    : pd_current(0)
+  inline poaCurrentStackInsert(omniCallDescriptor* desc,
+			       omni_thread* self = 0)
+    : pd_dummy(0)
   {
     if (desc && _OMNI_NS(orbParameters)::supportCurrent) {
-      omni_thread* self = omni_thread::self();
-      if (self)
-	pd_dummy = 0;
-      else {
-	pd_dummy = 1;
-	self     = omni_thread::create_dummy();
+      if (!self) {
+	self = omni_thread::self();
+
+	if (!self) {
+	  pd_dummy = 1;
+	  self     = omni_thread::create_dummy();
+	}
       }
       pd_current = omniCurrent::get(self);
-      pd_current->pushCallDescriptor(desc);
+      pd_old_cd  = pd_current->callDescriptor();
+      pd_current->setCallDescriptor(desc);
     }
+    else
+      pd_current = 0;
   }
   inline ~poaCurrentStackInsert()
   {
     if (pd_current) {
-      pd_current->popCallDescriptor();
+      pd_current->setCallDescriptor(pd_old_cd);
       if (pd_dummy)
 	omni_thread::release_dummy();
     }
   }
 private:
-  omniCurrent* pd_current;
-  int          pd_dummy;
+  omniCurrent*        pd_current;
+  omniCallDescriptor* pd_old_cd;
+  CORBA::Boolean      pd_dummy;
 };
 
 OMNI_NAMESPACE_END(omni)

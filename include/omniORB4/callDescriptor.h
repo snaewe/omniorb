@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.4.2.4  2006/07/02 22:52:05  dgrisby
+ Store self thread in task objects to avoid calls to self(), speeding
+ up Current. Other minor performance tweaks.
+
  Revision 1.4.2.3  2006/06/05 11:27:01  dgrisby
  Accessor method to change oneway-ness of a call descriptor.
 
@@ -129,18 +133,13 @@ public:
       pd_contains_values(0),
       pd_first_address_used(0),
       pd_current_address(0),
-      pd_current(0),
-      pd_current_next(0),
       pd_objref(0),
       pd_poa(0),
       pd_localId(0),
       pd_deadline_secs(0),
       pd_deadline_nanosecs(0) {}
 
-  virtual ~omniCallDescriptor()
-  {
-    OMNIORB_ASSERT(!pd_current);
-  }
+  virtual ~omniCallDescriptor() {}
 
   //////////////////////////////////////////////////
   // Methods to implement call on the client side //
@@ -290,8 +289,6 @@ private:
   omniCallDescriptor(const omniCallDescriptor&);
   omniCallDescriptor& operator = (const omniCallDescriptor&);
   // Not implemented.
-
-  friend class omniCurrent;
 };
 
 

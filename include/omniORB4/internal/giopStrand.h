@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2006/07/02 22:52:05  dgrisby
+  Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
   Revision 1.1.6.2  2006/06/22 13:53:49  dgrisby
   Add flags to strand.
 
@@ -104,14 +108,27 @@ public:
   giopStreamList* next;
   giopStreamList* prev;
 
-  giopStreamList() {
+  inline giopStreamList() {
     next = this;
     prev = this;
   }
 
-  void insert(giopStreamList& head);
-  void remove();
-  static CORBA::Boolean is_empty(giopStreamList& head);
+  inline void insert(giopStreamList& head) {
+    next = head.prev->next;
+    head.prev->next = this;
+    prev = head.prev;
+    head.prev = this;
+  }
+
+  inline void remove() {
+    prev->next = next;
+    next->prev = prev;
+    next = prev = this;
+  }
+
+  static inline CORBA::Boolean is_empty(giopStreamList& head) {
+    return (head.next == &head);
+  }
 
 private:
   giopStreamList(const giopStreamList&);

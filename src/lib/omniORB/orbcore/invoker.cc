@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/07/02 22:52:04  dgrisby
+  Store self thread in task objects to avoid calls to self(), speeding
+  up Current. Other minor performance tweaks.
+
   Revision 1.1.4.4  2006/05/02 13:08:26  dgrisby
   Time out waiting for invoker threads to exit; allow configutation of
   idle thread timeout.
@@ -151,6 +155,8 @@ public:
 
   void real_run() {
 
+    omni_thread* self_thread = omni_thread::self();
+
     if (omniORB::trace(10)) {
       omni_tracedmutex_lock sync(*pd_pool->pd_lock);
       omniORB::logger l;
@@ -216,6 +222,7 @@ public:
 
       pd_pool->pd_lock->unlock();
       try {
+	pd_task->pd_selfThread = self_thread;
 	pd_task->execute();
       }
       catch(...) {
