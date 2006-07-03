@@ -1,3 +1,14 @@
+Mon Jul  3 12:17:05 BST 2006 dgrisby
+====================================
+
+- If Poke() fails to connect to itself, wake up the SocketCollection
+  in case it is idle.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+
+
 Sun Jul  2 23:48:28 BST 2006 dgrisby
 ====================================
 

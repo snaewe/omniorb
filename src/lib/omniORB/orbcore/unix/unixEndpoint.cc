@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2006/07/03 11:18:56  dgrisby
+  If Poke() fails to connect to itself, wake up the SocketCollection in
+  case it is idle.
+
   Revision 1.1.4.6  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -287,6 +291,9 @@ unixEndpoint::Poke() {
       log << "Warning: fail to connect to myself ("
 	  << (const char*) pd_addresses[0] << ") via unix socket.\n";
     }
+    // Wake up the SocketCollection in case it is idle and blocked
+    // with no timeout.
+    wakeUp();
   }
   delete target;
 }
