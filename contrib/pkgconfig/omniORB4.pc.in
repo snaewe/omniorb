@@ -3,7 +3,7 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 datadir=@datadir@
-idldir=${datadir}/idl
+idldir=${datadir}/idl/omniORB
 omniidl=@bindir@/omniidl
 
 Name: omniORB4
