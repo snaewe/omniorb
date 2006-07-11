@@ -376,7 +376,7 @@ endef
 define CleanSharedLibrary
 ( set -x; \
 $(RM) $${dir:-.}/*.dll $${dir:-.}/*.lib $${dir:-.}/*.exp $${dir:-.}/*.def \
-      $${dir:-.}/*.dll.manifest $${dir:-.}/*.ilk
+      $${dir:-.}/*.dll.manifest $${dir:-.}/*.ilk )
 endef
 
 # Pattern rules to build objects files for static and shared library and the

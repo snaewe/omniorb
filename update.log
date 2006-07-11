@@ -1,3 +1,11 @@
+Tue Jul 11 14:43:02 BST 2006 dgrisby
+====================================
+
+- CleanSharedLibrary rule had lost a closing bracket. Thanks Bill Jones.
+
+mk/win32.mk
+
+
 Wed Jul  5 12:36:48 BST 2006 dgrisby
 ====================================
 
