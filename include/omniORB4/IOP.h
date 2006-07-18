@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2006/07/18 16:21:24  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.4.2.2  2005/01/06 23:08:09  dgrisby
   Big merge from omni4_0_develop.
 
@@ -231,6 +235,7 @@ public:
   static _core_attr const ComponentId TAG_OMNIORB_BIDIR;
   static _core_attr const ComponentId TAG_OMNIORB_UNIX_TRANS;
   static _core_attr const ComponentId TAG_OMNIORB_PERSISTENT_ID;
+  static _core_attr const ComponentId TAG_OMNIORB_RESTRICTED_CONNECTION;
 
 
   static const char* ComponentIDtoName(ComponentId);
@@ -435,6 +440,8 @@ public:
   static _core_attr const ServiceID RTCorbaPriorityRange;
   static _core_attr const ServiceID GROUP_VERSION; // FT SPEC
   static _core_attr const ServiceID REQUEST;       // FT SPEC
+
+  static _core_attr const ServiceID OMNIORB_RESTRICTED_CONNECTION;
 
   static const char* ServiceIDtoName(ServiceID);
   // omniORB private function.

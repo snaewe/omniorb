@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.5.2.10  2006/07/18 16:21:24  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.5.2.9  2006/04/09 19:52:31  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -247,6 +251,7 @@
 class omniObjRef;
 class omniServant;
 class omniIOR;
+class omniIORHints;
 class omniObjTableEntry;
 class omniLocalIdentity;
 class omniRemoteIdentity;
@@ -371,10 +376,10 @@ _CORBA_MODULE_BEG
   // Returns an omniIdentity to contact an object in this address
   // space which is unsuitable for contact through a localIdentity.
 
-   _CORBA_MODULE_FN omniObjRef* createObjRef(const char* targetRepoId,
-					     omniIOR* ior,
-					     _CORBA_Boolean locked,
-					     omniIdentity* id = 0);
+  _CORBA_MODULE_FN omniObjRef* createObjRef(const char* targetRepoId,
+					    omniIOR* ior,
+					    _CORBA_Boolean locked,
+					    omniIdentity* id = 0);
   // Returns an object reference identified by <ior>.  If <id> is not 0, it
   // is a readily available identity object.
   // Return 0 if a type error is detected and the object reference cannot be
@@ -384,14 +389,16 @@ _CORBA_MODULE_BEG
 
   _CORBA_MODULE_FN omniObjRef* createLocalObjRef(const char* mostDerivedRepoId,
 						 const char* targetRepoId,
-						 omniObjTableEntry* entry);
+						 omniObjTableEntry* entry,
+						 const omniIORHints& hints);
   // Return a reference to the specified activated local object.
   //  Must hold <internalLock>.
 
   _CORBA_MODULE_FN omniObjRef* createLocalObjRef(const char* mostDerivedRepoId,
 						 const char* targetRepoId,
 						 const _CORBA_Octet* key,
-						 int keysize);
+						 int keysize,
+						 const omniIORHints& hints);
   // Return a reference to the local object with the given key, which
   // may or may not be active.
   //  Must hold <internalLock>.
@@ -475,7 +482,6 @@ _CORBA_MODULE_END
 #include <omniORB4/valueTemplatedefns.h>
 #include <omniORB4/omniObjRef.h>
 #include <omniORB4/omniServer.h>
-#include <omniORB4/omniIOR.h>
 #include <omniORB4/proxyFactory.h>
 #include <omniORB4/omniServant.h>
 

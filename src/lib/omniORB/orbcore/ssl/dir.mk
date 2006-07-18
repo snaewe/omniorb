@@ -34,7 +34,6 @@ LIB_VERSION  := $(OMNIORB_SSL_VERSION)
 LIB_OBJS     := $(SSL_OBJS)
 LIB_IMPORTS  := $(patsubst %,$(LibPathPattern),../shared) \
                 $(OMNIORB_DLL_NAME) \
-                $(OMNIASYNCINVOKER_LIB) \
                 $(OMNITHREAD_LIB) $(EXTRA_LIBS) $(OPEN_SSL_LIB)
 LIB_SHARED_ONLY_OBJS := $(SHARED_ONLY_OBJS)
 

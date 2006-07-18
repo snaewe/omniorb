@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2006/07/18 16:21:23  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.6.2  2005/07/22 17:18:39  dgrisby
   Another merge from omni4_0_develop.
 
@@ -118,6 +122,15 @@
 
 #include <omniORB4/callHandle.h>
 
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
+#endif
+
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
+#endif
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -205,6 +218,12 @@ public:
   virtual int   objectExists(const _CORBA_Octet* key, int keysize);
   virtual void  lastInvocationHasCompleted(omniLocalIdentity* id);
 
+  virtual void* _ptrToClass(int* cptr);
+  static inline omniOrbPOA* _downcast(omniObjAdapter* a) {
+    return a ? (omniOrbPOA*)a->_ptrToClass(&_classid) : 0;
+  }
+  static _core_attr int _classid;
+
   //////////////////////
   // omniORB Internal //
   //////////////////////
@@ -239,11 +258,16 @@ public:
     return pd_policy.bidirectional_accept;
   }
 
+  inline const CORBA::PolicyList* policy_list() const {
+    return &pd_policy_list;
+  }
+
   typedef _CORBA_PseudoValue_Sequence<omniOrbPOA*> ChildSeq;
 
 
   omniOrbPOA(const char* name, omniOrbPOAManager* manager,
-	     const Policies& policies, omniOrbPOA* parent);
+	     const Policies& policies, const CORBA::PolicyList& policy_list,
+	     omniOrbPOA* parent);
   // Consumes <manager>.
 
   omniOrbPOA();
@@ -516,6 +540,10 @@ private:
   Policies                             pd_policy;
   // Immutable.
 
+  CORBA::PolicyList                    pd_policy_list;
+  // Full list of policies passed to create_POA().
+  //  Immutable.
+
 public:
   // For some reason, some compilers require this struct to be public
   struct MainThreadSync {
@@ -561,5 +589,7 @@ private:
 };
 
 OMNI_NAMESPACE_END(omni)
+
+#undef _core_attr
 
 #endif  // __POAIMPL_H__

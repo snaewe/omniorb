@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.4.2.10  2006/07/18 16:21:21  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.4.2.9  2005/11/29 13:33:35  dgrisby
   INS POA leaked a reference to the Root POA. Thanks Dirk Siebnich.
 
@@ -635,7 +639,7 @@ omniOrbPOA::create_POA(const char* adapter_name,
     PortableServer::POAManager::_duplicate(manager);
 
   omniOrbPOA* poa = new omniOrbPOA(adapter_name, (omniOrbPOAManager*) manager,
-				   policy, this);
+				   policy, policies, this);
 
   insert_child(poa);
 
@@ -1214,6 +1218,7 @@ omniOrbPOA::create_reference(const char* intf)
   omniObjKey key;
   omniLocalIdentity* id;
   CORBA::ULong hash;
+  omniIORHints hints(&pd_policy_list);
 
   pd_lock.lock();
   omni::internalLock->lock();
@@ -1230,7 +1235,7 @@ omniOrbPOA::create_reference(const char* intf)
 
   omniObjRef* objref = omni::createLocalObjRef(intf,
 					       CORBA::Object::_PD_repoId,
-					       key.key(), key.size());
+					       key.key(), key.size(), hints);
   omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);
@@ -1263,10 +1268,11 @@ omniOrbPOA::create_reference_with_id(const PortableServer::ObjectId& oid,
   omniObjKey key;
   create_key(key, oid.NP_data(), oid.length());
 
+  omniIORHints hints(&pd_policy_list);
   omni::internalLock->lock();
   omniObjRef* objref = omni::createLocalObjRef(intf,
 					       CORBA::Object::_PD_repoId,
-					       key.key(), key.size());
+					       key.key(), key.size(), hints);
   omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);
@@ -1426,6 +1432,8 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
     i    = p_servant->_activations().begin();
     last = p_servant->_activations().end();
 
+    omniIORHints hints(&pd_policy_list);
+
     for (; i != last; i++) {
       if ((*i)->adapter() == this) {
 	omniObjTableEntry* entry = *i;
@@ -1435,7 +1443,7 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
 
 	omniObjRef* objref =
 	  omni::createLocalObjRef(p_servant->_mostDerivedRepoId(),
-				  CORBA::Object::_PD_repoId, entry);
+				  CORBA::Object::_PD_repoId, entry, hints);
 	OMNIORB_ASSERT(objref);
 	return (CORBA::Object_ptr) objref->_ptrToObjRef(CORBA::Object
 							::_PD_repoId);
@@ -1466,9 +1474,10 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
   p_servant->_add_ref();
   entry->insertIntoOAObjList(&pd_activeObjList);
 
+  omniIORHints hints(&pd_policy_list);
   omniObjRef* objref = omni::createLocalObjRef(p_servant->_mostDerivedRepoId(),
 					       CORBA::Object::_PD_repoId,
-					       entry);
+					       entry, hints);
   OMNIORB_ASSERT(objref);
 
   return (CORBA::Object_ptr) objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
@@ -1631,9 +1640,10 @@ omniOrbPOA::id_to_reference(const PortableServer::ObjectId& oid)
 
   OMNIORB_ASSERT(entry->servant());
 
+  omniIORHints hints(&pd_policy_list);
   omniObjRef* objref =
     omni::createLocalObjRef(entry->servant()->_mostDerivedRepoId(),
-			    CORBA::Object::_PD_repoId, entry);
+			    CORBA::Object::_PD_repoId, entry, hints);
   omni::internalLock->unlock();
   OMNIORB_ASSERT(objref);
 
@@ -2051,6 +2061,7 @@ static void generateUniqueId(CORBA::Octet* k);
 omniOrbPOA::omniOrbPOA(const char* name,
 		       omniOrbPOAManager* manager,
 		       const Policies& policies,
+		       const CORBA::PolicyList& policy_list,
 		       omniOrbPOA* parent)
   : OMNIORB_BASE_CTOR(PortableServer::)POA(0),
     pd_destroyed(0),
@@ -2062,7 +2073,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
     pd_servantLocator(0),
     pd_defaultServant(0),
     pd_rq_state(PortableServer::POAManager::HOLDING),
-    pd_call_lock(0),
+    pd_policy_list(policy_list),
     pd_deathSignal(&pd_lock),
     pd_oidIndex(0),
     pd_activeObjList(0),
@@ -2388,6 +2399,8 @@ omniOrbPOA::servant__this(PortableServer::Servant p_servant,
     i    = p_servant->_activations().begin();
     last = p_servant->_activations().end();
 
+    omniIORHints hints(&pd_policy_list);
+
     for (; i != last; i++) {
       if ((*i)->adapter() == this) {
 	OMNIORB_ASSERT(pd_poaIdSize == 0 ||
@@ -2395,7 +2408,7 @@ omniOrbPOA::servant__this(PortableServer::Servant p_servant,
 
 	omniObjRef* objref =
 	  omni::createLocalObjRef(p_servant->_mostDerivedRepoId(),
-				  repoId, *i);
+				  repoId, *i, hints);
 	OMNIORB_ASSERT(objref);
 	return objref->_ptrToObjRef(repoId);
       }
@@ -2426,8 +2439,9 @@ omniOrbPOA::servant__this(PortableServer::Servant p_servant,
   p_servant->_add_ref();
   entry->insertIntoOAObjList(&pd_activeObjList);
 
+  omniIORHints hints(&pd_policy_list);
   omniObjRef* objref = omni::createLocalObjRef(p_servant->_mostDerivedRepoId(),
-					       repoId, entry);
+					       repoId, entry, hints);
   OMNIORB_ASSERT(objref);
 
   return objref->_ptrToObjRef(repoId);
@@ -2459,7 +2473,12 @@ initialise_poa()
 
   omniOrbPOAManager* manager = new omniOrbPOAManager();
 
-  theRootPOA = new omniOrbPOA("RootPOA", manager, policy, 0);
+  CORBA::PolicyList pl(1);
+  pl.length(1);
+  pl[0] = new PortableServer::ImplicitActivationPolicy(PortableServer::
+						       IMPLICIT_ACTIVATION);
+
+  theRootPOA = new omniOrbPOA("RootPOA", manager, policy, pl, 0);
   manager->gain_poa(theRootPOA);
   theRootPOA->adapterActive();
 }
@@ -2508,7 +2527,14 @@ omniOrbPOA::omniINSPOA()
 
     omniOrbPOAManager* manager = new omniOrbPOAManager();
 
-    theINSPOA = new omniOrbPOA("omniINSPOA", manager, policy, (omniOrbPOA*)1);
+    CORBA::PolicyList pl(2);
+    pl.length(2);
+    pl[0] = new PortableServer::ImplicitActivationPolicy(PortableServer::
+							 IMPLICIT_ACTIVATION);
+    pl[1] = new PortableServer::IdAssignmentPolicy(PortableServer::USER_ID);
+
+    theINSPOA = new omniOrbPOA("omniINSPOA", manager, policy, pl,
+			       (omniOrbPOA*)1);
 
     theRootPOA->insert_child(theINSPOA);
 
@@ -3678,6 +3704,18 @@ omniOrbPOA::is_adapteractivating_child(const char* name)
 
   return i != last;
 }
+
+//////////////////////////////////////////////////////////////////////
+void*
+omniOrbPOA::
+_ptrToClass(int* cptr)
+{
+  if (cptr == &omniObjAdapter::_classid) return (omniObjAdapter*)this;
+  if (cptr == &omniOrbPOA    ::_classid) return (omniOrbPOA*)    this;
+  return 0;
+}
+int omniOrbPOA::_classid;
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////

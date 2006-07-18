@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/07/18 16:21:24  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.4.2  2005/01/06 23:08:09  dgrisby
   Big merge from omni4_0_develop.
 
@@ -90,6 +94,13 @@
 OMNI_NAMESPACE_BEGIN(omni)
 class Rope;
 OMNI_NAMESPACE_END(omni)
+
+class omniIORHints {
+public:
+  const CORBA::PolicyList* policies;
+  inline omniIORHints(const CORBA::PolicyList* p) : policies(p) {}
+};
+
 
 class omniIOR {
 public:
@@ -210,8 +221,9 @@ public:
 	  _CORBA_ULong selected_profile_index);
   // Both repoId and iop are consumed by the object.
 
-  omniIOR(const char* repoId, const _CORBA_Octet* key, int keysize);
-  // create an IOR for a local object with the given key
+  omniIOR(const char* repoId, const _CORBA_Octet* key, int keysize,
+	  const omniIORHints& hints);
+  // Create an IOR for a local object with the given key
   //  Must hold <omni::internalLock>.
 
   enum interceptorOption { NoInterceptor,

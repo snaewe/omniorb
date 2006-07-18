@@ -8,7 +8,7 @@ endif
 SUBDIRS += orbcore
 
 ifndef OrbCoreOnly
-SUBDIRS += dynamic codesets
+SUBDIRS += dynamic codesets connections
 endif
 
 EXPORTHEADERS = omniORB4/distdate.hh \
@@ -23,7 +23,8 @@ EXPORTHEADERS = omniORB4/distdate.hh \
                 omniORB4/boxes_operators.hh \
                 omniORB4/boxes_poa.hh \
 		omniORB4/omniTypedefs.hh \
-                omniORB4/bootstrap.hh
+                omniORB4/bootstrap.hh \
+		omniORB4/omniConnectionData.hh
 
 
 all:: $(EXPORTHEADERS)
@@ -92,6 +93,10 @@ omniORB4/boxes_defs.hh boxes_operators.hh boxes_poa.hh: boxes.idl
 	$(OMNIORB_IDL) -v -nf -P -WbF -ComniORB4 $<
 
 omniORB4/omniTypedefs.hh: omniTypedefs.idl
+	@(dir=omniORB4; $(CreateDir))
+	$(OMNIORB_IDL_ONLY) -v -ComniORB4 $<
+
+omniORB4/omniConnectionData.hh: omniConnectionData.idl
 	@(dir=omniORB4; $(CreateDir))
 	$(OMNIORB_IDL_ONLY) -v -ComniORB4 $<
 

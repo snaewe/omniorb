@@ -249,6 +249,7 @@ AC_CONFIG_FILES(src/appl/GNUmakefile
                 src/lib/omniORB/omniidl_be/GNUmakefile
                 src/lib/omniORB/orbcore/GNUmakefile
                 src/lib/omniORB/orbcore/ssl/GNUmakefile
+                src/lib/omniORB/connections/GNUmakefile
                 src/lib/omnithread/GNUmakefile
                 src/services/GNUmakefile
                 src/services/mklib/GNUmakefile

@@ -116,4 +116,4 @@ omniPolicy::LocalShortcutPolicy::_nil()
 }
 
 const char*
-omniPolicy::LocalShortcutPolicy::_PD_repoId = "IDL:omniorb.org/omniPolicy/LocalShortcutPolicy:1.0";
+omniPolicy::LocalShortcutPolicy::_PD_repoId = "IDL:omniorb.net/omniPolicy/LocalShortcutPolicy:1.0";

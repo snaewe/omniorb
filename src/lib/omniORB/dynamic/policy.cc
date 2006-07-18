@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.1.4.6  2006/07/18 16:21:22  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.4.5  2005/07/22 17:18:38  dgrisby
   Another merge from omni4_0_develop.
 
@@ -62,6 +66,8 @@
 */
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/omniInterceptors.h>
+#include <interceptors.h>
 #include <exceptiondefs.h>
 
 #ifdef HAS_pch
@@ -131,6 +137,15 @@ OMNI_USING_NAMESPACE(omni)
 CORBA::Policy_ptr
 CORBA::
 ORB::create_policy(CORBA::PolicyType t, const CORBA::Any& value) {
+
+  // Try an interceptor
+  if (omniInterceptorP::createPolicy) {
+    CORBA::Policy_ptr policy = CORBA::Policy::_nil();
+    omniInterceptors::createPolicy_T::info_T info(t, value, policy);
+    omniInterceptorP::visit(info);
+    if (!CORBA::is_nil(policy))
+      return policy;
+  }
 
   switch (t) {
 

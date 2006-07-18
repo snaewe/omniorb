@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2006/07/18 16:21:22  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.6.7  2006/03/26 20:59:28  dgrisby
   Merge from omni4_0_develop.
 
@@ -165,6 +169,7 @@ GIOP_C::InitialiseRequest() {
   impl()->outputMessageEnd(this);
   clearValueTracker();
   pd_state = IOP_C::WaitingForReply;
+  pd_strand->first_call = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////

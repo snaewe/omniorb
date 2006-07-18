@@ -1,3 +1,52 @@
+Tue Jul 18 17:16:23 BST 2006 dgrisby
+====================================
+
+- New experimental connection management extension; ORB core support
+  for it.
+
+configure
+configure.ac
+idl/omniConnectionData.idl                              -- new
+idl/omniTypedefs.idl
+include/omniORB4/CORBA.h
+include/omniORB4/GNUmakefile.in
+include/omniORB4/IOP.h
+include/omniORB4/omniConnectionMgmt.h                   -- new
+include/omniORB4/omniIOR.h
+include/omniORB4/omniInterceptors.h
+include/omniORB4/omniInternal.h
+include/omniORB4/omniObjRef.h
+include/omniORB4/internal/GIOP_C.h
+include/omniORB4/internal/corbaBoa.h
+include/omniORB4/internal/giopStrand.h
+include/omniORB4/internal/interceptors.h
+include/omniORB4/internal/objectAdapter.h
+include/omniORB4/internal/poaimpl.h
+src/lib/omniORB/dir.mk
+src/lib/omniORB/connections/GNUmakefile                 -- new
+src/lib/omniORB/connections/GNUmakefile.in              -- new
+src/lib/omniORB/connections/README.txt                  -- new
+src/lib/omniORB/connections/dataStub.cc                 -- new
+src/lib/omniORB/connections/dir.mk                      -- new
+src/lib/omniORB/connections/omniConnectionMgmt.cc       -- new
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniPolicy.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/portableserver.cc
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+
+
 Tue Jul 11 14:43:02 BST 2006 dgrisby
 ====================================
 

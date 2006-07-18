@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.5.2.10  2006/07/18 16:21:24  dgrisby
+ New experimental connection management extension; ORB core support
+ for it.
+
  Revision 1.5.2.9  2005/11/09 12:22:18  dgrisby
  Local interfaces support.
 
@@ -492,6 +496,7 @@ _omni_callSystemExceptionHandler(omniObjRef* obj, CORBA::ULong retries,
 
 extern void _omni_set_NameService(CORBA::Object_ptr);
 
+#include <omniORB4/omniIOR.h>
 #include <omniORB4/omniORB.h>
 #include <omniORB4/proxyFactory.h>
 #include <omniORB4/valueType.h>

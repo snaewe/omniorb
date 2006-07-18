@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2006/07/18 16:21:24  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.4.2.2  2005/11/09 12:22:18  dgrisby
   Local interfaces support.
 
@@ -375,7 +379,8 @@ private:
 					_CORBA_Boolean,omniIdentity*);
 
   friend omniObjRef* omni::createLocalObjRef(const char*, const char*,
-					     omniObjTableEntry*);
+					     omniObjTableEntry*,
+					     const omniIORHints&);
 
   friend void omni::revertToOriginalProfile(omniObjRef*);
   friend void omni::locationForward(omniObjRef*,

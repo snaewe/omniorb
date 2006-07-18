@@ -1,9 +1,9 @@
-//
+// -*- Mode: C++; -*-
 //                            Package   : omniORB
-// omniTypeDefs.idl           Created on: 2004/07/14
-//                            Author    : Duncan Grisby
+// dataStub.cc                Created on: 2006/07/10
+//                            Author    : Duncan Grisby (dgrisby)
 //
-//    Copyright (C) 2004 Apasphere Ltd.
+//    Copyright (C) 2006 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -22,16 +22,7 @@
 //    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
-//
 // Description:
-//    IDL typedefs used internally to omniORB
+//    omniidl generated stub file
 
-#ifndef _omniTypedefs_idl_
-#define _omniTypedefs_idl_
-
-module omniTypedefs {
-  typedef sequence <ValueBase>       ValueBaseSeq;
-  typedef sequence <CORBA::TypeCode> TypeCodeSeq;
-};
-
-#endif // _omniTypedefs_idl_
+#include <omniORB4/omniConnectionDataSK.cc>

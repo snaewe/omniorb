@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/07/18 16:21:24  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.4.2  2006/06/05 11:28:04  dgrisby
   Change clientSendRequest interceptor members to a single GIOP_C.
 
@@ -94,10 +98,12 @@ public:
     public:
       omniIOR&                 ior;
       IIOP::ProfileBody&       iiop;
+      const omniIORHints&      hints;
       CORBA::Boolean           default_only;
 
-      info_T(omniIOR& i, IIOP::ProfileBody& body, CORBA::Boolean b) :
-         ior(i), iiop(body), default_only(b) {}
+      info_T(omniIOR& i, IIOP::ProfileBody& body,
+	     const omniIORHints& h, CORBA::Boolean b) :
+         ior(i), iiop(body), hints(h), default_only(b) {}
 
     private:
       info_T();
@@ -294,6 +300,26 @@ public:
   };
 
   //////////////////////////////////////////////////////////////////
+  class createPolicy_T {
+  public:
+    
+    class info_T {
+    public:
+      CORBA::PolicyType  type;
+      const CORBA::Any&  value;
+      CORBA::Policy_ptr& policy;
+
+      info_T(CORBA::PolicyType t, const CORBA::Any& v, CORBA::Policy_ptr& p) :
+	type(t), value(v), policy(p) {}
+    };
+
+    typedef CORBA::Boolean (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+  };
+
+  //////////////////////////////////////////////////////////////////
   class createThread_T {
   public:
     
@@ -335,6 +361,7 @@ public:
   serverSendException_T      serverSendException;
   createIdentity_T           createIdentity;
   createORBServer_T          createORBServer;
+  createPolicy_T             createPolicy;
   createThread_T             createThread;
   assignUpcallThread_T       assignUpcallThread;
 

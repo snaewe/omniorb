@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.17.2.5  2006/07/18 16:21:22  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.17.2.4  2005/01/06 23:10:12  dgrisby
   Big merge from omni4_0_develop.
 
@@ -172,10 +176,10 @@ const IOP::ComponentId IOP::TAG_PRIMARY = 90002; // XXX NEED THE REAL CONSTANT!
 const IOP::ComponentId IOP::TAG_HEARTBEAT_ENABLED = 90003; 
                                                // XXX NEED THE REAL CONSTANT !
 
-const IOP::ComponentId IOP::TAG_OMNIORB_BIDIR         = 0x41545401;
-const IOP::ComponentId IOP::TAG_OMNIORB_UNIX_TRANS    = 0x41545402;
-const IOP::ComponentId IOP::TAG_OMNIORB_PERSISTENT_ID = 0x41545403;
-
+const IOP::ComponentId IOP::TAG_OMNIORB_BIDIR         	      = 0x41545401;
+const IOP::ComponentId IOP::TAG_OMNIORB_UNIX_TRANS    	      = 0x41545402;
+const IOP::ComponentId IOP::TAG_OMNIORB_PERSISTENT_ID 	      = 0x41545403;
+const IOP::ComponentId IOP::TAG_OMNIORB_RESTRICTED_CONNECTION = 0x41545404;
 
 
 static struct {
@@ -214,6 +218,7 @@ static struct {
   { IOP::TAG_OMNIORB_BIDIR, "TAG_OMNIORB_BIDIR" },
   { IOP::TAG_OMNIORB_UNIX_TRANS, "TAG_OMNIORB_UNIX_TRANS" },
   { IOP::TAG_OMNIORB_PERSISTENT_ID, "TAG_OMNIORB_PERSISTENT_ID" },
+  { IOP::TAG_OMNIORB_RESTRICTED_CONNECTION, "TAG_OMNIORB_RESTRICTED_CONNECTION" },
   { 0, 0 }
 };
 
@@ -262,6 +267,8 @@ const IOP::ServiceID IOP::RTCorbaPriorityRange = 11;
 const IOP::ServiceID IOP::GROUP_VERSION = 90001;// XXX NEED THE REAL CONSTANT !
 const IOP::ServiceID IOP::REQUEST = 90002; // XXX NEED THE REAL CONSTANT !
 
+const IOP::ServiceID IOP::OMNIORB_RESTRICTED_CONNECTION = 0x41545404;
+
 static struct {
   IOP::ServiceID id;
   const char* name;
@@ -279,6 +286,7 @@ static struct {
   { IOP::UnknownExceptionInfo, "UnknownExceptionInfo" },
   { IOP::RTCorbaPriority, "RTCorbaPriority" },
   { IOP::RTCorbaPriorityRange, "RTCorbaPriorityRange" },
+  { IOP::OMNIORB_RESTRICTED_CONNECTION, "OMNIORB_RESTRICTED_CONNECTION" },
   { 0, 0 }
 };
 

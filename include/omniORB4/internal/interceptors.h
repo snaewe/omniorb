@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2006/07/18 16:21:23  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.4.1  2003/03/23 21:03:46  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -75,6 +79,7 @@ public:
   static _core_attr elmT* serverSendException;
   static _core_attr elmT* createIdentity;
   static _core_attr elmT* createORBServer;
+  static _core_attr elmT* createPolicy;
   static _core_attr elmT* createThread;
   static _core_attr elmT* assignUpcallThread;
 
@@ -95,6 +100,7 @@ public:
   VISIT_FUNCTION(serverSendException)
   VISIT_FUNCTION(createIdentity)
   VISIT_FUNCTION(createORBServer)
+  VISIT_FUNCTION(createPolicy)
 
 #undef VISIT_FUNCTION
 };

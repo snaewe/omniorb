@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2006/07/18 16:21:21  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.6.7  2006/07/02 22:52:05  dgrisby
   Store self thread in task objects to avoid calls to self(), speeding
   up Current. Other minor performance tweaks.
@@ -209,8 +213,8 @@ giopStrand::giopStrand(const giopAddress* addr) :
   pd_safelyDeleted(0),
   idlebeats(-1),
   address(addr), connection(0), server(0), flags(0),
-  biDir(0), gatekeeper_checked(0),first_use(1),orderly_closed(0),
-  biDir_initiated(0), biDir_has_callbacks(0),
+  biDir(0), gatekeeper_checked(0), first_use(1), first_call(1),
+  orderly_closed(0), biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
   rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
   wrcond(omniTransportLock), wr_nwaiting(0),
@@ -227,8 +231,8 @@ giopStrand::giopStrand(giopConnection* conn, giopServer* serv) :
   pd_safelyDeleted(0),
   idlebeats(-1),
   address(0), connection(conn), server(serv), flags(0),
-  biDir(0), gatekeeper_checked(0),first_use(0),orderly_closed(0),
-  biDir_initiated(0), biDir_has_callbacks(0),
+  biDir(0), gatekeeper_checked(0), first_use(0), first_call(0),
+  orderly_closed(0), biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
   rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
   wrcond(omniTransportLock), wr_nwaiting(0),

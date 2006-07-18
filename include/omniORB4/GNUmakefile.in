@@ -34,7 +34,8 @@ HEADERS = acconfig.h BiDirPolicy.h CORBA.h CORBA_AbstractBase.h		\
           streamOperators.h stringtypes.h templatedecls.h		\
           templatedefns.h tracedthread.h userexception.h		\
           valueFactoryManager.h valueType.h valueTemplatedecls.h	\
-          valueTemplatedefns.h wstringtypes.h
+          valueTemplatedefns.h wstringtypes.h                           \
+          omniConnectionMgmt.h
 
 SUBDIRS = internal
 

@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.4.2.5  2006/07/18 16:21:21  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.4.2.4  2005/07/22 17:18:36  dgrisby
   Another merge from omni4_0_develop.
 
@@ -126,6 +130,7 @@
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
 #include <omniCurrent.h>
+#include <objectTable.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -322,8 +327,11 @@ PortableServer::ServantBase::_do_this(const char* repoId)
 
     if (_activations().size() == 1) {
       // We only have a single activation -- return a reference to it.
+      omniObjTableEntry* entry = _activations()[0];
+      omniOrbPOA* poa = omniOrbPOA::_downcast(entry->adapter());
+      omniIORHints hints(poa ? poa->policy_list() : 0);
       omniObjRef* ref = omni::createLocalObjRef(_mostDerivedRepoId(), repoId,
-						_activations()[0]);
+						entry, hints);
       OMNIORB_ASSERT(ref);
       return ref->_ptrToObjRef(repoId);
     }

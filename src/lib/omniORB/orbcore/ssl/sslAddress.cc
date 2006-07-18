@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2006/07/18 16:21:21  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.4.5  2006/06/22 13:53:49  dgrisby
   Add flags to strand.
 
@@ -246,6 +250,9 @@ sslAddress::Connect(unsigned long deadline_secs,
       CLOSESOCKET(sock);
       return 0;
     }
+  }
+  else {
+    omniORB::logs(25, "New SSL connection without NO_DELAY option.");
   }
 
   if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {

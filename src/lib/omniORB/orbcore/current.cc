@@ -309,20 +309,32 @@ omniOrbPOACurrent::real_get_reference(omniCallDescriptor* call_desc)
   OMNIORB_ASSERT(id);
   OMNIORB_ASSERT(id->servant());
 
-  omni::internalLock->lock();
+  omniOrbPOA* poa;
+
   omniObjTableEntry* entry = omniObjTableEntry::downcast(id);
+  if (entry) {
+    poa = omniOrbPOA::_downcast(entry->adapter());
+  }
+  else {
+    omniObjAdapter* adapter = omniObjAdapter::getAdapter(id->key(),
+							 id->keysize());
+    poa = omniOrbPOA::_downcast(adapter);
+  }
+  omniIORHints hints(poa ? poa->policy_list() : 0);
+
+  omni::internalLock->lock();
 
   omniObjRef* objref;
 
   if (entry) {
     objref = omni::createLocalObjRef(id->servant()->_mostDerivedRepoId(),
 				     CORBA::Object::_PD_repoId,
-				     entry);
+				     entry, hints);
   }
   else {
     objref = omni::createLocalObjRef(id->servant()->_mostDerivedRepoId(),
 				     CORBA::Object::_PD_repoId,
-				     id->key(), id->keysize());
+				     id->key(), id->keysize(), hints);
   }
   omni::internalLock->unlock();
   OMNIORB_ASSERT(objref);

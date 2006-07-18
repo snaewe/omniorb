@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2006/07/18 16:21:24  dgrisby
+  New experimental connection management extension; ORB core support
+  for it.
+
   Revision 1.1.6.2  2006/06/05 13:33:25  dgrisby
   Inline declarations; operation() access function.
 
@@ -132,6 +136,8 @@ class GIOP_C : public IOP_C, public giopStream, public giopStreamList {
 
   inline CORBA::ULong  replyId() const { return pd_reply_id; }
   inline void replyId(CORBA::ULong v) { pd_reply_id = v; }
+
+  inline giopRope* rope() const { return pd_rope; }
 
 private:
   IOP_C::State            pd_state;

@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.5.2.10  2006/07/18 16:21:21  dgrisby
+ New experimental connection management extension; ORB core support
+ for it.
+
  Revision 1.5.2.9  2006/04/18 14:14:41  dgrisby
  Compatibility with 4.0's fail-if-multiple option.
 
@@ -689,6 +693,16 @@ Options::~Options() {
     delete (*i);
   }
 }
+
+//////////////////////////////////////////////////////////////////////
+void*
+omniObjAdapter::
+_ptrToClass(int* cptr)
+{
+  if (cptr == &omniObjAdapter::_classid) return (omniObjAdapter*)this;
+  return 0;
+}
+int omniObjAdapter::_classid;
 
 
 /////////////////////////////////////////////////////////////////////////////
