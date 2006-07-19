@@ -1,3 +1,19 @@
+Wed Jul 19 10:23:54 BST 2006 dgrisby
+====================================
+
+- Forgot to add list of policy interceptors.
+
+src/lib/omniORB/orbcore/interceptors.cc
+
+- Properly pass hints when handling persistent id.
+
+src/lib/omniORB/orbcore/omniInternal.cc
+
+- Fix inevitable Windows build issues.
+
+src/lib/omniORB/connections/dir.mk
+
+
 Tue Jul 18 17:16:23 BST 2006 dgrisby
 ====================================
 

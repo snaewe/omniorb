@@ -14,7 +14,9 @@ ifdef UnixPlatform
 endif
 
 ifdef Win32Platform
-  DIR_CPPFLAGS += -D"NTArchitecture" 
+  DIR_CPPFLAGS += -D"NTArchitecture"
+  vpath %.cc $(VPATH):$(VPATH:%=%/../orbcore)
+  SHARED_ONLY_OBJS = msvcdllstub.o
   EXTRA_LIBS    = advapi32.lib
   MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
   MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC
