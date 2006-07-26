@@ -457,18 +457,23 @@ OMNIORB_DEBUG_DYNAMIC_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst .
 OMNIORB_CODESETS_DLL_NAME = $(shell $(SharedLibraryFullName) $(subst ., ,omniCodeSets.$(OMNIORB_VERSION)))
 OMNIORB_DEBUG_CODESETS_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniCodeSets.$(OMNIORB_VERSION)))
 
+OMNIORB_CONNECTIONS_DLL_NAME = $(shell $(SharedLibraryFullName) $(subst ., ,omniConnectionMgmt.$(OMNIORB_VERSION)))
+OMNIORB_DEBUG_CONNECTIONS_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniConnectionMgmt.$(OMNIORB_VERSION)))
+
 
 ifndef BuildDebugBinary
 
 omniorb_dll_name := $(OMNIORB_DLL_NAME)
 omnidynamic_dll_name := $(OMNIORB_DYNAMIC_DLL_NAME)
 omnicodesets_dll_name := $(OMNIORB_CODESETS_DLL_NAME)
+omniconnections_dll_name := $(OMNIORB_CONNECTIONS_DLL_NAME)
 
 else
 
 omniorb_dll_name := $(OMNIORB_DEBUG_DLL_NAME)
 omnidynamic_dll_name := $(OMNIORB_DEBUG_DYNAMIC_DLL_NAME)
 omnicodesets_dll_name := $(OMNIORB_DEBUG_CODESETS_DLL_NAME)
+omniconnections_dll_name := $(OMNIORB_DEBUG_CONNECTIONS_DLL_NAME)
 endif
 
 lib_depend := $(omniorb_dll_name)
@@ -477,6 +482,8 @@ lib_depend := $(omnidynamic_dll_name)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 lib_depend := $(omnicodesets_dll_name)
 omniCodeSets_lib_depend := $(GENERATE_LIB_DEPEND)
+lib_depend := $(omniconnections_dll_name)
+omniConnections_lib_depend := $(GENERATE_LIB_DEPEND)
 
 OMNIIDL = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/oidlwrapper.exe $(XLN)
 OMNIORB_IDL_ONLY = $(OMNIIDL) -T -bcxx -Wbh=.hh -Wbs=SK.cc
@@ -503,6 +510,10 @@ OMNIORB_LIB_DEPEND := $(omniORB_lib_depend) \
 # CodeSets library
 OMNIORB_CODESETS_LIB = $(omnicodesets_dll_name)
 OMNIORB_CODESETS_LIB_DEPEND := $(omniCodeSets_lib_depend)
+
+# Connections library
+OMNIORB_CONNECTIONS_LIB = $(omniconnections_dll_name)
+OMNIORB_CONNECTIONS_LIB_DEPEND := $(omniConnections_lib_depend)
 
 
 
