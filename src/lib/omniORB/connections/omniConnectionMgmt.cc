@@ -623,6 +623,8 @@ makeRestrictedReference(CORBA::Object_ptr obj,
 class omniConnectionMgmt_initialiser : public omniInitialiser {
 public:
   void attach() {
+    omniORB::logs(2, "omniConnectionMgmt extension activated.");
+
     // Register interceptors
     omniInterceptors* interceptors = omniORB::getInterceptors();
 
