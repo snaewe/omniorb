@@ -31,14 +31,15 @@
 
 #include <omniORB4/CORBA.h>
 
-class omniConnectionMgmt {
-public:
+_CORBA_MODULE omniConnectionMgmt
 
-  static void init();
+_CORBA_MODULE_BEG
+
+  _CORBA_MODULE_FN void init();
   // Initialise the omniConnectionMgmt extension library. Must be
   // called before CORBA::ORB_init().
 
-  static CORBA::Object_ptr
+  _CORBA_MODULE_FN CORBA::Object_ptr
   makeRestrictedReference(CORBA::Object_ptr obj,
 			  CORBA::ULong      connection_id,
 			  CORBA::ULong      max_connections,
@@ -57,8 +58,7 @@ public:
   // connection. If <server_hold_open> is true, the server will keep
   // the connection open until the client closes it.
 
-};
-
+_CORBA_MODULE_END
 
 
 #endif // _OMNICONNECTIONMGMT_H_
