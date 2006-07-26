@@ -1,3 +1,25 @@
+Wed Jul 26 18:36:52 BST 2006 dgrisby
+====================================
+
+- Change omniConnectionMgmt into a CORBA_MODULE.
+
+include/omniORB4/omniConnectionMgmt.h
+
+- Add connections library name to make rules.
+
+mk/mingw.mk
+mk/unix.mk
+mk/win32.mk
+
+- Log start up of omniConnectionMgmt extension.
+
+src/lib/omniORB/connections/omniConnectionMgmt.cc
+
+- Fix a number of valuebox mapping bugs.
+
+src/lib/omniORB/omniidl_be/cxx/value.py
+
+
 Wed Jul 19 10:23:54 BST 2006 dgrisby
 ====================================
 

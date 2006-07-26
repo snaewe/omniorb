@@ -1157,7 +1157,7 @@ inline @name@(const @boxedtype@& _v) {
 inline @name@(const @name@& _v) {
   _pd_boxed = new @boxedtype@(_v._pd_boxed.in());
 }
-inline @name@(CORBA::TypeCode_ptr tc, void* value, Boolean release = 0) {
+inline @name@(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release = 0) {
   _pd_boxed = new @boxedtype@(tc, value, release);
 }
 
@@ -1190,7 +1190,7 @@ CORBA::TypeCode_ptr type() const {
   return _pd_boxed->type();
 }
 void type(CORBA::TypeCode_ptr _t) {
-  _pd_boxed->type(t);
+  _pd_boxed->type(_t);
 }
 """
 
@@ -1318,13 +1318,13 @@ CORBA::Fixed truncate(CORBA::UShort scale) const {
   return _pd_boxed.truncate(scale);
 }
 CORBA::UShort fixed_digits() const {
-  return pd_boxed.fixed_digits();
+  return _pd_boxed.fixed_digits();
 }
 CORBA::UShort fixed_scale() const {
-  return pd_boxed.fixed_scale();
+  return _pd_boxed.fixed_scale();
 }
 char* to_string() const {
-  return pd_boxed.to_string();
+  return _pd_boxed.to_string();
 }
 """
 
@@ -3221,9 +3221,12 @@ class ValueBox (mapping.Decl):
                 elif d_mType.sequence():
                     stream.out(valuebox_structmember_sequence, name=member)
 
-                elif d_mType.value():
+                elif d_mType.value() or d_mType.valuebox():
+                    scopedName = d_mType.type().decl().scopedName()
+                    name = id.Name(scopedName)
+                    type = name.unambiguous(self._environment)
                     stream.out(valuebox_structmember_value,
-                               name=member, type=bmemtype)
+                               name=member, type=type)
 
                 else:
                     util.fatalError("Unknown struct member type encountered")
@@ -3304,9 +3307,12 @@ class ValueBox (mapping.Decl):
             elif d_mType.sequence():
                 stream.out(valuebox_unionmember_sequence, name=member)
 
-            elif d_mType.value():
+            elif d_mType.value() or d_mType.valuebox():
+                scopedName = d_mType.type().decl().scopedName()
+                name = id.Name(scopedName)
+                type = name.unambiguous(self._environment)
                 stream.out(valuebox_unionmember_value,
-                           name=member, type=bmemtype)
+                           name=member, type=type)
 
             else:
                 util.fatalError("Unknown struct member type encountered")
@@ -3345,7 +3351,7 @@ class ValueBox (mapping.Decl):
         if boxedType.dims():
             btype = boxedType.member(self._environment)
             copy_content = ("_pd_boxed = "
-                            + btype + "_copyHelper::dup(_v._pd_boxed);")
+                            + btype + "_copyHelper::dup(_v->_pd_boxed);")
             destructor = btype + "_copyHelper::free(_pd_boxed);"
 
         elif d_boxedType.string():
