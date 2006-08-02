@@ -118,6 +118,7 @@ private:
   // Not implemented
 };
 
+
 //
 // selectRope function is a cut-and-paste of ORB core code, with small
 // modifications to track connection id.
@@ -227,6 +228,7 @@ restrictedGiopRope::acquireClient(const omniIOR*      ior,
   return iop_c;
 }
 
+
 //
 // decodeIOR interceptor handles the restricted connection component
 //
@@ -261,6 +263,7 @@ decodeIORInterceptor(omniInterceptors::decodeIOR_T::info_T& iinfo)
 	      << "with unknown version " << (int)rinfo->data.version << ".\n";
 	}
 
+	// Add the information to the omniIOR's extra info list.
 	omniIOR::IORExtraInfoList& infolist = ior.getIORInfo()->extraInfo();
 	CORBA::ULong i = infolist.length();
 	infolist.length(i+1);
@@ -309,6 +312,7 @@ createIdentityInterceptor(omniInterceptors::createIdentity_T::info_T& iinfo)
 
   omniIOR::IORInfo* info = ior->getIORInfo();
 
+  // Does the IOR have a TAG_RESTRICTED_CONNECTION component?
   omniIOR::IORExtraInfoList& extras = info->extraInfo();
   CORBA::ULong i;
   for (i=0; i < extras.length(); ++i) {
@@ -364,6 +368,7 @@ createIdentityInterceptor(omniInterceptors::createIdentity_T::info_T& iinfo)
   return 1;
 }
 
+
 //
 // clientSendRequest interceptor to set the service context
 //
@@ -408,6 +413,7 @@ clientSendRequestInterceptor(omniInterceptors::
   cdrEncapsulationStream stream(CORBA::ULong(0), CORBA::Boolean(1));
   data >>= stream;
 
+  // Copy the encapsulation contents into the service context data.
   CORBA::Octet* octets;
   CORBA::ULong max,datalen;
   stream.getOctetStream(octets,max,datalen);
@@ -427,6 +433,10 @@ clientSendRequestInterceptor(omniInterceptors::
 }
 
 
+//
+// serverReceiveRequest interceptor receives and handles the service context.
+//
+
 static CORBA::Boolean
 serverReceiveRequestInterceptor(omniInterceptors::
 				serverReceiveRequest_T::info_T& iinfo)
@@ -434,6 +444,8 @@ serverReceiveRequestInterceptor(omniInterceptors::
   IOP::ServiceContextList& contexts = iinfo.giop_s.service_contexts();
   CORBA::ULong len = contexts.length();
   CORBA::ULong i;
+
+  // Search for the context we handle
   for (i=0; i < len; ++i) {
     if (contexts[i].context_id ==
 	omniConnectionData::SVC_RESTRICTED_CONNECTION) {
@@ -617,7 +629,7 @@ makeRestrictedReference(CORBA::Object_ptr obj,
 
 
 //
-// Module initialiser
+// Module initialiser. Called during CORBA::ORB_init().
 //
 
 class omniConnectionMgmt_initialiser : public omniInitialiser {
@@ -640,7 +652,9 @@ public:
 static omniConnectionMgmt_initialiser the_omniConnectionMgmt_initialiser;
 
 
-
+//
+// init() just registers the initialiser.
+//
 
 void
 omniConnectionMgmt::init()

@@ -1,3 +1,12 @@
+Wed Aug  2 15:27:08 BST 2006 dgrisby
+====================================
+
+- README and comment updates for connections library.
+
+src/lib/omniORB/connections/README.txt
+src/lib/omniORB/connections/omniConnectionMgmt.cc
+
+
 Wed Aug  2 15:21:57 BST 2006 dgrisby
 ====================================
 
