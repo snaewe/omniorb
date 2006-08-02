@@ -2107,14 +2107,15 @@ getObjectReference(CORBA::ORB_ptr orb)
 static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);
 
 
-// This is the object implementation.  Notice that it does not
-// inherit from any stub class.
+// This is the object implementation.  Notice that it does not inherit
+// from any stub class, and notice that the echoString() member
+// function does not have to be virtual.
 
 class Echo_i {
 public:
   inline Echo_i() {}
   inline ~Echo_i() {}
-  virtual char* echoString(const char* mesg);
+  char* echoString(const char* mesg);
 };
 
 
@@ -2138,6 +2139,10 @@ int main(int argc, char** argv)
     // itself destroyed (when it goes out of scope).  It is essential
     // however to ensure that such servants are not deleted whilst
     // still activated.
+    //
+    // Tie objects can of course be allocated on the heap using new,
+    // in which case they are deleted when their reference count
+    // becomes zero, as with any other servant object.
     Echo_i* myimpl = new Echo_i();
     POA_Echo_tie<Echo_i> myecho(myimpl);
 
@@ -2310,7 +2315,7 @@ relied on omniORB 2 implementation details which no longer work.
 \item omniORB 2 did not use distinct types for object references and
 servants, and often accepted a pointer to a servant when the CORBA
 specification says it should only accept an object reference. Such
-code will not compile under omniORB 4.0.
+code will not compile under omniORB 4.1.
 
 \item The reverse is true for \op{BOA::obj\_is\_ready}. It now only
 works when passed a pointer to a servant object, not an object
@@ -6204,6 +6209,28 @@ referred to the same value has been lost.
 Because of these issues, it is best to avoid defining interfaces that
 mix valuetypes and Anys in a single operation, and certainly to avoid
 trying to share plain values with values inside Anys.
+
+
+\subsection{Values inside DynAnys}
+
+The sharing semantics of valuetypes can also cause difficulties for
+DynAny. The CORBA 2.6 specification does not mention how shared values
+inside DynAnys should be handled; the CORBA 3.x specification slightly
+clarifies the situation, but it is still unclear. To write portable
+code it is best to avoid manipulating DynAnys containing values that
+are shared.
+
+In omniORB, when a value inside an Any is converted into a DynAny, the
+value's state is copied into the DynAny, and manipulated there. When
+converting back to an Any a new value is created. This means that any
+other references to the original value (whether themselves inside Anys
+of not) still relate to the original value, with unchanged state.
+However, this copying only occurs when a DynValue is actually created,
+so for example a structure with two value members referring to the
+same value can manipulated inside a DynAny without breaking the
+sharing, provided the value members are not accessed as DynAnys.
+Extracting the value members as ValueBase will reveal the sharing, for
+example.
 
 
 \section{Local Interfaces}

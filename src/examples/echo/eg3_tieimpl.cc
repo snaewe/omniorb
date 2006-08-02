@@ -29,14 +29,15 @@
 static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);
 
 
-// This is the object implementation.  Notice that it does not
-// inherit from any stub class.
+// This is the object implementation.  Notice that it does not inherit
+// from any stub class, and notice that the echoString() member
+// function does not have to be virtual.
 
 class Echo_i {
 public:
   inline Echo_i() {}
   inline ~Echo_i() {}
-  virtual char* echoString(const char* mesg);
+  char* echoString(const char* mesg);
 };
 
 
@@ -60,6 +61,10 @@ int main(int argc, char** argv)
     // itself destroyed (when it goes out of scope).  It is essential
     // however to ensure that such servants are not deleted whilst
     // still activated.
+    //
+    // Tie objects can of course be allocated on the heap using new,
+    // in which case they are deleted when their reference count
+    // becomes zero, as with any other servant object.
     Echo_i* myimpl = new Echo_i();
     POA_Echo_tie<Echo_i> myecho(myimpl);
 

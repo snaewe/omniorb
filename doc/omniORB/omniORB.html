@@ -1830,14 +1830,15 @@ see the CORBA C++ mapping specification.<BR>
 </TT><TT><B>static</B> CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);</TT><TT>
 </TT><TT>
 </TT><TT>
-</TT><TT><I>// This is the object implementation.  Notice that it does not</I></TT><TT>
-</TT><TT><I>// inherit from any stub class.</I></TT><TT>
+</TT><TT><I>// This is the object implementation.  Notice that it does not inherit</I></TT><TT>
+</TT><TT><I>// from any stub class, and notice that the echoString() member</I></TT><TT>
+</TT><TT><I>// function does not have to be virtual.</I></TT><TT>
 </TT><TT>
 </TT><TT><B>class</B> Echo_i {</TT><TT>
 </TT><TT><B>public</B>:</TT><TT>
 </TT><TT>  <B>inline</B> Echo_i() {}</TT><TT>
 </TT><TT>  <B>inline</B> ~Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
+</TT><TT>  <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
 </TT><TT>};</TT><TT>
 </TT><TT>
 </TT><TT>
@@ -1861,6 +1862,10 @@ see the CORBA C++ mapping specification.<BR>
 </TT><TT>    <I>// itself destroyed (when it goes out of scope).  It is essential</I></TT><TT>
 </TT><TT>    <I>// however to ensure that such servants are not deleted whilst</I></TT><TT>
 </TT><TT>    <I>// still activated.</I></TT><TT>
+</TT><TT>    <I>//</I></TT><TT>
+</TT><TT>    <I>// Tie objects can of course be allocated on the heap using new,</I></TT><TT>
+</TT><TT>    <I>// in which case they are deleted when their reference count</I></TT><TT>
+</TT><TT>    <I>// becomes zero, as with any other servant object.</I></TT><TT>
 </TT><TT>    Echo_i* myimpl = <B>new</B> Echo_i();</TT><TT>
 </TT><TT>    POA_Echo_tie&lt;Echo_i&gt; myecho(myimpl);</TT><TT>
 </TT><TT>
@@ -2067,7 +2072,7 @@ relied on omniORB 2 implementation details which no longer work.
 <UL CLASS="itemize"><LI CLASS="li-itemize">omniORB 2 did not use distinct types for object references and
 servants, and often accepted a pointer to a servant when the CORBA
 specification says it should only accept an object reference. Such
-code will not compile under omniORB 4.0.<BR>
+code will not compile under omniORB 4.1.<BR>
 <BR>
 <LI CLASS="li-itemize">The reverse is true for <TT>BOA::obj_is_ready()</TT>. It now only
 works when passed a pointer to a servant object, not an object
@@ -5754,9 +5759,32 @@ Because of these issues, it is best to avoid defining interfaces that
 mix valuetypes and Anys in a single operation, and certainly to avoid
 trying to share plain values with values inside Anys.<BR>
 <BR>
+<!--TOC subsection Values inside DynAnys-->
+
+<H3 CLASS="subsection"><A NAME="htoc150">13.7.1</A>&nbsp;&nbsp;Values inside DynAnys</H3><!--SEC END -->
+
+The sharing semantics of valuetypes can also cause difficulties for
+DynAny. The CORBA 2.6 specification does not mention how shared values
+inside DynAnys should be handled; the CORBA 3.x specification slightly
+clarifies the situation, but it is still unclear. To write portable
+code it is best to avoid manipulating DynAnys containing values that
+are shared.<BR>
+<BR>
+In omniORB, when a value inside an Any is converted into a DynAny, the
+value's state is copied into the DynAny, and manipulated there. When
+converting back to an Any a new value is created. This means that any
+other references to the original value (whether themselves inside Anys
+of not) still relate to the original value, with unchanged state.
+However, this copying only occurs when a DynValue is actually created,
+so for example a structure with two value members referring to the
+same value can manipulated inside a DynAny without breaking the
+sharing, provided the value members are not accessed as DynAnys.
+Extracting the value members as ValueBase will reveal the sharing, for
+example.<BR>
+<BR>
 <!--TOC section Local Interfaces-->
 
-<H2 CLASS="section"><A NAME="htoc150">13.8</A>&nbsp;&nbsp;Local Interfaces</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc151">13.8</A>&nbsp;&nbsp;Local Interfaces</H2><!--SEC END -->
 
 <A NAME="sec:LocalInterfaces"></A>
 Local interfaces are somewhat under-specified in the C++ mapping. This
@@ -5765,7 +5793,7 @@ and details the limitations and issues.<BR>
 <BR>
 <!--TOC subsection Simple local interfaces-->
 
-<H3 CLASS="subsection"><A NAME="htoc151">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc152">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3><!--SEC END -->
 
 With simple IDL, there are no particular issues:<BR>
 <BR>
@@ -5790,7 +5818,7 @@ are thread safe.<BR>
 <BR>
 <!--TOC subsection Inheritance from unconstrained interfaces-->
 
-<H3 CLASS="subsection"><A NAME="htoc152">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc153">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3><!--SEC END -->
 
 Local interfaces can inherit from unconstrained (i.e. non-local)
 interfaces:<BR>
@@ -5849,7 +5877,7 @@ interfaces, you should compile all your IDL with the omniidl flags:
 </BLOCKQUOTE>
 <!--TOC subsection Valuetypes supporting local interfaces-->
 
-<H3 CLASS="subsection"><A NAME="htoc153">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3><!--SEC END -->
+<H3 CLASS="subsection"><A NAME="htoc154">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3><!--SEC END -->
 
 According to the IDL specification, it should be possible to declare a
 valuetype that supports a local interface:<BR>

@@ -200,15 +200,36 @@ Because of these issues, it is best to avoid defining interfaces that
 mix valuetypes and Anys in a single operation, and certainly to avoid
 trying to share plain values with values inside Anys.<BR>
 <BR>
+
+<H3 CLASS="subsection"><A NAME="htoc150">13.7.1</A>&nbsp;&nbsp;Values inside DynAnys</H3>
+The sharing semantics of valuetypes can also cause difficulties for
+DynAny. The CORBA 2.6 specification does not mention how shared values
+inside DynAnys should be handled; the CORBA 3.x specification slightly
+clarifies the situation, but it is still unclear. To write portable
+code it is best to avoid manipulating DynAnys containing values that
+are shared.<BR>
+<BR>
+In omniORB, when a value inside an Any is converted into a DynAny, the
+value's state is copied into the DynAny, and manipulated there. When
+converting back to an Any a new value is created. This means that any
+other references to the original value (whether themselves inside Anys
+of not) still relate to the original value, with unchanged state.
+However, this copying only occurs when a DynValue is actually created,
+so for example a structure with two value members referring to the
+same value can manipulated inside a DynAny without breaking the
+sharing, provided the value members are not accessed as DynAnys.
+Extracting the value members as ValueBase will reveal the sharing, for
+example.<BR>
+<BR>
 <A NAME="toc64"></A>
-<H2 CLASS="section"><A NAME="htoc150">13.8</A>&nbsp;&nbsp;Local Interfaces</H2>
+<H2 CLASS="section"><A NAME="htoc151">13.8</A>&nbsp;&nbsp;Local Interfaces</H2>
 <A NAME="sec:LocalInterfaces"></A>
 Local interfaces are somewhat under-specified in the C++ mapping. This
 section outlines the way local interfaces are supported in omniORB,
 and details the limitations and issues.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc151">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3>
+<H3 CLASS="subsection"><A NAME="htoc152">13.8.1</A>&nbsp;&nbsp;Simple local interfaces</H3>
 With simple IDL, there are no particular issues:<BR>
 <BR>
 <DIV CLASS="lstlisting"><TT><B>module</B> Test {</TT><TT>
@@ -231,7 +252,7 @@ within the implementation class. Make sure that the implementations
 are thread safe.<BR>
 <BR>
 
-<H3 CLASS="subsection"><A NAME="htoc152">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3>
+<H3 CLASS="subsection"><A NAME="htoc153">13.8.2</A>&nbsp;&nbsp;Inheritance from unconstrained interfaces</H3>
 Local interfaces can inherit from unconstrained (i.e. non-local)
 interfaces:<BR>
 <BR>
@@ -288,7 +309,7 @@ interfaces, you should compile all your IDL with the omniidl flags:
 <TT>-Wbvirtual_objref -Wbimpl_mapping</TT>
 </BLOCKQUOTE>
 
-<H3 CLASS="subsection"><A NAME="htoc153">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3>
+<H3 CLASS="subsection"><A NAME="htoc154">13.8.3</A>&nbsp;&nbsp;Valuetypes supporting local interfaces</H3>
 According to the IDL specification, it should be possible to declare a
 valuetype that supports a local interface:<BR>
 <BR>

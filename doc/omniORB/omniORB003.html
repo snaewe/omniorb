@@ -49,7 +49,7 @@ relied on omniORB 2 implementation details which no longer work.
 <UL CLASS="itemize"><LI CLASS="li-itemize">omniORB 2 did not use distinct types for object references and
 servants, and often accepted a pointer to a servant when the CORBA
 specification says it should only accept an object reference. Such
-code will not compile under omniORB 4.0.<BR>
+code will not compile under omniORB 4.1.<BR>
 <BR>
 <LI CLASS="li-itemize">The reverse is true for <TT>BOA::obj_is_ready()</TT>. It now only
 works when passed a pointer to a servant object, not an object

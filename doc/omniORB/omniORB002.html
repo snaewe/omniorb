@@ -1488,14 +1488,15 @@ see the CORBA C++ mapping specification.<BR>
 </TT><TT><B>static</B> CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);</TT><TT>
 </TT><TT>
 </TT><TT>
-</TT><TT><I>// This is the object implementation.  Notice that it does not</I></TT><TT>
-</TT><TT><I>// inherit from any stub class.</I></TT><TT>
+</TT><TT><I>// This is the object implementation.  Notice that it does not inherit</I></TT><TT>
+</TT><TT><I>// from any stub class, and notice that the echoString() member</I></TT><TT>
+</TT><TT><I>// function does not have to be virtual.</I></TT><TT>
 </TT><TT>
 </TT><TT><B>class</B> Echo_i {</TT><TT>
 </TT><TT><B>public</B>:</TT><TT>
 </TT><TT>  <B>inline</B> Echo_i() {}</TT><TT>
 </TT><TT>  <B>inline</B> ~Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
+</TT><TT>  <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
 </TT><TT>};</TT><TT>
 </TT><TT>
 </TT><TT>
@@ -1519,6 +1520,10 @@ see the CORBA C++ mapping specification.<BR>
 </TT><TT>    <I>// itself destroyed (when it goes out of scope).  It is essential</I></TT><TT>
 </TT><TT>    <I>// however to ensure that such servants are not deleted whilst</I></TT><TT>
 </TT><TT>    <I>// still activated.</I></TT><TT>
+</TT><TT>    <I>//</I></TT><TT>
+</TT><TT>    <I>// Tie objects can of course be allocated on the heap using new,</I></TT><TT>
+</TT><TT>    <I>// in which case they are deleted when their reference count</I></TT><TT>
+</TT><TT>    <I>// becomes zero, as with any other servant object.</I></TT><TT>
 </TT><TT>    Echo_i* myimpl = <B>new</B> Echo_i();</TT><TT>
 </TT><TT>    POA_Echo_tie&lt;Echo_i&gt; myecho(myimpl);</TT><TT>
 </TT><TT>
