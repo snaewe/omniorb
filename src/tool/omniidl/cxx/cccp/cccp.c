@@ -125,8 +125,6 @@ char *getenv ();
 # define bzero(d, n) memset (d, 0, n)
 # endif
 #else /* !STDC_HEADERS */
-char *index ();
-char *rindex ();
 
 # if !defined (BSTRING) && (defined (USG) || defined (VMS))
 
@@ -1353,8 +1351,8 @@ main (argc, argv)
     char *p;
     char *s = progname = savestring (progname);
 
-    if ((p = rindex (s, ';')) != 0) *p = '\0';	/* strip version number */
-    if ((p = rindex (s, '.')) != 0		/* strip type iff ".exe" */
+    if ((p = strrchr (s, ';')) != 0) *p = '\0';	/* strip version number */
+    if ((p = strrchr (s, '.')) != 0		/* strip type iff ".exe" */
 	&& (p[1] == 'e' || p[1] == 'E')
 	&& (p[2] == 'x' || p[2] == 'X')
 	&& (p[3] == 'e' || p[3] == 'E')
@@ -2114,7 +2112,7 @@ main (argc, argv)
       q = p + len;
       if (len >= 2
 	  && p[len - 2] == '.'
-	  && index("cCsSm", p[len - 1]))
+	  && strchr("cCsSm", p[len - 1]))
 	q = p + (len - 2);
       else if (len >= 3
 	       && p[len - 3] == '.'
@@ -2348,7 +2346,7 @@ index0 (s, c, n)
 {
   char *p = (char *) s;
   for (;;) {
-    char *q = (char *)index (p, c);
+    char *q = (char *)strchr (p, c);
     if (q)
       return (U_CHAR *) q;
     else {
@@ -4489,7 +4487,7 @@ get_filename:
 	/* This is a normal VMS filespec, so use it unchanged.  */
 	strcpy (fname, fbeg);
 	/* if it's '#include filename', add the missing .h */
-	if (vaxc_include && index(fname,'.')==NULL) {
+	if (vaxc_include && strchr(fname,'.')==NULL) {
 	  strcat (fname, ".h");
 	}
       }
@@ -4654,15 +4652,15 @@ base_name (fname)
   if (isalpha (s[0]) && s[1] == ':') s += 2;
 #endif
 #ifdef VMS
-  if ((p = rindex (s, ':'))) s = p + 1;	/* Skip device.  */
-  if ((p = rindex (s, ']'))) s = p + 1;	/* Skip directory.  */
-  if ((p = rindex (s, '>'))) s = p + 1;	/* Skip alternate (int'n'l) dir.  */
+  if ((p = strrchr (s, ':'))) s = p + 1;	/* Skip device.  */
+  if ((p = strrchr (s, ']'))) s = p + 1;	/* Skip directory.  */
+  if ((p = strrchr (s, '>'))) s = p + 1;	/* Skip alternate (int'n'l) dir.  */
   if (s != fname)
     return s;
 #endif
-  if ((p = (char *)rindex (s, '/'))) s = p + 1;
+  if ((p = (char *)strrchr (s, '/'))) s = p + 1;
 #ifdef DIR_SEPARATOR
-  if ((p = rindex (s, DIR_SEPARATOR))) s = p + 1;
+  if ((p = strrchr (s, DIR_SEPARATOR))) s = p + 1;
 #endif
   return s;
 }
@@ -5249,7 +5247,7 @@ check_preconditions (prec)
   char *lineend;
   
   while (*prec) {
-    lineend = (char *)index (prec, '\n');
+    lineend = (char *)strchr (prec, '\n');
     
     if (*prec++ != '#') {
       error ("Bad format encountered while reading precompiled file");
@@ -6886,7 +6884,7 @@ do_pragma (buf, limit, op, keyword)
       return 0;
 
     fname = p + 1;
-    if ((p = (U_CHAR *) index ((char *) fname, '\"')))
+    if ((p = (U_CHAR *) strchr ((char *) fname, '\"')))
       *p = '\0';
     
     for (h = 0; h < INCLUDE_HASHSIZE; h++) {
@@ -9472,7 +9470,7 @@ dump_arg_n (defn, argnum, of)
 {
   register U_CHAR *p = defn->args.argnames;
   while (argnum + 1 < defn->nargs) {
-    p = (U_CHAR *) index ((char *) p, ' ') + 1;
+    p = (U_CHAR *) strchr ((char *) p, ' ') + 1;
     argnum++;
   }
 
@@ -10094,7 +10092,7 @@ hack_vms_include_specification (fname, vaxc_include)
    * Check if we have a vax-c style '#include filename'
    * and add the missing .h
    */
-  if (vaxc_include && !index (cp,'.'))
+  if (vaxc_include && !strchr (cp,'.'))
     strcat (cp, ".h");
 
   cp2 = Local;			/* initialize */
@@ -10159,14 +10157,14 @@ hack_vms_include_specification (fname, vaxc_include)
   /* If there are no other slashes then the filename will be
      in the "root" directory.  Otherwise, we need to add
      directory specifications.  */
-  if (index (cp1, '/') == 0) {
+  if (strchr (cp1, '/') == 0) {
     /* Just add "000000]" as the directory string */
     strcpy (cp2, "000000]");
     cp2 += strlen (cp2);
     check_filename_before_returning = 1; /* we might need to fool with this later */
   } else {
     /* As long as there are still subdirectories to add, do them.  */
-    while (index (cp1, '/') != 0) {
+    while (strchr (cp1, '/') != 0) {
       /* If this token is "." we can ignore it */
       if ((cp1[0] == '.') && (cp1[1] == '/')) {
 	cp1 += 2;
@@ -10211,8 +10209,8 @@ hack_vms_include_specification (fname, vaxc_include)
     }
     /* The filename did not work.  Try to remove the [000000] from the name,
        and return it.  */
-    cp = index (fname, '[');
-    cp2 = index (fname, ']') + 1;
+    cp = strchr (fname, '[');
+    cp2 = strchr (fname, ']') + 1;
     strcpy (cp, cp2);		/* this gets rid of it */
   }
   return;

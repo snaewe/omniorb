@@ -357,6 +357,20 @@ if test "$omni_cv_enable_thread_tracing" = "yes"; then
 fi
 ])
 
+dnl Support for platforms where we just can't get alloca to work
+AC_DEFUN([OMNI_DISABLE_ALLOCA],
+[AC_CACHE_CHECK(whether alloca should be used in omnicpp,
+omni_cv_enable_alloca,
+[AC_ARG_ENABLE(alloca,
+               AC_HELP_STRING([--disable-alloca],
+                  [disable use of alloca in omnicpp (default enable-alloca)]),
+               omni_cv_enable_alloca=$enableval,
+               omni_cv_enable_alloca=yes)
+])
+if test "$omni_cv_enable_alloca" = "no"; then
+  AC_DEFINE(OMNIORB_DISABLE_ALLOCA,,[define if you want to avoid use of alloca])
+fi
+])
 
 
 dnl

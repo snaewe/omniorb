@@ -101,6 +101,7 @@ AC_CHECK_FUNCS(getnameinfo inet_ntop)
 AC_CHECK_FUNCS(isinf insinff isinfl localtime nanosleep poll sigaction)
 AC_CHECK_FUNCS(sigvec snprintf strcasecmp strdup strerror strftime stricmp)
 AC_CHECK_FUNCS(strncasecmp strtoul strtoull strtouq uname vprintf vsnprintf)
+AC_FUNC_ALLOCA
 AC_LANG(C++)
 
 OMNI_HAVE_ISNANORINF
@@ -115,6 +116,7 @@ OMNI_CONFIG_FILE
 OMNI_OMNINAMES_LOGDIR
 OMNI_DISABLE_STATIC
 OMNI_DISABLE_THREAD_TRACING
+OMNI_DISABLE_ALLOCA
 
 
 dnl ** Compiler name
