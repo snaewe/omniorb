@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2006/08/07 13:49:13  dgrisby
+  Allow serverReceiveRequest interceptor to throw user exceptions.
+
   Revision 1.1.6.7  2006/07/02 22:52:05  dgrisby
   Store self thread in task objects to avoid calls to self(), speeding
   up Current. Other minor performance tweaks.
@@ -229,6 +232,7 @@ GIOP_S::dispatcher() {
   try {
 
     pd_state = WaitForRequestHeader;
+    calldescriptor(0);
 
     impl()->inputMessageBegin(this,impl()->unmarshalWildCardRequestHeader);
 
@@ -377,7 +381,8 @@ GIOP_S::handleRequest() {
   }
 
 #define MARSHAL_USER_EXCEPTION() do { \
-      OMNIORB_ASSERT(calldescriptor() != 0); \
+  if (response_expected()) { \
+    if (calldescriptor()) { \
       int i, repoid_size;  \
       const char* repoid = ex._NP_repoId(&repoid_size); \
       for( i = 0; i < pd_n_user_excns; i++ ) \
@@ -396,6 +401,14 @@ GIOP_S::handleRequest() {
 			   (CORBA::CompletionStatus) completion()); \
 	impl()->sendSystemException(this,sex); \
       } \
+    } \
+    else { \
+      impl()->sendUserException(this,ex); \
+    } \
+  } \
+  if (pd_state == RequestIsBeingProcessed) { \
+    SkipRequestBody(); \
+  } \
 } while (0)
 
 #define MARSHAL_SYSTEM_EXCEPTION() do { \
@@ -426,11 +439,9 @@ GIOP_S::handleRequest() {
 #    undef CATCH_AND_MARSHAL
 
   catch(omniORB::StubUserException& uex) {
-    if (response_expected()) {
-      CORBA::UserException& ex = *((CORBA::UserException*)uex.ex());
-      MARSHAL_USER_EXCEPTION();
-      delete uex.ex();  // ?? Possible memory leak?
-    }
+    CORBA::UserException& ex = *((CORBA::UserException*)uex.ex());
+    MARSHAL_USER_EXCEPTION();
+    delete uex.ex();  // ?? Possible memory leak?
   }
 
 #endif
@@ -442,9 +453,7 @@ GIOP_S::handleRequest() {
     // the system exception.
   }
   catch(CORBA::UserException& ex) {
-    if (response_expected()) {
-      MARSHAL_USER_EXCEPTION();
-    }
+    MARSHAL_USER_EXCEPTION();
   }
 #undef MARSHAL_USER_EXCEPTION
 #undef MARSHAL_SYSTEM_EXCEPTION
@@ -459,9 +468,11 @@ GIOP_S::handleRequest() {
       l << "WARNING -- method \'" << operation() << "\' raised an unexpected\n"
 	" exception (not a CORBA exception).\n";
     }
-    CORBA::UNKNOWN ex(UNKNOWN_UserException,
-		      (CORBA::CompletionStatus) completion());
-    impl()->sendSystemException(this,ex);
+    if (response_expected()) {
+      CORBA::UNKNOWN ex(UNKNOWN_UserException,
+			(CORBA::CompletionStatus) completion());
+      impl()->sendSystemException(this,ex);
+    }
   }
   pd_state = ReplyCompleted;
   return 1;
