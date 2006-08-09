@@ -1,3 +1,11 @@
+Wed Aug  9 18:54:19 BST 2006 dgrisby
+====================================
+
+- Permit hostnames in transportRules.
+
+src/lib/omniORB/orbcore/transportRules.cc
+
+
 Mon Aug  7 14:44:49 BST 2006 dgrisby
 ====================================
 
