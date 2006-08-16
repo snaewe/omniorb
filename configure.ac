@@ -287,4 +287,5 @@ contrib/pkgconfig/omniORB4.pc
 contrib/pkgconfig/omniDynamic4.pc
 contrib/pkgconfig/omniCOS4.pc
 contrib/pkgconfig/omniCOSDynamic4.pc
+contrib/pkgconfig/omniConnectionMgmt4.pc
 ])

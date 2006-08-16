@@ -12711,7 +12711,7 @@ PROCESSOR_DEFINE=$proc_def
                     ac_config_files="$ac_config_files contrib/GNUmakefile contrib/pkgconfig/GNUmakefile"
 
 
-                                                  ac_config_files="$ac_config_files contrib/pkgconfig/omnithread3.pc contrib/pkgconfig/omniORB4.pc contrib/pkgconfig/omniDynamic4.pc contrib/pkgconfig/omniCOS4.pc contrib/pkgconfig/omniCOSDynamic4.pc"
+                                                            ac_config_files="$ac_config_files contrib/pkgconfig/omnithread3.pc contrib/pkgconfig/omniORB4.pc contrib/pkgconfig/omniDynamic4.pc contrib/pkgconfig/omniCOS4.pc contrib/pkgconfig/omniCOSDynamic4.pc contrib/pkgconfig/omniConnectionMgmt4.pc"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -13308,6 +13308,7 @@ do
   "contrib/pkgconfig/omniDynamic4.pc" ) CONFIG_FILES="$CONFIG_FILES contrib/pkgconfig/omniDynamic4.pc" ;;
   "contrib/pkgconfig/omniCOS4.pc" ) CONFIG_FILES="$CONFIG_FILES contrib/pkgconfig/omniCOS4.pc" ;;
   "contrib/pkgconfig/omniCOSDynamic4.pc" ) CONFIG_FILES="$CONFIG_FILES contrib/pkgconfig/omniCOSDynamic4.pc" ;;
+  "contrib/pkgconfig/omniConnectionMgmt4.pc" ) CONFIG_FILES="$CONFIG_FILES contrib/pkgconfig/omniConnectionMgmt4.pc" ;;
   "include/omniORB4/acconfig.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/omniORB4/acconfig.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

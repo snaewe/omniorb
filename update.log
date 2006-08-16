@@ -1,3 +1,13 @@
+Wed Aug 16 13:06:33 BST 2006 dgrisby
+====================================
+
+- pkgconfig file for connections library. Thanks Dirk Siebnich.
+
+configure
+configure.ac
+contrib/pkgconfig/omniConnectionMgmt4.pc.in   -- new
+
+
 Wed Aug  9 18:54:19 BST 2006 dgrisby
 ====================================
 
