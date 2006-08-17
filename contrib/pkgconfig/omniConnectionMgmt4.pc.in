@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: omniConnectionMgmt4
-Description: Threading library for omniORB4
+Description: Connection management extension for omniORB4
 Version: @PACKAGE_VERSION@
 Requires: omniORB4
 Libs: -L${libdir} -lomniConnectionMgmt4
