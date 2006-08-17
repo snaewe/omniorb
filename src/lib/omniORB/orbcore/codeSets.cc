@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/08/17 16:21:21  dgrisby
+  Second call to server with no codeset information would fail.
+
   Revision 1.1.4.4  2006/07/18 16:21:22  dgrisby
   New experimental connection management extension; ORB core support
   for it.
@@ -682,29 +685,14 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info)
 {
   omniCodeSet::TCS_C* tcs_c;
   omniCodeSet::TCS_W* tcs_w;
-  CORBA::Boolean sendcontext = 0;
   giopStrand& d = (giopStrand&)info.giop_c;
   GIOP::Version ver = info.giop_c.version();
-
-  if (ver.minor < 1) {
-    // Code set service context is only defined from GIOP 1.1 onwards,
-    // so here we do not attempt to set a codeset service context.
-    if (!d.tcs_selected) {
-      d.tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
-      d.tcs_w = 0;
-      d.tcs_selected = 1;
-    }
-    info.giop_c.TCS_C(d.tcs_c);
-    info.giop_c.TCS_W(d.tcs_w);
-    return 1;
-  }
 
   if (d.tcs_selected) {
     // giopStream::acquireClient never gives out the same strand
     // to run 2 different GIOP versions.
     //OMNIORB_ASSERT(d.version.major == ver.major && 
     //               d.version.minor == ver.minor);
-
     info.giop_c.TCS_C(d.tcs_c);
     info.giop_c.TCS_W(d.tcs_w);
     return 1;
@@ -716,27 +704,33 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info)
     // of another object in the same server and a perverse server may put
     // into the 2 IORs a different set of codesets.
   }
-  else {
-    const omniIOR* ior = info.giop_c.ior();
-    tcs_c = ior->getIORInfo()->TCS_C();
-    tcs_w = ior->getIORInfo()->TCS_W();
-    if (tcs_c || tcs_w) {
-      sendcontext = 1;
-      d.tcs_c = tcs_c;
-      d.tcs_w = tcs_w;
-      d.version = ver;
-    }
-    else {
-      // The server has not supplied any code set information.
-      // Use the default code set.
-      tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
-    }
+
+  if (ver.minor < 1) {
+    // Code set service context is only defined from GIOP 1.1 onwards,
+    // so here we do not attempt to set a codeset service context.
+    d.tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
+    d.tcs_w = 0;
     d.tcs_selected = 1;
+    info.giop_c.TCS_C(d.tcs_c);
+    info.giop_c.TCS_W(d.tcs_w);
+    return 1;
   }
-  info.giop_c.TCS_C(tcs_c);
-  info.giop_c.TCS_W(tcs_w);
-  
-  if (sendcontext) {
+
+  // Get codeset information from the IOR.
+  const omniIOR* ior = info.giop_c.ior();
+  tcs_c = ior->getIORInfo()->TCS_C();
+  tcs_w = ior->getIORInfo()->TCS_W();
+
+  if (tcs_c || tcs_w) {
+    d.tcs_c = tcs_c;
+    d.tcs_w = tcs_w;
+    d.version = ver;
+    d.tcs_selected = 1;
+
+    info.giop_c.TCS_C(tcs_c);
+    info.giop_c.TCS_W(tcs_w);
+
+    // Send the codeset service context
     cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
     tcs_c->id() >>= s;
     if (tcs_w) {
@@ -761,8 +755,16 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info)
 	  << tcs_c->name() << "," << ((tcs_w) ? tcs_w->name() : "none")
 	  << ")\n";
     }
+    return 1;
   }
-  return 1;
+  else {
+    // The server has not supplied any code set information.
+    // Use the default code set.
+    tcs_c = omniCodeSet::getTCS_C(omniCodeSet::ID_8859_1,ver);
+    info.giop_c.TCS_C(tcs_c);
+    info.giop_c.TCS_W(0);
+    return 1;
+  }
 }
 
 //
