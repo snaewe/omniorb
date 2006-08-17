@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.9  2006/08/17 16:22:46  dgrisby
+  Cast size_t to int in log message so it works on 64 bit Windows.
+
   Revision 1.1.6.8  2006/06/22 13:53:49  dgrisby
   Add flags to strand.
 
@@ -1280,7 +1283,7 @@ giopStream::dumpbuf(unsigned char* buf, size_t sz)
 
   const size_t dumplimit = 128;
   if (!omniORB::trace(40) && sz > dumplimit) {
-    l << dumplimit << " bytes out of " << sz << "\n";
+    l << (int)dumplimit << " bytes out of " << (int)sz << "\n";
     sz = dumplimit;
   }
   else {

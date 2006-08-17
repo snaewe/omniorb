@@ -1,3 +1,19 @@
+Thu Aug 17 17:19:25 BST 2006 dgrisby
+====================================
+
+- Incorrect description in package info.
+
+contrib/pkgconfig/omniConnectionMgmt4.pc.in
+
+- Second call to server with no codeset information would fail.
+
+src/lib/omniORB/orbcore/codeSets.cc
+
+- Cast size_t to int in log message so it works on 64 bit Windows.
+
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Wed Aug 16 13:06:33 BST 2006 dgrisby
 ====================================
 
