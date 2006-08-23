@@ -1,3 +1,11 @@
+Wed Aug 23 11:07:53 BST 2006 dgrisby
+====================================
+
+- Forgot to install omniConnectionMgmt.pc.
+
+contrib/pkgconfig/GNUmakefile.in
+
+
 Thu Aug 17 17:19:25 BST 2006 dgrisby
 ====================================
 
