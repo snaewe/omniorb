@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2006/08/25 22:18:38  dgrisby
+  VxWorks support was broken by IPv6 changes.
+
   Revision 1.1.4.5  2006/03/25 19:18:28  dgrisby
   Only use interfaces that are up.
 
@@ -465,7 +468,7 @@ void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs)
 	// AF_INET entries are of type sockaddr_in = 16 bytes
 	struct sockaddr_in* iaddr = (struct sockaddr_in*) &(ifr->ifr_addr);
 	CORBA::String_var s;
-	s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+	s = tcpConnection::addrToString((sockaddr*)iaddr);
 	ifaddrs.push_back(s._retn());
       }
     }      

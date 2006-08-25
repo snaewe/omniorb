@@ -1,3 +1,11 @@
+Fri Aug 25 23:17:56 BST 2006 dgrisby
+====================================
+
+- VxWorks support was broken by IPv6 changes.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Wed Aug 23 11:07:53 BST 2006 dgrisby
 ====================================
 
