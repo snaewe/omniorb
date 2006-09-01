@@ -1,3 +1,12 @@
+Fri Sep  1 17:02:14 BST 2006 dgrisby
+====================================
+
+- Merge minor updates from omni4_0_develop.
+
+src/lib/omniORB/orbcore/invoker.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Fri Sep  1 15:10:25 BST 2006 dgrisby
 ====================================
 

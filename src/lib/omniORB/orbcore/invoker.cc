@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2006/09/01 16:02:48  dgrisby
+  Merge minor updates from omni4_0_develop.
+  creation when a request is fully buffered.
+
   Revision 1.1.4.5  2006/07/02 22:52:04  dgrisby
   Store self thread in task objects to avoid calls to self(), speeding
   up Current. Other minor performance tweaks.
@@ -287,6 +291,12 @@ omniAsyncInvoker::omniAsyncInvoker(unsigned int max) {
   pd_totalthreads = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////
+static const char* plural(CORBA::ULong val)
+{
+  return val == 1 ? "" : "s";
+}
+
 ///////////////////////////////////////////////////////////////////////////
 omniAsyncInvoker::~omniAsyncInvoker() {
 
@@ -312,7 +322,8 @@ omniAsyncInvoker::~omniAsyncInvoker() {
 
     if (omniORB::trace(25)) {
       omniORB::logger l;
-      l << "Wait for " << pd_totalthreads << " invoker threads to finish.\n";
+      l << "Wait for " << pd_totalthreads << " invoker thread"
+	<< plural(pd_totalthreads) << " to finish.\n";
     }
     int go = 1;
     while (go && pd_totalthreads) {
