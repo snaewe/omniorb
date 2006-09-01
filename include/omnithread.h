@@ -260,8 +260,8 @@ OMNI_THREAD_EXPOSE:
 class _OMNITHREAD_NTDLL_ omni_mutex_lock {
     omni_mutex& mutex;
 public:
-    omni_mutex_lock(omni_mutex& m) : mutex(m) { mutex.lock(); }
-    ~omni_mutex_lock(void) { mutex.unlock(); }
+    inline omni_mutex_lock(omni_mutex& m) : mutex(m) { mutex.lock(); }
+    inline ~omni_mutex_lock(void) { mutex.unlock(); }
 private:
     // dummy copy constructor and operator= to prevent copying
     omni_mutex_lock(const omni_mutex_lock&);
