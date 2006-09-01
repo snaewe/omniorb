@@ -1,3 +1,12 @@
+Fri Sep  1 14:27:45 BST 2006 dgrisby
+====================================
+
+- Pass over unknown configuration options in config file / registry
+  with only a warning.
+
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Wed May 17 14:02:24 BST 2006 dgrisby
 ====================================
 
