@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2006/09/01 14:47:10  dgrisby
+  Time out waiting for threads to finish in AsyncInvoker.
+
   Revision 1.1.2.8  2005/07/25 16:29:20  dgrisby
   Async worker could still add itself to the idle list more than once.
 
@@ -85,6 +88,7 @@
 #include <omniORB4/omniInterceptors.h>
 #include <omniORB4/omniAsyncInvoker.h>
 #include <interceptors.h>
+#include <orbParameters.h>
 #include <stdlib.h>
 
 OMNI_USING_NAMESPACE(omni)
@@ -271,6 +275,12 @@ omniAsyncInvoker::omniAsyncInvoker(unsigned int max) {
   pd_totalthreads = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////
+static const char* plural(CORBA::ULong val)
+{
+  return val == 1 ? "" : "s";
+}
+
 ///////////////////////////////////////////////////////////////////////////
 omniAsyncInvoker::~omniAsyncInvoker() {
 
@@ -284,8 +294,28 @@ omniAsyncInvoker::~omniAsyncInvoker() {
     t->pd_cond->signal();
   }
   // Wait for threads to exit
-  while (pd_totalthreads) {
-    pd_cond->wait();
+  if (pd_totalthreads) {
+    if (omniORB::trace(20)) {
+      omniORB::logger log;
+      log << "AsyncInvoker: wait for " << pd_totalthreads << " thread"
+	  << plural(pd_totalthreads) << " to finish...\n";
+    }
+    unsigned long s, ns, timeout;
+    if (orbParameters::scanGranularity)
+      timeout = orbParameters::scanGranularity;
+    else
+      timeout = 5;
+
+    omni_thread::get_time(&s, &ns, timeout);
+
+    while (pd_totalthreads) {
+      if (!pd_cond->timedwait(s, ns)) {
+	omniORB::logs(20, "AsyncInvoker: timed out waiting for threads to "
+		      "finish.");
+	pd_lock->unlock();
+	return;
+      }
+    }
   }
   pd_lock->unlock();
 
