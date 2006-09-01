@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.32  2006/09/01 16:12:41  dgrisby
+  Avoid using size_t in logger for Win64.
+
   Revision 1.1.4.31  2006/03/16 09:53:48  dgrisby
   Race condition in address switching combined with failed location
   forwarding.
@@ -1224,7 +1227,7 @@ giopStream::dumpbuf(unsigned char* buf, size_t sz)
 
   const size_t dumplimit = 128;
   if (!omniORB::trace(40) && sz > dumplimit) {
-    l << dumplimit << " bytes out of " << sz << "\n";
+    l << (int)dumplimit << " bytes out of " << (int)sz << "\n";
     sz = dumplimit;
   }
   else {

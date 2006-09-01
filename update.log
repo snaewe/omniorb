@@ -1,3 +1,11 @@
+Fri Sep  1 17:12:08 BST 2006 dgrisby
+====================================
+
+- Avoid using size_t in logger for Win64.
+
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Fri Sep  1 15:46:24 BST 2006 dgrisby
 ====================================
 
