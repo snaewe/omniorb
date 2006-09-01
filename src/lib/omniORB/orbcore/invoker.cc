@@ -29,9 +29,8 @@
 
 /*
   $Log$
-  Revision 1.1.4.6  2006/09/01 16:02:48  dgrisby
+  Revision 1.1.4.7  2006/09/01 16:03:47  dgrisby
   Merge minor updates from omni4_0_develop.
-  creation when a request is fully buffered.
 
   Revision 1.1.4.5  2006/07/02 22:52:04  dgrisby
   Store self thread in task objects to avoid calls to self(), speeding

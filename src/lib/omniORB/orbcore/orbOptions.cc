@@ -29,9 +29,8 @@
 
 /*
   $Log$
-  Revision 1.1.4.7  2006/09/01 16:02:48  dgrisby
+  Revision 1.1.4.8  2006/09/01 16:03:47  dgrisby
   Merge minor updates from omni4_0_develop.
-  creation when a request is fully buffered.
 
   Revision 1.1.4.6  2005/09/29 11:32:35  dgrisby
   For loop scoping problem.
