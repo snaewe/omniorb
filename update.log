@@ -1,3 +1,17 @@
+Fri Sep  1 15:10:25 BST 2006 dgrisby
+====================================
+
+- Make omni_mutex_lock constructor and desctructor explicitly inline.
+
+include/omnithread.h
+
+- Avoid potential deadlock with call buffering; do not force worker
+  creation when a request is fully buffered.
+
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Fri Aug 25 23:17:56 BST 2006 dgrisby
 ====================================
 

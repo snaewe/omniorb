@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.25.2.15  2006/09/01 14:11:52  dgrisby
+  Avoid potential deadlock with call buffering; do not force worker
+  creation when a request is fully buffered.
+
   Revision 1.25.2.14  2006/06/05 13:34:31  dgrisby
   Make connection thread limit a per-connection value.
 
@@ -1092,7 +1096,7 @@ giopServer::notifyRzReadable(giopConnection* conn,
 void
 giopServer::notifyCallFullyBuffered(giopConnection* conn)
 {
-  notifyRzReadable(conn,1);
+  notifyRzReadable(conn);
 }
 
 ////////////////////////////////////////////////////////////////////////////
