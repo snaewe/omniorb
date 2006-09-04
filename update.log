@@ -1,3 +1,19 @@
+Mon Sep  4 12:31:51 BST 2006 dgrisby
+====================================
+
+- Configure option to disable IPv6 support.
+
+acinclude.m4
+configure
+configure.ac
+include/omniORB4/acconfig.h.in
+
+- Remove crazy switch code in enum marshalling.
+
+src/lib/omniORB/omniidl_be/cxx/header/opers.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+
 Fri Sep  1 17:02:14 BST 2006 dgrisby
 ====================================
 

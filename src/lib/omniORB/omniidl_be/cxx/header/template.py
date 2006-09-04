@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.15  2006/09/04 11:40:06  dgrisby
+# Remove crazy switch code in enum marshalling.
+#
 # Revision 1.8.2.14  2006/01/10 12:24:03  dgrisby
 # Merge from omni4_0_develop pre 4.0.7 release.
 #
@@ -1554,11 +1557,10 @@ inline void operator >>=(@name@ _e, cdrStream& s) {
 inline void operator <<= (@name@& _e, cdrStream& s) {
   CORBA::ULong @private_prefix@_e;
   ::operator<<=(@private_prefix@_e,s);
-  switch (@private_prefix@_e) {
-    @cases@
+  if (@private_prefix@_e <= @last_item@) {
     _e = (@name@) @private_prefix@_e;
-    break;
-  default:
+  }
+  else {
     OMNIORB_THROW(MARSHAL,_OMNI_NS(MARSHAL_InvalidEnumValue),
                   (CORBA::CompletionStatus)s.completion());
   }

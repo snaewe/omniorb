@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11.2.6  2006/09/04 11:40:06  dgrisby
+# Remove crazy switch code in enum marshalling.
+#
 # Revision 1.11.2.5  2006/06/14 10:35:03  dgrisby
 # Problems with nested types in valuetypes.
 #
@@ -167,17 +170,12 @@ def visitMember(node):
 
 def visitEnum(node):
     cxx_fqname = id.Name(node.scopedName()).fullyQualify()
-    
-    # build the cases
-    def cases(stream = stream, node = node):
-        for d in node.enumerators():
-            labelname = id.Name(d.scopedName()).fullyQualify()
-            stream.out("case " + labelname + ":\n")
+    last_item  = id.Name(node.enumerators()[-1].scopedName()).fullyQualify()
 
     stream.out(template.enum_operators,
                name = cxx_fqname,
                private_prefix = config.state['Private Prefix'],
-               cases = cases)
+               last_item = last_item)
 
     # Typecode and Any
     if config.state['Typecode']:
