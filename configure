@@ -864,6 +864,7 @@ Optional Features:
                           enable-static)
   --enable-thread-tracing enable thread and mutex tracing (default
                           disable-thread-tracing)
+  --disable-ipv6          disable IPv6 support (default enable-ipv6)
   --disable-alloca        disable use of alloca in omnicpp (default
                           enable-alloca)
 
@@ -12568,6 +12569,30 @@ if test "$omni_cv_enable_thread_tracing" = "yes"; then
 
 cat >>confdefs.h <<\_ACEOF
 #define OMNIORB_ENABLE_LOCK_TRACES
+_ACEOF
+
+fi
+
+echo "$as_me:$LINENO: checking whether to support IPv6" >&5
+echo $ECHO_N "checking whether to support IPv6... $ECHO_C" >&6
+if test "${omni_cv_enable_ipv6+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  # Check whether --enable-ipv6 or --disable-ipv6 was given.
+if test "${enable_ipv6+set}" = set; then
+  enableval="$enable_ipv6"
+  omni_cv_enable_ipv6=$enableval
+else
+  omni_cv_enable_ipv6=yes
+fi;
+
+fi
+echo "$as_me:$LINENO: result: $omni_cv_enable_ipv6" >&5
+echo "${ECHO_T}$omni_cv_enable_ipv6" >&6
+if test "$omni_cv_enable_ipv6" = "no"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define OMNI_DISABLE_IPV6
 _ACEOF
 
 fi

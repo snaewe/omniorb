@@ -357,6 +357,22 @@ if test "$omni_cv_enable_thread_tracing" = "yes"; then
 fi
 ])
 
+dnl Allow IPv6 to be disabled on platforms that look like they support
+dnl it, but where it doesn't work.
+AC_DEFUN([OMNI_DISABLE_IPV6_CHECK],
+[AC_CACHE_CHECK(whether to support IPv6,
+omni_cv_enable_ipv6,
+[AC_ARG_ENABLE(ipv6,
+               AC_HELP_STRING([--disable-ipv6],
+                  [disable IPv6 support (default enable-ipv6)]),
+               omni_cv_enable_ipv6=$enableval,
+               omni_cv_enable_ipv6=yes)
+])
+if test "$omni_cv_enable_ipv6" = "no"; then
+  AC_DEFINE(OMNI_DISABLE_IPV6,,[define if you want to disable IPv6 support])
+fi
+])
+
 dnl Support for platforms where we just can't get alloca to work
 AC_DEFUN([OMNI_DISABLE_ALLOCA],
 [AC_CACHE_CHECK(whether alloca should be used in omnicpp,
