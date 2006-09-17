@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.4.2.6  2006/09/17 23:24:18  dgrisby
+// Remove hard-coded hostname length.
+//
 // Revision 1.4.2.5  2006/03/25 18:54:03  dgrisby
 // Initial IPv6 support.
 //
@@ -797,7 +800,7 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
     GIOP::Version ver;
     ver.major = 127; ver.minor = 127;
 
-    char  self[64];
+    char  self[OMNIORB_HOSTNAME_MAX];
     char* selfp = 0;
 
     ObjAddr* addr;
@@ -845,7 +848,9 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
 	case ObjAddr::uiop:
 	  {
 	    if (!selfp) {
-	      if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+	      if (gethostname(&self[0],
+			      OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR) {
+
 		omniORB::logs(1, "Cannot get the name of this host.");
 		self[0] = '\0';
 	      }

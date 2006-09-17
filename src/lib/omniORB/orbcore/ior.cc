@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.12.2.5  2006/09/17 23:24:18  dgrisby
+  Remove hard-coded hostname length.
+
   Revision 1.12.2.4  2006/05/21 17:44:04  dgrisby
   Remove unnecessary uses of cdrCountingStream.
 
@@ -775,8 +778,8 @@ omniIOR::unmarshal_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent& c ,
   filename = e.unmarshalRawString();
 
   // Check if we are on the same host and hence can use unix socket.
-  char self[64];
-  if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+  char self[OMNIORB_HOSTNAME_MAX];
+  if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR) {
     self[0] = '\0';
     omniORB::logs(1, "Cannot get the name of this host.");
   }
@@ -1170,8 +1173,8 @@ omniIOR::add_TAG_OMNIORB_UNIX_TRANS(const char* filename) {
 
   OMNIORB_ASSERT(filename && strlen(filename) != 0);
 
-  char self[64];
-  if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+  char self[OMNIORB_HOSTNAME_MAX];
+  if (gethostname(&self[0],OMNIORB_HOSTNAME_MAX) == RC_SOCKET_ERROR) {
     omniORB::logs(1, "Cannot get the name of this host.");
     self[0] = '\0';
   }
