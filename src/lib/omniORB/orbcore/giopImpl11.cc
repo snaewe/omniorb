@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2006/09/17 23:23:16  dgrisby
+  Wrong offsets with indirections spanning GIOP fragments.
+
   Revision 1.1.6.5  2006/06/05 11:28:04  dgrisby
   Change clientSendRequest interceptor members to a single GIOP_C.
 
@@ -1553,7 +1556,7 @@ giopImpl11::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
   else {
     CORBA::Long msz = g->outputMessageSize();
     if (msz) {
-      g->outputMessageSize(msz+fsz);
+      g->outputMessageSize(msz+fsz-12);
     }
     else {
       g->outputMessageSize(fsz-12);
@@ -1721,12 +1724,7 @@ giopImpl11::currentOutputPtr(const giopStream* g) {
                      ((omni::ptr_arith_t) g->pd_currentOutputBuffer + 
 		      g->pd_currentOutputBuffer->start);
 
-  if (g->outputMessageSize()) {
-    return fsz + g->outputMessageSize();
-  }
-  else {
-    return fsz - 12;
-  }
+  return g->outputMessageSize() + fsz - 12;
 }
 
 

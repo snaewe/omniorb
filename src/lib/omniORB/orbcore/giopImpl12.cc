@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.9  2006/09/17 23:23:16  dgrisby
+  Wrong offsets with indirections spanning GIOP fragments.
+
   Revision 1.1.6.8  2006/09/01 14:11:52  dgrisby
   Avoid potential deadlock with call buffering; do not force worker
   creation when a request is fully buffered.
@@ -1906,7 +1909,7 @@ giopImpl12::outputRemaining(const giopStream* g) {
 void
 giopImpl12::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
 
-  // Note: g->outputFragmentSize() == 0 implies that the full message
+  // Note: g->outputFragmentSize() != 0 implies that the full message
   //       size has been pre-calculated and no GIOP Fragment should be
   //       sent! This also means that the message size limit has been
   //       checked and there is no need to check against
@@ -1917,7 +1920,7 @@ giopImpl12::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
 				    g->pd_currentOutputBuffer + 
 				    g->pd_currentOutputBuffer->start);
 
-  CORBA::ULong fsz =   (omni::ptr_arith_t) g->pd_outb_mkr - outbuf_begin;
+  CORBA::ULong fsz = (omni::ptr_arith_t) g->pd_outb_mkr - outbuf_begin;
 
   if (!g->outputFragmentSize()) {
     ((char*)outbuf_begin)[6] |= 0x2;
@@ -1929,7 +1932,15 @@ giopImpl12::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
     else {
       sz = *((CORBA::ULong*)((omni::ptr_arith_t)outbuf_begin + 8));
     }
-    g->outputMessageSize(g->outputMessageSize()+sz);
+    CORBA::Long msz = g->outputMessageSize();
+    if (msz) {
+      // Message has increased by 4 bytes less than the fragment size,
+      // due to the message id at the start of the fragment.
+      g->outputMessageSize(msz + sz - 4);
+    }
+    else {
+      g->outputMessageSize(sz);
+    }
     if (g->outputMessageSize() > orbParameters::giopMaxMsgSize) {
       OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnClient,
 		    (CORBA::CompletionStatus)g->completion());
@@ -1938,7 +1949,7 @@ giopImpl12::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
   else {
     CORBA::Long msz = g->outputMessageSize();
     if (msz) {
-      g->outputMessageSize(msz+fsz);
+      g->outputMessageSize(msz+fsz-16);
     }
     else {
       g->outputMessageSize(fsz-12);
@@ -2110,10 +2121,18 @@ giopImpl12::currentOutputPtr(const giopStream* g) {
                      ((omni::ptr_arith_t) g->pd_currentOutputBuffer + 
 		      g->pd_currentOutputBuffer->start);
 
-  if (g->outputMessageSize()) {
-    return fsz + g->outputMessageSize();
+  // Output offset is the sent message so far, plus the current buffer
+  // minus 12 byte header.
+  CORBA::Long msz = g->outputMessageSize();
+  if (msz) {
+    // At least one fragment has been output already; message has
+    // been extended by the current fragment size minus its 16 byte
+    // header (12 for GIOP header, plus 4 for request id).
+    return msz + fsz - 16;
   }
   else {
+    // This is the first fragment -- message size is the fragment
+    // size minus 12 byte GIOP header.
     return fsz - 12;
   }
 }
