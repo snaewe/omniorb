@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2006/09/17 23:22:43  dgrisby
+  Invalid assertion with indirections in counting streams.
+
   Revision 1.1.2.9  2006/01/18 19:21:54  dgrisby
   Clarifying comment.
 
@@ -85,7 +88,9 @@ marshalIndirection(cdrStream& stream, CORBA::Long pos)
   indirect >>= stream;
 
   CORBA::Long offset = pos - stream.currentOutputPtr();
-  OMNIORB_ASSERT(offset < -4);
+
+  OMNIORB_ASSERT(offset < -4 || stream.currentOutputPtr() == 0);
+  // In a counting stream, the currentOutputPtr is always zero.
 
   offset >>= stream;
 }
