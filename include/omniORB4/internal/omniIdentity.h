@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2006/09/17 23:21:49  dgrisby
+  Properly import identity_count for Windows DLL hell.
+
   Revision 1.1.6.1  2003/03/23 21:03:44  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -68,6 +71,16 @@
 
 #ifndef __OMNIIDENTITY_H__
 #define __OMNIIDENTITY_H__
+
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
+#endif
+
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
+#endif
 
 class omniCallDescriptor;
 class omniObjRef;
@@ -180,7 +193,7 @@ protected:
   // No key. Used by dummy shutdown identity.
 
 
-  static int identity_count;
+  static _core_attr int identity_count;
   // Count of active identity objects. When this goes to zero, all
   // outgoing invocations have completed.
 
@@ -209,7 +222,6 @@ private:
   // Immutable
 };
 
-
-
+#undef _core_attr
 
 #endif  // __OMNIIDENTITY_H__
