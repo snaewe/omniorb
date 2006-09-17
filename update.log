@@ -1,3 +1,30 @@
+Mon Sep 18 00:20:28 BST 2006 dgrisby
+====================================
+
+- Support FreeBSD 6 and 7.
+
+configure
+configure.ac
+
+- Properly import identity_count for Windows DLL hell.
+
+include/omniORB4/internal/omniIdentity.h
+
+- Invalid assertion with indirections in counting streams.
+
+src/lib/omniORB/dynamic/valueType.cc
+
+- Wrong offsets with indirections spanning GIOP fragments.
+
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+- Remove hard-coded hostname length.
+
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/uri.cc
+
+
 Mon Sep  4 12:31:51 BST 2006 dgrisby
 ====================================
 
