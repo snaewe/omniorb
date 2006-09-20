@@ -1,3 +1,15 @@
+Wed Sep 20 14:29:11 BST 2006 dgrisby
+====================================
+
+- Descriptive logging for connection and GIOP errors.
+
+include/omniORB4/internal/giopStream.h
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Mon Sep 18 00:20:28 BST 2006 dgrisby
 ====================================
 

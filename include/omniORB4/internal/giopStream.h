@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2006/09/20 13:36:31  dgrisby
+  Descriptive logging for connection and GIOP errors.
+
   Revision 1.1.6.2  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 
@@ -249,37 +252,31 @@ public:
   public:
     inline CommFailure(CORBA::ULong minor,
 		       CORBA::CompletionStatus status,
-		       CORBA::Boolean retry,
-		       const char* filename,
-		       CORBA::ULong linenumber) :
-      pd_minor(minor), pd_status(status), pd_retry(retry),
-      pd_filename(filename),pd_linenumber(linenumber) {}
+		       CORBA::Boolean retry) :
+      pd_minor(minor), pd_status(status), pd_retry(retry) {}
 
-    // minor - error no.
-    // status - completion status
-    // retry - TRUE(1) the invocation SHOULD BE relaunched
-    //         FALSE(0) don't bother
-    // filename - source file
+    // minor      - error no.
+    // status     - completion status
+    // retry      - TRUE(1) the invocation SHOULD BE relaunched
+    //              FALSE(0) don't bother
+    // filename   - source file
     // linenumber - line number where the exception is raised.
+    // message    - reason for the exception
+    // strand     - strand the exception occurred with
 
     inline ~CommFailure() {}
 
     inline CORBA::ULong minor() const { return pd_minor; }
     inline CORBA::CompletionStatus completed() const { return pd_status; }
     inline CORBA::Boolean retry() const { return pd_retry; }
-    inline const char* filename() const { return pd_filename; }
-    inline CORBA::ULong linenumber() const { return pd_linenumber; }
 
     inline CommFailure(const CommFailure& e) :
-      pd_minor(e.pd_minor), pd_status(e.pd_status), pd_retry(e.pd_retry),
-      pd_filename(e.pd_filename),pd_linenumber(e.pd_linenumber) {}
+      pd_minor(e.pd_minor), pd_status(e.pd_status), pd_retry(e.pd_retry) {}
 
     inline CommFailure& operator=(const CommFailure& e) {
       pd_minor = e.pd_minor;
       pd_status = e.pd_status;
       pd_retry = e.pd_retry;
-      pd_filename = e.pd_filename;
-      pd_linenumber = e.pd_linenumber;
       return *this;
     }
 
@@ -287,14 +284,14 @@ public:
 		       CORBA::CompletionStatus status,
 		       CORBA::Boolean retry,
 		       const char* filename,
-		       CORBA::ULong linenumber);
+		       CORBA::ULong linenumber,
+		       const char* message,
+		       giopStrand* strand);
 
   private:
     CORBA::ULong            pd_minor;
     CORBA::CompletionStatus pd_status;
     CORBA::Boolean          pd_retry;
-    const char*             pd_filename;
-    CORBA::ULong            pd_linenumber;
   };
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
@@ -473,7 +470,7 @@ private:
   //   None.
 
   void errorOnReceive(int,const char*,CORBA::ULong,giopStream_Buffer*,
-		      CORBA::Boolean);
+		      CORBA::Boolean,const char*);
   // internal helper function, do not use outside this class
 
   CORBA::ULong ensureSaneHeader(const char*,CORBA::ULong,
@@ -528,7 +525,7 @@ private:
   // Thread Safety preconditions:
   //   Caller must have acquired the write lock on the strand.
 
-  void errorOnSend(int,const char*,CORBA::ULong,CORBA::Boolean);
+  void errorOnSend(int,const char*,CORBA::ULong,CORBA::Boolean,const char*);
   // internal helper function, do not use outside this class
 
 protected:

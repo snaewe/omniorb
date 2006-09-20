@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.10  2006/09/20 13:36:31  dgrisby
+  Descriptive logging for connection and GIOP errors.
+
   Revision 1.1.6.9  2006/08/17 16:22:46  dgrisby
   Cast size_t to int in log message so it works on 64 bit Windows.
 
@@ -254,7 +257,8 @@ giopStream::rdLock() {
 
     if (hastimeout) {
       // Timeout. 
-      errorOnReceive(0,__FILE__,__LINE__,0,1);
+      errorOnReceive(0,__FILE__,__LINE__,0,1,
+		     "Timed out waiting for read lock");
     }
   }
   pd_strand->rd_nwaiting = -pd_strand->rd_nwaiting - 1;
@@ -319,7 +323,8 @@ giopStream::wrLock() {
 
     if (hastimeout) {
       // Timeout. 
-      errorOnReceive(0,__FILE__,__LINE__,0,1);
+      errorOnReceive(0,__FILE__,__LINE__,0,1,
+		     "Timed out waiting for write lock");
     }
   }
   pd_strand->wr_nwaiting = -pd_strand->wr_nwaiting - 1;
@@ -409,7 +414,8 @@ giopStream::sleepOnRdLock() {
 
     if (hastimeout) {
       // Timeout. 
-      errorOnReceive(0,__FILE__,__LINE__,0,1);
+      errorOnReceive(0,__FILE__,__LINE__,0,1,
+		     "Timed out sleeping on read lock");
     }
   }
 }
@@ -462,7 +468,9 @@ giopStream::sleepOnRdLockAlways() {
 
   if (hastimeout) {
     // Timeout. 
-    errorOnReceive(0,__FILE__,__LINE__,0,1);
+    errorOnReceive(0,__FILE__,__LINE__,0,1,
+		   "Timed out sleeping on read lock "
+		   "(waiting for receiver thread)");
   }
 }
 
@@ -530,27 +538,43 @@ giopStream::CommFailure::_raise(CORBA::ULong minor,
 				CORBA::CompletionStatus status,
 				CORBA::Boolean retry,
 				const char* filename,
-				CORBA::ULong linenumber)
+				CORBA::ULong linenumber,
+				const char* message,
+				giopStrand* strand)
 {
   if (status != CORBA::COMPLETED_NO) retry = 0;
+
 #ifndef OMNIORB_NO_EXCEPTION_LOGGING
   if( omniORB::traceExceptions ) {
-    omniORB::logger l;
-    l << "throw giopStream::CommFailure from "
-      << omniExHelper::strip(filename) 	
-      << ":" << linenumber 
-      << "(" << (int)retry << ",";
-    const char* description = minorCode2String(TRANSIENT_LookupTable,minor);
-    if (!description)
-      description = minorCode2String(COMM_FAILURE_LookupTable,minor);
-    if (description)
-      l << omniORB::logger::exceptionStatus(status,description);
-    else
-      l << omniORB::logger::exceptionStatus(status,minor);
-    l << ")\n";
+    {
+      omniORB::logger l;
+      l << message << ": ";
+      if (strand->connection)
+	l << strand->connection->peeraddress();
+      else if (strand->address)
+	l << strand->address->address();
+      else
+	l << "[unknown endpoint]";
+      l << '\n';
+    }
+    {
+      omniORB::logger l;
+      l << "throw giopStream::CommFailure from "
+	<< omniExHelper::strip(filename) 	
+	<< ":" << linenumber 
+	<< "(" << (int)retry << ",";
+      const char* description = minorCode2String(TRANSIENT_LookupTable,minor);
+      if (!description)
+	description = minorCode2String(COMM_FAILURE_LookupTable,minor);
+      if (description)
+	l << omniORB::logger::exceptionStatus(status,description);
+      else
+	l << omniORB::logger::exceptionStatus(status,minor);
+      l << ")\n";
+    }
   }
 #endif
-  throw CommFailure(minor,status,retry,filename,linenumber);
+  throw CommFailure(minor,status,retry);
 }
 
 
@@ -728,7 +752,8 @@ giopStream::releaseInputBuffer(giopStream_Buffer* p) {
 ////////////////////////////////////////////////////////////////////////
 void
 giopStream::errorOnReceive(int rc, const char* filename, CORBA::ULong lineno,
-			   giopStream_Buffer* buf,CORBA::Boolean heldlock) {
+			   giopStream_Buffer* buf,CORBA::Boolean heldlock,
+			   const char* message) {
 
   CORBA::ULong minor;
   CORBA::Boolean retry;
@@ -749,8 +774,9 @@ giopStream::errorOnReceive(int rc, const char* filename, CORBA::ULong lineno,
     pd_strand->state(giopStrand::DYING);
   }
   if (buf) giopStream_Buffer::deleteBuffer(buf);
+
   CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
-		      filename,lineno);
+		      filename,lineno, message, pd_strand);
   // never reaches here.
 }
 
@@ -771,7 +797,8 @@ giopStream::ensureSaneHeader(const char* filename, CORBA::ULong lineno,
     notifyCommFailure(0,minor,retry);
     giopStream_Buffer::deleteBuffer(buf);
     CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
-			filename,lineno);
+			filename,lineno,
+			"Input message is not a GIOP message", pd_strand);
     // never reaches here.
   }
   // Get the message size from the buffer
@@ -811,7 +838,8 @@ giopStream::inputMessage() {
     else {
       status = (CORBA::CompletionStatus)completion();
     }
-    CommFailure::_raise(minor,status,retry,__FILE__,__LINE__);
+    CommFailure::_raise(minor,status,retry,__FILE__,__LINE__,
+			"Connection is dying", pd_strand);
     // never reaches here.
   }
 
@@ -843,7 +871,8 @@ giopStream::inputMessage() {
       buf->last += rsz;
     }
     else {
-      errorOnReceive(rsz,__FILE__,__LINE__,buf,0);
+      errorOnReceive(rsz,__FILE__,__LINE__,buf,0,
+		     "Error in network receive (start of message)");
       // never reaches here.
     }
   }
@@ -888,7 +917,8 @@ giopStream::inputMessage() {
 	total -= rsz;
       }
       else {
-	errorOnReceive(rsz,__FILE__,__LINE__,buf,0);
+	errorOnReceive(rsz,__FILE__,__LINE__,buf,0,
+		       "Error in network receive (continuation of message)");
 	// never reaches here.
       }
     }
@@ -976,7 +1006,9 @@ giopStream::inputChunk(CORBA::ULong maxsize) {
     CORBA::Boolean retry;
     notifyCommFailure(0,minor,retry);
     CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
-			__FILE__,__LINE__);
+			__FILE__,__LINE__,
+			"New message received in the middle of an existing "
+			"message", pd_strand);
     // never reaches here.
   }
   else if (pd_strand->spare) {
@@ -1004,7 +1036,8 @@ giopStream::inputChunk(CORBA::ULong maxsize) {
       maxsize -= rsz;
     }
     else {
-      errorOnReceive(rsz,__FILE__,__LINE__,buf,0);
+      errorOnReceive(rsz,__FILE__,__LINE__,buf,0,
+		     "Error in network receive (input of chunk)");
       // never reaches here.
     }
   }
@@ -1035,7 +1068,9 @@ giopStream::inputCopyChunk(void* dest, CORBA::ULong size) {
     CORBA::Boolean retry;
     notifyCommFailure(0,minor,retry);
     CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
-			__FILE__,__LINE__);
+			__FILE__,__LINE__,
+			"New message received in the middle of an existing "
+			"message (bulk receive)", pd_strand);
     // never reaches here.
   }
 
@@ -1061,7 +1096,8 @@ giopStream::inputCopyChunk(void* dest, CORBA::ULong size) {
 
     }
     else {
-      errorOnReceive(rsz,__FILE__,__LINE__,0,0);
+      errorOnReceive(rsz,__FILE__,__LINE__,0,0,
+		     "Error in receive (input of bulk data)");
       // never reaches here.
     }
   }
@@ -1109,7 +1145,8 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {
-      errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__,0);
+      errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__,0,
+		  "Unable to open new connection");
     }
     if (omniORB::trace(20)) {
       omniORB::logger log;
@@ -1142,7 +1179,8 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
       first += ssz;
     }
     else {
-      errorOnSend(ssz,__FILE__,__LINE__,0);
+      errorOnSend(ssz,__FILE__,__LINE__,0,
+		  "Error in network send");
       // never reaches here.
     }
   }
@@ -1188,7 +1226,8 @@ giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {
-      errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__,0);
+      errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__,0,
+		  "Unable to open new connection");
     }
     if (omniORB::trace(20)) {
       omniORB::logger log;
@@ -1218,7 +1257,8 @@ giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
       buf = (void*)((omni::ptr_arith_t)buf + ssz);
     }
     else {
-      errorOnSend(ssz,__FILE__,__LINE__,0);
+      errorOnSend(ssz,__FILE__,__LINE__,0,
+		  "Error in network send (output of bulk data)");
       // never reaches here.
     }
   }
@@ -1228,7 +1268,7 @@ giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
 ////////////////////////////////////////////////////////////////////////
 void
 giopStream::errorOnSend(int rc, const char* filename, CORBA::ULong lineno,
-			CORBA::Boolean heldlock) {
+			CORBA::Boolean heldlock, const char* message) {
 
   CORBA::ULong minor;
   CORBA::Boolean retry;
@@ -1260,8 +1300,9 @@ giopStream::errorOnSend(int rc, const char* filename, CORBA::ULong lineno,
   else {
     pd_strand->state(giopStrand::DYING);
   }
+
   CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
-		      filename,lineno);
+		      filename,lineno,message,pd_strand);
   // never reaches here.
 }
 
