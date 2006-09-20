@@ -28,7 +28,7 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #
 #
 THREAD_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-THREAD_LIB      = omnithread30_rt.lib -libpath:$(TOP)\lib\x86_win32
+THREAD_LIB      = omnithread32_rt.lib -libpath:$(TOP)\lib\x86_win32
 CXXFLAGS       = -O2 -MD -GX $(THREAD_CPPFLAGS) $(DIR_CPPFLAGS)
 CXXLINKOPTIONS =
 
