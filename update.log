@@ -1,3 +1,13 @@
+Mon Sep 25 10:38:43 BST 2006 dgrisby
+====================================
+
+- New GBK codeset. Thanks JiangWei.
+
+src/lib/omniORB/codesets/cs-GBK.cc          -- new
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/codesets/omniCodeSets.cc
+
+
 Wed Sep 20 14:41:45 BST 2006 dgrisby
 ====================================
 
