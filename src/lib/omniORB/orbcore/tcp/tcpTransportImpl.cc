@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2006/09/28 22:18:52  dgrisby
+  Small memory leak in tcp endpoint initialisation. Thanks Teemu Torma.
+
   Revision 1.1.4.6  2006/08/25 22:18:38  dgrisby
   VxWorks support was broken by IPv6 changes.
 
@@ -168,6 +171,8 @@ tcpTransportImpl::toEndpoint(const char* param) {
     const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
     if (hostname)
       address.host = hostname;
+
+    CORBA::string_free(host);
   }
   else {
     address.host = host;

@@ -1,3 +1,11 @@
+Thu Sep 28 23:17:47 BST 2006 dgrisby
+====================================
+
+- Small memory leak in tcp endpoint initialisation. Thanks Teemu Torma.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Mon Sep 25 11:19:43 BST 2006 dgrisby
 ====================================
 
