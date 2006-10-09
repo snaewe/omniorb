@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2006/10/09 13:08:58  dgrisby
+  Rename SOCKADDR_STORAGE define to OMNI_SOCKADDR_STORAGE, to avoid
+  clash on Win32 2003 SDK.
+
   Revision 1.1.4.6  2006/07/18 16:21:21  dgrisby
   New experimental connection management extension; ORB core support
   for it.
@@ -292,7 +296,7 @@ sslAddress::Connect(unsigned long deadline_secs,
     }
     if (rc != RC_SOCKET_ERROR) {
       // Check to make sure that the socket is connected.
-      SOCKADDR_STORAGE peer;
+      OMNI_SOCKADDR_STORAGE peer;
       SOCKNAME_SIZE_T len = sizeof(peer);
       rc = getpeername(sock, (struct sockaddr*)&peer, &len);
     }

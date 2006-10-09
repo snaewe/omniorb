@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2006/10/09 13:08:58  dgrisby
+  Rename SOCKADDR_STORAGE define to OMNI_SOCKADDR_STORAGE, to avoid
+  clash on Win32 2003 SDK.
+
   Revision 1.1.4.12  2006/05/16 15:43:52  dgrisby
   Make sure IPv6 definitions are available on Win32.
 
@@ -133,9 +137,9 @@
 
 #if !defined(OMNI_DISABLE_IPV6) && defined(HAVE_STRUCT_SOCKADDR_IN6) && defined(HAVE_STRUCT_SOCKADDR_STORAGE) && defined(HAVE_GETADDRINFO) && defined(HAVE_GETNAMEINFO)
 #  define OMNI_SUPPORT_IPV6
-#  define SOCKADDR_STORAGE sockaddr_storage
+#  define OMNI_SOCKADDR_STORAGE sockaddr_storage
 #else
-#  define SOCKADDR_STORAGE sockaddr_in
+#  define OMNI_SOCKADDR_STORAGE sockaddr_in
 #endif
 
 #define SOCKNAME_SIZE_T OMNI_SOCKNAME_SIZE_T

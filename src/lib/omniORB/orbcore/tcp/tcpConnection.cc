@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2006/10/09 13:08:58  dgrisby
+  Rename SOCKADDR_STORAGE define to OMNI_SOCKADDR_STORAGE, to avoid
+  clash on Win32 2003 SDK.
+
   Revision 1.1.4.7  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -455,10 +459,10 @@ tcpConnection::tcpConnection(SocketHandle_t sock,
 			     SocketCollection* belong_to) :
   SocketHolder(sock) {
 
-  SOCKADDR_STORAGE addr;
+  OMNI_SOCKADDR_STORAGE addr;
   SOCKNAME_SIZE_T l;
 
-  l = sizeof(SOCKADDR_STORAGE);
+  l = sizeof(OMNI_SOCKADDR_STORAGE);
   if (getsockname(pd_socket,
 		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
     pd_myaddress = (const char*)"giop:tcp:255.255.255.255:65535";
@@ -467,7 +471,7 @@ tcpConnection::tcpConnection(SocketHandle_t sock,
     pd_myaddress = addrToURI((sockaddr*)&addr, "giop:tcp:");
   }
 
-  l = sizeof(SOCKADDR_STORAGE);
+  l = sizeof(OMNI_SOCKADDR_STORAGE);
   if (getpeername(pd_socket,
 		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
     pd_peeraddress = (const char*)"giop:tcp:255.255.255.255:65535";

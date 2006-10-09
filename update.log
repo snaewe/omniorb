@@ -1,3 +1,18 @@
+Mon Oct  9 14:07:22 BST 2006 dgrisby
+====================================
+
+- Rename SOCKADDR_STORAGE define to OMNI_SOCKADDR_STORAGE, to avoid
+  clash on Win32 2003 SDK.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Mon Oct  9 11:50:46 BST 2006 dgrisby
 ====================================
 
