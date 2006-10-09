@@ -1,3 +1,12 @@
+Mon Oct  9 11:50:46 BST 2006 dgrisby
+====================================
+
+- Updated Windows build rules -- compiler in dll name; version
+  info. Thanks Marco Barthel.
+
+mk/win32.mk
+
+
 Mon Oct  9 10:45:09 BST 2006 dgrisby
 ====================================
 

@@ -48,6 +48,7 @@ CC = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/clwrapper $(XLN)
 CLINK = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/linkwrapper $(XLN)
 CMAKEDEPEND = $(BASE_OMNI_TREE)/$(WRAPPER_FPATH)/omkdepend $(MKDEPOPT) -D_MSC_VER
 
+RCTOOL          = rc.exe
 MANIFESTTOOL    = true
 
 MKDIRHIER	= mkdir -p
@@ -72,9 +73,9 @@ MSVC_DLL_CNODEBUGFLAGS         = -MD
 MSVC_DLL_CLINKNODEBUGOPTIONS   = 
 #
 MSVC_DLL_CXXDEBUGFLAGS         = -MDd -GX -Z7 -Od 
-MSVC_DLL_CXXLINKDEBUGOPTIONS   = -debug -PDB:NONE
+MSVC_DLL_CXXLINKDEBUGOPTIONS   = -DEBUG
 MSVC_DLL_CDEBUGFLAGS           = -MDd -Z7 -Od
-MSVC_DLL_CLINKDEBUGOPTIONS     = -debug -PDB:NONE
+MSVC_DLL_CLINKDEBUGOPTIONS     = -DEBUG
 #
 # Or
 #
@@ -86,9 +87,9 @@ MSVC_STATICLIB_CNODEBUGFLAGS         = -MT
 MSVC_STATICLIB_CLINKNODEBUGOPTIONS   = 
 
 MSVC_STATICLIB_CXXDEBUGFLAGS         = -MTd -GX -Z7 -Od 
-MSVC_STATICLIB_CXXLINKDEBUGOPTIONS   = -debug -PDB:NONE
+MSVC_STATICLIB_CXXLINKDEBUGOPTIONS   = -DEBUG
 MSVC_STATICLIB_CDEBUGFLAGS           = -MTd -Z7 -Od
-MSVC_STATICLIB_CLINKDEBUGOPTIONS     = -debug -PDB:NONE
+MSVC_STATICLIB_CLINKDEBUGOPTIONS     = -DEBUG
 
 
 ifdef BuildDebugBinary
@@ -133,7 +134,7 @@ endef
 define VeryCleanRule
 $(RM) *.d
 $(RM) *.pyc
-$(RM) *.def *.ilk *.exp *.manifest
+$(RM) *.def *.pdb *.ilk *.exp *.manifest *.rc *.res
 $(RM) $(CORBA_STUB_FILES)
 endef
 
@@ -238,9 +239,20 @@ ifndef EmbeddedSystem
 BuildSharedLibrary = 1
 endif
 
+ifeq "$(MSVC7)" ""
+ compiler_version=_vc6
+else
+ ifeq "$(MSVC8)" ""
+  compiler_version=_vc7
+ else 
+  compiler_version=_vc8
+ endif
+endif
+
 SharedLibraryFullNameTemplate = $(SharedLibraryLibNameTemplate).lib
 SharedLibraryLibNameTemplate  = $$1$$2$$3$$4_rt$${extrasuffix:-}
 SharedLibraryShortLibName = $$1$$2$$3_rt$${extrasuffix:-}.lib
+SharedLibraryDllNameTemplate  = $$1$$2$$3$$4$(compiler_version)_rt$${extrasuffix:-}
 SharedLibraryExportSymbolFileNameTemplate = $$1$$2$${extrasuffix:-}.def
 SharedLibraryVersionStringTemplate = $$3.$$4
 SharedLibrarySymbolRefLibraryTemplate = $${symrefdir:-static}/$$1$$2$${extrasuffix:-}.lib
@@ -292,7 +304,7 @@ symrefdir=$${debug:+debug}; \
 symreflib=$(SharedLibrarySymbolRefLibraryTemplate); \
 if [ ! -f $$symreflib ]; then echo "Cannot find reference static library $$symreflib"; return 1; fi;  \
 set -x; \
-echo "LIBRARY $$libname" > $$defname; \
+echo "LIBRARY $$dllbase" > $$defname; \
 echo "VERSION $$version" >> $$defname; \
 echo "EXPORTS" >> $$defname; \
 DUMPBIN.EXE /SYMBOLS $$symreflib | \
@@ -304,6 +316,55 @@ cut -d' ' -f2 | $(SORT) -u >> $$defname; \
 set +x;
 endef
 
+
+# MakeResourceDefinitionFile
+#   Internal canned command used by MakeCXXSharedLibrary
+
+define MakeResourceDefinitionFile
+if [ -n "$$2" ]; then \
+commaver=$$2,$$3,$$4,0x$$nanovers; \
+dotver=$$2.$$3.$$4.$$nanovers; \
+else \
+commaver=$$3,$$4,0x$$nanovers,0; \
+dotver=$$3.$$4.$$nanovers; \
+fi; \
+set -x; \
+echo "#include \"afxres.h\"" > $$rcname; \
+echo "VS_VERSION_INFO VERSIONINFO" >> $$rcname; \
+echo " FILEVERSION $$commaver" >> $$rcname; \
+echo " PRODUCTVERSION $(OMNIORB_MAJOR_VERSION),$(OMNIORB_MINOR_VERSION),$(OMNIORB_MICRO_VERSION),0x$$nanovers" >> $$rcname; \
+echo " FILEFLAGSMASK 0x3fL" >> $$rcname; \
+if [ -n "$$debug" ]; then \
+echo " FILEFLAGS VS_FF_DEBUG" >> $$rcname; \
+else \
+echo " FILEFLAGS 0x0L" >> $$rcname; \
+fi; \
+echo " FILEOS VOS_UNKNOWN" >> $$rcname; \
+echo " FILETYPE VFT_UNKNOWN" >> $$rcname; \
+echo " FILESUBTYPE 0x0L" >> $$rcname; \
+echo "{    " >> $$rcname; \
+echo "    BLOCK \"StringFileInfo\"" >> $$rcname; \
+echo "    {" >> $$rcname; \
+echo "        BLOCK \"00000000\"" >> $$rcname; \
+echo "        {" >> $$rcname; \
+echo "            VALUE \"CompanyName\", \"omniORB open source project\0\"" >> $$rcname; \
+echo "            VALUE \"FileDescription\", \"omniORB\0\"" >> $$rcname; \
+echo "            VALUE \"FileVersion\", \"$$dotver\0\"" >> $$rcname; \
+echo "            VALUE \"InternalName\", \"$(SharedLibraryDllNameTemplate).dll\0\"" >> $$rcname; \
+echo "            VALUE \"OriginalFilename\", \"$(SharedLibraryDllNameTemplate).dll\0\"" >> $$rcname; \
+echo "            VALUE \"ProductName\", \"omniORB\"" >> $$rcname; \
+echo "            VALUE \"ProductVersion\", \"$(OMNIORB_MAJOR_VERSION).$(OMNIORB_MINOR_VERSION).$(OMNIORB_MICRO_VERSION).$$nanovers\0\"" >> $$rcname; \
+echo "            VALUE \"LegalCopyright\", \"Apasphere Ltd., AT&T Laboratories Cambridge, and others. Freely available under the terms of the GNU LGPL.\0\"" >> $$rcname; \
+echo "        }" >> $$rcname; \
+echo "    }" >> $$rcname; \
+echo "    BLOCK \"VarFileInfo\"" >> $$rcname; \
+echo "    {" >> $$rcname; \
+echo "        VALUE \"Translation\", 0x0, 0" >> $$rcname; \
+echo "    }" >> $$rcname; \
+echo "}" >> $$rcname; \
+echo "LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL" >> $$rcname; \
+$(RCTOOL) $$rcname;
+endef
 
 # MakeCXXSharedLibrary- Build shared library
 #  Expect shell variable:
@@ -320,9 +381,13 @@ extrasuffix=$${debug:+d}; \
 targetdir=$(@D); \
 libname=$(SharedLibraryLibNameTemplate); \
 slibname=$(SharedLibraryShortLibName); \
-dllname=$$targetdir/$$libname.dll; \
+dllbase=$$targetdir/$(SharedLibraryDllNameTemplate); \
+dllname=$$dllbase.dll; \
+rcname=$$dllbase.rc; \
+resname=$$targetdir/$(SharedLibraryDllNameTemplate).res; \
 defname=$$targetdir/$(SharedLibraryExportSymbolFileNameTemplate); \
 version=$(SharedLibraryVersionStringTemplate); \
+nanovers=`echo $(OMNIORB_VERSION_HEX) | cut -c 9-`; \
 if [ -n "$$debug" ]; then \
 extralinkoption="$(MSVC_DLL_CXXLINKDEBUGOPTIONS)"; \
 else \
@@ -332,11 +397,12 @@ if [ -z "$$nodeffile" ]; then \
 $(MakeCXXExportSymbolDefinitionFile) \
 defflag="-def:$$defname"; \
 fi; \
+$(MakeResourceDefinitionFile) \
 set -x; \
 $(RM) $@; \
 $(CXXLINK) -out:$$dllname -DLL $$extralinkoption \
 $$defflag -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
-$^ $$extralibs; \
+$^ $$extralibs $$resname; \
 $(CP) $@ $$slibname;
 endef
 
@@ -354,7 +420,8 @@ extrasuffix=$${debug:+d}; \
 targetdir=$(<D); \
 libname=$(SharedLibraryLibNameTemplate); \
 slibname=$(SharedLibraryShortLibName); \
-dllname=$$targetdir/$$libname.dll; \
+dllname=$$targetdir/$(SharedLibraryDllNameTemplate).dll; \
+pdbname=$$targetdir/$(SharedLibraryDllNameTemplate).pdb; \
 (dir="$(EXPORT_TREE)/$(LIBDIR)"; \
  file="$^"; \
  $(ExportFileToDir); \
@@ -366,6 +433,10 @@ dllname=$$targetdir/$$libname.dll; \
 (dir="$(EXPORT_TREE)/$(BINDIR)"; \
  file="$$dllname"; \
  $(ExportExecutableFileToDir); \
+); \
+(dir="$(EXPORT_TREE)/$(BINDIR)"; \
+ file="$$pdbname"; \
+ $(ExportExecutableFileToDir); \
 );
 endef
 
@@ -376,7 +447,8 @@ endef
 define CleanSharedLibrary
 ( set -x; \
 $(RM) $${dir:-.}/*.dll $${dir:-.}/*.lib $${dir:-.}/*.exp $${dir:-.}/*.def \
-      $${dir:-.}/*.dll.manifest $${dir:-.}/*.ilk )
+      $${dir:-.}/*.dll.manifest $${dir:-.}/*.ilk $${dir:-.}/*.pdb \
+      $${dir:-.}/*.rc $${dir:-.}/*.res)
 endef
 
 # Pattern rules to build objects files for static and shared library and the
