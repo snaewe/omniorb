@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2006/10/09 09:47:12  dgrisby
+  Only delete giopServer if all threads are successfully shut down.
+
   Revision 1.1.6.4  2006/06/22 13:53:49  dgrisby
   Add flags to strand.
 
@@ -90,8 +93,11 @@ class giopServer : public orbServer {
 public:
 
   static giopServer*& singleton();
+
+protected:
   ~giopServer();
 
+public:
   CORBA::Boolean instantiate(const char*    endpoint_uri,
 			     CORBA::Boolean no_publish,
 			     EndpointList&  listening_endpoints);
@@ -149,7 +155,8 @@ public:
   };
 
 private:
-  enum { IDLE, ACTIVE, ZOMBIE, INFLUX }  pd_state;
+  enum { IDLE, ACTIVE, ZOMBIE, INFLUX, TIMEDOUT }
+                                         pd_state;
   giopEndpointList                       pd_endpoints;
   Link                                   pd_rendezvousers;
   CORBA::ULong                           pd_nconnections;

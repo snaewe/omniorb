@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.16  2006/10/09 09:47:12  dgrisby
+  Only delete giopServer if all threads are successfully shut down.
+
   Revision 1.25.2.15  2006/09/01 14:11:52  dgrisby
   Avoid potential deadlock with call buffering; do not force worker
   creation when a request is fully buffered.
@@ -390,10 +393,8 @@ giopServer::start()
 
   switch (pd_state) {
   case IDLE:
-    {
-      pd_state = ACTIVE;
-      activate();
-    }
+    pd_state = ACTIVE;
+    activate();
     break;
   default:
     break;
@@ -410,9 +411,7 @@ giopServer::stop()
 
   switch (pd_state) {
   case ACTIVE:
-    {
-      deactivate();
-    }
+    deactivate();
     break;
   default:
     break;
@@ -423,31 +422,35 @@ giopServer::stop()
 void
 giopServer::remove()
 {
-  omni_tracedmutex_lock sync(pd_lock);
+  CORBA::Boolean do_delete = 1;
+  {
+    omni_tracedmutex_lock sync(pd_lock);
 
-  ensureNotInFlux();
+    ensureNotInFlux();
 
-  switch (pd_state) {
-  case ACTIVE:
-    {
+    switch (pd_state) {
+    case ACTIVE:
       deactivate();
+      break;
+    case TIMEDOUT:
+      do_delete = 0;
+      break;
+    default:
+      break;
     }
-  case IDLE:
-    {
-      pd_state = ZOMBIE;
+
+    pd_state = ZOMBIE;
+
+    giopEndpointList::iterator i;
+    i = pd_endpoints.begin();
+
+    while (i != pd_endpoints.end()) {
+      (*i)->Shutdown();
+      pd_endpoints.erase(i);
     }
-    break;
-  default:
-    return;
   }
-
-  giopEndpointList::iterator i;
-  i = pd_endpoints.begin();
-
-  while (i != pd_endpoints.end()) {
-    (*i)->Shutdown();
-    pd_endpoints.erase(i);
-  }
+  if (do_delete)
+    delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -582,8 +585,8 @@ giopServer::deactivate()
 
   pd_state = INFLUX;
 
-  CORBA::Boolean waitforcompletion;
   CORBA::Boolean rendezvousers_terminated = 0;
+  CORBA::Boolean timed_out = 0;
 
   omniORB::logs(25, "giopServer deactivate...");
 
@@ -633,6 +636,8 @@ giopServer::deactivate()
       while (go && pd_n_dedicated_workers) {
 	go = pd_cond.timedwait(s, ns);
       }
+      timed_out |= !go;
+
       if (omniORB::trace(25)) {
 	omniORB::logger l;
 	if (!go)
@@ -660,6 +665,8 @@ giopServer::deactivate()
     while (go && pd_rendezvousers.next != & pd_rendezvousers) {
       go = pd_cond.timedwait(s, ns);
     }
+    timed_out |= !go;
+
     if (omniORB::trace(25)) {
       omniORB::logger l;
       if (go)
@@ -683,6 +690,8 @@ giopServer::deactivate()
     while (go && !Link::is_empty(pd_bidir_monitors)) {
       go = pd_cond.timedwait(s, ns);
     }
+    timed_out |= !go;
+
     if (omniORB::trace(25)) {
       omniORB::logger l;
       if (go)
@@ -733,6 +742,8 @@ giopServer::deactivate()
     while (go && pd_n_temporary_workers) {
       go = pd_cond.timedwait(s, ns);
     }
+    timed_out |= !go;
+
     if (omniORB::trace(25)) {
       omniORB::logger l;
       if (!go)
@@ -758,7 +769,11 @@ giopServer::deactivate()
       g->deleteStrandAndConnection();
     }
   }
-  pd_state = IDLE;
+  if (timed_out)
+    pd_state = TIMEDOUT;
+  else
+    pd_state = IDLE;
+
   pd_cond.broadcast();
   omniORB::logs(25, "giopServer deactivated.");
 }

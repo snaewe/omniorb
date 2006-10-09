@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.11  2006/10/09 09:47:12  dgrisby
+ Only delete giopServer if all threads are successfully shut down.
+
  Revision 1.5.2.10  2006/07/18 16:21:21  dgrisby
  New experimental connection management extension; ORB core support
  for it.
@@ -506,7 +509,6 @@ omniObjAdapter::shutdown()
     last = oa_servers.end();
     for ( ; j != last; j++ ) {
       (*j)->remove();
-      delete (*j);
     }
     oa_servers.erase(oa_servers.begin(),oa_servers.end());
   }

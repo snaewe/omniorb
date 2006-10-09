@@ -1,3 +1,14 @@
+Mon Oct  9 10:45:09 BST 2006 dgrisby
+====================================
+
+- Only delete giopServer if all threads are successfully shut down.
+
+include/omniORB4/omniServer.h
+include/omniORB4/internal/giopServer.h
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Fri Sep 29 18:13:34 BST 2006 dgrisby
 ====================================
 

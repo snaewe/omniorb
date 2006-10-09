@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2006/10/09 09:47:12  dgrisby
+  Only delete giopServer if all threads are successfully shut down.
+
   Revision 1.1.4.2  2006/04/09 19:52:31  dgrisby
   More IPv6, endPointPublish parameter.
 
@@ -50,7 +53,12 @@ OMNI_NAMESPACE_BEGIN(omni)
 class orbServer {
 public:
   orbServer() {}
+
+protected:
+  // Only deleted by remove().
   virtual ~orbServer() {}
+
+public:
 
   typedef _CORBA_Unbounded_Sequence_String PublishSpecs;
   typedef _CORBA_Unbounded_Sequence_String EndpointList;
@@ -117,7 +125,8 @@ public:
   //    internally.
 
   virtual void remove() = 0;
-  // When this function returns, all endpoints will be removed.
+  // When this function returns, all endpoints will be removed and
+  // this server object will be deleted.
   //
   // This function does not raise any exceptions.
   //
