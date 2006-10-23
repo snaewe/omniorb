@@ -6,12 +6,10 @@
 # Uncomment one of the following platform lines to build for the
 # target platform
 #
-#  x86_nt_4.0                x86 Windows NT 4.0, MS VC++ 6.0 or 5.0
-#  x86_nt_4.0_vs_7           x86 Windows NT 4.0 (or later), MS VC++ 7.x (.NET)
-#  x86_nt_4.0_vs_8           x86 Windows NT 4.0 (or later), MS VC++ 8.x (.NET)
-#  x86_nt_4.0_mingw          x86 Windows NT 4.0 (or later), mingw/g++ build
-#  x86_nt_3.5                x86 Windows NT 3.5, MS VC++ 5.0
-#  x86_win95                 Windows 95, MS VC++ 5.0
+#  x86_win32_vs_6            x86 Windows, MS VC++ 6.0 or 5.0
+#  x86_win32_vs_7            x86 Windows, MS VC++ 7.x (.NET)
+#  x86_win32_vs_8            x86 Windows, MS VC++ 8.x (.NET)
+#  x86_win32_mingw           x86 Windows, mingw/g++ build
 #  x86_win32_dmc             x86 Win32, Digital Mars C++ (>= 8.32.14)
 #  sun4_sosV_5.5             Solaris 2.5, Sunpro C++/gcc
 #  sun4_sosV_5.6             Solaris 2.6, Sunpro C++/gcc
@@ -50,12 +48,10 @@
 # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
 # edit the make variables, such as CC and CXX, in the file.
 
-#platform = x86_nt_4.0
-#platform = x86_nt_4.0_vs_7
-#platform = x86_nt_4.0_vs_8
-#platform = x86_nt_4.0_mingw
-#platform = x86_nt_3.5
-#platform = x86_win95
+#platform = x86_win32_vs_6
+#platform = x86_win32_vs_7
+#platform = x86_win32_vs_8
+#platform = x86_win32_mingw
 #platform = x86_win32_dmc
 #platform = sun4_sosV_5.5
 #platform = sun4_sosV_5.6

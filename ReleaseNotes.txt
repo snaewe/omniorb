@@ -7,6 +7,12 @@ See README.unix or README.win32.txt for building instructions.
 See the documentation in the doc directory for more information.
 
 
+Changes since omniORB 4.1.0 release candidate 1
+-----------------------------------------------
+
+ - Modified Windows platform files. Platforms are now x86_win32_vs_*
+
+
 Changes since omniORB 4.1.0 beta 2
 ----------------------------------
 

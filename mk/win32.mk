@@ -60,38 +60,6 @@ INSTEXEFLAGS	=
 CP = cp
 MV = mv -f
 
-#
-# Compile flags for VS.NET compilers are different
-#
-ifeq "$(MSVC7)" ""
-
-# Use the following set of flags to build and use multithreaded DLLs
-#
-MSVC_DLL_CXXNODEBUGFLAGS       = -MD -GX
-MSVC_DLL_CXXLINKNODEBUGOPTIONS = 
-MSVC_DLL_CNODEBUGFLAGS         = -MD
-MSVC_DLL_CLINKNODEBUGOPTIONS   = 
-#
-MSVC_DLL_CXXDEBUGFLAGS         = -MDd -GX -Z7 -Od 
-MSVC_DLL_CXXLINKDEBUGOPTIONS   = -DEBUG
-MSVC_DLL_CDEBUGFLAGS           = -MDd -Z7 -Od
-MSVC_DLL_CLINKDEBUGOPTIONS     = -DEBUG
-#
-# Or
-#
-# Use the following set of flags to build and use multithread static libraries
-#
-MSVC_STATICLIB_CXXNODEBUGFLAGS       = -MT -GX
-MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS = 
-MSVC_STATICLIB_CNODEBUGFLAGS         = -MT
-MSVC_STATICLIB_CLINKNODEBUGOPTIONS   = 
-
-MSVC_STATICLIB_CXXDEBUGFLAGS         = -MTd -GX -Z7 -Od 
-MSVC_STATICLIB_CXXLINKDEBUGOPTIONS   = -DEBUG
-MSVC_STATICLIB_CDEBUGFLAGS           = -MTd -Z7 -Od
-MSVC_STATICLIB_CLINKDEBUGOPTIONS     = -DEBUG
-
-
 ifdef BuildDebugBinary
 
 CXXLINKOPTIONS = $(MSVC_DLL_CXXLINKDEBUGOPTIONS)
@@ -111,8 +79,6 @@ COPTIONS       = $(MSVC_DLL_CNODEBUGFLAGS)
 
 endif
 
-#vs_7
-endif
 
 ifndef WINVER
 WINVER = 0x0400
@@ -239,20 +205,10 @@ ifndef EmbeddedSystem
 BuildSharedLibrary = 1
 endif
 
-ifeq "$(MSVC7)" ""
- compiler_version=_vc6
-else
- ifeq "$(MSVC8)" ""
-  compiler_version=_vc7
- else 
-  compiler_version=_vc8
- endif
-endif
-
 SharedLibraryFullNameTemplate = $(SharedLibraryLibNameTemplate).lib
 SharedLibraryLibNameTemplate  = $$1$$2$$3$$4_rt$${extrasuffix:-}
-SharedLibraryShortLibName = $$1$$2$$3_rt$${extrasuffix:-}.lib
-SharedLibraryDllNameTemplate  = $$1$$2$$3$$4$(compiler_version)_rt$${extrasuffix:-}
+SharedLibraryShortLibName = $$1$$2_rt$${extrasuffix:-}.lib
+SharedLibraryDllNameTemplate  = $$1$$2$$3$$4$(compiler_version_suffix)_rt$${extrasuffix:-}
 SharedLibraryExportSymbolFileNameTemplate = $$1$$2$${extrasuffix:-}.def
 SharedLibraryVersionStringTemplate = $$3.$$4
 SharedLibrarySymbolRefLibraryTemplate = $${symrefdir:-static}/$$1$$2$${extrasuffix:-}.lib
@@ -434,10 +390,12 @@ pdbname=$$targetdir/$(SharedLibraryDllNameTemplate).pdb; \
  file="$$dllname"; \
  $(ExportExecutableFileToDir); \
 ); \
+if [ -f $$pdbname ]; then \
 (dir="$(EXPORT_TREE)/$(BINDIR)"; \
  file="$$pdbname"; \
  $(ExportExecutableFileToDir); \
-);
+);\
+fi;
 endef
 
 # CleanSharedLibrary

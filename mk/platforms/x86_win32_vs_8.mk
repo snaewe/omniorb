@@ -5,6 +5,8 @@
 WindowsNT = 1
 x86Processor = 1
 
+compiler_version_suffix=_vc8
+
 WINVER = 0x0400
 
 BINDIR = bin/x86_win32
@@ -24,14 +26,12 @@ ABSTOP = $(shell cd $(TOP); pwd)
 #PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
 #PYTHON = /cygdrive/c/Python24/python
 
-MSVC7 = "true"
-MSVC8 = "true"
 
 # Use the following set of flags to build and use multithreaded DLLs
 #
-MSVC_DLL_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -nologo
+MSVC_DLL_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -Zi -nologo
 MSVC_DLL_CXXLINKNODEBUGOPTIONS = -nologo -DEBUG
-MSVC_DLL_CNODEBUGFLAGS         = -MD -GS -GR -nologo
+MSVC_DLL_CNODEBUGFLAGS         = -MD -GS -GR -Zi -nologo
 MSVC_DLL_CLINKNODEBUGOPTIONS   = -nologo -DEBUG
 #
 MSVC_DLL_CXXDEBUGFLAGS         = -MDd -EHs -RTC1 -GS -GR -Zi -nologo
@@ -53,25 +53,6 @@ MSVC_STATICLIB_CXXLINKDEBUGOPTIONS   = -nologo -DEBUG
 MSVC_STATICLIB_CDEBUGFLAGS           = -MD -RTC1 -GS -GR -Zi -nologo
 MSVC_STATICLIB_CLINKDEBUGOPTIONS     = -nologo -DEBUG
 
-
-ifdef BuildDebugBinary
-
-CXXLINKOPTIONS = $(MSVC_DLL_CXXLINKDEBUGOPTIONS)
-CXXDEBUGFLAGS  = 
-CXXOPTIONS     = $(MSVC_DLL_CXXDEBUGFLAGS)
-CLINKOPTIONS   = $(MSVC_DLL_CLINKDEBUGOPTIONS)
-CDEBUGFLAGS    = $(MSVC_DLL_CDEBUGFLAGS)
-
-else
-
-CXXLINKOPTIONS = $(MSVC_DLL_CXXLINKNODEBUGOPTIONS)
-CXXDEBUGFLAGS  = -O2
-CXXOPTIONS     = $(MSVC_DLL_CXXNODEBUGFLAGS)
-CLINKOPTIONS   = $(MSVC_DLL_CLINKNODEBUGOPTIONS)
-CDEBUGFLAGS    = -O2
-COPTIONS       = $(MSVC_DLL_CNODEBUGFLAGS)
-
-endif
 
 #
 # Include general win32 things
