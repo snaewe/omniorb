@@ -76,7 +76,7 @@ OMNINAMES_LOG_DEFAULT_LOCATION = C:\\temp
 # the top level directory of the openssl library. The default is to disable
 # the build.
 #
-OPEN_SSL_ROOT = /cygdrive/c/openssl
+#OPEN_SSL_ROOT = /cygdrive/c/openssl
 #
 
 OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include

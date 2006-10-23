@@ -1,3 +1,12 @@
+Mon Oct 23 11:39:01 BST 2006 dgrisby
+====================================
+
+- Accidentally left openssl path uncommented.
+
+mk/platforms/x86_win32_vs_6.mk
+mk/platforms/x86_win32_vs_7.mk
+
+
 Mon Oct 23 10:44:01 BST 2006 dgrisby
 ====================================
 
