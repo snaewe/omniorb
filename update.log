@@ -1,3 +1,12 @@
+Mon Oct 23 16:35:08 BST 2006 dgrisby
+====================================
+
+- Undefine USE_stub_in_nt_dll at the end of header if it was not
+  defined at the start.
+
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+
 Mon Oct 23 16:06:14 BST 2006 dgrisby
 ====================================
 
