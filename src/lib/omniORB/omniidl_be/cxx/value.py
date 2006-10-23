@@ -873,7 +873,10 @@ private:
 valuebox_member_funcs_basic = """\
 inline @name@() {}
 inline @name@(@boxedtype@ _v) : _pd_boxed(_v) {}
-inline @name@(const @name@& _v) : _pd_boxed(_v._pd_boxed) {}
+inline @name@(const @name@& _v) :
+  ValueBase (_v),
+  DefaultValueRefCountBase (_v),
+  _pd_boxed(_v._pd_boxed) {}
 
 inline @name@& operator=(@boxedtype@ _v) {
   _pd_boxed = _v;
@@ -902,7 +905,8 @@ valuebox_member_funcs_string = """\
 inline @name@()
   : _pd_boxed(OMNI_CONST_CAST(char*,_CORBA_String_helper::empty_string))
 {}
-inline @name@(const @name@& _v) {
+inline @name@(const @name@& _v) :
+  ValueBase (_v), DefaultValueRefCountBase (_v) {
   if (_v._pd_boxed) _pd_boxed = _CORBA_String_helper::dup(_v._pd_boxed);
   else _pd_boxed = 0;
 }
@@ -1012,7 +1016,8 @@ valuebox_member_funcs_wstring = """\
 inline @name@()
   : _pd_boxed(OMNI_CONST_CAST(CORBA::WChar*,_CORBA_WString_helper::empty_wstring))
 {}
-inline @name@(const @name@& _v) {
+inline @name@(const @name@& _v) :
+  ValueBase (_v), DefaultValueRefCountBase (_v) {
   if (_v._pd_boxed) _pd_boxed = _CORBA_WString_helper::dup(_v._pd_boxed);
   else _pd_boxed = 0;
 }
@@ -1123,7 +1128,7 @@ inline @name@() {}
 inline @name@(@boxedif@_ptr _v) {
   _pd_boxed = @boxedif@::_duplicate(_v);
 }
-inline @name@(const @name@& _v) {
+inline @name@(const @name@& _v) : ValueBase (_v), DefaultValueRefCountBase (_v) {
   _pd_boxed = @boxedif@::_duplicate(_v._value());
 }
 inline @name@& operator=(@boxedif@_ptr _v) {
@@ -1154,7 +1159,8 @@ inline @name@() {}
 inline @name@(const @boxedtype@& _v) {
   _pd_boxed = new @boxedtype@(_v);
 }
-inline @name@(const @name@& _v) {
+inline @name@(const @name@& _v) :
+  ValueBase (_v), DefaultValueRefCountBase (_v) {
   _pd_boxed = new @boxedtype@(_v._pd_boxed.in());
 }
 inline @name@(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release = 0) {
@@ -1201,7 +1207,8 @@ inline @name@() {
 inline @name@(const @boxedtype@& _v) {
   _pd_boxed = new @boxedtype@(_v);
 }
-inline @name@(const @name@& _v) {
+inline @name@(const @name@& _v) :
+  ValueBase (_v), DefaultValueRefCountBase (_v) {
   _pd_boxed = new @boxedtype@(_v._pd_boxed.in());
 }
 @sequence_constructors@
@@ -1263,7 +1270,8 @@ inline @name@(CORBA::ULong _len, @element@* _val, CORBA::Boolean _rel=0) {
 
 valuebox_member_funcs_fixed = """\
 inline @name@(const @boxedtype@& _v) {}
-inline @name@(const @name@& _v) {
+inline @name@(const @name@& _v) :
+  ValueBase (_v), DefaultValueRefCountBase (_v) {
   _pd_boxed = _v._pd_boxed;
 }
 
@@ -1337,7 +1345,8 @@ inline @name@(const @boxedtype@ _v) {
   _pd_boxed = @helper@::dup(_v);
   if (!_pd_boxed) _CORBA_new_operator_return_null();
 }
-inline @name@(const @name@& _v) {
+inline @name@(const @name@& _v) :
+  ValueBase (_v), DefaultValueRefCountBase (_v) {
   if (!_v._pd_boxed) {
     _pd_boxed = 0;
   }
@@ -1407,7 +1416,8 @@ inline @name@() {
 inline @name@(const @boxedtype@& _v) {
   _pd_boxed = new @boxedtype@(_v);
 };
-inline @name@(const @name@& _v) {
+inline @name@(const @name@& _v) :
+  ValueBase (_v), DefaultValueRefCountBase (_v) {
   _pd_boxed = new @boxedtype@(_v._pd_boxed.in());
 };
 

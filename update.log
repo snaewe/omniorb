@@ -1,3 +1,15 @@
+Mon Oct 23 16:06:14 BST 2006 dgrisby
+====================================
+
+- Suppress GCC warnings about missing base class constructor calls.
+  Thanks Tamas Kerecsen. Somehow, this patch works on VC++ 6, where
+  before a similar change failed.
+
+include/omniORB4/CORBA_ValueBase.h
+include/omniORB4/poa.h
+src/lib/omniORB/omniidl_be/cxx/value.py
+
+
 Mon Oct 23 11:39:01 BST 2006 dgrisby
 ====================================
 

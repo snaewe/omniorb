@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.4.2.10  2006/10/23 15:08:31  dgrisby
+  Suppress GCC warnings about missing base class constructor calls.
+  Thanks Tamas Kerecsen. Somehow, this patch works on VC++ 6, where
+  before a similar change failed.
+
   Revision 1.4.2.9  2006/03/22 15:55:14  dgrisby
   VC++ 6 doesn't like explicit calls to default base constructors.
 
@@ -664,7 +669,9 @@ _CORBA_MODULE_BEG
 
   protected:
     inline ServantBase() : _pd_refCount(1) {}
-    inline ServantBase(const ServantBase&) : _pd_refCount (1) {}
+    inline ServantBase(const ServantBase& _v) :
+      omniServant (_v), _pd_refCount (1) {}
+
     inline ServantBase& operator = (const ServantBase&) { return *this; }
 
     void* _do_this(const char* repoId);

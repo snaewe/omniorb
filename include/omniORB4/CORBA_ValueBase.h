@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2006/10/23 15:08:31  dgrisby
+  Suppress GCC warnings about missing base class constructor calls.
+  Thanks Tamas Kerecsen. Somehow, this patch works on VC++ 6, where
+  before a similar change failed.
+
   Revision 1.1.2.7  2006/01/19 17:21:59  dgrisby
   Avoid member name conflict in DefaultValueRefCountBase.
 
@@ -173,8 +178,8 @@ protected:
   inline DefaultValueRefCountBase() : _pd__refCount(1) {}
   virtual ~DefaultValueRefCountBase();
 
-  inline DefaultValueRefCountBase(const DefaultValueRefCountBase&)
-    : _pd__refCount(1) {}
+  inline DefaultValueRefCountBase(const DefaultValueRefCountBase& _v)
+    : ValueBase(_v), _pd__refCount(1) {}
 
 private:
   void operator=(const DefaultValueRefCountBase&);
