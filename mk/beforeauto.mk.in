@@ -1033,7 +1033,7 @@ endif
 ###################
 ifdef Cygwin
 CXXLINKOPTIONS += -Wl,--enable-auto-import
-IMPORT_CPPFLAGS += -D__linux__ -D__cygwin__
+IMPORT_CPPFLAGS += -D__cygwin__
 SHAREDLIB_CPPFLAGS =
 OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
 OMNITHREAD_CPPFLAGS = -D_REENTRANT
