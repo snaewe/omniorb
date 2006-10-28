@@ -1,3 +1,11 @@
+Sat Oct 28 16:46:30 BST 2006 dgrisby
+====================================
+
+- Typo in indirection constant.
+
+src/lib/omniORB/dynamic/valueType.cc
+
+
 Mon Oct 23 16:35:08 BST 2006 dgrisby
 ====================================
 

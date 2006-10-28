@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2006/10/28 15:48:23  dgrisby
+  Typo in indirection constant.
+
   Revision 1.1.2.10  2006/09/17 23:22:43  dgrisby
   Invalid assertion with indirections in counting streams.
 
@@ -424,7 +427,7 @@ unmarshalHeaderAndBody(cdrStream&           stream,
   if (tag & CODEBASE_URL) { // Skip the codebase URL
     CORBA::ULong length;
     length <<= stream;
-    if (length == 0xfffffff) // Indirection
+    if (length == 0xffffffff) // Indirection
       length <<= stream;
     else
       stream.skipInput(length);
