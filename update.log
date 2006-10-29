@@ -1,3 +1,16 @@
+Sun Oct 29 15:08:24 GMT 2006 dgrisby
+====================================
+
+- omni_condition broken on VxWorks. Thanks Aleksander Matveyev.
+
+include/omnithread/VxThread.h
+
+- HPUX IA64 changes.
+
+mk/beforeauto.mk.in
+src/tool/omniidl/cxx/dir.mk
+
+
 Sat Oct 28 16:46:30 BST 2006 dgrisby
 ====================================
 

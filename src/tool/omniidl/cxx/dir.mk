@@ -449,7 +449,14 @@ ifeq ($(notdir $(CXX)),aCC)
 
 DIR_CPPFLAGS += +Z
 
+ifdef ia64Processor
+libname = _omniidlmodule.so
+endif
+
+ifndef ia64Processor
 libname = _omniidlmodule.sl
+endif
+
 soname = $(libname).$(IDLMODULE_MAJOR)
 lib = $(soname).$(IDLMODULE_MINOR)
 

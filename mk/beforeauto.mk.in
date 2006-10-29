@@ -854,7 +854,13 @@ define StaticLinkLibrary
 )
 endef
 
+ifdef ia64Processor
+SHAREDLIB_SUFFIX = so
+endif
+
+ifndef ia64Processor
 SHAREDLIB_SUFFIX = sl
+endif
 
 ifdef Compiler_KCC
 AR = KCC --thread_safe -o
@@ -877,10 +883,10 @@ endif
 
 ifdef Compiler_aCC
 CXXDEBUGFLAGS     = -O
-CXXOPTIONS       += -w +inst_v +DAportable -mt
+CXXOPTIONS       += -w +inst_v -mt
 CXXLINKOPTIONS   += -Wl,+s
 CDEBUGFLAGS       = -O
-COPTIONS          = -w -Aa -D_HPUX_SOURCE +DAportable
+COPTIONS          = -w -Aa -D_HPUX_SOURCE
 CLINKOPTIONS      = -Wl,+s
 
 SHAREDLIB_CPPFLAGS += +Z
