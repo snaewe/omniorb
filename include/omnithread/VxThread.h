@@ -10,6 +10,9 @@
 %% Notes:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% $Log$
+%% Revision 1.1.4.3  2006/10/29 15:09:08  dgrisby
+%% omni_condition broken on VxWorks. Thanks Aleksander Matveyev.
+%%
 %% Revision 1.1.4.2  2005/01/06 23:08:27  dgrisby
 %% Big merge from omni4_0_develop.
 %%
@@ -59,6 +62,7 @@ extern "C" void omni_thread_wrapper(void* ptr);
    bool m_bConstructed;
 
 #define OMNI_CONDITION_IMPLEMENTATION \
+   omni_mutex* mutex; \
    SEM_ID sema_;
 
 #define OMNI_SEMAPHORE_IMPLEMENTATION \
