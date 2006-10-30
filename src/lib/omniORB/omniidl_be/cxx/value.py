@@ -688,7 +688,7 @@ virtual void @name@(const @var_type@& _value) @abs@;
 statemember_objref_member = """\
 void @name@(const @memtype@& _value) {
   @helper@::duplicate(_value);
-  @name@((@ptr_type@)_value_);
+  @name@((@ptr_type@)_value);
 }
 """
 
