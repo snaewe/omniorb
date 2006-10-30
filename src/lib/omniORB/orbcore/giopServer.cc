@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.17  2006/10/30 14:17:22  dgrisby
+  Cast in log message for 64 bit Windows.
+
   Revision 1.25.2.16  2006/10/09 09:47:12  dgrisby
   Only delete giopServer if all threads are successfully shut down.
 
@@ -757,7 +760,7 @@ giopServer::deactivate()
   if (pd_bidir_strands.size()) {
     if (omniORB::trace(25)) {
       omniORB::logger l;
-      l << "Close " << pd_bidir_strands.size()
+      l << "Close " << (CORBA::ULong)pd_bidir_strands.size()
 	<< " bidirectional connections...\n";
     }
 
