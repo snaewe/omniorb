@@ -1,3 +1,11 @@
+Mon Oct 30 15:33:28 GMT 2006 dgrisby
+====================================
+
+- Scoping problems with object reference members of valuetypes.
+
+src/lib/omniORB/omniidl_be/cxx/value.py
+
+
 Mon Oct 30 14:33:52 GMT 2006 dgrisby
 ====================================
 

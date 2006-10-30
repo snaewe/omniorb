@@ -2337,7 +2337,7 @@ class ValueType (mapping.Decl):
 
             name     = id.Name(scopedName)
             type     = name.unambiguous(environment)
-            gtype    = name.unambiguous(None)
+            gtype    = name.fullyQualify()
             ptr_type = name.suffix("_ptr").unambiguous(environment)
             helper   = name.suffix("_Helper").unambiguous(environment)
             var_type = name.suffix("_var").unambiguous(environment)
@@ -2353,19 +2353,15 @@ class ValueType (mapping.Decl):
                        memtype = bmemtype,
                        ptr_type = ptr_type,
                        helper = helper)
-
-            # *** HERE: is this right?  What if ptr_type is relative?
-            if ptr_type[:2] != "::":
-                ptr_type = "::" + ptr_type
-            if var_type[:2] != "::":
-                var_type = "::" + var_type
-            if gtype[:2] != "::":
-                gtype = "::" + gtype
+            
+            gptr_type = "::" + name.suffix("_ptr").fullyQualify()
+            ghelper   = "::" + name.suffix("_Helper").fullyQualify()
+            gvar_type = "::" + name.suffix("_var").fullyQualify()
 
             obv_s.out(statemember_objref_sig,
                       name = member,
-                      ptr_type = ptr_type,
-                      var_type = var_type,
+                      ptr_type = gptr_type,
+                      var_type = gvar_type,
                       abs = "")
 
             copy_s.out(statemember_copy, name=member)
@@ -2374,11 +2370,11 @@ class ValueType (mapping.Decl):
                             type=type, var_type=var_type)
             init_s.out(statemember_objref_init, name=member, type=gtype)
             impl_s.out(statemember_objref_impl, name=member, type=gtype,
-                       ptr_type=ptr_type, var_type=var_type,
+                       ptr_type=gptr_type, var_type=gvar_type,
                        value_name=value_name)
 
             decl._cxx_holder   = omemtype + " _pd_" + member + ";"
-            decl._cxx_init_arg = ptr_type + " _" + member
+            decl._cxx_init_arg = gptr_type + " _" + member
 
         elif (mType.typedef() or d_mType.struct()
               or d_mType.union() or d_mType.fixed()):
