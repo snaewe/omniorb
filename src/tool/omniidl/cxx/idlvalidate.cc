@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.2  2006/11/02 14:26:14  dgrisby
+// Suppress warning about unresolved forward delcared interfaces for
+// interfaces in the CORBA module.
+//
 // Revision 1.7.2.1  2003/03/23 21:01:43  dgrisby
 // Start of omniORB 4.1.x development branch.
 //
@@ -58,6 +62,8 @@
 #include <idlast.h>
 #include <idlconfig.h>
 
+#include <string.h>
+
 void
 AstValidateVisitor::
 visitAST(AST* a)
@@ -87,7 +93,9 @@ AstValidateVisitor::
 visitForward(Forward* f)
 {
   if (Config::forwardWarning) {
-    if (f->isFirst() && !f->definition()) {
+    if (f->isFirst() && !f->definition() &&
+        strcmp(f->scopedName()->scopeList()->identifier(), "CORBA")) {
+
       char* ssn = f->scopedName()->toString();
       IdlWarning(f->file(), f->line(),
 		 "Forward declared interface '%s' was never fully defined",

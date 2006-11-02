@@ -1,3 +1,12 @@
+Thu Nov  2 14:24:43 GMT 2006 dgrisby
+====================================
+
+- Suppress warning about unresolved forward delcared interfaces for
+  interfaces in the CORBA module.
+
+src/tool/omniidl/cxx/idlvalidate.cc
+
+
 Thu Nov  2 13:59:22 GMT 2006 dgrisby
 ====================================
 
