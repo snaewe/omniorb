@@ -31,7 +31,7 @@ dnl if test "x$omni_cv_no_unit_at_a_time" = "xyes"
 dnl then
 dnl   EXTRA_GCC_CXXFLAGS="-fno-unit-at-a-time"
 dnl fi
-dnl AC_SUBST(EXTRA_GCC_CXXFLAGS)
+AC_SUBST(EXTRA_GCC_CXXFLAGS)
 
 dnl ** Libraries
 

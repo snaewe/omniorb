@@ -311,7 +311,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX CPP RANLIB ac_ct_RANLIB INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA SET_MAKE PYTHON PYTHON_VERSION PYTHON_PREFIX PYTHON_EXEC_PREFIX PYTHON_PLATFORM pythondir pkgpythondir pyexecdir pkgpyexecdir PKG_CONFIG OPENSSL_CFLAGS OPENSSL_LIBS OPEN_SSL_ROOT OPEN_SSL_CPPFLAGS OPEN_SSL_LIB CXXCPP EGREP ALLOCA OMNIORB_CONFIG OMNINAMES_LOGDIR ENABLE_STATIC COMPILER_NAME PLATFORM_NAME PLATFORM_DEFINE OSVERSION PROCESSOR_NAME PROCESSOR_DEFINE LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX CPP RANLIB ac_ct_RANLIB INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA SET_MAKE PYTHON PYTHON_VERSION PYTHON_PREFIX PYTHON_EXEC_PREFIX PYTHON_PLATFORM pythondir pkgpythondir pyexecdir pkgpyexecdir PKG_CONFIG EXTRA_GCC_CXXFLAGS OPENSSL_CFLAGS OPENSSL_LIBS OPEN_SSL_ROOT OPEN_SSL_CPPFLAGS OPEN_SSL_LIB CXXCPP EGREP ALLOCA OMNIORB_CONFIG OMNINAMES_LOGDIR ENABLE_STATIC COMPILER_NAME PLATFORM_NAME PLATFORM_DEFINE OSVERSION PROCESSOR_NAME PROCESSOR_DEFINE LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -3315,6 +3315,7 @@ ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
 
 
 
@@ -13381,6 +13382,7 @@ s,@pkgpythondir@,$pkgpythondir,;t t
 s,@pyexecdir@,$pyexecdir,;t t
 s,@pkgpyexecdir@,$pkgpyexecdir,;t t
 s,@PKG_CONFIG@,$PKG_CONFIG,;t t
+s,@EXTRA_GCC_CXXFLAGS@,$EXTRA_GCC_CXXFLAGS,;t t
 s,@OPENSSL_CFLAGS@,$OPENSSL_CFLAGS,;t t
 s,@OPENSSL_LIBS@,$OPENSSL_LIBS,;t t
 s,@OPEN_SSL_ROOT@,$OPEN_SSL_ROOT,;t t
