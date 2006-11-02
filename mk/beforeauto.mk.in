@@ -878,7 +878,7 @@ ifdef Compiler_GCC
 #                    /opt/aCC/lbin/ld: Unsatisfied symbols:
 #                    fstreambase::cma_close(void)(code)
 CXXOPTIONS    =  -fhandle-exceptions -Wall -Wno-unused \
-                 -D_CMA_NOWRAPPERS_
+                 -D_CMA_NOWRAPPERS_ @EXTRA_GCC_CXXFLAGS@
 endif
 
 ifdef Compiler_aCC
@@ -966,7 +966,7 @@ IMPORT_CPPFLAGS += -D__darwin__
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \
                             -DPthreadSupportThreadPriority -DNoNanoSleep
 
-CXXOPTIONS = -fno-common -bind_at_load
+CXXOPTIONS = -fno-common -bind_at_load @EXTRA_GCC_CXXFLAGS@
 SHAREDLIB_SUFFIX = dylib
 
 SharedLibraryFullNameTemplate = lib$$1$$2.$$3.$$4.$(SHAREDLIB_SUFFIX)

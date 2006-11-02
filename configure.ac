@@ -26,12 +26,12 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
 AC_LANG(C++)
 
-OMNI_CHECK_NO_UNIT_AT_A_TIME
-if test "x$omni_cv_no_unit_at_a_time" = "xyes"
-then
-  EXTRA_GCC_CXXFLAGS="-fno-unit-at-a-time"
-fi
-AC_SUBST(EXTRA_GCC_CXXFLAGS)
+dnl OMNI_CHECK_NO_UNIT_AT_A_TIME
+dnl if test "x$omni_cv_no_unit_at_a_time" = "xyes"
+dnl then
+dnl   EXTRA_GCC_CXXFLAGS="-fno-unit-at-a-time"
+dnl fi
+dnl AC_SUBST(EXTRA_GCC_CXXFLAGS)
 
 dnl ** Libraries
 
