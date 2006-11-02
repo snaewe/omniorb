@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2006/11/02 17:33:08  dgrisby
+  Convert some casts to use const_cast<> where available.
+
   Revision 1.1.4.4  2004/10/13 17:58:18  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -200,14 +203,18 @@ public:
     Octet& ref;
   };
   struct to_string {
-    to_string(const char*& s, ULong b) : val((char*&)s), bound(b) { }
+    to_string(const char*& s, ULong b) :
+      val(OMNI_CONST_CAST(char*&,s)), bound(b) { }
+
     to_string(char*& s, ULong b) : val(s), bound(b) { } // deprecated
 
     char*& val;
     ULong bound;
   };
   struct to_wstring {
-    to_wstring(const WChar*& s, ULong b) : val((WChar*&)s), bound(b) { }
+    to_wstring(const WChar*& s, ULong b) :
+      val(OMNI_CONST_CAST(WChar*&,s)), bound(b) { }
+
     to_wstring(WChar*& s, ULong b) : val(s), bound(b) { } // deprecated
 
     WChar*& val;
