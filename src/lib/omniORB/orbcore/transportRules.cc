@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2006/11/02 14:00:54  dgrisby
+  Remove a few warnings.
+
   Revision 1.1.4.6  2006/08/09 17:55:32  dgrisby
   Permit hostnames in transportRules.
 
@@ -391,7 +394,7 @@ public:
 
   transportRules::Rule* createRule(const char* address_mask) {
     
-    CORBA::ULong network, netmask;
+    CORBA::ULong network = 0, netmask = 0;
 
 #if defined(OMNI_SUPPORT_IPV6)
     builtinIPv6Rule::Addr ip6network;

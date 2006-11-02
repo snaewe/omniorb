@@ -1,3 +1,17 @@
+Thu Nov  2 13:59:22 GMT 2006 dgrisby
+====================================
+
+- Previous update broke the build.
+
+configure
+configure.ac
+
+- Remove a few warnings.
+
+src/lib/omniORB/orbcore/transportRules.cc
+src/tool/omniidl/cxx/idlast.cc
+
+
 Thu Nov  2 10:54:15 GMT 2006 dgrisby
 ====================================
 
