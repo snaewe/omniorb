@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.11  2006/11/09 15:37:45  dgrisby
+  Remove duplicate calls to retrieve addressing mode.
+
   Revision 1.1.6.10  2006/09/20 13:36:31  dgrisby
   Descriptive logging for connection and GIOP errors.
 
@@ -1531,7 +1534,7 @@ giopImpl12::marshalRequestHeader(giopStream* g) {
     cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12 + 4 + 1 + 3);
 
     if (giop_c.ior()->addr_mode() == GIOP::KeyAddr) {
-      giop_c.ior()->addr_mode() >>= cs;
+      GIOP::KeyAddr >>= cs;
       giop_c.keysize() >>= cs;
       cs.put_octet_array(giop_c.key(),giop_c.keysize());
     }
@@ -1561,7 +1564,7 @@ giopImpl12::marshalRequestHeader(giopStream* g) {
 
   // Target address
   if (giop_c.ior()->addr_mode() == GIOP::KeyAddr) {
-    giop_c.ior()->addr_mode() >>= s;
+    GIOP::KeyAddr >>= s;
     giop_c.keysize() >>= s;
     s.put_small_octet_array(giop_c.key(),giop_c.keysize());
   }
