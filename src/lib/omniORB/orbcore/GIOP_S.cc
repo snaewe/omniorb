@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.9  2006/11/09 15:36:17  dgrisby
+  Code formatting fix.
+
   Revision 1.1.6.8  2006/08/07 13:49:13  dgrisby
   Allow serverReceiveRequest interceptor to throw user exceptions.
 
@@ -816,7 +819,7 @@ GIOP_S::unmarshalIORAddressingInfo() {
 
     IIOP::ProfileBody decodedBody;
     IIOP::unmarshalProfile(ta.ior.profiles[ta.selected_profile_index],
-			decodedBody);
+			   decodedBody);
 
 #if 0 // XXX Not finalise yet
     _OMNI_NS(giopAddressList) addresses;
