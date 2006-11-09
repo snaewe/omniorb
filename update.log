@@ -1,3 +1,14 @@
+Thu Nov  9 15:38:01 GMT 2006 dgrisby
+====================================
+
+- This is omniORB 4.1.0 release candidate 2.
+
+ReleaseNotes.txt
+THIS_IS_OMNIORB_4_1_0_RC_1   -- deleted
+THIS_IS_OMNIORB_4_1_0_RC_2   -- new
+mk/version.mk
+
+
 Thu Nov  9 16:32:52 GMT 2006 dgrisby
 ====================================
 

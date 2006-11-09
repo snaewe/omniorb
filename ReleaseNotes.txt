@@ -1,7 +1,7 @@
 RELEASE NOTES
 =============
 
-This is omniORB 4.1.0 release candidate 1.
+This is omniORB 4.1.0 release candidate 2.
 
 See README.unix or README.win32.txt for building instructions.
 See the documentation in the doc directory for more information.
@@ -10,7 +10,10 @@ See the documentation in the doc directory for more information.
 Changes since omniORB 4.1.0 release candidate 1
 -----------------------------------------------
 
- - Modified Windows platform files. Platforms are now x86_win32_vs_*
+ - Modified Windows platform files and DLL names. Platforms are now
+   x86_win32_vs_*
+
+ - Minor bug fixes.
 
 
 Changes since omniORB 4.1.0 beta 2
