@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.17  2006/11/16 14:07:40  dgrisby
+  Peek failed to clear pd_fd_index, which could lead to a race condition
+  where the wrong socket was removed from the poll list.
+
   Revision 1.1.4.16  2006/05/16 13:32:04  dgrisby
   Silly bug in setting Peek timeouts with conflicting Peeks.
 
@@ -427,6 +431,7 @@ SocketCollection::Select() {
 	    if (s->pd_data_in_buffer) {
 	      // Socket is readable now
 	      s->pd_selectable = s->pd_data_in_buffer = 0;
+              s->pd_fd_index = -1;
 	      notifyReadable(s);
 	    }
 	    else {
@@ -442,6 +447,9 @@ SocketCollection::Select() {
 	      index++;
 	    }
 	  }
+          else {
+            s->pd_fd_index = -1;
+          }
 	}
 	pd_pollfd_n = index;
 	pd_changed  = 0;
@@ -720,12 +728,10 @@ SocketHolder::Peek()
 
       if (pd_data_in_buffer) {
 	pd_data_in_buffer = 0;
-	pd_selectable = 0;
 	retval = 1;
       }
       else if (r > 0) {
 	if (pfd.revents & POLLIN && pd_selectable) {
-	  pd_selectable = 0;
 	  retval = 1;
 	}
 	else {
@@ -736,7 +742,6 @@ SocketHolder::Peek()
 	// Timed out
 	if (pd_peek_go) {
 	  // Select thread has seen that we should return true
-	  pd_selectable = 0;
 	  retval = 1;
 	}
 	else {
@@ -750,6 +755,13 @@ SocketHolder::Peek()
       }
 
       if (retval != -1) {
+        if (retval) {
+          pd_selectable = 0;
+          if (pd_fd_index >= 0) {
+            pd_belong_to->pd_pollsockets[pd_fd_index] = 0;
+            pd_fd_index = -1;
+          }
+        }
 	pd_peeking = 0;
 	if (pd_peek_cond)
 	  pd_peek_cond->signal();
@@ -960,7 +972,6 @@ SocketHolder::setSelectable(int            now,
 		    "descriptors. Some connections may be ignored.");
     }
     else {
-      OMNIORB_ASSERT(pd_fd_index == -1);
       pd_fd_index = pd_belong_to->pd_fd_set.fd_count;
       pd_belong_to->pd_fd_set.fd_array[pd_fd_index] = pd_socket;
       pd_belong_to->pd_fd_sockets[pd_fd_index] = this;
