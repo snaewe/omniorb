@@ -1,3 +1,15 @@
+Thu Nov 16 11:03:16 GMT 2006 dgrisby
+====================================
+
+- Incorrect dependency paths.
+
+src/lib/omniORB/dir.mk
+
+- Support for Solaris 9 IPv6. Thanks Teemu Torma.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Thu Nov  9 15:38:01 GMT 2006 dgrisby
 ====================================
 

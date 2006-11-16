@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2006/11/16 11:04:35  dgrisby
+  Support for Solaris 9 IPv6. Thanks Teemu Torma.
+
   Revision 1.1.4.7  2006/09/28 22:18:52  dgrisby
   Small memory leak in tcp endpoint initialisation. Thanks Teemu Torma.
 
@@ -315,11 +318,18 @@ void ifaddrs_get_ifinfo(omnivector<const char*>& addrs)
 #elif defined(UnixArchitecture) && !defined(__vxWorks__)
 
 #  if defined(HAVE_STRUCT_LIFCONF) && defined(OMNI_SUPPORT_IPV6)
+#    ifdef __sun__
+#      undef ifc_buf
+#      undef ifc_req
+#      undef ifr_addr
+#      define sa_family ss_family
+#    endif
 #    define OMNI_SIOCGIFCONF SIOCGLIFCONF
 #    define ifconf   lifconf
 #    define ifreq    lifreq
 #    define ifc_len  lifc_len
 #    define ifc_buf  lifc_buf
+#    define ifc_req  lifc_req
 #    define ifr_addr lifr_addr
 #  else
 #    ifdef __aix__
