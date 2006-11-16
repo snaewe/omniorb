@@ -84,11 +84,11 @@ omniORB4/ir_defs.hh omniORB4/ir_operators.hh omniORB4/ir_poa.hh: ir.idl
 	@(dir=omniORB4; $(CreateDir))
 	$(OMNIORB_IDL) -v -WbF $(IMPORT_IDLFLAGS) -ComniORB4 $<
 
-omniORB4/corbaidl_defs.hh corbaidl_operators.hh corbaidl_poa.hh: corbaidl.idl
+omniORB4/corbaidl_defs.hh omniORB4/corbaidl_operators.hh omniORB4/corbaidl_poa.hh: corbaidl.idl
 	@(dir=omniORB4; $(CreateDir))
 	$(OMNIORB_IDL) -v -nf -P -WbF -ComniORB4 $<
 
-omniORB4/boxes_defs.hh boxes_operators.hh boxes_poa.hh: boxes.idl
+omniORB4/boxes_defs.hh omniORB4/boxes_operators.hh omniORB4/boxes_poa.hh: boxes.idl
 	@(dir=omniORB4; $(CreateDir))
 	$(OMNIORB_IDL) -v -nf -P -WbF -ComniORB4 $<
 
