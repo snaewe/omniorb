@@ -1038,6 +1038,7 @@ endif
 
 ###################
 ifdef Cygwin
+MKDIRHIER = mkdir -p
 CXXLINKOPTIONS += -Wl,--enable-auto-import
 IMPORT_CPPFLAGS += -D__cygwin__
 SHAREDLIB_CPPFLAGS =

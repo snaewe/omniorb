@@ -49,13 +49,6 @@ ifdef Win32Platform
   MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC
 endif
 
-ifdef Cygwin
-# there's a bug in gcc 3.2 (build 20020927) that makes gcc crash
-# when optimizing these files ...
-CXXDEBUGFLAGS = -O0
-extralibs += -lomniDynamic4
-endif
-
 
 ##############################################################################
 # Build Static library
@@ -128,13 +121,21 @@ imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
 dynimps := $(skshared) $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
          $(OMNIORB_LIB))
 else
-ifdef AIX
-imps := $(OMNIORB_LIB)
-dynimps := $(OMNIORB_LIB)
-else
 imps := $(OMNIORB_LIB_NODYN)
 dynimps := $(OMNIORB_LIB)
 endif
+
+ifdef AIX
+# AIX thinks the skeleton stubs depend on omniDynamic
+imps := $(OMNIORB_LIB)
+dynimps := $(OMNIORB_LIB)
+endif
+
+ifdef Cygwin
+# Cygwin thinks the skeleton stubs depend on omniDynamic, and that
+# COSDynamic depends on COS.
+imps := $(OMNIORB_LIB)
+dynimps := -L. -lCOS4 $(OMNIORB_LIB)
 endif
 
 mkshared::
