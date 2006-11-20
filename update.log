@@ -1,3 +1,11 @@
+Mon Nov 20 15:04:00 GMT 2006 dgrisby
+====================================
+
+- IA64 is usually little endian; only big endian on HPUX.
+
+include/omniORB4/CORBA_sysdep_trad.h
+
+
 Mon Nov 20 14:14:19 GMT 2006 dgrisby
 ====================================
 

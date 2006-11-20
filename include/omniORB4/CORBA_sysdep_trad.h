@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2006/11/20 15:04:54  dgrisby
+  IA64 is usually little endian; only big endian on HPUX.
+
   Revision 1.1.4.7  2006/03/25 18:54:04  dgrisby
   Initial IPv6 support.
 
@@ -408,7 +411,13 @@
 #  define _OMNIORB_HOST_BYTE_ORDER_ 0
 
 #elif defined(__ia64__)
-#  define _OMNIORB_HOST_BYTE_ORDER_ 0
+// IA64 is big-endian on HPUX, little endian on everything else
+#  if defined(__hpux__)
+#    define _OMNIORB_HOST_BYTE_ORDER_ 0
+#  else
+#    define _OMNIORB_HOST_BYTE_ORDER_ 1
+#  endif
+#endif
 
 #elif defined(__powerpc__)
 #  define _OMNIORB_HOST_BYTE_ORDER_ 0
