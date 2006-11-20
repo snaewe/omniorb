@@ -64,9 +64,9 @@
 #define OMNI_FORCE_LINK(modname) \
   extern int _omni_ ## modname ## _should_be_linked_but_is_not_; \
   static int _omni_ ## modname ## _forcelink_ = \
-                         _omni_ ## modname ## _should_be_linked_but_is_not_++; \
+                        _omni_ ## modname ## _should_be_linked_but_is_not_++; \
   static int _omni_ ## modname ## _value_ () { \
-    return *(_omni_ ## modname ## _forcelink_); \
+    return _omni_ ## modname ## _forcelink_; \
   }
 
 #else
