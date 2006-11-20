@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2006/11/20 14:16:21  dgrisby
+  FreeBSD doesn't listen for IPv4 on IPv6 sockets. Thanks Arno Klaassen.
+
   Revision 1.1.4.13  2006/10/09 13:08:58  dgrisby
   Rename SOCKADDR_STORAGE define to OMNI_SOCKADDR_STORAGE, to avoid
   clash on Win32 2003 SDK.
@@ -167,6 +170,11 @@
 #   define USE_FAKE_INTERRUPTABLE_RECV
 #   undef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
 #endif
+
+#if defined(__freebsd__)
+#   undef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////
 

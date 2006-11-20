@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2006/11/20 14:16:21  dgrisby
+  FreeBSD doesn't listen for IPv4 on IPv6 sockets. Thanks Arno Klaassen.
+
   Revision 1.1.4.12  2006/10/09 13:08:58  dgrisby
   Rename SOCKADDR_STORAGE define to OMNI_SOCKADDR_STORAGE, to avoid
   clash on Win32 2003 SDK.
@@ -368,10 +371,11 @@ sslEndpoint::Bind() {
     }
   }
   else {
-    host = 0;
 #ifdef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
+    host = 0;
     passive_host = 1;
 #else
+    host = "0.0.0.0";
     passive_host = 2;
 #endif
   }
