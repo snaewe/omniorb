@@ -1,3 +1,16 @@
+Tue Nov 28 13:27:23 GMT 2006 dgrisby
+====================================
+
+- This is omniORB 4.1.0.
+
+README.FIRST.txt
+README.win32.txt
+ReleaseNotes.txt
+THIS_IS_OMNIORB_4_1_0          -- new
+THIS_IS_OMNIORB_4_1_0_RC_2     -- deleted
+mk/version.mk
+
+
 Tue Nov 28 00:06:57 GMT 2006 dgrisby
 ====================================
 

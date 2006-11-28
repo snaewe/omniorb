@@ -70,13 +70,13 @@ Libraries
 To link against the DLL versions of the omniORB libraries, you should
 use the following libraries:
 
-  omnithread32_rt.lib     -- omnithread library
-  omniORB410_rt.lib       -- omniORB runtime library
-  omniDynamic410_rt.lib   -- omniORB runtime library for dynamic features
-  omniCodeSets410_rt.lib  -- extra code sets for string transformation
-  omnisslTP410_rt.lib     -- SSL transport (if OpenSSL is available)
-  COS410_rt.lib           -- stubs and skeletons for the COS service interfaces
-  COSDynamic410_rt.lib    -- dynamic stubs for the COS service interfaces
+  omnithread_rt.lib     -- omnithread library
+  omniORB4_rt.lib       -- omniORB runtime library
+  omniDynamic4_rt.lib   -- omniORB runtime library for dynamic features
+  omniCodeSets4_rt.lib  -- extra code sets for string transformation
+  omnisslTP4_rt.lib     -- SSL transport (if OpenSSL is available)
+  COS4_rt.lib           -- stubs and skeletons for the COS service interfaces
+  COSDynamic4_rt.lib    -- dynamic stubs for the COS service interfaces
 
 If you are building your application code in debug mode, you MUST use
 the debug versions of the omniORB libraries, otherwise you will get
