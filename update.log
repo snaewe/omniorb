@@ -9,6 +9,7 @@ ReleaseNotes.txt
 THIS_IS_OMNIORB_4_1_0          -- new
 THIS_IS_OMNIORB_4_1_0_RC_2     -- deleted
 mk/version.mk
+include/omniORB4/CORBA_sysdep_trad.h
 
 
 Tue Nov 28 00:06:57 GMT 2006 dgrisby
