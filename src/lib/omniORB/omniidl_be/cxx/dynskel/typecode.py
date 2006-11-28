@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.19.2.10  2006/11/28 00:07:57  dgrisby
+# TypeCodes for nested structures / unions were not exported.
+#
 # Revision 1.19.2.9  2005/11/09 12:22:17  dgrisby
 # Local interfaces support.
 #
@@ -521,10 +524,15 @@ def visitStruct(node):
     # create the static typecodes for constructed types by setting
     # the resolving_dependency flag and recursing
     save_resolving_dependency = self.__resolving_dependency
-    self.__resolving_dependency = 1
     
     for child in node.members():
         memberType = child.memberType()
+
+        if child.constrType():
+            self.__resolving_dependency = save_resolving_dependency
+        else:
+            self.__resolving_dependency = 1
+
         if isinstance(memberType, idltype.Declared):
             memberType.decl().accept(self)
         elif isinstance(memberType, idltype.Sequence):
@@ -627,7 +635,8 @@ def visitUnion(node):
     deref_switchType = switchType.deref()
     if isinstance(switchType.type(), idltype.Declared):
         save_resolving_dependency = self.__resolving_dependency
-        self.__resolving_dependency = 1
+        if not node.constrType():
+            self.__resolving_dependency = 1
         switchType.type().decl().accept(self)
         self.__resolving_dependency = save_resolving_dependency
         
@@ -641,7 +650,10 @@ def visitUnion(node):
         caseType = types.Type(c.caseType())
 
         save_resolving_dependency = self.__resolving_dependency
-        self.__resolving_dependency = 1
+
+        if not c.constrType():
+            self.__resolving_dependency = 1
+
         if isinstance(caseType.type(), idltype.Declared):
             caseType.type().decl().accept(self)
         elif caseType.sequence():
@@ -814,16 +826,18 @@ def visitInterface(node):
     finishingNode()
 
 
-def recurse(type):
+def recurse(type, constr=0):
     assert isinstance(type, types.Type)
     
     deref_type = type.deref()
     if isinstance(type.type(), idltype.Declared):
         base_decl = type.type().decl()
         save_resolving_dependency = self.__resolving_dependency
-        self.__resolving_dependency = 1
+        if not constr:
+            self.__resolving_dependency = 1
         base_decl.accept(self)
         self.__resolving_dependency = save_resolving_dependency
+
     elif deref_type.sequence():
         seqType = deref_type.type().seqType()
         if isinstance(seqType, idltype.Declared):
@@ -875,7 +889,7 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_alias_tc("@repoI
 def visitTypedef(node):
     aliasType = types.Type(node.aliasType())
 
-    recurse(aliasType)
+    recurse(aliasType, node.constrType())
 
     for declarator in node.declarators():
         declarator.accept(self)
@@ -903,13 +917,18 @@ def visitException(node):
     # create the static typecodes for constructed types by setting
     # the resolving_dependency flag and recursing
     save_resolving_dependency = self.__resolving_dependency
-    self.__resolving_dependency = 1
 
     insideModule = self.__immediatelyInsideModule
     self.__immediatelyInsideModule = 0
     
     for child in node.members():
         memberType = child.memberType()
+
+        if child.constrType():
+            self.__resolving_dependency = save_resolving_dependency
+        else:
+            self.__resolving_dependency = 1
+
         if isinstance(memberType, idltype.Declared):
             memberType.decl().accept(self)
 
@@ -1017,10 +1036,15 @@ def visitValue(node):
     # create the static typecodes for constructed types by setting
     # the resolving_dependency flag and recursing
     save_resolving_dependency = self.__resolving_dependency
-    self.__resolving_dependency = 1
     
     for child in node.statemembers():
         memberType = child.memberType()
+
+        if child.constrType():
+            self.__resolving_dependency = save_resolving_dependency
+        else:
+            self.__resolving_dependency = 1
+
         if isinstance(memberType, idltype.Declared):
             decl = memberType.decl()
             if not currently_being_defined(decl):
@@ -1132,7 +1156,7 @@ def visitValueAbs(node):
 def visitValueBox(node):
     boxedType = types.Type(node.boxedType())
 
-    recurse(boxedType)
+    recurse(boxedType, node.constrType())
     
     scopedName = node.scopedName()
     mangled_name = mangleName(config.state['Private Prefix'] +\
