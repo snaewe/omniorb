@@ -1,3 +1,17 @@
+Tue Nov 28 00:06:57 GMT 2006 dgrisby
+====================================
+
+- TypeCodes for nested structures / unions were not exported.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+
+- TypeCode collector could access deleted data when freeing TypeCodes
+  with multiple loops.
+
+include/omniORB4/internal/typecode.h
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Mon Nov 20 15:04:00 GMT 2006 dgrisby
 ====================================
 

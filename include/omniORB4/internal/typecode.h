@@ -32,6 +32,10 @@
 
 /*
  * $Log$
+ * Revision 1.1.4.5  2006/11/28 00:09:42  dgrisby
+ * TypeCode collector could access deleted data when freeing TypeCodes
+ * with multiple loops.
+ *
  * Revision 1.1.4.4  2006/05/20 16:23:37  dgrisby
  * Minor cdrMemoryStream and TypeCode performance tweaks.
  *
@@ -407,6 +411,9 @@ public:
   // This internal function removes any optional names and member_names
   // from the typecode
 
+  virtual void NP_releaseChildren();
+  // Release child TypeCodes. Used when freeing loops.
+
   static TypeCode_base* aliasExpand(TypeCode_base* tc);
   // Return a duplicate of <tc> with aliases expanded to
   // the true type.
@@ -415,6 +422,8 @@ public:
   // Returns the alias expanded TypeCode if it has been generated.
 
   inline CORBA::Boolean complete() { return pd_complete; }
+  // True if the TypeCode is complete; false if it has incomplete
+  // recursive members.
 
 protected:
   TypeCode_alignTable pd_alignmentTable;
@@ -653,6 +662,8 @@ public:
 
   virtual void removeOptionalNames();
 
+  virtual void NP_releaseChildren();
+
 private:
   inline TypeCode_alias() : TypeCode_base(CORBA::tk_alias) {}
 
@@ -708,6 +719,8 @@ public:
 
   virtual void removeOptionalNames();
 
+  virtual void NP_releaseChildren();
+
   inline CORBA::Boolean  PR_content_is_assigned() const {
     return !CORBA::is_nil(pd_content);
   }
@@ -760,6 +773,8 @@ public:
   virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
+
+  virtual void NP_releaseChildren();
 
 private:
   inline TypeCode_array() : TypeCode_base(CORBA::tk_array) {}
@@ -823,6 +838,8 @@ public:
 
   virtual void removeOptionalNames();
 
+  virtual void NP_releaseChildren();
+
 private:
   inline TypeCode_struct()
     : TypeCode_base(CORBA::tk_struct),
@@ -885,6 +902,8 @@ public:
   virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
+
+  virtual void NP_releaseChildren();
 
 private:
   inline TypeCode_except()
@@ -1018,6 +1037,8 @@ public:
 
   virtual void removeOptionalNames();
 
+  virtual void NP_releaseChildren();
+
 private:
   TypeCode_union();
 
@@ -1104,6 +1125,8 @@ public:
 
   virtual void removeOptionalNames();
 
+  virtual void NP_releaseChildren();
+
 private:
   TypeCode_value();
   // Private constructor - used when unmarshalling a TypeCode.
@@ -1151,6 +1174,8 @@ public:
   virtual TypeCode_base*       NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
+
+  virtual void NP_releaseChildren();
 
 private:
   TypeCode_value_box();
@@ -1249,6 +1274,7 @@ public:
   virtual CORBA::Boolean       NP_containsAnAlias();
   virtual TypeCode_base*       NP_aliasExpand(TypeCode_pairlist*);
   virtual void                 removeOptionalNames();
+  virtual void                 NP_releaseChildren();
 
   inline TypeCode_base* NP_resolved() {
     if (!pd_resolved)
