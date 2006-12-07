@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.5  2006/12/07 11:09:20  dgrisby
+  Typo in log message.
+
   Revision 1.5.2.4  2005/04/08 00:35:46  dgrisby
   Merging again.
 
@@ -171,7 +174,7 @@ proxyObjectFactory::~proxyObjectFactory()
       if( omniORB::trace(2) ) {
 	omniORB::logger l;
 	l << "Could not find proxyObjectFactory " << pd_repoId
-	  << " within its desctructor at "
+	  << " within its destructor at "
 	  << __FILE__ << ": line " << __LINE__ << "\n";
       }
     }
