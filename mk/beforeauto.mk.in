@@ -500,6 +500,17 @@ OMNIORB_LIB_NODYN_DEPEND += $(OMNITHREAD_LIB_DEPEND)
 OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread)
 
 
+# CodeSets library
+OMNIORB_CODESETS_LIB = $(patsubst %,$(LibSearchPattern),omniCodeSets$(OMNIORB_MAJOR_VERSION))
+lib_depend := $(patsubst %,$(LibPattern),omniCodeSets$(OMNIORB_MAJOR_VERSION))
+OMNIORB_CODESETS_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+
+# Connections library
+OMNIORB_CONNECTIONS_LIB = $(patsubst %,$(LibSearchPattern),omniConnectionMgmt$(OMNIORB_MAJOR_VERSION))
+lib_depend := $(patsubst %,$(LibPattern),omniConnectionMgmt$(OMNIORB_MAJOR_VERSION))
+OMNIORB_CONNECTIONS_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+
+
 
 # omniORB SSL transport
 OMNIORB_SSL_VERSION = $(OMNIORB_VERSION)
