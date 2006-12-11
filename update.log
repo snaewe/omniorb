@@ -1,3 +1,11 @@
+Mon Dec 11 10:38:10 GMT 2006 dgrisby
+====================================
+
+- Silly duplicated member in vxWorks omnithread.
+
+include/omnithread/VxThread.h
+
+
 Thu Dec  7 11:08:12 GMT 2006 dgrisby
 ====================================
 

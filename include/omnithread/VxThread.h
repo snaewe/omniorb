@@ -10,6 +10,9 @@
 %% Notes:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% $Log$
+%% Revision 1.1.4.4  2006/12/11 10:39:37  dgrisby
+%% Silly duplicated member in vxWorks omnithread.
+%%
 %% Revision 1.1.4.3  2006/10/29 15:09:08  dgrisby
 %% omni_condition broken on VxWorks. Thanks Aleksander Matveyev.
 %%
@@ -62,7 +65,6 @@ extern "C" void omni_thread_wrapper(void* ptr);
    bool m_bConstructed;
 
 #define OMNI_CONDITION_IMPLEMENTATION \
-   omni_mutex* mutex; \
    SEM_ID sema_;
 
 #define OMNI_SEMAPHORE_IMPLEMENTATION \
