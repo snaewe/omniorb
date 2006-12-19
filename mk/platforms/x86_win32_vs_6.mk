@@ -1,5 +1,5 @@
 #
-# x86_nt_4.0.mk - make variables and rules specific to Windows NT 4.0.
+# x86_win32_vc6.mk - make variables and rules specific to Visual Studio 6
 #
 
 WindowsNT = 1
@@ -24,7 +24,7 @@ ABSTOP = $(shell cd $(TOP); pwd)
 # In that case, uncomment the first line below.
 
 #PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
-PYTHON = /cygdrive/c/Python24/python
+#PYTHON = /cygdrive/c/Python24/python
 
 
 # Use the following set of flags to build and use multithreaded DLLs

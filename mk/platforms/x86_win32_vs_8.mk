@@ -1,5 +1,5 @@
 #
-# x86_nt_4.0.mk - make variables and rules specific to Windows NT 4.0.
+# x86_win32_vc8.mk - make variables and rules specific to Visual Studio 8
 #
 
 WindowsNT = 1

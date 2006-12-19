@@ -1,3 +1,17 @@
+Tue Dec 19 12:45:40 GMT 2006 dgrisby
+====================================
+
+- Windows README had not been updated with new platform names.
+
+README.win32.txt
+
+- Fix comments, properly comment out path to Python.
+
+mk/platforms/x86_win32_vs_6.mk
+mk/platforms/x86_win32_vs_7.mk
+mk/platforms/x86_win32_vs_8.mk
+
+
 Mon Dec 11 18:28:06 GMT 2006 dgrisby
 ====================================
 
