@@ -398,16 +398,13 @@ still work with Visual C++ 5 but that has not been tested.
   B. Choose the right platform configuration file
      --------------------------------------------
 
-     Edit <top>\config\config.mk to select one of the following:
+     Edit <top>\config\config.mk to select one of the following
+     depending on the compiler you are using:
 
-     platform = x86_nt_4.0
-     platform = x86_nt_4.0_vs_7
-     platform = x86_nt_4.0_vs_8
-     platform = x86_nt_4.0_mingw
-     platform = x86_nt_3.5
-     platform = x86_win95
-
-     For newer Windows operating systems, you should use x86_nt_4.0.
+     platform = x86_win32_vs_6
+     platform = x86_win32_vs_7
+     platform = x86_win32_vs_8
+     platform = x86_win32_mingw
 
 
   C. Set the location of the Python interpreter
@@ -416,7 +413,7 @@ still work with Visual C++ 5 but that has not been tested.
      Edit <top>\mk\platforms\<platform>.mk
 
      where <platform> is the platform you just chose in config.mk,
-     e.g. <top>\mk\platforms\x86_nt_4.0.mk.
+     e.g. <top>\mk\platforms\x86_win32_vs_7.mk.
 
      If you are using the omnipython minimal distribution, uncomment
      the line which reads
