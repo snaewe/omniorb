@@ -31,6 +31,11 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.13  2006/12/28 18:10:24  dgrisby
+ * When releasing children of a struct, union or value TypeCode, a
+ * reference to the parent must be held to prevent its premature
+ * deletion.
+ *
  * Revision 1.40.2.12  2006/11/28 00:09:41  dgrisby
  * TypeCode collector could access deleted data when freeing TypeCodes
  * with multiple loops.
@@ -3080,11 +3085,18 @@ TypeCode_struct::removeOptionalNames()
 void
 TypeCode_struct::NP_releaseChildren()
 {
+  // We acquire a reference to ourselves here. Otherwise, we will be
+  // released while releasing the children, rendering the list of
+  // TypeCodes invalid.
+  TypeCode_collector::duplicateRef(this);
+  pd_loop_member = 0;
+
   for (CORBA::ULong i = 0; i < pd_nmembers; i++) {
     CORBA::TypeCode_ptr ctc = pd_members[i].type;
     pd_members[i].type = CORBA::TypeCode::_duplicate(CORBA::_tc_void);
     CORBA::release(ctc);
   }
+  TypeCode_collector::releaseRef(this);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -3462,11 +3474,18 @@ TypeCode_except::removeOptionalNames()
 void
 TypeCode_except::NP_releaseChildren()
 {
+  // We acquire a reference to ourselves here. Otherwise, we will be
+  // released while releasing the children, rendering the list of
+  // TypeCodes invalid.
+  TypeCode_collector::duplicateRef(this);
+  pd_loop_member = 0;
+
   for (CORBA::ULong i = 0; i < pd_nmembers; i++) {
     CORBA::TypeCode_ptr ctc = pd_members[i].type;
     pd_members[i].type = CORBA::TypeCode::_duplicate(CORBA::_tc_void);
     CORBA::release(ctc);
   }
+  TypeCode_collector::releaseRef(this);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -4251,6 +4270,12 @@ TypeCode_union::removeOptionalNames()
 void
 TypeCode_union::NP_releaseChildren()
 {
+  // We acquire a reference to ourselves here. Otherwise, we will be
+  // released while releasing the children, rendering the list of
+  // TypeCodes invalid.
+  TypeCode_collector::duplicateRef(this);
+  pd_loop_member = 0;
+
   CORBA::ULong memberCount = pd_members.length();
 
   for (CORBA::ULong i = 0; i < memberCount; i++) {
@@ -4258,6 +4283,7 @@ TypeCode_union::NP_releaseChildren()
     pd_members[i].atype = CORBA::TypeCode::_duplicate(CORBA::_tc_void);
     CORBA::release(ctc);
   }
+  TypeCode_collector::releaseRef(this);
 }
 
 
@@ -4572,11 +4598,18 @@ TypeCode_value::NP_paramListType() const
 void
 TypeCode_value::NP_releaseChildren()
 {
+  // We acquire a reference to ourselves here. Otherwise, we will be
+  // released while releasing the children, rendering the list of
+  // TypeCodes invalid.
+  TypeCode_collector::duplicateRef(this);
+  pd_loop_member = 0;
+
   for (CORBA::ULong i = 0; i < pd_nmembers; i++) {
     CORBA::TypeCode_ptr ctc = pd_members[i].type;
     pd_members[i].type = CORBA::TypeCode::_duplicate(CORBA::_tc_void);
     CORBA::release(ctc);
   }
+  TypeCode_collector::releaseRef(this);
 }
 
 

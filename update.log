@@ -1,3 +1,13 @@
+Thu Dec 28 18:08:10 GMT 2006 dgrisby
+====================================
+
+- When releasing children of a struct, union or value TypeCode, a
+  reference to the parent must be held to prevent its premature
+  deletion.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Tue Dec 19 12:45:40 GMT 2006 dgrisby
 ====================================
 
