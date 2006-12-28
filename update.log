@@ -1,3 +1,12 @@
+Thu Dec 28 18:23:27 GMT 2006 dgrisby
+====================================
+
+- Downgrade assertion about failing to find all readable sockets to be
+  a warning.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Thu Dec 28 18:08:10 GMT 2006 dgrisby
 ====================================
 
