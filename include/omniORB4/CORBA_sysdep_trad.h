@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2007/01/12 10:19:51  dgrisby
+  Support for MontaVista ARM Linux.
+
   Revision 1.1.4.9  2006/11/28 14:17:13  dgrisby
   This is omniORB 4.1.0.
 
@@ -431,7 +434,12 @@
 #  define _OMNIORB_HOST_BYTE_ORDER_ 0
 
 #elif defined(__arm__)
-#  define _OMNIORB_HOST_BYTE_ORDER_ 1
+// armv5teb is big-endian
+#  if defined(__armv5teb__)
+#    define _OMNIORB_HOST_BYTE_ORDER_ 0
+#  else
+#    define _OMNIORB_HOST_BYTE_ORDER_ 1
+#  endif
 
 #elif defined(__m68k__)
 #  define _OMNIORB_HOST_BYTE_ORDER_ 0
@@ -590,6 +598,7 @@
 #ifndef _OMNIORB_HOST_BYTE_ORDER_
 # error "The byte order of this platform is unknown"
 #endif
+
 
 
 

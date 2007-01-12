@@ -86,6 +86,7 @@
 #platform = x86_freebsd_3.2
 #platform = x86_freebsd_4.0
 #platform = pc486_rtems_4.5.0
+#platform = arm_linux_mvl_3.1
 
 # This setting is used on Windows platforms to build debug versions of
 # the omniORB executables. It is not required if you want to debug

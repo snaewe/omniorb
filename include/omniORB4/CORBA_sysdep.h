@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.8  2007/01/12 10:19:51  dgrisby
+ Support for MontaVista ARM Linux.
+
  Revision 1.5.2.7  2006/04/28 18:40:46  dgrisby
  Merge from omni4_0_develop.
 
@@ -120,7 +123,11 @@
 //
 
 #if defined(__arm__)
-#  define OMNI_MIXED_ENDIAN_DOUBLE
+#  if defined(__armv5teb__)
+#    define NO_OMNI_MIXED_ENDIAN_DOUBLE
+#  else
+#    define OMNI_MIXED_ENDIAN_DOUBLE
+#  endif
 #endif
 
 
