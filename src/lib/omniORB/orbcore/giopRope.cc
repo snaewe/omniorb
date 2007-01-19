@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.7  2007/01/19 10:57:21  dgrisby
+  Better logging if ropes fail unexpectedly.
+
   Revision 1.1.6.6  2006/06/02 12:48:32  dgrisby
   Small code cleanups.
 
@@ -429,22 +432,24 @@ giopRope::releaseClient(IOP_C* iop_c) {
   CORBA::Boolean avail = 1;
 
   if (giop_c->state() != IOP_C::Idle && s->state() != giopStrand::DYING ) {
-    s->state(giopStrand::DYING);
     if (omniORB::trace(30)) {
       omniORB::logger l;
 
       if (s->connection) {
 	l << "Unexpected error encountered in talking to the server "
 	  << s->connection->peeraddress()
-	  << " . The connection is closed immediately.\n";
+	  << ". The connection is closed immediately. ";
       }
       else {
 	OMNIORB_ASSERT(s->address);
 	l << "Unexpected error encountered before talking to the server "
 	  << s->address->address()
-	  << " . No connection was opened.\n";
+	  << ". No connection was opened.";
       }
+      l << " GIOP_C state " << (int)giop_c->state()
+        << ", strand state " << (int)s->state() << "\n";
     }
+    s->state(giopStrand::DYING);
   }
 
   if ( s->state()== giopStrand::DYING ) {
