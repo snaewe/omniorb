@@ -6,7 +6,7 @@
 Summary: Object Request Broker (ORB)
 Name:    omniORB
 Version: 4.1.0
-Release: 0.3
+Release: 1
 License: GPL / LGPL
 Group:   System/Libraries
 Source0: %{name}-%{version}.tar.gz
@@ -251,7 +251,7 @@ fi
 %attr(644,root,man) %{_mandir}/man1/omniidl*
 %{_bindir}/omnicpp
 %{_bindir}/omniidl
-%{_bindir}/omniidlrun.py
+%{_bindir}/omniidlrun.py*
 %{_bindir}/omkdepend
 %{_libdir}/*.a
 %{_libdir}/*.so
