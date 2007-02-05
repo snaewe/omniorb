@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.6.9  2007/02/05 17:38:13  dgrisby
+  Scavenger did not cope with client strands with no connection. This
+  can happen if a Python client uses invalid argument types, for
+  example.
+
   Revision 1.1.6.8  2006/07/18 16:21:21  dgrisby
   New experimental connection management extension; ORB core support
   for it.
@@ -742,15 +747,17 @@ Scavenger::execute()
 	p = p->next;
 	s->StrandList::remove();
 	s->state(giopStrand::DYING);
-	if (omniORB::trace(30)) {
+	if (omniORB::trace(25)) {
 	  omniORB::logger log;
-	  log << "Scavenger close connection to " << s->address->address() << "\n";
+          log << "Scavenger close "
+              << (s->connection ? "connection" : "unconnected strand")
+              << " to " << s->address->address() << "\n";
 	}
-	if ( s->version.minor >= 2 ) {
-	  // GIOP 1.2 or above requires the client send a closeconnection
-	  // message.
-	  sendCloseConnection(s);
-	}
+        if ( s->version.minor >= 2 && s->connection ) {
+          // GIOP 1.2 or above requires the client send a CloseConnection
+          // message.
+          sendCloseConnection(s);
+        }
 	s->safeDelete(1);
       }
     }
@@ -989,14 +996,16 @@ public:
 	s->state(giopStrand::DYING);
 	if (omniORB::trace(25)) {
 	  omniORB::logger log;
-	  log << "Shutdown close connection to "
+	  log << "Shutdown close "
+              << (s->connection ? "connection" : "unconnected strand")
+              << " to "
 	      << s->address->address() << "\n";
 	}
-	if ( s->version.minor >= 2 ) {
-	  // GIOP 1.2 or above requires the client send a closeconnection
-	  // message.
-	  sendCloseConnection(s);
-	}
+        if ( s->version.minor >= 2 && s->connection ) {
+          // GIOP 1.2 or above requires the client send a closeconnection
+          // message.
+          sendCloseConnection(s);
+        }
 	s->safeDelete(1);
       }
     }

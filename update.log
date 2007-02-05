@@ -1,3 +1,13 @@
+Mon Feb  5 17:36:24 GMT 2007 dgrisby
+====================================
+
+- Scavenger did not cope with client strands with no connection. This
+  can happen if a Python client uses invalid argument types, for
+  example.
+
+src/lib/omniORB/orbcore/giopStrand.cc
+
+
 Sun Jan 28 16:08:51 GMT 2007 dgrisby
 ====================================
 
