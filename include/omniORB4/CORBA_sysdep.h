@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.9  2007/02/05 17:39:17  dgrisby
+ Later Sun compilers require a dummy return.
+
  Revision 1.5.2.8  2007/01/12 10:19:51  dgrisby
  Support for MontaVista ARM Linux.
 
@@ -179,9 +182,7 @@
 
 #if defined(__SUNPRO_CC) 
 // SUN C++ compiler
-#  if __SUNPRO_CC < 0x420
-#    define NEED_DUMMY_RETURN
-#  endif
+#  define NEED_DUMMY_RETURN
 
 // XXX
 // This is a hack to work around a bug in SUN C++ compiler (seen on 4.2).
