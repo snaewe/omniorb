@@ -1,3 +1,13 @@
+Mon Feb  5 18:31:25 GMT 2007 dgrisby
+====================================
+
+- Rounding error in poll() timeout could lead to infinite timeout.
+  Thanks Richard Hirst.
+
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+
+
 Mon Feb  5 17:36:24 GMT 2007 dgrisby
 ====================================
 

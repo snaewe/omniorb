@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2007/02/05 18:33:01  dgrisby
+  Rounding error in poll() timeout could lead to infinite timeout.
+  Thanks Richard Hirst.
+
   Revision 1.1.4.7  2006/10/09 13:08:58  dgrisby
   Rename SOCKADDR_STORAGE define to OMNI_SOCKADDR_STORAGE, to avoid
   clash on Win32 2003 SDK.
@@ -226,7 +230,7 @@ tcpAddress::Connect(unsigned long deadline_secs,
     struct pollfd fds;
     fds.fd = sock;
     fds.events = POLLOUT;
-    int timeout = t.tv_sec*1000+(t.tv_usec/1000);
+    int timeout = t.tv_sec*1000+((t.tv_usec+999)/1000);
     if (timeout == 0) timeout = -1;
     int rc = poll(&fds,1,timeout);
     if (rc > 0 && fds.revents & POLLERR) {
