@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.10  2007/02/05 18:39:53  dgrisby
+  Log scavenger connections closures at traceLevel 25 instead of 30.
+
   Revision 1.1.6.9  2007/02/05 17:38:13  dgrisby
   Scavenger did not cope with client strands with no connection. This
   can happen if a Python client uses invalid argument types, for
@@ -773,7 +776,7 @@ Scavenger::execute()
 	p = p->next;
 	s->StrandList::remove();
 	s->state(giopStrand::DYING);
-	if (omniORB::trace(30)) {
+	if (omniORB::trace(25)) {
 	  omniORB::logger log;
 	  log << "Scavenger close connection from " 
 	      << s->connection->peeraddress() << "\n";

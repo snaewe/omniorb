@@ -1,3 +1,11 @@
+Mon Feb  5 18:38:55 GMT 2007 dgrisby
+====================================
+
+- Log scavenger connections closures at traceLevel 25 instead of 30.
+
+src/lib/omniORB/orbcore/giopStrand.cc
+
+
 Mon Feb  5 18:31:25 GMT 2007 dgrisby
 ====================================
 
