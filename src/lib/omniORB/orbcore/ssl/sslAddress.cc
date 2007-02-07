@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.18  2007/02/07 10:33:28  dgrisby
+  Rounding error in poll() timeout could lead to infinite timeout.
+  Thanks Richard Hirst.
+
   Revision 1.1.2.17  2006/04/19 11:34:42  dgrisby
   Poking an address created a new client-side connection object that
   registered itself in the SocketCollection. Since it did this while
@@ -192,7 +196,7 @@ static inline int waitWrite(SocketHandle_t sock, struct timeval& t)
   struct pollfd fds;
   fds.fd = sock;
   fds.events = POLLOUT;
-  int timeout = t.tv_sec*1000+(t.tv_usec/1000);
+  int timeout = t.tv_sec*1000+((t.tv_usec+999)/1000);
   if (timeout == 0) timeout = -1;
   rc = poll(&fds,1,timeout);
   if (rc > 0 && fds.revents & POLLERR) {
@@ -219,7 +223,7 @@ static inline int waitRead(SocketHandle_t sock, struct timeval& t)
   struct pollfd fds;
   fds.fd = sock;
   fds.events = POLLIN;
-  int timeout = t.tv_sec*1000+(t.tv_usec/1000);
+  int timeout = t.tv_sec*1000+((t.tv_usec+999)/1000);
   if (timeout == 0) timeout = -1;
   rc = poll(&fds,1,timeout);
   if (rc > 0 && fds.revents & POLLERR) {
