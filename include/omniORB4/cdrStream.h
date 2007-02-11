@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2007/02/11 23:44:59  dgrisby
+  Value chunk stream looked at wrong byteswap flag in getLength.
+
   Revision 1.1.4.15  2006/06/06 16:39:37  dgrisby
   marshalRawString and chunking stream did not byte-swap length fields
   when required to.
@@ -1527,7 +1530,7 @@ private:
 
   inline _CORBA_ULong getLength()
   {
-    return pd_marshal_byte_swap ? Swap32(*pd_lengthPtr) : *pd_lengthPtr;
+    return pd_unmarshal_byte_swap ? Swap32(*pd_lengthPtr) : *pd_lengthPtr;
   }
 
   cdrStream&     pd_actual;    // Stream being wrapped
