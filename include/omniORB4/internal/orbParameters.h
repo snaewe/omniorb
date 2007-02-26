@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2007/02/26 15:16:31  dgrisby
+  New socketSendBuffer parameter, defaulting to 16384 on Windows.
+  Avoids a bug in Windows where select() on send waits for all sent data
+  to be acknowledged.
+
   Revision 1.1.4.7  2006/01/10 13:59:37  dgrisby
   New clientConnectTimeOutPeriod configuration parameter.
 
@@ -129,6 +134,11 @@ _CORBA_MODULE_VAR _core_attr size_t maxSocketRecv;
 //
 //   Valid values = (n >= 8192)
 
+_CORBA_MODULE_VAR _core_attr int socketSendBuffer;
+//   Sets the socket send buffer size. -1 means leave the system
+//   default unchanged.
+//
+//   Valid values = (n >= -1)
 
 _CORBA_MODULE_VAR _core_attr omniCodeSet::NCS_C* nativeCharCodeSet;
 //  set the native code set for char and string

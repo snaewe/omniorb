@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2007/02/26 15:16:31  dgrisby
+  New socketSendBuffer parameter, defaulting to 16384 on Windows.
+  Avoids a bug in Windows where select() on send waits for all sent data
+  to be acknowledged.
+
   Revision 1.1.4.13  2006/11/20 14:16:21  dgrisby
   FreeBSD doesn't listen for IPv4 on IPv6 sockets. Thanks Arno Klaassen.
 
@@ -403,6 +408,17 @@ sslEndpoint::Bind() {
     if (setsockopt(pd_socket,IPPROTO_TCP,TCP_NODELAY,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
 
+      CLOSESOCKET(pd_socket);
+      pd_socket = RC_INVALID_SOCKET;
+      return 0;
+    }
+  }
+
+  if (orbParameters::socketSendBuffer != -1) {
+    // Set the send buffer size
+    int bufsize = orbParameters::socketSendBuffer;
+    if (setsockopt(pd_socket, SOL_SOCKET, SO_SNDBUF,
+		   &bufsize, sizeof(bufsize)) == RC_SOCKET_ERROR) {
       CLOSESOCKET(pd_socket);
       pd_socket = RC_INVALID_SOCKET;
       return 0;

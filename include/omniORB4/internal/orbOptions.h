@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2007/02/26 15:16:31  dgrisby
+  New socketSendBuffer parameter, defaulting to 16384 on Windows.
+  Avoids a bug in Windows where select() on send waits for all sent data
+  to be acknowledged.
+
   Revision 1.1.4.4  2005/09/19 18:26:33  dgrisby
   Merge from omni4_0_develop again.
 
@@ -305,8 +310,10 @@ class orbOptions {
   //
   static CORBA::Boolean getBoolean(const char* value, CORBA::Boolean& result);
   static CORBA::Boolean getULong(const char* value, CORBA::ULong& result);
+  static CORBA::Boolean getLong(const char* value, CORBA::Long& result);
   static void addKVBoolean(const char* key, CORBA::Boolean,sequenceString&);
   static void addKVULong(const char* key, CORBA::ULong,sequenceString&);
+  static void addKVLong(const char* key, CORBA::Long,sequenceString&);
   static void addKVString(const char* key, const char* value, sequenceString&);
 
   static void move_args(int& argc,char **argv,int idx,int nargs);
