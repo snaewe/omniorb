@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.19  2007/02/26 15:27:13  dgrisby
+  Set pipe file descriptors to close on exec.
+
   Revision 1.1.4.18  2006/12/28 18:24:28  dgrisby
   Downgrade assertion about failing to find all readable sockets to be a
   warning.
@@ -312,6 +315,9 @@ static void initPipe(int& pipe_read, int& pipe_write)
   if (r != -1) {
     pipe_read  = filedes[0];
     pipe_write = filedes[1];
+
+    SocketSetCloseOnExec(pipe_read);
+    SocketSetCloseOnExec(pipe_write);
   }
   else {
     omniORB::logs(5, "Unable to create pipe for SocketCollection.");
