@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.11  2007/02/26 15:51:14  dgrisby
+# Suppress cd parameter when it is definitely unused, to avoid compiler
+# warnings.
+#
 # Revision 1.6.2.10  2005/11/14 11:02:16  dgrisby
 # Local interface fixes.
 #
@@ -528,7 +532,7 @@ return @method@(@args@);
 interface_callback = """\
 // Local call call-back function.
 static void
-@local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
+@local_call_descriptor@(omniCallDescriptor*@cd_arg@, omniServant* svnt)
 {
   @get_call_descriptor@
   @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);

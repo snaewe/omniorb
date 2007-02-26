@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.9  2007/02/26 15:51:15  dgrisby
+# Suppress cd parameter when it is definitely unused, to avoid compiler
+# warnings.
+#
 # Revision 1.1.6.8  2005/11/09 12:22:18  dgrisby
 # Local interfaces support.
 #
@@ -323,10 +327,19 @@ class CallDescriptor:
         if self.__contexts:
             impl_args.append("ctxt")
 
+        # If we have no return value, no arguments, no exceptions, and
+        # no contexts, we don't use the call descriptor argument at
+        # all, so we do not give it a name, so as to avoid warnings on
+        # some compilers.
+        if result_string or impl_args or self.__exceptions or self.__contexts:
+            cd_arg = " cd"
+        else:
+            cd_arg = ""
+
         # If we have no return value and no arguments at all then we don't
         # need to fetch the call descriptor. This suppresses a warning in gcc
         # about an unused variable.
-        if result_string != "" or impl_args != []:
+        if result_string or impl_args:
             get_cd = self.__name + "* tcd = (" + self.__name + "*)cd;"
         else:
             get_cd = ""
@@ -361,6 +374,7 @@ class CallDescriptor:
 
         stream.out(template.interface_callback,
                    local_call_descriptor = function_name,
+                   cd_arg = cd_arg,
                    get_call_descriptor = get_cd,
                    impl_fqname =interface_name.prefix("_impl_").fullyQualify(),
                    name = interface_name.fullyQualify(),
