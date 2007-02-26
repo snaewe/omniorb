@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.28  2007/02/26 15:15:32  dgrisby
+  New socketSendBuffer parameter, defaulting to 16384 on Windows.
+  Avoids a bug in Windows where select() on send waits for all sent data
+  to be acknowledged.
+
   Revision 1.1.2.27  2006/04/19 11:34:41  dgrisby
   Poking an address created a new client-side connection object that
   registered itself in the SocketCollection. Since it did this while
@@ -126,6 +131,7 @@
 #include <omniORB4/giopEndpoint.h>
 #include <SocketCollection.h>
 #include <objectAdapter.h>
+#include <orbParameters.h>
 #include <tcp/tcpConnection.h>
 #include <tcp/tcpAddress.h>
 #include <tcp/tcpEndpoint.h>
@@ -205,6 +211,17 @@ tcpEndpoint::Bind() {
     int valtrue = 1;
     if (setsockopt(pd_socket,IPPROTO_TCP,TCP_NODELAY,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
+      CLOSESOCKET(pd_socket);
+      pd_socket = RC_INVALID_SOCKET;
+      return 0;
+    }
+  }
+
+  if (orbParameters::socketSendBuffer != -1) {
+    // Set the send buffer size
+    int bufsize = orbParameters::socketSendBuffer;
+    if (setsockopt(pd_socket, SOL_SOCKET, SO_SNDBUF,
+		   &bufsize, sizeof(bufsize)) == RC_SOCKET_ERROR) {
       CLOSESOCKET(pd_socket);
       pd_socket = RC_INVALID_SOCKET;
       return 0;

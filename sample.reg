@@ -256,12 +256,29 @@ REGEDIT4
 ;   The default values are platform specific. It is unlikely that you
 ;   will need to change the values from the defaults.
 ;
-;   The minimum valid limit is 8KB, 8192 bytes.
+;   The minimum valid limit is 1KB, 1024 bytes.
 ;
 ;   e.g. to limit to 64KB sends / receives:
 ;
 ;     "maxSocketSend" = "65536"
 ;     "maxSocketRecv" = "65536"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; socketSendBuffer
+;
+;   On Windows, there is a kernel buffer used during send operations.
+;   A bug in Windows means that if a send uses the entire kernel
+;   buffer, a select() on the socket blocks until all the data has
+;   been acknowledged by the receiver, resulting in dreadful
+;   performance. This parameter modifies the socket send buffer from
+;   its default (8192 bytes on Windows) to the value specified. If
+;   this parameter is set to -1, the socket send buffer is left at the
+;   system default.
+;
+;   On Windows, the default value of this parameter is 16384 bytes; on
+;   all other platforms the default is -1.
+;
+;     socketSendBuffer = -1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; sslCAFile

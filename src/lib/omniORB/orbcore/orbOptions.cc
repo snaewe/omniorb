@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2007/02/26 15:15:32  dgrisby
+  New socketSendBuffer parameter, defaulting to 16384 on Windows.
+  Avoids a bug in Windows where select() on send waits for all sent data
+  to be acknowledged.
+
   Revision 1.1.2.15  2006/09/01 13:28:41  dgrisby
   Pass over unknown configuration options in config file / registry
   with only a warning.
@@ -489,6 +494,17 @@ orbOptions::getULong(const char* value, CORBA::ULong& result) {
 }
 
 ////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+orbOptions::getLong(const char* value, CORBA::Long& result) {
+
+  long v;
+  v = strtol(value,0,10);
+  if (v == LONG_MAX && errno == ERANGE) return 0;
+  result = v;
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
 void
 orbOptions::addKVBoolean(const char* key, CORBA::Boolean value,
 			 orbOptions::sequenceString& result) {
@@ -516,6 +532,23 @@ orbOptions::addKVULong(const char* key, CORBA::ULong value,
   l = strlen(key) + 16;
   kv = CORBA::string_alloc(l);
   sprintf(kv,"%s = %lu",key,(unsigned long)value);
+
+  l = result.length();
+  result.length(l+1);
+  result[l] = kv._retn();
+}
+
+////////////////////////////////////////////////////////////////////////
+void
+orbOptions::addKVLong(const char* key, CORBA::Long value,
+		      orbOptions::sequenceString& result) {
+
+  CORBA::String_var kv;
+  CORBA::ULong l;
+
+  l = strlen(key) + 16;
+  kv = CORBA::string_alloc(l);
+  sprintf(kv,"%s = %ld",key,(long)value);
 
   l = result.length();
   result.length(l+1);
