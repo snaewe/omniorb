@@ -1,3 +1,17 @@
+Mon Feb 26 12:37:37 GMT 2007 dgrisby
+====================================
+
+- Fix duplicated POA enum Any operators. Thanks Thomas Richter.
+
+include/omniORB4/GNUmakefile.in
+include/omniORB4/poa.h
+include/omniORB4/poa_enums_defs.h       -- deleted
+include/omniORB4/poa_enums_operators.h  -- deleted
+include/omniORB4/poa_operators.h        -- deleted
+src/lib/omniORB/dir.mk
+src/lib/omniORB/dynamic/poastub.cc
+
+
 Sun Feb 11 23:38:55 GMT 2007 dgrisby
 ====================================
 
