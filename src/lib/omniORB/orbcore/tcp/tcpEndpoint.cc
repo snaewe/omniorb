@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.29  2007/02/28 16:05:10  dgrisby
+  setsockopt expects a char* on some platforms.
+
   Revision 1.1.2.28  2007/02/26 15:15:32  dgrisby
   New socketSendBuffer parameter, defaulting to 16384 on Windows.
   Avoids a bug in Windows where select() on send waits for all sent data
@@ -221,7 +224,7 @@ tcpEndpoint::Bind() {
     // Set the send buffer size
     int bufsize = orbParameters::socketSendBuffer;
     if (setsockopt(pd_socket, SOL_SOCKET, SO_SNDBUF,
-		   &bufsize, sizeof(bufsize)) == RC_SOCKET_ERROR) {
+		   (char*)&bufsize, sizeof(bufsize)) == RC_SOCKET_ERROR) {
       CLOSESOCKET(pd_socket);
       pd_socket = RC_INVALID_SOCKET;
       return 0;
