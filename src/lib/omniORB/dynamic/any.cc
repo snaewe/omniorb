@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.21.2.7  2007/02/28 15:22:53  dgrisby
+ * Assertion failure trying to marshal an Any containing a nil objref.
+ *
  * Revision 1.21.2.6  2005/07/21 10:00:29  dgrisby
  * Bugs with valuetypes in Anys.
  *
@@ -369,11 +372,12 @@ CORBA::Any::operator>>= (cdrStream& s) const
   }
   else {
     CORBA::TCKind kind = pd_tc->kind();
-    if (kind == CORBA::tk_value ||
+    if (kind == CORBA::tk_objref ||
+        kind == CORBA::tk_value ||
 	kind == CORBA::tk_value_box ||
 	kind == CORBA::tk_abstract_interface) {
 
-      // Nil value
+      // Nil objref / value
       OMNIORB_ASSERT(pd_marshal);
       pd_marshal(s, pd_data);
     }
