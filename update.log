@@ -1,3 +1,12 @@
+Wed Mar  7 18:28:35 GMT 2007 dgrisby
+====================================
+
+- Bug creating union TypeCode with an enum discriminator. Thanks Peter
+  S. Housel.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Wed Feb 28 15:53:01 GMT 2007 dgrisby
 ====================================
 

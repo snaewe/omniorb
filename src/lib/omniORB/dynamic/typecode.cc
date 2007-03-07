@@ -31,6 +31,10 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.14  2007/03/07 18:30:24  dgrisby
+ * Bug creating union TypeCode with an enum discriminator. Thanks Peter
+ * S. Housel.
+ *
  * Revision 1.40.2.13  2006/12/28 18:10:24  dgrisby
  * When releasing children of a struct, union or value TypeCode, a
  * reference to the parent must be held to prevent its premature
@@ -6041,7 +6045,8 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
 			BAD_PARAM_IncompatibleDiscriminatorType,
 			CORBA::COMPLETED_NO);
 	CORBA::ULong c;
-	label >>= c;
+        cdrAnyMemoryStream& ms = label.PR_streamToRead();
+        c <<= ms;
 	lbl_value = c;
 	break;
       }
