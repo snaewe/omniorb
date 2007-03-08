@@ -1,3 +1,11 @@
+Thu Mar  8 09:16:17 GMT 2007 dgrisby
+====================================
+
+- Union discriminator bug is really fixed now.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Wed Mar  7 18:28:35 GMT 2007 dgrisby
 ====================================
 

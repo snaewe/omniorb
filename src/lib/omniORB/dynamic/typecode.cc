@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.15  2007/03/08 09:17:11  dgrisby
+ * Union discriminator bug is really fixed now.
+ *
  * Revision 1.40.2.14  2007/03/07 18:30:24  dgrisby
  * Bug creating union TypeCode with an enum discriminator. Thanks Peter
  * S. Housel.
@@ -6045,7 +6048,7 @@ TypeCode_union_helper::extractLabel(const CORBA::Any& label,
 			BAD_PARAM_IncompatibleDiscriminatorType,
 			CORBA::COMPLETED_NO);
 	CORBA::ULong c;
-        cdrAnyMemoryStream& ms = label.PR_streamToRead();
+        cdrAnyMemoryStream ms(label.PR_streamToRead(), 1);
         c <<= ms;
 	lbl_value = c;
 	break;
