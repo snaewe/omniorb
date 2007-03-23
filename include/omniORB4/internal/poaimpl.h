@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.4  2007/03/23 14:36:46  dgrisby
+  Use one etherealisation queue per POA, rather than one global one.
+  Thanks Teemu Torma.
+
   Revision 1.1.6.3  2006/07/18 16:21:23  dgrisby
   New experimental connection management extension; ORB core support
   for it.
@@ -137,6 +141,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define PS_VERSION  ":2.4"
 
 class omniOrbPOAManager;
+class omniServantActivatorTaskQueue;
 
 
 class omniOrbPOA : public PortableServer::POA,
@@ -586,6 +591,9 @@ private:
   // Unique id to prefix object ids when using the PERSISTENT and
   // SYSTEM_ID policies.
   //  Immutable once allocated. No concurrency control.
+
+  omniServantActivatorTaskQueue*       pd_servant_activator_queue;
+  // Servant activator queue. 
 };
 
 OMNI_NAMESPACE_END(omni)

@@ -1,3 +1,13 @@
+Fri Mar 23 14:35:21 GMT 2007 dgrisby
+====================================
+
+- Use one etherealisation queue per POA, rather than one global one.
+  Thanks Teemu Torma.
+
+include/omniORB4/internal/poaimpl.h
+src/lib/omniORB/orbcore/poa.cc
+
+
 Fri Mar 23 12:36:53 GMT 2007 dgrisby
 ====================================
 

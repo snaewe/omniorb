@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.4.2.11  2007/03/23 14:36:46  dgrisby
+  Use one etherealisation queue per POA, rather than one global one.
+  Thanks Teemu Torma.
+
   Revision 1.4.2.10  2006/07/18 16:21:21  dgrisby
   New experimental connection management extension; ORB core support
   for it.
@@ -311,6 +315,115 @@
 
 #define SYS_ASSIGNED_ID_SIZE    4
 
+OMNI_NAMESPACE_BEGIN(omni)
+
+//////////////////////////////////////////////////////////////////////
+////////////////////// Servant Activator queue ///////////////////////
+//////////////////////////////////////////////////////////////////////
+
+// Calls to incarnate() and etherealize() must be serialised. Calls to
+// etherealize are queued to be performed by the queue's thread; calls
+// to incarnate() are made by dispatch_to_sa(), but are synchronised
+// with the queue's activities.
+
+class omniServantActivatorTaskQueue : public omni_thread {
+public:
+  class Task;
+
+  virtual ~omniServantActivatorTaskQueue();
+  omniServantActivatorTaskQueue();
+
+  inline void lock()   { pd_task_lock.lock(); }
+  inline void unlock() { pd_task_lock.unlock(); }
+  // Lock and unlock the task lock. This must come before all other
+  // locks in the partial order of locks, since it is held when
+  // calling into applcation code.
+
+  void insert(Task*);
+  // Add a task to the queue. The Task object is _not_ deleted after
+  // it runs; if that's needed, the Task's doit() function should do
+  // the delete.
+
+  void die();
+
+  class Task {
+  public:
+    inline Task() : pd_next(0) {}
+    virtual ~Task();
+    virtual void doit() = 0;
+  private:
+    friend class omniServantActivatorTaskQueue;
+    Task(const Task&);
+    Task& operator=(const Task&);
+
+    Task* pd_next;
+  };
+
+  // Since this thread calls into application code, it must run both
+  // the thread interceptors -- to mark thread creation and assignment
+  // of the thread to do upcalls. run_undetached() trggers any
+  // createThread interceptors, and control reaches mid_run();
+  // mid_run() triggers any assignUpcallThread interceptors, and
+  // control reaches real_run(), which does the work.
+  virtual void* run_undetached(void*);
+  void mid_run();
+  void real_run();
+
+private:
+  omni_tracedmutex     pd_queue_lock;
+  omni_tracedmutex     pd_task_lock;
+  omni_tracedcondition pd_cond;
+  Task*                pd_taskq;
+  Task*                pd_taskqtail;
+  int                  pd_dying;
+};
+
+omniServantActivatorTaskQueue::~omniServantActivatorTaskQueue() {}
+
+
+omniServantActivatorTaskQueue::omniServantActivatorTaskQueue()
+  : pd_cond(&pd_queue_lock),
+    pd_taskq(0),
+    pd_taskqtail(0),
+    pd_dying(0)
+{
+  start_undetached();
+}
+
+
+void
+omniServantActivatorTaskQueue::insert(Task* t)
+{
+  OMNIORB_ASSERT(t);
+
+  omni_tracedmutex_lock sync(pd_queue_lock);
+
+  int signal = !pd_taskq;
+
+  t->pd_next = 0;
+  if( pd_taskq ) {
+    pd_taskqtail->pd_next = t;
+    pd_taskqtail = t;
+  }
+  else
+    pd_taskq = pd_taskqtail = t;
+
+  if( signal )  pd_cond.signal();
+}
+
+void
+omniServantActivatorTaskQueue::die()
+{
+  pd_queue_lock.lock();
+  pd_dying = 1;
+  int signal = !pd_taskq;
+  pd_queue_lock.unlock();
+
+  if( signal )  pd_cond.signal();
+}
+
+OMNI_NAMESPACE_END(omni)
+
 OMNI_USING_NAMESPACE(omni)
 
 ////////////////////////////////////////////////////////////////////////////
@@ -553,6 +666,12 @@ omniOrbPOA::~omniOrbPOA()
   }
   if (pd_oidPrefix)
     delete [] pd_oidPrefix;
+
+  if (pd_servant_activator_queue) {
+    void* v;
+    pd_servant_activator_queue->die();
+    pd_servant_activator_queue->join(&v);
+  }
 }
 
 
@@ -2077,7 +2196,8 @@ omniOrbPOA::omniOrbPOA(const char* name,
     pd_deathSignal(&pd_lock),
     pd_oidIndex(0),
     pd_activeObjList(0),
-    pd_oidPrefix(0)
+    pd_oidPrefix(0),
+    pd_servant_activator_queue(0)
 {
   OMNIORB_ASSERT(name);
   OMNIORB_ASSERT(manager);
@@ -2167,7 +2287,8 @@ omniOrbPOA::omniOrbPOA()  // nil constructor
     pd_deathSignal(&pd_lock),
     pd_oidIndex(0),
     pd_activeObjList(0),
-    pd_oidPrefix(0)
+    pd_oidPrefix(0),
+    pd_servant_activator_queue(0)
 {
 }
 
@@ -2287,9 +2408,8 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
     theRootPOA = 0;
   }
   poa_lock.unlock();
-  pd_lock.unlock();
-
   pd_deathSignal.broadcast();
+  pd_lock.unlock();
 
   try { adapterInactive(); } catch(...) {}
 
@@ -2975,112 +3095,6 @@ omniOrbPOA::etherealise_objects(omniObjTableEntry* entry,
   }
 }
 
-
-//////////////////////////////////////////////////////////////////////
-////////////////////// Servant Activator queue ///////////////////////
-//////////////////////////////////////////////////////////////////////
-
-// Calls to incarnate() and etherealize() must be serialised. Calls to
-// etherealize are queued to be performed by the queue's thread; calls
-// to incarnate() are made by dispatch_to_sa(), but are synchronised
-// with the queue's activities.
-
-class omniServantActivatorTaskQueue : public omni_thread {
-public:
-  class Task;
-
-  virtual ~omniServantActivatorTaskQueue();
-  omniServantActivatorTaskQueue();
-
-  inline void lock()   { pd_task_lock.lock(); }
-  inline void unlock() { pd_task_lock.unlock(); }
-  // Lock and unlock the task lock. This must come before all other
-  // locks in the partial order of locks, since it is held when
-  // calling into applcation code.
-
-  void insert(Task*);
-  // Add a task to the queue. The Task object is _not_ deleted after
-  // it runs; if that's needed, the Task's doit() function should do
-  // the delete.
-
-  void die();
-
-  class Task {
-  public:
-    inline Task() : pd_next(0) {}
-    virtual ~Task();
-    virtual void doit() = 0;
-  private:
-    friend class omniServantActivatorTaskQueue;
-    Task(const Task&);
-    Task& operator=(const Task&);
-
-    Task* pd_next;
-  };
-
-  // Since this thread calls into application code, it must run both
-  // the thread interceptors -- to mark thread creation and assignment
-  // of the thread to do upcalls. run_undetached() trggers any
-  // createThread interceptors, and control reaches mid_run();
-  // mid_run() triggers any assignUpcallThread interceptors, and
-  // control reaches real_run(), which does the work.
-  virtual void* run_undetached(void*);
-  void mid_run();
-  void real_run();
-
-private:
-  omni_tracedmutex     pd_queue_lock;
-  omni_tracedmutex     pd_task_lock;
-  omni_tracedcondition pd_cond;
-  Task*                pd_taskq;
-  Task*                pd_taskqtail;
-  int                  pd_dying;
-};
-
-omniServantActivatorTaskQueue::~omniServantActivatorTaskQueue() {}
-
-
-omniServantActivatorTaskQueue::omniServantActivatorTaskQueue()
-  : pd_cond(&pd_queue_lock),
-    pd_taskq(0),
-    pd_taskqtail(0),
-    pd_dying(0)
-{
-  start_undetached();
-}
-
-
-void
-omniServantActivatorTaskQueue::insert(Task* t)
-{
-  OMNIORB_ASSERT(t);
-
-  omni_tracedmutex_lock sync(pd_queue_lock);
-
-  int signal = !pd_taskq;
-
-  t->pd_next = 0;
-  if( pd_taskq ) {
-    pd_taskqtail->pd_next = t;
-    pd_taskqtail = t;
-  }
-  else
-    pd_taskq = pd_taskqtail = t;
-
-  if( signal )  pd_cond.signal();
-}
-
-void
-omniServantActivatorTaskQueue::die()
-{
-  pd_queue_lock.lock();
-  pd_dying = 1;
-  int signal = !pd_taskq;
-  pd_queue_lock.unlock();
-
-  if( signal )  pd_cond.signal();
-}
-
 OMNI_NAMESPACE_BEGIN(omni)
 
 class saTaskQueueCreateInfo
@@ -3228,9 +3242,6 @@ omniEtherealiser::doit()
   delete this;
 }
 
-static omniServantActivatorTaskQueue* servant_activator_queue = 0;
-
-
 void
 omniOrbPOA::add_object_to_etherealisation_queue(omniObjTableEntry* entry,
 				PortableServer::ServantActivator_ptr sa,
@@ -3248,12 +3259,12 @@ omniOrbPOA::add_object_to_etherealisation_queue(omniObjTableEntry* entry,
 
   omni::internalLock->lock();
 
-  if( !servant_activator_queue )
-    servant_activator_queue = new omniServantActivatorTaskQueue;
+  if( !pd_servant_activator_queue )
+    pd_servant_activator_queue = new omniServantActivatorTaskQueue;
 
   e->set_is_last(entry->servant()->_activations().empty());
 
-  servant_activator_queue->insert(e);
+  pd_servant_activator_queue->insert(e);
 
   omni::internalLock->unlock();
 
@@ -3329,8 +3340,8 @@ omniOrbPOA::dispatch_to_sa(omniCallHandle& handle,
   entry = omniObjTable::newEntry(okey, hash);
   OMNIORB_ASSERT(entry);
 
-  if( !servant_activator_queue )
-    servant_activator_queue = new omniServantActivatorTaskQueue;
+  if( !pd_servant_activator_queue )
+    pd_servant_activator_queue = new omniServantActivatorTaskQueue;
 
   enterAdapter();
   omni::internalLock->unlock();
@@ -3359,13 +3370,13 @@ omniOrbPOA::dispatch_to_sa(omniCallHandle& handle,
 
   PortableServer::Servant servant;
 
-  servant_activator_queue->lock();
+  pd_servant_activator_queue->lock();
 
   try {
     servant = sa->incarnate(oid, this);
   }
   catch(PortableServer::ForwardRequest& fr) {
-    servant_activator_queue->unlock();
+    pd_servant_activator_queue->unlock();
     omni::internalLock->lock();
     entry->setDead();
     exitAdapter(1,1);
@@ -3376,7 +3387,7 @@ omniOrbPOA::dispatch_to_sa(omniCallHandle& handle,
 #ifndef HAS_Cplusplus_catch_exception_by_base
 #define RETHROW_EXCEPTION(name)  \
   catch (CORBA::name& ex) {  \
-    servant_activator_queue->unlock();  \
+    pd_servant_activator_queue->unlock();  \
     omni::internalLock->lock(); \
     entry->setDead(); \
     exitAdapter(1,1); \
@@ -3387,7 +3398,7 @@ omniOrbPOA::dispatch_to_sa(omniCallHandle& handle,
 #undef RETHROW_EXCEPTION
 #else
   catch(CORBA::SystemException&) {
-    servant_activator_queue->unlock();
+    pd_servant_activator_queue->unlock();
     omni::internalLock->lock();
     entry->setDead();
     exitAdapter(1,1);
@@ -3396,14 +3407,14 @@ omniOrbPOA::dispatch_to_sa(omniCallHandle& handle,
   }
 #endif
   catch(...) {
-    servant_activator_queue->unlock();
+    pd_servant_activator_queue->unlock();
     omni::internalLock->lock();
     entry->setDead();
     exitAdapter(1,1);
     omni::internalLock->unlock();
     OMNIORB_THROW(UNKNOWN, UNKNOWN_UserException, CORBA::COMPLETED_NO);
   }
-  servant_activator_queue->unlock();
+  pd_servant_activator_queue->unlock();
 
   if( !servant ) {
     omni::internalLock->lock();
@@ -4056,17 +4067,6 @@ omniOrbPOA::shutdown()
   }
 
   if( rp )  CORBA::release(rp);
-
-  omni::internalLock->lock();
-  omniServantActivatorTaskQueue* queue = servant_activator_queue;
-  omni::internalLock->unlock();
-
-  if (queue) {
-    void* v;
-    servant_activator_queue->die();
-    servant_activator_queue->join(&v);
-  }
-  servant_activator_queue = 0;
 }
 
 OMNI_NAMESPACE_BEGIN(omni)
