@@ -1,3 +1,11 @@
+Fri Mar 23 12:36:53 GMT 2007 dgrisby
+====================================
+
+- Change to access linkHacks integer broke on Windows.
+
+include/omniORB4/linkHacks.h
+
+
 Fri Mar 23 11:40:51 GMT 2007 dgrisby
 ====================================
 

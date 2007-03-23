@@ -69,7 +69,21 @@
     return _omni_ ## modname ## _forcelink_; \
   }
 
+#elif defined(__WIN32__)
+
+// The Windows non-uniform memory model means that we cannot access
+// the integer's value. Referring to its address is sufficient to
+// force MSVC to link correctly.
+
+#define OMNI_FORCE_LINK(modname) \
+  extern int _omni_ ## modname ## _should_be_linked_but_is_not_; \
+  static int* _omni_ ## modname ## _forcelink_ = \
+                         &_omni_ ## modname ## _should_be_linked_but_is_not_
+
 #else
+
+// On other platforms, we modify the integer, ensuring we properly
+// link to it.
 
 #define OMNI_FORCE_LINK(modname) \
   extern int _omni_ ## modname ## _should_be_linked_but_is_not_; \
