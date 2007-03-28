@@ -1117,6 +1117,10 @@ ifdef x86Processor
 IMPORT_CPPFLAGS += -D__x86__
 endif
 
+ifdef x8664Processor
+IMPORT_CPPFLAGS += -D__x86_64__
+endif
+
 ifdef SparcProcessor
 IMPORT_CPPFLAGS += -D__sparc__
 endif

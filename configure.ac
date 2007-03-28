@@ -198,6 +198,7 @@ proc_def="__processor_unknown__"
 
 case "$host" in
   i?86-*)   proc_name="x86Processor";     proc_def="__x86__";;
+  x86_64-*) proc_name="x8664Processor";   proc_def="__x86_64__";;
   sparc-*)  proc_name="SparcProcessor";   proc_def="__sparc__";;
   alpha*)   proc_name="AlphaProcessor";   proc_def="__alpha__";;
   m68k-*)   proc_name="m68kProcessor";    proc_def="__m68k__";;
