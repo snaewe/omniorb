@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2007/03/28 16:29:04  dgrisby
+  Always wake up SocketCollection in Poke in case connect seems to work
+  but does not actually wake the thread.
+
   Revision 1.1.4.15  2007/02/28 15:55:57  dgrisby
   setsockopt expects a char* on some platforms.
 
@@ -604,10 +608,11 @@ sslEndpoint::Poke() {
       log << "Warning: fail to connect to myself (" 
 	  << (const char*) pd_addresses[0] << ") via ssl.\n";
     }
-    // Wake up the SocketCollection in case it is idle and blocked
-    // with no timeout.
-    wakeUp();
   }
+  // Wake up the SocketCollection in case the connect did not work and
+  // it is idle and blocked with no timeout.
+  wakeUp();
+
   delete target;
 }
 
