@@ -1,3 +1,11 @@
+Tue Apr  3 21:01:18 BST 2007 dgrisby
+====================================
+
+- Bug in VxWorks interface enumeration.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Wed Mar 28 17:20:39 BST 2007 dgrisby
 ====================================
 

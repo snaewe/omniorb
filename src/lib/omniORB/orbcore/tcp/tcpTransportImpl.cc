@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2007/04/03 20:02:06  dgrisby
+  Bug in VxWorks interface enumeration.
+
   Revision 1.1.4.8  2006/11/16 11:04:35  dgrisby
   Support for Solaris 9 IPv6. Thanks Teemu Torma.
 
@@ -465,7 +468,7 @@ void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs)
   entryLength = ifc.ifc_len;
 
   for (entryLength = ifc.ifc_len; entryLength > 0;) {
-    offset = sizeof (ifr->ifr_name) + sizeof (ifr->ifr_addr);
+    offset = sizeof (ifr->ifr_name) + ifr->ifr_addr.sa_len;
     bcopy ((caddr_t)ifr, ifreqBuf, offset);
 
     if (ioctl (s, SIOCGIFFLAGS, (int)ifreqBuf) < 0) {
