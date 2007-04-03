@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.24  2007/04/03 20:03:43  dgrisby
+  Bug in VxWorks interface enumeration.
+
   Revision 1.1.2.23  2005/04/25 18:00:08  dgrisby
   Fix infinite loop with inactive interfaces on vxWorks. Thanks Florian
   Kiesswetter.
@@ -451,7 +454,7 @@ void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs) {
   entryLength = ifc.ifc_len;
 
   for (entryLength = ifc.ifc_len; entryLength > 0;) {
-    offset = sizeof (ifr->ifr_name) + sizeof (ifr->ifr_addr);
+    offset = sizeof (ifr->ifr_name) + ifr->ifr_addr.sa_len;
     bcopy ((caddr_t)ifr, ifreqBuf, offset);
 
     if (ioctl (s, SIOCGIFFLAGS, (int)ifreqBuf) < 0) {
