@@ -1,3 +1,15 @@
+Thu Apr  5 16:37:01 BST 2007 dgrisby
+====================================
+
+- Minor fix to log message formatting.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+
+- Catch exceptions from servant destructor.
+
+src/lib/omniORB/orbcore/portableserver.cc
+
+
 Thu Apr  5 16:03:44 BST 2007 dgrisby
 ====================================
 

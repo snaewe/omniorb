@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.4.2.6  2007/04/05 15:38:02  dgrisby
+  Catch exceptions from servant destructor.
+
   Revision 1.4.2.5  2006/07/18 16:21:21  dgrisby
   New experimental connection management extension; ORB core support
   for it.
@@ -287,7 +290,12 @@ PortableServer::ServantBase::_remove_ref()
 
   omniORB::logs(15, "ServantBase has zero ref count -- deleted.");
 
-  delete this;
+  try {
+    delete this;
+  }
+  catch (...) {
+    omniORB::logs(1, "ERROR: Servant destructor threw an exception.");
+  }
 }
 
 CORBA::ULong
