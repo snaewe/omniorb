@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2007/04/05 15:06:45  dgrisby
+  Handle CancelRequest without starting a new giopWorker.
+
   Revision 1.1.6.4  2006/07/02 22:52:05  dgrisby
   Store self thread in task objects to avoid calls to self(), speeding
   up Current. Other minor performance tweaks.
@@ -252,8 +255,11 @@ private:
 
   CORBA::Boolean handleRequest();
   CORBA::Boolean handleLocateRequest();
+
+public:
   CORBA::Boolean handleCancelRequest();
 
+private:
   GIOP_S();
   GIOP_S& operator=(const GIOP_S&);
 

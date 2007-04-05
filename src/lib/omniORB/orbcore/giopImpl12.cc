@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.12  2007/04/05 15:06:45  dgrisby
+  Handle CancelRequest without starting a new giopWorker.
+
   Revision 1.1.6.11  2006/11/09 15:37:45  dgrisby
   Remove duplicate calls to retrieve addressing mode.
 
@@ -465,7 +468,6 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
       break;
     }
   }
-
   omniTransportLock->unlock();
 
   if (matched_target) {
@@ -497,8 +499,12 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
     }
       
     CORBA::Boolean isfull = ((hdr[6] & 0x2) ? 0 : 1);
-    if (mtype == GIOP::CancelRequest) isfull = 1;
-    if (isfull) {
+
+    if (mtype == GIOP::CancelRequest) {
+      if (!matched_target_is_client)
+	((GIOP_S*)matched_target)->handleCancelRequest();
+    }
+    else if (isfull) {
       {
 	omni_tracedmutex_lock sync(*omniTransportLock);
 	matched_target->inputFullyBuffered(isfull);
@@ -520,6 +526,11 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
 
   // reach here if we have no match.
   {
+    if (omniORB::trace(25)) {
+      omniORB::logger log;
+      log << "Discarding message for non-existent request id "
+	  << reqid << ".\n";
+    }
     CORBA::ULong fetchsz = b->size - (b->last - b->start);
     giopStream_Buffer::deleteBuffer(b);
     while (fetchsz) {
@@ -1006,6 +1017,7 @@ giopImpl12::unmarshalWildCardRequestHeader(giopStream* g) {
     CORBA::ULong reqid;
     reqid <<= (cdrStream&)(*g);
     ((GIOP_S*)g)->requestId(reqid);
+    // HERE: should check if request id has been seen before
     break;
   case GIOP::CloseConnection:
     if (g->pd_strand->biDir && g->pd_strand->isClient()) {
