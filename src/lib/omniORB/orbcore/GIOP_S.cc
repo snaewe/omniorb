@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.11  2007/04/05 15:37:32  dgrisby
+  Minor fix to log message formatting.
+
   Revision 1.1.6.10  2007/04/05 15:05:24  dgrisby
   Finished call could be selected by a CancelRequest, leading to an
   infinite loop failing to handle it.
@@ -269,7 +272,7 @@ GIOP_S::dispatcher() {
       if( omniORB::trace(1) ) {
 	omniORB::logger l;
 	l << "Unexpected message type (" << (CORBA::ULong) pd_requestType
-	  << ")received by a server thread at "
+	  << ") received by a server thread at "
 	  << __FILE__ << ": line " << __LINE__ << "\n";
       }
       return 0;
