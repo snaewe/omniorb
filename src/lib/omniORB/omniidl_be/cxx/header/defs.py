@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.14  2007/04/12 19:51:16  dgrisby
+# Fixed point member values should not go in a union's union.
+#
 # Revision 1.36.2.13  2006/05/25 18:19:12  dgrisby
 # Incorrect code generated for valuebox containing sequence of value;
 # clean up class nesting tracking.
@@ -1686,6 +1689,7 @@ def visitUnion(node):
                      idltype.tk_any,
                      idltype.tk_TypeCode,
                      idltype.tk_objref,
+                     idltype.tk_fixed,
                      idltype.tk_value,
                      idltype.tk_value_box,
                      idltype.tk_abstract_interface,

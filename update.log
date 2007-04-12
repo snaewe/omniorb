@@ -1,3 +1,17 @@
+Thu Apr 12 20:48:46 BST 2007 dgrisby
+====================================
+
+- A few cases of sizeof(bool) > 1 were not handled correctly.
+
+include/omniORB4/cdrStream.h
+include/omniORB4/seqTemplatedefns.h
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+
+- Fixed point member values should not go in a union's union.
+
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+
+
 Thu Apr 12 15:52:41 BST 2007 dgrisby
 ====================================
 
