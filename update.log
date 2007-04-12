@@ -1,3 +1,11 @@
+Thu Apr 12 15:45:41 BST 2007 dgrisby
+====================================
+
+- Output omniORB version number in log.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+
 Thu Apr  5 16:13:33 BST 2007 dgrisby
 ====================================
 
