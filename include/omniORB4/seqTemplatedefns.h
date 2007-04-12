@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2007/04/12 19:50:32  dgrisby
+  A few cases of sizeof(bool) > 1 were not handled correctly.
+
   Revision 1.1.4.3  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -352,7 +355,7 @@ _CORBA_Sequence_Boolean::operator>>= (cdrStream& s) const
   _CORBA_ULong l = Base_T_seq::length();
   l >>= s;
   if (l==0) return;
-# if !defined(HAVE_BOOL) || (SIZEOF_BOOL == 1)
+# if !defined(HAS_Cplusplus_Bool) || (SIZEOF_BOOL == 1)
   s.put_octet_array((_CORBA_Octet*)this->pd_buf,l);
 # else
   for ( _CORBA_ULong i = 0; i < l; i++ )
@@ -373,7 +376,7 @@ _CORBA_Sequence_Boolean::operator<<= (cdrStream& s)
   }
   this->length(l);
   if (l==0) return;
-# if !defined(HAVE_BOOL) || (SIZEOF_BOOL == 1)
+# if !defined(HAS_Cplusplus_Bool) || (SIZEOF_BOOL == 1)
   s.get_octet_array((_CORBA_Octet*)this->pd_buf,l);
 # else
   for ( _CORBA_ULong i = 0; i < l; i++ )
@@ -544,7 +547,15 @@ _CORBA_Sequence_Array_Boolean<T,T_slice,dimension>::operator>>=(cdrStream& s) co
 {
   this->pd_len >>= s;
   if (this->pd_len==0) return;
+# if !defined(HAS_Cplusplus_Bool) || (SIZEOF_BOOL == 1)
   s.put_octet_array((_CORBA_Octet*)this->pd_buf,(int)this->pd_len*dimension);
+# else
+  for (_CORBA_ULong i=0; i<this->pd_len; i++) {
+    for (_CORBA_ULong j=0; j<dimension; j++) {
+      s.marshalBoolean(*((_CORBA_Boolean*)(this->pd_buf[i]) + j));
+    }
+  }
+# endif
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -560,7 +571,15 @@ _CORBA_Sequence_Array_Boolean<T,T_slice,dimension>::operator<<=(cdrStream& s)
   }
   this->length(l);
   if (l==0) return;
+# if !defined(HAS_Cplusplus_Bool) || (SIZEOF_BOOL == 1)
   s.get_octet_array((_CORBA_Octet*)this->pd_buf,(int)l*dimension);
+# else
+  for (_CORBA_ULong i=0; i<l; i++) {
+    for (_CORBA_ULong j=0; j<dimension; j++) {
+      *((_CORBA_Boolean*)(this->pd_buf[i]) + j) =  s.unmarshalBoolean();
+    }
+  }
+# endif
 }
 //////////////////////////////////////////////////////////////////////
 template<class T, class T_slice, int dimension>

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.17  2007/04/12 19:50:33  dgrisby
+  A few cases of sizeof(bool) > 1 were not handled correctly.
+
   Revision 1.1.4.16  2007/02/11 23:44:59  dgrisby
   Value chunk stream looked at wrong byteswap flag in getLength.
 
@@ -801,6 +804,17 @@ public:
   {
     for( int i = 0; i < length; i++ )
       a[i] = unmarshalChar();
+  }
+
+  inline void
+  unmarshalArrayBoolean(_CORBA_Boolean* a, int length)
+  {
+#if !defined(HAS_Cplusplus_Bool) || (SIZEOF_BOOL == 1)
+    get_octet_array((_CORBA_Char*)a, length, omni::ALIGN_1);
+#else
+    for( int i = 0; i < length; i++ )
+      a[i] = unmarshalBoolean();
+#endif
   }
 
   inline void
