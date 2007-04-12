@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.36.2.7  2007/04/12 14:53:31  dgrisby
+  Output omniORB version number in log.
+
   Revision 1.36.2.6  2006/05/02 13:08:26  dgrisby
   Time out waiting for invoker threads to exit; allow configutation of
   idle thread timeout.
@@ -623,11 +626,8 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
 		  CORBA::COMPLETED_NO);
   }
 
-
-  if (omniORB::trace(2)) {
-    omniORB::logger l;
-    l << "Distribution date: " OMNIORB_DIST_DATE "\n";
-  }
+  omniORB::logs(2, "Version: " OMNIORB_VERSION_STRING);
+  omniORB::logs(2, "Distribution date: " OMNIORB_DIST_DATE);
 
   try {
     // Call attach method of each initialiser object.
