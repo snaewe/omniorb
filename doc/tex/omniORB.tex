@@ -193,7 +193,7 @@ AT\&T Laboratories Cambridge\\
 
 \vfill
 \vfill
-April 2006
+April 2007
 \vfill
 
 \end{center}
@@ -2390,8 +2390,8 @@ largely syntax changes, rather than semantic differences.
 
 \section{omniORB 4.0 compatibility}
 
-omniORB 4.1 is source-code compatible with omniORB 4.0, with three
-minor exceptions:
+omniORB 4.1 is source-code compatible with omniORB 4.0, with four
+exceptions:
 
 \begin{enumerate}
 
@@ -2412,6 +2412,26 @@ minor exceptions:
   been changed, replacing all the separate variables with a single
   member of type \code{GIOP\_C}. All the values previously available
   can be accessed through the \code{GIOP\_C} instance.
+
+\item The C++ mapping contains Any insertion operators for sequence
+  types passed by pointer, which cause the Any to take ownership of
+  the inserted sequence. In omniORB 4.0 and earlier, the sequence was
+  immediately marshalled into the Any's internal buffer, and the
+  sequence was deleted. In omniORB 4.1, the sequence pointer is stored
+  by the Any, and the sequence is deleted later when the Any is
+  destroyed.
+
+  For most uses, this change is not visible to application code.
+  However, if a sequence is constructed using an application-supplied
+  buffer with the release flag set to false (meaning that the
+  application continues to own the buffer), it is now important that
+  the buffer is not deleted or modified while the Any exists, since
+  the Any continues to refer to the buffer contents.  This change
+  means that code that worked with omniORB 4.0 may now fail with 4.1,
+  with the Any seeing modified data or the process crashing due to
+  accessing deleted data. To avoid this situation, use the alternative
+  Any insertion operator using a const reference, which copies the
+  sequence.
 
 \end{enumerate}
 
