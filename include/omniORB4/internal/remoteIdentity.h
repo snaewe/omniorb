@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.1.6.2  2007/04/14 17:56:52  dgrisby
+  Identity downcasting mechanism was broken by VC++ 8's
+  over-enthusiastic optimiser.
+
   Revision 1.1.6.1  2003/03/23 21:03:42  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -73,6 +77,16 @@
 
 #include <omniIdentity.h>
 
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
+#endif
+
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
+#endif
+
 OMNI_NAMESPACE_BEGIN(omni)
 
 class omniRemoteIdentity_RefHolder;
@@ -81,14 +95,11 @@ OMNI_NAMESPACE_END(omni)
 
 class omniRemoteIdentity : public omniIdentity {
 public:
-  static void* thisClassCompare(omniIdentity*, void*);
-
   inline omniRemoteIdentity(omniIOR* ior, 
 			    const CORBA::Octet* key,
 			    CORBA::ULong keysize,
-			    _OMNI_NS(Rope)* rope,
-			    classCompare_fn compare = thisClassCompare)
-    : omniIdentity(key, keysize, compare),
+			    _OMNI_NS(Rope)* rope)
+    : omniIdentity(key, keysize),
       pd_refCount(0),
       pd_ior(ior),
       pd_rope(rope)
@@ -119,11 +130,13 @@ public:
   virtual _CORBA_Boolean inThisAddressSpace();
   // Override omniIdentity.
 
-  static inline omniRemoteIdentity* downcast(omniIdentity* id)
-  {
-    return (omniRemoteIdentity*)(id->classCompare()
-				 (id, (void*)thisClassCompare));
+
+  virtual void* ptrToClass(int* cptr);
+  static inline omniRemoteIdentity* downcast(omniIdentity* i) {
+    return (omniRemoteIdentity*)i->ptrToClass(&_classid);
   }
+  static _core_attr int _classid;
+  // Dynamic casting mechanism.
 
 private:
   friend class _OMNI_NS(omniRemoteIdentity_RefHolder);
@@ -144,5 +157,7 @@ private:
 					   const omniIdentity*);
 
 };
+
+#undef _core_attr
 
 #endif  // __OMNIORB_REMOTEIDENTITY_H__

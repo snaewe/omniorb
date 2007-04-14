@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2007/04/14 17:56:52  dgrisby
+  Identity downcasting mechanism was broken by VC++ 8's
+  over-enthusiastic optimiser.
+
   Revision 1.4.2.2  2005/04/14 00:03:56  dgrisby
   New traceInvocationReturns and traceTime options; remove logf function.
 
@@ -369,13 +373,15 @@ omniRemoteIdentity::inThisAddressSpace()
   return 0;
 }
 
+
+
+
 void*
-omniRemoteIdentity::thisClassCompare(omniIdentity* id, void* vfn)
+omniRemoteIdentity::ptrToClass(int* cptr)
 {
-  classCompare_fn fn = (classCompare_fn)vfn;
-
-  if (fn == omniRemoteIdentity::thisClassCompare)
-    return (omniRemoteIdentity*)id;
-
+  if (cptr == &omniRemoteIdentity::_classid) return (omniRemoteIdentity*)this;
+  if (cptr == &omniIdentity      ::_classid) return (omniIdentity*)      this;
   return 0;
 }
+
+int omniRemoteIdentity::_classid;

@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.1.4.3  2007/04/14 17:56:52  dgrisby
+ Identity downcasting mechanism was broken by VC++ 8's
+ over-enthusiastic optimiser.
+
  Revision 1.1.4.2  2005/01/06 23:10:30  dgrisby
  Big merge from omni4_0_develop.
 
@@ -257,13 +261,17 @@ omniInProcessIdentity::inThisAddressSpace()
   return 1;
 }
 
-void*
-omniInProcessIdentity::thisClassCompare(omniIdentity* id, void* vfn)
-{
-  classCompare_fn fn = (classCompare_fn)vfn;
 
-  if (fn == omniInProcessIdentity::thisClassCompare)
-    return (omniInProcessIdentity*)id;
+void*
+omniInProcessIdentity::ptrToClass(int* cptr)
+{
+  if (cptr == &omniInProcessIdentity::_classid)
+    return (omniInProcessIdentity*)this;
+
+  if (cptr == &omniIdentity::_classid)
+    return (omniIdentity*)this;
 
   return 0;
 }
+
+int omniInProcessIdentity::_classid;

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2007/04/14 17:56:53  dgrisby
+  Identity downcasting mechanism was broken by VC++ 8's
+  over-enthusiastic optimiser.
+
   Revision 1.1.6.1  2003/03/23 21:03:45  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -84,6 +88,15 @@
 
 #include <omniIdentity.h>
 
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
+#endif
+
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
+#endif
 
 class omniServant;
 class omniObjRef;
@@ -96,16 +109,13 @@ OMNI_NAMESPACE_END(omni)
 
 class omniLocalIdentity : public omniIdentity {
 public:
-  static void* thisClassCompare(omniIdentity*, void*);
-
   inline ~omniLocalIdentity() {}
 
   inline omniLocalIdentity(omniObjKey& key,
 			   omniServant* servant,
-			   _OMNI_NS(omniObjAdapter)* adapter,
-			   classCompare_fn compare = thisClassCompare)
+			   _OMNI_NS(omniObjAdapter)* adapter)
 
-    : omniIdentity(key, compare),
+    : omniIdentity(key),
       pd_nInvocations(1),
       pd_servant(servant),
       pd_adapter(adapter),
@@ -116,10 +126,9 @@ public:
 
   inline omniLocalIdentity(const _CORBA_Octet* key, int keysize,
 			   omniServant* servant,
-			   _OMNI_NS(omniObjAdapter)* adapter,
-			   classCompare_fn compare = thisClassCompare)
+			   _OMNI_NS(omniObjAdapter)* adapter)
 
-    : omniIdentity(key, keysize, compare),
+    : omniIdentity(key, keysize),
       pd_nInvocations(1),
       pd_servant(servant),
       pd_adapter(adapter),
@@ -163,11 +172,14 @@ public:
   virtual _CORBA_Boolean inThisAddressSpace();
   // Override omniIdentity.
 
-  static inline omniLocalIdentity* downcast(omniIdentity* id)
-  {
-    return (omniLocalIdentity*)(id->classCompare()
-				(id, (void*)thisClassCompare));
+
+  virtual void* ptrToClass(int* cptr);
+  static inline omniLocalIdentity* downcast(omniIdentity* i) {
+    return (omniLocalIdentity*)i->ptrToClass(&_classid);
   }
+  static _core_attr int _classid;
+  // Dynamic casting mechanism.
+
 
   inline const _CORBA_Boolean* p_deactivated() const { return &pd_deactivated;}
   // This evil construction is used in the local shortcut
@@ -215,5 +227,6 @@ private:
   // Not implemented.
 };
 
+#undef _core_attr
 
 #endif  // __OMNIORB_LOCALIDENTITY_H__

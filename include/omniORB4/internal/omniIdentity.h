@@ -30,6 +30,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2007/04/14 17:56:52  dgrisby
+  Identity downcasting mechanism was broken by VC++ 8's
+  over-enthusiastic optimiser.
+
   Revision 1.1.6.2  2006/09/17 23:21:49  dgrisby
   Properly import identity_count for Windows DLL hell.
 
@@ -142,25 +146,13 @@ public:
   // Block until all traced omniIdentity objects have been deleted.
   //  Must not hold <omni::internalLock>
 
-  // Support for downcasting in the absense of dynamic_cast<>.
-  // classCompare_fn's second argument is really of type
-  // classCompare_fn, but that can't be declared.
-  //
-  // See e.g. localIdentity.h to see how it's used. The basic idea is
-  // that a derived class registers its class compare function with
-  // this base class. To downcast, you pass the omniIdentity* to be
-  // downcast and the static class compare function of the target
-  // class to the registered class compare function. The class compare
-  // function tests to see if the function is has been given belongs
-  // to either its own class, or one of its parent classes. If so, it
-  // returns the omniIdentity pointer suitably cast to the derived
-  // class.
-  //
-  // It's hard to explain. Just look at the code...
 
-  typedef void* (*classCompare_fn)(omniIdentity*, void*);
-
-  inline classCompare_fn classCompare() { return pd_classCompare; }
+  virtual void* ptrToClass(int* cptr);
+  static inline omniIdentity* downcast(omniIdentity* i) {
+    return (omniIdentity*)i->ptrToClass(&_classid);
+  }
+  static _core_attr int _classid;
+  // Dynamic casting mechanism.
 
 protected:
 #ifndef __GNUG__
@@ -174,22 +166,19 @@ protected:
   // the most derived type.  But gcc is rather anal and insists that a
   // class with virtual functions must have a virtual dtor.
 
-  inline omniIdentity(omniObjKey& key, classCompare_fn compare)
-    : pd_key(key, 1), pd_classCompare(compare) {}
+  inline omniIdentity(omniObjKey& key)
+    : pd_key(key, 1) {}
   // May consume <key> (if it is bigger than inline key buffer).
 
-  inline omniIdentity(const _CORBA_Octet* key, int keysize,
-		      classCompare_fn compare)
-    : pd_key(key, keysize), pd_classCompare(compare) {}
+  inline omniIdentity(const _CORBA_Octet* key, int keysize)
+    : pd_key(key, keysize) {}
   // Copies <key>.
 
-  inline omniIdentity(_CORBA_Octet* key, int keysize,
-		      classCompare_fn compare)
-    : pd_key(key, keysize), pd_classCompare(compare) {}
+  inline omniIdentity(_CORBA_Octet* key, int keysize)
+    : pd_key(key, keysize) {}
   // Consumes <key>.
 
-  inline omniIdentity(classCompare_fn compare)
-    : pd_classCompare(compare) {}
+  inline omniIdentity() {}
   // No key. Used by dummy shutdown identity.
 
 
@@ -213,13 +202,8 @@ private:
   omniIdentity& operator = (const omniIdentity&);
   // Not implemented.
 
-
   omniObjKey pd_key;
   // Immutable.
-
-  classCompare_fn pd_classCompare;
-  // Class comparison function to implement downcast()
-  // Immutable
 };
 
 #undef _core_attr

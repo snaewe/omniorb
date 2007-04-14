@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2007/04/14 17:56:52  dgrisby
+  Identity downcasting mechanism was broken by VC++ 8's
+  over-enthusiastic optimiser.
+
   Revision 1.1.4.1  2003/03/23 21:02:09  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -76,3 +80,12 @@ omniIdentity::lastIdentityHasBeenDeleted()
   if (cond)
     cond->signal();
 }
+
+void*
+omniIdentity::ptrToClass(int* cptr)
+{
+  if (cptr == &omniIdentity::_classid) return (omniIdentity*)this;
+  return 0;
+}
+
+int omniIdentity::_classid;

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2007/04/14 17:56:52  dgrisby
+  Identity downcasting mechanism was broken by VC++ 8's
+  over-enthusiastic optimiser.
+
   Revision 1.1.4.2  2005/01/06 23:08:25  dgrisby
   Big merge from omni4_0_develop.
 
@@ -51,6 +55,17 @@
 
 #include <omniORB4/omniutilities.h>
 #include <localIdentity.h>
+
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
+#endif
+
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
+#endif
+
 
 class omniObjTable;
 
@@ -88,13 +103,10 @@ public:
     ALL_STATES    = 15
   };
 
-  static void* thisClassCompare(omniIdentity*, void*);
-
   ~omniObjTableEntry();
 
-  inline omniObjTableEntry(omniObjKey& key,
-			   classCompare_fn compare = thisClassCompare)
-    : omniLocalIdentity(key, 0, 0, compare),
+  inline omniObjTableEntry(omniObjKey& key)
+    : omniLocalIdentity(key, 0, 0),
       pd_state(ACTIVATING),
       pd_nextInObjectTable(0),
       pd_nextInOAObjList(0),
@@ -106,9 +118,8 @@ public:
   // May consume <key>.  Constructs an identity with ref count
   // of 1.
 
-  inline omniObjTableEntry(const _CORBA_Octet* key, int keysize,
-			   classCompare_fn compare = thisClassCompare)
-    : omniLocalIdentity(key, keysize, 0, 0, compare),
+  inline omniObjTableEntry(const _CORBA_Octet* key, int keysize)
+    : omniLocalIdentity(key, keysize, 0, 0),
       pd_state(ACTIVATING),
       pd_nextInObjectTable(0),
       pd_nextInOAObjList(0),
@@ -203,11 +214,12 @@ public:
   //  Must hold <omni::internalLock>
 
 
-  static inline omniObjTableEntry* downcast(omniIdentity* id)
-  {
-    return (omniObjTableEntry*)(id->classCompare()
-				(id, (void*)thisClassCompare));
+  virtual void* ptrToClass(int* cptr);
+  static inline omniObjTableEntry* downcast(omniIdentity* i) {
+    return (omniObjTableEntry*)i->ptrToClass(&_classid);
   }
+  static _core_attr int _classid;
+  // Dynamic casting mechanism.
 
 private:
   State pd_state;
@@ -288,5 +300,6 @@ public:
   //  Must hold <omni::internalLock>.
 };
 
+#undef _core_attr
 
 #endif // __OMNIORB_OBJECTTABLE_H__

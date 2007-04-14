@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2007/04/14 17:56:52  dgrisby
+  Identity downcasting mechanism was broken by VC++ 8's
+  over-enthusiastic optimiser.
+
   Revision 1.4.2.2  2003/11/06 11:56:57  dgrisby
   Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 
@@ -274,13 +278,13 @@ omniLocalIdentity::inThisAddressSpace()
   return 1;
 }
 
+
 void*
-omniLocalIdentity::thisClassCompare(omniIdentity* id, void* vfn)
+omniLocalIdentity::ptrToClass(int* cptr)
 {
-  classCompare_fn fn = (classCompare_fn)vfn;
-
-  if (fn == omniLocalIdentity::thisClassCompare)
-    return (omniLocalIdentity*)id;
-
+  if (cptr == &omniLocalIdentity::_classid) return (omniLocalIdentity*)this;
+  if (cptr == &omniIdentity     ::_classid) return (omniIdentity*)     this;
   return 0;
 }
+
+int omniLocalIdentity::_classid;

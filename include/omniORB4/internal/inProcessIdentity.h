@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.1.4.2  2007/04/14 17:56:53  dgrisby
+ Identity downcasting mechanism was broken by VC++ 8's
+ over-enthusiastic optimiser.
+
  Revision 1.1.4.1  2003/03/23 21:03:46  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -63,6 +67,17 @@
 
 #include <omniIdentity.h>
 
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
+#endif
+
+#if defined(_OMNIORB_LIBRARY)
+#     define _core_attr
+#else
+#     define _core_attr _OMNIORB_NTDLL_IMPORT
+#endif
+
+
 OMNI_NAMESPACE_BEGIN(omni)
 
 class omniInProcessIdentity_RefHolder;
@@ -72,17 +87,14 @@ OMNI_NAMESPACE_END(omni)
 
 class omniInProcessIdentity : public omniIdentity {
 public:
-  static void* thisClassCompare(omniIdentity*, void*);
-
   inline ~omniInProcessIdentity() {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     if (--identity_count == 0)
       lastIdentityHasBeenDeleted();
   }
 
-  inline omniInProcessIdentity(omniObjKey& key,
-			       classCompare_fn compare = thisClassCompare)
-    : omniIdentity(key, compare),
+  inline omniInProcessIdentity(omniObjKey& key)
+    : omniIdentity(key),
       pd_refCount(0)
     {
       ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
@@ -90,9 +102,8 @@ public:
     }
   // May consume <key>.
 
-  inline omniInProcessIdentity(const _CORBA_Octet* key, int keysize,
-			       classCompare_fn compare = thisClassCompare)
-    : omniIdentity(key, keysize, compare),
+  inline omniInProcessIdentity(const _CORBA_Octet* key, int keysize)
+    : omniIdentity(key, keysize),
       pd_refCount(0)
     {
       ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
@@ -117,11 +128,13 @@ public:
   virtual _CORBA_Boolean inThisAddressSpace();
   // Override omniIdentity.
 
-  static inline omniInProcessIdentity* downcast(omniIdentity* id)
-  {
-    return (omniInProcessIdentity*)(id->classCompare()
-				    (id, (void*)thisClassCompare));
+
+  virtual void* ptrToClass(int* cptr);
+  static inline omniInProcessIdentity* downcast(omniIdentity* i) {
+    return (omniInProcessIdentity*)i->ptrToClass(&_classid);
   }
+  static _core_attr int _classid;
+  // Dynamic casting mechanism.
 
 private:
   friend class _OMNI_NS(omniInProcessIdentity_RefHolder);
@@ -133,5 +146,6 @@ private:
   int pd_refCount;
 };
 
+#undef _core_attr
 
 #endif // __OMNIORB_INPROCESSIDENTITY_H__
