@@ -29,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.13  2007/04/18 23:03:53  dgrisby
+// Another size_t that can't be logged on Win64.
+//
 // Revision 1.1.2.12  2006/06/06 16:39:37  dgrisby
 // marshalRawString and chunking stream did not byte-swap length fields
 // when required to.
@@ -208,7 +211,7 @@ cdrValueChunkStream::maybeStartNewChunk(omni::alignment_t align, size_t size)
     if (omniORB::trace(25)) {
       omniORB::logger l;
       l << "Cannot end value chunk with zero length; extending to "
-	<< size << " octets.\n";
+	<< (int)size << " octets.\n";
     }
     OMNIORB_ASSERT(size);
     declareArrayLength(align, size);

@@ -1,3 +1,11 @@
+Thu Apr 19 00:03:15 BST 2007 dgrisby
+====================================
+
+- Another size_t that can't be logged on Win64.
+
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Wed Apr 18 23:32:06 BST 2007 dgrisby
 ====================================
 
