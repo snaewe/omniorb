@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2007/04/18 22:32:43  dgrisby
+  Missing definition of ptr_arith_t on Win64.
+
   Revision 1.1.2.7  2006/05/25 18:17:18  dgrisby
   Comment fixes.
 
@@ -484,6 +487,8 @@ public:
   typedef long ptr_arith_t;
 #elif SIZEOF_PTR == SIZEOF_INT
   typedef int ptr_arith_t;
+#elif defined (_WIN64)
+  typedef size_t ptr_arith_t;
 #else
 #error "No suitable type to do pointer arithmetic"
 #endif
