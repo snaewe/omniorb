@@ -31,6 +31,10 @@
 
 /*
  * $Log$
+ * Revision 1.21.2.8  2007/05/11 09:46:45  dgrisby
+ * Initialise Any's TypeCode to 0 rather than tc_null to avoid locking
+ * overhead at creation. Thanks Teemu Torma.
+ *
  * Revision 1.21.2.7  2007/02/28 15:22:53  dgrisby
  * Assertion failure trying to marshal an Any containing a nil objref.
  *
@@ -204,6 +208,14 @@ OMNI_USING_NAMESPACE(omni)
 // Mutex to protect Any pointers against modification by multiple threads.
 static omni_tracedmutex anyLock;
 
+// Extract possibly nil typecode.
+static inline
+CORBA::TypeCode_ptr
+get(CORBA::TypeCode_ptr tc)
+{
+  return CORBA::is_nil(tc) ? CORBA::_tc_null : tc;
+}
+
 
 //////////////////////////////////////////////////////////////////////
 ////////////////// Constructors / destructor /////////////////////////
@@ -212,7 +224,6 @@ static omni_tracedmutex anyLock;
 CORBA::Any::Any()
   : pd_mbuf(0), pd_data(0), pd_marshal(0), pd_destructor(0)
 {
-  pd_tc = CORBA::TypeCode::_duplicate(CORBA::_tc_null);
 }
 
 
@@ -357,21 +368,21 @@ void
 CORBA::Any::operator>>= (cdrStream& s) const
 {
   if (orbParameters::tcAliasExpand) {
-    CORBA::TypeCode_var tc = TypeCode_base::aliasExpand(ToTcBase(pd_tc));
+    CORBA::TypeCode_var tc = TypeCode_base::aliasExpand(ToTcBase(get(pd_tc)));
     CORBA::TypeCode::marshalTypeCode(tc, s);
   }
   else
-    CORBA::TypeCode::marshalTypeCode(pd_tc, s);
+    CORBA::TypeCode::marshalTypeCode(get(pd_tc), s);
 
   if (pd_data) {
     OMNIORB_ASSERT(pd_marshal);
     pd_marshal(s, pd_data);
   }
   else if (pd_mbuf) {
-    tcParser::copyMemStreamToStream_rdonly(pd_tc, *pd_mbuf, s);
+    tcParser::copyMemStreamToStream_rdonly(get(pd_tc), *pd_mbuf, s);
   }
   else {
-    CORBA::TCKind kind = pd_tc->kind();
+    CORBA::TCKind kind = get(pd_tc)->kind();
     if (kind == CORBA::tk_objref ||
         kind == CORBA::tk_value ||
 	kind == CORBA::tk_value_box ||
@@ -394,7 +405,7 @@ CORBA::Any::operator<<= (cdrStream& s)
 
   pd_tc   = CORBA::TypeCode::unmarshalTypeCode(s);
   pd_mbuf = new cdrAnyMemoryStream;
-  tcParser::copyStreamToStream(pd_tc, s, *pd_mbuf);
+  tcParser::copyStreamToStream(get(pd_tc), s, *pd_mbuf);
 }
 
 // omniORB data-only marshalling functions
@@ -406,10 +417,10 @@ CORBA::Any::NP_marshalDataOnly(cdrStream& s) const
     pd_marshal(s, pd_data);
   }
   else if (pd_mbuf) {
-    tcParser::copyMemStreamToStream_rdonly(pd_tc, *pd_mbuf, s);
+    tcParser::copyMemStreamToStream_rdonly(get(pd_tc), *pd_mbuf, s);
   }
   else {
-    CORBA::TCKind kind = pd_tc->kind();
+    CORBA::TCKind kind = get(pd_tc)->kind();
     if (kind == CORBA::tk_value ||
 	kind == CORBA::tk_value_box ||
 	kind == CORBA::tk_abstract_interface) {
@@ -429,7 +440,7 @@ CORBA::Any::NP_unmarshalDataOnly(cdrStream& s)
 {
   PR_clearData();
   pd_mbuf = new cdrAnyMemoryStream;
-  tcParser::copyStreamToMemStream_flush(pd_tc, s, *pd_mbuf);
+  tcParser::copyStreamToMemStream_flush(get(pd_tc), s, *pd_mbuf);
 }
 
 
@@ -466,7 +477,7 @@ PR_extract(CORBA::TypeCode_ptr tc,
 	   pr_unmarshal_fn     unmarshal,
 	   void*               data) const
 {
-  if (!tc->equivalent(pd_tc))
+  if (!tc->equivalent(get(pd_tc)))
     return 0;
 
   if (pd_mbuf) {
@@ -492,7 +503,7 @@ PR_extract(CORBA::TypeCode_ptr     tc,
 	   pr_destructor_fn 	   destructor,
 	   void*&                  data) const
 {
-  if (!tc->equivalent(pd_tc))
+  if (!tc->equivalent(get(pd_tc)))
     return 0;
 
   if (pd_data) {
@@ -729,7 +740,7 @@ CORBA::Any::operator<<=(from_fixed f)
 CORBA::Boolean 
 CORBA::Any::operator>>=(Short& s) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_short)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_short)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   s <<= tbuf;
@@ -739,7 +750,7 @@ CORBA::Any::operator>>=(Short& s) const
 CORBA::Boolean
 CORBA::Any::operator>>=(UShort& u) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_ushort)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_ushort)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   u <<= tbuf;
@@ -749,7 +760,7 @@ CORBA::Any::operator>>=(UShort& u) const
 CORBA::Boolean
 CORBA::Any::operator>>=(Long& l) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_long)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_long)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   l <<= tbuf;
@@ -760,7 +771,7 @@ CORBA::Any::operator>>=(Long& l) const
 CORBA::Boolean
 CORBA::Any::operator>>=(ULong& u) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_ulong)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_ulong)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   u <<= tbuf;
@@ -772,7 +783,7 @@ CORBA::Any::operator>>=(ULong& u) const
 CORBA::Boolean
 CORBA::Any::operator>>=(LongLong& l) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_longlong)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_longlong)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   l <<= tbuf;
@@ -783,7 +794,7 @@ CORBA::Any::operator>>=(LongLong& l) const
 CORBA::Boolean
 CORBA::Any::operator>>=(ULongLong& u) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_ulonglong)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_ulonglong)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   u <<= tbuf;
@@ -796,7 +807,7 @@ CORBA::Any::operator>>=(ULongLong& u) const
 CORBA::Boolean
 CORBA::Any::operator>>=(Float& f) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_float)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_float)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   f <<= tbuf;
@@ -807,7 +818,7 @@ CORBA::Any::operator>>=(Float& f) const
 CORBA::Boolean
 CORBA::Any::operator>>=(Double& d) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_double)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_double)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   d <<= tbuf;
@@ -818,7 +829,7 @@ CORBA::Any::operator>>=(Double& d) const
 CORBA::Boolean
 CORBA::Any::operator>>=(LongDouble& d) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_longdouble)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_longdouble)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   d <<= tbuf;
@@ -832,7 +843,7 @@ CORBA::Any::operator>>=(LongDouble& d) const
 CORBA::Boolean
 CORBA::Any::operator>>=(to_boolean b) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_boolean)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_boolean)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   b.ref = tbuf.unmarshalBoolean();
@@ -843,7 +854,7 @@ CORBA::Any::operator>>=(to_boolean b) const
 CORBA::Boolean
 CORBA::Any::operator>>=(to_char c) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_char)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_char)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   c.ref = tbuf.unmarshalChar();
@@ -854,7 +865,7 @@ CORBA::Any::operator>>=(to_char c) const
 CORBA::Boolean
 CORBA::Any::operator>>=(to_wchar c) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_wchar)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_wchar)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   c.ref = tbuf.unmarshalWChar();
@@ -865,7 +876,7 @@ CORBA::Any::operator>>=(to_wchar c) const
 CORBA::Boolean
 CORBA::Any::operator>>=(to_octet o) const
 {
-  if (!pd_tc->equivalent(CORBA::_tc_octet)) return 0;
+  if (!get(pd_tc)->equivalent(CORBA::_tc_octet)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
   o.ref = tbuf.unmarshalOctet();
@@ -878,7 +889,7 @@ CORBA::Any::operator>>=(to_fixed f) const
 {
   CORBA::TypeCode_var tc = CORBA::TypeCode::NP_fixed_tc(f.digits,f.scale);
 
-  if (!pd_tc->equivalent(tc)) return 0;
+  if (!get(pd_tc)->equivalent(tc)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
 
@@ -1155,7 +1166,7 @@ CORBA::Any::operator>>=(to_object o) const
 {
   void* v;
 
-  CORBA::TCKind kind = pd_tc->kind();
+  CORBA::TCKind kind = get(pd_tc)->kind();
   
   if (kind == CORBA::tk_objref) {
     // We call PR_extract giving it our own TypeCode, so its type check
@@ -1165,7 +1176,7 @@ CORBA::Any::operator>>=(to_object o) const
     // Unlike other extraction operators, the caller takes ownership
     // of the returned reference here.
 
-    if (PR_extract(pd_tc,
+    if (PR_extract(get(pd_tc),
 		   unmarshalObject_fn, marshalObject_fn, deleteObject_fn,
 		   v)) {
 
@@ -1180,7 +1191,7 @@ CORBA::Any::operator>>=(to_object o) const
     }
   }
   else if (kind == CORBA::tk_abstract_interface) {
-    if (PR_extract(pd_tc,
+    if (PR_extract(get(pd_tc),
 		   unmarshalAbstractInterface_fn,
 		   marshalAbstractInterface_fn,
 		   deleteAbstractInterface_fn,
@@ -1204,10 +1215,10 @@ CORBA::Any::operator>>=(to_abstract_base a) const
 {
   void* v;
 
-  if (pd_tc->kind() != CORBA::tk_abstract_interface)
+  if (get(pd_tc)->kind() != CORBA::tk_abstract_interface)
     return 0;
 
-  if (PR_extract(pd_tc,
+  if (PR_extract(get(pd_tc),
 		 unmarshalAbstractInterface_fn,
 		 marshalAbstractInterface_fn,
 		 deleteAbstractInterface_fn,
@@ -1223,7 +1234,7 @@ CORBA::Any::operator>>=(to_value o) const
 {
   void* v;
 
-  CORBA::TCKind kind = pd_tc->kind();
+  CORBA::TCKind kind = get(pd_tc)->kind();
   
   if (kind == CORBA::tk_value || kind == CORBA::tk_value_box) {
     // When values are stored by pointer in pd_data, they are stored
@@ -1245,7 +1256,7 @@ CORBA::Any::operator>>=(to_value o) const
     }
   }
   else if (kind == CORBA::tk_abstract_interface) {
-    if (PR_extract(pd_tc,
+    if (PR_extract(get(pd_tc),
 		   unmarshalAbstractInterface_fn,
 		   marshalAbstractInterface_fn,
 		   deleteAbstractInterface_fn,
@@ -1424,7 +1435,7 @@ CORBA::Any::operator>>=(const CORBA::SystemException*& e) const
 {
   CORBA::Boolean r;
 #define EXTRACT_IF_MATCH(name) \
-  if (pd_tc->equivalent(CORBA::_tc_##name)) { \
+  if (get(pd_tc)->equivalent(CORBA::_tc_##name)) {	\
     const CORBA::name* ex; \
     r = *this >>= ex; \
     e = ex; \
@@ -1440,13 +1451,13 @@ CORBA::Any::operator>>=(const CORBA::SystemException*& e) const
 CORBA::TypeCode_ptr
 CORBA::Any::type() const
 {
-  return CORBA::TypeCode::_duplicate(pd_tc);
+  return CORBA::TypeCode::_duplicate(get(pd_tc));
 }
 
 void
 CORBA::Any::type(CORBA::TypeCode_ptr tc)
 {
-  if (!pd_tc->equivalent(tc))
+  if (!get(pd_tc)->equivalent(tc))
     OMNIORB_THROW(BAD_TYPECODE,
 		  BAD_TYPECODE_NotEquivalent,
 		  CORBA::COMPLETED_NO);
@@ -1457,8 +1468,8 @@ CORBA::Any::type(CORBA::TypeCode_ptr tc)
 const void*
 CORBA::Any::value() const
 {
-  if (pd_tc->kind() == CORBA::tk_null ||
-      pd_tc->kind() == CORBA::tk_void)
+  if (get(pd_tc)->kind() == CORBA::tk_null ||
+      get(pd_tc)->kind() == CORBA::tk_void)
     return 0;
 
   if (!pd_mbuf) {
