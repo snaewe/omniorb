@@ -762,6 +762,13 @@ OMNITHREAD_LIB += -lpthread
 endif
 
 ###################
+ifdef kFreeBSD
+OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10
+OMNITHREAD_CPPFLAGS = -D_REENTRANT -pthread
+OMNITHREAD_LIB += -lpthread
+endif
+
+###################
 ifdef SunOS
 IMPORT_CPPFLAGS += -D__sunos__
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \

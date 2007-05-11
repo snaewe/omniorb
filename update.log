@@ -1,3 +1,15 @@
+Fri May 11 11:12:16 BST 2007 dgrisby
+====================================
+
+- Support kfreebsd. Thanks Floris Bruynooghe.
+
+configure
+configure.ac
+include/omnithread.h
+mk/beforeauto.mk.in
+src/lib/omnithread/posix.cc
+
+
 Fri May 11 10:45:29 BST 2007 dgrisby
 ====================================
 

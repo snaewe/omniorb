@@ -886,7 +886,7 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 
 #else
 
-#if defined(__linux__) || defined(__aix__) || defined(__SCO_VERSION__) || defined(__darwin__) || defined(__macos__)
+#if defined(__linux__) || defined(__GLIBC__) || defined(__aix__) || defined(__SCO_VERSION__) || defined(__darwin__) || defined(__macos__)
 
     struct timeval tv;
     gettimeofday(&tv, NULL); 

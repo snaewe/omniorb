@@ -133,6 +133,9 @@ class omni_thread;
 #elif defined(__linux__)
 #include <omnithread/posix.h>
 
+#elif defined(__GLIBC__)
+#include <omnithread/posix.h>
+
 #elif defined(__nextstep__)
 #include <omnithread/mach.h>
 
