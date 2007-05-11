@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.17.2.5  2007/05/11 09:52:27  dgrisby
+# New -Wbguard_prefix option. Thanks Austin Bingham.
+#
 # Revision 1.17.2.4  2005/11/18 18:23:06  dgrisby
 # New -Wbimpl_mapping option.
 #
@@ -138,6 +141,9 @@ class ConfigurationState:
 
             # Extra ifdefs for stubs in dlls?
             'DLLIncludes':           0,
+
+            # Prefix for include guard in generated header
+            'GuardPrefix':           '',
 
             # Are we in DEBUG mode?
             'Debug':                 0

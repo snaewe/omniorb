@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.5  2007/05/11 09:52:27  dgrisby
+# New -Wbguard_prefix option. Thanks Austin Bingham.
+#
 # Revision 1.17.2.4  2006/05/17 13:26:59  dgrisby
 # Preserve path from #include rather than reconstructing it.
 #
@@ -143,9 +146,10 @@ import re, sys, os.path, string
 
 def header(stream, filename):
     stream.out(template.header,
-               program = config.state['Program Name'],
-               library = config.state['Library Version'],
-               guard   = filename)
+               program      = config.state['Program Name'],
+               library      = config.state['Library Version'],
+               guard_prefix = config.state['GuardPrefix'],
+               guard        = filename)
 
 def footer(stream):
     stream.out(template.footer)
@@ -252,7 +256,9 @@ def monolithic(stream, tree):
             cxx_include = "<" + cxx_include + ">"
             
         includes.out(template.main_include,
-                     guardname = guardname, filename = cxx_include)
+                     guardname    = guardname,
+                     guard_prefix = config.state['GuardPrefix'],
+                     filename     = cxx_include)
 
     # see o2be_root::produce_hdr and o2be_root::produce_hdr_defs
 
