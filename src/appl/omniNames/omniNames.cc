@@ -63,6 +63,7 @@ usage()
 {
   cerr << "\nusage: omniNames [-start [<port>]]\n"
        <<   "                 [-logdir <directory name>]\n"
+       <<   "                 [-nohostname]\n"
        <<   "                 [-errlog <file name>]\n"
        <<   "                 [-ignoreport]\n"
        <<   "                 [<omniORB-options>...]" << endl;
@@ -72,8 +73,10 @@ usage()
        << IIOP::DEFAULT_CORBALOC_PORT << " is used."
        << endl;
   cerr << "\nUse -logdir option to specify the directory where the log/data files are kept.\n";
+  cerr << "\nUse -nohostname to suppress the inclusion of the hostname in the log files.\n";
   cerr << "\nUse -errlog option to specify where standard error output is redirected.\n";
-  cerr << "\nUse -ignoreport option to ignore the port specification.\n";
+  cerr << "\nUse -ignoreport option to ignore the port specification when determining\n";
+  cerr << "the end points to listen on, using -ORBendPoint arguments instead.\n";
   cerr << "\nYou can also set the environment variable " << LOGDIR_ENV_VAR
        << " to specify the\ndirectory where the log/data files are kept.\n"
        << endl;
@@ -123,6 +126,7 @@ main(int argc, char **argv)
   int port = 0;
   char* logdir = 0;
   int ignoreport = 0;
+  int nohostname = 0;
 
   while (argc > 1) {
     if (strcmp(argv[1], "-start") == 0) {
@@ -137,6 +141,10 @@ main(int argc, char **argv)
     }
     else if (strcmp(argv[1], "-ignoreport") == 0) {
       ignoreport = 1;
+      removeArgs(argc, argv, 1, 1);
+    }
+    else if (strcmp(argv[1], "-nohostname") == 0) {
+      nohostname = 1;
       removeArgs(argc, argv, 1, 1);
     }
     else if (strcmp(argv[1], "-logdir") == 0) {
@@ -172,7 +180,7 @@ main(int argc, char **argv)
   // number from the log file if "-start" wasn't specified.
   //
 
-  omniNameslog l(port, logdir);
+  omniNameslog l(port, logdir, nohostname);
 
 
   //

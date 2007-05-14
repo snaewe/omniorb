@@ -49,6 +49,7 @@ class omniNameslog {
   ofstream logf;
 
   int port;
+  PortableServer::ObjectId persistentId;
 
   int startingUp;	// true while reading log file initially.
   int firstTime;	// true if -start option was given.
@@ -61,6 +62,8 @@ class omniNameslog {
   //
 
   void putPort(int port, ostream& file);
+
+  void putPersistent(const PortableServer::ObjectId& id, ostream& file);
 
   void putCreate(const PortableServer::ObjectId& id, ostream& file);
 
@@ -83,6 +86,8 @@ class omniNameslog {
 
   void getPort(istream& file);
 
+  void getPersistent(istream& file);
+
   void getCreate(istream& file);
 
   void getDestroy(istream& file);
@@ -104,7 +109,7 @@ public:
   class IOError {};
   class ParseError {};
 
-  omniNameslog(int& port,char* logdir=0);
+  omniNameslog(int& port, char* logdir, int nohostname);
 
   void init(CORBA::ORB_ptr o,
 	    PortableServer::POA_ptr p,

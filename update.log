@@ -1,3 +1,14 @@
+Mon May 14 01:08:54 BST 2007 dgrisby
+====================================
+
+- New -nohostname option to omniNames; use persistent server
+  identifier to allow omniNames logs to move from machine to machine.
+
+src/appl/omniNames/log.cc
+src/appl/omniNames/log.h
+src/appl/omniNames/omniNames.cc
+
+
 Fri May 11 11:12:16 BST 2007 dgrisby
 ====================================
 
