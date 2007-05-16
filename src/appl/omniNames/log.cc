@@ -153,7 +153,7 @@ timestamp ts;
 // initialises the ORB and the BOA and calls init().
 //
 
-omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
+omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
 {
   startingUp = 1;
   checkpointNeeded = 1;
@@ -168,95 +168,99 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
   if (!logdir && (logdir = getenv(LOGDIR_ENV_VAR)) == NULL)
     logdir = strdup(DEFAULT_LOGDIR);
 
-#if !defined(__WIN32__) && !defined(__VMS)
-  if (logdir[0] != '/') {
-    cerr << ts.t() << "Error: " << LOGDIR_ENV_VAR << " (" << logdir
-	 << ") is not an absolute path name." << endl;
-    exit(1);
-  }
+  char* logname;
 
+#if !defined(__WIN32__) && !defined(__VMS)
   if (logdir[strlen(logdir)-1] == '/') {
     logdir[strlen(logdir)-1] = '\0';		// strip trailing '/'
   }
-
-#ifdef HAVE_UNAME
-  struct utsname un;
-  if (uname(&un) < 0) {
-    cerr << ts.t() << "Error: cannot get the name of this host." << endl;
-	
-    exit(1);
-  }
-
-  char* logname = new char[strlen(logdir) + strlen("/omninames-")
-			   + strlen(un.nodename) + 1];
-  sprintf(logname, "%s/omninames-%s", logdir, un.nodename);
-
-#elif HAVE_GETHOSTNAME
-
-  // Apparently on some AIX versions, MAXHOSTNAMELEN is too small (32) to
-  // reflect the true size a hostname can be. Check and fix the value.
-#ifndef MAXHOSTNAMELEN
-#  define MAXHOSTNAMELEN 256
-#elif   MAXHOSTNAMELEN < 64
-#  undef  MAXHOSTNAMELEN
-#  define MAXHOSTNAMELEN 256
 #endif
 
-  char hostname[MAXHOSTNAMELEN+1];
-
-  if (gethostname(hostname, MAXHOSTNAMELEN) < 0) {
-    cerr << ts.t() << "Error: cannot get the name of this host." << endl;
-	
-    exit(1);
+  if (nohostname) {
+    logname = new char[strlen(logdir) + strlen("/omninames") + 1];
+    sprintf(logname, "%s/omninames", logdir);
   }
-  char* logname = new char[strlen(logdir) + strlen("/omninames-")
-			   + strlen(hostname) + 1];
-  sprintf(logname, "%s/omninames-%s", logdir, hostname);
+  else {
 
-#endif // HAVE_UNAME
+#if !defined(__WIN32__) && !defined(__VMS)
+#  ifdef HAVE_UNAME
+
+    struct utsname un;
+    if (uname(&un) < 0) {
+      cerr << ts.t() << "Error: cannot get the name of this host." << endl;
+	
+      exit(1);
+    }
+
+    logname = new char[strlen(logdir) + strlen("/omninames-")
+		       + strlen(un.nodename) + 1];
+    sprintf(logname, "%s/omninames-%s", logdir, un.nodename);
+
+#  elif HAVE_GETHOSTNAME
+
+    // Apparently on some AIX versions, MAXHOSTNAMELEN is too small (32) to
+    // reflect the true size a hostname can be. Check and fix the value.
+
+#    ifndef MAXHOSTNAMELEN
+#      define MAXHOSTNAMELEN 256
+#    elif   MAXHOSTNAMELEN < 64
+#      undef  MAXHOSTNAMELEN
+#      define MAXHOSTNAMELEN 256
+#    endif
+
+    char hostname[MAXHOSTNAMELEN+1];
+
+    if (gethostname(hostname, MAXHOSTNAMELEN) < 0) {
+      cerr << ts.t() << "Error: cannot get the name of this host." << endl;
+	
+      exit(1);
+    }
+    logname = new char[strlen(logdir) + strlen("/omninames-")
+		       + strlen(hostname) + 1];
+    sprintf(logname, "%s/omninames-%s", logdir, hostname);
+
+#  endif // HAVE_UNAME
+
 #elif defined(__WIN32__)
 
-  // Get host name:
+    // Get host name:
 
-  DWORD machineName_len = MAX_COMPUTERNAME_LENGTH+1;
-  char* machineName = new char[machineName_len];
-  if (!GetComputerName((LPTSTR) machineName, &machineName_len)) {
-    cerr << ts.t() << "Error: cannot get the name of this host." << endl;
+    DWORD machineName_len = MAX_COMPUTERNAME_LENGTH+1;
+    char* machineName = new char[machineName_len];
+    if (!GetComputerName((LPTSTR) machineName, &machineName_len)) {
+      cerr << ts.t() << "Error: cannot get the name of this host." << endl;
 	
-    exit(1);
-  }
+      exit(1);
+    }
 
-  char* logname = new char[strlen(logdir) + strlen("\\omninames-")
-			   + strlen(machineName) + 1];
-  sprintf(logname, "%s\\omninames-%s", logdir, machineName);
+    logname = new char[strlen(logdir) + strlen("\\omninames-")
+			     + strlen(machineName) + 1];
+    sprintf(logname, "%s\\omninames-%s", logdir, machineName);
   
-  delete[] machineName;
+    delete[] machineName;
 
 #else // VMS
-  char last(
-    logdir[strlen(logdir)-1]
-  );
-  if (last != ':' && last != ']') {
-    cerr << ts.t() << "Error: " << LOGDIR_ENV_VAR << " (" << logdir
-         << ") is not a directory name." << endl;
-    exit(1);
-  }
+    char last(
+	      logdir[strlen(logdir)-1]
+	      );
+    if (last != ':' && last != ']') {
+      cerr << ts.t() << "Error: " << LOGDIR_ENV_VAR << " (" << logdir
+	   << ") is not a directory name." << endl;
+      exit(1);
+    }
 
-//  if (logdir[strlen(logdir)-1] == '/') {
-//    logdir[strlen(logdir)-1] = '\0';          // strip trailing '/'
-//  }
-
-  struct utsname un;
-  if (uname(&un) < 0) {
-    cerr << ts.t() << "Error: cannot get the name of this host." << endl;
+    struct utsname un;
+    if (uname(&un) < 0) {
+      cerr << ts.t() << "Error: cannot get the name of this host." << endl;
         
-    exit(1);
-  }
+      exit(1);
+    }
 
-  char* logname = new char[strlen(logdir) + strlen("/omninames-")
-                           + strlen(un.nodename) + 1];
-  sprintf(logname, "%somninames-%s", logdir, un.nodename);
+    logname = new char[strlen(logdir) + strlen("/omninames-")
+			     + strlen(un.nodename) + 1];
+    sprintf(logname, "%somninames-%s", logdir, un.nodename);
 #endif
+  }
 
 #ifndef __VMS
   active = new char[strlen(logname)+strlen(".log")+1];
@@ -381,6 +385,19 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
       logf.attach(fd);
 #endif
       putPort(port, logf);
+
+      // Build persistent identifier
+      {
+	CORBA::Object_var ref = the_poa->create_reference("");
+	PortableServer::ObjectId_var pid = the_poa->reference_to_id(ref);
+	persistentId = pid;
+
+	// POA's ids are 12 bytes, the last 4 incrementing with each
+	// activated object. We use the first 8 as the persistent
+	// identifier.
+	persistentId.length(8);
+	putPersistent(persistentId, logf);
+      }
       reallyFlush(logf);
 
       {
@@ -439,6 +456,8 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
       if (strcmp(cmd, "port") == 0) {
 	while (initf && (initf.get() != '\n'));	// ignore rest of line
 	line++;
+      } else if (strcmp(cmd, "persistent") == 0) {
+	getPersistent(initf);
       } else if (strcmp(cmd, "create") == 0) {
 	getCreate(initf);
       } else if (strcmp(cmd, "destroy") == 0) {
@@ -662,6 +681,9 @@ omniNameslog::checkpoint(void)
 #endif
     putPort(port, ckpf);
 
+    if (persistentId.length())
+      putPersistent(persistentId, ckpf);
+
     NamingContext_i* nci;
 
     for (nci = NamingContext_i::headContext; nci; nci = nci->next) {
@@ -828,6 +850,24 @@ omniNameslog::getPort(istream& file)
     cerr << ts.t() << "Error: invalid port specified in log file." << endl;
     throw ParseError();
   }
+}
+
+
+void
+omniNameslog::putPersistent(const PortableServer::ObjectId& id, ostream& file)
+{
+  file << "persistent ";
+  putKey(id, file);
+  file << '\n';
+  if (!file) throw IOError();
+}
+
+
+void
+omniNameslog::getPersistent(istream& file)
+{
+  getKey(persistentId, file);
+  omniORB::setPersistentServerIdentifier(persistentId);
 }
 
 
