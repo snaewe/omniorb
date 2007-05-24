@@ -30,6 +30,10 @@
 
 /*
   $Log$
+  Revision 1.21.2.5  2007/05/24 15:56:10  dgrisby
+  Incorrect arguments to IP4AddrInfo constructor in HPUX 11 without
+  getaddrinfo case.
+
   Revision 1.21.2.4  2006/03/25 18:54:03  dgrisby
   Initial IPv6 support.
 
@@ -735,7 +739,7 @@ again:
   if ((hp = ::gethostbyname(node)) == NULL) {
     return 0;
   }
-  return new IP4AddrInfo(hostent_to_ip4(hp), port);
+  return new IP4AddrInfo(0, hostent_to_ip4(hp), port);
 
 # else
   // Use gethostbyname_r() on HPUX 10.20
