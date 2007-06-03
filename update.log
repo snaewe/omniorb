@@ -1,3 +1,13 @@
+Sun Jun  3 20:20:22 BST 2007 dgrisby
+====================================
+
+- POAManager deactivate would not meet its detached object if all
+  objects were busy, leading to a hang in POA destruction.
+
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Thu May 24 16:55:25 BST 2007 dgrisby
 ====================================
 
