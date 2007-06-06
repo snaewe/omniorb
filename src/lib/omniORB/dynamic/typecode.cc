@@ -31,6 +31,10 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.16  2007/06/06 17:31:01  dgrisby
+ * Enum discriminators were returned as ulongs from
+ * TypeCode::member_label, rather than as the proper enums.
+ *
  * Revision 1.40.2.15  2007/03/08 09:17:11  dgrisby
  * Union discriminator bug is really fixed now.
  *
@@ -6202,7 +6206,9 @@ TypeCode_union_helper::insertLabel(CORBA::Any& label,
 		      MARSHAL_InvalidEnumValue,
 		      CORBA::COMPLETED_NO);
       }
-      label <<= val;
+      label.replace((CORBA::TypeCode_ptr)aetc, 0, 0);
+      cdrAnyMemoryStream& ms = label.PR_streamToWrite();
+      val >>= ms;
       break;
     }
   // case CORBA::tk_wchar:
