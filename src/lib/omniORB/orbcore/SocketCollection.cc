@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.20  2007/06/06 17:01:26  dgrisby
+  Fix potential race conditions in SocketCollection set / poll access.
+  Cope with WSAEINVAL as well as WSAENOTSOCK in Windows case.
+
   Revision 1.1.4.19  2007/02/26 15:27:13  dgrisby
   Set pipe file descriptors to close on exec.
 
@@ -405,7 +409,7 @@ SocketCollection::Select() {
   struct timeval timeout;
   int timeout_millis;
   int count;
-  unsigned index;
+  unsigned index, pollfd_n;
 
   // (pd_abs_sec,pd_abs_nsec) defines the absolute time at which we
   // process the socket list.
@@ -471,13 +475,18 @@ SocketCollection::Select() {
 	omniORB::logs(25, "SocketCollection idle. Sleeping.");
 	timeout_millis = -1;
       }
+      pollfd_n = pd_pollfd_n;
     }
   }
   else {
     timeout_millis = timeout.tv_sec * 1000 + timeout.tv_usec / 1000;
+    {
+      omni_tracedmutex_lock sync(pd_collection_lock);
+      pollfd_n = pd_pollfd_n;
+    }
   }
 
-  count = poll(pd_pollfds, pd_pollfd_n, timeout_millis);
+  count = poll(pd_pollfds, pollfd_n, timeout_millis);
 
   if (count > 0) {
     // Some sockets are readable
@@ -611,15 +620,20 @@ SocketHolder::setSelectable(int            now,
     // Add socket to the list of pollfds
     unsigned index = pd_belong_to->pd_pollfd_n;
 
-    if (index == pd_belong_to->pd_pollfd_len)
-      pd_belong_to->growPollLists();
-
-    pd_belong_to->pd_pollfds[index].fd      = pd_socket;
-    pd_belong_to->pd_pollfds[index].events  = POLLIN;
-    pd_belong_to->pd_pollfds[index].revents = 0;
-    pd_belong_to->pd_pollsockets[index]     = this;
-    pd_belong_to->pd_pollfd_n = index + 1;
-    pd_fd_index = index;
+    if (index < pd_belong_to->pd_pollfd_len) {
+      pd_belong_to->pd_pollfds[index].fd      = pd_socket;
+      pd_belong_to->pd_pollfds[index].events  = POLLIN;
+      pd_belong_to->pd_pollfds[index].revents = 0;
+      pd_belong_to->pd_pollsockets[index]     = this;
+      pd_belong_to->pd_pollfd_n = index + 1;
+      pd_fd_index = index;
+    }
+    else {
+      // We must not grow the poll lists here, since the Select thread
+      // is possibly accessing pd_pollfds outside the lock. Instead,
+      // we ensure the Select thread rescans next iteration.
+      pd_belong_to->pd_abs_sec = pd_belong_to->pd_abs_nsec = 0;
+    }
   }
 
   pd_selectable      = 1;
@@ -837,6 +851,8 @@ SocketCollection::Select() {
   // process the socket list.
   SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
 
+  fd_set rfds;
+  
   if ((timeout.tv_sec == 0 && timeout.tv_usec == 0) ||
       timeout.tv_sec > scan_interval_sec) {
 
@@ -877,10 +893,13 @@ SocketCollection::Select() {
 	}
 	pd_changed = 0;
       }
+      rfds = pd_fd_set;
     }
   }
-
-  fd_set rfds = pd_fd_set;
+  else {
+    omni_tracedmutex_lock sync(pd_collection_lock);
+    rfds = pd_fd_set;
+  }
 
   if (rfds.fd_count) {
     // Windows select() ignores its first argument.
@@ -944,17 +963,23 @@ SocketCollection::Select() {
   }
   else {
     // Negative return means error
-    if (ERRNO == RC_EBADF) {
-      omniORB::logs(20, "select() returned EBADF.");
+    int err = ERRNO;
+
+    if (err == WSAENOTSOCK || err == WSAEINVAL) {
+      // Windows documentation claims that select() only returns
+      // WSAEINVAL if all fd_sets are null or the timeout is invalid,
+      // but in fact it sets it in some other circumstances.
+
+      omniORB::logs(20, "select() returned WSAENOTSOCK / WSAEINVAL.");
 
       // Force a list scan next time
       pd_changed = 1;
       pd_abs_sec = pd_abs_nsec = 0;
     }
-    else if (ERRNO != RC_EINTR) {
+    else if (err != RC_EINTR) {
       if (omniORB::trace(1)) {
 	omniORB::logger l;
-	l << "Error return from select(). errno = " << (int)ERRNO << "\n";
+	l << "Error return from select(). errno = " << err << "\n";
       }
       return 0;
     }
@@ -1188,6 +1213,8 @@ SocketCollection::Select() {
   // process the socket list.
   SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
 
+  fd_set rfds;
+
   if ((timeout.tv_sec == 0 && timeout.tv_usec == 0) ||
       timeout.tv_sec > scan_interval_sec) {
 
@@ -1240,13 +1267,17 @@ SocketCollection::Select() {
 	omniORB::logs(25, "SocketCollection idle. Sleeping.");
 	timeout_p = 0;
       }
+      rfds = pd_fd_set;
     }
   }
   else {
     timeout_p = &timeout;
+    {
+      omni_tracedmutex_lock sync(pd_collection_lock);
+      rfds = pd_fd_set;
+    }
   }
 
-  fd_set rfds = pd_fd_set;
   count = do_select(pd_fd_set_n, &rfds, 0, 0, timeout_p);
 
   if (count > 0) {

@@ -1,3 +1,12 @@
+Wed Jun  6 17:59:53 BST 2007 dgrisby
+====================================
+
+- Fix potential race conditions in SocketCollection set / poll access.
+  Cope with WSAEINVAL as well as WSAENOTSOCK in Windows case.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Sun Jun  3 20:20:22 BST 2007 dgrisby
 ====================================
 
