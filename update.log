@@ -1,3 +1,12 @@
+Thu Jun 14 22:55:22 BST 2007 dgrisby
+====================================
+
+- Fully scope CORBA::ValueBase in value box _downcast, for compilers
+  that don't understand scoping. Thanks Josh Arnold.
+
+src/lib/omniORB/omniidl_be/cxx/value.py
+
+
 Sun Jun 10 19:40:59 BST 2007 dgrisby
 ====================================
 

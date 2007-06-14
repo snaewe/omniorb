@@ -833,7 +833,7 @@ public:
 
   @member_funcs@
 
-  static @name@* _downcast(ValueBase*);
+  static @name@* _downcast(CORBA::ValueBase*);
 
 #ifdef OMNI_HAVE_COVARIANT_RETURNS
   virtual @name@* _copy_value();
