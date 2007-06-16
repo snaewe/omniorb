@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.21  2007/06/16 15:12:29  dgrisby
+  Incorrect initialisation if pipe creation failed on VxWorks.
+
   Revision 1.1.4.20  2007/06/06 17:01:26  dgrisby
   Fix potential race conditions in SocketCollection set / poll access.
   Cope with WSAEINVAL as well as WSAENOTSOCK in Windows case.
@@ -297,6 +300,8 @@ unsigned      SocketCollection::idle_scans         = 20;
 #  ifdef __vxWorks__
 static void initPipe(int& pipe_read, int& pipe_write)
 {
+  pipe_read = pipe_write = -1;
+
   if (pipeDrv() == OK) {
     if (pipeDevCreate("/pipe/SocketCollection",10,sizeof(int)) == OK) {
       pipe_read = pipe_write = open("/pipe/SocketCollection", O_RDWR,0);
