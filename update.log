@@ -1,3 +1,12 @@
+Tue Jun 19 17:19:28 BST 2007 dgrisby
+====================================
+
+- Windows doesn't support line buffering, and fails with a zero buffer
+  length.
+
+src/appl/omniNames/omniNames.cc
+
+
 Sat Jun 16 16:11:27 BST 2007 dgrisby
 ====================================
 

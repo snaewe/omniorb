@@ -164,7 +164,9 @@ main(int argc, char **argv)
 	cerr << "Cannot open error log file: " << argv[2] << endl;
 	usage();
       }
+#ifndef __WIN32__
       setvbuf(stderr, 0, _IOLBF, 0);
+#endif
       removeArgs(argc, argv, 1, 2);
     }
     else if ((strncmp(argv[1], "-ORB", 4) != 0)) {
