@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2007/06/22 17:28:25  dgrisby
+  Definitions for Darwin traditional compile.
+
   Revision 1.1.4.10  2007/01/12 10:19:51  dgrisby
   Support for MontaVista ARM Linux.
 
@@ -502,6 +505,9 @@
 
 #elif defined(__darwin__)
 #  define HAVE_STRTOUQ 1
+#  define OMNI_SOCKNAME_SIZE_T socklen_t
+#  define HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO 1
+#  define HAVE_STRUCT_SOCKADDR_IN_SIN_LEN 1
 
 #elif defined(__nextstep__)
 #  undef HAVE_STRDUP
