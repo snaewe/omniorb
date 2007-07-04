@@ -1,3 +1,11 @@
+Wed Jul  4 10:09:53 BST 2007 dgrisby
+====================================
+
+- Condition variable used in Peek() was leaked.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Fri Jun 22 18:27:44 BST 2007 dgrisby
 ====================================
 

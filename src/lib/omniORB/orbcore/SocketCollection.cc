@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.22  2007/07/04 09:13:32  dgrisby
+  Condition variable used in Peek() was leaked.
+
   Revision 1.1.4.21  2007/06/16 15:12:29  dgrisby
   Incorrect initialisation if pipe creation failed on VxWorks.
 
@@ -1562,6 +1565,8 @@ SocketHolder::Peek()
 /////////////////////////////////////////////////////////////////////////
 SocketHolder::~SocketHolder()
 {
+  if (pd_peek_cond)
+    delete pd_peek_cond;
 }
 
 
