@@ -1,3 +1,11 @@
+Fri Jul  6 21:11:03 BST 2007 dgrisby
+====================================
+
+- Better error handling getting IPv6 interfaces on Windows.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Wed Jul  4 10:09:53 BST 2007 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2007/07/06 20:12:14  dgrisby
+  Better error handling getting IPv6 interfaces on Windows.
+
   Revision 1.1.4.9  2007/04/03 20:02:06  dgrisby
   Bug in VxWorks interface enumeration.
 
@@ -578,8 +581,20 @@ void win32_get_ifinfo6(omnivector<const char*>& ifaddrs)
 #ifdef OMNI_SUPPORT_IPV6
 
   SocketHandle_t sock;
+  int err;
 
   sock = socket(AF_INET6,SOCK_STREAM,0);
+
+  if (sock == RC_INVALID_SOCKET) {
+    err = WSAGetLastError();
+    if (omniORB::trace(2)) {
+      omniORB::logger log;
+      log << "Warning: unable to create an IPv6 socket. "
+	  << "Unable to obtain the list of IPv6 interface addresses ("
+	  << err << ").\n";
+    }
+    return;
+  }
 
   int buflen = sizeof(SOCKET_ADDRESS_LIST) + 63 * sizeof(SOCKET_ADDRESS);
   char *buffer = new char[buflen];
@@ -589,14 +604,14 @@ void win32_get_ifinfo6(omnivector<const char*>& ifaddrs)
   if ( WSAIoctl(sock, SIO_ADDRESS_LIST_QUERY, NULL,0,
                 (LPVOID)addrlist, buflen, (LPDWORD)&retlen,
 		NULL,NULL) == SOCKET_ERROR ) {
-    
+
+    err = WSAGetLastError();
     delete[] buffer;
     if ( omniORB::trace(2) ) {
       omniORB::logger log;
-      int err = WSAGetLastError();
-      log << "Warning: WSAIoctl SIO_ADDRESS_LIST_QUERY failed.\n"
-	  << "Unable to obtain the list of all IPv6 interface addresses.\n"
-	  << "WSAGetLastError() = " << err << "\n";
+      log << "Warning: WSAIoctl SIO_ADDRESS_LIST_QUERY failed. "
+	  << "Unable to obtain the list of IPv6 interface addresses ("
+	  << err << ").\n";
     }
     return;
   }
