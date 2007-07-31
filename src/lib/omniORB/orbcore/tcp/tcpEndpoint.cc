@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2007/07/31 14:23:43  dgrisby
+  If the platform does not accept IPv4 connections on IPv6 sockets by
+  default, try to enable it by turning the IPV6_V6ONLY socket option
+  off. Should work for BSDs and Windows Vista.
+
   Revision 1.1.4.15  2007/03/28 16:29:04  dgrisby
   Always wake up SocketCollection in Poke in case connect seems to work
   but does not actually wake the thread.
@@ -374,7 +379,7 @@ tcpEndpoint::Bind() {
     }
   }
   else {
-#ifdef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
+#if defined(OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS) || defined(IPV6_V6ONLY)
     host = 0;
     passive_host = 1;
 #else
@@ -384,21 +389,43 @@ tcpEndpoint::Bind() {
   }
 
   LibcWrapper::AddrInfo_var ai;
-  ai = LibcWrapper::getAddrInfo(host, pd_address.port);
 
-  if ((LibcWrapper::AddrInfo*)ai == 0) {
-    if (omniORB::trace(1)) {
-      omniORB::logger log;
-      log << "Cannot get the address of host " << host << ".\n";
+  do {
+    ai = LibcWrapper::getAddrInfo(host, pd_address.port);
+
+    if ((LibcWrapper::AddrInfo*)ai == 0) {
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Cannot get the address of host " << host << ".\n";
+      }
+      CLOSESOCKET(pd_socket);
+      return 0;
     }
-    CLOSESOCKET(pd_socket);
-    return 0;
-  }
 
-  if ((pd_socket = socket(ai->addrFamily(),
-			  SOCK_STREAM, 0)) == RC_INVALID_SOCKET) {
-    return 0;
-  }
+    if ((pd_socket = socket(ai->addrFamily(),
+			    SOCK_STREAM, 0)) == RC_INVALID_SOCKET) {
+      return 0;
+    }
+
+#if defined(OMNI_SUPPORT_IPV6) && defined(IPV6_V6ONLY)
+#  if !defined(OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS)
+    if (passive_host == 1) {
+      // Attempt to turn IPV6_V6ONLY option off
+      int valfalse = 0;
+      omniORB::logs(10, "Attempt to set socket to listen on IPv4 and IPv6.");
+      if (setsockopt(pd_socket, IPPROTO_IPV6, IPV6_V6ONLY,
+		     (char*)&valfalse, sizeof(valfalse)) == RC_SOCKET_ERROR) {
+	omniORB::logs(2, "Unable to set socket to listen on IPv4 and IPv6. "
+		      "Fall back to just IPv4.");
+	CLOSESOCKET(pd_socket);
+	pd_socket = RC_INVALID_SOCKET;
+	host = "0.0.0.0";
+	passive_host = 2;
+      }
+    }
+#  endif
+#endif
+  } while (pd_socket == RC_INVALID_SOCKET);
 
   {
     // Prevent Nagle's algorithm

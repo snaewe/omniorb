@@ -1,3 +1,17 @@
+Tue Jul 31 15:21:09 BST 2007 dgrisby
+====================================
+
+- If the platform does not accept IPv4 connections on IPv6 sockets by
+  default, try to enable it by turning the IPV6_V6ONLY socket option
+  off. Should work for BSDs and Windows Vista.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Fri Jul  6 21:11:03 BST 2007 dgrisby
 ====================================
 

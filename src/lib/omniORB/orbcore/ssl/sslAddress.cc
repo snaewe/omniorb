@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2007/07/31 14:23:43  dgrisby
+  If the platform does not accept IPv4 connections on IPv6 sockets by
+  default, try to enable it by turning the IPV6_V6ONLY socket option
+  off. Should work for BSDs and Windows Vista.
+
   Revision 1.1.4.10  2007/02/28 15:55:57  dgrisby
   setsockopt expects a char* on some platforms.
 
@@ -426,7 +431,7 @@ sslAddress::Poke() const {
   if ((LibcWrapper::AddrInfo*)ai == 0)
     return 0;
 
-  if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET)
+  if ((sock = socket(ai->addrFamily(), SOCK_STREAM,0)) == RC_INVALID_SOCKET)
     return 0;
 
   if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {
