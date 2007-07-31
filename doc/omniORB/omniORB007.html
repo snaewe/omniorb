@@ -120,16 +120,17 @@ if B reports that it is not an A. Consider the following example:<BR>
 </TT><TT>  <B>Object</B> op2();</TT><TT>
 </TT><TT>};</TT></DIV><BR>
 <BR>
-<DIV CLASS="lstlisting"><TT> 1  <I>// C++</I></TT><TT>
-</TT><TT> 2  C_ptr objC;</TT><TT>
-</TT><TT> 3  A_ptr objA;</TT><TT>
-</TT><TT> 4  CORBA::Object_ptr objR;</TT><TT>
-</TT><TT> 5</TT><TT>
-</TT><TT> 6  objA =  objC-&gt;op1();</TT><TT>
-</TT><TT> 7  (<B>void</B>) objA-&gt;_non_existent();</TT><TT>
-</TT><TT> 8</TT><TT>
-</TT><TT> 9  objR =  objC-&gt;op2();</TT><TT>
-</TT><TT>10  objA =  A::_narrow(objR);</TT></DIV><BR>
+
+<DIV CLASS="lstlisting"><TT><FONT SIZE=1>   1</FONT> </TT><TT><I>// C++</I></TT><TT>
+<FONT SIZE=1>   2</FONT> </TT><TT>C_ptr objC;</TT><TT>
+<FONT SIZE=1>   3</FONT> </TT><TT>A_ptr objA;</TT><TT>
+<FONT SIZE=1>   4</FONT> </TT><TT>CORBA::Object_ptr objR;</TT><TT>
+<FONT SIZE=1>   5</FONT> </TT><TT>
+<FONT SIZE=1>   6</FONT> </TT><TT>objA =  objC-&gt;op1();</TT><TT>
+<FONT SIZE=1>   7</FONT> </TT><TT>(<B>void</B>) objA-&gt;_non_existent();</TT><TT>
+<FONT SIZE=1>   8</FONT> </TT><TT>
+<FONT SIZE=1>   9</FONT> </TT><TT>objR =  objC-&gt;op2();</TT><TT>
+<FONT SIZE=1>  10</FONT> </TT><TT>objA =  A::_narrow(objR);</TT></DIV><BR>
 <BR>
 If the stubs of A,B,C,D are linked into the executable and:
 <DL CLASS="description" COMPACT=compact><DT CLASS="dt-description">

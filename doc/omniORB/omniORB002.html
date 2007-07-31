@@ -403,25 +403,26 @@ variable goes out of scope and is destroyed.</DL>
 Here is an example of how an <TT>Echo_ptr</TT> object reference is
 used.<BR>
 <BR>
-<DIV CLASS="lstlisting"><TT> 1  <B>void</B></TT><TT>
-</TT><TT> 2  hello(CORBA::Object_ptr obj)</TT><TT>
-</TT><TT> 3  {</TT><TT>
-</TT><TT> 4    Echo_var e = Echo::_narrow(obj);</TT><TT>
-</TT><TT> 5</TT><TT>
-</TT><TT> 6    <B>if</B> (CORBA::is_nil(e)) {</TT><TT>
-</TT><TT> 7      cerr &lt;&lt; "cannot invoke on a nil object reference."</TT><TT>
-</TT><TT> 8           &lt;&lt; endl;</TT><TT>
-</TT><TT> 9      <B>return</B>;</TT><TT>
-</TT><TT>10    }</TT><TT>
-</TT><TT>11</TT><TT>
-</TT><TT>12    CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";</TT><TT>
-</TT><TT>13    CORBA::String_var dest;</TT><TT>
-</TT><TT>14</TT><TT>
-</TT><TT>15    dest = e-&gt;echoString(src);</TT><TT>
-</TT><TT>16</TT><TT>
-</TT><TT>17    cerr &lt;&lt; "I said,\"" &lt;&lt; src &lt;&lt; "\"."</TT><TT>
-</TT><TT>18         &lt;&lt; " The Object said,\"" &lt;&lt; dest &lt;&lt;"\"" &lt;&lt; endl;</TT><TT>
-</TT><TT>19  }</TT></DIV><BR>
+
+<DIV CLASS="lstlisting"><TT><FONT SIZE=1>   1</FONT> </TT><TT><B>void</B></TT><TT>
+<FONT SIZE=1>   2</FONT> </TT><TT>hello(CORBA::Object_ptr obj)</TT><TT>
+<FONT SIZE=1>   3</FONT> </TT><TT>{</TT><TT>
+<FONT SIZE=1>   4</FONT> </TT><TT>  Echo_var e = Echo::_narrow(obj);</TT><TT>
+<FONT SIZE=1>   5</FONT> </TT><TT>
+<FONT SIZE=1>   6</FONT> </TT><TT>  <B>if</B> (CORBA::is_nil(e)) {</TT><TT>
+<FONT SIZE=1>   7</FONT> </TT><TT>    cerr &lt;&lt; "cannot invoke on a nil object reference."</TT><TT>
+<FONT SIZE=1>   8</FONT> </TT><TT>         &lt;&lt; endl;</TT><TT>
+<FONT SIZE=1>   9</FONT> </TT><TT>    <B>return</B>;</TT><TT>
+<FONT SIZE=1>  10</FONT> </TT><TT>  }</TT><TT>
+<FONT SIZE=1>  11</FONT> </TT><TT>
+<FONT SIZE=1>  12</FONT> </TT><TT>  CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";</TT><TT>
+<FONT SIZE=1>  13</FONT> </TT><TT>  CORBA::String_var dest;</TT><TT>
+<FONT SIZE=1>  14</FONT> </TT><TT>
+<FONT SIZE=1>  15</FONT> </TT><TT>  dest = e-&gt;echoString(src);</TT><TT>
+<FONT SIZE=1>  16</FONT> </TT><TT>
+<FONT SIZE=1>  17</FONT> </TT><TT>  cerr &lt;&lt; "I said,\"" &lt;&lt; src &lt;&lt; "\"."</TT><TT>
+<FONT SIZE=1>  18</FONT> </TT><TT>       &lt;&lt; " The Object said,\"" &lt;&lt; dest &lt;&lt;"\"" &lt;&lt; endl;</TT><TT>
+<FONT SIZE=1>  19</FONT> </TT><TT>}</TT></DIV><BR>
 <BR>
 Briefly, the <TT>hello()</TT> function accepts a generic object reference.
 The object reference (<TT>obj</TT>) is narrowed to <TT>Echo_ptr</TT>. If
@@ -474,28 +475,29 @@ address spaces.<BR>
 <BR>
 The code for this example is reproduced below:<BR>
 <BR>
-<DIV CLASS="lstlisting"><TT> 1  <B>int</B></TT><TT>
-</TT><TT> 2  main(<B>int</B> argc, <B>char</B> **argv)</TT><TT>
-</TT><TT> 3  {</TT><TT>
-</TT><TT> 4    CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB4");</TT><TT>
-</TT><TT> 5</TT><TT>
-</TT><TT> 6    CORBA::Object_var       obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
-</TT><TT> 7    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
-</TT><TT> 8</TT><TT>
-</TT><TT> 9    Echo_i *myecho = <B>new</B> Echo_i();</TT><TT>
-</TT><TT>10    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
-</TT><TT>11</TT><TT>
-</TT><TT>12    Echo_var myechoref = myecho-&gt;_this();</TT><TT>
-</TT><TT>13    myecho-&gt;_remove_ref();</TT><TT>
-</TT><TT>14</TT><TT>
-</TT><TT>15    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
-</TT><TT>16    pman-&gt;activate();</TT><TT>
-</TT><TT>17</TT><TT>
-</TT><TT>18    hello(myechoref);</TT><TT>
-</TT><TT>19</TT><TT>
-</TT><TT>20    orb-&gt;destroy();</TT><TT>
-</TT><TT>21    <B>return</B> 0;</TT><TT>
-</TT><TT>22  }</TT></DIV><BR>
+
+<DIV CLASS="lstlisting"><TT><FONT SIZE=1>   1</FONT> </TT><TT><B>int</B></TT><TT>
+<FONT SIZE=1>   2</FONT> </TT><TT>main(<B>int</B> argc, <B>char</B> **argv)</TT><TT>
+<FONT SIZE=1>   3</FONT> </TT><TT>{</TT><TT>
+<FONT SIZE=1>   4</FONT> </TT><TT>  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB4");</TT><TT>
+<FONT SIZE=1>   5</FONT> </TT><TT>
+<FONT SIZE=1>   6</FONT> </TT><TT>  CORBA::Object_var       obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
+<FONT SIZE=1>   7</FONT> </TT><TT>  PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
+<FONT SIZE=1>   8</FONT> </TT><TT>
+<FONT SIZE=1>   9</FONT> </TT><TT>  Echo_i *myecho = <B>new</B> Echo_i();</TT><TT>
+<FONT SIZE=1>  10</FONT> </TT><TT>  PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
+<FONT SIZE=1>  11</FONT> </TT><TT>
+<FONT SIZE=1>  12</FONT> </TT><TT>  Echo_var myechoref = myecho-&gt;_this();</TT><TT>
+<FONT SIZE=1>  13</FONT> </TT><TT>  myecho-&gt;_remove_ref();</TT><TT>
+<FONT SIZE=1>  14</FONT> </TT><TT>
+<FONT SIZE=1>  15</FONT> </TT><TT>  PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
+<FONT SIZE=1>  16</FONT> </TT><TT>  pman-&gt;activate();</TT><TT>
+<FONT SIZE=1>  17</FONT> </TT><TT>
+<FONT SIZE=1>  18</FONT> </TT><TT>  hello(myechoref);</TT><TT>
+<FONT SIZE=1>  19</FONT> </TT><TT>
+<FONT SIZE=1>  20</FONT> </TT><TT>  orb-&gt;destroy();</TT><TT>
+<FONT SIZE=1>  21</FONT> </TT><TT>  <B>return</B> 0;</TT><TT>
+<FONT SIZE=1>  22</FONT> </TT><TT>}</TT></DIV><BR>
 <BR>
 The example illustrates several important interactions among the ORB,
 the POA, the servant, and the client. Here are the details:<BR>
@@ -622,30 +624,31 @@ The <TT>main()</TT> function of the server side is reproduced below. The
 full listing (<TT>eg2_impl.cc</TT>) can be found at the end of this
 chapter.<BR>
 <BR>
-<DIV CLASS="lstlisting"><TT> 1  <B>int</B> main(<B>int</B> argc, <B>char</B>** argv)</TT><TT>
-</TT><TT> 2  {</TT><TT>
-</TT><TT> 3    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
-</TT><TT> 4</TT><TT>
-</TT><TT> 5    CORBA::Object_var       obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
-</TT><TT> 6    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
-</TT><TT> 7</TT><TT>
-</TT><TT> 8    Echo_i* myecho = <B>new</B> Echo_i();</TT><TT>
-</TT><TT> 9</TT><TT>
-</TT><TT>10    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
-</TT><TT>11</TT><TT>
-</TT><TT>12    obj = myecho-&gt;_this();</TT><TT>
-</TT><TT>13    CORBA::String_var sior(orb-&gt;object_to_string(obj));</TT><TT>
-</TT><TT>14    cerr &lt;&lt; "'" &lt;&lt; (<B>char</B>*)sior &lt;&lt; "'" &lt;&lt; endl;</TT><TT>
-</TT><TT>15</TT><TT>
-</TT><TT>16    myecho-&gt;_remove_ref();</TT><TT>
-</TT><TT>17</TT><TT>
-</TT><TT>18    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
-</TT><TT>19    pman-&gt;activate();</TT><TT>
-</TT><TT>20</TT><TT>
-</TT><TT>21    orb-&gt;run();</TT><TT>
-</TT><TT>22    orb-&gt;destroy();</TT><TT>
-</TT><TT>23    <B>return</B> 0;</TT><TT>
-</TT><TT>24  }</TT></DIV><BR>
+
+<DIV CLASS="lstlisting"><TT><FONT SIZE=1>   1</FONT> </TT><TT><B>int</B> main(<B>int</B> argc, <B>char</B>** argv)</TT><TT>
+<FONT SIZE=1>   2</FONT> </TT><TT>{</TT><TT>
+<FONT SIZE=1>   3</FONT> </TT><TT>  CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
+<FONT SIZE=1>   4</FONT> </TT><TT>
+<FONT SIZE=1>   5</FONT> </TT><TT>  CORBA::Object_var       obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
+<FONT SIZE=1>   6</FONT> </TT><TT>  PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
+<FONT SIZE=1>   7</FONT> </TT><TT>
+<FONT SIZE=1>   8</FONT> </TT><TT>  Echo_i* myecho = <B>new</B> Echo_i();</TT><TT>
+<FONT SIZE=1>   9</FONT> </TT><TT>
+<FONT SIZE=1>  10</FONT> </TT><TT>  PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
+<FONT SIZE=1>  11</FONT> </TT><TT>
+<FONT SIZE=1>  12</FONT> </TT><TT>  obj = myecho-&gt;_this();</TT><TT>
+<FONT SIZE=1>  13</FONT> </TT><TT>  CORBA::String_var sior(orb-&gt;object_to_string(obj));</TT><TT>
+<FONT SIZE=1>  14</FONT> </TT><TT>  cerr &lt;&lt; (<B>char</B>*)sior &lt;&lt; endl;</TT><TT>
+<FONT SIZE=1>  15</FONT> </TT><TT>
+<FONT SIZE=1>  16</FONT> </TT><TT>  myecho-&gt;_remove_ref();</TT><TT>
+<FONT SIZE=1>  17</FONT> </TT><TT>
+<FONT SIZE=1>  18</FONT> </TT><TT>  PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
+<FONT SIZE=1>  19</FONT> </TT><TT>  pman-&gt;activate();</TT><TT>
+<FONT SIZE=1>  20</FONT> </TT><TT>
+<FONT SIZE=1>  21</FONT> </TT><TT>  orb-&gt;run();</TT><TT>
+<FONT SIZE=1>  22</FONT> </TT><TT>  orb-&gt;destroy();</TT><TT>
+<FONT SIZE=1>  23</FONT> </TT><TT>  <B>return</B> 0;</TT><TT>
+<FONT SIZE=1>  24</FONT> </TT><TT>}</TT></DIV><BR>
 <BR>
 The stringified object reference is obtained by calling the ORB's
 <TT>object_to_string()</TT> function (line 13). This results in a

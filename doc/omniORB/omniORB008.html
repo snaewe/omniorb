@@ -164,6 +164,13 @@ taken 13 seconds in total, longer than the usual timeout.<BR>
 This kind of configuration is good when connections are slow to be
 established.<BR>
 <BR>
+If an object reference has multiple possible endpoints available, and
+connecting to the first endpoint times out, only that one endpoint
+will have been tried before an exception is raised. However, once the
+timeout has occurred, the object reference will switch to use the next
+endpoint. If the application attempts to make another call, it will
+use the next endpoint.<BR>
+<BR>
 
 <H4 CLASS="subsubsection">Connect timeout &lt; usual timeout</H4>
 If the connect timeout is set to 2 seconds, the actual network-level
@@ -182,7 +189,10 @@ client will attempt to connect to them in turn, until one succeeds.
 The connect timeout applies to each connection attempt. So with a
 connect timeout of 2 seconds, the client will spend up to 2 seconds
 attempting to connect to the first address and then, if that fails, up
-to 2 seconds trying the second address, and so on.<BR>
+to 2 seconds trying the second address, and so on. The 10 second
+timeout still applies to the call as a whole, so if the total time
+taken on timed-out connection attempts exceeds 10 seconds, the call
+will time out.<BR>
 <BR>
 This kind of configuration is useful where calls may take a long time
 to complete (so call timeouts are long), but a fast indication of
@@ -399,12 +409,13 @@ for more details about endpoint publishing.<BR>
 On platforms where it is available, omniORB supports IPv6. On most
 Unix platforms, IPv6 sockets accept both IPv6 and IPv4 connections, so
 omniORB's default <TT>giop:tcp::</TT> endpoint accepts both IPv4 and
-IPv6 connections. On Windows, each socket type only accepts incoming
-connections of the same type, so an IPv6 socket cannot be used with
-IPv4 clients. For this reason, the default <TT>giop:tcp::</TT> endpoint
-only listens for IPv4 connections. Since endpoints with a specific
-host name or address only listen on a single network interface, they
-are inherently limited to just one protocol family.<BR>
+IPv6 connections. On Windows versions before Windows Vista, each
+socket type only accepts incoming connections of the same type, so an
+IPv6 socket cannot be used with IPv4 clients. For this reason, the
+default <TT>giop:tcp::</TT> endpoint only listens for IPv4 connections.
+Since endpoints with a specific host name or address only listen on a
+single network interface, they are inherently limited to just one
+protocol family.<BR>
 <BR>
 To explicitly ask for just IPv4 or just IPv6, an endpoint with the
 wildcard address for the protocol family should be used. For IPv4, the
@@ -421,8 +432,8 @@ somewhat cryptic:
 <BLOCKQUOTE CLASS="quote">
 <TT>giop:tcp:[::]:</TT>
 </BLOCKQUOTE>
-To listen for both IPv4 and IPv6 connections on Windows,
-both endpoints must be explicitly provided.<BR>
+To listen for both IPv4 and IPv6 connections on Windows
+versions prior to Vista, both endpoints must be explicitly provided.<BR>
 <BR>
 
 <H4 CLASS="subsubsection"><A NAME="htoc104">8.6.1.1</A>&nbsp;&nbsp;Link local addresses</H4>
