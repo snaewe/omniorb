@@ -1,3 +1,18 @@
+Tue Jul 31 17:35:53 BST 2007 dgrisby
+====================================
+
+- Hard-code define of IPV6_V6ONLY on Windows.
+
+include/omniORB4/internal/SocketCollection.h
+
+- New resetTimeOutOnRetries parameter.
+
+sample.cfg
+sample.reg
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Tue Jul 31 16:12:42 BST 2007 dgrisby
 ====================================
 

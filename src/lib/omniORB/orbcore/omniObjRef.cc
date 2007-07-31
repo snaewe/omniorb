@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.5  2007/07/31 16:38:31  dgrisby
+  New resetTimeOutOnRetries parameter.
+
   Revision 1.4.2.4  2006/01/10 13:59:37  dgrisby
   New clientConnectTimeOutPeriod configuration parameter.
 
@@ -212,6 +215,11 @@ CORBA::Boolean orbParameters::copyValuesInLocalCalls = 1;
 //
 //  Valid values = 0 or 1
 
+CORBA::Boolean orbParameters::resetTimeOutOnRetries = 0;
+// If the value of this variable is TRUE, the call timeout is reset
+// when an exception handler causes a call to be retried. If it is
+// FALSE, the timeout is not reset, and therefore applies to the call
+// as a whole, rather than each individual call attempt.
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -766,12 +774,11 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
       return;
     }
     catch(const giopStream::CommFailure& ex) {
-      if (ex.retry()) continue;
+      if (ex.retry()) continue; // without resetting timeout
       if( fwd ) {
 	RECOVER_FORWARD;
-	continue;
       }
-      if (is_COMM_FAILURE_minor(ex.minor())) {
+      else if (is_COMM_FAILURE_minor(ex.minor())) {
 	CORBA::COMM_FAILURE ex2(ex.minor(), ex.completed());
 	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
 	  OMNIORB_THROW(COMM_FAILURE,ex.minor(),ex.completed());
@@ -785,9 +792,8 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
     catch(CORBA::COMM_FAILURE& ex) {
       if( fwd ) {
 	RECOVER_FORWARD;
-	continue;
       }
-      if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
+      else if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
 	OMNIORB_THROW(COMM_FAILURE,ex.minor(),ex.completed());
     }
     catch(CORBA::TRANSIENT& ex) {
@@ -797,9 +803,8 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
     catch(CORBA::OBJECT_NOT_EXIST& ex) {
       if( fwd ) {
 	RECOVER_FORWARD;
-	continue;
       }
-      if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
+      else if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
 	OMNIORB_THROW(OBJECT_NOT_EXIST,ex.minor(),ex.completed());
     }
     catch(CORBA::SystemException& ex) {
@@ -818,6 +823,11 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 	  OMNIORB_THROW(TRANSIENT,ex2.minor(),ex2.completed());
       }
       omni::locationForward(this,ex.get_obj()->_PR_getobj(),ex.is_permanent());
+    }
+    
+    if (orbParameters::resetTimeOutOnRetries) {
+      abs_secs = 0;
+      abs_nanosecs = 0;
     }
   }
 }
@@ -1076,12 +1086,11 @@ omniObjRef::_locateRequest()
 
     }
     catch(const giopStream::CommFailure& ex) {
-      if (ex.retry()) continue;
+      if (ex.retry()) continue; // without resetting timeout
       if( fwd ) {
 	RECOVER_FORWARD;
-	continue;
       }
-      if (is_COMM_FAILURE_minor(ex.minor())) {
+      else if (is_COMM_FAILURE_minor(ex.minor())) {
 	CORBA::COMM_FAILURE ex2(ex.minor(), ex.completed());
 	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
 	  throw ex2;
@@ -1095,9 +1104,8 @@ omniObjRef::_locateRequest()
     catch(CORBA::COMM_FAILURE& ex) {
       if( fwd ) {
 	RECOVER_FORWARD;
-	continue;
       }
-      if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
+      else if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
 	throw;
     }
     catch(CORBA::TRANSIENT& ex) {
@@ -1107,9 +1115,8 @@ omniObjRef::_locateRequest()
     catch(CORBA::OBJECT_NOT_EXIST& ex) {
       if( fwd ) {
 	RECOVER_FORWARD;
-	continue;
       }
-      if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
+      else if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
 	throw;
     }
     catch(CORBA::SystemException& ex) {
@@ -1128,6 +1135,11 @@ omniObjRef::_locateRequest()
 	  throw ex2;
       }
       omni::locationForward(this,ex.get_obj()->_PR_getobj(),ex.is_permanent());
+    }
+
+    if (orbParameters::resetTimeOutOnRetries) {
+      abs_secs = 0;
+      abs_nanosecs = 0;
     }
   }
 }
@@ -1218,6 +1230,36 @@ static copyValuesInLocalCallsHandler copyValuesInLocalCallsHandler_;
 
 
 /////////////////////////////////////////////////////////////////////////////
+class resetTimeOutOnRetriesHandler : public orbOptions::Handler {
+public:
+
+  resetTimeOutOnRetriesHandler() : 
+    orbOptions::Handler("resetTimeOutOnRetries",
+			"resetTimeOutOnRetries = 0 or 1",
+			1,
+			"-ORBresetTimeOutOnRetries < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::resetTimeOutOnRetries = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::resetTimeOutOnRetries,
+			     result);
+  }
+};
+
+static resetTimeOutOnRetriesHandler resetTimeOutOnRetriesHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 class omni_ObjRef_initialiser : public omniInitialiser {
@@ -1226,6 +1268,7 @@ public:
   omni_ObjRef_initialiser() {
     orbOptions::singleton().registerHandler(verifyObjectExistsAndTypeHandler_);
     orbOptions::singleton().registerHandler(copyValuesInLocalCallsHandler_);
+    orbOptions::singleton().registerHandler(resetTimeOutOnRetriesHandler_);
   }
 
   void attach() { }

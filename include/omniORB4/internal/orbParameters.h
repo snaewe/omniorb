@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2007/07/31 16:38:31  dgrisby
+  New resetTimeOutOnRetries parameter.
+
   Revision 1.1.4.8  2007/02/26 15:16:31  dgrisby
   New socketSendBuffer parameter, defaulting to 16384 on Windows.
   Avoids a bug in Windows where select() on send waits for all sent data
@@ -374,6 +377,14 @@ _CORBA_MODULE_VAR _core_attr timeValue clientConnectTimeOutPeriod;
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportPerThreadTimeOut;
 //   If true, each thread may have a timeout associated with it. This
 //   gives a performance hit due to accessing per-thread data.
+//
+//   Valid values = 0 or 1
+
+_CORBA_MODULE_VAR _core_attr CORBA::Boolean resetTimeOutOnRetries;
+//   If true, the call timeout is reset when an exception handler
+//   causes a call to be retried. If false, the timeout is not reset,
+//   and therefore applies to the call as a whole, rather than to each
+//   individual call attempt.
 //
 //   Valid values = 0 or 1
 
