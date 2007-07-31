@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2007/07/31 16:36:50  dgrisby
+  Hard-code define of IPV6_V6ONLY on Windows.
+
   Revision 1.1.4.15  2007/07/31 14:23:43  dgrisby
   If the platform does not accept IPv4 connections on IPv6 sockets by
   default, try to enable it by turning the IPV6_V6ONLY socket option
@@ -195,6 +198,9 @@
 
 #  if defined(OMNI_SUPPORT_IPV6)
 #    include <ws2tcpip.h>
+#    if !defined(IPV6_V6ONLY)
+#      define IPV6_V6ONLY 27  // Defined to this on Vista
+#    endif
 #  endif
 
 #  define RC_INADDR_NONE     INADDR_NONE
