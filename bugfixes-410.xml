@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.1.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.1.0">
+
+<bug id="1" date="Mon Dec 11 10:38:10 GMT 2006" user="dgrisby">
+  <summary>Duplicated member in vxWorks omnithread</summary>
+  <text>
+  Compiler error due to a member being declared twice.
+  </text>
+</bug>
+
+<bug id="2" date="Thu Dec 28 18:08:10 GMT 2006" user="dgrisby">
+  <summary>Segfault on shutdown with some type definitions</summary>
+  <text>
+  When releasing children of a struct, union or value TypeCode, a
+  reference to the parent must be held to prevent its premature
+  deletion.
+  </text>
+</bug>
+
+<bug id="3" date="Mon Feb  5 17:36:24 GMT 2007" user="dgrisby">
+  <summary>Segfault in connection scavenger</summary>
+  <text>
+  Scavenger did not cope with client strands with no connection. This
+  can happen if a Python client uses invalid argument types, for
+  example.
+  </text>
+</bug>
+
+<bug id="4" date="Mon Feb  5 18:31:25 GMT 2007" user="dgrisby">
+  <summary>Infinite poll() timeout</summary>
+  <reported>Richard Hirst</reported>
+  <text>
+  A rounding error in calculating the poll() timeout could lead to
+  infinite timeout.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-January/028386.html"/>
+</bug>
+
+<bug id="5" date="Wed Feb 28 15:21:51 GMT 2007" user="dgrisby">
+  <summary>Assertion failure trying to marshal an Any containing a nil
+  objref.</summary>
+  <text>
+  Objref pointer is null when the object reference is nil.
+  </text>
+</bug>
+
+<bug id="6" date="Wed Mar  7 18:28:35 GMT 2007" user="dgrisby">
+  <summary>MARSHAL exception trying to create a union TypeCode with an
+  enum discriminator</summary>
+  <reported>Peter S. Housel</reported>
+  <text>
+  Code attempted to extract a enum from an Any as a ULong.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-March/028477.html"/>
+</bug>
+
+<bug id="7" date="Fri Mar 23 11:40:51 GMT 2007" user="dgrisby">
+  <summary>Incorrect compiler flags for static libraries on VC++ 7 and 8</summary>
+  <text>
+  DLL link options were used when building static libraries.
+  </text>
+</bug>
+
+<bug id="8" date="Fri Mar 23 12:36:53 GMT 2007" user="dgrisby">
+  <summary>Failure on start-up linking with SSL transport on Windows</summary>
+  <text>
+  A change to the link forcing mechanism did not work on Windows due
+  to the non-uniform DLL memory model.
+  </text>
+</bug>
+
+<bug id="9" date="Thu Apr  5 16:03:44 BST 2007" user="dgrisby">
+  <summary>Infinite loop after handling CancelRequest</summary>
+  <text>
+  A CancelRequest received for a finished call would lead to an
+  infinite loop.
+  </text>
+</bug>
+
+<bug id="10" date="Thu Apr 12 20:48:46 BST 2007" user="dgrisby">
+  <summary>Invalid code generated for fixed point values in unions</summary>
+  <text>
+  Fixed point values cannot go inside the C++ union in an IDL union.
+  </text>
+</bug>
+
+<bug id="11" date="Sat Apr 14 18:55:30 BST 2007" user="dgrisby">
+  <summary>Failure in Identity downcasting on VC++ 8</summary>
+  <text>
+  VC++ 8's optimiser optimises away some functions that were critical
+  to the operation of the downcasting mechanism used on Identity
+  objects.
+  </text>
+</bug>
+
+<bug id="12" date="Thu Apr 19 00:03:15 BST 2007" user="dgrisby">
+  <summary>Compilation errors on 64 bit Windows</summary>
+  <text>
+  VC++ on Windows 64 has no standard integer type that is as large as
+  its pointers.
+  </text>
+</bug>
+
+<bug id="13" date="Sun Jun  3 20:20:22 BST 2007" user="dgrisby">
+  <summary>Hang in POA destruction after POAManager deactivate()</summary>
+  <text>
+  POAManager deactivate would not meet its detached object if all
+  objects were busy, leading to a hang in POA destruction.
+  </text>
+</bug>
+
+<bug id="14" date="Wed Jun  6 18:22:11 BST 2007" user="dgrisby">
+  <summary>Incorrect return from TypeCode::member_label</summary>
+  <text>
+  Enum discriminators were returned as ulongs from
+  TypeCode::member_label, rather than as the proper enums.
+  </text>
+</bug>
+
+<bug id="15" date="Tue Jun 19 17:19:28 BST 2007" user="dgrisby">
+  <summary>omniNames failure with -errlog on Windows</summary>
+  <text>
+  Windows doesn't support line buffering, and fails with a zero buffer
+  length.
+  </text>
+</bug>
+
+<bug id="16" date="Wed Jul  4 10:09:53 BST 2007" user="dgrisby">
+  <summary>Condition variables leaked</summary>
+  <text>
+  The condition variables created when multiple threads peek a
+  connection simultaneously were leaked.
+  </text>
+</bug>
+
+</buglist>

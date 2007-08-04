@@ -1,3 +1,22 @@
+Sat Aug  4 15:48:08 BST 2007 dgrisby
+====================================
+
+- Report failures to start threads better.
+
+src/lib/omniORB/orbcore/invoker.cc
+
+- Updates for 4.1.1 release.
+
+README.FIRST.txt
+ReleaseNotes.txt
+THIS_IS_OMNIORB_4_1_0
+THIS_IS_OMNIORB_4_1_1
+bugfixes-410.xml
+configure
+configure.ac
+mk/version.mk
+
+
 Tue Jul 31 17:35:53 BST 2007 dgrisby
 ====================================
 
@@ -16,7 +35,7 @@ src/lib/omniORB/orbcore/omniObjRef.cc
 Tue Jul 31 16:12:42 BST 2007 dgrisby
 ====================================
 
-- Documentation updates for 4.1.0.
+- Documentation updates for 4.1.1.
 
 doc/omniORB.pdf
 doc/omniORB.ps

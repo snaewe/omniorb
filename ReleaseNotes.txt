@@ -1,10 +1,27 @@
 RELEASE NOTES
 =============
 
-This is omniORB 4.1.0.
+This is omniORB 4.1.1.
 
 See README.unix or README.win32.txt for building instructions.
 See the documentation in the doc directory for more information.
+
+
+
+Changes since omniORB 4.1.0
+---------------------------
+
+ - Bug fixes. See bugfixes-410.xml.
+
+ - Documentation updates.
+
+ - Support for new platforms and compilers.
+
+ - New configuration parameters: socketSendBuffer, resetTimeOutOnRetries.
+
+ - New -Wbguard_prefix option to omniidl.
+
+ - Small performance improvements.
 
 
 Changes since omniORB 4.1.0 release candidate 2
