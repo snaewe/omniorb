@@ -14,6 +14,7 @@ THIS_IS_OMNIORB_4_1_1
 bugfixes-410.xml
 configure
 configure.ac
+contrib/RPMs/omniORB.spec
 mk/version.mk
 
 
