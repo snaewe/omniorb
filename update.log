@@ -15,6 +15,7 @@ bugfixes-410.xml
 configure
 configure.ac
 contrib/RPMs/omniORB.spec
+contrib/RPMs/omniORB_new.spec
 mk/version.mk
 
 
