@@ -29,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.14  2007/08/31 09:45:57  dgrisby
+// Bug in handling pd_remaining within get_octet_array.
+//
 // Revision 1.1.2.13  2007/04/18 23:03:53  dgrisby
 // Another size_t that can't be logged on Win64.
 //
@@ -901,11 +904,26 @@ get_octet_array(_CORBA_Octet* b, int size, omni::alignment_t align)
   if (pd_remaining) {
     // More octets left in this chunk (but not in the buffer)
     copyStateToActual();
-    pd_actual.get_octet_array(b, pd_remaining, align);
-    size -= pd_remaining;
-    b += pd_remaining;
-    pd_remaining = 0;
-    copyStateFromActual();
+
+    if (pd_remaining <= size) {
+      pd_actual.get_octet_array(b, pd_remaining, align);
+      size -= pd_remaining;
+      b += pd_remaining;
+      pd_remaining = 0;
+
+      copyStateFromActual();
+
+      // Next read will start a new chunk
+      pd_inb_end = pd_inb_mkr;
+    }
+    else {
+      pd_actual.get_octet_array(b, size, align);
+      pd_remaining -= size;
+
+      copyStateFromActual();
+
+      pd_inb_end = (void*)(((omni::ptr_arith_t)pd_inb_mkr) + pd_remaining);
+    }
   }
 
   copyStateToActual();
@@ -939,7 +957,6 @@ get_octet_array(_CORBA_Octet* b, int size, omni::alignment_t align)
     }
 
     if (len <= 0 || len >= 0x7fffff00) {
-      OMNIORB_ASSERT(0);
       OMNIORB_THROW(MARSHAL, MARSHAL_InvalidChunkedEncoding,
 		    (CORBA::CompletionStatus)completion());
     }

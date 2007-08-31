@@ -140,4 +140,13 @@
   </text>
 </bug>
 
+<bug id="17" date="Fri Aug 31 10:43:11 BST 2007" user="dgrisby">
+  <summary>Value chunk reading error</summary>
+  <text>
+  When reading bulk data from value chunks, the reader could get out
+  of synchronisation with the chunk boundaries, leading to
+  unmarshalling of invalid data.
+  </text>
+</bug>
+
 </buglist>
