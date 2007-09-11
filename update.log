@@ -1,3 +1,11 @@
+Tue Sep 11 12:52:50 BST 2007 dgrisby
+====================================
+
+- Recursive nested function didn't work on ancient Python versions.
+
+src/lib/omniORB/omniidl_be/cxx/value.py
+
+
 Fri Aug 31 10:44:47 BST 2007 dgrisby
 ====================================
 

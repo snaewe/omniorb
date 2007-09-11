@@ -2743,35 +2743,6 @@ class ValueType (mapping.Decl):
         unmarshal_members   = output.StringStream()
         member_initialisers = output.StringStream()
 
-        def ptrToValueNames(decl, result, done):
-            for v in decl.inherits():
-                v = v.fullDecl()
-                iname = "::" + string.join(v.scopedName(), "::")
-                if done.has_key(iname):
-                    return result
-                done[iname] = None
-                result.append(iname)
-
-                ptrToValueNames(v, result, done)
-
-            try:
-                supports = decl.supports()
-            except AttributeError:
-                supports = []
-            
-            for i in supports:
-                i = i.fullDecl()
-                if i.abstract():
-                    iname = "::" + string.join(i.scopedName(), "::")
-                    if done.has_key(iname):
-                        return result
-                    done[iname] = None
-                    result.append(iname)
-
-                    ptrToValueNames(i, result, done)
-
-            return result
-
         for iname in ptrToValueNames(astdecl, [], {}):
             ptrToValuePtr.out(value_ptrToValuePtr, iname=iname)
             ptrToValueStr.out(value_ptrToValueStr, iname=iname)
@@ -2880,6 +2851,36 @@ class ValueType (mapping.Decl):
             stream.out(valuefactory_functions, fqname=value_name,
                        name=cxx_name)
             stream.out(valuefactory_create_for_unmarshal, fqname=value_name)
+
+
+def ptrToValueNames(decl, result, done):
+    for v in decl.inherits():
+        v = v.fullDecl()
+        iname = "::" + string.join(v.scopedName(), "::")
+        if done.has_key(iname):
+            return result
+        done[iname] = None
+        result.append(iname)
+
+        ptrToValueNames(v, result, done)
+
+    try:
+        supports = decl.supports()
+    except AttributeError:
+        supports = []
+
+    for i in supports:
+        i = i.fullDecl()
+        if i.abstract():
+            iname = "::" + string.join(i.scopedName(), "::")
+            if done.has_key(iname):
+                return result
+            done[iname] = None
+            result.append(iname)
+
+            ptrToValueNames(i, result, done)
+
+    return result
 
 
 class FactoryWrapper (idlast.Operation):
