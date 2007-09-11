@@ -1,3 +1,11 @@
+Tue Sep 11 13:00:04 BST 2007 dgrisby
+====================================
+
+- Do not mask exceptions in the C++ backend.
+
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+
+
 Tue Sep 11 12:52:50 BST 2007 dgrisby
 ====================================
 
