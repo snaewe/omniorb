@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.12  2007/09/19 14:16:07  dgrisby
+# Avoid namespace clashes if IDL defines modules named CORBA.
+#
 # Revision 1.6.2.11  2007/02/26 15:51:14  dgrisby
 # Suppress cd parameter when it is definitely unused, to avoid compiler
 # warnings.
@@ -227,12 +230,12 @@ interface_Helper = """\
   return ::@name@::_nil();
 }
 
-CORBA::Boolean @name@_Helper::is_nil(::@name@_ptr p) {
-  return CORBA::is_nil(p);\n
+::CORBA::Boolean @name@_Helper::is_nil(::@name@_ptr p) {
+  return ::CORBA::is_nil(p);\n
 }
 
 void @name@_Helper::release(::@name@_ptr p) {
-  CORBA::release(p);
+  ::CORBA::release(p);
 }
 
 void @name@_Helper::marshalObjRef(::@name@_ptr obj, cdrStream& s) {
@@ -257,7 +260,7 @@ void @name@_Helper::duplicate(::@name@_ptr obj) {
 }
 
 @name@_ptr
-@name@::_narrow(CORBA::Object_ptr obj)
+@name@::_narrow(::CORBA::Object_ptr obj)
 {
   if( !obj || obj->_NP_is_nil() || obj->_NP_is_pseudo() ) return _nil();
   _ptr_type e = (_ptr_type) obj->_PR_getobj()->_realNarrow(_PD_repoId);
@@ -266,7 +269,7 @@ void @name@_Helper::duplicate(::@name@_ptr obj) {
 
 
 @name@_ptr
-@name@::_unchecked_narrow(CORBA::Object_ptr obj)
+@name@::_unchecked_narrow(::CORBA::Object_ptr obj)
 {
   if( !obj || obj->_NP_is_nil() || obj->_NP_is_pseudo() ) return _nil();
   _ptr_type e = (_ptr_type) obj->_PR_getobj()->_uncheckedNarrow(_PD_repoId);
@@ -276,13 +279,13 @@ void @name@_Helper::duplicate(::@name@_ptr obj) {
 
 interface_narrow_abstract = """\
 @name@_ptr
-@name@::_narrow(CORBA::AbstractBase_ptr obj)
+@name@::_narrow(::CORBA::AbstractBase_ptr obj)
 {
   return _narrow(obj->_NP_to_object());
 }
 
 @name@_ptr
-@name@::_unchecked_narrow(CORBA::AbstractBase_ptr obj)
+@name@::_unchecked_narrow(::CORBA::AbstractBase_ptr obj)
 {
   return _unchecked_narrow(obj->_NP_to_object());
 }
@@ -308,17 +311,17 @@ void @name@_Helper::duplicate(::@name@_ptr obj) {
 }
 
 @name@_ptr
-@name@::_narrow(CORBA::AbstractBase_ptr obj)
+@name@::_narrow(::CORBA::AbstractBase_ptr obj)
 {
   if( !obj || obj->_NP_is_nil() ) return _nil();
   _ptr_type e = 0;
   
-  CORBA::ValueBase* v = obj->_to_value();
+  ::CORBA::ValueBase* v = obj->_to_value();
   if (v) {
     e = (_ptr_type) v->_ptrToValue(_PD_repoId);
   }
   else {
-    CORBA::Object_ptr o = obj->_NP_to_object();
+    ::CORBA::Object_ptr o = obj->_NP_to_object();
     if (o && !o->_NP_is_nil()) {
       e = (_ptr_type) o->_PR_getobj()->_realNarrow(_PD_repoId);
     }
@@ -327,17 +330,17 @@ void @name@_Helper::duplicate(::@name@_ptr obj) {
 }
 
 @name@_ptr
-@name@::_unchecked_narrow(CORBA::AbstractBase_ptr obj)
+@name@::_unchecked_narrow(::CORBA::AbstractBase_ptr obj)
 {
   if( !obj || obj->_NP_is_nil() ) return _nil();
   _ptr_type e = 0;
   
-  CORBA::ValueBase* v = obj->_to_value();
+  ::CORBA::ValueBase* v = obj->_to_value();
   if (v) {
     e = (_ptr_type) v->_ptrToValue(_PD_repoId);
   }
   else {
-    CORBA::Object_ptr o = obj->_NP_to_object();
+    ::CORBA::Object_ptr o = obj->_NP_to_object();
     if (o && !o->_NP_is_nil()) {
       e = (_ptr_type) o->_PR_getobj()->_uncheckedNarrow(_PD_repoId);
     }
@@ -359,7 +362,7 @@ void @name@_Helper::duplicate(::@name@_ptr obj) {
 }
 
 @name@_ptr
-@name@::_narrow(CORBA::Object_ptr obj)
+@name@::_narrow(::CORBA::Object_ptr obj)
 {
   if( !obj || obj->_NP_is_nil() ) return _nil();
   _ptr_type e = (_ptr_type) obj->_ptrToObjRef(_PD_repoId);
@@ -371,7 +374,7 @@ void @name@_Helper::duplicate(::@name@_ptr obj) {
 }
 
 @name@_ptr
-@name@::_unchecked_narrow(CORBA::Object_ptr obj)
+@name@::_unchecked_narrow(::CORBA::Object_ptr obj)
 {
   return _narrow(obj);
 }
@@ -520,7 +523,7 @@ void*
 """
 
 local_interface_nil_operation = """\
-OMNIORB_THROW(INV_OBJREF, INV_OBJREF_InvokeOnNilObjRef, CORBA::COMPLETED_NO);"""
+OMNIORB_THROW(INV_OBJREF, INV_OBJREF_InvokeOnNilObjRef, ::CORBA::COMPLETED_NO);"""
 
 local_interface_nil_dummy_return = """
 #ifdef NEED_DUMMY_RETURN
@@ -541,11 +544,11 @@ static void
 """
 
 interface_callback_context = """\
-  CORBA::Context_var ctxt;
+  ::CORBA::Context_var ctxt;
   if (cd->is_upcall())
-    ctxt = CORBA::Context::_duplicate(tcd->ctxt);
+    ctxt = ::CORBA::Context::_duplicate(tcd->ctxt);
   else
-    ctxt = CORBA::Context::filterContext(tcd->ctxt, @cname@, @count@);
+    ctxt = ::CORBA::Context::filterContext(tcd->ctxt, @cname@, @count@);
 """
 
 interface_callback_invoke = """\
@@ -602,7 +605,7 @@ void @call_descriptor@::marshalArguments(cdrStream& _n)
 """
 
 interface_proxy_marshal_context = """\
-CORBA::Context::marshalContext(ctxt, @name@, @count@, _n);"""
+::CORBA::Context::marshalContext(ctxt, @name@, @count@, _n);"""
 
 interface_proxy_unmarshal_arguments = """\
 void @call_descriptor@::unmarshalArguments(cdrStream& _n)
@@ -612,7 +615,7 @@ void @call_descriptor@::unmarshalArguments(cdrStream& _n)
 """
 
 interface_proxy_unmarshal_context = """\
-ctxt = CORBA::Context::unmarshalContext(_n);"""
+ctxt = ::CORBA::Context::unmarshalContext(_n);"""
 
 interface_proxy_marshal_returnedvalues = """\
 void @call_descriptor@::marshalReturnedValues(cdrStream& _n)
@@ -640,7 +643,7 @@ void @call_descriptor@::userException(cdrStream& s, _OMNI_NS(IOP_C)* iop_client,
   else {
     if (iop_client) iop_client->RequestCompleted(1);
     OMNIORB_THROW(UNKNOWN,UNKNOWN_UserException,
-                  (CORBA::CompletionStatus)s.completion());
+                  (::CORBA::CompletionStatus)s.completion());
   }
 }
 """
@@ -684,7 +687,7 @@ if (_s) {
   }
   else {
     OMNIORB_THROW(INV_OBJREF, INV_OBJREF_ShortcutServantDeactivated,
-                  CORBA::COMPLETED_NO);
+                  ::CORBA::COMPLETED_NO);
   }
 }\
 """
@@ -701,7 +704,7 @@ omniObjRef*
 }
 
 
-CORBA::Boolean
+::CORBA::Boolean
 @pof_name@::is_a(const char* id) const
 {
   if( omni::ptrStrMatch(id, ::@name@::_PD_repoId) )
@@ -733,7 +736,7 @@ interface_impl = """\
 @impl_fqname@::~_impl_@uname@() {}
 
 
-CORBA::Boolean
+::CORBA::Boolean
 @impl_fqname@::_dispatch(omniCallHandle& _handle)
 {
   @getopname@
@@ -808,8 +811,8 @@ catch(@exname@& ex) {
 """
 
 interface_operation_context = """\
-CORBA::Context_var _ctxt;
-_ctxt = CORBA::Context::unmarshalContext(iop_s);
+::CORBA::Context_var _ctxt;
+_ctxt = ::CORBA::Context::unmarshalContext(iop_s);
 """
 
 interface_operation_dispatch = """\
@@ -920,10 +923,10 @@ _init_in_def_( const @type@ @name@ = @value@; )
 ## Exception
 ##
 exception = """\
-CORBA::Exception::insertExceptionToAny @scoped_name@::insertToAnyFn = 0;
-CORBA::Exception::insertExceptionToAnyNCP @scoped_name@::insertToAnyFnNCP = 0;
+::CORBA::Exception::insertExceptionToAny @scoped_name@::insertToAnyFn = 0;
+::CORBA::Exception::insertExceptionToAnyNCP @scoped_name@::insertToAnyFnNCP = 0;
 
-@scoped_name@::@name@(const @scoped_name@& _s) : CORBA::UserException(_s)
+@scoped_name@::@name@(const @scoped_name@& _s) : ::CORBA::UserException(_s)
 {
   @copy_ctor_body@
 }
@@ -932,7 +935,7 @@ CORBA::Exception::insertExceptionToAnyNCP @scoped_name@::insertToAnyFnNCP = 0;
 
 @scoped_name@& @scoped_name@::operator=(const @scoped_name@& _s)
 {
-  ((CORBA::UserException*) this)->operator=(_s);
+  ((::CORBA::UserException*) this)->operator=(_s);
   @assign_op_body@
   return *this;
 }
@@ -944,15 +947,15 @@ void @scoped_name@::_raise() const { throw *this; }
 const char* @scoped_name@::_PD_repoId = "@repoID@";
 const char* @scoped_name@::_PD_typeId = "Exception/UserException/@scoped_name@";
 
-@scoped_name@* @scoped_name@::_downcast(CORBA::Exception* _e) {
+@scoped_name@* @scoped_name@::_downcast(::CORBA::Exception* _e) {
   return (@name@*) _NP_is_a(_e, _PD_typeId);
 }
 
-const @scoped_name@* @scoped_name@::_downcast(const CORBA::Exception* _e) {
+const @scoped_name@* @scoped_name@::_downcast(const ::CORBA::Exception* _e) {
   return (const @name@*) _NP_is_a(_e, _PD_typeId);
 }
 
-CORBA::Exception* @scoped_name@::_NP_duplicate() const {
+::CORBA::Exception* @scoped_name@::_NP_duplicate() const {
   return new @name@(*this);
 }
 

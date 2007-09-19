@@ -235,15 +235,15 @@ class Type:
         if self.string() or d_type.string():
             return "char*"
         if self.wstring() or d_type.wstring():
-            return "CORBA::WChar*"
+            return "::CORBA::WChar*"
         if self.typecode():
-            return "CORBA::TypeCode_ptr"
+            return "::CORBA::TypeCode_ptr"
         if self.any():
-            return "CORBA::Any"
+            return "::CORBA::Any"
         if self.void():
             return "void"
         if self.fixed():
-            return "CORBA::Fixed"
+            return "::CORBA::Fixed"
         if self.sequence():
             return self.sequenceTemplate(environment, gscope=gscope)
 
@@ -266,13 +266,13 @@ class Type:
         if basic_map_out.has_key(d_kind):
             return basic_map_out[d_kind]
         if d_type.string():
-            return "CORBA::String_out"
+            return "::CORBA::String_out"
         if d_type.wstring():
-            return "CORBA::WString_out"
+            return "::CORBA::WString_out"
         if d_type.typecode():
-            return "CORBA::TypeCode_OUT_arg"
+            return "::CORBA::TypeCode_OUT_arg"
         if d_type.any():
-            return "CORBA::Any_OUT_arg"
+            return "::CORBA::Any_OUT_arg"
         if d_type.sequence():
             return Type(d_type.type().seqType()).__base_type_OUT(environment)
 
@@ -287,13 +287,13 @@ class Type:
         d_type = self.deref()
         kind = d_type.kind()
         if d_type.string():
-            return "CORBA::String_INOUT_arg"
+            return "::CORBA::String_INOUT_arg"
         if d_type.wstring():
-            return "CORBA::WString_INOUT_arg"
+            return "::CORBA::WString_INOUT_arg"
         if d_type.typecode():
-            return "CORBA::TypeCode_INOUT_arg"
+            return "::CORBA::TypeCode_INOUT_arg"
         if d_type.any():
-            return "CORBA::Any_INOUT_arg"
+            return "::CORBA::Any_INOUT_arg"
 
         name = id.Name(self.type().scopedName())
         uname = name.unambiguous(environment)
@@ -307,7 +307,7 @@ class Type:
                 objref_name = name
 
             if d_type.type().scopedName() == ["CORBA", "Object"]:
-                return "CORBA::Object_INOUT_arg"
+                return "::CORBA::Object_INOUT_arg"
 
             return "_CORBA_ObjRef_INOUT_arg< " + objref_name.fullyQualify() + \
                    ", " + name.unambiguous(environment) + "_Helper >"
@@ -435,14 +435,14 @@ class Type:
         if not self.array():
             d_type = self.deref()
             if d_type.string():
-                return "CORBA::String_member"
+                return "::CORBA::String_member"
             if d_type.wstring():
-                return "CORBA::WString_member"
+                return "::CORBA::WString_member"
             if d_type.interface():
                 return d_type.objRefTemplate("Member", environment,
                                              gscope=gscope)
             if d_type.typecode():
-                return "CORBA::TypeCode_member"
+                return "::CORBA::TypeCode_member"
 
             if self.sequence():
                 return d_type.sequenceTemplate(environment, gscope=gscope)
@@ -466,7 +466,7 @@ class Type:
         type = self.deref().__type
         name = type.decl().scopedName()
         if name == ["CORBA", "Object"]:
-            return "CORBA::Object_" + suffix
+            return "::CORBA::Object_" + suffix
 
         name = id.Name(name)
         uname = name.unambiguous(environment)
@@ -576,21 +576,21 @@ class Type:
         SeqTypeID = SeqType.base(environment, gscope=gscope)
         d_SeqTypeID = d_SeqType.base(environment, gscope=gscope)
         if d_SeqType.typecode():
-            d_SeqTypeID = "CORBA::TypeCode_member"
-            SeqTypeID = "CORBA::TypeCode_member"
+            d_SeqTypeID = "::CORBA::TypeCode_member"
+            SeqTypeID = "::CORBA::TypeCode_member"
         elif d_SeqType.interface():
             d_SeqTypeID = string.replace(d_SeqTypeID,"_ptr","")
             SeqTypeID = string.replace(SeqTypeID,"_ptr","")
         elif d_SeqType.string():
-            d_SeqTypeID = "CORBA::String_member"
+            d_SeqTypeID = "::CORBA::String_member"
         elif d_SeqType.wstring():
-            d_SeqTypeID = "CORBA::WString_member"
+            d_SeqTypeID = "::CORBA::WString_member"
         
         if SeqType.string():
-            SeqTypeID = "CORBA::String_member"
+            SeqTypeID = "::CORBA::String_member"
 
         if SeqType.wstring():
-            SeqTypeID = "CORBA::WString_member"
+            SeqTypeID = "::CORBA::WString_member"
 
         # silly special case (not needed?):
         #if d_SeqType.objref() and SeqType.typedef():
@@ -772,10 +772,10 @@ class Type:
             name = id.Name(self.type().decl().scopedName()).suffix("_var")
             return name.unambiguous(environment)
 
-        if d_T.typecode(): return "CORBA::TypeCode_var"
-        if d_T.any():      return "CORBA::Any_var"
-        if d_T.string():   return "CORBA::String_var"
-        if d_T.wstring():  return "CORBA::WString_var"
+        if d_T.typecode(): return "::CORBA::TypeCode_var"
+        if d_T.any():      return "::CORBA::Any_var"
+        if d_T.string():   return "::CORBA::String_var"
+        if d_T.wstring():  return "::CORBA::WString_var"
         if d_T.enum():
             name = id.Name(self.type().decl().scopedName())
             return name.unambiguous(environment)
@@ -804,10 +804,10 @@ class Type:
         d_T = self.deref()
 
         if d_T.interface() or d_T.typecode():
-            return "CORBA::release(" + thing + ");"
-        if d_T.string():   return "CORBA::string_free(" + thing + ");"
+            return "::CORBA::release(" + thing + ");"
+        if d_T.string():   return "::CORBA::string_free(" + thing + ");"
 
-        if d_T.wstring():   return "CORBA::wstring_free(" + thing + ");"
+        if d_T.wstring():   return "::CORBA::wstring_free(" + thing + ");"
 
         if d_T.struct() or d_T.union() or d_T.exception() or \
            d_T.sequence() or d_T.any():
@@ -829,7 +829,7 @@ class Type:
 
         d_T = self.deref()
         if d_T.typecode():
-            return dest + " = CORBA::TypeCode::_duplicate(" + src + ");"
+            return dest + " = ::CORBA::TypeCode::_duplicate(" + src + ");"
         if d_T.interface():
             # Use the internal omniORB duplicate function in case the
             # normal one isn't available
@@ -837,11 +837,11 @@ class Type:
             return name.unambiguous(environment) + "::duplicate" +\
                    "(" + src + ");\n" + dest + " = " + src + ";"
         if d_T.string():
-            return dest + " = CORBA::string_dup(" + src + ");"
+            return dest + " = ::CORBA::string_dup(" + src + ");"
         if d_T.wstring():
-            return dest + " = CORBA::wstring_dup(" + src + ");"
+            return dest + " = ::CORBA::wstring_dup(" + src + ");"
         if d_T.any():
-            return dest + " = new CORBA::Any(" + src + ");"
+            return dest + " = new ::CORBA::Any(" + src + ");"
         
         if d_T.struct() or d_T.union() or d_T.exception() or d_T.sequence():
             name = id.Name(self.type().decl().scopedName()).\
@@ -1087,19 +1087,19 @@ already_Variable = {
 
 # CORBA2.3 P1-15 1.5 Mapping for Basic Data Types
 basic_map = {
-    idltype.tk_short:              "CORBA::Short",
-    idltype.tk_long:               "CORBA::Long",
-    idltype.tk_longlong:           "CORBA::LongLong",
-    idltype.tk_ushort:             "CORBA::UShort",
-    idltype.tk_ulong:              "CORBA::ULong",
-    idltype.tk_ulonglong:          "CORBA::ULongLong",
-    idltype.tk_float:              "CORBA::Float",
-    idltype.tk_double:             "CORBA::Double",
-    idltype.tk_longdouble:         "CORBA::LongDouble",
-    idltype.tk_char:               "CORBA::Char",
-    idltype.tk_wchar:              "CORBA::WChar",
-    idltype.tk_boolean:            "CORBA::Boolean",
-    idltype.tk_octet:              "CORBA::Octet"
+    idltype.tk_short:              "::CORBA::Short",
+    idltype.tk_long:               "::CORBA::Long",
+    idltype.tk_longlong:           "::CORBA::LongLong",
+    idltype.tk_ushort:             "::CORBA::UShort",
+    idltype.tk_ulong:              "::CORBA::ULong",
+    idltype.tk_ulonglong:          "::CORBA::ULongLong",
+    idltype.tk_float:              "::CORBA::Float",
+    idltype.tk_double:             "::CORBA::Double",
+    idltype.tk_longdouble:         "::CORBA::LongDouble",
+    idltype.tk_char:               "::CORBA::Char",
+    idltype.tk_wchar:              "::CORBA::WChar",
+    idltype.tk_boolean:            "::CORBA::Boolean",
+    idltype.tk_octet:              "::CORBA::Octet"
     }
 basic_map_out = { }
 for key,value in basic_map.items():

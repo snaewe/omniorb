@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.16.2.2  2007/09/19 14:16:07  dgrisby
+# Avoid namespace clashes if IDL defines modules named CORBA.
+#
 # Revision 1.16.2.1  2003/03/23 21:02:36  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -184,7 +187,7 @@ def write_template(name, inherits, node, stream,
 
             # deal with call contextx
             if operation.contexts() != []:
-                signature.append("CORBA::Context_ptr _ctxt")
+                signature.append("::CORBA::Context_ptr _ctxt")
                 call.append("_ctxt")
 
             if has_return_value:

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.7  2007/09/19 14:16:08  dgrisby
+  Avoid namespace clashes if IDL defines modules named CORBA.
+
   Revision 1.5.2.6  2006/01/10 13:59:37  dgrisby
   New clientConnectTimeOutPeriod configuration parameter.
 
@@ -728,7 +731,7 @@ OMNI_NAMESPACE_END(omni)
 
 
 #define OMNIORB_THROW(name, minor, completion) \
-  throw CORBA::name(minor, completion)
+  throw ::CORBA::name(minor, completion)
 
 #endif
 

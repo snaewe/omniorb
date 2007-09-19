@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.18  2007/09/19 14:16:07  dgrisby
+# Avoid namespace clashes if IDL defines modules named CORBA.
+#
 # Revision 1.8.2.17  2007/05/11 09:52:27  dgrisby
 # New -Wbguard_prefix option. Thanks Austin Bingham.
 #
@@ -432,8 +435,8 @@ public:
   typedef @name@_var _var_type;
 
   static _ptr_type _duplicate(_ptr_type);
-  static _ptr_type _narrow(CORBA::Object_ptr);
-  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
+  static _ptr_type _narrow(::CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(::CORBA::Object_ptr);
   @abstract_narrows@
   static _ptr_type _nil();
 
@@ -455,8 +458,8 @@ public:
 """
 
 interface_abstract_narrows = """\
-static _ptr_type _narrow(CORBA::AbstractBase_ptr);
-static _ptr_type _unchecked_narrow(CORBA::AbstractBase_ptr);
+static _ptr_type _narrow(::CORBA::AbstractBase_ptr);
+static _ptr_type _unchecked_narrow(::CORBA::AbstractBase_ptr);
 """
 
 
@@ -502,14 +505,14 @@ public:
   typedef @name@_var _var_type;
 
   static _ptr_type _duplicate(_ptr_type);
-  static _ptr_type _narrow(CORBA::AbstractBase_ptr);
-  static _ptr_type _unchecked_narrow(CORBA::AbstractBase_ptr);
+  static _ptr_type _narrow(::CORBA::AbstractBase_ptr);
+  static _ptr_type _unchecked_narrow(::CORBA::AbstractBase_ptr);
   static _ptr_type _nil();
 
   static inline void _marshalObjRef(_ptr_type, cdrStream&);
 
   static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
-    CORBA::Boolean b = s.unmarshalBoolean();
+    _CORBA_Boolean b = s.unmarshalBoolean();
     if (b) {
       omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
       if (o)
@@ -518,7 +521,7 @@ public:
         return _nil();
     }
     else {
-      CORBA::ValueBase* v = CORBA::ValueBase::_NP_unmarshal(s);
+      ::CORBA::ValueBase* v = ::CORBA::ValueBase::_NP_unmarshal(s);
       if (v)
         return (_ptr_type) v->_ptrToValue(_PD_repoId);
       else
@@ -577,18 +580,18 @@ public:
   typedef @name@_var _var_type;
 
   static _ptr_type _duplicate(_ptr_type);
-  static _ptr_type _narrow(CORBA::Object_ptr);
-  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
+  static _ptr_type _narrow(::CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(::CORBA::Object_ptr);
   @abstract_narrows@
   static _ptr_type _nil();
 
   static inline void _marshalObjRef(_ptr_type, cdrStream& s) {
     OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
-                  (CORBA::CompletionStatus)s.completion());
+                  (::CORBA::CompletionStatus)s.completion());
   }
   static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
     OMNIORB_THROW(MARSHAL, _OMNI_NS(MARSHAL_LocalObject),
-                  (CORBA::CompletionStatus)s.completion());
+                  (::CORBA::CompletionStatus)s.completion());
 #ifdef NEED_DUMMY_RETURN
     return 0;
 #endif
@@ -743,13 +746,13 @@ abstract_interface_marshal_forward = """\
 inline void
 @name@::_marshalObjRef(::@name@_ptr obj, cdrStream& s) {
   if (obj) {
-    CORBA::ValueBase* v = obj->_NP_to_value();
+    ::CORBA::ValueBase* v = obj->_NP_to_value();
     if (v) {
       s.marshalBoolean(0);
-      CORBA::ValueBase::_NP_marshal(v,s);
+      ::CORBA::ValueBase::_NP_marshal(v,s);
       return;
     }
-    CORBA::Object_ptr o = obj->_NP_to_object();
+    ::CORBA::Object_ptr o = obj->_NP_to_object();
     if (o) {
       s.marshalBoolean(1);
       omniObjRef::_marshal(o->_PR_getobj(),s);
@@ -757,7 +760,7 @@ inline void
     }
   }
   s.marshalBoolean(0);
-  CORBA::ValueBase::_NP_marshal(0, s);
+  ::CORBA::ValueBase::_NP_marshal(0, s);
 }
 """
 
@@ -782,25 +785,25 @@ typedef @base@_forany @derived@_forany;
 
 typedef_simple_string = """\
 typedef char* @name@;
-typedef CORBA::String_var @name@_var;
-typedef CORBA::String_out @name@_out;
+typedef ::CORBA::String_var @name@_var;
+typedef ::CORBA::String_out @name@_out;
 """
 
 typedef_simple_wstring = """\
-typedef CORBA::WChar* @name@;
-typedef CORBA::WString_var @name@_var;
-typedef CORBA::WString_out @name@_out;
+typedef ::CORBA::WChar* @name@;
+typedef ::CORBA::WString_var @name@_var;
+typedef ::CORBA::WString_out @name@_out;
 """
 
 typedef_simple_typecode = """\
-typedef CORBA::TypeCode_ptr @name@_ptr;
-typedef CORBA::TypeCode_var @name@_var;
+typedef ::CORBA::TypeCode_ptr @name@_ptr;
+typedef ::CORBA::TypeCode_var @name@_var;
 """
 
 typedef_simple_any = """\
-typedef CORBA::Any @name@;
-typedef CORBA::Any_var @name@_var;
-typedef CORBA::Any_out @name@_out;
+typedef ::CORBA::Any @name@;
+typedef ::CORBA::Any_var @name@_var;
+typedef ::CORBA::Any_out @name@_out;
 """
 
 typedef_simple_fixed = """\
@@ -1105,7 +1108,7 @@ struct @name@;
 ##
 
 exception = """\
-class @name@ : public CORBA::UserException {
+class @name@ : public ::CORBA::UserException {
 public:
   @Other_IDL@
   @members@
@@ -1119,9 +1122,9 @@ public:
   @name@& operator=(const @name@&);
   virtual ~@name@();
   virtual void _raise() const;
-  static @name@* _downcast(CORBA::Exception*);
-  static const @name@* _downcast(const CORBA::Exception*);
-  static inline @name@* _narrow(CORBA::Exception* _e) {
+  static @name@* _downcast(::CORBA::Exception*);
+  static const @name@* _downcast(const ::CORBA::Exception*);
+  static inline @name@* _narrow(::CORBA::Exception* _e) {
     return _downcast(_e);
   }
   
@@ -1131,7 +1134,7 @@ public:
   static _core_attr insertExceptionToAny    insertToAnyFn;
   static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
 
-  virtual CORBA::Exception* _NP_duplicate() const;
+  virtual ::CORBA::Exception* _NP_duplicate() const;
 
   static _core_attr const char* _PD_repoId;
   static _core_attr const char* _PD_typeId;
@@ -1228,8 +1231,8 @@ public:
 
 private:
   @discrimtype@ _pd__d;
-  CORBA::Boolean _pd__default;
-  CORBA::Boolean _pd__initialised;
+  _CORBA_Boolean _pd__default;
+  _CORBA_Boolean _pd__initialised;
 
   @union@
   @outsideUnion@
@@ -1255,14 +1258,14 @@ union {
 union_d_fn_body = """\
 // illegal to set discriminator before making a member active
 if (!_pd__initialised)
-  OMNIORB_THROW(BAD_PARAM,_OMNI_NS(BAD_PARAM_InvalidUnionDiscValue),CORBA::COMPLETED_NO);
+  OMNIORB_THROW(BAD_PARAM,_OMNI_NS(BAD_PARAM_InvalidUnionDiscValue),::CORBA::COMPLETED_NO);
 
 if (_value == _pd__d) return; // no change
 
 @switch@
 
 fail:
-OMNIORB_THROW(BAD_PARAM,_OMNI_NS(BAD_PARAM_InvalidUnionDiscValue),CORBA::COMPLETED_NO);
+OMNIORB_THROW(BAD_PARAM,_OMNI_NS(BAD_PARAM_InvalidUnionDiscValue),::CORBA::COMPLETED_NO);
 
 """
 
@@ -1322,20 +1325,20 @@ void @name@ (const @type@& _value) {
 """
 
 union_typecode = """\
-CORBA::TypeCode_ptr @name@ () const { return _pd_@name@._ptr; }
-void @name@(CORBA::TypeCode_ptr _value) {
+::CORBA::TypeCode_ptr @name@ () const { return _pd_@name@._ptr; }
+void @name@(::CORBA::TypeCode_ptr _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
-  _pd_@name@ = CORBA::TypeCode::_duplicate(_value);
+  _pd_@name@ = ::CORBA::TypeCode::_duplicate(_value);
 }
-void @name@(const CORBA::TypeCode_member& _value) {
+void @name@(const ::CORBA::TypeCode_member& _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
-void @name@(const CORBA::TypeCode_var& _value) {
+void @name@(const ::CORBA::TypeCode_var& _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
@@ -1367,13 +1370,13 @@ void @name@(const char*  _value) {
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
-void @name@(const CORBA::String_var& _value) {
+void @name@(const ::CORBA::String_var& _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
-void @name@(const CORBA::String_member& _value) {
+void @name@(const ::CORBA::String_member& _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
@@ -1382,28 +1385,28 @@ void @name@(const CORBA::String_member& _value) {
 """
 
 union_wstring = """\
-const CORBA::WChar * @name@ () const {
-    return (const CORBA::WChar*) _pd_@name@;
+const ::CORBA::WChar * @name@ () const {
+    return (const ::CORBA::WChar*) _pd_@name@;
 }
-void @name@(CORBA::WChar* _value) {
+void @name@(::CORBA::WChar* _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
-void @name@(const CORBA::WChar*  _value) {
+void @name@(const ::CORBA::WChar*  _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
-void @name@(const CORBA::WString_var& _value) {
+void @name@(const ::CORBA::WString_var& _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
   _pd_@name@ = _value;
 }
-void @name@(const CORBA::WString_member& _value) {
+void @name@(const ::CORBA::WString_member& _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
@@ -1464,7 +1467,7 @@ void @member@(@type@* _value) {
   _pd__initialised = 1;
   _pd__d = @discrimvalue@;
   _pd__default = @isDefault@;
-  CORBA::add_ref(_value);
+  ::CORBA::add_ref(_value);
   _pd_@member@ = _value;
 }
 """
@@ -1506,7 +1509,7 @@ _CORBA_@where@_VAR _core_attr const @type@ @name@;
 ## Typecode_ptr
 ##
 typecode = """\
-@qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;
+@qualifier@ _dyn_attr const ::CORBA::TypeCode_ptr _tc_@name@;
 """
 
 
@@ -1514,69 +1517,69 @@ typecode = """\
 ## Operators
 ##
 any_struct = """\
-extern void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-extern void operator<<=(CORBA::Any& _a, @fqname@* _sp);
-extern CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
-extern CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
+extern void operator<<=(::CORBA::Any& _a, const @fqname@& _s);
+extern void operator<<=(::CORBA::Any& _a, @fqname@* _sp);
+extern _CORBA_Boolean operator>>=(const ::CORBA::Any& _a, @fqname@*& _sp);
+extern _CORBA_Boolean operator>>=(const ::CORBA::Any& _a, const @fqname@*& _sp);
 """
 
 any_exception = """\
-void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-void operator<<=(CORBA::Any& _a, const @fqname@* _sp);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
+void operator<<=(::CORBA::Any& _a, const @fqname@& _s);
+void operator<<=(::CORBA::Any& _a, const @fqname@* _sp);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, const @fqname@*& _sp);
 """
 
 any_union = """\
-void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-void operator<<=(CORBA::Any& _a, @fqname@* _sp);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
+void operator<<=(::CORBA::Any& _a, const @fqname@& _s);
+void operator<<=(::CORBA::Any& _a, @fqname@* _sp);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, const @fqname@*& _sp);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, @fqname@*& _sp);
 """
 
 any_enum = """\
-void operator<<=(CORBA::Any& _a, @name@ _s);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @name@& _s);
+void operator<<=(::CORBA::Any& _a, @name@ _s);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, @name@& _s);
 """
 
 any_interface = """\
-void operator<<=(CORBA::Any& _a, @fqname@_ptr _s);
-void operator<<=(CORBA::Any& _a, @fqname@_ptr* _s);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s);
+void operator<<=(::CORBA::Any& _a, @fqname@_ptr _s);
+void operator<<=(::CORBA::Any& _a, @fqname@_ptr* _s);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, @fqname@_ptr& _s);
 """
 
 any_array_declarator = """\
-void operator<<=(CORBA::Any& _a, const @fqname@_forany& _s);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s);
+void operator<<=(::CORBA::Any& _a, const @fqname@_forany& _s);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, @fqname@_forany& _s);
 """
 
 any_sequence = """\
-void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-void operator<<=(CORBA::Any& _a, @fqname@* _sp);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
+void operator<<=(::CORBA::Any& _a, const @fqname@& _s);
+void operator<<=(::CORBA::Any& _a, @fqname@* _sp);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, @fqname@*& _sp);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, const @fqname@*& _sp);
 """
 
 any_value = """\
-void operator<<=(CORBA::Any& _a, @fqname@* _s);
-void operator<<=(CORBA::Any& _a, @fqname@** _s);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _s);
+void operator<<=(::CORBA::Any& _a, @fqname@* _s);
+void operator<<=(::CORBA::Any& _a, @fqname@** _s);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, @fqname@*& _s);
 """
 
 
 enum_operators = """\
 inline void operator >>=(@name@ _e, cdrStream& s) {
-  ::operator>>=((CORBA::ULong)_e, s);
+  ::operator>>=((::CORBA::ULong)_e, s);
 }
 
 inline void operator <<= (@name@& _e, cdrStream& s) {
-  CORBA::ULong @private_prefix@_e;
+  ::CORBA::ULong @private_prefix@_e;
   ::operator<<=(@private_prefix@_e,s);
   if (@private_prefix@_e <= @last_item@) {
     _e = (@name@) @private_prefix@_e;
   }
   else {
     OMNIORB_THROW(MARSHAL,_OMNI_NS(MARSHAL_InvalidEnumValue),
-                  (CORBA::CompletionStatus)s.completion());
+                  (::CORBA::CompletionStatus)s.completion());
   }
 }
 """
@@ -1592,14 +1595,14 @@ class @tie_name@ : public virtual @inherits@
 public:
   @tie_name@(_omniT& t)
     : pd_obj(&t), pd_poa(0), pd_rel(0) {}
-  @tie_name@(_omniT& t, PortableServer::POA_ptr p)
+  @tie_name@(_omniT& t, ::PortableServer::POA_ptr p)
     : pd_obj(&t), pd_poa(p), pd_rel(0) {}
-  @tie_name@(_omniT* t, CORBA::Boolean r=1)
+  @tie_name@(_omniT* t, _CORBA_Boolean r=1)
     : pd_obj(t), pd_poa(0), pd_rel(r) {}
-  @tie_name@(_omniT* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
+  @tie_name@(_omniT* t, ::PortableServer::POA_ptr p,_CORBA_Boolean r=1)
     : pd_obj(t), pd_poa(p), pd_rel(r) {}
   ~@tie_name@() {
-    if( pd_poa )  CORBA::release(pd_poa);
+    if( pd_poa )  ::CORBA::release(pd_poa);
     if( pd_rel )  delete pd_obj;
   }
 
@@ -1611,31 +1614,31 @@ public:
     pd_rel = 0;
   }
 
-  void _tied_object(_omniT* t, CORBA::Boolean r=1) {
+  void _tied_object(_omniT* t, _CORBA_Boolean r=1) {
     if( pd_rel )  delete pd_obj;
     pd_obj = t;
     pd_rel = r;
   }
 
-  CORBA::Boolean _is_owner()        { return pd_rel; }
-  void _is_owner(CORBA::Boolean io) { pd_rel = io;   }
+  _CORBA_Boolean _is_owner()        { return pd_rel; }
+  void _is_owner(_CORBA_Boolean io) { pd_rel = io;   }
 
-  PortableServer::POA_ptr _default_POA() {
-    if( !pd_poa )  return PortableServer::POA::_the_root_poa();
-    else           return PortableServer::POA::_duplicate(pd_poa);
+  ::PortableServer::POA_ptr _default_POA() {
+    if( !pd_poa )  return ::PortableServer::POA::_the_root_poa();
+    else           return ::PortableServer::POA::_duplicate(pd_poa);
   }
 
   @callables@
 
 private:
-  _omniT*                 pd_obj;
-  PortableServer::POA_ptr pd_poa;
-  CORBA::Boolean          pd_rel;
+  _omniT*                   pd_obj;
+  ::PortableServer::POA_ptr pd_poa;
+  _CORBA_Boolean            pd_rel;
 };
 """
 
 tie_template_old = """\
-template <class _omniT, CORBA::Boolean release>
+template <class _omniT, _CORBA_Boolean release>
 class @tie_name@ : public virtual @inherits@
 {
 public:
@@ -1651,7 +1654,7 @@ public:
 
 private:
   _omniT*                  pd_obj;
-  CORBA::Boolean           pd_rel;
+  _CORBA_Boolean           pd_rel;
 };
 """
 
@@ -1661,7 +1664,7 @@ private:
 tcstring = """\
 #if !defined(___tc_string_@n@__) && !defined(DISABLE_Unnamed_Bounded_String_TC)
 #define ___tc_string_@n@__
-_CORBA_GLOBAL_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_string_@n@;
+_CORBA_GLOBAL_VAR _dyn_attr const ::CORBA::TypeCode_ptr _tc_string_@n@;
 #endif
 """
 
@@ -1671,6 +1674,6 @@ _CORBA_GLOBAL_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_string_@n@;
 tcwstring = """\
 #if !defined(___tc_wstring_@n@__) && !defined(DISABLE_Unnamed_Bounded_WString_TC)
 #define ___tc_wstring_@n@__
-_CORBA_GLOBAL_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_wstring_@n@;
+_CORBA_GLOBAL_VAR _dyn_attr const ::CORBA::TypeCode_ptr _tc_wstring_@n@;
 #endif
 """

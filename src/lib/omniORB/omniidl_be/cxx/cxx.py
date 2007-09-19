@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.4  2007/09/19 14:16:08  dgrisby
+# Avoid namespace clashes if IDL defines modules named CORBA.
+#
 # Revision 1.1.6.3  2005/11/09 12:22:17  dgrisby
 # Local interfaces support.
 #
@@ -71,7 +74,7 @@ class For:
         for bound in bounds:
             i = prefix + str(index)
             stream.out("""\
-for (CORBA::ULong @i@ = 0; @i@ < @bound@; @i@++){""", i = i, bound = bound)
+for (_CORBA_ULong @i@ = 0; @i@ < @bound@; @i@++){""", i = i, bound = bound)
             stream.inc_indent()
             index_string = index_string + "[" + i + "]"
             index = index + 1

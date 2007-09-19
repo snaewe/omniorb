@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.15  2007/09/19 14:16:07  dgrisby
+# Avoid namespace clashes if IDL defines modules named CORBA.
+#
 # Revision 1.36.2.14  2007/04/12 19:51:16  dgrisby
 # Fixed point member values should not go in a union's union.
 #
@@ -563,7 +566,7 @@ def visitConst(node):
     if d_constType.string():
         type_string = "char *"
     elif d_constType.wstring():
-        type_string = "CORBA::WChar *"
+        type_string = "::CORBA::WChar *"
     elif d_constType.fixed():
         type_string = constType.member()
     else:
@@ -787,7 +790,7 @@ def visitTypedef(node):
                             element_ptr = "char*"
                         elif d_seqType.wstring():
                             element = "_CORBA_WString_element"
-                            element_ptr = "CORBA::WChar*"
+                            element_ptr = "::CORBA::WChar*"
                         elif d_seqType.interface():
                             element = seqType.base(environment)
                             element_ptr = element
@@ -799,7 +802,7 @@ def visitTypedef(node):
                             element = d_seqType.sequenceTemplate(environment)
                             element_ptr = element
                         elif d_seqType.typecode():
-                            element = "CORBA::TypeCode_member"
+                            element = "::CORBA::TypeCode_member"
                             element_ptr = element
                         else:
                             element = seqType.base(environment)
@@ -1118,7 +1121,7 @@ def visitException(node):
                 else:
                     ctor_arg_type = "const " + memberType.sequenceTemplate(environment)
             elif d_memberType.typecode():
-                ctor_arg_type = "CORBA::TypeCode_ptr"
+                ctor_arg_type = "::CORBA::TypeCode_ptr"
                 
             ident = d.identifier()
 

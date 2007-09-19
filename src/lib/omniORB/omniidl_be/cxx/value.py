@@ -64,13 +64,13 @@ public:
   typedef @name@*    _ptr_type;
   typedef @name@_var _var_type;
 
-  static _ptr_type _downcast (CORBA::ValueBase*);
+  static _ptr_type _downcast(::CORBA::ValueBase*);
   @downcast_abstract@
 
 #ifdef OMNI_HAVE_COVARIANT_RETURNS
   virtual @name@* _copy_value();
 #else
-  virtual CORBA::ValueBase* _copy_value();
+  virtual ::CORBA::ValueBase* _copy_value();
 #endif
 
   // Definitions in this scope
@@ -89,11 +89,11 @@ protected:
 public:
   // omniORB internal
   virtual const char* _NP_repositoryId() const;
-  virtual const char* _NP_repositoryId(CORBA::ULong& _hashval) const;
+  virtual const char* _NP_repositoryId(::CORBA::ULong& _hashval) const;
 
   virtual const _omni_ValueIds* _NP_truncatableIds() const;
 
-  virtual CORBA::Boolean _NP_custom() const;
+  virtual ::CORBA::Boolean _NP_custom() const;
 
   virtual void* _ptrToValue(const char* id);
 
@@ -119,21 +119,21 @@ private:
 """
 
 value_class_downcast_abstract = """\
-static _ptr_type _downcast (CORBA::AbstractBase*);"""
+static _ptr_type _downcast(::CORBA::AbstractBase*);"""
 
 value_class_np_to_value = """\
-virtual CORBA::ValueBase* _NP_to_value();"""
+virtual ::CORBA::ValueBase* _NP_to_value();"""
 
 
 valuefactory_class_initialisers = """\
-class @name@_init : public CORBA::ValueFactoryBase
+class @name@_init : public ::CORBA::ValueFactoryBase
 {
 public:
   virtual ~@name@_init();
 
   @factory_funcs@
 
-  static @name@_init* _downcast(CORBA::ValueFactory _v);
+  static @name@_init* _downcast(::CORBA::ValueFactory _v);
   virtual void* _ptrToFactory(const char* _id);
 protected:
   @name@_init();
@@ -141,15 +141,15 @@ protected:
 """
 
 valuefactory_class_no_operations = """\
-class @name@_init : public CORBA::ValueFactoryBase
+class @name@_init : public ::CORBA::ValueFactoryBase
 {
 public:
   @name@_init();
   virtual ~@name@_init();
 
-  virtual CORBA::ValueBase* create_for_unmarshal();
+  virtual ::CORBA::ValueBase* create_for_unmarshal();
 
-  static @name@_init* _downcast(CORBA::ValueFactory _v);
+  static @name@_init* _downcast(::CORBA::ValueFactory _v);
   virtual void* _ptrToFactory(const char* _id);
 };
 """
@@ -202,7 +202,7 @@ void
 }
 
 @fqname@*
-@fqname@::_downcast(CORBA::ValueBase* _b)
+@fqname@::_downcast(::CORBA::ValueBase* _b)
 {
   return _b ? (@fqname@*)_b->_ptrToValue(_PD_repoId) : 0;
 }
@@ -216,13 +216,13 @@ const char*
 }
 
 const char*
-@fqname@::_NP_repositoryId(CORBA::ULong& hash) const
+@fqname@::_NP_repositoryId(::CORBA::ULong& hash) const
 {
   hash = @idhash@U;
   return _PD_repoId;
 }
 
-CORBA::Boolean
+::CORBA::Boolean
 @fqname@::_NP_custom() const
 {
   return @custom@;
@@ -236,16 +236,16 @@ void*
   
   @ptrToValuePtr@
 
-  if (_id == CORBA::ValueBase::_PD_repoId)
-    return (CORBA::ValueBase*) this;
+  if (_id == ::CORBA::ValueBase::_PD_repoId)
+    return (::CORBA::ValueBase*) this;
   
   if (omni::strMatch(_id, ::@fqname@::_PD_repoId))
     return (::@fqname@*) this;
   
   @ptrToValueStr@
 
-  if (omni::strMatch(_id, CORBA::ValueBase::_PD_repoId))
-    return (CORBA::ValueBase*) this;
+  if (omni::strMatch(_id, ::CORBA::ValueBase::_PD_repoId))
+    return (::CORBA::ValueBase*) this;
 
   return 0;
 }
@@ -265,13 +265,13 @@ void
 @fqname@*
 @fqname@::_NP_unmarshal(cdrStream& _0s)
 {
-  CORBA::ValueBase* _b = omniValueType::unmarshal(@fqname@::_PD_repoId,
-						  @idhash@U, 0, _0s);
+  ::CORBA::ValueBase* _b = omniValueType::unmarshal(@fqname@::_PD_repoId,
+						    @idhash@U, 0, _0s);
   @fqname@* _d = @fqname@::_downcast(_b);
   if (_b && !_d) {
     _b = omniValueType::handleIncompatibleValue(
            @fqname@::_PD_repoId,
-           @idhash@U, _b, (CORBA::CompletionStatus)_0s.completion());
+           @idhash@U, _b, (::CORBA::CompletionStatus)_0s.completion());
     _d = @fqname@::_downcast(_b);
   }
   return _d;
@@ -298,17 +298,17 @@ void
 #ifdef OMNI_HAVE_COVARIANT_RETURNS
 @fqname@*
 #else
-CORBA::ValueBase*
+::CORBA::ValueBase*
 #endif
 @fqname@::_copy_value()
 {
-  CORBA::ValueBase* _b;
+  ::CORBA::ValueBase* _b;
   _b = _omni_ValueFactoryManager::create_for_unmarshal(_PD_repoId, @idhash@U);
   @fqname@* _v = @fqname@::_downcast(_b);
   if (!_v) {
-    CORBA::remove_ref(_b);
+    ::CORBA::remove_ref(_b);
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure,
-		  CORBA::COMPLETED_NO);
+		  ::CORBA::COMPLETED_NO);
   }
   _v->_PR_copy_state(this);
   return _v;
@@ -327,15 +327,15 @@ void
 
 value_functions_abstract = """\
 @fqname@*
-@fqname@::_downcast(CORBA::AbstractBase* _a)
+@fqname@::_downcast(::CORBA::AbstractBase* _a)
 {
   return _downcast(_a->_NP_to_value());
 }
 
-CORBA::ValueBase*
+::CORBA::ValueBase*
 @fqname@::_NP_to_value()
 {
-  return (CORBA::ValueBase*)this;
+  return (::CORBA::ValueBase*)this;
 }
 """
 
@@ -397,7 +397,7 @@ valuefactory_functions = """\
 @fqname@_init::~@name@_init() {}
 
 @fqname@_init*
-@fqname@_init::_downcast(CORBA::ValueFactory _v)
+@fqname@_init::_downcast(::CORBA::ValueFactory _v)
 {
   return _v ? (::@fqname@_init*)_v->_ptrToFactory(::@fqname@::_PD_repoId) : 0;
 }
@@ -408,21 +408,21 @@ void*
   if (_id == ::@fqname@::_PD_repoId)
     return (::@fqname@_init*) this;
   
-  if (_id == CORBA::ValueBase::_PD_repoId)
-    return (CORBA::ValueFactoryBase*) this;
+  if (_id == ::CORBA::ValueBase::_PD_repoId)
+    return (::CORBA::ValueFactoryBase*) this;
   
   if (omni::strMatch(_id, ::@fqname@::_PD_repoId))
     return (::@fqname@_init*) this;
   
-  if (omni::strMatch(_id, CORBA::ValueBase::_PD_repoId))
-    return (CORBA::ValueFactoryBase*) this;
+  if (omni::strMatch(_id, ::CORBA::ValueBase::_PD_repoId))
+    return (::CORBA::ValueFactoryBase*) this;
 
   return 0;
 }
 """
 
 valuefactory_create_for_unmarshal = """\
-CORBA::ValueBase*
+::CORBA::ValueBase*
 @fqname@_init::create_for_unmarshal()
 {
   return new OBV_@fqname@();
@@ -436,7 +436,7 @@ statemember_copy_value = """\
 #ifdef OMNI_HAVE_COVARIANT_RETURNS
 @name@(_v->@name@()->_copy_value());
 #else
-CORBA::ValueBase* _0v_@name@ = _v->@name@()->_copy_value();
+::CORBA::ValueBase* _0v_@name@ = _v->@name@()->_copy_value();
 @name@(@type@::_downcast(_0v_@name@));
 #endif"""
 
@@ -509,42 +509,42 @@ _@name@ <<= _0s;
 """
 
 statemember_typecode_sig = """\
-virtual CORBA::TypeCode_ptr @name@() const @abs@;
-virtual void @name@(CORBA::TypeCode_ptr _value) @abs@;
+virtual ::CORBA::TypeCode_ptr @name@() const @abs@;
+virtual void @name@(::CORBA::TypeCode_ptr _value) @abs@;
 """
 
 statemember_typecode_member = """\
-void @name@(const CORBA::TypeCode_member& _value) {
-  @name@(CORBA::TypeCode::_duplicate(_value));
+void @name@(const ::CORBA::TypeCode_member& _value) {
+  @name@(::CORBA::TypeCode::_duplicate(_value));
 }
 """
 
 statemember_typecode_impl = """\
-CORBA::TypeCode_ptr
+::CORBA::TypeCode_ptr
 OBV_@value_name@::@name@() const
 {
   return _pd_@name@.in();
 }
 
 void
-OBV_@value_name@::@name@(CORBA::TypeCode_ptr _value)
+OBV_@value_name@::@name@(::CORBA::TypeCode_ptr _value)
 {
-  _pd_@name@ = CORBA::TypeCode::_duplicate(_value);
+  _pd_@name@ = ::CORBA::TypeCode::_duplicate(_value);
 }
 """
 
 statemember_typecode_marshal = """\
-CORBA::TypeCode::marshalTypeCode(@name@(), _0s);
+::CORBA::TypeCode::marshalTypeCode(@name@(), _0s);
 """
 
 statemember_typecode_unmarshal = """\
-CORBA::TypeCode_var _@name@;
-_@name@ = CORBA::TypeCode::unmarshalTypeCode(_0s);
+::CORBA::TypeCode_var _@name@;
+_@name@ = ::CORBA::TypeCode::unmarshalTypeCode(_0s);
 @name@(_@name@);
 """
 
 statemember_typecode_init = """\
-_pd_@name@ = CORBA::TypeCode::_duplicate(_@name@);"""
+_pd_@name@ = ::CORBA::TypeCode::_duplicate(_@name@);"""
 
 statemember_basic_sig = """\
 virtual @type@ @name@() const @abs@;
@@ -587,11 +587,11 @@ statemember_string_sig = """\
 virtual const char* @name@() const @abs@;
 virtual void @name@(char* _value) @abs@;
 virtual void @name@(const char* _value) @abs@;
-virtual void @name@(const CORBA::String_var& _value) @abs@;
+virtual void @name@(const ::CORBA::String_var& _value) @abs@;
 """
 
 statemember_string_member = """\
-void @name@(const CORBA::String_member& _value) {
+void @name@(const ::CORBA::String_member& _value) {
   @name@((const char*)_value);
 }
 """
@@ -616,7 +616,7 @@ OBV_@value_name@::@name@(const char* _value)
 }
 
 void
-OBV_@value_name@::@name@(const CORBA::String_var& _value)
+OBV_@value_name@::@name@(const ::CORBA::String_var& _value)
 {
   _pd_@name@ = _value;
 }
@@ -632,39 +632,39 @@ _@name@ = _0s.unmarshalString();
 """
 
 statemember_wstring_sig = """\
-virtual const CORBA::WChar* @name@() const @abs@;
-virtual void @name@(CORBA::WChar* _value) @abs@;
-virtual void @name@(const CORBA::WChar* _value) @abs@;
-virtual void @name@(const CORBA::WString_var& _value) @abs@;
+virtual const ::CORBA::WChar* @name@() const @abs@;
+virtual void @name@(::CORBA::WChar* _value) @abs@;
+virtual void @name@(const ::CORBA::WChar* _value) @abs@;
+virtual void @name@(const ::CORBA::WString_var& _value) @abs@;
 """
 
 statemember_wstring_member = """\
-void @name@(const CORBA::WString_member& _value) {
-  @name@((const CORBA::WChar*)_value);
+void @name@(const ::CORBA::WString_member& _value) {
+  @name@((const ::CORBA::WChar*)_value);
 }
 """
 
 statemember_wstring_impl = """\
-const CORBA::WChar*
+const ::CORBA::WChar*
 OBV_@value_name@::@name@() const
 {
-  return (const CORBA::WChar*)_pd_@name@;
+  return (const ::CORBA::WChar*)_pd_@name@;
 }
 
 void
-OBV_@value_name@::@name@(CORBA::WChar* _value)
+OBV_@value_name@::@name@(::CORBA::WChar* _value)
 {
   _pd_@name@ = _value;
 }
 
 void
-OBV_@value_name@::@name@(const CORBA::WChar* _value)
+OBV_@value_name@::@name@(const ::CORBA::WChar* _value)
 {
   _pd_@name@ = _value;
 }
 
 void
-OBV_@value_name@::@name@(const CORBA::WString_var& _value)
+OBV_@value_name@::@name@(const ::CORBA::WString_var& _value)
 {
   _pd_@name@ = _value;
 }
@@ -674,7 +674,7 @@ statemember_wstring_marshal = """\
 _0s.marshalWString(@name@());"""
 
 statemember_wstring_unmarshal = """\
-CORBA::WChar* _@name@;
+::CORBA::WChar* _@name@;
 _@name@ = _0s.unmarshalWString();
 @name@(_@name@);
 """
@@ -810,7 +810,7 @@ OBV_@value_name@::@name@() const
 void
 OBV_@value_name@::@name@(@type@* _value)
 {
-  CORBA::add_ref(_value);
+  ::CORBA::add_ref(_value);
   _pd_@name@ = _value;
 }
 """
@@ -826,29 +826,29 @@ _@name@ = @type@::_NP_unmarshal(_0s);
 
 valuebox_class = """\
 class @name@ :
-  public CORBA::DefaultValueRefCountBase
+  public ::CORBA::DefaultValueRefCountBase
 {
 public:
   typedef @name@_var _var_type;
 
   @member_funcs@
 
-  static @name@* _downcast(CORBA::ValueBase*);
+  static @name@* _downcast(::CORBA::ValueBase*);
 
 #ifdef OMNI_HAVE_COVARIANT_RETURNS
   virtual @name@* _copy_value();
 #else
-  virtual CORBA::ValueBase* _copy_value();
+  virtual ::CORBA::ValueBase* _copy_value();
 #endif
 
   // omniORB internal
   virtual const char* _NP_repositoryId() const;
-  virtual const char* _NP_repositoryId(CORBA::ULong& _hashval) const;
+  virtual const char* _NP_repositoryId(::CORBA::ULong& _hashval) const;
 
   virtual const _omni_ValueIds* _NP_truncatableIds() const;
 
-  virtual CORBA::Boolean _NP_custom() const;
-  virtual CORBA::Boolean _NP_box() const;
+  virtual ::CORBA::Boolean _NP_custom() const;
+  virtual ::CORBA::Boolean _NP_box() const;
 
   virtual void* _ptrToValue(const char* id);
 
@@ -917,11 +917,11 @@ inline @name@(const char* _v) {
   if (_v) _pd_boxed = _CORBA_String_helper::dup(_v);
   else _pd_boxed = 0;
 }
-inline @name@(const CORBA::String_var& _v) {
+inline @name@(const ::CORBA::String_var& _v) {
   if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
   else _pd_boxed = 0;
 }
-inline @name@(const CORBA::String_member& _v) {
+inline @name@(const ::CORBA::String_member& _v) {
   if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
   else _pd_boxed = 0;
 }
@@ -941,13 +941,13 @@ inline @name@& operator=(const char* _v) {
   else _pd_boxed = 0;
   return *this;
 }
-inline @name@& operator=(const CORBA::String_var& _v) {
+inline @name@& operator=(const ::CORBA::String_var& _v) {
   _CORBA_String_helper::free(_pd_boxed);
   if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
   else _pd_boxed = 0;
   return *this;
 }
-inline @name@& operator=(const CORBA::String_member& _v) {
+inline @name@& operator=(const ::CORBA::String_member& _v) {
   _CORBA_String_helper::free(_pd_boxed);
   if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
   else _pd_boxed = 0;
@@ -972,12 +972,12 @@ inline void _value(const char* _v) {
   if (_v) _pd_boxed = _CORBA_String_helper::dup(_v);
   else _pd_boxed = 0;
 }
-inline void _value(const CORBA::String_var& _v) {
+inline void _value(const ::CORBA::String_var& _v) {
   _CORBA_String_helper::free(_pd_boxed);
   if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
   else _pd_boxed = 0;
 }
-inline void _value(const CORBA::String_member& _v) {
+inline void _value(const ::CORBA::String_member& _v) {
   _CORBA_String_helper::free(_pd_boxed);
   if ((const char*)_v) _pd_boxed = _CORBA_String_helper::dup(_v);
   else _pd_boxed = 0;
@@ -1014,111 +1014,111 @@ inline char*& _boxed_out() {
 
 valuebox_member_funcs_wstring = """\
 inline @name@()
-  : _pd_boxed(OMNI_CONST_CAST(CORBA::WChar*,_CORBA_WString_helper::empty_wstring))
+  : _pd_boxed(OMNI_CONST_CAST(::CORBA::WChar*,_CORBA_WString_helper::empty_wstring))
 {}
 inline @name@(const @name@& _v) :
   ValueBase (_v), DefaultValueRefCountBase (_v) {
   if (_v._pd_boxed) _pd_boxed = _CORBA_WString_helper::dup(_v._pd_boxed);
   else _pd_boxed = 0;
 }
-inline @name@(CORBA::WChar* _v) {
+inline @name@(::CORBA::WChar* _v) {
   _pd_boxed = _v;
 }
-inline @name@(const CORBA::WChar* _v) {
+inline @name@(const ::CORBA::WChar* _v) {
   if (_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
 }
-inline @name@(const CORBA::WString_var& _v) {
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+inline @name@(const ::CORBA::WString_var& _v) {
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
 }
-inline @name@(const CORBA::WString_member& _v) {
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+inline @name@(const ::CORBA::WString_member& _v) {
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
 }
 inline @name@(const _CORBA_WString_element& _v) {
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
 }
 
-inline @name@& operator=(CORBA::WChar* _v) {
+inline @name@& operator=(::CORBA::WChar* _v) {
   _CORBA_WString_helper::free(_pd_boxed);
   _pd_boxed = _v;
   return *this;
 }
-inline @name@& operator=(const CORBA::WChar* _v) {
+inline @name@& operator=(const ::CORBA::WChar* _v) {
   _CORBA_WString_helper::free(_pd_boxed);
   if (_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
   return *this;
 }
-inline @name@& operator=(const CORBA::WString_var& _v) {
+inline @name@& operator=(const ::CORBA::WString_var& _v) {
   _CORBA_WString_helper::free(_pd_boxed);
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
   return *this;
 }
-inline @name@& operator=(const CORBA::WString_member& _v) {
+inline @name@& operator=(const ::CORBA::WString_member& _v) {
   _CORBA_WString_helper::free(_pd_boxed);
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
   return *this;
 }
 inline @name@& operator=(const _CORBA_WString_element& _v) {
   _CORBA_WString_helper::free(_pd_boxed);
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
   return *this;
 }
 
-inline const CORBA::WChar* _value() const {
+inline const ::CORBA::WChar* _value() const {
   return _pd_boxed;
 }
-inline void _value(CORBA::WChar* _v) {
+inline void _value(::CORBA::WChar* _v) {
   _CORBA_WString_helper::free(_pd_boxed);
   _pd_boxed = _v;
 }
-inline void _value(const CORBA::WChar* _v) {
+inline void _value(const ::CORBA::WChar* _v) {
   _CORBA_WString_helper::free(_pd_boxed);
   if (_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
 }
-inline void _value(const CORBA::WString_var& _v) {
+inline void _value(const ::CORBA::WString_var& _v) {
   _CORBA_WString_helper::free(_pd_boxed);
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
 }
-inline void _value(const CORBA::WString_member& _v) {
+inline void _value(const ::CORBA::WString_member& _v) {
   _CORBA_WString_helper::free(_pd_boxed);
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
 }
 inline void _value(const _CORBA_WString_element& _v) {
   _CORBA_WString_helper::free(_pd_boxed);
-  if ((const CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
+  if ((const ::CORBA::WChar*)_v) _pd_boxed = _CORBA_WString_helper::dup(_v);
   else _pd_boxed = 0;
 }
 
-inline CORBA::WChar& operator[] (_CORBA_ULong _i) {
+inline ::CORBA::WChar& operator[] (_CORBA_ULong _i) {
   if (!_pd_boxed) {
     _CORBA_bound_check_error();	// never return
   }
   return _pd_boxed[_i];
 }
-inline CORBA::WChar operator[] (_CORBA_ULong _i) const {
+inline ::CORBA::WChar operator[] (_CORBA_ULong _i) const {
   if (!_pd_boxed) {
     _CORBA_bound_check_error();	// never return
   }
   return _pd_boxed[_i];
 }
 
-inline const CORBA::WChar* _boxed_in() const {
+inline const ::CORBA::WChar* _boxed_in() const {
   return _pd_boxed;
 }
-inline CORBA::WChar*& _boxed_inout() {
+inline ::CORBA::WChar*& _boxed_inout() {
   return _pd_boxed;
 }
-inline CORBA::WChar*& _boxed_out() {
+inline ::CORBA::WChar*& _boxed_out() {
   return _pd_boxed;
 }
 """
@@ -1163,7 +1163,7 @@ inline @name@(const @name@& _v) :
   ValueBase (_v), DefaultValueRefCountBase (_v) {
   _pd_boxed = new @boxedtype@(_v._pd_boxed.in());
 }
-inline @name@(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release = 0) {
+inline @name@(::CORBA::TypeCode_ptr tc, void* value, ::CORBA::Boolean release = 0) {
   _pd_boxed = new @boxedtype@(tc, value, release);
 }
 
@@ -1192,10 +1192,10 @@ inline @boxedtype@_out _boxed_out() {
   return _pd_boxed.out();
 }
 
-CORBA::TypeCode_ptr type() const {
+::CORBA::TypeCode_ptr type() const {
   return _pd_boxed->type();
 }
-void type(CORBA::TypeCode_ptr _t) {
+void type(::CORBA::TypeCode_ptr _t) {
   _pd_boxed->type(_t);
 }
 """
@@ -1238,32 +1238,32 @@ inline @boxedtype@_out _boxed_out() {
   return _pd_boxed.out();
 }
 
-inline CORBA::ULong maximum() const {
+inline ::CORBA::ULong maximum() const {
   return _pd_boxed->maximum();
 }
-inline CORBA::ULong length() const {
+inline ::CORBA::ULong length() const {
   return _pd_boxed->length();
 }
-inline void length(CORBA::ULong _len) {
+inline void length(::CORBA::ULong _len) {
   _pd_boxed->length(_len);
 }
 
-inline @subscript_element@ operator[](CORBA::ULong _i) {
+inline @subscript_element@ operator[](::CORBA::ULong _i) {
   return _pd_boxed[_i];
 }
 """
 
 valuebox_sequence_constructors_unbounded = """\
-inline @name@(CORBA::ULong _max) {
+inline @name@(::CORBA::ULong _max) {
   _pd_boxed = new @boxedtype@(_max);
 }
-inline @name@(CORBA::ULong _max, CORBA::ULong _len, @element@* _val, CORBA::Boolean _rel=0) {
+inline @name@(::CORBA::ULong _max, ::CORBA::ULong _len, @element@* _val, ::CORBA::Boolean _rel=0) {
   _pd_boxed = new @boxedtype@(_max, _len, _val, _rel);
 }
 """
 
 valuebox_sequence_constructors_bounded = """\
-inline @name@(CORBA::ULong _len, @element@* _val, CORBA::Boolean _rel=0) {
+inline @name@(::CORBA::ULong _len, @element@* _val, ::CORBA::Boolean _rel=0) {
   _pd_boxed = new @boxedtype@(_len, _val, _rel);
 }
 """
@@ -1279,18 +1279,18 @@ inline @name@(int _v = 0)           : _pd_boxed(_v) {}
 inline @name@(unsigned _v)          : _pd_boxed(_v) {}
 
 #ifndef OMNI_LONG_IS_INT
-inline @name@(CORBA::Long _v)       : _pd_boxed(_v) {}
-inline @name@(CORBA::ULong _v)      : _pd_boxed(_v) {}
+inline @name@(_CORBA_Long _v)       : _pd_boxed(_v) {}
+inline @name@(_CORBA_ULong _v)      : _pd_boxed(_v) {}
 #endif
 #ifdef HAS_LongLong
-inline @name@(CORBA::LongLong _v)   : _pd_boxed(_v) {}
-inline @name@(CORBA::ULongLong _v)  : _pd_boxed(_v) {}
+inline @name@(_CORBA_LongLong _v)   : _pd_boxed(_v) {}
+inline @name@(_CORBA_ULongLong _v)  : _pd_boxed(_v) {}
 #endif
 #ifndef NO_FLOAT
-inline @name@(CORBA::Double _v)     : _pd_boxed(_v) {}
+inline @name@(_CORBA_Double _v)     : _pd_boxed(_v) {}
 #endif
 #ifdef HAS_LongDouble
-inline @name@(CORBA::LongDouble _v) : _pd_boxed(_v) {}
+inline @name@(_CORBA_LongDouble _v) : _pd_boxed(_v) {}
 #endif
 inline @name@(const char* _v)       : _pd_boxed(_v) {}
 
@@ -1319,16 +1319,16 @@ inline @boxedtype@_out _boxed_out() {
   return _pd_boxed;
 }
 
-CORBA::Fixed round   (CORBA::UShort scale) const {
+::CORBA::Fixed round   (::CORBA::UShort scale) const {
   return _pd_boxed.round(scale);
 }
-CORBA::Fixed truncate(CORBA::UShort scale) const {
+::CORBA::Fixed truncate(::CORBA::UShort scale) const {
   return _pd_boxed.truncate(scale);
 }
-CORBA::UShort fixed_digits() const {
+::CORBA::UShort fixed_digits() const {
   return _pd_boxed.fixed_digits();
 }
-CORBA::UShort fixed_scale() const {
+::CORBA::UShort fixed_scale() const {
   return _pd_boxed.fixed_scale();
 }
 char* to_string() const {
@@ -1483,19 +1483,19 @@ inline void @name@(const @type@& _value)
 """
 
 valuebox_structmember_typecode = """\
-inline CORBA::TypeCode_ptr @name@() const
+inline ::CORBA::TypeCode_ptr @name@() const
 {
-  return CORBA::TypeCode::_duplicate(_pd_boxed->@name@);
+  return ::CORBA::TypeCode::_duplicate(_pd_boxed->@name@);
 }
-inline void @name@(CORBA::TypeCode_ptr _value)
+inline void @name@(::CORBA::TypeCode_ptr _value)
 {
-  _pd_boxed->@name@ = CORBA::TypeCode::_duplicate(_value);
+  _pd_boxed->@name@ = ::CORBA::TypeCode::_duplicate(_value);
 }
-inline void @name@(CORBA::TypeCode_var& _value)
+inline void @name@(::CORBA::TypeCode_var& _value)
 {
   _pd_boxed->@name@ = _value;
 }
-inline void @name@(CORBA::TypeCode_member& _value)
+inline void @name@(::CORBA::TypeCode_member& _value)
 {
   _pd_boxed->@name@ = _value;
 }
@@ -1525,26 +1525,26 @@ inline void @name@(const char* _value)
 {
   _pd_boxed->@name@ = _value;
 }
-inline void @name@(const CORBA::String_var& _value)
+inline void @name@(const ::CORBA::String_var& _value)
 {
   _pd_boxed->@name@ = _value;
 }
 """
 
 valuebox_structmember_wstring = """\
-inline const CORBA::WChar* @name@() const
+inline const ::CORBA::WChar* @name@() const
 {
   return _pd_boxed->@name@;
 }
-inline void @name@(CORBA::WChar* _value)
+inline void @name@(::CORBA::WChar* _value)
 {
   _pd_boxed->@name@ = _value;
 }
-inline void @name@(const CORBA::WChar* _value)
+inline void @name@(const ::CORBA::WChar* _value)
 {
   _pd_boxed->@name@ = _value;
 }
-inline void @name@(const CORBA::WString_var& _value)
+inline void @name@(const ::CORBA::WString_var& _value)
 {
   _pd_boxed->@name@ = _value;
 }
@@ -1606,7 +1606,7 @@ virtual @type@* @name@() const
 }
 virtual void @name@(@type@* _value)
 {
-  CORBA::add_ref(_value);
+  ::CORBA::add_ref(_value);
   _pd_boxed->@name@ = _value;
 }
 """
@@ -1655,19 +1655,19 @@ inline void @name@(const @type@& _value)
 """
 
 valuebox_unionmember_typecode = """\
-inline CORBA::TypeCode_ptr @name@() const
+inline ::CORBA::TypeCode_ptr @name@() const
 {
   return _pd_boxed->@name@();
 }
-inline void @name@(CORBA::TypeCode_ptr _value)
+inline void @name@(::CORBA::TypeCode_ptr _value)
 {
   _pd_boxed->@name@(_value);
 }
-inline void @name@(CORBA::TypeCode_member& _value)
+inline void @name@(::CORBA::TypeCode_member& _value)
 {
   _pd_boxed->@name@(_value);
 }
-inline void @name@(CORBA::TypeCode_var& _value)
+inline void @name@(::CORBA::TypeCode_var& _value)
 {
   _pd_boxed->@name@(_value);
 }
@@ -1697,26 +1697,26 @@ inline void @name@(const char* _value)
 {
   _pd_boxed->@name@(_value);
 }
-inline void @name@(const CORBA::String_var& _value)
+inline void @name@(const ::CORBA::String_var& _value)
 {
   _pd_boxed->@name@(_value);
 }
 """
 
 valuebox_unionmember_wstring = """\
-inline const CORBA::WChar* @name@() const
+inline const ::CORBA::WChar* @name@() const
 {
   return _pd_boxed->@name@();
 }
-inline void @name@(CORBA::WChar* _value)
+inline void @name@(::CORBA::WChar* _value)
 {
   _pd_boxed->@name@(_value);
 }
-inline void @name@(const CORBA::WChar* _value)
+inline void @name@(const ::CORBA::WChar* _value)
 {
   _pd_boxed->@name@(_value);
 }
-inline void @name@(const CORBA::WString_var& _value)
+inline void @name@(const ::CORBA::WString_var& _value)
 {
   _pd_boxed->@name@(_value);
 }
@@ -1799,7 +1799,7 @@ void
 }
 
 @fqname@*
-@fqname@::_downcast(CORBA::ValueBase* _b)
+@fqname@::_downcast(::CORBA::ValueBase* _b)
 {
   return _b ? (@fqname@*)_b->_ptrToValue(_PD_repoId) : 0;
 }
@@ -1813,7 +1813,7 @@ const char*
 }
 
 const char*
-@fqname@::_NP_repositoryId(CORBA::ULong& hash) const
+@fqname@::_NP_repositoryId(::CORBA::ULong& hash) const
 {
   hash = @idhash@U;
   return _PD_repoId;
@@ -1825,13 +1825,13 @@ const _omni_ValueIds*
   return 0;
 }
 
-CORBA::Boolean
+::CORBA::Boolean
 @fqname@::_NP_custom() const
 {
   return 0;
 }
 
-CORBA::Boolean
+::CORBA::Boolean
 @fqname@::_NP_box() const
 {
   return 1;
@@ -1843,14 +1843,14 @@ void*
   if (_id == ::@fqname@::_PD_repoId)
     return (::@fqname@*) this;
   
-  if (_id == CORBA::ValueBase::_PD_repoId)
-    return (CORBA::ValueBase*) this;
+  if (_id == ::CORBA::ValueBase::_PD_repoId)
+    return (::CORBA::ValueBase*) this;
   
   if (omni::strMatch(_id, ::@fqname@::_PD_repoId))
     return (::@fqname@*) this;
   
-  if (omni::strMatch(_id, CORBA::ValueBase::_PD_repoId))
-    return (CORBA::ValueBase*) this;
+  if (omni::strMatch(_id, ::CORBA::ValueBase::_PD_repoId))
+    return (::CORBA::ValueBase*) this;
 
   return 0;
 }
@@ -1870,13 +1870,13 @@ void
 @fqname@*
 @fqname@::_NP_unmarshal(cdrStream& _0s)
 {
-  CORBA::ValueBase* _b = omniValueType::unmarshal(@fqname@::_PD_repoId,
-						  @idhash@U, 0, _0s);
+  ::CORBA::ValueBase* _b = omniValueType::unmarshal(@fqname@::_PD_repoId,
+						    @idhash@U, 0, _0s);
   @fqname@* _d = @fqname@::_downcast(_b);
   if (_b && !_d) {
-    CORBA::remove_ref(_b);
+    ::CORBA::remove_ref(_b);
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure,
-		  (CORBA::CompletionStatus)_0s.completion());
+		  (::CORBA::CompletionStatus)_0s.completion());
   }
   return _d;
 }
@@ -1902,17 +1902,17 @@ void
 #ifdef OMNI_HAVE_COVARIANT_RETURNS
 @fqname@*
 #else
-CORBA::ValueBase*
+::CORBA::ValueBase*
 #endif
 @fqname@::_copy_value()
 {
-  CORBA::ValueBase* _b;
+  ::CORBA::ValueBase* _b;
   _b = _omni_ValueFactoryManager::create_for_unmarshal(_PD_repoId, @idhash@U);
   @fqname@* _v = @fqname@::_downcast(_b);
   if (!_v) {
-    CORBA::remove_ref(_b);
+    ::CORBA::remove_ref(_b);
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure,
-		  CORBA::COMPLETED_NO);
+		  ::CORBA::COMPLETED_NO);
   }
   _v->_PR_copy_state(this);
   return _v;
@@ -1930,16 +1930,16 @@ void
 }
 
 // ValueFactory for value box
-class _0RL_@flatname@_init : public CORBA::ValueFactoryBase
+class _0RL_@flatname@_init : public ::CORBA::ValueFactoryBase
 {
 public:
   _0RL_@flatname@_init() {}
   virtual ~_0RL_@flatname@_init() {}
 
-  virtual CORBA::ValueBase* create_for_unmarshal();
+  virtual ::CORBA::ValueBase* create_for_unmarshal();
 };
 
-CORBA::ValueBase*
+::CORBA::ValueBase*
 _0RL_@flatname@_init::create_for_unmarshal()
 {
   return new @fqname@();
@@ -1948,7 +1948,7 @@ _0RL_@flatname@_init::create_for_unmarshal()
 class _0RL_@flatname@_install {
 public:
   _0RL_@flatname@_install() {
-    CORBA::ValueFactoryBase* vf = new _0RL_@flatname@_init();
+    ::CORBA::ValueFactoryBase* vf = new _0RL_@flatname@_init();
     _omni_ValueFactoryManager::register_factory(@fqname@::_PD_repoId, @idhash@, vf, 1);
     vf->_remove_ref();
   }
@@ -1956,7 +1956,7 @@ public:
     try {
       _omni_ValueFactoryManager::unregister_factory(@fqname@::_PD_repoId, @idhash@);
     }
-    catch (CORBA::BAD_PARAM&) {
+    catch (::CORBA::BAD_PARAM&) {
     }
   }
 };
@@ -2237,8 +2237,8 @@ class ValueType (mapping.Decl):
             impl_s.out(statemember_typecode_impl, name=member,
                        value_name=value_name)
 
-            decl._cxx_holder = "CORBA::TypeCode_member _pd_" + member + ";"
-            decl._cxx_init_arg = "CORBA::TypeCode_ptr _" + member
+            decl._cxx_holder = "::CORBA::TypeCode_member _pd_" + member + ";"
+            decl._cxx_init_arg = "::CORBA::TypeCode_ptr _" + member
 
         elif isinstance(d_mType.type(), idltype.Base) or d_mType.enum():
             # basic type
@@ -2330,7 +2330,7 @@ class ValueType (mapping.Decl):
                        value_name=value_name)
 
             decl._cxx_holder = omemtype + " _pd_" + member + ";"
-            decl._cxx_init_arg = "const CORBA::WChar* _" + member
+            decl._cxx_init_arg = "const ::CORBA::WChar* _" + member
 
         elif d_mType.interface():
             scopedName = d_mType.type().decl().scopedName()
@@ -2495,7 +2495,7 @@ class ValueType (mapping.Decl):
             inheritl.append("public virtual " + uname)
 
         if not inheritl:
-            inheritl.append("public virtual CORBA::ValueBase")
+            inheritl.append("public virtual ::CORBA::ValueBase")
 
         if astdecl.supports():
             for intf in astdecl.supports():
@@ -2678,7 +2678,7 @@ class ValueType (mapping.Decl):
             # C++, since the OBV_ class is abstract. To avoid that, we
             # inherit from DefaultValueRefCountBase.
 
-            inheritl.append("public virtual CORBA::DefaultValueRefCountBase")
+            inheritl.append("public virtual ::CORBA::DefaultValueRefCountBase")
 
         inherits = string.join(inheritl, ",\n")
 
@@ -2748,8 +2748,8 @@ class ValueType (mapping.Decl):
             ptrToValueStr.out(value_ptrToValueStr, iname=iname)
 
         if astdecl._cxx_supports_abstract:
-            ptrToValuePtr.out(value_ptrToValuePtr, iname="CORBA::AbstractBase")
-            ptrToValueStr.out(value_ptrToValueStr, iname="CORBA::AbstractBase")
+            ptrToValuePtr.out(value_ptrToValuePtr, iname="::CORBA::AbstractBase")
+            ptrToValueStr.out(value_ptrToValueStr, iname="::CORBA::AbstractBase")
 
         if (astdecl.inherits() and
             isinstance(astdecl.inherits()[0].fullDecl(), idlast.Value)):
@@ -3000,9 +3000,9 @@ class ValueBox (mapping.Decl):
                              name=cxx_name, boxedtype=btype)
 
         elif d_boxedType.typecode():
-            boxed_member = "CORBA::TypeCode_var"
+            boxed_member = "::CORBA::TypeCode_var"
             member_funcs.out(valuebox_member_funcs_objref, name=cxx_name,
-                             boxedif="CORBA::TypeCode")
+                             boxedif="::CORBA::TypeCode")
 
         elif (isinstance(d_boxedType.type(), idltype.Base) or
               d_boxedType.enum()):
@@ -3017,7 +3017,7 @@ class ValueBox (mapping.Decl):
             member_funcs.out(valuebox_member_funcs_string, name=cxx_name)
         
         elif d_boxedType.wstring():
-            boxed_member = "CORBA::WChar*"
+            boxed_member = "::CORBA::WChar*"
             member_funcs.out(valuebox_member_funcs_wstring, name=cxx_name)
 
         elif d_boxedType.interface():
@@ -3071,7 +3071,7 @@ class ValueBox (mapping.Decl):
                     element_ptr = "char*"
                 elif d_seqType.wstring():
                     element = "_CORBA_WString_element"
-                    element_ptr = "CORBA::WChar*"
+                    element_ptr = "::CORBA::WChar*"
                 elif d_seqType.interface():
                     element = seqType.base(environment)
                     element_ptr = element
@@ -3082,7 +3082,7 @@ class ValueBox (mapping.Decl):
                     element = d_seqType.sequenceTemplate(environment)
                     element_ptr = element
                 elif d_seqType.typecode():
-                    element = "CORBA::TypeCode_member"
+                    element = "::CORBA::TypeCode_member"
                     element_ptr = element
                 else:
                     element = seqType.base(environment)

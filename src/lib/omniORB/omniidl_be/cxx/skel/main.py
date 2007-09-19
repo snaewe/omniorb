@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.12  2007/09/19 14:16:07  dgrisby
+# Avoid namespace clashes if IDL defines modules named CORBA.
+#
 # Revision 1.32.2.11  2005/11/14 11:02:16  dgrisby
 # Local interface fixes.
 #
@@ -650,7 +653,7 @@ def visitConst(node):
     if d_constType.string():
         type_string = "char *"
     elif d_constType.wstring():
-        type_string = "CORBA::WChar *"
+        type_string = "::CORBA::WChar *"
     elif d_constType.fixed():
         type_string = constType.base()
     else:
@@ -750,7 +753,7 @@ def visitException(node):
                 else:
                     memberType_name_arg = "const " + memberType.sequenceTemplate(environment)
             elif memberType.typecode():
-                memberType_name_arg = "CORBA::TypeCode_ptr"
+                memberType_name_arg = "::CORBA::TypeCode_ptr"
                 
             index = ""
 
