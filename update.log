@@ -1,3 +1,14 @@
+Mon Oct 15 15:04:30 BST 2007 dgrisby
+====================================
+
+- Enum TypeCodes not marked as complete, leading to an assertion
+  failure receiving a struct containing an enum.
+
+bugfixes-411.xml
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Sun Oct  7 16:41:47 BST 2007 dgrisby
 ====================================
 

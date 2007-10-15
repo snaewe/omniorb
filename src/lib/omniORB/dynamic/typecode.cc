@@ -31,6 +31,10 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.18  2007/10/15 14:07:19  dgrisby
+ * Enum TypeCodes not marked as complete, leading to an assertion
+ * failure receiving a struct containing an enum.
+ *
  * Revision 1.40.2.17  2007/06/10 18:43:08  dgrisby
  * Incorrect alignment table build for recursive struct.
  *
@@ -3562,6 +3566,7 @@ TypeCode_enum::TypeCode_enum(const char* repositoryId,
 			     const CORBA::EnumMemberSeq &members)
   : TypeCode_base(CORBA::tk_enum)
 {
+  pd_complete = 1;
   pd_repoId = repositoryId;
   pd_name = name;
   pd_members = members;
@@ -3573,6 +3578,7 @@ TypeCode_enum::TypeCode_enum(const char* repositoryId,
 TypeCode_enum::TypeCode_enum()
   : TypeCode_base(CORBA::tk_enum)
 {
+  pd_complete = 1;
   pd_alignmentTable.setNumEntries(1);
   pd_alignmentTable.addSimple(omni::ALIGN_4, 4);
 }

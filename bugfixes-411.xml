@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.1.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.1.1">
+
+<bug id="1" date="Mon Oct 15 14:56:37 BST 2007" user="dgrisby">
+  <summary>Assertion falure in Any unmarshalling</summary>
+  <reported>Jian Wu, Clemens Fischer</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-October/028948.html"/>
+  <text>
+  Enum TypeCodes were not marked as complete, meaning that receiving a
+  struct containing an enum would trigger an assertion failure.
+  </text>
+</bug>
+
+</buglist>

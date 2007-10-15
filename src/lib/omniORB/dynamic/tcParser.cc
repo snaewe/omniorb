@@ -294,6 +294,11 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 			(CORBA::CompletionStatus)ibuf.completion());
 
 	default:
+          if (omniORB::trace(1)) {
+            omniORB::logger log;
+            log << "Unexpected kind " << (CORBA::ULong)tc->NP_kind()
+                << " in fastCopyUsingTC.\n";
+          }
 	  OMNIORB_ASSERT(0);
 	}
 	break;
