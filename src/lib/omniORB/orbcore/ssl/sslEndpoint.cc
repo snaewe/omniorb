@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.18  2007/10/29 12:41:46  dgrisby
+  Handle SSL_ERROR_ZERO_RETURN. Thanks Jan Lennartsson.
+
   Revision 1.1.4.17  2007/07/31 14:23:43  dgrisby
   If the platform does not accept IPv4 connections on IPv6 sockets by
   default, try to enable it by turning the IPV6_V6ONLY socket option
@@ -692,6 +695,7 @@ sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 	  }
 	  // otherwise falls through
 	case SSL_ERROR_SSL:
+	case SSL_ERROR_ZERO_RETURN:
 	  {
 	    if (omniORB::trace(10)) {
 	      omniORB::logger log;

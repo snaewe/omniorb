@@ -1,3 +1,11 @@
+Mon Oct 29 13:40:23 GMT 2007 dgrisby
+====================================
+
+- Handle SSL_ERROR_ZERO_RETURN. Thanks Jan Lennartsson.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+
+
 Mon Oct 29 12:31:38 GMT 2007 dgrisby
 ====================================
 
