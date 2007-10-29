@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2007/10/29 11:33:39  dgrisby
+  Properly support IPv4 in IPv6 in localhost transport rule.
+
   Revision 1.1.4.7  2006/11/02 14:00:54  dgrisby
   Remove a few warnings.
 
@@ -207,13 +210,24 @@ static char* extractHost(const char* endpoint) {
     CORBA::UShort port;
     CORBA::String_var host = omniURI::extractHostPort(p, port, 0);
 
-    if (!LibcWrapper::isipaddr(host)) {
+    if (LibcWrapper::isip4addr(host)) {
+      return host._retn();
+    }
+    else if (LibcWrapper::isip6addr(host)) {
+      // Check if it's IPv4 encapsulated in IPv6
+      if (strncasecmp(host, "::ffff:", 7) == 0 &&
+	  LibcWrapper::isip4addr((const char*)host + 7)) {
+
+	return CORBA::string_dup((const char*)host + 7);
+      }
+      return host._retn();
+    }
+    else {
       // Try to resolve name
       LibcWrapper::AddrInfo_var ai(LibcWrapper::getAddrInfo(host,port));
       if (ai.in())
         return ai->asString();
     }
-    return host._retn();
   }
   return 0;
 }
@@ -235,6 +249,7 @@ public:
     // addresses.
     CORBA::String_var host;
     host = extractHost(endpoint);
+
     if ( (const char*)host )  {
       // Get this host's IP addresses and look for a match
       const omnivector<const char*>* ifaddrs;
@@ -714,7 +729,7 @@ public:
     if (clientRules_.pd_rules.size() == 0) {
       // Add a default rule
       parseAndAddRuleString(clientRules_.pd_rules,
-                            "*  unix,ssl,tcp");
+                            "* unix,ssl,tcp");
     }
     if (serverRules_.pd_rules.size() == 0) {
       // Add a default rule

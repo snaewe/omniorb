@@ -18,4 +18,25 @@
   </text>
 </bug>
 
+<bug id="2" date="Mon Oct 29 12:26:00 GMT 2007" user="dgrisby">
+  <summary>Escaped identifiers in unions cause incorrect errors</summary>
+  <reported>Will Denissen</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-October/028956.html"/>
+  <text>
+  omniidl would incorrectly report errors for union members clashing
+  with keywords, but escaped with a leading underscore.
+  </text>
+</bug>
+
+<bug id="3" date="Mon Oct 29 12:28:58 GMT 2007" user="dgrisby">
+  <summary>localhost server transport rule does not work for IPv4 in IPv6</summary>
+  <reported>Joe Lee</reported>
+  <text>
+  The localhost server transport rule failed to cope with IPv4
+  addresses encapsulated in IPv6, meaning connections were incorrectly
+  denied.
+  </text>
+</bug>
+
+
 </buglist>
