@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.22.2.7  2007/10/29 11:32:32  dgrisby
+// Error with escaped identifiers in union members.
+//
 // Revision 1.22.2.6  2006/11/02 14:00:54  dgrisby
 // Remove a few warnings.
 //
@@ -1687,7 +1690,7 @@ UnionCase(const char* file, int line, IDL_Boolean mainFile,
       }
     }
   }
-  Scope::current()->addInstance(declarator->identifier(), declarator,
+  Scope::current()->addInstance(declarator->eidentifier(), declarator,
 				caseType, declarator->file(),
 				declarator->line());
 }
