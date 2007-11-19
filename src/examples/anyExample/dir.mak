@@ -72,3 +72,6 @@ veryclean::
 
 anyExample.hh anyExampleSK.cc: anyExample.idl
 	$(TOP)\bin\x86_win32\omniidl -T -bcxx -Wbh=.hh -Wbs=SK.cc -Wba anyExample.idl
+
+anyExample.idl: $(TOP)\idl\anyExample.idl
+	copy $(TOP)\idl\anyExample.idl .

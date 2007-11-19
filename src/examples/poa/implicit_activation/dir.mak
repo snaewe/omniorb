@@ -33,7 +33,7 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 # So now we link the dynamic library as well.
 # An alternative is to replace the dynamic library with the much smaller 
 # library msvcstub.lib. The smaller library contains nothing but stubs
-# for the required functions. This is enough when non of the dynamic
+# for the required functions. This is enough when none of the dynamic
 # interfaces are used. We use the small library here. If you prefer
 # to link with the dynamic library, swap the comment on the next 2
 # lines.

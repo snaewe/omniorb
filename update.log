@@ -1,3 +1,25 @@
+Mon Nov 19 12:38:51 GMT 2007 dgrisby
+====================================
+
+- Errors in nmake example makefiles.
+
+src/examples/dir.mak
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/echo/dir.mak
+src/examples/poa/dir.mak
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+src/examples/poa/threading/dir.mak
+src/examples/ssl_echo/dir.mak
+src/examples/ssl_echo/echo.idl
+src/examples/valuetype/dir.mak
+src/examples/valuetype/simple/dir.mak
+
+
 Mon Oct 29 13:40:23 GMT 2007 dgrisby
 ====================================
 

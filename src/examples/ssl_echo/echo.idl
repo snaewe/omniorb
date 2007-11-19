@@ -5,4 +5,4 @@ interface Echo {
   string echoString(in string mesg);
 };
 
-#endif 
+#endif  // __ECHO_IDL__
