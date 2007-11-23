@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.18  2007/11/23 14:25:04  dgrisby
+  Leak of connections closed during upcall in thread pool mode.
+
   Revision 1.25.2.17  2006/10/30 14:17:22  dgrisby
   Cast in log message for 64 bit Windows.
 
@@ -1287,6 +1290,13 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
     // Worker is no longer needed.
     {
       omni_tracedmutex_lock sync(pd_lock);
+
+      if (conn->pd_n_workers == 1 && conn->pd_dying) {
+	// Connection is dying. Go round again so this thread spots
+	// the condition.
+	omniORB::logs(25, "Last pool worker sees connection is dying.");
+	return 1;
+      }
 
       w->remove();
       delete w;

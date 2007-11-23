@@ -38,5 +38,14 @@
   </text>
 </bug>
 
+<bug id="4" date="Fri Nov 23 14:20:15 GMT 2007" user="dgrisby">
+  <summary>Connections closed during upcalls could be leaked</summary>
+  <reported>Emmanuel Taurel</reported>
+  <text>
+  In thread pool mode, connections closed by a client while the server
+  was in an up-call could be leaked.
+  </text>
+</bug>
+
 
 </buglist>
