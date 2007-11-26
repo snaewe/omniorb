@@ -31,6 +31,10 @@
 
 /*
  * $Log$
+ * Revision 1.21.2.9  2007/11/26 16:14:35  dgrisby
+ * Assertion failure with nil objref in Any value marshalling.
+ * failure receiving a struct containing an enum.
+ *
  * Revision 1.21.2.8  2007/05/11 09:46:45  dgrisby
  * Initialise Any's TypeCode to 0 rather than tc_null to avoid locking
  * overhead at creation. Thanks Teemu Torma.
@@ -421,11 +425,12 @@ CORBA::Any::NP_marshalDataOnly(cdrStream& s) const
   }
   else {
     CORBA::TCKind kind = get(pd_tc)->kind();
-    if (kind == CORBA::tk_value ||
+    if (kind == CORBA::tk_objref ||
+        kind == CORBA::tk_value ||
 	kind == CORBA::tk_value_box ||
 	kind == CORBA::tk_abstract_interface) {
 
-      // Nil value
+      // Nil objref / value
       OMNIORB_ASSERT(pd_marshal);
       pd_marshal(s, pd_data);
     }

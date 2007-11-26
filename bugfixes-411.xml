@@ -47,5 +47,10 @@
   </text>
 </bug>
 
+<bug id="5" date="Mon Nov 26 16:11:15 GMT 2007" user="dgrisby">
+  <summary>Assertion failure in Any marshalling with nil objref</summary>
+  <reported>Peter S. Housel</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-November/029040.html"/>
+</bug>
 
 </buglist>
