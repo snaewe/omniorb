@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2007/11/26 16:15:19  dgrisby
+  Missing newline in log message.
+
   Revision 1.4.2.1  2003/03/23 21:02:13  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -659,7 +662,7 @@ resolveBootAgent(const char* id, unsigned int cycles)
       if (omniORB::trace(10)) {
 	omniORB::logger l;
 	l << "Caught exception trying to resolve `" << id
-	  << "' with boot agent.";
+	  << "' with boot agent.\n";
       }
     }
   }
