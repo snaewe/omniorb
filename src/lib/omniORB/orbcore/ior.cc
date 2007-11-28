@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.12.2.6  2007/11/28 12:24:26  dgrisby
+  Implement a tiny subset of CSIv2 to permit multiple SSL endpoints in IORs.
+
   Revision 1.12.2.5  2006/09/17 23:24:18  dgrisby
   Remove hard-coded hostname length.
 
@@ -468,7 +471,7 @@ IIOP::unmarshalObjectKey(const IOP::TaggedProfile& profile,
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 void
-omniIOR::unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent& c , omniIOR& ior)
+omniIOR::unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent& c, omniIOR& ior)
 {
   OMNIORB_ASSERT(c.tag == IOP::TAG_ORB_TYPE);
   cdrEncapsulationStream e(c.component_data.get_buffer(),
@@ -505,7 +508,7 @@ omniIOR::dump_TAG_ORB_TYPE(const IOP::TaggedComponent& c)
 
 
 void
-omniIOR::unmarshal_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent& c , omniIOR& ior)
+omniIOR::unmarshal_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent& c, omniIOR& ior)
 {
   OMNIORB_ASSERT(c.tag == IOP::TAG_ALTERNATE_IIOP_ADDRESS);
   cdrEncapsulationStream e(c.component_data.get_buffer(),
@@ -541,7 +544,7 @@ omniIOR::dump_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent& c)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 void
-omniIOR::unmarshal_TAG_GROUP(const IOP::TaggedComponent& c , omniIOR& ior)
+omniIOR::unmarshal_TAG_GROUP(const IOP::TaggedComponent& c, omniIOR& ior)
 {
   OMNIORB_ASSERT(c.tag == IOP::TAG_GROUP);
 
@@ -591,7 +594,7 @@ omniIOR::dump_TAG_GROUP(const IOP::TaggedComponent& c)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 void
-omniIOR::unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c ,
+omniIOR::unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c,
 				     omniIOR& ior) {
 
   OMNIORB_ASSERT(c.tag == IOP::TAG_SSL_SEC_TRANS);
@@ -705,10 +708,203 @@ omniIOR::dump_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c) {
   return outstr._retn();
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+void
+omniIOR::unmarshal_TAG_CSI_SEC_MECH_LIST(const IOP::TaggedComponent& c,
+					 omniIOR& ior) {
+
+  OMNIORB_ASSERT(c.tag == IOP::TAG_CSI_SEC_MECH_LIST);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  CORBA::Boolean stateful = e.unmarshalBoolean();
+
+  CORBA::ULong mech_count;
+  mech_count <<= e;
+
+  for (CORBA::ULong mech_idx = 0; mech_idx != mech_count; ++mech_idx) {
+    CORBA::UShort target_requires;
+
+    CORBA::UShort as_target_supports, as_target_requires;
+    _CORBA_Unbounded_Sequence_Octet as_client_authentication_mech;
+    _CORBA_Unbounded_Sequence_Octet as_target_name;
+
+    CORBA::UShort sas_target_supports, sas_target_requires;
+    CORBA::ULong sas_privilege_authorities_len;
+    _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> sas_supported_naming_mechanisms;
+    CORBA::ULong sas_supported_identity_types;
+
+    // CompoundSecMech structure
+    target_requires <<= e;
+
+    IOP::TaggedComponent transport_mech;
+    transport_mech <<= e;
+
+    // as_context_mech member
+    as_target_supports <<= e;
+    as_target_requires <<= e;
+    as_client_authentication_mech <<= e;
+    as_target_name <<= e;
+
+    // sas_context_mech member
+    sas_target_supports <<= e;
+    sas_target_requires <<= e;
+    sas_privilege_authorities_len <<= e;
+    for (CORBA::ULong pi = 0; pi != sas_privilege_authorities_len; ++pi) {
+      CORBA::ULong syntax;
+      _CORBA_Unbounded_Sequence_Octet name;
+      
+      syntax <<= e;
+      name   <<= e;
+    }
+    sas_supported_naming_mechanisms <<= e;
+    sas_supported_identity_types <<= e;
+
+    if (as_target_requires  == 0 &&
+	sas_target_requires == 0 &&
+	transport_mech.tag  == IOP::TAG_TLS_SEC_TRANS) {
+
+      // No higher-level requirements and a TLS transport tag -- we
+      // can support this component.
+      CORBA::UShort tls_target_supports, tls_target_requires;
+      CORBA::ULong addresses_len;
+
+      cdrEncapsulationStream tls_e(transport_mech.component_data.get_buffer(),
+				   transport_mech.component_data.length(),1);
+      
+      tls_target_supports <<= tls_e;
+      tls_target_requires <<= tls_e;
+      addresses_len <<= tls_e;
+
+      for (CORBA::ULong ai = 0; ai != addresses_len; ++ai) {
+	IIOP::Address ssladdr;
+
+	ssladdr.host = tls_e.unmarshalRawString();
+	ssladdr.port <<= tls_e;
+
+	giopAddress* address = giopAddress::fromSslAddress(ssladdr);
+	// If we do not have ssl transport linked the return value will be 0
+
+	if (address == 0) return;
+	ior.getIORInfo()->addresses().push_back(address);
+      }
+    }
+  }
+}
+
+char*
+omniIOR::dump_TAG_CSI_SEC_MECH_LIST(const IOP::TaggedComponent& c) {
+
+  OMNIORB_ASSERT(c.tag == IOP::TAG_CSI_SEC_MECH_LIST);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  _CORBA_Unbounded_Sequence_String addrs;
+  CORBA::ULong addrs_size = 0;
+
+  CORBA::Boolean stateful = e.unmarshalBoolean();
+
+  CORBA::ULong mech_count;
+  mech_count <<= e;
+
+  for (CORBA::ULong mech_idx = 0; mech_idx != mech_count; ++mech_idx) {
+    CORBA::UShort target_requires;
+
+    CORBA::UShort as_target_supports, as_target_requires;
+    _CORBA_Unbounded_Sequence_Octet as_client_authentication_mech;
+    _CORBA_Unbounded_Sequence_Octet as_target_name;
+
+    CORBA::UShort sas_target_supports, sas_target_requires;
+    CORBA::ULong sas_privilege_authorities_len;
+    _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> sas_supported_naming_mechanisms;
+    CORBA::ULong sas_supported_identity_types;
+
+    // CompoundSecMech structure
+    target_requires <<= e;
+
+    IOP::TaggedComponent transport_mech;
+    transport_mech <<= e;
+
+    // as_context_mech member
+    as_target_supports <<= e;
+    as_target_requires <<= e;
+    as_client_authentication_mech <<= e;
+    as_target_name <<= e;
+
+    // sas_context_mech member
+    sas_target_supports <<= e;
+    sas_target_requires <<= e;
+    sas_privilege_authorities_len <<= e;
+    for (CORBA::ULong pi = 0; pi != sas_privilege_authorities_len; ++pi) {
+      CORBA::ULong syntax;
+      _CORBA_Unbounded_Sequence_Octet name;
+      
+      syntax <<= e;
+      name   <<= e;
+    }
+    sas_supported_naming_mechanisms <<= e;
+    sas_supported_identity_types <<= e;
+
+    if (as_target_requires  == 0 &&
+	sas_target_requires == 0 &&
+	transport_mech.tag  == IOP::TAG_TLS_SEC_TRANS) {
+
+      // No higher-level requirements and a TLS transport tag -- we
+      // can support this component.
+      CORBA::UShort tls_target_supports, tls_target_requires;
+      CORBA::ULong addresses_len;
+
+      cdrEncapsulationStream tls_e(transport_mech.component_data.get_buffer(),
+				   transport_mech.component_data.length(),1);
+      
+      tls_target_supports <<= tls_e;
+      tls_target_requires <<= tls_e;
+      addresses_len <<= tls_e;
+
+      for (CORBA::ULong ai = 0; ai != addresses_len; ++ai) {
+	IIOP::Address ssladdr;
+
+	ssladdr.host = tls_e.unmarshalRawString();
+	ssladdr.port <<= tls_e;
+
+	char* addr = omniURI::buildURI("", ssladdr.host, ssladdr.port);
+
+	addrs_size += strlen(addr);
+
+	CORBA::ULong addrslen = addrs.length();
+	addrs.length(addrslen+1);
+	addrs[addrslen] = addr;
+      }
+    }
+  }
+
+  if (addrs.length()) {
+    const char* prefix = "TAG_CSI_SEC_MECH_LIST endpoints ";
+
+    CORBA::String_var outstr = CORBA::string_alloc(strlen(prefix) +
+						   addrs_size +
+						   addrs.length() * 2);
+    strcpy(outstr, prefix);
+    for (CORBA::ULong i=0; i != addrs.length(); ++i) {
+      strcat(outstr, addrs[i]);
+      if (i + 1 != addrs.length())
+	strcat(outstr, ", ");
+    }
+    return outstr._retn();
+  }
+  else {
+    return CORBA::string_dup("TAG_CSI_SEC_MECH_LIST (no usable endpoints)");
+  }
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 void
-omniIOR::unmarshal_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent& c ,
+omniIOR::unmarshal_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent& c,
 				     omniIOR& ior) {
   
   OMNIORB_ASSERT(c.tag == IOP::TAG_OMNIORB_BIDIR);
@@ -763,7 +959,7 @@ omniIOR::add_TAG_OMNIORB_BIDIR(const char* sendfrom,omniIOR& ior) {
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 void
-omniIOR::unmarshal_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent& c ,
+omniIOR::unmarshal_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent& c,
 					  omniIOR& ior) {
   
   OMNIORB_ASSERT(c.tag == IOP::TAG_OMNIORB_UNIX_TRANS);
@@ -976,6 +1172,11 @@ static struct {
   { IOP::TAG_FIREWALL_TRANS, 0, 0 },
   { IOP::TAG_SCCP_CONTACT_INFO, 0, 0 },
   { IOP::TAG_JAVA_CODEBASE, 0, 0 },
+
+  { IOP::TAG_CSI_SEC_MECH_LIST,
+    omniIOR::unmarshal_TAG_CSI_SEC_MECH_LIST,
+    omniIOR::dump_TAG_CSI_SEC_MECH_LIST },
+
   { IOP::TAG_DCE_STRING_BINDING, 0, 0 },
   { IOP::TAG_DCE_BINDING_NAME, 0, 0 },
   { IOP::TAG_DCE_NO_PIPES, 0, 0 },
@@ -1093,6 +1294,12 @@ static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_alternative
 static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_ssl_addr;
 static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_unix_addr;
 
+static _CORBA_Unbounded_Sequence_Octet my_csi_component;
+static _CORBA_Unbounded_Sequence<IIOP::Address> my_tls_addr_list;
+static CORBA::UShort  my_tls_supports;
+static CORBA::UShort  my_tls_requires;
+static CORBA::Boolean my_csi_enabled;
+
 _CORBA_Unbounded_Sequence_Octet orbParameters::persistentId;
 
 OMNI_NAMESPACE_END(omni)
@@ -1140,17 +1347,22 @@ void
 omniIOR::add_TAG_SSL_SEC_TRANS(const IIOP::Address& address,
 			       CORBA::UShort supports,CORBA::UShort requires) {
 
+  {
+    // Add to list of TLS addresses
+    CORBA::ULong length = my_tls_addr_list.length();
+    my_tls_addr_list.length(length+1);
+    my_tls_addr_list[length] = address;
+    my_tls_supports = supports;
+    my_tls_requires = requires;
+  }
+
   if (strlen(my_address.host) == 0) {
     my_address.host = address.host;
   }
   else if (strcmp(my_address.host,address.host) != 0) {
-    // The address does not match. We cannot add this address to our IOR.
-    // Shouldn't have happened!
-    omniORB::logger log;
-    log << "Warning: cannot add this SSL address ("
-	<< address.host << "," << address.port
-	<< ") to the IOR because the host name does not match my host name ("
-	<< my_address.host << ")\n";
+    // The address does not match the IIOP address. Cannot add as an
+    // SSL address. Enable the minimal CSI support.
+    my_csi_enabled = 1;
     return;
   }
 
@@ -1166,6 +1378,92 @@ omniIOR::add_TAG_SSL_SEC_TRANS(const IIOP::Address& address,
 
   my_ssl_addr[index].replace(max,len,p,1);
 }
+
+/////////////////////////////////////////////////////////////////////////////
+static
+void add_TAG_CSI_SEC_MECH_LIST(const _CORBA_Unbounded_Sequence<IIOP::Address>& addrs,
+			       CORBA::UShort supports, CORBA::UShort requires)
+{
+  // Anyone would think this structure was designed by committee...
+
+  if (omniORB::trace(10)) {
+    omniORB::logger log;
+    log << "Create CSIv2 security mechanism list for " << addrs.length()
+	<< " addresses.\n";
+  }
+
+  cdrEncapsulationStream stream(CORBA::ULong(0),CORBA::Boolean(1));
+
+  CORBA::UShort zeroUShort = 0;
+  CORBA::ULong  zeroULong  = 0;
+
+  // struct CompoundSecMechList {
+  //   boolean stateful;
+  //   CompoundSecMechanisms mechanism_list;
+  // };
+  stream.marshalBoolean(0);
+  CORBA::ULong mechanism_count = 1;
+  mechanism_count >>= stream;
+
+  // struct CompoundSecMech {
+  //   AssociationOptions taget_requires;
+  //   IOP::TaggedComponent transport_mech;
+  //   AS_ContextSec as_context_mech;
+  //   SAS_ContextSec sas_context_mech;
+  // };
+
+  requires >>= stream;
+
+  IOP::TaggedComponent transport_mech;
+  transport_mech.tag = IOP::TAG_TLS_SEC_TRANS;
+
+  cdrEncapsulationStream mech_stream(CORBA::ULong(0),CORBA::Boolean(1));
+
+  supports >>= mech_stream;
+  requires >>= mech_stream;
+  addrs    >>= mech_stream;
+
+  {
+    CORBA::Octet* p;
+    CORBA::ULong max, len;
+    mech_stream.getOctetStream(p,max,len);
+    transport_mech.component_data.replace(max, len, p, 1);
+  }
+  transport_mech >>= stream;
+
+  // struct AS_ContextSec {
+  //   AssociationOptions target_supports;
+  //   AssociationOptions target_requires;
+  //   CSI::OID client_authentication_mech;
+  //   CSI::GSS_NT_ExportedName target_name;
+  // };
+  zeroUShort >>= stream;
+  zeroUShort >>= stream;
+  zeroULong  >>= stream;
+  zeroULong  >>= stream;
+
+  // struct SAS_ContextSec {
+  //   AssociationOptions target_supports;
+  //   AssociationOptions target_requires;
+  //   ServiceConfigurationList privilege_authorities;
+  //   CSI::OIDList supported_naming_mechanisms;
+  //   CSI::IdentityTokenType supported_identity_types;
+  // };
+  zeroUShort >>= stream;
+  zeroUShort >>= stream;
+  zeroULong  >>= stream;
+  zeroULong  >>= stream;
+  zeroULong  >>= stream;
+
+  {
+    CORBA::Octet* p;
+    CORBA::ULong max, len;
+    stream.getOctetStream(p,max,len);
+
+    _OMNI_NS(my_csi_component).replace(max, len, p, 1);
+  }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 void
@@ -1260,6 +1558,24 @@ CORBA::Boolean insertSupportedComponents(omniInterceptors::encodeIOR_T::info_T& 
       len = my_ssl_addr[index].length();
       c.component_data.replace(max,len,
 			       my_ssl_addr[index].get_buffer(),0);
+    }
+  }
+
+  if (v.major > 1 || v.minor >= 1) {
+    // 1.1 or later, Insert CSI_SEC_MECH_LIST
+    if (my_csi_enabled) {
+      if (!my_csi_component.length()) {
+	add_TAG_CSI_SEC_MECH_LIST(my_tls_addr_list,
+				  my_tls_supports, my_tls_requires);
+      }
+      IOP::TaggedComponent& c = omniIOR::newIIOPtaggedComponent(cs);
+      c.tag = IOP::TAG_CSI_SEC_MECH_LIST;
+
+      CORBA::ULong max, len;
+      max = my_csi_component.maximum();
+      len = my_csi_component.length();
+      c.component_data.replace(max,len,
+			       my_csi_component.get_buffer(),0);
     }
   }
 
@@ -1367,6 +1683,13 @@ public:
     omniORB::getInterceptors()->encodeIOR.remove(insertSupportedComponents);
     omniORB::getInterceptors()->decodeIOR.remove(extractSupportedComponents);
     _CORBA_Unbounded_Sequence_Octet::freebuf(my_orb_type.get_buffer(1));
+
+    my_alternative_addr.length(0);
+    my_ssl_addr.length(0);
+    my_unix_addr.length(0);
+    my_csi_component.length(0);
+    my_tls_addr_list.length(0);
+    my_csi_enabled = 0;
   }
 
 };

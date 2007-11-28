@@ -1,3 +1,15 @@
+Wed Nov 28 12:20:17 GMT 2007 dgrisby
+====================================
+
+- Implement a tiny subset of CSIv2 to permit multiple SSL endpoints in IORs.
+
+include/omniORB4/IOP.h
+include/omniORB4/omniIOR.h
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+
 Wed Nov 28 11:16:36 GMT 2007 dgrisby
 ====================================
 

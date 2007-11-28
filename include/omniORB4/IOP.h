@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.4  2007/11/28 12:24:26  dgrisby
+  Implement a tiny subset of CSIv2 to permit multiple SSL endpoints in IORs.
+
   Revision 1.4.2.3  2006/07/18 16:21:24  dgrisby
   New experimental connection management extension; ORB core support
   for it.
@@ -219,6 +222,9 @@ public:
   static _core_attr const ComponentId TAG_FIREWALL_TRANS;
   static _core_attr const ComponentId TAG_SCCP_CONTACT_INFO;
   static _core_attr const ComponentId TAG_JAVA_CODEBASE;
+  static _core_attr const ComponentId TAG_CSI_SEC_MECH_LIST;
+  static _core_attr const ComponentId TAG_NULL_TAG;
+  static _core_attr const ComponentId TAG_TLS_SEC_TRANS;
   static _core_attr const ComponentId TAG_COMPLETE_OBJECT_KEY;
   static _core_attr const ComponentId TAG_ENDPOINT_ID_POSITION;
   static _core_attr const ComponentId TAG_LOCATION_POLICY;
