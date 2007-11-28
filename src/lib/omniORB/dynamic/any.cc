@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.21.2.10  2007/11/28 11:17:59  dgrisby
+ * More problems with Anys containing nil objrefs. Thanks Peter S. Housel.
+ *
  * Revision 1.21.2.9  2007/11/26 16:14:35  dgrisby
  * Assertion failure with nil objref in Any value marshalling.
  * failure receiving a struct containing an enum.
@@ -267,13 +270,11 @@ CORBA::Any::Any(const Any& a)
   if (a.pd_mbuf) {
     pd_mbuf = new cdrAnyMemoryStream(*a.pd_mbuf);
   }
-  else if (a.pd_data) {
+  else if (a.pd_marshal) {
     // Existing Any has data in its void* pointer. Rather than trying
     // to copy that (which would require a copy function to be
     // registered along with the marshal and destructor functions), we
     // marshal the data into a memory buffer.
-    OMNIORB_ASSERT(a.pd_marshal);
-
     pd_mbuf = new cdrAnyMemoryStream;
     a.pd_marshal(*pd_mbuf, a.pd_data);
   }
@@ -294,13 +295,9 @@ CORBA::Any::operator=(const CORBA::Any& a)
     if (a.pd_mbuf) {
       pd_mbuf = new cdrAnyMemoryStream(*a.pd_mbuf);
     }
-    else if (a.pd_data) {
-      OMNIORB_ASSERT(a.pd_marshal);
+    else if (a.pd_marshal) {
       pd_mbuf = new cdrAnyMemoryStream;
       a.pd_marshal(*pd_mbuf, a.pd_data);
-    }
-    else {
-      pd_mbuf = 0;
     }
   }
   return *this;
