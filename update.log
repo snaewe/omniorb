@@ -1,3 +1,17 @@
+Wed Dec  5 11:10:28 GMT 2007 dgrisby
+====================================
+
+- Segfault on omniidl exit with forward declaration to previously
+  fully-declared valuetype.
+
+src/tool/omniidl/cxx/idlast.cc
+
+- Incorrect generated code involving ::CORBA::AbstractBase.
+
+bugfixes-411.xml
+src/lib/omniORB/omniidl_be/cxx/iface.py
+
+
 Wed Nov 28 12:20:17 GMT 2007 dgrisby
 ====================================
 

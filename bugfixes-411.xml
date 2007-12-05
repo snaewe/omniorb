@@ -53,4 +53,24 @@
   <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-November/029040.html"/>
 </bug>
 
+<bug id="6" date="Wed Dec  5 11:10:28 GMT 2007" user="dgrisby">
+  <summary>Segfault on exit of omniidl</summary>
+  <reported>Juergen Weber</reported>
+  <text>
+  omniidl would segfault on exit if given a forward declaration to a
+  previously fully-declared valuetype.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-December/029062.html"/>
+</bug>
+
+<bug id="7" date="Wed Dec  5 11:10:28 GMT 2007" user="dgrisby">
+  <summary>Incorrect generated code</summary>
+  <reported>Juergen Weber</reported>
+  <text>
+  Incorrect generated code for ::CORBA::AbstractBase.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-December/029067.html"/>
+</bug>
+
+
 </buglist>
