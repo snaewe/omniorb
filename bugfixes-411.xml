@@ -72,5 +72,14 @@
   <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-December/029067.html"/>
 </bug>
 
+<bug id="8" date="Sun Dec  9 01:32:28 GMT 2007" user="dgrisby">
+  <summary>Race condition between Peek and select thread when data in buffer.</summary>
+  <reported>Dirk Siebnich</reported>
+  <text>
+  A race between the select thread and a thread doing peek when there
+  was data already in the connection buffer could lead to a lock-up.
+  </text>
+</bug>
+
 
 </buglist>
