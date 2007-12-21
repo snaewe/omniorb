@@ -281,8 +281,13 @@ static int normal_priority;
 static int highest_priority;
 #endif
 
-#if defined(__osf1__) && defined(__alpha__) || defined(__VMS)
-// omniORB requires a larger stack size than the default (21120) on OSF/1
+#if defined(__osf1__) && defined(__alpha__)
+#  if (__OSVERSION__ < 5)
+static size_t stack_size = 32768;
+#  else
+static size_t stack_size = 1048576;
+#  endif
+#elif defined(__VMS)
 static size_t stack_size = 32768;
 #elif defined(__rtems__)
 static size_t stack_size = ThreadStackSize;
