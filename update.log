@@ -1,3 +1,15 @@
+Fri Dec 21 11:36:50 GMT 2007 dgrisby
+====================================
+
+- Increase default stack size on TRU64.
+
+src/lib/omnithread/posix.cc
+
+- Properly align after header in user exception messages. Thanks Jon Biggar.
+
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Sun Dec  9 01:32:28 GMT 2007 dgrisby
 ====================================
 

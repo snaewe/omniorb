@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.13  2007/12/21 11:39:29  dgrisby
+  Properly align after header in user exception messages. Thanks Jon Biggar.
+
   Revision 1.1.6.12  2007/04/05 15:06:45  dgrisby
   Handle CancelRequest without starting a new giopWorker.
 
@@ -1797,6 +1800,8 @@ giopImpl12::sendUserException(giopStream* g,const CORBA::UserException& ex) {
     operator>>= ((CORBA::ULong)0,cs);
     operator>>= ((CORBA::ULong)0,cs);
     giop_s.service_contexts() >>= cs;
+    cs.alignOutput(omni::ALIGN_8);
+
     CORBA::ULong(repoid_size) >>= cs;
     cs.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
     ex._NP_marshal(cs);
@@ -1814,6 +1819,8 @@ giopImpl12::sendUserException(giopStream* g,const CORBA::UserException& ex) {
 
   // Service context
   giop_s.service_contexts() >>= s;
+
+  s.alignOutput(omni::ALIGN_8);
 
   // RepoId
   CORBA::ULong(repoid_size) >>= s;
