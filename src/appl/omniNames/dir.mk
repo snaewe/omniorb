@@ -25,7 +25,7 @@ endif
 
 
 
-CXXSRCS = omniNames.cc NamingContext_i.cc log.cc
+CXXSRCS = omniNames.cc NamingContext_i.cc log.cc omniNamesWin.cc
 
 
 omniNames = $(patsubst %,$(BinPattern),omniNames)

@@ -153,7 +153,9 @@ timestamp ts;
 // initialises the ORB and the BOA and calls init().
 //
 
-omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
+omniNameslog::omniNameslog(int& p, const char* arg_logdir,
+			   int nohostname, int always)
+  : port(p)
 {
   startingUp = 1;
   checkpointNeeded = 1;
@@ -165,10 +167,16 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
   struct stat sb;
 #endif
 
-  if (!logdir && (logdir = getenv(LOGDIR_ENV_VAR)) == NULL)
-    logdir = strdup(DEFAULT_LOGDIR);
+  CORBA::String_var logdir;
+  if (!arg_logdir)
+    arg_logdir = getenv(LOGDIR_ENV_VAR);
+  
+  if (arg_logdir)
+    logdir = CORBA::string_dup(arg_logdir);
+  else
+    logdir = CORBA::string_dup(DEFAULT_LOGDIR);
 
-  char* logname;
+  CORBA::String_var logname;
 
 #if !defined(__WIN32__) && !defined(__VMS)
   if (logdir[strlen(logdir)-1] == '/') {
@@ -177,8 +185,8 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
 #endif
 
   if (nohostname) {
-    logname = new char[strlen(logdir) + strlen("/omninames") + 1];
-    sprintf(logname, "%s/omninames", logdir);
+    logname = CORBA::string_alloc(strlen(logdir) + strlen("/omninames"));
+    sprintf(logname, "%s/omninames", (const char*)logdir);
   }
   else {
 
@@ -192,9 +200,9 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
       exit(1);
     }
 
-    logname = new char[strlen(logdir) + strlen("/omninames-")
-		       + strlen(un.nodename) + 1];
-    sprintf(logname, "%s/omninames-%s", logdir, un.nodename);
+    logname = CORBA::string_alloc(strlen(logdir) + strlen("/omninames-") +
+				  strlen(un.nodename));
+    sprintf(logname, "%s/omninames-%s", (const char*)logdir, un.nodename);
 
 #  elif HAVE_GETHOSTNAME
 
@@ -215,9 +223,9 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
 	
       exit(1);
     }
-    logname = new char[strlen(logdir) + strlen("/omninames-")
-		       + strlen(hostname) + 1];
-    sprintf(logname, "%s/omninames-%s", logdir, hostname);
+    logname = CORBA::string_alloc(strlen(logdir) + strlen("/omninames-") +
+				  strlen(hostname));
+    sprintf(logname, "%s/omninames-%s", (const char*)logdir, hostname);
 
 #  endif // HAVE_UNAME
 
@@ -225,24 +233,20 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
 
     // Get host name:
 
-    DWORD machineName_len = MAX_COMPUTERNAME_LENGTH+1;
-    char* machineName = new char[machineName_len];
-    if (!GetComputerName((LPTSTR) machineName, &machineName_len)) {
+    DWORD machineName_len = MAX_COMPUTERNAME_LENGTH;
+    CORBA::String_var machineName = CORBA::string_alloc(machineName_len);
+    if (!GetComputerName((LPTSTR)(char*)machineName, &machineName_len)) {
       cerr << ts.t() << "Error: cannot get the name of this host." << endl;
-	
       exit(1);
     }
 
-    logname = new char[strlen(logdir) + strlen("\\omninames-")
-			     + strlen(machineName) + 1];
-    sprintf(logname, "%s\\omninames-%s", logdir, machineName);
+    logname = CORBA::string_alloc(strlen(logdir) + strlen("\\omninames-") +
+				  + strlen(machineName));
+    sprintf(logname, "%s\\omninames-%s",
+	    (const char*)logdir, (const char*)machineName);
   
-    delete[] machineName;
-
 #else // VMS
-    char last(
-	      logdir[strlen(logdir)-1]
-	      );
+    char last(logdir[strlen(logdir)-1]);
     if (last != ':' && last != ']') {
       cerr << ts.t() << "Error: " << LOGDIR_ENV_VAR << " (" << logdir
 	   << ") is not a directory name." << endl;
@@ -256,39 +260,52 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
       exit(1);
     }
 
-    logname = new char[strlen(logdir) + strlen("/omninames-")
-			     + strlen(un.nodename) + 1];
-    sprintf(logname, "%somninames-%s", logdir, un.nodename);
+    logname = CORBA::string_alloc(strlen(logdir) + strlen("/omninames-") +
+				  strlen(un.nodename));
+    sprintf(logname, "%somninames-%s", (const char*)logdir, un.nodename);
 #endif
   }
 
 #ifndef __VMS
-  active = new char[strlen(logname)+strlen(".log")+1];
-  sprintf(active,"%s.log",logname);
-  backup = new char[strlen(logname)+strlen(".bak")+1];
-  sprintf(backup,"%s.bak",logname);
-  checkpt = new char[strlen(logname)+strlen(".ckp")+1];
-  sprintf(checkpt,"%s.ckp",logname);
+  active = CORBA::string_alloc(strlen(logname)+strlen(".log"));
+  sprintf(active,"%s.log", (const char*)logname);
+  backup = CORBA::string_alloc(strlen(logname)+strlen(".bak"));
+  sprintf(backup,"%s.bak", (const char*)logname);
+  checkpt = CORBA::string_alloc(strlen(logname)+strlen(".ckp"));
+  sprintf(checkpt,"%s.ckp", (const char*)logname);
 #else
   // specify latest version:
-  active = new char[strlen(logname)+strlen(".log;")+1];
-  sprintf(active,"%s.log;",logname);
-  backup = new char[strlen(logname)+strlen(".bak;")+1];
-  sprintf(backup,"%s.bak;",logname);
-  checkpt = new char[strlen(logname)+strlen(".ckp;")+1];
-  sprintf(checkpt,"%s.ckp;",logname);
+  active = CORBA::string_alloc(strlen(logname)+strlen(".log;"));
+  sprintf(active,"%s.log;", (const char*)logname);
+  backup = CORBA::string_alloc(strlen(logname)+strlen(".bak;"));
+  sprintf(backup,"%s.bak;", (const char*)logname);
+  checkpt = CORBA::string_alloc(strlen(logname)+strlen(".ckp;"));
+  sprintf(checkpt,"%s.ckp;", (const char*)logname);
 #endif
 
-  delete [] logname;
-
-  if (port != 0) {
+  if (port == 0) {
+    firstTime = 0;
+  }
+  else {
+    if (always) {
+      if (stat(active,&sb) == 0) {
+	// Log file exists -- not first time
+	firstTime = 0;
+      }
+      else {
+	firstTime = 1;
+      }
+    }
+    else {
+      firstTime = 1;
+    }
+  }
+  if (firstTime) {
 
     //
     // Starting for the first time - make sure log file doesn't exist, and
     // for safety, that there is no backup file either.
     //
-
-    firstTime = 1;
 
     if (stat(active,&sb) == 0) {
       cerr << ts.t() << "Error: log file '" << active
@@ -301,13 +318,12 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
       exit(1);
     }
 
-  } else {
+  }
+  else {
 
     //
     // Restart - get port info from log file.
     //
-
-    firstTime = 0;
 
 #ifdef __WIN32__
     ifstream initf(active,ios::in);
@@ -317,18 +333,32 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
     if (!initf) {
       cerr << ts.t() << "Error: cannot open log file '" << active << "'."
 	   << endl;
+
       if (stat(backup,&sb) == 0) {
-	cerr << "Info: backup file '" << backup << "' exists." << endl
-	     << "This must be removed if you want to use the -start option."
-	     << endl;
+	if (always) {
+	  if (unlink(backup) == 0) {
+	    cerr << "Info: backup file '" << backup << "' removed." << endl;
+	  }
+	  else {
+	    cerr << "Backup file '" << backup
+		 << "' exists and cannot be removed." << endl;
+	    exit(1);
+	  }
+	}
+	else {
+	  cerr << "Backup file '" << backup << "' exists." << endl
+	       << "Refusing to start. "
+	       << "Remove the backup file to start omniNames."
+	       << endl;
+	  exit(1);
+	}
       }
-      usage();
     }
 
     try {
       getPort(initf);
-
-    } catch (IOError&) {
+    }
+    catch (IOError&) {
 
       cerr << ts.t() << "Error: reading log file '" << active << "' failed: "
 	   << flush;
@@ -336,7 +366,8 @@ omniNameslog::omniNameslog(int& p, char* logdir, int nohostname) : port(p)
       initf.close();
       exit(1);
 
-    } catch (ParseError&) {
+    }
+    catch (ParseError&) {
 
       cerr << ts.t() << "Error: parse error in log file '" << active
 	   << "' at line " << line << "." << endl;
@@ -418,6 +449,7 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
 #endif
 
     } catch (IOError& ex) {
+
       cerr << ts.t() << "Error: cannot create initial log file '" << active
 	   << "': " << endl;
       perror("");

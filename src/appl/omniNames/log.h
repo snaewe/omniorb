@@ -35,7 +35,7 @@
 #endif
 
 #ifndef LOGDIR_ENV_VAR
-#define LOGDIR_ENV_VAR "OMNINAMES_LOGDIR"
+#  define LOGDIR_ENV_VAR "OMNINAMES_LOGDIR"
 #endif
 
 class omniNameslog {
@@ -43,16 +43,16 @@ class omniNameslog {
   CORBA::ORB_ptr orb;
   PortableServer::POA_ptr poa;
   PortableServer::POA_ptr ins_poa;
-  char *active;
-  char *backup;
-  char *checkpt;
+  CORBA::String_var active;
+  CORBA::String_var backup;
+  CORBA::String_var checkpt;
   ofstream logf;
 
   int port;
   PortableServer::ObjectId persistentId;
 
   int startingUp;	// true while reading log file initially.
-  int firstTime;	// true if -start option was given.
+  int firstTime;	// true if running for the first time
   int checkpointNeeded;	// true if changes have been made since last checkpoint
 
   int line;		// current line number when reading log file initially.
@@ -109,7 +109,7 @@ public:
   class IOError {};
   class ParseError {};
 
-  omniNameslog(int& port, char* logdir, int nohostname);
+  omniNameslog(int& port, const char* logdir, int nohostname, int always);
 
   void init(CORBA::ORB_ptr o,
 	    PortableServer::POA_ptr p,
