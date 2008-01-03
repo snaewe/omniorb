@@ -173,7 +173,7 @@ define CXXExecutable
  $(RM) $@; \
  $(CXXLINK) -out:$@ $(CXXLINKOPTIONS) -PDB:$@.pdb $(IMPORT_LIBRARY_FLAGS) \
       $(filter-out $(LibPattern),$^) $$libs; \
- $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
+ $(MANIFESTTOOL) /outputresource:"$@;#1" /manifest $@.manifest; \
 )
 endef
 
@@ -181,7 +181,7 @@ define CExecutable
 (set -x; \
  $(RM) $@; \
  $(CLINK) -out:$@ $(CLINKOPTIONS) -PDB:$@.pdb $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibPattern),$^) $$libs; \
- $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
+ $(MANIFESTTOOL) /outputresource:"$@;#1" /manifest $@.manifest; \
 )
 endef
 
@@ -359,6 +359,7 @@ $(RM) $@; \
 $(CXXLINK) -out:$$dllname -DLL $$extralinkoption \
 $$defflag -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
 $^ $$extralibs $$resname; \
+$(MANIFESTTOOL) /outputresource:"$$dllname;#2" /manifest $$dllname.manifest; \
 $(CP) $@ $$slibname;
 endef
 
