@@ -92,8 +92,8 @@ public:
 
   void destroy(void) {
     // remember the destructor for an object should never be called explicitly.
-    PortableServer::ObjectId_var id = the_poa->servant_to_id(this);
-    the_poa->deactivate_object(id);
+    PortableServer::ObjectId_var id = names_poa->servant_to_id(this);
+    names_poa->deactivate_object(id);
   }
 
 private:

@@ -58,10 +58,7 @@
 #define DEFAULT_IDLE_TIME_BTW_CHKPT  (15*60)
 
 
-PortableServer::POA_var the_poa;
-PortableServer::POA_var the_ins_poa;
-
-ofstream o_cerr;
+PortableServer::POA_var names_poa;
 
 void
 usage()
@@ -303,7 +300,6 @@ omniNames(int            port,
 
   PortableServer::POA_var root_poa;
   PortableServer::POA_var ins_poa;
-  PortableServer::POA_var names_poa;
 
   // Root POA
   CORBA::Object_var poaref = orb_->resolve_initial_references("RootPOA");

@@ -29,8 +29,7 @@
 #include <log.h>
 #include <omniORB4/Naming.hh>
 
-extern PortableServer::POA_var the_poa;
-extern PortableServer::POA_var the_ins_poa;
+extern PortableServer::POA_var names_poa;
 
 
 class ObjectBinding;

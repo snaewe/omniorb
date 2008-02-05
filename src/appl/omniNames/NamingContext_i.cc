@@ -84,11 +84,11 @@ NamingContext_i::NamingContext_i(PortableServer::POA_ptr poa,
 CosNaming::NamingContext_ptr
 NamingContext_i::new_context()
 {
-  CORBA::Object_var ref = the_poa->create_reference(
-				    CosNaming::NamingContext::_PD_repoId);
-  PortableServer::ObjectId_var id = the_poa->reference_to_id(ref);
+  CORBA::Object_var ref = names_poa->create_reference(
 
-  NamingContext_i* nc = new NamingContext_i(the_poa, id, redolog);
+  PortableServer::ObjectId_var id = names_poa->reference_to_id(ref);
+
+  NamingContext_i* nc = new NamingContext_i(names_poa, id, redolog);
   CosNaming::NamingContext_ptr ncref = nc->_this();
   nc->_remove_ref();
 
@@ -387,6 +387,7 @@ NamingContext_i::bind_new_context(const CosNaming::Name& n)
     DB(cerr << "bind_new_context simple (" << n[0].id << "," << n[0].kind
        << ") in context " << this << endl);
     CosNaming::NamingContext_ptr nc = new_context();
+
     try {
       bind_context(n, nc);
     } catch (...) {
@@ -479,7 +480,7 @@ NamingContext_i::list(CORBA::ULong how_many, CosNaming::BindingList_out bl,
     return;
   }
 
-  BindingIterator_i* bii = new BindingIterator_i(the_poa, all);
+  BindingIterator_i* bii = new BindingIterator_i(names_poa, all);
 
   bi = bii->_this();
   bii->_remove_ref();
