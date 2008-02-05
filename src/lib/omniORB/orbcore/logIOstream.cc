@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.11.2.6  2008/02/05 16:43:20  dgrisby
+  Flush log file.
+
   Revision 1.11.2.5  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -225,8 +228,11 @@ omniORB::logger::~logger()
   if( (size_t)(pd_p - pd_buf) != strlen(pd_prefix) ) {
     if (logfunc())
       logfunc()(pd_buf);
-    else
+    else {
       fputs(pd_buf, logfile);
+      if ((const char*)logfilename)
+	fflush(logfile);
+    }
   }
   delete[] pd_buf;
 }
