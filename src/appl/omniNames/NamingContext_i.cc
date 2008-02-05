@@ -85,7 +85,7 @@ CosNaming::NamingContext_ptr
 NamingContext_i::new_context()
 {
   CORBA::Object_var ref = names_poa->create_reference(
-
+				    CosNaming::NamingContext::_PD_repoId);
   PortableServer::ObjectId_var id = names_poa->reference_to_id(ref);
 
   NamingContext_i* nc = new NamingContext_i(names_poa, id, redolog);
@@ -387,7 +387,6 @@ NamingContext_i::bind_new_context(const CosNaming::Name& n)
     DB(cerr << "bind_new_context simple (" << n[0].id << "," << n[0].kind
        << ") in context " << this << endl);
     CosNaming::NamingContext_ptr nc = new_context();
-
     try {
       bind_context(n, nc);
     } catch (...) {
