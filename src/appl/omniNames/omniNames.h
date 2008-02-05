@@ -69,7 +69,9 @@ public:
   static int removeService();
   // Remove Windows service
 
-  static int runService();
+  static int runService(int port, const char* logdir, const char* errlog,
+			CORBA::Boolean ignoreport, CORBA::Boolean nohostname,
+			int a_argc, char** a_argv);
   // Entry-point for service execution
 
 #endif

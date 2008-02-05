@@ -1,3 +1,17 @@
+Tue Feb  5 16:35:34 GMT 2008 dgrisby
+====================================
+
+- Flush log file.
+
+src/lib/omniORB/orbcore/logIOstream.cc
+
+- Allow service command line to override registry.
+
+src/appl/omniNames/omniNames.cc
+src/appl/omniNames/omniNames.h
+src/appl/omniNames/omniNamesWin.cc
+
+
 Tue Feb  5 14:37:25 GMT 2008 dgrisby
 ====================================
 

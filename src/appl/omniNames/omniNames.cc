@@ -212,7 +212,8 @@ main(int argc, char **argv)
     return omniNames::removeService();
   }
   else if (runsvc) {
-    return omniNames::runService();
+    return omniNames::runService(port, logdir, errlog, ignoreport,
+				 nohostname, new_argc, new_argv);
   }
 #endif
 

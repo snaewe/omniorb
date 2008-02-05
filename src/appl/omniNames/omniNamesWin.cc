@@ -157,7 +157,8 @@ getRegLong(HKEY rootkey, const char* subkey)
 
 static
 char*
-getRegArgs(HKEY rootkey, const char* subkey, int& argc, char**& argv)
+getRegArgs(HKEY rootkey, const char* subkey, int& argc, char**& argv,
+	   int a_argc, char** a_argv)
 {
   int size = 1024;
   CORBA::String_var val;
@@ -183,7 +184,7 @@ getRegArgs(HKEY rootkey, const char* subkey, int& argc, char**& argv)
   }
   char* c = (char*)val;
   int slen;
-  argc = 0;
+  argc = a_argc;
   while (1) {
     slen = strlen(c);
     if (slen == 0)
@@ -194,8 +195,14 @@ getRegArgs(HKEY rootkey, const char* subkey, int& argc, char**& argv)
   }
   argv = new char*[argc];
 
+  int i;
+
+  for (i=0; i < a_argc; ++i) {
+    argv[i] = a_argv[i];
+  }
+
   c = (char*)val;
-  for (int i=0; i < argc; ++i) {
+  for (; i < argc; ++i) {
     argv[i] = c;
     c += strlen(c) + 1;
   }
@@ -378,14 +385,12 @@ removeService()
 
 int
 omniNames::
-runService()
+runService(int port, const char* logdir, const char* errlog,
+	   CORBA::Boolean ignoreport, CORBA::Boolean nohostname,
+	   int a_argc, char** a_argv)
 {
-  int               port;
-  CORBA::String_var logdir;
-  CORBA::String_var errlog;
-  CORBA::Boolean    ignoreport = 0;
-  CORBA::Boolean    nohostname = 0;
-
+  CORBA::String_var logdir_v;
+  CORBA::String_var errlog_v;
   CORBA::String_var packed_args;
   int               argc;
   char**            argv;
@@ -399,12 +404,24 @@ runService()
       cerr << "Unable to open registry key: " << err_msg << endl;
       return 2;
     }
-    port       	= getRegLong  (rootkey, "port");
-    ignoreport 	= getRegLong  (rootkey, "ignoreport");
-    nohostname 	= getRegLong  (rootkey, "nohostname");
-    logdir     	= getRegString(rootkey, "logdir");
-    errlog     	= getRegString(rootkey, "errlog");
-    packed_args = getRegArgs  (rootkey, "args", argc, argv);
+    if (!port)
+      port = getRegLong(rootkey, "port");
+
+    if (!ignoreport)
+      ignoreport = getRegLong(rootkey, "ignoreport");
+
+    if (!nohostname)
+      nohostname = getRegLong(rootkey, "nohostname");
+
+    if (!logdir) {
+      logdir   = getRegString(rootkey, "logdir");
+      logdir_v = logdir;
+    }
+    if (!errlog) {
+      errlog   = getRegString(rootkey, "errlog");
+      errlog_v = errlog;
+    }
+    packed_args = getRegArgs(rootkey, "args", argc, argv, a_argc, a_argv);
 
     RegCloseKey(rootkey);
   }
