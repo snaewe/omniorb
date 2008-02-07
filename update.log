@@ -1,3 +1,11 @@
+Thu Feb  7 23:17:05 GMT 2008 dgrisby
+====================================
+
+- Check wchar code sets in tcParser.
+
+src/lib/omniORB/dynamic/tcParser.cc
+
+
 Tue Feb  5 16:35:34 GMT 2008 dgrisby
 ====================================
 

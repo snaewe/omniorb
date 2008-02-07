@@ -99,6 +99,9 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 
 	case CORBA::tk_wchar:
 	  {
+	    OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(ibuf.TCS_W(), ibuf);
+	    OMNIORB_CHECK_TCS_W_FOR_MARSHAL  (obuf.TCS_W(), obuf);
+
 	    if (ibuf.TCS_W() == obuf.TCS_W()) {
 	      // No conversion necessary
 	      CORBA::Octet len = ibuf.unmarshalOctet();
@@ -151,6 +154,9 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 
 	case CORBA::tk_wstring:
 	  {
+	    OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(ibuf.TCS_W(), ibuf);
+	    OMNIORB_CHECK_TCS_W_FOR_MARSHAL  (obuf.TCS_W(), obuf);
+
 	    if (ibuf.TCS_W() == obuf.TCS_W()) {
 	      // No conversion necessary
 	      CORBA::ULong len;
@@ -377,6 +383,9 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
       {
 	// Always do a conversion via UTF-16, to avoid the pain of
 	// possibly byteswapping.
+	OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(ibuf.TCS_W(), ibuf);
+	OMNIORB_CHECK_TCS_W_FOR_MARSHAL  (obuf.TCS_W(), obuf);
+
 	omniCodeSet::UniChar uc = ibuf.TCS_W()->unmarshalWChar(ibuf);
 	obuf.TCS_W()->marshalWChar(obuf, uc);
 	return;
@@ -411,6 +420,9 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
     case CORBA::tk_wstring:
       {
 	// Convert via UTF-16
+	OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(ibuf.TCS_W(), ibuf);
+	OMNIORB_CHECK_TCS_W_FOR_MARSHAL  (obuf.TCS_W(), obuf);
+
 	omniCodeSet::UniChar* us;
 	CORBA::ULong len = ibuf.TCS_W()->unmarshalWString(ibuf, 0, us);
 	omniCodeSetUtil::HolderU uh(us);
