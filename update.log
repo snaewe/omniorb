@@ -1,3 +1,11 @@
+Wed Feb 13 11:07:10 GMT 2008 dgrisby
+====================================
+
+- Accidental check-in of uncommented platform choice in config.mk.
+
+config/config.mk
+
+
 Thu Feb  7 23:17:05 GMT 2008 dgrisby
 ====================================
 

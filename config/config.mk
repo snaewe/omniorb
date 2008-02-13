@@ -49,7 +49,7 @@
 # edit the make variables, such as CC and CXX, in the file.
 
 #platform = x86_win32_vs_6
-platform = x86_win32_vs_7
+#platform = x86_win32_vs_7
 #platform = x86_win32_vs_8
 #platform = x86_win32_mingw
 #platform = x86_win32_dmc
