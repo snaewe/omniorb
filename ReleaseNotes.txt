@@ -1,10 +1,21 @@
 RELEASE NOTES
 =============
 
-This is omniORB 4.1.1.
+This is omniORB 4.1.2.
 
 See README.unix or README.win32.txt for building instructions.
 See the documentation in the doc directory for more information.
+
+
+Changes since omniORB 4.1.1
+---------------------------
+
+ - Bug fixes. See bugfixes-411.xml.
+
+ - omniNames Windows service support. See doc/omniNames.pdf.
+
+ - Support for multi-endpoint SSL IORs (using an extremely minimal
+   subset of CSIv2).
 
 
 

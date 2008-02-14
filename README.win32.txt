@@ -1,13 +1,13 @@
-                        omniORB on Win32 platforms.
-                        ===========================
+omniORB on Win32 / Win64 platforms
+==================================
 
 This file contains information on installing, building, and using
-omniORB on Win32 (Windows NT and Windows '9x) platforms.
+omniORB on Win32 and Win64 platforms.
 
 omniORB has been tested with the following software configuration:
 
 - Operating System  : Windows NT 4.0, 9x, 2000, XP, 2003
-- Architecture      : x86 (and alpha in earlier versions)
+- Architecture      : x86, x86-64 (and alpha in earlier versions)
 - Compiler          : Visual C++ 6, 7, 8. VC++ 5 may still work.
 
 The omniORB binaries, when compiled using VC++ 6.0 on Windows NT, will
@@ -49,6 +49,10 @@ ready-built binaries are provided. The binaries are compiled with VC++
 6, 7, or 8, depending on the version you downloaded. If you are using
 any other version of VC++, the binaries will not work, and you must
 compile omniORB from source.
+
+Note that although there are many references to "win32", everything
+works on 64 bit Windows platforms. There is no separate "win64"
+platform in the build environment.
 
 The executables and DLLs are in <Top-Level Directory>\bin\x86_win32.
 The libraries are in            <Top-Level Directory>\lib\x86_win32.
@@ -108,7 +112,7 @@ follow these steps:
       the naming service omniNames can store its data. For example:
           set OMNINAMES_LOGDIR=C:\OMNINAMES
 
-    o Start omniNames. The binary is in <Install Location>\bin\win32_x86. 
+    o Start omniNames. The binary is in <Install Location>\bin\x86_win32. 
       For example:
          omniNames -start
 
@@ -445,27 +449,11 @@ still work with Visual C++ 5 but that has not been tested.
 
 
 
-Running omniNames as an NT service
-==================================
+Running omniNames as a Windows service
+======================================
 
-  o Use srvany from the NT resource kit.
-
-  o Follow the instructions provided with srvany to run a program as a
-    service.
-
-  o E.g. The binary of omniNames.exe is in C:\omniNames\omniNames.exe
-         The log directory is set to C:\omniNames
-         The standard error output is to be redirected to 
-             C:\omniNames\omniNames.errlog
-
-         Set the following registry parameters with the service applet:
-            Application:   REG_SZ C:\omniNames\omniNames.exe
-
-            AppParameters: REG_SZ -logdir C:\omniNames -errlog
-                           C:\omniNames\omniNames.errlog
-
-            AppDirectory:  REG_SZ C:\omniNames
-
+From omniORB version 4.1.2, omniNames can be run as a Windows
+service. See doc/omniNames.pdf for details.
 
 
 Mailing List

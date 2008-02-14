@@ -6,13 +6,13 @@
 \addtolength{\textwidth}{0.5in}
 \pagestyle{headings}
 
+\newcommand{\cmdline}[1]{\texttt{#1}}
+
+
+
 \title{The OMNI Naming Service}
 
-\author{Tristan Richardson\\
-AT\&T Laboratories Cambridge
-}
-
-\date{13 July 2000}
+\date{14 February 2008}
 
 \begin{document}
 
@@ -35,7 +35,7 @@ which name lookups usually start.  This is the object returned by the
 call to \verb|CORBA::ORB::resolve_initial_references("NameService").|
 
 
-\section{Log file}
+\section{`Log' file}
 
 The Naming Service is often part of the bootstrapping process of other
 CORBA programs.  For this reason, if an instance of omniNames crashes
@@ -48,10 +48,10 @@ reference to be stored in a configuration file, for example.
 Secondly, the naming graph with all its bindings should persist
 between invocations.
 
-To achieve this, omniNames generates a log file, to which it writes
-out an entry every time a change is made to the naming graph.  The
-directory in which this log file is written can be specified with the
-\verb|OMNINAMES_LOGDIR| environment variable.  When omniNames is
+To achieve this, omniNames generates a redo log file, to which it
+writes out an entry every time a change is made to the naming graph.
+The directory in which this log file is written can be specified with
+the \verb|OMNINAMES_LOGDIR| environment variable.  When omniNames is
 restarted it uses the log file so that it can regenerate the naming
 graph.
 
@@ -76,5 +76,86 @@ of the Naming Service.  This object reference is returned by
 \verb|resolve_initial_references("NameService")|. There are a number
 of methods of specifying the root naming context in
 \verb|omniORB.cfg|---see the omniORB manual for details.
+
+
+\section{Command line parameters}
+
+omniNames accepts the following command line parameters.
+
+\vspace{\baselineskip}
+
+\begin{tabular}{lp{.8\textwidth}}
+%HEVEA\\
+
+\cmdline{-help} &
+    Output usage information.\\[.5\baselineskip]
+
+\cmdline{-start }\textit{[port]} &
+    Start omniNames for the first time, listening on
+    \textit{port}.\\[.5\baselineskip]
+
+\cmdline{-always} &
+    In conjunction with \cmdline{-start}, always start up
+    omniNames, even if its log file already exists.\\[.5\baselineskip]
+
+\cmdline{-logdir }\textit{directory} &
+    Specifies the directory for the redo log file, overriding the
+    default.\\[.5\baselineskip]
+
+\cmdline{-errlog }\textit{filename} &
+    Causes output that would normally be sent to stderr to go to the
+    specified file instead.\\[.5\baselineskip]
+
+\cmdline{-nohostname} &
+    Normally, omniNames includes the host name in the name of the redo
+    log file. This option disables that, meaning the log file can be
+    used on a different host, or if the host name
+    changes.\\[.5\baselineskip]
+
+\cmdline{-ignoreport} &
+    omniNames normally adds its own endpoint, based on the port
+    specification (given with \cmdline{-start} or stored in the log
+    file). This option causes it to ignore the port. It should be used
+    in conjunction with specific \cmdline{-ORBendPoint} options to
+    ensure object references are stable.\\[.5\baselineskip]
+
+\cmdline{-install }\textit{[port]} &
+    On Windows, install omniNames service. See below.\\[.5\baselineskip]
+
+\cmdline{-manual} &
+    On Windows, specify that the service should be started
+    manually. See below.\\[.5\baselineskip]
+
+\cmdline{-remove} &
+    On Windows, uninstall omniNames service. See below.\\[.5\baselineskip]
+
+\end{tabular}
+
+
+
+\section{Windows service}
+
+omniNames can be run as a Windows service.
+
+To install the service, run with the \cmdline{-install} command line
+option, with a port to override the default 2809 if necessary. The
+command line should include any other parameters of relevance, such as
+the log directory and error log file. It is particularly important to
+specify an error log file, since the service runs in an environment
+where stderr goes nowhere. Similarly, if omniORB tracing is requested
+with the various \cmdline{-ORBtrace} options, \cmdline{-ORBtraceFile}
+should be specified, otherwise the trace messages vanish.
+
+The service is normally configured to start at system startup time.
+Specifying \cmdline{-manual} configures it for manual startup.
+Regardless of that setting, the service is not automatically started
+at the time it is installed. It should be started manually with the
+service control manager if it is to run before the next system
+restart.
+
+Once installed, the service can be uninstalled by running omniNames
+with the \cmdline{-remove} option.
+
+
 
 \end{document}

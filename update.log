@@ -1,3 +1,25 @@
+Thu Feb 14 11:45:28 GMT 2008 dgrisby
+====================================
+
+- Updates for 4.1.2.
+
+README.FIRST.txt
+README.win32.txt
+ReleaseNotes.txt
+THIS_IS_OMNIORB_4_1_1
+THIS_IS_OMNIORB_4_1_2
+configure
+configure.ac
+update.log
+contrib/RPMs/omniORB.spec
+contrib/RPMs/omniORB_new.spec
+doc/omniNames.html
+doc/omniNames.pdf
+doc/omniNames.ps
+doc/tex/omniNames.tex
+mk/version.mk
+
+
 Thu Feb 14 09:37:56 GMT 2008 dgrisby
 ====================================
 

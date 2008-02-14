@@ -22,7 +22,7 @@ BLOCKQUOTE{margin-left:4ex;margin-right:4ex;text-align:left;}
 </HEAD>
 
 <BODY >
-<!--HEVEA command line is: hevea omniNames.tex -->
+<!--HEVEA command line is: hevea omniNames -->
 <!--HTMLHEAD-->
 <!--ENDHTML-->
 <!--PREFIX <ARG ></ARG>-->
@@ -32,10 +32,7 @@ BLOCKQUOTE{margin-left:4ex;margin-right:4ex;text-align:left;}
 <TABLE CLASS="title">
 <TR><TD>
 <H1 CLASS="titlemain">The OMNI Naming Service</H1>
-<H3 CLASS="titlerest">Tristan Richardson<BR>
-AT&amp;T Laboratories Cambridge
-</H3>
-<H3 CLASS="titlerest">13 July 2000</H3></TD>
+<H3 CLASS="titlerest">14 February 2008</H3></TD>
 </TR></TABLE><BR>
 <!--TOC section Introduction-->
 
@@ -55,9 +52,9 @@ the graph is a <EM>naming context</EM>. There is a &#8220;root&#8221; context at
 which name lookups usually start. This is the object returned by the
 call to <CODE>CORBA::ORB::resolve_initial_references("NameService").</CODE><BR>
 <BR>
-<!--TOC section Log file-->
+<!--TOC section `Log' file-->
 
-<H2 CLASS="section"><A NAME="htoc2">2</A>&nbsp;&nbsp;Log file</H2><!--SEC END -->
+<H2 CLASS="section"><A NAME="htoc2">2</A>&nbsp;&nbsp;`Log' file</H2><!--SEC END -->
 
 The Naming Service is often part of the bootstrapping process of other
 CORBA programs. For this reason, if an instance of omniNames crashes
@@ -70,10 +67,10 @@ reference to be stored in a configuration file, for example.
 Secondly, the naming graph with all its bindings should persist
 between invocations.<BR>
 <BR>
-To achieve this, omniNames generates a log file, to which it writes
-out an entry every time a change is made to the naming graph. The
-directory in which this log file is written can be specified with the
-<CODE>OMNINAMES_LOGDIR</CODE> environment variable. When omniNames is
+To achieve this, omniNames generates a redo log file, to which it
+writes out an entry every time a change is made to the naming graph.
+The directory in which this log file is written can be specified with
+the <CODE>OMNINAMES_LOGDIR</CODE> environment variable. When omniNames is
 restarted it uses the log file so that it can regenerate the naming
 graph.<BR>
 <BR>
@@ -100,6 +97,81 @@ of the Naming Service. This object reference is returned by
 <CODE>resolve_initial_references("NameService")</CODE>. There are a number
 of methods of specifying the root naming context in
 <CODE>omniORB.cfg</CODE>&mdash;see the omniORB manual for details.<BR>
+<BR>
+<!--TOC section Command line parameters-->
+
+<H2 CLASS="section"><A NAME="htoc4">4</A>&nbsp;&nbsp;Command line parameters</H2><!--SEC END -->
+
+omniNames accepts the following command line parameters.<BR>
+<TABLE CELLSPACING=2 CELLPADDING=0>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>&nbsp;</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-help</TT></TD>
+<TD VALIGN=top ALIGN=left>Output usage information.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-start </TT><I>[port]</I></TD>
+<TD VALIGN=top ALIGN=left>Start omniNames for the first time, listening on
+ <I>port</I>.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-always</TT></TD>
+<TD VALIGN=top ALIGN=left>In conjunction with <TT>-start</TT>, always start up
+ omniNames, even if its log file already exists.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-logdir </TT><I>directory</I></TD>
+<TD VALIGN=top ALIGN=left>Specifies the directory for the redo log file, overriding the
+ default.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-errlog </TT><I>filename</I></TD>
+<TD VALIGN=top ALIGN=left>Causes output that would normally be sent to stderr to go to the
+ specified file instead.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-nohostname</TT></TD>
+<TD VALIGN=top ALIGN=left>Normally, omniNames includes the host name in the name of the redo
+ log file. This option disables that, meaning the log file can be
+ used on a different host, or if the host name
+ changes.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-ignoreport</TT></TD>
+<TD VALIGN=top ALIGN=left>omniNames normally adds its own endpoint, based on the port
+ specification (given with <TT>-start</TT> or stored in the log
+ file). This option causes it to ignore the port. It should be used
+ in conjunction with specific <TT>-ORBendPoint</TT> options to
+ ensure object references are stable.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-install </TT><I>[port]</I></TD>
+<TD VALIGN=top ALIGN=left>On Windows, install omniNames service. See below.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-manual</TT></TD>
+<TD VALIGN=top ALIGN=left>On Windows, specify that the service should be started
+ manually. See below.</TD>
+</TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP><TT>-remove</TT></TD>
+<TD VALIGN=top ALIGN=left>On Windows, uninstall omniNames service. See below.</TD>
+</TR></TABLE><BR>
+<!--TOC section Windows service-->
+
+<H2 CLASS="section"><A NAME="htoc5">5</A>&nbsp;&nbsp;Windows service</H2><!--SEC END -->
+
+omniNames can be run as a Windows service.<BR>
+<BR>
+To install the service, run with the <TT>-install</TT> command line
+option, with a port to override the default 2809 if necessary. The
+command line should include any other parameters of relevance, such as
+the log directory and error log file. It is particularly important to
+specify an error log file, since the service runs in an environment
+where stderr goes nowhere. Similarly, if omniORB tracing is requested
+with the various <TT>-ORBtrace</TT> options, <TT>-ORBtraceFile</TT>
+should be specified, otherwise the trace messages vanish.<BR>
+<BR>
+The service is normally configured to start at system startup time.
+Specifying <TT>-manual</TT> configures it for manual startup.
+Regardless of that setting, the service is not automatically started
+at the time it is installed. It should be started manually with the
+service control manager if it is to run before the next system
+restart.<BR>
+<BR>
+Once installed, the service can be uninstalled by running omniNames
+with the <TT>-remove</TT> option.<BR>
 <BR>
 <!--HTMLFOOT-->
 <!--ENDHTML-->
