@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.9  2008/02/14 12:37:50  dgrisby
+  New immediateAddressSwitch parameter.
+
   Revision 1.1.6.8  2006/07/18 16:21:22  dgrisby
   New experimental connection management extension; ORB core support
   for it.
@@ -93,6 +96,7 @@
 #include <giopStreamImpl.h>
 #include <GIOP_C.h>
 #include <exceptiondefs.h>
+#include <orbParameters.h>
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/minorCode.h>
 
@@ -289,7 +293,7 @@ GIOP_C::notifyCommFailure(CORBA::Boolean heldlock,
 
   OMNIORB_ASSERT(pd_calldescriptor);
 
-  if (pd_strand->first_use) {
+  if (pd_strand->first_use || orbParameters::immediateRopeSwitch) {
     const giopAddress* firstaddr = pd_calldescriptor->firstAddressUsed();
     const giopAddress* currentaddr; 
 
@@ -303,7 +307,7 @@ GIOP_C::notifyCommFailure(CORBA::Boolean heldlock,
       currentaddr = pd_calldescriptor->currentAddress();
     }
 
-    if (pd_strand->orderly_closed) {
+    if (pd_strand->orderly_closed && !orbParameters::immediateRopeSwitch) {
       // Strand was closed before / during our request. Retry with the
       // same address.
       retry = 1;

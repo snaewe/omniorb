@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2008/02/14 12:37:50  dgrisby
+  New immediateAddressSwitch parameter.
+
   Revision 1.1.6.4  2006/02/22 14:56:36  dgrisby
   New endPointPublishHostname and endPointResolveNames parameters.
 
@@ -155,7 +158,6 @@ GIOP::AddressingDisposition orbParameters::giopTargetAddressMode = GIOP::KeyAddr
 //                 1 (GIOP::ProfileAddr)
 //                 2 (GIOP::ReferenceAddr)
 
-
 CORBA::Boolean orbParameters::strictIIOP = 1;
 //   Enable vigorous check on incoming IIOP messages
 //
@@ -180,6 +182,11 @@ CORBA::Boolean orbParameters::strictIIOP = 1;
 //
 //   Valid values = 0 or 1
 
+CORBA::Boolean orbParameters::immediateRopeSwitch = 0;
+//   Switch rope to use a new address immediately, rather than
+//   retrying with the existing one.
+//
+//   Valid values = 0 or 1
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -580,6 +587,37 @@ public:
 static strictIIOPHandler strictIIOPHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
+class immediateRopeSwitchHandler : public orbOptions::Handler {
+public:
+
+  immediateRopeSwitchHandler() : 
+    orbOptions::Handler("immediateAddressSwitch",
+			"immediateAddressSwitch = 0 or 1",
+			1,
+			"-ORBimmediateAddressSwitch < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::immediateRopeSwitch = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::immediateRopeSwitch,
+			     result);
+  }
+};
+
+static immediateRopeSwitchHandler immediateRopeSwitchHandler_;
+
+
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -600,6 +638,7 @@ public:
     orbOptions::singleton().registerHandler(maxInterleavedCallsPerConnectionHandler_);
     orbOptions::singleton().registerHandler(giopTargetAddressModeHandler_);
     orbOptions::singleton().registerHandler(strictIIOPHandler_);
+    orbOptions::singleton().registerHandler(immediateRopeSwitchHandler_);
   }
 
   void attach() {

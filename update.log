@@ -1,3 +1,15 @@
+Thu Feb 14 12:36:58 GMT 2008 dgrisby
+====================================
+
+- New immediateAddressSwitch parameter.
+
+sample.cfg
+sample.reg
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+
+
 Thu Feb 14 11:45:28 GMT 2008 dgrisby
 ====================================
 

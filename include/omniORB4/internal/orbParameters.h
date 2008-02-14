@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2008/02/14 12:37:50  dgrisby
+  New immediateAddressSwitch parameter.
+
   Revision 1.1.4.9  2007/07/31 16:38:31  dgrisby
   New resetTimeOutOnRetries parameter.
 
@@ -389,14 +392,20 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean resetTimeOutOnRetries;
 //   Valid values = 0 or 1
 
 _CORBA_MODULE_VAR _core_attr CORBA::String_var bootstrapAgentHostname;
-// Applies to the client side. Non-zero enables the use of Sun's bootstrap
-// agent protocol to resolve initial references. The value is the host name
-// where requests for initial references should be sent. Only uses this
-// option to interoperate with Sun's javaIDL.
+//   Applies to the client side. Non-zero enables the use of Sun's
+//   bootstrap agent protocol to resolve initial references. The value
+//   is the host name where requests for initial references should be
+//   sent. Only uses this option to interoperate with Sun's javaIDL.
 
 _CORBA_MODULE_VAR _core_attr CORBA::UShort bootstrapAgentPort;
-// Applies to the client side. Use this port no. to contact the bootstrap 
-// agent.
+//   Applies to the client side. Use this port no. to contact the
+//   bootstrap agent.
+
+_CORBA_MODULE_VAR _core_attr CORBA::Boolean immediateRopeSwitch;
+//   If true, client will immediately switch a rope to a new address
+//   when a failure occurs, rather than retrying the current address.
+//
+//   Valid values = 0 or 1
 
 
 ///////////////////////////////////////////////////////////////////////////

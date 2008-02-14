@@ -580,6 +580,17 @@ traceTime = "0"
 "giopTargetAddressMode" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; immediateAddressSwitch
+;
+;   If true, the client will immediately switch to use a new address
+;   to contact an object after a failure. If false (the default), the
+;   current address will be retried in certain circumstances.
+;
+;   Valid values = 0 or 1
+;
+"immediateAddressSwitch" = "0"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; bootstrapAgentHostname
 ;
 ; Applies to the client side. Non-zero enables the use of Sun's bootstrap
