@@ -1,3 +1,16 @@
+Thu Feb 14 13:49:04 GMT 2008 dgrisby
+====================================
+
+- Initialise openssl only if necessary. Thanks Teemu Torma.
+
+include/omniORB4/sslContext.h
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+
+- Clarify message about missing platform definition.
+
+mk/beforedir.mk
+
+
 Thu Feb 14 12:36:58 GMT 2008 dgrisby
 ====================================
 

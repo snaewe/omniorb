@@ -356,6 +356,11 @@ define NoPlatformError
  echo '*** SORRY! ***'; \
  echo; \
  echo 'You have not told me what platform you are using.'; \
+ echo; \
+ echo 'If you have used the configure script on a Unix platform,'; \
+ echo 'you must run make in the build tree, not the source tree.'; \
+ echo; \
+ echo 'If you are using the Windows / traditional build,'; \
  echo 'Please edit $$TOP/config/config.mk to set the platform.'; \
  echo; \
  echo 'Note that you also need to set the location of Python'; \
