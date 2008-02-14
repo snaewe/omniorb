@@ -1,3 +1,11 @@
+Thu Feb 14 09:37:56 GMT 2008 dgrisby
+====================================
+
+- Service failed to start if no registry entries at all.
+
+src/appl/omniNames/omniNamesWin.cc
+
+
 Wed Feb 13 17:29:44 GMT 2008 dgrisby
 ====================================
 

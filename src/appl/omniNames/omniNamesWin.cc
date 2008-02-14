@@ -398,32 +398,29 @@ runService(int port, const char* logdir, const char* errlog,
   {
     HKEY rootkey;
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGISTRY_KEY, 0,
-		     KEY_QUERY_VALUE, &rootkey) != ERROR_SUCCESS) {
-      TCHAR err_msg[512];
-      GetLastErrorText(err_msg, sizeof(err_msg));
-      cerr << "Unable to open registry key: " << err_msg << endl;
-      return 2;
+		     KEY_QUERY_VALUE, &rootkey) == ERROR_SUCCESS) {
+
+      if (!port)
+	port = getRegLong(rootkey, "port");
+
+      if (!ignoreport)
+	ignoreport = getRegLong(rootkey, "ignoreport");
+
+      if (!nohostname)
+	nohostname = getRegLong(rootkey, "nohostname");
+
+      if (!logdir) {
+	logdir   = getRegString(rootkey, "logdir");
+	logdir_v = logdir;
+      }
+      if (!errlog) {
+	errlog   = getRegString(rootkey, "errlog");
+	errlog_v = errlog;
+      }
+      packed_args = getRegArgs(rootkey, "args", argc, argv, a_argc, a_argv);
+
+      RegCloseKey(rootkey);
     }
-    if (!port)
-      port = getRegLong(rootkey, "port");
-
-    if (!ignoreport)
-      ignoreport = getRegLong(rootkey, "ignoreport");
-
-    if (!nohostname)
-      nohostname = getRegLong(rootkey, "nohostname");
-
-    if (!logdir) {
-      logdir   = getRegString(rootkey, "logdir");
-      logdir_v = logdir;
-    }
-    if (!errlog) {
-      errlog   = getRegString(rootkey, "errlog");
-      errlog_v = errlog;
-    }
-    packed_args = getRegArgs(rootkey, "args", argc, argv, a_argc, a_argv);
-
-    RegCloseKey(rootkey);
   }
 
   SERVICE_TABLE_ENTRY dispatch[] = {
