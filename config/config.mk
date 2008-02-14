@@ -51,6 +51,7 @@
 #platform = x86_win32_vs_6
 #platform = x86_win32_vs_7
 #platform = x86_win32_vs_8
+#platform = x86_win32_vs_9
 #platform = x86_win32_mingw
 #platform = x86_win32_dmc
 #platform = sun4_sosV_5.5

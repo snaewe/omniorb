@@ -1,3 +1,12 @@
+Thu Feb 14 13:54:01 GMT 2008 dgrisby
+====================================
+
+- Platform file for VC++ 9.
+
+config/config.mk
+mk/platforms/x86_win32_vs_9.mk
+
+
 Thu Feb 14 13:49:04 GMT 2008 dgrisby
 ====================================
 
