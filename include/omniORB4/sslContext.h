@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2008/02/14 13:50:03  dgrisby
+  Initialise openssl only if necessary. Thanks Teemu Torma.
+
   Revision 1.1.4.4  2006/01/10 12:24:04  dgrisby
   Merge from omni4_0_develop pre 4.0.7 release.
 
@@ -156,6 +159,7 @@ class sslContext {
   const char* 	    pd_password;
   SSL_CTX*    	    pd_ctx;
   omni_tracedmutex* pd_locks;
+  CORBA::Boolean    pd_ssl_owner;
 };
 
 #undef _core_attr

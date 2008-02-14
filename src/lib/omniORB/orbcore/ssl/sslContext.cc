@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2008/02/14 13:50:03  dgrisby
+  Initialise openssl only if necessary. Thanks Teemu Torma.
+
   Revision 1.1.4.4  2005/09/05 17:12:20  dgrisby
   Merge again. Mainly SSL transport changes.
 
@@ -121,12 +124,13 @@ sslContext::sslContext(const char* cafile,
 		       const char* keyfile,
 		       const char* password) :
   pd_cafile(cafile), pd_keyfile(keyfile), pd_password(password), pd_ctx(0),
-  pd_locks(0) {}
+  pd_locks(0), pd_ssl_owner(0) {}
 
 
 /////////////////////////////////////////////////////////////////////////
 sslContext::sslContext() :
-  pd_cafile(0), pd_keyfile(0), pd_password(0), pd_ctx(0), pd_locks(0) {
+  pd_cafile(0), pd_keyfile(0), pd_password(0), pd_ctx(0),
+  pd_locks(0), pd_ssl_owner(0) {
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -135,9 +139,14 @@ sslContext::internal_initialise() {
 
   if (pd_ctx) return;
 
-  SSL_library_init();
-  set_cipher();
-  SSL_load_error_strings();
+  // Assume we own the ssl if no locking callback yet.
+  pd_ssl_owner = CRYPTO_get_locking_callback() == 0;
+
+  if (pd_ssl_owner) {
+    SSL_library_init();
+    set_cipher();
+    SSL_load_error_strings();
+  }
 
   pd_ctx = SSL_CTX_new(set_method());
   if (!pd_ctx) {
@@ -154,7 +163,8 @@ sslContext::internal_initialise() {
   set_ephemeralRSA();
   // Allow the user to overwrite the SSL verification types.
   SSL_CTX_set_verify(pd_ctx,set_verify_mode(),NULL);
-  thread_setup();
+  if (pd_ssl_owner)
+    thread_setup();
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -162,7 +172,8 @@ sslContext::~sslContext() {
   if (pd_ctx) {
     SSL_CTX_free(pd_ctx);
   }
-  thread_cleanup();
+  if (pd_ssl_owner)
+    thread_cleanup();
 }
 
 /////////////////////////////////////////////////////////////////////////
