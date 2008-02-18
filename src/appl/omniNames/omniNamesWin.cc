@@ -236,7 +236,7 @@ installService(int            port,
     return 2;
   }
 
-  const char* svc_arg = " -runsvc -logdir c:\\names -errlog c:\\names\\err.log -start";
+  const char* svc_arg = " -runsvc";
   CORBA::String_var path_arg = CORBA::string_alloc(path_result +
 						   strlen(svc_arg));
   strcpy((char*)path_arg, path);
