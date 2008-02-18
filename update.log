@@ -1,3 +1,12 @@
+Mon Feb 18 16:20:50 GMT 2008 dgrisby
+====================================
+
+- Missed commit for omniNames service with no registry entries.
+
+src/appl/omniNames/omniNamesWin.cc
+
+
+
 Thu Feb 14 14:19:08 GMT 2008 dgrisby
 ====================================
 

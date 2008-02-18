@@ -236,7 +236,7 @@ installService(int            port,
     return 2;
   }
 
-  const char* svc_arg = " -runsvc";
+  const char* svc_arg = " -runsvc -logdir c:\\names -errlog c:\\names\\err.log -start";
   CORBA::String_var path_arg = CORBA::string_alloc(path_result +
 						   strlen(svc_arg));
   strcpy((char*)path_arg, path);
@@ -392,8 +392,8 @@ runService(int port, const char* logdir, const char* errlog,
   CORBA::String_var logdir_v;
   CORBA::String_var errlog_v;
   CORBA::String_var packed_args;
-  int               argc;
-  char**            argv;
+  int               argc = a_argc;
+  char**            argv = a_argv;
 
   {
     HKEY rootkey;
@@ -430,7 +430,8 @@ runService(int port, const char* logdir, const char* errlog,
 
   names = new omniNames(port, logdir, errlog, ignoreport, nohostname, 1,
 			argc, argv);
-  delete [] argv;
+  if (argv != a_argv)
+    delete [] argv;
 
   // Run the service here - call returns when service stopped
   if (StartServiceCtrlDispatcher(dispatch) == 0) {
