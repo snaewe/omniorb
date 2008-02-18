@@ -5,6 +5,9 @@ Mon Feb 18 16:20:50 GMT 2008 dgrisby
 
 src/appl/omniNames/omniNamesWin.cc
 
+- Wrong DLL suffix define for VC++ 9.
+
+mk/platforms/x86_win32_vs_9.mk
 
 
 Thu Feb 14 14:19:08 GMT 2008 dgrisby

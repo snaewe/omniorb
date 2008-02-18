@@ -5,7 +5,7 @@
 WindowsNT = 1
 x86Processor = 1
 
-compiler_version_suffix=_vc8
+compiler_version_suffix=_vc9
 
 WINVER = 0x0501
 
