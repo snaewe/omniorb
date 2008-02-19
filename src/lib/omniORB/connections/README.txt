@@ -86,7 +86,7 @@ max_threads
   This parameter overrides the maxServerThreadPerConnection
   configuration parameter that determines the maximum number of
   concurrent threads the server will use to service requests coming
-  from a connection. Note that if this parameter is only relevant if
+  from a connection. Note that this parameter is only relevant if
   either the client permits interleaved calls, or if oneway operations
   are used, since those are the only circumstances under which the
   server can receive a new request on a connection while already
