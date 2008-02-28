@@ -1,3 +1,12 @@
+Thu Feb 28 17:39:40 GMT 2008 dgrisby
+====================================
+
+- iostream include left over from debugging caused mysterious failure
+  of omniidl on HP-UX.
+
+src/tool/omniidl/cxx/idlast.cc
+
+
 Tue Feb 19 16:39:09 GMT 2008 dgrisby
 ====================================
 

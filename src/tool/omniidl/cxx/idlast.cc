@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.22.2.9  2008/02/28 17:40:38  dgrisby
+// iostream include left over from debugging caused mysterious failure of
+// omniidl on HP-UX.
+//
 // Revision 1.22.2.8  2007/12/05 11:15:15  dgrisby
 // Segfault on omniidl exit with forward declaration to previously
 // fully-declared valuetype.
@@ -162,8 +166,6 @@
 // Revision 1.1  1999/10/27 14:05:59  dpg1
 // *** empty log message ***
 //
-
-#include <iostream>
 
 #include <idlast.h>
 #include <idlrepoId.h>
