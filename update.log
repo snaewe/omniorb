@@ -1,3 +1,17 @@
+Mon Mar 10 08:52:05 GMT 2008 dgrisby
+====================================
+
+- LynxOS port. Thanks Wojciech Gajewski.
+
+config/config.mk
+include/omnithread.h
+mk/platforms/powerpc_LynxOS_4.0.mk
+mk/platforms/x86_LynxOS_4.0.mk
+src/lib/omnithread/posix.cc
+src/tool/omniidl/cxx/cccp/config-lynxos.h
+src/tool/omniidl/cxx/cccp/config.h
+
+
 Thu Feb 28 17:39:40 GMT 2008 dgrisby
 ====================================
 

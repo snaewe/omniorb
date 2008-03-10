@@ -38,6 +38,9 @@
 #  elif defined(__darwin__)
 #    include "config-darwin.h"
 
+#  elif defined(__Lynx__) || defined(__lynxos__)
+#    include "config-lynxos.h"
+
 #  else
 #    error "You must create a cccp config file for your platform"
 

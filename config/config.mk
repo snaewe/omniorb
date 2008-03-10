@@ -44,6 +44,7 @@
 #  x86_freebsd_3.2           x86 FreeBSD 3.2, egcs 1.1.2
 #  x86_freebsd_4.0           x86 FreeBSD 4.0, gcc 2.95
 #  pc486_rtems_4.5.0         x86, RTEMS, gcc 2.95.2
+#  x86_LynxOS_4.0            x86, LynxOS 4.0, gcc 2.95.3
 
 # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
 # edit the make variables, such as CC and CXX, in the file.
@@ -70,10 +71,10 @@
 #platform = powerpc_aix_4.3_xlc5
 #platform = powerpc_linux_2.2_glibc
 #platform = powerpc_darwin_1.3
+#platform = powerpc_LynxOS_4.0
 #platform = hppa_hpux_10.20
 #platform = hppa_hpux_11.00
 #platform = m68k_nextstep_3.3
-#platform = x86_nextstep_3.3
 #platform = mips_sinux_5.43
 #platform = mips_irix_6.2_n32
 #platform = mips_irix_6.3_n32
@@ -81,11 +82,13 @@
 #platform = mips_irix_6.4_64
 #platform = mips_irix_6.5_n32
 #platform = mips_irix_6.5_64
+#platform = x86_nextstep_3.3
 #platform = x86_ets
 #platform = x86_osr5
 #platform = x86_uw7
 #platform = x86_freebsd_3.2
 #platform = x86_freebsd_4.0
+#platform = x86_LynxOS_4.0
 #platform = pc486_rtems_4.5.0
 #platform = arm_linux_mvl_3.1
 

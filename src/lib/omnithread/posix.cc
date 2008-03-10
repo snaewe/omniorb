@@ -646,6 +646,13 @@ omni_thread::join(void** status)
 
     DB(cerr << "omni_thread::join: doing pthread_join\n");
 
+#if defined(__Lynx__) || defined(__lynxos__)
+    // LynxOS requires a real void** status argument to pthread_join
+    void* newstatus;
+    if (status == 0)
+      status = &newstatus;
+#endif
+
     THROW_ERRORS(pthread_join(posix_thread, status));
 
     DB(cerr << "omni_thread::join: pthread_join succeeded\n");
