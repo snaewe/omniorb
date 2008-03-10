@@ -1,3 +1,12 @@
+Mon Mar 10 11:42:02 GMT 2008 dgrisby
+====================================
+
+- Work around VC++ 7.1 bug with using continue in an exception
+  handler. Thanks Werner Mausshardt.
+
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Mon Mar 10 09:04:31 GMT 2008 dgrisby
 ====================================
 
