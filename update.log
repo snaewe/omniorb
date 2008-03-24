@@ -1,3 +1,11 @@
+Mon Mar 24 20:16:24 GMT 2008 dgrisby
+====================================
+
+- Sun's compiler doesn't like the <: in const_cast<::CORBA...>.
+
+include/omniORB4/CORBA_sysdep.h
+
+
 Mon Mar 10 11:42:02 GMT 2008 dgrisby
 ====================================
 
