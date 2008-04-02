@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2008/04/02 15:48:30  dgrisby
+  Always initialise variable to avoid over-zealous complaint from MSVC
+  that it is passed (safely) uninitialised.
+
   Revision 1.1.2.11  2006/10/28 15:48:23  dgrisby
   Typo in indirection constant.
 
@@ -160,7 +164,7 @@ marshal(CORBA::ValueBase* val, const char* repoId, cdrStream& stream)
   CORBA::ULong valRepoIdHash;
   const char* valRepoId = val->_NP_repositoryId(valRepoIdHash);
 
-  const _omni_ValueIds* valTruncIds;
+  const _omni_ValueIds* valTruncIds = 0;
 
   if (omni::ptrStrMatch(repoId, valRepoId)) {
     // Value matches IDL / TypeCode type

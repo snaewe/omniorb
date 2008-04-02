@@ -1,3 +1,17 @@
+Wed Apr  2 16:45:34 BST 2008 dgrisby
+====================================
+
+- Use windows.h instead of afxres.h in resource file, so it works
+  without MFC.
+
+mk/win32.mk
+
+- Always initialise variable to avoid over-zealous complaint from MSVC
+  that it is passed (safely) uninitialised.
+
+src/lib/omniORB/dynamic/valueType.cc
+
+
 Mon Mar 24 20:16:24 GMT 2008 dgrisby
 ====================================
 
