@@ -285,7 +285,7 @@ commaver=$$3,$$4,0x$$nanovers,0; \
 dotver=$$3.$$4.$$nanovers; \
 fi; \
 set -x; \
-echo "#include \"afxres.h\"" > $$rcname; \
+echo "#include \"windows.h\"" > $$rcname; \
 echo "VS_VERSION_INFO VERSIONINFO" >> $$rcname; \
 echo " FILEVERSION $$commaver" >> $$rcname; \
 echo " PRODUCTVERSION $(OMNIORB_MAJOR_VERSION),$(OMNIORB_MINOR_VERSION),$(OMNIORB_MICRO_VERSION),0x$$nanovers" >> $$rcname; \
