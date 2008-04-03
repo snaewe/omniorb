@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.17  2008/04/03 08:53:53  dgrisby
+  Define EBADF diferently for VxWorks. Thanks Ingo Thiele.
+
   Revision 1.1.4.16  2007/07/31 16:36:50  dgrisby
   Hard-code define of IPV6_V6ONLY on Windows.
 
@@ -230,6 +233,7 @@ OMNI_NAMESPACE_END(omni)
 #    include <sockLib.h>
 #    include <hostLib.h>
 #    include <ioLib.h>
+#    include <iosLib.h>
 #    include <netinet/tcp.h>
 #  else
 #    include <sys/time.h>
@@ -287,7 +291,11 @@ extern "C" int select (int,fd_set*,fd_set*,fd_set*,struct timeval *);
 
 #  define ERRNO              errno
 #  define RC_EINTR           EINTR
-#  define RC_EBADF           EBADF
+#  if defined (__vxWorks__)
+#    define RC_EBADF         S_iosLib_INVALID_FILE_DESCRIPTOR  
+#  else
+#    define RC_EBADF         EBADF
+#  endif
 #  define RC_EAGAIN          EAGAIN
 
 
