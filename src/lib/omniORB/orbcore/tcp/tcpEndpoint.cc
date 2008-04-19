@@ -3,7 +3,8 @@
 // tcpEndpoint.cc             Created on: 19 Mar 2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
+//    Copyright (C) 2002-2008 Apasphere Ltd
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.17  2008/04/19 18:25:33  dgrisby
+  HPUX returns an invalid protocol from getaddrinfo() with PF_UNSPEC.
+
   Revision 1.1.4.16  2007/07/31 14:23:43  dgrisby
   If the platform does not accept IPv4 connections on IPv6 sockets by
   default, try to enable it by turning the IPV6_V6ONLY socket option
@@ -402,9 +406,21 @@ tcpEndpoint::Bind() {
       return 0;
     }
 
-    if ((pd_socket = socket(ai->addrFamily(),
-			    SOCK_STREAM, 0)) == RC_INVALID_SOCKET) {
-      return 0;
+    pd_socket = socket(ai->addrFamily(), SOCK_STREAM, 0);
+
+    if (pd_socket == RC_INVALID_SOCKET) {
+
+      if (passive_host == 1) {
+	omniORB::logs(2, "Unable to open socket for unspecified passive host "
+		      " -- fall back to IPv4.");
+	host = "0.0.0.0";
+	passive_host = 2;
+	continue;
+      }
+      else {
+	omniORB::logs(1, "Unable to open required socket.");
+	return 0;
+      }
     }
 
 #if defined(OMNI_SUPPORT_IPV6) && defined(IPV6_V6ONLY)
@@ -413,6 +429,7 @@ tcpEndpoint::Bind() {
       // Attempt to turn IPV6_V6ONLY option off
       int valfalse = 0;
       omniORB::logs(10, "Attempt to set socket to listen on IPv4 and IPv6.");
+
       if (setsockopt(pd_socket, IPPROTO_IPV6, IPV6_V6ONLY,
 		     (char*)&valfalse, sizeof(valfalse)) == RC_SOCKET_ERROR) {
 	omniORB::logs(2, "Unable to set socket to listen on IPv4 and IPv6. "
@@ -433,9 +450,7 @@ tcpEndpoint::Bind() {
     if (setsockopt(pd_socket,IPPROTO_TCP,TCP_NODELAY,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
 
-      CLOSESOCKET(pd_socket);
-      pd_socket = RC_INVALID_SOCKET;
-      return 0;
+      omniORB::logs(2, "Warning: failed to set TCP_NODELAY option.");
     }
   }
 
@@ -446,6 +461,7 @@ tcpEndpoint::Bind() {
 		   (char*)&bufsize, sizeof(bufsize)) == RC_SOCKET_ERROR) {
       CLOSESOCKET(pd_socket);
       pd_socket = RC_INVALID_SOCKET;
+      omniORB::logs(1, "Failed to set SO_SNDBUF option.");
       return 0;
     }
   }
@@ -456,23 +472,36 @@ tcpEndpoint::Bind() {
     int valtrue = 1;
     if (setsockopt(pd_socket,SOL_SOCKET,SO_REUSEADDR,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
-      CLOSESOCKET(pd_socket);
-      pd_socket = RC_INVALID_SOCKET;
-      return 0;
+
+      omniORB::logs(2, "Warning: failed to set SO_REUSEADDR option.");
     }
   }
   if (omniORB::trace(25)) {
     omniORB::logger log;
     CORBA::String_var addr(ai->asString());
-    log << "Bind to address " << addr << "\n";
+    log << "Bind to address " << addr << " ";
+    if (pd_address.port)
+      log << "port " << pd_address.port << ".\n";
+    else
+      log << "ephemeral port.\n";
   }
   if (::bind(pd_socket, ai->addr(), ai->addrSize()) == RC_SOCKET_ERROR) {
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      CORBA::String_var addr(ai->asString());
+      log << "Failed to bind to address " << addr << " ";
+      if (pd_address.port)
+	log << "port " << pd_address.port << ". Address in use?\n";
+      else
+	log << "ephemeral port.\n";
+    }
     CLOSESOCKET(pd_socket);
     return 0;
   }
 
   if (listen(pd_socket,SOMAXCONN) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
+    omniORB::logs(1, "Failed to listen on socket.");
     return 0;
   }
 
@@ -484,6 +513,7 @@ tcpEndpoint::Bind() {
   if (getsockname(pd_socket,
 		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
+    omniORB::logs(1, "Failed to get socket name.");
     return 0;
   }
   pd_address.port = tcpConnection::addrToPort((struct sockaddr*)&addr);

@@ -1,3 +1,12 @@
+Sat Apr 19 19:24:25 BST 2008 dgrisby
+====================================
+
+- HPUX returns an invalid protocol from getaddrinfo() with PF_UNSPEC.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Thu Apr  3 09:52:30 BST 2008 dgrisby
 ====================================
 
