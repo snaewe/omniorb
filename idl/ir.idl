@@ -44,7 +44,7 @@ module CORBA {
     dk_Fixed,
     dk_Value,
     dk_ValueBox,
-    dk_Member,
+    dk_ValueMember,
     dk_Native,
     dk_AbstractInterface
   };
