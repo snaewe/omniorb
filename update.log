@@ -1,3 +1,15 @@
+Thu May 29 14:06:00 BST 2008 dgrisby
+====================================
+
+- dk_ValueMember was misnamed dk_Member for some reason.
+
+idl/ir.idl
+
+- Cope with fd 0 in pipe files. Thanks Wei Jiang.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Sat Apr 19 19:24:25 BST 2008 dgrisby
 ====================================
 

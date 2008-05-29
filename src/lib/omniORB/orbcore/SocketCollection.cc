@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.24  2008/05/29 13:08:35  dgrisby
+  Cope with fd 0 in pipe files. Thanks Wei Jiang.
+
   Revision 1.1.4.23  2007/12/09 01:35:08  dgrisby
   Race condition between Peek / select thread when data in buffer.
 
@@ -341,8 +344,8 @@ static void initPipe(int& pipe_read, int& pipe_write)
 }
 static void closePipe(int pipe_read, int pipe_write)
 {
-  if (pipe_read  > 0) close(pipe_read);
-  if (pipe_write > 0) close(pipe_write);
+  if (pipe_read  >= 0) close(pipe_read);
+  if (pipe_write >= 0) close(pipe_write);
 }
 #  endif
 #else
