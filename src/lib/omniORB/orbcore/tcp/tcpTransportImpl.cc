@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2008/07/15 11:03:48  dgrisby
+  Windows sometimes includes network adapter details in site local IPv6
+  addresses.
+
   Revision 1.1.4.10  2007/07/06 20:12:14  dgrisby
   Better error handling getting IPv6 interfaces on Windows.
 
@@ -627,6 +631,13 @@ void win32_get_ifinfo6(omnivector<const char*>& ifaddrs)
 	continue;
 
       CORBA::String_var s = tcpConnection::addrToString(addr);
+
+      // Windows appends interface details to site local addresses.
+      // Strip anything starting with a % sign.
+      char* ppos = strchr((const char*)s, '%');
+      if (ppos)
+	*ppos = '\0';
+
       ifaddrs.push_back(s._retn());
     }
   }
