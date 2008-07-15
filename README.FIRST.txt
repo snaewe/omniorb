@@ -1,6 +1,6 @@
 READ ME FIRST!
 
-This is omniORB 4.1.2.
+This is omniORB 4.1.3.
 
 omniORB is copyright AT&T Laboratories Cambridge, Apasphere Ltd and
 others. It is free software. The programs in omniORB are distributed
@@ -79,6 +79,7 @@ omniORB is not yet a complete implementation of the CORBA core. The
 following features are not supported in the current release.
 
 - Portable Interceptors.
+- Asynchronous Message Interface.
 
 
 Missing features

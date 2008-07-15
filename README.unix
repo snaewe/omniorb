@@ -189,11 +189,9 @@ steps:
   The makefiles in this distribution only work with GNU make. Make
   sure that you have the program installed and invoke it directly.
 
-  You can skip this step if this is a pre-compiled binary
-  distribution.  To build and install everything, go into the
-  directory ./src and type 'make export'. If all goes well, the
-  libraries and executables will be installed into ./lib/<platform>/
-  and ./bin/<platform>/.
+  To build and install everything, go into the directory ./src and
+  type 'make export'. If all goes well, the libraries and executables
+  will be installed into ./lib/<platform>/ and ./bin/<platform>/.
 
 
   4. Add omniORB libraries to search path
