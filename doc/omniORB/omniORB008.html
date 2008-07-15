@@ -323,6 +323,13 @@ set with the <TT>outConScanPeriod</TT> and <TT>inConScanPeriod</TT>
 parameters respectively. The values are in seconds, and must be a
 multiple of the scan granularity.<BR>
 <BR>
+Beware that setting <TT>outConScanPeriod</TT> or <TT>inConScanPeriod</TT>
+to be equal to (or less than) <TT>scanGranularity</TT> means that
+connections are considered candidates for closure immediately after
+they are opened. That can mean that the connections are closed before
+any calls have been sent through them. If oneway calls are used, such
+connection closure can result in silent loss of calls.<BR>
+<BR>
 
 <H3 CLASS="subsection"><A NAME="htoc101">8.5.1</A>&nbsp;&nbsp;Interoperability Considerations</H3>
 The IIOP specification allows both the client and the server to
