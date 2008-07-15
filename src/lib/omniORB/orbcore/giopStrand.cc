@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.11  2008/07/15 10:59:39  dgrisby
+  Clarity of behaviour if inConScanPeriod / outConScanPeriod are <=
+  scanGranularity.
+
   Revision 1.1.6.10  2007/02/05 18:39:53  dgrisby
   Log scavenger connections closures at traceLevel 25 instead of 30.
 
@@ -956,6 +960,8 @@ public:
     if (orbParameters::outConScanPeriod && orbParameters::scanGranularity) {
       if (orbParameters::outConScanPeriod <= orbParameters::scanGranularity) {
 	giopStrand::idleOutgoingBeats = 1;
+	omniORB::logs(2, "Warning: outConScanPeriod <= scanGranularity means "
+		      "connections can be closed while still in use.");
       }
       else {
 	giopStrand::idleOutgoingBeats = orbParameters::outConScanPeriod /
@@ -968,6 +974,8 @@ public:
     if (orbParameters::inConScanPeriod && orbParameters::scanGranularity) {
       if (orbParameters::inConScanPeriod <= orbParameters::scanGranularity) {
 	giopStrand::idleIncomingBeats = 1;
+	omniORB::logs(2, "Warning: inConScanPeriod <= scanGranularity means "
+		      "connections can be closed while still in use.");
       }
       else {
 	giopStrand::idleIncomingBeats = orbParameters::inConScanPeriod /

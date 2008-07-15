@@ -4519,6 +4519,13 @@ set with the \code{outConScan\dsc{}Period} and \code{inConScanPeriod}
 parameters respectively. The values are in seconds, and must be a
 multiple of the scan granularity.
 
+Beware that setting \code{outConScanPeriod} or \code{inConScanPeriod}
+to be equal to (or less than) \code{scanGranularity} means that
+connections are considered candidates for closure immediately after
+they are opened. That can mean that the connections are closed before
+any calls have been sent through them. If oneway calls are used, such
+connection closure can result in silent loss of calls.
+
 
 \subsection{Interoperability Considerations}
 

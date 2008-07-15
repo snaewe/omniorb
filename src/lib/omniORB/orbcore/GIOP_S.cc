@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.12  2008/07/15 10:59:39  dgrisby
+  Clarity of behaviour if inConScanPeriod / outConScanPeriod are <=
+  scanGranularity.
+
   Revision 1.1.6.11  2007/04/05 15:37:32  dgrisby
   Minor fix to log message formatting.
 
@@ -253,7 +257,7 @@ GIOP_S::dispatcher() {
       if (!pd_strand->stopIdleCounter()) {
 	// This strand has been expired by the scavenger. Don't
 	// process this call.
-	omniORB::logs(1, "dispatcher cannot stop idle counter.\n");
+	omniORB::logs(5, "Connection closed by scavenger. Dispatch aborted.");
 	pd_strand->state(giopStrand::DYING);
 	return 0;
       }
