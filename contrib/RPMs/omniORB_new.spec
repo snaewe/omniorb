@@ -7,6 +7,14 @@
 
 %define lib_name %{?mklibname:%mklibname %{_name} 4.1}%{!?mklibname:lib%{_name}4.1}
 
+%if "%{_vendor}" == "mandriva"
+%define py_sitedir %{_prefix}/lib*/python%{py_ver}/site-packages
+%endif
+%if "%{_vendor}" == "redhat"
+%define py_ver     %(python -c 'import sys;print(sys.version[0:3])')
+%define py_sitedir %{_prefix}/lib*/python%{py_ver}/site-packages
+%endif
+
 Summary: Object Request Broker (ORB)
 Name:    %{_name}
 Version: 4.1.3
@@ -16,8 +24,9 @@ Group:   System/Libraries
 Source0: %{_name}-%{version}.tar.gz
 Prefix:  /usr
 URL:     http://omniorb.sourceforge.net/
-BuildRequires:  python glibc-devel
-BuildRequires:  python-devel openssl-devel
+BuildRequires:  gcc-c++
+BuildRequires:  glibc-devel openssl-devel
+BuildRequires:  python python-devel
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 
 %description
@@ -108,10 +117,6 @@ Provides:        libomniorb-doc = %{version}-%{release}
 
 %description doc
 Developer documentation and examples.
-
-
-%define py_ver    %(python -c 'import sys;print(sys.version[0:3])')
-
 
 %prep
 %setup -n %{_name}-%{version}
@@ -278,14 +283,14 @@ fi
 %{_libdir}/*.so
 %{_includedir}/*
 %{_datadir}/idl/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/*.py*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/*.py*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/header/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/skel/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/dynskel/*
-%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/impl/*
-%{_libdir}/python%{py_ver}/site-packages/_omniidlmodule.so*
+%{py_sitedir}/omniidl/*
+%{py_sitedir}/omniidl_be/*.py*
+%{py_sitedir}/omniidl_be/cxx/*.py*
+%{py_sitedir}/omniidl_be/cxx/header/*
+%{py_sitedir}/omniidl_be/cxx/skel/*
+%{py_sitedir}/omniidl_be/cxx/dynskel/*
+%{py_sitedir}/omniidl_be/cxx/impl/*
+%{py_sitedir}/_omniidlmodule.so*
 %{_libdir}/pkgconfig/*.pc
 
 
