@@ -1,3 +1,15 @@
+Fri Jul 18 18:01:15 BST 2008 dgrisby
+====================================
+
+- New RPM spec file from Dirk Siebnich.
+
+contrib/RPMs/omniORB_new.spec
+
+- VC++ 8 plays interesting const tricks with strchr().
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Tue Jul 15 12:16:47 BST 2008 dgrisby
 ====================================
 

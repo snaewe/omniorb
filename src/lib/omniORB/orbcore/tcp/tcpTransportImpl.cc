@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2008/07/18 17:02:35  dgrisby
+  VC++ 8 plays interesting const tricks with strchr().
+
   Revision 1.1.4.11  2008/07/15 11:03:48  dgrisby
   Windows sometimes includes network adapter details in site local IPv6
   addresses.
@@ -634,7 +637,7 @@ void win32_get_ifinfo6(omnivector<const char*>& ifaddrs)
 
       // Windows appends interface details to site local addresses.
       // Strip anything starting with a % sign.
-      char* ppos = strchr((const char*)s, '%');
+      char* ppos = strchr((char*)s, '%');
       if (ppos)
 	*ppos = '\0';
 
