@@ -1,3 +1,11 @@
+Tue Jul 29 12:15:47 BST 2008 dgrisby
+====================================
+
+- Use a file rather than a pipe in makedeffile.py. Thanks Dirk Siebnich.
+
+bin/scripts/makedeffile.py
+
+
 Fri Jul 18 18:01:15 BST 2008 dgrisby
 ====================================
 

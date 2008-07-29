@@ -69,9 +69,10 @@ def main(argv):
         usage(argv)
         sys.exit(1)
 
-    cmd = "DUMPBIN.EXE /SYMBOLS %s" % libfile
+    cmd = "DUMPBIN.EXE /SYMBOLS %s /OUT:%s" % (libfile, deffile)
     print cmd
-    dumped = os.popen(cmd)
+    os.system(cmd)
+    dumped = open(deffile, "r")
 
     definitions = {}
 
@@ -93,6 +94,8 @@ def main(argv):
                 continue
 
             definitions[symbol] = None
+
+    dumped.close()
 
     symbols = definitions.keys()
     symbols.sort()
