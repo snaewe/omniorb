@@ -126,9 +126,12 @@ dynimps := $(OMNIORB_LIB)
 endif
 
 ifdef AIX
-# AIX thinks the skeleton stubs depend on omniDynamic
-imps := $(OMNIORB_LIB)
-dynimps := $(OMNIORB_LIB)
+# AIX thinks the skeleton stubs depend on omniDynamic and also that
+# COSDynamic depends on COS.
+oov = $(OMNIORB_MAJOR_VERSION)$(OMNIORB_MINOR_VERSION)
+oovm = $(oov)$(OMNIORB_MICRO_VERSION)
+imps := -lomniORB$(oov) -lomniDynamic$(oov) $(OMNITHREAD_LIB)
+dynimps := -Lshared -lCOS$(oovm) $(imps)
 endif
 
 ifdef Cygwin

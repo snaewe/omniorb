@@ -99,7 +99,20 @@ CXXLINK = makeC++SharedLib_r
 
 libinit = init_omniidl
 py_exp = $(PYPREFIX)/lib/python$(PYVERSION)/config/python.exp
+ld_so_aix = $(PYPREFIX)/lib/python$(PYVERSION)/config/ld_so_aix
 
+ifdef Compiler_GCC
+$(shlib): $(OBJS) $(PYOBJS)
+	@(set -x; \
+	$(RM) $@; \
+	$(ld_so_aix) $(CXX) \
+		-o $(shlib) \
+		-e $(libinit) \
+		-bI:$(py_exp) \
+		$(IMPORT_LIBRARY_FLAGS) \
+		$(filter-out $(LibSuffixPattern),$^); \
+	)
+else
 $(shlib): $(OBJS) $(PYOBJS)
 	@(set -x; \
 	$(RM) $@; \
@@ -112,7 +125,8 @@ $(shlib): $(OBJS) $(PYOBJS)
 		$(filter-out $(LibSuffixPattern),$^) \
 		-p 40 \
 		; \
-       )
+	)
+endif
 
 else
 #### ugly AIX section end, normal build command

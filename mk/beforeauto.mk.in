@@ -949,7 +949,7 @@ endif
 
 ###################
 ifdef AIX
-ifndef Compiler_GCC
+ifndef Compiler_GCC		# Assuming XlC compiler
 
 IMPORT_CPPFLAGS += -D__aix__
 
@@ -974,7 +974,48 @@ PythonSHAREDLIB_SUFFIX = so
 SharedLibraryPlatformLinkFlagsTemplate = -G -qmkshrobj \
                -bnoipath -blibpath:/usr/lib:$(prefix)/lib
 
-endif	# compiler not gcc
+endif
+
+ifdef Compiler_GCC
+# A lot of this is stolen from the mk/platform/powerpc_aix4.3_gcc
+# platform file, some of it is made up.  This is tested on AIX 5.3
+# with gcc 4.2.0 (as included in the AIX Toolbox for Linux
+# Applications 4/2008 (they really mean GNU applications!)).
+
+IMPORT_CPPFLAGS += -D__aix__
+CMAKEDEPEND     += -D_AIX
+CXXMAKEDEPEND   += -D_AIX
+CXXLINKOPTIONS  += -Wl,-brtl -Wl,-blibpath:/lib:/usr/lib:$(prefix)/lib
+CLINKOPTIONS    += -Wl,-brtl -Wl,-blibpath:/lib:/usr/lib:$(prefix)/lib
+
+# Name all static libraries with -ar.a suffix.
+LibPattern = lib%-ar.a
+LibDebugPattern = lib%-ar.a
+LibNoDebugPattern = lib%-ar.a
+LibSuffixPattern = %-ar.a
+LibSearchPattern = -l%-ar
+
+# Name all shared libraries with .a suffix
+LibSharedPattern = lib%.a
+LibSharedSuffixPattern = %.a
+LibSharedSearchPattern = -l%
+
+# OMNI thread stuff
+ThreadSystem = Posix
+OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
+OMNITHREAD_CPPFLAGS = -D_REENTRANT -D_THREAD_SAFE
+OMNITHREAD_PLATFORM_LIB = -lpthreads
+OMNITHREAD_LIB = -lomnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION) $(OMNITHREAD_PLATFORM_LIB)
+
+# Shared library support stuff
+SHAREDLIB_SUFFIX   = a
+PythonSHAREDLIB_SUFFIX = so
+SharedLibraryFullNameTemplate = lib$$1$$2$$3$$4.$(SHAREDLIB_SUFFIX)
+SharedLibrarySoNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3
+SharedLibraryLibNameTemplate = lib$$1$$2$$3.$(SHAREDLIB_SUFFIX)
+SharedLibraryPlatformLinkFlagsTemplate = -shared -fPIC -Wl,-brtl -Wl,-bexpfull -Wl,-blibpath:/lib:/usr/lib:$(prefix)/lib
+
+endif	# Compiler_GCC
 endif	# AIX
 
 ###################
