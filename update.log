@@ -1,3 +1,21 @@
+Fri Aug  8 17:50:03 BST 2008 dgrisby
+====================================
+
+- Option to validate untransformed UTF-8; correct data conversion
+  minor codes; better logging for MessageErrors.
+
+include/omniORB4/internal/giopStreamImpl.h
+src/lib/omniORB/codesets/cs-GBK.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+
+
 Fri Aug  8 14:43:51 BST 2008 dgrisby
 ====================================
 

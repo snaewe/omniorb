@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2008/08/08 16:52:56  dgrisby
+  Option to validate untransformed UTF-8; correct data conversion minor
+  codes; better logging for MessageErrors.
+
   Revision 1.1.4.4  2006/05/22 15:44:51  dgrisby
   Make sure string length and body are never split across a chunk
   boundary.
@@ -104,7 +108,7 @@ omniCodeSet::NCS_W_16bit::marshalWChar(cdrStream& stream,
 
   omniCodeSet::UniChar uc = pd_toU[(wc & 0xff00) >> 8][wc & 0x00ff];
   if (wc && !uc) OMNIORB_THROW(DATA_CONVERSION, 
-			       DATA_CONVERSION_BadInput,
+			       DATA_CONVERSION_CannotMapChar,
 			       (CORBA::CompletionStatus)stream.completion());
 
   tcs->marshalWChar(stream, uc);
@@ -139,7 +143,7 @@ omniCodeSet::NCS_W_16bit::marshalWString(cdrStream&          stream,
 #endif
     uc = pd_toU[(wc & 0xff00) >> 8][wc & 0x00ff];
     if (wc && !uc) OMNIORB_THROW(DATA_CONVERSION, 
-				 DATA_CONVERSION_BadInput,
+				 DATA_CONVERSION_CannotMapChar,
 				 (CORBA::CompletionStatus)stream.completion());
     us[i] = uc;
   }
@@ -159,7 +163,7 @@ omniCodeSet::NCS_W_16bit::unmarshalWChar(cdrStream& stream,
 
   wc = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
   if (uc && !wc) OMNIORB_THROW(DATA_CONVERSION, 
-			       DATA_CONVERSION_BadInput,
+			       DATA_CONVERSION_CannotMapChar,
 			       (CORBA::CompletionStatus)stream.completion());
 
   return wc;
@@ -192,7 +196,7 @@ omniCodeSet::NCS_W_16bit::unmarshalWString(cdrStream& stream,
     uc = us[i];
     wc  = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
     if (uc && !wc) OMNIORB_THROW(DATA_CONVERSION, 
-				 DATA_CONVERSION_BadInput,
+				 DATA_CONVERSION_CannotMapChar,
 				 (CORBA::CompletionStatus)stream.completion());
     ws[i] = wc;
   }
@@ -211,7 +215,7 @@ omniCodeSet::TCS_W_16bit::marshalWChar(cdrStream& stream,
 {
   _CORBA_UShort tc = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
   if (uc && !tc) OMNIORB_THROW(DATA_CONVERSION, 
-			       DATA_CONVERSION_BadInput,
+			       DATA_CONVERSION_CannotMapChar,
 			       (CORBA::CompletionStatus)stream.completion());
 
   // In GIOP 1.2, wchar is encoded as an octet containing a length,
@@ -258,7 +262,7 @@ omniCodeSet::TCS_W_16bit::marshalWString(cdrStream& stream,
     uc = us[i];
     tc = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
     if (uc && !tc) OMNIORB_THROW(DATA_CONVERSION, 
-				 DATA_CONVERSION_BadInput,
+				 DATA_CONVERSION_CannotMapChar,
 				 (CORBA::CompletionStatus)stream.completion());
 
     tc >>= stream;
@@ -299,7 +303,7 @@ omniCodeSet::TCS_W_16bit::unmarshalWChar(cdrStream& stream)
   }
   omniCodeSet::UniChar uc = pd_toU[(tc & 0xff00) >> 8][tc & 0x00ff];
   if (tc && !uc) OMNIORB_THROW(DATA_CONVERSION, 
-			       DATA_CONVERSION_BadInput,
+			       DATA_CONVERSION_CannotMapChar,
 			       (CORBA::CompletionStatus)stream.completion());
 
   return uc;
@@ -338,7 +342,7 @@ omniCodeSet::TCS_W_16bit::unmarshalWString(cdrStream& stream,
     tc <<= stream;
     uc = pd_toU[(tc & 0xff00) >> 16][tc & 0x00ff];
     if (tc && !uc) OMNIORB_THROW(DATA_CONVERSION, 
-				 DATA_CONVERSION_BadInput,
+				 DATA_CONVERSION_CannotMapChar,
 				 (CORBA::CompletionStatus)stream.completion());
     us[i] = uc;
   }

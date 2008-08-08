@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2008/08/08 16:52:56  dgrisby
+  Option to validate untransformed UTF-8; correct data conversion minor
+  codes; better logging for MessageErrors.
+
   Revision 1.1.6.7  2006/09/20 13:36:31  dgrisby
   Descriptive logging for connection and GIOP errors.
 
@@ -154,7 +158,7 @@ public:
   static void inputMessageBegin(giopStream*,
 				void (*unmarshalHeader)(giopStream*));
   static void inputMessageEnd(giopStream*,CORBA::Boolean skip = 0);
-  static void sendMsgErrorMessage(giopStream*);
+  static void sendMsgErrorMessage(giopStream*, const CORBA::SystemException*);
   static void marshalRequestHeader(giopStream*);
   static void sendLocateRequest(giopStream*);
   static void unmarshalReplyHeader(giopStream*);
@@ -917,7 +921,7 @@ giopImpl10::inputTerminalProtocolError(giopStream* g,
       << ". Connection is closed.\n";
   }
 
-  sendMsgErrorMessage(g);
+  sendMsgErrorMessage(g, 0);
 
   inputRaiseCommFailure(g, message);
 }
@@ -1010,7 +1014,8 @@ giopImpl10::outputMessageEnd(giopStream* g) {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopImpl10::sendMsgErrorMessage(giopStream* g) {
+giopImpl10::sendMsgErrorMessage(giopStream* g,
+				const CORBA::SystemException* ex) {
 
   if (!g->pd_wrlocked) {
     omni_tracedmutex_lock sync(*omniTransportLock);
@@ -1019,9 +1024,17 @@ giopImpl10::sendMsgErrorMessage(giopStream* g) {
 
   if (omniORB::trace(1)) {
     omniORB::logger l;
-    l << "To endpoint: " << g->pd_strand->connection->peeraddress()
-      << ". Send GIOP 1.0 MessageError because a protocol error has "
-      << "been detected. Connection is closed.\n";
+
+    l << "To endpoint: " << g->pd_strand->connection->peeraddress() << ". ";
+
+    if (ex) {
+      l << "System exception " << *ex << " while marshalling. "
+	<< "Send GIOP 1.0 MessageError.\n";
+    }
+    else {
+      l << "Send GIOP 1.0 MessageError because a protocol error has "
+	<< "been detected. Connection is closed.\n";
+    }
   }
 
   if (!g->pd_currentOutputBuffer) {
@@ -1212,7 +1225,7 @@ giopImpl10::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
     if (g->outputMessageSize())
 #endif
       {
-	sendMsgErrorMessage(g);
+	sendMsgErrorMessage(g, &ex);
 
 	CORBA::ULong minor;
 	CORBA::Boolean retry;

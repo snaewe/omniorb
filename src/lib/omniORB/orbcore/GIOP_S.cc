@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.13  2008/08/08 16:52:56  dgrisby
+  Option to validate untransformed UTF-8; correct data conversion minor
+  codes; better logging for MessageErrors.
+
   Revision 1.1.6.12  2008/07/15 10:59:39  dgrisby
   Clarity of behaviour if inConScanPeriod / outConScanPeriod are <=
   scanGranularity.
@@ -426,7 +430,7 @@ GIOP_S::handleRequest() {
 #define MARSHAL_SYSTEM_EXCEPTION() do { \
     if (pd_state == WaitForRequestHeader || \
 	pd_state == RequestHeaderIsBeingProcessed ) { \
-      impl()->sendMsgErrorMessage(this); \
+      impl()->sendMsgErrorMessage(this, &ex); \
       return 0; \
     } else if (response_expected()) { \
       impl()->sendSystemException(this,ex); \
@@ -561,7 +565,7 @@ GIOP_S::handleLocateRequest() {
 #define MARSHAL_SYSTEM_EXCEPTION() do { \
     if (pd_state == WaitForRequestHeader || \
         pd_state == RequestHeaderIsBeingProcessed) { \
-      impl()->sendMsgErrorMessage(this); \
+      impl()->sendMsgErrorMessage(this, &ex); \
       return 0; \
     } else if (response_expected()) { \
       impl()->sendSystemException(this,ex); \

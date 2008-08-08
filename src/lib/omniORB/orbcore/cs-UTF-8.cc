@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2008/08/08 16:52:56  dgrisby
+  Option to validate untransformed UTF-8; correct data conversion minor
+  codes; better logging for MessageErrors.
+
   Revision 1.1.4.4  2006/04/28 18:40:46  dgrisby
   Merge from omni4_0_develop.
 
@@ -91,8 +95,13 @@
 #include <omniORB4/linkHacks.h>
 #include <codeSetUtil.h>
 #include <orbParameters.h>
+#include <orbOptions.h>
+
 
 OMNI_NAMESPACE_BEGIN(omni)
+
+static CORBA::Boolean validateUTF8 = 0;
+
 
 class NCS_C_UTF_8 : public omniCodeSet::NCS_C {
 public:
@@ -149,6 +158,8 @@ public:
 				     _CORBA_ULong        bound,
 				     _CORBA_ULong&       length,
 				     char*&              s);
+
+  void validateString(const char* s, CORBA::CompletionStatus completion);
 
   TCS_C_UTF_8(GIOP::Version v)
     : omniCodeSet::TCS_C(omniCodeSet::ID_UTF_8, "UTF-8",
@@ -241,6 +252,20 @@ static CORBA::Char utf8Mask[256] = {
 };
 
 
+// Validate an extension character
+
+static inline void
+validateExt(_CORBA_Char c, CORBA::CompletionStatus completion)
+{
+  if ((c & 0xc0) ^ 0x80)
+	OMNIORB_THROW(DATA_CONVERSION,
+		      DATA_CONVERSION_BadInput,
+		      completion);
+}
+
+
+
+
 //
 // Native code set
 //
@@ -274,29 +299,28 @@ NCS_C_UTF_8::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
 
   if (tcs->fastMarshalString(stream, this, bound, len, s)) return;
 
+  CORBA::CompletionStatus completion =
+    (CORBA::CompletionStatus)stream.completion();
+
   omniCodeSetUtil::BufferU ub;
   CORBA::ULong        	   lc;
   _CORBA_Char         	   c;
   int                  	   bytes;
-  CORBA::Octet         	   error = 0;
 
   while (*s) {
     c     = *s++;
     bytes = utf8Count[c];
     lc    = c & utf8Mask[c];
 
-    // This switch is an attempt to avoid overhead in pipelined
-    // processors. Cases 3, 2 and 1 should drop through with no
-    // branching code.
     switch (bytes) {
     case 6:
     case 5:
     case 4: OMNIORB_THROW(DATA_CONVERSION, 
-			  DATA_CONVERSION_BadInput,
-			  (CORBA::CompletionStatus)stream.completion());
-    case 3: c = *s++; lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
-    case 2: c = *s++; lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
-    case 1: c = *s++; lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
+			  DATA_CONVERSION_CannotMapChar,
+			  completion);
+    case 3: c = *s++; lc = (lc << 6) | (c & 0x3f); validateExt(c, completion);
+    case 2: c = *s++; lc = (lc << 6) | (c & 0x3f); validateExt(c, completion);
+    case 1: c = *s++; lc = (lc << 6) | (c & 0x3f); validateExt(c, completion);
     }
     if (lc <= 0xffff) {
       // Single unicode char
@@ -307,15 +331,6 @@ NCS_C_UTF_8::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
       lc -= 0x10000;
       ub.insert((lc >> 10)    + 0xd800);
       ub.insert((lc &  0x3ff) + 0xdc00);
-    }
-    // By testing the error here, rather than immediately after the
-    // switch, we might avoid stalling the pipeline waiting for error
-    // to become available.
-    if (error) {
-      // At least one extension byte was not of the form 10xxxxxx
-      OMNIORB_THROW(DATA_CONVERSION, 
-		    DATA_CONVERSION_BadInput,
-		    (CORBA::CompletionStatus)stream.completion());
     }
   }
   // Null terminator
@@ -530,13 +545,15 @@ _CORBA_ULong
 TCS_C_UTF_8::unmarshalString(cdrStream& stream,
 			     _CORBA_ULong bound, omniCodeSet::UniChar*& us)
 {
+  CORBA::CompletionStatus completion =
+    (CORBA::CompletionStatus)stream.completion();
+
   _CORBA_ULong len; len <<= stream;
 
   if (len == 0) {
     if (orbParameters::strictIIOP) {
       omniORB::logs(1, "Error: received an invalid zero length string.");
-      OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, 
-		    (CORBA::CompletionStatus)stream.completion());
+      OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, completion);
     }
     else {
       omniORB::logs(1, "Warning: received an invalid zero length string. "
@@ -548,46 +565,40 @@ TCS_C_UTF_8::unmarshalString(cdrStream& stream,
   }
 
   if (bound && len-1 > bound)
-    OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
-		  (CORBA::CompletionStatus)stream.completion());
+    OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, completion);
 
 
   if (!stream.checkInputOverrun(1, len))
-    OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
-		  (CORBA::CompletionStatus)stream.completion());
+    OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage, completion);
 
 
   omniCodeSetUtil::BufferU ub;
   CORBA::ULong         	   lc;
   _CORBA_Char          	   c;
   int                  	   bytes;
-  CORBA::Octet         	   error = 0;
 
   for (_CORBA_ULong i=0; i < len; i++) {
-    c   = stream.unmarshalOctet();
+    c     = stream.unmarshalOctet();
     bytes = utf8Count[c];
     lc    = c & utf8Mask[c];
 
-    // This switch is an attempt to avoid overhead in pipelined
-    // processors. Cases 3, 2 and 1 should drop through with no
-    // branching code.
     switch (bytes) {
     case 6: OMNIORB_THROW(DATA_CONVERSION, 
 			  DATA_CONVERSION_BadInput,
-			  (CORBA::CompletionStatus)stream.completion());
+			  completion);
     case 5:
     case 4: OMNIORB_THROW(DATA_CONVERSION, 
-			  DATA_CONVERSION_BadInput,
-			  (CORBA::CompletionStatus)stream.completion());
+			  DATA_CONVERSION_CannotMapChar,
+			  completion);
     case 3:
       c = stream.unmarshalOctet(); i++;
-      lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
+      lc = (lc << 6) | (c & 0x3f); validateExt(c, completion);
     case 2:
       c = stream.unmarshalOctet(); i++;
-      lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
+      lc = (lc << 6) | (c & 0x3f); validateExt(c, completion);
     case 1:
       c = stream.unmarshalOctet(); i++;
-      lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
+      lc = (lc << 6) | (c & 0x3f); validateExt(c, completion);
     }
     if (lc <= 0xffff) {
       // Single unicode char
@@ -599,19 +610,9 @@ TCS_C_UTF_8::unmarshalString(cdrStream& stream,
       ub.insert((lc >> 10)    + 0xd800);
       ub.insert((lc &  0x3ff) + 0xdc00);
     }
-    // By testing the error here, rather than immediately after the
-    // switch, we might avoid stalling the pipeline waiting for error
-    // to become available.
-    if (error) {
-      // At least one extension byte was not of the form 10xxxxxx
-      OMNIORB_THROW(DATA_CONVERSION, 
-		    DATA_CONVERSION_BadInput,
-		    (CORBA::CompletionStatus)stream.completion());
-    }
   }
   if (lc != 0) // Check for null-terminator
-    OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, 
-		  (CORBA::CompletionStatus)stream.completion());
+    OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, completion);
 
   us = ub.extract();
   return ub.length() - 1;
@@ -638,6 +639,9 @@ TCS_C_UTF_8::fastMarshalString(cdrStream&          stream,
 			       const char*         s)
 {
   if (ncs->id() == id()) { // Null transformation
+    if (validateUTF8)
+      validateString(s, (CORBA::CompletionStatus)stream.completion());
+
     if (len == 0) {
       len = stream.marshalRawString(s);
 
@@ -757,11 +761,17 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
       OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, 
 		    (CORBA::CompletionStatus)stream.completion());
 
+    if (validateUTF8)
+      validateString(s, (CORBA::CompletionStatus)stream.completion());
+
     h.drop();
     len = mlen - 1;
     return 1;
   }
   else if (ncs->kind() == omniCodeSet::CS_8bit) { // Simple 8-bit set
+
+    CORBA::CompletionStatus completion =
+      (CORBA::CompletionStatus)stream.completion();
 
     const _CORBA_Char** fromU = ((omniCodeSet::NCS_C_8bit*)ncs)->fromU();
 
@@ -770,8 +780,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
     if (mlen == 0) {
       if (orbParameters::strictIIOP) {
 	omniORB::logs(1, "Error: received an invalid zero length string.");
-	OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, 
-		      (CORBA::CompletionStatus)stream.completion());
+	OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, completion);
       }
       else {
 	omniORB::logs(1, "Warning: received an invalid zero length string. "
@@ -783,61 +792,46 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
     }
 
     if (bound && mlen-1 > bound)
-      OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
-		    (CORBA::CompletionStatus)stream.completion());
-
+      OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, completion);
 
     if (!stream.checkInputOverrun(1, mlen))
-      OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
-		    (CORBA::CompletionStatus)stream.completion());
+      OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage, completion);
 
     omniCodeSetUtil::BufferC        b; // *** Could initialise to mlen here
     omniCodeSet::UniChar 	    uc;
     _CORBA_Char          	    c;
     int                  	    bytes;
-    CORBA::Octet         	    error = 0;
 
     for (_CORBA_ULong i=0; i < mlen; i++) {
-      c   = stream.unmarshalOctet();
+      c     = stream.unmarshalOctet();
       bytes = utf8Count[c];
       uc    = c & utf8Mask[c];
 
-      // This switch is an attempt to avoid overhead in pipelined
-      // processors. Cases 2 and 1 should drop through with no
-      // branching code.
       switch (bytes) {
       case 6: OMNIORB_THROW(DATA_CONVERSION, 
 			    DATA_CONVERSION_BadInput,
-			    (CORBA::CompletionStatus)stream.completion());
+			    completion);
       case 5:
       case 4:
       case 3: OMNIORB_THROW(DATA_CONVERSION, 
-			    DATA_CONVERSION_BadInput,
-			    (CORBA::CompletionStatus)stream.completion());
+			    DATA_CONVERSION_CannotMapChar,
+			    completion);
       case 2:
 	c = stream.unmarshalOctet(); i++;
-	uc = (uc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
+	uc = (uc << 6) | (c & 0x3f); validateExt(c, completion);
       case 1:
 	c = stream.unmarshalOctet(); i++;
-	uc = (uc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
+	uc = (uc << 6) | (c & 0x3f); validateExt(c, completion);
       }
       c = fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
       if (uc && !c) OMNIORB_THROW(DATA_CONVERSION, 
-				  DATA_CONVERSION_BadInput,
-				  (CORBA::CompletionStatus)stream.completion());
+				  DATA_CONVERSION_CannotMapChar,
+				  completion);
 
       b.insert(c);
-
-      if (error) {
-	// At least one extension byte was not of the form 10xxxxxx
-	OMNIORB_THROW(DATA_CONVERSION, 
-		      DATA_CONVERSION_BadInput,
-		      (CORBA::CompletionStatus)stream.completion());
-      }
     }
     if (uc != 0) // Check for null-terminator
-      OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, 
-		    (CORBA::CompletionStatus)stream.completion());
+      OMNIORB_THROW(MARSHAL, MARSHAL_StringNotEndWithNull, completion);
 
     s   = b.extract();
     len = b.length() - 1;
@@ -847,10 +841,63 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
 }
 
 
+void
+TCS_C_UTF_8::validateString(const char* s, CORBA::CompletionStatus completion)
+{
+  // Check that string is valid UTF-8 data.
+
+  int bytes;
+
+  while (*s) {
+    bytes = utf8Count[*s++];
+
+    switch (bytes) {
+    case 6:
+    case 5: OMNIORB_THROW(DATA_CONVERSION,
+			  DATA_CONVERSION_BadInput,
+			  completion);
+    case 4: validateExt(*s++, completion);
+    case 3: validateExt(*s++, completion);
+    case 2: validateExt(*s++, completion);
+    case 1: validateExt(*s++, completion);
+    }
+  }
+}
+
 
 //
 // Initialiser
 //
+
+/////////////////////////////////////////////////////////////////////////////
+class validateUTF8Handler : public orbOptions::Handler {
+public:
+
+  validateUTF8Handler() : 
+    orbOptions::Handler("validateUTF8",
+			"validateUTF8 = 0 or 1",
+			1,
+			"-ORBvalidateUTF8 < 0 | 1 >") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    validateUTF8 = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(), validateUTF8, result);
+  }
+};
+
+static validateUTF8Handler validateUTF8Handler_;
+
+
 
 static NCS_C_UTF_8 _NCS_C_UTF_8;
 static TCS_C_UTF_8 _TCS_C_UTF_8_11(omniCodeSetUtil::GIOP11);
@@ -859,6 +906,7 @@ static TCS_C_UTF_8 _TCS_C_UTF_8_12(omniCodeSetUtil::GIOP12);
 class CS_UTF_8_init {
 public:
   CS_UTF_8_init() {
+    orbOptions::singleton().registerHandler(validateUTF8Handler_);
     omniCodeSet::registerNCS_C(&_NCS_C_UTF_8);
     omniCodeSet::registerTCS_C(&_TCS_C_UTF_8_11);
     omniCodeSet::registerTCS_C(&_TCS_C_UTF_8_12);

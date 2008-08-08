@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.11.2.7  2008/08/08 16:52:56  dgrisby
+  Option to validate untransformed UTF-8; correct data conversion minor
+  codes; better logging for MessageErrors.
+
   Revision 1.11.2.6  2008/02/05 16:43:20  dgrisby
   Flush log file.
 
@@ -400,22 +404,29 @@ omniORB::logger::operator<<(const omniORB::logger::exceptionStatus& ex)
 omniORB::logger&
 omniORB::logger::operator<<(const CORBA::SystemException& ex)
 {
-  int sz;
-  *this << ex._NP_repoId(&sz);
+  *this << ex._name() << "(";
   switch (ex.completed()) {
   case CORBA::COMPLETED_YES:
-    *this << ",YES,";
+    *this << "YES,";
     break;
   case CORBA::COMPLETED_NO:
-    *this << ",NO,";
+    *this << "NO,";
     break;
   case CORBA::COMPLETED_MAYBE:
-    *this << ",MAYBE,";
+    *this << "MAYBE,";
     break;
   }
-  reserve(30);
-  sprintf(pd_p, "0x%08x", (int)ex.minor());
-  pd_p += strlen(pd_p);
+  const char* minor = ex.NP_minorString();
+  if (minor) {
+    *this << minor;
+  }
+  else {
+    reserve(30);
+    sprintf(pd_p, "0x%08x", (int)ex.minor());
+    pd_p += strlen(pd_p);
+  }
+  *this << ")";
+
   return *this;
 }
 

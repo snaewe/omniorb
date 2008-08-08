@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2008/08/08 16:52:56  dgrisby
+  Option to validate untransformed UTF-8; correct data conversion minor
+  codes; better logging for MessageErrors.
+
   Revision 1.1.6.7  2006/09/20 13:36:31  dgrisby
   Descriptive logging for connection and GIOP errors.
 
@@ -146,7 +150,7 @@ public:
   static void inputMessageBegin(giopStream*,
 				void (*unmarshalHeader)(giopStream*));
   static void inputMessageEnd(giopStream*,CORBA::Boolean disgard = 0);
-  static void sendMsgErrorMessage(giopStream*);
+  static void sendMsgErrorMessage(giopStream*, const CORBA::SystemException*);
   static void marshalRequestHeader(giopStream*);
   static void sendLocateRequest(giopStream*);
   static void unmarshalReplyHeader(giopStream*);
@@ -1154,7 +1158,8 @@ giopImpl11::outputMessageEnd(giopStream* g) {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopImpl11::sendMsgErrorMessage(giopStream* g) {
+giopImpl11::sendMsgErrorMessage(giopStream* g,
+				const CORBA::SystemException* ex) {
 
   if (!g->pd_wrlocked) {
     omni_tracedmutex_lock sync(*omniTransportLock);
@@ -1163,9 +1168,17 @@ giopImpl11::sendMsgErrorMessage(giopStream* g) {
 
   if (omniORB::trace(1)) {
     omniORB::logger l;
-    l << "To endpoint: " << g->pd_strand->connection->peeraddress()
-      <<". Send GIOP 1.1 MessageError because a protocol error has been detected. "
-      << "Connection is closed.\n";
+
+    l << "To endpoint: " << g->pd_strand->connection->peeraddress() << ". ";
+
+    if (ex) {
+      l << "System exception " << *ex << " while marshalling. "
+	<< "Send GIOP 1.1 MessageError.\n";
+    }
+    else {
+      l << "Send GIOP 1.1 MessageError because a protocol error has "
+	<< "been detected. Connection is closed.\n";
+    }
   }
 
   if (!g->pd_currentOutputBuffer) {
@@ -1313,7 +1326,7 @@ giopImpl11::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
     // This system exception is raised during the marshalling of the reply.
     // We cannot marshal the exception. Can only indicate that something
     // fatal about this request.
-    sendMsgErrorMessage(g);
+    sendMsgErrorMessage(g, &ex);
 
     CORBA::ULong minor;
     CORBA::Boolean retry;

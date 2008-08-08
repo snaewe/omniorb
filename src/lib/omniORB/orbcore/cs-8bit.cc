@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2008/08/08 16:52:56  dgrisby
+  Option to validate untransformed UTF-8; correct data conversion minor
+  codes; better logging for MessageErrors.
+
   Revision 1.1.4.5  2006/05/22 15:44:51  dgrisby
   Make sure string length and body are never split across a chunk
   boundary.
@@ -111,7 +115,7 @@ omniCodeSet::NCS_C_8bit::marshalChar(cdrStream& stream,
 
   omniCodeSet::UniChar uc = pd_toU[c];
   if (c && !uc) OMNIORB_THROW(DATA_CONVERSION, 
-			      DATA_CONVERSION_BadInput,
+			      DATA_CONVERSION_CannotMapChar,
 			      (CORBA::CompletionStatus)stream.completion());
 
 
@@ -143,7 +147,7 @@ omniCodeSet::NCS_C_8bit::marshalString(cdrStream&          stream,
     uc = pd_toU[(_CORBA_Char)(s[i])];
     if (!uc && s[i])
       OMNIORB_THROW(DATA_CONVERSION, 
-		    DATA_CONVERSION_BadInput,
+		    DATA_CONVERSION_CannotMapChar,
 		    (CORBA::CompletionStatus)stream.completion());
     us[i] = uc;
   }
@@ -165,7 +169,7 @@ omniCodeSet::NCS_C_8bit::unmarshalChar(cdrStream& stream,
 
   c = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
   if (uc && !c) OMNIORB_THROW(DATA_CONVERSION, 
-			      DATA_CONVERSION_BadInput,
+			      DATA_CONVERSION_CannotMapChar,
 			      (CORBA::CompletionStatus)stream.completion());
 
   return c;
@@ -199,7 +203,7 @@ omniCodeSet::NCS_C_8bit::unmarshalString(cdrStream& stream,
     uc = us[i];
     c  = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
     if (uc && !c) OMNIORB_THROW(DATA_CONVERSION, 
-				DATA_CONVERSION_BadInput,
+				DATA_CONVERSION_CannotMapChar,
 				(CORBA::CompletionStatus)stream.completion());
     s[i] = c;
   }
@@ -218,7 +222,7 @@ omniCodeSet::TCS_C_8bit::marshalChar(cdrStream& stream,
 {
   _CORBA_Char c = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
   if (uc && !c) OMNIORB_THROW(DATA_CONVERSION, 
-			      DATA_CONVERSION_BadInput,
+			      DATA_CONVERSION_CannotMapChar,
 			      (CORBA::CompletionStatus)stream.completion());
 
   stream.marshalOctet(c);
@@ -245,7 +249,7 @@ omniCodeSet::TCS_C_8bit::marshalString(cdrStream& stream,
     uc = us[i];
     c = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
     if (uc && !c)  OMNIORB_THROW(DATA_CONVERSION, 
-				DATA_CONVERSION_BadInput,
+				DATA_CONVERSION_CannotMapChar,
 				(CORBA::CompletionStatus)stream.completion());
     stream.marshalOctet(c);
   }
@@ -259,7 +263,7 @@ omniCodeSet::TCS_C_8bit::unmarshalChar(cdrStream& stream)
 
   omniCodeSet::UniChar uc = pd_toU[c];
   if (c && !uc)  OMNIORB_THROW(DATA_CONVERSION, 
-			       DATA_CONVERSION_BadInput,
+			       DATA_CONVERSION_CannotMapChar,
 			       (CORBA::CompletionStatus)stream.completion());
   return uc;
 }
@@ -304,7 +308,7 @@ omniCodeSet::TCS_C_8bit::unmarshalString(cdrStream& stream,
     c = stream.unmarshalOctet();
     uc = pd_toU[c];
     if (c && !uc) OMNIORB_THROW(DATA_CONVERSION, 
-				DATA_CONVERSION_BadInput,
+				DATA_CONVERSION_CannotMapChar,
 				(CORBA::CompletionStatus)stream.completion());
     us[i] = uc;
   }

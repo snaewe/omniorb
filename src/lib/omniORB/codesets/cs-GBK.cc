@@ -6825,7 +6825,7 @@ NCS_C_GBK::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
     }
     else
       OMNIORB_THROW(DATA_CONVERSION, 
-		    DATA_CONVERSION_BadInput,
+		    DATA_CONVERSION_CannotMapChar,
 		    (CORBA::CompletionStatus)stream.completion());
   }
   // Null terminator
@@ -6893,7 +6893,7 @@ NCS_C_GBK::unmarshalString(cdrStream&          stream,
     else
     {
         OMNIORB_THROW(DATA_CONVERSION,
-		    DATA_CONVERSION_BadInput,
+		    DATA_CONVERSION_CannotMapChar,
 		    (CORBA::CompletionStatus)stream.completion());
     }
   }
@@ -6941,7 +6941,7 @@ TCS_C_GBK::marshalString(cdrStream& stream, CORBA::ULong bound,
     }
     else
         OMNIORB_THROW(DATA_CONVERSION,
-		    DATA_CONVERSION_BadInput,
+		    DATA_CONVERSION_CannotMapChar,
 		    (CORBA::CompletionStatus)stream.completion());
   }
 
@@ -7024,7 +7024,7 @@ TCS_C_GBK::unmarshalString(cdrStream&             stream,
     else
     {
       OMNIORB_THROW(DATA_CONVERSION, 
-		    DATA_CONVERSION_BadInput,
+		    DATA_CONVERSION_CannotMapChar,
     		    (CORBA::CompletionStatus)stream.completion());
     }
   }
@@ -7098,7 +7098,7 @@ TCS_C_GBK::fastMarshalString(  cdrStream&          stream,
       }
       else {
 	OMNIORB_THROW(DATA_CONVERSION, 
-		      DATA_CONVERSION_BadInput,
+		      DATA_CONVERSION_CannotMapChar,
 		      (CORBA::CompletionStatus)stream.completion());
       }
     }
@@ -7221,7 +7221,7 @@ TCS_C_GBK::fastUnmarshalString(  cdrStream&          stream,
       }
       else
 	OMNIORB_THROW(DATA_CONVERSION, 
-		      DATA_CONVERSION_BadInput,
+		      DATA_CONVERSION_CannotMapChar,
 		      (CORBA::CompletionStatus)stream.completion());
 
     }
