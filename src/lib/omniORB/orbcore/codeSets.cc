@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2008/08/08 18:45:48  dgrisby
+  Add missing ISO-8859 and Windows code sets.
+
   Revision 1.1.4.5  2006/08/17 16:21:21  dgrisby
   Second call to server with no codeset information would fail.
 
@@ -160,6 +163,9 @@ versionMatch(GIOP::Version v1, GIOP::Version v2)
 // Code set id constants
 //
 
+// Ones tagged with // ?? are not in the DCE code set registry, but
+// are inferred from the id allocation pattern.
+
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_1  = 0x00010001;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_2  = 0x00010002;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_3  = 0x00010003;
@@ -170,11 +176,24 @@ const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_7  = 0x00010007;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_8  = 0x00010008;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_9  = 0x00010009;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_10 = 0x0001000a;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_11 = 0x0001000b; // ??
+const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_13 = 0x0001000d; // ??
+const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_14 = 0x0001000e; // ??
+const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_15 = 0x0001000f; // ??
+const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_16 = 0x00010010; // ??
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_2   = 0x00010102;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_4   = 0x00010106;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_8   = 0x05010001;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_16  = 0x00010109;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1250  = 0x100204e2;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1251  = 0x100204e3;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1252  = 0x100204e4;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1253  = 0x100204e5;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1254  = 0x100204e6;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1255  = 0x100204e7;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1256  = 0x100204e8;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1257  = 0x100204e9;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1258  = 0x100204ea; // ??
 const CONV_FRAME::CodeSetId omniCodeSet::ID_037     = 0x10020025;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_500     = 0x100201f8;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_EDF_4   = 0x10040366;

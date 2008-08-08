@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2008/08/08 18:45:49  dgrisby
+  Add missing ISO-8859 and Windows code sets.
+
   Revision 1.1.4.2  2005/12/08 14:22:31  dgrisby
   Better string marshalling performance; other minor optimisations.
 
@@ -146,12 +149,25 @@ public:
   static _core_attr const CONV_FRAME::CodeSetId ID_8859_8;
   static _core_attr const CONV_FRAME::CodeSetId ID_8859_9;
   static _core_attr const CONV_FRAME::CodeSetId ID_8859_10;
+  static _core_attr const CONV_FRAME::CodeSetId ID_8859_11;
+  static _core_attr const CONV_FRAME::CodeSetId ID_8859_13;
+  static _core_attr const CONV_FRAME::CodeSetId ID_8859_14;
+  static _core_attr const CONV_FRAME::CodeSetId ID_8859_15;
+  static _core_attr const CONV_FRAME::CodeSetId ID_8859_16;
   static _core_attr const CONV_FRAME::CodeSetId ID_UCS_2;   // Unicode
   static _core_attr const CONV_FRAME::CodeSetId ID_UCS_4;
   static _core_attr const CONV_FRAME::CodeSetId ID_UTF_8;
   static _core_attr const CONV_FRAME::CodeSetId ID_UTF_16;  // Unicode with
                                                             //  surrogates
-  static _core_attr const CONV_FRAME::CodeSetId ID_CP1251;  // windows-1251
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1250;  // Windows-1250
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1251;  // Windows-1251
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1252;  // Windows-1252
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1253;  // Windows-1253
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1254;  // Windows-1254
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1255;  // Windows-1255
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1256;  // Windows-1256
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1257;  // Windows-1257
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1258;  // Windows-1258
   static _core_attr const CONV_FRAME::CodeSetId ID_037;     // IBM Ebcdic
   static _core_attr const CONV_FRAME::CodeSetId ID_500;
   static _core_attr const CONV_FRAME::CodeSetId ID_EDF_4;

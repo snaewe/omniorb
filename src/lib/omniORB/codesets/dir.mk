@@ -10,8 +10,21 @@ ORB_SRCS = \
             cs-8859-8.cc  \
             cs-8859-9.cc  \
             cs-8859-10.cc \
+            cs-8859-11.cc \
+            cs-8859-13.cc \
+            cs-8859-14.cc \
+            cs-8859-15.cc \
+            cs-8859-16.cc \
             cs-UCS-4.cc   \
+            cs-cp1250.cc  \
             cs-cp1251.cc  \
+            cs-cp1252.cc  \
+            cs-cp1253.cc  \
+            cs-cp1254.cc  \
+            cs-cp1255.cc  \
+            cs-cp1256.cc  \
+            cs-cp1257.cc  \
+            cs-cp1258.cc  \
             cs-037.cc     \
             cs-500.cc     \
             cs-EDF-4.cc   \

@@ -1,3 +1,27 @@
+Fri Aug  8 19:43:49 BST 2008 dgrisby
+====================================
+
+- Add missing ISO-8859 and Windows code sets.
+
+include/omniORB4/codeSets.h
+src/lib/omniORB/codesets/cs-8859-11.cc
+src/lib/omniORB/codesets/cs-8859-13.cc
+src/lib/omniORB/codesets/cs-8859-14.cc
+src/lib/omniORB/codesets/cs-8859-15.cc
+src/lib/omniORB/codesets/cs-8859-16.cc
+src/lib/omniORB/codesets/cs-cp1250.cc
+src/lib/omniORB/codesets/cs-cp1252.cc
+src/lib/omniORB/codesets/cs-cp1253.cc
+src/lib/omniORB/codesets/cs-cp1254.cc
+src/lib/omniORB/codesets/cs-cp1255.cc
+src/lib/omniORB/codesets/cs-cp1256.cc
+src/lib/omniORB/codesets/cs-cp1257.cc
+src/lib/omniORB/codesets/cs-cp1258.cc
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/codesets/omniCodeSets.cc
+src/lib/omniORB/orbcore/codeSets.cc
+
+
 Fri Aug  8 17:50:03 BST 2008 dgrisby
 ====================================
 
