@@ -1,3 +1,11 @@
+Tue Sep 16 12:12:59 BST 2008 dgrisby
+====================================
+
+- Look for omniidl files in local Python installation. Thanks Tim Theisen.
+
+src/tool/omniidl/python/scripts/omniidl.in
+
+
 Tue Sep 16 10:21:06 BST 2008 dgrisby
 ====================================
 

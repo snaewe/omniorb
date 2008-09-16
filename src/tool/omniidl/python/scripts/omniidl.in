@@ -57,20 +57,28 @@ if binarchdir != "":
     treedir, bin     = os.path.split(bindir)
     if bin == "bin":
         pylibdir   = os.path.join(treedir, "lib", "python")
+        vpylibdir  = pylibdir + sys.version[:3] + "/site-packages"
         archlibdir = os.path.join(treedir, "lib", archname)
 
         if os.path.isdir(pylibdir):
             sys.path.insert(0, pylibdir)
+
+        if os.path.isdir(vpylibdir):
+            sys.path.insert(0, vpylibdir)
 
         if os.path.isdir(archlibdir):
             sys.path.insert(0, archlibdir)
 
     elif archname == "bin":
         pylibdir   = os.path.join(bindir, "lib", "python")
+        vpylibdir  = pylibdir + sys.version[:3] + "/site-packages"
         archlibdir = os.path.join(bindir, "lib")
 
         if os.path.isdir(pylibdir):
             sys.path.insert(0, pylibdir)
+
+        if os.path.isdir(vpylibdir):
+            sys.path.insert(0, vpylibdir)
 
         if os.path.isdir(archlibdir):
             sys.path.insert(0, archlibdir)
