@@ -84,7 +84,7 @@ Profiles:
       OpenSSL actually provides you with a lot of options to set up
       keys and certificates etc. To choose different options, you can
       register your own implementation of the sslContext object. See
-      include/omniORB4/sslContext.cc for details.
+      include/omniORB4/sslContext.h for details.
 
     d) On the server side, you have to tell the ORB, via ORB_init, to
        instantiate a SSL endpoint. This is done using the -ORBendPoint
