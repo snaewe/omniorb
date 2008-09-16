@@ -9,48 +9,80 @@ omni_cv_openssl_root,
              AC_HELP_STRING([--with-openssl],
                [OpenSSL root directory (default none)]),
              omni_cv_openssl_root=$withval,
-             if test "x$prefix" != "xNONE"; then
-               omni_cv_openssl_root=$prefix/openssl
-             else
-               omni_cv_openssl_root=$ac_default_prefix/openssl
-             fi
-	     if test -d $omni_cv_openssl_root/lib; then
-               :
-             else
-               omni_cv_openssl_root=no
-	     fi)
+             omni_cv_openssl_root=no)
 ])
 
-dnl ugly kludge follows:
-dnl if  pkg-config is installed and openssl.pc then override the 
-dnl openssl-root given with --with-openssl
+dnl Hairy logic to work out OpenSSL path and options.
+dnl
+dnl  If the option is "no", do nothing.
+dnl
+dnl  If the option is "yes", try pkg-config, failing that use prefix.
+dnl
+dnl  If the option is a path, and <path>/lib/pkgconfig exists, try to
+dnl   use pkg-config based on that directory, failing that just use
+dnl   the directory/
 
 if test "$omni_cv_openssl_root" = "no"; then
   :
 else
   if test "$PKG_CONFIG" != "no" ; then
-    PKG_CHECK_MODULES(OPENSSL, openssl,
-        [open_ssl_root=`$PKG_CONFIG --variable=prefix openssl`
-	 open_ssl_cppflags="$OPENSSL_CFLAGS"
-	 open_ssl_lib="$OPENSSL_LIBS"
-	 open_ssl_pkgconfig="yes"
-	 omni_cv_openssl_root="$open_ssl_root"
-        ],
-	[open_ssl_pkgconfig="no"])
+    set_pkg_config_path=no
+    if test "$omni_cv_openssl_root" = "yes"; then
+      do_pkg_config=yes
+    else
+      if test -d $omni_cv_openssl_root/lib/pkgconfig; then
+        saved_pkg_config_libdir="$PKG_CONFIG_LIBDIR"
+        saved_pkg_config_path="$PKG_CONFIG_PATH"
+        PKG_CONFIG_LIBDIR=$omni_cv_openssl_root/lib/pkgconfig
+        PKG_CONFIG_PATH=
+        export PKG_CONFIG_LIBDIR
+        export PKG_CONFIG_PATH
+        do_pkg_config=yes
+        set_pkg_config_path=yes
+      else
+        do_pkg_config=no
+      fi
+    fi
+
+    if test "$do_pkg_config" = "yes"; then
+      PKG_CHECK_MODULES(OPENSSL, openssl,
+          [open_ssl_root=`$PKG_CONFIG --variable=prefix openssl`
+           open_ssl_cppflags="$OPENSSL_CFLAGS"
+           open_ssl_lib="$OPENSSL_LIBS"
+           open_ssl_pkgconfig="yes"
+           omni_cv_openssl_root="$open_ssl_root"
+          ],
+          [open_ssl_pkgconfig="no"])
+    fi
+
+    if test "$set_pkg_config_path" = "yes"; then
+      if test "x$saved_pkg_config_libdir" = "x"; then
+        unset PKG_CONFIG_LIBDIR
+      else
+        PKG_CONFIG_LIBDIR=$saved_pkg_config_libdir
+        export PKG_CONFIG_LIBDIR
+      fi
+      if test "x$saved_pkg_config_path" = "x"; then
+        unset PKG_CONFIG_PATH
+      else
+        PKG_CONFIG_PATH=$saved_pkg_config_path
+        export PKG_CONFIG_PATH
+      fi
+    fi
   fi
   if test "$omni_cv_openssl_root" = "yes"; then
-    if test "x$open_ssl_pkgconfig" != "yes"; then
-      if test "x$prefix" != "xNONE"; then
-        omni_cv_openssl_root=$prefix/openssl
-      else
-        omni_cv_openssl_root=$ac_default_prefix/openssl
-      fi
-      if test -d $omni_cv_openssl_root; then
-        :
-      else
-        AC_MSG_ERROR(Can't find OpenSSL in '$omni_cv_openssl_root'. Please give me the full path or leave out --with-openssl.)
-        omni_cv_openssl_root=no
-      fi
+    if test "x$prefix" != "xNONE"; then
+      omni_cv_openssl_root=$prefix
+    else
+      omni_cv_openssl_root=$ac_default_prefix
+    fi
+    if test -d $omni_cv_openssl_root/openssl/lib; then
+      omni_cv_openssl_root=$omni_cv_openssl_root/openssl
+    elif test -d $omni_cv_openssl_root/lib; then
+      :
+    else
+      AC_MSG_ERROR(Can't find OpenSSL in '$omni_cv_openssl_root'. Please give me the full path or leave out --with-openssl.)
+      omni_cv_openssl_root=no
     fi
   fi
 fi
