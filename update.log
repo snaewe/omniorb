@@ -1,3 +1,11 @@
+Tue Sep 16 10:21:06 BST 2008 dgrisby
+====================================
+
+- Support null types in DynAny; fix errors with exception handling.
+
+src/lib/omniORB/dynamic/dynAny.cc
+
+
 Tue Sep 16 10:17:43 BST 2008 dgrisby
 ====================================
 

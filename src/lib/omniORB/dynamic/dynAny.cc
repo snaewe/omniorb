@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.13.2.9  2008/09/16 09:24:08  dgrisby
+   Support null types in DynAny; fix errors with exception handling.
+
    Revision 1.13.2.8  2006/05/31 10:17:04  dgrisby
    Allow creation of unknown values in DynAnys.
 
@@ -1443,8 +1446,10 @@ DynAnyConstrBase::DynAnyConstrBase(TypeCode_base* tc, int nodetype,
 
 DynAnyConstrBase::~DynAnyConstrBase()
 {
-  for( unsigned i = pd_first_in_comp; i < pd_n_components; i++ )
-    pd_components[i]->_NP_decrRefCount();
+  for( unsigned i = pd_first_in_comp; i < pd_n_components; i++ ) {
+    if (pd_components[i])
+      pd_components[i]->_NP_decrRefCount();
+  }
 }
 
 //////////////////////
@@ -5647,67 +5652,62 @@ internal_create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root)
 
   DynAnyImplBase* da = 0;
 
-  try {
-    switch( TypeCode_base::NP_expand(tc)->NP_kind() ) {
-    case CORBA::tk_void:
-    case CORBA::tk_short:
-    case CORBA::tk_long:
-    case CORBA::tk_ushort:
-    case CORBA::tk_ulong:
+  switch( TypeCode_base::NP_expand(tc)->NP_kind() ) {
+  case CORBA::tk_void:
+  case CORBA::tk_null:
+  case CORBA::tk_short:
+  case CORBA::tk_long:
+  case CORBA::tk_ushort:
+  case CORBA::tk_ulong:
 #ifdef HAS_LongLong
-    case CORBA::tk_longlong:
-    case CORBA::tk_ulonglong:
+  case CORBA::tk_longlong:
+  case CORBA::tk_ulonglong:
 #endif
 #ifndef NO_FLOAT
-    case CORBA::tk_float:
-    case CORBA::tk_double:
+  case CORBA::tk_float:
+  case CORBA::tk_double:
 #ifdef HAS_LongDouble
-    case CORBA::tk_longdouble:
+  case CORBA::tk_longdouble:
 #endif
 #endif
-    case CORBA::tk_boolean:
-    case CORBA::tk_char:
-    case CORBA::tk_wchar:
-    case CORBA::tk_octet:
-    case CORBA::tk_any:
-    case CORBA::tk_TypeCode:
-    case CORBA::tk_objref:
-    case CORBA::tk_string:
-    case CORBA::tk_wstring:
-      da = new DynAnyImpl(tc, dt_any, is_root);
-      break;
-    case CORBA::tk_fixed:
-      da = new DynFixedImpl(tc, is_root);
-      break;
-    case CORBA::tk_enum:
-      da = new DynEnumImpl(tc, is_root);
-      break;
-    case CORBA::tk_struct:
-    case CORBA::tk_except:
-      da = new DynStructImpl(tc, is_root);
-      break;
-    case CORBA::tk_union:
-      da = new DynUnionImpl(tc, is_root);
-      break;
-    case CORBA::tk_sequence:
-      da = new DynSequenceImpl(tc, is_root);
-      break;
-    case CORBA::tk_array:
-      da = new DynArrayImpl(tc, is_root);
-      break;
-    case CORBA::tk_value:
-      da = new DynValueImpl(tc, is_root);
-      break;
-    case CORBA::tk_value_box:
-      da = new DynValueBoxImpl(tc, is_root);
-      break;
-    default:
-      throw DynamicAny::DynAny::TypeMismatch();
-    }
-  }
-  catch(...) {
-    CORBA::release(tc);
-    throw;
+  case CORBA::tk_boolean:
+  case CORBA::tk_char:
+  case CORBA::tk_wchar:
+  case CORBA::tk_octet:
+  case CORBA::tk_any:
+  case CORBA::tk_TypeCode:
+  case CORBA::tk_objref:
+  case CORBA::tk_string:
+  case CORBA::tk_wstring:
+    da = new DynAnyImpl(tc, dt_any, is_root);
+    break;
+  case CORBA::tk_fixed:
+    da = new DynFixedImpl(tc, is_root);
+    break;
+  case CORBA::tk_enum:
+    da = new DynEnumImpl(tc, is_root);
+    break;
+  case CORBA::tk_struct:
+  case CORBA::tk_except:
+    da = new DynStructImpl(tc, is_root);
+    break;
+  case CORBA::tk_union:
+    da = new DynUnionImpl(tc, is_root);
+    break;
+  case CORBA::tk_sequence:
+    da = new DynSequenceImpl(tc, is_root);
+    break;
+  case CORBA::tk_array:
+    da = new DynArrayImpl(tc, is_root);
+    break;
+  case CORBA::tk_value:
+    da = new DynValueImpl(tc, is_root);
+    break;
+  case CORBA::tk_value_box:
+    da = new DynValueBoxImpl(tc, is_root);
+    break;
+  default:
+    throw DynamicAny::DynAny::TypeMismatch();
   }
   return da;
 }
