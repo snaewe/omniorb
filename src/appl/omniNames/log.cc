@@ -233,9 +233,9 @@ omniNameslog::omniNameslog(int& p, const char* arg_logdir,
 
     // Get host name:
 
-    DWORD machineName_len = MAX_COMPUTERNAME_LENGTH;
-    CORBA::String_var machineName = CORBA::string_alloc(machineName_len);
-    if (!GetComputerName((LPTSTR)(char*)machineName, &machineName_len)) {
+    DWORD machineName_buflen = MAX_COMPUTERNAME_LENGTH+1;
+    CORBA::String_var machineName = CORBA::string_alloc(machineName_buflen-1);
+    if (!GetComputerName((LPTSTR)(char*)machineName, &machineName_buflen)) {
       cerr << ts.t() << "Error: cannot get the name of this host." << endl;
       exit(1);
     }
