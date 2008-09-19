@@ -190,6 +190,7 @@ class omni_thread;
 
 #if (!defined(OMNI_MUTEX_IMPLEMENTATION)        || \
      !defined(OMNI_MUTEX_LOCK_IMPLEMENTATION)   || \
+     !defined(OMNI_MUTEX_TRYLOCK_IMPLEMENTATION)|| \
      !defined(OMNI_MUTEX_UNLOCK_IMPLEMENTATION) || \
      !defined(OMNI_CONDITION_IMPLEMENTATION)    || \
      !defined(OMNI_SEMAPHORE_IMPLEMENTATION)    || \
@@ -231,6 +232,10 @@ public:
 
     inline void lock(void)    { OMNI_MUTEX_LOCK_IMPLEMENTATION   }
     inline void unlock(void)  { OMNI_MUTEX_UNLOCK_IMPLEMENTATION }
+    inline int trylock(void)  { OMNI_MUTEX_TRYLOCK_IMPLEMENTATION }
+	// if mutex is unlocked then lock it and return 1 (true).
+	// If it is already locked then return 0 (false).
+
     inline void acquire(void) { lock(); }
     inline void release(void) { unlock(); }
 	// the names lock and unlock are preferred over acquire and release
@@ -276,6 +281,20 @@ private:
     omni_mutex_lock(const omni_mutex_lock&);
     omni_mutex_lock& operator=(const omni_mutex_lock&);
 };
+
+class _OMNITHREAD_NTDLL_ omni_mutex_trylock {
+    omni_mutex& mutex;
+    const int locked;
+public:
+    omni_mutex_trylock(omni_mutex& m) : mutex(m), locked(mutex.trylock()) {}
+    ~omni_mutex_trylock(void) { if (locked) mutex.unlock(); }
+    operator int(void) const { return locked; }
+private:
+    // dummy copy constructor and operator= to prevent copying
+    omni_mutex_trylock(const omni_mutex_trylock&);
+    omni_mutex_trylock& operator=(const omni_mutex_trylock&);
+};
+
 
 
 ///////////////////////////////////////////////////////////////////////////

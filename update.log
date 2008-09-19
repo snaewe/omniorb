@@ -1,3 +1,15 @@
+Fri Sep 19 10:22:58 BST 2008 dgrisby
+====================================
+
+- omni_mutex trylock method. Thanks Luke Deller and Alex Tingle.
+
+include/omnithread.h
+include/omnithread/VxThread.h
+include/omnithread/nt.h
+include/omnithread/posix.h
+mk/version.mk
+
+
 Tue Sep 16 12:12:59 BST 2008 dgrisby
 ====================================
 

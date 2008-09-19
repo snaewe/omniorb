@@ -62,6 +62,9 @@ extern "C" void* omni_thread_wrapper(void* ptr);
 #define OMNI_MUTEX_LOCK_IMPLEMENTATION                  \
     pthread_mutex_lock(&posix_mutex);
 
+#define OMNI_MUTEX_TRYLOCK_IMPLEMENTATION               \
+    return !pthread_mutex_trylock(&posix_mutex);
+
 #define OMNI_MUTEX_UNLOCK_IMPLEMENTATION                \
     pthread_mutex_unlock(&posix_mutex);
 

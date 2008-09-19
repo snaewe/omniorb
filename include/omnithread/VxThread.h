@@ -10,6 +10,9 @@
 %% Notes:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% $Log$
+%% Revision 1.1.4.5  2008/09/19 09:29:03  dgrisby
+%% omni_mutex trylock method. Thanks Luke Deller and Alex Tingle.
+%%
 %% Revision 1.1.4.4  2006/12/11 10:39:37  dgrisby
 %% Silly duplicated member in vxWorks omnithread.
 %%
@@ -75,6 +78,9 @@ extern "C" void omni_thread_wrapper(void* ptr);
 	{	\
 		throw omni_thread_fatal(errno);	\
 	}
+
+#define OMNI_MUTEX_TRYLOCK_IMPLEMENTATION               \
+	return semTake(mutexID, NO_WAIT) == OK;
 
 #define OMNI_MUTEX_UNLOCK_IMPLEMENTATION                \
 	if(semGive(mutexID) != OK)	\
