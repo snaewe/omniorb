@@ -13,8 +13,13 @@ Changes since omniORB 4.1.2
 
  - Bug fixes. See bugfixes-412.xml
 
- - Port to LynxOS.
+ - Option to validate UTF-8 string data.
 
+ - New omni_mutex trylock method.
+
+ - New ISO-8859 and Windows code sets.
+
+ - Port to LynxOS.
 
 
 Changes since omniORB 4.1.1

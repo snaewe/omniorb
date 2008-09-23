@@ -43,4 +43,22 @@
   </text>
 </bug>
 
+<bug id="5" date="Tue Sep 16 10:21:06 BST 2008" user="dgrisby">
+  <summary>Crash constructing DynAny containing null TypeCodes</summary>
+  <text>
+  tk_null was not properly handled, and the resulting exception caused
+  corruption of DynAny state, leading to a crash.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-August/029667.html"/>
+</bug>
+
+<bug id="6" date="Fri Sep 19 16:04:44 BST 2008" user="dgrisby">
+  <summary>Failure with long computer name on Windows</summary>
+  <reported>Luke Deller</reported>
+  <text>
+  Off-by-one error in name handling.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-September/029690.html"/>
+</bug>
+
 </buglist>
