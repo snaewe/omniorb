@@ -1,3 +1,11 @@
+Fri Oct 24 17:51:25 BST 2008 dgrisby
+====================================
+
+- On Unix platforms, ignore IPv6 addresses on the loopback interface.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Fri Oct 24 17:43:33 BST 2008 dgrisby
 ====================================
 
