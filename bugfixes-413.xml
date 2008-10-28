@@ -28,4 +28,16 @@
   </text>
 </bug>
 
+<bug id="3" date="Tue Oct 28 16:47:32 GMT 2008" user="dgrisby">
+  <summary>Internal CommFailure exception escapes after
+  failed-on-forward call that is not retried.</summary>
+  <text>
+  When a call on an object reference that has been location-forwarded
+  fails, the transient exception handler is called. If the handler
+  returns false, in some circumstances an internal exception can be
+  thrown, rather than the proper CORBA system exception.
+  </text>
+  <reported>Jacob Feisley</reported>
+</bug>
+
 </buglist>
