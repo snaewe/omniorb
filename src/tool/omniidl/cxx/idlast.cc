@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.22.2.10  2008/10/28 15:59:05  dgrisby
+// Pollution of global namespace with TypeCode and Principal.
+//
 // Revision 1.22.2.9  2008/02/28 17:40:38  dgrisby
 // iostream include left over from debugging caused mysterious failure of
 // omniidl on HP-UX.
@@ -2269,12 +2272,14 @@ finishConstruction(Parameter* parameters, RaisesSpec* raises,
 // Native
 Native::
 Native(const char* file, int line, IDL_Boolean mainFile,
-       const char* identifier)
+       const char* identifier, IdlType* type)
 
   : Decl(D_NATIVE, file, line, mainFile),
     DeclRepoId(identifier)
 {
-  DeclaredType* type = new DeclaredType(IdlType::tk_native, this, this);
+  if (!type)
+    type = new DeclaredType(IdlType::tk_native, this, this);
+
   Scope::current()->addDecl(identifier, 0, this, type, file, line);
 }
 

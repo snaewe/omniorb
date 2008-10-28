@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.4  2008/10/28 15:59:05  dgrisby
+// Pollution of global namespace with TypeCode and Principal.
+//
 // Revision 1.15.2.3  2004/02/16 10:10:33  dgrisby
 // More valuetype, including value boxes. C++ mapping updates.
 //
@@ -1039,7 +1042,7 @@ private:
 class Native : public Decl, public DeclRepoId {
 public:
   Native(const char* file, int line, IDL_Boolean mainFile,
-	 const char* identifier);
+	 const char* identifier, IdlType* type=0);
   virtual ~Native();
 
   const char* kindAsString() const { return "native"; }

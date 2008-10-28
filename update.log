@@ -1,3 +1,13 @@
+Tue Oct 28 16:57:15 GMT 2008 dgrisby
+====================================
+
+- Pollution of global namespace with TypeCode and Principal.
+
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Tue Oct 28 16:47:32 GMT 2008 dgrisby
 ====================================
 

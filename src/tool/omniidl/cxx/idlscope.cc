@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.18.2.7  2008/10/28 15:59:05  dgrisby
+// Pollution of global namespace with TypeCode and Principal.
+//
 // Revision 1.18.2.6  2006/03/26 20:59:28  dgrisby
 // Merge from omni4_0_develop.
 //
@@ -382,19 +385,24 @@ init()
   Prefix::newFile();
 
   global_  = new Scope(0, Scope::S_GLOBAL, 0, file, 0);
-  Scope* s = global_->newModuleScope("CORBA", file, 1);
-
-  global_->addModule("CORBA", s, 0, file, 1);
   current_ = global_;
+
+  Scope* s = global_->newModuleScope("CORBA", file, 1);
+  global_->addModule("CORBA", s, 0, file, 1);
+  startScope(s);
+  Prefix::newScope("CORBA");
 
   n_builtins  = 2;
   assert (builtins == 0);
   builtins    = new Decl*[n_builtins];
-  builtins[0] = new Native(file, 2, 0, "TypeCode");
-  builtins[1] = new Native(file, 3, 0, "Principal");
+  builtins[0] = new Native(file, 2, 0, "TypeCode",  BaseType::TypeCodeType);
+  builtins[1] = new Native(file, 3, 0, "Principal", BaseType::PrincipalType);
 
-  s->addDecl("TypeCode",  0, builtins[0], BaseType::TypeCodeType,  file, 2);
-  s->addDecl("Principal", 0, builtins[1], BaseType::PrincipalType, file, 3);
+  //s->addDecl("TypeCode",  0, builtins[0], BaseType::TypeCodeType,  file, 2);
+  //s->addDecl("Principal", 0, builtins[1], BaseType::PrincipalType, file, 3);
+
+  Prefix::endScope();
+  endScope();
 
   // Creating the Decls sets the most recent decl pointer; clear it here.
   Decl::clear();
