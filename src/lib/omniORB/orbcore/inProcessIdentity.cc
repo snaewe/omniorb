@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.4  2008/10/28 15:33:42  dgrisby
+ Undeclared user exceptions not caught in local calls.
+
  Revision 1.1.4.3  2007/04/14 17:56:52  dgrisby
  Identity downcasting mechanism was broken by VC++ 8's
  over-enthusiastic optimiser.
@@ -187,7 +190,11 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
 
 #ifdef HAS_Cplusplus_catch_exception_by_base
   }
-  catch (CORBA::Exception&) {
+  catch (CORBA::SystemException& ex) {
+    throw;
+  }
+  catch (CORBA::UserException& ex) {
+    call_desc.validateUserException(ex);
     throw;
   }
   catch (omniORB::LOCATION_FORWARD&) {

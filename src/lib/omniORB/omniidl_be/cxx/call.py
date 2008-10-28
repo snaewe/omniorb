@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.11  2008/10/28 15:33:42  dgrisby
+# Undeclared user exceptions not caught in local calls.
+#
 # Revision 1.1.6.10  2007/09/19 14:16:08  dgrisby
 # Avoid namespace clashes if IDL defines modules named CORBA.
 #
@@ -487,17 +490,15 @@ class CallDescriptor:
         # list and the data members list
         ctor_args = ["LocalCallFn lcfn", "const char* op_", "size_t oplen",
                      "_CORBA_Boolean upcall=0" ]
-        base_ctor = "omniCallDescriptor(lcfn, op_, oplen, " + \
-                    str(self.__oneway)
-        if self.__exceptions != []:
-            base_ctor = base_ctor + ", _user_exns, "
+
+        base_ctor = ("omniCallDescriptor(lcfn, op_, oplen, %s, _user_exns, "
+                     "%d, upcall)" % (self.__oneway, len(self.__exceptions)))
+
+        if self.__exceptions:
             user_exceptions_decl = \
-            "void userException(cdrStream&,_OMNI_NS(IOP_C)*,const char*);\n"+\
-            "static const char* const _user_exns[];\n"
+            "void userException(cdrStream&,_OMNI_NS(IOP_C)*,const char*);"
         else:
-            base_ctor = base_ctor + ", 0, "
             user_exceptions_decl = ""
-        base_ctor = base_ctor + str(len(self.__exceptions)) + ", upcall)"
 
         in_arguments_decl = ""
         out_arguments_decl = ""
@@ -785,7 +786,7 @@ class CallDescriptor:
 
 
     def __out_userException(self, stream):
-        if self.__exceptions != []:
+        if self.__exceptions:
             block = output.StringStream()
             exceptions = skutil.sort_exceptions(self.__exceptions)
             repoIDs = []
@@ -803,6 +804,10 @@ class CallDescriptor:
                        call_descriptor = self.__name,
                        exception_block = str(block),
                        exception_namelist = string.join(repoIDs,",\n"))
+        else:
+            stream.out(template.interface_proxy_empty_exn,
+                       call_descriptor = self.__name)
+
 
 
 def _arg_info(type,direction):

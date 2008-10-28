@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.1.3     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.1.3">
+
+<bug id="1" date="Fri Oct 24 17:43:33 BST 2008" user="dgrisby">
+  <summary>Delays in servicing calls with thread pool and no connection watching</summary>
+  <reported>Serguei Kolos</reported>
+  <text>
+  The set of sockets to poll could be malformed, causing a socket to
+  be ignored for a while.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-October/029739.html"/>
+</bug>
+
+<bug id="2" date="Tue Oct 28 16:25:32 GMT 2008" user="dgrisby">
+  <summary>Undeclared user exceptions in local calls are not caught</summary>
+  <text>
+  If an operation implementation raised a CORBA user exception that
+  was not declared in the operation's raises clause, local callers
+  received the user exception, rather than CORBA::UNKNOWN as they
+  should.
+  </text>
+</bug>
+
+</buglist>

@@ -1,3 +1,17 @@
+Tue Oct 28 16:25:32 GMT 2008 dgrisby
+====================================
+
+- Undeclared user exceptions not caught in local calls.
+
+bugfixes-413.xml
+include/omniORB4/callDescriptor.h
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/callDescriptor.cc
+src/lib/omniORB/orbcore/inProcessIdentity.cc
+src/lib/omniORB/orbcore/localIdentity.cc
+
+
 Fri Oct 24 17:51:25 BST 2008 dgrisby
 ====================================
 
