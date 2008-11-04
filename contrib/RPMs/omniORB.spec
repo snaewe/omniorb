@@ -121,7 +121,7 @@ mkdir -p %{buildroot}%{_sysconfdir}
 cp sample.cfg %{buildroot}%{_sysconfdir}/omniORB.cfg
 cp etc/init.d/omniNames %{buildroot}%{_initrddir}
 
-mkdir -p %{buildroot}%{_mandir}/man{1,5}
+mkdir -p %{buildroot}%{_mandir}/man{1,8}
 cp -r man/* %{buildroot}%{_mandir}
 
 mkdir -p %{buildroot}%{_var}/omniNames
