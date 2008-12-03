@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.2  2008/12/03 10:53:58  dgrisby
+# Tweaks leading to Python 3 support; other minor clean-ups.
+#
 # Revision 1.1.6.1  2003/03/23 21:02:41  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -155,7 +158,7 @@ class Stream:
             elif type(expr) is FuncType:
                 oindent = self.indent
                 self.indent = pos
-                apply(expr)
+                expr()
                 self.indent = oindent
             else:
                 pos = self.olines(pos, pos, str(expr))
@@ -196,7 +199,7 @@ class Stream:
             elif type(expr) is FuncType:
                 oindent = self.indent
                 self.indent = pos
-                apply(expr)
+                expr()
                 self.indent = oindent
             else:
                 pos = self.olines(pos, pos, str(expr))

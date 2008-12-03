@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.12  2008/12/03 10:53:58  dgrisby
+# Tweaks leading to Python 3 support; other minor clean-ups.
+#
 # Revision 1.20.2.11  2007/09/19 14:16:08  dgrisby
 # Avoid namespace clashes if IDL defines modules named CORBA.
 #
@@ -168,6 +171,12 @@
 #
 
 import string
+
+try:
+    # Python 3 does not have a built in reduce()
+    from functools import reduce
+except ImportError:
+    pass
 
 from omniidl import idlutil, idltype, idlast
 
@@ -514,11 +523,15 @@ def unmarshall(to, environment, type, decl, name, from_where):
 
 def sort_exceptions(ex):
     # sort the exceptions into lexicographical order
-    def lexicographic(exception_a, exception_b):
-        name_a = exception_a.repoId()
-        name_b = exception_b.repoId()
-        return cmp(name_a, name_b)
-        
-    raises = ex[:]
-    raises.sort(lexicographic)
-    return raises
+    try:
+        return sorted(ex, key = lambda e: e.repoId())
+
+    except NameError:
+        def lexicographic(exception_a, exception_b):
+            name_a = exception_a.repoId()
+            name_b = exception_b.repoId()
+            return cmp(name_a, name_b)
+
+        raises = ex[:]
+        raises.sort(lexicographic)
+        return raises

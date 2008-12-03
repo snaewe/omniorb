@@ -10,7 +10,7 @@ export::
 endif
 
 FILES = __init__.py main.py idlast.py idltype.py idlutil.py idlvisitor.py \
-        output.py
+        idlstring.py output.py
 
 export:: $(FILES)
 	@(dir="$(PYLIBDIR)"; \

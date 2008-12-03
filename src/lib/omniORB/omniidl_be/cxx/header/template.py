@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.19  2008/12/03 10:53:58  dgrisby
+# Tweaks leading to Python 3 support; other minor clean-ups.
+#
 # Revision 1.8.2.18  2007/09/19 14:16:07  dgrisby
 # Avoid namespace clashes if IDL defines modules named CORBA.
 #
@@ -865,7 +868,7 @@ typedef @type@ @name@_slice@taildims@;
 }
 
 @inline_qualifier@ void @name@_free(@name@_slice* _s) {
-    delete [] _s;
+  delete [] _s;
 }
 """
 

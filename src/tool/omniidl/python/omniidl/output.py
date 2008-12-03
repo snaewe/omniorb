@@ -33,7 +33,8 @@ Class:
   Stream -- output stream which outputs templates, performing
             key/value substitution and indentation."""
 
-import string
+import idlstring
+string = idlstring
 
 def dummy(): pass
 

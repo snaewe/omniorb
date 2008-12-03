@@ -14,7 +14,11 @@ line = sys.stdin.readline()
 while line == "\n":
     line = sys.stdin.readline()
 
-line = string.strip(line)
+try:
+    line = string.strip(line)
+except NameError:
+    # Python 3 has no string.strip()
+    line = line.strip()
 
 output = """\
 // distdate.hh -- Automatically generated file
@@ -22,4 +26,4 @@ output = """\
 #define %s_DIST_DATE "%s"
 """
 
-print output % (package, line)
+sys.stdout.write(output % (package, line))

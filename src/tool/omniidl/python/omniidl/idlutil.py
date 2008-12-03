@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9.2.5  2008/12/03 10:53:58  dgrisby
+# Tweaks leading to Python 3 support; other minor clean-ups.
+#
 # Revision 1.9.2.4  2006/01/10 12:24:03  dgrisby
 # Merge from omni4_0_develop pre 4.0.7 release.
 #
@@ -80,7 +83,8 @@ ccolonName()      -- format a scoped name with '::' separating components.
 pruneScope()      -- remove common prefix from a scoped name.
 relativeScope()   -- give a minimal name for one scope relative to another."""
 
-import string
+import idlstring
+string = idlstring
 
 def slashName(scopedName, our_scope=[]):
     """slashName(list, [list]) -> string

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.23.2.8  2008/12/03 10:53:58  dgrisby
+# Tweaks leading to Python 3 support; other minor clean-ups.
+#
 # Revision 1.23.2.7  2007/09/11 12:01:20  dgrisby
 # Do not mask exceptions in the C++ backend.
 #
@@ -322,7 +325,7 @@ def run(tree, args):
             impl.run(tree)
 
     except AttributeError, e:
-        name = e[0]
+        name = e.args[0]
         unsupported_visitors = map(lambda x:"visit" + x,
                                    AST_unsupported_nodes[:])
         if name in unsupported_visitors:

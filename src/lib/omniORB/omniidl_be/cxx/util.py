@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.3  2008/12/03 10:53:58  dgrisby
+# Tweaks leading to Python 3 support; other minor clean-ups.
+#
 # Revision 1.17.2.2  2003/10/23 11:25:55  dgrisby
 # More valuetype support.
 #
@@ -245,7 +248,7 @@ class Stack:
     def push(self, thing):
         self.__list.append(thing)
     def pop(self):
-        if self.__list == []: raise "Stack Empty"
+        assert self.__list
         thing = self.__list[-1]
         self.__list = self.__list[0:-1]
         return thing

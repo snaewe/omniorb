@@ -39,7 +39,7 @@ if sys.hexversion < 0x10502f0:
     sys.stderr.write("\n\n\n")
     sys.stderr.flush()
 
-import os, os.path, string
+import os, os.path
 
 pylibdir   = archlibdir = None
 binarchdir = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -90,10 +90,24 @@ paths = [ "@exec_prefix@/lib/python" + sys.version[:3] + "/site-packages",
           "@pythondir@",
           "@pyexecdir@" ]
 
+
+# Implement a string replace function for all Python versions. We
+# can't use the version in idlstring.py, since we're trying to work
+# out the path to find modules including that one.
+
+import string
+try:
+    replace = string.replace
+
+except NameError:
+    def replace(s, old, new):
+        return s.replace(old, new)
+
+
 # Autoconf insists on making our life difficult...
 for path in paths:
-    path = string.replace(path, "${exec_prefix}", "@exec_prefix@")
-    path = string.replace(path, "${prefix}", "@prefix@")
+    path = replace(path, "${exec_prefix}", "@exec_prefix@")
+    path = replace(path, "${prefix}", "@prefix@")
     sys.path.append(path)
 
 try:

@@ -28,6 +28,12 @@
 
 import string
 
+try:
+    # Python 3 does not have a built in reduce()
+    from functools import reduce
+except ImportError:
+    pass
+
 from omniidl import idltype, idlast, idlutil
 from omniidl_be.cxx import util, config, id
 
@@ -783,7 +789,8 @@ class Type:
         if self.is_basic_data_types():
             return basic_map[d_T.kind()]
         
-        if d_T.void():     raise "No such thing as a void _var type"
+        if d_T.void():
+            raise NotImplementedError("No such thing as a void _var type")
 
         raise "Unknown _var type, kind = " + str(d_T.kind())
 
@@ -862,7 +869,7 @@ class Type:
 
     def is_basic_data_types(self):
         d_T = self.deref()
-        return d_T.kind() in basic_map.keys()
+        return basic_map.has_key(d_T.kind())
         
     def integer(self):
         type = self.__type

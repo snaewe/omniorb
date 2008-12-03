@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.5  2008/12/03 10:53:58  dgrisby
+# Tweaks leading to Python 3 support; other minor clean-ups.
+#
 # Revision 1.1.6.4  2007/09/19 14:16:08  dgrisby
 # Avoid namespace clashes if IDL defines modules named CORBA.
 #
@@ -136,10 +139,10 @@ class Class:
       stream.out("class @name@;", name = self.name().simple())
 
   def hh(self, stream):
-      raise "Class header missing"
+      raise NotImplementedError("Class header missing")
 
   def cc(self, stream):
-      raise "Class implementation missing"
+      raise NotImplementedError("Class implementation missing")
 
 
 # Method: Generates a C++ method (both header and implementation code)
@@ -211,8 +214,8 @@ def dimsToString(dims, prefix = ""):
     new_dims = []
     for x in dims:
         new_dims.append("[" + prefix + repr(x) + "]")
-    append = lambda x,y: x + y
-    return reduce(append, new_dims, "")
+
+    return string.join(new_dims, "")
 
 
 def warning(text):

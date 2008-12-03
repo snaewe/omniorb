@@ -1,3 +1,28 @@
+Wed Dec  3 10:47:02 GMT 2008 dgrisby
+====================================
+
+- Tweaks leading to Python 3 support; other minor clean-ups.
+
+aclocal.m4
+configure
+bin/scripts/distdate.py
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+src/lib/omniORB/omniidl_be/cxx/cxx.py
+src/lib/omniORB/omniidl_be/cxx/output.py
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/util.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/header/tie.py
+src/tool/omniidl/python/omniidl/dir.mk
+src/tool/omniidl/python/omniidl/idlast.py
+src/tool/omniidl/python/omniidl/idlstring.py
+src/tool/omniidl/python/omniidl/idlutil.py
+src/tool/omniidl/python/omniidl/main.py
+src/tool/omniidl/python/omniidl/output.py
+src/tool/omniidl/python/scripts/omniidl.in
+
+
 Tue Nov  4 15:07:39 GMT 2008 dgrisby
 ====================================
 
