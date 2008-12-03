@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9.2.6  2008/12/03 10:57:03  dgrisby
+# Incorrect code generated for some float constants. Thanks Will Denissen.
+#
 # Revision 1.9.2.5  2008/12/03 10:53:58  dgrisby
 # Tweaks leading to Python 3 support; other minor clean-ups.
 #
@@ -178,7 +181,7 @@ pattern."""
     # *** Deal with long double
 
     s = "%.17g" % f
-    if string.find(s, ".") == -1:
+    if string.find(s, ".") == -1 and string.find(s, "e") == -1:
         s = s + ".0"
     return s
 

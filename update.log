@@ -1,3 +1,15 @@
+Wed Dec  3 10:50:44 GMT 2008 dgrisby
+====================================
+
+- Struct scope incorrectly handled in marshalling code.
+
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+
+- Incorrect code generated for some float constants. Thanks Will Denissen.
+
+src/tool/omniidl/python/omniidl/idlutil.py
+
+
 Wed Dec  3 10:47:02 GMT 2008 dgrisby
 ====================================
 
