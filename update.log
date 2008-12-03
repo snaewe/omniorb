@@ -1,3 +1,12 @@
+Wed Dec  3 12:42:20 GMT 2008 dgrisby
+====================================
+
+- More Python 3 updates.
+
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idlpython.cc
+
+
 Wed Dec  3 10:50:44 GMT 2008 dgrisby
 ====================================
 

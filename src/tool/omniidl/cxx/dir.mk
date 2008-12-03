@@ -56,6 +56,16 @@ idlc = $(patsubst %,$(BinPattern),idlc)
 # 	echo '#line' `cat $@ | wc -l` '"lex_yy.cc"' >> $@
 # 	echo '#endif' >> $@
 
+#############################################################################
+#   Test executable                                                         #
+#############################################################################
+
+# all:: $(idlc)
+
+# $(idlc): $(OBJS) idlc.o
+# 	@(libs=""; $(CXXExecutable))
+
+
 
 #############################################################################
 #   Make variables for Unix platforms                                       #
@@ -63,8 +73,8 @@ idlc = $(patsubst %,$(BinPattern),idlc)
 
 ifdef UnixPlatform
 #CXXDEBUGFLAGS = -g
-PYPREFIX  := $(shell $(PYTHON) -c 'import sys; print sys.exec_prefix')
-PYVERSION := $(shell $(PYTHON) -c 'import sys; print sys.version[:3]')
+PYPREFIX  := $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.exec_prefix)')
+PYVERSION := $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.version[:3])')
 PYINCDIR  := $(PYPREFIX)/include
 PYINCFILE := "<python$(PYVERSION)/Python.h>"
 DIR_CPPFLAGS += -I$(PYINCDIR) -DPYTHON_INCLUDE=$(PYINCFILE)
@@ -621,7 +631,7 @@ endif
 
 ifdef NextStep
 
-PYPREFIX = $(shell $(PYTHON) -c "import sys; print sys.exec_prefix")
+PYPREFIX = $(shell $(PYTHON) -c "import sys; sys.stdout.write(sys.exec_prefix)")
 CXXOPTIONS += -I$(PYPREFIX)/include
 CXXLINKOPTIONS += -nostdlib -r
 SO = .so
@@ -684,17 +694,5 @@ clean::
 	$(RM) $(lib)
 
 endif
-
-
-
-#############################################################################
-#   Test executable                                                         #
-#############################################################################
-
-# all:: $(idlc)
-
-# $(idlc): $(OBJS) idlc.o
-# 	@(libs=""; $(CXXExecutable))
-
 
 endif

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.22.2.4  2008/12/03 12:46:30  dgrisby
+// More Python 3 updates.
+//
 // Revision 1.22.2.3  2005/01/06 23:11:14  dgrisby
 // Big merge from omni4_0_develop.
 //
@@ -218,6 +221,30 @@ static inline PyObject* MyPyLong_FromLongLong(IDL_LongLong ll)
 #  else
 #    define MyPyLong_FromLongLong(ll) PyLong_FromLongLong(ll)
 #  endif
+#endif
+
+
+//
+// Python 3 support
+
+#if PY_VERSION_HEX >= 0x03000000
+#  define OMNIIDL_PY3 1
+#  define PyString_Check PyUnicode_Check
+#  define PyInt_FromLong PyLong_FromLong
+
+static inline PyObject* PyString_FromString(const char* str)
+{
+  Py_ssize_t size = strlen(str);
+  return PyUnicode_DecodeLatin1(str, size, 0);
+}
+
+static inline char* PyString_AsString(PyObject* obj)
+{
+  char* str;
+  PyArg_Parse(obj, (char*)"s", &str);
+  return str;
+}
+
 #endif
 
 
@@ -1364,7 +1391,7 @@ extern "C" {
     FILE*       file;
     IDL_Boolean to_close = 0;
 
-    if (!PyArg_ParseTuple(args, (char*)"O", &arg))
+    if (!PyArg_ParseTuple(args, (char*)"Os", &arg, &name))
       return 0;
 
     if (PyString_Check(arg)) {
@@ -1377,16 +1404,32 @@ extern "C" {
       }
       to_close = 1;
     }
+
+#ifndef OMNIIDL_PY3
+
     else if (PyFile_Check(arg)) {
       PyObject* pyname = PyFile_Name(arg);
       file = PyFile_AsFile(arg);
-      name = PyString_AsString(pyname);
     }
     else {
       PyErr_SetString(PyExc_TypeError,
-		      (char*)"Argument must be a file or filename");
+		      (char*)"First argument must be a file or filename");
       return 0;
     }
+#else
+    else {
+      int fd = PyObject_AsFileDescriptor(arg);
+      if (fd == -1)
+	return 0;
+
+      file = fdopen(fd, "r");
+      if (!file) {
+	PyErr_SetString(PyExc_IOError,
+			(char*)"Cannot open file descriptor");
+	return 0;
+      }
+    }
+#endif
 
     IDL_Boolean success = AST::process(file, name);
 
@@ -1422,7 +1465,7 @@ extern "C" {
     FILE*       file;
     IDL_Boolean to_close = 0;
 
-    if (!PyArg_ParseTuple(args, (char*)"O", &arg))
+    if (!PyArg_ParseTuple(args, (char*)"Os", &arg, &name))
       return 0;
 
     if (PyString_Check(arg)) {
@@ -1435,6 +1478,9 @@ extern "C" {
       }
       to_close = 1;
     }
+
+#ifndef OMNIIDL_PY3
+
     else if (PyFile_Check(arg)) {
       PyObject* pyname = PyFile_Name(arg);
       file = PyFile_AsFile(arg);
@@ -1445,6 +1491,20 @@ extern "C" {
 		      (char*)"Argument must be a file or filename");
       return 0;
     }
+#else
+    else {
+      int fd = PyObject_AsFileDescriptor(arg);
+      if (fd == -1)
+	return 0;
+
+      file = fdopen(fd, "r");
+      if (!file) {
+	PyErr_SetString(PyExc_IOError,
+			(char*)"Cannot open file descriptor");
+	return 0;
+      }
+    }
+#endif
 
     IDL_Boolean success = AST::process(file, name);
 
@@ -1605,12 +1665,40 @@ extern "C" {
     {NULL, NULL}
   };
 
+#ifndef OMNIIDL_PY3
+
   void DLL_EXPORT init_omniidl()
   {
     PyObject* m = Py_InitModule((char*)"_omniidl", omniidl_methods);
     PyObject_SetAttrString(m, (char*)"version",
 			   PyString_FromString(IDLMODULE_VERSION));
   }
+
+#else
+
+  static struct PyModuleDef omniidlmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_omniidl",
+    "omniidl front-end",
+    -1,
+    omniidl_methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+  };
+
+  PyMODINIT_FUNC
+  PyInit__omniidl(void)
+  {
+    PyObject* m = PyModule_Create(&omniidlmodule);
+    if (!m)
+      return 0;
+    return m;
+  }
+
+#endif
+
 }
 
 #ifdef OMNIIDL_EXECUTABLE
