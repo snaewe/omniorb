@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.13  2008/12/03 10:56:28  dgrisby
+# Struct scope incorrectly handled in marshalling code.
+#
 # Revision 1.32.2.12  2007/09/19 14:16:07  dgrisby
 # Avoid namespace clashes if IDL defines modules named CORBA.
 #
@@ -468,31 +471,29 @@ def visitMember(node):
 def visitStruct(node):
 
     outer_environment = id.lookup(node)
+    environment = outer_environment.enter(node.identifier())
     
     scopedName = id.Name(node.scopedName())
 
     for n in node.members():
         n.accept(self)
 
-    def marshal(stream = stream, node = node,
-                outer_env = outer_environment):
+    def marshal(stream = stream, node = node, env = environment):
         for n in node.members():
             memberType = types.Type(n.memberType())
             for d in n.declarators():
                 scopedName = id.Name(d.scopedName())
                 member_name = scopedName.simple()
-                skutil.marshall(stream, outer_env,
-                                memberType, d, member_name, "_n")
+                skutil.marshall(stream, env, memberType, d, member_name, "_n")
         return
 
-    def unmarshal(stream = stream, node = node,
-                  outer_env = outer_environment):
+    def unmarshal(stream = stream, node = node, env = environment):
         for n in node.members():
             memberType = types.Type(n.memberType())
             for d in n.declarators():
                 scopedName = id.Name(d.scopedName())
                 member_name = scopedName.simple()
-                skutil.unmarshall(stream, outer_env,
+                skutil.unmarshall(stream, env,
                                   memberType, d, member_name, "_n")
         return
 
