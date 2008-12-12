@@ -69,7 +69,10 @@ class omni_thread;
 #include <omnithread/posix.h>
 
 #elif defined(__osf1__)
-#include <omnithread/posix.h>
+#  include <omnithread/posix.h>
+#  if defined(_OSF_SOURCE) && defined(signal)
+#    undef signal
+#  endif
 
 #elif defined(__aix__)
 #include <omnithread/posix.h>

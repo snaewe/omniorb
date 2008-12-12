@@ -1,3 +1,11 @@
+Fri Dec 12 12:38:47 GMT 2008 dgrisby
+====================================
+
+- Tru64 can define signal as a macro. Thanks Nikola Radovanovic.
+
+include/omnithread.h
+
+
 Fri Dec 12 12:12:03 GMT 2008 dgrisby
 ====================================
 
