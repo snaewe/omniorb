@@ -35,8 +35,8 @@
 # Edit the paths if they do not correspond with your installation
 GENIOR=@prefix@/bin/genior
 OMNINAMES=@prefix@/bin/omniNames
-OMNINAMES_DIR=/var/omniNames
-OMNIMAPPER_DIR=/var/lib/omniMapper
+OMNINAMES_DIR=@localstatedir@/lib/omniNames
+OMNIMAPPER_DIR=@localstatedir@/lib/omniMapper
 test -x $OMNINAMES || exit 5
 
 . /lib/lsb/init-functions

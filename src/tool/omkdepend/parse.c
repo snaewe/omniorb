@@ -417,7 +417,7 @@ zero_value(exp, filep, file_red)
 	    return(IF);
 }
 
-define(def, file)
+void define(def, file)
 	char	*def;
 	struct inclist	*file;
 {
@@ -437,7 +437,7 @@ define(def, file)
     define2(def, val, file);
 }
 
-define2(name, val, file)
+void define2(name, val, file)
 	char	*name, *val;
 	struct inclist	*file;
 {
@@ -555,7 +555,7 @@ struct symtab *slookup(symbol, file)
 	return(NULL);
 }
 
-undefine(symbol, file)
+void undefine(symbol, file)
 	char	*symbol;
 	register struct inclist	*file;
 {

@@ -126,7 +126,7 @@ struct inclist *inc_path(file, include, dot)
  * Any of the 'x/..' sequences within the name can be eliminated.
  * (but only if 'x' is not a symbolic link!!)
  */
-remove_dotdot(path)
+void remove_dotdot(path)
 	char	*path;
 {
 	register char	*end, *from, *to, **cp;
@@ -257,7 +257,7 @@ struct inclist *newinclude(newfile, incstring)
 	return(ip);
 }
 
-included_by(ip, newfile)
+void included_by(ip, newfile)
 	register struct inclist	*ip, *newfile;
 {
 	register i;
@@ -302,7 +302,7 @@ included_by(ip, newfile)
 	ip->i_list[ ip->i_listlen-1 ] = newfile;
 }
 
-inc_clean ()
+void inc_clean ()
 {
 	register struct inclist *ip;
 

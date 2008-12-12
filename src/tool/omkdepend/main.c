@@ -443,6 +443,7 @@ freefile(fp)
 {
 	free(fp->f_base);
 	free(fp);
+	return 0;
 }
 
 char *copy(str)
@@ -577,10 +578,10 @@ fatalerr(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 }
 
 #if NeedVarargsPrototypes
-warning(char *msg, ...)
+void warning(char *msg, ...)
 #else
 /*VARARGS0*/
-warning(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
+void warning(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
     char *msg;
 #endif
 {
@@ -598,10 +599,10 @@ warning(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 }
 
 #if NeedVarargsPrototypes
-warning1(char *msg, ...)
+void warning1(char *msg, ...)
 #else
 /*VARARGS0*/
-warning1(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
+void warning1(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
     char *msg;
 #endif
 {

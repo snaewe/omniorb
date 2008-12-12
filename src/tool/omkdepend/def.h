@@ -39,6 +39,7 @@ in this Software without prior written authorization from the X Consortium.
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #define MAXDEFINES	512
 #define MAXFILES	512
@@ -137,7 +138,7 @@ struct inclist		*newinclude();
 struct inclist		*inc_path();
 
 #if NeedVarargsPrototypes
-extern fatalerr(char *, ...);
-extern warning(char *, ...);
-extern warning1(char *, ...);
+extern void fatalerr(char *, ...);
+extern void warning(char *, ...);
+extern void warning1(char *, ...);
 #endif

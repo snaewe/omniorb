@@ -1,3 +1,16 @@
+Fri Dec 12 12:12:03 GMT 2008 dgrisby
+====================================
+
+- Specify void returns; update SuSE script. Thanks Dirk Siebnich.
+
+etc/init.d/omniNames.SuSE.in
+src/tool/omkdepend/def.h
+src/tool/omkdepend/include.c
+src/tool/omkdepend/main.c
+src/tool/omkdepend/parse.c
+src/tool/omkdepend/pr.c
+
+
 Wed Dec  3 12:42:20 GMT 2008 dgrisby
 ====================================
 
