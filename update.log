@@ -1,3 +1,12 @@
+Mon Dec 29 19:25:24 GMT 2008 dgrisby
+====================================
+
+- Set locale on Windows to cope with log file paths with multi-byte
+  characters in them. Thanks Noriaki Ando.
+
+src/appl/omniNames/log.cc
+
+
 Mon Dec 29 18:43:31 GMT 2008 dgrisby
 ====================================
 

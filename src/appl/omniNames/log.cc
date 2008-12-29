@@ -391,6 +391,11 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
   poa     = the_poa;
   ins_poa = the_ins_poa;
 
+#ifdef __WIN32__
+  // This allows the path to contain multi-byte characters.
+  setlocale(LC_ALL, "");
+#endif
+
   if (firstTime) {
 
     //
