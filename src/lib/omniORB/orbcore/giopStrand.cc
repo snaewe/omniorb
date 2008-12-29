@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.12  2008/12/29 17:31:16  dgrisby
+  Properly handle message size being exceeded in request header.
+
   Revision 1.1.6.11  2008/07/15 10:59:39  dgrisby
   Clarity of behaviour if inConScanPeriod / outConScanPeriod are <=
   scanGranularity.
@@ -606,7 +609,13 @@ giopStrand::releaseServer(IOP_S* iop_s)
 
   if (restart_idle && !biDir) {
     CORBA::Boolean success = startIdleCounter();
-    OMNIORB_ASSERT(success);
+    if (!success) {
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Error: strand idle counter already running for strand "
+	    << this << ".\n";
+      }
+    }
   }
 }
 

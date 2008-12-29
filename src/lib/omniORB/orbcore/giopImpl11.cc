@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.9  2008/12/29 17:31:16  dgrisby
+  Properly handle message size being exceeded in request header.
+
   Revision 1.1.6.8  2008/08/08 16:52:56  dgrisby
   Option to validate untransformed UTF-8; correct data conversion minor
   codes; better logging for MessageErrors.
@@ -1172,7 +1175,7 @@ giopImpl11::sendMsgErrorMessage(giopStream* g,
     l << "To endpoint: " << g->pd_strand->connection->peeraddress() << ". ";
 
     if (ex) {
-      l << "System exception " << *ex << " while marshalling. "
+      l << "System exception " << *ex << " while (un)marshalling. "
 	<< "Send GIOP 1.1 MessageError.\n";
     }
     else {

@@ -1,3 +1,15 @@
+Mon Dec 29 17:30:18 GMT 2008 dgrisby
+====================================
+
+- Properly handle message size being exceeded in request header.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+
+
 Mon Dec 29 15:10:23 GMT 2008 dgrisby
 ====================================
 
