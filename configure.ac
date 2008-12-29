@@ -11,6 +11,17 @@ AC_CANONICAL_HOST
 AC_CONFIG_HEADERS(include/omniORB4/acconfig.h)
 
 
+dnl ** CFLAGS / CXXFLAGS
+
+if test "${CFLAGS+set}" != set; then
+    CFLAGS="-O"
+fi
+
+if test "${CXXFLAGS+set}" != set; then
+    CXXFLAGS="-O2"
+fi
+
+
 dnl ** Programs
 
 AC_PROG_CC

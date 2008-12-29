@@ -85,7 +85,7 @@ IMPORT_CPPFLAGS += -I. $(patsubst %,-I%,$(VPATH)) \
                    -I$(TOP)/include -I$(BASE_OMNI_TREE)/include \
                    -D__OSVERSION__=@OSVERSION@
 
-CPPFLAGS = $(DIR_CPPFLAGS) $(IMPORT_CPPFLAGS)
+CPPFLAGS = @CPPFLAGS@ $(DIR_CPPFLAGS) $(IMPORT_CPPFLAGS)
 
 CFLAGS = $(CDEBUGFLAGS) $(COPTIONS) $(CPPFLAGS)
 
@@ -723,12 +723,12 @@ endif
 #
 # Default compiler rules
 #
-CDEBUGFLAGS     = -O
+CDEBUGFLAGS     = @CFLAGS@
 CLINK           = $(CC)
-CLINKOPTIONS    = $(CDEBUGFLAGS) $(COPTIONS)
-CXXDEBUGFLAGS   = -O2
+CLINKOPTIONS    = @LDFLAGS@ $(CDEBUGFLAGS) $(COPTIONS)
+CXXDEBUGFLAGS   = @CXXFLAGS@
 CXXLINK         = $(CXX)
-CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
+CXXLINKOPTIONS  = @LDFLAGS@ $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 
 
 ###########################################################################

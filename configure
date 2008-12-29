@@ -1427,6 +1427,16 @@ host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 
 
 
+if test "${CFLAGS+set}" != set; then
+    CFLAGS="-O"
+fi
+
+if test "${CXXFLAGS+set}" != set; then
+    CXXFLAGS="-O2"
+fi
+
+
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'

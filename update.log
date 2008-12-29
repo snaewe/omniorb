@@ -1,3 +1,20 @@
+Mon Dec 29 14:37:54 GMT 2008 dgrisby
+====================================
+
+- Fix errors caused by void returns patch.
+
+src/tool/omkdepend/include.c
+src/tool/omkdepend/main.c
+src/tool/omkdepend/parse.c
+src/tool/omkdepend/pr.c
+
+- Support setting CFLAGS, CXXFLAGS in configure. Thanks Floris Bruynooghe.
+
+configure
+configure.ac
+mk/beforeauto.mk.in
+
+
 Fri Dec 12 12:38:47 GMT 2008 dgrisby
 ====================================
 
