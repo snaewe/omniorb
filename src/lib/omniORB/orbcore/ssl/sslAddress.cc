@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2008/12/29 15:11:48  dgrisby
+  Infinite loop on socket error on platforms using fake interruptible recv.
+
   Revision 1.1.4.12  2008/07/15 11:02:16  dgrisby
   Incorrect while loop if connection fails with EAGAIN. Thanks Dirk Siebnich.
 
@@ -205,7 +208,7 @@ static inline int waitWrite(SocketHandle_t sock, struct timeval& t)
   if (timeout == 0) timeout = -1;
   rc = poll(&fds,1,timeout);
   if (rc > 0 && fds.revents & POLLERR) {
-    rc = 0;
+    rc = RC_SOCKET_ERROR;
   }
 #else
   fd_set fds, efds;
@@ -232,7 +235,7 @@ static inline int waitRead(SocketHandle_t sock, struct timeval& t)
   if (timeout == 0) timeout = -1;
   rc = poll(&fds,1,timeout);
   if (rc > 0 && fds.revents & POLLERR) {
-    rc = 0;
+    rc = RC_SOCKET_ERROR;
   }
 #else
   fd_set fds, efds;

@@ -1,3 +1,12 @@
+Mon Dec 29 15:10:23 GMT 2008 dgrisby
+====================================
+
+- Infinite loop on socket error on platforms using fake interruptible recv.
+
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+
+
 Mon Dec 29 14:37:54 GMT 2008 dgrisby
 ====================================
 

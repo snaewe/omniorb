@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2008/12/29 15:11:48  dgrisby
+  Infinite loop on socket error on platforms using fake interruptible recv.
+
   Revision 1.1.4.12  2008/07/15 11:02:15  dgrisby
   Incorrect while loop if connection fails with EAGAIN. Thanks Dirk Siebnich.
 
@@ -260,7 +263,7 @@ tcpAddress::Connect(unsigned long deadline_secs,
     if (timeout == 0) timeout = -1;
     int rc = poll(&fds,1,timeout);
     if (rc > 0 && fds.revents & POLLERR) {
-      rc = 0;
+      rc = RC_SOCKET_ERROR;
     }
 #else
     fd_set fds, efds;
@@ -289,8 +292,9 @@ tcpAddress::Connect(unsigned long deadline_secs,
       rc = getpeername(sock, (struct sockaddr*)&peer, &len);
     }
     if (rc == RC_SOCKET_ERROR) {
-      if (ERRNO == RC_EINTR)
+      if (ERRNO == RC_EINTR) {
 	continue;
+      }
       else {
 	CLOSESOCKET(sock);
 	return 0;
