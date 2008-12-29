@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.20  2008/12/29 18:44:38  dgrisby
+# Globally scope array functions to avoid ambiguities.
+#
 # Revision 1.8.2.19  2008/12/03 10:53:58  dgrisby
 # Tweaks leading to Python 3 support; other minor clean-ups.
 #
@@ -875,9 +878,9 @@ typedef @type@ @name@_slice@taildims@;
 typedef_array_copyHelper = """\
 class @name@_copyHelper {
 public:
-  static inline @name@_slice* alloc() { return @name@_alloc(); }
-  static inline @name@_slice* dup(const @name@_slice* p) { return @name@_dup(p); }
-  static inline void free(@name@_slice* p) { @name@_free(p); }
+  static inline @name@_slice* alloc() { return ::@fqname@_alloc(); }
+  static inline @name@_slice* dup(const @name@_slice* p) { return ::@fqname@_dup(p); }
+  static inline void free(@name@_slice* p) { ::@fqname@_free(p); }
 };
 
 typedef _CORBA_Array_@var_or_fix@_Var<@name@_copyHelper,@name@_slice> @name@_var;

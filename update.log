@@ -1,3 +1,12 @@
+Mon Dec 29 18:43:31 GMT 2008 dgrisby
+====================================
+
+- Globally scope array functions to avoid ambiguities.
+
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+
 Mon Dec 29 18:02:46 GMT 2008 dgrisby
 ====================================
 
