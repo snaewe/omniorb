@@ -36,6 +36,9 @@ extern char	*notdotdot[ ];
 extern boolean show_where_not;
 extern boolean warn_multiple;
 
+void remove_dotdot(char* path);
+
+
 struct inclist *inc_path(file, include, dot)
 	register char	*file,
 			*include;

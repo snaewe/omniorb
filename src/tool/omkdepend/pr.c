@@ -38,6 +38,9 @@ extern boolean	printed;
 extern boolean	verbose;
 extern boolean	show_where_not;
 
+void pr(struct inclist* ip, char* file, char* base);
+
+
 void add_include(filep, file, file_red, include, dot, failOK)
 	struct filepointer	*filep;
 	struct inclist	*file, *file_red;

@@ -31,6 +31,10 @@ in this Software without prior written authorization from the X Consortium.
 extern char	*directives[];
 extern struct inclist	maininclist;
 
+void define(char* def, struct inclist* file);
+void define2(char* name, char* val, struct inclist* file);
+void undefine(char* symbol, struct inclist* file);
+
 find_includes(filep, file, file_red, recursion, failOK)
 	struct filepointer	*filep;
 	struct inclist		*file, *file_red;
