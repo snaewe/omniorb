@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.16  2008/12/29 18:03:34  dgrisby
+# More C++ backend scope errors. Thanks Gellule Xg.
+#
 # Revision 1.1.6.15  2007/12/05 11:15:58  dgrisby
 # Incorrect generated code involving ::CORBA::AbstractBase.
 #
@@ -253,7 +256,8 @@ class _objref_Method(cxx.Method):
 
   def _from_Callable(self, use_out):
     # Grab the IDL environment
-    environment = self.callable().interface().environment()
+    ifc = self.callable().interface()
+    environment = ifc.environment().enter(ifc.name().simple())
 
     # Kept as a type object because in .cc part the _return_ type
     # must be fully qualified.
@@ -684,11 +688,13 @@ class _objref_I(Class):
                  name = method.name())
 
 
+      intf_env = self._environment.enter(self.interface().name().simple())
+
       call_descriptor.out_objrefcall(body,
                                      callable.operation_name(),
                                      argnames,
                                      localcall_fn,
-                                     self._environment)
+                                     intf_env)
       method.cc(stream, body)
 
 

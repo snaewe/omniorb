@@ -1,3 +1,11 @@
+Mon Dec 29 18:02:46 GMT 2008 dgrisby
+====================================
+
+- More C++ backend scope errors. Thanks Gellule Xg.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+
+
 Mon Dec 29 17:30:18 GMT 2008 dgrisby
 ====================================
 
