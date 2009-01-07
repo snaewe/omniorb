@@ -1,3 +1,11 @@
+Wed Jan  7 12:29:52 GMT 2009 dgrisby
+====================================
+
+- Some compilers do not like empty static arrays.
+
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+
 Tue Dec 30 15:37:41 GMT 2008 dgrisby
 ====================================
 

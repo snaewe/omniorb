@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.14  2009/01/07 12:30:33  dgrisby
+# Some compilers do not like empty static arrays.
+#
 # Revision 1.6.2.13  2008/10/28 15:33:42  dgrisby
 # Undeclared user exceptions not caught in local calls.
 #
@@ -639,6 +642,7 @@ void @call_descriptor@::unmarshalReturnedValues(cdrStream& _n)
 
 interface_proxy_empty_exn = """\
 const char* const @call_descriptor@::_user_exns[] = {
+  0
 };
 """
 
