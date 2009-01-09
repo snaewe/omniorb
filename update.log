@@ -1,3 +1,16 @@
+Fri Jan  9 11:40:11 GMT 2009 dgrisby
+====================================
+
+- Remove unnecessary pass.
+
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+
+- Remove superfluous "omniORB" from log messages.
+
+src/lib/omniORB/dynamic/deferredRequest.cc
+src/lib/omniORB/dynamic/request.cc
+
+
 Fri Jan  9 11:38:12 GMT 2009 dgrisby
 ====================================
 

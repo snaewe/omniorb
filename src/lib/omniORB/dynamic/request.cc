@@ -165,7 +165,7 @@ RequestImpl::~RequestImpl()
   if( (pd_state == RS_DEFERRED) && omniORB::traceLevel > 0 ){
     omniORB::logger log;
     log <<
-      "omniORB: WARNING -- The application has not collected the reponse of\n"
+      "WARNING -- The application has not collected the reponse of\n"
       " a deferred DII request.  Use Request::get_response() or\n"
       " poll_response().\n";
   }

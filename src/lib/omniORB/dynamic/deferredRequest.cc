@@ -73,7 +73,7 @@ DeferredRequest::execute()
 	if( omniORB::traceLevel > 0 ){
 	  omniORB::logger log;
 	  log <<
-	    "omniORB: BUG: file <" << __FILE__ << ">, line " << __LINE__ <<
+	    "BUG: file <" << __FILE__ << ">, line " << __LINE__ <<
 	    "\n Request->invoke() raised a system exception.\n"
 	    " omni::diiThrowsSysExceptions = " <<
 	    orbParameters::diiThrowsSysExceptions << ".\n";
