@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2009/01/09 11:39:28  dgrisby
+  Log if OMNIORB_USEHOSTNAME environment variable is used.
+
   Revision 1.1.4.13  2008/10/24 16:52:22  dgrisby
   On Unix platforms, ignore IPv6 addresses on the loopback interface.
 
@@ -188,9 +191,14 @@ tcpTransportImpl::toEndpoint(const char* param) {
   if (*host == '\0') {
     // No name in param -- try environment variable.
     const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
-    if (hostname)
+    if (hostname) {
+      if (omniORB::trace(5)) {
+	omniORB::logger log;
+	log << "Use hostname '" << hostname << "' from "
+	    << OMNIORB_USEHOSTNAME_VAR << " environment variable.\n";
+      }
       address.host = hostname;
-
+    }
     CORBA::string_free(host);
   }
   else {

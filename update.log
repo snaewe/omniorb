@@ -1,3 +1,11 @@
+Fri Jan  9 11:38:12 GMT 2009 dgrisby
+====================================
+
+- Log if OMNIORB_USEHOSTNAME environment variable is used.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Wed Jan  7 12:29:52 GMT 2009 dgrisby
 ====================================
 
