@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.14  2009/01/09 11:40:37  dgrisby
+# Remove unnecessary pass.
+#
 # Revision 1.32.2.13  2008/12/03 10:56:28  dgrisby
 # Struct scope incorrectly handled in marshalling code.
 #
@@ -700,8 +703,7 @@ def visitConst(node):
                    type = type_string, name = name, value = value)
         
 
-    
-    pass
+
 def visitDeclarator(node):
     pass
 
