@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.4.2.13  2009/01/13 14:11:00  dgrisby
+  When deactivating an object in a main thread policy POA, call
+  _remove_ref from the main thread.
+
   Revision 1.4.2.12  2007/06/03 19:21:38  dgrisby
   POAManager deactivate would not meet its detached object if all
   objects were busy, leading to a hang in POA destruction.
@@ -287,6 +291,7 @@
 #include <orbParameters.h>
 #include <initRefs.h>
 #include <interceptors.h>
+#include <invoker.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -2086,6 +2091,77 @@ omniOrbPOA::objectExists(const _CORBA_Octet*, int)
 }
 
 
+// Task to release servant reference in main thread policy POAs.
+
+#ifdef HAS_Cplusplus_Namespace
+namespace {
+#endif
+  class RemoveRefTask : public omniTask {
+  public:
+    inline RemoveRefTask(PortableServer::Servant servant)
+      : omniTask(omniTask::DedicatedThread),
+	pd_servant(servant),
+	pd_cond(&pd_mu)
+    {
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	l << "Preparing to invoke _remove_ref on servant "
+	  << (void*)servant << " in main thread\n";
+      }
+    }
+
+    void execute();
+    // Called by the async invoker. Performs the _remove_ref
+    // call. Swallows any exceptions that occur.
+
+    void wait();
+    // Wait for execute() to finish.
+    
+  private:
+    PortableServer::Servant pd_servant;
+    omni_tracedmutex        pd_mu;
+    omni_tracedcondition    pd_cond;
+  };
+
+#ifdef HAS_Cplusplus_Namespace
+}
+#endif
+
+
+void
+RemoveRefTask::execute()
+{
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    log << "Main thread invoke _remove_ref on servant "
+	<< (void*)pd_servant << "\n";
+  }
+  try {
+    pd_servant->_remove_ref();
+  }
+  catch (...) {
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      log << "ERROR: call to _remove_ref on servant " << (void*)pd_servant
+	  << " threw an exception.\n";
+    }
+  }
+  {
+    omni_tracedmutex_lock lock(pd_mu);
+    pd_servant = 0;
+    pd_cond.signal();
+  }
+}
+
+void
+RemoveRefTask::wait()
+{
+  omni_tracedmutex_lock lock(pd_mu);
+  while (pd_servant)
+    pd_cond.wait();
+}
+
+
 void
 omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
 {
@@ -2161,14 +2237,29 @@ omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
     omni::internalLock->lock();
     entry->setDead();
     omni::internalLock->unlock();
-    try {
-      servant->_remove_ref();
+    
+    omni_thread* self;
+    if (pd_policy.threading == TP_MAIN_THREAD &&
+	((self = omni_thread::self())) &&
+	self->id() != omni::mainThreadId) {
+
+      RemoveRefTask rrt(servant);
+      int i = orbAsyncInvoker->insert(&rrt); OMNIORB_ASSERT(i);
+      rrt.wait();
     }
-    catch (...) {
-      // _remove_ref should not throw exceptions, but in case it does,
-      // we deal with it here.
-      met_detached_object();
-      throw;
+    else {
+      try {
+	servant->_remove_ref();
+      }
+      catch (...) {
+	// _remove_ref should not throw exceptions, but in case it does,
+	// we swallow it here.
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;
+	  log << "ERROR: call to _remove_ref on servant " << (void*)servant
+	      << " threw an exception.\n";
+	}
+      }
     }
     met_detached_object();
   }
@@ -3782,12 +3873,15 @@ transfer_and_check_policies(omniOrbPOA::Policies& pout,
 	p = PortableServer::ThreadPolicy::_narrow(pin[i]);
 
 	if( seen.threading ) {
-	  if ( pout.threading == omniOrbPOA::TP_ORB_CTRL &&
-	       p->value() != PortableServer::ORB_CTRL_MODEL ||
-	       pout.threading == omniOrbPOA::TP_SINGLE_THREAD &&
-	       p->value() != PortableServer::SINGLE_THREAD_MODEL ||
-	       pout.threading == omniOrbPOA::TP_MAIN_THREAD &&
-	       p->value() != PortableServer::MAIN_THREAD_MODEL )
+	  if ( (pout.threading == omniOrbPOA::TP_ORB_CTRL &&
+		p->value() != PortableServer::ORB_CTRL_MODEL) ||
+
+	       (pout.threading == omniOrbPOA::TP_SINGLE_THREAD &&
+		p->value() != PortableServer::SINGLE_THREAD_MODEL) ||
+
+	       (pout.threading == omniOrbPOA::TP_MAIN_THREAD &&
+		p->value() != PortableServer::MAIN_THREAD_MODEL) )
+
 	    throw PortableServer::POA::InvalidPolicy(i);
 	}
 	switch( p->value() ) {
