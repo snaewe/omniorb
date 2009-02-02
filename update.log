@@ -1,3 +1,11 @@
+Mon Feb  2 12:28:53 GMT 2009 dgrisby
+====================================
+
+- Memory leaks in DynAny. Thanks Sampo Ahokas.
+
+src/lib/omniORB/dynamic/dynAny.cc
+
+
 Tue Jan 13 14:08:26 GMT 2009 dgrisby
 ====================================
 
