@@ -1,3 +1,13 @@
+Tue Feb 17 14:30:43 GMT 2009 dgrisby
+====================================
+
+- Some platforms return the IPv4 wildcard address before the IPv6 one
+  when given PF_UNSPEC. Make sure the IPv6 one is used if available.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Mon Feb  2 12:28:53 GMT 2009 dgrisby
 ====================================
 
