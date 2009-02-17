@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.11.2.8  2009/02/17 14:32:48  dgrisby
+  Gracefully handle null string pointer in logger.
+
   Revision 1.11.2.7  2008/08/08 16:52:56  dgrisby
   Option to validate untransformed UTF-8; correct data conversion minor
   codes; better logging for MessageErrors.
@@ -255,6 +258,7 @@ omniORB::logger::operator<<(char c)
 omniORB::logger&
 omniORB::logger::operator<<(const char *s)
 {
+  if (!s) s = "(null)";
   size_t len = strlen(s);
   reserve(len);
   strcpy(pd_p, s);
