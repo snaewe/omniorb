@@ -1,3 +1,11 @@
+Wed Feb 25 11:55:23 GMT 2009 dgrisby
+====================================
+
+- Correct log message.
+
+src/lib/omniORB/orbcore/giopBiDir.cc
+
+
 Tue Feb 17 14:30:43 GMT 2009 dgrisby
 ====================================
 

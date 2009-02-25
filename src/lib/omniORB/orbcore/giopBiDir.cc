@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2009/02/25 11:56:16  dgrisby
+  Correct log message.
+
   Revision 1.1.4.9  2006/06/22 13:53:49  dgrisby
   Add flags to strand.
 
@@ -647,7 +650,7 @@ getBiDirServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
 
       if (omniORB::trace(25)) {
 	omniORB::logger log;
-	log << " receive bidir IIOP service context: ( ";
+	log << "Receive bidir IIOP service context: ( ";
 
 	for (CORBA::ULong i = 0; i < l.length(); i++) {
 	  log << (const char*) l[i].host << ":" << l[i].port << " ";
