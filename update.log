@@ -1,3 +1,11 @@
+Fri Mar 13 13:41:48 GMT 2009 dgrisby
+====================================
+
+- Need an extra include on Win2K. Thanks Sampo Ahokas.
+
+include/omniORB4/internal/SocketCollection.h
+
+
 Wed Feb 25 11:55:23 GMT 2009 dgrisby
 ====================================
 

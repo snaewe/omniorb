@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.18  2009/03/13 13:42:33  dgrisby
+  Need an extra include on Win2K. Thanks Sampo Ahokas.
+
   Revision 1.1.4.17  2008/04/03 08:53:53  dgrisby
   Define EBADF diferently for VxWorks. Thanks Ingo Thiele.
 
@@ -201,6 +204,7 @@
 
 #  if defined(OMNI_SUPPORT_IPV6)
 #    include <ws2tcpip.h>
+#    include <Wspiapi.h>
 #    if !defined(IPV6_V6ONLY)
 #      define IPV6_V6ONLY 27  // Defined to this on Vista
 #    endif
