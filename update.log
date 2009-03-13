@@ -1,3 +1,11 @@
+Fri Mar 13 13:58:20 GMT 2009 dgrisby
+====================================
+
+- AIX build patch. Thanks Floris Bruynooghe.
+
+src/tool/omniidl/cxx/dir.mk
+
+
 Fri Mar 13 13:41:48 GMT 2009 dgrisby
 ====================================
 

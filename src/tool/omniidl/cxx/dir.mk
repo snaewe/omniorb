@@ -119,6 +119,7 @@ $(shlib): $(OBJS) $(PYOBJS)
 		-o $(shlib) \
 		-e $(libinit) \
 		-bI:$(py_exp) \
+		-Wl,-blibpath:/lib:/usr/lib:$(prefix)/lib \
 		$(IMPORT_LIBRARY_FLAGS) \
 		$(filter-out $(LibSuffixPattern),$^); \
 	)
