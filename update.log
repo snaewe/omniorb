@@ -1,3 +1,12 @@
+Mon Apr 20 12:07:16 BST 2009 dgrisby
+====================================
+
+- Use class instead of typename to make Sun compiler happy. Thanks
+  Paul Parlett.
+
+include/omniORB4/poa.h
+
+
 Mon Apr 20 10:49:58 BST 2009 dgrisby
 ====================================
 
