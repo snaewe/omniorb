@@ -1087,7 +1087,6 @@ already_Variable = {
     idltype.tk_value:              1,      
     idltype.tk_value_box:          1,      
     idltype.tk_abstract_interface: 1,
-    idltype.tk_any:                1,
     idltype.tk_TypeCode:           1,
     idltype.tk_local_interface:    1,
     }
