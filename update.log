@@ -1,3 +1,11 @@
+Mon Apr 20 10:15:26 BST 2009 dgrisby
+====================================
+
+- omniidl path fix for 64 bit Linux from Tim Thiesen.
+
+src/tool/omniidl/python/scripts/omniidl.in
+
+
 Fri Mar 13 13:58:20 GMT 2009 dgrisby
 ====================================
 
