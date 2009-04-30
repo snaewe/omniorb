@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.21  2009/04/30 14:53:52  dgrisby
+  Skip 127.* addresses.
+
   Revision 1.1.4.20  2009/02/17 14:32:18  dgrisby
   Some platforms return the IPv4 wildcard address before the IPv6 one
   when given PF_UNSPEC. Make sure the IPv6 one is used if available.
@@ -576,6 +579,12 @@ sslEndpoint::Bind() {
 
 	if (omni::strMatch(*i, "127.0.0.1")) {
 	  loopback4 = *i;
+	  continue;
+	}
+	if (strncmp(*i, "127.", 4) == 0) {
+	  // Anything else starting 127. is defined to be a loopback.
+	  if (!loopback4)
+	    loopback4 = *i;
 	  continue;
 	}
 	if (omni::strMatch(*i, "::1")) {
