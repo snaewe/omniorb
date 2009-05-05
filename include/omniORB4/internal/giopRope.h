@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2009/05/05 14:44:39  dgrisby
+  Ropes rememeber the bidir configuration set at the time of their
+  creation, meaning it can safely be changed at run time.
+
   Revision 1.1.6.2  2006/03/26 20:59:28  dgrisby
   Merge from omni4_0_develop.
 
@@ -236,6 +240,8 @@ class giopRope : public Rope, public RopeLink {
   CORBA::Boolean       pd_oneCallPerConnection;
   int                  pd_nwaiting;
   omni_tracedcondition pd_cond;
+  CORBA::Boolean       pd_offerBiDir; // State of orbParameters::offerBiDir...
+				      // at time of creation.
 
   static _core_attr RopeLink ropes;
   // All ropes created by selectRope are linked together by this list.

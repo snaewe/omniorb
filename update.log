@@ -1,3 +1,13 @@
+Tue May  5 15:42:42 BST 2009 dgrisby
+====================================
+
+- Ropes rememeber the bidir configuration set at the time of their
+  creation, meaning it can safely be changed at run time.
+
+include/omniORB4/internal/giopRope.h
+src/lib/omniORB/orbcore/giopRope.cc
+
+
 Thu Apr 30 15:52:57 BST 2009 dgrisby
 ====================================
 

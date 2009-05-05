@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2009/05/05 14:44:39  dgrisby
+  Ropes rememeber the bidir configuration set at the time of their
+  creation, meaning it can safely be changed at run time.
+
   Revision 1.1.6.7  2007/01/19 10:57:21  dgrisby
   Better logging if ropes fail unexpectedly.
 
@@ -184,7 +188,8 @@ giopRope::giopRope(const giopAddressList& addrlist,
   pd_maxStrands(orbParameters::maxGIOPConnectionPerServer),
   pd_oneCallPerConnection(orbParameters::oneCallPerConnection),
   pd_nwaiting(0),
-  pd_cond(omniTransportLock)
+  pd_cond(omniTransportLock),
+  pd_offerBiDir(orbParameters::offerBiDirectionalGIOP)
 {
   {
     giopAddressList::const_iterator i, last;
@@ -691,6 +696,7 @@ CORBA::Boolean
 giopRope::match(const giopAddressList& addrlist) const
 {
   if (addrlist.size() != pd_addresses.size()) return 0;
+  if (orbParameters::offerBiDirectionalGIOP != pd_offerBiDir) return 0;
 
   giopAddressList::const_iterator i, last, j;
   i    = addrlist.begin();
