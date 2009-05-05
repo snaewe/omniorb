@@ -3,7 +3,8 @@
 // sslConnection.cc           Created on: 19 Mar 2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
+//    Copyright (C) 2005-2009 Apasphere Ltd
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2009/05/05 17:18:58  dgrisby
+  Translate SSL peer identity to native code set; fix some minor leaks.
+  Thanks Wei Jiang.
+
   Revision 1.1.4.9  2006/10/09 13:08:58  dgrisby
   Rename SOCKADDR_STORAGE define to OMNI_SOCKADDR_STORAGE, to avoid
   clash on Win32 2003 SDK.
@@ -110,6 +115,7 @@
 #include <ssl/sslEndpoint.h>
 #include <tcp/tcpConnection.h>
 #include <stdio.h>
+#include <giopStreamImpl.h>
 #include <omniORB4/linkHacks.h>
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(sslConnection);
@@ -373,20 +379,64 @@ sslConnection::sslConnection(SocketHandle_t sock,::SSL* ssl,
 
   belong_to->addSocket(this);
 
-  // determine our peer identity, if there is one
+  // Determine our peer identity, if there is one
   X509 *peer_cert = SSL_get_peer_certificate(pd_ssl);
 
   if (peer_cert) {
-    if (SSL_get_verify_result(pd_ssl) != X509_V_OK)
+    if (SSL_get_verify_result(pd_ssl) != X509_V_OK) {
+      X509_free(peer_cert);
       return;
+    }
 
-    char buf[1024];
+    int lastpos = -1;
 
-    X509_NAME_get_text_by_NID(X509_get_subject_name(peer_cert),
-			      NID_commonName, buf, sizeof(buf));
+    X509_NAME* name = X509_get_subject_name(peer_cert);
+    lastpos = X509_NAME_get_index_by_NID(name, NID_commonName, lastpos);
 
-    pd_peeridentity = CORBA::string_dup(buf);
+    if (lastpos == -1) {
+      X509_free(peer_cert);
+      return;
+    }
+
+    X509_NAME_ENTRY* ne       = X509_NAME_get_entry(name, lastpos);
+    ASN1_STRING*     asn1_str = X509_NAME_ENTRY_get_data(ne);
+
+    // Convert to native code set
+    cdrMemoryStream stream;
+    GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+    stream.TCS_C(omniCodeSet::getTCS_C(omniCodeSet::ID_UTF_8, ver));
+
+    if (ASN1_STRING_type(asn1_str) != V_ASN1_UTF8STRING) {
+      unsigned char* s = 0;
+      int len = ASN1_STRING_to_UTF8(&s, asn1_str);
+      if (len == -1) {
+	X509_free(peer_cert);
+        return;
+      }
+      CORBA::ULong(len+1) >>= stream;
+      stream.put_octet_array(s, len);
+      stream.marshalOctet(0);
+      OPENSSL_free(s);
+    }
+    else {
+      int len = ASN1_STRING_length(asn1_str);
+      CORBA::ULong(len+1) >>= stream;
+      stream.put_octet_array(ASN1_STRING_data(asn1_str), len);
+      stream.marshalOctet(0);
+    }
+
     X509_free(peer_cert);
+
+    try {
+      pd_peeridentity = stream.unmarshalString();
+    }
+    catch (CORBA::SystemException &ex) {
+      if (omniORB::trace(2)) {
+	omniORB::logger log;
+	log << "Failed to convert SSL peer identity to native code set ("
+	    << ex._name() << ")\n";
+      }
+    }
   }
 }
 

@@ -1,3 +1,12 @@
+Tue May  5 18:17:10 BST 2009 dgrisby
+====================================
+
+- Translate SSL peer identity to native code set; fix some minor
+  leaks. Thanks Wei Jiang.
+
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+
+
 Tue May  5 17:13:39 BST 2009 dgrisby
 ====================================
 
