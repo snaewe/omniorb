@@ -3,7 +3,8 @@
 // sslAddress.cc              Created on: 29 May 2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
+//    Copyright (C) 2003-2009 Apasphere Ltd
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2009/05/05 16:15:00  dgrisby
+  Try all addresses if a name resolves to more than one; better
+  connection error logging.
+
   Revision 1.1.4.13  2008/12/29 15:11:48  dgrisby
   Infinite loop on socket error on platforms using fake interruptible recv.
 
@@ -251,29 +256,85 @@ static inline int waitRead(SocketHandle_t sock, struct timeval& t)
 }
 
 
+/////////////////////////////////////////////////////////////////////////
+static inline void
+logFailure(const char* message, LibcWrapper::AddrInfo* ai)
+{
+  if (omniORB::trace(25)) {
+    omniORB::logger log;
+    CORBA::String_var addr = ai->asString();
+    log << message << ": " << addr << "\n";
+  }
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+static giopActiveConnection*
+doConnect(unsigned long 	 deadline_secs,
+	  unsigned long 	 deadline_nanosecs,
+	  CORBA::ULong  	 strand_flags,
+	  LibcWrapper::AddrInfo* ai,
+	  sslContext*            ctx);
+
 giopActiveConnection*
 sslAddress::Connect(unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs,
 		    CORBA::ULong  strand_flags) const {
 
-  SocketHandle_t sock;
-
   if (pd_address.port == 0) return 0;
 
-  LibcWrapper::AddrInfo_var ai;
-  ai = LibcWrapper::getAddrInfo(pd_address.host, pd_address.port);
+  LibcWrapper::AddrInfo_var aiv;
+  aiv = LibcWrapper::getAddrInfo(pd_address.host, pd_address.port);
 
-  if ((LibcWrapper::AddrInfo*)ai == 0)
-    return 0;
+  LibcWrapper::AddrInfo* ai = aiv;
 
-  if ((sock = socket(ai->addrFamily(), SOCK_STREAM,0)) == RC_INVALID_SOCKET)
+  if (ai == 0) {
+    if (omniORB::trace(25)) {
+      omniORB::logger log;
+      log << "Unable to resolve: " << pd_address.host << "\n";
+    }
     return 0;
+  }
+
+  while (ai) {
+    if (omniORB::trace(25)) {
+      if (!LibcWrapper::isipaddr(pd_address.host)) {
+	omniORB::logger log;
+	CORBA::String_var addr = ai->asString();
+	log << "Name '" << pd_address.host << "' resolved: " << addr << "\n";
+      }
+    }
+    giopActiveConnection* conn = doConnect(deadline_secs, deadline_nanosecs,
+					   strand_flags, ai, pd_ctx);
+    if (conn)
+      return conn;
+
+    ai = ai->next();
+  }
+  return 0;
+}
+
+
+static giopActiveConnection*
+doConnect(unsigned long 	 deadline_secs,
+	  unsigned long 	 deadline_nanosecs,
+	  CORBA::ULong  	 strand_flags,
+	  LibcWrapper::AddrInfo* ai,
+	  sslContext*            ctx)
+{
+  SocketHandle_t sock;
+
+  if ((sock = socket(ai->addrFamily(), SOCK_STREAM, 0)) == RC_INVALID_SOCKET) {
+    logFailure("Failed to create socket", ai);
+    return 0;
+  }
 
   if (!strand_flags & GIOPSTRAND_ENABLE_TRANSPORT_BATCHING) {
     // Prevent Nagle's algorithm
     int valtrue = 1;
     if (setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
+      logFailure("Failed to set TCP_NODELAY option", ai);
       CLOSESOCKET(sock);
       return 0;
     }
@@ -287,12 +348,14 @@ sslAddress::Connect(unsigned long deadline_secs,
     int bufsize = orbParameters::socketSendBuffer;
     if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF,
 		   (char*)&bufsize, sizeof(bufsize)) == RC_SOCKET_ERROR) {
+      logFailure("Failed to set socket send buffer", ai);
       CLOSESOCKET(sock);
       return 0;
     }
   }
 
   if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {
+    logFailure("Failed to set socket to non-blocking mode", ai);
     CLOSESOCKET(sock);
     return 0;
   }
@@ -300,6 +363,7 @@ sslAddress::Connect(unsigned long deadline_secs,
   if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
 
     if (ERRNO != EINPROGRESS) {
+      logFailure("Failed to connect", ai);
       CLOSESOCKET(sock);
       return 0;
     }
@@ -312,6 +376,7 @@ sslAddress::Connect(unsigned long deadline_secs,
   do {
     if (setAndCheckTimeout(deadline_secs, deadline_nanosecs, t)) {
       // Already timeout.
+      logFailure("Connect timed out", ai);
       CLOSESOCKET(sock);
       return 0;
     }
@@ -337,6 +402,7 @@ sslAddress::Connect(unsigned long deadline_secs,
       if (ERRNO == RC_EINTR)
 	continue;
       else {
+	logFailure("Failed to connect (no peer name)", ai);
 	CLOSESOCKET(sock);
 	return 0;
       }
@@ -345,7 +411,7 @@ sslAddress::Connect(unsigned long deadline_secs,
 
   } while (1);
 
-  ::SSL* ssl = SSL_new(pd_ctx->get_SSL_CTX());
+  ::SSL* ssl = SSL_new(ctx->get_SSL_CTX());
   SSL_set_fd(ssl, sock);
   SSL_set_connect_state(ssl);
 
@@ -354,6 +420,7 @@ sslAddress::Connect(unsigned long deadline_secs,
 
     if (setAndCheckTimeout(deadline_secs, deadline_nanosecs, t)) {
       // Already timeout.
+      logFailure("Timed out before SSL handshake", ai);
       SSL_free(ssl);
       CLOSESOCKET(sock);
       return 0;
@@ -366,6 +433,7 @@ sslAddress::Connect(unsigned long deadline_secs,
     case SSL_ERROR_NONE:
       {
 	if (SocketSetblocking(sock) == RC_INVALID_SOCKET) {
+	  logFailure("Failed to set socket to blocking mode", ai);
 	  SSL_free(ssl);
 	  CLOSESOCKET(sock);
 	  return 0;
@@ -379,6 +447,7 @@ sslAddress::Connect(unsigned long deadline_secs,
 	if (rc == 0) {
 	  // Timeout
 #if !defined(USE_FAKE_INTERRUPTABLE_RECV)
+	  logFailure("Timed out during SSL handshake", ai);
 	  SSL_free(ssl);
 	  CLOSESOCKET(sock);
 	  return 0;
@@ -393,6 +462,7 @@ sslAddress::Connect(unsigned long deadline_secs,
 	if (rc == 0) {
 	  // Timeout
 #if !defined(USE_FAKE_INTERRUPTABLE_RECV)
+	  logFailure("Timed out during SSL handshake", ai);
 	  SSL_free(ssl);
 	  CLOSESOCKET(sock);
 	  return 0;
