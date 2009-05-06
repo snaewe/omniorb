@@ -3,7 +3,8 @@
 // giopEndpoint.h               Created on: 20 Dec 2000
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2000 AT&T Laboratories Cambridge
+//    Copyright (C) 2002-2006 Apasphere Ltd
+//    Copyright (C) 2000      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.9  2009/05/06 16:16:13  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.8  2006/06/22 13:53:49  dgrisby
   Add flags to strand.
 

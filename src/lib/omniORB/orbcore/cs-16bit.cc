@@ -3,6 +3,7 @@
 // cs-16bit.cc                Created on: 24/10/2000
 //                            Author    : Duncan Grisby (dpg1)
 //
+//    Copyright (C) 2003-2008 Apasphere Ltd
 //    Copyright (C) 2000 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -28,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2009/05/06 16:15:27  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.5  2008/08/08 16:52:56  dgrisby
   Option to validate untransformed UTF-8; correct data conversion minor
   codes; better logging for MessageErrors.

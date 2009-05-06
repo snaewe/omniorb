@@ -3,6 +3,7 @@
 # defs.py                   Created on: 1999/11/2
 #			    Author    : David Scott (djs)
 #
+#    Copyright (C) 2003-2008 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -28,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.17  2009/05/06 16:15:46  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.36.2.16  2008/12/29 18:44:38  dgrisby
 # Globally scope array functions to avoid ambiguities.
 #

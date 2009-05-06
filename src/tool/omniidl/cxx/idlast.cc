@@ -3,7 +3,8 @@
 // idlast.cc                Created on: 1999/10/20
 //			    Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 1999 AT&T Laboratories Cambridge
+//    Copyright (C) 2002-2008 Apasphere Ltd
+//    Copyright (C) 1999      AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl.
 //
@@ -28,6 +29,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.22.2.11  2009/05/06 16:14:40  dgrisby
+// Update lots of copyright notices.
+//
 // Revision 1.22.2.10  2008/10/28 15:59:05  dgrisby
 // Pollution of global namespace with TypeCode and Principal.
 //

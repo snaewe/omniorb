@@ -3,6 +3,7 @@
 // DynAny.cc                  Created on: 12/02/98
 //                            Author    : Sai-Lai Lo (sll)
 //
+//    Copyright (C) 2002-2009 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
    $Log$
+   Revision 1.13.2.11  2009/05/06 16:15:57  dgrisby
+   Update lots of copyright notices.
+
    Revision 1.13.2.10  2009/02/02 12:30:25  dgrisby
    Memory leaks in DynAny. Thanks Sampo Ahokas.
 

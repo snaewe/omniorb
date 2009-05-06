@@ -3,6 +3,7 @@
 # types.py                  Created on: 2000/4/10
 #			    Author    : David Scott (djs)
 #
+#    Copyright (C) 2003-2009 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.

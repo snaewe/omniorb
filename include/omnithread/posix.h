@@ -1,7 +1,8 @@
 //				Package : omnithread
 // omnithread/posix.h		Created : 7/94 tjr
 //
-//    Copyright (C) 1994,1995,1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 2002-2009 Apasphere Ltd
+//    Copyright (C) 1994-1997 Olivetti & Oracle Research Laboratory
 //
 //    This file is part of the omnithread library
 //

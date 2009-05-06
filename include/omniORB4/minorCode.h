@@ -3,7 +3,8 @@
 // minorCode.h                Created on: 05/01/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2002-2006 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.8  2009/05/06 16:16:13  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.7  2006/04/10 12:50:35  dgrisby
   More endPointPublish; support for deprecated endPointNoListen,
   endPointPublishAllIFs.

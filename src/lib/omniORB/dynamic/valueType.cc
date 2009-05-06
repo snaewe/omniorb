@@ -3,7 +3,7 @@
 // valueType.cc               Created on: 2003/09/17
 //                            Author    : Duncan Grisby
 //
-//    Copyright (C) 2003-2004 Apasphere Ltd.
+//    Copyright (C) 2003-2008 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2009/05/06 16:15:55  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.2.12  2008/04/02 15:48:30  dgrisby
   Always initialise variable to avoid over-zealous complaint from MSVC
   that it is passed (safely) uninitialised.

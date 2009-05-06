@@ -3,7 +3,7 @@
 # obv.py                    Created on: 2003/10/08
 #			    Author    : Duncan Grisby
 #
-#    Copyright (C) 2003 Apasphere Ltd.
+#    Copyright (C) 2003-2004 Apasphere Ltd.
 #
 #  This file is part of omniidl.
 #
@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.4  2009/05/06 16:15:45  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.1.2.3  2004/10/13 17:58:24  dgrisby
 # Abstract interfaces support; values support interfaces; value bug fixes.
 #

@@ -3,6 +3,7 @@
 // omniORB.cc                 Created on: 15/6/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2002-2006 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
 //    This file is part of the omniORB library.
@@ -28,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.5  2009/05/06 16:15:01  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.4.2.4  2006/01/10 13:59:37  dgrisby
   New clientConnectTimeOutPeriod configuration parameter.
 

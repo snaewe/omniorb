@@ -3,6 +3,7 @@
 # util.py                   Created on: 1999/11/2
 #			    Author    : David Scott (djs)
 #
+#    Copyright (C) 2002-2008 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -28,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.4  2009/05/06 16:15:52  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.17.2.3  2008/12/03 10:53:58  dgrisby
 # Tweaks leading to Python 3 support; other minor clean-ups.
 #

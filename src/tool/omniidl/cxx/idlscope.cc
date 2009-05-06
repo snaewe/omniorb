@@ -3,7 +3,8 @@
 // idlscope.cc              Created on: 1999/10/11
 //			    Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 1999 AT&T Laboratories Cambridge
+//    Copyright (C) 2004-2008 Apasphere Ltd
+//    Copyright (C) 1999      AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl.
 //
@@ -28,6 +29,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.18.2.8  2009/05/06 16:14:33  dgrisby
+// Update lots of copyright notices.
+//
 // Revision 1.18.2.7  2008/10/28 15:59:05  dgrisby
 // Pollution of global namespace with TypeCode and Principal.
 //

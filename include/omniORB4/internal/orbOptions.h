@@ -3,6 +3,7 @@
 // orbOptions.h               Created on: 13/8/2001
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2003-2007 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2009/05/06 16:16:03  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.5  2007/02/26 15:16:31  dgrisby
   New socketSendBuffer parameter, defaulting to 16384 on Windows.
   Avoids a bug in Windows where select() on send waits for all sent data

@@ -3,7 +3,7 @@
 // valueFactoryManager.h      Created on: 2003/09/03
 //                            Author    : Duncan Grisby (dgrisby)
 //
-//    Copyright (C) 2003 Apasphere Ltd.
+//    Copyright (C) 2003-2004 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -28,6 +28,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.3  2009/05/06 16:16:10  dgrisby
+// Update lots of copyright notices.
+//
 // Revision 1.1.2.2  2004/02/16 10:10:29  dgrisby
 // More valuetype, including value boxes. C++ mapping updates.
 //

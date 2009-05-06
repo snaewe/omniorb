@@ -1,6 +1,7 @@
 //				Package : omnithread
 // omnithread/posix.cc		Created : 7/94 tjr
 //
+//    Copyright (C) 2003-2008 Apasphere Ltd
 //    Copyright (C) 1994-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omnithread library

@@ -3,7 +3,8 @@
 // unixActive.cc              Created on: 6 Aug 2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2005-2006 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2009/05/06 16:14:45  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.3  2006/05/02 13:07:12  dgrisby
   Idle giopMonitor SocketCollections would not exit at shutdown.
 

@@ -3,7 +3,8 @@
 // giopServer.h                 Created on: 20 Dec 2000
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2000 AT&T Laboratories Cambridge
+//    Copyright (C) 2003-2006 Apasphere Ltd
+//    Copyright (C) 2000      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2009/05/06 16:16:08  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.5  2006/10/09 09:47:12  dgrisby
   Only delete giopServer if all threads are successfully shut down.
 

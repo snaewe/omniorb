@@ -3,6 +3,7 @@
 // poaimpl.h                  Created on: 31/3/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2002-2007 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
 //    This file is part of the omniORB library.
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.5  2009/05/06 16:16:02  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.4  2007/03/23 14:36:46  dgrisby
   Use one etherealisation queue per POA, rather than one global one.
   Thanks Teemu Torma.

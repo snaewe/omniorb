@@ -3,6 +3,7 @@
 # iface.py                  Created on: 2000/8/10
 #			    Author    : David Scott (djs)
 #
+#    Copyright (C) 2002-2008 Apasphere Ltd
 #    Copyright (C) 2000 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -28,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.18  2009/05/06 16:15:52  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.1.6.17  2008/12/30 15:38:27  dgrisby
 # Scope change broke structs defined in interfaces that use them.
 #

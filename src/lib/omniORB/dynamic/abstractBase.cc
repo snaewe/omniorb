@@ -3,7 +3,7 @@
 // abstractBase.c             Created on: 2004/03/05
 //                            Author    : Duncan Grisby
 //
-//    Copyright (C) 2004 Apasphere Ltd.
+//    Copyright (C) 2004-2005 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2009/05/06 16:15:59  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.2.3  2005/01/17 14:44:46  dgrisby
   Surprisingly few changes to compile on Windows.
 

@@ -3,7 +3,8 @@
 // unixEndpoint.cc            Created on: 6 Aug 2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2005-2006 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2009/05/06 16:14:44  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.7  2006/07/03 11:18:56  dgrisby
   If Poke() fails to connect to itself, wake up the SocketCollection in
   case it is idle.

@@ -3,6 +3,7 @@
 // corbaOrb.cc                Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2002-2007 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.36.2.8  2009/05/06 16:15:28  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.36.2.7  2007/04/12 14:53:31  dgrisby
   Output omniORB version number in log.
 

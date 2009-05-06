@@ -3,6 +3,7 @@
 // GIOP_C.cc                  Created on: 08/02/2001
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2003-2008 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.10  2009/05/06 16:15:32  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.9  2008/02/14 12:37:50  dgrisby
   New immediateAddressSwitch parameter.
 

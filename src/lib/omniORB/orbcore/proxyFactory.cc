@@ -3,7 +3,8 @@
 // proxyFactory.cc            Created on: 24/2/99
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 2003-2006 Apasphere Ltd
+//    Copyright (C) 1996,1997 Olivetti & Oracle Research Laboratory
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.6  2009/05/06 16:14:56  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.5.2.5  2006/12/07 11:09:20  dgrisby
   Typo in log message.
 

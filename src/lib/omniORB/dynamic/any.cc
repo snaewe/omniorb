@@ -5,7 +5,7 @@
 //                            Author2   : James Weatherall (jnw)
 //                            Author3   : Duncan Grisby (dgrisby)
 //
-//    Copyright (C) 2004-2005 Apasphere Ltd.
+//    Copyright (C) 2004-2007 Apasphere Ltd.
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.21.2.11  2009/05/06 16:15:58  dgrisby
+ * Update lots of copyright notices.
+ *
  * Revision 1.21.2.10  2007/11/28 11:17:59  dgrisby
  * More problems with Anys containing nil objrefs. Thanks Peter S. Housel.
  *

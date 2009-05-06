@@ -1,6 +1,7 @@
 //				Package : omnithread
 // omnithread/nt.cc		Created : 6/95 tjr
 //
+//    Copyright (C) 2005      Apasphere Ltd
 //    Copyright (C) 1995-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omnithread library

@@ -2,6 +2,7 @@
 //                          Package   : omniNames
 // INISMapper.h             Author    : Duncan Grisby (dpg1)
 //
+//    Copyright (C) 2004 Apasphere Ltd
 //    Copyright (C) 2000 AT&T Laboratories Cambridge
 //
 //  This file is part of omniNames.
@@ -24,6 +25,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.3  2009/05/06 16:16:00  dgrisby
+// Update lots of copyright notices.
+//
 // Revision 1.5.2.2  2004/02/20 00:03:35  dgrisby
 // Compilation fixes. Thanks Gary Duzan for pointing them out.
 //

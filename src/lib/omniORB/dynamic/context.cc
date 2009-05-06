@@ -3,6 +3,7 @@
 // context.cc                 Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2004-2006 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
  $Log$
+ Revision 1.14.2.4  2009/05/06 16:15:58  dgrisby
+ Update lots of copyright notices.
+
  Revision 1.14.2.3  2006/04/28 18:40:46  dgrisby
  Merge from omni4_0_develop.
 

@@ -2,6 +2,7 @@
 //                          Package   : omniNames
 // log.cc                   Author    : Tristan Richardson (tjr)
 //
+//    Copyright (C) 2002-2008 Apasphere Ltd
 //    Copyright (C) 1997-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniNames.

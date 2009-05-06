@@ -3,7 +3,7 @@
 # value.py                  Created on: 2003/09/29
 #			    Author    : Duncan Grisby
 #
-#    Copyright (C) 2003-2005 Apasphere Ltd.
+#    Copyright (C) 2003-2007 Apasphere Ltd.
 #
 #  This file is part of omniidl.
 #

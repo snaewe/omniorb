@@ -3,6 +3,7 @@
 // CORBA_sysdep.h             Created on: 30/1/96
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2002-2007 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -30,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2009/05/06 16:16:14  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.11  2007/06/22 17:28:25  dgrisby
   Definitions for Darwin traditional compile.
 

@@ -3,7 +3,7 @@
 // valueBase.cc               Created on: 2003/08/20
 //                            Author    : Duncan Grisby
 //
-//    Copyright (C) 2003-2005 Apasphere Ltd.
+//    Copyright (C) 2003-2006 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2009/05/06 16:15:55  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.2.8  2006/01/19 17:21:59  dgrisby
   Avoid member name conflict in DefaultValueRefCountBase.
 

@@ -3,7 +3,7 @@
 // valueTemplatedecls.h       Created on: 2003/09/24
 //                            Author    : Duncan Grisby
 //
-//    Copyright (C) 2003 Apasphere Ltd.
+//    Copyright (C) 2003-2007 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2009/05/06 16:16:10  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.2.8  2007/04/18 22:32:43  dgrisby
   Missing definition of ptr_arith_t on Win64.
 

@@ -3,7 +3,8 @@
 // idl.ll                   Created on: 1999/10/05
 //			    Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 1999 AT&T Laboratories Cambridge
+//    Copyright (C) 2003-2005 Apasphere Ltd
+//    Copyright (C) 1999      AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl.
 //
@@ -28,6 +29,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.13.2.3  2009/05/06 16:14:42  dgrisby
+// Update lots of copyright notices.
+//
 // Revision 1.13.2.2  2005/01/06 23:11:14  dgrisby
 // Big merge from omni4_0_develop.
 //

@@ -3,6 +3,7 @@
 // giopRendezvouser.cc        Created on: 20 Dec 2000
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2005 Apasphere Ltd
 //    Copyright (C) 2000 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2009/05/06 16:15:12  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.2  2005/11/17 17:03:26  dgrisby
   Merge from omni4_0_develop.
 

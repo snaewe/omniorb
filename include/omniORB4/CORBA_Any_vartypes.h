@@ -3,6 +3,7 @@
 // CORBA_Any_vartypes.h       Created on: 2001/08/17
 //                            Author    : Duncan Grisby (dpg1)
 //
+//    Copyright (C) 2004 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2009/05/06 16:16:15  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.3  2004/10/13 17:58:18  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 

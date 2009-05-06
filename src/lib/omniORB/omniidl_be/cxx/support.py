@@ -3,6 +3,7 @@
 # support.py                Created on: 2000/08/14
 #			    Author    : David Scott (djs)
 #
+#    Copyright (C) 2003-2005 Apasphere Ltd
 #    Copyright (C) 2000 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.

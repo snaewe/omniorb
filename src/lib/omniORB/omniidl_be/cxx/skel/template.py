@@ -3,6 +3,7 @@
 # template.py               Created on: 2000/01/19
 #			    Author    : David Scott (djs)
 #
+#    Copyright (C) 2003-2009 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -28,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.15  2009/05/06 16:15:32  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.6.2.14  2009/01/07 12:30:33  dgrisby
 # Some compilers do not like empty static arrays.
 #

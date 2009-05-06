@@ -3,6 +3,7 @@
 // omniServant.cc             Created on: 26/2/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2005 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
 //    This file is part of the omniORB library.
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2009/05/06 16:15:01  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.4.2.2  2005/09/05 17:22:09  dgrisby
   Reference counted local call shortcut.
 

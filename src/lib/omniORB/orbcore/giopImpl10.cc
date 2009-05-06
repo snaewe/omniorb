@@ -3,6 +3,7 @@
 // giopImpl10.cc              Created on: 14/02/2001
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2002-2008 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories, Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.10  2009/05/06 16:15:17  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.9  2008/12/29 17:31:16  dgrisby
   Properly handle message size being exceeded in request header.
 

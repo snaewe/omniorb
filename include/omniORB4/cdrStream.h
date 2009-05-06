@@ -3,7 +3,8 @@
 // cdrStream.h                Created on: 11/1/99
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1999 AT&T Laboratories, Cambridge
+//    Copyright (C) 2003-2007 Apasphere Ltd
+//    Copyright (C) 1999      AT&T Laboratories, Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.18  2009/05/06 16:16:13  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.17  2007/04/12 19:50:33  dgrisby
   A few cases of sizeof(bool) > 1 were not handled correctly.
 

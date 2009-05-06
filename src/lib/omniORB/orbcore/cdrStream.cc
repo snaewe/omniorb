@@ -3,6 +3,7 @@
 // cdrStream.cc               Created on: 09/11/2000
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2002-2006 Apasphere Ltd
 //    Copyright (C) 2000 AT&T Laboratories Cambrige
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2009/05/06 16:15:32  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.11  2006/06/05 11:25:30  dgrisby
   Move codeset initialisation code to a more logical source file.
 

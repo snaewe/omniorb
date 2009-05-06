@@ -3,7 +3,8 @@
 // orbParameters.h            Created on: 15/8/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2002-2008 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2009/05/06 16:16:03  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.10  2008/02/14 12:37:50  dgrisby
   New immediateAddressSwitch parameter.
 

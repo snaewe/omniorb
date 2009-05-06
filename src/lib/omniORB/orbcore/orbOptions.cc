@@ -3,6 +3,7 @@
 // orbOptions.cc              Created on: 13/8/2001
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2003-2007 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2009/05/06 16:15:01  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.10  2007/06/10 18:41:59  dgrisby
   Sort handlers before processing options in environment.
 

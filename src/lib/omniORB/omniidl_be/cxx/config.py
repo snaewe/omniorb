@@ -3,6 +3,7 @@
 # config.py                 Created on: 2000/10/8
 #                           Author    : David Scott (djs)
 #
+#    Copyright (C) 2002-2007 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -28,6 +29,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.17.2.6  2009/05/06 16:15:53  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.17.2.5  2007/05/11 09:52:27  dgrisby
 # New -Wbguard_prefix option. Thanks Austin Bingham.
 #

@@ -3,7 +3,8 @@
 // sslContext.h               Created on: 29 May 2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2005-2008 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2009/05/06 16:16:12  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.5  2008/02/14 13:50:03  dgrisby
   Initialise openssl only if necessary. Thanks Teemu Torma.
 

@@ -3,6 +3,7 @@
 // giopServer.cc              Created on: 20 Dec 2000
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2002-2007 Apasphere Ltd
 //    Copyright (C) 2000 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.20  2009/05/06 16:15:09  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.25.2.19  2007/12/09 01:35:08  dgrisby
   Race condition between Peek / select thread when data in buffer.
 

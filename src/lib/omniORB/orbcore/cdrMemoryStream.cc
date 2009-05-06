@@ -3,6 +3,7 @@
 // cdrMemoryStream.cc         Created on: 13/1/99
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2003-2006 Apasphere Ltd
 //    Copyright (C) 1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2009/05/06 16:15:32  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.5  2006/05/20 16:23:36  dgrisby
   Minor cdrMemoryStream and TypeCode performance tweaks.
 

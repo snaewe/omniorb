@@ -3,6 +3,7 @@
 // omniObjRef.cc              Created on: 26/2/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2002-2008 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
 //    This file is part of the omniORB library
@@ -28,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.8  2009/05/06 16:15:01  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.4.2.7  2008/10/28 15:54:51  dgrisby
   Internal CommFailure exception escapes after failed-on-forward call
   that is not retried.

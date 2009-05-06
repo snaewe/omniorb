@@ -3,8 +3,8 @@
 // sslEndpoint.cc             Created on: 29 May 2001
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2002-2009 Apasphere Ltd
 //    Copyright (C) 2001      AT&T Laboratories Cambridge
-//    Copyright (C) 2002-2008 Apasphere Ltd
 //
 //    This file is part of the omniORB library
 //
@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.22  2009/05/06 16:14:50  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.21  2009/04/30 14:53:52  dgrisby
   Skip 127.* addresses.
 

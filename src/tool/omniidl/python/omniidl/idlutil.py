@@ -3,7 +3,8 @@
 # idlutil.py                Created on: 1999/10/27
 #			    Author    : Duncan Grisby (dpg1)
 #
-#    Copyright (C) 1999 AT&T Laboratories Cambridge
+#    Copyright (C) 2003-2008 Apasphere Ltd
+#    Copyright (C) 1999      AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
 #
@@ -28,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9.2.7  2009/05/06 16:14:30  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.9.2.6  2008/12/03 10:57:03  dgrisby
 # Incorrect code generated for some float constants. Thanks Will Denissen.
 #

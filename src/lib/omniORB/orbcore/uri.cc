@@ -3,6 +3,7 @@
 // uri.cc                     Created on: 2000/04/03
 //                            Author    : Duncan Grisby (dpg1)
 //
+//    Copyright (C) 2003-2006 Apasphere Ltd
 //    Copyright (C) 2000 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 //      
 
 // $Log$
+// Revision 1.4.2.7  2009/05/06 16:14:53  dgrisby
+// Update lots of copyright notices.
+//
 // Revision 1.4.2.6  2006/09/17 23:24:18  dgrisby
 // Remove hard-coded hostname length.
 //

@@ -2,8 +2,8 @@
 //                          Package   : omniNames
 // omniNames.h              Author    : Duncan Grisby
 //
-//    Copyright (C) 1997-1999 AT&T Laboratories Cambridge
 //    Copyright (C) 2007 Apasphere Ltd
+//    Copyright (C) 1997-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniNames.
 //

@@ -3,7 +3,8 @@
 // CORBA_ORB.h                Created on: 2001/08/17
 //                            Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2003-2005 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2009/05/06 16:16:15  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.4  2005/01/06 23:08:06  dgrisby
   Big merge from omni4_0_develop.
 

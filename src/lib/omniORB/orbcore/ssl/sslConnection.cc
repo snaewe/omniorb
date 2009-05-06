@@ -3,8 +3,8 @@
 // sslConnection.cc           Created on: 19 Mar 2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //    Copyright (C) 2005-2009 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2009/05/06 16:14:52  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.10  2009/05/05 17:18:58  dgrisby
   Translate SSL peer identity to native code set; fix some minor leaks.
   Thanks Wei Jiang.

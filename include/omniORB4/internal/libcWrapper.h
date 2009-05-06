@@ -3,7 +3,7 @@
 // LibcWrapper.h              Created on: 19/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2003 Apasphere Ltd
+//    Copyright (C) 2003-2006 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.7  2009/05/06 16:16:04  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.6  2006/04/21 14:38:35  dgrisby
   Typo in comment.
 

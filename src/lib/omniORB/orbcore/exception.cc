@@ -3,6 +3,7 @@
 // exception.cc               Created on: 13/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2005 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -28,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.12.2.3  2009/05/06 16:15:21  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.12.2.2  2005/04/08 00:35:46  dgrisby
   Merging again.
 

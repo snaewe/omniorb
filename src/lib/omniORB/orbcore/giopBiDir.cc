@@ -3,6 +3,7 @@
 // giopBiDir.cc               Created on: 17/7/2001
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2002-2009 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2009/05/06 16:15:19  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.10  2009/02/25 11:56:16  dgrisby
   Correct log message.
 

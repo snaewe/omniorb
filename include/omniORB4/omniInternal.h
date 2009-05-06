@@ -3,6 +3,7 @@
 // omniInternal.h             Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2003-2006 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.11  2009/05/06 16:16:13  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.5.2.10  2006/07/18 16:21:24  dgrisby
   New experimental connection management extension; ORB core support
   for it.

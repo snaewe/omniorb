@@ -3,6 +3,7 @@
 // portableserver.cc          Created on: 11/5/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2004-2007 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.4.2.7  2009/05/06 16:14:57  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.4.2.6  2007/04/05 15:38:02  dgrisby
   Catch exceptions from servant destructor.
 

@@ -3,6 +3,7 @@
 // remoteIdentity.h           Created on: 16/6/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2002-2007 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
 //    This file is part of the omniORB library.
@@ -29,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.1.6.3  2009/05/06 16:16:01  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.2  2007/04/14 17:56:52  dgrisby
   Identity downcasting mechanism was broken by VC++ 8's
   over-enthusiastic optimiser.

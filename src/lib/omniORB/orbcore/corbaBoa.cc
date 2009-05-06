@@ -3,6 +3,7 @@
 // corbaBoa.cc                Created on: 23/7/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2002-2006 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.4  2009/05/06 16:15:30  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.19.2.3  2006/07/18 16:21:21  dgrisby
   New experimental connection management extension; ORB core support
   for it.

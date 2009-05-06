@@ -3,6 +3,7 @@
 // orbOptionsReg.cc           Created on: 17/8/2001
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2002-2005 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2009/05/06 16:15:00  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.2  2005/01/06 23:10:37  dgrisby
   Big merge from omni4_0_develop.
 

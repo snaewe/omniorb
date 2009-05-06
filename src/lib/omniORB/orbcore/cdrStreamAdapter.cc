@@ -3,6 +3,7 @@
 // cdrStreamAdapter.cc        Created on: 2001/01/09
 //                            Author    : Duncan Grisby (dpg1)
 //
+//    Copyright (C) 2005 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambrige
 //
 //    This file is part of the omniORB library
@@ -28,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.1.4.3  2009/05/06 16:15:31  dgrisby
+// Update lots of copyright notices.
+//
 // Revision 1.1.4.2  2005/01/06 23:10:12  dgrisby
 // Big merge from omni4_0_develop.
 //

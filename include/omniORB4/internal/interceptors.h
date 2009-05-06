@@ -3,6 +3,7 @@
 // interceptors.h             Created on: 2002/03/21
 //                            Author    : Duncan Grisby (dpg1)
 //
+//    Copyright (C) 2006 Apasphere Ltd
 //    Copyright (C) 2002 AT&T Laboratories, Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2009/05/06 16:16:04  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.2  2006/07/18 16:21:23  dgrisby
   New experimental connection management extension; ORB core support
   for it.

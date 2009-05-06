@@ -3,7 +3,8 @@
 // giopStream.h                   Created on: 05/01/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2003-2006 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.4  2009/05/06 16:16:04  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.3  2006/09/20 13:36:31  dgrisby
   Descriptive logging for connection and GIOP errors.
 

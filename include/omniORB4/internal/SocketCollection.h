@@ -4,8 +4,8 @@
 //                            Author    : Sai Lai Lo (sll)
 //                            Author    : Duncan Grisby
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
-//    Copyright (C) 2005 Apasphere Ltd.
+//    Copyright (C) 2005-2009 Apasphere Ltd.
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.19  2009/05/06 16:16:09  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.18  2009/03/13 13:42:33  dgrisby
   Need an extra include on Win2K. Thanks Sampo Ahokas.
 

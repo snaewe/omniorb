@@ -4,8 +4,8 @@
 //                            Author 1  : Sai Lai Lo (sll)
 //                            Author 2  : Duncan Grisby (dgrisby)
 //
+//    Copyright (C) 2002-2008 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
-//    Copyright (C) 2005 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.26  2009/05/06 16:15:32  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.25  2008/10/24 16:45:29  dgrisby
   Last socket in poll list incorrectly thought it was still in the list.
   Thanks Serguei Kolos for the bug report.

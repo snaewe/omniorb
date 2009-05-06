@@ -3,6 +3,7 @@
 // callHandle.cc              Created on: 16/05/2001
 //                            Author    : Duncan Grisby (dpg1)
 //
+//    Copyright (C) 2003-2006 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.7  2009/05/06 16:15:32  dgrisby
+ Update lots of copyright notices.
+
  Revision 1.1.4.6  2006/07/02 22:52:05  dgrisby
  Store self thread in task objects to avoid calls to self(), speeding
  up Current. Other minor performance tweaks.

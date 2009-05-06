@@ -2,7 +2,7 @@ READ ME FIRST!
 
 This is omniORB 4.1.3.
 
-omniORB is copyright AT&T Laboratories Cambridge, Apasphere Ltd and
+omniORB is copyright Apasphere Ltd, AT&T Laboratories Cambridge and
 others. It is free software. The programs in omniORB are distributed
 under the GNU General Public Licence as published by the Free Software
 Foundation. See the file COPYING for copying permission of these

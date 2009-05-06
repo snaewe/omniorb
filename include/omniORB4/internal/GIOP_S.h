@@ -3,7 +3,8 @@
 // GIOP_S.h                   Created on: 05/01/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2005-2007 Apasphere Ltd
+//    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.6  2009/05/06 16:16:09  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.6.5  2007/04/05 15:06:45  dgrisby
   Handle CancelRequest without starting a new giopWorker.
 

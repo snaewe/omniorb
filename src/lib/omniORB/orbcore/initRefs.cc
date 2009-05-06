@@ -3,6 +3,7 @@
 // initRefs.cc                Created on: 20/08/98
 //                            Author    : Sai-Lai Lo
 //
+//    Copyright (C) 2002-2007 Apasphere Ltd
 //    Copyright (C) 1996-2000 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2009/05/06 16:15:07  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.4.2.2  2007/11/26 16:15:19  dgrisby
   Missing newline in log message.
 

@@ -3,6 +3,7 @@
 # template.py               Created on: 2000/01/18
 #			    Author    : David Scott (djs)
 #
+#    Copyright (C) 2003-2008 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -28,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.21  2009/05/06 16:15:40  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.8.2.20  2008/12/29 18:44:38  dgrisby
 # Globally scope array functions to avoid ambiguities.
 #

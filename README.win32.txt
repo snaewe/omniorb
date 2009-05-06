@@ -46,9 +46,9 @@ Installation
 
 If you downloaded the Win32 binary distribution of omniORB,
 ready-built binaries are provided. The binaries are compiled with VC++
-6, 7, or 8, depending on the version you downloaded. If you are using
-any other version of VC++, the binaries will not work, and you must
-compile omniORB from source.
+6, 7, 8 or 9, depending on the version you downloaded. If you are
+using any other version of VC++, the binaries will not work, and you
+must compile omniORB from source.
 
 Note that although there are many references to "win32", everything
 works on 64 bit Windows platforms. There is no separate "win64"

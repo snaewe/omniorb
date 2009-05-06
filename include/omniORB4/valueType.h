@@ -3,7 +3,7 @@
 // valueType.h                Created on: 2003/08/22
 //                            Author    : Duncan Grisby
 //
-//    Copyright (C) 2003 Apasphere Ltd.
+//    Copyright (C) 2003-2004 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2009/05/06 16:16:10  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.2.4  2004/10/13 17:58:19  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 

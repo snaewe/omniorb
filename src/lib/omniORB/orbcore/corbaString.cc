@@ -3,6 +3,7 @@
 // corbaString.cc             Created on: 20/9/96
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2005-2006 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.6  2009/05/06 16:15:27  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.19.2.5  2006/06/06 16:39:37  dgrisby
   marshalRawString and chunking stream did not byte-swap length fields
   when required to.

@@ -3,6 +3,7 @@
 // omniObjRef.h               Created on: 22/2/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2002-2006 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
 //    This file is part of the omniORB library.
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.4  2009/05/06 16:16:12  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.4.2.3  2006/07/18 16:21:24  dgrisby
   New experimental connection management extension; ORB core support
   for it.

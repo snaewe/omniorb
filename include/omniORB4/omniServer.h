@@ -3,6 +3,7 @@
 // omniServer.h               Created on: 05/01/2001
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2006 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2009/05/06 16:16:12  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.3  2006/10/09 09:47:12  dgrisby
   Only delete giopServer if all threads are successfully shut down.
 

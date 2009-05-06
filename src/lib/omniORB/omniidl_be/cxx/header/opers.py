@@ -3,6 +3,7 @@
 # opers.py                  Created on: 1999/11/4
 #			    Author    : David Scott (djs)
 #
+#    Copyright (C) 2003-2006 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -28,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11.2.7  2009/05/06 16:15:44  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.11.2.6  2006/09/04 11:40:06  dgrisby
 # Remove crazy switch code in enum marshalling.
 #

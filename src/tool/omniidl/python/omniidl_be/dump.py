@@ -3,6 +3,7 @@
 # idldump.py                Created on: 1999/10/29
 #			    Author    : Duncan Grisby (dpg1)
 #
+#    Copyright (C) 2005 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -28,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.3  2009/05/06 16:14:27  dgrisby
+# Update lots of copyright notices.
+#
 # Revision 1.12.2.2  2005/06/08 09:40:37  dgrisby
 # Update example code, IDL dumping.
 #

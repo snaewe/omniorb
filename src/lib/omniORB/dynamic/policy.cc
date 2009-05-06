@@ -3,6 +3,7 @@
 // policy.cc                  Created on: 30/7/2001
 //                            Author    : Sai-Lai Lo (sll)
 //
+//    Copyright (C) 2003-2006 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Research Cambridge
 //
 //    This file is part of the omniORB library.
@@ -28,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.4.7  2009/05/06 16:15:57  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.1.4.6  2006/07/18 16:21:22  dgrisby
   New experimental connection management extension; ORB core support
   for it.

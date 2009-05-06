@@ -3,6 +3,7 @@
 # idltype.py                Created on: 1999/10/27
 #			    Author    : Duncan Grisby (dpg1)
 #
+#    Copyright (C) 2003-2005 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.

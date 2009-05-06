@@ -3,6 +3,7 @@
 // dynamicLib.cc              Created on: 15/9/99
 //                            Author    : David Riddoch (djr)
 //
+//    Copyright (C) 2003-2004 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2009/05/06 16:15:22  dgrisby
+  Update lots of copyright notices.
+
   Revision 1.4.2.2  2004/10/13 17:58:25  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 
