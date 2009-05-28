@@ -1,3 +1,19 @@
+Thu May 28 10:29:18 BST 2009 dgrisby
+====================================
+
+- Use -1 instead of EOF in getopt().
+
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/appl/utils/genior/genior.cc
+
+- Function named getline clashes with stdio.h on gcc 4.4. Thanks Jiang Wei.
+
+src/tool/omkdepend/def.h
+src/tool/omkdepend/main.c
+src/tool/omkdepend/parse.c
+
+
 Wed May  6 17:12:29 BST 2009 dgrisby
 ====================================
 
