@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2009/05/28 09:51:45  dgrisby
+  Set SSL session id context. Thanks Jiang Wei.
+
   Revision 1.1.4.6  2009/05/06 16:14:51  dgrisby
   Update lots of copyright notices.
 
@@ -158,6 +161,19 @@ sslContext::internal_initialise() {
     OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
 		  CORBA::COMPLETED_NO);
   }
+
+  static const unsigned char session_id_context[] = "omniORB";
+  size_t session_id_len =
+    (sizeof(session_id_context) >= SSL_MAX_SSL_SESSION_ID_LENGTH ?
+     SSL_MAX_SSL_SESSION_ID_LENGTH : sizeof(session_id_context));
+
+  if (SSL_CTX_set_session_id_context(pd_ctx,
+				     session_id_context, session_id_len) != 1) {
+    report_error();
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
+		  CORBA::COMPLETED_NO);
+  }
+
   set_supported_versions();
   seed_PRNG();
   set_certificate();

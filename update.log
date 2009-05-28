@@ -1,3 +1,11 @@
+Thu May 28 10:51:13 BST 2009 dgrisby
+====================================
+
+- Set SSL session id context. Thanks Jiang Wei.
+
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+
+
 Thu May 28 10:29:18 BST 2009 dgrisby
 ====================================
 
