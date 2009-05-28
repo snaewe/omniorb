@@ -88,15 +88,15 @@ int optind = 1;
 int
 getopt(int num_args, char* const* args, const char* optstring)
 {
-  if (optind == num_args) return EOF;
+  if (optind == num_args) return -1;
   char* buf_left = *(args+optind);
 
-  if ((*buf_left != '-' && *buf_left != '/') || buf_left == NULL ) return EOF;
+  if ((*buf_left != '-' && *buf_left != '/') || buf_left == NULL ) return -1;
   else if ((optind < (num_args-1)) && strcmp(buf_left,"-") == 0 &&
 	   strcmp(*(args+optind+1),"-") == 0)
     {
       optind+=2;
-      return EOF;
+      return -1;
     }
   else if (strcmp(buf_left,"-") == 0)
     {
@@ -360,7 +360,7 @@ int main(int argc, char* argv[])
   int hexflag = 0;
   int omniflag = 0;
 
-  while((c = getopt(argc,argv,"xo")) != EOF) {
+  while((c = getopt(argc,argv,"xo")) != -1) {
     switch(c) {
     case 'x':
       hexflag = 1;
