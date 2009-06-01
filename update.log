@@ -1,3 +1,11 @@
+Mon Jun  1 12:03:11 BST 2009 dgrisby
+====================================
+
+- Chunked encoding did not support data-less values.
+
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Thu May 28 10:51:13 BST 2009 dgrisby
 ====================================
 
