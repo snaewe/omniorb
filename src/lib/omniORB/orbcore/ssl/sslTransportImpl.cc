@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2009/06/16 11:19:30  dgrisby
+  Leak of empty host string in SSL transport.
+
   Revision 1.1.4.6  2009/05/06 16:14:49  dgrisby
   Update lots of copyright notices.
 
@@ -133,6 +136,8 @@ sslTransportImpl::toEndpoint(const char* param) {
     const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
     if (hostname)
       address.host = hostname;
+
+    CORBA::string_free(host);
   }
   else {
     address.host = host;

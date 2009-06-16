@@ -1,3 +1,11 @@
+Tue Jun 16 12:18:41 BST 2009 dgrisby
+====================================
+
+- Leak of empty host string in SSL transport.
+
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+
 Tue Jun 16 12:02:45 BST 2009 dgrisby
 ====================================
 
