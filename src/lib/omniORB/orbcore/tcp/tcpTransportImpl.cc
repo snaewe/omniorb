@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2009/06/16 11:03:45  dgrisby
+  IPv6 build issues on Solaris.
+
   Revision 1.1.4.15  2009/05/06 16:14:46  dgrisby
   Update lots of copyright notices.
 
@@ -396,6 +399,7 @@ void ifaddrs_get_ifinfo(omnivector<const char*>& addrs)
 #    define ifc_buf  lifc_buf
 #    define ifc_req  lifc_req
 #    define ifr_addr lifr_addr
+#    define ifr_name lifr_name
 #  else
 #    ifdef __aix__
 #      define OMNI_SIOCGIFCONF OSIOCGIFCONF

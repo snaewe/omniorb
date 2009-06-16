@@ -104,6 +104,11 @@ OMNI_CXX_COVARIANT_RETURNS
 OMNI_CXX_LONG_IS_INT
 
 
+dnl ** Libraries
+
+AC_SEARCH_LIBS(getaddrinfo, [nsl socket])
+
+
 dnl ** Functions
 
 AC_LANG(C)

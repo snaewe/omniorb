@@ -1,3 +1,13 @@
+Tue Jun 16 12:02:45 BST 2009 dgrisby
+====================================
+
+- IPv6 build issues on Solaris.
+
+configure
+configure.ac
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Mon Jun  1 12:03:11 BST 2009 dgrisby
 ====================================
 
