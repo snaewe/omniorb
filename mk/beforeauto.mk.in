@@ -858,9 +858,6 @@ OMNITHREAD_CPPFLAGS += -D_REENTRANT
 OMNITHREAD_LIB += -ldce -lcma
 else
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10
-OMNITHREAD_CPPFLAGS += -D_HPUX_SOURCE \
-		       -D_POSIX_C_SOURCE=199506L
-OMNITHREAD_LIB += -lpthread
 endif
 
 define StaticLinkLibrary
@@ -901,14 +898,11 @@ endif
 
 ifdef Compiler_aCC
 CXXDEBUGFLAGS     = -O
-CXXOPTIONS       += -w +inst_v -mt
-CXXLINKOPTIONS   += -Wl,+s
+CXXOPTIONS       += -AA -w -mt
 CDEBUGFLAGS       = -O
-COPTIONS          = -w -Aa -D_HPUX_SOURCE
-CLINKOPTIONS      = -Wl,+s
+COPTIONS          = -w -mt
 
-SHAREDLIB_CPPFLAGS += +Z
-SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname -Wl,+s -lstd -lCsup
+SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname -lCsup
 endif
 
 endif
