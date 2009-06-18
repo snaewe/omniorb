@@ -7,13 +7,9 @@
 
 %define lib_name %{?mklibname:%mklibname %{_name} 4.1}%{!?mklibname:lib%{_name}4.1}
 
-%if "%{_vendor}" == "mandriva"
-%define py_sitedir %{_prefix}/lib*/python%{py_ver}/site-packages
-%endif
-%if "%{_vendor}" == "redhat"
-%define py_ver     %(python -c 'import sys;print(sys.version[0:3])')
-%define py_sitedir %{_prefix}/lib*/python%{py_ver}/site-packages
-%endif
+%{!?py_ver: %define py_ver %(python -c "import sys;print(sys.version[0:3])")}
+%{!?py_sitedir: %define py_sitedir %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0,0,'%{_prefix}')")}
+%{!?py_sitearch: %define py_sitearch %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1,0,'%{_prefix}')")}
 
 Summary: Object Request Broker (ORB)
 Name:    %{_name}
@@ -27,6 +23,12 @@ URL:     http://omniorb.sourceforge.net/
 BuildRequires:  gcc-c++
 BuildRequires:  glibc-devel openssl-devel
 BuildRequires:  python python-devel
+%if "%{_vendor}" == "suse"
+BuildRequires:  klogd syslog-ng
+%endif
+%if "%{_vendor}" == "mandriva"
+BuildRequires:  sysklogd
+%endif
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 
 %description
@@ -74,6 +76,11 @@ Prereq:         /sbin/insserv
 Prereq:         /sbin/service /sbin/chkconfig
 %endif
 Requires: %{name}-servers = %{version}-%{release} %{name}-utils = %{version}-%{release}
+%if "%{_vendor}" == "mandriva"
+Prereq:  sysklogd
+%else
+Prereq: syslog
+%endif
 Provides: %{_name}-bootscripts = %{version}-%{release}
 Obsoletes: omniORB-bootscripts omniorb
 
@@ -128,7 +135,7 @@ Developer documentation and examples.
 cp -f etc/init.d/omniNames.SuSE.in etc/init.d/omniNames.in
 %endif
 
-%{?configure:%configure}%{!?configure:./configure --prefix=%{_prefix} --libdir=%{_libdir}} --with-openssl=%{_prefix}
+%{?configure:%configure}%{!?configure:./configure --prefix=%{_prefix} --libdir=%{_libdir}} --with-openssl=%{_prefix} --with-omniNames-logdir=%{_localstatedir}/lib/omniNames
 
 
 %build
@@ -138,19 +145,24 @@ cp -f etc/init.d/omniNames.SuSE.in etc/init.d/omniNames.in
 
 %install
 [ -z %{buildroot} ] || rm -rf %{buildroot}
+mkdir %{buildroot}
 
-%{?makeinstall_std:%makeinstall_std}%{!?makeinstall_std:make DESTDIR=%{buildroot} install}
+%if "%{_vendor}" == "suse"
+%{?makeinstall:%makeinstall}%{!?makeinstall:make DESTDIR=%{buildroot} install}
+%else
+%{?make:%make}%{!?make:make} install DESTDIR=%{buildroot}
+%endif
 
 mkdir -p %{buildroot}%{_initrddir}
 mkdir -p %{buildroot}%{_sysconfdir}
 cp sample.cfg %{buildroot}%{_sysconfdir}/omniORB.cfg
 cp etc/init.d/omniNames %{buildroot}%{_initrddir}
 
-mkdir -p %{buildroot}%{_mandir}/man{1,8}
+mkdir -p %{buildroot}%{_mandir}/man{1,5}
 cp -r man/* %{buildroot}%{_mandir}
 
-mkdir -p %{buildroot}%{_var}/omniNames
-mkdir -p %{buildroot}%{_localstatedir}/omniMapper
+mkdir -p %{buildroot}%{_localstatedir}/lib/omniNames
+mkdir -p %{buildroot}%{_localstatedir}/lib/omniMapper
 
 # Rename catior to avoid naming conflict with TAO
 mv %{buildroot}%{_bindir}/catior %{buildroot}%{_bindir}/catior.omni
@@ -187,7 +199,7 @@ OMNIUIDOPT="-r"
 OMNIUIDOPT="-u %{omniuid}"
 %endif
 /usr/sbin/groupadd ${OMNIGIDOPT} omni >/dev/null 2>&1 || :
-/usr/sbin/useradd ${OMNIUIDOPT} -M -g omni -d /var/omniNames \
+/usr/sbin/useradd ${OMNIUIDOPT} -M -g omni -d %{_localstatedir}/lib/omniNames \
   -s /bin/bash -c "omniORB servers" omni >/dev/null 2>&1 || :
 
 %pre bootscripts
@@ -219,8 +231,8 @@ if [ $1 -eq 0 ]; then
   /sbin/service omniNames stop >/dev/null 2>&1
   /sbin/chkconfig --del omniNames
 %endif
-  rm -rf /var/omniNames/*
-  rm -rf /var/lib/omniMapper/*
+  rm -rf %{_localstatedir}/lib/omniNames/*
+  rm -rf %{_localstatedir}/lib/omniMapper/*
 fi
 
 %postun -n %{lib_name}
@@ -243,10 +255,8 @@ fi
 
 %files servers
 %defattr (-,root,root)
-%dir %attr(700,omni,omni) %{_var}/omniNames
-%dir %attr(700,omni,omni) %{_localstatedir}/omniMapper
-%attr(644,root,man) %{_mandir}/man1/omniNames*
-#%attr(644,root,man) %{_mandir}/man1/omniMapper*
+%dir %attr(700,omni,omni) %{_localstatedir}/lib/omniNames
+%dir %attr(700,omni,omni) %{_localstatedir}/lib/omniMapper
 %attr(755,root,root) %{_bindir}/omniMapper
 %attr(755,root,root) %{_bindir}/omniNames
 # Thin substitute for standard Linux init script
@@ -263,6 +273,7 @@ fi
 %files utils
 %defattr (-,root,root)
 %attr(644,root,man) %{_mandir}/man1/catior*
+%attr(644,root,man) %{_mandir}/man1/convertior*
 %attr(644,root,man) %{_mandir}/man1/genior*
 %attr(644,root,man) %{_mandir}/man1/nameclt*
 %{_bindir}/catior.omni
@@ -274,23 +285,26 @@ fi
 %files -n %{lib_name}-devel
 %defattr(-,root,root)
 %doc readmes/*
+%attr(644,root,man) %{_mandir}/man1/omnicpp*
 %attr(644,root,man) %{_mandir}/man1/omniidl*
 %{_bindir}/omnicpp
 %{_bindir}/omniidl
-%{_bindir}/omniidlrun.py
+%{_bindir}/omniidlrun.py*
 %{_bindir}/omkdepend
 %{_libdir}/*.a
 %{_libdir}/*.so
 %{_includedir}/*
-%{_datadir}/idl/*
-%{py_sitedir}/omniidl/*
+%{_datadir}/idl
+%{py_sitedir}/omniidl
+%dir %{py_sitedir}/omniidl_be
 %{py_sitedir}/omniidl_be/*.py*
+%dir %{py_sitedir}/omniidl_be/cxx
 %{py_sitedir}/omniidl_be/cxx/*.py*
-%{py_sitedir}/omniidl_be/cxx/header/*
-%{py_sitedir}/omniidl_be/cxx/skel/*
-%{py_sitedir}/omniidl_be/cxx/dynskel/*
-%{py_sitedir}/omniidl_be/cxx/impl/*
-%{py_sitedir}/_omniidlmodule.so*
+%{py_sitedir}/omniidl_be/cxx/header
+%{py_sitedir}/omniidl_be/cxx/skel
+%{py_sitedir}/omniidl_be/cxx/dynskel
+%{py_sitedir}/omniidl_be/cxx/impl
+%{py_sitearch}/_omniidlmodule.so*
 %{_libdir}/pkgconfig/*.pc
 
 
