@@ -62,10 +62,12 @@ endif
 clean::
 	$(RM) static/*.o
 	$(RM) $(staticlib)
+	(dir=static; $(CleanStaticLibrary))
 
 veryclean::
 	$(RM) static/*.o
 	$(RM) $(staticlib)
+	(dir=static; $(CleanStaticLibrary))
 
 else
 

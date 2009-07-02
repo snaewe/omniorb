@@ -87,10 +87,12 @@ endif
 clean::
 	$(RM) static/*.o
 	$(RM) $(staticlib)
+	(dir=static; $(CleanStaticLibrary))
 
 veryclean::
 	$(RM) static/*.o
 	$(RM) $(staticlib)
+	(dir=static; $(CleanStaticLibrary))
 
 else
 
@@ -206,10 +208,12 @@ export:: $(dbuglib)
 clean::
 	$(RM) debug/*.o
 	$(RM) $(dbuglib)
+	(dir=debug; $(CleanStaticLibrary))
 
 veryclean::
 	$(RM) debug/*.o
 	$(RM) $(dbuglib)
+	(dir=debug; $(CleanStaticLibrary))
 
 #####################################################
 #      DLL debug libraries

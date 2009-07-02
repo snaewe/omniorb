@@ -1,3 +1,16 @@
+Thu Jul  2 14:23:03 BST 2009 dgrisby
+====================================
+
+- Export pdb files for static libraries.
+
+mk/mklib.mk
+mk/win32.mk
+mk/platforms/x86_win32_vs_6.mk
+mk/platforms/x86_win32_vs_7.mk
+mk/platforms/x86_win32_vs_8.mk
+mk/platforms/x86_win32_vs_9.mk
+
+
 Thu Jul  2 09:51:51 BST 2009 dgrisby
 ====================================
 

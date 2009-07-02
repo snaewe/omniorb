@@ -24,7 +24,7 @@ ABSTOP = $(shell cd $(TOP); pwd)
 # In that case, uncomment the first line below.
 
 #PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
-#PYTHON = /cygdrive/c/Python24/python
+#PYTHON = /cygdrive/c/Python26/python
 
 
 # Use the following set of flags to build and use multithreaded DLLs
@@ -43,9 +43,9 @@ MSVC_DLL_CLINKDEBUGOPTIONS     = -nologo -DEBUG
 #
 # Use the following set of flags to build and use multithread static libraries
 #
-MSVC_STATICLIB_CXXNODEBUGFLAGS       = -MT -EHs -GS -GR -nologo
+MSVC_STATICLIB_CXXNODEBUGFLAGS       = -MT -EHs -GS -GR -Zi -nologo
 MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS = -nologo -DEBUG
-MSVC_STATICLIB_CNODEBUGFLAGS         = -MT -GS -GR -nologo
+MSVC_STATICLIB_CNODEBUGFLAGS         = -MT -GS -GR -Zi -nologo
 MSVC_STATICLIB_CLINKNODEBUGOPTIONS   = -nologo -DEBUG
 
 MSVC_STATICLIB_CXXDEBUGFLAGS         = -MTd -EHs -RTC1 -GS -GR -Zi -nologo

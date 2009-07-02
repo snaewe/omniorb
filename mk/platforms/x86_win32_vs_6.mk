@@ -24,7 +24,7 @@ ABSTOP = $(shell cd $(TOP); pwd)
 # In that case, uncomment the first line below.
 
 #PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
-#PYTHON = /cygdrive/c/Python24/python
+#PYTHON = /cygdrive/c/Python26/python
 
 
 # Use the following set of flags to build and use multithreaded DLLs

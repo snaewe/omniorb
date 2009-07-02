@@ -157,6 +157,13 @@ define ExportLibrary
  for file in $$files; do \
    $(ExportFileToDir); \
  done; \
+ for pfile in $$files; do \
+   file=$${pfile%.lib}.pdb; \
+   echo "YYY" $$pfile $$file; \
+   if [ -f $$file ]; then \
+     $(ExportFileToDir); \
+   fi; \
+ done;\
 )
 endef
 endif
@@ -410,6 +417,17 @@ $(RM) $${dir:-.}/*.dll $${dir:-.}/*.lib $${dir:-.}/*.exp $${dir:-.}/*.def \
       $${dir:-.}/*.rc $${dir:-.}/*.res)
 endef
 
+# CleanStaticLibrary
+#   Expected shell variable:
+#      dir = directory name to clean. Default to . (current directory)
+#
+define CleanStaticLibrary
+( set -x; \
+$(RM) $${dir:-.}/*.lib $${dir:-.}/*.exp $${dir:-.}/*.def \
+      $${dir:-.}/*.ilk $${dir:-.}/*.pdb \
+      $${dir:-.}/*.rc $${dir:-.}/*.res)
+endef
+
 # Pattern rules to build objects files for static and shared library and the
 # debug versions for both.
 # The convention is to build object files and libraries in different
@@ -423,35 +441,35 @@ endef
 # to compile the source for the library.
 
 static/%.o: %.cc
-	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_STATICLIB_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_STATICLIB_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdstatic\\$(LIB_NAME)$(major).pdb $<
 
 debug/%.o: %.cc
-	$(CXX) -c  $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c  $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fddebug\\$(LIB_NAME)$(major)d.pdb $<
 
 shared/%DynSK.o: %DynSK.cc
-	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
 
 shared/%SK.o: %SK.cc
-	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
 
 shared/%.o: %.cc
-	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
 
 
 shareddebug/%DynSK.o: %DynSK.cc
-	$(CXX) -c  -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c  -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
 
 shareddebug/%SK.o: %SK.cc
-	$(CXX) -c  -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c  -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
 
 shareddebug/%.o: %.cc
-	$(CXX) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
 
 static/%.o: %.c
-	$(CC) -c $(CDEBUGFLAGS) $(MSVC_STATICLIB_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CC) -c $(CDEBUGFLAGS) $(MSVC_STATICLIB_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdstatic\\$(LIB_NAME)$(major).pdb $<
 
 debug/%.o: %.c
-	$(CC) -c $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CC) -c $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdstatic\\$(LIB_NAME)$(major)d.pdb $<
 
 shared/%.o: %.c
 	$(CC) -c $(CDEBUGFLAGS) $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
