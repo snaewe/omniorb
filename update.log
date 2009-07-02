@@ -1,3 +1,12 @@
+Thu Jul  2 09:51:51 BST 2009 dgrisby
+====================================
+
+- Unix endpoints not properly supported by transport rules. Thanks
+  Serguei Kolos and Zsolt Rizsanyi.
+
+src/lib/omniORB/orbcore/transportRules.cc
+
+
 Thu Jun 18 10:06:31 BST 2009 dgrisby
 ====================================
 

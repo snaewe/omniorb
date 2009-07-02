@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2009/07/02 08:53:11  dgrisby
+  Unix endpoints not properly supported by transport rules. Thanks
+  Serguei Kolos and Zsolt Rizsanyi.
+
   Revision 1.1.4.10  2009/05/06 16:14:54  dgrisby
   Update lots of copyright notices.
 
@@ -287,22 +291,6 @@ public:
 
   CORBA::Boolean match(const char* endpoint) { 
 
-    CORBA::String_var ipv4;
-    ipv4 = extractHost(endpoint);
-    if ((const char*)ipv4) {
-      if (LibcWrapper::isip4addr(ipv4)) {
-	CORBA::ULong address = inet_addr((char*)ipv4);
-	return (network_ == (address & netmask_));
-      }
-      else if (strncasecmp(ipv4, "::ffff:", 7) == 0 &&
-	       LibcWrapper::isip4addr((const char*)ipv4 + 7)) {
-
-	// IPv4 in IPv6
-	CORBA::ULong address = inet_addr((char*)ipv4 + 7);
-	return (network_ == (address & netmask_));
-      }
-    }
-
     if (strncmp(endpoint,"giop:unix",9) == 0) {
       // local transport. Does this rule apply to this host's 
       // IP address(es)? 
@@ -320,6 +308,22 @@ public:
 	  i++;
 	}
 	return 0;
+      }
+    }
+
+    CORBA::String_var ipv4;
+    ipv4 = extractHost(endpoint);
+    if ((const char*)ipv4) {
+      if (LibcWrapper::isip4addr(ipv4)) {
+	CORBA::ULong address = inet_addr((char*)ipv4);
+	return (network_ == (address & netmask_));
+      }
+      else if (strncasecmp(ipv4, "::ffff:", 7) == 0 &&
+	       LibcWrapper::isip4addr((const char*)ipv4 + 7)) {
+
+	// IPv4 in IPv6
+	CORBA::ULong address = inet_addr((char*)ipv4 + 7);
+	return (network_ == (address & netmask_));
       }
     }
     return 0;
@@ -372,13 +376,6 @@ public:
 
   CORBA::Boolean match(const char* endpoint)
   {
-    CORBA::String_var ipv6;
-    ipv6 = extractHost(endpoint);
-
-    if ((const char*)ipv6 && LibcWrapper::isip6addr(ipv6)) {
-      return matchAddr(ipv6);
-    }
-
     if (strncmp(endpoint,"giop:unix",9) == 0) {
       // local transport. Does this rule apply to this host's 
       // IP address(es)? 
@@ -394,6 +391,13 @@ public:
 	  i++;
 	}
       }
+    }
+
+    CORBA::String_var ipv6;
+    ipv6 = extractHost(endpoint);
+
+    if ((const char*)ipv6 && LibcWrapper::isip6addr(ipv6)) {
+      return matchAddr(ipv6);
     }
     return 0;
   }
