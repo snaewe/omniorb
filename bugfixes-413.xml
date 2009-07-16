@@ -40,4 +40,61 @@
   <reported>Jacob Feisley</reported>
 </bug>
 
+<bug id="4" date="Wed Dec  3 10:50:44 GMT 2008" user="dgrisby">
+  <summary>Incorrect generated code for some float constants</summary>
+  <text>
+  Very small float constants led to invalid generated code.
+  </text>
+  <reported>Will Denissen</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-November/029792.html"/>
+</bug>
+
+<bug id="5" date="Wed Dec  3 10:50:44 GMT 2008" user="dgrisby">
+  <summary>Scoping problem in code generated for struct marshalling</summary>
+  <text>
+  Ambiguous generated code with awkward nested type names.
+  </text>
+  <reported>Will Denissen</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-November/029792.html"/>
+</bug>
+
+<bug id="6" date="Mon Dec 29 15:10:23 GMT 2008" user="dgrisby">
+  <summary>Infinite loop on socket error</summary>
+  <text>
+  On platforms with recv() that cannot be interrupted, a socket error
+  would lead to an infinite loop.
+  </text>
+  <reported>Masaaki Sekiya</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-November/029772.html"/>
+</bug>
+
+<bug id="7" date="Mon Feb  2 12:28:53 GMT 2009" user="dgrisby">
+  <summary>Memory leaks in DynAny</summary>
+  <text>
+  Memory leaks setting members / elements with DynAnys.
+  </text>
+  <reported>Sampo Ahokas</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2009-January/029874.html"/>
+</bug>
+
+<bug id="8" date="Mon Jun  1 12:03:11 BST 2009" user="dgrisby">
+  <summary>Assertion failure with empty valuetype in omniORBpy</summary>
+  <text>
+  ORB core chunked encoding did not support empty chunks.
+  </text>
+  <reported>Stephane Bonniez</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2009-May/030102.html"/>
+</bug>
+
+<bug id="9" date="Thu Jul  2 09:51:51 BST 2009" user="dgrisby">
+  <summary>Crash with unix transport when using transport rules</summary>
+  <text>
+  An object reference with just a unix endpoint would cause a crash if
+  using transport rules.
+  </text>
+  <reported>Serguei Kolos</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2009-June/030119.html"/>
+</bug>
+
+
 </buglist>

@@ -1,11 +1,20 @@
 RELEASE NOTES
 =============
 
-This is omniORB 4.1.3.
+This is omniORB 4.1.4.
 
 See README.unix or README.win32.txt for building instructions.
 See the documentation in the doc directory for more information.
 
+
+Changes since omniORB 4.1.3
+---------------------------
+
+ - Bug fixes. See bugfixes-413.xml
+
+ - Connection management enhancements and logging improvements.
+
+ - Ability to switch bidirectional mode at run-time.
 
 
 Changes since omniORB 4.1.2

@@ -1,3 +1,21 @@
+Thu Jul 16 14:08:54 BST 2009 dgrisby
+====================================
+
+- Updates for omniORB 4.1.4.
+
+README.FIRST.txt
+ReleaseChecklist.txt
+ReleaseNotes.txt
+THIS_IS_OMNIORB_4_1_3
+THIS_IS_OMNIORB_4_1_4
+bugfixes-413.xml
+configure
+configure.ac
+contrib/RPMs/omniORB.spec
+include/omniORB4/acconfig.h.in
+mk/version.mk
+
+
 Thu Jul  2 14:23:03 BST 2009 dgrisby
 ====================================
 

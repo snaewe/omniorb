@@ -12,6 +12,8 @@ bugfixes-XXX.xml
 
 configure.ac
 
+spec files
+
 tag repository
 
 Features web page
