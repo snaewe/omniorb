@@ -3,66 +3,40 @@
 <HTML>
 <HEAD>
 
-
-
-<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.08">
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
 <LINK rel="stylesheet" type="text/css" href="omniORB.css">
-<TITLE>
-The Basics
-</TITLE>
+<TITLE>The Basics</TITLE>
 </HEAD>
 <BODY >
-<A HREF="omniORB001.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
-<A HREF="omniORB003.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<A HREF="omniORB001.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB003.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
 <HR>
-
-<H1 CLASS="chapter"><A NAME="htoc8">Chapter&nbsp;2</A>&nbsp;&nbsp;The Basics</H1>
-<A NAME="chap:basic"></A>
-In this chapter, we go through three examples to illustrate the
+<H1 CLASS="chapter"><A NAME="htoc8">Chapter&#XA0;2</A>&#XA0;&#XA0;The Basics</H1><P>
+<A NAME="chap:basic"></A></P><P>In this chapter, we go through three examples to illustrate the
 practical steps to use omniORB. By going through the source code of
 each example, the essential concepts and APIs are introduced. If you
 have no previous experience with using CORBA, you should study this
 chapter in detail. There are pointers to other essential documents you
-should be familiar with.<BR>
-<BR>
-If you have experience with using other ORBs, you should still go
+should be familiar with.</P><P>If you have experience with using other ORBs, you should still go
 through this chapter because it provides important information about
 the features and APIs that are necessarily omniORB specific. With the
-Portable Object Adapter, there are very few omniORB specific details.<BR>
-<BR>
-<A NAME="toc4"></A>
-<H2 CLASS="section"><A NAME="htoc9">2.1</A>&nbsp;&nbsp;The Echo Object Example</H2>
-Our example is an object which has only one method. The method simply
-echos the argument string. We have to:
-<OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">define the object interface in IDL;
-<LI CLASS="li-enumerate">use the IDL compiler to generate the stub code<SUP><A NAME="text3" HREF="#note3">1</A></SUP>;
-<LI CLASS="li-enumerate">provide the <I>servant</I> object implementation;
-<LI CLASS="li-enumerate">write the client code.</OL>
-These examples are in the <TT>src/examples/echo</TT> directory of the
+Portable Object Adapter, there are very few omniORB specific details.</P><H2 CLASS="section"><A NAME="toc4"></A><A NAME="htoc9">2.1</A>&#XA0;&#XA0;The Echo Object Example</H2><P>Our example is an object which has only one method. The method simply
+echos the argument string. We have to:</P><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">define the object interface in IDL;
+</LI><LI CLASS="li-enumerate">use the IDL compiler to generate the stub code<SUP><A NAME="text3" HREF="#note3">1</A></SUP>;
+</LI><LI CLASS="li-enumerate">provide the <I>servant</I> object implementation;
+</LI><LI CLASS="li-enumerate">write the client code.</LI></OL><P>These examples are in the <TT>src/examples/echo</TT> directory of the
 omniORB distribution; there are several other examples one directory
-above that in <TT>src/examples</TT>.<BR>
-<BR>
-<A NAME="toc5"></A>
-<H2 CLASS="section"><A NAME="htoc10">2.2</A>&nbsp;&nbsp;Specifying the Echo interface in IDL</H2>
-We define an object interface, called <TT>Echo</TT>, as follows:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>interface</B> Echo {</TT><TT>
-</TT><TT>    <B>string</B> echoString(<B>in</B> <B>string</B> mesg);</TT><TT>
-</TT><TT>};</TT></DIV><BR>
-<BR>
-If you are new to IDL, you can learn about its syntax in Chapter 3 of
-the CORBA 2.6 specification&nbsp;[<A HREF="omniORB014.html#corba26-spec"><CITE>OMG01</CITE></A>]. For the moment, you
+above that in <TT>src/examples</TT>.</P><H2 CLASS="section"><A NAME="toc5"></A><A NAME="htoc10">2.2</A>&#XA0;&#XA0;Specifying the Echo interface in IDL</H2><P>We define an object interface, called <TT>Echo</TT>, as follows:</P><DIV CLASS="lstlisting"><B>interface</B> Echo {
+    <B>string</B> echoString(<B>in</B> <B>string</B> mesg);
+};</DIV><P>If you are new to IDL, you can learn about its syntax in Chapter 3 of
+the CORBA 2.6 specification&#XA0;[<A HREF="omniORB014.html#corba26-spec">OMG01</A>]. For the moment, you
 only need to know that the interface consists of a single operation,
 <TT>echoString()</TT>, which takes a string as an input argument and returns
-a copy of the same string.<BR>
-<BR>
-The interface is written in a file, called <TT>echo.idl</TT>. It is part
+a copy of the same string.</P><P>The interface is written in a file, called <TT>echo.idl</TT>. It is part
 of the CORBA standard that all IDL files should have the extension
-`<TT>.idl</TT>', although omniORB does not enforce this.<BR>
-<BR>
-For simplicity, the interface is defined in the global IDL namespace.
+&#X2018;<TT>.idl</TT>&#X2019;, although omniORB does not enforce this.</P><P>For simplicity, the interface is defined in the global IDL namespace.
 You should avoid this practice for the sake of object reusability. If
 every CORBA developer defines their interfaces in the global IDL
 namespace, there is a danger of name clashes between two independently
@@ -70,145 +44,95 @@ defined interfaces. Therefore, it is better to qualify your interfaces
 by defining them inside <TT>module</TT> names. Of course, this does not
 eliminate the chance of a name clash unless some form of naming
 convention is agreed globally. Nevertheless, a well-chosen module name
-can help a lot.<BR>
-<BR>
-<A NAME="toc6"></A>
-<H2 CLASS="section"><A NAME="htoc11">2.3</A>&nbsp;&nbsp;Generating the C++ stubs</H2>
-From the IDL file, we use the IDL compiler to produce the C++ mapping
+can help a lot.</P><H2 CLASS="section"><A NAME="toc6"></A><A NAME="htoc11">2.3</A>&#XA0;&#XA0;Generating the C++ stubs</H2><P>From the IDL file, we use the IDL compiler to produce the C++ mapping
 of the interface. The IDL compiler for omniORB is called omniidl.
 Given the IDL file, omniidl produces two stub files: a C++ header file
 and a C++ source file. For example, from the file <TT>echo.idl</TT>, the
-following files are produced:
-<UL CLASS="itemize"><LI CLASS="li-itemize">
+following files are produced:</P><UL CLASS="itemize"><LI CLASS="li-itemize">
 <TT>echo.hh</TT>
-<LI CLASS="li-itemize"><TT>echoSK.cc</TT>
-</UL>
-omniidl must be invoked with the <TT>-bcxx</TT> argument to
+</LI><LI CLASS="li-itemize"><TT>echoSK.cc</TT>
+</LI></UL><P>omniidl must be invoked with the <TT>-bcxx</TT> argument to
 tell it to generate C++ stubs. The following command line generates
-the stubs for <TT>echo.idl</TT>:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT>omniidl -bcxx echo.idl</TT></DIV><BR>
-<BR>
-If you are using our make environment (ODE), you don't need
+the stubs for <TT>echo.idl</TT>:</P><DIV CLASS="lstlisting">omniidl -bcxx echo.idl</DIV><P>If you are using our make environment (ODE), you don&#X2019;t need
 to invoke omniidl explicitly. In the example file <TT>dir.mk</TT>, we
-have the following line:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT>CORBA_INTERFACES = echo</TT></DIV><BR>
-<BR>
-That is all we need to instruct ODE to generate the stubs.
-Remember, you won't find the stubs in your working directory because
+have the following line:</P><DIV CLASS="lstlisting">CORBA_INTERFACES = echo</DIV><P>That is all we need to instruct ODE to generate the stubs.
+Remember, you won&#X2019;t find the stubs in your working directory because
 all stubs are written into the <TT>stub</TT> directory at the top level
-of your build tree.<BR>
-<BR>
-The full arguments to omniidl are detailed in
-chapter&nbsp;<A HREF="omniORB005.html#chap:omniidl">5</A>.<BR>
-<BR>
-<A NAME="toc7"></A>
-<H2 CLASS="section"><A NAME="htoc12">2.4</A>&nbsp;&nbsp;Object References and Servants</H2>
-We contact a CORBA object through an <I>object reference</I>. The
-actual implementation of a CORBA object is termed a <I>servant</I>.<BR>
-<BR>
-Object references and servants are quite separate entities, and it is
+of your build tree.</P><P>The full arguments to omniidl are detailed in
+chapter&#XA0;<A HREF="omniORB005.html#chap:omniidl">5</A>.</P><H2 CLASS="section"><A NAME="toc7"></A><A NAME="htoc12">2.4</A>&#XA0;&#XA0;Object References and Servants</H2><P>We contact a CORBA object through an <I>object reference</I>. The
+actual implementation of a CORBA object is termed a <I>servant</I>.</P><P>Object references and servants are quite separate entities, and it is
 important not to confuse the two. Client code deals purely with object
 references, so there can be no confusion; object implementation code
 must deal with both object references and servants. omniORB 4 uses
 distinct C++ types for object references and servants, so the C++
 compiler will complain if you use a servant when an object reference
-is expected, or vice-versa.<BR>
-<BR>
-<HR SIZE=2><DL CLASS="list" COMPACT="compact"><DT CLASS="dt-list"><DD CLASS="dd-list">
-<DIV CLASS="center"><B>Warning</B></DIV><BR>
-<BR>
-omniORB 2.x <EM>did not</EM> use distinct types for object references
+is expected, or vice-versa.</P><DIV CLASS="minipage"><HR SIZE=2><DL CLASS="list"><DT CLASS="dt-list">
+
+</DT><DD CLASS="dd-list">
+<DIV CLASS="center"><B>Warning</B></DIV><P>omniORB 2.x <EM>did not</EM> use distinct types for object references
 and servants, and often accepted a pointer to a servant when the CORBA
 specification says it should only accept an object reference. If you
 have code which relies on this, it will not compile with omniORB 3.x
 or 4.x, even under the BOA compatibility mode.
-</DL><HR SIZE=2><BR>
-<BR>
-<A NAME="toc8"></A>
-<H2 CLASS="section"><A NAME="htoc13">2.5</A>&nbsp;&nbsp;A Quick Tour of the C++ stubs</H2>
-The C++ stubs conform to the standard mapping defined in the CORBA
-specification&nbsp;[<A HREF="omniORB014.html#cxxmapping"><CITE>OMG03</CITE></A>]. It is important to understand the
+</P></DD></DL><HR SIZE=2></DIV><H2 CLASS="section"><A NAME="toc8"></A><A NAME="htoc13">2.5</A>&#XA0;&#XA0;A Quick Tour of the C++ stubs</H2><P>The C++ stubs conform to the standard mapping defined in the CORBA
+specification&#XA0;[<A HREF="omniORB014.html#cxxmapping">OMG03</A>]. It is important to understand the
 mapping before you start writing any serious CORBA applications.
 Before going any further, it is worth knowing what the mapping looks
-like.<BR>
-<BR>
-For the example interface <TT>Echo</TT>, the C++ mapping for its object
+like.</P><P>For the example interface <TT>Echo</TT>, the C++ mapping for its object
 reference is <TT>Echo_ptr</TT>. The type is defined in <TT>echo.hh</TT>.
 The relevant section of the code is reproduced below. The stub code
-produced by other ORBs will be functionally equivalent to omniORB's,
-but will almost certainly look very different.<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>class</B> Echo;</TT><TT>
-</TT><TT><B>class</B> _objref_Echo;</TT><TT>
-</TT><TT><B>class</B> _impl_Echo;</TT><TT>
-</TT><TT><B>typedef</B> _objref_Echo* Echo_ptr;</TT><TT>
-</TT><TT>
-</TT><TT><B>class</B> Echo {</TT><TT>
-</TT><TT><B>public</B>:</TT><TT>
-</TT><TT>  <I>// Declarations for this interface type.</I></TT><TT>
-</TT><TT>  <B>typedef</B> Echo_ptr _ptr_type;</TT><TT>
-</TT><TT>  <B>typedef</B> Echo_var _var_type;</TT><TT>
-</TT><TT>
-</TT><TT>  <B>static</B> _ptr_type _duplicate(_ptr_type);</TT><TT>
-</TT><TT>  <B>static</B> _ptr_type _narrow(CORBA::Object_ptr);</TT><TT>
-</TT><TT>  <B>static</B> _ptr_type _nil();</TT><TT>
-</TT><TT>
-</TT><TT>  <I>// ... methods generated for internal use</I></TT><TT>
-</TT><TT>};</TT><TT>
-</TT><TT>
-</TT><TT><B>class</B> _objref_Echo :</TT><TT>
-</TT><TT>  <B>public</B> <B>virtual</B> CORBA::Object, <B>public</B> <B>virtual</B> omniObjRef {</TT><TT>
-</TT><TT><B>public</B>:</TT><TT>
-</TT><TT>  <B>char</B> * echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
-</TT><TT>
-</TT><TT>  <I>// ... methods generated for internal use</I></TT><TT>
-</TT><TT>};</TT></DIV><BR>
-<BR>
-In a compliant application, the operations defined in an object
+produced by other ORBs will be functionally equivalent to omniORB&#X2019;s,
+but will almost certainly look very different.</P><DIV CLASS="lstlisting"><B>class</B> Echo;
+<B>class</B> _objref_Echo;
+<B>class</B> _impl_Echo;
+<B>typedef</B> _objref_Echo* Echo_ptr;
+
+<B>class</B> Echo {
+<B>public</B>:
+  <I>// Declarations for this interface type.</I>
+  <B>typedef</B> Echo_ptr _ptr_type;
+  <B>typedef</B> Echo_var _var_type;
+
+  <B>static</B> _ptr_type _duplicate(_ptr_type);
+  <B>static</B> _ptr_type _narrow(CORBA::Object_ptr);
+  <B>static</B> _ptr_type _nil();
+
+  <I>// ... methods generated for internal use</I>
+};
+
+<B>class</B> _objref_Echo :
+  <B>public</B> <B>virtual</B> CORBA::Object, <B>public</B> <B>virtual</B> omniObjRef {
+<B>public</B>:
+  <B>char</B> * echoString(<B>const</B> <B>char</B>* mesg);
+
+  <I>// ... methods generated for internal use</I>
+};</DIV><P>In a compliant application, the operations defined in an object
 interface should <B>only</B> be invoked via an object reference.
-This is done by using arrow (`<TT>-&gt;</TT>') on an object reference.
+This is done by using arrow (&#X2018;<TT>-&gt;</TT>&#X2019;) on an object reference.
 For example, the call to the operation <TT>echoString()</TT> would be
-written as <TT>obj-&gt;echoString(mesg)</TT>.<BR>
-<BR>
-It should be noted that the concrete type of an object reference is
+written as <TT>obj-&gt;echoString(mesg)</TT>.</P><P>It should be noted that the concrete type of an object reference is
 opaque, i.e. you must not make any assumption about how an object
 reference is implemented. In our example, even though <TT>Echo_ptr</TT>
 is implemented as a pointer to the class <TT>_objref_Echo</TT>, it
 should not be used as a C++ pointer, i.e. conversion to <TT>void*</TT>,
 arithmetic operations, and relational operations including testing for
-equality using <TT>operator==</TT>, must not be performed on the type.<BR>
-<BR>
-In addition to class <TT>_objref_Echo</TT>, the mapping defines three
+equality using <TT>operator==</TT>, must not be performed on the type.</P><P>In addition to class <TT>_objref_Echo</TT>, the mapping defines three
 static member functions in the class <TT>Echo</TT>: <TT>_nil()</TT>,
-<TT>_duplicate()</TT>, and <TT>_narrow()</TT>.<BR>
-<BR>
-The <TT>_nil()</TT> function returns a nil object reference of the Echo
-interface. The following call is guaranteed to return TRUE:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT>CORBA::Boolean true_result = CORBA::is_nil(Echo::_nil());</TT></DIV><BR>
-<BR>
-Remember, <TT>CORBA::is_nil()</TT> is the only compliant way to check if an
+<TT>_duplicate()</TT>, and <TT>_narrow()</TT>.</P><P>The <TT>_nil()</TT> function returns a nil object reference of the Echo
+interface. The following call is guaranteed to return TRUE:</P><DIV CLASS="lstlisting">CORBA::Boolean true_result = CORBA::is_nil(Echo::_nil());</DIV><P>Remember, <TT>CORBA::is_nil()</TT> is the only compliant way to check if an
 object reference is nil. You should not use the equality
 <TT>operator==</TT>. Many C++ ORBs use the null pointer to represent a
-nil object reference; <EM>omniORB does not</EM>.<BR>
-<BR>
-The <TT>_duplicate()</TT> function returns a new object reference of the
+nil object reference; <EM>omniORB does not</EM>.</P><P>The <TT>_duplicate()</TT> function returns a new object reference of the
 <TT>Echo</TT> interface. The new object reference can be used
 interchangeably with the old object reference to perform an operation
 on the same object. Duplications are required to satisfy the C++
-mapping's reference counting memory management.<BR>
-<BR>
-All CORBA objects inherit from the generic object
+mapping&#X2019;s reference counting memory management.</P><P>All CORBA objects inherit from the generic object
 <TT>CORBA::Object</TT>. <TT>CORBA::Object_ptr</TT> is the object
 reference type for <TT>CORBA::Object</TT>. Any <TT>_ptr</TT> object
 reference is therefore conceptually inherited from
 <TT>CORBA::Object_ptr</TT>. In other words, an object reference such as
 <TT>Echo_ptr</TT> can be used in places where a
-<TT>CORBA::Object_ptr</TT> is expected.<BR>
-<BR>
-The <TT>_narrow()</TT> function takes an argument of type
+<TT>CORBA::Object_ptr</TT> is expected.</P><P>The <TT>_narrow()</TT> function takes an argument of type
 <TT>CORBA::Object_ptr</TT> and returns a new object reference of the
 <TT>Echo</TT> interface. If the actual (runtime) type of the argument
 object reference can be narrowed to <TT>Echo_ptr</TT>, <TT>_narrow()</TT>
@@ -217,149 +141,104 @@ object reference. Note that <TT>_narrow()</TT> performs an implicit
 duplication of the object reference, so the result must be released.
 Note also that <TT>_narrow()</TT> may involve a remote call to check the
 type of the object, so it may throw CORBA system exceptions such as
-<TT>COMM_FAILURE</TT> or <TT>OBJECT_NOT_EXIST</TT>.<BR>
-<BR>
-To indicate that an object reference will no longer be accessed, you
+<TT>COMM_FAILURE</TT> or <TT>OBJECT_NOT_EXIST</TT>.</P><P>To indicate that an object reference will no longer be accessed, you
 must call the <TT>CORBA::release()</TT> operation. Its signature is as
-follows:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>namespace</B> CORBA {</TT><TT>
-</TT><TT>  <B>void</B> release(CORBA::Object_ptr obj);</TT><TT>
-</TT><TT>  ... <I>// other methods</I></TT><TT>
-</TT><TT>};</TT></DIV><BR>
-<BR>
-Once you have called <TT>CORBA::release()</TT> on an object reference, you
+follows:</P><DIV CLASS="lstlisting"><B>namespace</B> CORBA {
+  <B>void</B> release(CORBA::Object_ptr obj);
+  ... <I>// other methods</I>
+};</DIV><P>Once you have called <TT>CORBA::release()</TT> on an object reference, you
 must no longer use that reference. This is because the associated
 resources may have been deallocated. Notice that we are referring to
 the resources associated with the object reference and <B>not the
 servant object</B>. Servant objects are not affected by the lifetimes of
 object references. In particular, servants are not deleted when all
-references to them have been released&mdash;CORBA does not perform
-distributed garbage collection.<BR>
-<BR>
-As described above, the equality <TT>operator==</TT> should not be used
+references to them have been released&#X2014;CORBA does not perform
+distributed garbage collection.</P><P>As described above, the equality <TT>operator==</TT> should not be used
 on object references. To test if two object references are equivalent,
 the member function <TT>_is_equivalent()</TT> of the generic object
-<TT>CORBA::Object</TT> can be used. Here is an example of its usage:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT>Echo_ptr A;</TT><TT>
-</TT><TT>...            <I>// initialise A to a valid object reference </I></TT><TT>
-</TT><TT>Echo_ptr B = A;</TT><TT>
-</TT><TT>CORBA::Boolean true_result = A-&gt;_is_equivalent(B);</TT><TT>
-</TT><TT><I>// Note: the above call is guaranteed to be TRUE</I></TT></DIV><BR>
-<BR>
-You have now been introduced to most of the operations that can be
+<TT>CORBA::Object</TT> can be used. Here is an example of its usage:</P><DIV CLASS="lstlisting">Echo_ptr A;
+...            <I>// initialise A to a valid object reference </I>
+Echo_ptr B = A;
+CORBA::Boolean true_result = A-&gt;_is_equivalent(B);
+<I>// Note: the above call is guaranteed to be TRUE</I></DIV><P>You have now been introduced to most of the operations that can be
 invoked via <TT>Echo_ptr</TT>. The generic object <TT>CORBA::Object</TT>
 provides a few more operations and all of them can be invoked via
-<TT>Echo_ptr</TT>. These operations deal mainly with CORBA's dynamic
+<TT>Echo_ptr</TT>. These operations deal mainly with CORBA&#X2019;s dynamic
 interfaces. You do not have to understand them in order to use the C++
-mapping provided via the stubs.<BR>
-<BR>
-Since object references must be released explicitly, their usage is
+mapping provided via the stubs.</P><P>Since object references must be released explicitly, their usage is
 prone to error and can lead to memory leakage. The mapping defines the
 <I>object reference variable</I> type to make life easier. In our
-example, the variable type <TT>Echo_var</TT> is defined<SUP><A NAME="text4" HREF="#note4">2</A></SUP>.<BR>
-<BR>
-The <TT>Echo_var</TT> is more convenient to use because it will
+example, the variable type <TT>Echo_var</TT> is defined<SUP><A NAME="text4" HREF="#note4">2</A></SUP>.</P><P>The <TT>Echo_var</TT> is more convenient to use because it will
 automatically release its object reference when it is deallocated or
 when assigned a new object reference. For many operations, mixing data
 of type <TT>Echo_var</TT> and <TT>Echo_ptr</TT> is possible without any
 explicit operations or castings<SUP><A NAME="text5" HREF="#note5">3</A></SUP>. For instance, the operation
-<TT>echoString()</TT> can be called using the arrow (`<TT>-&gt;</TT>') on a
-<TT>Echo_var</TT>, as one can do with a <TT>Echo_ptr</TT>.<BR>
-<BR>
-The usage of <TT>Echo_var</TT> is illustrated below:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT>Echo_var a;</TT><TT>
-</TT><TT>Echo_ptr p = ... <I>// somehow obtain an object reference</I></TT><TT>
-</TT><TT>
-</TT><TT>a = p;           <I>// a assumes ownership of p, must not use p any more</I></TT><TT>
-</TT><TT>
-</TT><TT>Echo_var b = a;  <I>// implicit _duplicate</I></TT><TT>
-</TT><TT>
-</TT><TT>p = ...          <I>// somehow obtain another object reference</I></TT><TT>
-</TT><TT>
-</TT><TT>a = Echo::_duplicate(p);     <I>// release old object reference</I></TT><TT>
-</TT><TT>                             <I>// a now holds a copy of p.</I></TT></DIV><BR>
-<BR>
+<TT>echoString()</TT> can be called using the arrow (&#X2018;<TT>-&gt;</TT>&#X2019;) on a
+<TT>Echo_var</TT>, as one can do with a <TT>Echo_ptr</TT>.</P><P>The usage of <TT>Echo_var</TT> is illustrated below:</P><DIV CLASS="lstlisting">Echo_var a;
+Echo_ptr p = ... <I>// somehow obtain an object reference</I>
 
-<H3 CLASS="subsection"><A NAME="htoc14">2.5.1</A>&nbsp;&nbsp;Servant Object Implementation</H3>
-<A NAME="stubobjimpl"></A>
-Before the Portable Object Adapter (POA) specification, many of the
+a = p;           <I>// a assumes ownership of p, must not use p any more</I>
+
+Echo_var b = a;  <I>// implicit _duplicate</I>
+
+p = ...          <I>// somehow obtain another object reference</I>
+
+a = Echo::_duplicate(p);     <I>// release old object reference</I>
+                             <I>// a now holds a copy of p.</I></DIV><H3 CLASS="subsection"><A NAME="htoc14">2.5.1</A>&#XA0;&#XA0;Servant Object Implementation</H3><P>
+<A NAME="stubobjimpl"></A></P><P>Before the Portable Object Adapter (POA) specification, many of the
 details of how servant objects should be implemented and registered
 with the system were unspecified, so server-side code was not portable
 between ORBs. The POA specification rectifies that. omniORB 4 still
 supports the old omniORB 2.x BOA mapping, but you should always use
 the POA mapping for new code. BOA code and POA code can coexist within
-a single program. See section&nbsp;<A HREF="omniORB003.html#sec:BOAcompat">3.1</A> for details of the
-BOA compatibility, and problems you may encounter.<BR>
-<BR>
-For each object interface, a <I>skeleton</I> class is generated. In
+a single program. See section&#XA0;<A HREF="omniORB003.html#sec:BOAcompat">3.1</A> for details of the
+BOA compatibility, and problems you may encounter.</P><P>For each object interface, a <I>skeleton</I> class is generated. In
 our example, the POA specification says that the skeleton class for
 interface <TT>Echo</TT> is named <TT>POA_Echo</TT>. A servant
 implementation can be written by creating an implementation class that
-derives from the skeleton class.<BR>
-<BR>
-The skeleton class <TT>POA_Echo</TT> is defined in <TT>echo.hh</TT>. The
-relevant section of the code is reproduced below.<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>class</B> POA_Echo :</TT><TT>
-</TT><TT>  <B>public</B> <B>virtual</B> PortableServer::ServantBase</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT><B>public</B>:</TT><TT>
-</TT><TT>  Echo_ptr _this();</TT><TT>
-</TT><TT>
-</TT><TT>  <B>virtual</B> <B>char</B> * echoString(<B>const</B> <B>char</B>*  mesg) = 0;</TT><TT>
-</TT><TT>  <I>// ...</I></TT><TT>
-</TT><TT>};</TT></DIV><BR>
-<BR>
-The code fragment shows the only member functions that can be used in
+derives from the skeleton class.</P><P>The skeleton class <TT>POA_Echo</TT> is defined in <TT>echo.hh</TT>. The
+relevant section of the code is reproduced below.</P><DIV CLASS="lstlisting"><B>class</B> POA_Echo :
+  <B>public</B> <B>virtual</B> PortableServer::ServantBase
+{
+<B>public</B>:
+  Echo_ptr _this();
+
+  <B>virtual</B> <B>char</B> * echoString(<B>const</B> <B>char</B>*  mesg) = 0;
+  <I>// ...</I>
+};</DIV><P>The code fragment shows the only member functions that can be used in
 the object implementation code. Other member functions are generated
 for internal use only. As with the code generated for object
 references, other POA-based ORBs will generate code which looks
-different, but is functionally equivalent to this.
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B><TT>echoString()</TT></B><DD CLASS="dd-description"><BR>
+different, but is functionally equivalent to this.</P><DL CLASS="description"><DT CLASS="dt-description"><B><TT>echoString()</TT></B></DT><DD CLASS="dd-description"><BR>
 It is through this abstract function that an implementation class
 provides the implementation of the <TT>echoString()</TT> operation. Notice
 that its signature is the same as the <TT>echoString()</TT> function that
-can be invoked via the <TT>Echo_ptr</TT> object reference.<BR>
-<BR>
-<DT CLASS="dt-description"><B><TT>_this()</TT></B><DD CLASS="dd-description"><BR>
+can be invoked via the <TT>Echo_ptr</TT> object reference.</DD><DT CLASS="dt-description"><B><TT>_this()</TT></B></DT><DD CLASS="dd-description"><BR>
 This function returns an object reference for the target object,
 provided the POA policies permit it. The returned value must be
-deallocated via <TT>CORBA::release()</TT>. See section&nbsp;<A HREF="#objeg1">2.8</A>
-for an example of how this function is used.</DL>
-<A NAME="toc9"></A>
-<H2 CLASS="section"><A NAME="htoc15">2.6</A>&nbsp;&nbsp;Writing the servant implementation</H2>
-<A NAME="objimpl"></A>
-You define an implementation class to provide the servant
+deallocated via <TT>CORBA::release()</TT>. See section&#XA0;<A HREF="#objeg1">2.8</A>
+for an example of how this function is used.</DD></DL><H2 CLASS="section"><A NAME="toc9"></A><A NAME="htoc15">2.6</A>&#XA0;&#XA0;Writing the servant implementation</H2><P>
+<A NAME="objimpl"></A></P><P>You define an implementation class to provide the servant
 implementation. There is little constraint on how you design your
-implementation class except that it has to inherit from the stubs'
+implementation class except that it has to inherit from the stubs&#X2019;
 skeleton class and to implement all the abstract functions defined in
 the skeleton class. Each of these abstract functions corresponds to an
 operation of the interface. They are the hooks for the ORB to perform
-upcalls to your implementation.<BR>
-<BR>
-Here is a simple implementation of the Echo object.<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>class</B> Echo_i : <B>public</B> POA_Echo</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT><B>public</B>:</TT><TT>
-</TT><TT>  <B>inline</B> Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> ~Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
-</TT><TT>};</TT><TT>
-</TT><TT>
-</TT><TT><B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>return</B> CORBA::string_dup(mesg);</TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
-There are four points to note here:
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>Storage Responsibilities</B><DD CLASS="dd-description"><BR>
+upcalls to your implementation.</P><P>Here is a simple implementation of the Echo object.</P><DIV CLASS="lstlisting"><B>class</B> Echo_i : <B>public</B> POA_Echo
+{
+<B>public</B>:
+  <B>inline</B> Echo_i() {}
+  <B>virtual</B> ~Echo_i() {}
+  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);
+};
+
+<B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)
+{
+  <B>return</B> CORBA::string_dup(mesg);
+}</DIV><P>There are four points to note here:</P><DL CLASS="description"><DT CLASS="dt-description"><B>Storage Responsibilities</B></DT><DD CLASS="dd-description"><BR>
 A string, which is used both as an in argument and the return value of
 <TT>echoString()</TT>, is a variable size data type. Other examples of
-variable size data types include sequences, type `any', etc. For these
+variable size data types include sequences, type &#X2018;any&#X2019;, etc. For these
 data types, you must be clear about whose responsibility it is to
 allocate and release the associated storage. As a rule of thumb, the
 client (or the caller to the implementation functions) owns the
@@ -368,20 +247,14 @@ must copy the data if it wants to retain a copy. For OUT arguments and
 return values, the object implementation allocates the storage and
 passes the ownership to the client. The client must release the
 storage when the variables will no longer be used. For details,
-please refer to the C++ mapping specification.<BR>
-<BR>
-<DT CLASS="dt-description"><B>Multi-threading</B><DD CLASS="dd-description"><BR>
+please refer to the C++ mapping specification.</DD><DT CLASS="dt-description"><B>Multi-threading</B></DT><DD CLASS="dd-description"><BR>
 As omniORB is fully multithreaded, multiple threads may perform the
 same upcall to your implementation concurrently. It is up to your
-implementation to synchronise the threads' accesses to shared data.
+implementation to synchronise the threads&#X2019; accesses to shared data.
 In our simple example, we have no shared data to protect so no thread
-synchronisation is necessary.<BR>
-<BR>
-Alternatively, you can create a POA which has the
+synchronisation is necessary.<P>Alternatively, you can create a POA which has the
 <TT>SINGLE_THREAD_MODEL</TT> Thread Policy. This guarantees that all
-calls to that POA are processed sequentially.<BR>
-<BR>
-<DT CLASS="dt-description"><B>Reference Counting</B><DD CLASS="dd-description"><BR>
+calls to that POA are processed sequentially.</P></DD><DT CLASS="dt-description"><B>Reference Counting</B></DT><DD CLASS="dd-description"><BR>
 All servant objects are reference counted. The base
 <TT>PortableServer::ServantBase</TT> class from which all servant
 skeleton classes derive defines member functions named <TT>_add_ref()</TT>
@@ -389,61 +262,45 @@ and <TT>_remove_ref()</TT><SUP><A NAME="text6" HREF="#note6">4</A></SUP>. The re
 counting means that an <TT>Echo_i</TT> instance will be deleted when no
 more references to it are held by application code or the POA
 itself. Note that this is totally separate from the reference counting
-which is associated with object references&mdash;a servant object is
-<EM>never</EM> deleted due to a CORBA object reference being released.<BR>
-<BR>
-<DT CLASS="dt-description"><B>Instantiation</B><DD CLASS="dd-description"><BR>
+which is associated with object references&#X2014;a servant object is
+<EM>never</EM> deleted due to a CORBA object reference being released.</DD><DT CLASS="dt-description"><B>Instantiation</B></DT><DD CLASS="dd-description"><BR>
 Servants are usually instantiated on the heap, i.e. using the
 <TT>new</TT> operator. However, they can also be created on the stack as
 automatic variables. If you do that, it is vital to make sure that the
 servant has been deactivated, and thus released by the POA, before the
-variable goes out of scope and is destroyed.</DL>
-<A NAME="toc10"></A>
-<H2 CLASS="section"><A NAME="htoc16">2.7</A>&nbsp;&nbsp;Writing the client</H2>
-Here is an example of how an <TT>Echo_ptr</TT> object reference is
-used.<BR>
-<BR>
-
-<DIV CLASS="lstlisting"><TT><FONT SIZE=1>   1</FONT> </TT><TT><B>void</B></TT><TT>
-<FONT SIZE=1>   2</FONT> </TT><TT>hello(CORBA::Object_ptr obj)</TT><TT>
-<FONT SIZE=1>   3</FONT> </TT><TT>{</TT><TT>
-<FONT SIZE=1>   4</FONT> </TT><TT>  Echo_var e = Echo::_narrow(obj);</TT><TT>
-<FONT SIZE=1>   5</FONT> </TT><TT>
-<FONT SIZE=1>   6</FONT> </TT><TT>  <B>if</B> (CORBA::is_nil(e)) {</TT><TT>
-<FONT SIZE=1>   7</FONT> </TT><TT>    cerr &lt;&lt; "cannot invoke on a nil object reference."</TT><TT>
-<FONT SIZE=1>   8</FONT> </TT><TT>         &lt;&lt; endl;</TT><TT>
-<FONT SIZE=1>   9</FONT> </TT><TT>    <B>return</B>;</TT><TT>
-<FONT SIZE=1>  10</FONT> </TT><TT>  }</TT><TT>
-<FONT SIZE=1>  11</FONT> </TT><TT>
-<FONT SIZE=1>  12</FONT> </TT><TT>  CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";</TT><TT>
-<FONT SIZE=1>  13</FONT> </TT><TT>  CORBA::String_var dest;</TT><TT>
-<FONT SIZE=1>  14</FONT> </TT><TT>
-<FONT SIZE=1>  15</FONT> </TT><TT>  dest = e-&gt;echoString(src);</TT><TT>
-<FONT SIZE=1>  16</FONT> </TT><TT>
-<FONT SIZE=1>  17</FONT> </TT><TT>  cerr &lt;&lt; "I said,\"" &lt;&lt; src &lt;&lt; "\"."</TT><TT>
-<FONT SIZE=1>  18</FONT> </TT><TT>       &lt;&lt; " The Object said,\"" &lt;&lt; dest &lt;&lt;"\"" &lt;&lt; endl;</TT><TT>
-<FONT SIZE=1>  19</FONT> </TT><TT>}</TT></DIV><BR>
-<BR>
-Briefly, the <TT>hello()</TT> function accepts a generic object reference.
+variable goes out of scope and is destroyed.</DD></DL><H2 CLASS="section"><A NAME="toc10"></A><A NAME="htoc16">2.7</A>&#XA0;&#XA0;Writing the client</H2><P>Here is an example of how an <TT>Echo_ptr</TT> object reference is
+used.</P><DIV CLASS="lstlisting"><FONT SIZE=1>   1</FONT> <B>void</B>
+<FONT SIZE=1>   2</FONT> hello(CORBA::Object_ptr obj)
+<FONT SIZE=1>   3</FONT> {
+<FONT SIZE=1>   4</FONT>   Echo_var e = Echo::_narrow(obj);
+<FONT SIZE=1>   5</FONT> 
+<FONT SIZE=1>   6</FONT>   <B>if</B> (CORBA::is_nil(e)) {
+<FONT SIZE=1>   7</FONT>     cerr &lt;&lt; "cannot invoke on a nil object reference."
+<FONT SIZE=1>   8</FONT>          &lt;&lt; endl;
+<FONT SIZE=1>   9</FONT>     <B>return</B>;
+<FONT SIZE=1>  10</FONT>   }
+<FONT SIZE=1>  11</FONT> 
+<FONT SIZE=1>  12</FONT>   CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";
+<FONT SIZE=1>  13</FONT>   CORBA::String_var dest;
+<FONT SIZE=1>  14</FONT> 
+<FONT SIZE=1>  15</FONT>   dest = e-&gt;echoString(src);
+<FONT SIZE=1>  16</FONT> 
+<FONT SIZE=1>  17</FONT>   cerr &lt;&lt; "I said,\"" &lt;&lt; src &lt;&lt; "\"."
+<FONT SIZE=1>  18</FONT>        &lt;&lt; " The Object said,\"" &lt;&lt; dest &lt;&lt;"\"" &lt;&lt; endl;
+<FONT SIZE=1>  19</FONT> }</DIV><P>Briefly, the <TT>hello()</TT> function accepts a generic object reference.
 The object reference (<TT>obj</TT>) is narrowed to <TT>Echo_ptr</TT>. If
 the object reference returned by <TT>Echo::_narrow()</TT> is not nil, the
 operation <TT>echoString()</TT> is invoked. Finally, both the argument to
-and the return value of <TT>echoString()</TT> are printed to <TT>cerr</TT>.<BR>
-<BR>
-The example also illustrates how <TT>T_var</TT> types are used. As was
+and the return value of <TT>echoString()</TT> are printed to <TT>cerr</TT>.</P><P>The example also illustrates how <TT>T_var</TT> types are used. As was
 explained in the previous section, <TT>T_var</TT> types take care of
 storage allocation and release automatically when variables are
-reassigned or when the variables go out of scope.<BR>
-<BR>
-In line 4, the variable <TT>e</TT> takes over the storage responsibility
+reassigned or when the variables go out of scope.</P><P>In line 4, the variable <TT>e</TT> takes over the storage responsibility
 of the object reference returned by <TT>Echo::_narrow()</TT>. The object
 reference is released by the destructor of <TT>e</TT>. It is called
 automatically when the function returns. Lines 6 and 15 show how a
 <TT>Echo_var</TT> variable is used. As explained earlier, the
 <TT>Echo_var</TT> type can be used interchangeably with the
-<TT>Echo_ptr</TT> type.<BR>
-<BR>
-The argument and the return value of <TT>echoString()</TT> are stored in
+<TT>Echo_ptr</TT> type.</P><P>The argument and the return value of <TT>echoString()</TT> are stored in
 <TT>CORBA::String_var</TT> variables <TT>src</TT> and <TT>dest</TT>
 respectively. The strings managed by the variables are deallocated by
 the destructor of <TT>CORBA::String_var</TT>. It is called
@@ -454,257 +311,175 @@ used. They can be used in place of a string (for which the mapping is
 (<TT>const char*</TT>) to a <TT>CORBA::String_var</TT> causes the string
 to be copied. On the other hand, assigning a <TT>char*</TT> to a
 <TT>CORBA::String_var</TT>, as used in line 15, causes the latter to
-assume the ownership of the string<SUP><A NAME="text8" HREF="#note8">6</A></SUP>.<BR>
-<BR>
-Under the C++ mapping, <TT>T_var</TT> types are provided for all the
+assume the ownership of the string<SUP><A NAME="text8" HREF="#note8">6</A></SUP>.</P><P>Under the C++ mapping, <TT>T_var</TT> types are provided for all the
 non-basic data types. It is obvious that one should use automatic
 variables whenever possible both to avoid memory leaks and to maximise
 performance. However, when one has to allocate data items on the heap,
 it is a good practice to use the <TT>T_var</TT> types to manage the
-heap storage.<BR>
-<BR>
-<A NAME="toc11"></A>
-<H2 CLASS="section"><A NAME="htoc17">2.8</A>&nbsp;&nbsp;Example 1 &mdash; Colocated Client and Implementation</H2>
-<A NAME="objeg1"></A>
-Having introduced the client and the object implementation, we can now
+heap storage.</P><H2 CLASS="section"><A NAME="toc11"></A><A NAME="htoc17">2.8</A>&#XA0;&#XA0;Example 1 &#X2014; Colocated Client and Implementation</H2><P>
+<A NAME="objeg1"></A></P><P>Having introduced the client and the object implementation, we can now
 describe how to link up the two via the ORB and POA. In this section,
 we describe an example in which both the client and the object
 implementation are in the same address space. In the next two
 sections, we shall describe the case where the two are in different
-address spaces.<BR>
-<BR>
-The code for this example is reproduced below:<BR>
-<BR>
-
-<DIV CLASS="lstlisting"><TT><FONT SIZE=1>   1</FONT> </TT><TT><B>int</B></TT><TT>
-<FONT SIZE=1>   2</FONT> </TT><TT>main(<B>int</B> argc, <B>char</B> **argv)</TT><TT>
-<FONT SIZE=1>   3</FONT> </TT><TT>{</TT><TT>
-<FONT SIZE=1>   4</FONT> </TT><TT>  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB4");</TT><TT>
-<FONT SIZE=1>   5</FONT> </TT><TT>
-<FONT SIZE=1>   6</FONT> </TT><TT>  CORBA::Object_var       obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
-<FONT SIZE=1>   7</FONT> </TT><TT>  PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
-<FONT SIZE=1>   8</FONT> </TT><TT>
-<FONT SIZE=1>   9</FONT> </TT><TT>  Echo_i *myecho = <B>new</B> Echo_i();</TT><TT>
-<FONT SIZE=1>  10</FONT> </TT><TT>  PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
-<FONT SIZE=1>  11</FONT> </TT><TT>
-<FONT SIZE=1>  12</FONT> </TT><TT>  Echo_var myechoref = myecho-&gt;_this();</TT><TT>
-<FONT SIZE=1>  13</FONT> </TT><TT>  myecho-&gt;_remove_ref();</TT><TT>
-<FONT SIZE=1>  14</FONT> </TT><TT>
-<FONT SIZE=1>  15</FONT> </TT><TT>  PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
-<FONT SIZE=1>  16</FONT> </TT><TT>  pman-&gt;activate();</TT><TT>
-<FONT SIZE=1>  17</FONT> </TT><TT>
-<FONT SIZE=1>  18</FONT> </TT><TT>  hello(myechoref);</TT><TT>
-<FONT SIZE=1>  19</FONT> </TT><TT>
-<FONT SIZE=1>  20</FONT> </TT><TT>  orb-&gt;destroy();</TT><TT>
-<FONT SIZE=1>  21</FONT> </TT><TT>  <B>return</B> 0;</TT><TT>
-<FONT SIZE=1>  22</FONT> </TT><TT>}</TT></DIV><BR>
-<BR>
-The example illustrates several important interactions among the ORB,
-the POA, the servant, and the client. Here are the details:<BR>
-<BR>
-
-<H3 CLASS="subsection"><A NAME="htoc18">2.8.1</A>&nbsp;&nbsp;ORB initialisation</H3>
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>Line 4</B><DD CLASS="dd-description"><BR>
+address spaces.</P><P>The code for this example is reproduced below:</P><DIV CLASS="lstlisting"><FONT SIZE=1>   1</FONT> <B>int</B>
+<FONT SIZE=1>   2</FONT> main(<B>int</B> argc, <B>char</B> **argv)
+<FONT SIZE=1>   3</FONT> {
+<FONT SIZE=1>   4</FONT>   CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB4");
+<FONT SIZE=1>   5</FONT> 
+<FONT SIZE=1>   6</FONT>   CORBA::Object_var       obj = orb-&gt;resolve_initial_references("RootPOA");
+<FONT SIZE=1>   7</FONT>   PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+<FONT SIZE=1>   8</FONT> 
+<FONT SIZE=1>   9</FONT>   Echo_i *myecho = <B>new</B> Echo_i();
+<FONT SIZE=1>  10</FONT>   PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);
+<FONT SIZE=1>  11</FONT> 
+<FONT SIZE=1>  12</FONT>   Echo_var myechoref = myecho-&gt;_this();
+<FONT SIZE=1>  13</FONT>   myecho-&gt;_remove_ref();
+<FONT SIZE=1>  14</FONT> 
+<FONT SIZE=1>  15</FONT>   PortableServer::POAManager_var pman = poa-&gt;the_POAManager();
+<FONT SIZE=1>  16</FONT>   pman-&gt;activate();
+<FONT SIZE=1>  17</FONT> 
+<FONT SIZE=1>  18</FONT>   hello(myechoref);
+<FONT SIZE=1>  19</FONT> 
+<FONT SIZE=1>  20</FONT>   orb-&gt;destroy();
+<FONT SIZE=1>  21</FONT>   <B>return</B> 0;
+<FONT SIZE=1>  22</FONT> }</DIV><P>The example illustrates several important interactions among the ORB,
+the POA, the servant, and the client. Here are the details:</P><H3 CLASS="subsection"><A NAME="htoc18">2.8.1</A>&#XA0;&#XA0;ORB initialisation</H3><DL CLASS="description"><DT CLASS="dt-description"><B>Line 4</B></DT><DD CLASS="dd-description"><BR>
 The ORB is initialised by calling the <TT>CORBA::ORB_init()</TT>
 function. The function uses the optional 3rd argument to determine
 which ORB should be returned. Unless you are using omniORB specific
 features, it is usually best to leave it out, and get the default
 ORB. To explicitly ask for omniORB 4.x, this argument must be
-`omniORB4'<SUP><A NAME="text9" HREF="#note9">7</A></SUP>.<BR>
-<BR>
-<TT>CORBA::ORB_init()</TT> takes the list of command line arguments and
-processes any that start `<TT>-ORB</TT>'. It removes these arguments
-from the list, so application code does not have to deal with them.<BR>
-<BR>
-If any error occurs during ORB initialisation, such as invalid ORB
+&#X2018;omniORB4&#X2019;<SUP><A NAME="text9" HREF="#note9">7</A></SUP>.<P><TT>CORBA::ORB_init()</TT> takes the list of command line arguments and
+processes any that start &#X2018;<TT>-ORB</TT>&#X2019;. It removes these arguments
+from the list, so application code does not have to deal with them.</P><P>If any error occurs during ORB initialisation, such as invalid ORB
 arguments, or an invalid configuration file, the
-<TT>CORBA::INITIALIZE</TT> system exception is raised.</DL>
-
-<H3 CLASS="subsection"><A NAME="htoc19">2.8.2</A>&nbsp;&nbsp;Obtaining the Root POA</H3>
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>Lines 6&ndash;7</B><DD CLASS="dd-description"><BR>
+<TT>CORBA::INITIALIZE</TT> system exception is raised.</P></DD></DL><H3 CLASS="subsection"><A NAME="htoc19">2.8.2</A>&#XA0;&#XA0;Obtaining the Root POA</H3><DL CLASS="description"><DT CLASS="dt-description"><B>Lines 6&#X2013;7</B></DT><DD CLASS="dd-description"><BR>
 To activate our servant object and make it available to clients, we
 must register it with a POA. In this example, we use the <I>Root
 POA</I>, rather than creating any child POAs. The Root POA is found with
 <TT>orb-&gt;resolve_initial_references()</TT>, which returns a plain
 <TT>CORBA::Object</TT>. In line 7, we narrow the reference to the right
-type for a POA.<BR>
-<BR>
-A POA's behaviour is governed by its <I>policies</I>. The Root POA has
+type for a POA.<P>A POA&#X2019;s behaviour is governed by its <I>policies</I>. The Root POA has
 suitable policies for many simple servers, and closely matches the
-`policies' used by omniORB 2's BOA. See Chapter 11 of the CORBA 2.6
-specification[<A HREF="omniORB014.html#corba26-spec"><CITE>OMG01</CITE></A>] for details of all the POA policies
-which are available.</DL>
-
-<H3 CLASS="subsection"><A NAME="htoc20">2.8.3</A>&nbsp;&nbsp;Object initialisation</H3>
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>Line 9</B><DD CLASS="dd-description"><BR>
+&#X2018;policies&#X2019; used by omniORB 2&#X2019;s BOA. See Chapter 11 of the CORBA 2.6
+specification[<A HREF="omniORB014.html#corba26-spec">OMG01</A>] for details of all the POA policies
+which are available.</P></DD></DL><H3 CLASS="subsection"><A NAME="htoc20">2.8.3</A>&#XA0;&#XA0;Object initialisation</H3><DL CLASS="description"><DT CLASS="dt-description"><B>Line 9</B></DT><DD CLASS="dd-description"><BR>
 An instance of the Echo servant is initialised using the <TT>new</TT>
-operator.<BR>
-<BR>
-<DT CLASS="dt-description"><B>Line 10</B><DD CLASS="dd-description"><BR>
+operator.</DD><DT CLASS="dt-description"><B>Line 10</B></DT><DD CLASS="dd-description"><BR>
 The servant object is activated in the Root POA using
 <TT>poa-&gt;activate_object()</TT>, which returns an object identifier
 (of type <TT>PortableServer::ObjectId*</TT>). The object id must
 be passed back to various POA operations. The caller is responsible
-for freeing the object id, so it is assigned to a <TT>_var</TT> type.<BR>
-<BR>
-<DT CLASS="dt-description"><B>Line 12</B><DD CLASS="dd-description"><BR>
+for freeing the object id, so it is assigned to a <TT>_var</TT> type.</DD><DT CLASS="dt-description"><B>Line 12</B></DT><DD CLASS="dd-description"><BR>
 The object reference is obtained from the servant object by calling
 <TT>_this()</TT>. Like all object references, the return value of
 <TT>_this()</TT> must be released by <TT>CORBA::release()</TT> when it is no
 longer needed. In this case, we assign it to a <TT>_var</TT> type, so
-the release is implicit at the end of the function.<BR>
-<BR>
-One of the important characteristics of an object reference is that it
+the release is implicit at the end of the function.<P>One of the important characteristics of an object reference is that it
 is completely location transparent. A client can invoke on the object
 using its object reference without any need to know whether the
 servant object is colocated in the same address space or is in a
-different address space.<BR>
-<BR>
-In the case of colocated client and servant, omniORB is able to
+different address space.</P><P>In the case of colocated client and servant, omniORB is able to
 short-circuit the client calls so they do not involve IIOP. The calls
 still go through the POA, however, so the various POA policies affect
 local calls in the same way as remote ones. This optimisation is
 applicable not only to object references returned by <TT>_this()</TT>, but
 to any object references that are passed around within the same
-address space or received from other address spaces via remote calls.<BR>
-<BR>
-<DT CLASS="dt-description"><B>Line 13</B><DD CLASS="dd-description"><BR>
+address space or received from other address spaces via remote calls.</P></DD><DT CLASS="dt-description"><B>Line 13</B></DT><DD CLASS="dd-description"><BR>
 The server code releases the reference it holds to the servant
 object. The only reference to that object is now held by the POA (it
 gained the reference on the call to <TT>activate_object()</TT>), so when
 the object is deactivated (or the POA is destroyed), the servant
 object will be deleted automatically. After this point, the code must
-no longer use the <TT>myecho</TT> pointer.</DL>
-
-<H3 CLASS="subsection"><A NAME="htoc21">2.8.4</A>&nbsp;&nbsp;Activating the POA</H3>
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>Lines 15&ndash;16</B><DD CLASS="dd-description"><BR>
+no longer use the <TT>myecho</TT> pointer.</DD></DL><H3 CLASS="subsection"><A NAME="htoc21">2.8.4</A>&#XA0;&#XA0;Activating the POA</H3><DL CLASS="description"><DT CLASS="dt-description"><B>Lines 15&#X2013;16</B></DT><DD CLASS="dd-description"><BR>
 POAs are initially in the <I>holding</I> state, meaning that incoming
-requests are blocked. Lines 15 and 16 acquire a reference to the POA's
+requests are blocked. Lines 15 and 16 acquire a reference to the POA&#X2019;s
 POA manager, and use it to put the POA into the <I>active</I> state.
 Incoming requests are now served. <B>Failing to activate the POA
 is one of the most common programming mistakes. If your program
-appears deadlocked, make sure you activated the POA!</B></DL>
-
-<H3 CLASS="subsection"><A NAME="htoc22">2.8.5</A>&nbsp;&nbsp;Performing a call</H3>
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>Line 18</B><DD CLASS="dd-description"><BR>
+appears deadlocked, make sure you activated the POA!</B></DD></DL><H3 CLASS="subsection"><A NAME="htoc22">2.8.5</A>&#XA0;&#XA0;Performing a call</H3><DL CLASS="description"><DT CLASS="dt-description"><B>Line 18</B></DT><DD CLASS="dd-description"><BR>
 At long last, we can call <TT>hello()</TT> with this object reference. The
 argument is widened implicitly to the generic object reference
-<TT>CORBA::Object_ptr</TT>.</DL>
-
-<H3 CLASS="subsection"><A NAME="htoc23">2.8.6</A>&nbsp;&nbsp;ORB destruction</H3>
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>Line 20</B><DD CLASS="dd-description"><BR>
+<TT>CORBA::Object_ptr</TT>.</DD></DL><H3 CLASS="subsection"><A NAME="htoc23">2.8.6</A>&#XA0;&#XA0;ORB destruction</H3><DL CLASS="description"><DT CLASS="dt-description"><B>Line 20</B></DT><DD CLASS="dd-description"><BR>
 Shutdown the ORB permanently. This call causes the ORB to release all
 its resources, e.g. internal threads, and also to deactivate any
 servant objects which are currently active. When it deactivates the
-<TT>Echo_i</TT> instance, the servant's reference count drops to zero,
-so the servant is deleted.<BR>
-<BR>
-This call is particularly important when writing a CORBA DLL on
+<TT>Echo_i</TT> instance, the servant&#X2019;s reference count drops to zero,
+so the servant is deleted.<P>This call is particularly important when writing a CORBA DLL on
 Windows NT that is to be used from ActiveX. If this call is absent,
-the application will hang when the CORBA DLL is unloaded.</DL>
-<A NAME="toc12"></A>
-<H2 CLASS="section"><A NAME="htoc24">2.9</A>&nbsp;&nbsp;Example 2 &mdash; Different Address Spaces</H2>
-In this example, the client and the object implementation reside in
+the application will hang when the CORBA DLL is unloaded.</P></DD></DL><H2 CLASS="section"><A NAME="toc12"></A><A NAME="htoc24">2.9</A>&#XA0;&#XA0;Example 2 &#X2014; Different Address Spaces</H2><P>In this example, the client and the object implementation reside in
 two different address spaces. The code of this example is almost the
 same as the previous example. The only difference is the extra work
 which needs to be done to pass the object reference from the object
-implementation to the client.<BR>
-<BR>
-The simplest (and quite primitive) way to pass an object reference
+implementation to the client.</P><P>The simplest (and quite primitive) way to pass an object reference
 between two address spaces is to produce a <I>stringified</I> version
 of the object reference and to pass this string to the client as a
 command-line argument. The string is then converted by the client
 into a proper object reference. This method is used in this
 example. In the next example, we shall introduce a better way of
-passing the object reference using the CORBA Naming Service.<BR>
-<BR>
-
-<H3 CLASS="subsection"><A NAME="htoc25">2.9.1</A>&nbsp;&nbsp;Object Implementation: Making a Stringified Object Reference</H3>
-The <TT>main()</TT> function of the server side is reproduced below. The
+passing the object reference using the CORBA Naming Service.</P><H3 CLASS="subsection"><A NAME="htoc25">2.9.1</A>&#XA0;&#XA0;Object Implementation: Making a Stringified Object Reference</H3><P>The <TT>main()</TT> function of the server side is reproduced below. The
 full listing (<TT>eg2_impl.cc</TT>) can be found at the end of this
-chapter.<BR>
-<BR>
-
-<DIV CLASS="lstlisting"><TT><FONT SIZE=1>   1</FONT> </TT><TT><B>int</B> main(<B>int</B> argc, <B>char</B>** argv)</TT><TT>
-<FONT SIZE=1>   2</FONT> </TT><TT>{</TT><TT>
-<FONT SIZE=1>   3</FONT> </TT><TT>  CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
-<FONT SIZE=1>   4</FONT> </TT><TT>
-<FONT SIZE=1>   5</FONT> </TT><TT>  CORBA::Object_var       obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
-<FONT SIZE=1>   6</FONT> </TT><TT>  PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
-<FONT SIZE=1>   7</FONT> </TT><TT>
-<FONT SIZE=1>   8</FONT> </TT><TT>  Echo_i* myecho = <B>new</B> Echo_i();</TT><TT>
-<FONT SIZE=1>   9</FONT> </TT><TT>
-<FONT SIZE=1>  10</FONT> </TT><TT>  PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
-<FONT SIZE=1>  11</FONT> </TT><TT>
-<FONT SIZE=1>  12</FONT> </TT><TT>  obj = myecho-&gt;_this();</TT><TT>
-<FONT SIZE=1>  13</FONT> </TT><TT>  CORBA::String_var sior(orb-&gt;object_to_string(obj));</TT><TT>
-<FONT SIZE=1>  14</FONT> </TT><TT>  cerr &lt;&lt; (<B>char</B>*)sior &lt;&lt; endl;</TT><TT>
-<FONT SIZE=1>  15</FONT> </TT><TT>
-<FONT SIZE=1>  16</FONT> </TT><TT>  myecho-&gt;_remove_ref();</TT><TT>
-<FONT SIZE=1>  17</FONT> </TT><TT>
-<FONT SIZE=1>  18</FONT> </TT><TT>  PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
-<FONT SIZE=1>  19</FONT> </TT><TT>  pman-&gt;activate();</TT><TT>
-<FONT SIZE=1>  20</FONT> </TT><TT>
-<FONT SIZE=1>  21</FONT> </TT><TT>  orb-&gt;run();</TT><TT>
-<FONT SIZE=1>  22</FONT> </TT><TT>  orb-&gt;destroy();</TT><TT>
-<FONT SIZE=1>  23</FONT> </TT><TT>  <B>return</B> 0;</TT><TT>
-<FONT SIZE=1>  24</FONT> </TT><TT>}</TT></DIV><BR>
-<BR>
-The stringified object reference is obtained by calling the ORB's
+chapter.</P><DIV CLASS="lstlisting"><FONT SIZE=1>   1</FONT> <B>int</B> main(<B>int</B> argc, <B>char</B>** argv)
+<FONT SIZE=1>   2</FONT> {
+<FONT SIZE=1>   3</FONT>   CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
+<FONT SIZE=1>   4</FONT> 
+<FONT SIZE=1>   5</FONT>   CORBA::Object_var       obj = orb-&gt;resolve_initial_references("RootPOA");
+<FONT SIZE=1>   6</FONT>   PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+<FONT SIZE=1>   7</FONT> 
+<FONT SIZE=1>   8</FONT>   Echo_i* myecho = <B>new</B> Echo_i();
+<FONT SIZE=1>   9</FONT> 
+<FONT SIZE=1>  10</FONT>   PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);
+<FONT SIZE=1>  11</FONT> 
+<FONT SIZE=1>  12</FONT>   obj = myecho-&gt;_this();
+<FONT SIZE=1>  13</FONT>   CORBA::String_var sior(orb-&gt;object_to_string(obj));
+<FONT SIZE=1>  14</FONT>   cerr &lt;&lt; (<B>char</B>*)sior &lt;&lt; endl;
+<FONT SIZE=1>  15</FONT> 
+<FONT SIZE=1>  16</FONT>   myecho-&gt;_remove_ref();
+<FONT SIZE=1>  17</FONT> 
+<FONT SIZE=1>  18</FONT>   PortableServer::POAManager_var pman = poa-&gt;the_POAManager();
+<FONT SIZE=1>  19</FONT>   pman-&gt;activate();
+<FONT SIZE=1>  20</FONT> 
+<FONT SIZE=1>  21</FONT>   orb-&gt;run();
+<FONT SIZE=1>  22</FONT>   orb-&gt;destroy();
+<FONT SIZE=1>  23</FONT>   <B>return</B> 0;
+<FONT SIZE=1>  24</FONT> }</DIV><P>The stringified object reference is obtained by calling the ORB&#X2019;s
 <TT>object_to_string()</TT> function (line 13). This results in a
-string starting with the signature `IOR:' and followed by some
+string starting with the signature &#X2018;IOR:&#X2019; and followed by some
 hexadecimal digits. All CORBA 2 compliant ORBs are able to convert the
 string into its internal representation of a so-called Interoperable
 Object Reference (IOR). The IOR contains the location information and
 a key to uniquely identify the object implementation in its own
-address space. From the IOR, an object reference can be constructed.<BR>
-<BR>
-
-<H3 CLASS="subsection"><A NAME="htoc26">2.9.2</A>&nbsp;&nbsp;Client: Using a Stringified Object Reference</H3>
-<A NAME="clnt2"></A>
-The stringified object reference is passed to the client as a
-command-line argument. The client uses the ORB's
+address space. From the IOR, an object reference can be constructed.</P><H3 CLASS="subsection"><A NAME="htoc26">2.9.2</A>&#XA0;&#XA0;Client: Using a Stringified Object Reference</H3><P>
+<A NAME="clnt2"></A></P><P>The stringified object reference is passed to the client as a
+command-line argument. The client uses the ORB&#X2019;s
 <TT>string_to_object()</TT> function to convert the string into a generic
 object reference (<TT>CORBA::Object_ptr</TT>). The relevant section of
 the code is reproduced below. The full listing (<TT>eg2_clt.cc</TT>) can
-be found at the end of this chapter.<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>try</B> {</TT><TT>
-</TT><TT>  CORBA::Object_var obj = orb-&gt;string_to_object(argv[1]);</TT><TT>
-</TT><TT>  hello(obj);</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT><B>catch</B>(CORBA::TRANSIENT&amp;) {</TT><TT>
-</TT><TT>  ... <I>// code to handle transient exception...</I></TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
-
-<H3 CLASS="subsection"><A NAME="htoc27">2.9.3</A>&nbsp;&nbsp;Catching System Exceptions</H3>
-When omniORB detects an error condition, it may raise a system
+be found at the end of this chapter.</P><DIV CLASS="lstlisting"><B>try</B> {
+  CORBA::Object_var obj = orb-&gt;string_to_object(argv[1]);
+  hello(obj);
+}
+<B>catch</B>(CORBA::TRANSIENT&amp;) {
+  ... <I>// code to handle transient exception...</I>
+}</DIV><H3 CLASS="subsection"><A NAME="htoc27">2.9.3</A>&#XA0;&#XA0;Catching System Exceptions</H3><P>When omniORB detects an error condition, it may raise a system
 exception. The CORBA specification defines a series of exceptions
 covering most of the error conditions that an ORB may encounter. The
 client may choose to catch these exceptions and recover from the error
 condition<SUP><A NAME="text10" HREF="#note10">8</A></SUP>. For instance, the code fragment, shown in
-section&nbsp;<A HREF="#clnt2">2.9.2</A>, catches the <TT>TRANSIENT</TT> system exception
+section&#XA0;<A HREF="#clnt2">2.9.2</A>, catches the <TT>TRANSIENT</TT> system exception
 which indicates that the object could not be contacted at the time of
-the call, usually meaning the server is not running.<BR>
-<BR>
-All system exceptions inherit from <TT>CORBA::SystemException</TT>. With
+the call, usually meaning the server is not running.</P><P>All system exceptions inherit from <TT>CORBA::SystemException</TT>. With
 compilers that properly support RTTI<SUP><A NAME="text11" HREF="#note11">9</A></SUP>, a single catch of <TT>CORBA::SystemException</TT> will
-catch all the different system exceptions thrown by omniORB.<BR>
-<BR>
-When omniORB detects an internal error such as corrupt data or invalid
+catch all the different system exceptions thrown by omniORB.</P><P>When omniORB detects an internal error such as corrupt data or invalid
 conditions, it raises the exception <TT>omniORB::fatalException</TT>.
 When this exception is raised, it is not sensible to proceed with any
-operation that involves the ORB's runtime. It is best to exit the
+operation that involves the ORB&#X2019;s runtime. It is best to exit the
 program immediately. The exception structure carried by
 <TT>omniORB::fatalException</TT> contains the exact location (the file
 name and the line number) where the exception is raised. In most
 cases, <TT>fatalException</TT>s occur due to incorrect behaviour by the
-application code, but they may be caused by bugs in omniORB.<BR>
-<BR>
-
-<H3 CLASS="subsection"><A NAME="htoc28">2.9.4</A>&nbsp;&nbsp;Lifetime of a CORBA object</H3>
-CORBA objects are either <I>transient</I> or <I>persistent</I>. The
+application code, but they may be caused by bugs in omniORB.</P><H3 CLASS="subsection"><A NAME="htoc28">2.9.4</A>&#XA0;&#XA0;Lifetime of a CORBA object</H3><P>CORBA objects are either <I>transient</I> or <I>persistent</I>. The
 majority are transient, meaning that the lifetime of the CORBA object
 (as contacted through an object reference) is the same as the lifetime
 of its servant object. Persistent objects can live beyond the
@@ -713,114 +488,74 @@ even their process. Persistent objects are, of course, only
 contactable when their associated servants are active, or can be
 activated by their POA with a servant manager<SUP><A NAME="text12" HREF="#note12">10</A></SUP>. A reference to
 a persistent object can be published, and will remain valid even if
-the server process is restarted.<BR>
-<BR>
-A POA's Lifespan Policy determines whether objects created within it
+the server process is restarted.</P><P>A POA&#X2019;s Lifespan Policy determines whether objects created within it
 are transient or persistent. The Root POA has the <TT>TRANSIENT</TT>
-policy.<BR>
-<BR>
-An alternative to creating persistent objects is to register object
+policy.</P><P>An alternative to creating persistent objects is to register object
 references in a <I>naming service</I> and bind them to fixed path
 names. Clients can bind to the object implementations at run time by
 asking the naming service to resolve the path names to the object
 references. CORBA defines a standard naming service, which is a
-component of the Common Object Services (COS)&nbsp;[<A HREF="omniORB014.html#corbaservices"><CITE>OMG98</CITE></A>],
+component of the Common Object Services (COS)&#XA0;[<A HREF="omniORB014.html#corbaservices">OMG98</A>],
 that can be used for this purpose. The next section describes an
-example of how to use the COS Naming Service.<BR>
-<BR>
-<A NAME="toc13"></A>
-<H2 CLASS="section"><A NAME="htoc29">2.10</A>&nbsp;&nbsp;Example 3 &mdash; Using the Naming Service</H2>
-In this example, the object implementation uses the Naming
-Service&nbsp;[<A HREF="omniORB014.html#corbaservices"><CITE>OMG98</CITE></A>] to pass on the object reference to the
+example of how to use the COS Naming Service.</P><H2 CLASS="section"><A NAME="toc13"></A><A NAME="htoc29">2.10</A>&#XA0;&#XA0;Example 3 &#X2014; Using the Naming Service</H2><P>In this example, the object implementation uses the Naming
+Service&#XA0;[<A HREF="omniORB014.html#corbaservices">OMG98</A>] to pass on the object reference to the
 client. This method is far more practical than using stringified
 object references. The full listing of the object implementation
 (<TT>eg3_impl.cc</TT>) and the client (<TT>eg3_clt.cc</TT>) can be found
-at the end of this chapter.<BR>
-<BR>
-The names used by the Naming service consist of a sequence of
+at the end of this chapter.</P><P>The names used by the Naming service consist of a sequence of
 <I>name components</I>. Each name component has an <I>id</I> and a
 <I>kind</I> field, both of which are strings. All name components
 except the last one are bound to a naming context. A naming context is
 analogous to a directory in a filing system: it can contain names of
 object references or other naming contexts. The last name component is
-bound to an object reference.<BR>
-<BR>
-Sequences of name components can be represented as a flat string,
-using `.' to separate the id and kind fields, and `/' to separate name
+bound to an object reference.</P><P>Sequences of name components can be represented as a flat string,
+using &#X2018;.&#X2019; to separate the id and kind fields, and &#X2018;/&#X2019; to separate name
 components from each other<SUP><A NAME="text13" HREF="#note13">11</A></SUP>. In our example, the Echo object
 reference is bound to the stringified name
-`<TT>test.my_context/Echo.Object</TT>'.<BR>
-<BR>
-The kind field is intended to describe the name in a
+&#X2018;<TT>test.my_context/Echo.Object</TT>&#X2019;.</P><P>The kind field is intended to describe the name in a
 syntax-independent way. The naming service does not interpret, assign,
 or manage these values. However, both the name and the kind attribute
 must match for a name lookup to succeed. In this example, the kind
 values for <TT>test</TT> and <TT>Echo</TT> are chosen to be
-`<TT>my_context</TT>' and `<TT>Object</TT>' respectively. This is an
-arbitrary choice as there is no standardised set of kind values.<BR>
-<BR>
-
-<H3 CLASS="subsection"><A NAME="htoc30">2.10.1</A>&nbsp;&nbsp;Obtaining the Root Context Object Reference</H3>
-<A NAME="resolveinit"></A>
-The initial contact with the Naming Service can be established via the
+&#X2018;<TT>my_context</TT>&#X2019; and &#X2018;<TT>Object</TT>&#X2019; respectively. This is an
+arbitrary choice as there is no standardised set of kind values.</P><H3 CLASS="subsection"><A NAME="htoc30">2.10.1</A>&#XA0;&#XA0;Obtaining the Root Context Object Reference</H3><P>
+<A NAME="resolveinit"></A></P><P>The initial contact with the Naming Service can be established via the
 <I>root</I> context. The object reference to the root context is
 provided by the ORB and can be obtained by calling
 <TT>resolve_initial_references()</TT>. The following code fragment shows
-how it is used:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT>CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv);</TT><TT>
-</TT><TT>
-</TT><TT>CORBA::Object_var initServ;</TT><TT>
-</TT><TT>initServ = orb-&gt;resolve_initial_references("NameService");</TT><TT>
-</TT><TT>
-</TT><TT>CosNaming::NamingContext_var rootContext;</TT><TT>
-</TT><TT>rootContext = CosNaming::NamingContext::_narrow(initServ);</TT></DIV><BR>
-<BR>
-Remember, omniORB constructs its internal list of initial references
+how it is used:</P><DIV CLASS="lstlisting">CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv);
+
+CORBA::Object_var initServ;
+initServ = orb-&gt;resolve_initial_references("NameService");
+
+CosNaming::NamingContext_var rootContext;
+rootContext = CosNaming::NamingContext::_narrow(initServ);</DIV><P>Remember, omniORB constructs its internal list of initial references
 at initialisation time using the information provided in the
 configuration file <TT>omniORB.cfg</TT>, or given on the command
 line. If this file is not present, the internal list will be empty and
 <TT>resolve_initial_references()</TT> will raise a
-<TT>CORBA::ORB::InvalidName</TT> exception.<BR>
-<BR>
-
-<H3 CLASS="subsection"><A NAME="htoc31">2.10.2</A>&nbsp;&nbsp;The Naming Service Interface</H3>
-It is beyond the scope of this chapter to describe in detail the
+<TT>CORBA::ORB::InvalidName</TT> exception.</P><H3 CLASS="subsection"><A NAME="htoc31">2.10.2</A>&#XA0;&#XA0;The Naming Service Interface</H3><P>It is beyond the scope of this chapter to describe in detail the
 Naming Service interface. You should consult the CORBA services
-specification&nbsp;[<A HREF="omniORB014.html#corbaservices"><CITE>OMG98</CITE></A>] (chapter 3). The code listed in
+specification&#XA0;[<A HREF="omniORB014.html#corbaservices">OMG98</A>] (chapter 3). The code listed in
 <TT>eg3_impl.cc</TT> and <TT>eg3_clt.cc</TT> are good examples of how the
 service can be used. Please spend time to study the examples
-carefully.<BR>
-<BR>
-<A NAME="toc14"></A>
-<H2 CLASS="section"><A NAME="htoc32">2.11</A>&nbsp;&nbsp;Example 4 &mdash; Using tie implementation templates</H2>
-omniORB supports <I>tie</I> implementation templates as an alternative
+carefully.</P><H2 CLASS="section"><A NAME="toc14"></A><A NAME="htoc32">2.11</A>&#XA0;&#XA0;Example 4 &#X2014; Using tie implementation templates</H2><P>omniORB supports <I>tie</I> implementation templates as an alternative
 way of providing servant classes. If you use the <TT>-Wbtp</TT> option
 to omniidl, it generates an extra template class for each interface.
 This template class can be used to tie a C++ class to the skeleton
-class of the interface.<BR>
-<BR>
-The source code in <TT>eg3_tieimpl.cc</TT> at the end of this chapter
+class of the interface.</P><P>The source code in <TT>eg3_tieimpl.cc</TT> at the end of this chapter
 illustrates how the template class can be used. The code is almost
-identical to <TT>eg3_impl.cc</TT> with only a few changes.<BR>
-<BR>
-Firstly, the servant class <TT>Echo_i</TT> does not inherit from any
+identical to <TT>eg3_impl.cc</TT> with only a few changes.</P><P>Firstly, the servant class <TT>Echo_i</TT> does not inherit from any
 stub classes. This is the main benefit of using the template class
 because there are applications in which it is difficult to require
-every servant class to derive from CORBA classes.<BR>
-<BR>
-Secondly, the instantiation of a CORBA object now involves creating an
+every servant class to derive from CORBA classes.</P><P>Secondly, the instantiation of a CORBA object now involves creating an
 instance of the implementation class <EM>and</EM> an instance of the
-template. Here is the relevant code fragment:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>class</B> Echo_i { ... };</TT><TT>
-</TT><TT>
-</TT><TT>Echo_i *myimpl = <B>new</B> Echo_i();</TT><TT>
-</TT><TT>POA_Echo_tie&lt;Echo_i&gt; myecho(myimpl);</TT><TT>
-</TT><TT>
-</TT><TT>PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(&amp;myecho);</TT></DIV><BR>
-<BR>
-For interface <TT>Echo</TT>, the name of its tie implementation template
+template. Here is the relevant code fragment:</P><DIV CLASS="lstlisting"><B>class</B> Echo_i { ... };
+
+Echo_i *myimpl = <B>new</B> Echo_i();
+POA_Echo_tie&lt;Echo_i&gt; myecho(myimpl);
+
+PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(&amp;myecho);</DIV><P>For interface <TT>Echo</TT>, the name of its tie implementation template
 is <TT>POA_Echo_tie</TT>. The template parameter is the servant
 class that contains an implementation of each of the operations
 defined in the interface. As used above, the tie template takes
@@ -828,876 +563,843 @@ ownership of the <TT>Echo_i</TT> instance, and deletes it when the tie
 object goes out of scope. The tie constructor has an optional boolean
 argument (defaulted to true) which indicates whether or not it should
 delete the servant object. For full details of using tie templates,
-see the CORBA C++ mapping specification.<BR>
-<BR>
-<A NAME="toc15"></A>
-<H2 CLASS="section"><A NAME="htoc33">2.12</A>&nbsp;&nbsp;Source Listings</H2>
+see the CORBA C++ mapping specification.</P><H2 CLASS="section"><A NAME="toc15"></A><A NAME="htoc33">2.12</A>&#XA0;&#XA0;Source Listings</H2><H3 CLASS="subsection"><A NAME="htoc34">2.12.1</A>&#XA0;&#XA0;eg1.cc</H3><DIV CLASS="lstlisting"><I>// eg1.cc - This is the source code of example 1 used in Chapter 2</I>
+<I>//          "The Basics" of the omniORB user guide.</I>
+<I>//</I>
+<I>//          In this example, both the object implementation and the</I>
+<I>//          client are in the same process.</I>
+<I>//</I>
+<I>// Usage: eg1</I>
+<I>//</I>
 
-<H3 CLASS="subsection"><A NAME="htoc34">2.12.1</A>&nbsp;&nbsp;eg1.cc</H3><BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><I>// eg1.cc - This is the source code of example 1 used in Chapter 2</I></TT><TT>
-</TT><TT><I>//          "The Basics" of the omniORB user guide.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//          In this example, both the object implementation and the</I></TT><TT>
-</TT><TT><I>//          client are in the same process.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>// Usage: eg1</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT>
-</TT><TT><B>#include</B> &lt;echo.hh&gt;</TT><TT>
-</TT><TT>
-</TT><TT><B>#ifdef</B> HAVE_STD</TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream&gt;</TT><TT>
-</TT><TT>   <B>using</B> <B>namespace</B> std;</TT><TT>
-</TT><TT><B>#else</B></TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream.h&gt;</TT><TT>
-</TT><TT><B>#endif</B></TT><TT>
-</TT><TT>
-</TT><TT><I>// This is the object implementation.</I></TT><TT>
-</TT><TT>
-</TT><TT><B>class</B> Echo_i : <B>public</B> POA_Echo</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT><B>public</B>:</TT><TT>
-</TT><TT>  <B>inline</B> Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> ~Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
-</TT><TT>};</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT><B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>return</B> CORBA::string_dup(mesg);</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><I>// This function acts as a client to the object.</I></TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> <B>void</B> hello(Echo_ptr e)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>if</B>( CORBA::is_nil(e) ) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "hello: The object reference is nil!\n" &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B>;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>
-</TT><TT>  CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";</TT><TT>
-</TT><TT>  <I>// String literals are (char*) rather than (const char*) on some</I></TT><TT>
-</TT><TT>  <I>// old compilers.  Thus it is essential to cast to (const char*)</I></TT><TT>
-</TT><TT>  <I>// here to ensure that the string is copied, so that the</I></TT><TT>
-</TT><TT>  <I>// CORBA::String_var does not attempt to 'delete' the string</I></TT><TT>
-</TT><TT>  <I>// literal.</I></TT><TT>
-</TT><TT>
-</TT><TT>  CORBA::String_var dest = e-&gt;echoString(src);</TT><TT>
-</TT><TT>
-</TT><TT>  cout &lt;&lt; "I said, \"" &lt;&lt; (<B>char</B>*)src &lt;&lt; "\"." &lt;&lt; endl</TT><TT>
-</TT><TT>       &lt;&lt; "The Echo object replied, \"" &lt;&lt; (<B>char</B>*)dest &lt;&lt;"\"." &lt;&lt; endl;</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>int</B> main(<B>int</B> argc, <B>char</B>** argv)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    <I>// Initialise the ORB.</I></TT><TT>
-</TT><TT>    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Obtain a reference to the root POA.</I></TT><TT>
-</TT><TT>    CORBA::Object_var obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
-</TT><TT>    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
-</TT><TT>
-</TT><TT>      <I>// We allocate the object on the heap.  Since this is a reference</I></TT><TT>
-</TT><TT>      <I>// counted object, it will be deleted by the POA when it is no</I></TT><TT>
-</TT><TT>      <I>// longer needed.</I></TT><TT>
-</TT><TT>    Echo_i* myecho = <B>new</B> Echo_i();</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Activate the object.  This tells the POA that this object is</I></TT><TT>
-</TT><TT>    <I>// ready to accept requests.</I></TT><TT>
-</TT><TT>    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
-</TT><TT>
-</TT><TT>      <I>// Obtain a reference to the object.</I></TT><TT>
-</TT><TT>    Echo_var myechoref = myecho-&gt;_this();</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Decrement the reference count of the object implementation, so</I></TT><TT>
-</TT><TT>    <I>// that it will be properly cleaned up when the POA has determined</I></TT><TT>
-</TT><TT>    <I>// that it is no longer needed.</I></TT><TT>
-</TT><TT>    myecho-&gt;_remove_ref();</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Obtain a POAManager, and tell the POA to start accepting</I></TT><TT>
-</TT><TT>    <I>// requests on its objects.</I></TT><TT>
-</TT><TT>    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
-</TT><TT>    pman-&gt;activate();</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Do the client-side call.</I></TT><TT>
-</TT><TT>    hello(myechoref);</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Clean up all the resources.</I></TT><TT>
-</TT><TT>    orb-&gt;destroy();</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::Exception&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(omniORB::fatalException&amp; fe) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>return</B> 0;</TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
+<B>#include</B> &lt;echo.hh&gt;
 
-<H3 CLASS="subsection"><A NAME="htoc35">2.12.2</A>&nbsp;&nbsp;eg2_impl.cc</H3><BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><I>// eg2_impl.cc - This is the source code of example 2 used in Chapter 2</I></TT><TT>
-</TT><TT><I>//               "The Basics" of the omniORB user guide.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//               This is the object implementation.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>// Usage: eg2_impl</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//        On startup, the object reference is printed to cerr as a</I></TT><TT>
-</TT><TT><I>//        stringified IOR. This string should be used as the argument to </I></TT><TT>
-</TT><TT><I>//        eg2_clt.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT>
-</TT><TT><B>#include</B> &lt;echo.hh&gt;</TT><TT>
-</TT><TT>
-</TT><TT><B>#ifdef</B> HAVE_STD</TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream&gt;</TT><TT>
-</TT><TT>   <B>using</B> <B>namespace</B> std;</TT><TT>
-</TT><TT><B>#else</B></TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream.h&gt;</TT><TT>
-</TT><TT><B>#endif</B></TT><TT>
-</TT><TT>
-</TT><TT><B>class</B> Echo_i : <B>public</B> POA_Echo</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT><B>public</B>:</TT><TT>
-</TT><TT>  <B>inline</B> Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> ~Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
-</TT><TT>};</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT><B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  cout &lt;&lt; "Upcall " &lt;&lt; mesg &lt;&lt; endl;</TT><TT>
-</TT><TT>  <B>return</B> CORBA::string_dup(mesg);</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>int</B> main(<B>int</B> argc, <B>char</B>** argv)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
-</TT><TT>
-</TT><TT>    CORBA::Object_var obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
-</TT><TT>    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
-</TT><TT>
-</TT><TT>    Echo_i* myecho = <B>new</B> Echo_i();</TT><TT>
-</TT><TT>
-</TT><TT>    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Obtain a reference to the object, and print it out as a</I></TT><TT>
-</TT><TT>    <I>// stringified IOR.</I></TT><TT>
-</TT><TT>    obj = myecho-&gt;_this();</TT><TT>
-</TT><TT>    CORBA::String_var sior(orb-&gt;object_to_string(obj));</TT><TT>
-</TT><TT>    cout &lt;&lt; (<B>char</B>*)sior &lt;&lt; endl;</TT><TT>
-</TT><TT>
-</TT><TT>    myecho-&gt;_remove_ref();</TT><TT>
-</TT><TT>
-</TT><TT>    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
-</TT><TT>    pman-&gt;activate();</TT><TT>
-</TT><TT>
-</TT><TT>    orb-&gt;run();</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::Exception&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(omniORB::fatalException&amp; fe) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>return</B> 0;</TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
+<B>#ifdef</B> HAVE_STD
+<B>#  include</B> &lt;iostream&gt;
+   <B>using</B> <B>namespace</B> std;
+<B>#else</B>
+<B>#  include</B> &lt;iostream.h&gt;
+<B>#endif</B>
 
-<H3 CLASS="subsection"><A NAME="htoc36">2.12.3</A>&nbsp;&nbsp;eg2_clt.cc</H3><BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><I>// eg2_clt.cc - This is the source code of example 2 used in Chapter 2</I></TT><TT>
-</TT><TT><I>//              "The Basics" of the omniORB user guide.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//              This is the client. The object reference is given as a</I></TT><TT>
-</TT><TT><I>//              stringified IOR on the command line.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>// Usage: eg2_clt &lt;object reference&gt;</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT>
-</TT><TT><B>#include</B> &lt;echo.hh&gt;</TT><TT>
-</TT><TT>
-</TT><TT><B>#ifdef</B> HAVE_STD</TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream&gt;</TT><TT>
-</TT><TT><B>#  include</B> &lt;fstream&gt;</TT><TT>
-</TT><TT>   <B>using</B> <B>namespace</B> std;</TT><TT>
-</TT><TT><B>#else</B></TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream.h&gt;</TT><TT>
-</TT><TT><B>#endif</B></TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> <B>void</B> hello(Echo_ptr e)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";</TT><TT>
-</TT><TT>
-</TT><TT>  CORBA::String_var dest = e-&gt;echoString(src);</TT><TT>
-</TT><TT>
-</TT><TT>  cout &lt;&lt; "I said, \"" &lt;&lt; (<B>char</B>*)src &lt;&lt; "\"." &lt;&lt; endl</TT><TT>
-</TT><TT>       &lt;&lt; "The Echo object replied, \"" &lt;&lt; (<B>char</B>*)dest &lt;&lt;"\"." &lt;&lt; endl;</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>int</B> main(<B>int</B> argc, <B>char</B>** argv)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
-</TT><TT>
-</TT><TT>    <B>if</B>( argc != 2 ) {</TT><TT>
-</TT><TT>      cerr &lt;&lt; "usage:  eg2_clt &lt;object reference&gt;" &lt;&lt; endl;</TT><TT>
-</TT><TT>      <B>return</B> 1;</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>
-</TT><TT>    CORBA::Object_var obj = orb-&gt;string_to_object(argv[1]);</TT><TT>
-</TT><TT>    Echo_var echoref = Echo::_narrow(obj);</TT><TT>
-</TT><TT>    <B>if</B>( CORBA::is_nil(echoref) ) {</TT><TT>
-</TT><TT>      cerr &lt;&lt; "Can't narrow reference to type Echo (or it was nil)." &lt;&lt; endl;</TT><TT>
-</TT><TT>      <B>return</B> 1;</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>    <B>for</B> (CORBA::ULong count=0; count&lt;10; count++)</TT><TT>
-</TT><TT>      hello(echoref);</TT><TT>
-</TT><TT>
-</TT><TT>    orb-&gt;destroy();</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::TRANSIENT&amp;) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "</TT><TT>
-</TT><TT>         &lt;&lt; "server." &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::Exception&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(omniORB::fatalException&amp; fe) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>return</B> 0;</TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
+<I>// This is the object implementation.</I>
 
-<H3 CLASS="subsection"><A NAME="htoc37">2.12.4</A>&nbsp;&nbsp;eg3_impl.cc</H3><BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><I>// eg3_impl.cc - This is the source code of example 3 used in Chapter 2</I></TT><TT>
-</TT><TT><I>//               "The Basics" of the omniORB user guide.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//               This is the object implementation.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>// Usage: eg3_impl</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//        On startup, the object reference is registered with the</I></TT><TT>
-</TT><TT><I>//        COS naming service. The client uses the naming service to</I></TT><TT>
-</TT><TT><I>//        locate this object.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//        The name which the object is bound to is as follows:</I></TT><TT>
-</TT><TT><I>//              root  [context]</I></TT><TT>
-</TT><TT><I>//               |</I></TT><TT>
-</TT><TT><I>//              test  [context] kind [my_context]</I></TT><TT>
-</TT><TT><I>//               |</I></TT><TT>
-</TT><TT><I>//              Echo  [object]  kind [Object]</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT>
-</TT><TT><B>#include</B> &lt;echo.hh&gt;</TT><TT>
-</TT><TT>
-</TT><TT><B>#ifdef</B> HAVE_STD</TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream&gt;</TT><TT>
-</TT><TT>   <B>using</B> <B>namespace</B> std;</TT><TT>
-</TT><TT><B>#else</B></TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream.h&gt;</TT><TT>
-</TT><TT><B>#endif</B></TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> CORBA::Boolean bindObjectToName(CORBA::ORB_ptr, CORBA::Object_ptr);</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT><B>class</B> Echo_i : <B>public</B> POA_Echo</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT><B>public</B>:</TT><TT>
-</TT><TT>  <B>inline</B> Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> ~Echo_i() {}</TT><TT>
-</TT><TT>  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
-</TT><TT>};</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT><B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>return</B> CORBA::string_dup(mesg);</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>int</B></TT><TT>
-</TT><TT>main(<B>int</B> argc, <B>char</B> **argv)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
-</TT><TT>
-</TT><TT>    CORBA::Object_var obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
-</TT><TT>    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
-</TT><TT>
-</TT><TT>    Echo_i* myecho = <B>new</B> Echo_i();</TT><TT>
-</TT><TT>
-</TT><TT>    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Obtain a reference to the object, and register it in</I></TT><TT>
-</TT><TT>    <I>// the naming service.</I></TT><TT>
-</TT><TT>    obj = myecho-&gt;_this();</TT><TT>
-</TT><TT>
-</TT><TT>    CORBA::String_var x;</TT><TT>
-</TT><TT>    x = orb-&gt;object_to_string(obj);</TT><TT>
-</TT><TT>    cout &lt;&lt; x &lt;&lt; endl;</TT><TT>
-</TT><TT>
-</TT><TT>    <B>if</B>( !bindObjectToName(orb, obj) )</TT><TT>
-</TT><TT>      <B>return</B> 1;</TT><TT>
-</TT><TT>
-</TT><TT>    myecho-&gt;_remove_ref();</TT><TT>
-</TT><TT>
-</TT><TT>    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
-</TT><TT>    pman-&gt;activate();</TT><TT>
-</TT><TT>
-</TT><TT>    orb-&gt;run();</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::Exception&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(omniORB::fatalException&amp; fe) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>return</B> 0;</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> CORBA::Boolean</TT><TT>
-</TT><TT>bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  CosNaming::NamingContext_var rootContext;</TT><TT>
-</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    <I>// Obtain a reference to the root context of the Name service:</I></TT><TT>
-</TT><TT>    CORBA::Object_var obj;</TT><TT>
-</TT><TT>    obj = orb-&gt;resolve_initial_references("NameService");</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Narrow the reference returned.</I></TT><TT>
-</TT><TT>    rootContext = CosNaming::NamingContext::_narrow(obj);</TT><TT>
-</TT><TT>    <B>if</B>( CORBA::is_nil(rootContext) ) {</TT><TT>
-</TT><TT>      cerr &lt;&lt; "Failed to narrow the root naming context." &lt;&lt; endl;</TT><TT>
-</TT><TT>      <B>return</B> 0;</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B> (CORBA::NO_RESOURCES&amp;) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught NO_RESOURCES exception. You must configure omniORB "</TT><TT>
-</TT><TT>  &lt;&lt; "with the location" &lt;&lt; endl</TT><TT>
-</TT><TT>  &lt;&lt; "of the naming service." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B> (CORBA::ORB::InvalidName&amp;) {</TT><TT>
-</TT><TT>    <I>// This should not happen!</I></TT><TT>
-</TT><TT>    cerr &lt;&lt; "Service required is invalid [does not exist]." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    <I>// Bind a context called "test" to the root context:</I></TT><TT>
-</TT><TT>
-</TT><TT>    CosNaming::Name contextName;</TT><TT>
-</TT><TT>    contextName.length(1);</TT><TT>
-</TT><TT>    contextName[0].id   = (<B>const</B> <B>char</B>*) "test";       <I>// string copied</I></TT><TT>
-</TT><TT>    contextName[0].kind = (<B>const</B> <B>char</B>*) "my_context"; <I>// string copied</I></TT><TT>
-</TT><TT>    <I>// Note on kind: The kind field is used to indicate the type</I></TT><TT>
-</TT><TT>    <I>// of the object. This is to avoid conventions such as that used</I></TT><TT>
-</TT><TT>    <I>// by files (name.type -- e.g. test.ps = postscript etc.)</I></TT><TT>
-</TT><TT>
-</TT><TT>    CosNaming::NamingContext_var testContext;</TT><TT>
-</TT><TT>    <B>try</B> {</TT><TT>
-</TT><TT>      <I>// Bind the context to root.</I></TT><TT>
-</TT><TT>      testContext = rootContext-&gt;bind_new_context(contextName);</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>    <B>catch</B>(CosNaming::NamingContext::AlreadyBound&amp; ex) {</TT><TT>
-</TT><TT>      <I>// If the context already exists, this exception will be raised.</I></TT><TT>
-</TT><TT>      <I>// In this case, just resolve the name and assign testContext</I></TT><TT>
-</TT><TT>      <I>// to the object returned:</I></TT><TT>
-</TT><TT>      CORBA::Object_var obj;</TT><TT>
-</TT><TT>      obj = rootContext-&gt;resolve(contextName);</TT><TT>
-</TT><TT>      testContext = CosNaming::NamingContext::_narrow(obj);</TT><TT>
-</TT><TT>      <B>if</B>( CORBA::is_nil(testContext) ) {</TT><TT>
-</TT><TT>        cerr &lt;&lt; "Failed to narrow naming context." &lt;&lt; endl;</TT><TT>
-</TT><TT>        <B>return</B> 0;</TT><TT>
-</TT><TT>      }</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Bind objref with name Echo to the testContext:</I></TT><TT>
-</TT><TT>    CosNaming::Name objectName;</TT><TT>
-</TT><TT>    objectName.length(1);</TT><TT>
-</TT><TT>    objectName[0].id   = (<B>const</B> <B>char</B>*) "Echo";   <I>// string copied</I></TT><TT>
-</TT><TT>    objectName[0].kind = (<B>const</B> <B>char</B>*) "Object"; <I>// string copied</I></TT><TT>
-</TT><TT>
-</TT><TT>    <B>try</B> {</TT><TT>
-</TT><TT>      testContext-&gt;bind(objectName, objref);</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>    <B>catch</B>(CosNaming::NamingContext::AlreadyBound&amp; ex) {</TT><TT>
-</TT><TT>      testContext-&gt;rebind(objectName, objref);</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>    <I>// Note: Using rebind() will overwrite any Object previously bound</I></TT><TT>
-</TT><TT>    <I>//       to /test/Echo with obj.</I></TT><TT>
-</TT><TT>    <I>//       Alternatively, bind() can be used, which will raise a</I></TT><TT>
-</TT><TT>    <I>//       CosNaming::NamingContext::AlreadyBound exception if the name</I></TT><TT>
-</TT><TT>    <I>//       supplied is already bound to an object.</I></TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Amendment: When using OrbixNames, it is necessary to first try bind</I></TT><TT>
-</TT><TT>    <I>// and then rebind, as rebind on it's own will throw a NotFoundexception if</I></TT><TT>
-</TT><TT>    <I>// the Name has not already been bound. [This is incorrect behaviour -</I></TT><TT>
-</TT><TT>    <I>// it should just bind].</I></TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::TRANSIENT&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "</TT><TT>
-</TT><TT>         &lt;&lt; "naming service." &lt;&lt; endl</TT><TT>
-</TT><TT>  &lt;&lt; "Make sure the naming server is running and that omniORB is "</TT><TT>
-</TT><TT>  &lt;&lt; "configured correctly." &lt;&lt; endl;</TT><TT>
-</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name()</TT><TT>
-</TT><TT>  &lt;&lt; " while using the naming service." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>return</B> 1;</TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
+<B>class</B> Echo_i : <B>public</B> POA_Echo
+{
+<B>public</B>:
+  <B>inline</B> Echo_i() {}
+  <B>virtual</B> ~Echo_i() {}
+  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);
+};
 
-<H3 CLASS="subsection"><A NAME="htoc38">2.12.5</A>&nbsp;&nbsp;eg3_clt.cc</H3><BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><I>// eg3_clt.cc - This is the source code of example 3 used in Chapter 2</I></TT><TT>
-</TT><TT><I>//              "The Basics" of the omniORB user guide.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//              This is the client. It uses the COSS naming service</I></TT><TT>
-</TT><TT><I>//              to obtain the object reference.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>// Usage: eg3_clt</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//        On startup, the client lookup the object reference from the</I></TT><TT>
-</TT><TT><I>//        COS naming service.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//        The name which the object is bound to is as follows:</I></TT><TT>
-</TT><TT><I>//              root  [context]</I></TT><TT>
-</TT><TT><I>//               |</I></TT><TT>
-</TT><TT><I>//              text  [context] kind [my_context]</I></TT><TT>
-</TT><TT><I>//               |</I></TT><TT>
-</TT><TT><I>//              Echo  [object]  kind [Object]</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT>
-</TT><TT><B>#include</B> &lt;echo.hh&gt;</TT><TT>
-</TT><TT>
-</TT><TT><B>#ifdef</B> HAVE_STD</TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream&gt;</TT><TT>
-</TT><TT>   <B>using</B> <B>namespace</B> std;</TT><TT>
-</TT><TT><B>#else</B></TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream.h&gt;</TT><TT>
-</TT><TT><B>#endif</B></TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> CORBA::Object_ptr getObjectReference(CORBA::ORB_ptr orb);</TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> <B>void</B> hello(Echo_ptr e)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>if</B>( CORBA::is_nil(e) ) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "hello: The object reference is nil!\n" &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B>;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>
-</TT><TT>  CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";</TT><TT>
-</TT><TT>
-</TT><TT>  CORBA::String_var dest = e-&gt;echoString(src);</TT><TT>
-</TT><TT>
-</TT><TT>  cerr &lt;&lt; "I said, \"" &lt;&lt; (<B>char</B>*)src &lt;&lt; "\"." &lt;&lt; endl</TT><TT>
-</TT><TT>       &lt;&lt; "The Echo object replied, \"" &lt;&lt; (<B>char</B>*)dest &lt;&lt;"\"." &lt;&lt; endl;</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>int</B></TT><TT>
-</TT><TT>main (<B>int</B> argc, <B>char</B> **argv)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
-</TT><TT>
-</TT><TT>    CORBA::Object_var obj = getObjectReference(orb);</TT><TT>
-</TT><TT>
-</TT><TT>    Echo_var echoref = Echo::_narrow(obj);</TT><TT>
-</TT><TT>
-</TT><TT>    <B>for</B> (CORBA::ULong count=0; count &lt; 10; count++)</TT><TT>
-</TT><TT>      hello(echoref);</TT><TT>
-</TT><TT>
-</TT><TT>    orb-&gt;destroy();</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::TRANSIENT&amp;) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "</TT><TT>
-</TT><TT>         &lt;&lt; "server." &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::Exception&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(omniORB::fatalException&amp; fe) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>return</B> 0;</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> CORBA::Object_ptr</TT><TT>
-</TT><TT>getObjectReference(CORBA::ORB_ptr orb)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  CosNaming::NamingContext_var rootContext;</TT><TT>
-</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    <I>// Obtain a reference to the root context of the Name service:</I></TT><TT>
-</TT><TT>    CORBA::Object_var obj;</TT><TT>
-</TT><TT>    obj = orb-&gt;resolve_initial_references("NameService");</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Narrow the reference returned.</I></TT><TT>
-</TT><TT>    rootContext = CosNaming::NamingContext::_narrow(obj);</TT><TT>
-</TT><TT>    <B>if</B>( CORBA::is_nil(rootContext) ) {</TT><TT>
-</TT><TT>      cerr &lt;&lt; "Failed to narrow the root naming context." &lt;&lt; endl;</TT><TT>
-</TT><TT>      <B>return</B> CORBA::Object::_nil();</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B> (CORBA::NO_RESOURCES&amp;) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught NO_RESOURCES exception. You must configure omniORB "</TT><TT>
-</TT><TT>  &lt;&lt; "with the location" &lt;&lt; endl</TT><TT>
-</TT><TT>  &lt;&lt; "of the naming service." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::ORB::InvalidName&amp; ex) {</TT><TT>
-</TT><TT>    <I>// This should not happen!</I></TT><TT>
-</TT><TT>    cerr &lt;&lt; "Service required is invalid [does not exist]." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> CORBA::Object::_nil();</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>
-</TT><TT>  <I>// Create a name object, containing the name test/context:</I></TT><TT>
-</TT><TT>  CosNaming::Name name;</TT><TT>
-</TT><TT>  name.length(2);</TT><TT>
-</TT><TT>
-</TT><TT>  name[0].id   = (<B>const</B> <B>char</B>*) "test";       <I>// string copied</I></TT><TT>
-</TT><TT>  name[0].kind = (<B>const</B> <B>char</B>*) "my_context"; <I>// string copied</I></TT><TT>
-</TT><TT>  name[1].id   = (<B>const</B> <B>char</B>*) "Echo";</TT><TT>
-</TT><TT>  name[1].kind = (<B>const</B> <B>char</B>*) "Object";</TT><TT>
-</TT><TT>  <I>// Note on kind: The kind field is used to indicate the type</I></TT><TT>
-</TT><TT>  <I>// of the object. This is to avoid conventions such as that used</I></TT><TT>
-</TT><TT>  <I>// by files (name.type -- e.g. test.ps = postscript etc.)</I></TT><TT>
-</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    <I>// Resolve the name to an object reference.</I></TT><TT>
-</TT><TT>    <B>return</B> rootContext-&gt;resolve(name);</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CosNaming::NamingContext::NotFound&amp; ex) {</TT><TT>
-</TT><TT>    <I>// This exception is thrown if any of the components of the</I></TT><TT>
-</TT><TT>    <I>// path [contexts or the object] aren't found:</I></TT><TT>
-</TT><TT>    cerr &lt;&lt; "Context not found." &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::TRANSIENT&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "</TT><TT>
-</TT><TT>         &lt;&lt; "naming service." &lt;&lt; endl</TT><TT>
-</TT><TT>  &lt;&lt; "Make sure the naming server is running and that omniORB is "</TT><TT>
-</TT><TT>  &lt;&lt; "configured correctly." &lt;&lt; endl;</TT><TT>
-</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name()</TT><TT>
-</TT><TT>  &lt;&lt; " while using the naming service." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>
-</TT><TT>  <B>return</B> CORBA::Object::_nil();</TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
 
-<H3 CLASS="subsection"><A NAME="htoc39">2.12.6</A>&nbsp;&nbsp;eg3_tieimpl.cc</H3><BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><I>// eg3_tieimpl.cc - This example is similar to eg3_impl.cc except that</I></TT><TT>
-</TT><TT><I>//                  the tie implementation skeleton is used.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//               This is the object implementation.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>// Usage: eg3_tieimpl</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//        On startup, the object reference is registered with the </I></TT><TT>
-</TT><TT><I>//        COS naming service. The client uses the naming service to</I></TT><TT>
-</TT><TT><I>//        locate this object.</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT><I>//        The name which the object is bound to is as follows:</I></TT><TT>
-</TT><TT><I>//              root  [context]</I></TT><TT>
-</TT><TT><I>//               |</I></TT><TT>
-</TT><TT><I>//              test  [context] kind [my_context]</I></TT><TT>
-</TT><TT><I>//               |</I></TT><TT>
-</TT><TT><I>//              Echo  [object]  kind [Object]</I></TT><TT>
-</TT><TT><I>//</I></TT><TT>
-</TT><TT>
-</TT><TT><B>#include</B> &lt;echo.hh&gt;</TT><TT>
-</TT><TT>
-</TT><TT><B>#ifdef</B> HAVE_STD</TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream&gt;</TT><TT>
-</TT><TT>   <B>using</B> <B>namespace</B> std;</TT><TT>
-</TT><TT><B>#else</B></TT><TT>
-</TT><TT><B>#  include</B> &lt;iostream.h&gt;</TT><TT>
-</TT><TT><B>#endif</B></TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT><I>// This is the object implementation.  Notice that it does not inherit</I></TT><TT>
-</TT><TT><I>// from any stub class, and notice that the echoString() member</I></TT><TT>
-</TT><TT><I>// function does not have to be virtual.</I></TT><TT>
-</TT><TT>
-</TT><TT><B>class</B> Echo_i {</TT><TT>
-</TT><TT><B>public</B>:</TT><TT>
-</TT><TT>  <B>inline</B> Echo_i() {}</TT><TT>
-</TT><TT>  <B>inline</B> ~Echo_i() {}</TT><TT>
-</TT><TT>  <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);</TT><TT>
-</TT><TT>};</TT><TT>
-</TT><TT>
-</TT><TT>
-</TT><TT><B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>return</B> CORBA::string_dup(mesg);</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>int</B> main(<B>int</B> argc, <B>char</B>** argv)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);</TT><TT>
-</TT><TT>
-</TT><TT>    CORBA::Object_var obj = orb-&gt;resolve_initial_references("RootPOA");</TT><TT>
-</TT><TT>    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Note that the &lt;myecho&gt; tie object is constructed on the stack</I></TT><TT>
-</TT><TT>    <I>// here. It will delete its implementation (myimpl) when it it</I></TT><TT>
-</TT><TT>    <I>// itself destroyed (when it goes out of scope).  It is essential</I></TT><TT>
-</TT><TT>    <I>// however to ensure that such servants are not deleted whilst</I></TT><TT>
-</TT><TT>    <I>// still activated.</I></TT><TT>
-</TT><TT>    <I>//</I></TT><TT>
-</TT><TT>    <I>// Tie objects can of course be allocated on the heap using new,</I></TT><TT>
-</TT><TT>    <I>// in which case they are deleted when their reference count</I></TT><TT>
-</TT><TT>    <I>// becomes zero, as with any other servant object.</I></TT><TT>
-</TT><TT>    Echo_i* myimpl = <B>new</B> Echo_i();</TT><TT>
-</TT><TT>    POA_Echo_tie&lt;Echo_i&gt; myecho(myimpl);</TT><TT>
-</TT><TT>
-</TT><TT>    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(&amp;myecho);</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Obtain a reference to the object, and register it in</I></TT><TT>
-</TT><TT>    <I>// the naming service.</I></TT><TT>
-</TT><TT>    obj = myecho._this();</TT><TT>
-</TT><TT>    <B>if</B>( !bindObjectToName(orb, obj) )</TT><TT>
-</TT><TT>      <B>return</B> 1;</TT><TT>
-</TT><TT>
-</TT><TT>    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();</TT><TT>
-</TT><TT>    pman-&gt;activate();</TT><TT>
-</TT><TT>
-</TT><TT>    orb-&gt;run();</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::Exception&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(omniORB::fatalException&amp; fe) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;</TT><TT>
-</TT><TT>    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>return</B> 0;</TT><TT>
-</TT><TT>}</TT><TT>
-</TT><TT>
-</TT><TT><I>//////////////////////////////////////////////////////////////////////</I></TT><TT>
-</TT><TT>
-</TT><TT><B>static</B> CORBA::Boolean</TT><TT>
-</TT><TT>bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)</TT><TT>
-</TT><TT>{</TT><TT>
-</TT><TT>  CosNaming::NamingContext_var rootContext;</TT><TT>
-</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    <I>// Obtain a reference to the root context of the Name service:</I></TT><TT>
-</TT><TT>    CORBA::Object_var obj;</TT><TT>
-</TT><TT>    obj = orb-&gt;resolve_initial_references("NameService");</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Narrow the reference returned.</I></TT><TT>
-</TT><TT>    rootContext = CosNaming::NamingContext::_narrow(obj);</TT><TT>
-</TT><TT>    <B>if</B>( CORBA::is_nil(rootContext) ) {</TT><TT>
-</TT><TT>      cerr &lt;&lt; "Failed to narrow the root naming context." &lt;&lt; endl;</TT><TT>
-</TT><TT>      <B>return</B> 0;</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B> (CORBA::NO_RESOURCES&amp;) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught NO_RESOURCES exception. You must configure omniORB "</TT><TT>
-</TT><TT>  &lt;&lt; "with the location" &lt;&lt; endl</TT><TT>
-</TT><TT>  &lt;&lt; "of the naming service." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B> (CORBA::ORB::InvalidName&amp;) {</TT><TT>
-</TT><TT>    <I>// This should not happen!</I></TT><TT>
-</TT><TT>    cerr &lt;&lt; "Service required is invalid [does not exist]." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>
-</TT><TT>  <B>try</B> {</TT><TT>
-</TT><TT>    <I>// Bind a context called "test" to the root context:</I></TT><TT>
-</TT><TT>
-</TT><TT>    CosNaming::Name contextName;</TT><TT>
-</TT><TT>    contextName.length(1);</TT><TT>
-</TT><TT>    contextName[0].id   = (<B>const</B> <B>char</B>*) "test";       <I>// string copied</I></TT><TT>
-</TT><TT>    contextName[0].kind = (<B>const</B> <B>char</B>*) "my_context"; <I>// string copied</I></TT><TT>
-</TT><TT>    <I>// Note on kind: The kind field is used to indicate the type</I></TT><TT>
-</TT><TT>    <I>// of the object. This is to avoid conventions such as that used</I></TT><TT>
-</TT><TT>    <I>// by files (name.type -- e.g. test.ps = postscript etc.)</I></TT><TT>
-</TT><TT>
-</TT><TT>    CosNaming::NamingContext_var testContext;</TT><TT>
-</TT><TT>    <B>try</B> {</TT><TT>
-</TT><TT>      <I>// Bind the context to root.</I></TT><TT>
-</TT><TT>      testContext = rootContext-&gt;bind_new_context(contextName);</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>    <B>catch</B>(CosNaming::NamingContext::AlreadyBound&amp; ex) {</TT><TT>
-</TT><TT>      <I>// If the context already exists, this exception will be raised.</I></TT><TT>
-</TT><TT>      <I>// In this case, just resolve the name and assign testContext</I></TT><TT>
-</TT><TT>      <I>// to the object returned:</I></TT><TT>
-</TT><TT>      CORBA::Object_var obj;</TT><TT>
-</TT><TT>      obj = rootContext-&gt;resolve(contextName);</TT><TT>
-</TT><TT>      testContext = CosNaming::NamingContext::_narrow(obj);</TT><TT>
-</TT><TT>      <B>if</B>( CORBA::is_nil(testContext) ) {</TT><TT>
-</TT><TT>        cerr &lt;&lt; "Failed to narrow naming context." &lt;&lt; endl;</TT><TT>
-</TT><TT>        <B>return</B> 0;</TT><TT>
-</TT><TT>      }</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Bind objref with name Echo to the testContext:</I></TT><TT>
-</TT><TT>    CosNaming::Name objectName;</TT><TT>
-</TT><TT>    objectName.length(1);</TT><TT>
-</TT><TT>    objectName[0].id   = (<B>const</B> <B>char</B>*) "Echo";   <I>// string copied</I></TT><TT>
-</TT><TT>    objectName[0].kind = (<B>const</B> <B>char</B>*) "Object"; <I>// string copied</I></TT><TT>
-</TT><TT>
-</TT><TT>    <B>try</B> {</TT><TT>
-</TT><TT>      testContext-&gt;bind(objectName, objref);</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>    <B>catch</B>(CosNaming::NamingContext::AlreadyBound&amp; ex) {</TT><TT>
-</TT><TT>      testContext-&gt;rebind(objectName, objref);</TT><TT>
-</TT><TT>    }</TT><TT>
-</TT><TT>    <I>// Note: Using rebind() will overwrite any Object previously bound</I></TT><TT>
-</TT><TT>    <I>//       to /test/Echo with obj.</I></TT><TT>
-</TT><TT>    <I>//       Alternatively, bind() can be used, which will raise a</I></TT><TT>
-</TT><TT>    <I>//       CosNaming::NamingContext::AlreadyBound exception if the name</I></TT><TT>
-</TT><TT>    <I>//       supplied is already bound to an object.</I></TT><TT>
-</TT><TT>
-</TT><TT>    <I>// Amendment: When using OrbixNames, it is necessary to first try bind</I></TT><TT>
-</TT><TT>    <I>// and then rebind, as rebind on it's own will throw a NotFoundexception if</I></TT><TT>
-</TT><TT>    <I>// the Name has not already been bound. [This is incorrect behaviour -</I></TT><TT>
-</TT><TT>    <I>// it should just bind].</I></TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::TRANSIENT&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "</TT><TT>
-</TT><TT>         &lt;&lt; "naming service." &lt;&lt; endl</TT><TT>
-</TT><TT>  &lt;&lt; "Make sure the naming server is running and that omniORB is "</TT><TT>
-</TT><TT>  &lt;&lt; "configured correctly." &lt;&lt; endl;</TT><TT>
-</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>catch</B>(CORBA::SystemException&amp; ex) {</TT><TT>
-</TT><TT>    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name()</TT><TT>
-</TT><TT>  &lt;&lt; " while using the naming service." &lt;&lt; endl;</TT><TT>
-</TT><TT>    <B>return</B> 0;</TT><TT>
-</TT><TT>  }</TT><TT>
-</TT><TT>  <B>return</B> 1;</TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
-<HR WIDTH="50%" SIZE=1><DL CLASS="list"><DT CLASS="dt-list"><A NAME="note3" HREF="#text3"><FONT SIZE=5>1</FONT></A><DD CLASS="dd-list">The stub
+<B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)
+{
+  <B>return</B> CORBA::string_dup(mesg);
+}
+
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<I>// This function acts as a client to the object.</I>
+
+<B>static</B> <B>void</B> hello(Echo_ptr e)
+{
+  <B>if</B>( CORBA::is_nil(e) ) {
+    cerr &lt;&lt; "hello: The object reference is nil!\n" &lt;&lt; endl;
+    <B>return</B>;
+  }
+
+  CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";
+  <I>// String literals are (char*) rather than (const char*) on some</I>
+  <I>// old compilers.  Thus it is essential to cast to (const char*)</I>
+  <I>// here to ensure that the string is copied, so that the</I>
+  <I>// CORBA::String_var does not attempt to 'delete' the string</I>
+  <I>// literal.</I>
+
+  CORBA::String_var dest = e-&gt;echoString(src);
+
+  cout &lt;&lt; "I said, \"" &lt;&lt; (<B>char</B>*)src &lt;&lt; "\"." &lt;&lt; endl
+       &lt;&lt; "The Echo object replied, \"" &lt;&lt; (<B>char</B>*)dest &lt;&lt;"\"." &lt;&lt; endl;
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>int</B> main(<B>int</B> argc, <B>char</B>** argv)
+{
+
+
+  <B>try</B> {
+    <I>// Initialise the ORB.</I>
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
+
+    <I>// Obtain a reference to the root POA.</I>
+    CORBA::Object_var obj = orb-&gt;resolve_initial_references("RootPOA");
+    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+
+      <I>// We allocate the object on the heap.  Since this is a reference</I>
+      <I>// counted object, it will be deleted by the POA when it is no</I>
+      <I>// longer needed.</I>
+    Echo_i* myecho = <B>new</B> Echo_i();
+
+    <I>// Activate the object.  This tells the POA that this object is</I>
+    <I>// ready to accept requests.</I>
+    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);
+
+      <I>// Obtain a reference to the object.</I>
+    Echo_var myechoref = myecho-&gt;_this();
+
+    <I>// Decrement the reference count of the object implementation, so</I>
+    <I>// that it will be properly cleaned up when the POA has determined</I>
+    <I>// that it is no longer needed.</I>
+    myecho-&gt;_remove_ref();
+
+    <I>// Obtain a POAManager, and tell the POA to start accepting</I>
+    <I>// requests on its objects.</I>
+    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();
+    pman-&gt;activate();
+
+    <I>// Do the client-side call.</I>
+    hello(myechoref);
+
+    <I>// Clean up all the resources.</I>
+    orb-&gt;destroy();
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::Exception&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(omniORB::fatalException&amp; fe) {
+    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;
+    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;
+    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;
+    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;
+  }
+  <B>return</B> 0;
+}</DIV><H3 CLASS="subsection"><A NAME="htoc35">2.12.2</A>&#XA0;&#XA0;eg2_impl.cc</H3><DIV CLASS="lstlisting"><I>// eg2_impl.cc - This is the source code of example 2 used in Chapter 2</I>
+<I>//               "The Basics" of the omniORB user guide.</I>
+<I>//</I>
+<I>//               This is the object implementation.</I>
+<I>//</I>
+<I>// Usage: eg2_impl</I>
+<I>//</I>
+<I>//        On startup, the object reference is printed to cerr as a</I>
+<I>//        stringified IOR. This string should be used as the argument to </I>
+<I>//        eg2_clt.</I>
+<I>//</I>
+
+<B>#include</B> &lt;echo.hh&gt;
+
+<B>#ifdef</B> HAVE_STD
+<B>#  include</B> &lt;iostream&gt;
+   <B>using</B> <B>namespace</B> std;
+<B>#else</B>
+<B>#  include</B> &lt;iostream.h&gt;
+<B>#endif</B>
+
+<B>class</B> Echo_i : <B>public</B> POA_Echo
+{
+<B>public</B>:
+  <B>inline</B> Echo_i() {}
+  <B>virtual</B> ~Echo_i() {}
+  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);
+};
+
+
+<B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)
+{
+  cout &lt;&lt; "Upcall " &lt;&lt; mesg &lt;&lt; endl;
+  <B>return</B> CORBA::string_dup(mesg);
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>int</B> main(<B>int</B> argc, <B>char</B>** argv)
+{
+  <B>try</B> {
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
+
+    CORBA::Object_var obj = orb-&gt;resolve_initial_references("RootPOA");
+    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+
+    Echo_i* myecho = <B>new</B> Echo_i();
+
+    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);
+
+    <I>// Obtain a reference to the object, and print it out as a</I>
+    <I>// stringified IOR.</I>
+    obj = myecho-&gt;_this();
+    CORBA::String_var sior(orb-&gt;object_to_string(obj));
+    cout &lt;&lt; (<B>char</B>*)sior &lt;&lt; endl;
+
+    myecho-&gt;_remove_ref();
+
+    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();
+    pman-&gt;activate();
+
+    orb-&gt;run();
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::Exception&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(omniORB::fatalException&amp; fe) {
+    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;
+    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;
+    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;
+    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;
+  }
+  <B>return</B> 0;
+}</DIV><H3 CLASS="subsection"><A NAME="htoc36">2.12.3</A>&#XA0;&#XA0;eg2_clt.cc</H3><DIV CLASS="lstlisting"><I>// eg2_clt.cc - This is the source code of example 2 used in Chapter 2</I>
+<I>//              "The Basics" of the omniORB user guide.</I>
+<I>//</I>
+<I>//              This is the client. The object reference is given as a</I>
+<I>//              stringified IOR on the command line.</I>
+<I>//</I>
+<I>// Usage: eg2_clt &lt;object reference&gt;</I>
+<I>//</I>
+
+<B>#include</B> &lt;echo.hh&gt;
+
+<B>#ifdef</B> HAVE_STD
+<B>#  include</B> &lt;iostream&gt;
+<B>#  include</B> &lt;fstream&gt;
+   <B>using</B> <B>namespace</B> std;
+<B>#else</B>
+<B>#  include</B> &lt;iostream.h&gt;
+<B>#endif</B>
+
+
+<B>static</B> <B>void</B> hello(Echo_ptr e)
+{
+  CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";
+
+  CORBA::String_var dest = e-&gt;echoString(src);
+
+  cout &lt;&lt; "I said, \"" &lt;&lt; (<B>char</B>*)src &lt;&lt; "\"." &lt;&lt; endl
+       &lt;&lt; "The Echo object replied, \"" &lt;&lt; (<B>char</B>*)dest &lt;&lt;"\"." &lt;&lt; endl;
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>int</B> main(<B>int</B> argc, <B>char</B>** argv)
+{
+
+
+  <B>try</B> {
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
+
+    <B>if</B>( argc != 2 ) {
+      cerr &lt;&lt; "usage:  eg2_clt &lt;object reference&gt;" &lt;&lt; endl;
+      <B>return</B> 1;
+    }
+
+    CORBA::Object_var obj = orb-&gt;string_to_object(argv[1]);
+    Echo_var echoref = Echo::_narrow(obj);
+    <B>if</B>( CORBA::is_nil(echoref) ) {
+      cerr &lt;&lt; "Can't narrow reference to type Echo (or it was nil)." &lt;&lt; endl;
+      <B>return</B> 1;
+    }
+    <B>for</B> (CORBA::ULong count=0; count&lt;10; count++)
+      hello(echoref);
+
+    orb-&gt;destroy();
+  }
+  <B>catch</B>(CORBA::TRANSIENT&amp;) {
+    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "
+         &lt;&lt; "server." &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::Exception&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(omniORB::fatalException&amp; fe) {
+    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;
+    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;
+    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;
+    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;
+  }
+  <B>return</B> 0;
+}</DIV><H3 CLASS="subsection"><A NAME="htoc37">2.12.4</A>&#XA0;&#XA0;eg3_impl.cc</H3><DIV CLASS="lstlisting"><I>// eg3_impl.cc - This is the source code of example 3 used in Chapter 2</I>
+<I>//               "The Basics" of the omniORB user guide.</I>
+<I>//</I>
+<I>//               This is the object implementation.</I>
+<I>//</I>
+<I>// Usage: eg3_impl</I>
+<I>//</I>
+<I>//        On startup, the object reference is registered with the</I>
+<I>//        COS naming service. The client uses the naming service to</I>
+<I>//        locate this object.</I>
+<I>//</I>
+<I>//        The name which the object is bound to is as follows:</I>
+<I>//              root  [context]</I>
+<I>//               |</I>
+<I>//              test  [context] kind [my_context]</I>
+<I>//               |</I>
+<I>//              Echo  [object]  kind [Object]</I>
+<I>//</I>
+
+<B>#include</B> &lt;echo.hh&gt;
+
+<B>#ifdef</B> HAVE_STD
+<B>#  include</B> &lt;iostream&gt;
+   <B>using</B> <B>namespace</B> std;
+<B>#else</B>
+<B>#  include</B> &lt;iostream.h&gt;
+<B>#endif</B>
+
+<B>static</B> CORBA::Boolean bindObjectToName(CORBA::ORB_ptr, CORBA::Object_ptr);
+
+
+<B>class</B> Echo_i : <B>public</B> POA_Echo
+{
+<B>public</B>:
+  <B>inline</B> Echo_i() {}
+  <B>virtual</B> ~Echo_i() {}
+  <B>virtual</B> <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);
+};
+
+
+<B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)
+{
+  <B>return</B> CORBA::string_dup(mesg);
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>int</B>
+main(<B>int</B> argc, <B>char</B> **argv)
+{
+  <B>try</B> {
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
+
+    CORBA::Object_var obj = orb-&gt;resolve_initial_references("RootPOA");
+    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+
+    Echo_i* myecho = <B>new</B> Echo_i();
+
+    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(myecho);
+
+    <I>// Obtain a reference to the object, and register it in</I>
+    <I>// the naming service.</I>
+    obj = myecho-&gt;_this();
+
+    CORBA::String_var x;
+    x = orb-&gt;object_to_string(obj);
+    cout &lt;&lt; x &lt;&lt; endl;
+
+    <B>if</B>( !bindObjectToName(orb, obj) )
+      <B>return</B> 1;
+
+    myecho-&gt;_remove_ref();
+
+    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();
+    pman-&gt;activate();
+
+    orb-&gt;run();
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::Exception&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(omniORB::fatalException&amp; fe) {
+    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;
+    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;
+    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;
+    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;
+  }
+  <B>return</B> 0;
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>static</B> CORBA::Boolean
+bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
+{
+  CosNaming::NamingContext_var rootContext;
+
+  <B>try</B> {
+    <I>// Obtain a reference to the root context of the Name service:</I>
+    CORBA::Object_var obj;
+    obj = orb-&gt;resolve_initial_references("NameService");
+
+    <I>// Narrow the reference returned.</I>
+    rootContext = CosNaming::NamingContext::_narrow(obj);
+    <B>if</B>( CORBA::is_nil(rootContext) ) {
+      cerr &lt;&lt; "Failed to narrow the root naming context." &lt;&lt; endl;
+      <B>return</B> 0;
+    }
+  }
+  <B>catch</B> (CORBA::NO_RESOURCES&amp;) {
+    cerr &lt;&lt; "Caught NO_RESOURCES exception. You must configure omniORB "
+         &lt;&lt; "with the location" &lt;&lt; endl
+         &lt;&lt; "of the naming service." &lt;&lt; endl;
+    <B>return</B> 0;
+  }
+  <B>catch</B> (CORBA::ORB::InvalidName&amp;) {
+    <I>// This should not happen!</I>
+    cerr &lt;&lt; "Service required is invalid [does not exist]." &lt;&lt; endl;
+    <B>return</B> 0;
+  }
+
+  <B>try</B> {
+    <I>// Bind a context called "test" to the root context:</I>
+
+    CosNaming::Name contextName;
+    contextName.length(1);
+    contextName[0].id   = (<B>const</B> <B>char</B>*) "test";       <I>// string copied</I>
+    contextName[0].kind = (<B>const</B> <B>char</B>*) "my_context"; <I>// string copied</I>
+    <I>// Note on kind: The kind field is used to indicate the type</I>
+    <I>// of the object. This is to avoid conventions such as that used</I>
+    <I>// by files (name.type -- e.g. test.ps = postscript etc.)</I>
+
+    CosNaming::NamingContext_var testContext;
+    <B>try</B> {
+      <I>// Bind the context to root.</I>
+      testContext = rootContext-&gt;bind_new_context(contextName);
+    }
+    <B>catch</B>(CosNaming::NamingContext::AlreadyBound&amp; ex) {
+      <I>// If the context already exists, this exception will be raised.</I>
+      <I>// In this case, just resolve the name and assign testContext</I>
+      <I>// to the object returned:</I>
+      CORBA::Object_var obj;
+      obj = rootContext-&gt;resolve(contextName);
+      testContext = CosNaming::NamingContext::_narrow(obj);
+      <B>if</B>( CORBA::is_nil(testContext) ) {
+        cerr &lt;&lt; "Failed to narrow naming context." &lt;&lt; endl;
+        <B>return</B> 0;
+      }
+    }
+
+    <I>// Bind objref with name Echo to the testContext:</I>
+    CosNaming::Name objectName;
+    objectName.length(1);
+    objectName[0].id   = (<B>const</B> <B>char</B>*) "Echo";   <I>// string copied</I>
+    objectName[0].kind = (<B>const</B> <B>char</B>*) "Object"; <I>// string copied</I>
+
+    <B>try</B> {
+      testContext-&gt;bind(objectName, objref);
+    }
+    <B>catch</B>(CosNaming::NamingContext::AlreadyBound&amp; ex) {
+      testContext-&gt;rebind(objectName, objref);
+    }
+    <I>// Note: Using rebind() will overwrite any Object previously bound</I>
+    <I>//       to /test/Echo with obj.</I>
+    <I>//       Alternatively, bind() can be used, which will raise a</I>
+    <I>//       CosNaming::NamingContext::AlreadyBound exception if the name</I>
+    <I>//       supplied is already bound to an object.</I>
+
+    <I>// Amendment: When using OrbixNames, it is necessary to first try bind</I>
+    <I>// and then rebind, as rebind on it's own will throw a NotFoundexception if</I>
+    <I>// the Name has not already been bound. [This is incorrect behaviour -</I>
+    <I>// it should just bind].</I>
+  }
+  <B>catch</B>(CORBA::TRANSIENT&amp; ex) {
+    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "
+         &lt;&lt; "naming service." &lt;&lt; endl
+         &lt;&lt; "Make sure the naming server is running and that omniORB is "
+         &lt;&lt; "configured correctly." &lt;&lt; endl;
+
+    <B>return</B> 0;
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name()
+         &lt;&lt; " while using the naming service." &lt;&lt; endl;
+    <B>return</B> 0;
+  }
+  <B>return</B> 1;
+}</DIV><H3 CLASS="subsection"><A NAME="htoc38">2.12.5</A>&#XA0;&#XA0;eg3_clt.cc</H3><DIV CLASS="lstlisting"><I>// eg3_clt.cc - This is the source code of example 3 used in Chapter 2</I>
+<I>//              "The Basics" of the omniORB user guide.</I>
+<I>//</I>
+<I>//              This is the client. It uses the COSS naming service</I>
+<I>//              to obtain the object reference.</I>
+<I>//</I>
+<I>// Usage: eg3_clt</I>
+<I>//</I>
+<I>//</I>
+<I>//        On startup, the client lookup the object reference from the</I>
+<I>//        COS naming service.</I>
+<I>//</I>
+<I>//        The name which the object is bound to is as follows:</I>
+<I>//              root  [context]</I>
+<I>//               |</I>
+<I>//              text  [context] kind [my_context]</I>
+<I>//               |</I>
+<I>//              Echo  [object]  kind [Object]</I>
+<I>//</I>
+
+<B>#include</B> &lt;echo.hh&gt;
+
+<B>#ifdef</B> HAVE_STD
+<B>#  include</B> &lt;iostream&gt;
+   <B>using</B> <B>namespace</B> std;
+<B>#else</B>
+<B>#  include</B> &lt;iostream.h&gt;
+<B>#endif</B>
+
+<B>static</B> CORBA::Object_ptr getObjectReference(CORBA::ORB_ptr orb);
+
+<B>static</B> <B>void</B> hello(Echo_ptr e)
+{
+  <B>if</B>( CORBA::is_nil(e) ) {
+    cerr &lt;&lt; "hello: The object reference is nil!\n" &lt;&lt; endl;
+    <B>return</B>;
+  }
+
+  CORBA::String_var src = (<B>const</B> <B>char</B>*) "Hello!";
+
+  CORBA::String_var dest = e-&gt;echoString(src);
+
+  cerr &lt;&lt; "I said, \"" &lt;&lt; (<B>char</B>*)src &lt;&lt; "\"." &lt;&lt; endl
+       &lt;&lt; "The Echo object replied, \"" &lt;&lt; (<B>char</B>*)dest &lt;&lt;"\"." &lt;&lt; endl;
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>int</B>
+main (<B>int</B> argc, <B>char</B> **argv)
+{
+  <B>try</B> {
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
+
+    CORBA::Object_var obj = getObjectReference(orb);
+
+    Echo_var echoref = Echo::_narrow(obj);
+
+    <B>for</B> (CORBA::ULong count=0; count &lt; 10; count++)
+      hello(echoref);
+
+    orb-&gt;destroy();
+  }
+  <B>catch</B>(CORBA::TRANSIENT&amp;) {
+    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "
+         &lt;&lt; "server." &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::Exception&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(omniORB::fatalException&amp; fe) {
+    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;
+    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;
+    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;
+    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;
+  }
+  <B>return</B> 0;
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>static</B> CORBA::Object_ptr
+getObjectReference(CORBA::ORB_ptr orb)
+{
+  CosNaming::NamingContext_var rootContext;
+
+  <B>try</B> {
+    <I>// Obtain a reference to the root context of the Name service:</I>
+    CORBA::Object_var obj;
+    obj = orb-&gt;resolve_initial_references("NameService");
+
+    <I>// Narrow the reference returned.</I>
+    rootContext = CosNaming::NamingContext::_narrow(obj);
+    <B>if</B>( CORBA::is_nil(rootContext) ) {
+      cerr &lt;&lt; "Failed to narrow the root naming context." &lt;&lt; endl;
+      <B>return</B> CORBA::Object::_nil();
+    }
+  }
+  <B>catch</B> (CORBA::NO_RESOURCES&amp;) {
+    cerr &lt;&lt; "Caught NO_RESOURCES exception. You must configure omniORB "
+         &lt;&lt; "with the location" &lt;&lt; endl
+         &lt;&lt; "of the naming service." &lt;&lt; endl;
+    <B>return</B> 0;
+  }
+  <B>catch</B>(CORBA::ORB::InvalidName&amp; ex) {
+    <I>// This should not happen!</I>
+    cerr &lt;&lt; "Service required is invalid [does not exist]." &lt;&lt; endl;
+    <B>return</B> CORBA::Object::_nil();
+  }
+
+  <I>// Create a name object, containing the name test/context:</I>
+  CosNaming::Name name;
+  name.length(2);
+
+  name[0].id   = (<B>const</B> <B>char</B>*) "test";       <I>// string copied</I>
+  name[0].kind = (<B>const</B> <B>char</B>*) "my_context"; <I>// string copied</I>
+  name[1].id   = (<B>const</B> <B>char</B>*) "Echo";
+  name[1].kind = (<B>const</B> <B>char</B>*) "Object";
+  <I>// Note on kind: The kind field is used to indicate the type</I>
+  <I>// of the object. This is to avoid conventions such as that used</I>
+  <I>// by files (name.type -- e.g. test.ps = postscript etc.)</I>
+
+  <B>try</B> {
+    <I>// Resolve the name to an object reference.</I>
+    <B>return</B> rootContext-&gt;resolve(name);
+  }
+  <B>catch</B>(CosNaming::NamingContext::NotFound&amp; ex) {
+    <I>// This exception is thrown if any of the components of the</I>
+    <I>// path [contexts or the object] aren't found:</I>
+    cerr &lt;&lt; "Context not found." &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::TRANSIENT&amp; ex) {
+    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "
+         &lt;&lt; "naming service." &lt;&lt; endl
+         &lt;&lt; "Make sure the naming server is running and that omniORB is "
+         &lt;&lt; "configured correctly." &lt;&lt; endl;
+
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name()
+         &lt;&lt; " while using the naming service." &lt;&lt; endl;
+    <B>return</B> 0;
+  }
+
+  <B>return</B> CORBA::Object::_nil();
+}</DIV><H3 CLASS="subsection"><A NAME="htoc39">2.12.6</A>&#XA0;&#XA0;eg3_tieimpl.cc</H3><DIV CLASS="lstlisting"><I>// eg3_tieimpl.cc - This example is similar to eg3_impl.cc except that</I>
+<I>//                  the tie implementation skeleton is used.</I>
+<I>//</I>
+<I>//               This is the object implementation.</I>
+<I>//</I>
+<I>// Usage: eg3_tieimpl</I>
+<I>//</I>
+<I>//        On startup, the object reference is registered with the </I>
+<I>//        COS naming service. The client uses the naming service to</I>
+<I>//        locate this object.</I>
+<I>//</I>
+<I>//        The name which the object is bound to is as follows:</I>
+<I>//              root  [context]</I>
+<I>//               |</I>
+<I>//              test  [context] kind [my_context]</I>
+<I>//               |</I>
+<I>//              Echo  [object]  kind [Object]</I>
+<I>//</I>
+
+<B>#include</B> &lt;echo.hh&gt;
+
+<B>#ifdef</B> HAVE_STD
+<B>#  include</B> &lt;iostream&gt;
+   <B>using</B> <B>namespace</B> std;
+<B>#else</B>
+<B>#  include</B> &lt;iostream.h&gt;
+<B>#endif</B>
+
+<B>static</B> CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);
+
+
+<I>// This is the object implementation.  Notice that it does not inherit</I>
+<I>// from any stub class, and notice that the echoString() member</I>
+<I>// function does not have to be virtual.</I>
+
+<B>class</B> Echo_i {
+<B>public</B>:
+  <B>inline</B> Echo_i() {}
+  <B>inline</B> ~Echo_i() {}
+  <B>char</B>* echoString(<B>const</B> <B>char</B>* mesg);
+};
+
+
+<B>char</B>* Echo_i::echoString(<B>const</B> <B>char</B>* mesg)
+{
+  <B>return</B> CORBA::string_dup(mesg);
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>int</B> main(<B>int</B> argc, <B>char</B>** argv)
+{
+  <B>try</B> {
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
+
+    CORBA::Object_var obj = orb-&gt;resolve_initial_references("RootPOA");
+    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+
+    <I>// Note that the &lt;myecho&gt; tie object is constructed on the stack</I>
+    <I>// here. It will delete its implementation (myimpl) when it it</I>
+    <I>// itself destroyed (when it goes out of scope).  It is essential</I>
+    <I>// however to ensure that such servants are not deleted whilst</I>
+    <I>// still activated.</I>
+    <I>//</I>
+    <I>// Tie objects can of course be allocated on the heap using new,</I>
+    <I>// in which case they are deleted when their reference count</I>
+    <I>// becomes zero, as with any other servant object.</I>
+    Echo_i* myimpl = <B>new</B> Echo_i();
+    POA_Echo_tie&lt;Echo_i&gt; myecho(myimpl);
+
+    PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(&amp;myecho);
+
+    <I>// Obtain a reference to the object, and register it in</I>
+    <I>// the naming service.</I>
+    obj = myecho._this();
+    <B>if</B>( !bindObjectToName(orb, obj) )
+      <B>return</B> 1;
+
+    PortableServer::POAManager_var pman = poa-&gt;the_POAManager();
+    pman-&gt;activate();
+
+    orb-&gt;run();
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::" &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(CORBA::Exception&amp; ex) {
+    cerr &lt;&lt; "Caught CORBA::Exception: " &lt;&lt; ex._name() &lt;&lt; endl;
+  }
+  <B>catch</B>(omniORB::fatalException&amp; fe) {
+    cerr &lt;&lt; "Caught omniORB::fatalException:" &lt;&lt; endl;
+    cerr &lt;&lt; "  file: " &lt;&lt; fe.file() &lt;&lt; endl;
+    cerr &lt;&lt; "  line: " &lt;&lt; fe.line() &lt;&lt; endl;
+    cerr &lt;&lt; "  mesg: " &lt;&lt; fe.errmsg() &lt;&lt; endl;
+  }
+  <B>return</B> 0;
+}
+
+<I>//////////////////////////////////////////////////////////////////////</I>
+
+<B>static</B> CORBA::Boolean
+bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
+{
+  CosNaming::NamingContext_var rootContext;
+
+  <B>try</B> {
+    <I>// Obtain a reference to the root context of the Name service:</I>
+    CORBA::Object_var obj;
+    obj = orb-&gt;resolve_initial_references("NameService");
+
+    <I>// Narrow the reference returned.</I>
+    rootContext = CosNaming::NamingContext::_narrow(obj);
+    <B>if</B>( CORBA::is_nil(rootContext) ) {
+      cerr &lt;&lt; "Failed to narrow the root naming context." &lt;&lt; endl;
+      <B>return</B> 0;
+    }
+  }
+  <B>catch</B> (CORBA::NO_RESOURCES&amp;) {
+    cerr &lt;&lt; "Caught NO_RESOURCES exception. You must configure omniORB "
+         &lt;&lt; "with the location" &lt;&lt; endl
+         &lt;&lt; "of the naming service." &lt;&lt; endl;
+    <B>return</B> 0;
+  }
+  <B>catch</B> (CORBA::ORB::InvalidName&amp;) {
+    <I>// This should not happen!</I>
+    cerr &lt;&lt; "Service required is invalid [does not exist]." &lt;&lt; endl;
+    <B>return</B> 0;
+  }
+
+  <B>try</B> {
+    <I>// Bind a context called "test" to the root context:</I>
+
+    CosNaming::Name contextName;
+    contextName.length(1);
+    contextName[0].id   = (<B>const</B> <B>char</B>*) "test";       <I>// string copied</I>
+    contextName[0].kind = (<B>const</B> <B>char</B>*) "my_context"; <I>// string copied</I>
+    <I>// Note on kind: The kind field is used to indicate the type</I>
+    <I>// of the object. This is to avoid conventions such as that used</I>
+    <I>// by files (name.type -- e.g. test.ps = postscript etc.)</I>
+
+    CosNaming::NamingContext_var testContext;
+    <B>try</B> {
+      <I>// Bind the context to root.</I>
+      testContext = rootContext-&gt;bind_new_context(contextName);
+    }
+    <B>catch</B>(CosNaming::NamingContext::AlreadyBound&amp; ex) {
+      <I>// If the context already exists, this exception will be raised.</I>
+      <I>// In this case, just resolve the name and assign testContext</I>
+      <I>// to the object returned:</I>
+      CORBA::Object_var obj;
+      obj = rootContext-&gt;resolve(contextName);
+      testContext = CosNaming::NamingContext::_narrow(obj);
+      <B>if</B>( CORBA::is_nil(testContext) ) {
+        cerr &lt;&lt; "Failed to narrow naming context." &lt;&lt; endl;
+        <B>return</B> 0;
+      }
+    }
+
+    <I>// Bind objref with name Echo to the testContext:</I>
+    CosNaming::Name objectName;
+    objectName.length(1);
+    objectName[0].id   = (<B>const</B> <B>char</B>*) "Echo";   <I>// string copied</I>
+    objectName[0].kind = (<B>const</B> <B>char</B>*) "Object"; <I>// string copied</I>
+
+    <B>try</B> {
+      testContext-&gt;bind(objectName, objref);
+    }
+    <B>catch</B>(CosNaming::NamingContext::AlreadyBound&amp; ex) {
+      testContext-&gt;rebind(objectName, objref);
+    }
+    <I>// Note: Using rebind() will overwrite any Object previously bound</I>
+    <I>//       to /test/Echo with obj.</I>
+    <I>//       Alternatively, bind() can be used, which will raise a</I>
+    <I>//       CosNaming::NamingContext::AlreadyBound exception if the name</I>
+    <I>//       supplied is already bound to an object.</I>
+
+    <I>// Amendment: When using OrbixNames, it is necessary to first try bind</I>
+    <I>// and then rebind, as rebind on it's own will throw a NotFoundexception if</I>
+    <I>// the Name has not already been bound. [This is incorrect behaviour -</I>
+    <I>// it should just bind].</I>
+  }
+  <B>catch</B>(CORBA::TRANSIENT&amp; ex) {
+    cerr &lt;&lt; "Caught system exception TRANSIENT -- unable to contact the "
+         &lt;&lt; "naming service." &lt;&lt; endl
+         &lt;&lt; "Make sure the naming server is running and that omniORB is "
+         &lt;&lt; "configured correctly." &lt;&lt; endl;
+
+    <B>return</B> 0;
+  }
+  <B>catch</B>(CORBA::SystemException&amp; ex) {
+    cerr &lt;&lt; "Caught a CORBA::" &lt;&lt; ex._name()
+         &lt;&lt; " while using the naming service." &lt;&lt; endl;
+    <B>return</B> 0;
+  }
+  <B>return</B> 1;
+}</DIV><HR CLASS="footnoterule"><DL CLASS="thefootnotes"><DT CLASS="dt-thefootnotes">
+<A NAME="note3" HREF="#text3">1</A></DT><DD CLASS="dd-thefootnotes">The stub
 code is the C++ code that provides the object mapping as defined in
 the CORBA specification.
-<DT CLASS="dt-list"><A NAME="note4" HREF="#text4"><FONT SIZE=5>2</FONT></A><DD CLASS="dd-list">In
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note4" HREF="#text4">2</A></DT><DD CLASS="dd-thefootnotes">In
 omniORB, all object reference variable types are instantiated from the
 template type <TT>_CORBA_ObjRef_Var</TT>.
-<DT CLASS="dt-list"><A NAME="note5" HREF="#text5"><FONT SIZE=5>3</FONT></A><DD CLASS="dd-list">However, the implementation
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note5" HREF="#text5">3</A></DT><DD CLASS="dd-thefootnotes">However, the implementation
 of the type conversion operator between <TT>Echo_var</TT> and
 <TT>Echo_ptr</TT> varies slightly among different C++ compilers; you
 may need to do an explicit cast if the compiler complains about the
 conversion being ambiguous.
-<DT CLASS="dt-list"><A NAME="note6" HREF="#text6"><FONT SIZE=5>4</FONT></A><DD CLASS="dd-list">In the previous 1.0 version of the C++
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note6" HREF="#text6">4</A></DT><DD CLASS="dd-thefootnotes">In the previous 1.0 version of the C++
 mapping, servant reference counting was optional, chosen by inheriting
 from a mixin class named <TT>RefCountServantBase</TT>. That has been
 deprecated in the 1.1 version of the C++ mapping, but the class is
 still available as an empty struct, so existing code that inherits
 from <TT>RefCountServantBase</TT> will continue to work.
-<DT CLASS="dt-list"><A NAME="note7" HREF="#text7"><FONT SIZE=5>5</FONT></A><DD CLASS="dd-list">A conversion operator of
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note7" HREF="#text7">5</A></DT><DD CLASS="dd-thefootnotes">A conversion operator of
 <TT>CORBA::String_var</TT> converts a <TT>CORBA::String_var</TT>
 to a <TT>char*</TT>.
-<DT CLASS="dt-list"><A NAME="note8" HREF="#text8"><FONT SIZE=5>6</FONT></A><DD CLASS="dd-list">Please refer to the C++
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note8" HREF="#text8">6</A></DT><DD CLASS="dd-thefootnotes">Please refer to the C++
 mapping specification for details of the String_var mapping.
-<DT CLASS="dt-list"><A NAME="note9" HREF="#text9"><FONT SIZE=5>7</FONT></A><DD CLASS="dd-list">For backwards compatibility, the ORB identifiers
-`omniORB2' and `omniORB3' are also accepted.
-<DT CLASS="dt-list"><A NAME="note10" HREF="#text10"><FONT SIZE=5>8</FONT></A><DD CLASS="dd-list">If a system exception is not caught, the C++
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note9" HREF="#text9">7</A></DT><DD CLASS="dd-thefootnotes">For backwards compatibility, the ORB identifiers
+&#X2018;omniORB2&#X2019; and &#X2018;omniORB3&#X2019; are also accepted.
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note10" HREF="#text10">8</A></DT><DD CLASS="dd-thefootnotes">If a system exception is not caught, the C++
 runtime will call the <TT>terminate()</TT> function. This function is
 defaulted to abort the whole process and on some systems will cause a
 core file to be produced.
-<DT CLASS="dt-list"><A NAME="note11" HREF="#text11"><FONT SIZE=5>9</FONT></A><DD CLASS="dd-list">Run Time Type
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note11" HREF="#text11">9</A></DT><DD CLASS="dd-thefootnotes">Run Time Type
 Identification
-<DT CLASS="dt-list"><A NAME="note12" HREF="#text12"><FONT SIZE=5>10</FONT></A><DD CLASS="dd-list">The POA itself
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note12" HREF="#text12">10</A></DT><DD CLASS="dd-thefootnotes">The POA itself
 can be activated on demand with an adapter activator.
-<DT CLASS="dt-list"><A NAME="note13" HREF="#text13"><FONT SIZE=5>11</FONT></A><DD CLASS="dd-list">There are escaping rules to cope
-with id and kind fields which contain `.' and `/' characters. See
-chapter&nbsp;<A HREF="omniORB006.html#chap:ins">6</A> of this manual, and chapter 3 of the CORBA
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note13" HREF="#text13">11</A></DT><DD CLASS="dd-thefootnotes">There are escaping rules to cope
+with id and kind fields which contain &#X2018;.&#X2019; and &#X2018;/&#X2019; characters. See
+chapter&#XA0;<A HREF="omniORB006.html#chap:ins">6</A> of this manual, and chapter 3 of the CORBA
 services specification, as updated for the Interoperable Naming
-Service&nbsp;[<A HREF="omniORB014.html#inschapters"><CITE>OMG00</CITE></A>].
-</DL>
+Service&#XA0;[<A HREF="omniORB014.html#inschapters">OMG00</A>].
+</DD></DL>
 <HR>
-<A HREF="omniORB001.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
-<A HREF="omniORB003.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<A HREF="omniORB001.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB003.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

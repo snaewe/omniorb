@@ -3,156 +3,105 @@
 <HTML>
 <HEAD>
 
-
-
-<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.08">
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
 <LINK rel="stylesheet" type="text/css" href="omniORB.css">
-<TITLE>
-C++ language mapping
-</TITLE>
+<TITLE>C++ language mapping</TITLE>
 </HEAD>
 <BODY >
-<A HREF="omniORB002.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
-<A HREF="omniORB004.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<A HREF="omniORB002.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB004.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
 <HR>
-
-<H1 CLASS="chapter"><A NAME="htoc40">Chapter&nbsp;3</A>&nbsp;&nbsp;C++ language mapping</H1>
-
-Now that you are familiar with the basics, it is important to
+<H1 CLASS="chapter"><A NAME="htoc40">Chapter&#XA0;3</A>&#XA0;&#XA0;C++ language mapping</H1><P>Now that you are familiar with the basics, it is important to
 familiarise yourself with the standard IDL to C++ language mapping.
-The mapping is described in detail in&nbsp;[<A HREF="omniORB014.html#cxxmapping"><CITE>OMG03</CITE></A>]. If you have
+The mapping is described in detail in&#XA0;[<A HREF="omniORB014.html#cxxmapping">OMG03</A>]. If you have
 not done so, you should obtain a copy of the document and use that as
-the programming guide to omniORB.<BR>
-<BR>
-The specification is not an easy read. The alternative is to use one
+the programming guide to omniORB.</P><P>The specification is not an easy read. The alternative is to use one
 of the books on CORBA programming that has begun to appear. For
-instance, Henning and Vinoski's `Advanced CORBA Programming with
-C++'&nbsp;[<A HREF="omniORB014.html#henning1999"><CITE>HV99</CITE></A>] includes many example code bits to illustrate
-how to use the C++ mapping.<BR>
-<BR>
-<A NAME="toc16"></A>
-<H2 CLASS="section"><A NAME="htoc41">3.1</A>&nbsp;&nbsp;omniORB 2 BOA compatibility</H2>
-<A NAME="sec:BOAcompat"></A>
-If you use the <TT>-WbBOA</TT> option to omniidl, it will generate
+instance, Henning and Vinoski&#X2019;s &#X2018;Advanced CORBA Programming with
+C++&#X2019;&#XA0;[<A HREF="omniORB014.html#henning1999">HV99</A>] includes many example code bits to illustrate
+how to use the C++ mapping.</P><H2 CLASS="section"><A NAME="toc16"></A><A NAME="htoc41">3.1</A>&#XA0;&#XA0;omniORB 2 BOA compatibility</H2><P>
+<A NAME="sec:BOAcompat"></A></P><P>If you use the <TT>-WbBOA</TT> option to omniidl, it will generate
 skeleton code with the same interface as the old omniORB 2 BOA
 mapping, as well as code to be used with the POA. Note that since the
 major problem with the BOA specification was that server code was not
-portable between ORBs, it is unlikely that omniORB 4.1's BOA
+portable between ORBs, it is unlikely that omniORB 4.1&#X2019;s BOA
 compatibility will help you much if you are moving from a different
-BOA-based ORB.<BR>
-<BR>
-The BOA compatibility permits the majority of BOA code to compile
+BOA-based ORB.</P><P>The BOA compatibility permits the majority of BOA code to compile
 without difficulty. However, there are a number of constructs which
-relied on omniORB 2 implementation details which no longer work.
-<UL CLASS="itemize"><LI CLASS="li-itemize">omniORB 2 did not use distinct types for object references and
+relied on omniORB 2 implementation details which no longer work.</P><UL CLASS="itemize"><LI CLASS="li-itemize">omniORB 2 did not use distinct types for object references and
 servants, and often accepted a pointer to a servant when the CORBA
 specification says it should only accept an object reference. Such
-code will not compile under omniORB 4.1.<BR>
-<BR>
-<LI CLASS="li-itemize">The reverse is true for <TT>BOA::obj_is_ready()</TT>. It now only
+code will not compile under omniORB 4.1.</LI><LI CLASS="li-itemize">The reverse is true for <TT>BOA::obj_is_ready()</TT>. It now only
 works when passed a pointer to a servant object, not an object
 reference. The more commonly used mechanism of calling
 <TT>_obj_is_ready(boa)</TT> on the servant object still works as
-expected.<BR>
-<BR>
-<LI CLASS="li-itemize">It used to be the case that the skeleton class for interface
+expected.</LI><LI CLASS="li-itemize">It used to be the case that the skeleton class for interface
 <TT>I</TT> (<TT>_sk_I</TT>) was derived from class <TT>I</TT>. This meant
 that the names of any types declared in the interface were available
 in the scope of the skeleton class. This is no longer true. If you
-have an interface:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>interface</B> I {</TT><TT>
-</TT><TT>  <B>struct</B> S {</TT><TT>
-</TT><TT>    <B>long</B> a,b;</TT><TT>
-</TT><TT>  };</TT><TT>
-</TT><TT>  S op();</TT><TT>
-</TT><TT>};</TT></DIV><BR>
-<BR>
-then where before the implementation code might have been:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>class</B> I_impl : <B>public</B> <B>virtual</B> _sk_I {</TT><TT>
-</TT><TT>  S op();  <I>// _sk_I is derived from I</I></TT><TT>
-</TT><TT>};</TT><TT>
-</TT><TT>I::S I_impl::op() {</TT><TT>
-</TT><TT>  S ret;</TT><TT>
-</TT><TT>  <I>// ...</I></TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
-it is now necessary to fully qualify all uses of <TT>S</TT>:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>class</B> I_impl : <B>public</B> <B>virtual</B> _sk_I {</TT><TT>
-</TT><TT>  I::S op(); <I>// _sk_I is not derived from I</I></TT><TT>
-</TT><TT>};</TT><TT>
-</TT><TT>I::S I_impl::op() {</TT><TT>
-</TT><TT>  I::S ret;</TT><TT>
-</TT><TT>  <I>// ...</I></TT><TT>
-</TT><TT>}</TT></DIV><BR>
-<BR>
-<LI CLASS="li-itemize">The proprietary omniORB 2 LifeCycle extensions are no longer
+have an interface:<DIV CLASS="lstlisting"><B>interface</B> I {
+  <B>struct</B> S {
+    <B>long</B> a,b;
+  };
+  S op();
+};</DIV><P>then where before the implementation code might have been:</P><DIV CLASS="lstlisting"><B>class</B> I_impl : <B>public</B> <B>virtual</B> _sk_I {
+  S op();  <I>// _sk_I is derived from I</I>
+};
+I::S I_impl::op() {
+  S ret;
+  <I>// ...</I>
+}</DIV><P>it is now necessary to fully qualify all uses of <TT>S</TT>:</P><DIV CLASS="lstlisting"><B>class</B> I_impl : <B>public</B> <B>virtual</B> _sk_I {
+  I::S op(); <I>// _sk_I is not derived from I</I>
+};
+I::S I_impl::op() {
+  I::S ret;
+  <I>// ...</I>
+}</DIV></LI><LI CLASS="li-itemize">The proprietary omniORB 2 LifeCycle extensions are no longer
 supported. All of the facilities it offered can be implemented with
 the POA interfaces, and the <TT>omniORB::LOCATION_FORWARD</TT>
-exception (see section&nbsp;<A HREF="omniORB004.html#sec:locationForward">4.8</A>). Code which used the
-old interfaces will have to be rewritten.</UL>
-<A NAME="toc17"></A>
-<H2 CLASS="section"><A NAME="htoc42">3.2</A>&nbsp;&nbsp;omniORB 3.0 compatibility</H2>
-omniORB 4.1 is almost completely source-code compatible with omniORB
+exception (see section&#XA0;<A HREF="omniORB004.html#sec:locationForward">4.8</A>). Code which used the
+old interfaces will have to be rewritten.</LI></UL><H2 CLASS="section"><A NAME="toc17"></A><A NAME="htoc42">3.2</A>&#XA0;&#XA0;omniORB 3.0 compatibility</H2><P>omniORB 4.1 is almost completely source-code compatible with omniORB
 3.0. There are two main cases where code may have to change. The first
 is code that uses the omniORB API, some aspects of which have
 changed. The omniORB configuration file also has a new format. See the
-next chapter for details of the new API and configuration file.<BR>
-<BR>
-The second case of code that may have to change is code using the
+next chapter for details of the new API and configuration file.</P><P>The second case of code that may have to change is code using the
 Dynamic Any interfaces. The standard changed quite significantly
 between CORBA 2.2 and CORBA 2.3; omniORB 3.0 supported the old CORBA
 2.2 interfaces; omniORB 4.1 uses the new mapping. The changes are
-largely syntax changes, rather than semantic differences.<BR>
-<BR>
-<A NAME="toc18"></A>
-<H2 CLASS="section"><A NAME="htoc43">3.3</A>&nbsp;&nbsp;omniORB 4.0 compatibility</H2>
-omniORB 4.1 is source-code compatible with omniORB 4.0, with four
-exceptions:
-<OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">As required by the 1.1 version of the CORBA C++ mapping
- specification, the <TT>RefCountServantBase</TT> class has been
- deprecated, and the reference counting functionality moved into
- <TT>ServantBase</TT>. For backwards compatibility,
- <TT>RefCountServantBase</TT> still exists, but is now defined as an
- empty struct. Most code will continue to work unchanged, but code
- that explicitly calls <TT>RefCountServantBase::_add_ref()</TT> or
- <TT>_remove_ref()</TT> will no longer compile.<BR>
-<BR>
-<LI CLASS="li-enumerate">omniORB 4.0 had an option for Any extraction semantics that was
- compatible with omniORB 2.7, where ownership of extracted values was
- not maintained by the Any. That option is no longer available.<BR>
-<BR>
-<LI CLASS="li-enumerate">The members of the <TT>clientSendRequest</TT> interceptor have
- been changed, replacing all the separate variables with a single
- member of type <TT>GIOP_C</TT>. All the values previously available
- can be accessed through the <TT>GIOP_C</TT> instance.<BR>
-<BR>
-<LI CLASS="li-enumerate">The C++ mapping contains Any insertion operators for sequence
- types passed by pointer, which cause the Any to take ownership of
- the inserted sequence. In omniORB 4.0 and earlier, the sequence was
- immediately marshalled into the Any's internal buffer, and the
- sequence was deleted. In omniORB 4.1, the sequence pointer is stored
- by the Any, and the sequence is deleted later when the Any is
- destroyed.<BR>
-<BR>
-For most uses, this change is not visible to application code.
- However, if a sequence is constructed using an application-supplied
- buffer with the release flag set to false (meaning that the
- application continues to own the buffer), it is now important that
- the buffer is not deleted or modified while the Any exists, since
- the Any continues to refer to the buffer contents. This change
- means that code that worked with omniORB 4.0 may now fail with 4.1,
- with the Any seeing modified data or the process crashing due to
- accessing deleted data. To avoid this situation, use the alternative
- Any insertion operator using a const reference, which copies the
- sequence.</OL>
-<HR>
-<A HREF="omniORB002.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
-<A HREF="omniORB004.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+largely syntax changes, rather than semantic differences.</P><H2 CLASS="section"><A NAME="toc18"></A><A NAME="htoc43">3.3</A>&#XA0;&#XA0;omniORB 4.0 compatibility</H2><P>omniORB 4.1 is source-code compatible with omniORB 4.0, with four
+exceptions:</P><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">As required by the 1.1 version of the CORBA C++ mapping
+specification, the <TT>RefCountServantBase</TT> class has been
+deprecated, and the reference counting functionality moved into
+<TT>ServantBase</TT>. For backwards compatibility,
+<TT>RefCountServantBase</TT> still exists, but is now defined as an
+empty struct. Most code will continue to work unchanged, but code
+that explicitly calls <TT>RefCountServantBase::_add_ref()</TT> or
+<TT>_remove_ref()</TT> will no longer compile.</LI><LI CLASS="li-enumerate">omniORB 4.0 had an option for Any extraction semantics that was
+compatible with omniORB 2.7, where ownership of extracted values was
+not maintained by the Any. That option is no longer available.</LI><LI CLASS="li-enumerate">The members of the <TT>clientSendRequest</TT> interceptor have
+been changed, replacing all the separate variables with a single
+member of type <TT>GIOP_C</TT>. All the values previously available
+can be accessed through the <TT>GIOP_C</TT> instance.</LI><LI CLASS="li-enumerate">The C++ mapping contains Any insertion operators for sequence
+types that are passed by pointer, which cause the Any to take
+ownership of the inserted sequence. In omniORB 4.0 and earlier, the
+sequence was immediately marshalled into the Any&#X2019;s internal buffer,
+and the sequence was deleted. In omniORB 4.1, the sequence pointer
+is stored by the Any, and the sequence is deleted later when the Any
+is destroyed.<P>For most uses, this change is not visible to application code.
+However, if a sequence is constructed using an application-supplied
+buffer with the release flag set to false (meaning that the
+application continues to own the buffer), it is now important that
+the buffer is not deleted or modified while the Any exists, since
+the Any continues to refer to the buffer contents. This change
+means that code that worked with omniORB 4.0 may now fail with 4.1,
+with the Any seeing modified data or the process crashing due to
+accessing deleted data. To avoid this situation, use the alternative
+Any insertion operator using a const reference, which copies the
+sequence.</P></LI></OL><HR>
+<A HREF="omniORB002.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB004.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

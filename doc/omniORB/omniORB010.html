@@ -3,88 +3,63 @@
 <HTML>
 <HEAD>
 
-
-
-<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.08">
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
 <LINK rel="stylesheet" type="text/css" href="omniORB.css">
-<TITLE>
-Interceptors
-</TITLE>
+<TITLE>Interceptors</TITLE>
 </HEAD>
 <BODY >
-<A HREF="omniORB009.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
-<A HREF="omniORB011.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<A HREF="omniORB009.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB011.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
 <HR>
-
-<H1 CLASS="chapter"><A NAME="htoc115">Chapter&nbsp;10</A>&nbsp;&nbsp;Interceptors</H1>
-<A NAME="chap:interceptors"></A>
-omniORB supports interceptors that allow the application to insert
+<H1 CLASS="chapter"><A NAME="htoc115">Chapter&#XA0;10</A>&#XA0;&#XA0;Interceptors</H1><P>
+<A NAME="chap:interceptors"></A></P><P>omniORB supports interceptors that allow the application to insert
 processing in various points along the call chain, and in various
 other locations. It does not yet support the standard Portable
-Interceptors API.<BR>
-<BR>
-The interceptor interfaces are defined in a single header,
+Interceptors API.</P><P>The interceptor interfaces are defined in a single header,
 <TT>include/omniORB4/omniInterceptors.h</TT>. Each interception point
 consists of a singleton object with <TT>add()</TT> and <TT>remove()</TT> methods,
-and the definition of an `interceptor info' class. For example:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT><B>class</B> omniInterceptors {</TT><TT>
-</TT><TT>  ...</TT><TT>
-</TT><TT>  <B>class</B> clientSendRequest_T {</TT><TT>
-</TT><TT>  <B>public</B>:</TT><TT>
-</TT><TT>
-</TT><TT>    <B>class</B> info_T {</TT><TT>
-</TT><TT>    <B>public</B>:</TT><TT>
-</TT><TT>      GIOP_C&amp;                 giop_c;</TT><TT>
-</TT><TT>      IOP::ServiceContextList service_contexts;</TT><TT>
-</TT><TT>
-</TT><TT>      info_T(GIOP_C&amp; c) : giop_c(c), service_contexts(5) {}</TT><TT>
-</TT><TT>
-</TT><TT>    <B>private</B>:</TT><TT>
-</TT><TT>      info_T();</TT><TT>
-</TT><TT>      info_T(<B>const</B> info_T&amp;);</TT><TT>
-</TT><TT>      info_T&amp; <B>operator</B>=(<B>const</B> info_T&amp;);</TT><TT>
-</TT><TT>    };</TT><TT>
-</TT><TT>
-</TT><TT>    <B>typedef</B> CORBA::Boolean (*interceptFunc)(info_T&amp; info);</TT><TT>
-</TT><TT>
-</TT><TT>    <B>void</B> add(interceptFunc);</TT><TT>
-</TT><TT>    <B>void</B> remove(interceptFunc);</TT><TT>
-</TT><TT>  };</TT><TT>
-</TT><TT>  ...</TT><TT>
-</TT><TT>};</TT></DIV><BR>
-<BR>
-You can see that the interceptors themselves are functions
+and the definition of an &#X2018;interceptor info&#X2019; class. For example:</P><DIV CLASS="lstlisting"><B>class</B> omniInterceptors {
+  ...
+  <B>class</B> clientSendRequest_T {
+  <B>public</B>:
+
+    <B>class</B> info_T {
+    <B>public</B>:
+      GIOP_C&amp;                 giop_c;
+      IOP::ServiceContextList service_contexts;
+
+      info_T(GIOP_C&amp; c) : giop_c(c), service_contexts(5) {}
+
+    <B>private</B>:
+      info_T();
+      info_T(<B>const</B> info_T&amp;);
+      info_T&amp; <B>operator</B>=(<B>const</B> info_T&amp;);
+    };
+
+    <B>typedef</B> CORBA::Boolean (*interceptFunc)(info_T&amp; info);
+
+    <B>void</B> add(interceptFunc);
+    <B>void</B> remove(interceptFunc);
+  };
+  ...
+};</DIV><P>You can see that the interceptors themselves are functions
 that take the <TT>info_T</TT> object as their argument and return
 boolean. Interceptors are called in the order they are registered;
 normally, all interceptor functions return true, meaning that
 processing should continue with subsequent interceptors. If an
 interceptor returns false, later interceptors are not called. You
-should only do that if you really know what you are doing.<BR>
-<BR>
-Notice that the <TT>info_T</TT> contains references to omniORB internal
+should only do that if you really know what you are doing.</P><P>Notice that the <TT>info_T</TT> contains references to omniORB internal
 data types. The definitions of these types can be found in other
 header files within <TT>include/omniORB4</TT> and
-<TT>include/omniORB4/internal</TT>.<BR>
-<BR>
-<A NAME="toc49"></A>
-<H2 CLASS="section"><A NAME="htoc116">10.1</A>&nbsp;&nbsp;Interceptor registration</H2>
-All the interceptor singletons are registered within another singleton
+<TT>include/omniORB4/internal</TT>.</P><H2 CLASS="section"><A NAME="toc49"></A><A NAME="htoc116">10.1</A>&#XA0;&#XA0;Interceptor registration</H2><P>All the interceptor singletons are registered within another singleton
 object of class <TT>omniInterceptors</TT>. You retrieve a pointer to the
 object with the <TT>omniORB::getInterceptors()</TT> function, which
 must be called after the ORB has been initialised with
 <TT>CORBA::ORB_init()</TT>, but before the ORB is used. The code to
-register an interceptor looks, for example, like:<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT>omniInterceptors* interceptors = omniORB::getInterceptors();</TT><TT>
-</TT><TT>interceptors-&gt;clientSendRequest.add(myInterceptorFunc);</TT></DIV><BR>
-<BR>
-<A NAME="toc50"></A>
-<H2 CLASS="section"><A NAME="htoc117">10.2</A>&nbsp;&nbsp;Available interceptors</H2>
-The following interceptors are available:
-<DL CLASS="description" COMPACT=compact><DT CLASS="dt-description"><B>encodeIOR</B><DD CLASS="dd-description"><BR>
+register an interceptor looks, for example, like:</P><DIV CLASS="lstlisting">omniInterceptors* interceptors = omniORB::getInterceptors();
+interceptors-&gt;clientSendRequest.add(myInterceptorFunc);</DIV><H2 CLASS="section"><A NAME="toc50"></A><A NAME="htoc117">10.2</A>&#XA0;&#XA0;Available interceptors</H2><P>The following interceptors are available:</P><DL CLASS="description"><DT CLASS="dt-description"><B>encodeIOR</B></DT><DD CLASS="dd-description"><BR>
 Called when encoding an IOR to represent an object reference. This
 interception point allows the application to insert extra profile
 components into IORs. Note that you must understand and adhere to the
@@ -92,63 +67,39 @@ rules about data stored in IORs, otherwise the IORs created may be
 invalid. omniORB itself uses this interceptor to insert various items,
 so you can see an example of its use in the
 <TT>insertSupportedComponents()</TT> function defined in
-<TT>src/lib/omniORB/orbcore/ior.cc</TT>.<BR>
-<BR>
-<DT CLASS="dt-description"><B>decodeIOR</B><DD CLASS="dd-description"><BR>
+<TT>src/lib/omniORB/orbcore/ior.cc</TT>.</DD><DT CLASS="dt-description"><B>decodeIOR</B></DT><DD CLASS="dd-description"><BR>
 Called when decoding an IOR. The application can use this to get out
 whatever information they put into IORs with encodeIOR. Again, see
 <TT>extractSupportedComponents()</TT> in
-<TT>src/lib/omniORB/orbcore/ior.cc</TT> for an example.<BR>
-<BR>
-<DT CLASS="dt-description"><B>clientSendRequest</B><DD CLASS="dd-description"><BR>
+<TT>src/lib/omniORB/orbcore/ior.cc</TT> for an example.</DD><DT CLASS="dt-description"><B>clientSendRequest</B></DT><DD CLASS="dd-description"><BR>
 Called just before a request header is sent over the network. The
 application can use it to insert service contexts in the header. See
 <TT>setCodeSetServiceContext()</TT> in
-<TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example of its use.<BR>
-<BR>
-<DT CLASS="dt-description"><B>clientReceiveReply</B><DD CLASS="dd-description"><BR>
+<TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example of its use.</DD><DT CLASS="dt-description"><B>clientReceiveReply</B></DT><DD CLASS="dd-description"><BR>
 Called as the client receives a reply, just after unmarshalling the
-reply header. Called for normal replies and exceptions.<BR>
-<BR>
-<DT CLASS="dt-description"><B>serverReceiveRequest</B><DD CLASS="dd-description"><BR>
+reply header. Called for normal replies and exceptions.</DD><DT CLASS="dt-description"><B>serverReceiveRequest</B></DT><DD CLASS="dd-description"><BR>
 Called when the server receives a request, just after unmarshalling
 the request header. See the <TT>getCodeSetServiceContext()</TT> function in
-<TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example.<BR>
-<BR>
-<DT CLASS="dt-description"><B>serverSendReply</B><DD CLASS="dd-description"><BR>
-Called just before the server marshals a reply header.<BR>
-<BR>
-<DT CLASS="dt-description"><B>serverSendException</B><DD CLASS="dd-description"><BR>
-Called just before the server marshals an exception reply header.<BR>
-<BR>
-<DT CLASS="dt-description"><B>createIdentity</B><DD CLASS="dd-description"><BR>
-Called when the ORB is about to create an `identity' object to
+<TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example.</DD><DT CLASS="dt-description"><B>serverSendReply</B></DT><DD CLASS="dd-description"><BR>
+Called just before the server marshals a reply header.</DD><DT CLASS="dt-description"><B>serverSendException</B></DT><DD CLASS="dd-description"><BR>
+Called just before the server marshals an exception reply header.</DD><DT CLASS="dt-description"><B>createIdentity</B></DT><DD CLASS="dd-description"><BR>
+Called when the ORB is about to create an &#X2018;identity&#X2019; object to
 represent a CORBA object. It allows application code to provide its
 own identity implementations. It is very unlikely that an application
-will need to do this.<BR>
-<BR>
-<DT CLASS="dt-description"><B>createORBServer</B><DD CLASS="dd-description"><BR>
+will need to do this.</DD><DT CLASS="dt-description"><B>createORBServer</B></DT><DD CLASS="dd-description"><BR>
 Used internally by the ORB to register different kinds of server. At
 present, only a GIOP server is registered. It is very unlikely that
-application code will need to do this.<BR>
-<BR>
-<DT CLASS="dt-description"><B>createThread</B><DD CLASS="dd-description"><BR>
+application code will need to do this.</DD><DT CLASS="dt-description"><B>createThread</B></DT><DD CLASS="dd-description"><BR>
 Called whenever the ORB creates a thread. The <TT>info_T</TT> class for
-this interceptor is<BR>
-<BR>
-<DIV CLASS="lstlisting"><TT>    <B>class</B> info_T {</TT><TT>
-</TT><TT>    <B>public</B>:</TT><TT>
-</TT><TT>      <B>virtual</B> <B>void</B> run() = 0;</TT><TT>
-</TT><TT>    };</TT></DIV><BR>
-<BR>
-The interceptor function is called in the context of the newly created
-thread. The function <EM>must</EM> call the <TT>info_T</TT>'s <TT>run()</TT>
+this interceptor is<DIV CLASS="lstlisting">    <B>class</B> info_T {
+    <B>public</B>:
+      <B>virtual</B> <B>void</B> run() = 0;
+    };</DIV><P>The interceptor function is called in the context of the newly created
+thread. The function <EM>must</EM> call the <TT>info_T</TT>&#X2019;s <TT>run()</TT>
 method, to pass control to the thread body. <TT>run()</TT> returns just
 before the thread exits. This arrangement allows the interceptor to
 initialise some per-thread state before the thread body runs, then
-release it just before the thread exits.<BR>
-<BR>
-<DT CLASS="dt-description"><B>assignUpcallThread</B><DD CLASS="dd-description"><BR>
+release it just before the thread exits.</P></DD><DT CLASS="dt-description"><B>assignUpcallThread</B></DT><DD CLASS="dd-description"><BR>
 The ORB maintains a general thread pool, from which threads are drawn
 for various purposes. One purpose is for performing upcalls to
 application code, in response to incoming CORBA calls. The
@@ -159,24 +110,20 @@ underlying network connection; in the thread pool model, threads are
 assigned for upcalls on a per call basis, so this interceptor is
 triggered for every incoming call<SUP><A NAME="text19" HREF="#note19">1</A></SUP>. As with the
 createThread interceptor, the interceptor function must call the
-<TT>info_T</TT>'s <TT>run()</TT> method to pass control to the upcall.<BR>
-<BR>
-When a thread finishes its assignment of processing upcalls, it
+<TT>info_T</TT>&#X2019;s <TT>run()</TT> method to pass control to the upcall.<P>When a thread finishes its assignment of processing upcalls, it
 returns to the pool (even in thread per connection mode), so the same
 thread can be reassigned to perform more upcalls, or reused for a
-different purpose.<BR>
-<BR>
-Unlike the other interceptors, the interceptor functions for
+different purpose.</P><P>Unlike the other interceptors, the interceptor functions for
 createThread and assignUpcallThread have no return value. Interceptor
 chaining is performed by calls through the <TT>info_T::run()</TT> method,
-rather than by visiting interceptor functions in turn.</DL>
-<HR WIDTH="50%" SIZE=1><DL CLASS="list"><DT CLASS="dt-list"><A NAME="note19" HREF="#text19"><FONT SIZE=5>1</FONT></A><DD CLASS="dd-list">Except that with the
+rather than by visiting interceptor functions in turn.</P></DD></DL><HR CLASS="footnoterule"><DL CLASS="thefootnotes"><DT CLASS="dt-thefootnotes">
+<A NAME="note19" HREF="#text19">1</A></DT><DD CLASS="dd-thefootnotes">Except that with the
 threadPoolWatchConnection parameter set true, a thread can perform
 multiple upcalls even when thread pool mode is active.
-</DL>
+</DD></DL>
 <HR>
-<A HREF="omniORB009.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
-<A HREF="omniORB011.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
+<A HREF="omniORB009.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB011.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>
