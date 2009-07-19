@@ -283,7 +283,20 @@ traceTime = "0"
 ;   On Windows, the default value of this parameter is 16384 bytes; on
 ;   all other platforms the default is -1.
 ;
-;     socketSendBuffer = -1
+;     "socketSendBuffer" = "-1"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; validateUTF8
+;
+;   When transmitting a string that is supposed to be UTF-8, omniORB
+;   normally passes it directly, assuming that it is valid. With this
+;   parameter set TRUE, omniORB checks that all UTF-8 strings are
+;   valid, and throws DATA_CONVERSION if not.
+;
+;   Valid values = 0 or 1
+;
+"validateUTF8" = "0"
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; sslCAFile
@@ -528,6 +541,15 @@ traceTime = "0"
 ;
 "oneCallPerConnection" = "1"
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; maxInterleavedCallsPerConnection
+;
+;   The maximum number of calls that can be interleaved on a
+;   connection. If more concurrent calls are made, they are queued.
+;
+;   Valid values = (n >= 1)
+;
+"maxInterleavedCallsPerConnection" = "5"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; offerBiDirectionalGIOP
@@ -700,13 +722,11 @@ traceTime = "0"
 ;
 ;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPoint]
 ;"0" = "giop:tcp::"
-;"1" = "giop:unix:"
-;"2" = "giop:ssl::"
+;"1" = "giop:ssl::"
 ;
 ;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPointNoPublish]
 ;"0" = "giop:tcp::"
-;"1" = "giop:unix:"
-;"2" = "giop:ssl::"
+;"1" = "giop:ssl::"
 ;
 ;[HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\endPointNoListen]
 ;"0" = "giop:tcp:192.168.1.1:12345"
@@ -1057,6 +1077,18 @@ traceTime = "0"
 ;   Valid values = 0 or 1
 ;
 "poaUniquePersistentSystemIds" = "1"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; idleThreadTimeout
+;
+;   When a thread created by omniORB becomes idle, it is kept alive
+;   for a while, in case a new thread is required. Once a thread has
+;   been idle for the number of seconds specified in this parameter,
+;   it exits.
+;
+;   Valid values = (n >= 0 in seconds)
+;
+"idleThreadTimeout" = "10"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; supportBootstrapAgent
