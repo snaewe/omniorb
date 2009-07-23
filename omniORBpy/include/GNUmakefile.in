@@ -1,0 +1,19 @@
+TOP=..
+CURRENT=include
+BASE_OMNI_TREE=@top_srcdir@
+VPATH=@srcdir@
+INSTALL=@INSTALL@
+
+INSTALLDIR = $(INSTALLINCDIR)
+
+HEADERS = omniORBpy.h
+
+include $(TOP)/mk/beforeauto.mk
+
+install:: $(HEADERS)
+	@(dir="$(INSTALLDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done )
+
+include $(TOP)/mk/afterauto.mk

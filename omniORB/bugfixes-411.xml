@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.1.1     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.1.1">
+
+<bug id="1" date="Mon Oct 15 14:56:37 BST 2007" user="dgrisby">
+  <summary>Assertion falure in Any unmarshalling</summary>
+  <reported>Jian Wu, Clemens Fischer</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-October/028948.html"/>
+  <text>
+  Enum TypeCodes were not marked as complete, meaning that receiving a
+  struct containing an enum would trigger an assertion failure.
+  </text>
+</bug>
+
+<bug id="2" date="Mon Oct 29 12:26:00 GMT 2007" user="dgrisby">
+  <summary>Escaped identifiers in unions cause incorrect errors</summary>
+  <reported>Will Denissen</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-October/028956.html"/>
+  <text>
+  omniidl would incorrectly report errors for union members clashing
+  with keywords, but escaped with a leading underscore.
+  </text>
+</bug>
+
+<bug id="3" date="Mon Oct 29 12:28:58 GMT 2007" user="dgrisby">
+  <summary>localhost server transport rule does not work for IPv4 in IPv6</summary>
+  <reported>Joe Lee</reported>
+  <text>
+  The localhost server transport rule failed to cope with IPv4
+  addresses encapsulated in IPv6, meaning connections were incorrectly
+  denied.
+  </text>
+</bug>
+
+<bug id="4" date="Fri Nov 23 14:20:15 GMT 2007" user="dgrisby">
+  <summary>Connections closed during upcalls could be leaked</summary>
+  <reported>Emmanuel Taurel</reported>
+  <text>
+  In thread pool mode, connections closed by a client while the server
+  was in an up-call could be leaked.
+  </text>
+</bug>
+
+<bug id="5" date="Mon Nov 26 16:11:15 GMT 2007" user="dgrisby">
+  <summary>Assertion failure in Any marshalling with nil objref</summary>
+  <reported>Peter S. Housel</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-November/029040.html"/>
+</bug>
+
+<bug id="6" date="Wed Dec  5 11:10:28 GMT 2007" user="dgrisby">
+  <summary>Segfault on exit of omniidl</summary>
+  <reported>Juergen Weber</reported>
+  <text>
+  omniidl would segfault on exit if given a forward declaration to a
+  previously fully-declared valuetype.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-December/029062.html"/>
+</bug>
+
+<bug id="7" date="Wed Dec  5 11:10:28 GMT 2007" user="dgrisby">
+  <summary>Incorrect generated code</summary>
+  <reported>Juergen Weber</reported>
+  <text>
+  Incorrect generated code for ::CORBA::AbstractBase.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-December/029067.html"/>
+</bug>
+
+<bug id="8" date="Sun Dec  9 01:32:28 GMT 2007" user="dgrisby">
+  <summary>Race condition between Peek and select thread when data in buffer.</summary>
+  <reported>Dirk Siebnich</reported>
+  <text>
+  A race between the select thread and a thread doing peek when there
+  was data already in the connection buffer could lead to a lock-up.
+  </text>
+</bug>
+
+
+</buglist>

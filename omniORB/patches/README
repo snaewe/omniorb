@@ -1,0 +1,16 @@
+This directory contains patches to the source to work around bugs in some
+old / broken compilers.
+
+This patch is for Dec C++ 5.6 on Tru64. It is against omniORB 3.0, so
+it will not work with omniORB 4.0. It should give you a hint about
+what needs to be done to omniORB 4.0, though. If you successfully
+compile omniORB on this platform, please send an up to date patch to
+the omniORB mailing list.
+
+  dec_CXX_5.6.patch
+
+
+This patch is for the omnipython minimal Python 1.5 distribution,
+required when compiling with the mingw GCC compiler on Windows.
+
+   mingw_omnipython.patch

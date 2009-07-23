@@ -1,0 +1,32 @@
+
+module PerfTest {
+
+  typedef sequence<octet> octets;
+  typedef octet octeta[200];
+
+  typedef sequence<short> shorts;
+  typedef short shorta[200];
+
+  typedef sequence<long> longs;
+  typedef long longa[200];
+
+  typedef sequence<unsigned long> ulongs;
+  typedef unsigned long ulonga[200];
+
+  typedef sequence<double> doubles;
+  typedef double doublea[200];
+
+  interface I {
+    long    op0(in long    l);
+    octets  op1(in octets  a);
+    octeta  op2(in octeta  a);
+    shorts  op3(in shorts  a);
+    shorta  op4(in shorta  a);
+    longs   op5(in longs   a);
+    longa   op6(in longa   a);
+    ulongs  op7(in ulongs  a);
+    ulonga  op8(in ulonga  a);
+    doubles op9(in doubles a);
+    doublea opa(in doublea a);
+  };
+};

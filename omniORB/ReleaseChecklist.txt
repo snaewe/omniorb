@@ -1,0 +1,19 @@
+mk/version.mk
+  version
+  hex version
+
+README.FIRST.txt
+
+THIS_IS_OMNIORB...
+
+ReleaseNotes.txt
+
+bugfixes-XXX.xml
+
+configure.ac
+
+spec files
+
+tag repository
+
+Features web page

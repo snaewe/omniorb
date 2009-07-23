@@ -1,0 +1,102 @@
+//
+//                            Package   : omniORB
+// omniConnectionData.idl     Created on: 2006/07/10
+//                            Author    : Duncan Grisby
+//
+//    Copyright (C) 2006 Apasphere Ltd.
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+//    02111-1307, USA
+//
+//
+// Description:
+//    IDL definitions used by the omniConnections library
+
+#ifndef _omniConnectionData_idl_
+#define _omniConnectionData_idl_
+
+module omniConnectionData {
+
+  //
+  // Data stored in an IOR tagged component.
+  //
+
+  struct ComponentData {
+    octet          version;         // Component version. Must be 1.
+
+    unsigned short flags;           // See below for flags values.
+
+    unsigned long  connection_id;   // Identity of the connection for
+				    // calls to this object reference;
+				    // all objects with the same
+				    // connection id share a
+				    // connection.
+
+    unsigned long  max_connections; // The maximum number of
+				    // connections the client will
+				    // open for the id.
+
+    unsigned long  max_threads;     // The maximum number of
+				    // concurrent threads the server
+				    // will dispatch for each
+				    // connection.
+  };
+
+  // Flag values:
+
+  const unsigned short COMP_DATA_BATCH         = 0x0001;
+  // If set, enable transport level batching in the client --
+  // e.g. Nagle's algorithm.
+
+  const unsigned short COMP_PERMIT_INTERLEAVED = 0x0002;
+  // If set, the client can interleave concurrent calls on a single
+  // open connection; if not set, all calls on a connection are
+  // serialised.
+
+  const unsigned short COMP_SERVER_HOLD_OPEN   = 0x0004;
+  // If set, instruct the server to hold connections open, rather than
+  // closing them when idle.
+
+  // IOR component tag value:
+  const unsigned long TAG_RESTRICTED_CONNECTION = 0x41545404; // ATT\x04
+
+
+  //
+  // Data sent in a GIOP service context
+  //
+
+  struct ServiceData {
+    octet 	   version;       // Service context version. Must be 1.
+    unsigned short flags;         // See below for flag bits.
+    unsigned long  connection_id; // Identity of the connection. 
+    unsigned long  max_threads;   // Maximum number of threads the
+				  // server will dispatch for this
+				  // connection.
+  };
+  // Flag values:
+
+  const unsigned short SVC_HOLD_OPEN = 0x0001;
+  // If set, the server will hold the connection open until the client
+  // closes it, or the connection fails, rather than scavenging it
+  // after a while being idle.
+
+  const unsigned long SVC_RESTRICTED_CONNECTION = 0x41545404; // ATT\x04
+  // Service context tag value.
+
+};
+
+#endif // _omniConnectionData_idl_

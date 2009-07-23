@@ -1,0 +1,168 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
+<LINK rel="stylesheet" type="text/css" href="omniORBpy.css">
+<TITLE>The IDL compiler</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORBpy004.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy006.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+<HR>
+<H1 CLASS="chapter"><A NAME="htoc57">Chapter&#XA0;5</A>&#XA0;&#XA0;The IDL compiler</H1><P>
+<A NAME="chap:omniidl"></A></P><P>omniORBpy&#X2019;s IDL compiler is called omniidl. It consists of a generic
+front-end parser written in C++, and a number of back-ends written in
+Python. omniidl is very strict about IDL validity, so you may find
+that it reports errors in IDL which compiles fine with other IDL
+compilers.</P><P>The general form of an omniidl command line is:</P><BLOCKQUOTE CLASS="quote"> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file 1</I>&gt;<TT> </TT>&lt;<I>file 2</I>&gt;<TT> </TT>&#X2026;</BLOCKQUOTE><H2 CLASS="section"><A NAME="toc23"></A><A NAME="htoc58">5.1</A>&#XA0;&#XA0;Common options</H2><P>The following options are common to all back-ends:</P><TABLE border=0 cellspacing=0 cellpadding=0><TR><TD ALIGN=left NOWRAP></TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-b</TT><I>back-end</I></TD><TD ALIGN=left NOWRAP>Run the specified back-end. For omniORBpy, use <TT>-bpython</TT>.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-D</TT><I>name</I>[<TT>=</TT><I>value</I>]</TD><TD ALIGN=left NOWRAP>Define <I>name</I> for the preprocessor.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-U</TT><I>name</I></TD><TD ALIGN=left NOWRAP>Undefine <I>name</I> for the preprocessor.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-I</TT><I>dir</I></TD><TD ALIGN=left NOWRAP>Include <I>dir</I> in the preprocessor search path.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-E</TT></TD><TD ALIGN=left NOWRAP>Only run the preprocessor, sending its output to stdout.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Y</TT><I>cmd</I></TD><TD ALIGN=left NOWRAP>Use <I>cmd</I> as the preprocessor, rather than the normal C
+preprocessor.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-N</TT></TD><TD ALIGN=left NOWRAP>Do not run the preprocessor.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-T</TT></TD><TD ALIGN=left NOWRAP>Use a temporary file, not a pipe, for preprocessor output.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Wp</TT><I>arg</I>[,<I>arg</I>&#X2026;]</TD><TD ALIGN=left NOWRAP>Send arguments to the preprocessor.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Wb</TT><I>arg</I>[,<I>arg</I>&#X2026;]</TD><TD ALIGN=left NOWRAP>Send arguments to the back-end.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-nf</TT></TD><TD ALIGN=left NOWRAP>Do not warn about unresolved forward declarations.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-k</TT></TD><TD ALIGN=left NOWRAP>Keep comments after declarations, to be used by some back-ends.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-K</TT></TD><TD ALIGN=left NOWRAP>Keep comments before declarations, to be used by some back-ends.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-C</TT><I>dir</I></TD><TD ALIGN=left NOWRAP>Change directory to <I>dir</I> before writing output files.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-d</TT></TD><TD ALIGN=left NOWRAP>Dump the parsed IDL then exit, without running a back-end.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-p</TT><I>dir</I></TD><TD ALIGN=left NOWRAP>Use <I>dir</I> as a path to find omniidl back-ends.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-V</TT></TD><TD ALIGN=left NOWRAP>Print version information then exit.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-u</TT></TD><TD ALIGN=left NOWRAP>Print usage information.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-v</TT></TD><TD ALIGN=left NOWRAP>Verbose: trace compilation stages.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+</TD></TR>
+</TABLE><P>Most of these options are self explanatory, but some are not
+so obvious.</P><H3 CLASS="subsection"><A NAME="htoc59">5.1.1</A>&#XA0;&#XA0;Preprocessor interactions</H3><P>IDL is processed by the C preprocessor before omniidl parses it.
+omniidl always uses the GNU C preprocessor (which it builds with the
+name omnicpp). The <TT>-D</TT>, <TT>-U</TT>, and <TT>-I</TT>
+options are just sent to the preprocessor. Note that the current
+directory is not on the include search path by default&#X2014;use
+&#X2018;<TT>-I.</TT>&#X2019; for that. The <TT>-Y</TT> option can be used to
+specify a different preprocessor to omnicpp. Beware that line
+directives inserted by other preprocessors are likely to confuse
+omniidl.</P><H4 CLASS="subsubsection"><A NAME="htoc60">5.1.1.1</A>&#XA0;&#XA0;Windows 9x</H4><P>The output from the C preprocessor is normally fed to the omniidl
+parser through a pipe. On some Windows 98 machines (but not all!) the
+pipe does not work, and the preprocessor output is echoed to the
+screen. When this happens, the omniidl parser sees an empty file, and
+produces useless stub files with strange long names. To avoid the
+problem, use the &#X2018;<TT>-T</TT>&#X2019; option to create a temporary file
+between the two stages.</P><H3 CLASS="subsection"><A NAME="htoc61">5.1.2</A>&#XA0;&#XA0;Forward-declared interfaces</H3><P>If you have an IDL file like:</P><DIV CLASS="lstlisting"><B>interface</B> I;
+<B>interface</B> J {
+  <B>attribute</B> I the_I;
+};</DIV><P>then omniidl will normally issue a warning:</P><PRE CLASS="verbatim">  test.idl:1: Warning: Forward declared interface `I' was never
+  fully defined
+</PRE><P>It is illegal to declare such IDL in isolation, but it
+<EM>is</EM> valid to define interface <TT>I</TT> in a separate file. If
+you have a lot of IDL with this sort of construct, you will drown
+under the warning messages. Use the <TT>-nf</TT> option to suppress
+them.</P><H3 CLASS="subsection"><A NAME="htoc62">5.1.3</A>&#XA0;&#XA0;Comments</H3><P>By default, omniidl discards comments in the input IDL. However, with
+the <TT>-k</TT> and <TT>-K</TT> options, it preserves the comments
+for use by the back-ends. The Python back-end ignores this
+information, but it is relatively easy to write new back-ends which
+<EM>do</EM> make use of comments.</P><P>The two different options relate to how comments are attached to
+declarations within the IDL. Given IDL like:</P><DIV CLASS="lstlisting"><B>interface</B> I {
+  <B>void</B> op1();
+  <I>// A comment</I>
+  <B>void</B> op2();
+};</DIV><P>the <TT>-k</TT> flag will attach the comment to <TT>op1()</TT>;
+the <TT>-K</TT> flag will attach it to <TT>op2()</TT>.</P><H2 CLASS="section"><A NAME="toc24"></A><A NAME="htoc63">5.2</A>&#XA0;&#XA0;Python back-end options</H2><P>
+<A NAME="sec:Wbglobal"></A></P><P>When you specify the Python back-end (with <TT>-bpython</TT>), the
+following <TT>-Wb</TT> options are available. Note that the
+<TT>-Wb</TT> options must be specified <EM>after</EM> the
+<TT>-bpython</TT> option, so omniidl knows which back-end to give the
+arguments to.</P><TABLE border=0 cellspacing=0 cellpadding=0><TR><TD ALIGN=left NOWRAP></TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Wbstdout</TT></TD><TD ALIGN=left NOWRAP>Send the generated stubs to standard output, rather than to a
+file.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Wbinline</TT></TD><TD ALIGN=left NOWRAP>Output stubs for #included files in line with the main
+file.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Wbglobal=</TT><I>g</I></TD><TD ALIGN=left NOWRAP>Use <I>g</I> as the name for the global IDL scope (default
+<TT>_GlobalIDL</TT>).</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Wbpackage=</TT><I>p</I></TD><TD ALIGN=left NOWRAP>Put both Python modules and stub files in package
+<I>p</I>.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Wbmodules=</TT><I>p</I></TD><TD ALIGN=left NOWRAP>Put Python modules in package <I>p</I>.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+<TT>-Wbstubs=</TT><I>p</I></TD><TD ALIGN=left NOWRAP>Put stub files in package <I>p</I>.</TD></TR>
+<TR><TD ALIGN=left NOWRAP>
+</TD></TR>
+</TABLE><P>The <TT>-Wbstdout</TT> option is not really useful if you are
+invoking omniidl yourself. It is used by <TT>omniORB.importIDL()</TT>,
+described in section&#XA0;<A HREF="omniORBpy004.html#sec:importIDL">4.9</A>.</P><P>When you compile an IDL file which #includes other IDL files, omniidl
+normally only generates code for the main file, assuming that code for
+the included files will be generated separately. Instead, you can use
+the <TT>-Wbinline</TT> option to generate code for the main IDL file
+<EM>and</EM> all included files in a single stub file.</P><P>Definitions declared at IDL global scope are normally placed in a
+Python module named &#X2018;<TT>_GlobalIDL</TT>&#X2019;. The <TT>-Wbglobal</TT>
+allows you to change that.</P><P>As explained in section&#XA0;<A HREF="omniORBpy002.html#sec:generatingStubs">2.2</A>, when you compile an
+IDL file like:</P><DIV CLASS="lstlisting"><I>// example_echo.idl</I>
+<B>module</B> Example {
+  <B>interface</B> Echo {
+    <B>string</B> echoString(<B>in</B> <B>string</B> mesg);
+  };
+};</DIV><P>omniidl generates directories named <TT>Example</TT> and
+<TT>Example__POA</TT>, which provide the standard Python mapping
+modules, and also the file <TT>example_echo_idl.py</TT> which contains
+the actual definitions. The latter file contains code which inserts
+the definitions in the standard modules. This arrangement means that
+it is not possible to move all of the generated code into a Python
+package by simply placing the files in a suitably named directory.
+You may wish to do this to avoid clashes with names in use elsewhere
+in your software.</P><P>You can place all generated code in a package using the
+<TT>-Wbpackage</TT> command line option. For example,</P><BLOCKQUOTE CLASS="quote">
+<TT>omniidl -bpython -Wbpackage=generated echo_example.idl</TT>
+</BLOCKQUOTE><P>creates a directory named &#X2018;<TT>generated</TT>&#X2019;, containing the
+generated code. The stub module is now called
+&#X2018;<TT>generated.Example</TT>&#X2019;, and the actual stub definitions are in
+&#X2018;<TT>generated.example_echo_idl</TT>&#X2019;. If you wish to split the
+modules and the stub definitions into different Python packages, you
+can use the <TT>-Wbmodules</TT> and <TT>-Wbstubs</TT> options.</P><P>Note that if you use these options to change the module package, the
+interface to the generated code is not strictly-speaking CORBA
+compliant. You may have to change your code if you ever use a Python
+ORB other than omniORBpy.</P><H2 CLASS="section"><A NAME="toc25"></A><A NAME="htoc64">5.3</A>&#XA0;&#XA0;Examples</H2><P>Generate the Python stubs for a file <TT>a.idl</TT>:</P><BLOCKQUOTE CLASS="quote">
+<TT>omniidl -bpython a.idl</TT>
+</BLOCKQUOTE><P>As above, but put the stubs in a package called
+&#X2018;<TT>stubs</TT>&#X2019;:</P><BLOCKQUOTE CLASS="quote">
+<TT>omniidl -bpython -Wbstubs=stubs a.idl</TT>
+</BLOCKQUOTE><P>Generate both Python and C++ stubs for two IDL files:</P><BLOCKQUOTE CLASS="quote">
+<TT>omniidl -bpython -bcxx a.idl b.idl</TT>
+</BLOCKQUOTE><P>Just check the IDL files for validity, generating no output:</P><BLOCKQUOTE CLASS="quote">
+<TT>omniidl a.idl b.idl</TT>
+</BLOCKQUOTE><HR>
+<A HREF="omniORBpy004.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy006.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

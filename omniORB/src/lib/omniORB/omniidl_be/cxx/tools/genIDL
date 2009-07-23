@@ -1,0 +1,282 @@
+#!/usr/bin/env python
+# -*- python -*-
+#                           Package   : omniidl
+# genIDL                    Created on: 1999/11/5
+#			    Author    : David Scott (djs)
+#
+#    Copyright (C) 1999 AT&T Laboratories Cambridge
+#
+#  This file is part of omniidl.
+#
+#  omniidl is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA.
+#
+# Description:
+#   
+#   Automatically produce large amounts of IDL for testing the compiler
+
+# $Id$
+# $Log$
+# Revision 1.4.2.3  2000/11/20 14:43:26  sll
+# Added support for wchar and wstring.
+#
+# Revision 1.4.2.2  2000/10/12 15:37:54  sll
+# Updated from omni3_1_develop.
+#
+# Revision 1.5  2000/07/13 15:25:59  dpg1
+# Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.2.2.1  2000/02/14 18:34:53  dpg1
+# New omniidl merged in.
+#
+# Revision 1.2  1999/11/12 17:19:52  djs
+# IDL generator generates more things (esp interfaces)
+# Regression tester covers SK.cc and DynSK.cc
+# Quick hack to compare performance of the new system with the old
+#
+# Revision 1.1  1999/11/10 20:20:10  djs
+# Tools used for comparing the new compiler with the old one
+#
+
+import re
+
+from omniidl_be.cxx import util
+
+allPossibilities = 0
+
+allNames      = []
+allExceptions = []
+allInterfaces = []
+
+# returns a list of 2 element tupes
+#  (IDL type, flattened type)
+def listNames(allNames = allNames, sequences = 1):
+    def stringify(name):
+        return util.delimitedlist(name, "::")
+    def legal(name):
+        def escape(text):
+            return re.sub(r"\W","_",text)
+        return escape(name)
+    
+    result = []
+    for name in allNames:
+        # type = "A::B::C"
+        # flatID = "A__B__C" or "unsigned_short"
+        type = stringify(name)
+        flatID = legal(type)
+
+        result = result + [ (type, flatID) ]
+        if sequences:
+            result = result + [ ("sequence<" + type + ">", "seq_"+flatID),
+                                ("sequence<" + type + ",7>", "bseq_"+flatID) ]
+    return result
+        
+
+def out(text):
+    print text
+
+def addDec(definition, newName):
+    if newName in allNames:
+        return
+    allNames.append(newName)
+    out(definition + ";")
+
+def addEx(definition, newName):
+    if newName in allExceptions:
+        return
+    allExceptions.append(newName)
+    out(definition + ";")
+
+def addInt(definition, newName):
+    if newName in allInterfaces:
+        return
+    allInterfaces.append(newName)
+    out(definition + ";")
+            
+def basic():
+    if allPossibilities:
+        for type in ["float", "double", "short", "long", "unsigned short",
+                     "unsigned long", "boolean", "char", "wchar", "octet"]:
+            allNames.append([type])
+    else:
+        allNames.append(["float"])
+
+    for type in ["string", "wstring" ]:
+        allNames.append([type])
+
+    addEx("""\
+exception BasicException {
+  long BasicExceptionLong;
+}""", ["BasicException"])
+    out("""\
+enum BasicEnum {
+  One, Two, Three
+};""")
+    out("""
+interface BasicInterface {};""")
+    out("""\
+union BasicUnion switch(BasicEnum){
+ case One:
+   short BasicUnionShort;
+ default:
+   long BasicUnionLong;
+};""")
+    out("""
+struct BasicStruct{
+  long member;
+};""")
+    for type in ["BasicEnum", "BasicInterface", "BasicUnion", "BasicStruct"]:
+        allNames.append([type])
+
+
+
+def const():
+    out("""\
+//
+// Generating const instances of built-in types
+//""")
+    out("const float          const_float  = 0.1;")
+    if allPossibilities:
+        out("const double         const_double = 0.1;")
+        out("const short          const_short  = 1;")
+        out("const long           const_long   = 2;")
+        out("const unsigned short const_ushort = 3;")
+        out("const unsigned long  const_ulong  = 4;")
+        out("const boolean        const_bool   = FALSE;")
+        out("const char           const_char   = 'a';")
+        #addDec("const wchar          const_wchar  = W'a'",  scope + ["const_wchar"])
+        out("const octet          const_octet  = 5;")    
+    #
+    out("const string const_string = \"Hi\";")
+
+    
+def shownames():
+    out("""\
+//
+// Names currently available:
+//""")
+    for name in allNames[:]:
+        out("// * " + repr(name))
+
+def typedef(scope):
+    out("""\
+//
+// Generating typedefs to all known types
+//""")
+    for (type, flatID) in listNames():
+        newName = "td_" + flatID
+        addDec("typedef " + type + " " + newName, scope + [newName])
+        newName = "td_ar_" + flatID
+        addDec("typedef " + type + " " + newName + "[10]", scope + [newName])
+
+
+def makeDecs(scope):
+#    shownames()
+    const()
+#    shownames()
+    typedef(scope)
+#    shownames()
+
+def module(scope, name, depth = 0):
+    out("module " + name + " {\n")
+
+    makeDecs(scope + [name])
+    struct(scope + [name], "st_" + name)
+    union(scope + [name], "un_" + name)
+    if depth > 0:
+        module(scope + [name], name + str(depth), depth - 1)
+
+    out("}; /* module " + name + " */")
+    
+
+def struct(scope, name):
+    str = """\
+//
+// Generating a struct with lots of members
+//
+"""
+    str = str + "struct " + name + " {\n"
+
+    for (type, flatID) in listNames():
+        newName = "st" + name + "_" + flatID
+        str = str + type + " " + newName + ";\n"
+
+    str = str + "} /* struct " + name + " */\n"
+    addDec(str, scope + [name])
+    
+def union(scope, name):
+    uni = """\
+//
+// Generating a union with lots of cases
+//
+"""
+    uni = uni + "union " + name + " switch(long) {\n"
+
+    label = 0
+    for (type, flatID) in listNames():
+        newName = "un" + name + "_" + flatID
+        uni = uni + "case " + str(label) + ":  " + type + " " + newName + ";\n"
+        label = label + 1
+    uni = uni + "} /* union " + name + "*/"
+
+    addDec(uni, scope + [name])
+
+def interface(scope, name):
+    int = """\
+//
+// Generating an interface
+//
+"""
+    int = int + "interface " + name + " "
+    fst = lambda (x,y): x
+    inherits = map(fst, listNames(allInterfaces))
+    if inherits != []:
+        int = int + ": "
+    int = int + util.delimitedlist(inherits)
+    int = int + "{\n"
+    
+    int = int + """\
+//
+// interface attributes
+//
+"""
+    for (type, flatID) in listNames(allNames, 0):
+        newName = "inattr_" + name + "_" + flatID
+        newNameRO = "inattrRO_" + name + "_" + flatID
+        int = int + "attribute " + type + " " + newName + ";\n"
+        int = int + "readonly attribute " + type + " " + newNameRO + ";\n"
+
+    int = int + "} /* interface " + name + " */\n"
+    addInt(int, name)
+    
+    
+
+out("""\
+// Automatically generated by genIDL - DO NOT EDIT
+//  (well you can if you like, but what's the point?)
+//
+""")
+
+basic()
+union([], "U")
+typedef([])
+module([], "A", 0)
+#interface([], "I")
+struct([], "S")
+struct([], "U2")
+#typedef([])
+
+
+

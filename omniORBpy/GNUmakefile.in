@@ -1,0 +1,8 @@
+TOP=.
+CURRENT=.
+BASE_OMNI_TREE=@top_srcdir@
+VPATH=@srcdir@
+
+include $(TOP)/mk/beforeauto.mk
+include @srcdir@/dir.mk
+include $(TOP)/mk/afterauto.mk

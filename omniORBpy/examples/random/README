@@ -1,0 +1,16 @@
+This little example provides an omniORBpy client to the random number
+server running on random.org.
+
+To run the example, you must first compile the Python stubs from
+random.idl, with
+
+  omniidl -bpython random.idl
+
+Then simply run the client with ./random_clt.py
+
+Using omniORBpy reveals a bug in Orbix 2.3 running on random.org. The
+first time omniORBpy makes a call to a remote object, it calls the
+standard _is_a() operation to verify that the object is alive and
+supports the required interface. Unfortunately, Orbix 2.3 incorrectly
+returns FALSE to this _is_a() call. random_clt.py therefore configures
+the ORB not to perform the _is_a() call.

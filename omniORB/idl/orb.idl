@@ -1,0 +1,9 @@
+// orb.idl
+
+#include "corbaidl.idl"
+
+#ifdef ENABLE_CLIENT_IR_SUPPORT
+#include "ir.idl"
+#endif
+
+#include "boxes.idl"

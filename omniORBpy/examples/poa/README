@@ -1,0 +1,21 @@
+This directory contains examples of various POA facilities.
+
+All the examples implement the Echo server.
+
+servantactivator.py and servantlocator.py do on-demand object
+activation / location. If you run either program with a -l command
+line argument, it will make a number of local calls to the object,
+showing that the activator or locator runs in the local, as well as
+the remote, case.
+
+singlethread.py shows a single threaded POA. Only one thread at a time
+is permitted to process requests, but invocations can happen on
+different threads. mainthread.py performs all invocations on the main
+thread, rather than threads created by omniORB.
+
+Look at the source for each program to see extra things you can do
+with them.
+
+Before the programs will run, you must compile the IDL with
+
+  omniidl -bpython echo.idl

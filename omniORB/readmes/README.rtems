@@ -1,0 +1,337 @@
+         omniORB3 for RTEMS - Embedded Systems
+         =====================================
+
+This file contains information on installing, building, and using 
+omniORB3 with RTEMS a Real-Time Operating System for Multiprocessors.
+This initial port was tested with RTEMS running on a PC ( pc486 BSP ).
+
+OmniORB for RTEMS has been tested with the following software 
+configuration:
+
+- HOST OS           : NT 4.0 - Cygnus CygWin 1.1.2
+- RTOS              : RTEMS-4.5.0-beta3a
+- omniORB           : omniORB-3.0.1 release
+- Architecture      : i386 and BSP = pc486
+- Cross Compiler    : gcc 2.95.2 binutils-2.9.1, newlib 1.8.2 
+
+Everything regarding RTEMS, and its cross compilers can be 
+downloaded from OARCorp web site. You can download pre-built toolsets
+for your host( Linux, CygWin and FreeBSD ).
+http://www.oarcorp.com
+
+For more recent news about this porting or more information about 
+CORBA on embedded systems, please go to:
+http://www.connecttel.com/corba/rtems_omni.html
+
+
+Introduction
+============
+
+This is file has some preliminary instructions on how to build
+and setup omniORB under RTEMS. Setting up a CORBA environment
+can be a hard task task if you are doing this for the first time.
+So, before you start to hack with a port of a CORBA ORB under an 
+embedded system, it might be appropriated, if you would check things 
+out on your host, and make sure that basic things, such as naming service 
+( omniNames ) and the examples, specially eg3_impl and eg3_clt are working ok. 
+As a second stage, them it is time to go ahead and play with your embedded target.
+
+
+RTEMS and its tools can be downloaded from this site:
+from OARCorp web site at: http://www.oarcorp.com
+
+
+NOTE: It is assumed that you are familiar with RTEMS and omniORB
+      enviroments, and you have both software packages installed,
+      and working. There is no instructions here to install and
+      setup any of the packages above.
+
+
+What has been tested ?
+
+  - "thread examples" have been tested.
+  - Three of "echo" examples have been tested:  eg1, eg3_impl and eg3_clt
+  - All others examples compile and link properly, but they have not
+    been tested.
+
+
+
+What was changed ?
+
+    a) C+source code, some files got changed: omnithread.h, 
+       omniInternal.h and posix.cc tcpSocketMTFactory.cc
+
+    b) Most of the changes on the run-time were to the makefiles( dir.mk ).
+
+So, that was it !!!!.
+I am fairly confident that the result of this porting is as reliable as 
+is omniORB and RTEMS.
+
+
+
+Installation
+============
+
+   - Obtain the RTEMS distribution
+     http://www.oarcorp.com
+This step assumes that you know how to install, build and make sure that 
+RTEMS is working fine between your target and the host machine. Please,
+make sure that the network stack ( TCP/IP ) is up and running before 
+going any further.
+
+
+   - Obtain the omniORB3 distribution for your host.
+     http://www.uk.research.att.com/omniORB/omniORB.html.
+Make sure that the Host IDL compiler is working properly. This step might 
+require you to build the tools for your host. You can download a pre-built 
+tarball for your host. It is also a good idea to make sure that 
+the naming service ( omniNames ) and the examples that came with omniORB 
+are working ok under your host.
+
+
+   - The source is ready to go.
+
+
+Building omniORB for RTEMS
+==========================
+
+Before you start building the system, you need to change the makefile
+mk/rtems.mk to localize your toolset to point the proper location 
+of the RTEMS tree. If you have installed RTEMS on its 
+default location, everything might be ok. Please check.
+
+RTEMS_BUILD         = /opt/rtems
+RTEMS_INSTALL_POINT = /opt/rtems
+RTEMS_CC_PREFIX     = i386-rtems-
+RTEMS_BSP           = pc486
+
+RTEMS_BUILD         = /opt/rtems
+This macro is set to the location of the RTEMS build.
+
+RTEMS_INSTALL_POINT = /opt/rtems
+This macro is set to the location of the RTEMS' cross compiler
+
+RTEMS_CC_PREFIX     = i386-rtems-
+This macro is set to the prefix of the RTEMS cross compiler
+
+RTEMS_BSP           = pc486
+This macro is set to the name of the RTEMS BSP.
+
+
+OrbCoreOnly         = 1
+This macro eliminate the "-a" flag passed to the IDL compiler,
+to remove all "dynamic any" stuff that usually is NOT required
+on embedded applications. If you have memory restrictions this
+option will save around 150K of memory space. It is off by
+default.
+
+
+HOSTBINDIR = bin/x86_win32
+The HOSTBINDIR variable is used to locate the HOST IDL compiler. 
+Somehow you have to get the IDL compiler ready before you start 
+building omniORB3. The default there is for CygWin and WIn32.
+
+IMPORTANT NOTE: It is required to have a native omniORB IDL 
+                compiler ( omniidl ) for the host machine.
+
+
+A few other macros might need to be changed for your environment
+( see mk/rtems.mak ), but the aboves will cover most of the cases.
+
+
+     - Build the ORB run-time for RTEMS
+     cd src/lib
+     make export
+
+
+NOTE: To build the examples, you must unzip the archive $(TOP)/etc/rtems.zip.
+      See README under $(TOP)/etc for more details.
+
+     - Build the examples
+     cd src/examples
+     make
+
+
+
+How to get Started ? 
+====================
+
+ONE MORE TIME LET ME TO REMIND YOU THAT THE STEPS BELOW ARE VERY
+IMPORTANT AND THEY SHOULD BE TESTED ONE BY ONE.
+
+- Make sure that the Naming Service ( omniNames ) is configured and 
+  working properly. 
+
+- Get started with the examples that comes with the 
+  omniORB3 distribution. 
+
+- Check if RTEMS and its TCP/IP stack is configured and working. 
+  Use RTEMS' network examples ( netdemos ) for that. 
+
+
+If you managed to get all of the above configured and working 
+correctly, you will not have problems getting the omniORB 
+examples running on your environment. 
+
+
+
+RTEMS and Network Configuration 
+===============================
+
+It is important to have RTEMS resources configured properly,
+as well as the network settings.
+
+All configuration is placed in the files located under:
+
+$(TOP)/src/examples/rtems/rtems_init.cc
+$(TOP)/src/examples/rtems/rtemscfg.h
+$(TOP)/src/examples/rtems/net_cfg.h
+
+rtems_init.cc  -- init task : does all network initialization,
+                  and invokes an user's entry point called "cc_main()".
+
+$(TOP)/src/examples/rtems/rtemscfg.h  -- define all RTEMS resources. 
+This file must be changed to have all the resources that is required
+by your CORBA application. 
+
+$(TOP)/src/examples/rtems/net_cfg.h  -- network configuration ---
+These macros are very important and they need to be changed to match
+your development and/or target environment. 
+
+ANYTHING STARTING WITH RTEMS_TARGET_* must be changed to conform with 
+your environment.
+
+#define  RTEMS_TARGET_IP           "target IP"
+#define  RTEMS_TARGET_NET_MASK     "target mask"
+#define  RTEMS_TARGET_HOSTNAME     "target hostname"
+#define  RTEMS_TARGET_DOMAIN       "your domain name"
+#define  RTEMS_TARGET_GATEWAY      "IP of the gateway machine"
+#define  RTEMS_TARGET_LOG_HOST     "IP of the syslog server"
+#define  RTEMS_TARGET_DNS_LIST     {"IP DNS #1", "IP DNS #2", "IP DNS #3"}
+
+#define  HOST_OMNINAMES_HOST_NAME     "omniNames_host"
+#define  HOST_OMNINAMES_PORT_NUMBER   "NNNN"
+
+
+System Requirements
+===================
+
+  -- TARGET REQUIREMENTS
+
+omniORB seems to be one of the smallest ORBs around. 
+But, for embedded system standards, it still has a 
+considerable memory footprint. 
+
+The smallest application using omniORB run-time would require 
+around 800K of code space and 65K of data space, plus all the 
+dynamic memory needed( heap ) by your application.
+
+So, targets with less than 1 Meg of Code Space and 
+0.5 Meg of RAM for data space, would certainly not 
+be good candidates to run CORBA applications.
+
+- Stack Sizes
+  The default size of the stacks of the threads created by 
+  the omniORB run-time is 16K. You can try to reduce 
+  this size, but be aware that no test has been done 
+  with smaller stacks.	
+
+The table below give you an idean of the memory footprint 
+of the components used in a CORBA application.
+
+These number are not absolutely correct, and they would change as
+these packages changes along the way, and they depend on
+many variables, such as release of GCC, RTEMS release, and
+omniORB changes. They're here to give you an idea of how
+much memory the target would need, and the order of
+magnitude for it.
+
+
++------------------+----------------+---------------+--------------+
+|  COMPONENT       |  CODE SIZE     |  DATA SIZE    |   BSS SIZE   |
++------------------+----------------+---------------+--------------+
+| RTEMS POSIX    |  120K          |  5K           |   12K        |
++------------------+----------------+---------------+--------------+
+| C+IOSTREAMS    |  55K           |  2K           |   1K         |
++------------------+----------------+---------------+--------------+
+| TCP/IP STACK     |  100K        |  5K           |   256K     |
++------------------+----------------+---------------+--------------+
+| OMNIORB - NODYN  |  380K          |  20K          |   20K        |
++------------------+----------------+---------------+--------------+
+| DYNAMIC ANY      |  140K          |  10K          |   3K         |
++------------------+----------------+---------------+--------------+
+
+
+
+  -- HOST REQUIREMENTS
+
+  - a working standard CORBA Naming Service --> omniNames 
+  - omniORB2 IDL compiler		            --> omniidl 
+  - a working TCP/IP Stack between the machine running 
+    the CORBA Naming Service and the RTEMS target. 
+  - TCP/IP naming service - DNS
+
+
+What to do for Another BSP ?
+============================
+
+   + add the new platform to the file $(TOP)\config\config.mk
+
+   + add the specific file $(TOP)\mk\platforms\your_new_BSP_specific.mk.
+     It might require some tweaking in $(TOP)\mk\rtems.mk
+
+   + select your new target in $(TOP)\config\config.mk
+
+
+Issues
+======
+
+Issues to be addressed later:
+
+None.
+
+
+About the Examples
+==================
+
+All "thread" and some of "echo" examples have been tested 
+with the following configurations:
+
+   RTEMS 	<----------------------->   NT 4.0     NT 4.0
+   eg3_clt				    eg3_impl   omniNames
+   eg3_Impl				    eg3_clt    omniNames
+
+   RTEMS 	<----------------------->   Linux      NT 4.0	     
+   eg3_clt				    eg3_impl   omniNames
+   eg3_Impl				    eg3_clt    omniNames
+
+
+RTEMS running on a PC 486DX  --> BSP pc486
+
+
+
+Credits
+=======
+
+Thanks to all participants of the RTEMS and omniORB's lists
+for all your help.
+
+I'd like to make special mention of:
+
+  ( RTEMS' list )
+  - Joel Sherrill     		<joel@oarcorp.com>
+  - Erik Ivanenko  		    <erik.ivanenko@utoronto.ca>
+  - Ian Lance Taylor    	<ian@zembu.com>
+  - D. V. Henkel-Wallace	<gumby@zembu.com>
+
+  ( omniORB's list )
+  - David Riddoch		<djr@uk.research.att.com>
+  - Sai-Lai Lo			<S.Lo@uk.research.att.com>
+
+
+Enjoy!
+
+Rosimildo da Silva  		<rdasilva@connecttel.com>
+ConnectTel, Inc.
+http://www.connecttel.com
+

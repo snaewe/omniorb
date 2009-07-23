@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+datadir=@datadir@
+idldir=${datadir}/idl/omniORB/COS
+includedir=@includedir@
+
+Name: omniCOS4
+Description: CORBA Object Request Broker - CORBA Services stubs
+Version: @PACKAGE_VERSION@
+Requires: omniORB4
+Libs: -L${libdir} -lCOS4
+Cflags:

@@ -1,0 +1,11 @@
+
+module ValueTest {
+  valuetype One {
+    public string s;
+    public long   l;
+  };
+
+  interface Test {
+    One op1(in One a, in One b);
+  };
+};

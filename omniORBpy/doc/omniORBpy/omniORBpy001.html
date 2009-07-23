@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
+<LINK rel="stylesheet" type="text/css" href="omniORBpy.css">
+<TITLE>Introduction</TITLE>
+</HEAD>
+<BODY >
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy002.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+<HR>
+<H1 CLASS="chapter"><A NAME="htoc1">Chapter&#XA0;1</A>&#XA0;&#XA0;Introduction</H1><P>omniORBpy is an Object Request Broker (ORB) that implements the CORBA
+2.6 Python mapping&#XA0;[<A HREF="omniORBpy011.html#pythonmapping">OMG01b</A>]. It works in conjunction with
+omniORB for C++, version 4.1.</P><P>This user guide tells you how to use omniORBpy to develop CORBA
+applications using Python. It assumes a basic understanding of CORBA,
+and of the Python mapping. Unlike most CORBA standards, the Python
+mapping document is small, and quite easy to follow.</P><P>This manual contains all you need to know about omniORB in order to
+use omniORBpy. Some sections are repeated from the omniORB manual.</P><P>In this chapter, we give an overview of the main features of omniORBpy
+and what you need to do to setup your environment to run it.</P><H2 CLASS="section"><A NAME="toc1"></A><A NAME="htoc2">1.1</A>&#XA0;&#XA0;Features</H2><H3 CLASS="subsection"><A NAME="htoc3">1.1.1</A>&#XA0;&#XA0;Multithreading</H3><P>omniORB is fully multithreaded. To achieve low call overhead,
+unnecessary call-multiplexing is eliminated. With the default
+policies, there is at most one call in-flight in each communication
+channel between two address spaces at any one time. To do this without
+limiting the level of concurrency, new channels connecting the two
+address spaces are created on demand and cached when there are
+concurrent calls in progress. Each channel is served by a dedicated
+thread. This arrangement provides maximal concurrency and eliminates
+any thread switching in either of the address spaces to process a
+call. Furthermore, to maximise the throughput in processing large call
+arguments, large data elements are sent as soon as they are processed
+while the other arguments are being marshalled. With GIOP 1.2, large
+messages are fragmented, so the marshaller can start transmission
+before it knows how large the entire message will be.</P><P>From version 4.0 onwards, omniORB also supports a flexible thread
+pooling policy, and supports sending multiple interleaved calls on a
+single connection. This policy leads to a small amount of additional
+call overhead, compared to the default thread per connection model,
+but allows omniORB to scale to extremely large numbers of concurrent
+clients.</P><H3 CLASS="subsection"><A NAME="htoc4">1.1.2</A>&#XA0;&#XA0;Portability</H3><P>omniORB has always been designed to be portable. It runs on many
+flavours of Unix, Windows, several embedded operating systems, and
+relatively obscure systems such as OpenVMS and Fujitsu-Siemens BS2000.
+It is designed to be easy to port to new platforms. The IDL to C++
+mapping for all target platforms is the same.</P><H3 CLASS="subsection"><A NAME="htoc5">1.1.3</A>&#XA0;&#XA0;Missing features</H3><P>
+<A NAME="sec:missing"></A></P><P>omniORB is not (yet) a complete implementation of the CORBA 2.6 core.
+The following is a list of the most significant missing features.</P><UL CLASS="itemize"><LI CLASS="li-itemize">omniORB does not have its own Interface Repository. However, it
+can act as a client to an IfR. The omniifr project
+(<A HREF="http://omniifr.sourceforge.net/"><TT>http://omniifr.sourceforge.net/</TT></A>) aims to create an IfR for
+omniORB.</LI><LI CLASS="li-itemize">omniORB supports interceptors, but not the standard Portable
+Interceptor API. Interceptor facilities available from Python code are
+quite limited.</LI></UL><P>These features may be implemented in the short to medium term. It is
+best to check out the latest status on the omniORB home page
+(<A HREF="http://omniorb.sourceforge.net/"><TT>http://omniorb.sourceforge.net/</TT></A>).</P><H2 CLASS="section"><A NAME="toc2"></A><A NAME="htoc6">1.2</A>&#XA0;&#XA0;Setting up your environment</H2><P>
+<A NAME="sec:setup"></A></P><P>omniORBpy relies on the omniORB C++ libraries. If you are building
+from source, you must first build omniORB itself, as detailed in the
+omniORB documentation. After that, you can build the omniORBpy
+distribution, according to the instructions in the release notes.</P><H3 CLASS="subsection"><A NAME="htoc7">1.2.1</A>&#XA0;&#XA0;Paths</H3><P>With an Autoconf build (the norm on Unix platforms), omniORBpy is
+usually installed into a location that Python will find it.</P><P>Otherwise, you must tell Python where to find it. You must add two
+directories to the <TT>PYTHONPATH</TT> environment variable. The
+<TT>lib/python</TT> directory contains platform-independent Python code;
+the <TT>lib/</TT><TT>$</TT><TT>FARCH</TT> directory contains
+platform-specific binaries, where <TT>FARCH</TT> is the name of
+your platform, such as <TT>x86_win32</TT>.</P><P>On Unix platforms, set <TT>PYTHONPATH</TT> with a command like:</P><PRE CLASS="verbatim">   export PYTHONPATH=$PYTHONPATH:$TOP/lib/python:$TOP/lib/$FARCH
+</PRE><P>On Windows, use</P><PRE CLASS="verbatim">   set PYTHONPATH=%PYTHONPATH%;%TOP%\lib\python;%TOP%\lib\x86_win32
+</PRE><P>(Where the <TT>TOP</TT> environment variable is the root of your
+omniORB tree.)</P><P>You should also add the <TT>bin/</TT><TT>$</TT><TT>FARCH</TT> directory
+to your <TT>PATH</TT>, so you can run the IDL compiler, omniidl.
+Finally, add the <TT>lib/</TT><TT>$</TT><TT>FARCH</TT> directory to
+<TT>LD_LIBRARY_PATH</TT>, so the omniORB core library can be found.</P><H3 CLASS="subsection"><A NAME="htoc8">1.2.2</A>&#XA0;&#XA0;Configuration file</H3><UL CLASS="itemize"><LI CLASS="li-itemize">On Unix platforms, the omniORB runtime looks for the environment
+variable <TT>OMNIORB_CONFIG</TT>. If this variable is defined, it
+contains the pathname of the omniORB configuration file. If the
+variable is not set, omniORB will use the compiled-in pathname to
+locate the file (by default <TT>/etc/omniORB.cfg</TT>).</LI><LI CLASS="li-itemize">On Win32 platforms (Windows NT, 2000, 95, 98), omniORB first
+checks the environment variable <TT>OMNIORB_CONFIG</TT> to obtain the
+pathname of the configuration file. If this is not set, it then
+attempts to obtain configuration data in the system registry. It
+searches for the data under the key
+<TT>HKEY_LOCAL_MACHINE\SOFTWARE\omniORB</TT>.</LI></UL><P>omniORB has a large number of parameters than can be configured. See
+chapter&#XA0;<A HREF="omniORBpy004.html#chap:config">4</A> for full details. The files
+<TT>sample.cfg</TT> and <TT>sample.reg</TT> contain an example
+configuration file and set of registry entries respectively.</P><P>To get all the omniORB examples running, the main thing you need to
+configure is the Naming service, omniNames. To do that, the
+configuration file or registry should contain an entry of the form</P><PRE CLASS="verbatim">  InitRef = NameService=corbaname::my.host.name
+</PRE><P>See section&#XA0;<A HREF="omniORBpy006.html#sec:corbaname">6.1.2</A> for full details of corbaname URIs.</P><HR>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy002.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

@@ -1,0 +1,241 @@
+omniORB on OpenVMS platforms
+============================
+
+This file contains information on building and running omniORB on
+OpenVMS platforms.
+
+The current version of omniORB has been compiled on the following platforms:
+
+        Compaq C++ V6.5-001 for OpenVMS Alpha V7.3
+        Compaq C V6.2-003 on OpenVMS Alpha V7.3
+        Python 2.3.1
+        MMS V3.4-3
+
+and:
+
+        Compaq C++ V6.5-021 for OpenVMS Alpha V7.3-1
+        Compaq C V6.5-001 on OpenVMS Alpha V7.3-1
+        Python 1.5.2
+        MMS V3.4-3
+
+Requirements
+------------
+
+Built and tested on OpenVMS Alpha 7.3 and 7.3-1.  Older or newer
+versions may work but at least 7.1 is recommended.
+
+It is recommended to use an ODS-5 disk volume for the omniORB distribution.
+
+omniORB has not been tested on the VAX platform for quite some time.
+However, support utilities and instructions remain in place in case
+anyone wishes once again to port to that platform.  Good luck.
+Alternatively, older versions of omniORB (2.8.0?) may still work on
+the VAX.
+
+omniORB has not been tested on the Itanium platform.
+
+HP C++ for OpenVMS is required.
+
+HP C for OpenVMS is required for building the GNU preprocessor which
+is used by the omniORB IDL compiler (omniidl).
+
+MMS is required for building the distribution.  Note that a somewhat
+recent version of MMS is required (MMS V3.4-3 is the tested version).
+For example, the makefiles utilize the "predefined functions" ($(subst
+...) $(patsubst ...) and $(foreach ...)) that are now provided.
+Therefore, the freely available MMK likely won't work without some
+effort (unfortunately).
+
+Python is required for the IDL compiler (omniidl) and to support the OpenVMS
+build environment.
+
+Python version 1.5.2 will still work even though it is no longer
+available for download.  If you use this version then you must ensure
+that the following logical names are defined:
+
+	Logical name	Definition
+	---------------	-------------------------------------------------
+	python_include	pyvms_disk:[python.python-1_5_2.include]
+	python_olb	pyvms_disk:[python.python-1_5_2.vms.o_'platform']
+
+Recent versions of Python are available for download from
+http://vmspython.dyndns.org and also from
+http://www.hp.com/go/openvms/freeware (browse or download the freeware
+V6 CD).
+
+At this writing, Python for OpenVMS requires SSL, ZLIB, and LIBBZ2.
+See the installation instructions for Python from one of the above two
+links.
+
+New features
+------------
+
+It is no longer necessary to define a rooted logical name in order to
+build omniORB.
+
+Build performance for shareable images has been improved (believe it
+or not it used to be worse!).
+
+A setup.com file has been added for convenience.
+
+The omniORB libraries are now compatable with CXX /NAME=AS_IS (see below).
+
+Building the distribution
+-------------------------
+
+You must set default to the top level directory and unzip the
+[.etc]openvms.zip file before building the distribution.  Unzip for
+OpenVMS is available from the HP sponsored freeware CD
+(http://www.hp.com/go/openvms/freeware).
+
+To build, simply SET DEFAULT to the [...src] directory
+and type "MMS /SKIP /EXTENDED_SYNTAX EXPORT".  You may wish to define
+a make symbol such as:
+
+  MAKE == "mms/skip/extended_syntax"
+
+After typing "make export" from the [...src] directory, you should
+have all of the libraries and executables needed to build and run
+CORBA applications on your OpenVMS system.  Note that it is no longer
+required to perform a seperate make to build the debug libraries.
+
+Using omniORB
+-------------
+
+setup.com
+.........
+
+For convenient access to the omniORB libraries and executables,
+execute (via "@") the setup.com file located in the top level
+directory of this distribution.  Optionally, a logical name table
+(e.g., LNM$GROUP, LNM$SYSTEM) may be passed as the first argument to
+indicate the logical name table to use.  Default is LNM$PROCESS.
+
+The following logical names are defined:
+
+        logical name            description
+        ----------------------- -----------------------------------------------
+        OMNIEXE                 directory containing omniORB utility
+                                executables
+        OMNILIB                 directory containing omniORB object
+                                libraries and shareable images
+        OMNIINC                 top level include directory
+        OMNICODESETS4_RT        codeset library shareable image.
+        OMNICODESETS4_RTD       codeset library shareable image (debug version)
+        OMNIDYNAMIC4_RT         dynamic library shareable image
+        OMNIDYNAMIC4_RTD        dynamic library shareable image (debug version)
+        OMNIORB4_RT             core library shareable image
+        OMNIORB4_RTD            core library shareable image (debug version)
+        OMNITHREAD_RT           thread library
+        OMNITHREAD_RTD          thread library (debug version)
+
+In addition a "PATH" global symbol is defined ("points" to
+[.bin.scripts]path.com) and executed to add the proper "bin" directory
+to the DCL$PATH "search list" logical name.
+
+You may wish to invoke the setup.com file from your login.com.
+
+The CXX /NAME qualifier
+.......................
+
+You may now use the CXX /NAME=AS_IS qualifier with the omniORB static
+libraries or shareable images.  However, if you do not wish to use the
+CXX /NAME=AS_IS qualifier, you must now link against the shareable
+images.  The shareable images now contain upper case aliases that
+allow for comptability with the default setting of CXX/NAME=UPPERCASE.
+
+There are additional configuration parameters in [config]config.mms.
+
+Setting up your environment
+---------------------------
+
+You will need to define the OMNICFG logical name to point to an
+existing directory for name service configuration information.  The
+omniNames server will use this directory.
+
+You will need to create a file called "omnicfg:omniorb.cfg" to contain
+the nameservice URI as described in the omniORB documentation.
+
+Once you have created this file, you should startup the omniNames
+server as a detached process.  This should be added to your system
+startup procedure.
+
+Building omniORB applications
+-----------------------------
+
+Assuming that setup.com has run, you should add:
+/include=("./","/OMNIINC")/name=as_is to your CXX compiles.
+
+To link against the shareable images, you should use the
+omnilib:omni_share.olb (or omnilib:omni_shared.olb) library.
+
+To run the resulting executable, you will need to run setup.com or
+redefine sys$share.  E.g.,
+
+	$ define sys$share omnilib,sys$library
+
+You may wish to use or adapt the development environment provided in
+the DCL and MMS files contained in [etc]openvms.zip to accomplish the
+above.
+
+Floating point support
+----------------------
+
+The CORBA standard mandates that an implementation should use the IEEE
+standard for floating point types (CORBA::Float and CORBA::Double).
+Since native IEEE floating point was not available on the VAX platform
+and to provide additional flexibility for the Alpha platform, proxy
+classes have been defined for these types on the OpenVMS platform.
+
+Building the examples
+=====================
+
+You are strongly encouraged to try out the examples provided in
+[src.examples]. Go into [src.examples] and type 'make all' (where make
+is defined as above).
+
+Study the documentations in ['top'.doc] (in the omniORB distribution) before
+you run any of the example programs.
+
+Documentation
+=============
+
+You must read the omniORB and the OMNI naming service user
+guides. Follow the instructions in the guides to complete the
+configuration process.
+
+Performance
+===========
+
+omniORB is implemented using synchronous socket calls in threads
+rather than asynchronous socket calls.  Thus, performance of omniORB
+relies heavily on the ability of the O/S to perform I/Os that block
+only the thread of execution (rather than the whole process) pending
+I/O completion.
+
+Alpha
+-----
+
+For OpenVMS Alpha platforms, the best way to acheive this behavior is
+to use link with /Thread=upcalls.  This requires at least 7.1 of
+OpenVMS.  Ideally, you should upgrade (if necessary) to 7.1 or 7.2 and
+use /Thread=upcalls.  If for some reason you cannot upgrade the O/S
+you can use the tcpSocketVaxRoutines.cc enhancement below.
+
+VAX
+---
+
+The OpenVMS VAX platform (effectively) ignores the /Thread=upcalls (at
+least as of 7.2).  Therefore you should use the
+tcpSocketVaxRoutines.cc enhancement below. However, since this
+enhancement relies on a DEC CRTL 7.0 feature, it requires using the
+backport libraries on versions of VMS prior to 7.1.  Therefore,
+upgrading to at least OpenVMS 7.1 is advised.
+
+tcpSocketVaxRoutines.cc
+-----------------------
+
+The file [etc]openvms.zip file contains the source file
+tcpSocketVaxRoutines.cc.  Inclusion of this module into the omniORB
+object library is controled by the MMS macro, useTcpSocketVaxRoutines.
+This macro is automatically set if the platform is OpenVMS VAX 7.x.

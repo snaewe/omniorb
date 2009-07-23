@@ -1,0 +1,220 @@
+
+module TypeTest {
+
+  interface J {
+    void op();
+  };
+
+  struct S1 {
+    short          a;
+    unsigned short b;
+    long           c;
+    unsigned long  d;
+    float          e;
+    double         f;
+    boolean        g;
+    char           h;
+    octet          i;
+  };
+
+  union U1 switch (long) {
+  case 0:
+    long a;
+  case 1:
+  case 2:
+    short b;
+  case 3:
+    octet c;
+  };
+
+  union U2 switch (char) {
+  case 'a':
+    long a;
+  case 'b':
+  case 'c':
+    short b;
+  default:
+    octet c;
+  };
+
+  enum E1 { one, two, three, four };
+  enum E2 { five, six, seven, eight, nine };
+
+  typedef sequence <short>          Q1;
+  typedef sequence <unsigned short> Q2;
+  typedef sequence <long>           Q3;
+  typedef sequence <unsigned long>  Q4;
+  typedef sequence <float>          Q5;
+  typedef sequence <double>         Q6;
+  typedef sequence <boolean>        Q7;
+  typedef sequence <char>           Q8;
+  typedef sequence <octet>          Q9;
+
+  typedef sequence <short,10>          BQ1;
+  typedef sequence <unsigned short,10> BQ2;
+  typedef sequence <long,10>           BQ3;
+  typedef sequence <unsigned long,10>  BQ4;
+  typedef sequence <float,10>          BQ5;
+  typedef sequence <double,10>         BQ6;
+  typedef sequence <boolean,10>        BQ7;
+  typedef sequence <char,10>           BQ8;
+  typedef sequence <octet,10>          BQ9;
+
+  typedef short          A1[5];
+  typedef unsigned short A2[5];
+  typedef long           A3[5];
+  typedef unsigned long  A4[5];
+  typedef float          A5[5];
+  typedef double         A6[5];
+  typedef boolean        A7[5];
+  typedef char           A8[5];
+  typedef octet          A9[5];
+  typedef string         A10[5];
+
+  struct S2;
+  typedef sequence <S2> S2s;
+
+  struct S2 {
+    S1     a;
+    U1     b;
+    J      c;
+    Q1     d;
+    Q9     e;
+    string f;
+  };
+
+  struct S3 {
+    long a;
+    union U switch (boolean) {
+    case TRUE:
+      sequence <S3> a;
+    } b;
+  };
+
+  typedef sequence <S1> Q10;
+
+  exception X1 {};
+  exception X2 {
+    long   a;
+    string b;
+  };
+
+  typedef fixed<10,5> F1;
+
+  valuetype V1 {
+    public string s;
+    public long   l;
+  };
+
+  valuetype V2 : V1 {
+    public V1 v;
+  };
+
+  valuetype B1 long;
+
+  interface I {
+
+    // Simple types
+    void           simple1 ();
+    oneway void    simple2 ();
+    short          simple3 (in short          a);
+    unsigned short simple4 (in unsigned short a);
+    long           simple5 (in long           a);
+    unsigned long  simple6 (in unsigned long  a);
+    float          simple7 (in float          a);
+    double         simple8 (in double         a);
+    boolean        simple9 (in boolean        a);
+    char           simple10(in char           a);
+    octet          simple11(in octet          a);
+    
+    // Combinations of simple types
+    void combine1(in short a, in  long b, in    unsigned long c);
+    void combine2(in short a, out long b, inout unsigned long c);
+
+    // Simple attributes
+    attribute short          sattr1;
+    attribute unsigned short sattr2;
+    attribute long           sattr3;
+    attribute unsigned long  sattr4;
+    attribute float          sattr5;
+    attribute double         sattr6;
+    attribute boolean        sattr7;
+    attribute char           sattr8;
+    attribute octet          sattr9;
+
+    // Complex types
+    Object     complex1 (in Object     a);
+    J          complex2 (in J          a);
+    S1         complex3 (in S1         a);
+    U1         complex4 (in U1         a);
+    U2         complex5 (in U2         a);
+    E1         complex6 (in E1         a);
+    string     complex7 (in string     a);
+    string<10> complex8 (in string<10> a);
+    Q1         complex9 (in Q1         a);
+    Q2         complex10(in Q2         a);
+    Q3         complex11(in Q3         a);
+    Q4         complex12(in Q4         a);
+    Q5         complex13(in Q5         a);
+    Q6         complex14(in Q6         a);
+    Q7         complex15(in Q7         a);
+    Q8         complex16(in Q8         a);
+    Q9         complex17(in Q9         a);
+    BQ1        complex18(in BQ1        a);
+    BQ2        complex19(in BQ2        a);
+    BQ3        complex20(in BQ3        a);
+    BQ4        complex21(in BQ4        a);
+    BQ5        complex22(in BQ5        a);
+    BQ6        complex23(in BQ6        a);
+    BQ7        complex24(in BQ7        a);
+    BQ8        complex25(in BQ8        a);
+    BQ9        complex26(in BQ9        a);
+    A1         complex27(in A1         a);
+    A2         complex28(in A2         a);
+    A3         complex29(in A3         a);
+    A4         complex30(in A4         a);
+    A5         complex31(in A5         a);
+    A6         complex32(in A6         a);
+    A7         complex33(in A7         a);
+    A8         complex34(in A8         a);
+    A9         complex35(in A9         a);
+    A10        complex36(in A10        a);
+
+    // More complex types
+    S2         complex37(in S2         a);
+    S3         complex38(in S3         a);
+    Q10        complex39(in Q10        a);
+
+    // Fixed
+    F1         complex40(in F1         a);
+
+    // WString
+    wstring     complex41(in wstring     a);
+    wstring<10> complex42(in wstring<10> a);
+
+    // ValueType
+    V1         complex43(in V1         a);
+    V2         complex44(in V2         a);
+    B1         complex45(in B1         a);
+
+    // Exceptions
+    void except1()          raises (X1);
+    // Always raise X1
+
+    void except2(in long a) raises (X1, X2);
+    // Raise X1 if a==1, X2 if a==2, no exception otherwise
+
+    void except3(in long a);
+    // Raise X1 if a==1 (caller should get UNKNOWN), NO_PERMISSION if a==2,
+    // no exception otherwise
+
+    // TypeCode, Any
+    CORBA::TypeCode tc1 (in CORBA::TypeCode a);
+    any             any1(in any             a);
+
+    // Context
+    typedef sequence<string> strings;
+    strings context1(in long l) context("test");
+    strings context2(in long l) context("test*", "foo*", "bar");
+  };
+};

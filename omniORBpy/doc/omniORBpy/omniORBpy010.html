@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
+<LINK rel="stylesheet" type="text/css" href="omniORBpy.css">
+<TITLE>Objects by value</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORBpy009.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy011.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+<HR>
+<H1 CLASS="chapter"><A NAME="htoc101">Chapter&#XA0;10</A>&#XA0;&#XA0;Objects by value</H1><P>
+<A NAME="chap:valuetype"></A></P><P>omniORBpy 3 supports objects by value, declared with the
+<TT>valuetype</TT> keyword in IDL. This chapter outlines some issues to
+do with using valuetypes in omniORB. You are assumed to have read the
+relevant parts of the CORBA specification, specifically chapters 4 and
+5 of the CORBA 2.6 specification, and section 1.3.10 of the Python
+language mapping, version 1.2.</P><H2 CLASS="section"><A NAME="toc43"></A><A NAME="htoc102">10.1</A>&#XA0;&#XA0;Features</H2><P>omniORB supports the complete objects by value specification, with the
+exception of custom valuetypes. All other features including value
+boxes, value sharing semantics, abstract valuetypes, and abstract
+interfaces are supported.</P><H2 CLASS="section"><A NAME="toc44"></A><A NAME="htoc103">10.2</A>&#XA0;&#XA0;Value sharing and local calls</H2><P>When valuetypes are passed as parameters in CORBA calls (i.e. calls
+on CORBA objects declared with <TT>interface</TT> in IDL), the structure
+of related values is maintained. Consider, for example, the following
+IDL definitions (which are from the example code in
+<TT>src/examples/valuetype/simple</TT>:</P><DIV CLASS="lstlisting"><B>module</B> ValueTest {
+  <B>valuetype</B> One {
+    <B>public</B> <B>string</B> s;
+    <B>public</B> <B>long</B>   l;
+  };
+
+  <B>interface</B> Test {
+    One op1(<B>in</B> One a, <B>in</B> One b);
+  };
+};</DIV><P>If the client to the <TT>Test</TT> object passes the same value in both
+parameters, just one value is transmitted, and the object
+implementation receives a copy of the single value, with references to
+it in both parameters.</P><P>In the case that the object is remote from the client, there is
+obviously a copying step involved. In the case that the object is in
+the same address space as the client, the same copying semantics must
+be maintained so that the object implementation can modify the values
+it receives without the client seeing the modifications. To support
+that, omniORB must copy the entire parameter list in one operation, in
+case there is sharing between different parameters. Such copying is a
+rather more time-consuming process than the parameter-by-parameter
+copy that takes place in calls not involving valuetypes.</P><P>To avoid the overhead of copying parameters in this way, applications
+can choose to relax the semantics of value copying in local calls, so
+values are not copied at all, but are passed by reference. In that
+case, the client to a call <EM>will</EM> see any modifications to the
+values it passes as parameters (and similarly, the object
+implementation will see any changes the client makes to returned
+values). To choose this option, set the <TT>copyValuesInLocalCalls</TT>
+configuration parameter to zero.</P><H2 CLASS="section"><A NAME="toc45"></A><A NAME="htoc104">10.3</A>&#XA0;&#XA0;Value factories</H2><P>As specified in section 1.3.10 of the Python language mapping (version
+1.2), factories are automatically registered for values with no
+operations. This means that in common usage where values are just used
+to hold state, the application code does not need to implement and
+register factories. The application may still register different
+factories if it requires.</P><P>If the IDL definitions specify operations on values, the application
+is supposed to provide implementations of the operations, meaning that
+it must register suitable factories. If the application chooses to
+ignore the operations and just manipulate the data inside the values,
+omniidl can be asked to register factories for <EM>all</EM> values, not
+just ones with no operations, using the <TT>-Wbfactories</TT> option.</P><P>The Python language mapping says a value factory should be &#X201C;a class
+instance with a <TT>__call__</TT> method taking no arguments&#X201D;.
+omniORBpy is less restrictive than that, and permits the use of
+<EM>any</EM> callable object, in particular the value implementation
+class itself.</P><H2 CLASS="section"><A NAME="toc46"></A><A NAME="htoc105">10.4</A>&#XA0;&#XA0;Standard value boxes</H2><P>The standard <TT>CORBA.StringValue</TT> and <TT>CORBA.WStringValue</TT>
+value boxes are available to application code. To make the definitions
+available in IDL, #include the standard <TT>orb.idl</TT>.</P><H2 CLASS="section"><A NAME="toc47"></A><A NAME="htoc106">10.5</A>&#XA0;&#XA0;Values inside Anys</H2><P>Valuetypes inserted into Anys cause a number of interesting issues.
+Even when inside Anys, values are required to support complete sharing
+semantics. Take this IDL for example:</P><DIV CLASS="lstlisting"><B>module</B> ValueTest {
+  <B>valuetype</B> One {
+    <B>public</B> <B>string</B> s;
+    <B>public</B> <B>long</B>   l;
+  };
+
+  <B>interface</B> AnyTest {
+    <B>void</B> op1(<B>in</B> One v, <B>in</B> Any a);
+  };
+};</DIV><P>Now, suppose the client behaves as follows:</P><DIV CLASS="lstlisting">v = One_impl("hello", 123)
+a = CORBA.Any(ValueTest._tc_One, v)
+obj.op1(v, a)</DIV><P>then on the server side:</P><DIV CLASS="lstlisting"><B>class</B> AnyTest_impl:
+    ...
+    <B>def</B> op1(self, v, a):
+        v2 = a.value()
+        assert v2 == v</DIV><P>This is all very well in this kind of simple situation, but problems
+can arise if truncatable valuetypes are used. Imagine this derived
+value:</P><DIV CLASS="lstlisting"><B>module</B> ValueTest {
+  <B>valuetype</B> Two : <B>truncatable</B> One {
+    <B>public</B> <B>double</B> d;
+  };
+};</DIV><P>Now, suppose that the client shown above sends an instance of
+valuetype <TT>Two</TT> in both parameters, and suppose that the server
+has not seen the definition of valuetype <TT>Two</TT>. In this
+situation, as the first parameter is unmarshalled, it will be
+truncated to valuetype <TT>One</TT>, as required. Now, when the Any is
+unmarshalled, it refers to the same value, which has been truncated.
+So, even though the TypeCode in the Any indicates that the value has
+type <TT>Two</TT>, the stored value actually has type <TT>One</TT>. If the
+receiver of the Any tries to pass it on, transmission will fail
+because the Any&#X2019;s value does not match its TypeCode.</P><P>In the opposite situation, where an Any parameter comes before a
+valuetype parameter, a different problem occurs. In that case, as the
+Any is unmarshalled, there is no type information available for
+valuetype <TT>Two</TT>, so omniORBpy constructs a suitable type based on
+the transmitted TypeCode. Because omniORBpy is unable to know how (and
+indeed if) the application has implemented valuetype <TT>One</TT>, the
+generated class for valuetype <TT>Two</TT> is not derived from the
+application&#X2019;s <TT>One</TT> class. When the second parameter is
+unmarshalled, it is given as an indirection to the
+previously-marshalled value inside the Any. The parameter is therefore
+set to the constructed <TT>Two</TT> type, rather than being truncated to
+an instance of the application&#X2019;s registered <TT>One</TT> type.</P><P>Because of these issues, it is best to avoid defining interfaces that
+mix valuetypes and Anys in a single operation, and certainly to avoid
+trying to share plain values with values inside Anys.</P><HR>
+<A HREF="omniORBpy009.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy011.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

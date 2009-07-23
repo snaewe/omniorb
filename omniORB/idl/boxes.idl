@@ -1,0 +1,18 @@
+// boxes.idl
+//
+// This file contains definitions of standard valueboxes.
+
+#ifndef _omniorb_boxes_idl_
+#define _omniorb_boxes_idl_
+
+#pragma prefix "omg.org"
+
+module CORBA {
+
+  valuetype StringValue  string;
+  valuetype WStringValue wstring;
+
+};
+
+
+#endif // _omniorb_boxes_idl_

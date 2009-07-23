@@ -1,0 +1,12 @@
+A note about Python licensing
+=============================
+
+Versions of Python up to and including 1.5.2 had a very simple and
+liberal license; versions from 1.6 onwards have much more complex, and
+more restrictive licenses. In particular, it is arguable as to whether
+the new licensing terms are "GPL compatible" -- that is, whether it is
+permissible to link Python with code licensed under the GNU Public
+License.
+
+To avoid any doubt, we explicitly permit omniORBpy to be linked with
+any version of Python.

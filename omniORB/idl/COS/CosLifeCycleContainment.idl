@@ -1,0 +1,29 @@
+//File: CosLifeCycleContainment.idl
+//Part of the Lifecycle Service
+
+#ifndef _COS_LIFE_CYCLE_CONTAINMENT_IDL_
+#define _COS_LIFE_CYCLE_CONTAINMENT_IDL_
+
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #include "COS_sysdep.h"
+
+#include <CosContainment.idl>
+#include <CosCompoundLifeCycle.idl>
+
+#pragma prefix "omg.org"
+
+module CosLifeCycleContainment {
+
+	interface Relationship : 
+			CosCompoundLifeCycle::Relationship,
+			CosContainment::Relationship {};
+
+	interface ContainsRole : 
+			CosCompoundLifeCycle::Role,
+			CosContainment::ContainsRole {};
+
+	interface ContainedInRole : 
+			CosCompoundLifeCycle::Role,
+			CosContainment::ContainedInRole {};
+};
+#endif /* ifndef _COS_LIFE_CYCLE_CONTAINMENT_IDL_ */

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
+<LINK rel="stylesheet" type="text/css" href="omniORBpy.css">
+<TITLE>Interceptors</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORBpy008.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy010.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+<HR>
+<H1 CLASS="chapter"><A NAME="htoc100">Chapter&#XA0;9</A>&#XA0;&#XA0;Interceptors</H1><P>
+<A NAME="chap:interceptors"></A></P><P>omniORBpy has limited interceptor support. Interceptors permit the
+application to insert processing at various points along the call
+chain, as requests are processed. The Portable Interceptors API is not
+yet supported.</P><P>Interceptors are registered using functions in the
+<TT>omniORB.interceptors</TT> module:</P><DIV CLASS="lstlisting">  addClientSendRequest()
+  addClientReceiveReply()
+  addServerReceiveRequest()
+  addServerSendReply()
+  addServerSendException()</DIV><P>To register an interceptor function, call the relevant registration
+function with a callable argument. The callable will be called with
+two or three arguments. The first argument is the name of the
+operation being invoked; the second is the set of service contexts to
+be retrieved or filled in. <TT>ServerSendException</TT> has a third
+argument, the repository id of the exception being thrown.</P><P>When receiving service contexts (in the <TT>ClientReceiveReply</TT> and
+<TT>ServerReceiveRequest</TT> interceptors), the second argument
+is a tuple of 2-tuples. In each 2-tuple, the first item is the service
+context id and the second item is the CDR encapsulation of the service
+context. The encapsulation can be decoded with
+<TT>omniORB.cdrUnmarshal()</TT> (but only if you know the type to decode it
+to).</P><P>When sending service contexts (<TT>ClientSendRequest</TT>,
+<TT>ServerSendReply</TT>, and <TT>ServerSendException</TT>), the second
+argument is an empty list. The interceptor function can choose to add
+one or more service context tuples, with the same form described
+above, by appending to the list. Encapsulations are created with
+<TT>omniORB.cdrMarshal()</TT>.</P><P>Interceptor registration functions may only be called before the ORB
+is initialised. Attempting to call them later results in a
+<TT>BAD_INV_ORDER</TT> exception.</P><HR>
+<A HREF="omniORBpy008.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy010.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

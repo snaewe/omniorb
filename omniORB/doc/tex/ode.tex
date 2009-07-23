@@ -1,0 +1,1501 @@
+\documentclass[11pt,twoside,onecolumn]{article}
+\usepackage[]{fontenc}
+\usepackage{palatino}
+\usepackage{a4}
+\addtolength{\oddsidemargin}{-0.2in}
+\addtolength{\evensidemargin}{-0.6in}
+\addtolength{\textwidth}{0.5in}
+
+\pagestyle{headings}
+\parskip 1ex
+\parindent 0pt
+\title{The OMNI Development Environment}
+\author{Tristan Richardson\\
+        ORL\\
+        Cambridge}
+\date{12 January 1999}
+
+\begin{document}
+
+\maketitle
+
+\vspace{0.2in}
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+The OMNI Development Environment (ODE) provides a mechanism for building
+software across all our diverse platforms.
+
+The idea is that you create a {\em build tree} for a particular platform where
+you can ``build'' software using compilers, linkers, etc.  To help with this
+you can pull in things like header files and libraries from a number of {\em
+import trees}.  The resulting code can be ``exported'' to an {\em export tree},
+from where others may ``import'' it.  A few simple definitions of the different
+types of tree may help:
+
+\begin{itemize}
+
+\item An {\em import/export tree} is a place for sharing compiled libraries and
+binaries, header files, IDL files, {\em make} variables and rules.  It has a
+standard structure of subdirectories - at present {\tt include}, {\tt idl},
+{\tt mk}, {\tt bin} and {\tt lib} - but a particular tree might have some of
+these missing or have other extra subdirectories.  Underneath {\tt bin} and
+{\tt lib} are platform-dependent subdirectories.
+
+\item A {\em build tree} is where source code is ``built''.  The source code
+can be local to the build tree, or it can be pulled in from a source tree which
+is shared with other build trees.  The results of building, such as libraries
+and binaries, can be exported to an {\em export tree}.  Such an {\em export
+tree} can then be used as an {\em import tree} by another build tree.
+Obviously build trees are platform-dependent.
+
+\item A {\em source tree} has the source code of things which need ``building''
+such as C/C++ source and Java source.  Things which don't need to be ``built''
+such as header files and IDL files can just be put directly into an
+import/export tree.
+
+\end{itemize}
+
+By convention a source tree will often be associated with an import/export
+tree and will be placed in the {\tt src} subdirectory of the import/export
+tree.  Its structure underneath {\tt src} can be anything.
+
+For each platform there will also often be a build tree under the {\tt build}
+subdirectory of the import/export tree.  Here source code from the
+corresponding source tree is built, and then exported to the import/export
+tree.
+
+Note that when you treat an import/export tree as an import tree, the contents
+of its corresponding source and build trees is totally irrelevant.  There is no
+sense in which you can ``import'' from a build tree.\footnote{This differs from
+the old OMNI development environment where, for example, an {\tt appl} build
+tree could ``import'' from a {\tt lib} build tree.}
+
+Every build tree must have a {\em base} OMNI tree from which it imports.
+Usually this will be the current {\em release} or {\em develop} OMNI tree.  In
+addition the build tree can have any number of other import trees.  The order
+of these import trees is important - if a library, header file or whatever
+appears in more than one import tree, the build tree will use the one in the
+import tree which is specified first.  The {\em base} OMNI tree will always be
+searched last.
+
+
+\section{Some example ways of using the ODE}
+
+There are a number of different ways in which the ODE can be used.  Here are
+some examples, using various source, build and import/export trees.  Don't
+worry if the later examples seem complicated - it will all become clear when
+you try some building yourself.
+
+\begin{enumerate}
+
+\item
+\label{buildtreeonly}
+The simplest situation is where a user wants to write their own code in
+isolation.  For a single platform this can be done directly in a build tree
+which just imports from the base OMNI tree but has no export tree or source
+trees.  See the hello world example below.
+
+\item If the user wants to build the same source code on multiple platforms the
+code can be placed in a source tree.  Several build trees can then be created
+each of which shadow the source tree (i.e. have the same directory structure
+but no source files).  Again these build trees need not have an export tree.
+
+\item
+\label{twoimporttrees}
+To share header files and libraries between several programs, the user needs
+their own import/export tree.  The build tree(s) will both import from and
+export to this import/export tree, as well as importing from the base OMNI
+tree.  Note that if two programs want to share a library which is built in the
+same tree, the recommended way of doing this is to export the library to an
+import/export tree, rather than just pulling the library out of the build tree.
+This makes it possible to build the same programs in a different tree simply by
+importing from this import/export tree.
+
+\item The base OMNI tree has a source tree and a build tree for each platform.
+Each of these build trees shadows the source tree, and both imports from and
+exports to the base OMNI import/export tree.  It has no other import trees.
+
+\item If the user wants to build their own version of a standard OMNI library
+with just one or two source file changes, this can be done by using the base
+OMNI tree as a second {\em source tree}.  The user makes a directory with
+exactly the same path in their own source tree and build trees as in the base
+OMNI source tree.  A local file in the user's source tree then just overrides
+the same file in the base OMNI source tree.  Once the library has been built,
+it should be exported to the user's import/export tree, where it can be used to
+override the library in the base OMNI import/export tree.
+
+\item Each project using the ODE will have its own import/export tree with
+corresponding source tree and build trees for each platform.  Similar to
+case~\ref{twoimporttrees} these build trees will import from and export to the
+project's import/export tree and also import from the base OMNI tree.
+
+\item People working on a project will also have personal build trees which
+import from the project tree followed by the base OMNI tree.  They may also
+have their own import/export tree which is imported from first.  In this case
+there are three levels of import tree.  There is theoretically no limit to the
+number of trees which may be imported in this way.
+
+\item Similarly to multiple import trees, a user may have a build tree with
+multiple source trees.  It could firstly shadow their own source tree followed
+by a project source tree followed by the base OMNI source tree.  This could be
+used to build a different version of a standard OMNI library, a different
+version of a standard project library and the user's own programs all in the
+same build tree.
+
+\end{enumerate}
+
+\section{Writing a Hello World program in C}
+
+This section introduces the use of the development environment by going through
+the steps to build a simple ``hello world'' program on a unix platform.  This
+will be done using the ODE in the simplest way as in case~\ref{buildtreeonly}
+above.
+
+\subsection{Setting up Your Environment}
+\label{settingenv}
+
+\sloppy{Although not strictly necessary it is advisable to set the environment
+variable \verb|OMNI_TREE| to point to the base OMNI tree you wish to use.  For
+a quick test like this, you can use \verb|/project/omni/release| - this is a
+symbolic link to the current release tree.  If you want to make a build tree
+which is more stable, use the actual directory name
+(e.g. \verb|/project/omni/version5.5|) as the base OMNI tree.  Doing the latter
+means you won't have problems when the release tree is moved on to the next
+version.  If you really want to be at the cutting edge, you can use
+\verb|/project/omni/develop|, but as the name suggests, the develop tree may
+change underneath your feet, so you should only do this if you really need to.
+
+Having decided on your base OMNI tree, add the directories
+\verb|$OMNI_TREE/bin/|{\it platform} and \verb|$OMNI_TREE/bin/scripts| to your
+path in that order (so that platform-specific binaries will override scripts).
+You may also wish to add \verb|$OMNI_TREE/man| to your {\tt MANPATH}.  If the
+version of make which is on your path is not GNU make then you need to set the
+environment variable {\tt GNUMAKE} to specify the command to run for GNU make.}
+
+\subsection{Creating a build tree}
+
+You create a build tree by running the script {\tt obuildtree}.  It will prompt
+you for a number of things.  Often there is a sensible default shown in square
+brackets which will be used if you just hit RETURN.  In this case you want a
+build tree for whichever platform you're on with no source or export tree.  You
+can name the destination directory whatever you like.  For example:
+
+{\footnotesize \begin{verbatim}
+$ obuildtree
+
+Enter the base OMNI tree for this build tree
+> [/project/omni/release] 
+
+Enter the platform name from:
+alpha_osf1_3.2
+arm_atmos_3.0/atb
+i586_linux_2.0
+sun4_sosV_5.5
+x86_nt_3.5
+> [sun4_sosV_5.5] 
+
+Enter the destination directory
+> [sun4_sosV_5.5] solaris_hello
+
+Does this build tree have an export tree ?
+> [n] 
+
+The final import tree will be /project/omni/release (the base OMNI tree)
+Enter any other import trees in search order
+> 
+
+Does this build tree have any source trees ?
+> [y] n
+
+************************************************************************
+
+Creating OMNI build tree "solaris_hello" for platform "sun4_sosV_5.5"
+
+No export tree
+
+Import trees are:
+/project/omni/release
+
+No source trees
+
+\end{verbatim}}
+
+Now go into your new build tree:
+
+{\footnotesize \begin{verbatim}
+$ cd solaris_hello
+\end{verbatim}}
+
+Notice that there is a directory called {\tt config} with files called {\tt
+config.mk} and {\tt sources}.  Generating these files is all that {\tt
+obuildtree} does.
+
+Now you're ready to write your ``hello world'' program:
+
+{\footnotesize \begin{verbatim}
+$ cat >hello.c
+#include <stdio.h>
+int main()
+{
+  printf("Hello world!\n");
+  return 0;
+}
+\end{verbatim}}
+
+Now you need to specify how to make an executable from this C source file.
+This is done in a file called {\tt dir.mk}.  This is very similar in concept to
+an Imakefile except that there is no separate preprocessing stage -- {\tt
+dir.mk} is actually processed by {\tt make}.  However, to allow it to be a
+platform-independent specification, {\tt dir.mk} is not a complete makefile in
+itself.  Instead a front-end to {\tt make} is used called {\tt omake}.  What
+{\tt omake} does is to find the {\tt config} directory in your build tree and
+run {\tt make} on {\tt config.mk}.  This allows for import trees to define
+useful {\tt make} variables and rules which can be used in your {\tt dir.mk}.
+
+So for our example you need a {\tt dir.mk} like this:
+
+{\footnotesize \begin{verbatim}
+$ cat >dir.mk
+SRCS = hello.c
+
+all:: hello
+
+hello: hello.o
+        @$(CExecutable)
+\end{verbatim}}
+
+Notice this looks just like a makefile -- except that the rule {\tt
+\$(CExecutable)} has been predefined for you so you don't need to worry about
+compilers, linkers and their flags.  Note also that it is important to use a
+TAB rather than spaces in the make rule.  The ``@'' is there to tell make not
+to generate lots of irrelevant output.
+
+Now you can run ``{\tt omake}'' to build the executable\footnote{If you get a
+``missing separator'' error from make this is probably because you used spaces
+instead of a TAB in the rule}:
+
+{\footnotesize \begin{verbatim}
+$ omake
+
+make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET=
+
+/project/omni/release/mk/afterdir.mk:64: hello.d: No such file or directory
+/bin/sh -ec "gcc -M  -I.  -I/project/omni/release/include -D__sunos__ -D__sp
+arc__ -D__OSVERSION__=5 -DSVR4 hello.c | sed 's/hello\\.o/& hello.d/g' > hel
+lo.d"
+gcc -c -O -fpcc-struct-return  -I.  -I/project/omni/release/include -D__suno
+s__ -D__sparc__ -D__OSVERSION__=5 -DSVR4 -o hello.o hello.c
++ rm -f hello 
++ gcc -o hello -L/project/omni/release/lib/sun4_sosV_5.5 hello.o 
+\end{verbatim}}
+
+The result should be that three files are generated.  The file called
+{\tt hello} is the executable which you should be able to run:
+
+{\footnotesize \begin{verbatim}
+$ ./hello
+Hello world!
+\end{verbatim}}
+
+There should also be the object file {\tt hello.o}.  The third file is called
+{\tt hello.d}.  This contains the header file dependencies of {\tt hello.c}.
+The generation of this file is done automatically whenever {\tt hello.c}
+changes -- there is no need for a separate ``make depend'' step.  Any C source
+file specified in {\tt SRCS} or C++ file specified in {\tt CXXSRCS} will have
+this dependency checking done automatically.
+
+\subsection{Making it portable to NT and ATMos}
+
+Because different platforms adopt different naming conventions for executables,
+the {\tt dir.mk} used above is not suitable for use on non-unix platforms.  To
+make it truly portable {\tt dir.mk} should look like this:
+
+{\footnotesize \begin{verbatim}
+SRCS = hello.c
+
+HELLO = $(patsubst %,$(BinPattern),hello)
+
+all:: $(HELLO)
+
+$(HELLO): hello.o
+        @$(CExecutable)
+
+clean::
+        $(RM) $(HELLO)
+\end{verbatim}}
+
+This uses GNU make's {\tt patsubst} feature together with a make variable {\tt
+BinPattern} to produce the name of the executable file.  For example on NT,
+{\tt BinPattern} is set to {\tt \%.exe}, resulting in the executable name {\tt
+hello.exe}.\footnote{You may recall this is similar to the old OMNI development
+environment's {\tt ProgramTargetName} macro.}  For completeness there should
+also be a rule for removing the executable when ``{\tt omake clean}'' is done.
+
+\section{Using a source tree}
+
+Now assume you want to build the same code on several platforms.  Put {\tt
+hello.c} and {\tt dir.mk} in a directory called {\tt src}.  Create a
+directory alongside it called {\tt build} and inside there run ``{\tt
+obuildtree}''.  This time specify the full path of the {\tt src} directory (or
+if you prefer ``{\tt ../../src}'') as a source tree.  You should be able to
+type ``{\tt omake}'' inside the build tree and have it compile your program
+even though the source file is not in the local build directory.
+
+You will see that on the command line {\tt omake} gives to GNU {\tt make} it
+specifies a {\tt -I} flag causing make to search for the {\tt dir.mk} in the
+{\tt src} directory, and sets the VPATH variable so that make searches for
+source files in that directory.  In this way there is no need for symbolic
+links from the build tree back to the source tree.
+
+You can create a similar build tree for another platform using the same source
+tree, thereby compiling for both platforms from the same source files.
+
+\section{Creating an import/export tree}
+
+There is no magic involved in creating an import/export tree.  An empty
+directory is a completely valid import/export tree, albeit a not very useful
+one.  In the conventional case where there are source and build trees
+associated with an import/export tree, the import/export tree will be the
+directory above the {\tt src} and {\tt build} directories.
+
+If say you want to put a header file in your import/export tree, simply create
+an {\tt include} subdirectory and put the header file in it.  Similarly IDL
+files can simply be put in an {\tt idl} subdirectory.  However, if you want to
+put something which needs ``building'' (such as a library or executable binary)
+into an import/export tree, this needs to be done by running ``{\tt omake
+export}'' inside a build tree.
+
+Suppose you want to export the {\tt hello} executable to your import/export
+tree.  When {\tt obuildtree} asks you whether the build tree has an export tree
+you should type ``y'' and specify the full path of the import/export tree (with
+any luck this will be the default).  The export tree will automatically become
+the first import tree as well.  Now in your {\tt dir.mk} you need a rule which
+says how to export the {\tt hello} executable.  Add the following:
+
+{\footnotesize \begin{verbatim}
+export:: $(HELLO)
+        @$(ExportExecutable)
+\end{verbatim}}
+
+When you run ``{\tt omake export}'' inside your build tree it should create a
+{\tt bin/}{\it platform} directory in your import/export tree and put the hello
+executable there.
+
+As well as providing header files, IDL files, libraries and executables, an
+import/export tree can provide make variables and rules in the {\tt mk}
+directory.  The {\tt config.mk} in a build tree includes two make files for
+each import tree, called {\tt beforedir.mk} and {\tt afterdir.mk}.  Whenever
+{\tt omake} is run, these get included before and after {\tt dir.mk}
+respectively.  The most common use of these files is for defining make
+variables for libraries (see section~\ref{buildlib} about building libraries).
+
+
+\section{Writing dir.mk}
+
+The {\tt dir.mk} file is basically just a makefile, so you can put normal make
+rules and variable definitions there.  However to make full use of the ODE you
+will want to use the predefined variables and rules to make your {\tt dir.mk}
+platform-independent.  As with imakefiles, usually the best thing to do is find
+an existing {\tt dir.mk} which does nearly the same thing that you want and
+copy it.
+
+\subsection{Generating library and executable names}
+
+Since each platform has its own naming conventions for libraries and executable
+binaries, you should use the GNU make ``patsubst'' function together with {\tt
+LibPattern} and {\tt BinPattern} to generate the appropriate file name.
+Assigning a make variable to each library or executable name is probably a good
+idea, e.g.:
+
+{\footnotesize \begin{verbatim}
+lib = $(patsubst %,$(LibPattern),my_library)
+prog1 = $(patsubst %,$(BinPattern),my_program1)
+prog2 = $(patsubst %,$(BinPattern),my_program2)
+\end{verbatim}}
+
+These variables can then be used throughout the rest of {\tt dir.mk}.  All
+platforms support the extensions {\tt .c} for C source files, {\tt .cc} for C++
+source files and {\tt .o} for object files.
+
+\subsection{Building C or C++ programs}
+
+For building C or C++ programs use the ``rules'' CExecutable and CXXExecutable
+respectively (``rules'' like these are actually make variables which contain a
+canned sequence of shell commands).  The general forms are:
+
+{\footnotesize \begin{verbatim}
+$(prog1): <objects> <lib_depends>
+        @(libs="<libs>"; $(CExecutable))
+
+$(prog2): <objects> <lib_depends>
+        @(libs="<libs>"; $(CXXExecutable))
+\end{verbatim}}
+
+Here {\tt prog1} and {\tt prog2} have been assigned using BinPattern as
+suggested above, {\tt <objects>} is a list of object files and {\tt <libs>} is
+a list of libraries.  \verb|<lib_depends>| is a list of library dependencies -
+for each library provided there should be a make variable both for the library
+itself and for putting in the dependencies of a program.  For example the
+omnithread library provides a variable \verb|OMNITHREAD_LIB| which might
+contain something like ``{\tt -lomnithread -lpthreads}'' and a variable
+\verb|OMNITHREAD_LIB_DEPEND| which will contain the full pathname of {\tt
+libomnithread.a}.  By specifying such dependencies programs will automatically
+be relinked whenever relevant libraries change.
+
+In addition to the rules for creating the executables, you also need to specify
+what the C and C++ source files are.  The variables {\tt SRCS} and {\tt
+CXXSRCS} should contain a list of the C and C++ source files respectively.  The
+main effect of setting these variables is to cause header file dependency
+analysis to be performed.  The variable {\tt ASSRCS} can be used to specify
+assembly language source files.
+
+To specify the options that get given to the C or C++ compiler there are
+several variables you can use.  The most common one is \verb|DIR_CPPFLAGS|.
+This is used for passing C preprocessor flags (i.e. {\tt -D} and {\tt -I}) to
+both the C compiler and the C++ compiler.  The ``{\tt DIR}'' signifies that the
+flags are specific to this directory.  These flags will be used in addition to
+the normal flags given to the compiler.  If you want to totally override all
+the standard CPP flags provided by the import trees you can set the variable
+{\tt CPPFLAGS} directly, but this is not recommended unless you know what
+you're doing.
+
+Other variables you can set are:
+
+\begin{itemize}
+\item {\tt CDEBUGFLAGS} or {\tt CXXDEBUGFLAGS} for setting {\tt -O} and {\tt
+-g} flags to the compiler.
+\item {\tt COPTIONS} and {\tt CXXOPTIONS} for setting other options to the
+compiler.
+\item {\tt CLINKOPTIONS} and {\tt CXXLINKOPTIONS} for setting options to the
+linker.
+\end{itemize}
+
+Setting these variables will override any defaults provided by the import
+trees.  If you want to keep the defaults but add an extra flag you can use GNU
+make's ``+='' notation.
+
+As well as the rule to build the executable you should also have a rule to
+remove it when ``{\tt omake clean}'' is done and a rule to export it when
+``{\tt omake export}'' is done, e.g.:
+
+{\footnotesize \begin{verbatim}
+clean::
+        $(RM) $(prog1) $(prog2)
+
+export:: $(prog1) $(prog2)
+        @$(ExportExecutable)
+\end{verbatim}}
+
+\subsection{Building libraries}
+\label{buildlib}
+
+To build a statically-linked (i.e. non-shared) library, use the rule
+{\tt StaticLinkLibrary}:
+
+{\footnotesize \begin{verbatim}
+$(lib): <objects>
+        @$(StaticLinkLibrary)
+\end{verbatim}}
+
+Again you can use \verb|DIR_CPPFLAGS|, {\tt CDEBUGFLAGS}, etc for controlling
+the flags given to the compiler, and you should put the names of all the source
+files in {\tt SRCS} and {\tt CXXSRCS}.  To export the library and clean it out
+you should also have:
+
+{\footnotesize \begin{verbatim}
+clean::
+        $(RM) $(lib)
+
+export:: $(lib)
+        @$(ExportLibrary)
+\end{verbatim}}
+
+As well as exporting the library itself, you should provide two MAKE variables
+to make it easier for others to use the library.  These variables should be of
+the form \verb|XXX_LIB| and \verb|XXX_LIB_DEPEND|, as described above for the
+omnithread library.  You put their definitions in the \verb|mk/beforedir.mk| of
+the import/export tree. Assuming your library has the name ``wob'', you need
+something like:
+
+{\footnotesize \begin{verbatim}
+WOB_LIB = $(patsubst %,$(LibSearchPattern),wob)
+lib_depend := $(patsubst %,$(LibPattern),wob)
+WOB_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+\end{verbatim}}
+
+You don't actually {\em need} to understand what these lines do but they are
+worth explaining anyway.  {\tt LibSearchPattern} is like {\tt LibPattern}
+except it specifies the library in such a way as to cause the linker to search
+for the library.  For example, on unix platforms this will be ``\verb|-l%|''
+(on ATMos and NT it happens to be the same as {\tt LibPattern}).  If your
+library requires any other libraries these should be added to \verb|WOB_LIB|.
+
+The two ``lib\_depend'' lines are slightly more complicated.  The variable
+\verb|GENERATE_LIB_DEPEND| actually acts more like a function than a
+variable. What it does is search through all the import trees for the library
+currently specified in the \verb|lib_depend| variable.  Since simple assignment
+(``{\tt :=}'') is used, the variable \verb|WOB_LIB_DEPEND| gets assigned the
+full pathname of the ``wob'' library in whichever import tree it is found.
+Hence it can be used in the dependencies of a link rule to cause relinking
+whenever that library changes.
+
+\subsubsection{Building dynamically-linked (shared) libraries}
+
+At present there are no rules to help you do this.  Currently the omnithread
+and omniORB2 libraries are built as shared libraries using a custom {\tt
+dir.mk}.  Proper support for building shared libraries ought to be provided at
+some time in the future.
+
+
+\subsection{Building in subdirectories}
+
+Use the {\tt MakeSubdirs} rule.  Normally you just set the {\tt SUBDIRS}
+variable like this:
+
+{\footnotesize \begin{verbatim}
+SUBDIRS = wib wob
+
+all::
+        @$(MakeSubdirs)
+
+export::
+        @$(MakeSubdirs)
+\end{verbatim}}
+
+This will cause both ``{\tt omake all}'' and ``{\tt omake export}'' to go down
+into the subdirectories {\tt wib} and {\tt wob}.  If you want to run {\tt
+omake} with a different target in the subdirectories you can set the shell
+variable {\tt target}.  For example, if you want ``{\tt omake export}'' to
+actually perform ``{\tt omake all}'' in each of the subdirectories, do this:
+
+{\footnotesize \begin{verbatim}
+export::
+        @(target=all; $(MakeSubdirs))
+\end{verbatim}}
+
+In fact you can use different subdirectories for different targets as well by
+using the {\tt subdirs} shell variable instead of the {\tt SUBDIRS} make
+variable:
+
+{\footnotesize \begin{verbatim}
+all::
+        @(subdirs="a b"; $(MakeSubdirs))
+
+export::
+        @(subdirs="c d"; $(MakeSubdirs))
+\end{verbatim}}
+
+If you want to pass make variable settings down to a subdirectory you can use
+the make variable \verb|SUBDIR_MAKEFLAGS| (as with {\tt SUBDIRS} this can be
+overridden with a shell variable, in this case \verb|subdir_makeflags|).  For
+example:
+
+{\footnotesize \begin{verbatim}
+SUBDIR_MAKEFLAGS = CDEBUGFLAGS=-g MY_MAKE_VARIABLE="foo bar"
+
+all::
+        @$(MakeSubdirs)
+
+export::
+        @(subdir_makeflags='MY_MAKE_VARIABLE="wib wob"'; $(MakeSubdirs))
+\end{verbatim}}
+
+
+\subsection{Local include directories}
+
+One point to note is that when adding local include directories to
+\verb|DIR_CPPFLAGS| you need to be aware of the way the VPATH mechanism works.
+For example, putting:
+
+{\footnotesize \begin{verbatim}
+DIR_CPPFLAGS = -I../include
+\end{verbatim}}
+
+will probably not do what you want since only this build tree will be searched
+for header files.  If you want to search through all the source trees for the
+equivalent include directories you need a ``patsubst'' expression to add the
+same relative path to each element of {\tt VPATH}:
+
+{\footnotesize \begin{verbatim}
+DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH))
+\end{verbatim}}
+
+
+\subsection{Platform specific variables}
+
+There are several make variables which you can test to distinguish between the
+various platforms.  The variable {\tt platform} contains the full platform name
+in the form used by {\tt obuildtree} (e.g. \verb|sun4_sosV_5.5|).  More useful
+for testing in {\tt dir.mk}, each platform defines two variables to identify
+the operating system\footnote{The make variable identifying the operating
+system is the same as returned by the ``uname'' command where appropriate.} and
+processor.  In addition {\tt UnixPlatform} and {\tt Win32Platform} are defined
+where appropriate.  These variables can be tested using GNU make's {\tt ifdef}
+command.  Currently supported are:
+
+\begin{flushleft}
+\begin{tabular}{|l|l|}
+\hline
+Platform & make variables \\
+\hline
+Sun Solaris 2.5  & \verb|platform=sun4_sosV_5.5| \\
+                 & \verb|SparcProcessor  SunOS      UnixPlatform| \\
+\hline
+Digital Unix 3.2 & \verb|platform=alpha_osf1_3.2| \\
+                 & \verb|AlphaProcessor  OSF1       UnixPlatform| \\
+\hline
+Linux 2.0 (x86)  & \verb|platform=i586_linux_2.0| \\
+                 & \verb|x86Processor    Linux      UnixPlatform| \\
+\hline
+Windows/NT 3.5   & \verb|platform=x86_nt_3.5| \\
+                 & \verb|x86Processor    WindowsNT  Win32Platform| \\
+\hline
+ATMos 4.0        & \verb|platform=arm_atmos_3.0/atb| \\
+                 & \verb|ArmProcessor    ATMos| \\
+\hline
+\end{tabular}
+\end{flushleft}
+
+In addition to these make variables which can be tested in {\tt dir.mk}, there
+are several C/C++ preprocessor defines which can be tested in your program
+source to distinguish the various platforms:
+
+\begin{flushleft}
+\begin{tabular}{|l|l|}
+\hline
+Platform & CPP defines \\
+\hline
+Sun Solaris 2.5  & \verb|__sparc__  __sunos__  __OSVERSION__=5| \\
+\hline
+Digital Unix 3.2 & \verb|__alpha__  __osf1__   __OSVERSION__=3| \\
+\hline
+Linux 2.0 (x86)  & \verb|__x86__    __linux__  __OSVERSION__=2| \\
+\hline
+Windows/NT 3.5   & \verb|__x86__    __NT__     __OSVERSION__=3  __WIN32__| \\
+\hline
+ATMos 4.0        & \verb|__arm__    __atmos__  __OSVERSION__=4| \\
+\hline
+\end{tabular}
+\end{flushleft}
+
+To distinguish amongst different compilers, each compiler usually sets its own
+CPP defines.  The ones you are recommended to test are:
+
+\begin{flushleft}
+\begin{tabular}{|l|l|}
+\hline
+Compiler & CPP define \\
+\hline
+SparcWorks C++       & \verb|__SUNPRO_CC| \\
+\hline
+DEC C++              & \verb|__DECCXX| \\
+\hline
+GNU g++              & \verb|__GNUG__| \\
+\hline
+GNU gcc (C and C++)  & \verb|__GNUC__| \\
+\hline
+Microsoft Visual C++ & \verb|_MSC_VER| \\
+\hline
+\end{tabular}
+\end{flushleft}
+
+
+
+\section{Creating a New Project Tree}
+
+To create a new project tree all you need is an import/export tree, a source
+tree and a set of build trees, one for each platform.  By convention, the
+source tree is put in a subdirectory of the import/export tree called {\tt src}
+and the build trees are put in subdirectories named {\tt build/}{\it platform}.
+
+Let's assume for your project that you have some IDL files and header files as
+well as some source files.  Create your top-level directory, say {\small \tt
+/project/wobble/version1.0}.  Then make directories {\tt idl}, {\tt include},
+{\tt src} and {\tt build}.  Copy your IDL files into {\tt idl} and your header
+files into {\tt include}.
+
+For your source files you must decide on an appropriate directory structure
+underneath {\tt src} and put the source files there.  You can have any
+structure there, but if you want a guide, take a look at the {\tt
+/project/omni/release/src} structure.  This has (in order of processing by
+{\tt omake}):
+\begin{itemize}
+\item a directory with tools used in the building process (which are probably
+unlikely in your project tree).
+\item a directory with ATMos interface files (again unlikely unless you are
+writing low-level ATMos code).
+\item a directory with sources to be made into libraries.
+\item a directory with sources to be made into executable programs.
+\end{itemize}
+In your source tree you'll need an appropriate {\tt dir.mk} file in each
+directory (including one in {\tt src} itself).  At the top level you may not
+want ``{\tt omake all}'' to do anything since it is unlikely to do what people
+expect (when it gets to building programs it won't use the libraries which have
+just been built).  Instead you probably only want an ``{\tt omake export}''
+rule at the top level which will export things as they get built.  In this way
+executable programs will use the libraries which have just been built and
+exported.
+
+Once you have the structure and the {\tt dir.mk} files, you can now create a
+build tree for each platform.  Go into the {\tt build} directory and run ``{\tt
+obuildtree}''.  Nearly all the the defaults should be correct.  You should use
+the actual directory name of the base OMNI tree
+(e.g. \verb|/project/omni/version5.5|) rather than
+\verb|/project/omni/release|, so that you don't have problems when the release
+tree is moved on to the next version.  Make sure that your top-level directory
+({\tt /project/wobble/version1.0}) is the export tree as well as the first
+import tree, and also that the source tree is the same with {\tt src} appended
+({\tt /project/wobble/version1.0/src}).
+
+Go into the {\it platform} subdirectory and do ``{\tt omake export}''.  If you
+got your {\tt dir.mk} files correct everything will now build and be exported
+to your project import/export tree.
+
+Once the project import/export tree is set up, users can create their own build
+trees which import from the project import/export tree.  Note that they should
+not export to it from their private build trees -- only the ``official''
+project build trees should be used for this purpose.  It may be worth
+suggesting to your users that they set the environment variable
+\verb|OMNI_IMPORT_TREES| to contain your top-level directory (e.g. {\tt
+/project/wobble/version1.0}).  Whenever they run {\tt obuildtree} it will by
+default import from any trees specified in \verb|OMNI_IMPORT_TREES|, saving
+them from having to type the full path out each time they create a build tree.
+
+
+\section{Using CORBA in C++ programs}
+
+Using CORBA in your C++ programs is easy.  In your {\tt dir.mk}:
+\begin{itemize}
+\item the make variable \verb|CORBA_INTERFACES| should contain a list of the
+IDL interfaces which your program uses.
+\item \verb|DIR_CPPFLAGS| should include \verb|$(CORBA_CPPFLAGS)|.
+\item Your rule for building the executable should have both
+\verb|$(CORBA_STUB_OBJS)| and \verb|$(CORBA_LIB_DEPEND)| in the dependencies.
+\item The rule should also specify \verb|$(CORBA_LIB)| as one of the libraries.
+\end{itemize}
+For example:
+
+{\footnotesize \begin{verbatim}
+CXXSRCS = foo.cc
+OBJS = foo.o
+FOO = $(patsubst %,$(BinPattern),foo)
+
+DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
+
+CORBA_INTERFACES = wib wob
+
+$(FOO): $(OBJS) $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
+\end{verbatim}}
+
+When you run ``{\tt omake}'' for the first time, a {\tt stub} directory should
+be created at the top level of the build tree.  The IDL compiler is invoked for
+each of the IDL files (in this case {\tt wib.idl} and {\tt wob.idl}), and the
+stubs generated are compiled and linked in to your executable binary.
+
+If your program does not use any of the dynamic features of CORBA
+(ie. \verb|Any|, \verb|TypeCode|, \verb|DynAny| or the \emph{Dynamic
+Invocation Interface} or \emph{Dynamic Skeleton Interface}) then it is
+possible to build a binary without this code:
+\begin{itemize}
+\item use \verb|CORBA_STATIC_STUB_OBJS| rather than \verb|CORBA_STUB_OBJS| in
+the dependency list.
+\item specify \verb|CORBA_LIB_NODYN| as the CORBA library instead of
+\verb|CORBA_LIB|.
+\end{itemize}
+
+For each platform there should be a default implementation of CORBA to which
+the {\tt CorbaImplementation} variable is set. At present this is 
+{\tt OMNIORB2} on Solaris, Digital UNIX, Linux, ATMos and
+NT. Alternatively, {\tt ORBIX2} is available on Solaris, Digital UNIX and NT.
+You can override the default simply by setting
+{\tt CorbaImplementation} before the first rule in your {\tt dir.mk}.
+This can either be done inside {\tt dir.mk} itself (for a one-off hack), or in
+the {\tt beforedir.mk} of an import tree.  If you change {\tt
+CorbaImplementation} in this way you must be careful to make sure that all
+relevant libraries and stubs have also been built with the same CORBA
+implementation.
+
+
+\section{Building Java Programs}
+
+Building Java programs is quite different to the way C and C++ programs are
+built.  In Java there is no link stage, and there are no header files.
+Instead, Java imposes constraints on the way files are used and named so that
+the compiler or the runtime can find interdependent classes.
+
+The ``make'' program was designed with the C/C++ model of building in mind.
+Java doesn't fit into this model very well in a number of ways:
+
+\begin{itemize}
+
+\item There is no simple relationship between Java source (\verb|.java|) and
+Java class (\verb|.class|) file names.  For example a single \verb|.java| file
+can generate multiple \verb|.class| files, whose names may change as the
+contents of the \verb|.java| file changes.
+
+\item Checking dependencies between individual \verb|.java| and \verb|.class|
+files is not really worth doing separately - it's as expensive as recompiling
+all the \verb|.java| files.
+
+\item The Java package layout must be reflected in the directory hierarchy.  In
+particular, the Java compiler must be invoked from the top of this package
+directory hierarchy so that it can find classes in different packages.
+
+\end{itemize}
+
+In essence, \verb|.class| files are too small a unit for "make" to deal with.
+Our solution to these problems is for make to deal with Java archive
+(\verb|.jar|) files as targets, rather than \verb|.class| files.  We treat
+\verb|.class| files as intermediate files which exist temporarily to create a
+\verb|.jar| file, but can be removed afterwards.
+
+So in a {\tt dir.mk} you specify that certain \verb|.java| files produce a
+\verb|.jar| file - all \verb|.class| files generated from compiling the
+\verb|.java| files will be included in the \verb|.jar| file.  Whenever a
+\verb|.java| file changes, all the \verb|.java| files making up the same
+\verb|.jar| file will be recompiled to produce a new \verb|.jar| file.
+
+For example, say you have a class \verb|HelloWorld| inside the \verb|Hello|
+package.  Somewhere in your tree you must have a \verb|Hello| directory with
+a \verb|HelloWorld.java| inside it.  Don't put a {\tt dir.mk} in the
+\verb|Hello| directory itself.  Instead, at the level above the \verb|Hello|
+directory, make a {\tt dir.mk} with the following:
+
+{\footnotesize \begin{verbatim}
+all:: hello.jar
+
+hello.jar: Hello/HelloWorld.java
+        @$(CompileJavaSourcesToJar)
+\end{verbatim}}
+
+When you do an \verb|omake|, this should first run the Java compiler to create
+any \verb|.class| files, then run the \verb|jar| program to create the
+\verb|hello.jar| file.  The \verb|CompileJavaSourcesToJar| rule actually leaves
+behind the intermediate \verb|.class| files, so in this case you can run your
+Java program something like this:
+
+{\footnotesize \begin{verbatim}
+% java Hello.HelloWorld
+\end{verbatim}}
+
+However, only the \verb|.class| files from the last
+\verb|CompileJavaSourcesToJar| rule are left behind, so in general you need to
+run your Java program from the \verb|.jar| file, something like this:
+
+{\footnotesize \begin{verbatim}
+% java -classpath hello.jar:/usr/local/java/lib/classes.zip Hello.HelloWorld
+\end{verbatim}}
+
+For completeness there should also be a rule for removing the \verb|.class|
+files when ``{\tt omake clean}'' is done:
+
+{\footnotesize \begin{verbatim}
+clean::
+        @$(CleanJavaClassFiles)
+\end{verbatim}}
+
+You may also want a rule to export the \verb|.jar| file:
+
+{\footnotesize \begin{verbatim}
+export:: hello.jar
+        @$(ExportJar)
+\end{verbatim}}
+
+As an extra convenience, you don't need to explicitly specify all of the
+\verb|.java| files in your tree if you just want them all combined into a
+single \verb|.jar| file.  You can get the ODE to automatically find all the
+\verb|.java| files by doing the following:
+
+{\footnotesize \begin{verbatim}
+hello.jar: $(JAVA_FIND_ALL_SOURCES)
+        @$(CompileJavaSourcesToJar)
+\end{verbatim}}
+
+Another difference between C/C++ and Java is that Java is platform-independent,
+so you only need to build Java code on a single platform.  The easiest way to
+ensure this is to put an \verb|ifdef| in the dir.mk above the directory with
+your Java code, which builds in that directory only for your chosen platform.  For example:
+
+{\footnotesize \begin{verbatim}
+SUBDIRS = wib wob
+
+ifdef SunOS
+SUBDIRS += myjavastuff
+endif
+
+all::
+        @$(MakeSubdirs)
+
+export::
+        @$(MakeSubdirs)
+\end{verbatim}}
+
+\subsection{Using CORBA in Java programs}
+
+CORBA stubs fit into this jar-based scheme well - all Java classes generated
+from a \verb|.idl| file are bundled into a \verb|.jar| file of the same name.
+These are put into a \verb|java_stub| directory at the top of the build tree,
+similar to the \verb|stub| directory for C++ stubs.
+
+As with C++, your {\tt dir.mk} should set \verb|CORBA_INTERFACES| to the IDL
+interfaces which your program uses.  The rule to build your \verb|.jar| file
+should have both \verb|$(CORBA_STUB_JARS)| and \verb|$(CORBA_ORB_JAR)| in the
+dependencies.  If you want to generate a complete \verb|.jar| which includes
+all the ORB and stub classes, you can use the \verb|$(CombineJars)| rule, e.g.:
+
+{\footnotesize \begin{verbatim}
+CORBA_INTERFACES = mrBook
+
+mrbook_only.jar: $(CORBA_STUB_JARS) $(CORBA_ORB_JAR) $(JAVA_FIND_ALL_SOURCES)
+        @$(CompileJavaSourcesToJar)
+
+mrbook.jar: mrbook_only.jar $(CORBA_STUB_JARS) $(CORBA_ORB_JAR)
+        @$(CombineJars)
+\end{verbatim}}
+
+Often it's useful to put all the generated stub classes into a separate Java
+package to avoid name clashes.  This can be done by setting the make variable
+\verb|CORBA_INTERFACES_JAVA_PACKAGE|, e.g.:
+
+{\footnotesize \begin{verbatim}
+CORBA_INTERFACES_JAVA_PACKAGE = mrBookPackage
+\end{verbatim}}
+
+In this case, all generated stub classes appear in the package
+\verb|mrBookPackage|.
+
+\section{Building on NT}
+
+\subsection{Installing the GNU-WIN32 environment}
+
+It's best to set up the GNU-WIN32 tools on a machine's local disk as this makes
+a noticeable difference to the speed at which they operate.  The tools are
+usually put into \verb|C:\gnuwin32| and take up just over a megabyte.  If you
+need to install them on a new machine you can use a gzip'd tar file from
+\verb|/project/omni/misc/gnu-win32-lite.tar.gz|:
+
+{\footnotesize \begin{verbatim}
+C:\>mkdir gnuwin32
+C:\>cd gnuwin32
+C:\gnuwin32>\\hazel\win32app\x86\bin\gunzip -c \\shallot\omni\misc\gnu-win32-l
+ite.tar.gz | \\hazel\win32app\x86\bin\tar xf -
+\end{verbatim}}
+
+This should create the directories \verb|C:\gnuwin32\bin| and
+\verb|C:\gnuwin32\tmp|.
+
+\subsection{Setting your path and mounting directories}
+
+Having made sure the tools are installed on the local machine you now need to
+set up your personal environment.  First you need to put \verb|C:\gnuwin32\bin|
+on your path.  If you also have \verb|\\hazel\win32app\x86\bin| on your path
+you should make sure that this is searched after the GNU-WIN32 directories
+since it contains several unix-like programs which conflict with the GNU-WIN32
+tools.  The next thing to do is ``mount'' the {\tt bin} and {\tt tmp}
+directories at the root:
+
+{\footnotesize \begin{verbatim}
+C:\>set path=c:\gnuwin32\bin;%path%
+C:\>mount c:/gnuwin32/bin /bin
+C:\>mount c:/gnuwin32/tmp /tmp
+\end{verbatim}}
+
+You should now be able to run the shell {\tt sh} and all the other tools.
+
+The next stage is to ``mount'' any other unix file systems you require.  These
+should be mounted with the same pathname as on unix machines.  For example say
+you have drive \verb|O:| connected to \verb|\\shallot\omni|, then do
+``\verb|mount o: /project/omni|''.  It is possible to mount a directory without
+connecting it to a drive letter, by doing for example
+``\verb|mount //shallot/omni /project/omni|''.
+
+As well as \verb|/project/omni| and other project directories, you will also
+need Microsoft Visual C++ installed on the machine.  This must be accessible as
+\verb|/msdev| in the GNU-WIN32 environment (since \verb|C:\| is the GNU-WIN32
+root this is the normal place for it to be installed on a machine).
+
+Now that you have all the right directories mounted you need to finish off
+setting your environment variables.  You need to make sure that the Visual C++
+tools are available by adding the \verb|/msdev/bin| directory to your path.
+You can either add it to your path inside {\tt sh}, in which case you can use
+the unix-style directory names, or inside MSDOS / Control Panel in which case
+you need to use NT-style names (either using drive letters or the {\it
+\verb|\\|machine\verb|\|directory} form depending on how you've mounted each
+directory).  You also need to set the {\tt INCLUDE} environment variable to
+contain \verb|C:\msdev\include| (or whatever the Visual C++ include directory
+is).  Note that {\tt INCLUDE} should always use an NT-style name since it is
+used by the compiler itself.
+
+Finally you need to set up the environment variables described in section
+\ref{settingenv}.  Now you should be able to use {\tt obuildtree}, {\tt omake},
+etc just as on any unix platform.
+
+\section{Building on ATMos}
+
+\subsection{Introduction}
+
+Building programs to run on ATMos is quite different from Unix and NT for a
+number of reasons.  On ATMos, programs are not started on demand as they are
+needed.  Instead all programs to run on a particular ATMos machine must be
+joined into a single ``image'' which is loaded at boot time and cannot be
+changed without rebooting the machine.  Another reason is that the development
+tools for ATMos are non-native -- programs must be cross-compiled on Unix
+platforms.  And most significantly ATMos has its own tool called ``{\tt
+aconfig}'' which is normally used for compiling code and generating the image
+files.
+
+The approach taken in the ODE is to try to make building on ATMos as similar to
+building on Unix and NT as possible.  This means using the {\tt aconfig}
+utility only when it really can't be avoided.  Many features of {\tt aconfig}
+are not used because the ODE provides a better way of achieving the same goal.
+For example header files are placed in the include directories of import/export
+trees rather than being made available using {\tt aconfig}'s {\tt Export
+Header} directive.
+
+Unlike the old imake-based ODE, there is no attempt to generate a final ATMos
+image file inside an OMNI build tree.  It's best to think of creating an ATMos
+image as being more like the first stage of {\em invoking} a program rather
+than part of the process of building.
+
+To get a program to run on an ATMos machine you must first build the program
+and export it using ``{\tt omake export}''.  The end result of this building
+and exporting will most probably be an ATMos ``package'' file.
+
+\label{imageanywhere}
+Once a program has been exported in this way, creating an actual image which
+contains the program can be done in any directory -- not necessarily underneath
+an OMNI build tree or import/export tree.  Generating the image should be
+a simple matter of creating an {\tt aconfig} SYSTEM file which includes the
+package file.  For example, to create an ATMos image which contains the
+``diner'' program from the {\tt /project/omni/release} tree, simply write a
+SYSTEM file like this:
+
+{\footnotesize \begin{verbatim}
+Hardware atb
+Set Pthreads
+Package core
+
+ReleasePath /project/omni/release/bin/arm_atmos_3.0/atb
+Path /project/omni/release/bin/arm_atmos_3.0/atb
+
+Package diner
+\end{verbatim}}
+
+The first three lines are the same for all such SYSTEM files (for the ``atb''
+hardware anyway).  The next two lines simply tell aconfig to look in the OMNI
+import/export tree, and the last line tells aconfig to actually include the
+``diner'' package, which it will find inside the OMNI import/export tree.  Run
+{\tt aconfig} followed by {\tt make} in the normal ATMos way and you should get
+an ATMos image which when booted into a machine runs the diner program.
+
+To generate an image which also has the example calculator client and server
+programs, simply add a line ``{\tt Package calc}'' to the SYSTEM file and again
+run {\tt aconfig} followed by {\tt make}.
+
+\subsection{Hello World Revisited}
+\label{atmoshello}
+
+This section goes through the steps necessary to build and run the simple
+``hello world'' example on an ATMos platform.  Your environment should be set
+up exactly as in section \ref{settingenv}.  Run {\tt obuildtree} as for unix,
+but this time specify the appropriate ATMos platform and make sure that the
+build tree {\em does} have an export tree. For example:
+
+{\footnotesize \begin{verbatim}
+$ cd /home/tjr/hello
+$ mkdir build
+$ cd build
+$ obuildtree
+
+Enter the base OMNI tree for this build tree
+> [/project/omni/release] 
+
+Enter the platform name from:
+alpha_osf1_3.2
+arm_atmos_3.0/atb
+i586_linux_2.0
+sun4_sosV_5.5
+x86_nt_3.5
+> [alpha_osf1_3.2] arm_atmos_3.0/atb
+
+Enter the destination directory
+> [arm_atmos_3.0/atb] 
+
+Does this build tree have an export tree ?
+> [y] 
+
+Enter the export tree
+> [/home/tjr/hello] 
+
+The first import tree will be /home/tjr/hello (the export tree)
+The final import tree will be /project/omni/release (the base OMNI tree)
+Enter any other import trees in search order
+> 
+
+Does this build tree have any source trees ?
+> [y] n
+
+************************************************************************
+
+Creating OMNI build tree "arm_atmos_3.0/atb" for platform "arm_atmos_3.0/atb"
+
+Export tree is /home/tjr/hello
+
+Import trees are:
+/home/tjr/hello
+/project/omni/release
+
+No source trees
+
+************************************************************************
+
+\end{verbatim}}
+
+Now go into your new build tree and write the ``hello world'' program:
+
+{\footnotesize \begin{verbatim}
+$ cd arm_atmos_3.0/atb 
+$ mkdir hello
+$ cd hello
+$ cat >hello.c
+#include <stdio.h>
+int main()
+{
+  printf("Hello world!\n");
+  return 0;
+}
+\end{verbatim}}
+
+The {\tt dir.mk} is just as before:
+
+{\footnotesize \begin{verbatim}
+$ cat >dir.mk
+SRCS = hello.c
+
+HELLO = $(patsubst %,$(BinPattern),hello)
+
+all:: $(HELLO)
+
+$(HELLO): hello.o
+        @$(CExecutable)
+
+clean::
+        $(RM) $(HELLO)
+
+export:: $(HELLO)
+        @$(ExportExecutable)
+\end{verbatim}}
+
+You can now build an ``executable binary'' by running ``{\tt omake all}''.  The
+form this ``executable binary'' takes is actually an object file called
+\verb|hello_exe.o| (on ATMos platforms, {\tt BinPattern} is set to
+\verb|%_exe.o|):
+
+{\footnotesize \begin{verbatim}
+$ omake all
+
+make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET='all' 'all'
+
+/project/omni/release/mk/afterdir.mk:105: hello.d: No such file or directory
+/bin/sh -ec "arm-gcc -nostdinc -fno-common -fno-builtin -M  -I.  -I/home/tjr/he
+    .
+    .
+    .
++ catobj -o hello_exe.o hello.o 
+\end{verbatim}}
+
+As previously discussed, before the program can be run on an ATMos machine it
+needs to be incorporated into an image file.  It is this stage where we cannot
+avoid using {\tt aconfig}.  To help {\tt aconfig} we need to write a {\em
+module} file describing our executable.  This module file should not contain
+any directives other than {\tt Object}, {\tt Executable} and {\tt ULibrary}.
+In particular it should not have any {\tt Make} or {\tt Message}
+directives.\footnote{see section \ref{atmosmessages} for information on
+defining ATMos messages.}
+
+For a C program like {\tt hello.c} the module file should look like this:
+
+{\footnotesize \begin{verbatim}
+$ cat >hello.module
+Object hello_exe.o
+{
+    Executable hello
+    ULibrary llibc.o
+}
+\end{verbatim}}
+
+Now we need to put the module file and the \verb|_exe.o| file into a directory
+in such a way that {\tt aconfig} can use them.  This is done by exporting them
+to our export tree:
+
+{\footnotesize \begin{verbatim}
+$ omake export
+
+make -r -f ../config/config.mk VPATH= TOP=.. CURRENT=hello OMAKE_TARGET='export
+' 'export'
+
++ mkdirhier /home/tjr/hello/bin/arm_atmos_3.0/atb/hello 
++ installbsd -c -m 0644 hello.module /home/tjr/hello/bin/arm_atmos_3.0/atb/hell
+o 
++ installbsd -c -m 0644 hello_exe.o /home/tjr/hello/bin/arm_atmos_3.0/atb/hello
+\end{verbatim}}
+
+At this stage we could create an image by writing a SYSTEM file with {\tt
+Module} and {\tt Process} directives in it, but it's cleaner to provide a
+single ``package'' file so that the SYSTEM file is kept as simple as possible.
+First we need to write the package file:
+
+{\footnotesize \begin{verbatim}
+$ cat >hello.pkg
+Module hello
+Process hello is hello/hello
+\end{verbatim}}
+
+Now we need one extra {\tt export} rule in {\tt dir.mk}\footnote{Adding this
+rule doesn't make {\tt dir.mk} ATMos-specific -- it is simply ignored on
+non-ATMos platforms}:
+
+{\footnotesize \begin{verbatim}
+$ cat >>dir.mk
+
+export::
+        @(packages="hello"; $(ExportATMosPackages))
+\end{verbatim}}
+
+Now run {\tt omake export} again:
+
+{\footnotesize \begin{verbatim}
+$ omake export
+
+make -r -f ../config/config.mk VPATH= TOP=.. CURRENT=hello OMAKE_TARGET='export
+' 'export'
+
+File hello.module hasn't changed.
+File hello_exe.o hasn't changed.
++ mkdirhier /home/tjr/hello/bin/arm_atmos_3.0/atb/software 
++ installbsd -c -m 0644 hello.pkg /home/tjr/hello/bin/arm_atmos_3.0/atb/softwar
+e 
+\end{verbatim}}
+
+Finally the {\tt hello.pkg} in \verb|/home/tjr/hello/bin/arm_atmos_3.0/atb| can
+be used to include the hello world program in an ATMos image.  As described in
+section \ref{imageanywhere}, this can be done in any directory.  For example
+you could make a directory {\tt image} inside this build tree and create the
+image there:
+
+{\footnotesize \begin{verbatim}
+$ cd ..
+$ mkdir image
+$ cd image
+$ cat >SYSTEM
+Hardware atb
+Set Pthreads
+Package core
+
+ReleasePath /home/tjr/hello/bin/arm_atmos_3.0/atb
+Path /home/tjr/hello/bin/arm_atmos_3.0/atb
+
+Package hello
+
+$ aconfig
+ATMos Config (Jul 24 1996, 13:24:41)
+    .
+    .
+Config completed successfully.
+
+$ make
+(cd init; make -f makefile)
+    .
+    .
+syslink  -oimage -T0x00010000 -Ereset -Msyslink.map syslink.input
+
+\end{verbatim}}
+
+You should now be able to boot up an ATMos machine with this image and see the
+magic words ``Hello world!'' come out on the console.
+
+\subsection{Building C++ programs}
+
+When building a C++ program for ATMos the module file needs to be slightly
+different.  For example:
+
+{\footnotesize \begin{verbatim}
+Object prog_exe.o
+{
+    Executable prog Qhandler pthread_qhandler
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+}
+\end{verbatim}}
+
+\subsection{Building libraries}
+
+Building libraries on ATMos is exactly the same as for any other platform.  A
+statically-linked library gets built with the \verb|StaticLinkLibrary| rule,
+and gets exported using the \verb|ExportLibrary| rule.  We do not use {\tt
+aconfig}'s {\tt Export ULibrary} feature.  This means that libraries built in
+an OMNI tree cannot easily be used in ATMos programs built outside the OMNI
+development environment.
+
+\subsection{ATMos messages}
+\label{atmosmessages}
+
+Other than creating an ATMos image there is one other situation in which we
+cannot avoid using {\tt aconfig}.  This is when writing low-level ATMos code
+which uses ATMos messages.  ATMos message definitions need to be put in module
+files, but in the ODE we do not allow these to be the same module files which
+describe executables.  Module files which define messages should instead be put
+in a separate directory at the top of the source or build tree.
+
+One way of looking at it is that existing ATMos module files need to broken up
+into their three different functions:
+
+\begin{enumerate}
+\item Directives which say how to compile programs and libraries are replaced
+by rules in {\tt dir.mk}.
+\item Directives describing particular executables are put into a module file
+in the same directory as the code and {\tt dir.mk} (as described in section
+\ref{atmoshello} for the hello world example).
+\item Directives defining {\em interfaces}, i.e. messages (and possibly
+hardware configuration), are put into module files in a separate ``ATMos
+interface'' directory.
+\end{enumerate}
+
+So say you have a couple of ATMos messages you want to define.  Make a
+directory called \verb|atmos_if| at the top level of your build tree, and
+inside there write a module file which just defines the messages:
+
+{\footnotesize \begin{verbatim}
+$ cd /home/tjr/hello/build/arm_atmos_3.0/atb
+$ mkdir atmos_if
+$ cd atmos_if
+$ cat >mymsg.module
+MessageId 0x00200000
+
+Message ONE
+{
+  int a;
+}
+
+Message TWO
+{
+  char *b
+}
+\end{verbatim}}
+
+Note that it's preferable to use the {\tt MessageId} directive rather than
+allowing message IDs to be allocated automatically.  If you don't use the {\tt
+MessageId} directive then automatic allocation of message IDs happens in the
+normal way.  When you have multiple import trees each defining messages with
+automatically allocated IDs, it can be very difficult to ensure consistency
+between libraries and programs built in different places.
+
+Now you need to write a {\tt dir.mk} to specify that the messages in {\tt
+mymsg.module} should be exported and then run ``{\tt omake export}'':
+
+{\footnotesize \begin{verbatim}
+$ cat >dir.mk
+all::
+        @echo
+        @echo 'No "all" rule here.  Do "omake export" to export ATMos'
+        @echo 'interface files.'
+        @echo
+
+export::
+        @(modules="mymsg"; $(ExportATMosInterfaces))
+$ omake export
+
+make -r -f ../config/config.mk VPATH= TOP=.. CURRENT=atmos_if OMAKE_TARGET='exp
+ort' 'export'
+
+echo Module mymsg >> /home/tjr/hello/bin/arm_atmos_3.0/atb/all_interfaces
++ mkdirhier /home/tjr/hello/bin/arm_atmos_3.0/atb/mymsg 
++ installbsd -c -m 0644 mymsg.module /home/tjr/hello/bin/arm_atmos_3.0/atb/myms
+g 
+echo Hardware atb > /home/tjr/hello/bin/arm_atmos_3.0/atb/SYSTEM
+echo Set Pthreads >> /home/tjr/hello/bin/arm_atmos_3.0/atb/SYSTEM
+echo Package core >> /home/tjr/hello/bin/arm_atmos_3.0/atb/SYSTEM
+echo Path /home/tjr/hello/bin/arm_atmos_3.0/atb >> /home/tjr/hello/bin/arm_atmo
+s_3.0/atb/SYSTEM
+cat /home/tjr/hello/bin/arm_atmos_3.0/atb/all_interfaces >> /home/tjr/hello/bin
+/arm_atmos_3.0/atb/SYSTEM
++ cd /home/tjr/hello/bin/arm_atmos_3.0/atb 
++ aconfig 
+ATMos Config (Jul 24 1996, 13:24:41)
+   .
+   .
+Config completed successfully.
+\end{verbatim}}
+
+If you look in the ...\verb|/bin/arm_atmos_3.0/atb| directory you will see that
+the message definitions now appear in the \verb|init/messages.h| file.  Code in
+your build tree which tries to include \verb|messages.h| should find this file,
+and thus have access to all message definitions which were exported from the
+\verb|atmos_if| directory.
+
+One other thing to note is that we haven't written a top-level {\tt dir.mk} in
+this example yet.  It is important that when doing ``{\tt omake export}'' at
+the top of the build tree, the \verb|atmos_if| directory is processed before
+any directories with code which might use the message definitions.  In this
+case the top-level {\tt dir.mk} should be something like:
+
+{\footnotesize \begin{verbatim}
+SUBDIRS = atmos_if hello
+
+export::
+        @$(MakeSubdirs)
+\end{verbatim}}
+
+\subsubsection{Multiple import trees defining ATMos messages}
+
+Any ATMos build tree should pull in the \verb|messages.h| file from the first
+import tree it finds which has any message definitions.  So if only one import
+tree has any message definitions then things work fine.  However if two import
+trees both have message definitions then somehow all the messages defined in
+the two trees need to be combined into a single \verb|messages.h| file.  The
+{\tt ExportATMosInterfaces} rule should cope with this, but it is worth
+explaining how this is done so that potential problems can be avoided.
+
+Say you have an ATMos build tree which exports to and imports from your own
+import/export tree, and also imports from a project tree.  When you do ``{\tt
+omake export}'' inside the \verb|atmos_if| directory of your build tree, it
+generates a {\tt messages.h} file inside the \verb|bin/arm_atmos...| directory
+of your import/export tree, as explained above.  However, because this build
+tree also imports from the project tree, the {\tt messages.h} file generated
+contains not only the message definitions from your own \verb|atmos_if|
+directory, but also the message definitions from the project tree.
+
+There are two situations where you have to be careful:
+
+\begin{itemize}
+
+\item If someone changes message definitions in the project tree, they will do
+``{\tt omake export}'' inside the project build tree, thus updating the {\tt
+messages.h} file in the project import/export tree.  However, the {\tt
+messages.h} file in your import/export tree will continue to have the old
+message definitions from the project tree.  To keep things consistent you need
+to redo ``{\tt omake export}'' in the \verb|atmos_if| directory of your own
+build tree, even though none of your message definitions have changed.
+
+\item If you want to import from two unrelated project trees (say the streams
+tree and the spirit tree) then by default you will only get the messages from
+whichever tree you import from first.  If you want to combine the two sets of
+message definitions you will need to create your own import/export tree, and
+inside your build tree have an \verb|atmos_if| directory even if you don't
+define any messages yourself (the {\tt dir.mk} for such a directory would
+simply have an {\tt ExportATMosInterfaces} rule without specifying any module
+files).  Note that in this case it is imperative that the message definitions
+in the two project trees use {\tt MessageId} directives -- otherwise the same
+message will have a different ID in your local import/export tree from the ID
+it has in the project import/export tree.
+
+\end{itemize}
+
+\end{document}

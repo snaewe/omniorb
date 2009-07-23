@@ -1,0 +1,75 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH OMNIMAPPER 8 "30 Apr 2007"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+omniMapper \- Simple proxy for CORBA naming service from omniORB
+.SH SYNOPSIS
+.B omniMapper
+.RI [ options ]
+.SH DESCRIPTION
+This manual page documents briefly the
+.B omniMapper
+command.
+.PP
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+\fBomniMapper\fP is a simple daemon which listens on port 2809 (or any
+other port) and redirects IIOP requets for configured object keys to
+associated persistent IORs.  It can be used to make a naming service
+(even an old non-INS aware version of omniNames or other ORB's naming
+service) appear on port 2809 with the object key \fINameService\fP.
+The same goes for any other service you may wish to specify, such as
+an interace repository.
+.SH OPTIONS
+A summary of options is included below.
+For a complete description, see the HTML pages included in the
+omniorb4-doc package.
+.TP
+.BI \-port \ port
+This allows you to choose a port other than 2809 to listen on.
+.TP
+.BI \-config \ config_file
+This specifies a location for the configuration file.  The default
+name is \fI/etc/omniMapper.cfg\fP.
+.TP
+.BI \-v
+\fBomniMapper\fP does not normally print anything; this option makes
+it verbose so it prints configuration information and a record of the
+redirections it makes to standard output.
+.SH CONFIGURATION FILE
+The configuration file is very simple.  Each line contains a string to
+be used as an object key, some white space and an IOR (or any valid
+URI) that it will redirect that object key to.  Comments should be
+prefixed with a \fI#\fP character.  For example:
+.br
+    # Example omniMapper.cfg
+.br
+    NameService         IOR:000f...
+.br
+    InterfaceRepository IOR:0100...
+.SH SEE ALSO
+.BR omniNames (8).
+.br
+The programs are documented fully by the HTML documentation in the
+omniorb4-doc package.
+.SH AUTHOR
+omniMapper was written by Duncan Grisby <duncan@grisby.org>
+.PP
+This manual page was written by Floris Bruynooghe
+<floris.bruynooghe@gmail.com>, for the Debian project (but may be
+used by others).

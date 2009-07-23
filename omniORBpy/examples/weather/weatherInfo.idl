@@ -1,0 +1,67 @@
+// 
+// weatherInfo.idl                                                     
+// 
+// This is the interface for the weather information server.  It is a client
+// of the weather station server, and provides several additional services
+// including a greater range of processed weather data, more robustness in
+// restarting after hardware failures, and historical data logging.
+//
+// This server is intended to run on a system with a proper filing system,
+// while the weather station is designed to run on ATMOS.
+//
+// $Id$
+// $Author$
+/*
+$Log$
+Revision 1.1  2000/01/06 18:38:06  dpg1
+Weather station demo.
+
+# Revision 1.3  1998/10/28  13:57:51  krw
+# Rolling wind speed added.
+#
+# Revision 1.2  1995/11/02  11:35:43  krw
+# Remove extraneous typedef of time_t.
+#
+# Revision 1.1  1995/08/30  09:28:19  krw
+# Initial revision
+#
+*/
+
+struct cumulativeWeatherInfo {
+  long start;              // Beginning of interval in Unix time() format
+  long end;                // End of interval in Unix time() format
+  float sunshine;          // Hours of sunshine during interval.
+  float rainfall;          // mm of rainfall during interval.
+};
+
+struct immediateWeatherInfo {
+  short windDirection;     // degrees clockwise from due North 
+  short windSpeed;         // knots (now)
+  float rollingWindSpeed;  // knots (10-minute rolling average, -1 if not ready)
+  float temperature;       // degrees Celsius
+  short humidity;          // percent
+  float dewpoint;          // degrees Celsius
+  short pressure;          // millibars
+  short sunny;             // 1 if it's sunny now, 0 otherwise
+  short rainy;             // 1 if it's rainy now, 0 otherwise
+};
+ 
+interface weatherInfo {
+
+  short windDirection();                     //
+  short windSpeed();                         //
+  float rollingWindSpeed();                  //
+  float temperature();                       //
+  short humidity();                          // Units as above.
+  float dewpoint();                          //
+  short pressure();                          //
+  short sunny();                             //
+  short rainy();                             //
+
+  immediateWeatherInfo  immediate();         // All immediate data at once
+  cumulativeWeatherInfo cumulative();        // Sunshine and rainfall
+};  
+
+
+
+

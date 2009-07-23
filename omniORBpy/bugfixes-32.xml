@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORBpy 3.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="3.2">
+
+<bug id="4" date="Tue Sep 23 10:14:04 BST 2008" user="dgrisby">
+  <summary>Invalid TypeCodes created by to_any</summary>
+  <text>
+  to_any would create invalid sequence and struct TypeCodes when
+  encountering Nones.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-August/029667.html"/>
+</bug>
+
+<bug id="3" date="Tue Sep 16 12:17:44 BST 2008" user="dgrisby">
+  <summary>List containing mixed integers and bools mishandled in to_any</summary>
+  <text>
+  A list containing integers and bools would be considered a sequence
+  of integers, rather than a sequence of Anys.
+  </text>
+</bug>
+
+<bug id="2" date="Thu Apr  3 10:03:08 BST 2008" user="dgrisby">
+  <summary>Leaks of some exception classes</summary>
+  <reported>Luke Deller</reported>
+  <text>
+  Failed to release Python references.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-April/029346.html"/>
+</bug>
+
+<bug id="1" date="Mon Mar 24 20:02:14 GMT 2008" user="dgrisby">
+  <summary>Memory leak in minor code stringification.</summary>
+  <text>
+  Failed to release Python references.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-dev/2008-March/000244.html"/>
+</bug>
+
+</buglist>

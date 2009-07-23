@@ -1,0 +1,55 @@
+
+module ValueTest {
+  valuetype One {
+    public string s;
+    public long l;
+  };
+
+  valuetype Two {
+    public One a;
+    public One b;
+  };
+
+  valuetype StringValue string;
+
+  abstract interface Abs {
+    string test();
+  };
+
+  valuetype Three supports Abs {
+    public string s;
+  };
+
+  interface Four : Abs {};
+
+  valuetype Empty {};
+  valuetype Container {
+    public Empty e1;
+    public Empty e2;
+  };
+  
+  interface Test {
+    void show(in string s);
+
+    // Simple values
+    One  op1(in One a);
+    void op2(in One a, in One b);
+    Two  op3(in Two a);
+    
+    // Value box
+    StringValue op4(in StringValue a);
+
+    // Abstract interface
+    void op5(in Abs a);
+
+    // Values in Anys
+    void op6(in any a);
+    void op7(in any a, in any b);
+    void op8(in any a, in One b);
+    void op9(in One a, in any b);
+
+    void op10(in Empty e);
+    void op11(in Empty e1, in Empty e2);
+    void op12(in Container c);
+  };
+};

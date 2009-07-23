@@ -1,0 +1,9 @@
+TOP=../../..
+CURRENT=src/examples/boa
+BASE_OMNI_TREE=@top_srcdir@
+VPATH=@srcdir@
+INSTALL=@INSTALL@
+
+include $(TOP)/mk/beforeauto.mk
+include @srcdir@/dir.mk
+include $(TOP)/mk/afterauto.mk

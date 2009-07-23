@@ -1,0 +1,11 @@
+This example shows a very over-engineered distributed tic-tac-toe
+game.
+
+Compile the IDL in tictactoe.idl, then run gameServer.py. Now start
+some instances of gameClient.py. The client has a user interface for
+creating new games, joining existing games, and watching games.
+
+This is not a particularly sensible implementation of such a simple
+game, but it demonstrates many techniques that are useful in large
+applications.
+

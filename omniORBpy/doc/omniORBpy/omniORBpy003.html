@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
+<LINK rel="stylesheet" type="text/css" href="omniORBpy.css">
+<TITLE>Python language mapping issues</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORBpy002.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy004.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+<HR>
+<H1 CLASS="chapter"><A NAME="htoc32">Chapter&#XA0;3</A>&#XA0;&#XA0;Python language mapping issues</H1><P>omniORBpy adheres to the standard Python mapping&#XA0;[<A HREF="omniORBpy011.html#pythonmapping">OMG01b</A>],
+so there is no need to describe the mapping here. This chapter
+outlines a number of issues which are not addressed by the standard
+(or are optional), and how they are resolved in omniORBpy.</P><H2 CLASS="section"><A NAME="toc10"></A><A NAME="htoc33">3.1</A>&#XA0;&#XA0;Narrowing object references</H2><P>
+<A NAME="sec:narrowing"></A></P><P>As explained in chapter&#XA0;<A HREF="omniORBpy002.html#chap:basics">2</A>, whenever you receive an
+object reference declared to be base <TT>CORBA::Object</TT>, such as
+from <TT>NamingContext::resolve()</TT> or
+<TT>ORB::string_to_object()</TT>, you should narrow the reference to
+the type you require. You might think that since Python is a
+dynamically typed language, narrowing should never be necessary.
+Unfortunately, although omniORBpy often generates object references
+with the right types, it cannot do so in all circumstances.</P><P>The rules which govern when narrowing is required are quite complex.
+To be totally safe, you can <EM>always</EM> narrow object references to
+the type you are expecting. The advantages of this approach are that
+it is simple and that it is guaranteed to work with all Python ORBs.</P><P>The disadvantage with calling narrow for all received object
+references is that much of the time it is guaranteed not to be
+necessary. If you understand the situations in which narrowing
+<EM>is</EM> necessary, you can avoid spurious narrowing.</P><H3 CLASS="subsection"><A NAME="htoc34">3.1.1</A>&#XA0;&#XA0;The gory details</H3><P>When object references are transmitted (or stored in stringified
+IORs), they contain a single type identifier string, termed the
+<I>repository id</I>. Normally, the repository id represents the most
+derived interface of the object. However, it is also permitted to be
+the empty string, or to refer to an interface higher up the
+inheritance hierarchy. To give a concrete example, suppose there are
+two IDL files:</P><DIV CLASS="lstlisting"><I>// a.idl</I>
+<B>module</B> M1 {
+  <B>interface</B> A {
+    <B>void</B> opA();
+  };
+};</DIV><DIV CLASS="lstlisting"><I>// b.idl</I>
+<B>#include</B> "a.idl"
+<B>module</B> M2 {
+  <B>interface</B> B : M1::A {
+    <B>void</B> opB();
+  };
+};</DIV><P>A reference to an object with interface <TT>B</TT> will
+normally contain the repository id &#X2018;<TT>IDL:M2/B:1.0</TT>&#X2019;<SUP><A NAME="text6" HREF="#note6">1</A></SUP>. It is also permitted to have an empty
+repository id, or the id &#X2018;<TT>IDL:M1/A:1.0</TT>&#X2019;.
+&#X2018;<TT>IDL:M1/A:1.0</TT>&#X2019; is unlikely unless the server is being
+deliberately obtuse.</P><P>Whenever omniORBpy receives an object reference from
+somewhere&#X2014;either as a return value or as an operation argument&#X2014;it
+has a particular <I>target</I> interface in mind, which it compares
+with the repository id it has received. A target of base
+<TT>CORBA::Object</TT> is just one (common) case. For example, in the
+following IDL:</P><DIV CLASS="lstlisting"><I>// c.idl</I>
+<B>#include</B> "a.idl"
+<B>module</B> M3 {
+  <B>interface</B> C {
+    <B>Object</B> getObj();
+    M1::A  getA();
+  };
+};</DIV><P>the target interface for <TT>getObj</TT>&#X2019;s return value is
+<TT>CORBA::Object</TT>; the target interface for <TT>getA</TT>&#X2019;s return
+value is <TT>M1::A</TT>.</P><P>omniORBpy uses the result of comparing the received and target
+repository ids to determine the type of the object reference it
+creates. The object reference has either the type of the received
+reference, or the target type, according to this table:</P><DIV CLASS="center">
+<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=1><TR><TD ALIGN=left NOWRAP COLSPAN=2><B>Case</B></TD><TD VALIGN=top ALIGN=left NOWRAP> <B>Objref Type</B></TD></TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>
+1.</TD><TD VALIGN=top ALIGN=left>The received id is the same as the target id</TD><TD VALIGN=top ALIGN=left NOWRAP>received</TD></TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>
+2.</TD><TD VALIGN=top ALIGN=left>The received id is not the same as the target id, but the
+ORB knows that the received interface is derived from
+the target interface</TD><TD VALIGN=top ALIGN=left NOWRAP>received</TD></TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>
+3.</TD><TD VALIGN=top ALIGN=left>The received id is unknown to the ORB</TD><TD VALIGN=top ALIGN=left NOWRAP>target</TD></TR>
+<TR><TD VALIGN=top ALIGN=left NOWRAP>
+4.</TD><TD VALIGN=top ALIGN=left>The received id is not the same as the target id, and the
+ORB knows that the received interface is <EM>not</EM>
+derived from the target interface</TD><TD VALIGN=top ALIGN=left NOWRAP>target</TD></TR>
+</TABLE>
+</DIV><P>Cases 1 and 2 are the most common. Case 2 explains why it is not
+necessary to narrow the result of calling
+<TT>resolve_initial_references("RootPOA")</TT>: the return is always
+of the known type <TT>PortableServer.POA</TT>, which is derived from the
+target type of <TT>CORBA.Object</TT>.</P><P>Case 3 is also quite common. Suppose a client knows about IDL modules
+<TT>M1</TT> and <TT>M3</TT> from above, but not module <TT>M2</TT>.
+When it calls <TT>getA()</TT> on an instance of <TT>M3::C</TT>, the return
+value may validly be of type <TT>M2::B</TT>, which it does not know. By
+creating an object reference of type <TT>M1::A</TT> in this case, the
+client is still able to call the object&#X2019;s <TT>opA()</TT> operation. On the
+other hand, if <TT>getObj()</TT> returns an object of type <TT>M2::B</TT>, the
+ORB will create a reference to base <TT>CORBA::Object</TT>, since that
+is the target type.</P><P>Note that the ORB <EM>never</EM> rejects an object reference due to it
+having the wrong type. Even if it knows that the received id is not
+derived from the target interface (case 4), it might be the case that
+the object actually has a more derived interface, which is derived
+from both the type it is claiming to be <EM>and</EM> the target type.
+That is, of course, extremely unlikely.</P><P>In cases 3 and 4, the ORB confirms the type of the object by calling
+<TT>_is_a()</TT> just before the first invocation on the object. If it
+turns out that the object is not of the right type after all, the
+<TT>CORBA.INV_OBJREF</TT> exception is raised. The alternative to this
+approach would be to check the types of object references when they
+were received, rather than waiting until the first invocation. That
+would be inefficient, however, since it is quite possible that a
+received object reference will never be used. It may also cause
+objects to be activated earlier than expected.</P><P>In summary, whenever your code receives an object reference, you
+should bear in mind what omniORBpy&#X2019;s idea of the target type is. You
+must not assume that the ORB will always correctly figure out a more
+derived type than the target. One consequence of this is that you must
+always narrow a plain <TT>CORBA::Object</TT> to a more specific type
+before invoking on it<SUP><A NAME="text7" HREF="#note7">2</A></SUP>. You
+<EM>can</EM> assume that the object reference you receive is of the
+target type, or something derived from it, although the object it
+refers to may turn out to be invalid. The fact that omniORBpy often
+<EM>is</EM> able figure out a more derived type than the target is only
+useful when using the Python interactive command line.</P><H2 CLASS="section"><A NAME="toc11"></A><A NAME="htoc35">3.2</A>&#XA0;&#XA0;Support for Any values</H2><P>In statically typed languages, such as C++, Anys can only be used with
+built-in types and IDL-declared types for which stubs have been
+generated. If, for example, a C++ program receives an Any containing a
+struct for which it does not have static knowledge, it cannot easily
+extract the struct contents. The only solution is to use the
+inconvenient DynAny interface.</P><P>Since Python is a dynamically typed language, it does not have this
+difficulty. When omniORBpy receives an Any containing types it does
+not know, it is able to create new Python types which behave exactly
+as if there were statically generated stubs available. Note that this
+behaviour is not required by the Python mapping specification, so
+other Python ORBs may not be so accommodating.</P><P>The equivalent of DynAny creation can be achieved by dynamically
+writing and importing new IDL, as described in
+section&#XA0;<A HREF="omniORBpy004.html#sec:importIDL">4.9</A>.</P><P>There is, however, a minor fly in the ointment when it comes to
+receiving Anys. When an Any is transmitted, it is sent as a TypeCode
+followed by the actual value. Normally, the TypeCodes for entities
+with names&#X2014;members of structs, for example&#X2014;contain those names as
+strings. That permits omniORBpy to create types with the corresponding
+names. Unfortunately, the GIOP specification permits TypeCodes to be
+sent with empty strings where the names would normally be. In this
+situation, the types which omniORBpy creates cannot be given the
+correct names. The contents of all types except structs and exceptions
+can be accessed without having to know their names, through the
+standard interfaces. Unknown structs, exceptions and valuetypes
+received by omniORBpy have an attribute named &#X2018;<TT>_values</TT>&#X2019; which
+contains a sequence of the member values. This attribute is omniORBpy
+specific.</P><P>Similarly, TypeCodes for constructed types such as structs and unions
+normally contain the repository ids of those types. This means that
+omniORBpy can use types statically declared in the stubs when they are
+available. Once again, the specification permits the repository id
+strings to be empty<SUP><A NAME="text8" HREF="#note8">3</A></SUP>. This means that even if stubs for a type
+received in an Any are available, it may not be able to create a
+Python value with the right type. For example, with a struct
+definition such as:</P><DIV CLASS="lstlisting"><B>module</B> M {
+  <B>struct</B> S {
+    <B>string</B> str;
+    <B>long</B>   l;
+  };
+};</DIV><P>The transmitted TypeCode for <TT>M::S</TT> may contain only
+the information that it is a structure containing a string followed by
+a long, not that it is type <TT>M::S</TT>, or what the member names are.</P><P>To cope with this situation, omniORBpy has an extension to the
+standard interface which allows you to <I>coerce</I> an Any value to a
+known type. Calling an Any&#X2019;s <TT>value()</TT> method with a TypeCode
+argument returns either a value of the requested type, or <TT>None</TT>
+if the requested TypeCode is not <I>equivalent</I> to the Any&#X2019;s
+TypeCode. The following code is guaranteed to be safe, but is not
+standard:</P><DIV CLASS="lstlisting">a = <I># Acquire an Any from somewhere</I>
+v = a.value(CORBA.TypeCode(CORBA.id(M.S)))
+<B>if</B> v <B>is</B> <B>not</B> None:
+    <B>print</B> v.str
+<B>else</B>:
+    <B>print</B> "The Any does not contain a value compatible with M::S."</DIV><H3 CLASS="subsection"><A NAME="htoc36">3.2.1</A>&#XA0;&#XA0;Any helper module</H3><P>omniORBpy provides an alternative, non-standard way of constructing
+and deconstructing Anys that is often more convenient to use in Python
+programs. It uses Python&#X2019;s own dynamic typing to infer the TypeCodes
+to use. The <TT>omniORB.any</TT> module contains two functions,
+<TT>to_any()</TT> and <TT>from_any()</TT>.</P><P><TT>to_any()</TT> takes a Python object and tries to return it inside an
+Any. It uses the following rules:</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+Python strings are represented as CORBA strings.
+</LI><LI CLASS="li-itemize">Python unicode objects are represented as CORBA wstrings.
+</LI><LI CLASS="li-itemize">Python integers are represented as CORBA longs.</LI><LI CLASS="li-itemize">Python long integers are represented as a CORBA integer type
+taken from long, unsigned long, long long, unsigned long, depending on
+what size type the Python long integer will fit in. If the value is
+too large for any of these, <TT>CORBA.BAD_PARAM</TT> is raised.</LI><LI CLASS="li-itemize">Python lists and tuples of the types above are represented as
+sequences of the corresponding CORBA types.</LI><LI CLASS="li-itemize">Python lists and tuples of mixed types are represented as
+sequences of Anys.</LI><LI CLASS="li-itemize">Python dictionaries with string keys are represented as CORBA
+structs, using the dictionary keys as the member names, and the
+types of the dictionary values as the member types.</LI><LI CLASS="li-itemize">Instances of CORBA types (structs, unions, enums, etc.)
+generated by the IDL compiler are represented as themselves.
+</LI></UL><P>All other Python types result in a <TT>CORBA.BAD_PARAM</TT> exception.</P><P>The <TT>from_any()</TT> function works in reverse. It takes an Any as its
+argument and extracts its contents using the same rules as
+<TT>to_any()</TT>. By default, CORBA structs are extracted to dictionaries;
+if the optional <TT>keep_structs</TT> argument is set true, they are
+instead left as instances of the CORBA struct classes.</P><H2 CLASS="section"><A NAME="toc12"></A><A NAME="htoc37">3.3</A>&#XA0;&#XA0;Interface Repository stubs</H2><P>
+<A NAME="sec:ifrstubs"></A></P><P>The Interface Repository interfaces are declared in IDL module
+<TT>CORBA</TT> so, according to the Python mapping, the stubs for them
+should appear in the Python <TT>CORBA</TT> module, along with all the
+other CORBA definitions. However, since the stubs are extremely large,
+omniORBpy does not include them by default. To do so would
+unnecessarily increase the memory footprint and start-up time.</P><P>The Interface Repository stubs are automatically included if you
+define the <TT>OMNIORBPY_IMPORT_IR_STUBS</TT> environment variable.
+Alternatively, you can import the stubs at run-time by calling the
+<TT>omniORB.importIRStubs()</TT> function. In both cases, the stubs become
+available in the Python <TT>CORBA</TT> module.</P><HR CLASS="footnoterule"><DL CLASS="thefootnotes"><DT CLASS="dt-thefootnotes">
+<A NAME="note6" HREF="#text6">1</A></DT><DD CLASS="dd-thefootnotes">It
+is possible to change the repository id strings associated with
+particular interfaces using the <TT>ID</TT>, <TT>version</TT> and
+<TT>prefix</TT> pragmas.
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note7" HREF="#text7">2</A></DT><DD CLASS="dd-thefootnotes">Unless you are invoking pseudo
+operations like <TT>_is_a()</TT> and <TT>_non_existent()</TT>.
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note8" HREF="#text8">3</A></DT><DD CLASS="dd-thefootnotes">The use of empty repository id strings is
+deprecated as of GIOP 1.2.
+</DD></DL>
+<HR>
+<A HREF="omniORBpy002.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy004.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

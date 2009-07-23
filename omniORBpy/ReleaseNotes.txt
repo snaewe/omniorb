@@ -1,0 +1,114 @@
+RELEASE NOTES
+=============
+
+This is omniORBpy 3.4.
+
+See README.txt for building instructions.
+See the documentation in the doc directory for more information.
+
+
+Changes since omniORBpy 3.3
+---------------------------
+
+ - Bug fixes. See bugfixes-33.xml.
+
+
+Changes since omniORBpy 3.2
+---------------------------
+
+ - Bug fixes. See bugfixes-32.xml.
+
+
+Changes since omniORBpy 3.1
+---------------------------
+
+ - Bug fixes. See bugfixes-31.xml.
+
+
+Changes since omniORBpy 3.0
+---------------------------
+
+ - Bug fixes. See bugfixes-30.xml.
+
+ - Minor documentation updates.
+
+ - New configuration parameters: socketSendBuffer, resetTimeOutOnRetries.
+
+
+Changes since omniORBpy 3.0 release candidate 2
+-----------------------------------------------
+
+ - Minor bug fixes.
+
+
+Changes since omniORBpy 3.0 release candidate 1
+-----------------------------------------------
+
+ - Minor bug fixes.
+
+
+Changes since omniORBpy 3.0 beta 2
+----------------------------------
+
+ - Minor bug fixes.
+ - Support for the experimental omniConnectionMgmt extension.
+ - New C++ api functions.
+
+
+Changes since omniORBpy 3.0 beta 1
+----------------------------------
+
+ - IPv6 support.
+
+     See section 7.6.1 of the omniORBpy manual for details.
+
+ - New endPointPublish parameter.
+
+     Used for configuring what to publish in IORs. See section 7.6.2
+     of the omniORBpy manual.
+
+ - Minor bug fixes.
+
+
+Changes since omniORBpy 2.x
+---------------------------
+
+ - Objects by value support.
+
+     omniORB now supports the full objects by value specification,
+     with the exception of custom valuetypes. See chapter 10 of the
+     omniORBpy manual for information about valuetype in omniORBpy.
+
+ - Abstract interfaces support.
+
+ - New socket collection implementation.
+
+     Uses poll() on platforms where it is available to avoid limiting
+     the number of connections to FD_SETSIZE. Windows specific version
+     that better manages the unusual Windows fd_set.
+
+ - New tracing options traceTime and traceInvocationReturns.
+
+     See section 4.2 of the omniORB manual.
+
+ - New-style Python classes can now be used for servants.
+
+ - Partial support for local interfaces.
+
+     In particular, ServantManagers and AdapterActivators no longer
+     need to be activated in a POA, but can be simple Python objects.
+     See the examples in examples/poa.
+
+
+Known issues
+------------
+
+This release has the following known issues and omissions:
+
+ - There is no support for DII and DSI. Since you can write IDL and
+   Python code on-the-fly, this is not a significant limitation.
+
+ - Interceptors have only limited functionality, and do not adhere to
+   the portable interceptors API.
+
+ - Local interfaces are not supported for user-defined IDL.

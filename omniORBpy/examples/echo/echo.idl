@@ -1,0 +1,4 @@
+// echo.idl
+interface Echo {
+  string echoString(in string mesg);
+};

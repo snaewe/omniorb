@@ -1,0 +1,30 @@
+//File: CosLifeCycleReference.idl
+//Part of the LifeCycle Service
+
+#ifndef _COS_LIFE_CYCLE_REFERENCE_IDL_
+#define _COS_LIFE_CYCLE_REFERENCE_IDL_
+
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #include "COS_sysdep.h"
+
+#include <CosReference.idl>
+#include <CosCompoundLifeCycle.idl>
+
+#pragma prefix "omg.org"
+
+module CosLifeCycleReference {
+
+	interface Relationship : 
+			CosCompoundLifeCycle::Relationship,
+			CosReference::Relationship {};
+
+	interface ReferencesRole : 
+			CosCompoundLifeCycle::Role,
+			CosReference::ReferencesRole {};
+
+	interface ReferencedByRole : 
+			CosCompoundLifeCycle::Role,
+			CosReference::ReferencedByRole {};
+};
+
+#endif /* ifndef _COS_LIFE_CYCLE_REFERENCE_IDL_ */

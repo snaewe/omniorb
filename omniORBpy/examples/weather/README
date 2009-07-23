@@ -1,0 +1,14 @@
+Before AT&T Laboratories Cambridge closed, it ran a live weather
+service with web and CORBA interfaces. The web interface lives on,
+hosted by the Laboratory for Communications Engineering in Cambridge
+University, but the CORBA interface unfortunately does not.
+
+This directory contains an example client that used to connect to the
+live weather service. That is no longer possible, but you can use the
+weather server to create your own weather. Drag the hands of the
+displayed gauges to choose the weather you would like. Give the IOR of
+the server to the client on its command line.
+
+Before you can run the programs, you must compile the IDL with
+
+  omniidl -bpython weatherInfo.idl

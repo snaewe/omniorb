@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORBpy 3.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="3.3">
+
+<bug id="1" date="Thu Oct  9 16:02:23 BST 2008" user="dgrisby">
+  <summary>Python exceptions during unmarshalling not handled properly</summary>
+  <text>
+  If a Python exception occurred when unmarshalling data (during
+  shutdown, for example), a null pointer could be stored in a Python
+  object, leading to a later crash.
+  </text>
+</bug>
+
+</buglist>

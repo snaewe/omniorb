@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORBpy 3.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="3.1">
+
+<bug id="1" date="Fri Feb  1 16:22:20 GMT 2008" user="dgrisby">
+  <summary>Cannot implement operations with names clashing with Python keywords</summary>
+  <reported>Jimmy Deveil</reported>
+  <text>
+  Operations with names clashing with Python keywords were not handled
+  properly, meaning it was impossible to implement a server with such
+  operations.
+  </text>
+</bug>
+
+</buglist>

@@ -1,0 +1,223 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
+<LINK rel="stylesheet" type="text/css" href="omniORB.css">
+<TITLE>Objects by value, etc.</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORB012.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB014.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+<HR>
+<H1 CLASS="chapter"><A NAME="htoc142">Chapter&#XA0;13</A>&#XA0;&#XA0;Objects by value, abstract interfaces and local interfaces</H1><P>
+<A NAME="chap:valuetype"></A></P><P>omniORB 4.1 supports objects by value, declared with the
+<TT>valuetype</TT> keyword in IDL, and both abstract and local
+interfaces. This chapter outlines some issues to do with using these
+types in omniORB. You are assumed to have read the relevant parts of
+the CORBA specification, specifically chapters 3, 4, 5 and 6 of the
+CORBA 2.6 specification, and sections 1.17, 1.18 and 1.35 of the C++
+mapping specification, version 1.1.</P><H2 CLASS="section"><A NAME="toc57"></A><A NAME="htoc143">13.1</A>&#XA0;&#XA0;Features</H2><P>omniORB supports the complete objects by value specification, with the
+exception of custom valuetypes. All other valuetype features including
+value boxes, value sharing semantics, abstract valuetypes, and
+abstract interfaces are supported. Local interfaces are supported,
+with a number of caveats outlined in
+section&#XA0;<A HREF="#sec:LocalInterfaces">13.8</A>.</P><H2 CLASS="section"><A NAME="toc58"></A><A NAME="htoc144">13.2</A>&#XA0;&#XA0;Reference counting</H2><P>Values are reference counted. This means that, as long as your
+application properly manages reference counts, values are usually
+automatically deleted when they are no longer required. However, one
+of the features of valuetypes is that they support the representation
+of cyclic graph structures. In that kind of situation, the reference
+counting garbage collection does not work, because references internal
+to the graph prevent the reference counts ever becoming zero.</P><P>To avoid memory leaks, application code must explicitly break any
+reference cycles in values it manipulates. This includes graphs of
+values received as parameters and return values from CORBA operations.</P><H2 CLASS="section"><A NAME="toc59"></A><A NAME="htoc145">13.3</A>&#XA0;&#XA0;Value sharing and local calls</H2><P>When valuetypes are passed as parameters in CORBA calls (i.e. calls
+on CORBA objects declared with <TT>interface</TT> in IDL), the structure
+of related values is maintained. Consider, for example, the following
+IDL definitions (which are from the example code in
+<TT>src/examples/valuetype/simple</TT>:</P><DIV CLASS="lstlisting"><B>module</B> ValueTest {
+  <B>valuetype</B> One {
+    <B>public</B> <B>string</B> s;
+    <B>public</B> <B>long</B>   l;
+  };
+
+  <B>interface</B> Test {
+    One op1(<B>in</B> One a, <B>in</B> One b);
+  };
+};</DIV><P>If the client to the <TT>Test</TT> object passes the same value in both
+parameters, just one value is transmitted, and the object
+implementation receives a copy of the single value, with references to
+it in both parameters.</P><P>In the case that the object is remote from the client, there is
+obviously a copying step involved. In the case that the object is in
+the same address space as the client, the same copying semantics must
+be maintained so that the object implementation can modify the values
+it receives without the client seeing the modifications. To support
+that, omniORB must copy the entire parameter list in one operation, in
+case there is sharing between different parameters. Such copying is a
+rather more time-consuming process than the parameter-by-parameter
+copy that takes place in calls not involving valuetypes.</P><P>To avoid the overhead of copying parameters in this way, applications
+can choose to relax the semantics of value copying in local calls, so
+values are not copied at all, but are passed by reference. In that
+case, the client to a call <EM>will</EM> see any modifications to the
+values it passes as parameters (and similarly, the object
+implementation will see any changes the client makes to returned
+values). To choose this option, set the <TT>copyValuesInLocalCalls</TT>
+configuration parameter to zero.</P><H2 CLASS="section"><A NAME="toc60"></A><A NAME="htoc146">13.4</A>&#XA0;&#XA0;Value box factories</H2><P>With normal valuetypes, omniidl generates factory classes (with names
+ending <TT>_init</TT>) as required by the C++ mapping specification.
+The application is responsible for registering the factories with the
+ORB.</P><P>Unfortunately, the C++ mapping makes no mention of factories for value
+boxes. In omniORB, factories for value boxes are automatically
+registered with the ORB, and there are no application-visible factory
+classes generated for them. Some other CORBA implementations generate
+application visible factories, and the application <EM>does</EM> have to
+register the factories with the ORB.</P><H2 CLASS="section"><A NAME="toc61"></A><A NAME="htoc147">13.5</A>&#XA0;&#XA0;Standard value boxes</H2><P>The standard <TT>CORBA::StringValue</TT> and <TT>CORBA::WStringValue</TT>
+value boxes are available to application code. To make the definitions
+available in IDL, #include the standard <TT>orb.idl</TT>.</P><H2 CLASS="section"><A NAME="toc62"></A><A NAME="htoc148">13.6</A>&#XA0;&#XA0;Covariant returns</H2><P>As required by the C++ mapping, on C++ compilers that support
+covariant return types, omniidl generates code for the
+<TT>_copy_value()</TT> function that returns the most derived type of the
+value. On older compilers, <TT>_copy_value()</TT> returns
+<TT>CORBA::ValueBase</TT>.</P><P>If you write code that calls <TT>_copy_value()</TT>, and you need to
+support older compilers, you should assign the result to a variable of
+type <TT>CORBA::ValueBase*</TT> and downcast to the target type, rather
+than using the covariant return.</P><P>If you are overriding <TT>_copy_value()</TT>, you must correctly take
+account of the <TT>OMNI_HAVE_COVARIANT_RETURNS</TT> preprocessor
+definition.</P><H2 CLASS="section"><A NAME="toc63"></A><A NAME="htoc149">13.7</A>&#XA0;&#XA0;Values inside Anys</H2><P>Valuetypes inserted into Anys cause a number of interesting issues.
+Even when inside Anys, values are required to support complete sharing
+semantics. Take this IDL for example:</P><DIV CLASS="lstlisting"><B>module</B> ValueTest {
+  <B>valuetype</B> One {
+    <B>public</B> <B>string</B> s;
+    <B>public</B> <B>long</B>   l;
+  };
+
+  <B>interface</B> AnyTest {
+    <B>void</B> op1(<B>in</B> One v, <B>in</B> Any a);
+  };
+};</DIV><P>Now, suppose the client behaves as follows:</P><DIV CLASS="lstlisting">ValueTest::One* v = <B>new</B> One_impl("hello", 123);
+CORBA::Any a;
+a &lt;&lt;= v;
+obj-&gt;op1(v, a);</DIV><P>then on the server side:</P><DIV CLASS="lstlisting"><B>void</B> AnyTest_impl::op1(ValueTest::One* v, CORBA::Any&amp; a)
+{
+  ValueTest::One* v2;
+  a &gt;&gt;= v2;
+  assert(v2 == v);
+}</DIV><P>This is all very well in this kind of simple situation, but problems
+can arise if truncatable valuetypes are used. Imagine this derived
+value:</P><DIV CLASS="lstlisting"><B>module</B> ValueTest {
+  <B>valuetype</B> Two : <B>truncatable</B> One {
+    <B>public</B> <B>double</B> d;
+  };
+};</DIV><P>Now, suppose that the client shown above sends an instance of
+valuetype <TT>Two</TT> in both parameters, and suppose that the server
+has not seen the definition of valuetype <TT>Two</TT>. In this
+situation, as the first parameter is unmarshalled, it will be
+truncated to valuetype <TT>One</TT>, as required. Now, when the Any is
+unmarshalled, it refers to the same value, which has been truncated.
+So, even though the TypeCode in the Any indicates that the value has
+type <TT>Two</TT>, the stored value actually has type <TT>One</TT>. If the
+receiver of the Any tries to pass it on, transmission will fail
+because the Any&#X2019;s value does not match its TypeCode.</P><P>In the opposite situation, where an Any parameter comes before a
+valuetype parameter, a different problem occurs. In that case, as the
+Any is unmarshalled, there is no type information available for
+valuetype <TT>Two</TT>, so the value inside the Any has an internal
+omniORB type used for unknown valuetypes. As the next parameter is
+unmarshalled, omniORB sees that the shared value is unknown, and is
+able to convert it to the target <TT>One</TT> valuetype with
+truncation. In this case, the Any and the plain valuetype both have
+the correct types and values, but the fact that both should have
+referred to the same value has been lost.</P><P>Because of these issues, it is best to avoid defining interfaces that
+mix valuetypes and Anys in a single operation, and certainly to avoid
+trying to share plain values with values inside Anys.</P><H3 CLASS="subsection"><A NAME="htoc150">13.7.1</A>&#XA0;&#XA0;Values inside DynAnys</H3><P>The sharing semantics of valuetypes can also cause difficulties for
+DynAny. The CORBA 2.6 specification does not mention how shared values
+inside DynAnys should be handled; the CORBA 3.x specification slightly
+clarifies the situation, but it is still unclear. To write portable
+code it is best to avoid manipulating DynAnys containing values that
+are shared.</P><P>In omniORB, when a value inside an Any is converted into a DynAny, the
+value&#X2019;s state is copied into the DynAny, and manipulated there. When
+converting back to an Any a new value is created. This means that any
+other references to the original value (whether themselves inside Anys
+of not) still relate to the original value, with unchanged state.
+However, this copying only occurs when a DynValue is actually created,
+so for example a structure with two value members referring to the
+same value can manipulated inside a DynAny without breaking the
+sharing, provided the value members are not accessed as DynAnys.
+Extracting the value members as ValueBase will reveal the sharing, for
+example.</P><H2 CLASS="section"><A NAME="toc64"></A><A NAME="htoc151">13.8</A>&#XA0;&#XA0;Local Interfaces</H2><P>
+<A NAME="sec:LocalInterfaces"></A></P><P>Local interfaces are somewhat under-specified in the C++ mapping. This
+section outlines the way local interfaces are supported in omniORB,
+and details the limitations and issues.</P><H3 CLASS="subsection"><A NAME="htoc152">13.8.1</A>&#XA0;&#XA0;Simple local interfaces</H3><P>With simple IDL, there are no particular issues:</P><DIV CLASS="lstlisting"><B>module</B> Test {
+  <B>local</B> <B>interface</B> Example {
+    <B>string</B> hello(<B>in</B> <B>string</B> arg);
+  };
+};</DIV><P>The IDL compiler generates an abstract base class
+<TT>Test::Example</TT>. The application defines a class derived from it
+that implements the abstract <TT>hello()</TT> member function. Instances of
+that class can then be used where the IDL specifies interface
+<TT>Example</TT>.</P><P>Note that, by default, local interface implementations have no
+reference counting behaviour. If the local object should be deleted
+when the last reference is released, the application must implement
+the <TT>_add_ref()</TT> and <TT>_remove_ref()</TT> virtual member functions
+within the implementation class. Make sure that the implementations
+are thread safe.</P><H3 CLASS="subsection"><A NAME="htoc153">13.8.2</A>&#XA0;&#XA0;Inheritance from unconstrained interfaces</H3><P>Local interfaces can inherit from unconstrained (i.e. non-local)
+interfaces:</P><DIV CLASS="lstlisting"><B>module</B> Test {
+  <B>interface</B> One {
+    <B>void</B> problem(<B>inout</B> <B>string</B> arg);
+  };
+  <B>local</B> <B>interface</B> Two : One {
+  };
+
+  <B>interface</B> Receiver {
+    <B>void</B> setOne(<B>in</B> One a);
+  };
+};</DIV><P>IDL like this leads to two issues to do with omniORB&#X2019;s C++ mapping
+implementation.</P><P>First, an instance of local interface <TT>Two</TT> should be suitable to
+pass as the argument to the <TT>setOne()</TT> method of a <TT>Receiver</TT>
+object (as long as the object is in the same address space as the
+caller). Therefore, the <TT>Two</TT> abstract base class has to inherit
+from the internal class omniORB uses to map object references of type
+<TT>One</TT>. For performance reasons, the class that implements
+<TT>One</TT> object references normally has non-virtual member
+functions. That means that the application-supplied <TT>problem()</TT>
+member function for the implementation of local interface <TT>Two</TT>
+will not override the base class&#X2019;s version. To overcome this, the IDL
+for the base unconstrained interface must be compiled with the
+-Wbvirtual_objref switch to omniidl. That makes the member functions
+of the mapping of <TT>One</TT> into virtual functions, so they can be
+overridden.</P><P>The second problem is that, in some cases, omniORB uses a different
+mapping for object reference member functions than the mapping used in
+servant classes. For example, in the <TT>problem()</TT> operation, it uses
+an internal type for the inout string argument that avoids memory
+issues if the application uses a String_var in the argument. This
+means that the abstract member function declared in the <TT>Two</TT>
+class (and implemented by the application) has a different signature
+to the member function in the base class. The application-supplied
+class will therefore not properly override the base class method. In
+all likelihood, the C++ compiler will also complain that the two
+member functions are ambiguous. The solution to this problem is to use
+the implementation mapping in the base object reference class, rather
+than the normal object reference mapping, using the -Wbimpl_mapping
+switch to omniidl. The consequence of this is that some uses of _var
+types for inout arguments that are normally acceptable in omniORB now
+lead to memory problems.</P><P>In summary, to use local interfaces derived from normal unconstrained
+interfaces, you should compile all your IDL with the omniidl flags:</P><BLOCKQUOTE CLASS="quote">
+<TT>-Wbvirtual_objref -Wbimpl_mapping</TT>
+</BLOCKQUOTE><H3 CLASS="subsection"><A NAME="htoc154">13.8.3</A>&#XA0;&#XA0;Valuetypes supporting local interfaces</H3><P>According to the IDL specification, it should be possible to declare a
+valuetype that supports a local interface:</P><DIV CLASS="lstlisting"><B>local</B> <B>interface</B> I {
+  <B>void</B> my_operation();
+};
+<B>valuetype</B> V <B>supports</B> I {
+  <B>public</B> <B>string</B> s;
+};</DIV><P>omniidl accepts the IDL, but unfortunately the resulting C++ code does
+not compile. The C++ mapping specification has a problem in that both
+the <TT>CORBA::LocalObject</TT> and <TT>CORBA::ValueBase</TT>
+classes have <TT>add_ref()</TT> and <TT>remove_ref()</TT> member functions
+defined. The classes generated for the valuetype inherit from both
+these base classes, and therefore have an ambiguity. Until the C++
+mapping resolves this conflict, valuetypes supporting local interfaces
+cannot be used in omniORB.</P><HR>
+<A HREF="omniORB012.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORB014.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

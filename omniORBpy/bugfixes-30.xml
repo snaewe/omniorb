@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORBpy 3.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="3.0">
+
+<bug id="1" date="Thu Dec  7 11:48:01 GMT 2006" user="dgrisby">
+  <summary>Incorrect TypeCode from to_any</summary>
+  <text>
+  omniORB.any.to_any used the wrong TypeCode for large integers on 64
+  bit platforms.
+  </text>
+</bug>
+
+<bug id="2" date="Thu Apr 26 09:32:43 BST 2007" user="dgrisby">
+  <summary>Incorrect kind() return for object reference TypeCodes</summary>
+  <reported>Andrew Edem</reported>
+  <text>
+  Changes to support abstract and local interfaces broke the kind()
+  function for object reference TypeCodes.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2007-April/028599.html"/>
+</bug>
+
+<bug id="3" date="Wed Jul 25 15:58:36 BST 2007" user="dgrisby">
+  <summary>Error unmarshalling a sequence of nulls</summary>
+  <text>
+  A MARSHAL exception would sometimes occur when unmarshalling a
+  sequence of nulls.
+  </text>
+</bug>
+
+<bug id="4" date="Sun Oct  7 16:30:01 BST 2007" user="dgrisby">
+  <reported>Fabian Knittel</reported>
+  <summary>Problems with modules inside packages</summary>
+  <text>
+  When generating stubs in packages, repoened modules could be
+  accessed in incomplete form when usin from .. import ..
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-dev/2007-October/000233.html"/>
+</bug>
+
+</buglist>

@@ -1,0 +1,14 @@
+
+#include "value1.idl"
+
+module Derived {
+
+  valuetype Five : truncatable ValueTest::One {
+    public string extra;
+  };
+
+  valuetype Six {
+    public double s;
+    public string l;
+  };
+};

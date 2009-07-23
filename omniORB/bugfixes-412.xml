@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.1.2     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.1.2">
+
+<bug id="1" date="Mon Feb 18 16:20:50 GMT 2008" user="dgrisby">
+  <summary>omniNames service failed if no registry entries present</summary>
+  <text>
+  If the omniNames Windows service was set up using an external tool,
+  meaning it had none of its expected registry entries present,
+  startup failed.
+  </text>
+</bug>
+
+<bug id="2" date="Mon Mar 10 11:42:02 GMT 2008" user="dgrisby">
+  <summary>Incorrect behaviour handling exceptions on VC++ 7.1</summary>
+  <reported>Werner Mausshardt</reported>
+  <text>
+  A bug in Visual C++ 7.1 meant it generated incorrect exception
+  handling code, leading to strange errors and crashes if exceptions
+  occurred in remote calls.
+  </text>
+</bug>
+
+<bug id="3" date="Thu May 29 14:06:00 BST 2008" user="dgrisby">
+  <summary>Incorrect enum name in IR IDL</summary>
+  <text>
+  The dk_ValueMember enum member was misnamed dk_Member in ir.idl.
+  </text>
+</bug>
+
+<bug id="4" date="Tue Jul 15 11:57:45 BST 2008" user="dgrisby">
+  <summary>Failure if openening a connection fails with EAGAIN</summary>
+  <reported>Dirk Siebnich</reported>
+  <text>
+  If opening a connection failed with EAGAIN, an incorrect while loop
+  meant that the connection attempt was not properly retried.
+  </text>
+</bug>
+
+<bug id="5" date="Tue Sep 16 10:21:06 BST 2008" user="dgrisby">
+  <summary>Crash constructing DynAny containing null TypeCodes</summary>
+  <text>
+  tk_null was not properly handled, and the resulting exception caused
+  corruption of DynAny state, leading to a crash.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-August/029667.html"/>
+</bug>
+
+<bug id="6" date="Fri Sep 19 16:04:44 BST 2008" user="dgrisby">
+  <summary>Failure with long computer name on Windows</summary>
+  <reported>Luke Deller</reported>
+  <text>
+  Off-by-one error in name handling.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2008-September/029690.html"/>
+</bug>
+
+</buglist>

@@ -1,0 +1,98 @@
+// IDL for a rather over-engineered distributed noughts and crosses game
+
+module TicTacToe {
+
+  // State of a game.
+  enum PlayerType { Nobody, Nought, Cross };
+  typedef PlayerType GameState[3][3];
+
+  // Forward declaration of all interfaces.
+  interface GameFactory;
+  interface GameIterator;
+  interface Game;
+  interface GameController;
+  interface Player;
+  interface Spectator;
+
+  struct GameInfo {
+    string name;
+    Game   obj;
+  };
+  typedef sequence <GameInfo> GameInfoSeq;
+
+  interface GameFactory {
+    exception NameInUse {};
+
+    Game newGame(in string name) raises (NameInUse);
+    // Create a new game
+
+    GameInfoSeq listGames(in unsigned long how_many, out GameIterator iter);
+    // List the currently active games, returning a sequence with at
+    // most how_many elements. If there are more active games than
+    // that, the iterator is non-nil, permitting the rest of the games
+    // to be retrieved.
+  };
+
+  interface GameIterator {
+    GameInfoSeq next_n(in unsigned long how_many, out boolean more);
+    // Return the next sequence of games, up to a maximum of
+    // how_many. If more is true, there are more games to list.
+
+    void destroy();
+    // Destroy the iterator object.
+  };
+
+  interface Game {
+    readonly attribute string    name;    // Name of this game.
+    readonly attribute short     players; // Number of players registered.
+    readonly attribute GameState state;   // Current state of the game.
+
+    exception CannotJoin {};
+
+    GameController joinGame(in Player p, out PlayerType t)
+      raises (CannotJoin);
+    // Join a new game, passing in a Player object reference. Returns
+    // a GameController object reference used to play the game. The
+    // out argument lets the player know whether they are noughts or
+    // crosses.
+
+    unsigned long watchGame  (in Spectator s, out GameState state);
+    void          unwatchGame(in unsigned long cookie);
+    // Register or unregister a spectator for the game. watchGame()
+    // returns a cookie to be used to unregister. Note the potential
+    // for unregistering other spectators. This should really use an
+    // event or notification service.
+
+    void kill();
+    // Kill the game prematurely.
+  };
+
+  interface GameController {
+    exception SquareOccupied {};
+    exception InvalidCoordinates {};
+    exception NotYourGo {};
+
+    GameState play(in short x, in short y)
+      raises (SquareOccupied, InvalidCoordinates, NotYourGo);
+    // Place a piece at the specified coordinates. Returns the new
+    // game state.
+  };
+
+  interface Player {
+    void yourGo(in GameState state);
+    // Tell the player it is their go, giving the current game state.
+
+    void end(in GameState state, in PlayerType winner);
+    // End of game. winner is Nobody if the game is tied.
+
+    void gameAborted();
+  };
+
+  interface Spectator {
+    void update(in GameState state);
+    // Update the current state of the game.
+
+    void end(in GameState state, in PlayerType winner);
+    void gameAborted();
+  };
+};

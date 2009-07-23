@@ -1,0 +1,10 @@
+
+module Fortune {
+  exception Failure {
+    string message;
+  };
+
+  interface CookieServer {
+    string get_cookie() raises (Failure);
+  };
+};

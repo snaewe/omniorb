@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
+<LINK rel="stylesheet" type="text/css" href="omniORBpy.css">
+<TITLE>Code set conversion</TITLE>
+</HEAD>
+<BODY >
+<A HREF="omniORBpy007.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy009.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+<HR>
+<H1 CLASS="chapter"><A NAME="htoc96">Chapter&#XA0;8</A>&#XA0;&#XA0;Code set conversion</H1><P>
+<A NAME="chap:codesets"></A></P><P>omniORB supports full code set negotiation, used to select and
+translate between different character code sets, for the transmission
+of chars, strings, wchars and wstrings. The support is mostly
+transparent to application code, but there are a number of options
+that can be selected. This chapter covers the options, and also gives
+some pointers about how to implement your own code sets, in case the
+ones that come with omniORB are not sufficient.</P><H2 CLASS="section"><A NAME="toc40"></A><A NAME="htoc97">8.1</A>&#XA0;&#XA0;Native code set</H2><P>For the ORB to know how to handle strings given to it by the
+application, it must know what code set they are represented with, so
+it can properly translate them if need be. The default is ISO 8859-1
+(Latin 1). A different code sets can be chosen at initialisation time
+with the <TT>nativeCharCodeSet</TT> parameter. The supported code sets
+are printed out at initialisation time if the ORB traceLevel is 15 or
+greater.</P><P>For most applications, the default is fine. Some applications may need
+to set the native char code set to UTF-8, allowing the full Unicode
+range to be supported in strings.</P><P>In omniORBpy, wchar and wstring are always represented by the Python
+Unicode type, so there is no need to select a native code set for
+wchar.</P><H2 CLASS="section"><A NAME="toc41"></A><A NAME="htoc98">8.2</A>&#XA0;&#XA0;Code set library</H2><P>To save space in the main ORB core library, most of the code set
+implementations are in a separate library. To load it from Python, you
+must import the <TT>omniORB.codesets</TT> module before calling
+<TT>CORBA.ORB_init()</TT>.</P><H2 CLASS="section"><A NAME="toc42"></A><A NAME="htoc99">8.3</A>&#XA0;&#XA0;Implementing new code sets</H2><P>Code sets must currently be implemented in C++. See the omniORB for
+C++ documentation for details.</P><HR>
+<A HREF="omniORBpy007.html"><IMG SRC="previous_motif.gif" ALT="Previous"></A>
+<A HREF="index.html"><IMG SRC="contents_motif.gif" ALT="Up"></A>
+<A HREF="omniORBpy009.html"><IMG SRC="next_motif.gif" ALT="Next"></A>
+</BODY>
+</HTML>

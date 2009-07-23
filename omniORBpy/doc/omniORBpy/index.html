@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD>
+<TITLE>omniORBpy</TITLE>
+
+<META http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<META name="GENERATOR" content="hevea 1.10">
+<LINK rel="stylesheet" type="text/css" href="omniORBpy.css">
+</HEAD>
+<BODY >
+<!--HEVEA command line is: hevea omniORBpy -->
+<!--HACHA command line is: hacha omniORBpy.html -->
+<DIV CLASS="center"><P> <FONT SIZE=7>The omniORBpy version 3<BR>
+User&#X2019;s Guide
+</FONT></P><P> <FONT SIZE=5>Duncan Grisby<BR>
+</FONT><FONT SIZE=3>(</FONT><FONT SIZE=3><I>email: </I></FONT><A HREF="mailto:dgrisby@apasphere.com"><FONT SIZE=3><I><FONT COLOR=purple>dgrisby@apasphere.com</FONT></I></FONT></A><FONT SIZE=3>)</FONT><FONT SIZE=5><BR>
+Apasphere Ltd.<BR>
+</FONT></P><P>July 2009
+</P></DIV><P><FONT SIZE=5><B>Changes and Additions, June 2007</B></FONT>
+</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+Updates for omniORBpy 3.1.
+</LI></UL><P><FONT SIZE=5><B>Changes and Additions, June 2005</B></FONT>
+</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+New omniORBpy 3 features.
+</LI></UL><P><FONT SIZE=5><B>Changes and Additions, July 2004</B></FONT>
+</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+Minor updates.
+</LI></UL><P><FONT SIZE=5><B>Changes and Additions, November 2002</B></FONT>
+</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+Per thread timeouts.
+</LI><LI CLASS="li-itemize">Minor fixes.
+</LI></UL><P><FONT SIZE=5><B>Changes and Additions, August 2002</B></FONT>
+</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+Updated to omniORBpy 2.
+</LI></UL><P><FONT SIZE=5><B>Contents</B></FONT></P><UL>
+<LI><A HREF="omniORBpy001.html">Introduction</A>
+<UL>
+<LI><A HREF="omniORBpy001.html#toc1">Features</A>
+</LI><LI><A HREF="omniORBpy001.html#toc2">Setting up your environment</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy002.html">The Basics</A>
+<UL>
+<LI><A HREF="omniORBpy002.html#toc3">The Echo example</A>
+</LI><LI><A HREF="omniORBpy002.html#toc4">Generating the Python stubs</A>
+</LI><LI><A HREF="omniORBpy002.html#toc5">Object References and Servants</A>
+</LI><LI><A HREF="omniORBpy002.html#toc6">Example 1 &#X2014; Colocated client and servant</A>
+</LI><LI><A HREF="omniORBpy002.html#toc7">Example 2 &#X2014; Different Address Spaces</A>
+</LI><LI><A HREF="omniORBpy002.html#toc8">Example 3 &#X2014; Using the Naming Service</A>
+</LI><LI><A HREF="omniORBpy002.html#toc9">Global IDL definitions</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy003.html">Python language mapping issues</A>
+<UL>
+<LI><A HREF="omniORBpy003.html#toc10">Narrowing object references</A>
+</LI><LI><A HREF="omniORBpy003.html#toc11">Support for Any values</A>
+</LI><LI><A HREF="omniORBpy003.html#toc12">Interface Repository stubs</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy004.html">omniORB configuration and API</A>
+<UL>
+<LI><A HREF="omniORBpy004.html#toc13">Setting parameters</A>
+</LI><LI><A HREF="omniORBpy004.html#toc14">Tracing options</A>
+</LI><LI><A HREF="omniORBpy004.html#toc15">Miscellaneous global options</A>
+</LI><LI><A HREF="omniORBpy004.html#toc16">Client side options</A>
+</LI><LI><A HREF="omniORBpy004.html#toc17">Server side options</A>
+</LI><LI><A HREF="omniORBpy004.html#toc18">GIOP and interoperability options</A>
+</LI><LI><A HREF="omniORBpy004.html#toc19">System Exception Handlers</A>
+</LI><LI><A HREF="omniORBpy004.html#toc20">Location forwarding</A>
+</LI><LI><A HREF="omniORBpy004.html#toc21">Dynamic importing of IDL</A>
+</LI><LI><A HREF="omniORBpy004.html#toc22">C++ API</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy005.html">The IDL compiler</A>
+<UL>
+<LI><A HREF="omniORBpy005.html#toc23">Common options</A>
+</LI><LI><A HREF="omniORBpy005.html#toc24">Python back-end options</A>
+</LI><LI><A HREF="omniORBpy005.html#toc25">Examples</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy006.html">Interoperable Naming Service</A>
+<UL>
+<LI><A HREF="omniORBpy006.html#toc26">Object URIs</A>
+</LI><LI><A HREF="omniORBpy006.html#toc27">Configuring resolve_initial_references</A>
+</LI><LI><A HREF="omniORBpy006.html#toc28">omniNames</A>
+</LI><LI><A HREF="omniORBpy006.html#toc29">omniMapper</A>
+</LI><LI><A HREF="omniORBpy006.html#toc30">Creating objects with simple object keys</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy007.html">Connection and Thread Management</A>
+<UL>
+<LI><A HREF="omniORBpy007.html#toc31">Background</A>
+</LI><LI><A HREF="omniORBpy007.html#toc32">The model</A>
+</LI><LI><A HREF="omniORBpy007.html#toc33">Client side behaviour</A>
+</LI><LI><A HREF="omniORBpy007.html#toc34">Server side behaviour</A>
+</LI><LI><A HREF="omniORBpy007.html#toc35">Idle connection shutdown</A>
+</LI><LI><A HREF="omniORBpy007.html#toc36">Transports and endpoints</A>
+</LI><LI><A HREF="omniORBpy007.html#toc37">Connection selection and acceptance</A>
+</LI><LI><A HREF="omniORBpy007.html#toc38">Bidirectional GIOP</A>
+</LI><LI><A HREF="omniORBpy007.html#toc39">SSL transport</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy008.html">Code set conversion</A>
+<UL>
+<LI><A HREF="omniORBpy008.html#toc40">Native code set</A>
+</LI><LI><A HREF="omniORBpy008.html#toc41">Code set library</A>
+</LI><LI><A HREF="omniORBpy008.html#toc42">Implementing new code sets</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy009.html">Interceptors</A>
+</LI><LI><A HREF="omniORBpy010.html">Objects by value</A>
+<UL>
+<LI><A HREF="omniORBpy010.html#toc43">Features</A>
+</LI><LI><A HREF="omniORBpy010.html#toc44">Value sharing and local calls</A>
+</LI><LI><A HREF="omniORBpy010.html#toc45">Value factories</A>
+</LI><LI><A HREF="omniORBpy010.html#toc46">Standard value boxes</A>
+</LI><LI><A HREF="omniORBpy010.html#toc47">Values inside Anys</A>
+</LI></UL>
+</LI><LI><A HREF="omniORBpy011.html">References</A>
+</LI></UL>
+<!--FOOTER-->
+<HR SIZE=2><BLOCKQUOTE CLASS="quote"><EM>This document was translated from L<sup>A</sup>T<sub>E</sub>X by
+</EM><A HREF="http://hevea.inria.fr/index.html"><EM>H</EM><EM><FONT SIZE=2><sup>E</sup></FONT></EM><EM>V</EM><EM><FONT SIZE=2><sup>E</sup></FONT></EM><EM>A</EM></A><EM>.</EM></BLOCKQUOTE></BODY>
+</HTML>
