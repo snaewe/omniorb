@@ -227,14 +227,14 @@ cdrStream::put_small_octet_array(const _CORBA_Octet* b, int size)
 // to be easy to understand.
 
 void
-operator>>=(_CORBA_LongDouble a, cdrStream& s)
+cdrStream::marshalLongDouble(_CORBA_LongDouble a)
 {
   _CORBA_Octet  mbuf[16];
   _CORBA_Octet* dbuf = (_CORBA_Octet*)&a;
 
   memset(mbuf, 0, 16);
 
-  if (s.pd_marshal_byte_swap) { // big endian
+  if (pd_marshal_byte_swap) { // big endian
     // Sign and exponent
     mbuf[0] = dbuf[9];
     mbuf[1] = dbuf[8];
@@ -264,20 +264,21 @@ operator>>=(_CORBA_LongDouble a, cdrStream& s)
     mbuf[ 7] = (dbuf[1] << 1) | (dbuf[0] >> 7);
     mbuf[ 6] = (dbuf[0] << 1);
   }
-  s.put_octet_array((_CORBA_Octet*)mbuf, 16, omni::ALIGN_8);
+  put_octet_array((_CORBA_Octet*)mbuf, 16, omni::ALIGN_8);
 }
 
-void
-operator<<=(_CORBA_LongDouble& a, cdrStream& s)
+_CORBA_LongDouble
+cdrStream::unmarshalLongDouble()
 {
+  _CORBA_LongDouble a;
   _CORBA_Octet  mbuf[16];
   _CORBA_Octet* dbuf = (_CORBA_Octet*)&a;
 
-  s.get_octet_array((_CORBA_Octet*)mbuf, 16, omni::ALIGN_8);
+  get_octet_array((_CORBA_Octet*)mbuf, 16, omni::ALIGN_8);
 
   dbuf[11] = dbuf[10] = 0;
 
-  if (s.pd_unmarshal_byte_swap) { // big endian
+  if (pd_unmarshal_byte_swap) { // big endian
     // Sign and exponent
     dbuf[9] = mbuf[0];
     dbuf[8] = mbuf[1];
@@ -307,11 +308,45 @@ operator<<=(_CORBA_LongDouble& a, cdrStream& s)
     dbuf[1] = (mbuf[ 8] << 7) | (mbuf[ 7] >> 1);
     dbuf[0] = (mbuf[ 7] << 7) | (mbuf[ 6] >> 1);
   }
+  return a;
 }
 
 #  endif // SIZEOF_LONG_DOUBLE == 12
 #endif // HAS_LongDouble
 
+
+/////////////////////////////////////////////////////////////////////////////
+#define fetchReserveMarshalFns(type, align)\
+void cdrStream::reserveAndMarshal ## type(CORBA::type a) \
+{ \
+  if (reserveOutputSpaceForPrimitiveType(align, sizeof(CORBA::type))) \
+    marshal ## type(a); \
+} \
+CORBA::type cdrStream::fetchAndUnmarshal ## type() \
+{ \
+  fetchInputData(align, sizeof(CORBA::type)); \
+  return unmarshal ## type(); \
+}
+
+fetchReserveMarshalFns(Octet,      omni::ALIGN_1)
+fetchReserveMarshalFns(Short,      omni::ALIGN_2)
+fetchReserveMarshalFns(UShort,     omni::ALIGN_2)
+fetchReserveMarshalFns(Long,       omni::ALIGN_4)
+fetchReserveMarshalFns(ULong,      omni::ALIGN_4)
+
+#ifdef HAS_LongLong
+fetchReserveMarshalFns(LongLong,   omni::ALIGN_8)
+fetchReserveMarshalFns(ULongLong,  omni::ALIGN_8)
+#endif
+
+#ifndef NO_FLOAT
+fetchReserveMarshalFns(Double,     omni::ALIGN_8)
+
+#  if defined(HAS_LongDouble) && defined(HAS_LongLong)
+fetchReserveMarshalFns(LongDouble, omni::ALIGN_8)
+#  endif
+
+#endif
 
 
 /////////////////////////////////////////////////////////////////////////////
