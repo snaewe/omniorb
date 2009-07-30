@@ -911,7 +911,7 @@ get_octet_array(_CORBA_Octet* b, int size, omni::alignment_t align)
     // More octets left in this chunk (but not in the buffer)
     copyStateToActual();
 
-    if (pd_remaining <= size) {
+    if (pd_remaining <= (_CORBA_ULong)size) {
       pd_actual.get_octet_array(b, pd_remaining, align);
       size -= pd_remaining;
       b += pd_remaining;

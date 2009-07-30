@@ -411,8 +411,8 @@ omniObjTable::resize()
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
-  OMNIORB_ASSERT(numObjectsInTable > maxNumObjects ||
-		 numObjectsInTable < minNumObjects && objectTableSizeI > 0);
+  OMNIORB_ASSERT((numObjectsInTable > maxNumObjects) ||
+		 (numObjectsInTable < minNumObjects && objectTableSizeI > 0));
 
   if (numObjectsInTable > maxNumObjects) {
     ++objectTableSizeI;

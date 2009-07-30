@@ -3968,12 +3968,12 @@ transfer_and_check_policies(omniOrbPOA::Policies& pout,
 	PortableServer::RequestProcessingPolicy_var p;
 	p = PortableServer::RequestProcessingPolicy::_narrow(pin[i]);
 	if( seen.req_processing ) {
-	  if( pout.req_processing == omniOrbPOA::RPP_ACTIVE_OBJ_MAP &&
-	      p->value() != PortableServer::USE_ACTIVE_OBJECT_MAP_ONLY ||
-	      pout.req_processing == omniOrbPOA::RPP_DEFAULT_SERVANT &&
-	      p->value() != PortableServer::USE_DEFAULT_SERVANT ||
-	      pout.req_processing == omniOrbPOA::RPP_SERVANT_MANAGER &&
-	      p->value() != PortableServer::USE_SERVANT_MANAGER )
+	  if( (pout.req_processing == omniOrbPOA::RPP_ACTIVE_OBJ_MAP &&
+	       p->value() != PortableServer::USE_ACTIVE_OBJECT_MAP_ONLY) ||
+	      (pout.req_processing == omniOrbPOA::RPP_DEFAULT_SERVANT &&
+	       p->value() != PortableServer::USE_DEFAULT_SERVANT) ||
+	      (pout.req_processing == omniOrbPOA::RPP_SERVANT_MANAGER &&
+	       p->value() != PortableServer::USE_SERVANT_MANAGER) )
 	    throw PortableServer::POA::InvalidPolicy(i);
 	}
 	switch( p->value() ) {
