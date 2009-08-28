@@ -1,3 +1,25 @@
+Fri Aug 28 12:05:01 BST 2009 dgrisby
+====================================
+
+- Bump stub version symbol to 4.2; move ptr_arith_t to CORBA_sysdep.h.
+
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/omniInternal.h
+src/lib/omniORB/dynamic/constants.cc
+src/lib/omniORB/omniidl_be/cxx/config.py
+src/lib/omniORB/orbcore/constants.cc
+
+- Updates to sequence mapping. Grow exponentially; free if set
+  zero-length; C++ mapping fix for allocbuf() on bounded sequences.
+
+include/omniORB4/cdrStream.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/seqTemplatedefns.h
+include/omniORB4/valueTemplatedecls.h
+include/omniORB4/valueTemplatedefns.h
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+
 Thu Jul 30 16:02:25 BST 2009 dgrisby
 ====================================
 

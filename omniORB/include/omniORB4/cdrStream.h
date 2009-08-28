@@ -3,7 +3,7 @@
 // cdrStream.h                Created on: 11/1/99
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2003-2007 Apasphere Ltd
+//    Copyright (C) 2003-2009 Apasphere Ltd
 //    Copyright (C) 1999      AT&T Laboratories, Cambridge
 //
 //    This file is part of the omniORB library
@@ -27,131 +27,6 @@
 // Description:
 //	*** PROPRIETARY INTERFACE ***
 //
-
-/*
-  $Log$
-  Revision 1.1.4.17  2007/04/12 19:50:33  dgrisby
-  A few cases of sizeof(bool) > 1 were not handled correctly.
-
-  Revision 1.1.4.16  2007/02/11 23:44:59  dgrisby
-  Value chunk stream looked at wrong byteswap flag in getLength.
-
-  Revision 1.1.4.15  2006/06/06 16:39:37  dgrisby
-  marshalRawString and chunking stream did not byte-swap length fields
-  when required to.
-
-  Revision 1.1.4.14  2006/05/21 17:43:24  dgrisby
-  Remove obsolete pd_chunked flag.
-
-  Revision 1.1.4.13  2006/05/20 16:23:37  dgrisby
-  Minor cdrMemoryStream and TypeCode performance tweaks.
-
-  Revision 1.1.4.12  2006/05/15 10:13:00  dgrisby
-  Data was overwritten when a chunk ended with an array; make
-  declareArrayLength() virtual.
-
-  Revision 1.1.4.11  2006/04/28 18:40:46  dgrisby
-  Merge from omni4_0_develop.
-
-  Revision 1.1.4.10  2005/12/08 14:22:31  dgrisby
-  Better string marshalling performance; other minor optimisations.
-
-  Revision 1.1.4.9  2005/07/22 17:18:40  dgrisby
-  Another merge from omni4_0_develop.
-
-  Revision 1.1.4.8  2005/01/06 23:08:09  dgrisby
-  Big merge from omni4_0_develop.
-
-  Revision 1.1.4.7  2005/01/06 17:31:07  dgrisby
-  Changes (mainly from omni4_0_develop) to compile on gcc 3.4.
-
-  Revision 1.1.4.6  2004/07/23 10:29:56  dgrisby
-  Completely new, much simpler Any implementation.
-
-  Revision 1.1.4.5  2004/07/04 23:53:35  dgrisby
-  More ValueType TypeCode and Any support.
-
-  Revision 1.1.4.4  2003/11/06 11:56:55  dgrisby
-  Yet more valuetype. Plain valuetype and abstract valuetype are now working.
-
-  Revision 1.1.4.3  2003/07/10 21:52:31  dgrisby
-  Value chunks should start after URL / repoids.
-
-  Revision 1.1.4.2  2003/05/20 16:53:12  dgrisby
-  Valuetype marshalling support.
-
-  Revision 1.1.4.1  2003/03/23 21:04:17  dgrisby
-  Start of omniORB 4.1.x development branch.
-
-  Revision 1.1.2.20  2003/03/02 17:10:41  dgrisby
-  AIX patches integrated in main tree.
-
-  Revision 1.1.2.19  2002/03/14 14:39:44  dpg1
-  Obscure bug in objref creation with unaligned buffers.
-
-  Revision 1.1.2.18  2002/03/11 12:23:03  dpg1
-  Tweaks to avoid compiler warnings.
-
-  Revision 1.1.2.17  2001/11/14 17:13:41  dpg1
-  Long double support.
-
-  Revision 1.1.2.16  2001/10/17 16:33:27  dpg1
-  New downcast mechanism for cdrStreams.
-
-  Revision 1.1.2.15  2001/09/19 17:29:04  dpg1
-  Cosmetic changes.
-
-  Revision 1.1.2.14  2001/08/22 13:29:45  dpg1
-  Re-entrant Any marshalling.
-
-  Revision 1.1.2.13  2001/08/17 17:02:22  sll
-  Removed static variables ncs_c, ncs_w, default_tcs_c, default_tcs_w.
-
-  Revision 1.1.2.12  2001/07/31 16:32:02  sll
-  Added virtual function is_giopStream to check if a cdrStream is a giopStream.
-  That is, a poor man's substitute for dynamic_cast.
-
-  Revision 1.1.2.11  2001/06/13 19:58:37  sll
-  Added omni namespace scoping for omniCodeSet.
-
-  Revision 1.1.2.10  2001/05/10 15:03:50  dpg1
-  Update cdrStreamAdapter to modified cdrStream interface.
-
-  Revision 1.1.2.9  2001/04/18 17:50:44  sll
-  Big checkin with the brand new internal APIs.
-  Scoped where appropriate with the omni namespace.
-
-  Revision 1.1.2.8  2001/01/09 17:16:59  dpg1
-  New cdrStreamAdapter class to allow omniORBpy to intercept buffer
-  management.
-
-  Revision 1.1.2.7  2000/12/05 17:39:31  dpg1
-  New cdrStream functions to marshal and unmarshal raw strings.
-
-  Revision 1.1.2.6  2000/11/22 14:37:58  dpg1
-  Code set marshalling functions now take a string length argument.
-
-  Revision 1.1.2.5  2000/11/15 17:16:23  sll
-  Added char, wchar codeset convertor support to cdrStream.
-
-  Revision 1.1.2.4  2000/11/09 12:27:49  dpg1
-  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
-
-  Revision 1.1.2.3  2000/11/03 18:49:16  sll
-  Separate out the marshalling of byte, octet and char into 3 set of distinct
-  marshalling functions.
-  Renamed put_char_array and get_char_array to put_octet_array and
-  get_octet_array.
-  New string marshal member functions.
-
-  Revision 1.1.2.2  2000/10/10 10:14:27  sll
-  Extra ctor for cdrEncapsulationStream which initialise the buffer by
-  fetching data from the argument cdrStream.
-
-  Revision 1.1.2.1  2000/09/27 16:54:08  sll
-  *** empty log message ***
-
-*/
 
 #ifndef __CDRSTREAM_H__
 #define __CDRSTREAM_H__
@@ -228,21 +103,21 @@ public:
   //
   // Byte swapping functions
 
-  inline _CORBA_Short byteSwap(_CORBA_Short s) {
+  static inline _CORBA_Short byteSwap(_CORBA_Short s) {
     return (((s & 0xff00) >> 8 |
 	     (s & 0x00ff) << 8));
   }
-  inline _CORBA_UShort byteSwap(_CORBA_UShort s) {
+  static inline _CORBA_UShort byteSwap(_CORBA_UShort s) {
     return (((s & 0xff00) >> 8 |
 	     (s & 0x00ff) << 8));
   }
-  inline _CORBA_Long byteSwap(_CORBA_Long l) {
+  static inline _CORBA_Long byteSwap(_CORBA_Long l) {
     return (((l & 0xff000000) >> 24) |
 	    ((l & 0x00ff0000) >> 8)  |
 	    ((l & 0x0000ff00) << 8)  |
 	    ((l & 0x000000ff) << 24));
   }
-  inline _CORBA_ULong byteSwap(_CORBA_ULong l) {
+  static inline _CORBA_ULong byteSwap(_CORBA_ULong l) {
     return (((l & 0xff000000) >> 24) |
 	    ((l & 0x00ff0000) >> 8)  |
 	    ((l & 0x0000ff00) << 8)  |
@@ -250,7 +125,7 @@ public:
   }
 
 #ifdef HAS_LongLong
-  inline _CORBA_LongLong byteSwap(_CORBA_LongLong l) {
+  static inline _CORBA_LongLong byteSwap(_CORBA_LongLong l) {
     return (((l & _CORBA_LONGLONG_CONST(0xff00000000000000)) >> 56) |
 	    ((l & _CORBA_LONGLONG_CONST(0x00ff000000000000)) >> 40) |
 	    ((l & _CORBA_LONGLONG_CONST(0x0000ff0000000000)) >> 24) |
@@ -260,7 +135,7 @@ public:
 	    ((l & _CORBA_LONGLONG_CONST(0x000000000000ff00)) << 40) |
 	    ((l & _CORBA_LONGLONG_CONST(0x00000000000000ff)) << 56));
   }
-  inline _CORBA_ULongLong byteSwap(_CORBA_ULongLong l) {
+  static inline _CORBA_ULongLong byteSwap(_CORBA_ULongLong l) {
     return (((l & _CORBA_LONGLONG_CONST(0xff00000000000000)) >> 56) |
 	    ((l & _CORBA_LONGLONG_CONST(0x00ff000000000000)) >> 40) |
 	    ((l & _CORBA_LONGLONG_CONST(0x0000ff0000000000)) >> 24) |

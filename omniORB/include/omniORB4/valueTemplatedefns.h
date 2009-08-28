@@ -3,7 +3,7 @@
 // valueTemplatedefns.h       Created on: 2005/01/06
 //                            Author    : Duncan Grisby
 //
-//    Copyright (C) 2005 Apasphere Ltd.
+//    Copyright (C) 2005-2009 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -31,14 +31,13 @@
 #define __VALUETEMPLATEDEFNS_H__
 
 
-
 template <class T, class ElemT, class T_Helper>
 inline void
 _CORBA_Sequence_Value<T,ElemT,T_Helper>::operator>>= (cdrStream& s) const
 {
   ::operator>>=(_CORBA_ULong(pd_len), s);
   for (int i = 0; i < (int)pd_len; i++)
-    T_Helper::marshal(pd_data[i], s);
+    T_Helper::marshal(pd_buf[i], s);
 }
 
 template <class T, class ElemT, class T_Helper>
@@ -50,11 +49,21 @@ _CORBA_Sequence_Value<T,ElemT,T_Helper>::operator<<= (cdrStream &s) {
     _CORBA_marshal_sequence_range_check_error(s);
     // never reach here
   }
-  length(l);
-  for( _CORBA_ULong i = 0; i < l; i++ )
-    operator[](i) = T_Helper::unmarshal(s);
-}
 
+  _CORBA_ULong i;
+
+  if (pd_rel) {
+    for (i=0; i < pd_len; i++) {
+      T_Helper::remove_ref(pd_buf[i]);
+      pd_buf[i] = 0;
+    }
+  }
+  pd_len = 0;
+
+  length(l);
+  for (i = 0; i < l; i++)
+    pd_buf[i] = T_Helper::unmarshal(s);
+}
 
 
 #endif // __VALUETEMPLATEDEFNS_H__
