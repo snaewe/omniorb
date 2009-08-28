@@ -27,34 +27,6 @@
 // Description:
 //	
 
-/*
-  $Log$
-  Revision 1.4.2.3  2004/07/04 23:53:36  dgrisby
-  More ValueType TypeCode and Any support.
-
-  Revision 1.4.2.2  2003/09/26 16:12:54  dgrisby
-  Start of valuetype support.
-
-  Revision 1.4.2.1  2003/03/23 21:02:51  dgrisby
-  Start of omniORB 4.1.x development branch.
-
-  Revision 1.2.2.3  2001/10/17 16:44:02  dpg1
-  Update DynAny to CORBA 2.5 spec, const Any exception extraction.
-
-  Revision 1.2.2.2  2000/09/27 17:25:40  sll
-  Changed include/omniORB3 to include/omniORB4.
-
-  Revision 1.2.2.1  2000/07/17 10:35:40  sll
-  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
-
-  Revision 1.3  2000/07/13 15:26:03  dpg1
-  Merge from omni3_develop for 3.0 release.
-
-  Revision 1.1.2.1  1999/09/22 14:26:28  djr
-  Major rewrite of orbcore to support POA.
-
-*/
-
 #include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
@@ -65,7 +37,7 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 // See the description of this variable in omniInternal.h
-const char* omniORB_4_1_dyn = "omniORB dynamic library version 4.1.x";
+const char* omniORB_4_2_dyn = "omniORB dynamic library version 4.2.x";
 
 OMNI_NAMESPACE_END(omni)
 

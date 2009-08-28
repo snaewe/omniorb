@@ -3,7 +3,7 @@
 // CORBA_sysdep.h             Created on: 30/1/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2003-2008 Apasphere Ltd
+//    Copyright (C) 2003-2009 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -31,62 +31,6 @@
 //      about the system and the compiler used.
 // 
 
-/*
- $Log$
- Revision 1.5.2.10  2008/03/24 20:17:20  dgrisby
- Sun's compiler doesn't like the <: in const_cast<::CORBA...>.
-
- Revision 1.5.2.9  2007/02/05 17:39:17  dgrisby
- Later Sun compilers require a dummy return.
-
- Revision 1.5.2.8  2007/01/12 10:19:51  dgrisby
- Support for MontaVista ARM Linux.
-
- Revision 1.5.2.7  2006/04/28 18:40:46  dgrisby
- Merge from omni4_0_develop.
-
- Revision 1.5.2.6  2006/01/10 12:24:04  dgrisby
- Merge from omni4_0_develop pre 4.0.7 release.
-
- Revision 1.5.2.5  2005/11/17 17:03:27  dgrisby
- Merge from omni4_0_develop.
-
- Revision 1.5.2.4  2005/07/22 17:18:40  dgrisby
- Another merge from omni4_0_develop.
-
- Revision 1.5.2.3  2005/07/11 17:47:31  dgrisby
- VMS changes from Bruce Visscher.
-
- Revision 1.5.2.2  2005/01/06 23:08:07  dgrisby
- Big merge from omni4_0_develop.
-
- Revision 1.5.2.1  2003/03/23 21:04:22  dgrisby
- Start of omniORB 4.1.x development branch.
-
- Revision 1.2.2.23  2003/03/02 17:10:40  dgrisby
- AIX patches integrated in main tree.
-
- Revision 1.2.2.22  2003/02/17 02:03:07  dgrisby
- vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
-
- Revision 1.2.2.21  2003/01/16 12:47:08  dgrisby
- Const cast macro. Thanks Matej Kenda.
-
- Revision 1.2.2.20  2003/01/16 11:08:26  dgrisby
- Patches to support Digital Mars C++. Thanks Christof Meerwald.
-
- Revision 1.2.2.19  2002/02/18 11:59:12  dpg1
- Full autoconf support.
-
- Revision 1.2.2.18  2002/01/15 16:38:09  dpg1
- On the road to autoconf. Dependencies refactored, configure.ac
- written. No makefiles yet.
-
-
- Log truncated.
-
-*/
-
 #ifndef __CORBA_SYSDEP_H__
 #define __CORBA_SYSDEP_H__
 
@@ -111,6 +55,21 @@
 #  include <omniORB4/CORBA_sysdep_trad.h>
 #else
 #  include <omniORB4/CORBA_sysdep_auto.h>
+#endif
+
+
+//
+// Pointer arithmetic type
+//
+
+#if SIZEOF_PTR == SIZEOF_LONG
+typedef unsigned long omni_ptr_arith_t;
+#elif SIZEOF_PTR == SIZEOF_INT
+typedef unsigned int omni_ptr_arith_t;
+#elif defined (_WIN64)
+typedef size_t omni_ptr_arith_t;
+#else
+#error "No suitable type to do pointer arithmetic"
 #endif
 
 

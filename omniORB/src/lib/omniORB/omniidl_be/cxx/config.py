@@ -28,40 +28,6 @@
 #   Global state of the C++ backend is stored here
 #
 # $Id$
-# $Log$
-# Revision 1.17.2.5  2007/05/11 09:52:27  dgrisby
-# New -Wbguard_prefix option. Thanks Austin Bingham.
-#
-# Revision 1.17.2.4  2005/11/18 18:23:06  dgrisby
-# New -Wbimpl_mapping option.
-#
-# Revision 1.17.2.3  2005/01/06 23:09:49  dgrisby
-# Big merge from omni4_0_develop.
-#
-# Revision 1.17.2.2  2003/10/23 11:25:54  dgrisby
-# More valuetype support.
-#
-# Revision 1.17.2.1  2003/03/23 21:02:42  dgrisby
-# Start of omniORB 4.1.x development branch.
-#
-# Revision 1.14.2.6  2002/09/03 09:32:57  dgrisby
-# C++ back-end bails out if asked to compile more than one file.
-#
-# Revision 1.14.2.5  2001/11/08 16:33:51  dpg1
-# Local servant POA shortcut policy.
-#
-# Revision 1.14.2.4  2001/06/08 17:12:11  dpg1
-# Merge all the bug fixes from omni3_develop.
-#
-# Revision 1.14.2.3  2000/11/03 19:25:42  sll
-# Updated library name to omniORB4.
-#
-# Revision 1.14.2.2  2000/10/12 15:37:46  sll
-# Updated from omni3_1_develop.
-#
-# Revision 1.15.2.2  2000/08/21 11:34:32  djs
-# Lots of omniidl/C++ backend changes
-#
 
 import string
 
@@ -78,7 +44,7 @@ class ConfigurationState:
             # Useful data from CVS
             'CVS ID':                '$Id$',
             # Relevant omniORB C++ library version
-            'Library Version':       'omniORB_4_1',
+            'Library Version':       'omniORB_4_2',
             # Suffix of generated header file
             'HH Suffix':             '.hh',
             # Suffix of generated Skeleton file
