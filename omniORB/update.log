@@ -1,3 +1,18 @@
+Thu Sep  3 18:53:51 BST 2009 dgrisby
+====================================
+
+- New VC++ 10 platform file. Thanks John Kamp.
+
+mk/platforms/x86_win32_vs_10.mk
+
+- MinGW build fixes. Thanks Sampo Ahokas.
+
+include/omniORB4/linkHacks.h
+src/lib/dir.mk
+src/lib/omniORB/connections/dir.mk
+src/lib/omniORB/orbcore/ssl/dir.mk
+
+
 Thu Sep  3 16:50:45 BST 2009 dgrisby
 ====================================
 
