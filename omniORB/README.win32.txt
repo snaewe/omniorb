@@ -202,12 +202,12 @@ c) Set up macros and libraries:
     7. Select The Input Tab
     8. add The following Libraries to "Additional Dependencies"
 
-       ws2_32.lib, mswsock.lib, advapi32.lib, omniORB410_rt.lib,
-       omniDynamic410_rt.lib, omnithread32_rt.lib
+       ws2_32.lib, mswsock.lib, advapi32.lib, omniORB4_rt.lib,
+       omniDynamic4_rt.lib, omnithread_rt.lib
 
        If you are building a debug executable, the debug version of
-       the libraries: omniORB410_rtd.lib, omniDynamic410_rtd.lib and
-       omnithread32_rtd.lib should be used.
+       the libraries: omniORB4_rtd.lib, omniDynamic4_rtd.lib and
+       omnithread_rtd.lib should be used.
 
   d)   Your project is now set up, and you can build it.     
 
@@ -254,12 +254,12 @@ c) Set up macros and libraries:
 
     6. In the "Category" box, select "Input". In the "Object/library
        modules" box, add the following libraries: ws2_32.lib,
-       mswsock.lib, advapi32.lib, omniORB410_rt.lib,
-       omniDynamic410_rt.lib, omnithread32_rt.lib
+       mswsock.lib, advapi32.lib, omniORB4_rt.lib,
+       omniDynamic4_rt.lib, omnithread_rt.lib
 
        If you are building a debug executable, the debug version of
-       the libraries: omniORB410_rtd.lib, omniDynamic410_rtd.lib and
-       omnithread32_rtd.lib should be used.
+       the libraries: omniORB4_rtd.lib, omniDynamic4_rtd.lib and
+       omnithread_rtd.lib should be used.
 
 d) Your project is now set up, and you can build it.
 
@@ -269,8 +269,8 @@ Important:
 
 If you want to use the static versions of omniORB and omnithread, you
 must add the macro _WINSTATIC (see step (c) 4* or 5#, above), and
-replace the libraries omniORB410_rt.lib, omniDynamic410_rt.lib and
-omnithread32_rt.lib with omniORB4.lib, omniDynamic4.lib and
+replace the libraries omniORB4_rt.lib, omniDynamic4_rt.lib and
+omnithread_rt.lib with omniORB4.lib, omniDynamic4.lib and
 omnithread.lib (see step (c) 6* or 8#, above).
 
 * If Using VC 5/6
