@@ -1,3 +1,11 @@
+Thu Sep  3 16:42:12 BST 2009 dgrisby
+====================================
+
+- Memory leak if POA cannot be initialised due to clashing endPoint.
+
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Sun Jul 19 18:35:23 BST 2009 dgrisby
 ====================================
 
