@@ -218,13 +218,15 @@ public:
   }
 
   inline T_element& operator= (const T_element& p) {
-    if (pd_rel) {
-      T_Helper::remove_ref(_pd_val);
-      _pd_val = p._pd_val;
-      T_Helper::add_ref(_pd_val);
+    if (p._pd_val != _pd_val) {
+      if (pd_rel) {
+        T_Helper::remove_ref(_pd_val);
+        _pd_val = p._pd_val;
+        T_Helper::add_ref(_pd_val);
+      }
+      else
+        _pd_val = p._pd_val;
     }
-    else
-      _pd_val = p._pd_val;
     return *this;
   }
 

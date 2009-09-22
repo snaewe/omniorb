@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.1.4     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.1.4">
+
+<bug id="1" date="Tue Sep 22 16:02:46 BST 2009" user="dgrisby">
+  <summary>Error in element self-assignment</summary>
+  <reported>Felix Nawothnig</reported>
+  <text>
+  Element classes did not cope properly with self-assignment.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2009-September/030279.html"/>
+</bug>
+
+</buglist>

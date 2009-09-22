@@ -18,7 +18,7 @@ SSL_OBJS      = $(SSL_SRCS:.cc=.o)
 CXXSRCS       = $(SSL_SRCS)
 
 ifdef Win32Platform
-EXTRA_LIBS    = $(SOCKET_LIB) advapi32.lib
+EXTRA_LIBS    = $(SOCKET_LIB) $(patsubst %,$(LibNoDebugSearchPattern),advapi32)
 SHARED_ONLY_OBJS = msvcdllstub.o
 DIR_CPPFLAGS += -D"NTArchitecture"
 MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC

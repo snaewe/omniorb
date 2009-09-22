@@ -1,3 +1,23 @@
+Tue Sep 22 17:40:30 BST 2009 dgrisby
+====================================
+
+- Merge changes from 4.1 up to r5916.
+
+README.win32.txt
+THIS_IS_OMNIORB_DEVELOPMENT_BRANCH
+bugfixes-414.xml
+include/omniORB4/linkHacks.h
+include/omniORB4/stringtypes.h
+include/omniORB4/templatedecls.h
+include/omniORB4/valueTemplatedecls.h
+include/omniORB4/wstringtypes.h
+mk/platforms/x86_win32_vs_10.mk
+src/lib/dir.mk
+src/lib/omniORB/connections/dir.mk
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/ssl/dir.mk
+
+
 Fri Aug 28 12:05:01 BST 2009 dgrisby
 ====================================
 

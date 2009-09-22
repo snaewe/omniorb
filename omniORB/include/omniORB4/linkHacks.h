@@ -69,7 +69,7 @@
     return _omni_ ## modname ## _forcelink_; \
   }
 
-#elif defined(__WIN32__)
+#elif defined(_MSC_VER)
 
 // The Windows non-uniform memory model means that we cannot access
 // the integer's value. Referring to its address is sufficient to
