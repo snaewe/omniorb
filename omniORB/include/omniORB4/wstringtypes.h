@@ -370,7 +370,7 @@ public:
   }
 
   inline _CORBA_WString_element& operator=(const _CORBA_WString_element& s) {
-    if (&s != this) {
+    if (s.pd_data != pd_data) {
       if (pd_rel)
 	_CORBA_WString_helper::free(pd_data);
       if (s.pd_data && s.pd_data != _CORBA_WString_helper::empty_wstring)
