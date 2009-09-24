@@ -1,3 +1,11 @@
+Thu Sep 24 10:30:36 BST 2009 dgrisby
+====================================
+
+- Some missing semicolons upset some compilers.
+
+include/omniORB4/cdrStream.h
+
+
 Tue Sep 22 17:40:30 BST 2009 dgrisby
 ====================================
 

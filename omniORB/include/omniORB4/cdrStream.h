@@ -275,7 +275,7 @@ public:
     if ((void*)p2 <= pd_outb_end) {
       pd_outb_mkr = (void*) p2;
 
-      struct LongArray2 { _CORBA_ULong l[2] };
+      struct LongArray2 { _CORBA_ULong l[2]; };
       union { _CORBA_Double a; LongArray2 l; } u;
       u.a = a;
 
@@ -308,7 +308,7 @@ public:
     if ((void*)p2 <= pd_inb_end) {
       pd_inb_mkr = (void*) p2;
 
-      struct LongArray2 { _CORBA_ULong l[2] };
+      struct LongArray2 { _CORBA_ULong l[2]; };
       union { _CORBA_Double a; LongArray2 l; } u;
 
       if (!pd_unmarshal_byte_swap) {
@@ -358,7 +358,7 @@ public:
     if ((void*)p2 <= pd_outb_end) {
       pd_outb_mkr = (void*) p2;
 
-      struct LongArray2 { _CORBA_ULong l[2] };
+      struct LongArray2 { _CORBA_ULong l[2]; };
 
       LongArray2 l = OMNI_REINTERPRET_CAST(LongArray2, a);
       
@@ -384,7 +384,7 @@ public:
     if ((void*)p2 <= pd_inb_end) {
       pd_inb_mkr = (void*) p2;
 
-      struct LongArray2 { _CORBA_ULong l[2] };
+      struct LongArray2 { _CORBA_ULong l[2]; };
 
       LongArray2 l;
 
@@ -419,7 +419,7 @@ public:
     if ((void*)p2 <= pd_outb_end) {
       pd_outb_mkr = (void*) p2;
 
-      struct LongLongArray2 { _CORBA_ULongLong l[2] };
+      struct LongLongArray2 { _CORBA_ULongLong l[2]; };
       union { _CORBA_LongDouble a; LongLongArray2 l; } u;
       u.a = a;
 
@@ -445,7 +445,7 @@ public:
     if ((void*)p2 <= pd_inb_end) {
       pd_inb_mkr = (void*) p2;
 
-      struct LongLongArray2 { _CORBA_ULongLong l[2] };
+      struct LongLongArray2 { _CORBA_ULongLong l[2]; };
       union { _CORBA_LongDouble a; LongLongArray2 l; } u;
 
       if (!pd_unmarshal_byte_swap) {
