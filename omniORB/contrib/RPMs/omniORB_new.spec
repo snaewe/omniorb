@@ -5,7 +5,7 @@
 
 %define _name omniORB
 
-%define lib_name %{?mklibname:%mklibname %{_name} 4.1}%{!?mklibname:lib%{_name}4.1}
+%define lib_name %{?mklibname:%mklibname %{_name} 4.2}%{!?mklibname:lib%{_name}4.2}
 
 %{!?py_ver: %define py_ver %(python -c "import sys;print(sys.version[0:3])")}
 %{!?py_sitedir: %define py_sitedir %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0,0,'%{_prefix}')")}
@@ -13,7 +13,7 @@
 
 Summary: Object Request Broker (ORB)
 Name:    %{_name}
-Version: 4.1.4
+Version: 4.2.0
 Release: 1
 License: GPL / LGPL
 Group:   System/Libraries
@@ -126,7 +126,7 @@ Provides:        libomniorb-doc = %{version}-%{release}
 Developer documentation and examples.
 
 %prep
-%setup -n %{_name}-%{version}
+%setup -n %{_name} #-%{version}
 
 %if "%{_vendor}" == "suse"
 # Replace the init script with something appropriate for SUSE.
@@ -215,10 +215,10 @@ fi
 %post bootscripts
 %if "%{_vendor}" == "suse"
 /sbin/insserv omniNames
-#%{_sbindir}/rcomniNames restart >/dev/null 2>&1
+%{_sbindir}/rcomniNames restart >/dev/null 2>&1
 %else
 /sbin/chkconfig --add omniNames
-#/sbin/service omniNames restart >/dev/null 2>&1
+/sbin/service omniNames restart >/dev/null 2>&1
 %endif
 
 %preun bootscripts
@@ -257,6 +257,8 @@ fi
 %defattr (-,root,root)
 %dir %attr(700,omni,omni) %{_localstatedir}/lib/omniNames
 %dir %attr(700,omni,omni) %{_localstatedir}/lib/omniMapper
+%attr(644,root,man) %{_mandir}/man8/omniMapper*
+%attr(644,root,man) %{_mandir}/man8/omniNames*
 %attr(755,root,root) %{_bindir}/omniMapper
 %attr(755,root,root) %{_bindir}/omniNames
 # Thin substitute for standard Linux init script
@@ -314,6 +316,9 @@ fi
 
 
 %changelog
+* Mon Sep 07 2009 Dirk Siebnich <dok@dok-net.net> 4.2.0-1
+- Use 4.2 sources from SVN
+
 * Thu May 05 2005 Dirk Siebnich <dok@dok-net.net> 4.1.0-1
 - rework package names to support x86_64, co-existance of 4.0
   and 4.1 libraries

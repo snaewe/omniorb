@@ -5,7 +5,7 @@
 
 Summary: Object Request Broker (ORB)
 Name:    omniORB
-Version: 4.1.4
+Version: 4.2.0
 Release: 1
 License: GPL / LGPL
 Group:   System/Libraries
@@ -219,8 +219,8 @@ fi
 %defattr (-,root,root)
 %dir %attr(700,omni,omni) %{_var}/omniNames
 %dir %attr(700,omni,omni) %{_localstatedir}/omniMapper
-%attr(644,root,man) %{_mandir}/man1/omniNames*
-#%attr(644,root,man) %{_mandir}/man1/omniMapper*
+%attr(644,root,man) %{_mandir}/man8/omniMapper*
+%attr(644,root,man) %{_mandir}/man8/omniNames*
 %attr(755,root,root) %{_bindir}/omniMapper
 %attr(755,root,root) %{_bindir}/omniNames
 # Thin substitute for standard Linux init script
@@ -237,6 +237,7 @@ fi
 %files utils
 %defattr (-,root,root)
 %attr(644,root,man) %{_mandir}/man1/catior*
+%attr(644,root,man) %{_mandir}/man1/convertior*
 %attr(644,root,man) %{_mandir}/man1/genior*
 %attr(644,root,man) %{_mandir}/man1/nameclt*
 %{_bindir}/catior.omni
@@ -248,6 +249,7 @@ fi
 %files devel
 %defattr(-,root,root)
 %doc ReleaseNotes* readmes/*
+%attr(644,root,man) %{_mandir}/man1/omnicpp*
 %attr(644,root,man) %{_mandir}/man1/omniidl*
 %{_bindir}/omnicpp
 %{_bindir}/omniidl
