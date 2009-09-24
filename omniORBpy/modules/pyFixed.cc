@@ -286,7 +286,7 @@ extern "C" {
     unsigned long u = h;
     int shift = f->ob_fixed->fixed_scale();
 
-    h = u << shift + u >> (32 - shift);
+    h = (u << shift) + (u >> (32 - shift));
 
     if (h == -1)
       h = -2;

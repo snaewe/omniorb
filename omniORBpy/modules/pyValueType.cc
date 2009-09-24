@@ -314,12 +314,14 @@ validateTypeValue(PyObject* d_o, PyObject* a_o,
 
     validateMembers(d_o, a_o, compstatus, track);
 
-    if (track_alloc)
+    if (track_alloc) {
       Py_DECREF(track);
+    }
   }
   catch (...) {
-    if (track_alloc)
+    if (track_alloc) {
       Py_DECREF(track);
+    }
     throw;
   }
 }
