@@ -1,3 +1,12 @@
+Thu Sep 24 11:06:54 BST 2009 dgrisby
+====================================
+
+- Update spec files.
+
+contrib/RPMs/omniORBpy.spec
+contrib/RPMs/omniORBpy_new.spec
+
+
 Thu Sep 24 11:04:21 BST 2009 dgrisby
 ====================================
 

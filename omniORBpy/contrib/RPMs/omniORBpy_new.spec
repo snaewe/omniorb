@@ -1,6 +1,6 @@
 %define _name omniORBpy
 
-%define lib_name %{?mklibname:%mklibname %{_name} 3}%{!?mklibname:lib%{_name}3}
+%define lib_name %{?mklibname:%mklibname %{_name} 4.2}%{!?mklibname:lib%{_name}4.2}
 
 %{!?py_ver: %define py_ver %(python -c "import sys;print(sys.version[0:3])")}
 %{!?py_sitedir: %define py_sitedir %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0,0,'%{_prefix}')")}
@@ -8,7 +8,7 @@
 
 Summary:   Python Language Mapping for omniORB
 Name:      %{_name}
-Version:   3.4
+Version:   4.2.0
 Release:   1
 License:   GPL / LGPL
 Group:     System/Libraries
@@ -76,7 +76,7 @@ Developer documentation and examples.
 
 %prep 
 
-%setup -n %{_name}-%{version}
+%setup -n %{_name} #-%{version}
 
 # Needs to know where omniORB was installed if it is not in /usr.
 # If necessary, use the configure option --with-omniorb=%{_prefix}
@@ -139,6 +139,9 @@ rm -rf %{buildroot}%{py_sitedir}/omniidl_be/__init__.py*
 %doc doc/* 
 
 %changelog
+* Mon Sep 07 2009 Dirk Siebnich <dok@dok-net.net> 4.2.0-1
+- Use 4.2 sources from SVN
+
 * Thu May 05 2005 Dirk Siebnich <dok@dok-net.net> 3.0-1
 - rework package names to support x86_64
 
