@@ -1,3 +1,11 @@
+Mon Oct  5 14:23:38 BST 2009 dgrisby
+====================================
+
+- Fix incorrect SunOS platform define.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Tue Sep 22 16:02:46 BST 2009 dgrisby
 ====================================
 
