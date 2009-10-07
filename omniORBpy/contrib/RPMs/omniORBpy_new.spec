@@ -139,10 +139,10 @@ rm -rf %{buildroot}%{py_sitedir}/omniidl_be/__init__.py*
 %doc doc/* 
 
 %changelog
-* Mon Sep 07 2009 Dirk Siebnich <dok@dok-net.net> 4.2.0-1
+* Mon Sep 07 2009 Dirk Kaar <dok@dok-net.net> 4.2.0-1
 - Use 4.2 sources from SVN
 
-* Thu May 05 2005 Dirk Siebnich <dok@dok-net.net> 3.0-1
+* Thu May 05 2005 Dirk Kaar <dok@dok-net.net> 3.0-1
 - rework package names to support x86_64
 
 * Mon Jul 26 2004 Duncan Grisby <duncan@grisby.org> 2.4
