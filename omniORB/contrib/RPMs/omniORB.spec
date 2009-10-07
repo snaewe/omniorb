@@ -286,7 +286,7 @@ fi
   start omniNames upon RPM install.
 
 * Thu Jul 22 2004 Thomas Lockhart <lockhart@fourpalms.org> 4.0.3-7
-- Incorporate additional SUSE features per Dirk O. Siebnich <dok@dok-net.net>
+- Incorporate additional SUSE features per Dirk O. Kaar <dok@dok-net.net>
 - Use additional standard RPM substitution parameters rather than
   hardcoded paths
 

@@ -316,10 +316,10 @@ fi
 
 
 %changelog
-* Mon Sep 07 2009 Dirk Siebnich <dok@dok-net.net> 4.2.0-1
+* Mon Sep 07 2009 Dirk Kaar <dok@dok-net.net> 4.2.0-1
 - Use 4.2 sources from SVN
 
-* Thu May 05 2005 Dirk Siebnich <dok@dok-net.net> 4.1.0-1
+* Thu May 05 2005 Dirk Kaar <dok@dok-net.net> 4.1.0-1
 - rework package names to support x86_64, co-existance of 4.0
   and 4.1 libraries
 
@@ -328,7 +328,7 @@ fi
   start omniNames upon RPM install.
 
 * Thu Jul 22 2004 Thomas Lockhart <lockhart@fourpalms.org> 4.0.3-7
-- Incorporate additional SUSE features per Dirk O. Siebnich <dok@dok-net.net>
+- Incorporate additional SUSE features per Dirk O. Kaar <dok@dok-net.net>
 - Use additional standard RPM substitution parameters rather than
   hardcoded paths
 
