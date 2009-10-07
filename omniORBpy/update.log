@@ -1,3 +1,11 @@
+Wed Oct  7 17:24:23 BST 2009 dgrisby
+====================================
+
+- File __name__ set incorrectly at end of a module when using -Wbpackage.
+
+omniidl_be/python.py
+
+
 Thu Jul 16 16:16:19 BST 2009 dgrisby
 ====================================
 

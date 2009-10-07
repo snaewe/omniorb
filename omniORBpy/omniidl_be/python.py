@@ -990,8 +990,13 @@ class PythonVisitor:
 
         if node.mainFile() or output_inline:
             exported_modules[sname] = 1
+            if parentmodname == self.outpymodule:
+                end_package = ""
+            else:
+                end_package = module_package
+
             self.st.out(module_end, modname=parentmodname, sname=sname,
-                        package=module_package)
+                        package=end_package)
 
     #
     # Forward interface
