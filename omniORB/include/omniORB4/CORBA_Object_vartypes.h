@@ -221,13 +221,15 @@ public:
   }
 
   inline T_element& operator= (const T_element& p) {
-    if( pd_rel ) {
-      CORBA::release(pd_data);
-      T::_duplicate(p.pd_data);
-      pd_data = p.pd_data;
+    if (p.pd_data != pd_data) {
+      if( pd_rel ) {
+        CORBA::release(pd_data);
+        T::_duplicate(p.pd_data);
+        pd_data = p.pd_data;
+      }
+      else
+        pd_data = p.pd_data;
     }
-    else
-      pd_data = p.pd_data;
     return *this;
   }
 
