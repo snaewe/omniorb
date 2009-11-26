@@ -1128,6 +1128,7 @@ declMap = {}
 def registerDecl(scopedName, decl):
     """Private function"""
     sname = idlutil.slashName(scopedName)
+
     if declMap.has_key(sname):
 
         rdecl = declMap[sname]
@@ -1164,10 +1165,13 @@ def registerDecl(scopedName, decl):
 
         elif (isi(decl, Module) and isi(rdecl, Module)):
             # continued module
+            for cc in rdecl._continuations:
+                cc._continuations.append(decl)
+
             rdecl._continuations.append(decl)
 
         else:
-            print "***Warning: attempt to re-register", sname
+            print "Warning: attempt to re-register", sname
 
         return
 
