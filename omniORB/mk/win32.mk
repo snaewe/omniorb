@@ -159,7 +159,6 @@ define ExportLibrary
  done; \
  for pfile in $$files; do \
    file=$${pfile%.lib}.pdb; \
-   echo "YYY" $$pfile $$file; \
    if [ -f $$file ]; then \
      $(ExportFileToDir); \
    fi; \
