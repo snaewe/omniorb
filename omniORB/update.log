@@ -1,3 +1,24 @@
+Thu Nov 26 23:18:47 GMT 2009 dgrisby
+====================================
+
+- Remove accidentally included debug output in makefile.
+
+mk/win32.mk
+
+- Missing output TypeCodes if a module is opened in an #included file,
+  then opened more than once in the main file.
+
+src/tool/omniidl/python/omniidl/idlast.py
+
+- Time out ssl connections that block in SSL_accept.
+
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.h
+
+
 Thu Oct 29 11:42:21 GMT 2009 dgrisby
 ====================================
 

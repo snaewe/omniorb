@@ -57,6 +57,12 @@ class sslTransportImpl : public giopTransportImpl {
   sslTransportImpl(sslContext* ctx);
   ~sslTransportImpl();
 
+  struct timeValue {
+    unsigned long secs;
+    unsigned long nanosecs;
+  };
+  static timeValue sslAcceptTimeOut;
+
  private:
 
   sslContext*  pd_ctx;

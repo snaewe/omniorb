@@ -183,6 +183,7 @@
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <ssl/sslEndpoint.h>
+#include <ssl/sslTransportImpl.h>
 #include <tcp/tcpConnection.h>
 #include <openssl/err.h>
 #include <omniORB4/linkHacks.h>
@@ -718,6 +719,18 @@ sslEndpoint::Shutdown() {
 }
 
 /////////////////////////////////////////////////////////////////////////
+static char* peerAddress(int sock)
+{
+  OMNI_SOCKADDR_STORAGE addr;
+  SOCKNAME_SIZE_T l;
+  if (getpeername(sock, (struct sockaddr*)&addr, &l) == RC_SOCKET_ERROR)
+    return CORBA::string_dup("<unknown address>");
+  
+  return tcpConnection::addrToURI((sockaddr*)&addr, "giop:ssl:");
+}
+
+
+/////////////////////////////////////////////////////////////////////////
 giopConnection*
 sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 			      void* cookie) {
@@ -737,17 +750,55 @@ sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
       SSL_set_fd(ssl, pd_new_conn_socket);
       SSL_set_accept_state(ssl);
 
+      if (omniORB::trace(25)) {
+	omniORB::logger log;
+	CORBA::String_var peer = peerAddress(pd_new_conn_socket);
+	log << "Perform SSL accept for new incoming connection " << peer
+	    << "\n";
+      }
+
+      unsigned long deadline_secs, deadline_nanosecs;
+      struct timeval tv;
+
+      if (sslTransportImpl::sslAcceptTimeOut.secs ||
+	  sslTransportImpl::sslAcceptTimeOut.nanosecs) {
+
+	SocketSetnonblocking(pd_new_conn_socket);
+	omni_thread::get_time(&deadline_secs, &deadline_nanosecs,
+			      sslTransportImpl::sslAcceptTimeOut.secs,
+			      sslTransportImpl::sslAcceptTimeOut.nanosecs);
+      }
+
+      int timeout = 0;
       int go = pd_go;
+
       while(go && pd_go) {
+	if (setAndCheckTimeout(deadline_secs, deadline_nanosecs, tv)) {
+	  // Timed out
+	  timeout = 1;
+	  break;
+	}
+
 	int result = SSL_accept(ssl);
 	int code = SSL_get_error(ssl, result);
 
 	switch(code) {
 	case SSL_ERROR_NONE:
+	  SocketSetblocking(pd_new_conn_socket);
 	  return new sslConnection(pd_new_conn_socket,ssl,this);
 
 	case SSL_ERROR_WANT_READ:
+	  if (waitRead(pd_new_conn_socket, tv) == 0) {
+	    timeout = 1;
+	    go = 0;
+	  }
+	  continue;
+
 	case SSL_ERROR_WANT_WRITE:
+	  if (waitWrite(pd_new_conn_socket, tv) == 0) {
+	    timeout = 1;
+	    go = 0;
+	  }
 	  continue;
 
 	case SSL_ERROR_SYSCALL:
@@ -763,12 +814,18 @@ sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 	      omniORB::logger log;
 	      char buf[128];
 	      ERR_error_string_n(ERR_get_error(),buf,128);
-	      log << "openSSL error detected in sslEndpoint::accept.\n"
-		  << "Reason: " << (const char*) buf << "\n";
+	      CORBA::String_var peer = peerAddress(pd_new_conn_socket);
+	      log << "openSSL error detected in SSL accept from "
+		  << peer << " : " << (const char*) buf << "\n";
 	    }
 	    go = 0;
 	  }
 	}
+      }
+      if (timeout && omniORB::trace(10)) {
+	omniORB::logger log;
+	CORBA::String_var peer = peerAddress(pd_new_conn_socket);
+	log << "Timeout in SSL accept from " << peer << "\n";
       }
       SSL_free(ssl);
       CLOSESOCKET(pd_new_conn_socket);

@@ -109,6 +109,11 @@ OMNI_EXPORT_LINK_FORCE_SYMBOL(omnisslTP);
 
 OMNI_NAMESPACE_BEGIN(omni)
 
+
+/////////////////////////////////////////////////////////////////////////
+sslTransportImpl::timeValue sslTransportImpl::sslAcceptTimeOut = {10,0};
+
+
 /////////////////////////////////////////////////////////////////////////
 sslTransportImpl::sslTransportImpl(sslContext* ctx) : 
   giopTransportImpl("giop:ssl"), pd_ctx(ctx) {
@@ -348,6 +353,38 @@ public:
 static sslVerifyModeHandler sslVerifyModeHandler_;
 
 
+/////////////////////////////////////////////////////////////////////////////
+class sslAcceptTimeOutHandler : public orbOptions::Handler {
+public:
+
+  sslAcceptTimeOutHandler() : 
+    orbOptions::Handler("sslAcceptTimeOut",
+			"sslAcceptTimeOut = n >= 0 in msecs",
+			1,
+			"-ORBsslAcceptTimeOut < n >= 0 in msecs >") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 "Expect n >= 0 in msecs");
+    }
+    sslTransportImpl::sslAcceptTimeOut.secs = v / 1000;
+    sslTransportImpl::sslAcceptTimeOut.nanosecs = (v % 1000) * 1000000;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    CORBA::ULong v = sslTransportImpl::sslAcceptTimeOut.secs * 1000 +
+      sslTransportImpl::sslAcceptTimeOut.nanosecs / 1000000;
+    orbOptions::addKVULong(key(),v,result);
+  }
+
+};
+
+static sslAcceptTimeOutHandler sslAcceptTimeOutHandler_;
+
+
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -361,6 +398,7 @@ public:
     orbOptions::singleton().registerHandler(sslKeyFileHandler_);
     orbOptions::singleton().registerHandler(sslKeyPasswordHandler_);
     orbOptions::singleton().registerHandler(sslVerifyModeHandler_);
+    orbOptions::singleton().registerHandler(sslAcceptTimeOutHandler_);
     omniInitialiser::install(this);
   }
 
