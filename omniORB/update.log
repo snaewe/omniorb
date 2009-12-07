@@ -1,3 +1,12 @@
+Mon Dec  7 17:40:16 GMT 2009 dgrisby
+====================================
+
+- Extra libraries sometimes required for SSL transport on Windows.
+  Thanks Peter Klotz.
+
+src/lib/omniORB/orbcore/ssl/dir.mk
+
+
 Thu Nov 26 23:18:47 GMT 2009 dgrisby
 ====================================
 
