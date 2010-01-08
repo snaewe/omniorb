@@ -532,10 +532,6 @@ def visitUnion(node):
         
     hasDefault = defaultCase != None
 
-    # Booleans are a special case (isn't everything?)
-    booleanWrap = switchType.boolean() and exhaustive
-
-
     # deal with types constructed here
     if node.constrType():
         node.switchType().decl().accept(self)
@@ -552,21 +548,18 @@ def visitUnion(node):
     
     skutil.marshall(marshal_discriminator,environment,
                     switchType, None, "_pd__d", "_n")
+
     skutil.unmarshall(unmarshal_discriminator,environment,
                       switchType, None, "_pd__d", "_n")
 
-    marshal_cases = output.StringStream()
+    marshal_cases   = output.StringStream()
     unmarshal_cases = output.StringStream()
+
     for c in node.cases():
         caseType = types.Type(c.caseType())
         decl = c.declarator()
         decl_scopedName = id.Name(decl.scopedName())
         decl_name = decl_scopedName.simple()
-
-        # *** HERE: only output code once for each case, no matter how
-        # *** many labels; don't bother with the default check -- do
-        # *** it with the switch. Don't think we need _pd__default
-        # *** member.
 
         if defaultCase == c:
             isDefault = 1
@@ -578,22 +571,26 @@ def visitUnion(node):
             discrim_value = switchType.literal(value, environment)
             if l.default():
                 unmarshal_cases.out("default:")
+                marshal_cases.out("default:")
             else:
                 unmarshal_cases.out("case " + discrim_value + ":")
                 marshal_cases.out("case " + discrim_value + ":")
 
-                marshal_cases.inc_indent()
-                skutil.marshall(marshal_cases, environment,
-                                caseType, decl, "_pd_" + decl_name, "_n")
-                marshal_cases.out("break;")
-                marshal_cases.dec_indent()
+        marshal_cases.inc_indent()
+        skutil.marshall(marshal_cases, environment,
+                        caseType, decl, "_pd_" + decl_name, "_n",
+                        is_union=1)
+        marshal_cases.out("break;")
+        marshal_cases.dec_indent()
 
-            unmarshal_cases.inc_indent()
-            unmarshal_cases.out("_pd__default = " + str(isDefault) + ";")
-            skutil.unmarshall(unmarshal_cases, environment,
-                              caseType, decl, "_pd_" + decl_name, "_n")
-            unmarshal_cases.out("break;")
-            unmarshal_cases.dec_indent()
+        unmarshal_cases.inc_indent()
+        unmarshal_cases.out("_pd__default = %d;" % isDefault)
+        skutil.unmarshall(unmarshal_cases, environment,
+                          caseType, decl, "_pd_" + decl_name, "_n",
+                          is_union=1)
+        unmarshal_cases.out("break;")
+        unmarshal_cases.dec_indent()
+
 
     if not hasDefault and not exhaustive:
         unmarshal_cases.out("""\
@@ -601,43 +598,12 @@ default:
   _pd__default = 1;
   break;""")
 
-            
-    if booleanWrap:
-        marshal_cases.out(template.union_default_bool)
-    else:
-        marshal_cases.out(template.union_default)
-
-
-    def marshal(stream = stream, exhaustive = exhaustive,
-                hasDefault = hasDefault, defaultCase = defaultCase,
-                environment = environment, defaultMember = defaultMember,
-                marshal_cases = marshal_cases):
-        if not exhaustive:
-
-            def default(stream = stream, exhaustive = exhaustive,
-                        hasDefault = hasDefault, defaultCase = defaultCase,
-                        environment = environment,
-                        defaultMember = defaultMember):
-                if hasDefault:
-                    caseType = types.Type(defaultCase.caseType())
-                    decl = defaultCase.declarator()
-                    decl_scopedName = id.Name(decl.scopedName())
-                    decl_name = decl_scopedName.simple()
-                    skutil.marshall(stream, environment, caseType,
-                                    decl, "_pd_" + decl_name, "_n")
-            stream.out(template.union_operators_nonexhaustive,
-                       default = default,
-                       cases = str(marshal_cases))
-        else:
-            stream.out(template.union_operators_exhaustive,
-                       cases = str(marshal_cases))
-
     # write the operators
     stream.out(template.union_operators,
                name = name,
                marshal_discriminator = str(marshal_discriminator),
                unmarshal_discriminator = str(unmarshal_discriminator),
-               marshal_cases = marshal,
+               marshal_cases = str(marshal_cases),
                unmarshal_cases = str(unmarshal_cases))
                 
         

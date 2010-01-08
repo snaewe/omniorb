@@ -1306,7 +1306,7 @@ def visitUnion(node):
                 if c.isDefault:
                     case_id = c.declarator().identifier()
                     cxx_case_id = id.mapID(case_id)
-                    default = cxx_case_id + "(_value._pd_" + cxx_case_id + ");"
+                    default = cxx_case_id + "(_value." + cxx_case_id + "());"
 
 
             stream.out(template.union_ctor_nonexhaustive,
@@ -1467,6 +1467,7 @@ def visitUnion(node):
     # get and set functions for each case:
     def members(stream = stream, node = node, environment = environment,
                 choose = chooseArbitraryDefault, switchType = switchType):
+
         for c in node.cases():
             # Following the typedef chain will deliver the base type of
             # the alias. Whether or not it is an array is stored in an
@@ -1527,7 +1528,7 @@ def visitUnion(node):
                 # only different when array declarator
                 const_type_str = memtype
                 
-                # anonymous arrays are handled slightly differently
+                # create typedefs for anonymous arrays
                 if is_array_declarator:
                     prefix = config.state['Private Prefix']
                     stream.out(template.union_array_declarator,
@@ -1556,6 +1557,7 @@ def visitUnion(node):
                                name = member,
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue,
+                               first_dim = repr(full_dims[0]),
                                loop = loop)
                     
                 elif d_caseType.any():
@@ -1583,6 +1585,7 @@ def visitUnion(node):
                     
                 elif d_caseType.string():
                     stream.out(template.union_string,
+                               type = memtype,
                                name = member,
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
@@ -1596,18 +1599,23 @@ def visitUnion(node):
                 elif d_caseType.interface():
                     scopedName = d_caseType.type().decl().scopedName()
 
-                    name = id.Name(scopedName)
+                    name     = id.Name(scopedName)
                     ptr_name = name.suffix("_ptr").unambiguous(environment)
-                    Helper_name = name.suffix("_Helper").unambiguous(
-                        environment)
                     var_name = name.suffix("_var").unambiguous(environment)
+
+                    if isinstance(d_caseType.type().decl(), idlast.Forward):
+                        helper = name.suffix("_Helper").unambiguous(environment)
+                        duplicate = helper + "::duplicate"
+                    else:
+                        iclass    = name.unambiguous(environment)
+                        duplicate = iclass + "::_duplicate"
 
                     stream.out(template.union_objref,
                                member = member,
                                memtype = memtype,
                                ptr_name = ptr_name,
                                var_name = var_name,
-                               Helper_name = Helper_name,
+                               duplicate = duplicate,
                                isDefault = str(c.isDefault),
                                discrimvalue = discrimvalue)
 
@@ -1645,100 +1653,160 @@ def visitUnion(node):
 
     # declare the instance of the discriminator and
     # the actual data members (shock, horror)
-    # FIXME: there is some interesting behaviour in
-    # o2be_union::produce_hdr which I should examine more
-    # carefully
-    inside = output.StringStream()
-    outside = output.StringStream()
-    used_inside = 0
-    used_outside = 0
+    union_body       = output.StringStream()
+    release_body     = output.StringStream()
+    need_release     = 0
+    explicit_default = 0
+    
     for c in node.cases():
 
-        # find the dereferenced type of the member if its an alias
-        caseType = types.Type(c.caseType())
+        # find the dereferenced type of the member if it's an alias
+        caseType   = types.Type(c.caseType())
         d_caseType = caseType.deref()
+        case_kind  = d_caseType.type().kind()
 
-        decl = c.declarator()
-        decl_dims = decl.sizes()
-
-        full_dims = caseType.dims() + decl_dims
+        decl       = c.declarator()
+        decl_dims  = decl.sizes()
+        full_dims  = caseType.dims() + decl_dims
         
-        is_array = full_dims != []
+        is_array            = full_dims != []
         is_array_declarator = decl_dims != []
+
         member_name = id.mapID(c.declarator().identifier())
+        member_type = caseType.base(environment)
 
-        type_str = caseType.member(environment)
 
-        # non-array sequences have had their template typedef'd somewhere
-        if not is_array_declarator and caseType.sequence():
-            type_str = "_" + member_name + "_seq"
-        
-        dims_str = cxx.dimsToString(decl_dims)
+        # Work out type for the union member
+        if is_array_declarator:
+            # _slice typedef defined earlier
+            member_type = "_" + member_name + "_slice*"
 
-        # Decide what does inside and outside the union {} itself
-        # Note: floats in unions are special cases
-        if (d_caseType.float() or d_caseType.double()) and \
-           not is_array:
-            inside.out(template.union_noproxy_float,
-                       type = type_str, name = member_name,
-                       dims = dims_str)
-            outside.out(template.union_proxy_float,
-                       type = type_str, name = member_name,
-                       dims = dims_str)
-            used_inside = used_outside = 1
+        elif caseType.sequence():
+            # _seq typedef defined earlier
+            member_type = "_" + member_name + "_seq*"
+
+        elif is_array:
+            member_type = member_type + "_slice*"
+
+        elif case_kind in [ idltype.tk_any,
+                            idltype.tk_struct,
+                            idltype.tk_union,
+                            idltype.tk_sequence,
+                            idltype.tk_except,
+                            idltype.tk_fixed,
+                            idltype.tk_value,
+                            idltype.tk_value_box,
+                            ]:
+            member_type = member_type + "*"
+
+        # Float types have conditional code that may or may not store
+        # them by pointer.
+        if not is_array and case_kind in [ idltype.tk_float,
+                                           idltype.tk_double ]:
+            union_member = template.union_member_float
         else:
-            if is_array and d_caseType.struct() and \
-               not caseType.variable():
-                this_stream = inside
-                used_inside = 1
+            union_member = template.union_member
+
+        # Output union member
+        union_body.out(union_member,
+                       type = member_type,
+                       name = member_name)
+
+
+        # Code to release the member
+        release = None
+        helper  = None
+
+        if is_array:
+            release = template.union_release_array
+
+        elif case_kind in [ idltype.tk_any,
+                            idltype.tk_struct,
+                            idltype.tk_union,
+                            idltype.tk_sequence,
+                            idltype.tk_except,
+                            idltype.tk_fixed,
+                            ]:
+            release = template.union_release_delete
+
+        elif case_kind in [ idltype.tk_objref,
+                            idltype.tk_abstract_interface,
+                            idltype.tk_local_interface,
+                            ]:
+
+            if isinstance(d_caseType.type().decl(), idlast.Forward):
+                # Use the helper class to call release
+                release = template.union_release_helper
+
+                scopedName = d_caseType.type().decl().scopedName()
+                name       = id.Name(scopedName)
+                helper     = name.suffix("_Helper").unambiguous(environment)
             else:
-                if d_caseType.type().kind() in \
-                   [ idltype.tk_struct,
-                     idltype.tk_union,
-                     idltype.tk_except,
-                     idltype.tk_string,
-                     idltype.tk_wstring,
-                     idltype.tk_sequence,
-                     idltype.tk_any,
-                     idltype.tk_TypeCode,
-                     idltype.tk_objref,
-                     idltype.tk_fixed,
-                     idltype.tk_value,
-                     idltype.tk_value_box,
-                     idltype.tk_abstract_interface,
-                     idltype.tk_local_interface ]:
-                                                 
-                    this_stream = outside
-                    used_outside = 1
-                else:
-                    this_stream = inside
-                    used_inside = 1
+                release = template.union_release_corba_release
 
-            this_stream.out(template.union_member,
-                            type = type_str,
-                            name = member_name,
-                            dims = dims_str)
+        elif case_kind in [ idltype.tk_TypeCode,
+                            ]:
+            release = template.union_release_corba_release
 
-    discrimtype = d_switchType.base(environment)
-    
-    if used_inside:
-        _union = output.StringStream()
-        _union.out(template.union_union, members = str(inside))
-        inside = _union
+        elif case_kind in [ idltype.tk_value,
+                            idltype.tk_value_box,
+                            ]:
+            release = template.union_release_valuetype
+
+        elif case_kind == idltype.tk_string:
+            release = template.union_release_string
+
+        elif case_kind == idltype.tk_wstring:
+            release = template.union_release_wstring
+
+        if release is not None:
+            need_release = 1
+            release_member = output.StringStream()
+            release_member.out(release, name=member_name, helper=helper)
+        else:
+            release_member = ""
+
+        cases = output.StringStream()
+        for label in c.labels():
+            if label.default():
+                cases.out("default:")
+                explicit_default = 1
+            else:
+                cases.out("case @label@:",
+                          label = switchType.literal(label.value(),
+                                                     environment))
+
+        release_body.out(template.union_release_case,
+                         cases          = cases,
+                         release_member = release_member)
+        
+    if need_release:
+        if not explicit_default:
+            # Output an empty default case to prevent fussy compilers
+            # complaining
+            release_body.out(template.union_release_case,
+                             cases          = "default:",
+                             release_member = "")
+                
+        release_member = output.StringStream()
+        release_member.out(template.union_release_member,
+                                 cases = release_body)
+    else:
+        release_member = template.union_release_member_empty
 
     # write out the union class
     stream.out(template.union,
-               unionname = cxx_id,
-               fixed = fixed,
-               Other_IDL = Other_IDL,
+               unionname           = cxx_id,
+               fixed               = fixed,
+               Other_IDL           = Other_IDL,
                default_constructor = default_constructor,
-               copy_constructor = copy_constructor,
-               discrimtype = discrimtype,
-               _d_body = _d_fn,
-               implicit_default = implicit_default,
-               members = members,
-               union = str(inside),
-               outsideUnion = str(outside))
+               copy_constructor    = copy_constructor,
+               discrimtype         = d_switchType.base(environment),
+               _d_body             = _d_fn,
+               implicit_default    = implicit_default,
+               members             = members,
+               union_body          = union_body,
+               release_member      = release_member)
 
     if types.variableDecl(node):
         stream.out(template.union_variable_out_type,

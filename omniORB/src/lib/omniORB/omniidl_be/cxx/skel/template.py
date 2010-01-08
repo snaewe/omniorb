@@ -706,34 +706,22 @@ void
 @name@::operator>>= (cdrStream& _n) const
 {
   @marshal_discriminator@
-  @marshal_cases@
+
+  switch(_pd__d) {
+    @marshal_cases@
+  }
 }
 
 void
 @name@::operator<<= (cdrStream& _n)
 {
   @unmarshal_discriminator@
+  _release_member();
+  
   switch(_pd__d) {
     @unmarshal_cases@
   }
   _pd__initialised = 1;
-}
-"""
-
-union_operators_nonexhaustive = """\
-if (_pd__default) {
-  @default@
-}
-else {
-  switch(_pd__d) {
-    @cases@
-  }
-}
-"""
-
-union_operators_exhaustive = """\
-switch(_pd__d) {
-  @cases@
 }
 """
 

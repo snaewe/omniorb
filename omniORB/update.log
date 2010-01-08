@@ -1,3 +1,21 @@
+Fri Jan  8 13:37:48 GMT 2010 dgrisby
+====================================
+
+- Incorrect platform test.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+- Store union members more efficiently. Initial concept my Michael
+  Teske; expanded to all types by Duncan Grisby.
+
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/tool/omniidl/python/omniidl/idlast.py
+
+
 Wed Oct  7 16:45:17 BST 2009 dgrisby
 ====================================
 
