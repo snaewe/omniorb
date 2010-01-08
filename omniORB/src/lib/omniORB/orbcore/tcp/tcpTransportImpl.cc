@@ -383,7 +383,7 @@ void ifaddrs_get_ifinfo(omnivector<const char*>& addrs)
 #elif defined(UnixArchitecture) && !defined(__vxWorks__)
 
 #  if defined(HAVE_STRUCT_LIFCONF) && defined(OMNI_SUPPORT_IPV6)
-#    ifdef __sun__
+#    ifdef __sunos__
 #      undef ifc_buf
 #      undef ifc_req
 #      undef ifr_addr
