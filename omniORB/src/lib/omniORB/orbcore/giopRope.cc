@@ -619,47 +619,49 @@ giopRope::selectRope(const giopAddressList& addrlist,
 		     omniIOR::IORInfo* info,
 		     Rope*& r,CORBA::Boolean& loc) {
 
-  omni_tracedmutex_lock sync(*omniTransportLock);
-
-  // Check if we have to use a bidirectional connection.
-  if (orbParameters::acceptBiDirectionalGIOP &&
-      BiDirServerRope::selectRope(addrlist,info,r)) {
-    loc = 0;
-    return 1;
-  }
-
-  // Check if these are our addresses
-  giopAddressList::const_iterator i, last;
-  i    = addrlist.begin();
-  last = addrlist.end();
-  for (; i != last; i++) {
-    if (omniObjAdapter::matchMyEndpoints((*i)->address())) {
-      r = 0; loc = 1;
-      return 1;
-    }
-  }
-
   giopRope* gr;
 
-  // Check if there already exists a rope that goes to the same addresses
-  RopeLink* p = giopRope::ropes.next;
-  while ( p != &giopRope::ropes ) {
-    gr = (giopRope*)p;
-    if (gr->match(addrlist)) {
-      gr->realIncrRefCount();
-      r = (Rope*)gr; loc = 0;
+  {
+    omni_tracedmutex_lock sync(*omniTransportLock);
+
+    // Check if we have to use a bidirectional connection.
+    if (orbParameters::acceptBiDirectionalGIOP &&
+	BiDirServerRope::selectRope(addrlist,info,r)) {
+      loc = 0;
       return 1;
     }
-    else if (gr->pd_refcount == 0 &&
-	     RopeLink::is_empty(gr->pd_strands) &&
-	     !gr->pd_nwaiting) {
-      // garbage rope, remove it
-      p = p->next;
-      gr->RopeLink::remove();
-      delete gr;
+
+    // Check if these are our addresses
+    giopAddressList::const_iterator i, last;
+    i    = addrlist.begin();
+    last = addrlist.end();
+    for (; i != last; i++) {
+      if (omniObjAdapter::matchMyEndpoints((*i)->address())) {
+	r = 0; loc = 1;
+	return 1;
+      }
     }
-    else {
-      p = p->next;
+
+    // Check if there already exists a rope that goes to the same addresses
+    RopeLink* p = giopRope::ropes.next;
+    while ( p != &giopRope::ropes ) {
+      gr = (giopRope*)p;
+      if (gr->match(addrlist)) {
+	gr->realIncrRefCount();
+	r = (Rope*)gr; loc = 0;
+	return 1;
+      }
+      else if (gr->pd_refcount == 0 &&
+	       RopeLink::is_empty(gr->pd_strands) &&
+	       !gr->pd_nwaiting) {
+	// garbage rope, remove it
+	p = p->next;
+	gr->RopeLink::remove();
+	delete gr;
+      }
+      else {
+	p = p->next;
+      }
     }
   }
 
@@ -669,28 +671,36 @@ giopRope::selectRope(const giopAddressList& addrlist,
   omnivector<CORBA::ULong> prefer_list;
   CORBA::Boolean use_bidir;
 
+  // filterAndSortAddressList may spend time resolving host names, so
+  // we ensure we do not hold omniTransportLock while we do it. A
+  // consequence of this is that we may race with another thread and
+  // create two ropes for the same addresses, but although that is
+  // wasteful, it doesn't do any real harm.
   filterAndSortAddressList(addrlist,prefer_list,use_bidir);
 
-  if (!use_bidir) {
-    gr = new giopRope(addrlist,prefer_list);
-  }
-  else {
-    if (omniObjAdapter::isInitialised()) {
-      gr = new BiDirClientRope(addrlist,prefer_list);
-    }
-    else {
-      omniORB::logs(10, "Client policies specify a bidirectional connection, "
-		    "but no object adapters have been initialised. Using a "
-		    "non-bidirectional connection.");
+  {
+    omni_tracedmutex_lock sync(*omniTransportLock);
+
+    if (!use_bidir) {
       gr = new giopRope(addrlist,prefer_list);
     }
+    else {
+      if (omniObjAdapter::isInitialised()) {
+	gr = new BiDirClientRope(addrlist,prefer_list);
+      }
+      else {
+	omniORB::logs(10, "Client policies specify a bidirectional connection, "
+		      "but no object adapters have been initialised. Using a "
+		      "non-bidirectional connection.");
+	gr = new giopRope(addrlist,prefer_list);
+      }
+    }
+    gr->RopeLink::insert(giopRope::ropes);
+    gr->realIncrRefCount();
+    r = (Rope*)gr; loc = 0;
+    return 1;
   }
-  gr->RopeLink::insert(giopRope::ropes);
-  gr->realIncrRefCount();
-  r = (Rope*)gr; loc = 0;
-  return 1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
