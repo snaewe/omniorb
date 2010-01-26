@@ -1,3 +1,11 @@
+Tue Jan 26 23:34:34 GMT 2010 dgrisby
+====================================
+
+- Force linking of Unix transport. Thanks Arne Pajunen.
+
+src/lib/omniORB/orbcore/giopEndpoint.cc
+
+
 Tue Jan 26 22:23:39 GMT 2010 dgrisby
 ====================================
 

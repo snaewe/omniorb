@@ -105,6 +105,9 @@
 
 OMNI_FORCE_LINK(tcpTransportImpl);
 
+#if defined(UnixArchitecture)
+OMNI_FORCE_LINK(unixTransportImpl);
+#endif
 
 OMNI_NAMESPACE_BEGIN(omni)
 
