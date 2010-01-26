@@ -1,3 +1,16 @@
+Tue Jan 26 22:23:39 GMT 2010 dgrisby
+====================================
+
+- Do not hold omniTransportLock during name lookups in transport rules.
+
+src/lib/omniORB/orbcore/giopRope.cc
+
+- Ensure a reference to the identity is hold for the duration it is required.
+
+include/omniORB4/omniInternal.h
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Thu Dec 24 09:40:12 GMT 2009 dgrisby
 ====================================
 
