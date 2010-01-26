@@ -368,6 +368,9 @@ _CORBA_MODULE_BEG
   // <target>. If they are compatible, the localIdentity is returned;
   // otherwise, an inProcessIdentity is used.
   //
+  // The new identity has had gainRef() called. The caller should
+  // release it with loseRef().
+  //
   // <ior> is always consumed even if the function returns 0.
   //
   // <locked> => hold <internalLock>.
