@@ -1,3 +1,11 @@
+Sat Feb 27 20:08:29 GMT 2010 dgrisby
+====================================
+
+- New minor code for ORB not initialised.
+
+include/omniORB4/minorCode.h
+
+
 Tue Jan 26 23:47:40 GMT 2010 dgrisby
 ====================================
 
