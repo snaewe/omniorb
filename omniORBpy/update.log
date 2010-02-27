@@ -1,3 +1,15 @@
+Sat Feb 27 20:07:35 GMT 2010 dgrisby
+====================================
+
+- Ensure a reference to the identity is held for the duration it is required.
+
+modules/pyObjectRef.cc
+
+- Raise BAD_INV_ORDER from cdrMarshal / cdrUnmarshal if ORB is not initialised.
+
+python/omniORB/__init__.py
+
+
 Wed Oct  7 17:24:23 BST 2009 dgrisby
 ====================================
 

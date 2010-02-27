@@ -420,7 +420,14 @@ marshal with: True for little endian; false for big endian. The
 resulting string in this case is the raw marshalled form, not a CDR
 encapsulation. To unmarshal it, the endianness must be known.
 
-Throws CORBA.BAD_PARAM if the data does not match the TypeCode."""
+CORBA.ORB_init must be called before using this function.
+
+Throws CORBA.BAD_PARAM if the data does not match the TypeCode or
+CORBA.BAD_INV_ORDER if the ORB has not been initialised."""
+
+    if orb is None:
+        raise CORBA.BAD_INV_ORDER(BAD_INV_ORDER_ORBNotInitialised,
+                                  CORBA.COMPLETED_NO)
 
     if not isinstance(tc, CORBA.TypeCode):
         raise TypeError("Argument 1 must be a TypeCode")
@@ -439,8 +446,14 @@ case, the string should be the raw marshalled form, not a CDR
 encapsulation. If the endianness does not match that used for
 marshalling, invalid data may be returned, or exceptions raised.
 
-Throws CORBA.MARSHAL if the binary string does not match the
-TypeCode."""
+CORBA.ORB_init must be called before using this function.
+
+Throws CORBA.MARSHAL if the binary string does not match the TypeCode
+or CORBA.BAD_INV_ORDER if the ORB has not been initialised."""
+
+    if orb is None:
+        raise CORBA.BAD_INV_ORDER(BAD_INV_ORDER_ORBNotInitialised,
+                                  CORBA.COMPLETED_NO)
 
     if not isinstance(tc, CORBA.TypeCode):
         raise TypeError("Argument 1 must be a TypeCode")
