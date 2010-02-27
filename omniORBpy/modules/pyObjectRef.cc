@@ -343,9 +343,12 @@ omniPy::createObjRef(const char*    	targetRepoId,
   OMNIORB_ASSERT(targetRepoId);
   OMNIORB_ASSERT(ior);
 
+  CORBA::Boolean called_create = 0;
+
   if (!id) {
     ior->duplicate();  // consumed by createIdentity
     id = omni::createIdentity(ior, omniPy::string_Py_omniServant, locked);
+    called_create = 1;
     if (!id) {
       ior->release();
       return 0;
@@ -380,6 +383,8 @@ omniPy::createObjRef(const char*    	targetRepoId,
   {
     omni_optional_lock sync(*omni::internalLock, locked, locked);
     id->gainRef(objref);
+    if (called_create)
+      id->loseRef();
   }
 
   if (orbParameters::persistentId.length()) {
