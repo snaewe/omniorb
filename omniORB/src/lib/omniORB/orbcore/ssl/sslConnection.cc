@@ -109,8 +109,8 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
 #include <orbParameters.h>
-#include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
+#include <omniORB4/sslContext.h>
 #include <ssl/sslConnection.h>
 #include <ssl/sslEndpoint.h>
 #include <tcp/tcpConnection.h>

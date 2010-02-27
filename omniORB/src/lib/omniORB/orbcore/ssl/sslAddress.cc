@@ -134,8 +134,8 @@
 #include <omniORB4/omniURI.h>
 #include <orbParameters.h>
 #include <giopStrandFlags.h>
-#include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
+#include <omniORB4/sslContext.h>
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <openssl/err.h>

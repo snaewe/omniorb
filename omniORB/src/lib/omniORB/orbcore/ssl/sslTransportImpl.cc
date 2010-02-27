@@ -85,6 +85,7 @@
 #include <omniORB4/giopEndpoint.h>
 #include <omniORB4/omniURI.h>
 #include <objectAdapter.h>
+#include <SocketCollection.h>
 #include <omniORB4/sslContext.h>
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>

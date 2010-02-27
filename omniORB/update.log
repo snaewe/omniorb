@@ -5,6 +5,14 @@ Sat Feb 27 20:08:29 GMT 2010 dgrisby
 
 include/omniORB4/minorCode.h
 
+- Rearrange includes to prevent Winsock errors with recent OpenSSL.
+
+src/lib/omniORB/orbcore/ssl/sslActive.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
 
 Tue Jan 26 23:47:40 GMT 2010 dgrisby
 ====================================

@@ -175,8 +175,8 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
 #include <omniORB4/omniURI.h>
-#include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
+#include <omniORB4/sslContext.h>
 #include <libcWrapper.h>
 #include <objectAdapter.h>
 #include <orbParameters.h>
