@@ -684,6 +684,7 @@ omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
 
     if (result) {
       holder._retn();
+      result->gainRef();
       return result;
     }
   }
@@ -742,12 +743,15 @@ omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
 
     if (entry && entry->servant()->_ptrToInterface(target)) {
       // Compatible activated object
+      entry->gainRef();
       return entry;
     }
     else {
       // Not active or servant incompatible with target
-      return createInProcessIdentity(object_key.get_buffer(),
-				     object_key.length());
+      result = createInProcessIdentity(object_key.get_buffer(),
+				       object_key.length());
+      result->gainRef();
+      return result;
     }
   }
   else {
@@ -758,6 +762,7 @@ omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
 				    object_key.get_buffer(),
 				    object_key.length(),
 				    rope);
+    result->gainRef();
     return result;
   }
 }
@@ -779,6 +784,8 @@ omni::createObjRef(const char* targetRepoId,
   OMNIORB_ASSERT(targetRepoId);
   OMNIORB_ASSERT(ior);
 
+  CORBA::Boolean called_create = 0;
+
   if (id) {
     omniLocalIdentity* lid = omniLocalIdentity::downcast(id);
 
@@ -792,6 +799,7 @@ omni::createObjRef(const char* targetRepoId,
   else {
     ior->duplicate();  // consumed by createIdentity
     id = omni::createIdentity(ior, targetRepoId, locked);
+    called_create = 1;
     if ( !id ) {
       ior->release();
       return 0;
@@ -858,6 +866,9 @@ omni::createObjRef(const char* targetRepoId,
   {
     omni_optional_lock sync(*internalLock, locked, locked);
     id->gainRef(objref);
+
+    if (called_create)
+      id->loseRef();
   }
 
   if (orbParameters::persistentId.length()) {
@@ -1001,6 +1012,7 @@ omni::revertToOriginalProfile(omniObjRef* objref)
   objref->pd_flags.object_exists = 1;
 
   objref->_setIdentity(id);
+  id->loseRef(); // Drop the extra reference held by createIdentity.
 }
 
 

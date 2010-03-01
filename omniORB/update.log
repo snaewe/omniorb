@@ -1,3 +1,27 @@
+Mon Mar  1 16:08:30 GMT 2010 dgrisby
+====================================
+
+- Merge changes from 4_1 branch, up to r5946.
+
+include/omniORB4/CORBA_Object_vartypes.h
+include/omniORB4/minorCode.h
+include/omniORB4/omniInternal.h
+mk/beforeauto.mk.in
+mk/win32.mk
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omniORB/orbcore/ssl/sslActive.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.h
+
+
 Mon Mar  1 15:55:55 GMT 2010 dgrisby
 ====================================
 

@@ -134,8 +134,8 @@
 #include <omniORB4/omniURI.h>
 #include <orbParameters.h>
 #include <giopStrandFlags.h>
-#include <omniORB4/sslContext.h>
 #include <SocketCollection.h>
+#include <omniORB4/sslContext.h>
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <openssl/err.h>
@@ -169,90 +169,6 @@ sslAddress::address() const {
 giopAddress*
 sslAddress::duplicate() const {
   return new sslAddress(pd_address,pd_ctx);
-}
-
-
-/////////////////////////////////////////////////////////////////////////
-
-static inline int setAndCheckTimeout(unsigned long deadline_secs,
-				     unsigned long deadline_nanosecs,
-				     struct timeval& t)
-{
-  if (deadline_secs || deadline_nanosecs) {
-    SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
-    if (t.tv_sec == 0 && t.tv_usec == 0) {
-      // Already timedout.
-      return 1;
-    }
-#if defined(USE_FAKE_INTERRUPTABLE_RECV)
-    if (t.tv_sec > orbParameters::scanGranularity) {
-      t.tv_sec = orbParameters::scanGranularity;
-    }
-#endif
-  }
-  else {
-#if defined(USE_FAKE_INTERRUPTABLE_RECV)
-    t.tv_sec = orbParameters::scanGranularity;
-    t.tv_usec = 0;
-#else
-    t.tv_sec = t.tv_usec = 0;
-#endif
-  }
-  return 0;
-}
-
-static inline int waitWrite(SocketHandle_t sock, struct timeval& t)
-{
-  int rc;
-
-#if defined(USE_POLL)
-  struct pollfd fds;
-  fds.fd = sock;
-  fds.events = POLLOUT;
-  int timeout = t.tv_sec*1000+((t.tv_usec+999)/1000);
-  if (timeout == 0) timeout = -1;
-  rc = poll(&fds,1,timeout);
-  if (rc > 0 && fds.revents & POLLERR) {
-    rc = RC_SOCKET_ERROR;
-  }
-#else
-  fd_set fds, efds;
-  FD_ZERO(&fds);
-  FD_ZERO(&efds);
-  FD_SET(sock,&fds);
-  FD_SET(sock,&efds);
-  struct timeval* tp = &t;
-  if (t.tv_sec == 0 && t.tv_usec == 0) tp = 0;
-  rc = select(sock+1,0,&fds,&efds,tp);
-#endif
-  return rc;
-}
-
-static inline int waitRead(SocketHandle_t sock, struct timeval& t)
-{
-  int rc;
-
-#if defined(USE_POLL)
-  struct pollfd fds;
-  fds.fd = sock;
-  fds.events = POLLIN;
-  int timeout = t.tv_sec*1000+((t.tv_usec+999)/1000);
-  if (timeout == 0) timeout = -1;
-  rc = poll(&fds,1,timeout);
-  if (rc > 0 && fds.revents & POLLERR) {
-    rc = RC_SOCKET_ERROR;
-  }
-#else
-  fd_set fds, efds;
-  FD_ZERO(&fds);
-  FD_ZERO(&efds);
-  FD_SET(sock,&fds);
-  FD_SET(sock,&efds);
-  struct timeval* tp = &t;
-  if (t.tv_sec == 0 && t.tv_usec == 0) tp = 0;
-  rc = select(sock+1,&fds,0,&efds,tp);
-#endif
-  return rc;
 }
 
 

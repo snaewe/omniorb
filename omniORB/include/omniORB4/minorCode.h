@@ -234,6 +234,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_117 OMNIORBMinorCode(117)
 #define OMNIORBMinorCode_118 OMNIORBMinorCode(118)
 #define OMNIORBMinorCode_119 OMNIORBMinorCode(119)
+#define OMNIORBMinorCode_120 OMNIORBMinorCode(120)
 
 #define OMNI_COMMA ,
 #define DeclareValue(name,value) name = value
@@ -457,7 +458,8 @@ code( BAD_INV_ORDER_CodeSetNotKnownYet	     	  , OMNIORBMinorCode_24 ) sep \
 code( BAD_INV_ORDER_ArgumentsNotCalled            , OMNIORBMinorCode_65 ) sep \
 code( BAD_INV_ORDER_ErrorInDynamicImplementation  , OMNIORBMinorCode_66 ) sep \
 code( BAD_INV_ORDER_RequestConfiguredOutOfOrder   , OMNIORBMinorCode_86 ) sep \
-code( BAD_INV_ORDER_DynAnyNotInitialised          , OMNIORBMinorCode_103 )
+code( BAD_INV_ORDER_DynAnyNotInitialised          , OMNIORBMinorCode_103 ) sep \
+code( BAD_INV_ORDER_ORBNotInitialised             , OMNIORBMinorCode_120 )
 
 enum BAD_INV_ORDER_minor {
   DECLARE_BAD_INV_ORDER_minors(DeclareValue,OMNI_COMMA)  

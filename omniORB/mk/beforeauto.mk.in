@@ -892,8 +892,9 @@ ifdef Compiler_GCC
 # -D_CMA_NOWRAPPERS_ is needed otherwise linking omniNames results in
 #                    /opt/aCC/lbin/ld: Unsatisfied symbols:
 #                    fstreambase::cma_close(void)(code)
-CXXOPTIONS    =  -fhandle-exceptions -Wall -Wno-unused \
+CXXOPTIONS    =  -Wall -Wno-unused \
                  -D_CMA_NOWRAPPERS_ @EXTRA_GCC_CXXFLAGS@
+SharedLibraryPlatformLinkFlagsTemplate = -Wl,-b -Wl,+h$$soname -lCsup				 
 endif
 
 ifdef Compiler_aCC
