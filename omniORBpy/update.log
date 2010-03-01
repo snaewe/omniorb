@@ -1,3 +1,13 @@
+Mon Mar  1 16:09:32 GMT 2010 dgrisby
+====================================
+
+- Merge changes from 4_1 branch, up to r5946.
+
+modules/pyObjectRef.cc
+omniidl_be/python.py
+python/omniORB/__init__.py
+
+
 Wed Oct  7 16:46:32 BST 2009 dgrisby
 ====================================
 
