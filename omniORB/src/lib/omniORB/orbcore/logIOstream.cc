@@ -237,7 +237,7 @@ omniORB::logger::~logger()
     if (logfunc())
       logfunc()(pd_buf);
     else {
-      fputs(pd_buf, logfile);
+      fputs(pd_buf, logfile ? logfile : stderr);
       if ((const char*)logfilename)
 	fflush(logfile);
     }
@@ -442,7 +442,7 @@ omniORB::logger::flush()
     if (logfunc())
       logfunc()(pd_buf);
     else
-      fprintf(logfile, "%s", pd_buf);
+      fprintf(logfile ? logfile : stderr, "%s", pd_buf);
   }
   pd_p = pd_buf + strlen(pd_prefix);
   *pd_p = '\0';
@@ -518,7 +518,7 @@ omniORB::do_logs(const char* mesg)
   if (logfunc())
     logfunc()(buf);
   else
-    fputs(buf, logfile);
+    fputs(buf, logfile ? logfile : stderr);
 
   if (buf != inlinebuf) delete[] buf;
 }
