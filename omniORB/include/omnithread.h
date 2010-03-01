@@ -2,7 +2,7 @@
 //				Package : omnithread
 // omnithread.h			Created : 7/94 tjr
 //
-//    Copyright (C) 2002-2009 Apasphere Ltd
+//    Copyright (C) 2002-2010 Apasphere Ltd
 //    Copyright (C) 1994-1997 Olivetti & Oracle Research Laboratory
 //
 //    This file is part of the omnithread library
@@ -37,10 +37,6 @@
 #ifndef __omnithread_h_
 #define __omnithread_h_
 
-#ifndef NULL
-#define NULL 0
-#endif
-
 class omni_mutex;
 class omni_condition;
 class omni_semaphore;
@@ -60,39 +56,23 @@ class omni_thread;
 //
 // Include implementation-specific header file.
 //
-// This must define 4 CPP macros of the form OMNI_x_IMPLEMENTATION for mutex,
+// This must define 7 CPP macros of the form OMNI_x_IMPLEMENTATION for mutex,
 // condition variable, semaphore and thread.  Each should define any
 // implementation-specific members of the corresponding classes.
 //
 
+//
+// Windows
 
-#if defined(__arm__) && defined(__atmos__)
-#include <omnithread/posix.h>
+#if defined(__WIN32__)
 
-#elif defined(__osf1__)
-#  include <omnithread/posix.h>
-#  if defined(_OSF_SOURCE) && defined(signal)
-#    undef signal
+#  if defined(__POSIX_NT__)
+#    include <omnithread/posix.h>
+#  else
+#    include <omnithread/nt.h>
 #  endif
 
-#elif defined(__aix__)
-#include <omnithread/posix.h>
-
-#elif defined(__hpux__)
-#include <omnithread/posix.h>
-
-#elif defined(__vxWorks__)
-#include <omnithread/VxThread.h>
-
-#elif defined(__WIN32__)
-
-#if defined(__POSIX_NT__)
-#include <omnithread/posix.h>
-#else
-#include <omnithread/nt.h>
-#endif
-
-#if defined(_MSC_VER) || defined(__BCPLUSPLUS__)
+#  if defined(_MSC_VER) || defined(__BCPLUSPLUS__)
 
 // Using MSVC++ or Borland C++ to compile. If compiling library as a
 // DLL, define _OMNITHREAD_DLL. If compiling as a static library,
@@ -101,92 +81,45 @@ class omni_thread;
 // application is to be dynamically linked, there is no need to define
 // any of these macros).
 
-#if defined (_OMNITHREAD_DLL) && defined(_WINSTATIC)
-#error "Both _OMNITHREAD_DLL and _WINSTATIC are defined."
-#elif defined(_OMNITHREAD_DLL)
-#define _OMNITHREAD_NTDLL_ __declspec(dllexport)
-#elif !defined(_WINSTATIC)
-#define _OMNITHREAD_NTDLL_ __declspec(dllimport)
-#elif defined(_WINSTATIC)
-#define _OMNITHREAD_NTDLL_
-#endif
+#    if defined (_OMNITHREAD_DLL) && defined(_WINSTATIC)
+#      error "Both _OMNITHREAD_DLL and _WINSTATIC are defined."
+#    elif defined(_OMNITHREAD_DLL)
+#      define _OMNITHREAD_NTDLL_ __declspec(dllexport)
+#    elif !defined(_WINSTATIC)
+#      define _OMNITHREAD_NTDLL_ __declspec(dllimport)
+#    elif defined(_WINSTATIC)
+#      define _OMNITHREAD_NTDLL_
+#    endif
  // _OMNITHREAD_DLL && _WINSTATIC
 
-#else
+#  else
 
 // Not using MSVC++ to compile
-#define _OMNITHREAD_NTDLL_
+#    define _OMNITHREAD_NTDLL_
 
-#endif
- // _MSC_VER
- 
-#elif defined(__sunos__)
-#if __OSVERSION__ != 5
-// XXX Workaround for SUN C++ compiler (seen on 4.2) Template.DB code
-//     regeneration bug. See omniORB2/CORBA_sysdep.h for details.
-#if !defined(__SUNPRO_CC) || __OSVERSION__ != '5'
-#error "Only SunOS 5.x or later is supported."
-#endif
-#endif
-#ifdef UseSolarisThreads
-#include <omnithread/solaris.h>
-#else
-#include <omnithread/posix.h>
-#endif
+#  endif
 
-#elif defined(__linux__)
-#include <omnithread/posix.h>
+//
+// vxWorks
 
-#elif defined(__GLIBC__)
-#include <omnithread/posix.h>
+#elif defined(__vxWorks__)
+#  include <omnithread/VxThread.h>
 
-#elif defined(__nextstep__)
-#include <omnithread/mach.h>
-
-#elif defined(__VMS)
-#include <omnithread/posix.h>
-
-#elif defined(__SINIX__)
-#include <omnithread/posix.h>
-
-#elif defined(__osr5__)
-#include <omnithread/posix.h>
-
-#elif defined(__uw7__)
-#include <omnithread/posix.h>
-
-#elif defined(__irix__)
-#include <omnithread/posix.h>
-
-#elif defined(__freebsd__)
-#include <omnithread/posix.h>
-
-#elif defined(__netbsd__)
-#include <omnithread/posix.h>
-
-#elif defined(__openbsd__)
-#include <omnithread/posix.h>
-
-#elif defined(__rtems__)
-#include <omnithread/posix.h>
-#include <sched.h>
-
-#elif defined(__darwin__)
-#include <omnithread/posix.h>
-
-#elif defined(__macos__)
-#include <omnithread/posix.h>
-#include <sched.h>
-
-#elif defined(__cygwin__)
-#include <omnithread/posix.h>
-
-#elif defined(__Lynx__)
-#include <omnithread/posix.h>
+//
+// Everything else uses pthreads
 
 #else
-#error "No implementation header file"
+#  include <omnithread/posix.h>
+
 #endif
+
+//
+// Additional platform dependencies
+
+#if defined(__macos__)
+#  include <sched.h>
+#endif
+
 
 #if !defined(__WIN32__)
 #define _OMNITHREAD_NTDLL_
@@ -430,9 +363,9 @@ public:
     // a thread in a single call.
     //
 
-    omni_thread(void (*fn)(void*), void* arg = NULL,
+    omni_thread(void (*fn)(void*), void* arg = 0,
 		priority_t pri = PRIORITY_NORMAL);
-    omni_thread(void* (*fn)(void*), void* arg = NULL,
+    omni_thread(void* (*fn)(void*), void* arg = 0,
 		priority_t pri = PRIORITY_NORMAL);
 	// these constructors create a thread which will run the given function
 	// when start() is called.  The thread will be detached if given a
@@ -447,7 +380,7 @@ public:
 
 protected:
 
-    omni_thread(void* arg = NULL, priority_t pri = PRIORITY_NORMAL);
+    omni_thread(void* arg = 0, priority_t pri = PRIORITY_NORMAL);
 	// this constructor is used in a derived class.  The thread will
 	// execute the run() or run_undetached() member functions depending on
 	// whether start() or start_undetached() is called respectively.
@@ -476,16 +409,16 @@ public:
     void set_priority(priority_t);
 	// set the priority of the thread.
 
-    static omni_thread* create(void (*fn)(void*), void* arg = NULL,
+    static omni_thread* create(void (*fn)(void*), void* arg = 0,
 			       priority_t pri = PRIORITY_NORMAL);
-    static omni_thread* create(void* (*fn)(void*), void* arg = NULL,
+    static omni_thread* create(void* (*fn)(void*), void* arg = 0,
 			       priority_t pri = PRIORITY_NORMAL);
 	// create spawns a new thread executing the given function with the
 	// given argument at the given priority. Returns a pointer to the
 	// thread object. It simply constructs a new thread object then calls
 	// start.
 
-    static void exit(void* return_value = NULL);
+    static void exit(void* return_value = 0);
 	// causes the calling thread to terminate.
 
     static omni_thread* self(void);
@@ -601,7 +534,7 @@ public:
 private:
 
     virtual void run(void* /*arg*/) {}
-    virtual void* run_undetached(void* /*arg*/) { return NULL; }
+    virtual void* run_undetached(void* /*arg*/) { return 0; }
 	// can be overridden in a derived class.  When constructed using the
 	// the constructor omni_thread(void*, priority_t), these functions are
 	// called by start() and start_undetached() respectively.
@@ -670,12 +603,13 @@ OMNI_THREAD_EXPOSE:
     OMNI_THREAD_IMPLEMENTATION
 };
 
+
 #ifndef __rtems__
 static omni_thread::init_t omni_thread_init;
 #else
 // RTEMS calls global Ctor/Dtor in a context that is not
 // a posix thread. Calls to functions to pthread_self() in
-// that context returns NULL. 
+// that context returns 0. 
 // So, for RTEMS we will make the thread initialization at the
 // beginning of the Init task that has a posix context.
 #endif

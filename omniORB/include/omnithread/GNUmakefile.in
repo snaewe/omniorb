@@ -6,7 +6,7 @@ INSTALL=@INSTALL@
 
 INSTALLDIR = $(INSTALLINCDIR)/omnithread
 
-HEADERS = mach.h nt.h posix.h pthread_nt.h solaris.h
+HEADERS = nt.h posix.h pthread_nt.h
 
 include $(TOP)/mk/beforeauto.mk
 

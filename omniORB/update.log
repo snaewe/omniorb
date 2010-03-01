@@ -1,3 +1,33 @@
+Mon Mar  1 15:55:55 GMT 2010 dgrisby
+====================================
+
+- Log time and thread id by default.
+
+sample.cfg
+sample.reg
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+
+- Miscellaneous clean-up.
+
+src/lib/omniORB/orbcore/policy.cc
+src/lib/omniORB/orbcore/tracedthread.cc
+
+- Clean up omnithread code.
+
+include/omnithread.h
+include/omnithread/GNUmakefile.in
+include/omnithread/mach.h
+include/omnithread/solaris.h
+src/lib/omnithread/dir.mk
+src/lib/omnithread/mach.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/threaddata.cc
+src/lib/omnithread/vxWorks.cc
+
+
 Fri Jan  8 13:37:48 GMT 2010 dgrisby
 ====================================
 

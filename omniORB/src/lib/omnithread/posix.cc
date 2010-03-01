@@ -322,9 +322,9 @@ omni_thread::init_t::init_t(void)
 #endif
 
 #if (PthreadDraftVersion == 4)
-    THROW_ERRORS(pthread_keycreate(&self_key, NULL));
+    THROW_ERRORS(pthread_keycreate(&self_key, 0));
 #else
-    THROW_ERRORS(pthread_key_create(&self_key, NULL));
+    THROW_ERRORS(pthread_key_create(&self_key, 0));
 #endif
 
 #ifdef PthreadSupportThreadPriority
@@ -443,12 +443,12 @@ omni_thread_wrapper(void* ptr)
     // Now invoke the thread function with the given argument.
     //
 
-    if (me->fn_void != NULL) {
+    if (me->fn_void != 0) {
 	(*me->fn_void)(me->thread_arg);
 	omni_thread::exit();
     }
 
-    if (me->fn_ret != NULL) {
+    if (me->fn_ret != 0) {
 	void* return_value = (*me->fn_ret)(me->thread_arg);
 	omni_thread::exit(return_value);
     }
@@ -463,7 +463,7 @@ omni_thread_wrapper(void* ptr)
 
     // should never get here.
 
-    return NULL;
+    return 0;
 }
 
 
@@ -478,7 +478,7 @@ omni_thread::omni_thread(void (*fn)(void*), void* arg, priority_t pri)
 {
     common_constructor(arg, pri, 1);
     fn_void = fn;
-    fn_ret = NULL;
+    fn_ret = 0;
 }
 
 // construct an undetached thread running a given function.
@@ -486,7 +486,7 @@ omni_thread::omni_thread(void (*fn)(void*), void* arg, priority_t pri)
 omni_thread::omni_thread(void* (*fn)(void*), void* arg, priority_t pri)
 {
     common_constructor(arg, pri, 0);
-    fn_void = NULL;
+    fn_void = 0;
     fn_ret = fn;
 }
 
@@ -495,8 +495,8 @@ omni_thread::omni_thread(void* (*fn)(void*), void* arg, priority_t pri)
 omni_thread::omni_thread(void* arg, priority_t pri)
 {
     common_constructor(arg, pri, 1);
-    fn_void = NULL;
-    fn_ret = NULL;
+    fn_void = 0;
+    fn_ret = 0;
 }
 
 // common part of all constructors.
@@ -615,7 +615,7 @@ omni_thread::start(void)
 void
 omni_thread::start_undetached(void)
 {
-    if ((fn_void != NULL) || (fn_ret != NULL))
+    if ((fn_void != 0) || (fn_ret != 0))
 	throw omni_thread_invalid();
 
     detached = 0;
@@ -820,7 +820,7 @@ omni_thread::yield(void)
 {
 #if (PthreadDraftVersion == 6)
 
-    pthread_yield(NULL);
+    pthread_yield(0);
 
 #elif (PthreadDraftVersion < 9)
 
@@ -902,7 +902,7 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 #if defined(__linux__) || defined(__GLIBC__) || defined(__aix__) || defined(__SCO_VERSION__) || defined(__darwin__) || defined(__macos__)
 
     struct timeval tv;
-    gettimeofday(&tv, NULL); 
+    gettimeofday(&tv, 0); 
     abs.tv_sec = tv.tv_sec;
     abs.tv_nsec = tv.tv_usec * 1000;
 
@@ -997,8 +997,3 @@ omni_thread::release_dummy()
   omni_thread_dummy* dummy = (omni_thread_dummy*)self;
   delete dummy;
 }
-
-
-#define INSIDE_THREAD_IMPL_CC
-#include "threaddata.cc"
-#undef INSIDE_THREAD_IMPL_CC
