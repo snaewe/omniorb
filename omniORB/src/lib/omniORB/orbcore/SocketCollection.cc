@@ -945,11 +945,10 @@ SocketCollection::Select() {
 	// the readable sockets, but that should usually be a
 	// reasonably small number, so it's probably OK.
 
-	if (FD_ISSET(s->pd_socket, &rfds)) {
+	if (s->pd_pd_index >= 0 && FD_ISSET(s->pd_socket, &rfds)) {
 	  // Remove socket from pd_fd_set by swapping last item.
 	  // We don't use FD_CLR since that is incredibly inefficient
 	  // with large sets.
-	  OMNIORB_ASSERT(s->pd_fd_index >= 0);
 	  int to_i   = s->pd_fd_index;
 	  int from_i = --pd_fd_set.fd_count;
 	  

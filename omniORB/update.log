@@ -1,3 +1,11 @@
+Sat Apr 17 22:32:46 BST 2010 dgrisby
+====================================
+
+- Race condition leading to assertion failure. Bug report from Richard Pitts.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Sat Feb 27 20:08:29 GMT 2010 dgrisby
 ====================================
 
