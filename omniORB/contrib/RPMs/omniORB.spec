@@ -6,7 +6,7 @@
 Summary: Object Request Broker (ORB)
 Name:    omniORB
 Version: 4.1.4
-Release: 1
+Release: 3%{?dist}
 License: GPL / LGPL
 Group:   System/Libraries
 Source0: %{name}-%{version}.tar.gz
@@ -219,8 +219,8 @@ fi
 %defattr (-,root,root)
 %dir %attr(700,omni,omni) %{_var}/omniNames
 %dir %attr(700,omni,omni) %{_localstatedir}/omniMapper
-%attr(644,root,man) %{_mandir}/man1/omniNames*
-#%attr(644,root,man) %{_mandir}/man1/omniMapper*
+%attr(644,root,man) %{_mandir}/man8/omniNames*
+%attr(644,root,man) %{_mandir}/man8/omniMapper*
 %attr(755,root,root) %{_bindir}/omniMapper
 %attr(755,root,root) %{_bindir}/omniNames
 # Thin substitute for standard Linux init script
@@ -237,6 +237,7 @@ fi
 %files utils
 %defattr (-,root,root)
 %attr(644,root,man) %{_mandir}/man1/catior*
+%attr(644,root,man) %{_mandir}/man1/convertior*
 %attr(644,root,man) %{_mandir}/man1/genior*
 %attr(644,root,man) %{_mandir}/man1/nameclt*
 %{_bindir}/catior.omni
@@ -248,6 +249,7 @@ fi
 %files devel
 %defattr(-,root,root)
 %doc ReleaseNotes* readmes/*
+%attr(644,root,man) %{_mandir}/man1/omnicpp*
 %attr(644,root,man) %{_mandir}/man1/omniidl*
 %{_bindir}/omnicpp
 %{_bindir}/omniidl
@@ -273,6 +275,10 @@ fi
 
 
 %changelog
+* Tue Apr 13 2010 Thomas Lockhart <lockhart@fourpalms.org> 4.1.4
+- Define py_libdir to determine the location of python libraries
+- Define py_execlibdir to determine the location of shared libraries
+
 * Thu Apr 21 2005 Sander Steffann <steffann@nederland.net> 4.0.6-2
 - Fixed packaging issues for RHEL and x86_64
 

@@ -1,7 +1,7 @@
 Summary:  Python Language Mapping for omniORB
 Name:     omniORBpy
 Version:  3.4
-Release:  1
+Release:  2%{?dist}
 License:  GPL / LGPL
 Group:    System/Libraries
 Source0:  %{name}-%{version}.tar.gz
@@ -50,6 +50,8 @@ Developer documentation and examples.
 
 
 %define py_ver %(python -c 'import sys;print(sys.version[0:3])')
+%define py_libdir %(python -c 'from distutils import sysconfig; print sysconfig.get_python_lib()')
+%define py_execlibdir %(python -c 'from distutils import sysconfig; print sysconfig.get_python_lib(True)')
 
 %prep 
 
@@ -87,28 +89,32 @@ rm -rf $RPM_BUILD_ROOT
 %defattr (-,root,root)
 %doc COPYING.LIB
 #%doc bugfixes*
-%prefix/lib*/python%{py_ver}/site-packages/_omni*.so*
-%prefix/lib*/python%{py_ver}/site-packages/omniORB
+%{py_execlibdir}/_omni*.so*
+%{py_libdir}/omniORB
 
 %files -n %{name}-standard
 %defattr(-,root,root)
-%prefix/lib*/python%{py_ver}/site-packages/*.py*
-%prefix/lib*/python%{py_ver}/site-packages/omniORB.pth
-%prefix/lib*/python%{py_ver}/site-packages/CosNaming
-%prefix/lib*/python%{py_ver}/site-packages/CosNaming__POA
+%{py_libdir}/*.py*
+%{py_libdir}/omniORB.pth
+%{py_libdir}/CosNaming
+%{py_libdir}/CosNaming__POA
 
 %files -n %{name}-devel
 %defattr(-,root,root)
 %doc README* ReleaseNotes* update.log
 %prefix/include/omniORBpy.h
 %prefix/include/omniORB4/pydistdate.hh
-%prefix/lib*/python%{py_ver}/site-packages/omniidl_be/python.py*
+%{py_libdir}/omniidl_be/python.py*
 
 %files -n %{name}-doc
 %defattr(-,root,root)
 %doc doc/* 
 
 %changelog
+* Tue Apr 29 2008 Thomas Lockhart <lockhart@fourpalms.org> 3.2-2
+- Define py_libdir to determine the location of python libraries
+- Define py_execlibdir to determine the location of shared libraries
+
 * Fri Dec 16 2005 Thomas Lockhart <lockhart@fourpalms.org> 2.6-3
 - Modified postun syntax to eliminate an error from ldconfig
 
