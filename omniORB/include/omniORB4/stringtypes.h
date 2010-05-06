@@ -573,6 +573,7 @@ public:
 
 private:
   _CORBA_String_inout();
+  _CORBA_String_inout& operator=(const _CORBA_String_inout&);
 };
 
 //////////////////////////////////////////////////////////////////////

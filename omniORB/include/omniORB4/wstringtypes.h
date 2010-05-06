@@ -544,6 +544,7 @@ public:
 
 private:
   _CORBA_WString_inout();
+  _CORBA_WString_inout& operator=(const _CORBA_WString_inout&);
 };
 
 //////////////////////////////////////////////////////////////////////

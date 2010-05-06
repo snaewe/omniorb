@@ -1,3 +1,12 @@
+Thu May  6 17:17:32 BST 2010 dgrisby
+====================================
+
+- Work around spurious MSVC warning.
+
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+
+
 Thu May  6 16:21:52 BST 2010 dgrisby
 ====================================
 
