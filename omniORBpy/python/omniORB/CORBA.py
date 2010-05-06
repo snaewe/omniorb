@@ -321,6 +321,9 @@ class UserException (Exception):
     def _tuple(self):
         return tuple(self)
 
+    def __reduce__(self):
+        return (self.__class__, self.__args)
+
 
 # All the standard system exceptions...
 

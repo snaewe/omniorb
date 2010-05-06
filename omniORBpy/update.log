@@ -1,3 +1,11 @@
+Thu May  6 16:47:33 BST 2010 dgrisby
+====================================
+
+- Allow exceptions to be pickled. Thanks Luke Deller.
+
+python/omniORB/CORBA.py
+
+
 Thu May  6 16:21:52 BST 2010 dgrisby
 ====================================
 
