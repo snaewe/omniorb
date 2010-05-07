@@ -291,7 +291,7 @@ public:
 
 
 protected:
-  omniObjAdapter(int nil=0);
+  omniObjAdapter(int is_nil=0);
 
   void adapterDestroyed();
   // Called by derived adapter classes when the adapter has been destroyed.

@@ -94,8 +94,8 @@ public:
   static _core_attr const char* _PD_repoId;
 
 protected:
-  inline BOA(int nil) {
-    if (nil)
+  inline BOA(int is_nil) {
+    if (is_nil)
       _PR_setobj((omniObjRef*)0);
     else
       _PR_setobj((omniObjRef*)1);

@@ -296,8 +296,8 @@ public:
   virtual ~ORB();
 
 protected:
-  inline ORB(int nil) {
-    if (nil)
+  inline ORB(int is_nil) {
+    if (is_nil)
       _PR_setobj((omniObjRef*)0);
     else
       _PR_setobj((omniObjRef*)1);

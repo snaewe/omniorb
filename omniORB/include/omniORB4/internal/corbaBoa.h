@@ -82,7 +82,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 class omniOrbBOA : public CORBA::BOA, public omniObjAdapter
 {
 public:
-  omniOrbBOA(int nil);
+  omniOrbBOA(int is_nil);
   virtual ~omniOrbBOA();
 
   ////////////////

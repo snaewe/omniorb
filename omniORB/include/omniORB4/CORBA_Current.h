@@ -60,7 +60,7 @@ public:
   static _core_attr const char* _PD_repoId;
 
 protected:
-  Current(int nil);
+  Current(int is_nil);
   virtual ~Current();
 
 private:

@@ -70,7 +70,7 @@
 class omniOrbORB : public CORBA::ORB {
 public:
   virtual ~omniOrbORB();
-  omniOrbORB(int nil);
+  omniOrbORB(int is_nil);
 
   virtual char* id();
 
