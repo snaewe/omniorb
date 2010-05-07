@@ -235,6 +235,9 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_118 OMNIORBMinorCode(118)
 #define OMNIORBMinorCode_119 OMNIORBMinorCode(119)
 #define OMNIORBMinorCode_120 OMNIORBMinorCode(120)
+#define OMNIORBMinorCode_121 OMNIORBMinorCode(121)
+#define OMNIORBMinorCode_122 OMNIORBMinorCode(122)
+#define OMNIORBMinorCode_123 OMNIORBMinorCode(123)
 
 #define OMNI_COMMA ,
 #define DeclareValue(name,value) name = value
@@ -244,9 +247,10 @@ OMNI_NAMESPACE_BEGIN(omni)
 //  UNKNOWN
 #define DECLARE_UNKNOWN_minors(code,sep) \
 \
-code( UNKNOWN_UserException,   OMGMinorCode(1) ) sep \
-code( UNKNOWN_SystemException, OMGMinorCode(2) ) sep \
-code( UNKNOWN_PythonException, OMNIORBMinorCode_98 )
+code( UNKNOWN_UserException,   	   OMGMinorCode(1) ) sep \
+code( UNKNOWN_SystemException, 	   OMGMinorCode(2) ) sep \
+code( UNKNOWN_PythonException, 	   OMNIORBMinorCode_98 ) sep \
+code( UNKNOWN_OmniThreadException, OMNIORBMinorCode_123 )
 
 enum UNKNOWN_minor {
   DECLARE_UNKNOWN_minors(DeclareValue,OMNI_COMMA)
@@ -428,7 +432,8 @@ enum NO_IMPLEMENT_minor {
 \
 code ( NO_RESOURCES_PIOperationNotSupported, OMGMinorCode(1) ) sep \
 code ( NO_RESOURCES_CodeSetNotSupported    , OMNIORBMinorCode_25 ) sep \
-code ( NO_RESOURCES_InitialRefNotFound     , OMNIORBMinorCode_51 )
+code ( NO_RESOURCES_InitialRefNotFound     , OMNIORBMinorCode_51 ) sep \
+code ( NO_RESOURCES_UnableToStartThread    , OMNIORBMinorCode_122 )
 
 enum NO_RESOURCES_minor {
   DECLARE_NO_RESOURCES_minors(DeclareValue,OMNI_COMMA)  
@@ -601,6 +606,20 @@ code( BAD_CONTEXT_StartingScopeNotFound , OMNIORBMinorCode_76 )
 enum BAD_CONTEXT_minor {
   DECLARE_BAD_CONTEXT_minors(DeclareValue,OMNI_COMMA)
 };
+
+
+// NO_MEMORY
+#define DECLARE_NO_MEMORY_minors(code,sep) \
+\
+code( NO_MEMORY_BadAlloc, OMNIORBMinorCode_121 )
+
+enum NO_MEMORY_minor {
+  DECLARE_NO_MEMORY_minors(DeclareValue,OMNI_COMMA)
+};
+
+
+//
+// Exception access / lookup
 
 inline CORBA::Boolean is_COMM_FAILURE_minor(CORBA::ULong w) {
   return (w >= COMM_FAILURE_MarshalArguments &&

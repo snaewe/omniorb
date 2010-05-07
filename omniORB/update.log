@@ -1,3 +1,15 @@
+Fri May  7 12:58:55 BST 2010 dgrisby
+====================================
+
+- Better handling of out-of-resources conditions.
+
+include/omniORB4/minorCode.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/minorCode.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Thu May  6 17:17:32 BST 2010 dgrisby
 ====================================
 

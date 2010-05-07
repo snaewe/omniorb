@@ -66,6 +66,7 @@ minorCodeLookup BAD_PARAM_LookupTable[] = {
 };
 
 minorCodeLookup NO_MEMORY_LookupTable[] = { 
+  DECLARE_NO_MEMORY_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 

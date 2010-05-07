@@ -186,6 +186,10 @@
 #include <interceptors.h>
 #include <poaimpl.h>
 
+#ifdef HAVE_STD
+#include <memory>
+#endif
+
 OMNI_NAMESPACE_BEGIN(omni)
 
 ////////////////////////////////////////////////////////////////////////
@@ -499,6 +503,46 @@ GIOP_S::handleRequest() {
 
   catch(const giopStream::CommFailure&) {
     throw;
+  }
+
+#ifdef HAVE_STD
+  catch (const std::bad_alloc&) {
+    // We keep logging as simple as possible to avoid too much allocation.
+    omniORB::logs(1, "ERROR -- upcall raised std::bad_alloc.");
+
+    if (response_expected()) {
+      CORBA::NO_MEMORY ex(NO_MEMORY_BadAlloc,
+			  (CORBA::CompletionStatus)completion());
+      impl()->sendSystemException(this,ex);
+    }
+  }
+  
+  catch (const std::exception& std_ex) {
+    if (omniORB::trace(1)) {
+      omniORB::logger l;
+      l << "WARNING -- method '" << operation() << "' raised an unexpected\n"
+	<< " std::exception (not a CORBA exception):\n "
+	<< std_ex.what() << "\n";
+    }
+    if (response_expected()) {
+      CORBA::UNKNOWN ex(UNKNOWN_UserException,
+			(CORBA::CompletionStatus) completion());
+      impl()->sendSystemException(this,ex);
+    }
+  }
+#endif // HAVE_STD
+
+  catch (const omni_thread_fatal& thr_ex) {
+    if (omniORB::trace(1)) {
+      omniORB::logger l;
+      l << "WARNING -- method '" << operation() << "' raised an "
+	<< "omni_thread_fatal exception (error " << thr_ex.error << ").\n";
+    }
+    if (response_expected()) {
+      CORBA::UNKNOWN ex(UNKNOWN_OmniThreadException,
+			(CORBA::CompletionStatus) completion());
+      impl()->sendSystemException(this,ex);
+    }
   }
 
   catch(...) {

@@ -930,7 +930,20 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
     void** args = new void* [2];
     args[0] = (omniOrbPOA*) this;
     args[1] = (void*) (unsigned long) etherealize_objects;
-    (new omni_thread(destroyer_thread_fn, args))->start();
+
+    try {
+      (new omni_thread(destroyer_thread_fn, args))->start();
+    }
+    catch (const omni_thread_fatal& ex) {
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Unable to start POA destroyer thread (error "
+	    << ex.error << ").\n";
+      }
+      OMNIORB_THROW(NO_RESOURCES,
+		    NO_RESOURCES_UnableToStartThread,
+		    CORBA::COMPLETED_NO);
+    }
   }
 }
 
@@ -2415,7 +2428,8 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
 	omni_thread::sleep(0, 100000000);
       }
       catch (...) {
-	omniORB::logs(2, "Unexpected exception in do_destroy.");
+	omniORB::logs(1, "Unexpected exception in omniOrbPOA::do_destroy.");
+	throw;
       }
     }
     else {

@@ -1080,7 +1080,19 @@ omniOrbORB::do_shutdown(CORBA::Boolean wait_for_completion)
 
     omniORB::logs(15, "Starting an ORB shutdown thread.");
 
-    (new omni_thread(shutdown_thread_fn, (omniOrbORB*) this))->start();
+    try {
+      (new omni_thread(shutdown_thread_fn, (omniOrbORB*) this))->start();
+    }
+    catch (const omni_thread_fatal& ex) {
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Unable to start ORB shutdown thread (error "
+	    << ex.error << ").\n";
+      }
+      OMNIORB_THROW(NO_RESOURCES,
+		    NO_RESOURCES_UnableToStartThread,
+		    CORBA::COMPLETED_NO);
+    }
   }
 }
 
