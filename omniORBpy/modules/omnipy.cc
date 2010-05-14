@@ -766,7 +766,7 @@ extern "C" {
       char* err = new char[80];
       sprintf(err, "Operation requires %d argument%s; %d given",
 	      arg_len, (arg_len == 1) ? "" : "s",
-	      PyTuple_GET_SIZE(op_args));
+	      (int)PyTuple_GET_SIZE(op_args));
 
       PyErr_SetString(PyExc_TypeError, err);
       delete [] err;
