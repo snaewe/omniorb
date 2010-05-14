@@ -1,3 +1,12 @@
+Fri May 14 13:49:16 BST 2010 dgrisby
+====================================
+
+- reserveOutputSpaceForPrimitiveType with zero required size could
+  create a chunk that had to be closed while still empty.
+
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Fri May  7 23:46:18 BST 2010 dgrisby
 ====================================
 

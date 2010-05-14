@@ -361,7 +361,7 @@ reserveOutputSpaceForPrimitiveType(omni::alignment_t align, size_t required)
       return 1;
     }
 
-    if (pd_inHeader) {
+    if (pd_inHeader || (!pd_inChunk && required == 0)) {
       OMNIORB_ASSERT(!pd_inChunk);
       copyStateToActual();
       if (!pd_actual.reserveOutputSpaceForPrimitiveType(align, required))
