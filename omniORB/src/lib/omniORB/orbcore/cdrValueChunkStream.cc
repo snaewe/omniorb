@@ -361,7 +361,7 @@ reserveOutputSpaceForPrimitiveType(omni::alignment_t align, size_t required)
       return 1;
     }
 
-    if (pd_inHeader || (!pd_inChunk && required == 0)) {
+    if (pd_inHeader) {
       OMNIORB_ASSERT(!pd_inChunk);
       copyStateToActual();
       if (!pd_actual.reserveOutputSpaceForPrimitiveType(align, required))
@@ -372,10 +372,24 @@ reserveOutputSpaceForPrimitiveType(omni::alignment_t align, size_t required)
     }
 
     if (!pd_inChunk) {
-      // Start a new chunk
-      OMNIORB_ASSERT(pd_nestLevel);
-      OMNIORB_ASSERT(pd_lengthPtr == 0);
-      startOutputChunk();
+      if (required) {
+	// Start a new chunk
+	OMNIORB_ASSERT(pd_nestLevel);
+	OMNIORB_ASSERT(pd_lengthPtr == 0);
+	startOutputChunk();
+      }
+      else {
+	// No data to marshal, merely aligning output. Ask actual to
+	// reserve and set pd_outb_end to ensure we re-evaluate when
+	// there is something to marshal.
+	copyStateToActual();
+	if (!pd_actual.reserveOutputSpaceForPrimitiveType(align, required))
+	  OMNIORB_THROW(MARSHAL, MARSHAL_CannotReserveOutputSpace,
+			(CORBA::CompletionStatus)completion());
+	copyStateFromActual();
+	pd_outb_end = pd_outb_mkr;
+	return 1;
+      }
     }
 
     p1 = omni::align_to((omni::ptr_arith_t)pd_outb_mkr, align);
@@ -911,7 +925,7 @@ get_octet_array(_CORBA_Octet* b, int size, omni::alignment_t align)
     // More octets left in this chunk (but not in the buffer)
     copyStateToActual();
 
-    if (pd_remaining <= size) {
+    if (pd_remaining <= (_CORBA_ULong)size) {
       pd_actual.get_octet_array(b, pd_remaining, align);
       size -= pd_remaining;
       b += pd_remaining;
