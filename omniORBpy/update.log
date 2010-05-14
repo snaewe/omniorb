@@ -1,3 +1,20 @@
+Fri May 14 13:52:49 BST 2010 dgrisby
+====================================
+
+- Wrong sprintf argument size.
+
+modules/omnipy.cc
+
+- Better logging when receiving invalid indirections.
+
+modules/pyTypeCode.cc
+
+- Premature decref caused problems with properties used as valuetype
+  attributes.
+
+modules/pyValueType.cc
+
+
 Thu May  6 16:47:33 BST 2010 dgrisby
 ====================================
 

@@ -524,7 +524,7 @@ marshalMembers(cdrValueChunkStream& stream, PyObject* d_o, PyObject* a_o)
     name    = PyTuple_GET_ITEM(d_o, j);
     value   = PyObject_GetAttr(a_o, name);
 
-    Py_DECREF(value); // Safe to DECREF now because object still holds a ref
+    omniPy::PyRefHolder h(value);
     omniPy::marshalPyObject(stream, PyTuple_GET_ITEM(d_o, j+1), value);
   }
 }  
