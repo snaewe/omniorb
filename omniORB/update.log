@@ -1,3 +1,11 @@
+Tue Jun  1 23:49:43 BST 2010 dgrisby
+====================================
+
+- Remove "good luck" message from error when deleting an object reference.
+
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Fri May 14 14:26:30 BST 2010 dgrisby
 ====================================
 

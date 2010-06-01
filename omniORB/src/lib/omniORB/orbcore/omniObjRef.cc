@@ -594,7 +594,6 @@ omniObjRef::~omniObjRef()
       omniORB::logger log;
       log <<
 	"omniORB: ERROR -- an object reference has been explicity deleted.\n"
-	" This is not legal, and will probably lead to a crash. Good luck!\n";
     }
   }
 
