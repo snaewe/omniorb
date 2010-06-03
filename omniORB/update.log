@@ -1,3 +1,11 @@
+Thu Jun  3 14:09:43 BST 2010 dgrisby
+====================================
+
+- Fix old typo in log message.
+
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Tue Jun  1 23:49:43 BST 2010 dgrisby
 ====================================
 

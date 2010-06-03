@@ -593,7 +593,7 @@ omniObjRef::~omniObjRef()
     if( omniORB::traceLevel > 0 ) {
       omniORB::logger log;
       log <<
-	"omniORB: ERROR -- an object reference has been explicity deleted.\n"
+	"omniORB: ERROR -- an object reference has been explicitly deleted.\n"
     }
   }
 
