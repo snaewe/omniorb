@@ -1714,6 +1714,8 @@ giopImpl12::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 				    "MessageError", g->pd_strand);
   }
 
+  giop_s.state(GIOP_S::ReplyIsBeingComposed);
+
   int repoid_size;
   const char* repoid = ex._NP_repoId(&repoid_size);
 
@@ -1792,6 +1794,8 @@ giopImpl12::sendUserException(giopStream* g,const CORBA::UserException& ex) {
   GIOP_S& giop_s = *(GIOP_S*)g;
   cdrStream& s = (cdrStream&) *g;
 
+  giop_s.state(GIOP_S::ReplyIsBeingComposed);
+
   int repoid_size;
   const char* repoid = ex._NP_repoId(&repoid_size);
 
@@ -1864,6 +1868,8 @@ giopImpl12::sendLocationForwardReply(giopStream* g,CORBA::Object_ptr obj,
   GIOP_S& giop_s = *(GIOP_S*)g;
   cdrStream& s = (cdrStream&) *g;
 
+  giop_s.state(GIOP_S::ReplyIsBeingComposed);
+
   // Compute and initialise the message size field
   {
     cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12);
@@ -1907,6 +1913,8 @@ giopImpl12::sendLocateReply(giopStream* g,GIOP::LocateStatusType rc,
 
   GIOP_S& giop_s = *(GIOP_S*)g;
   cdrStream& s = (cdrStream&) *g;
+
+  giop_s.state(GIOP_S::ReplyIsBeingComposed);
 
   CORBA::Object_ptr extra = CORBA::Object::_nil();
 

@@ -1245,6 +1245,8 @@ giopImpl10::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
       }
   }
 
+  giop_s.state(GIOP_S::ReplyIsBeingComposed);
+
   int repoid_size;
   const char* repoid = ex._NP_repoId(&repoid_size);
 
@@ -1307,6 +1309,8 @@ giopImpl10::sendUserException(giopStream* g,const CORBA::UserException& ex) {
 
   GIOP_S& giop_s = *(GIOP_S*)g;
   cdrStream& s = (cdrStream&) *g;
+
+  giop_s.state(GIOP_S::ReplyIsBeingComposed);
 
   int i, repoid_size;
   const char* repoid = ex._NP_repoId(&repoid_size);
@@ -1372,6 +1376,8 @@ giopImpl10::sendLocationForwardReply(giopStream* g,CORBA::Object_ptr obj,
   GIOP_S& giop_s = *(GIOP_S*)g;
   cdrStream& s = (cdrStream&) *g;
 
+  giop_s.state(GIOP_S::ReplyIsBeingComposed);
+
   // Service context
   operator>>= ((CORBA::ULong)0,s);
 
@@ -1412,6 +1418,8 @@ giopImpl10::sendLocateReply(giopStream* g,GIOP::LocateStatusType rc,
 
   GIOP_S& giop_s = *(GIOP_S*)g;
   cdrStream& s = (cdrStream&) *g;
+
+  giop_s.state(GIOP_S::ReplyIsBeingComposed);
 
   // request id
   giop_s.requestId() >>= s;

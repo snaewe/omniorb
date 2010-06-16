@@ -1,3 +1,13 @@
+Wed Jun 16 11:41:21 BST 2010 dgrisby
+====================================
+
+- Send error while sending an exception reply would leak the GIOP_S.
+
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Thu Jun  3 14:09:43 BST 2010 dgrisby
 ====================================
 
