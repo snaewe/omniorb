@@ -1,3 +1,12 @@
+Thu Jun 17 23:51:25 BST 2010 dgrisby
+====================================
+
+- Previous change to state machine requires input to be skipped
+  earlier when handling a system exception.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+
+
 Thu Jun 17 17:04:40 BST 2010 dgrisby
 ====================================
 

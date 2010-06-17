@@ -424,6 +424,9 @@ GIOP_S::handleRequest() {
   }
 
 #define MARSHAL_USER_EXCEPTION() do { \
+  if (pd_state == RequestIsBeingProcessed) { \
+    SkipRequestBody(); \
+  } \
   if (response_expected()) { \
     if (calldescriptor()) { \
       int i, repoid_size;  \
@@ -449,21 +452,18 @@ GIOP_S::handleRequest() {
       impl()->sendUserException(this,ex); \
     } \
   } \
-  if (pd_state == RequestIsBeingProcessed) { \
-    SkipRequestBody(); \
-  } \
 } while (0)
 
 #define MARSHAL_SYSTEM_EXCEPTION() do { \
+    if (pd_state == RequestIsBeingProcessed) { \
+      SkipRequestBody(); \
+    } \
     if (pd_state == WaitForRequestHeader || \
 	pd_state == RequestHeaderIsBeingProcessed ) { \
       impl()->sendMsgErrorMessage(this, &ex); \
       return 0; \
     } else if (response_expected()) { \
       impl()->sendSystemException(this,ex); \
-    } \
-    if (pd_state == RequestIsBeingProcessed) { \
-      SkipRequestBody(); \
     } \
 } while (0) 
 
@@ -630,15 +630,15 @@ GIOP_S::handleLocateRequest() {
   }
 
 #define MARSHAL_SYSTEM_EXCEPTION() do { \
+    if (pd_state == RequestIsBeingProcessed) { \
+      SkipRequestBody(); \
+    } \
     if (pd_state == WaitForRequestHeader || \
         pd_state == RequestHeaderIsBeingProcessed) { \
       impl()->sendMsgErrorMessage(this, &ex); \
       return 0; \
     } else if (response_expected()) { \
       impl()->sendSystemException(this,ex); \
-    } \
-    if (pd_state == RequestIsBeingProcessed) { \
-      SkipRequestBody(); \
     } \
 } while (0) 
 
