@@ -1,3 +1,12 @@
+Fri Jul 30 11:11:54 BST 2010 dgrisby
+====================================
+
+- Make locate request handling consistent with normal request
+  handling. Thanks Peter Klotz.
+
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Fri Jul 16 15:48:54 BST 2010 dgrisby
 ====================================
 
