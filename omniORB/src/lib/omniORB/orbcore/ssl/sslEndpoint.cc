@@ -722,7 +722,7 @@ sslEndpoint::Shutdown() {
 static char* peerAddress(int sock)
 {
   OMNI_SOCKADDR_STORAGE addr;
-  SOCKNAME_SIZE_T l;
+  SOCKNAME_SIZE_T l = sizeof(addr);
   if (getpeername(sock, (struct sockaddr*)&addr, &l) == RC_SOCKET_ERROR)
     return CORBA::string_dup("<unknown address>");
   

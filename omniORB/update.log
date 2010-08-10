@@ -1,3 +1,11 @@
+Tue Aug 10 13:45:33 BST 2010 dgrisby
+====================================
+
+- Failed to initialise length value in call to getpeername().
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+
+
 Fri Jul 30 11:11:54 BST 2010 dgrisby
 ====================================
 
