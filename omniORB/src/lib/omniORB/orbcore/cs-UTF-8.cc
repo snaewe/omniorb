@@ -521,6 +521,7 @@ TCS_C_UTF_8::marshalString(cdrStream& stream,
     OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
 		  (CORBA::CompletionStatus)stream.completion());
 
+  stream.declareArrayLength(omni::ALIGN_4, mlen+4);
   mlen >>= stream;
   stream.put_octet_array((const _CORBA_Octet*)b.buffer(), mlen);
 }
@@ -656,6 +657,7 @@ TCS_C_UTF_8::fastMarshalString(cdrStream&          stream,
 		      (CORBA::CompletionStatus)stream.completion());
 
       _CORBA_ULong mlen = len + 1;
+      stream.declareArrayLength(omni::ALIGN_4, mlen+4);
       mlen >>= stream;
       stream.put_octet_array((const _CORBA_Octet*)s, mlen);
     }
@@ -702,6 +704,7 @@ TCS_C_UTF_8::fastMarshalString(cdrStream&          stream,
       OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
 		    (CORBA::CompletionStatus)stream.completion());
 
+    stream.declareArrayLength(omni::ALIGN_4, mlen+4);
     mlen >>= stream;
     stream.put_octet_array((const _CORBA_Octet*)b.buffer(), mlen);
     return 1;

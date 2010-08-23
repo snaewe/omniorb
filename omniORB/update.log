@@ -1,3 +1,11 @@
+Mon Aug 23 16:33:19 BST 2010 dgrisby
+====================================
+
+- Ensure string length and string body are always in the same chunk.
+
+omniORB/src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+
 Tue Aug 10 13:45:33 BST 2010 dgrisby
 ====================================
 
