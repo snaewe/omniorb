@@ -154,16 +154,22 @@ omniURI::buildURI(const char* prefix, const char* host, CORBA::UShort port)
   const char* ip6format = "%s[%s]:%d";
 
   const char* format = ip4format;
-  CORBA::ULong len = strlen(prefix);
+  CORBA::ULong len = 0;
   for (const char* c = host; *c; ++c, ++len) {
     if (*c == ':')
       format = ip6format;
   }
+  if (host[0] == '[' && host[len-1] == ']') {
+    if (omniORB::trace(5)) {
+      omniORB::logger log;
+      log << "Fixing invalid square-bracketed address " << host << "\n";
+    }
+    format = ip4format;
+  }
 
-  if (len == 0) return 0;
-  len += strlen(format) + 6;
+  len += strlen(format) + strlen(prefix) + 6;
   CORBA::String_var addrstr(CORBA::string_alloc(len));
-  sprintf((char*)addrstr, format, prefix, host, port);
+  sprintf((char*)addrstr, format, prefix, host, (int)port);
 
   return addrstr._retn();
 }

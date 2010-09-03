@@ -1,3 +1,11 @@
+Fri Sep  3 16:04:25 BST 2010 dgrisby
+====================================
+
+- Accept invalid IORs with IPv6 addresses in square brackets.
+
+omniORB/src/lib/omniORB/orbcore/uri.cc
+
+
 Mon Aug 23 16:33:19 BST 2010 dgrisby
 ====================================
 
