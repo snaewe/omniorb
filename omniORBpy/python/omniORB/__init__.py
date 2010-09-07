@@ -254,6 +254,7 @@ Error: your Python executable was not built with thread support.
 import _omnipy
 
 _coreVersion = _omnipy.coreVersion()
+__version__  = _omnipy.__version__
 
 
 # Make sure _omnipy submodules are in sys.modules, and have not been

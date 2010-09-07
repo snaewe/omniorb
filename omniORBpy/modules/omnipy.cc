@@ -1052,6 +1052,10 @@ OMNIORB_FOR_EACH_SYS_EXCEPTION(DO_CALL_DESC_SYSTEM_EXCEPTON)
 
     PyObject* m = Py_InitModule((char*)"_omnipy", omnipy_methods);
     PyObject* d = PyModule_GetDict(m);
+
+    PyDict_SetItemString(d, (char*)"__version__",
+			 PyString_FromString(OMNIPY_VERSION_STRING));
+
     PyDict_SetItemString(d, (char*)"omnipyTwinType",
 			 (PyObject*)&omnipyTwinType);
 

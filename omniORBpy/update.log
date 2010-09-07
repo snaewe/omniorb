@@ -1,3 +1,17 @@
+Tue Sep  7 14:36:11 BST 2010 dgrisby
+====================================
+
+- Some braces to make gcc happy.
+
+modules/pyValueType.cc
+
+- Put omniORBpy version in __version__.
+
+modules/dir.mk
+modules/omnipy.cc
+python/omniORB/__init__.py
+
+
 Fri May 14 13:52:49 BST 2010 dgrisby
 ====================================
 
