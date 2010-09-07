@@ -104,8 +104,9 @@ unixAddress::duplicate() const {
 
 /////////////////////////////////////////////////////////////////////////
 giopActiveConnection*
-unixAddress::Connect(unsigned long, unsigned long, CORBA::ULong) const {
-
+unixAddress::Connect(unsigned long deadline_secs,
+		     unsigned long deadline_nanosecs,
+		     CORBA::ULong) const {
 
   struct sockaddr_un raddr;
   int  rc;
@@ -119,11 +120,117 @@ unixAddress::Connect(unsigned long, unsigned long, CORBA::ULong) const {
   raddr.sun_family = AF_LOCAL;
   strncpy(raddr.sun_path, pd_filename, sizeof(raddr.sun_path) - 1);
 
+#if !defined(USE_NONBLOCKING_CONNECT)
+
   if (::connect(sock,(struct sockaddr *)&raddr,
                      sizeof(raddr)) == RC_SOCKET_ERROR) {
+    omniORB::logs(25, "Failed to connect to Unix socket.");
     CLOSESOCKET(sock);
     return 0;
   }
+
+#else
+
+  if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {
+    omniORB::logs(25, "Failed to set Unix socket to non-blocking mode.");
+    CLOSESOCKET(sock);
+    return 0;
+  }
+
+  if (::connect(sock,(struct sockaddr *)&raddr,
+                     sizeof(raddr)) == RC_SOCKET_ERROR) {
+    if (ERRNO != EINPROGRESS) {
+      omniORB::logs(25, "Failed to connect to Unix socket.");
+      CLOSESOCKET(sock);
+      return 0;
+    }
+  }
+
+  do {
+
+    struct timeval t;
+
+    if (deadline_secs || deadline_nanosecs) {
+      SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
+      if (t.tv_sec == 0 && t.tv_usec == 0) {
+	// Already timed out.
+	omniORB::logs(25, "Timed out connecting to Unix socket.");
+	CLOSESOCKET(sock);
+	return 0;
+      }
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+      if (t.tv_sec > orbParameters::scanGranularity) {
+	t.tv_sec = orbParameters::scanGranularity;
+      }
+#endif
+    }
+    else {
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+      t.tv_sec = orbParameters::scanGranularity;
+      t.tv_usec = 0;
+#else
+      t.tv_sec = t.tv_usec = 0;
+#endif
+    }
+
+#if defined(USE_POLL)
+    struct pollfd fds;
+    fds.fd = sock;
+    fds.events = POLLOUT;
+    int timeout = t.tv_sec*1000+((t.tv_usec+999)/1000);
+    if (timeout == 0) timeout = -1;
+    int rc = poll(&fds,1,timeout);
+    if (rc > 0 && fds.revents & POLLERR) {
+      rc = RC_SOCKET_ERROR;
+    }
+#else
+    fd_set fds, efds;
+    FD_ZERO(&fds);
+    FD_ZERO(&efds);
+    FD_SET(sock,&fds);
+    FD_SET(sock,&efds);
+    struct timeval* tp = &t;
+    if (t.tv_sec == 0 && t.tv_usec == 0) tp = 0;
+    int rc = select(sock+1,0,&fds,&efds,tp);
+#endif
+    if (rc == 0) {
+      // Time out!
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+      continue;
+#else
+      omniORB::logs(25, "Timed out connecting to Unix socket.");
+      CLOSESOCKET(sock);
+      return 0;
+#endif
+    }
+    if (rc != RC_SOCKET_ERROR) {
+      // Check to make sure that the socket is connected.
+
+      OMNI_SOCKADDR_STORAGE peer;
+      SOCKNAME_SIZE_T len = sizeof(peer);
+      rc = getpeername(sock, (struct sockaddr*)&peer, &len);
+    }
+    if (rc == RC_SOCKET_ERROR) {
+      if (ERRNO == RC_EINTR) {
+	continue;
+      }
+      else {
+	omniORB::logs(25, "Failed to connect to Unix socket (no peer name).");
+	CLOSESOCKET(sock);
+	return 0;
+      }
+    }
+    break;
+
+  } while (1);
+
+  if (SocketSetblocking(sock) == RC_INVALID_SOCKET) {
+    omniORB::logs(25, "Failed to set Unix socket to blocking mode.");
+    CLOSESOCKET(sock);
+    return 0;
+  }
+#endif
+
   return new unixActiveConnection(sock,pd_filename);
 }
 

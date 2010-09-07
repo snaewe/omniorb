@@ -1,9 +1,22 @@
+Tue Sep  7 14:33:51 BST 2010 dgrisby
+====================================
+
+- Explicit int cast from size_t.
+
+include/omniORB4/callDescriptor.h
+include/omniORB4/stringtypes.h
+
+- Use nonblocking connect on Unix sockets.
+
+src/lib/omniORB/orbcore/unix/unixAddress.cc
+
+
 Fri Sep  3 16:04:25 BST 2010 dgrisby
 ====================================
 
 - Accept invalid IORs with IPv6 addresses in square brackets.
 
-omniORB/src/lib/omniORB/orbcore/uri.cc
+src/lib/omniORB/orbcore/uri.cc
 
 
 Mon Aug 23 16:33:19 BST 2010 dgrisby
@@ -11,7 +24,7 @@ Mon Aug 23 16:33:19 BST 2010 dgrisby
 
 - Ensure string length and string body are always in the same chunk.
 
-omniORB/src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
 
 
 Tue Aug 10 13:45:33 BST 2010 dgrisby
