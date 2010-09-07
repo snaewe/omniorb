@@ -1,7 +1,7 @@
 # -*- python -*-
 #                           Package   : omniidl
 # types.py                  Created on: 2000/4/10
-#			    Author    : David Scott (djs)
+#                           Author    : David Scott (djs)
 #
 #    Copyright (C) 2003-2009 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
@@ -793,7 +793,7 @@ class Type:
         if d_T.void():
             raise NotImplementedError("No such thing as a void _var type")
 
-        raise "Unknown _var type, kind = " + str(d_T.kind())
+        raise AssertionError("Unknown _var type, kind = " + str(d_T.kind()))
 
     def out(self, ident):
         if self.is_basic_data_types():
@@ -826,7 +826,8 @@ class Type:
         if d_T.enum() or d_T.void() or (self.is_basic_data_types()):
             return ""
 
-        raise "Don't know how to free type, kind = " + str(d_T.kind())
+        raise AssertionError("Don't know how to free type, kind = " +
+                             str(d_T.kind()))
 
     def copy(self, src, dest, environment = None):
         """Copies an entity from src to dest"""
@@ -861,7 +862,8 @@ class Type:
         if d_T.enum() or self.is_basic_data_types():
             return dest + " = " + src + ";"
 
-        raise "Don't know how to copy type, kind = " + str(d_T.kind())
+        raise AssertionError("Don't know how to copy type, kind = " +
+                             str(d_T.kind()))
                
     def representable_by_int(self):
         """representable_by_int(types.Type): boolean

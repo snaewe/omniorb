@@ -1,7 +1,7 @@
 # -*- python -*-
 #                           Package   : omniidl
 # ast.py                    Created on: 2000/8/10
-#			    Author    : David Scott (djs)
+#                           Author    : David Scott (djs)
 #
 #    Copyright (C) 2000 AT&T Laboratories Cambridge
 #
@@ -349,8 +349,8 @@ def exhaustiveMatch(type, values):
             if enum not in values: return 0
         return 1
 
-    raise "exhaustiveMatch type="+repr(type)+ \
-          " val="+repr(discrimvalue)
+    raise AssertionError("exhaustiveMatch type="+repr(type)+
+                         " val="+repr(discrimvalue))
 
 
 # Return the base AST node after following all the typedef chains

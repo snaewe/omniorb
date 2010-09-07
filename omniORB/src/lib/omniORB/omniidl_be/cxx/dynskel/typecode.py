@@ -1,7 +1,7 @@
 # -*- python -*-
 #                           Package   : omniidl
 # typecode.py               Created on: 1999/12/2
-#			    Author    : David Scott (djs)
+#                           Author    : David Scott (djs)
 #
 #    Copyright (C) 2003-2006 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
@@ -373,8 +373,8 @@ def mkTypeCode(type, declarator = None, node = None):
 
     if isinstance(type, idltype.Base):
         util.fatalError("Internal error generating TypeCode data")
-        raise "Don't know how to generate TypeCode for Base kind = " +\
-              repr(type.kind())
+        raise AssertionError("Don't know how to generate TypeCode for"
+                             "Base kind = " + repr(type.kind()))
 
     if isinstance(type, idltype.String):
         return prefix + "string_tc(" + str(type.bound()) + tctrack + ")"

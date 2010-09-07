@@ -1,7 +1,7 @@
 # -*- python -*-
 #                           Package   : omniidl
 # main.py                   Created on: 2000/02/13
-#			    Author    : David Scott (djs)
+#                           Author    : David Scott (djs)
 #
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
@@ -241,7 +241,7 @@ class BuildInterfaceImplementations(idlvisitor.AstVisitor):
                                        "::" + args)
             else:
                 util.fatalError("Internal error generating interface member")
-                raise "No code for interface member: " + repr(c)
+                raise AssertionError("No code for interface member: "+repr(c))
 
         # the class definition has no actual code...
         defs = string.join(map(lambda x:x + ";\n", declarations), "")

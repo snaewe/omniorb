@@ -1,3 +1,15 @@
+Tue Sep  7 16:09:47 BST 2010 dgrisby
+====================================
+
+- Convert ancient string exceptions into AssertionErrors. Thanks
+  Floris Bruynooghe.
+
+src/lib/omniORB/omniidl_be/cxx/ast.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/omniidl_be/cxx/impl/main.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+
+
 Tue Sep  7 14:33:51 BST 2010 dgrisby
 ====================================
 
