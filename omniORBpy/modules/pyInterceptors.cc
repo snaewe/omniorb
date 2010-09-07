@@ -58,11 +58,13 @@ OMNI_USING_NAMESPACE(omni)
 
 
 // Python lists of interceptor functions
-static PyObject* clientSendRequestFns    = 0;
-static PyObject* clientReceiveReplyFns   = 0;
-static PyObject* serverReceiveRequestFns = 0;
-static PyObject* serverSendReplyFns      = 0;
-static PyObject* serverSendExceptionFns  = 0;
+static PyObject* clientSendRequestFns         = 0;
+static PyObject* clientReceiveReplyFns        = 0;
+static PyObject* clientReceiveReplyCredsFns   = 0;
+static PyObject* serverReceiveRequestFns      = 0;
+static PyObject* serverReceiveRequestCredsFns = 0;
+static PyObject* serverSendReplyFns           = 0;
+static PyObject* serverSendExceptionFns       = 0;
 
 
 static inline
@@ -163,17 +165,42 @@ static
 void
 getContextsAndCallInterceptors(PyObject*                fnlist,
                                const char*              opname,
+                               int                      pass_peer_info,
+                               const char*              peer_address,
+                               const char*              peer_identity,
                                IOP::ServiceContextList& service_contexts,
                                CORBA::CompletionStatus  completion)
 {
   int i;
   int sclen = service_contexts.length();
 
-  PyObject* argtuple = PyTuple_New(2);
+  PyObject* argtuple = PyTuple_New(pass_peer_info ? 3 : 2);
   PyObject* sctuple  = PyTuple_New(sclen);
 
   PyTuple_SET_ITEM(argtuple, 0, PyString_FromString(opname));
   PyTuple_SET_ITEM(argtuple, 1, sctuple);
+
+  if (pass_peer_info) {
+    PyObject* peer_info = PyDict_New();
+    PyObject* value;
+    if (peer_address) {
+      value = PyString_FromString(peer_address);
+    }
+    else {
+      Py_INCREF(Py_None);
+      value = Py_None;
+    }
+    PyDict_SetItemString(peer_info, "address", value);
+    if (peer_identity) {
+      value = PyString_FromString(peer_identity);
+    }
+    else {
+      Py_INCREF(Py_None);
+      value = Py_None;
+    }
+    PyDict_SetItemString(peer_info, "identity", value);
+    PyTuple_SET_ITEM(argtuple, 2, peer_info);
+  }
 
   for (i=0; i < sclen; i++) {
     PyObject* sc = PyTuple_New(2);
@@ -235,11 +262,30 @@ pyClientReceiveReplyFn(omniInterceptors::clientReceiveReply_T::info_T& info)
 
   omnipyThreadCache::lock _t;
 
-  getContextsAndCallInterceptors(clientReceiveReplyFns,
-				 info.giop_c.operation(),
-				 info.service_contexts,
-				 (CORBA::CompletionStatus)
-				 info.giop_c.completion());
+  if (PyList_Size(clientReceiveReplyFns)) {
+
+    getContextsAndCallInterceptors(clientReceiveReplyFns,
+				   info.giop_c.operation(),
+				   0, 0, 0,
+				   info.service_contexts,
+				   (CORBA::CompletionStatus)
+				   info.giop_c.completion());
+  }
+
+  if (PyList_Size(clientReceiveReplyCredsFns)) {
+
+    giopStrand& strand = (omni::giopStrand&) info.giop_c;
+    giopConnection* connection = strand.connection;
+    const char* address  = connection->peeraddress();
+    const char* identity = connection->peeridentity();
+
+    getContextsAndCallInterceptors(clientReceiveReplyCredsFns,
+				   info.giop_c.operation(),
+				   1, address, identity,
+				   info.service_contexts,
+				   (CORBA::CompletionStatus)
+				   info.giop_c.completion());
+  }
   return 1;
 }
 
@@ -252,11 +298,29 @@ pyServerReceiveRequestFn(omniInterceptors::
 
   omnipyThreadCache::lock _t;
 
-  getContextsAndCallInterceptors(serverReceiveRequestFns,
-				 info.giop_s.operation(),
-				 info.giop_s.service_contexts(),
-				 (CORBA::CompletionStatus)
-				 info.giop_s.completion());
+  if (PyList_Size(serverReceiveRequestFns)) {
+    getContextsAndCallInterceptors(serverReceiveRequestFns,
+				   info.giop_s.operation(),
+				   0, 0, 0,
+				   info.giop_s.service_contexts(),
+				   (CORBA::CompletionStatus)
+				   info.giop_s.completion());
+  }
+
+  if (PyList_Size(serverReceiveRequestCredsFns)) {
+
+    giopStrand& strand = (omni::giopStrand&) info.giop_s;
+    giopConnection* connection = strand.connection;
+    const char* address  = connection->peeraddress();
+    const char* identity = connection->peeridentity();
+
+    getContextsAndCallInterceptors(serverReceiveRequestCredsFns,
+				   info.giop_s.operation(),
+				   1, address, identity,
+				   info.giop_s.service_contexts(),
+				   (CORBA::CompletionStatus)
+				   info.giop_s.completion());
+  }
   return 1;
 }
 
@@ -303,10 +367,10 @@ registerInterceptors()
   if (clientSendRequestFns)
     interceptors->clientSendRequest.add(pyClientSendRequestFn);
 
-  if (clientReceiveReplyFns)
+  if (clientReceiveReplyFns || clientReceiveReplyCredsFns)
     interceptors->clientReceiveReply.add(pyClientReceiveReplyFn);
 
-  if (serverReceiveRequestFns)
+  if (serverReceiveRequestFns || serverReceiveRequestCredsFns)
     interceptors->serverReceiveRequest.add(pyServerReceiveRequestFn);
 
   if (serverSendReplyFns)
@@ -363,7 +427,8 @@ extern "C" {
   {
     PyObject* interceptor;
 
-    if (!PyArg_ParseTuple(args, (char*)"O", &interceptor))
+    int pass_creds = 0;
+    if (!PyArg_ParseTuple(args, (char*)"O|i", &interceptor, &pass_creds))
       return 0;
 
     RAISE_PY_BAD_PARAM_IF(!PyCallable_Check(interceptor),
@@ -371,10 +436,16 @@ extern "C" {
 
     CHECK_ORB_NOT_INITIALISED();
 
-    if (!clientReceiveReplyFns)
-      clientReceiveReplyFns = PyList_New(0);
+    if (!clientReceiveReplyFns) {
+      clientReceiveReplyFns      = PyList_New(0);
+      clientReceiveReplyCredsFns = PyList_New(0);
+    }
 
-    PyList_Append(clientReceiveReplyFns, interceptor);
+    if (pass_creds)
+      PyList_Append(clientReceiveReplyCredsFns, interceptor);
+    else
+      PyList_Append(clientReceiveReplyFns, interceptor);
+
     Py_INCREF(Py_None);
     return Py_None;
   }
@@ -389,7 +460,8 @@ extern "C" {
   {
     PyObject* interceptor;
 
-    if (!PyArg_ParseTuple(args, (char*)"O", &interceptor))
+    int pass_creds = 0;
+    if (!PyArg_ParseTuple(args, (char*)"O|i", &interceptor, &pass_creds))
       return 0;
 
     RAISE_PY_BAD_PARAM_IF(!PyCallable_Check(interceptor),
@@ -397,10 +469,16 @@ extern "C" {
 
     CHECK_ORB_NOT_INITIALISED();
 
-    if (!serverReceiveRequestFns)
-      serverReceiveRequestFns = PyList_New(0);
+    if (!serverReceiveRequestFns) {
+      serverReceiveRequestFns      = PyList_New(0);
+      serverReceiveRequestCredsFns = PyList_New(0);
+    }
 
-    PyList_Append(serverReceiveRequestFns, interceptor);
+    if (pass_creds)
+      PyList_Append(serverReceiveRequestCredsFns, interceptor);
+    else
+      PyList_Append(serverReceiveRequestFns, interceptor);
+
     Py_INCREF(Py_None);
     return Py_None;
   }
