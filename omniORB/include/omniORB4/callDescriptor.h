@@ -322,7 +322,7 @@ public:
     inline _cCORBA_mObject_i_cstring(LocalCallFn lcfn, const char* op_,
 		     size_t oplen, const char* a_0,
 		     _CORBA_Boolean upcall=0) :
-      omniCallDescriptor(lcfn, op_, oplen, 0, 0, 0, upcall),
+      omniCallDescriptor(lcfn, op_, (int)oplen, 0, 0, 0, upcall),
       arg_0( OMNI_CONST_CAST(char*, a_0) ) {}
  
     inline ~_cCORBA_mObject_i_cstring() {

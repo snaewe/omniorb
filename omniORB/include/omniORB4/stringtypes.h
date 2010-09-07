@@ -139,7 +139,7 @@ static inline void free(char* s) {
 // As CORBA::string_free().
 
 static inline char* dup(const char* s) { 
-  char* r = alloc(strlen(s));
+  char* r = alloc((int)strlen(s));
   if (r) {
     strcpy(r, s);
     return r;
