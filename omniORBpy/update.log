@@ -1,3 +1,12 @@
+Tue Sep  7 16:04:46 BST 2010 dgrisby
+====================================
+
+- Allow passing of peer address and identity to interceptors. Thanks
+  Konstantin Olkhovskiy.
+
+modules/pyInterceptors.cc
+
+
 Tue Sep  7 14:36:11 BST 2010 dgrisby
 ====================================
 
