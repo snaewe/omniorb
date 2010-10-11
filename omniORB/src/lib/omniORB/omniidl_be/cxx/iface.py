@@ -565,22 +565,6 @@ class _objref_I(Class):
         objref_str = objref_name.flatName()
 
       this_inherits_str = objref_str + "(ior, id)"
-
-      # FIXME:
-      # The powerpc-aix OMNIORB_BASE_CTOR workaround still works here
-      # (in precendence to the flattened base name) but lacking a
-      # powerpc-aix test machine I can't properly test it. It's probably
-      # not required any more.
-      if objref_name.relName(self._environment) != i.name().fullName():
-        prefix = []
-        for x in objref_name.fullName():
-          if x == "_objref_" + objref_name.relName(self._environment)[0]:
-            break
-          prefix.append(x)
-        inherits_scope_prefix = string.join(prefix, "::") + "::"
-        this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix +\
-                            ")" + this_inherits_str
-
       inherits_str_list.append(this_inherits_str)
 
     inherits_str = string.join(inherits_str_list, ",\n")

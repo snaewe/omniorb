@@ -178,11 +178,9 @@ class Name:
         return string.join(self.fullName(), "_")
     
     def needFlatName(self, environment):
-        # does the name have scope :: qualifiers
-        relName = self.relName(environment)
-        #if not relName: return 0
-            
-        return len(relName) > 1
+        # does the name have scope :: qualifiers?
+        rscope = idlutil.relativeScope(environment.scope(), self._scopedName)
+        return len(rscope) > 1
 
 
     def hash(self):
