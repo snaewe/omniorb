@@ -2427,7 +2427,7 @@ class ValueType (mapping.Decl):
                        value_name=value_name)
 
             decl._cxx_holder   = omemtype + " _pd_" + member + ";"
-            decl._cxx_init_arg = member + "_seq& _" + member
+            decl._cxx_init_arg = "_" + member + "_seq& _" + member
 
         elif d_mType.value() or d_mType.valuebox():
             otype = mType.base()
