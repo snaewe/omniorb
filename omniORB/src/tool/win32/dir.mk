@@ -1,10 +1,10 @@
-all:: clwrapper.exe libwrapper.exe linkwrapper.exe oidlwrapper.exe #omake.exe
+all:: clwrapper.exe libwrapper.exe linkwrapper.exe oidlwrapper.exe
 
 define CompileWrapper
 cat $< >tmp.c
 CL.EXE tmp.c advapi32.lib
-$(MV) tmp.exe $@
-$(RM) tmp.obj tmp.c
+mv tmp.exe $@
+rm tmp.obj tmp.c
 endef
 
 clwrapper.exe: clwrapper.c
@@ -19,8 +19,5 @@ linkwrapper.exe: linkwrapper.c
 oidlwrapper.exe: oidlwrapper.c
 	$(CompileWrapper)
 
-omake.exe: omake.c
-	gcc $< -o omake.exe
-
-export:: clwrapper.exe libwrapper.exe linkwrapper.exe oidlwrapper.exe #omake.exe
+export:: clwrapper.exe libwrapper.exe linkwrapper.exe oidlwrapper.exe
 	@$(ExportExecutable)

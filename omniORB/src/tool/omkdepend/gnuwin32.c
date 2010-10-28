@@ -6,9 +6,9 @@
 
 #define MAX_MOUNTS 256
 
-#ifdef __MINGW32__
 #include <stdio.h>
 
+#ifdef __MINGW32__
 void GetMinGW32Mounts(void);
 #else
 int  GetCygwinMounts(void);
@@ -50,7 +50,6 @@ char *TranslateFileNameU2D(char *in, int offset)
       out[i] = '\\';
     }
   }
-
   return out;
 }
 
@@ -61,6 +60,7 @@ char *TranslateFileNameD2U(char *in, int offset)
 
   /* make a copy, make sure that all \ are translated back to / */
   char *tmp = malloc(strlen(in)+1);
+
   strcpy(tmp,in);
   for (i = 0; i < strlen(tmp); i++) {
     if (tmp[i] == '\\') tmp[i] = '/';
@@ -70,7 +70,8 @@ char *TranslateFileNameD2U(char *in, int offset)
   for (i = 0; i < nmounts; i++) {
     char *upath = unix[index[i]];
     char *dpath = dos[index[i]];
-    if (strncmp(dpath, &in[offset], strlen(dpath)) == 0) {
+    
+    if (strnicmp(dpath, &in[offset], strlen(dpath)) == 0) {
       out = malloc(strlen(in) - strlen(dpath) + strlen(upath) + 1);
       strncpy(out, in, offset); /* doesn't NUL-terminate! */
       strcpy(out + offset, upath);
@@ -113,6 +114,7 @@ char *TranslateFileNameD2U(char *in, int offset)
     out = newout;
   }
   free(tmp);
+
   return out;
 }
 
@@ -326,74 +328,123 @@ GetCygwinMounts()
     DWORD	i;
     LONG	rc;
     char        c;
+    char*       drvprefix;
 
     if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, key, 0, KEY_READ, &hkey)
-	!= ERROR_SUCCESS)
-	return 0;
-
-    nmounts = 0;
-
-    if (RegQueryValueEx (hkey, "cygdrive prefix", NULL, NULL, NULL, &len)
-	    == ERROR_SUCCESS) {
-
-      drvprefix = (char *) malloc (len + 2);
-      RegQueryValueEx (hkey, "cygdrive prefix", NULL, NULL, drvprefix, &len);
-      if (drvprefix[strlen(drvprefix)-1] == '/')
-	drvprefix[strlen(drvprefix)-1] = '\0';
-    
-      for (c = 'A'; c <= 'Z'; c++) {
-	unix[nmounts] = (char *)malloc(strlen(drvprefix) + 4);
-	sprintf(unix[nmounts], "%s/%c/", drvprefix, c);
-	dos[nmounts] = (char *)malloc(4);
-	sprintf(dos[nmounts], "%c:/", c);
-	index[nmounts] = nmounts;
-	nmounts++;
+	== ERROR_SUCCESS) {
+      nmounts = 0;
+  
+      if (RegQueryValueEx (hkey, "cygdrive prefix", NULL, NULL, NULL, &len)
+  	    == ERROR_SUCCESS) {
+  
+        drvprefix = (char *) malloc (len + 2);
+        RegQueryValueEx (hkey, "cygdrive prefix", NULL, NULL, drvprefix, &len);
+        if (drvprefix[strlen(drvprefix)-1] == '/')
+	  drvprefix[strlen(drvprefix)-1] = '\0';
+      
+        for (c = 'A'; c <= 'Z'; c++) {
+	  unix[nmounts] = (char *)malloc(strlen(drvprefix) + 4);
+	  sprintf(unix[nmounts], "%s/%c/", drvprefix, c);
+	  dos[nmounts] = (char *)malloc(4);
+	  sprintf(dos[nmounts], "%c:/", c);
+	  index[nmounts] = nmounts;
+	  nmounts++;
+        }
+  
+        for (c = 'a'; c <= 'z'; c++) {
+	  unix[nmounts] = (char *)malloc(strlen(drvprefix) + 4);
+	  sprintf(unix[nmounts], "%s/%c/", drvprefix, c);
+	  dos[nmounts] = (char *)malloc(4);
+	  sprintf(dos[nmounts], "%c:/", c);
+	  index[nmounts] = nmounts;
+	  nmounts++;
+        }
+  
       }
-
-      for (c = 'a'; c <= 'z'; c++) {
-	unix[nmounts] = (char *)malloc(strlen(drvprefix) + 4);
-	sprintf(unix[nmounts], "%s/%c/", drvprefix, c);
-	dos[nmounts] = (char *)malloc(4);
-	sprintf(dos[nmounts], "%c:/", c);
-	index[nmounts] = nmounts;
-	nmounts++;
+  
+      for (i = 0; nmounts < MAX_MOUNTS; i++) {
+  	upathlen = sizeof(upath);
+  	rc = RegEnumKeyEx (hkey, i, upath, &upathlen, NULL, NULL, NULL, NULL);
+  	if (rc == ERROR_NO_MORE_ITEMS)
+	  break;
+  	if (rc != ERROR_SUCCESS) {
+	  printf ("RegEnumKeyEx(%d) failed - error %d\n", i, GetLastError());
+	  exit(1);
+  	}
+  	if (RegOpenKeyEx (hkey, upath, 0, KEY_READ, &hkey1)
+  	    != ERROR_SUCCESS) {
+	  printf ("RegOpenKeyEx() failed - error %d\n", GetLastError());
+	  exit(1);
+  	}
+  	unix[nmounts] = (char *) malloc (upathlen + 1);
+  	strcpy (unix[nmounts], upath);
+  	if (RegQueryValueEx (hkey1, "native", NULL, NULL, NULL, &len)
+  	    != ERROR_SUCCESS) {
+	  printf("RegQueryValueEx failed - error %d\n",GetLastError());
+	  exit(1);
+  	}
+  	if (strcmp (unix[nmounts], "/") == 0) {
+	  dos[nmounts] = (char *) malloc (len + 2);
+	  RegQueryValueEx (hkey1, "native", NULL, NULL, dos[nmounts], &len);
+	  dos[nmounts][len-1] = '\\';
+	  dos[nmounts][len] = 0;
+  	}
+	else {
+	  dos[nmounts] = (char *) malloc (len + 1);
+	  RegQueryValueEx (hkey1, "native", NULL, NULL, dos[nmounts], &len);
+  	}
+  	nmounts++;
       }
-
+      return 1;
     }
+    else {
+      /* Newer cygwin does not use the registry to store mounts. Run
+	 the mount command instead. */
+      FILE* mounts;
+      nmounts = 0;
+      mounts = _popen("mount", "r");
 
-    for (i = 0; i < MAX_MOUNTS; i++) {
-	upathlen = sizeof(upath);
-	rc = RegEnumKeyEx (hkey, i, upath, &upathlen, NULL, NULL, NULL, NULL);
-	if (rc == ERROR_NO_MORE_ITEMS)
+      if (mounts) {
+        char dpath[256];
+        char upath[256];
+        while (nmounts < MAX_MOUNTS) {
+          int idx;
+	  int ret = fscanf(mounts, "%256s on %256s", dpath, upath);
+	  if (ret == EOF)
 	    break;
-	if (rc != ERROR_SUCCESS) {
-	    printf ("RegEnumKeyEx(%d) failed - error %d\n", i, GetLastError());
-	    exit(1);
-	}
-	if (RegOpenKeyEx (hkey, upath, 0, KEY_READ, &hkey1)
-	    != ERROR_SUCCESS) {
-	    printf ("RegOpenKeyEx() failed - error %d\n", GetLastError());
-	    exit(1);
-	}
-	unix[nmounts] = (char *) malloc (upathlen + 1);
-	strcpy (unix[nmounts], upath);
-	if (RegQueryValueEx (hkey1, "native", NULL, NULL, NULL, &len)
-	    != ERROR_SUCCESS) {
-	    printf("RegQueryValueEx failed - error %d\n",GetLastError());
-	    exit(1);
-	}
-	if (strcmp (unix[nmounts], "/") == 0) {
-	    dos[nmounts] = (char *) malloc (len + 2);
-	    RegQueryValueEx (hkey1, "native", NULL, NULL, dos[nmounts], &len);
-	    dos[nmounts][len-1] = '\\';
-	    dos[nmounts][len] = 0;
-	} else {
-	    dos[nmounts] = (char *) malloc (len + 1);
-	    RegQueryValueEx (hkey1, "native", NULL, NULL, dos[nmounts], &len);
-	}
-	nmounts++;
+	  else if (ret < 2)
+	    continue;
+
+  	  unix[nmounts] = (char *) malloc (strlen(upath) + 1);
+  	  strcpy (unix[nmounts], upath);
+
+          if (strcmp(unix[nmounts], "/") == 0) {
+  	    dos[nmounts] = (char *) malloc (strlen(dpath) + 2);
+  	    strcpy (dos[nmounts], dpath);
+            dos[nmounts][strlen(dpath)] = '/';
+            dos[nmounts][strlen(dpath) + 1] = '\0';
+          }
+	  else {
+  	    dos[nmounts] = (char *) malloc (strlen(dpath) + 1);
+  	    strcpy (dos[nmounts], dpath);
+          }
+
+          for (idx = 0; dos[nmounts][idx]; ++idx) {
+            if (dos[nmounts][idx] == '/') {
+              dos[nmounts][idx] = '\\';
+            }
+          }
+          ++nmounts;
+        }
+        fclose(mounts);
+      }
+
+      if (0 != nmounts) {
+        return 1;
+      }
     }
-    return 1;
+
+    return 0;
 }
 #endif
 

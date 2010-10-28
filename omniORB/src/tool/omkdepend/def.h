@@ -39,7 +39,9 @@ in this Software without prior written authorization from the X Consortium.
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 #define MAXDEFINES	512
 #define MAXFILES	512

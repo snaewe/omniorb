@@ -1,3 +1,25 @@
+Fri Oct 29 00:03:44 BST 2010 dgrisby
+====================================
+
+- Support latest cygwin in wrapper programs.
+
+bin/x86_win32/clwrapper.exe
+bin/x86_win32/libwrapper.exe
+bin/x86_win32/linkwrapper.exe
+bin/x86_win32/oidlwrapper.exe
+bin/x86_win32/omkdepend.exe
+config/config.mk
+src/tool/omkdepend/def.h
+src/tool/omkdepend/gnuwin32.c
+src/tool/win32/clwrapper.c
+src/tool/win32/dir.mk
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/oidlwrapper.c
+src/tool/win32/omake.c
+src/tool/win32/pathmapping.h
+
+
 Thu Oct 21 17:09:42 BST 2010 dgrisby
 ====================================
 
