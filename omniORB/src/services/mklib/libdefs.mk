@@ -15,7 +15,7 @@ DIR_IDLFLAGS  += -Wbuse_quotes -I$(BASE_OMNI_TREE)/idl
 
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS) -D_COS_LIBRARY -DENABLE_CLIENT_IR_SUPPORT
 
-%.DynSK.cc %SK.cc: %.idl
+%DynSK.cc %SK.cc: %.idl
 	$(CORBA_IDL) $(DIR_IDLFLAGS) $^	
 
-.PRECIOUS: %.DynSK.cc %SK.cc
+.PRECIOUS: %DynSK.cc %SK.cc

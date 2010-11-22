@@ -10,6 +10,8 @@ AC_CANONICAL_HOST
 
 AC_CONFIG_HEADERS(include/omniORB4/acconfig.h)
 
+dnl to prevent error from autoreconf while crosscompiling
+m4_pattern_allow(PKG_CONFIG_LIBDIR)
 
 dnl ** CFLAGS / CXXFLAGS
 
@@ -276,6 +278,8 @@ AC_CONFIG_FILES(src/appl/GNUmakefile
                 src/lib/omnithread/GNUmakefile
                 src/services/GNUmakefile
                 src/services/mklib/GNUmakefile
+                src/services/mklib/stublib/GNUmakefile
+                src/services/mklib/dynstublib/GNUmakefile
                 src/services/mklib/mkBOAlib/GNUmakefile
                 src/tool/GNUmakefile
                 src/tool/omkdepend/GNUmakefile

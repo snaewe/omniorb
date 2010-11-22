@@ -1,3 +1,28 @@
+Mon Nov 22 15:29:25 GMT 2010 dgrisby
+====================================
+
+- Some autoconf macro issue. Thanks Mika Laitio.
+
+configure.ac
+configure
+
+- Link COS libraries correctly. Thanks Floris Bruynooghe for the
+  initial implementation.
+
+configure.ac
+configure
+src/services/mklib/dir.mk
+src/services/mklib/dynstublib
+src/services/mklib/dynstublib/GNUmakefile.in
+src/services/mklib/dynstublib/GNUmakefile
+src/services/mklib/dynstublib/dir.mk
+src/services/mklib/libdefs.mk
+src/services/mklib/stublib
+src/services/mklib/stublib/GNUmakefile.in
+src/services/mklib/stublib/GNUmakefile
+src/services/mklib/stublib/dir.mk
+
+
 Fri Oct 29 00:03:44 BST 2010 dgrisby
 ====================================
 
