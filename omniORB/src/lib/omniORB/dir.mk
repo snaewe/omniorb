@@ -68,6 +68,10 @@ endif
 # Make rules for stubs.                                              #
 ######################################################################
 
+ifdef DisableLongDouble
+UNDEFINES = -UHAS_LongDouble
+endif
+
 OMNIORB_IDL += -p$(BASE_OMNI_TREE)/src/lib/omniORB -Wbdebug
 OMNIORB_IDL_ONLY += -p$(BASE_OMNI_TREE)/src/lib/omniORB -Wbdebug
 
@@ -89,15 +93,15 @@ omniORB4/ir_defs.hh omniORB4/ir_operators.hh omniORB4/ir_poa.hh: ir.idl
 
 omniORB4/corbaidl_defs.hh omniORB4/corbaidl_operators.hh omniORB4/corbaidl_poa.hh: corbaidl.idl
 	@(dir=omniORB4; $(CreateDir))
-	$(OMNIORB_IDL) -v -nf -P -WbF -ComniORB4 $<
+	$(OMNIORB_IDL) -v -nf -P $(UNDEFINES) -WbF -ComniORB4 $<
 
 omniORB4/boxes_defs.hh omniORB4/boxes_operators.hh omniORB4/boxes_poa.hh: boxes.idl
 	@(dir=omniORB4; $(CreateDir))
-	$(OMNIORB_IDL) -v -nf -P -WbF -ComniORB4 $<
+	$(OMNIORB_IDL) -v -nf -P $(UNDEFINES) -WbF -ComniORB4 $<
 
 omniORB4/poa_enums_defs.hh omniORB4/poa_enums_operators.hh omniORB4/poa_enums_poa.hh: poa_enums.idl
 	@(dir=omniORB4; $(CreateDir))
-	$(OMNIORB_IDL) -v -nf -P -WbF -ComniORB4 $<
+	$(OMNIORB_IDL) -v -nf -P $(UNDEFINES) -WbF -ComniORB4 $<
 
 omniORB4/omniTypedefs.hh: omniTypedefs.idl
 	@(dir=omniORB4; $(CreateDir))

@@ -420,6 +420,23 @@ if test "$omni_cv_enable_alloca" = "no"; then
 fi
 ])
 
+dnl Disable support for long double even if the toolchain claims to support it.
+AC_DEFUN([OMNI_DISABLE_LONGDOUBLE],
+[AC_CACHE_CHECK(whether to support long double,
+omni_cv_enable_longdouble,
+[AC_ARG_ENABLE(longdouble,
+               AC_HELP_STRING([--disable-longdouble],
+                  [disable long double support (default enable-longdouble)]),
+               omni_cv_enable_longdouble=$enableval,
+               omni_cv_enable_longdouble=yes)
+])
+if test "$omni_cv_enable_longdouble" = "no"; then
+  AC_DEFINE(OMNIORB_DISABLE_LONGDOUBLE,,[define if you want to disable long double support])
+fi
+AC_SUBST(ENABLE_LONGDOUBLE, $omni_cv_enable_longdouble)
+])
+
+
 
 dnl
 dnl Tests from http://www.gnu.org/software/ac-archive/

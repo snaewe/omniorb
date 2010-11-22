@@ -1,3 +1,20 @@
+Mon Nov 22 22:59:43 GMT 2010 dgrisby
+====================================
+
+- New --disable-longdouble option to configure. Simplified version of
+  original patch from Mika Laitio.
+
+acinclude.m4
+aclocal.m4
+configure.ac
+configure
+include/omniORB4/CORBA_sysdep_auto.h
+include/omniORB4/acconfig.h.in
+include/omniORB4/local_config.h
+mk/beforeauto.mk.in
+src/lib/omniORB/dir.mk
+
+
 Mon Nov 22 17:33:59 GMT 2010 dgrisby
 ====================================
 

@@ -1,6 +1,6 @@
 // -*- Mode: C++; -*-
 //
-// Edit this file to include any local customerisation
+// Edit this file to include any local customisation
 //
 
 #ifndef __LOCAL_CONFIG_H__

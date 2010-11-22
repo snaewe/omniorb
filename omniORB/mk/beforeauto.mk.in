@@ -706,6 +706,7 @@ OMNINAMES_LOG_DEFAULT_LOCATION  = @OMNINAMES_LOGDIR@
 #
 # OpenSSL
 #
+
 OPEN_SSL_ROOT = @OPEN_SSL_ROOT@
 OPEN_SSL_LIB = @OPEN_SSL_LIB@
 OPEN_SSL_CPPFLAGS = @OPEN_SSL_CPPFLAGS@
@@ -716,6 +717,14 @@ OPEN_SSL_CPPFLAGS = @OPEN_SSL_CPPFLAGS@
 
 ifeq (@ENABLE_STATIC@,no)
 NoStaticLibrary = 1
+endif
+
+#
+# Disable long double?
+#
+
+ifeq (@ENABLE_LONGDOUBLE@,no)
+DisableLongDouble = 1
 endif
 
 

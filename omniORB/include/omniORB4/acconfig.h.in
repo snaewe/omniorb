@@ -216,6 +216,9 @@
 /* define if you want to avoid use of alloca */
 #undef OMNIORB_DISABLE_ALLOCA
 
+/* define if you want to disable long double support */
+#undef OMNIORB_DISABLE_LONGDOUBLE
+
 /* define if you want mutexes to be traced */
 #undef OMNIORB_ENABLE_LOCK_TRACES
 

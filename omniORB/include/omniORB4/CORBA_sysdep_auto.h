@@ -82,16 +82,17 @@
 #endif
 
 
-#if defined(SIZEOF_LONG_DOUBLE) && (SIZEOF_LONG_DOUBLE == 16)
-#  define HAS_LongDouble
-#  define _CORBA_LONGDOUBLE_DECL long double
-#endif
+#if !defined(OMNIORB_DISABLE_LONGDOUBLE)
+#  if defined(SIZEOF_LONG_DOUBLE) && (SIZEOF_LONG_DOUBLE == 16)
+#    define HAS_LongDouble
+#    define _CORBA_LONGDOUBLE_DECL long double
+#  endif
 
-#if defined(SIZEOF_LONG_DOUBLE) && (SIZEOF_LONG_DOUBLE == 12) && defined(__i386__)
-#  define HAS_LongDouble
-#  define _CORBA_LONGDOUBLE_DECL long double
+#  if defined(SIZEOF_LONG_DOUBLE) && (SIZEOF_LONG_DOUBLE == 12) && defined(__i386__)
+#    define HAS_LongDouble
+#    define _CORBA_LONGDOUBLE_DECL long double
+#  endif
 #endif
-
 
 #ifndef _CORBA_WCHAR_DECL
 #  if defined(SIZEOF_WCHAR_T) && (SIZEOF_WCHAR_T > 0)
