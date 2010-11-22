@@ -139,7 +139,9 @@ unixAddress::Connect(unsigned long deadline_secs,
 
   if (::connect(sock,(struct sockaddr *)&raddr,
                      sizeof(raddr)) == RC_SOCKET_ERROR) {
-    if (ERRNO != EINPROGRESS) {
+
+    int err = ERRNO;
+    if (err && err != EINPROGRESS) {
       omniORB::logs(25, "Failed to connect to Unix socket.");
       CLOSESOCKET(sock);
       return 0;

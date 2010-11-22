@@ -285,7 +285,8 @@ doConnect(unsigned long 	 deadline_secs,
   }
   if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
 
-    if (ERRNO != EINPROGRESS) {
+    int err = ERRNO;
+    if (err && err != EINPROGRESS) {
       logFailure("Failed to connect", ai);
       CLOSESOCKET(sock);
       return 0;

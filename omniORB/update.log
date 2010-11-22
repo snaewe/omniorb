@@ -1,3 +1,14 @@
+Mon Nov 22 23:10:50 GMT 2010 dgrisby
+====================================
+
+- connect() can return an error with no errno on HP-UX. Thanks Nicolas
+  Veyssiere.
+
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/unix/unixAddress.cc
+
+
 Mon Nov 22 22:59:43 GMT 2010 dgrisby
 ====================================
 
