@@ -1,3 +1,11 @@
+Mon Nov 22 16:14:45 GMT 2010 dgrisby
+====================================
+
+- Avoid race condition in connection closure logging. Thanks Weiyifeng.
+
+src/lib/omniORB/orbcore/giopStrand.cc
+
+
 Mon Nov 22 15:29:25 GMT 2010 dgrisby
 ====================================
 
