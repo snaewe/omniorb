@@ -1,9 +1,10 @@
-include $(MAKEFILE_INC_DIR)/../cosinterfaces.mk
-include $(MAKEFILE_INC_DIR)/../libdefs.mk
+include $(MAKEFILE_INC_DIR)../cosinterfaces.mk
+include $(MAKEFILE_INC_DIR)../libdefs.mk
 
 vpath %.cc ..
 DIR_CPPFLAGS += -I$(MAKEFILE_INC_DIR)..
 
+LIB_NAME := COSDynamic
 COS_DYNSKLIB_NAME = COSDynamic
 
 COS_DYNSK_OBJS = $(COS_INTERFACES:%=%DynSK.o)
@@ -73,7 +74,8 @@ MDFLAGS += -p shared/
 
 ifdef Win32Platform
 # in case of Win32 lossage:
-dynimps := $(skshared) $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), $(OMNIORB_LIB))
+dynimps := COS$(OMNIORB_MAJOR_VERSION)$(OMNIORB_MINOR_VERSION)$(OMNIORB_MICRO_VERSION)_rt.lib \
+           $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), $(OMNIORB_LIB))
 else
 dynimps := -lCOS$(OMNIORB_MAJOR_VERSION) $(OMNIORB_LIB)
 endif
@@ -156,8 +158,8 @@ shareddbugversion = $(OMNIORB_VERSION)
 dynsknamespec   = $(subst ., ,$(COS_DYNSKLIB_NAME).$(shareddbugversion))
 dynskshareddbug = shareddebug/$(shell $(SharedLibraryDebugFullName) $(dynsknamespec))
 
-dbugimps  := $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), \
-               $(OMNIORB_LIB))
+dbugimps  := COS$(OMNIORB_MAJOR_VERSION)$(OMNIORB_MINOR_VERSION)$(OMNIORB_MICRO_VERSION)_rtd.lib \
+	     $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), $(OMNIORB_LIB))
 
 MDFLAGS += -p shareddebug/
 

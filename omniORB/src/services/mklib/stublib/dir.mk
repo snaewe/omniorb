@@ -1,9 +1,10 @@
-include $(MAKEFILE_INC_DIR)/../cosinterfaces.mk
-include $(MAKEFILE_INC_DIR)/../libdefs.mk
+include $(MAKEFILE_INC_DIR)../cosinterfaces.mk
+include $(MAKEFILE_INC_DIR)../libdefs.mk
 
 vpath %.cc ..
 DIR_CPPFLAGS += -I$(MAKEFILE_INC_DIR)..
 
+LIB_NAME := COS
 COS_SKLIB_NAME = COS
 
 COS_SK_OBJS = $(COS_INTERFACES:%=%SK.o)
