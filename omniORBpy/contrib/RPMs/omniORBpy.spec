@@ -1,128 +1,155 @@
-Summary:  Python Language Mapping for omniORB
-Name:     omniORBpy
-Version:  3.4
-Release:  2%{?dist}
-License:  GPL / LGPL
-Group:    System/Libraries
-Source0:  %{name}-%{version}.tar.gz
-URL:      http://omniorb.sourceforge.net/
-Prefix:   /usr
-Prereq:   /sbin/ldconfig
-Requires: omniORB = 4.1.4
-BuildRequires: omniORB-devel python
+%define version_major 3
+%define version_minor 5
+%define version_full %{version_major}.%{version_minor}
+%define version_brief %{version_major}.%{version_minor}
+
+%define lib_name %{?mklibname:%mklibname %{name} %{version_brief}}%{!?mklibname:lib%{name}%{version_brief}}
+
+%{!?py_ver: %define py_ver %(python -c "import sys;print(sys.version[0:3])")}
+%{!?python_sitearch: %define python_sitearch %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(True,0,'%{_prefix}')")}
+%{!?python_sitelib: %define python_sitelib %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(False,0,'%{_prefix}')")}
+
+Summary:   Python Language Mapping for omniORB
+Name:      omniORBpy
+Version:   %{version_full}
+Release:   1%{?dist}
+License:   GPL / LGPL
+Group:     System/Libraries
+Source0:   %{name}-%{version}.tar.gz
+Prefix:    /usr
+URL:       http://omniorb.sourceforge.net/
+BuildRequires: gcc-c++
+BuildRequires: glibc-devel openssl-devel
+BuildRequires: omniORB-devel = %{version}
+BuildRequires: python python-devel
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 
 %description
-omniORBpy is a Python language mapping for the omniORB CORBA
+%{name} is a Python language mapping for the omniORB CORBA
+Object Request Broker (ORB).
+
+%package -n %{lib_name}
+Summary:   Python Language Mapping for omniORB
+Group:     System/Libraries
+Requires:  libomniORB = %{version}
+Provides:  lib%{name} = %{version}-%{release} %{name} = %{version}-%{release}
+Provides:  libomniorbpy = %{version}-%{release}
+Conflicts: libomniORBpy < %{version}-%{release}
+Obsoletes: libomniorbpy2
+
+%description -n %{lib_name}
+%{name} is a Python language mapping for the omniORB CORBA
 Object Request Broker (ORB).
 
 # "standard" part of the bundle
 
-%package -n %{name}-standard
-Summary:  Files to provide standard top-level CORBA module for %{name}
-Group:    Development/Python
-Provides: libomniorbpy-standard = %{version}-%{release} %{name}-standard = %{version}-%{release}
+%package standard
+Summary:   Files to provide standard top-level CORBA module for %{name}
+Group:     Development/Python
+Provides:  omniorbpy-standard = %{version}-%{release}
+Conflicts: %{name}-standard < %{version}-%{release}
 
-%description -n %{name}-standard
+%description standard
 The CORBA to Python mapping standard requires top-level CORBA and
 PortableServer modules. This provides those standard modules for
 %{name}. It will clash with similar packages for other Python ORBs.
 
 # devel part of the bundle
 
-%package -n %{name}-devel
-Summary:  Header files and libraries needed for %{name} development
-Group:    Development/Python
-Requires: %{name} = %{version}-%{release} omniORB-devel
-Provides: libomniorbpy-devel = %{version}-%{release} %{name}-devel = %{version}-%{release}
+%package devel
+Summary:   Header files and libraries needed for %{name} development
+Group:     Development/Python
+Requires:  %{lib_name} = %{version}-%{release} omniORB-devel = %{version}
+Provides:  libomniorbpy-devel = %{version}-%{release} omniorbpy-devel = %{version}-%{release}
+Conflicts: %{name}-devel < %{version}-%{release}
+Obsoletes: libomniORBpy-devel
 
-%description -n %{name}-devel
+%description devel
 The header files and libraries needed for developing programs using %{name}.
 
 # docs and examples are in a separate package
 
-%package -n %{name}-doc
-Summary:  Documentation needed for %{name} development
-Group:    Development/Python
+%package doc
+Summary:   Documentation needed for %{name} development
+Group:     Development/Python
+Obsoletes: omniorbpy-doc libomniorbpy-doc
 
-%description -n %{name}-doc
+%description doc
 Developer documentation and examples.
-
-
-%define py_ver %(python -c 'import sys;print(sys.version[0:3])')
-%define py_libdir %(python -c 'from distutils import sysconfig; print sysconfig.get_python_lib()')
-%define py_execlibdir %(python -c 'from distutils import sysconfig; print sysconfig.get_python_lib(True)')
 
 %prep 
 
-%setup -n %{name}-%{version}
-#%patch0 -p1
+%setup -n %{name} #-%{version}
 
 # Needs to know where omniORB was installed if it is not in /usr.
-# If necessary, use the configure option --with-omniorb=%{prefix}
-./configure --prefix=%{prefix} --with-openssl=/usr
+# If necessary, use the configure option --with-omniorb=%{_prefix}
+%{?configure:%configure}%{!?configure:./configure --prefix=%{_prefix} --libdir=%{_libdir}} --with-openssl=%{_prefix}
+
 
 %build
 # We abuse the CPPFLAGS to pass optimisation options through.
-make IMPORT_CPPFLAGS+="$RPM_OPT_FLAGS" all
+%{?make:%make}%{!?make:make IMPORT_CPPFLAGS+="$RPM_OPT_FLAGS"} all
 
 %install
-make DESTDIR=$RPM_BUILD_ROOT install
+[ -z %{buildroot} ] || rm -rf %{buildroot}
+mkdir %{buildroot}
+
+%if "%{_vendor}" == "suse"
+%{?makeinstall:%makeinstall}%{!?makeinstall:make DESTDIR=%{buildroot} install}
+%else
+%{?make:%make}%{!?make:make} install DESTDIR=%{buildroot}
+%endif
 
 # omit omniidl_be/__init__.py because it is a duplicate of the file
 # already provided by omniORB.
-rm -rf $RPM_BUILD_ROOT%{prefix}/lib*/python%{py_ver}/site-packages/omniidl_be/__init__.py*
+rm -rf %{buildroot}%{python_sitelib}/omniidl_be/__init__.py*
 
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+[ -z %{buildroot} ] || rm -rf %{buildroot}
 
-%post
+%post -n %{lib_name}
 /sbin/ldconfig
 
-%postun
+%postun -n %{lib_name}
 /sbin/ldconfig
 
 
 # main package includes libraries and servers
-%files
+%files -n %{lib_name}
 %defattr (-,root,root)
 %doc COPYING.LIB
 #%doc bugfixes*
-%{py_execlibdir}/_omni*.so*
-%{py_libdir}/omniORB
+%{python_sitearch}/_omni*.so*
+%{python_sitelib}/omniORB
 
-%files -n %{name}-standard
+%files standard
 %defattr(-,root,root)
-%{py_libdir}/*.py*
-%{py_libdir}/omniORB.pth
-%{py_libdir}/CosNaming
-%{py_libdir}/CosNaming__POA
+%{python_sitelib}/*.py*
+%{python_sitelib}/omniORB.pth
+%{python_sitelib}/CosNaming
+%{python_sitelib}/CosNaming__POA
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %doc README* ReleaseNotes* update.log
-%prefix/include/omniORBpy.h
-%prefix/include/omniORB4/pydistdate.hh
-%{py_libdir}/omniidl_be/python.py*
+%{_includedir}/omniORBpy.h
+%{_includedir}/omniORB4/pydistdate.hh
+%{python_sitelib}/omniidl_be/python.py*
 
-%files -n %{name}-doc
+%files doc
 %defattr(-,root,root)
 %doc doc/* 
 
 %changelog
-* Tue Apr 29 2008 Thomas Lockhart <lockhart@fourpalms.org> 3.2-2
-- Define py_libdir to determine the location of python libraries
-- Define py_execlibdir to determine the location of shared libraries
+* Wed Nov 24 2010 Dirk O. Kaar <dok@dok-net.net> 4.2.0-2
+- Merge in improvements for current RPM from Thomas Lockhart
 
-* Fri Dec 16 2005 Thomas Lockhart <lockhart@fourpalms.org> 2.6-3
-- Modified postun syntax to eliminate an error from ldconfig
+* Mon Sep 07 2009 Dirk O. Kaar <dok@dok-net.net> 4.2.0-1
+- Use 4.2 sources from SVN
 
-* Thu Apr 21 2005 Sander Steffann <steffann@nederland.net> 2.6-2
-- Fixed packaging on RHEL and x86_64
-
-* Wed Apr 20 2005 Sander Steffann <steffann@nederland.net> 2.6-1
-- Upgrade to version 2.6
+* Thu May 05 2005 Dirk O. Siebnich <dok@dok-net.net> 3.0-1
+- rework package names to support x86_64
 
 * Mon Jul 26 2004 Duncan Grisby <duncan@grisby.org> 2.4
 - Bump version number to 2.4.

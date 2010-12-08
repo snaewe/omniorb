@@ -3,32 +3,57 @@
 %define omniuid -1
 %define omnigid -1
 
+%define version_major 4
+%define version_minor 1
+%define version_micro 5
+%define version_full %{version_major}.%{version_minor}.%{version_micro}
+%define version_brief %{version_major}.%{version_minor}
+
+%define lib_name %{?mklibname:%mklibname %{name} %{version_brief}}%{!?mklibname:lib%{name}%{version_brief}}
+
+%{!?py_ver: %define py_ver %(python -c "import sys;print(sys.version[0:3])")}
+%{!?python_sitearch: %define python_sitearch %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(True,0,'%{_prefix}')")}
+%{!?python_sitelib: %define python_sitelib %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(False,0,'%{_prefix}')")}
+
 Summary: Object Request Broker (ORB)
 Name:    omniORB
-Version: 4.1.4
-Release: 3%{?dist}
+Version: %{version_full}
+Release: 1%{?dist}
 License: GPL / LGPL
 Group:   System/Libraries
 Source0: %{name}-%{version}.tar.gz
 Prefix:  /usr
-Prereq:  /sbin/ldconfig
 URL:     http://omniorb.sourceforge.net/
-BuildRequires:  python glibc-devel
-%if "%{_vendor}" == "MandrakeSoft"
-BuildRequires:  openssl-devel
-%endif
-%if "%{_vendor}" == "redhat"
-BuildRequires:  python-devel openssl-devel
-%endif
+BuildRequires:  gcc-c++
+BuildRequires:  glibc-devel openssl-devel
+BuildRequires:  python python-devel
+BuildRequires:	pkgconfig
 %if "%{_vendor}" == "suse"
-BuildRequires:	openssl-devel
+BuildRequires:  klogd rsyslog
 %endif
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 
 %description
 %{name} is an Object Request Broker (ORB) which implements
 specification 2.6 of the Common Object Request Broker Architecture
-(CORBA). Contains the libraries needed to run programs dynamically
+(CORBA).
+This package contains the libraries needed to run programs dynamically
+linked with %{name}.
+
+%package -n %{lib_name}
+Summary: Object Request Broker (ORB)
+Group:   System/Libraries
+Requires(post): /sbin/ldconfig
+Requires(postun): /sbin/ldconfig
+#Provides:  corba
+Provides:  lib%{name} = %{version}-%{release} %{name} = %{version}-%{release}
+Provides:  libomniorb = %{version}-%{release} omniorb = %{version}-%{release}
+
+%description -n %{lib_name}
+%{name} is an Object Request Broker (ORB) which implements
+specification 2.6 of the Common Object Request Broker Architecture
+(CORBA).
+This package contains the libraries needed to run programs dynamically
 linked with %{name}.
 
 # servers
@@ -36,15 +61,11 @@ linked with %{name}.
 %package servers
 Summary: Utility programs
 Group:          Development/C++
-%if "%{_vendor}" == "suse"
-Prereq:         /sbin/insserv
-%else
-Prereq:         /sbin/service /sbin/chkconfig
-%endif
-Prereq:         /usr/sbin/groupadd /usr/sbin/groupdel
-Prereq:         /usr/sbin/useradd /usr/sbin/userdel
-Requires:       %{name} = %{version}-%{release}
-Provides:       libomniorb-servers = %{version}-%{release} %{name}-servers = %{version}-%{release}
+Requires(pre):  /usr/sbin/groupadd /usr/sbin/useradd
+Requires(postun): /usr/sbin/groupdel /usr/sbin/userdel
+Requires:       %{lib_name} = %{version}-%{release}
+Provides:       omniorb-servers = %{version}-%{release}
+Provides:       libomniorb-servers = %{version}-%{release}
 
 %description servers
 %{name} CORBA services including a Naming Service.
@@ -52,8 +73,17 @@ Provides:       libomniorb-servers = %{version}-%{release} %{name}-servers = %{v
 %package bootscripts
 Summary: Utility programs
 Group: Development/C++
+%if "%{_vendor}" == "suse"
+Requires(post): /sbin/insserv
+Requires(preun): /sbin/insserv
+%else
+Requires(pre):  /sbin/service
+Requires(post): /sbin/service /sbin/chkconfig
+Requires(preun): /sbin/service /sbin/chkconfig
+%endif
 Requires: %{name}-servers = %{version}-%{release} %{name}-utils = %{version}-%{release}
-Provides: %{name}-bootscripts = %{version}-%{release}
+Requires(pre): syslog
+Provides: omniorb-bootscripts = %{version}-%{release}
 
 %description bootscripts
 Automatic starting of the %{name} CORBA Naming Service.
@@ -63,8 +93,8 @@ Automatic starting of the %{name} CORBA Naming Service.
 %package utils
 Summary: Utility programs
 Group:          Development/C++
-Requires:       %{name} = %{version}-%{release}
-Provides:       libomniorb-utils = %{version}-%{release} %{name}-utils = %{version}-%{release}
+Requires:       %{lib_name} = %{version}-%{release}
+Provides:       omniorb-utils = %{version}-%{release}
 
 %description utils
 %{name} utility programs which may be useful at runtime.
@@ -73,9 +103,11 @@ Provides:       libomniorb-utils = %{version}-%{release} %{name}-utils = %{versi
 
 %package devel
 Summary: Header files and libraries needed for %{name} development
-Group:          Development/C++
-Requires:       %{name} = %{version}-%{release}
-Provides:       libomniorb-devel = %{version}-%{release} %{name}-devel = %{version}-%{release}
+Group:     Development/C++
+Requires:  %{lib_name} = %{version}-%{release}
+Provides:  libomniorb-devel = %{version}-%{release} omniorb-devel = %{version}-%{release}
+Conflicts: %{name}-devel < %{version}-%{release}
+Obsoletes: libomniORB-devel
 
 %description devel
 The header files and libraries needed for developing programs using
@@ -85,18 +117,15 @@ The header files and libraries needed for developing programs using
 
 %package doc
 Summary: Documentation and examples for %{name}
-Group:          Development/C++
-#Requires:       %{name} = %{version}
+Group:           Development/C++
+Provides:        libomniorb-doc = %{version}-%{release} omniorb-doc = %{version}-%{release}
+Obsoletes:       libomniORB-doc
 
 %description doc
 Developer documentation and examples.
 
-
-%define py_ver    %(python -c 'import sys;print(sys.version[0:3])')
-
-
 %prep
-%setup -n %{name}-%{version}
+%setup -n %{name} #-%{version}
 
 %if "%{_vendor}" == "suse"
 # Replace the init script with something appropriate for SUSE.
@@ -105,27 +134,34 @@ Developer documentation and examples.
 cp -f etc/init.d/omniNames.SuSE.in etc/init.d/omniNames.in
 %endif
 
-%configure --with-openssl=%{prefix}
+%{?configure:%configure}%{!?configure:./configure --prefix=%{_prefix} --libdir=%{_libdir}} --with-openssl=%{_prefix} --with-omniNames-logdir=%{_localstatedir}/lib/omniNames
 
 
 %build
 # We abuse the CPPFLAGS to pass optimisation options through.
-make IMPORT_CPPFLAGS+="$RPM_OPT_FLAGS" all
+%{?make:%make}%{!?make:make IMPORT_CPPFLAGS+="$RPM_OPT_FLAGS"} all
 
 
 %install
-make DESTDIR=%{buildroot} install
+[ -z %{buildroot} ] || rm -rf %{buildroot}
+mkdir %{buildroot}
+
+%if "%{_vendor}" == "suse"
+%{?makeinstall:%makeinstall}%{!?makeinstall:make DESTDIR=%{buildroot} install}
+%else
+%{?make:%make}%{!?make:make} install DESTDIR=%{buildroot}
+%endif
 
 mkdir -p %{buildroot}%{_initrddir}
 mkdir -p %{buildroot}%{_sysconfdir}
 cp sample.cfg %{buildroot}%{_sysconfdir}/omniORB.cfg
 cp etc/init.d/omniNames %{buildroot}%{_initrddir}
 
-mkdir -p %{buildroot}%{_mandir}/man{1,8}
+mkdir -p %{buildroot}%{_mandir}/man{1,5,8}
 cp -r man/* %{buildroot}%{_mandir}
 
-mkdir -p %{buildroot}%{_var}/omniNames
-mkdir -p %{buildroot}%{_localstatedir}/omniMapper
+mkdir -p %{buildroot}%{_localstatedir}/lib/omniNames
+mkdir -p %{buildroot}%{_localstatedir}/lib/omniMapper
 
 # Rename catior to avoid naming conflict with TAO
 mv %{buildroot}%{_bindir}/catior %{buildroot}%{_bindir}/catior.omni
@@ -137,14 +173,17 @@ mv %{buildroot}%{_mandir}/man1/catior.1 %{buildroot}%{_mandir}/man1/catior.omni.
   ln -sf %{_initrddir}/omniNames %{buildroot}%{_sbindir}/rcomniNames
 %endif
 
+%{?multiarch_includes:%multiarch_includes %{buildroot}%{_includedir}/omniORB4/acconfig.h}
+%{?multiarch_includes:%multiarch_includes %{buildroot}%{_includedir}/omniORB4/CORBA_sysdep_trad.h}
+
 
 %clean
 [ -z %{buildroot} ] || rm -rf %{buildroot}
 
 
-%pre
+%pre -n %{lib_name}
 
-%post
+%post -n %{lib_name}
 /sbin/ldconfig
 
 %pre servers
@@ -159,7 +198,7 @@ OMNIUIDOPT="-r"
 OMNIUIDOPT="-u %{omniuid}"
 %endif
 /usr/sbin/groupadd ${OMNIGIDOPT} omni >/dev/null 2>&1 || :
-/usr/sbin/useradd ${OMNIUIDOPT} -M -g omni -d /var/omniNames \
+/usr/sbin/useradd ${OMNIUIDOPT} -M -g omni -d %{_localstatedir}/lib/omniNames \
   -s /bin/bash -c "omniORB servers" omni >/dev/null 2>&1 || :
 
 %pre bootscripts
@@ -175,10 +214,10 @@ fi
 %post bootscripts
 %if "%{_vendor}" == "suse"
 /sbin/insserv omniNames
-#%{_sbindir}/rcomniNames restart >/dev/null 2>&1
+%{_sbindir}/rcomniNames restart >/dev/null 2>&1
 %else
 /sbin/chkconfig --add omniNames
-#/sbin/service omniNames restart >/dev/null 2>&1
+/sbin/service omniNames restart >/dev/null 2>&1
 %endif
 
 %preun bootscripts
@@ -191,11 +230,11 @@ if [ $1 -eq 0 ]; then
   /sbin/service omniNames stop >/dev/null 2>&1
   /sbin/chkconfig --del omniNames
 %endif
-  rm -rf /var/omniNames/*
-  rm -rf /var/lib/omniMapper/*
+  rm -rf %{_localstatedir}/lib/omniNames/*
+  rm -rf %{_localstatedir}/lib/omniMapper/*
 fi
 
-%postun
+%postun -n %{lib_name}
 /sbin/ldconfig
 
 %postun servers
@@ -207,23 +246,21 @@ fi
 
 
 # main package includes libraries and copyright info
-%files
+%files -n %{lib_name}
 %defattr (-,root,root)
 %doc CREDITS COPYING COPYING.LIB
 %config(noreplace) %{_sysconfdir}/*.cfg
 %{_libdir}/*.so.*
-%{_datadir}/idl/*
 
 
 %files servers
 %defattr (-,root,root)
-%dir %attr(700,omni,omni) %{_var}/omniNames
-%dir %attr(700,omni,omni) %{_localstatedir}/omniMapper
 %attr(644,root,man) %{_mandir}/man8/omniNames*
 %attr(644,root,man) %{_mandir}/man8/omniMapper*
+%dir %attr(700,omni,omni) %{_localstatedir}/lib/omniNames
+%dir %attr(700,omni,omni) %{_localstatedir}/lib/omniMapper
 %attr(755,root,root) %{_bindir}/omniMapper
 %attr(755,root,root) %{_bindir}/omniNames
-# Thin substitute for standard Linux init script
 
 
 %files bootscripts
@@ -258,15 +295,18 @@ fi
 %{_libdir}/*.a
 %{_libdir}/*.so
 %{_includedir}/*
-%{_libdir}*/python%{py_ver}/site-packages/omniidl/*
-%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/*.py*
-%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/*.py*
-%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/header/*
-%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/skel/*
-%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/dynskel/*
-%{_libdir}*/python%{py_ver}/site-packages/omniidl_be/cxx/impl/*
-%{_libdir}*/python%{py_ver}/site-packages/_omniidlmodule.so*
+%{_datadir}/idl
 %{_libdir}/pkgconfig/*.pc
+%{python_sitelib}/omniidl
+%dir %{python_sitelib}/omniidl_be
+%{python_sitelib}/omniidl_be/*.py*
+%dir %{python_sitelib}/omniidl_be/cxx
+%{python_sitelib}/omniidl_be/cxx/*.py*
+%{python_sitelib}/omniidl_be/cxx/header
+%{python_sitelib}/omniidl_be/cxx/skel
+%{python_sitelib}/omniidl_be/cxx/dynskel
+%{python_sitelib}/omniidl_be/cxx/impl
+%{python_sitearch}/_omniidlmodule.so*
 
 
 %files doc
@@ -275,15 +315,15 @@ fi
 
 
 %changelog
-* Tue Apr 13 2010 Thomas Lockhart <lockhart@fourpalms.org> 4.1.4
-- Define py_libdir to determine the location of python libraries
-- Define py_execlibdir to determine the location of shared libraries
+* Wed Nov 24 2010 Dirk O. Kaar <dok@dok-net.net> 4.2.0-2
+- Merge in improvements for current RPM from Thomas Lockhart
 
-* Thu Apr 21 2005 Sander Steffann <steffann@nederland.net> 4.0.6-2
-- Fixed packaging issues for RHEL and x86_64
+* Mon Sep 07 2009 Dirk O. Kaar <dok@dok-net.net> 4.2.0-1
+- Use 4.2 sources from SVN
 
-* Wed Apr 20 2005 Sander Steffann <steffann@nederland.net> 4.0.6-1
-- Upgrade to version 4.0.6
+* Thu May 05 2005 Dirk Siebnich <dok@dok-net.net> 4.1.0-1
+- rework package names to support x86_64, co-existance of 4.0
+  and 4.1 libraries
 
 * Mon Jul 26 2004 Duncan Grisby <duncan@grisby.org> 4.0.4-1
 - Bump version number; integrate SUSE changes. Don't automatically
@@ -331,3 +371,4 @@ fi
 * Wed Jul 03 2002 Thomas Lockhart <lockhart@fourpalms.org> 4.0.0beta
 - Start from 3.04 spec files
 - Strip workarounds from the spec file since 4.0 builds more cleanly
+
