@@ -1,3 +1,19 @@
+Mon Dec 20 22:07:35 GMT 2010 dgrisby
+====================================
+
+- Updates for 3.5 release.
+
+README.txt
+ReleaseNotes.txt
+THIS_IS_OMNIORBPY_3_4
+THIS_IS_OMNIORBPY_3_5
+aclocal.m4
+bugfixes-34.xml
+configure.ac
+configure
+mk/version.mk
+
+
 Wed Dec  8 12:27:01 GMT 2010 dgrisby
 ====================================
 

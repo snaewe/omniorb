@@ -1,10 +1,18 @@
 RELEASE NOTES
 =============
 
-This is omniORBpy 3.4.
+This is omniORBpy 3.5.
 
 See README.txt for building instructions.
 See the documentation in the doc directory for more information.
+
+
+Changes since omniORBpy 3.4
+---------------------------
+
+ - Bug fixes. See bugfixes-34.xml.
+ - Allow passing of peer address and identity to interceptors.
+ - Exceptions can be pickled.
 
 
 Changes since omniORBpy 3.3

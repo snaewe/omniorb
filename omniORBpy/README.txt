@@ -1,7 +1,7 @@
 omniORBpy 3
 ===========
 
-This is omniORBpy 3.4.
+This is omniORBpy 3.5.
 
 omniORBpy is a robust high-performance CORBA ORB for Python.
 

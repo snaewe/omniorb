@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORBpy 3.4     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="3.4">
+
+<bug id="1" date="Fri May 14 13:52:49 BST 2010" user="dgrisby">
+  <summary>Failure using properties as valuetype attributes</summary>
+  <text>
+  A reference counting assumption was not true in the case that a
+  valuetype used a property to implement an attribute, leading to a
+  crash due to premature deallocation.
+  </text>
+</bug>
+
+</buglist>
