@@ -17,4 +17,76 @@
   <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2009-September/030279.html"/>
 </bug>
 
+<bug id="2" date="Thu Nov 26 23:18:47 GMT 2009" user="dgrisby">
+  <summary>Missing generated code</summary>
+  <reported>Jean-Louis Gilbert</reported>
+  <text>
+  Combinations of multiple files opening the same module multiple
+  times could cause IDL definitions to be skipped.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2009-November/030429.html"/>
+</bug>
+
+<bug id="3" date="Sat Apr 17 22:32:46 BST 2010" user="dgrisby">
+  <summary>Assertion failure in SocketCollection</summary>
+  <reported>Richard Pitts</reported>
+  <text>
+  A race condition led to an assertion failure.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2010-March/030562.html"/>
+</bug>
+
+<bug id="4" date="Fri May 14 14:26:30 BST 2010" user="dgrisby">
+  <summary>Chunked encoding error</summary>
+  <text>
+  Valuetype chunked encoding could create an empty chunk, leading to
+  an assertion failure.
+  </text>
+</bug>
+
+<bug id="5" date="Fri Jul 30 11:11:54 BST 2010" user="dgrisby">
+  <summary>Inconsistent retry handling between locate request and normal request</summary>
+  <reported>Peter Klotz</reported>
+  <text>
+  Connection errors during locate requests were not handled correctly.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2010-July/030686.html"/>
+</bug>
+
+<bug id="6" date="Tue Aug 10 13:45:33 BST 2010" user="dgrisby">
+  <summary>Uninitialised variable in call to getpeername</summary>
+  <text>
+  The length field passed to getpeername() was not initialised,
+  leading to incorrect results or crashes.
+  </text>
+</bug>
+
+<bug id="7" date="Mon Aug 23 16:33:19 BST 2010" user="dgrisby">
+  <summary>Invalid chunked encoding of UTF-8 strings</summary>
+  <text>
+  UTF-8 string length and string body could be split across
+  chunks. omniORB accepts that but other ORBs do not.
+  </text>
+</bug>
+
+<bug id="8" date="Mon Oct 11 22:35:36 BST 2010" user="dgrisby">
+  <summary>Bug in omniidl back-end with nested scopes with clashing names</summary>
+  <reported>Kovex</reported>
+  <text>
+  C++ back-end would crash with IDL that had nested scopes with clashing names
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2010-October/030749.html"/>
+</bug>
+
+<bug id="9" date="Thu Oct 21 17:09:42 BST 2010" user="dgrisby">
+  <summary>Invalid generated code for anonymous sequence in valuetype</summary>
+  <reported>hydrargentum</reported>
+  <text>
+  C++ back-end used the wrong name for the internally-generated type
+  corresponding to an anonymous sequence.
+  </text>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2010-October/030758.html"/>
+</bug>
+
+
 </buglist>

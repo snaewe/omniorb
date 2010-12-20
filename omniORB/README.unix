@@ -130,83 +130,6 @@ Once omniORB is configured, build it with "make", then install it with
 "make install". You must use GNU make.
 
 
-
-Manual configuration with platform files
-========================================
-
-To build using the old omniORB 2 / 3 build environment, follow these
-steps:
- 
-  1. Select the appropriate platform configuration file
-  ------------------------------------------------------
-
-  Edit ./config/config.mk to select the appropriate platform file
-
-      e.g. For Solaris 2.5 onwards and with Sunspro C++
-      
-            platform = sun4_sosV_5.5
-
-  All the platform files are in ./mk/platforms.
-
-  If you are using gcc or the default compiler for your platform is
-  gcc, it is most likely that you have to edit the CXX and CC make
-  variables in the platform file. Some old versions of gcc do not have
-  proper support for multithreaded exception handling, and thus cannot
-  be used for omniORB. Moreover, the gcc compiler has to be configured
-  with the --enable-threads option or else the code generated does not
-  work reliably. The default version of gcc compiler that comes with
-  your platform may not be the right version.
-
-
-  2. Set the location of a Python interpreter
-  -------------------------------------------
-
-  Edit ./mk/platforms/<platform>.mk, where <platform> is the platform
-  name you set in config.mk.
-
-  Uncomment the 'PYTHON =' line, and set it to the path of your Python
-  interpreter.
-
-  If you do not have Python 1.5.2 or higher, you can download the full
-  source distribution from
-
-   http://www.python.org/download/
-
-  Alternatively, on Solaris, Linux, IRIX and HPUX (and Windows, but
-  this is README.unix!) you can download a minimal version of Python
-  which contains just the functionality required by omniidl. Download
-  it from
-
-   http://sourceforge.net/project/showfiles.php?group_id=51138&release_id=90793
-
-  Unpack the archive at the top of the omniORB tree. It places files
-  in the bin, lib and include directories.
-
-
-  3. Building and installing
-  --------------------------
-
-  The makefiles in this distribution only work with GNU make. Make
-  sure that you have the program installed and invoke it directly.
-
-  To build and install everything, go into the directory ./src and
-  type 'make export'. If all goes well, the libraries and executables
-  will be installed into ./lib/<platform>/ and ./bin/<platform>/.
-
-
-  4. Add omniORB libraries to search path
-  ---------------------------------------
-
-  Since the shared libraries libomniORB4.so and libomnithread.so are not in
-  the directories searched by the dynamic loader by default, you must add 
-  the library directory to the search path. For example:
- 
-    On Solaris 2.5
-       $ LD_LIBRARY_PATH=<absolute pathname of ./lib/sun4_sosV_5.5>
-       $ export LD_LIBRARY_PATH
- 
-
-
 Configuring the Naming service
 ==============================
 
@@ -309,3 +232,72 @@ Documentation
 
 You must read the omniORB and the naming service user guides. Follow
 the instructions in the guides to complete the configuration process.
+
+
+Manual configuration with platform files
+========================================
+
+Ignore this section unless you are absolutely certain that you should
+be using the old build environment.
+
+To build using the old omniORB build environment, follow these steps:
+ 
+  1. Select the appropriate platform configuration file
+  ------------------------------------------------------
+
+  Edit ./config/config.mk to select the appropriate platform file
+
+      e.g. For Solaris 2.5 onwards and with Sunspro C++
+      
+            platform = sun4_sosV_5.5
+
+  All the platform files are in ./mk/platforms.
+
+  If you are using gcc or the default compiler for your platform is
+  gcc, it is most likely that you have to edit the CXX and CC make
+  variables in the platform file. Some old versions of gcc do not have
+  proper support for multithreaded exception handling, and thus cannot
+  be used for omniORB. Moreover, the gcc compiler has to be configured
+  with the --enable-threads option or else the code generated does not
+  work reliably. The default version of gcc compiler that comes with
+  your platform may not be the right version.
+
+
+  2. Set the location of a Python interpreter
+  -------------------------------------------
+
+  Edit ./mk/platforms/<platform>.mk, where <platform> is the platform
+  name you set in config.mk.
+
+  Uncomment the 'PYTHON =' line, and set it to the path of your Python
+  interpreter.
+
+  If you do not have Python 1.5.2 or higher, you can download the full
+  source distribution from
+
+   http://www.python.org/download/
+
+
+  3. Building and installing
+  --------------------------
+
+  The makefiles in this distribution only work with GNU make. Make
+  sure that you have the program installed and invoke it directly.
+
+  To build and install everything, go into the directory ./src and
+  type 'make export'. If all goes well, the libraries and executables
+  will be installed into ./lib/<platform>/ and ./bin/<platform>/.
+
+
+  4. Add omniORB libraries to search path
+  ---------------------------------------
+
+  Since the shared libraries libomniORB4.so and libomnithread.so are not in
+  the directories searched by the dynamic loader by default, you must add 
+  the library directory to the search path. For example:
+ 
+    On Solaris 2.5
+       $ LD_LIBRARY_PATH=<absolute pathname of ./lib/sun4_sosV_5.5>
+       $ export LD_LIBRARY_PATH
+ 
+

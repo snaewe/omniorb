@@ -1,6 +1,6 @@
 READ ME FIRST!
 
-This is omniORB 4.1.4.
+This is omniORB 4.1.5.
 
 omniORB is copyright Apasphere Ltd, AT&T Laboratories Cambridge and
 others. It is free software. The programs in omniORB are distributed
@@ -100,7 +100,7 @@ Installation
 Installation instructions are provided in the following files:
 
 - README.unix      for all unix platforms
-- README.win32.txt for Windows NT and Windows 95
+- README.win32.txt for Windows, both 32 and 64 bit.
 
 
 Documentation
