@@ -273,6 +273,7 @@ DUMPBIN.EXE /SYMBOLS $$symreflib | \
 egrep '^[^ ]+ +[^ ]+ +SECT[^ ]+ +[^ ]+ +\(\) +External +\| +\?[^ ]*|^[^ ]+ +[^ ]+ +SECT[^ ]+ +[^ ]+ +External +\| +\?[^?][^ ]*'|\
 egrep -v 'deleting destructor[^(]+\(unsigned int\)' | \
 egrep -v 'anonymous namespace' | \
+egrep -v '@std@' | \
 cut -d'|' -f2 | \
 cut -d' ' -f2 | $(SORT) -u >> $$defname; \
 set +x;
