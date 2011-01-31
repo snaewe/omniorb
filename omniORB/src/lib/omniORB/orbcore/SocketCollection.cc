@@ -1308,10 +1308,12 @@ SocketCollection::Select() {
     pd_fd_set_n = 0;
 
 #ifdef UnixArchitecture
-    if (pd_pipe_read >= 0 && FD_ISSET(pd_pipe_read, &rfds)) {
-      char data;
-      read(pd_pipe_read, &data, 1);
-      pd_pipe_full = 0;
+    if (pd_pipe_read >= 0) {
+      if (FD_ISSET(pd_pipe_read, &rfds)) {
+	char data;
+	read(pd_pipe_read, &data, 1);
+	pd_pipe_full = 0;
+      }
       pd_fd_set_n = pd_pipe_read + 1;
     }
 #endif

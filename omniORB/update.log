@@ -1,5 +1,17 @@
+Mon Jan 31 23:55:16 GMT 2011 dgrisby
+====================================
+
+- poll() works on Mac OS.
+
+include/omniORB4/internal/SocketCollection.h
+
+- nfds could miss out the pipe on the select() SocketCollection.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Mon Jan 31 17:02:17 GMT 2011 dgrisby
-------------------------------------
+====================================
 
 - Missing include for USE_FAKE_INTERRUPTABLE_RECV case. Thanks Rui
   Pedro Fernandes.
