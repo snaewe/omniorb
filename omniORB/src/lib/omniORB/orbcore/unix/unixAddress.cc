@@ -67,6 +67,10 @@
 #include <omniORB4/linkHacks.h>
 #include <sys/un.h>
 
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+#  include <orbParameters.h>
+#endif
+
 OMNI_EXPORT_LINK_FORCE_SYMBOL(unixAddress);
 
 #ifndef AF_LOCAL
