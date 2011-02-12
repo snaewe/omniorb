@@ -5803,8 +5803,10 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 
       case CORBA::_np_tk_indirect:
 	{
-	  tc->pd_internal_depth =
-	    markLoops(((TypeCode_indirect*)tc)->NP_resolved(), depth+1);
+	  if (tc->pd_complete) {
+	    tc->pd_internal_depth =
+	      markLoops(((TypeCode_indirect*)tc)->NP_resolved(), depth+1);
+	  }
 	  break;
 	}
 

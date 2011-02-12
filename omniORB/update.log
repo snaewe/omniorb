@@ -1,3 +1,12 @@
+Sat Feb 12 19:50:49 GMT 2011 dgrisby
+====================================
+
+- Construction of static TypeCodes for complex recursive valuetypes
+  could throw BAD_TYPECODE.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Mon Jan 31 23:55:16 GMT 2011 dgrisby
 ====================================
 
