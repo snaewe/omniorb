@@ -320,7 +320,7 @@ must have been created by omnithread, or
 <TT>omni_thread::create_dummy()</TT> must have been called). If it
 does not, the function throws <TT>CORBA::INITIALIZE</TT>.</P><P>Note that calls are only actually dispatched to the &#X2018;main&#X2019; thread if
 <TT>ORB::run()</TT> or <TT>ORB::perform_work()</TT> is called from that thread.</P><H2 CLASS="section"><A NAME="toc24"></A><A NAME="htoc57">4.6</A>&#XA0;&#XA0;GIOP and interoperability options</H2><P>These options control omniORB&#X2019;s use of GIOP, and cover some areas
-where omniORB can work around buggy behaviour by other ORBs.</P><P><TT>maxGIOPVerson</TT> &#XA0;&#XA0; <I>default</I> =
+where omniORB can work around buggy behaviour by other ORBs.</P><P><TT>maxGIOPVersion</TT> &#XA0;&#XA0; <I>default</I> =
 <TT>1.2</TT></P><P>Choose the maximum GIOP version the ORB should support. Valid values
 are 1.0, 1.1 and 1.2.</P><P><TT>giopMaxMsgSize</TT> &#XA0;&#XA0; <I>default</I> =
 <TT>2097152</TT></P><P>The largest message, in bytes, that the ORB will send or receive, to
