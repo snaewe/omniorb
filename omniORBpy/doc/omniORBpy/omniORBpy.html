@@ -124,8 +124,8 @@ directories to the <TT>PYTHONPATH</TT> environment variable. The
 <TT>lib/python</TT> directory contains platform-independent Python code;
 the <TT>lib/</TT><TT>$</TT><TT>FARCH</TT> directory contains
 platform-specific binaries, where <TT>FARCH</TT> is the name of
-your platform, such as <TT>x86_win32</TT>.</P><P>On Unix platforms, set <TT>PYTHONPATH</TT> with a command like:</P><PRE CLASS="verbatim">   export PYTHONPATH=$PYTHONPATH:$TOP/lib/python:$TOP/lib/$FARCH
-</PRE><P>On Windows, use</P><PRE CLASS="verbatim">   set PYTHONPATH=%PYTHONPATH%;%TOP%\lib\python;%TOP%\lib\x86_win32
+your platform, such as <TT>x86_win32</TT>.</P><P>On Unix platforms, set <TT>PYTHONPATH</TT> with a command like:</P><PRE CLASS="verbatim">   export $TOP/lib/python:$TOP/lib/$FARCH
+</PRE><P>On Windows, use</P><PRE CLASS="verbatim">   set PYTHONPATH=%TOP%\lib\python;%TOP%\lib\x86_win32
 </PRE><P>(Where the <TT>TOP</TT> environment variable is the root of your
 omniORB tree.)</P><P>You should also add the <TT>bin/</TT><TT>$</TT><TT>FARCH</TT> directory
 to your <TT>PATH</TT>, so you can run the IDL compiler, omniidl.
@@ -1092,7 +1092,7 @@ while, in case a new thread is required. Once a thread has been idle
 for the number of seconds specified in this parameter, it exits.</P><P><TT>supportBootstrapAgent</TT> &#XA0;&#XA0; <I>default</I> =
 <TT>0</TT></P><P>If set true, servers support the Sun bootstrap agent protocol.</P><!--TOC section GIOP and interoperability options-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc49">4.6</A>&#XA0;&#XA0;GIOP and interoperability options</H2><!--SEC END --><P>These options control omniORB&#X2019;s use of GIOP, and cover some areas
-where omniORB can work around buggy behaviour by other ORBs.</P><P><TT>maxGIOPVerson</TT> &#XA0;&#XA0; <I>default</I> =
+where omniORB can work around buggy behaviour by other ORBs.</P><P><TT>maxGIOPVersion</TT> &#XA0;&#XA0; <I>default</I> =
 <TT>1.2</TT></P><P>Choose the maximum GIOP version the ORB should support. Valid values
 are 1.0, 1.1 and 1.2.</P><P><TT>giopMaxMsgSize</TT> &#XA0;&#XA0; <I>default</I> =
 <TT>2097152</TT></P><P>The largest message, in bytes, that the ORB will send or receive, to

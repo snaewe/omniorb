@@ -60,8 +60,8 @@ directories to the <TT>PYTHONPATH</TT> environment variable. The
 <TT>lib/python</TT> directory contains platform-independent Python code;
 the <TT>lib/</TT><TT>$</TT><TT>FARCH</TT> directory contains
 platform-specific binaries, where <TT>FARCH</TT> is the name of
-your platform, such as <TT>x86_win32</TT>.</P><P>On Unix platforms, set <TT>PYTHONPATH</TT> with a command like:</P><PRE CLASS="verbatim">   export PYTHONPATH=$PYTHONPATH:$TOP/lib/python:$TOP/lib/$FARCH
-</PRE><P>On Windows, use</P><PRE CLASS="verbatim">   set PYTHONPATH=%PYTHONPATH%;%TOP%\lib\python;%TOP%\lib\x86_win32
+your platform, such as <TT>x86_win32</TT>.</P><P>On Unix platforms, set <TT>PYTHONPATH</TT> with a command like:</P><PRE CLASS="verbatim">   export $TOP/lib/python:$TOP/lib/$FARCH
+</PRE><P>On Windows, use</P><PRE CLASS="verbatim">   set PYTHONPATH=%TOP%\lib\python;%TOP%\lib\x86_win32
 </PRE><P>(Where the <TT>TOP</TT> environment variable is the root of your
 omniORB tree.)</P><P>You should also add the <TT>bin/</TT><TT>$</TT><TT>FARCH</TT> directory
 to your <TT>PATH</TT>, so you can run the IDL compiler, omniidl.
