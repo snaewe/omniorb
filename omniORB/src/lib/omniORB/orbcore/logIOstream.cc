@@ -350,7 +350,7 @@ omniORB::logger::operator<<(const omniLocalIdentity* id)
                                            *this << " (deactivating OA)";break;
     case omniObjTableEntry::ETHEREALISING: *this << " (etherealising)";  break;
     case omniObjTableEntry::DEAD:          *this << " (dead)";           break;
-    default:                               *this << " (???)";
+    default:                               *this << " (???" ")";
     }
   }
   else

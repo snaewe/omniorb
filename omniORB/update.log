@@ -1,3 +1,11 @@
+Tue Apr 26 18:30:31 BST 2011 dgrisby
+====================================
+
+- Avoid unintentional trigraph. Thanks Peter Klotz.
+
+src/lib/omniORB/orbcore/logIOstream.cc
+
+
 Mon Apr  4 17:54:38 BST 2011 dgrisby
 ====================================
 
