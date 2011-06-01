@@ -117,6 +117,7 @@
 #include <omniORB4/omniInterceptors.h>
 #include <omniORB4/objTracker.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/omniInterceptors.h>
 #include <exceptiondefs.h>
 #include <giopStrand.h>
 #include <giopRope.h>
@@ -132,6 +133,7 @@
 #include <orbOptions.h>
 #include <orbParameters.h>
 #include <transportRules.h>
+#include <interceptors.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -587,16 +589,37 @@ BiDirClientRope::acquireClient(const omniIOR* ior,
       s.state(giopStrand::DYING);
     }
     else {
-      // now make the connection managed by the giopServer.
-      s.biDir = 1;
-      s.gatekeeper_checked = 1;
-      giopActiveCollection* watcher = c->registerMonitor();
-      if (omniORB::trace(20)) {
-	omniORB::logger log;
-	log << "Client opened bidirectional connection to " 
-	    << s.connection->peeraddress() << "\n";
+      CORBA::ULong minor_code = 0;
+
+      if (omniInterceptorP::clientOpenConnection) {
+	omniInterceptors::clientOpenConnection_T::info_T info(*giop_c);
+	omniInterceptorP::visit(info);
+	if (info.reject) {
+	  if (omniORB::trace(5)) {
+	    omniORB::logger log;
+	    log << "Interceptor rejected new bidirectional client connection";
+	    if (info.why)
+	      log << " : " << info.why;
+	    log << "\n";
+	  }
+	  minor_code = TRANSIENT_ConnectFailed;
+	}
       }
-      if (!giopServer::singleton()->addBiDirStrand(&s,watcher)) {
+
+      if (!minor_code) {
+	// now make the connection managed by the giopServer.
+	s.biDir = 1;
+	s.gatekeeper_checked = 1;
+	giopActiveCollection* watcher = c->registerMonitor();
+	if (omniORB::trace(20)) {
+	  omniORB::logger log;
+	  log << "Client opened bidirectional connection to " 
+	      << s.connection->peeraddress() << "\n";
+	}
+	if (!giopServer::singleton()->addBiDirStrand(&s,watcher))
+	  minor_code = TRANSIENT_BiDirConnUsedWithNoPOA;
+      }
+      if (minor_code) {
 	{
 	  omni_tracedmutex_lock sync(*omniTransportLock);
 	  s.connection->decrRefCount();
@@ -604,9 +627,7 @@ BiDirClientRope::acquireClient(const omniIOR* ior,
 	s.connection = 0;
 	s.biDir = 0;
 	giopRope::releaseClient(giop_c);
-	OMNIORB_THROW(TRANSIENT,
-		      TRANSIENT_BiDirConnUsedWithNoPOA,
-		      CORBA::COMPLETED_NO);
+	OMNIORB_THROW(TRANSIENT, minor_code, CORBA::COMPLETED_NO);
       }
     }
   }

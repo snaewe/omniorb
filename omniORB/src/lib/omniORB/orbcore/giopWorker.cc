@@ -124,11 +124,11 @@ giopWorker::real_execute()
   if (!pd_strand->gatekeeper_checked) {
 
     transportRules::sequenceString actions;
-    CORBA::ULong matchedRule;
+    CORBA::ULong		   matchedRule;
 
     CORBA::Boolean acceptconnection;
     CORBA::Boolean dumprule = 0;
-    const char* why;
+    const char*	   why;
 
     if ( !(acceptconnection = transportRules::serverRules().
                               match(pd_strand->connection->peeraddress(),
@@ -160,6 +160,15 @@ giopWorker::real_execute()
       if ( i == actions.length() ) {
 	why = (const char*) "the transport type is not in this rule: ";
 	dumprule = 1;
+      }
+    }
+
+    if ( acceptconnection && omniInterceptorP::serverAcceptConnection ) {
+      omniInterceptors::serverAcceptConnection_T::info_T info(*pd_strand);
+      omniInterceptorP::visit(info);
+      if ( info.reject ) {
+	acceptconnection = 0;
+	why = info.why ? info.why : (const char*) "an interceptor rejected it";
       }
     }
 

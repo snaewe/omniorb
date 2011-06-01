@@ -123,7 +123,8 @@ public:
   GIOP::Version version();
   // No thread safety precondition
 
-  operator giopStrand& () { return *pd_strand; }
+  operator giopStrand& ()     { return *pd_strand; }
+  inline giopStrand& strand() { return *pd_strand; }
   // No thread safety precondition
 
   giopStreamImpl* impl() const { return pd_impl; }

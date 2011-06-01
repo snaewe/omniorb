@@ -16,7 +16,7 @@
 <H1 CLASS="chapter"><A NAME="htoc115">Chapter&#XA0;10</A>&#XA0;&#XA0;Interceptors</H1><P>
 <A NAME="chap:interceptors"></A></P><P>omniORB supports interceptors that allow the application to insert
 processing in various points along the call chain, and in various
-other locations. It does not yet support the standard Portable
+other locations. It does not (yet) support the standard Portable
 Interceptors API.</P><P>The interceptor interfaces are defined in a single header,
 <TT>include/omniORB4/omniInterceptors.h</TT>. Each interception point
 consists of a singleton object with <TT>add()</TT> and <TT>remove()</TT> methods,
@@ -71,13 +71,26 @@ so you can see an example of its use in the
 Called when decoding an IOR. The application can use this to get out
 whatever information they put into IORs with encodeIOR. Again, see
 <TT>extractSupportedComponents()</TT> in
-<TT>src/lib/omniORB/orbcore/ior.cc</TT> for an example.</DD><DT CLASS="dt-description"><B>clientSendRequest</B></DT><DD CLASS="dd-description"><BR>
+<TT>src/lib/omniORB/orbcore/ior.cc</TT> for an example.</DD><DT CLASS="dt-description"><B>clientOpenConnection</B></DT><DD CLASS="dd-description"><BR>
+Called as a client opens a new connection to a server, after the
+connection is opened but before it is used to send a request. The
+interceptor function can set the <TT>info_T</TT>&#X2019;s <TT>reject</TT> member
+to true to cause the client to immediately close the new connection
+and throw CORBA::TRANSIENT to the calling code. In that case, the
+interceptor function can also set the <TT>why</TT> member to provide a
+message that is logged.</DD><DT CLASS="dt-description"><B>clientSendRequest</B></DT><DD CLASS="dd-description"><BR>
 Called just before a request header is sent over the network. The
 application can use it to insert service contexts in the header. See
 <TT>setCodeSetServiceContext()</TT> in
 <TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example of its use.</DD><DT CLASS="dt-description"><B>clientReceiveReply</B></DT><DD CLASS="dd-description"><BR>
 Called as the client receives a reply, just after unmarshalling the
-reply header. Called for normal replies and exceptions.</DD><DT CLASS="dt-description"><B>serverReceiveRequest</B></DT><DD CLASS="dd-description"><BR>
+reply header. Called for normal replies and exceptions.</DD><DT CLASS="dt-description"><B>serverAcceptConnection</B></DT><DD CLASS="dd-description"><BR>
+Called when a server accepts a new incoming connection, but before
+it reads any data from it. The interceptor function can set the
+<TT>info_T</TT>&#X2019;s <TT>reject</TT> member to true to cause the server to
+immediately close the new connection. In that case, the interceptor
+function can also set the <TT>why</TT> member to provide a message
+that is logged.</DD><DT CLASS="dt-description"><B>serverReceiveRequest</B></DT><DD CLASS="dd-description"><BR>
 Called when the server receives a request, just after unmarshalling
 the request header. See the <TT>getCodeSetServiceContext()</TT> function in
 <TT>src/lib/omniORB/orbcore/cdrStream.cc</TT> for an example.</DD><DT CLASS="dt-description"><B>serverSendReply</B></DT><DD CLASS="dd-description"><BR>

@@ -5164,7 +5164,7 @@ entirely of data and no code, since they are driven by look-up tables.
 
 omniORB supports interceptors that allow the application to insert
 processing in various points along the call chain, and in various
-other locations. It does not yet support the standard Portable
+other locations. It does not (yet) support the standard Portable
 Interceptors API.
 
 The interceptor interfaces are defined in a single header,
@@ -5255,6 +5255,17 @@ whatever information they put into IORs with encodeIOR. Again, see
 \file{src/lib/omniORB/orbcore/ior.cc} for an example.
 
 
+\item[clientOpenConnection]\mbox{}\\
+%
+Called as a client opens a new connection to a server, after the
+connection is opened but before it is used to send a request. The
+interceptor function can set the \code{info\_T}'s \code{reject} member
+to true to cause the client to immediately close the new connection
+and throw CORBA::TRANSIENT to the calling code. In that case, the
+interceptor function can also set the \code{why} member to provide a
+message that is logged.
+
+
 \item[clientSendRequest]\mbox{}\\
 %
 Called just before a request header is sent over the network. The
@@ -5267,6 +5278,16 @@ application can use it to insert service contexts in the header. See
 %
 Called as the client receives a reply, just after unmarshalling the
 reply header. Called for normal replies and exceptions.
+
+
+\item[serverAcceptConnection]\mbox{}\\
+%
+Called when a server accepts a new incoming connection, but before
+it reads any data from it. The interceptor function can set the
+\code{info\_T}'s \code{reject} member to true to cause the server to
+immediately close the new connection. In that case, the interceptor
+function can also set the \code{why} member to provide a message
+that is logged.
 
 
 \item[serverReceiveRequest]\mbox{}\\

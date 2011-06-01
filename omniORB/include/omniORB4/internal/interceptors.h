@@ -3,7 +3,7 @@
 // interceptors.h             Created on: 2002/03/21
 //                            Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 2006 Apasphere Ltd
+//    Copyright (C) 2006-2011 Apasphere Ltd
 //    Copyright (C) 2002 AT&T Laboratories, Cambridge
 //
 //    This file is part of the omniORB library
@@ -73,8 +73,10 @@ public:
 
   static _core_attr elmT* encodeIOR;
   static _core_attr elmT* decodeIOR;
+  static _core_attr elmT* clientOpenConnection;
   static _core_attr elmT* clientSendRequest;
   static _core_attr elmT* clientReceiveReply;
+  static _core_attr elmT* serverAcceptConnection;
   static _core_attr elmT* serverReceiveRequest;
   static _core_attr elmT* serverSendReply;
   static _core_attr elmT* serverSendException;
@@ -94,8 +96,10 @@ public:
 
   VISIT_FUNCTION(encodeIOR)
   VISIT_FUNCTION(decodeIOR)
+  VISIT_FUNCTION(clientOpenConnection)
   VISIT_FUNCTION(clientSendRequest)
   VISIT_FUNCTION(clientReceiveReply)
+  VISIT_FUNCTION(serverAcceptConnection)
   VISIT_FUNCTION(serverReceiveRequest)
   VISIT_FUNCTION(serverSendReply)
   VISIT_FUNCTION(serverSendException)

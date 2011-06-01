@@ -3,7 +3,7 @@
 // omniInterceptors.h         Created on: 22/09/2000
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2006 Apasphere Ltd
+//    Copyright (C) 2006-2011 Apasphere Ltd
 //    Copyright (C) 2000 AT&T Laboratories, Cambridge
 //
 //    This file is part of the omniORB library
@@ -83,7 +83,7 @@ class omniCallDescriptor;
 OMNI_NAMESPACE_BEGIN(omni)
 
 class omniInterceptorP;
-class giopStream;
+class giopStrand;
 class GIOP_S;
 class GIOP_C;
 class orbServer;
@@ -130,6 +130,32 @@ public:
 
       info_T(const IIOP::ProfileBody& body, omniIOR& i, CORBA::Boolean b) :
          iiop(body), ior(i), has_iiop_body(b) {}
+
+    private:
+      info_T();
+      info_T(const info_T&);
+      info_T& operator=(const info_T&);
+    };
+
+    typedef CORBA::Boolean (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+  };
+
+
+  //////////////////////////////////////////////////////////////////
+  class clientOpenConnection_T {
+  public:
+
+    class info_T {
+    public:
+      GIOP_C&        giop_c;
+      CORBA::Boolean reject;
+      const char*    why;
+
+      info_T(GIOP_C& c) :
+        giop_c(c), reject(0), why(0) {}
 
     private:
       info_T();
@@ -193,6 +219,33 @@ public:
     void remove(interceptFunc);
   };
 
+
+  //////////////////////////////////////////////////////////////////
+  class serverAcceptConnection_T {
+  public:
+
+    class info_T {
+    public:
+      giopStrand&    strand;
+      CORBA::Boolean reject;
+      const char*    why;
+
+      info_T(giopStrand& s) : 
+	strand(s), reject(0), why(0) {}
+
+    private:
+      info_T();
+      info_T(const info_T&);
+      info_T& operator=(const info_T&);
+    };
+
+    typedef CORBA::Boolean (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+  };
+
+
   //////////////////////////////////////////////////////////////////
   class serverReceiveRequest_T {
   public:
@@ -223,10 +276,11 @@ public:
 
     class info_T {
     public:
-      GIOP_S&                  giop_s;
+      GIOP_S& giop_s;
       
       info_T(GIOP_S& s) :
 	giop_s(s) {}
+
     private:
       info_T();
       info_T(const info_T&);
@@ -238,6 +292,7 @@ public:
     void add(interceptFunc);
     void remove(interceptFunc);
   };
+
 
   //////////////////////////////////////////////////////////////////
   class serverSendException_T {
@@ -262,6 +317,7 @@ public:
     void remove(interceptFunc);
   };
 
+
   //////////////////////////////////////////////////////////////////
   class createIdentity_T {
   public:
@@ -283,6 +339,7 @@ public:
     void remove(interceptFunc);
   };
 
+
   //////////////////////////////////////////////////////////////////
   class createORBServer_T {
   public:
@@ -299,6 +356,7 @@ public:
     void add(interceptFunc);
     void remove(interceptFunc);
   };
+
 
   //////////////////////////////////////////////////////////////////
   class createPolicy_T {
@@ -320,6 +378,7 @@ public:
     void remove(interceptFunc);
   };
 
+
   //////////////////////////////////////////////////////////////////
   class createThread_T {
   public:
@@ -334,6 +393,7 @@ public:
     void add(interceptFunc);
     void remove(interceptFunc);
   };
+
 
   //////////////////////////////////////////////////////////////////
   class assignUpcallThread_T {
@@ -355,8 +415,10 @@ public:
   //////////////////////////////////////////////////////////////////
   encodeIOR_T                encodeIOR;
   decodeIOR_T                decodeIOR;
+  clientOpenConnection_T     clientOpenConnection;
   clientSendRequest_T        clientSendRequest;
   clientReceiveReply_T       clientReceiveReply;
+  serverAcceptConnection_T   serverAcceptConnection;
   serverReceiveRequest_T     serverReceiveRequest;
   serverSendReply_T          serverSendReply;
   serverSendException_T      serverSendException;

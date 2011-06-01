@@ -140,9 +140,13 @@
 #include <exceptiondefs.h>
 #include <giopStream.h>
 #include <giopStrand.h>
+#include <giopRope.h>
 #include <giopStreamImpl.h>
 #include <omniORB4/minorCode.h>
+#include <omniORB4/omniInterceptors.h>
 #include <orbParameters.h>
+#include <interceptors.h>
+#include <GIOP_C.h>
 #include <stdio.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -1149,6 +1153,17 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
       errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__,0,
 		  "Unable to open new connection");
     }
+    if (omniInterceptorP::clientOpenConnection) {
+      GIOP_C* giop_c = GIOP_C::downcast(this);
+      OMNIORB_ASSERT(giop_c);
+      omniInterceptors::clientOpenConnection_T::info_T info(*giop_c);
+      omniInterceptorP::visit(info);
+      if (info.reject) {
+	errorOnSend(TRANSIENT_ConnectFailed, __FILE__, __LINE__, 0,
+		    info.why ? info.why :
+		    (const char*)"Interceptor rejected new client connection");
+      }
+    }
     if (omniORB::trace(20)) {
       omniORB::logger log;
       log << "Client opened connection to " 
@@ -1223,12 +1238,24 @@ giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
 	deadline_nanosecs = pd_deadline_nanosecs;
       }
       giopActiveConnection* c = pd_strand->address->Connect(deadline_secs,
-							    deadline_nanosecs);
+							    deadline_nanosecs,
+							    pd_strand->flags);
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {
       errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__,0,
 		  "Unable to open new connection");
+    }
+    if (omniInterceptorP::clientOpenConnection) {
+      GIOP_C* giop_c = GIOP_C::downcast(this);
+      OMNIORB_ASSERT(giop_c);
+      omniInterceptors::clientOpenConnection_T::info_T info(*giop_c);
+      omniInterceptorP::visit(info);
+      if (info.reject) {
+	errorOnSend(TRANSIENT_ConnectFailed, __FILE__, __LINE__, 0,
+		    info.why ? info.why :
+		    (const char*)"Interceptor rejected new client connection");
+      }
     }
     if (omniORB::trace(20)) {
       omniORB::logger log;
