@@ -168,6 +168,11 @@
 #   define USE_POLL
 #endif
 
+// Darwin implementation of poll() appears to be broken
+#if defined(__darwin__)
+#   undef USE_POLL
+#endif
+
 #if defined(__hpux__)
 #   if __OSVERSION__ < 11
 #       undef USE_POLL
@@ -181,6 +186,12 @@
 #endif
 
 #if defined(__freebsd__) || defined(__netbsd__)
+#   undef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
+#endif
+
+// By default, Linux does accept IPv4 connections on IPv6, but some
+// distributions misconfigure it not to.
+#if defined(__linux__) || defined(IPV6_V6ONLY)
 #   undef OMNI_IPV6_SOCKETS_ACCEPT_IPV4_CONNECTIONS
 #endif
 
