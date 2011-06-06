@@ -191,7 +191,7 @@ tcpConnection::addrToURI(sockaddr* addr, const char* prefix)
 
   char dest[80];
   int port;
-  const char* addrstr;
+  const char* addrstr = 0;
 
   if (addr->sa_family == AF_INET) {
     sockaddr_in* addr_in = (sockaddr_in*)addr;
@@ -199,15 +199,19 @@ tcpConnection::addrToURI(sockaddr* addr, const char* prefix)
     addrstr = inet_ntop(AF_INET, &addr_in->sin_addr, dest, sizeof(dest));
   }
 #if defined(OMNI_SUPPORT_IPV6)
-  else {
-    OMNIORB_ASSERT(addr->sa_family == AF_INET6);
+  else if (addr->sa_family == AF_INET6) {
     sockaddr_in6* addr_in6 = (sockaddr_in6*)addr;
     port = ntohs(addr_in6->sin6_port);
     addrstr = inet_ntop(AF_INET6, &addr_in6->sin6_addr, dest, sizeof(dest));
   }
 #endif
-  OMNIORB_ASSERT(addrstr);
-
+  else {
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      log << "Unknown address family " << addr->sa_family << " in sockaddr.\n";
+    }
+    return CORBA::string_dup("**invalid**");
+  }
   return omniURI::buildURI(prefix, addrstr, port);
 
 #elif defined (HAVE_GETNAMEINFO)
@@ -222,15 +226,19 @@ tcpConnection::addrToURI(sockaddr* addr, const char* prefix)
     port = ntohs(addr_in->sin_port);
   }
 #if defined(OMNI_SUPPORT_IPV6)
-  else {
-    OMNIORB_ASSERT(addr->sa_family == AF_INET6);
+  else if (addr->sa_family == AF_INET6) {
     addrlen = sizeof(sockaddr_in6);
     sockaddr_in6* addr_in6 = (sockaddr_in6*)addr;
     port = ntohs(addr_in6->sin6_port);
   }
 #endif
-  OMNIORB_ASSERT(addrlen);
-
+  else {
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      log << "Unknown address family " << addr->sa_family << " in sockaddr.\n";
+    }
+    return CORBA::string_dup("**invalid**");
+  }
   int result = getnameinfo(addr, addrlen, dest, sizeof(dest), 0, 0,
 			   NI_NUMERICHOST);
   if (result != 0) {

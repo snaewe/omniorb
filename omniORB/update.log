@@ -1,3 +1,16 @@
+Mon Jun  6 21:58:51 BST 2011 dgrisby
+====================================
+
+- Mac OS may not have a working poll() after all; Linux can be
+  configured to use IPV6_V6ONLY by default.
+
+include/omniORB4/internal/SocketCollection.h
+
+- Cope gracefully with unexpected sockaddr address family.
+
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+
+
 Thu Jun  2 00:10:39 BST 2011 dgrisby
 ====================================
 
