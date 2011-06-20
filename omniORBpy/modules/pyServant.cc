@@ -383,6 +383,9 @@ Py_omniServant::_default_POA()
       // The call raised a Python exception
       omniORB::logs(1, "Python servant raised an exception in _default_POA.");
       omniPy::handlePythonException();
+#ifdef NEED_DUMMY_THROW
+      throw 0;
+#endif
     }
   }
   return 0;

@@ -34,6 +34,14 @@
 
 #define PY_OMNISERVANT_BASE omniPy::Py_omniServant
 
+// Some compilers will do some flow analysis and might get tricked if
+// a function always throws an exception.
+
+#ifdef NEED_DUMMY_RETURN
+#  define NEED_DUMMY_THROW
+#elif defined(__DECCXX)
+#  define NEED_DUMMY_THROW
+#endif
 
 // Things that are broken
 
