@@ -593,6 +593,15 @@ SocketCollection::Select() {
   }
   else {
     // Negative return means error
+#ifdef __VMS
+    if (ERRNO == EVMSERR && vaxc$errno == 316) {
+      errno = EBADF;
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "vaxc$errno==" << vaxc$errno << "\n";
+      }
+    }
+#endif
     if (ERRNO == RC_EBADF) {
       omniORB::logs(20, "poll() returned EBADF.");
 
@@ -602,8 +611,12 @@ SocketCollection::Select() {
     }
     else if (ERRNO != RC_EINTR) {
       if (omniORB::trace(20)) {
+#ifdef __VMS
+	perror("Error return from poll()");
+#else
 	omniORB::logger l;
 	l << "Error return from poll(). errno = " << (int)ERRNO << "\n";
+#endif
       }
       return 0;
     }
@@ -1354,6 +1367,15 @@ SocketCollection::Select() {
   }
   else {
     // Negative return means error
+#ifdef __VMS
+    if (ERRNO == EVMSERR && vaxc$errno == 316) {
+      errno = EBADF;
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "vaxc$errno==" << vaxc$errno << "\n";
+      }
+    }
+#endif
     if (ERRNO == RC_EBADF) {
       omniORB::logs(20, "select() returned EBADF.");
 
@@ -1363,8 +1385,12 @@ SocketCollection::Select() {
     }
     else if (ERRNO != RC_EINTR) {
       if (omniORB::trace(1)) {
+#ifdef __VMS
+        perror("Error return from select()");
+#else
 	omniORB::logger l;
 	l << "Error return from select(). errno = " << (int)ERRNO << "\n";
+#endif
       }
       return 0;
     }

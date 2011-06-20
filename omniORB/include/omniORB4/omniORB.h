@@ -3,7 +3,7 @@
 // omniORB.h                  Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2002-2007 Apasphere Ltd
+//    Copyright (C) 2002-2011 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -725,11 +725,22 @@ public:
 
 OMNI_NAMESPACE_END(omni)
 
+#ifdef OMNIORB_THROW_VISIBLE_THROW
+
+#define OMNIORB_THROW(name, minor, completion) \
+  do {\
+    _OMNI_NS(omniExHelper)::name(__FILE__, __LINE__, minor, completion); \
+    throw ::CORBA::name(minor, completion); \
+  } while(0)
+
+#else  // throw inside omniExHelper function
+
 #define OMNIORB_THROW(name, minor, completion) \
   _OMNI_NS(omniExHelper)::name(__FILE__, __LINE__, minor, completion)
 
-#else
+#endif // OMNIORB_THROW_VISIBLE_THROW
 
+#else  // no tracing
 
 #define OMNIORB_THROW(name, minor, completion) \
   throw ::CORBA::name(minor, completion)

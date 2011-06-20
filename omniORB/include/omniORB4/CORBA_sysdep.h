@@ -164,7 +164,6 @@
 
 #if defined(__DECCXX)
 // DEC C++ compiler
-#  define NEED_DUMMY_RETURN
 #  if __DECCXX_VER < 60000000
 //    Compaq C++ 5.x
 //    Work-around for OpenVMS VAX Compaq C++ 5.6 compiler problem with
@@ -173,7 +172,9 @@
 //    this pragma wasn't implemented until 6.something on Unix).
 #     ifdef __VMS
 #       pragma message disable CANTCOMPLETE
+#       define OMNIORB_THROW_VISIBLE_THROW
 #     endif
+#     define NEED_DUMMY_RETURN
 #     define OMNI_OPERATOR_REFPTR_REQUIRES_TYPEDEF
 #     define OMNI_PREMATURE_INSTANTIATION
 //    Extra macros from the Compaq C++ 5.x patch (in <top>/patches/) to be

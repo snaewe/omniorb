@@ -35,11 +35,6 @@
 #endif
 #endif
 
-#ifdef __VMS
-#define pthread_mutex_lock PTHREAD_MUTEX_LOCK
-#define pthread_mutex_unlock PTHREAD_MUTEX_UNLOCK
-#endif
-
 #ifndef __POSIX_NT__
 #  include <pthread.h>
 #else

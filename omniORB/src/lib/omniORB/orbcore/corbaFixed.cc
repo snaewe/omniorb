@@ -177,7 +177,7 @@ CORBA::Fixed::Fixed(CORBA::Double val) :
 		  CORBA::COMPLETED_NO);
   }
   char buffer[80];
-  int len = sprintf(buffer, "%.31f", val);
+  int len = sprintf(buffer, "%.31f", (double)val);
   OMNIORB_ASSERT(len < 79);
 
   NP_fromString(buffer);

@@ -1,3 +1,22 @@
+Mon Jun 20 23:10:45 BST 2011 dgrisby
+====================================
+
+- VMS updates. Thanks Bruce Visscher.
+
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/omniORB.h
+include/omnithread/posix.h
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/corbaFixed.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/exceptn.cc
+src/lib/omniORB/orbcore/uri.cc
+src/tool/omniidl/python/omniidl/main.py
+
+
 Mon Jun  6 21:58:51 BST 2011 dgrisby
 ====================================
 

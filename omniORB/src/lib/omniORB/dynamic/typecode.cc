@@ -364,15 +364,6 @@ OMNI_USING_NAMESPACE(omni)
 /////////////////////////// CORBA::TypeCode //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-#if !defined(OMNIORB_NO_EXCEPTION_LOGGING) && defined(__DECCXX) && __DECCXX_VER > 60000000
-//  Compaq C++ 6.x needs dummy return if function is called to throw an
-//  exception.
-#ifndef NEED_DUMMY_RETURN
-#define NEED_DUMMY_RETURN
-#endif
-#endif
-
-
 CORBA::TypeCode::~TypeCode() {
   pd_magic = 0;
 }

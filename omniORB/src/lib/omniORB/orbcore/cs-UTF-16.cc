@@ -367,7 +367,9 @@ TCS_W_UTF_16::unmarshalWChar(cdrStream& stream)
   }
   OMNIORB_THROW(MARSHAL, MARSHAL_InvalidWCharSize,
 		(CORBA::CompletionStatus)stream.completion());
-  return 0; // For broken compilers
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
 }
 
 _CORBA_ULong

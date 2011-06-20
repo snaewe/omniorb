@@ -359,8 +359,9 @@ NCS_C_UTF_8::unmarshalChar(cdrStream& stream, omniCodeSet::TCS_C* tcs)
     OMNIORB_THROW(DATA_CONVERSION, 
 		  DATA_CONVERSION_BadInput,
 		  (CORBA::CompletionStatus)stream.completion());
-
-  return 0; // For broken compilers
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
 }
 
 _CORBA_ULong
@@ -539,8 +540,9 @@ TCS_C_UTF_8::unmarshalChar(cdrStream& stream)
     OMNIORB_THROW(DATA_CONVERSION, 
 		  DATA_CONVERSION_BadInput,
 		  (CORBA::CompletionStatus)stream.completion());
-
-  return 0; // For broken compilers
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
 }
 
 _CORBA_ULong

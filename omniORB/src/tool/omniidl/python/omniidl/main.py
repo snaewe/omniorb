@@ -178,14 +178,21 @@ if sys.platform != "OpenVMS":
                         _omniidl.version
 else:
     if hasattr(_omniidl, "__file__"):
-        preprocessor_path = os.path.dirname(_omniidl.__file__)
+        preprocessor_path = os.path.dirname(os.path.abspath(_omniidl.__file__))
     else:
-        preprocessor_path = os.path.dirname(sys.argv[0])
+        preprocessor_path = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-    names = string.split(preprocessor_path, "/")
-    preprocessor_cmd = \
-         '''mcr %s:[%s]omnicpp -lang-c++ -undef "-D__OMNIIDL__=%s"'''\
-         % (names[1], string.join(names[2:],"."), _omniidl.version)
+    names=[]
+    for name in string.split(preprocessor_path, "/"):
+        names.append(string.replace(name, '.', '^.'))
+
+    preprocessor_options = ('-lang-c++ -undef "-D__OMNIIDL__=%s"' %
+                            _omniidl.version)
+    preprocessor_cmdfmt  = "mcr %s:[%s]%s %s"
+    preprocessor_cmd     = preprocessor_cmdfmt % (names[1],
+                                                  string.join(names[2:],"."),
+                                                  preprocessor_name,
+                                                  preprocessor_options)
 
 no_preprocessor   = 0
 backends          = []

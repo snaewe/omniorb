@@ -224,7 +224,9 @@
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
 #     define HAS_pch
-#     define OMNI_REQUIRES_FQ_BASE_CTOR
+#     if __DECCXX_VER < 70390009
+#       define OMNI_REQUIRES_FQ_BASE_CTOR
+#     endif
 // Uncomment the following lines to enable the use of namespace with cxx v5.6
 // Notice that the source code may have to be patched to compile.
 //#  elif __DECCXX_VER >= 50600000
@@ -527,6 +529,9 @@
 #    undef HAVE_STRCASECMP
 #    undef HAVE_STRNCASECMP
 #    undef HAVE_GETTIMEOFDAY
+#  endif
+#  if __CRTL_VER >= 70311000
+#    define HAVE_POLL
 #  endif
 
 #elif defined(__WIN32__)
