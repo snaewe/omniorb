@@ -1,3 +1,16 @@
+Fri Jun 24 22:39:31 BST 2011 dgrisby
+====================================
+
+- Updates for 3.6 release.
+
+ReleaseNotes.txt
+THIS_IS_OMNIORBPY_3_5
+THIS_IS_OMNIORBPY_3_6
+configure.ac
+configure
+mk/version.mk
+
+
 Mon Jun 20 23:13:47 BST 2011 dgrisby
 ====================================
 

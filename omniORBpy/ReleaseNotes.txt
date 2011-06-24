@@ -1,10 +1,16 @@
 RELEASE NOTES
 =============
 
-This is omniORBpy 3.5.
+This is omniORBpy 3.6.
 
 See README.txt for building instructions.
 See the documentation in the doc directory for more information.
+
+
+Changes since omniORBpy 3.5
+---------------------------
+
+ - Build fixes.
 
 
 Changes since omniORBpy 3.4
