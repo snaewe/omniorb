@@ -1,3 +1,21 @@
+Fri Jun 24 22:36:11 BST 2011 dgrisby
+====================================
+
+- Updates for 4.1.6 release.
+
+CREDITS
+README.FIRST.txt
+ReleaseChecklist.txt
+ReleaseNotes.txt
+THIS_IS_OMNIORB_4_1_5
+THIS_IS_OMNIORB_4_1_6
+bugfixes-415.xml
+configure.ac
+configure
+contrib/RPMs/omniORB.spec
+mk/version.mk
+
+
 Fri Jun 24 22:32:30 BST 2011 dgrisby
 ====================================
 

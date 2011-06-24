@@ -1,10 +1,18 @@
 RELEASE NOTES
 =============
 
-This is omniORB 4.1.5.
+This is omniORB 4.1.6.
 
 See README.unix or README.win32.txt for building instructions.
 See the documentation in the doc directory for more information.
+
+
+Changes since omniORB 4.1.5
+---------------------------
+
+ - Bug fixes. See bugfixes-415.xml
+
+ - New clientOpenConnection and serverAcceptConnection interceptors.
 
 
 Changes since omniORB 4.1.4

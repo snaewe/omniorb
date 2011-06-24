@@ -1,5 +1,8 @@
-This is a list of people that have contributed to omniORB. It is
-sorted by the last name.
+This is a list of many of the people that have contributed to
+omniORB. If you have contributed in some way and your name is not
+here, please email Duncan Grisby <dgrisby@apasphere.com> with the
+details.
+
 
 Name:         Peter Braun
 Email:        Peter.Braun@mchp.siemens.de
@@ -100,7 +103,11 @@ Email:        Hugo.Vandeputte@meteo.fr
 Organisation: SCEM/TTI/DEV
 Description:  HPUX port
 
+Name:         Bruce Visscher
+Email:        bruce.visscher@gmail.com
+Description:  VMS port
+
 Name:         James Weatherall
-Email:	      jnw@uk.research.att.com
+Email:        jnw@uk.research.att.com
 Organisation: AT&T Laboratories, Cambridge
 Description:  New implementation of TypeCode and Any

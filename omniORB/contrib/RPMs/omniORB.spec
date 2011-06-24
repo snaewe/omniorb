@@ -5,7 +5,7 @@
 
 %define version_major 4
 %define version_minor 1
-%define version_micro 5
+%define version_micro 6
 %define version_full %{version_major}.%{version_minor}.%{version_micro}
 %define version_brief %{version_major}.%{version_minor}
 

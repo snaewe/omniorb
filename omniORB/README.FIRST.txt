@@ -1,6 +1,6 @@
 READ ME FIRST!
 
-This is omniORB 4.1.5.
+This is omniORB 4.1.6.
 
 omniORB is copyright Apasphere Ltd, AT&T Laboratories Cambridge and
 others. It is free software. The programs in omniORB are distributed

@@ -2,6 +2,8 @@ mk/version.mk
   version
   hex version
 
+omniORBpy/mk/version.mk
+
 README.FIRST.txt
 
 THIS_IS_OMNIORB...
