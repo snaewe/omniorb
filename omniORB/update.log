@@ -1,9 +1,20 @@
-Fri Jul  1 14:49:39 BST 2011 dgrisby
+Fri Jul  1 15:57:00 BST 2011 dgrisby
 ====================================
 
 - This is omniORB 4.1.6.
 
 mk/version.mk
+
+
+Fri Jul  1 15:53:03 BST 2011 dgrisby
+====================================
+
+- Avoid EINPROGRESS define.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/unix/unixAddress.cc
 
 
 Fri Jul  1 14:46:40 BST 2011 dgrisby
