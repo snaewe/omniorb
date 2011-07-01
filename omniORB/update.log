@@ -1,3 +1,12 @@
+Fri Jul  1 14:46:40 BST 2011 dgrisby
+====================================
+
+- Another ARM define that avoids mixed-endian doubles. Thanks Philippe
+  Hamelin.
+
+include/omniORB4/CORBA_sysdep.h
+
+
 Fri Jul  1 14:29:37 BST 2011 dgrisby
 ====================================
 
