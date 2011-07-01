@@ -129,8 +129,10 @@
 // Processor dependencies
 //
 
+// __VFP_FP__ means that the floating point format in use is that of the ARM 
+// VFP unit, which is native-endian IEEE-754.
 #if defined(__arm__)
-#  if defined(__armv5teb__)
+#  if defined(__armv5teb__) || defined(__VFP_FP__)
 #    define NO_OMNI_MIXED_ENDIAN_DOUBLE
 #  else
 #    define OMNI_MIXED_ENDIAN_DOUBLE

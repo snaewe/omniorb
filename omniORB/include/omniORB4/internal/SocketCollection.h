@@ -223,7 +223,7 @@
 #  define CLOSESOCKET(sock)  closesocket(sock)
 #  define SHUTDOWNSOCKET(sock) ::shutdown(sock,2)
 #  define ERRNO              ::WSAGetLastError()
-#  define EINPROGRESS        WSAEWOULDBLOCK
+#  define RC_EINPROGRESS     WSAEWOULDBLOCK
 #  define RC_EINTR           WSAEINTR
 #  define RC_EBADF           WSAENOTSOCK
 
@@ -301,6 +301,7 @@ extern "C" int select (int,fd_set*,fd_set*,fd_set*,struct timeval *);
 
 #  define ERRNO              errno
 #  define RC_EINTR           EINTR
+#  define RC_EINPROGRESS     EINPROGRESS
 #  if defined (__vxWorks__)
 #    define RC_EBADF         S_iosLib_INVALID_FILE_DESCRIPTOR  
 #  else

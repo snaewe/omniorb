@@ -11,6 +11,7 @@ Changes since omniORBpy 3.5
 ---------------------------
 
  - Build fixes.
+ - Track ORB core 4.1.6 release.
 
 
 Changes since omniORBpy 3.4
