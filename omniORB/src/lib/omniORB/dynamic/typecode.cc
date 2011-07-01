@@ -1611,17 +1611,28 @@ static omni_tracedmutex* aliasExpandedTc_lock = 0;
 TypeCode_base*
 TypeCode_base::aliasExpand(TypeCode_base* tc)
 {
-  if( !tc->pd_aliasExpandedTc ) {
-    TypeCode_base* aetc =
-      tc->NP_containsAnAlias() ? tc->NP_aliasExpand(0) : tc;
-
-    aliasExpandedTc_lock->lock();
-    if( !tc->pd_aliasExpandedTc )  tc->pd_aliasExpandedTc = aetc;
-    else                           TypeCode_collector::releaseRef(aetc);
-    aliasExpandedTc_lock->unlock();
+  TypeCode_base* exp_tc;
+  {
+    omni_tracedmutex_lock l(*aliasExpandedTc_lock);
+    exp_tc = tc->pd_aliasExpandedTc;
   }
 
-  return TypeCode_collector::duplicateRef(tc->pd_aliasExpandedTc);
+  if (!exp_tc) {
+    TypeCode_base* aetc = tc->NP_containsAnAlias() ? tc->NP_aliasExpand(0) : tc;
+
+    {
+      omni_tracedmutex_lock l(*aliasExpandedTc_lock);
+      if (!tc->pd_aliasExpandedTc) {
+	exp_tc = tc->pd_aliasExpandedTc = aetc;
+      }
+      else {
+	exp_tc = tc->pd_aliasExpandedTc;
+	if (aetc != tc)
+	  TypeCode_collector::releaseRef(aetc);
+      }
+    }
+  }
+  return TypeCode_collector::duplicateRef(exp_tc);
 }
 
 TypeCode_base*

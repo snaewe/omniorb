@@ -1,3 +1,13 @@
+Fri Jul  1 14:29:37 BST 2011 dgrisby
+====================================
+
+- A TypeCode with no alias expansion could be released unintentionally
+  if multiple threads attempted to alias-expand it simultaneously.
+
+bugfixes-415.xml
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Fri Jun 24 22:36:11 BST 2011 dgrisby
 ====================================
 
