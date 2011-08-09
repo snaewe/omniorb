@@ -96,13 +96,18 @@ class sslContext {
 
   SSL_CTX* get_SSL_CTX() const { return pd_ctx; }
   
-  // These four parameters must be set or else the default way to
+  // These three parameters must be set or else the default way to
   // initialise a sslContext singleton will not be used.
   static _core_attr const char* certificate_authority_file; // In PEM format
   static _core_attr const char* key_file;                   // In PEM format
   static _core_attr const char* key_file_password;
-  static _core_attr int         verify_mode;
 
+  // These parameters can be overriden to adjust the verify mode and
+  // verify callback passed to SSL_CTX_set_verify.
+  static _core_attr int         verify_mode;
+  static _core_attr int       (*verify_callback)(int, X509_STORE_CTX*);
+
+  // sslContext singleton object.
   static _core_attr sslContext* singleton;
 
   virtual ~sslContext();

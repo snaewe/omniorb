@@ -119,6 +119,7 @@ const char* sslContext::key_file = 0;
 const char* sslContext::key_file_password = 0;
 int         sslContext::verify_mode = (SSL_VERIFY_PEER |
 				       SSL_VERIFY_FAIL_IF_NO_PEER_CERT);
+int       (*sslContext::verify_callback)(int,X509_STORE_CTX *) = 0;
 
 sslContext* sslContext::singleton = 0;
 
@@ -179,7 +180,7 @@ sslContext::internal_initialise() {
   set_DH();
   set_ephemeralRSA();
   // Allow the user to overwrite the SSL verification types.
-  SSL_CTX_set_verify(pd_ctx,set_verify_mode(),NULL);
+  SSL_CTX_set_verify(pd_ctx, set_verify_mode(), verify_callback);
   if (pd_ssl_owner)
     thread_setup();
 }
@@ -247,7 +248,7 @@ sslContext::set_certificate() {
     }
   }
 
-  if(!(SSL_CTX_use_certificate_file(pd_ctx,pd_keyfile,SSL_FILETYPE_PEM))) {
+  if(!(SSL_CTX_use_certificate_chain_file(pd_ctx, pd_keyfile))) {
     report_error();
     OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
