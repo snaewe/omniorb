@@ -147,20 +147,20 @@ int main(int argc, char** argv)
     orb->destroy();
   }
   catch(CORBA::TRANSIENT&) {
-    cerr << "Caught system exception TRANSIENT -- unable to contact the "
-         << "server." << endl;
+    std::cerr << "Caught system exception TRANSIENT -- unable to contact the "
+              << "server." << endl;
   }
   catch(CORBA::SystemException& ex) {
-    cerr << "Caught a CORBA::" << ex._name() << endl;
+    std::cerr << "Caught a CORBA::" << ex._name() << endl;
   }
   catch(CORBA::Exception& ex) {
-    cerr << "Caught CORBA::Exception: " << ex._name() << endl;
+    std::cerr << "Caught CORBA::Exception: " << ex._name() << endl;
   }
   catch(omniORB::fatalException& fe) {
-    cerr << "Caught omniORB::fatalException:" << endl;
-    cerr << "  file: " << fe.file() << endl;
-    cerr << "  line: " << fe.line() << endl;
-    cerr << "  mesg: " << fe.errmsg() << endl;
+    std::cerr << "Caught omniORB::fatalException:" << endl;
+    std::cerr << "  file: " << fe.file() << endl;
+    std::cerr << "  line: " << fe.line() << endl;
+    std::cerr << "  mesg: " << fe.errmsg() << endl;
   }
   return 0;
 }
