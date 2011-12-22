@@ -323,7 +323,13 @@ orbOptions::getTraceLevel(int argc, char** argv)
 	throw orbOptions::BadParam("traceFile", "<missing>",
 				   "Expected parameter missing");
       }
-      omniORB::setLogFilename(argv[i+1]);
+      try {
+	omniORB::setLogFilename(argv[i+1]);
+      }
+      catch (CORBA::INITIALIZE&) {
+	throw orbOptions::BadParam("traceFile", argv[i+1],
+				   "invalid log file name");
+      }
       break;
     }
   }

@@ -1,3 +1,16 @@
+Thu Dec 22 16:35:51 GMT 2011 dgrisby
+====================================
+
+- Use std namespace in generated example code.
+
+src/lib/omniORB/omniidl_be/cxx/impl/template.py
+
+- INITIALIZE exception was incorrectly turned into terminate due to
+  throw specification.
+
+src/lib/omniORB/orbcore/orbOptions.cc
+
+
 Tue Aug  9 23:05:08 BST 2011 dgrisby
 ====================================
 
