@@ -1,7 +1,9 @@
 %define version_major 3
-%define version_minor 5
+%define version_minor 6
 %define version_full %{version_major}.%{version_minor}
 %define version_brief %{version_major}.%{version_minor}
+
+%define omniORB_version 4.1.%{version_minor}
 
 %define lib_name %{?mklibname:%mklibname %{name} %{version_brief}}%{!?mklibname:lib%{name}%{version_brief}}
 
@@ -15,12 +17,12 @@ Version:   %{version_full}
 Release:   1%{?dist}
 License:   GPL / LGPL
 Group:     System/Libraries
-Source0:   %{name}-%{version}.tar.gz
+Source0:   %{name}-%{version}.tar.bz2
 Prefix:    /usr
 URL:       http://omniorb.sourceforge.net/
 BuildRequires: gcc-c++
 BuildRequires: glibc-devel openssl-devel
-BuildRequires: omniORB-devel = %{version}
+BuildRequires: omniORB-devel = %{omniORB_version}
 BuildRequires: python python-devel
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 
@@ -31,7 +33,7 @@ Object Request Broker (ORB).
 %package -n %{lib_name}
 Summary:   Python Language Mapping for omniORB
 Group:     System/Libraries
-Requires:  libomniORB = %{version}
+Requires:  libomniORB = %{omniORB_version}
 Provides:  lib%{name} = %{version}-%{release} %{name} = %{version}-%{release}
 Provides:  libomniorbpy = %{version}-%{release}
 Conflicts: libomniORBpy < %{version}-%{release}
@@ -59,7 +61,7 @@ PortableServer modules. This provides those standard modules for
 %package devel
 Summary:   Header files and libraries needed for %{name} development
 Group:     Development/Python
-Requires:  %{lib_name} = %{version}-%{release} omniORB-devel = %{version}
+Requires:  %{lib_name} = %{version}-%{release} omniORB-devel = %{omniORB_version}
 Provides:  libomniorbpy-devel = %{version}-%{release} omniorbpy-devel = %{version}-%{release}
 Conflicts: %{name}-devel < %{version}-%{release}
 Obsoletes: libomniORBpy-devel
@@ -79,7 +81,7 @@ Developer documentation and examples.
 
 %prep 
 
-%setup -n %{name} #-%{version}
+%setup -n %{name}-%{version}
 
 # Needs to know where omniORB was installed if it is not in /usr.
 # If necessary, use the configure option --with-omniorb=%{_prefix}

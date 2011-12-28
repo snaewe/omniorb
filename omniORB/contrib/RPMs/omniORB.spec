@@ -18,10 +18,10 @@
 Summary: Object Request Broker (ORB)
 Name:    omniORB
 Version: %{version_full}
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPL / LGPL
 Group:   System/Libraries
-Source0: %{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar.bz2
 Prefix:  /usr
 URL:     http://omniorb.sourceforge.net/
 BuildRequires:  gcc-c++
@@ -48,6 +48,14 @@ Requires(postun): /sbin/ldconfig
 #Provides:  corba
 Provides:  lib%{name} = %{version}-%{release} %{name} = %{version}-%{release}
 Provides:  libomniorb = %{version}-%{release} omniorb = %{version}-%{release}
+Provides:  libCOS%{version_major}.so.%{version_minor}
+Provides:  libCOSDynamic%{version_major}.so.%{version_minor}
+Provides:  libomniCodeSets%{version_major}.so.%{version_minor}
+Provides:  libomniConnectionMgmt%{version_major}.so.%{version_minor}
+Provides:  libomniDynamic%{version_major}.so.%{version_minor}
+Provides:  libomniORB%{version_major}.so.%{version_minor}
+Provides:  libomnisslTP%{version_major}.so.%{version_minor}
+Provides:  libomnithread.so.3
 
 %description -n %{lib_name}
 %{name} is an Object Request Broker (ORB) which implements
@@ -125,7 +133,7 @@ Obsoletes:       libomniORB-doc
 Developer documentation and examples.
 
 %prep
-%setup -n %{name} #-%{version}
+%setup -n %{name}-%{version}
 
 %if "%{_vendor}" == "suse"
 # Replace the init script with something appropriate for SUSE.
@@ -173,8 +181,8 @@ mv %{buildroot}%{_mandir}/man1/catior.1 %{buildroot}%{_mandir}/man1/catior.omni.
   ln -sf %{_initrddir}/omniNames %{buildroot}%{_sbindir}/rcomniNames
 %endif
 
-%{?multiarch_includes:%multiarch_includes %{buildroot}%{_includedir}/omniORB4/acconfig.h}
-%{?multiarch_includes:%multiarch_includes %{buildroot}%{_includedir}/omniORB4/CORBA_sysdep_trad.h}
+%{?multiarch_includes:%multiarch_includes %{buildroot}%{_includedir}/omniORB%{version_major}/acconfig.h}
+%{?multiarch_includes:%multiarch_includes %{buildroot}%{_includedir}/omniORB%{version_major}/CORBA_sysdep_trad.h}
 
 
 %clean
@@ -252,7 +260,6 @@ fi
 %config(noreplace) %{_sysconfdir}/*.cfg
 %{_libdir}/*.so.*
 
-
 %files servers
 %defattr (-,root,root)
 %attr(644,root,man) %{_mandir}/man8/omniNames*
@@ -315,11 +322,16 @@ fi
 
 
 %changelog
-* Wed Nov 24 2010 Dirk O. Kaar <dok@dok-net.net> 4.2.0-2
+* Sun Aug 07 2011 Thomas Lockhart <lockhart@fourpalms.org> 4.1.6-1
+- Use .bz2 source tarball rather than .gz
+- Parameterize version numbers for dependencies
+
+* Wed Nov 24 2010 Dirk O. Kaar <dok@dok-net.net> 4.1.5-1
 - Merge in improvements for current RPM from Thomas Lockhart
 
-* Mon Sep 07 2009 Dirk O. Kaar <dok@dok-net.net> 4.2.0-1
-- Use 4.2 sources from SVN
+* Tue Nov 23 2010 Thomas Lockhart <lockhart@fourpalms.org> 4.1.5-1
+- Support python library locations for 64-bit installations
+- Integrate additional features from omniORB_new.spec from Dirk Kaar
 
 * Thu May 05 2005 Dirk Siebnich <dok@dok-net.net> 4.1.0-1
 - rework package names to support x86_64, co-existance of 4.0
