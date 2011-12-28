@@ -1,3 +1,16 @@
+Wed Dec 28 15:42:24 GMT 2011 dgrisby
+====================================
+
+- Build tweaks, including GNU/HURD support from Floris Bruynooghe.
+
+configure.ac
+configure
+include/omniORB4/acconfig.h.in
+include/omnithread.h
+mk/beforeauto.mk.in
+src/lib/omniORB/orbcore/poa.cc
+
+
 Wed Dec 28 15:07:59 GMT 2011 dgrisby
 ====================================
 

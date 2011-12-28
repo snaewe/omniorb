@@ -200,10 +200,12 @@ case "$host" in
   *-*-freebsd5*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="5";;
   *-*-freebsd6*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="6";;
   *-*-freebsd7*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="7";;
+  *-*-freebsd8*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="8";;
   *-*-kfreebsd*) plat_name="kFreeBSD";  plat_def="__FreeBSD_kernel__";  os_v="6";;
   *-*-netbsd*)   plat_name="NetBSD";   plat_def="__netbsd__";   os_v="1";;
   *-*-openbsd*)  plat_name="OpenBSD";  plat_def="__openbsd__";  os_v="3";;
   *-*-sco*)      plat_name="OSR5";     plat_def="__osr5__";     os_v="5";;
+  *-*-gnu*)      plat_name="GNU";      plat_def="__hurd__" ;    os_v="0";;
 esac
 
 AC_SUBST(PLATFORM_NAME, $plat_name)
