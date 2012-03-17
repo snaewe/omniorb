@@ -1078,6 +1078,7 @@ SocketHolder::clearSelectable()
   OMNIORB_ASSERT(pd_belong_to);
   omni_tracedmutex_lock l(pd_belong_to->pd_collection_lock);
   pd_selectable = 0;
+  pd_belong_to->pd_changed = 1;
 }
 
 
@@ -1466,6 +1467,7 @@ SocketHolder::clearSelectable()
   OMNIORB_ASSERT(pd_belong_to);
   omni_tracedmutex_lock l(pd_belong_to->pd_collection_lock);
   pd_selectable = 0;
+  pd_belong_to->pd_changed = 1;
 
 #ifdef UnixArchitecture
   if (pd_belong_to->pd_idle_count == 0) {
@@ -1669,6 +1671,10 @@ SocketCollection::removeSocket(SocketHolder* s)
       s->pd_next->pd_prev = s->pd_prev;
 
     s->pd_belong_to = 0;
+    
+    // Force rescan of sockets ASAP
+    pd_changed = 1;
+    pd_abs_sec = pd_abs_nsec = 0;
   }
   if (refcount == 0) delete this;
 }
