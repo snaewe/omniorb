@@ -80,14 +80,6 @@ else
 dynimps := -lCOS$(OMNIORB_MAJOR_VERSION) $(OMNIORB_LIB)
 endif
 
-ifdef AIX
-# AIX has special library names.
-oov = $(OMNIORB_MAJOR_VERSION)$(OMNIORB_MINOR_VERSION)
-oovm = $(oov)$(OMNIORB_MICRO_VERSION)
-imps := -lomniORB$(oov) -lomniDynamic$(oov) $(OMNITHREAD_LIB)
-dynimps := -lCOS$(oovm) $(imps)
-endif
-
 mkshared::
 	@(dir=shared; $(CreateDir))
 

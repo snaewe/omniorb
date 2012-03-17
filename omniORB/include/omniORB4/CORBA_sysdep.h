@@ -228,6 +228,12 @@
 
 #if defined(__aix__) && defined(__xlC__)
 #  define OMNI_NO_INLINE_FRIENDS
+#  define NEED_DUMMY_RETURN
+#endif
+
+
+#if defined(__clang__)
+#  define OMNI_NO_INLINE_FRIENDS
 #endif
 
 
