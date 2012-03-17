@@ -1,3 +1,25 @@
+Sat Mar 17 20:34:10 GMT 2012 dgrisby
+====================================
+
+- Build tweaks for AIX and clang.
+
+include/omniORB4/CORBA_sysdep.h
+src/services/mklib/dynstublib/dir.mk
+src/services/mklib/stublib/dir.mk
+
+- Spot change to selectable sockets more rapidly.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+- Flush all messages.
+
+src/lib/omniORB/orbcore/logIOstream.cc
+
+- Solaris lifconf fix.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Wed Dec 28 15:42:24 GMT 2011 dgrisby
 ====================================
 
