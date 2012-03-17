@@ -515,11 +515,14 @@ omniORB::do_logs(const char* mesg)
 
   sprintf(cbuf, "%s\n", mesg);
 
-  if (logfunc())
+  if (logfunc()) {
     logfunc()(buf);
-  else
+  }
+  else {
     fputs(buf, logfile);
-
+    if ((const char*)logfilename)
+      fflush(logfile);
+  }
   if (buf != inlinebuf) delete[] buf;
 }
 
