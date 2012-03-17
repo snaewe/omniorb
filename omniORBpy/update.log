@@ -1,3 +1,11 @@
+Sat Mar 17 20:38:08 GMT 2012 dgrisby
+====================================
+
+- Properly pass parent into child typecodes.
+
+python/omniORB/tcInternal.py
+
+
 Wed Dec 28 15:42:24 GMT 2011 dgrisby
 ====================================
 
