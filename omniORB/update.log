@@ -1,3 +1,11 @@
+Mon Apr  2 15:14:52 BST 2012 dgrisby
+====================================
+
+- Minor one-off memory leak if ioctl failed.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Sat Mar 17 20:34:10 GMT 2012 dgrisby
 ====================================
 

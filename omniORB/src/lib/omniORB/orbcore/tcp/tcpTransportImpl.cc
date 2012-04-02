@@ -440,6 +440,7 @@ void unix_get_ifinfo(omnivector<const char*>& addrs)
 	  log << "Warning: ioctl SIOCGICONF failed.\n"
 	      << "Unable to obtain the list of all interface addresses.\n";
 	}
+	free(buf);
 	return;
       }
     }
