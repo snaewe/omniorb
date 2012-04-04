@@ -501,9 +501,13 @@ omniObjAdapter::shutdown()
 {
   omni_tracedmutex_lock sync(oa_lock);
 
-  OMNIORB_ASSERT(num_active_oas == 0);
-
   omniORB::logs(10, "Shutting-down all incoming endpoints.");
+
+  if (num_active_oas != 0 && omniORB::trace(1)) {
+    omniORB::logger log;
+    log << "Warning: " << num_active_oas
+        << " active object adapters at endpoint shutdown time.\n";
+  }
 
   if ( !oa_servers.empty() ) {
 

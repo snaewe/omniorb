@@ -1003,23 +1003,55 @@ omniOrbORB::actual_shutdown()
   ASSERT_OMNI_TRACEDMUTEX_HELD(orb_lock, 1);
   OMNIORB_ASSERT(pd_shutdown_in_progress);
 
-  //?? Is is safe to unlock orb_lock here?
+  // Release lock while shutting down subsystems
   orb_lock.unlock();
+
+  CORBA::Boolean failure = 0;
 
   // Shutdown object adapters.  When this returns all
   // outstanding requests have completed.
-  omniOrbPOA::shutdown();
+  try {
+    omniOrbPOA::shutdown();
+  }
+  catch (...) {
+    omniORB::logs(1, "Unexpected exception shutting down POAs.");
+    failure = 1;
+  }
 
   // Shutdown incoming connections.
-  omniObjAdapter::shutdown();
+  try {
+    omniObjAdapter::shutdown();
+  }
+  catch (...) {
+    omniORB::logs(1, "Unexpected exception shutting down connections.");
+    failure = 1;
+  }
 
   // Disable object references
-  omniObjRef::_shutdown();
+  try {
+    omniObjRef::_shutdown();
+  }
+  catch (...) {
+    omniORB::logs(1, "Unexpected exception disabling object references.");
+    failure = 1;
+  }
 
-  // Wait for all client requests to complete
-  omniIdentity::waitForLastIdentity();
+  if (!failure) {
+    try {
+      // Wait for all client requests to complete
+      omniIdentity::waitForLastIdentity();
+      omniORB::logs(10, "ORB shutdown is complete.");
+    }
+    catch (...) {
+      omniORB::logs(1, "Unexpected exception waiting for "
+                    "client requests to complete.");
+      failure = 1;
+    }
+  }
 
-  omniORB::logs(10, "ORB shutdown is complete.");
+  if (failure) {
+    omniORB::logs(1, "ORB shutdown completed with errors.");
+  }
 
   orb_lock.lock();
   pd_shutdown = 1;

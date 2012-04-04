@@ -1,3 +1,14 @@
+Wed Apr  4 20:48:04 BST 2012 dgrisby
+====================================
+
+- Avoid hang if there are assertion failures during shutdown.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Mon Apr  2 15:14:52 BST 2012 dgrisby
 ====================================
 

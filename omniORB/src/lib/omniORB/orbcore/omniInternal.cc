@@ -1683,7 +1683,7 @@ public:
       l << "Error: the object table still contains "
 	<< numObjectsInTable << " entr"
 	<< (numObjectsInTable == 1 ? "y" : "ies")
-	<< " at ORB shutdown time.";
+	<< " at ORB shutdown time.\n";
     }
     OMNIORB_ASSERT(numObjectsInTable == 0);
     delete [] objectTable;
