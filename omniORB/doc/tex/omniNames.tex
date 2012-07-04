@@ -132,6 +132,25 @@ omniNames accepts the following command line parameters.
 \end{tabular}
 
 
+\section{Machines with multiple IP addresses}
+
+The CORBA naming service is a tree (or graph) of \verb|NamingContext|
+CORBA objects. For each of those CORBA objects, the object reference
+contains details about the \emph{endpoint}---i.e.\ the host address
+and port---that is used to contact the object.
+
+When the machine running omniNames has multiple IP addresses, omniORB
+arbitrarily picks one of the addresses to publish in object
+references. It might pick the `wrong' one, meaning that clients
+connect to the configured root context successfully, but then fail to
+connect to the sub-contexts. To force omniORB to publish the correct
+IP address, use the \verb|-ORBendPointPublish| command line parameter:
+
+\begin{quote}
+\cmdline{-ORBendPointPublish giop:tcp:}\textit{address}\cmdline{:}
+\end{quote}
+
+\noindent where \textit{address} can be an IP address or a host name.
 
 \section{Windows service}
 
