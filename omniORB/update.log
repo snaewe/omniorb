@@ -1,3 +1,11 @@
+Tue Aug 14 13:44:27 BST 2012 dgrisby
+====================================
+
+- UTF-8 validation incorrectly used a char array index.
+
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+
 Wed Jul  4 12:03:30 BST 2012 dgrisby
 ====================================
 

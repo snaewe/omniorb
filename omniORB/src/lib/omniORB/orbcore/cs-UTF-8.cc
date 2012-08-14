@@ -848,12 +848,12 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
 
 
 void
-TCS_C_UTF_8::validateString(const char* s, CORBA::CompletionStatus completion)
+TCS_C_UTF_8::validateString(const char* cs, CORBA::CompletionStatus completion)
 {
   // Check that string is valid UTF-8 data.
-
   int bytes;
 
+  const unsigned char* s = (const unsigned char*)cs;
   while (*s) {
     bytes = utf8Count[*s++];
 
