@@ -3,7 +3,7 @@
 // cdrValueChunkStream.cc     Created on: 2003/03/26
 //                            Author    : Duncan Grisby (dgrisby)
 //
-//    Copyright (C) 2003-2007 Apasphere Ltd.
+//    Copyright (C) 2003-2012 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -28,58 +28,6 @@
 //    encoding.
 //
 
-// $Log$
-// Revision 1.1.2.15  2009/05/06 16:15:31  dgrisby
-// Update lots of copyright notices.
-//
-// Revision 1.1.2.14  2007/08/31 09:45:57  dgrisby
-// Bug in handling pd_remaining within get_octet_array.
-//
-// Revision 1.1.2.13  2007/04/18 23:03:53  dgrisby
-// Another size_t that can't be logged on Win64.
-//
-// Revision 1.1.2.12  2006/06/06 16:39:37  dgrisby
-// marshalRawString and chunking stream did not byte-swap length fields
-// when required to.
-//
-// Revision 1.1.2.11  2006/05/22 15:44:51  dgrisby
-// Make sure string length and body are never split across a chunk
-// boundary.
-//
-// Revision 1.1.2.10  2006/05/21 17:45:11  dgrisby
-// get_octet_array could set chunk end pointer incorrectly.
-//
-// Revision 1.1.2.9  2006/05/15 10:12:59  dgrisby
-// Data was overwritten when a chunk ended with an array; make
-// declareArrayLength() virtual.
-//
-// Revision 1.1.2.8  2005/07/08 16:39:36  dgrisby
-// get_octet_array in cdrValueChunkStream failed if called just after the
-// end of a nested value.
-//
-// Revision 1.1.2.7  2005/04/25 17:42:25  dgrisby
-// Bug in marshalling nested chunks on a buffer boundary.
-//
-// Revision 1.1.2.6  2005/04/13 09:11:04  dgrisby
-// peekChunkTag forgot to byteswap when it needed to.
-//
-// Revision 1.1.2.5  2005/01/13 21:55:56  dgrisby
-// Turn off -g debugging; suppress some compiler warnings.
-//
-// Revision 1.1.2.4  2004/10/13 17:58:25  dgrisby
-// Abstract interfaces support; values support interfaces; value bug fixes.
-//
-// Revision 1.1.2.3  2003/11/06 11:56:57  dgrisby
-// Yet more valuetype. Plain valuetype and abstract valuetype are now working.
-//
-// Revision 1.1.2.2  2003/07/10 21:52:31  dgrisby
-// Value chunks should start after URL / repoids.
-//
-// Revision 1.1.2.1  2003/05/20 16:53:16  dgrisby
-// Valuetype marshalling support.
-//
-
-
 #include <omniORB4/CORBA.h>
 
 #ifndef Swap32
@@ -99,7 +47,14 @@ cdrValueChunkStream::
 {
   if (!pd_exception) {
     if (pd_reader && pd_nestLevel > 0) {
-      endInputValue();
+      try {
+        endInputValue();
+      }
+      catch (...) {
+        copyStateToActual();
+        pd_valueTracker = 0;
+        throw;
+      }
     }
     OMNIORB_ASSERT(pd_nestLevel == 0);
   }
@@ -343,6 +298,13 @@ reserveOutputSpaceForPrimitiveType(omni::alignment_t align, size_t required)
 	// Not got to the end of the current buffer yet
 	return 1;
       }
+
+      // If there is room for any data in the current buffer, it will
+      // be "lost" when the buffer is changed below. Increase
+      // pd_remaining to reflect the octets that would have fitted in
+      // the current buffer, but were not used.
+      pd_remaining += (omni::ptr_arith_t)pd_outb_end - p1;
+
       copyStateToActual();
       if (!pd_actual.reserveOutputSpaceForPrimitiveType(align, required))
 	OMNIORB_THROW(MARSHAL, MARSHAL_CannotReserveOutputSpace,
@@ -431,6 +393,13 @@ maybeReserveOutputSpace(omni::alignment_t align, size_t required)
       // Not got to the end of the current buffer yet
       return 1;
     }
+
+    // If there is room for any data in the current buffer, it will
+    // be "lost" when the buffer is changed below. Increase
+    // pd_remaining to reflect the octets that would have fitted in
+    // the current buffer, but were not used.
+    pd_remaining += (omni::ptr_arith_t)pd_outb_end - p1;
+
     copyStateToActual();
     if (!pd_actual.maybeReserveOutputSpace(align, required))
       OMNIORB_THROW(MARSHAL, MARSHAL_CannotReserveOutputSpace,
@@ -613,8 +582,7 @@ declareArrayLength(omni::alignment_t align, size_t size)
     // Number of octets remaining is the number we required, minus the
     // number we can fit into the current buffer with the required
     // alignment.
-    omni::ptr_arith_t mask = ~((ptr_arith_t)align - 1);
-    pd_remaining = end - ((omni::ptr_arith_t)pd_outb_end & mask);
+    pd_remaining = end - (omni::ptr_arith_t)pd_outb_end;
 
     if (omniORB::trace(25)) {
       omniORB::logger l;

@@ -1,3 +1,11 @@
+Thu Aug 23 15:43:07 BST 2012 dgrisby
+====================================
+
+- Errors in chunked encoding.
+
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+
+
 Tue Aug 14 13:44:27 BST 2012 dgrisby
 ====================================
 
