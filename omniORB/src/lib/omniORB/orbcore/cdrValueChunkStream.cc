@@ -291,6 +291,7 @@ reserveOutputSpaceForPrimitiveType(omni::alignment_t align, size_t required)
       // Some pre-reserved octets to go before finishing a chunk
       OMNIORB_ASSERT(!pd_inChunk);
       OMNIORB_ASSERT(!pd_inHeader);
+      OMNIORB_ASSERT(pd_outb_mkr <= pd_outb_end);
 
       p1 = omni::align_to((omni::ptr_arith_t)pd_outb_mkr, align);
       p2 = p1 + required;
@@ -574,7 +575,6 @@ declareArrayLength(omni::alignment_t align, size_t size)
   }
   else {
     // End the chunk, setting its length to include the array
-    pd_outb_mkr = (void*)cur;
     start = (omni::ptr_arith_t)pd_lengthPtr + 4;
     OMNIORB_ASSERT(start < end);
     setLength(end - start);
