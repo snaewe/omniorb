@@ -437,7 +437,7 @@ void unix_get_ifinfo(omnivector<const char*>& addrs)
       if ( errno != EINVAL || lastlen != 0 ) {
 	if ( omniORB::trace(1) ) {
 	  omniORB::logger log;
-	  log << "Warning: ioctl SIOCGICONF failed.\n"
+	  log << "Warning: ioctl SIOCGIFCONF failed.\n"
 	      << "Unable to obtain the list of all interface addresses.\n";
 	}
 	free(buf);

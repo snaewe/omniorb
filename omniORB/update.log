@@ -1,3 +1,15 @@
+Mon Sep 10 09:33:01 BST 2012 dgrisby
+====================================
+
+- Recent Solaris versions require elevated permissions to set thread priority.
+
+mk/beforeauto.mk.in
+
+- Typo in log message.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Fri Aug 24 10:49:17 BST 2012 dgrisby
 ====================================
 
