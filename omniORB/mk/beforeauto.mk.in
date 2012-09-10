@@ -787,8 +787,7 @@ endif
 ###################
 ifdef SunOS
 IMPORT_CPPFLAGS += -D__sunos__
-OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \
-			    -DPthreadSupportThreadPriority
+OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10
 OMNITHREAD_CPPFLAGS = -DUsePthread -D_REENTRANT $(CXXMTFLAG)
 SOCKET_LIB = -lsocket -lnsl
 THREAD_LIB = -lthread $(CXXMTFLAG)
