@@ -1,3 +1,11 @@
+Mon Nov 19 14:01:54 GMT 2012 dgrisby
+====================================
+
+- Avoid MSVC warning about perfectly safe use of strcpy.
+
+include/omniORB4/stringtypes.h
+
+
 Mon Sep 10 09:33:01 BST 2012 dgrisby
 ====================================
 
