@@ -1,3 +1,11 @@
+Mon Nov 26 09:53:00 GMT 2012 dgrisby
+====================================
+
+- Avoid some compiler warnings.
+
+src/lib/omnithread/posix.cc
+
+
 Mon Nov 19 14:01:54 GMT 2012 dgrisby
 ====================================
 

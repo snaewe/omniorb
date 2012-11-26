@@ -167,7 +167,7 @@ omni_condition::wait(void)
 int
 omni_condition::timedwait(unsigned long secs, unsigned long nanosecs)
 {
-    timespec rqts = { secs, nanosecs };
+    timespec rqts = { (time_t)secs, (long)nanosecs };
 
 again:
     int rc = ERRNO(pthread_cond_timedwait(&posix_cond,
@@ -837,7 +837,7 @@ omni_thread::yield(void)
 void
 omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 {
-    timespec rqts = { secs, nanosecs };
+    timespec rqts = { (time_t)secs, (long)nanosecs };
 
 #ifndef NoNanoSleep
 
