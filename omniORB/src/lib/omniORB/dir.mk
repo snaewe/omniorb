@@ -9,6 +9,11 @@ SUBDIRS += orbcore
 
 ifndef OrbCoreOnly
 SUBDIRS += dynamic codesets connections
+
+ifdef EnableZIOP
+SUBDIRS += ziop
+endif
+
 endif
 
 EXPORTHEADERS = omniORB4/distdate.hh \
@@ -28,6 +33,12 @@ EXPORTHEADERS = omniORB4/distdate.hh \
 		omniORB4/omniTypedefs.hh \
                 omniORB4/bootstrap.hh \
 		omniORB4/omniConnectionData.hh
+
+ifdef EnableZIOP
+EXPORTHEADERS += omniORB4/compression.hh \
+		 omniORB4/messaging.hh \
+		 omniORB4/ziop_defs.hh
+endif
 
 
 all:: $(EXPORTHEADERS)
@@ -110,6 +121,23 @@ omniORB4/omniTypedefs.hh: omniTypedefs.idl
 omniORB4/omniConnectionData.hh: omniConnectionData.idl
 	@(dir=omniORB4; $(CreateDir))
 	$(OMNIORB_IDL_ONLY) -v -ComniORB4 $<
+
+ifdef EnableZIOP
+
+omniORB4/compression.hh : compression.idl
+	@(dir=omniORB4; $(CreateDir))
+	$(OMNIORB_IDL_ONLY) -v $(IMPORT_IDLFLAGS) -ComniORB4 $<
+
+omniORB4/messaging.hh : messaging.idl
+	@(dir=omniORB4; $(CreateDir))
+	$(OMNIORB_IDL_ONLY) -v $(IMPORT_IDLFLAGS) -ComniORB4 $<
+
+omniORB4/ziop_defs.hh : ziop.idl
+	@(dir=omniORB4; $(CreateDir))
+	$(OMNIORB_IDL_ONLY) -v $(IMPORT_IDLFLAGS) -WbF -ComniORB4 $<
+
+endif
+
 
 ciao:: $(STUBHEADERS)
 	@$(MakeSubdirs)

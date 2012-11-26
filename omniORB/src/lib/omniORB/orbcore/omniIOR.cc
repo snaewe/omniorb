@@ -397,8 +397,12 @@ omniIOR::getIORInfo() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-omniIOR::IORInfo::IORInfo() : pd_tcs_c(0),
-			      pd_tcs_w(0)
+omniIOR::IORInfo::IORInfo()
+  : pd_tcs_c(0),
+    pd_tcs_w(0)
+#ifdef OMNIORB_ENABLE_ZIOP
+  , pd_flags(0)
+#endif
 {
   pd_version.major = 0;
   pd_version.minor = 0;

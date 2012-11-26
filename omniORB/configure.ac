@@ -137,6 +137,7 @@ OMNI_DISABLE_THREAD_TRACING
 OMNI_DISABLE_IPV6_CHECK
 OMNI_DISABLE_ALLOCA
 OMNI_DISABLE_LONGDOUBLE
+OMNI_ENABLE_ZIOP
 
 
 dnl ** Compiler name
@@ -278,6 +279,7 @@ AC_CONFIG_FILES(src/appl/GNUmakefile
                 src/lib/omniORB/orbcore/GNUmakefile
                 src/lib/omniORB/orbcore/ssl/GNUmakefile
                 src/lib/omniORB/connections/GNUmakefile
+                src/lib/omniORB/ziop/GNUmakefile
                 src/lib/omnithread/GNUmakefile
                 src/services/GNUmakefile
                 src/services/mklib/GNUmakefile

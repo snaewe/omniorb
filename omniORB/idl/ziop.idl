@@ -1,0 +1,57 @@
+// ziop.idl
+//
+// Definitions for ZIOP. From the ZIOP 1.0 specification.
+//
+// http://www.omg.org/spec/ZIOP/
+
+#ifndef _omniorb_ziop_idl_
+#define _omniorb_ziop_idl_
+
+#include <compression.idl>
+
+#pragma prefix "omg.org"
+
+module ZIOP {
+  typedef unsigned long PolicyType; // Really CORBA::PolicyType
+
+  struct CompressedData {
+    Compression::CompressorId compressorid;
+    unsigned long             original_length;
+    Compression::Buffer       data;
+  };
+
+  typedef boolean                            CompressionEnablingPolicyValue;
+  typedef Compression::CompressorIdLevelList CompressionIdLevelListPolicyValue;
+  typedef unsigned long                      CompressionLowValuePolicyValue;
+  typedef Compression::CompressionRatio      CompressionMinRatioPolicyValue;
+
+  const PolicyType COMPRESSION_ENABLING_POLICY_ID     = 64;
+  const PolicyType COMPRESSOR_ID_LEVEL_LIST_POLICY_ID = 65;
+  const PolicyType COMPRESSION_LOW_VALUE_POLICY_ID    = 66;
+  const PolicyType COMPRESSION_MIN_RATIO_POLICY_ID    = 67;
+
+  // Policy interface classes are provided by hand-written code.
+  /*
+  local interface CompressionEnablingPolicy: CORBA::Policy
+  {
+    readonly attribute CompressionEnablingPolicyValue compression_enabled;
+  };
+
+  local interface CompressionIdLevelListPolicy: CORBA::Policy
+  {
+    readonly attribute Compression::CompressorIdLevelList compressor_ids;
+  };
+
+  local interface CompressionLowValuePolicy: CORBA::Policy
+  {
+    readonly attribute CompressionLowValuePolicyValue low_value;
+  };
+
+  local interface CompressionMinRatioPolicy: CORBA::Policy
+  {
+    readonly attribute CompressionMinRatioPolicyValue ratio;
+  };
+  */
+};
+
+#endif // _omniorb_ziop_idl_

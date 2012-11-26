@@ -1,0 +1,23 @@
+// messaging.idl
+//
+// A subset of the standard Messaging module.
+
+#ifndef _omniorb_messaging_idl_
+#define _omniorb_messaging_idl_
+
+#include "corbaidl.idl"
+
+#pragma prefix "omg.org"
+
+module Messaging {
+  typedef CORBA::OctetSeq PolicyData;
+
+  struct PolicyValue {
+    unsigned long ptype;  // really CORBA::PolicyType
+    PolicyData    pvalue;
+  };
+  typedef sequence<PolicyValue> PolicyValueSeq;
+};
+
+
+#endif // _omniorb_messaging_idl_

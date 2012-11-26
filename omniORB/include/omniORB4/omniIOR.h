@@ -3,7 +3,7 @@
 // omniIOR.h                  Created on: 11/8/99
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2002-2007 Apasphere Ltd
+//    Copyright (C) 2002-2012 Apasphere Ltd
 //    Copyright (C) 1999-2000 AT&T Laboratories, Cambridge
 //
 //    This file is part of the omniORB library
@@ -200,7 +200,14 @@ public:
     void TCS_W(_OMNI_NS(omniCodeSet::TCS_W)* tcs_w) { pd_tcs_w = tcs_w; }
 
     // Extra info list
-    IORExtraInfoList& extraInfo() { return pd_extra_info; }
+    IORExtraInfoList&       extraInfo()       { return pd_extra_info; }
+    const IORExtraInfoList& extraInfo() const { return pd_extra_info; }
+
+#ifdef OMNIORB_ENABLE_ZIOP
+    // Flags (defined in giopStrandFlags.h)
+    inline _CORBA_ULong flags() const             { return pd_flags;  }
+    inline void         flags(_CORBA_ULong flags) { pd_flags = flags; }
+#endif
 
     IORInfo();
     ~IORInfo();
@@ -212,6 +219,10 @@ public:
     _OMNI_NS(omniCodeSet::TCS_C)*      pd_tcs_c;
     _OMNI_NS(omniCodeSet::TCS_W)*      pd_tcs_w;
     IORExtraInfoList                   pd_extra_info;
+
+#ifdef OMNIORB_ENABLE_ZIOP
+    _CORBA_ULong                       pd_flags;
+#endif
   };
 
 public:
@@ -345,7 +356,7 @@ private:
   GIOP::AddressingDisposition        pd_addr_mode;
   IORInfo*                           pd_iorInfo;
   int                                pd_refCount;
-  // Protected by <omni::internalLock>
+  // Protected by <omniIOR::lock>
 
   omniIOR();
   omniIOR(const omniIOR&);

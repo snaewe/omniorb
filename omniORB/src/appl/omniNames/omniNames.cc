@@ -183,7 +183,7 @@ main(int argc, char **argv)
 	     strcmp(argv[arg], "-ORBhelp") == 0) {
       usage();
       cerr << endl << endl;
-      new_argv[new_argc++] = "-ORBhelp";
+      new_argv[new_argc++] = (char*)"-ORBhelp";
       CORBA::ORB_var orb = CORBA::ORB_init(new_argc, new_argv);
       orb->destroy();
       exit(0);

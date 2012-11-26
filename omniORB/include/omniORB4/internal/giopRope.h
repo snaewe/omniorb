@@ -1,9 +1,9 @@
 // -*- Mode: C++; -*-
 //                            Package   : omniORB2
-// giopRope.h               Created on: 05/01/2001
+// giopRope.h                 Created on: 05/01/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2003-2009 Apasphere Ltd
+//    Copyright (C) 2003-2012 Apasphere Ltd
 //    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -210,7 +210,7 @@ class giopRope : public Rope, public RopeLink {
   }
 
   void oneCallPerConnection(CORBA::Boolean yes) {
-  // No thread safety precondition, use with extreme care
+    // No thread safety precondition, use with extreme care
     pd_oneCallPerConnection = yes;
   }
 
@@ -241,6 +241,10 @@ class giopRope : public Rope, public RopeLink {
   CORBA::Boolean       pd_oneCallPerConnection;
   int                  pd_nwaiting;
   omni_tracedcondition pd_cond;
+
+#ifdef OMNIORB_ENABLE_ZIOP
+  CORBA::ULong         pd_flags;
+#endif
   CORBA::Boolean       pd_offerBiDir; // State of orbParameters::offerBiDir...
 				      // at time of creation.
 
@@ -253,13 +257,24 @@ class giopRope : public Rope, public RopeLink {
   // Thread Safety preconditions:
   //    Caller must hold omniTransportLock.
 
+  CORBA::Boolean match(const giopAddressList&, omniIOR::IORInfo* info) const;
+  // Return TRUE(1) if the address list matches EXACTLY those of this
+  // rope, and the IORInfo policies match.
+  // No thread safety precondition
+
   CORBA::Boolean match(const giopAddressList&) const;
   // Return TRUE(1) if the address list matches EXACTLY those of this rope.
   // No thread safety precondition
 
-  static void filterAndSortAddressList(const giopAddressList& list,
+
+  static void filterAndSortAddressList(const giopAddressList&    list,
 				       omnivector<CORBA::ULong>& ordered_list,
-				       CORBA::Boolean& use_bidir);
+				       CORBA::Boolean&           use_bidir);
+
+  static void filterAndSortAddressList(const giopAddressList&    list,
+				       omnivector<CORBA::ULong>& ordered_list,
+				       CORBA::Boolean&           use_bidir,
+                                       CORBA::ULong&             flags);
   // Consult the configuration table, filter out the addresses in <list> that
   // should not be used. Sort the remaining ones in the order of preference.
   // Write out the *index* of the sorted addresses into <ordered_list>.

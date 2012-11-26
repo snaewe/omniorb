@@ -232,6 +232,9 @@ giopStrand::giopStrand(const giopAddress* addr) :
   biDir(0), gatekeeper_checked(0), first_use(1), first_call(1),
   orderly_closed(0), biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
+#ifdef OMNIORB_ENABLE_ZIOP
+  compressor(0),
+#endif
   rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
   wrcond(omniTransportLock), wr_nwaiting(0),
   seqNumber(0), head(0), spare(0), pd_state(ACTIVE)
@@ -250,6 +253,9 @@ giopStrand::giopStrand(giopConnection* conn, giopServer* serv) :
   biDir(0), gatekeeper_checked(0), first_use(0), first_call(0),
   orderly_closed(0), biDir_initiated(0), biDir_has_callbacks(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
+#ifdef OMNIORB_ENABLE_ZIOP
+  compressor(0),
+#endif
   rdcond(omniTransportLock), rd_nwaiting(0), rd_n_justwaiting(0),
   wrcond(omniTransportLock), wr_nwaiting(0),
   seqNumber(1), head(0), spare(0), pd_state(ACTIVE)
@@ -306,6 +312,11 @@ giopStrand::~giopStrand()
     p = q;
   }
   spare = 0;
+
+#ifdef OMNIORB_ENABLE_ZIOP
+  if (compressor)
+    delete compressor;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////

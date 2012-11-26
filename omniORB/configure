@@ -602,6 +602,7 @@ OSVERSION
 PLATFORM_DEFINE
 PLATFORM_NAME
 COMPILER_NAME
+ENABLE_ZIOP
 ENABLE_LONGDOUBLE
 ENABLE_STATIC
 OMNINAMES_LOGDIR
@@ -615,6 +616,8 @@ OPEN_SSL_CPPFLAGS
 OPEN_SSL_ROOT
 OPENSSL_LIBS
 OPENSSL_CFLAGS
+PKG_CONFIG_LIBDIR
+PKG_CONFIG_PATH
 EXTRA_GCC_CXXFLAGS
 PKG_CONFIG
 pkgpyexecdir
@@ -699,6 +702,7 @@ enable_thread_tracing
 enable_ipv6
 enable_alloca
 enable_longdouble
+enable_ziop
 '
       ac_precious_vars='build_alias
 host_alias
@@ -713,6 +717,8 @@ CXXFLAGS
 CCC
 CPP
 PKG_CONFIG
+PKG_CONFIG_PATH
+PKG_CONFIG_LIBDIR
 OPENSSL_CFLAGS
 OPENSSL_LIBS
 CXXCPP'
@@ -1339,6 +1345,7 @@ Optional Features:
                           enable-alloca)
   --disable-longdouble    disable long double support (default
                           enable-longdouble)
+  --enable-ziop           enable ZIOP support (default disable-ziop)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1361,6 +1368,10 @@ Some influential environment variables:
   CXXFLAGS    C++ compiler flags
   CPP         C preprocessor
   PKG_CONFIG  path to pkg-config utility
+  PKG_CONFIG_PATH
+              directories to add to pkg-config's search path
+  PKG_CONFIG_LIBDIR
+              path overriding pkg-config's built-in search path
   OPENSSL_CFLAGS
               C compiler flags for OPENSSL, overriding pkg-config
   OPENSSL_LIBS
@@ -4353,6 +4364,10 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 
+
+
+
+
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
@@ -4465,7 +4480,6 @@ $as_echo "yes" >&6; }
 $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
-
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OpenSSL root" >&5
 $as_echo_n "checking for OpenSSL root... " >&6; }
@@ -4550,6 +4564,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -4564,10 +4580,10 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$OPENSSL_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-                open_ssl_pkgconfig="no"
+	open_ssl_pkgconfig="no"
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 	open_ssl_pkgconfig="no"
 else
 	OPENSSL_CFLAGS=$pkg_cv_OPENSSL_CFLAGS
@@ -7126,6 +7142,30 @@ fi
 ENABLE_LONGDOUBLE=$omni_cv_enable_longdouble
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable ZIOP" >&5
+$as_echo_n "checking whether to enable ZIOP... " >&6; }
+if test "${omni_cv_enable_ziop+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  # Check whether --enable-ziop was given.
+if test "${enable_ziop+set}" = set; then :
+  enableval=$enable_ziop; omni_cv_enable_ziop=$enableval
+else
+  omni_cv_enable_ziop=no
+fi
+
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $omni_cv_enable_ziop" >&5
+$as_echo "$omni_cv_enable_ziop" >&6; }
+if test "$omni_cv_enable_ziop" = "yes"; then
+
+$as_echo "#define OMNIORB_ENABLE_ZIOP /**/" >>confdefs.h
+
+fi
+ENABLE_ZIOP=$omni_cv_enable_ziop
+
+
 
 
 
@@ -7232,7 +7272,7 @@ ac_config_files="$ac_config_files mk/beforeauto.mk mk/afterauto.mk GNUmakefile"
 
 ac_config_files="$ac_config_files src/tool/omniidl/python/scripts/omniidl"
 
-ac_config_files="$ac_config_files src/appl/GNUmakefile src/appl/omniMapper/GNUmakefile src/appl/omniNames/GNUmakefile src/appl/utils/catior/GNUmakefile src/appl/utils/convertior/GNUmakefile src/appl/utils/GNUmakefile src/appl/utils/genior/GNUmakefile src/appl/utils/nameclt/GNUmakefile src/GNUmakefile src/examples/anyExample/GNUmakefile src/examples/bidir/GNUmakefile src/examples/boa/GNUmakefile src/examples/call_back/GNUmakefile src/examples/dii/GNUmakefile src/examples/GNUmakefile src/examples/dsi/GNUmakefile src/examples/echo/GNUmakefile src/examples/poa/GNUmakefile src/examples/poa/implicit_activation/GNUmakefile src/examples/poa/persistent_objref/GNUmakefile src/examples/poa/servant_manager/GNUmakefile src/examples/poa/threading/GNUmakefile src/examples/ssl_echo/GNUmakefile src/examples/thread/GNUmakefile src/examples/valuetype/GNUmakefile src/examples/valuetype/simple/GNUmakefile src/lib/GNUmakefile src/lib/omniORB/codesets/GNUmakefile src/lib/omniORB/GNUmakefile src/lib/omniORB/dynamic/GNUmakefile src/lib/omniORB/omniidl_be/cxx/GNUmakefile src/lib/omniORB/omniidl_be/cxx/dynskel/GNUmakefile src/lib/omniORB/omniidl_be/cxx/header/GNUmakefile src/lib/omniORB/omniidl_be/cxx/impl/GNUmakefile src/lib/omniORB/omniidl_be/cxx/skel/GNUmakefile src/lib/omniORB/omniidl_be/GNUmakefile src/lib/omniORB/orbcore/GNUmakefile src/lib/omniORB/orbcore/ssl/GNUmakefile src/lib/omniORB/connections/GNUmakefile src/lib/omnithread/GNUmakefile src/services/GNUmakefile src/services/mklib/GNUmakefile src/services/mklib/stublib/GNUmakefile src/services/mklib/dynstublib/GNUmakefile src/services/mklib/mkBOAlib/GNUmakefile src/tool/GNUmakefile src/tool/omkdepend/GNUmakefile src/tool/omniidl/cxx/cccp/GNUmakefile src/tool/omniidl/cxx/GNUmakefile src/tool/omniidl/GNUmakefile src/tool/omniidl/python/GNUmakefile src/tool/omniidl/python/omniidl_be/GNUmakefile src/tool/omniidl/python/omniidl/GNUmakefile src/tool/omniidl/python/scripts/GNUmakefile"
+ac_config_files="$ac_config_files src/appl/GNUmakefile src/appl/omniMapper/GNUmakefile src/appl/omniNames/GNUmakefile src/appl/utils/catior/GNUmakefile src/appl/utils/convertior/GNUmakefile src/appl/utils/GNUmakefile src/appl/utils/genior/GNUmakefile src/appl/utils/nameclt/GNUmakefile src/GNUmakefile src/examples/anyExample/GNUmakefile src/examples/bidir/GNUmakefile src/examples/boa/GNUmakefile src/examples/call_back/GNUmakefile src/examples/dii/GNUmakefile src/examples/GNUmakefile src/examples/dsi/GNUmakefile src/examples/echo/GNUmakefile src/examples/poa/GNUmakefile src/examples/poa/implicit_activation/GNUmakefile src/examples/poa/persistent_objref/GNUmakefile src/examples/poa/servant_manager/GNUmakefile src/examples/poa/threading/GNUmakefile src/examples/ssl_echo/GNUmakefile src/examples/thread/GNUmakefile src/examples/valuetype/GNUmakefile src/examples/valuetype/simple/GNUmakefile src/lib/GNUmakefile src/lib/omniORB/codesets/GNUmakefile src/lib/omniORB/GNUmakefile src/lib/omniORB/dynamic/GNUmakefile src/lib/omniORB/omniidl_be/cxx/GNUmakefile src/lib/omniORB/omniidl_be/cxx/dynskel/GNUmakefile src/lib/omniORB/omniidl_be/cxx/header/GNUmakefile src/lib/omniORB/omniidl_be/cxx/impl/GNUmakefile src/lib/omniORB/omniidl_be/cxx/skel/GNUmakefile src/lib/omniORB/omniidl_be/GNUmakefile src/lib/omniORB/orbcore/GNUmakefile src/lib/omniORB/orbcore/ssl/GNUmakefile src/lib/omniORB/connections/GNUmakefile src/lib/omniORB/ziop/GNUmakefile src/lib/omnithread/GNUmakefile src/services/GNUmakefile src/services/mklib/GNUmakefile src/services/mklib/stublib/GNUmakefile src/services/mklib/dynstublib/GNUmakefile src/services/mklib/mkBOAlib/GNUmakefile src/tool/GNUmakefile src/tool/omkdepend/GNUmakefile src/tool/omniidl/cxx/cccp/GNUmakefile src/tool/omniidl/cxx/GNUmakefile src/tool/omniidl/GNUmakefile src/tool/omniidl/python/GNUmakefile src/tool/omniidl/python/omniidl_be/GNUmakefile src/tool/omniidl/python/omniidl/GNUmakefile src/tool/omniidl/python/scripts/GNUmakefile"
 
 
 ac_config_files="$ac_config_files include/GNUmakefile include/omniconfig.h include/omnithread/GNUmakefile include/omniORB4/GNUmakefile include/omniORB4/internal/GNUmakefile"
@@ -7978,6 +8018,7 @@ do
     "src/lib/omniORB/orbcore/GNUmakefile") CONFIG_FILES="$CONFIG_FILES src/lib/omniORB/orbcore/GNUmakefile" ;;
     "src/lib/omniORB/orbcore/ssl/GNUmakefile") CONFIG_FILES="$CONFIG_FILES src/lib/omniORB/orbcore/ssl/GNUmakefile" ;;
     "src/lib/omniORB/connections/GNUmakefile") CONFIG_FILES="$CONFIG_FILES src/lib/omniORB/connections/GNUmakefile" ;;
+    "src/lib/omniORB/ziop/GNUmakefile") CONFIG_FILES="$CONFIG_FILES src/lib/omniORB/ziop/GNUmakefile" ;;
     "src/lib/omnithread/GNUmakefile") CONFIG_FILES="$CONFIG_FILES src/lib/omnithread/GNUmakefile" ;;
     "src/services/GNUmakefile") CONFIG_FILES="$CONFIG_FILES src/services/GNUmakefile" ;;
     "src/services/mklib/GNUmakefile") CONFIG_FILES="$CONFIG_FILES src/services/mklib/GNUmakefile" ;;

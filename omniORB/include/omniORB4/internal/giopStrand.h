@@ -3,7 +3,7 @@
 // giopStrand.h               Created on: 05/01/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2002-2006 Apasphere Ltd
+//    Copyright (C) 2002-2012 Apasphere Ltd
 //    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -103,8 +103,10 @@ class giopStream;
 class giopStreamImpl;
 class giopWorker;
 class giopServer;
+class giopCompressor;
 class GIOP_S;
 struct giopStream_Buffer;
+
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -160,8 +162,6 @@ public:
   //
   // No thread safety precondition
 
-
-public:
 
   CORBA::Boolean safeDelete(CORBA::Boolean forced = 0);
   // This should be the *ONLY* method to call to delete a strand.
@@ -278,7 +278,7 @@ public:
 
   giopStreamList      servers;
   giopStreamList      clients;
-  // a strand may have more than one giopStream instances associated with
+  // a strand may have more than one giopStream instance associated with
   // it. Mostly this is because from GIOP 1.2 onwards, requests can be
   // interleaved on associated connection. Each of these request is
   // represented by a giopStream instance. They are linked together by
@@ -289,7 +289,7 @@ public:
   // Except when a strand is used to support bidirectional GIOP, only one of
   // the list will be populated (because plain GIOP is asymetric and one
   // end is either a client or a server but not both). With bidirectional GIOP,
-  // both list may be populated.
+  // both lists may be populated.
 
   inline CORBA::Boolean isClient() { return (address != 0); }
   // Return TRUE if this is an active strand on the client side. Unless
@@ -352,11 +352,13 @@ public:
   // This flag is initialised to 0 by ctor and set to 1 by 
   // omniObjRef::_marshal.
 
+
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
   // The following are data structures used by the giopStream instances
   // associated with this strand AND SHOULD NOT BE manipulated by the Strand
   // class!!!
+
   CORBA::Boolean      tcs_selected;
   omniCodeSet::TCS_C* tcs_c;
   omniCodeSet::TCS_W* tcs_w;
@@ -370,8 +372,14 @@ public:
   //   <tcs_c>, <tcs_w> and <version> records the chosen code set convertors
   //   and the GIOP version for which the convertors apply.
 
+#ifdef OMNIORB_ENABLE_ZIOP
 
-  // conditional variables and counters to implement giopStream locking
+  giopCompressor*     compressor;
+  // Compressor used for ZIOP.
+
+#endif
+
+  // Condition variables and counters to implement giopStream locking
   // functions.
   omni_tracedcondition rdcond;
   int                  rd_nwaiting;

@@ -3,7 +3,7 @@
 // CORBA_sysdep.h             Created on: 30/1/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2002-2007 Apasphere Ltd
+//    Copyright (C) 2002-2012 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -169,6 +169,8 @@
 #define HAVE_STRTOUL 1
 // Unset if no strtoul() function
 
+#undef OMNIORB_ENABLE_ZIOP
+// Define to enable ZIOP support
 
 
 //

@@ -377,8 +377,8 @@ static CORBA::Boolean
 clientSendRequestInterceptor(omniInterceptors::
 			     clientSendRequest_T::info_T& iinfo)
 {
-  GIOP_C& giop_c = iinfo.giop_c;
-  giopStrand& strand = (giopStrand&)giop_c;
+  GIOP_C& giop_c     = iinfo.giop_c;
+  giopStrand& strand = giop_c.strand();
 
   if (!strand.first_call) {
     // Only consider the connection on the first call

@@ -485,6 +485,42 @@ cdrEncapsulationStream::cdrEncapsulationStream(const CORBA::Octet* databuffer,
   }
 }
 
+cdrEncapsulationStream::
+cdrEncapsulationStream(const _CORBA_Unbounded_Sequence_Octet& seq,
+                       _CORBA_Boolean useAlign4)
+  : cdrMemoryStream((void*)seq.get_buffer(), seq.length())
+{
+  if (seq.length() < 1)
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidInitialSize,
+		  (CORBA::CompletionStatus)completion());
+
+  // We have to check the alignment of start of the the octet sequence buffer.
+  // It should be <initialAlign>. This is normally the case but
+  // is dependent on the implementation of the new operator. The following
+  // deal with both cases.
+  omni::alignment_t initialAlign = (useAlign4) ? omni::ALIGN_4 : omni::ALIGN_8;
+
+  if ((omni::ptr_arith_t)pd_bufp != 
+      omni::align_to((omni::ptr_arith_t)pd_bufp, initialAlign)) 
+    {
+      // This is the rare case. The sequence buffer does not start with
+      // initialAlign. Create a local copy.
+      pd_readonly_and_external_buffer = 0;
+      pd_clear_memory = 0;
+      pd_bufp     = pd_inline_buffer;
+      pd_bufp_8   = ensure_align_8(pd_inline_buffer);
+      pd_outb_end = (pd_inline_buffer + sizeof(pd_inline_buffer));
+      rewindPtrs();
+      put_octet_array((const CORBA::Char*)seq.get_buffer(), seq.length());
+    }
+
+  {
+    CORBA::Boolean endian = unmarshalBoolean();
+    setByteSwapFlag(endian);
+  }
+}
+
+
 cdrEncapsulationStream::cdrEncapsulationStream(cdrStream& s,
 					       CORBA::ULong fetchsize)
   : cdrMemoryStream(fetchsize)
@@ -540,6 +576,16 @@ cdrEncapsulationStream::getOctetStream(CORBA::Octet*& databuffer,
     databuffer = new CORBA::Octet[max];
     memcpy((void*)databuffer,(void*)begin,len);
   }
+}
+
+void
+cdrEncapsulationStream::setOctetSeq(_CORBA_Unbounded_Sequence_Octet& seq)
+{
+  CORBA::Octet* databuffer;
+  CORBA::ULong  max, len;
+  getOctetStream(databuffer, max, len);
+
+  seq.replace(max, len, databuffer, 1);
 }
 
 

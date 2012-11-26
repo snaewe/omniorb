@@ -727,6 +727,10 @@ ifeq (@ENABLE_LONGDOUBLE@,no)
 DisableLongDouble = 1
 endif
 
+ifeq (@ENABLE_ZIOP@,yes)
+EnableZIOP = 1
+endif
+
 
 ###########################################################################
 #

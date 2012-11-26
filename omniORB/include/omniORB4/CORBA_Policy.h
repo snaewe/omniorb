@@ -220,13 +220,3 @@ private:
   }; \
   \
   typedef _CORBA_PseudoObj_Var<name> name##_var;
-
-#ifdef OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS
-#error OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS is already defined!
-#endif
-
-#define OMNIORB_POLICY_VALUE(policy) policy##Value
-
-#define OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(name) \
-void operator<<=(CORBA::Any &, name); \
-CORBA::Boolean operator>>=(const CORBA::Any&, name& );

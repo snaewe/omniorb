@@ -261,6 +261,112 @@ print_omni_key(_CORBA_Unbounded_Sequence_Octet& key, int hexflag)
   print_key(id, hexflag);
 }
 
+
+static
+void
+print_tag_policies(IOP::TaggedComponent& c)
+{
+  cdrEncapsulationStream e(c.component_data, 1);
+
+  // Encapsulation contains a Messaging::PolicyValueSeq, but the ORB
+  // core does not have the stubs for the Messaging module, so we
+  // unpick it by hand.
+
+  CORBA::ULong seq_len;
+  seq_len <<= e;
+
+  for (CORBA::ULong idx=0; idx != seq_len; ++idx) {
+    if (idx == 0)
+      cout << "            TAG_POLICIES ";
+    else
+      cout << "                         ";
+
+    CORBA::ULong    ptype;
+    CORBA::OctetSeq pvalue;
+
+    ptype  <<= e;
+    pvalue <<= e;
+
+    switch (ptype) {
+    case /*ZIOP::COMPRESSION_ENABLING_POLICY_ID*/ 64:
+      {
+        cdrEncapsulationStream pe(pvalue, 1);
+        CORBA::Boolean enabled = pe.unmarshalBoolean();
+
+        cout << "ZIOP::COMPRESSION_ENABLING_POLICY_ID: "
+             << (enabled ? "true" : "false")
+             << endl;
+      }
+      break;
+
+    case /*ZIOP::COMPRESSOR_ID_LEVEL_LIST_POLICY_ID*/ 65:
+      {
+        cdrEncapsulationStream pe(pvalue, 1);
+
+        cout << "ZIOP::COMPRESSOR_ID_LEVEL_LIST_POLICY_ID: "
+             << endl;
+
+        // Encapsulation contains a Compression::CompressorIdLevelList
+
+        CORBA::ULong ids_len;
+        ids_len <<= pe;
+
+        for (CORBA::ULong ii=0; ii != ids_len; ++ii) {
+          CORBA::UShort compressor_id, compression_level;
+
+          compressor_id     <<= pe;
+          compression_level <<= pe;
+          
+          cout << "                           compressor ";
+
+          switch (compressor_id) {
+          case 0:
+            cout << "NONE";
+            break;
+          case 1:
+            cout << "GZIP";
+            break;
+          case 2:
+            cout << "PKZIP";
+            break;
+          case 3:
+            cout << "BZIP2";
+            break;
+          case 4:
+            cout << "ZLIB";
+            break;
+          case 5:
+            cout << "LZMA";
+            break;
+          case 6:
+            cout << "LZO";
+            break;
+          case 7:
+            cout << "RZIP";
+            break;
+          case 8:
+            cout << "7X";
+            break;
+          case 9:
+            cout << "XAR";
+            break;
+          default:
+            cout << "unknown";
+            break;
+          }
+          cout << ", level " << compression_level << endl;;
+        }
+      }
+      break;
+
+    default:
+      cout << "unknown(" << ptype << ')' << endl;
+      break;
+    }
+  }
+}
+
+
 static
 void
 print_tagged_components(IOP::MultipleComponentProfile& components)
@@ -268,22 +374,29 @@ print_tagged_components(IOP::MultipleComponentProfile& components)
   CORBA::ULong total = components.length();
 
   for (CORBA::ULong index=0; index < total; index++) {
+    IOP::TaggedComponent& c = components[index];
+
     try {
-      CORBA::String_var content;
-      content = IOP::dumpComponent(components[index]);
-      char* p = content;
-      char* q;
-      do {
-	q = strchr(p,'\n');
-	if (q) {
-	  *q++ = '\0';
-	}
-	cout << "            " << (const char*) p << endl;
-	p = q;
-      } while (q);
+      if (c.tag == IOP::TAG_POLICIES) {
+        print_tag_policies(c);
+      }
+      else {
+        CORBA::String_var content;
+        content = IOP::dumpComponent(c);
+        char* p = content;
+        char* q;
+        do {
+          q = strchr(p,'\n');
+          if (q) {
+            *q++ = '\0';
+          }
+          cout << "            " << (const char*) p << endl;
+          p = q;
+        } while (q);
+      }
     }
     catch (CORBA::MARSHAL& ex) {
-      cout << "            Broken component" << endl;
+      cout << "            Broken component with tag " << c.tag << endl;
     }
   }
 }

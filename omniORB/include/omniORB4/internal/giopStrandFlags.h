@@ -54,6 +54,8 @@
 // If set, the connection is held open, rather than being scavenged
 // when idle.
 
+#define GIOPSTRAND_COMPRESSION (1 << 2)
+// If set, the connection supports ZIOP compression.
 
 
 #endif // __GIOPSTRANDFLAGS_H__

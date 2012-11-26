@@ -245,7 +245,7 @@ doConnect(unsigned long 	 deadline_secs,
     return 0;
   }
 
-  if (!strand_flags & GIOPSTRAND_ENABLE_TRANSPORT_BATCHING) {
+  if (!(strand_flags & GIOPSTRAND_ENABLE_TRANSPORT_BATCHING)) {
     // Prevent Nagle's algorithm
     int valtrue = 1;
     if (setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,

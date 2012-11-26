@@ -215,7 +215,7 @@ omni_tracedmutex::unlock()
   {
     omni_mutex_lock sync(pd_lock);
 
-    if( !pd_holder || me && pd_holder != me ) {
+    if (!pd_holder || (me && pd_holder != me)) {
       {
 	omniORB::logger log;
 	log << "Assertion failed -- attempt to unlock mutex not held.\n"
@@ -238,7 +238,7 @@ omni_tracedmutex::assert_held(const char* file, int line, int yes)
 
     omni_thread* me = omni_thread::self();
 
-    if(  yes && pd_holder == me || !yes && pd_holder != me || !me )
+    if ((yes && pd_holder == me) || (!yes && pd_holder != me) || !me)
       return;
   }
 

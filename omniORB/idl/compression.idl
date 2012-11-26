@@ -1,0 +1,94 @@
+// compression.idl
+//
+// Compression definitions for ZIOP. From the ZIOP 1.0 specification.
+//
+// http://www.omg.org/spec/ZIOP/
+
+#ifndef _omniorb_compression_idl_
+#define _omniorb_compression_idl_
+
+#include <corbaidl.idl>
+
+#pragma prefix "omg.org"
+
+module Compression {
+  exception CompressionException {
+    long   reason;
+    string description;
+  };
+  exception FactoryAlreadyRegistered { };
+  exception UnknownCompressorId { };
+
+  typedef unsigned short CompressorId;
+
+  const CompressorId COMPRESSORID_NONE  = 0;
+  const CompressorId COMPRESSORID_GZIP  = 1;
+  const CompressorId COMPRESSORID_PKZIP = 2;
+  const CompressorId COMPRESSORID_BZIP2 = 3;
+  const CompressorId COMPRESSORID_ZLIB  = 4;
+  const CompressorId COMPRESSORID_LZMA  = 5;
+  const CompressorId COMPRESSORID_LZO   = 6;
+  const CompressorId COMPRESSORID_RZIP  = 7;
+  const CompressorId COMPRESSORID_7X    = 8;
+  const CompressorId COMPRESSORID_XAR   = 9;
+
+  typedef unsigned short CompressionLevel;
+  typedef float          CompressionRatio;
+
+  struct CompressorIdLevel {
+    CompressorId     compressor_id;
+    CompressionLevel compression_level;
+  };
+
+  typedef sequence <CompressorIdLevel> CompressorIdLevelList;
+
+  typedef CORBA::OctetSeq Buffer;
+
+  local interface CompressorFactory;
+
+  local interface Compressor {
+
+    void compress(in    Buffer source,
+                  inout Buffer target)
+      raises (CompressionException);
+
+    void decompress(in    Buffer source,
+                    inout Buffer target)
+      raises (CompressionException);
+
+    readonly attribute CompressorFactory  compressor_factory;
+    readonly attribute CompressionLevel   compression_level;
+    readonly attribute unsigned long long compressed_bytes;
+    readonly attribute unsigned long long uncompressed_bytes;
+    readonly attribute CompressionRatio   compression_ratio;
+  };
+
+  typedef sequence<Compressor> CompressorSeq; // omniORB extension
+
+  local interface CompressorFactory {
+    readonly attribute CompressorId compressor_id;
+    Compressor get_compressor(in CompressionLevel compression_level);
+  };
+
+  typedef sequence<CompressorFactory> CompressorFactorySeq;
+
+  local interface CompressionManager {
+    void register_factory(in CompressorFactory compressor_factory)
+      raises (FactoryAlreadyRegistered);
+
+    void unregister_factory(in CompressorId compressor_id)
+      raises (UnknownCompressorId);
+
+    CompressorFactory get_factory(in CompressorId compressor_id)
+      raises (UnknownCompressorId);
+
+    Compressor get_compressor(in CompressorId     compressor_id,
+                              in CompressionLevel compression_level)
+      raises (UnknownCompressorId);
+
+    CompressorFactorySeq get_factories();
+  };
+};
+
+
+#endif // _omniorb_compression_idl_

@@ -3,7 +3,7 @@
 // giopStream.h                   Created on: 05/01/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2003-2006 Apasphere Ltd
+//    Copyright (C) 2003-2012 Apasphere Ltd
 //    Copyright (C) 2001      AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -97,11 +97,42 @@ struct giopStream_Buffer {
   CORBA::ULong             last;    // offset to the last data byte
   CORBA::ULong             size;    // GIOP message size.
   giopStream_Buffer*       next;    // next Buffer in a chain
-  // buffer data to follows.
+  // buffer data follows.
+
   void alignStart(omni::alignment_t);
   static void deleteBuffer(giopStream_Buffer*);
   static giopStream_Buffer* newBuffer(CORBA::ULong sz=0);
 };
+
+
+#ifdef OMNIORB_ENABLE_ZIOP
+
+class giopStream;
+
+class giopCompressor {
+public:
+  virtual ~giopCompressor() = 0;
+
+  virtual giopStream_Buffer* compressBuffer(giopStream*        stream,
+                                            giopStream_Buffer* buf) = 0;
+  // Compress buf, which must contain a complete GIOP message.
+  // Consumes buf, or returns it unchanged if the data was not
+  // compressible.
+
+  virtual giopStream_Buffer* decompressBuffer(giopStream*        stream,
+                                              giopStream_Buffer* buf) = 0;
+  // Decompress buf, reading more data from the stream if need be.
+  // Consumes buf.
+};
+
+class giopCompressorFactory {
+public:
+  virtual ~giopCompressorFactory() = 0;
+  virtual giopCompressor* newCompressor() = 0;
+};
+
+#endif
+
 
 class giopStream : public cdrStream {
 public:
@@ -326,6 +357,10 @@ public:
   static _core_attr CORBA::ULong bufferSize;
   // Allocate this number of bytes for each giopStream_Buffer.
 
+#ifdef OMNIORB_ENABLE_ZIOP
+  static _core_attr giopCompressorFactory* compressorFactory;
+#endif
+
 public:
   // The following implement the abstract functions defined in cdrStream
   //
@@ -356,6 +391,9 @@ public:
   friend class giopImpl11;
   friend class giopImpl12;
 
+#ifdef OMNIORB_ENABLE_ZIOP
+  friend class giopCompressorImpl;
+#endif
 
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////

@@ -3,7 +3,7 @@
 // giopStream.cc              Created on: 16/01/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2002-2006 Apasphere Ltd
+//    Copyright (C) 2002-2012 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -152,9 +152,49 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 ////////////////////////////////////////////////////////////////////////
-CORBA::ULong giopStream::directSendCutOff = 16384;
+CORBA::ULong giopStream::directSendCutOff    = 16384;
 CORBA::ULong giopStream::directReceiveCutOff = 1024;
-CORBA::ULong giopStream::bufferSize = 8192;
+CORBA::ULong giopStream::bufferSize          = 8192;
+
+
+////////////////////////////////////////////////////////////////////////
+#ifdef OMNIORB_ENABLE_ZIOP
+giopCompressorFactory* giopStream::compressorFactory = 0;
+
+giopCompressorFactory::~giopCompressorFactory() {}
+giopCompressor::~giopCompressor() {}
+
+class BufferCompressor {
+public:
+  inline BufferCompressor(giopStream*        gs,
+                          giopCompressor*    compressor,
+                          giopStream_Buffer* buf)
+    : pd_obuf(buf)
+  {
+    if (compressor)
+      pd_zbuf = compressor->compressBuffer(gs, buf);
+    else
+      pd_zbuf = 0;
+  }
+
+  inline ~BufferCompressor()
+  {
+    if (pd_zbuf)
+      giopStream_Buffer::deleteBuffer(pd_zbuf);
+  }
+
+  inline giopStream_Buffer* buf()
+  {
+    return pd_zbuf ? pd_zbuf : pd_obuf;
+  }
+
+private:
+  giopStream_Buffer* pd_obuf;
+  giopStream_Buffer* pd_zbuf;
+};
+
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////
 giopStream::giopStream(giopStrand* strand) : 
@@ -792,11 +832,19 @@ giopStream::ensureSaneHeader(const char* filename, CORBA::ULong lineno,
 			     giopStream_Buffer* buf,
 			     CORBA::ULong begin) {
 
-  CORBA::ULong minor;
+  CORBA::ULong   minor;
   CORBA::Boolean retry;
 
   char* hdr = (char*)buf + begin;
-  if (hdr[0] != 'G' || hdr[1] != 'I' || hdr[2] != 'O' || hdr[3] != 'P') {
+
+  if (!(
+#ifdef OMNIORB_ENABLE_ZIOP
+        (hdr[0] == 'G' || (hdr[0] == 'Z' && giopStream::compressorFactory)) &&
+#else
+        hdr[0] == 'G' &&
+#endif
+        hdr[1] == 'I' && hdr[2] == 'O' && hdr[3] == 'P')) {
+
     // Terrible! This is not a GIOP header.
     pd_strand->state(giopStrand::DYING);
     notifyCommFailure(0,minor,retry);
@@ -830,7 +878,6 @@ giopStream_Buffer*
 giopStream::inputMessage() {
 
   OMNIORB_ASSERT(pd_rdlocked);
-
 
   if (pd_strand->state() == giopStrand::DYING) {
     CORBA::ULong minor;
@@ -889,10 +936,10 @@ giopStream::inputMessage() {
 	<< buf->last - buf->start << " bytes\n";
   }
   if (omniORB::trace(30)) {
-    dumpbuf((unsigned char*)buf+buf->start,buf->last - buf->start);
+    dumpbuf((unsigned char*)buf + buf->start, buf->last - buf->start);
   }
 
-  buf->size = ensureSaneHeader(__FILE__,__LINE__,buf,buf->start);
+  buf->size = ensureSaneHeader(__FILE__, __LINE__, buf, buf->start);
 
   if (buf->size > (buf->last - buf->start)) {
     // Not enough data in the buffer. Try to fetch as much as can be fit
@@ -943,7 +990,7 @@ giopStream::inputMessage() {
       CORBA::ULong sz = buf->last - first;
       giopStream_Buffer* newbuf;
       if (sz >= 12) {
-	CORBA::ULong msz = ensureSaneHeader(__FILE__,__LINE__,buf,first);
+	CORBA::ULong msz = ensureSaneHeader(__FILE__, __LINE__, buf, first);
 	if (msz <= sz) {
 	  sz = msz;
 	}
@@ -991,6 +1038,26 @@ giopStream::inputMessage() {
       log << "Split input data into " << splitcount+1 << " messages\n";
     }
   }
+
+#ifdef OMNIORB_ENABLE_ZIOP
+  char* hdr = (char*)buf + buf->start;
+  if (*hdr == 'Z') {
+    if (!pd_strand->compressor) {
+      if (compressorFactory) {
+        pd_strand->compressor = compressorFactory->newCompressor();
+      }
+      else {
+        OMNIORB_THROW(MARSHAL, MARSHAL_InvalidCompressedData,
+                      (CORBA::CompletionStatus)completion());
+      }
+    }
+    giopStream_Buffer* g_buf;
+    g_buf = pd_strand->compressor->decompressBuffer(this, buf);
+    giopStream_Buffer::deleteBuffer(buf);
+    buf = g_buf;
+  }
+#endif
+
   return buf;
 }
 
@@ -1170,6 +1237,11 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
 	  << pd_strand->connection->peeraddress() << "\n";
     }
   }
+
+#ifdef OMNIORB_ENABLE_ZIOP
+  BufferCompressor bc(this, pd_strand->compressor, buf);
+  buf = bc.buf();
+#endif
 
   CORBA::ULong first = buf->start;
   size_t total;

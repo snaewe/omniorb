@@ -3889,7 +3889,7 @@ transfer_and_check_policies(omniOrbPOA::Policies& pout,
 
   // Check for policies which contradict one-another.
 
-  for( CORBA::ULong i = 0; i < pin.length(); i++ )
+  for( CORBA::ULong i = 0; i < pin.length(); i++ ) {
     switch( pin[i]->policy_type() ) {
 
     case /*THREAD_POLICY_ID*/ 16:
@@ -4049,10 +4049,22 @@ transfer_and_check_policies(omniOrbPOA::Policies& pout,
 	break;
       }
 
+#ifdef OMNIORB_ENABLE_ZIOP
+    case /*ZIOP::COMPRESSION_ENABLING_POLICY_ID*/     64:
+    case /*ZIOP::COMPRESSOR_ID_LEVEL_LIST_POLICY_ID*/ 65:
+    case /*ZIOP::COMPRESSION_LOW_VALUE_POLICY_ID*/    66:
+    case /*ZIOP::COMPRESSION_MIN_RATIO_POLICY_ID*/    67:
+
+      // Allow these policies to pass here so they can be used in
+      // encodeIOR interceptor.
+      break;
+#endif
+
     default:
       throw PortableServer::POA::InvalidPolicy(i);
 
     }
+  }
 
   // Check for incompatible policy combinations.
 
