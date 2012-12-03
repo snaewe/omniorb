@@ -1,3 +1,15 @@
+Mon Dec  3 17:55:47 GMT 2012 dgrisby
+====================================
+
+- Windows ZIOP support.
+
+mk/platforms/x86_win32_vs_10.mk
+mk/platforms/x86_win32_vs_8.mk
+mk/platforms/x86_win32_vs_9.mk
+src/lib/omniORB/ziop/dir.mk
+src/lib/omniORB/ziop/omniZIOP.cc
+
+
 Mon Nov 26 10:38:22 GMT 2012 dgrisby
 ====================================
 

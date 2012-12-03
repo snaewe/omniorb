@@ -84,3 +84,14 @@ OPEN_SSL_LIB = $(patsubst %,$(LibPathPattern),$(OPEN_SSL_ROOT)/lib) \
                ssleay32.lib libeay32.lib
 OMNIORB_SSL_LIB += $(OPEN_SSL_LIB)
 OMNIORB_SSL_CPPFLAGS += $(OPEN_SSL_CPPFLAGS)
+
+
+# To build experimental ZIOP support, EnableZIOP must be defined and
+# ZLIB_ROOT must be set to the path to the zlib install. See also the
+# OMNIORB_ENABLE_ZIOP define in include/omniORB4/CORBA_sysdep_trad.h.
+
+#EnableZIOP = 1
+#ZLIB_ROOT = /cygdrive/c/zlib-1.2.7
+
+ZLIB_CPPFLAGS = -I$(ZLIB_ROOT)
+ZLIB_LIB = $(patsubst %,$(LibPathPattern),$(ZLIB_ROOT)) zdll.lib

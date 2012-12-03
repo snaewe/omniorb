@@ -290,6 +290,8 @@ setGlobalPolicies(const CORBA::PolicyList& policies)
 }
 
 
+#undef min
+
 static inline
 CORBA::Boolean
 min(Compression::CompressionLevel a, Compression::CompressionLevel b)
