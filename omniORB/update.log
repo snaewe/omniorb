@@ -1,8 +1,9 @@
-Fri Dec 21 16:26:41 GMT 2012 dgrisby
+Fri Dec 21 16:28:36 GMT 2012 dgrisby
 ====================================
 
-- GNUmakefiles for ZIOP examples.
+- Makefiles for ZIOP examples.
 
+src/examples/ziop/dir.mk
 src/examples/ziop/GNUmakefile.in
 src/examples/ziop/GNUmakefile
 
