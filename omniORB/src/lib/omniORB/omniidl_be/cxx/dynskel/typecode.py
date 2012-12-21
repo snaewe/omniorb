@@ -3,7 +3,7 @@
 # typecode.py               Created on: 1999/12/2
 #                           Author    : David Scott (djs)
 #
-#    Copyright (C) 2003-2006 Apasphere Ltd
+#    Copyright (C) 2003-2012 Apasphere Ltd
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
@@ -985,18 +985,23 @@ def buildStateMembersStructure(node):
     members = node.statemembers()
     array = []
 
-    for m in members:
-        memberType = types.Type(m.memberType())
-        access = m.memberAccess()
-        for d in m.declarators():
-            this_name = id.Name(d.scopedName()).simple()
-            typecode = mkTypeCode(memberType, d, node)
-            array.append('{"%s", %s, %d}' % (this_name, typecode, access))
+    if members:
+        for m in members:
+            memberType = types.Type(m.memberType())
+            access = m.memberAccess()
+            for d in m.declarators():
+                this_name = id.Name(d.scopedName()).simple()
+                typecode = mkTypeCode(memberType, d, node)
+                array.append('{"%s", %s, %d}' % (this_name, typecode, access))
 
-    struct.out("""\
+        struct.out("""\
 static CORBA::PR_valueMember @mangled_name@[] = {
   @members@
 };""", members = string.join(array, ",\n"), mangled_name = mangled_name)
+    else:
+        struct.out("""\
+static CORBA::PR_valueMember* @mangled_name@ = 0;""",
+                   mangled_name=mangled_name)
 
     return struct
 

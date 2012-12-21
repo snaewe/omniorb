@@ -1,3 +1,11 @@
+Fri Dec 21 14:08:04 GMT 2012 dgrisby
+====================================
+
+- Back-port omniidl TypeCode fix for valuetypes with no members.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+
+
 Mon Dec  3 17:55:47 GMT 2012 dgrisby
 ====================================
 
