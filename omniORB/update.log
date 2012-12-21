@@ -1,3 +1,11 @@
+Fri Dec 21 20:40:12 GMT 2012 dgrisby
+====================================
+
+- strcpy_s needs the buffer size, not the string size.
+
+include/omniORB4/stringtypes.h
+
+
 Fri Dec 21 16:28:36 GMT 2012 dgrisby
 ====================================
 

@@ -143,7 +143,7 @@ static inline char* dup(const char* s) {
   char* r = alloc(l);
   if (r) {
 #ifdef _MSC_VER
-    strcpy_s(r, l, s);
+    strcpy_s(r, l+1, s);
 #else
     strcpy(r, s);
 #endif
