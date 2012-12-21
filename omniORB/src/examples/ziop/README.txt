@@ -5,8 +5,11 @@ omniORB has experimental support for ZIOP, which compresses
 transmitted messages.
 
 To enable ZIOP on Unix platforms, give an argument of --enable-ziop to
-the configure script. To enable it on Windows, set the EnableZIOP make
-variable in the platform configuration file.
+the configure script.
+
+To enable it on Windows, set the EnableZIOP make variable in the
+platform configuration file and define OMNIORB_ENABLE_ZIOP in
+include/omniORB4/CORBA_sysdep_trad.h.
 
 
 omniORB has an almost complete implementation of the ZIOP
