@@ -53,8 +53,8 @@ fi
 case "$1" in
   start)
 	# Make sure directories exist
-	[ -d $OMNINAMES_DIR ] || mkdir -p $OMNINAMES_DIR
-	[ -d $OMNIMAPPER_DIR ] || mkdir -p $OMNIMAPPER_DIR
+	[ -d $OMNINAMES_DIR ] || (mkdir -p $OMNINAMES_DIR; chown omni:omni $OMNINAMES_DIR)
+	[ -d $OMNIMAPPER_DIR ] || (mkdir -p $OMNIMAPPER_DIR; chown omni:omni $OMNIMAPPER_DIR)
   
         echo -n "Starting omniNames"
         OMNINAMES_OPTIONS="-errlog $OMNINAMES_DIR/error.log -logdir $OMNINAMES_DIR"

@@ -1,3 +1,12 @@
+Fri Dec 21 14:51:16 GMT 2012 dgrisby
+====================================
+
+- Ensure directories are owned by omni in init scripts.
+
+etc/init.d/omniNames.SuSE.in
+etc/init.d/omniNames.in
+
+
 Fri Dec 21 14:08:04 GMT 2012 dgrisby
 ====================================
 
