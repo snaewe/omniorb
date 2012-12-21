@@ -526,6 +526,12 @@ OMNIORB_SSL_LIB += $(OPEN_SSL_LIB)
 OMNIORB_SSL_CPPFLAGS += $(OPEN_SSL_CPPFLAGS)
 
 
+# ZIOP
+OMNIORB_ZIOP_LIB = $(patsubst %,$(LibSearchPattern),omniZIOP$(OMNIORB_MAJOR_VERSION))
+lib_depend := $(patsubst %,$(LibPattern),omniZIOP$(OMNIORB_MAJOR_VERSION))
+OMNIORB_ZIOP_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+
+
 ##########################################################################
 #
 # Shared library support stuff

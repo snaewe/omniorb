@@ -1,3 +1,19 @@
+Fri Dec 21 16:07:18 GMT 2012 dgrisby
+====================================
+
+- ZIOP examples.
+
+configure.ac
+configure
+include/omniORB4/acconfig.h.in
+mk/beforeauto.mk.in
+mk/win32.mk
+src/examples/ziop
+src/examples/ziop/README.txt
+src/examples/ziop/ziop_clt.cc
+src/examples/ziop/ziop_impl.cc
+
+
 Fri Dec 21 14:51:16 GMT 2012 dgrisby
 ====================================
 

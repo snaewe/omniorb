@@ -266,6 +266,7 @@ AC_CONFIG_FILES(src/appl/GNUmakefile
                 src/examples/thread/GNUmakefile
                 src/examples/valuetype/GNUmakefile
                 src/examples/valuetype/simple/GNUmakefile
+                src/examples/ziop/GNUmakefile
                 src/lib/GNUmakefile
                 src/lib/omniORB/codesets/GNUmakefile
                 src/lib/omniORB/GNUmakefile
