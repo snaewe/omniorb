@@ -295,6 +295,14 @@ giopConnection::peeridentity() {
 }
 
 ////////////////////////////////////////////////////////////////////////
+#ifdef OMNIORB_ENABLE_CERT_ACCESS
+void*
+giopConnection::peerdetails() {
+  return 0;
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////
 const omnivector<const char*>*
 giopTransportImpl::getInterfaceAddress(const char* t) {
 

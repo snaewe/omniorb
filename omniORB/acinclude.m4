@@ -452,6 +452,21 @@ fi
 AC_SUBST(ENABLE_ZIOP, $omni_cv_enable_ziop)
 ])
 
+dnl Enable SSL peer certificate access
+AC_DEFUN([OMNI_ENABLE_CERT_ACCESS],
+[AC_CACHE_CHECK(whether to enable access to SSL peer certificate,
+omni_cv_enable_cert_access,
+[AC_ARG_ENABLE(cert-access,
+               AC_HELP_STRING([--enable-cert-access],
+                  [enable certificate access (default disable-cert-access)]),
+               omni_cv_enable_cert_access=$enableval,
+               omni_cv_enable_cert_access=no)
+])
+if test "$omni_cv_enable_cert_access" = "yes"; then
+  AC_DEFINE(OMNIORB_ENABLE_CERT_ACCESS,,[define if you want access to peer certificate])
+fi
+])
+
 
 dnl
 dnl Tests from http://www.gnu.org/software/ac-archive/

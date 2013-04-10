@@ -1,3 +1,21 @@
+Wed Apr 10 18:08:01 BST 2013 dgrisby
+====================================
+
+- Allow access to SSL peer certificate. Disabled by default to
+  preserve binary compatiblity.
+
+acinclude.m4
+configure.ac
+configure
+include/omniORB4/acconfig.h.in
+include/omniORB4/giopEndpoint.h
+include/omniORB4/sslContext.h
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+
+
 Fri Dec 21 20:40:12 GMT 2012 dgrisby
 ====================================
 

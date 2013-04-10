@@ -120,6 +120,7 @@ const char* sslContext::key_file_password = 0;
 int         sslContext::verify_mode = (SSL_VERIFY_PEER |
 				       SSL_VERIFY_FAIL_IF_NO_PEER_CERT);
 int       (*sslContext::verify_callback)(int,X509_STORE_CTX *) = 0;
+void      (*sslContext::info_callback)(const SSL *s, int where, int ret) = 0;
 
 sslContext* sslContext::singleton = 0;
 
@@ -179,8 +180,11 @@ sslContext::internal_initialise() {
   set_CA();
   set_DH();
   set_ephemeralRSA();
+
   // Allow the user to overwrite the SSL verification types.
   SSL_CTX_set_verify(pd_ctx, set_verify_mode(), verify_callback);
+  SSL_CTX_set_info_callback(pd_ctx, info_callback);
+
   if (pd_ssl_owner)
     thread_setup();
 }

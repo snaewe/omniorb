@@ -93,6 +93,10 @@ class sslConnection : public giopConnection, public SocketHolder {
 
   const char *peeridentity();
 
+#ifdef OMNIORB_ENABLE_CERT_ACCESS
+  void* peerdetails();
+#endif
+
   void setSelectable(int now = 0,CORBA::Boolean data_in_buffer = 0);
 
   void clearSelectable();
@@ -114,6 +118,10 @@ class sslConnection : public giopConnection, public SocketHolder {
   CORBA::String_var pd_myaddress;
   CORBA::String_var pd_peeraddress;
   CORBA::String_var pd_peeridentity;
+
+#ifdef OMNIORB_ENABLE_CERT_ACCESS
+  X509*             pd_peercert;
+#endif
 };
 
 

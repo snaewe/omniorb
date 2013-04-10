@@ -123,6 +123,15 @@ public:
   // connection type. By default returns zero to indicate no peer
   // identification is possible.
 
+
+#ifdef OMNIORB_ENABLE_CERT_ACCESS
+  virtual void* peerdetails();
+  // Return connection-specific details about the peer. For SSL
+  // connections, the void* may be cast to an X509*. Returns zero to
+  // indicate no peer details are available. The connection retains
+  // ownership of the returned data.
+#endif
+
   virtual void setSelectable(int now = 0,
 			     _CORBA_Boolean data_in_buffer = 0) = 0;
   // Indicates that this connection should be watched by a select()

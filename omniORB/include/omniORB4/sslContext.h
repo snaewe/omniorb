@@ -103,9 +103,13 @@ class sslContext {
   static _core_attr const char* key_file_password;
 
   // These parameters can be overriden to adjust the verify mode and
-  // verify callback passed to SSL_CTX_set_verify.
+  // verify callback passed to SSL_CTX_set_verify and the info
+  // callback passed to SSL_CTX_set_info_callback.
   static _core_attr int         verify_mode;
   static _core_attr int       (*verify_callback)(int, X509_STORE_CTX*);
+
+  static _core_attr void      (*info_callback)(const SSL *s,
+					       int where, int ret);
 
   // sslContext singleton object.
   static _core_attr sslContext* singleton;

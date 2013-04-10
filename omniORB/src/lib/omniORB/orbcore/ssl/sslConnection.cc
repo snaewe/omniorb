@@ -350,11 +350,23 @@ sslConnection::peeridentity() {
   return (const char *)pd_peeridentity;
 }
 
+#ifdef OMNIORB_ENABLE_CERT_ACCESS
+
+void*
+sslConnection::peerdetails() {
+  return (void*)pd_peercert;
+}
+
+#endif
+
 /////////////////////////////////////////////////////////////////////////
 sslConnection::sslConnection(SocketHandle_t sock,::SSL* ssl, 
 			     SocketCollection* belong_to) : 
-  SocketHolder(sock), pd_ssl(ssl) {
-
+  SocketHolder(sock), pd_ssl(ssl)
+#ifdef OMNIORB_ENABLE_CERT_ACCESS
+  , pd_peercert(0)
+#endif
+{
   OMNI_SOCKADDR_STORAGE addr;
   SOCKNAME_SIZE_T l;
 
@@ -425,7 +437,11 @@ sslConnection::sslConnection(SocketHandle_t sock,::SSL* ssl,
       stream.marshalOctet(0);
     }
 
+#ifdef OMNIORB_ENABLE_CERT_ACCESS
+    pd_peercert = peer_cert;
+#else
     X509_free(peer_cert);
+#endif
 
     try {
       pd_peeridentity = stream.unmarshalString();
@@ -446,7 +462,14 @@ sslConnection::~sslConnection() {
   clearSelectable();
   pd_belong_to->removeSocket(this);
 
-  if(pd_ssl != 0) {
+#ifdef OMNIORB_ENABLE_CERT_ACCESS
+  if (pd_peercert) {
+    X509_free(pd_peercert);
+    pd_peercert = 0;
+  }
+#endif
+
+  if (pd_ssl != 0) {
     if (SSL_get_shutdown(pd_ssl) == 0) {
       SSL_set_shutdown(pd_ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
       SSL_shutdown(pd_ssl);
