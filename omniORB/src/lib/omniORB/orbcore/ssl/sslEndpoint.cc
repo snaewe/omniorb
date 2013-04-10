@@ -248,7 +248,7 @@ publish_one(const char*    	     publish_spec,
       if (omniORB::trace(1)) {
 	omniORB::logger l;
 	l << "Invalid endpoint '" << publish_spec
-	  << "' in publish specification.";
+	  << "' in publish specification.\n";
       }
       OMNIORB_THROW(INITIALIZE,
 		    INITIALIZE_EndpointPublishFailure,
