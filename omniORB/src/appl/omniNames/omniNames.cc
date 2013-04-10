@@ -225,10 +225,7 @@ main(int argc, char **argv)
     names.run();
   }
   catch (const CORBA::INITIALIZE& ex) {
-    cerr << "Failed to initialise the ORB / POA: " << ex.NP_minorString()
-	 << endl
-	 << "Is omniNames already running?"
-	 << endl;
+    // omniNames constructor has logged a suitable error.
     exit(1);
   }
   return 0;
@@ -296,35 +293,52 @@ omniNames(int            port,
     new_argv[new_argc++] = argv[arg];
 
   // Initialise ORB
-  orb_ = CORBA::ORB_init(new_argc, new_argv);
+  try {
+    orb_ = CORBA::ORB_init(new_argc, new_argv);
 
-  delete [] new_argv;
+    delete [] new_argv;
 
-  PortableServer::POA_var root_poa;
-  PortableServer::POA_var ins_poa;
+    PortableServer::POA_var root_poa;
+    PortableServer::POA_var ins_poa;
 
-  // Root POA
-  CORBA::Object_var poaref = orb_->resolve_initial_references("RootPOA");
-  root_poa = PortableServer::POA::_narrow(poaref);
+    // Root POA
+    CORBA::Object_var poaref = orb_->resolve_initial_references("RootPOA");
+    root_poa = PortableServer::POA::_narrow(poaref);
 
-  PortableServer::POAManager_var pman = root_poa->the_POAManager();
+    PortableServer::POAManager_var pman = root_poa->the_POAManager();
 
-  CORBA::PolicyList pl(1);
-  pl.length(1);
-  pl[0] = root_poa->create_lifespan_policy(PortableServer::PERSISTENT);
+    CORBA::PolicyList pl(1);
+    pl.length(1);
+    pl[0] = root_poa->create_lifespan_policy(PortableServer::PERSISTENT);
 
-  // Main naming context POA
-  names_poa = root_poa->create_POA("", pman, pl);
-  pman->activate();
+    // Main naming context POA
+    names_poa = root_poa->create_POA("", pman, pl);
+    pman->activate();
 
-  // Get the interoperable naming service POA
-  poaref  = orb_->resolve_initial_references("omniINSPOA");
-  ins_poa = PortableServer::POA::_narrow(poaref);
-  pman    = ins_poa->the_POAManager();
-  pman->activate();
+    // Get the interoperable naming service POA
+    poaref  = orb_->resolve_initial_references("omniINSPOA");
+    ins_poa = PortableServer::POA::_narrow(poaref);
+    pman    = ins_poa->the_POAManager();
+    pman->activate();
 
-  // Read the log file and set up all the naming contexts described in it.
-  log_->init(orb_, names_poa, ins_poa);
+    // Read the log file and set up all the naming contexts described in it.
+    log_->init(orb_, names_poa, ins_poa);
+  }
+  catch (const CORBA::INITIALIZE& ex) {
+    cerr << "Failed to initialise: " << ex.NP_minorString() << endl
+	 << "omniNames may already be running, or omniORB may be misconfigured."
+	 << endl << flush;
+
+#ifdef __WIN32__
+    if (cerrbuf_) {
+      // Restore original cerr buffer
+      cerr.ios::rdbuf(cerrbuf_);
+      cerrbuf_ = 0;
+      errstream_.close();
+    }
+#endif
+    throw;
+  }
 }
 
 void

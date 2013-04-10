@@ -428,8 +428,15 @@ runService(int port, const char* logdir, const char* errlog,
     { NULL, NULL }
   };
 
-  names = new omniNames(port, logdir, errlog, ignoreport, nohostname, 1,
-			argc, argv);
+  try {
+    names = new omniNames(port, logdir, errlog, ignoreport, nohostname, 1,
+			  argc, argv);
+  }
+  catch (...) {
+    // Carry on, to allow service start-up to report an error
+    names = 0;
+  }
+
   if (argv != a_argv)
     delete [] argv;
 
@@ -439,11 +446,15 @@ runService(int port, const char* logdir, const char* errlog,
     GetLastErrorText(err_msg, sizeof(err_msg));
     cerr << "Unable to start service control dispatcher: " << err_msg << endl;
 
-    delete names;
+    if (names)
+      delete names;
+
     names = 0;
     return 1;
   }
-  delete names;
+  if (names)
+    delete names;
+
   names = 0;
   return 0;
 }
@@ -475,17 +486,22 @@ void WINAPI win32_svc_dispatch(DWORD dargc, LPTSTR *largv)
   if (h_status) {
     if (win32_report_status(SERVICE_START_PENDING, NO_ERROR, 5000)) {
 
-      // Start main omniNames thread
-      NamesThread* nthread = new NamesThread;
+      if (names) {
+	// Start main omniNames thread
+	NamesThread* nthread = new NamesThread;
 
-      if (!names->waitForStart(5)) {
-	names->stop();
-	win32_report_status(SERVICE_STOPPED, ERROR_SERVICE_SPECIFIC_ERROR, 0);
-	return;
+	if (!names->waitForStart(5)) {
+	  names->stop();
+	  win32_report_status(SERVICE_STOPPED, ERROR_SERVICE_SPECIFIC_ERROR, 0);
+	  return;
+	}
+	win32_report_status(SERVICE_RUNNING, NO_ERROR, 0);
+	nthread->join(0);
+	win32_report_status(SERVICE_STOPPED, NO_ERROR, 0);
       }
-      win32_report_status(SERVICE_RUNNING, NO_ERROR, 0);
-      nthread->join(0);
-      win32_report_status(SERVICE_STOPPED, NO_ERROR, 0);
+      else {
+	win32_report_status(SERVICE_STOPPED, ERROR_SERVICE_SPECIFIC_ERROR, 0);
+      }
     }
   }
   return;

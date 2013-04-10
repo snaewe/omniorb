@@ -1,3 +1,19 @@
+Wed Apr 10 18:13:58 BST 2013 dgrisby
+====================================
+
+- Missing newlines in log messages.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+- Startup errors could cause Windows service to crash rather than
+  failing gracefully.
+
+src/appl/omniNames/omniNames.cc
+src/appl/omniNames/omniNamesWin.cc
+
+
+
 Wed Apr 10 18:08:01 BST 2013 dgrisby
 ====================================
 
