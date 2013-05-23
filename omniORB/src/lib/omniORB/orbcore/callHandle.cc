@@ -3,7 +3,7 @@
 // callHandle.cc              Created on: 16/05/2001
 //                            Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 2003-2006 Apasphere Ltd
+//    Copyright (C) 2003-2013 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -27,48 +27,6 @@
 // Description:
 //
 //   Call handle used during remote or in-process operation dispatch.
-
-/*
- $Log$
- Revision 1.1.4.6  2006/07/02 22:52:05  dgrisby
- Store self thread in task objects to avoid calls to self(), speeding
- up Current. Other minor performance tweaks.
-
- Revision 1.1.4.5  2006/01/10 12:24:03  dgrisby
- Merge from omni4_0_develop pre 4.0.7 release.
-
- Revision 1.1.4.4  2005/07/22 17:18:37  dgrisby
- Another merge from omni4_0_develop.
-
- Revision 1.1.4.3  2003/11/06 11:56:56  dgrisby
- Yet more valuetype. Plain valuetype and abstract valuetype are now working.
-
- Revision 1.1.4.2  2003/05/20 16:53:15  dgrisby
- Valuetype marshalling support.
-
- Revision 1.1.4.1  2003/03/23 21:02:29  dgrisby
- Start of omniORB 4.1.x development branch.
-
- Revision 1.1.2.6  2001/08/17 13:42:49  dpg1
- callDescriptor::userException() no longer has to throw an exception.
-
- Revision 1.1.2.5  2001/08/15 10:26:11  dpg1
- New object table behaviour, correct POA semantics.
-
- Revision 1.1.2.4  2001/08/01 10:08:21  dpg1
- Main thread policy.
-
- Revision 1.1.2.3  2001/07/31 16:29:40  sll
- Make call descriptor available from omniCurrent in the unmarshalling of
- arguments on the server side.
-
- Revision 1.1.2.2  2001/06/07 16:24:09  dpg1
- PortableServer::Current support.
-
- Revision 1.1.2.1  2001/05/29 17:03:50  dpg1
- In process identity.
-
-*/
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/omniORB.h>
@@ -148,13 +106,7 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
   desc.poa(pd_poa);
   desc.localId(pd_localId);
 
-  omniCallDescriptor* to_insert;
-  if (pd_mainthread_mu)
-    to_insert = 0;
-  else
-    to_insert = &desc;
-
-  _OMNI_NS(poaCurrentStackInsert) insert(to_insert, pd_self_thread);
+  _OMNI_NS(poaCurrentStackInsert) insert(&desc, pd_self_thread);
 
   if (pd_iop_s) { // Remote call
     pd_iop_s->ReceiveRequest(desc);
@@ -192,7 +144,7 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
       }
     }
     else {
-      // Cannot call directly -- use a memory stream for now
+      // Cannot call directly -- use a memory stream
       if (omniORB::traceInvocations) {
 	omniORB::logger l;
 	l << "In process indirect call '" << desc.op() << "'\n";
