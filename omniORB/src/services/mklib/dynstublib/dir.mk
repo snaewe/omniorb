@@ -73,9 +73,14 @@ dynskshared   = shared/$(shell $(SharedLibraryFullName) $(dynsknamespec))
 MDFLAGS += -p shared/
 
 ifdef Win32Platform
+ifndef MinGW32Build
 # in case of Win32 lossage:
 dynimps := COS$(OMNIORB_MAJOR_VERSION)$(OMNIORB_MINOR_VERSION)$(OMNIORB_MICRO_VERSION)_rt.lib \
            $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), $(OMNIORB_LIB))
+else
+dynimps := -lCOS$(OMNIORB_MAJOR_VERSION)$(OMNIORB_MINOR_VERSION)$(OMNIORB_MICRO_VERSION)_rt \
+			$(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), $(OMNIORB_LIB))
+endif
 else
 dynimps := -lCOS$(OMNIORB_MAJOR_VERSION) $(OMNIORB_LIB)
 endif
@@ -150,8 +155,13 @@ shareddbugversion = $(OMNIORB_VERSION)
 dynsknamespec   = $(subst ., ,$(COS_DYNSKLIB_NAME).$(shareddbugversion))
 dynskshareddbug = shareddebug/$(shell $(SharedLibraryDebugFullName) $(dynsknamespec))
 
+ifndef MinGW32Build
 dbugimps  := COS$(OMNIORB_MAJOR_VERSION)$(OMNIORB_MINOR_VERSION)$(OMNIORB_MICRO_VERSION)_rtd.lib \
 	     $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), $(OMNIORB_LIB))
+else
+dbugimps  := -lCOS$(OMNIORB_MAJOR_VERSION)$(OMNIORB_MINOR_VERSION)$(OMNIORB_MICRO_VERSION)_rtd \
+	     $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), $(OMNIORB_LIB))
+endif
 
 MDFLAGS += -p shareddebug/
 

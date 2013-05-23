@@ -1,3 +1,11 @@
+Thu May 23 13:35:26 BST 2013 dgrisby
+====================================
+
+- MinGW build patch. Thanks Matej Kenda.
+
+src/services/mklib/dynstublib/dir.mk
+
+
 Thu May 23 12:54:55 BST 2013 dgrisby
 ====================================
 
