@@ -3,7 +3,7 @@
 // transportRule.cc           Created on: 21/08/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2003-2008 Apasphere Ltd
+//    Copyright (C) 2003-2013 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -26,65 +26,6 @@
 //
 // Description:
 //
-
-/*
-  $Log$
-  Revision 1.1.4.10  2009/05/06 16:14:54  dgrisby
-  Update lots of copyright notices.
-
-  Revision 1.1.4.9  2008/11/04 12:13:22  dgrisby
-  inet_addr on vxWorks expects a char* argument. Thanks Yakov Gerlovin.
-
-  Revision 1.1.4.8  2007/10/29 11:33:39  dgrisby
-  Properly support IPv4 in IPv6 in localhost transport rule.
-
-  Revision 1.1.4.7  2006/11/02 14:00:54  dgrisby
-  Remove a few warnings.
-
-  Revision 1.1.4.6  2006/08/09 17:55:32  dgrisby
-  Permit hostnames in transportRules.
-
-  Revision 1.1.4.5  2006/04/24 14:26:00  dgrisby
-  Match IPv4-in-IPv6 addresses in IPv4 rules.
-
-  Revision 1.1.4.4  2006/04/21 14:40:39  dgrisby
-  IPv6 support in transport rules.
-
-  Revision 1.1.4.3  2006/03/25 18:54:03  dgrisby
-  Initial IPv6 support.
-
-  Revision 1.1.4.2  2005/01/06 23:10:41  dgrisby
-  Big merge from omni4_0_develop.
-
-  Revision 1.1.4.1  2003/03/23 21:02:00  dgrisby
-  Start of omniORB 4.1.x development branch.
-
-  Revision 1.1.2.7  2003/02/17 02:03:09  dgrisby
-  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
-
-  Revision 1.1.2.6  2003/01/06 11:11:55  dgrisby
-  New AddrInfo instead of gethostbyname.
-
-  Revision 1.1.2.5  2001/09/24 16:16:10  sll
-  Allow serverTransportRule and clientTransportRule to be specified as
-  -ORB initialisation options.
-
-  Revision 1.1.2.4  2001/08/31 16:59:59  sll
-  Support '^' prefix in address field.
-  Do host address lookup in extractIPv4 if necessary.
-
-  Revision 1.1.2.3  2001/08/31 11:56:52  sll
-  Change the default preference to unix,tcp,ssl.
-  Minor fix to extractIPv4.
-
-  Revision 1.1.2.2  2001/08/29 17:54:15  sll
-  New method dumpRule.
-
-  Revision 1.1.2.1  2001/08/23 16:00:35  sll
-  Added method in giopTransportImpl to return the addresses of the host
-  interfaces.
-
-*/
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/omniURI.h>
@@ -451,13 +392,13 @@ public:
             << addr << "'.\n";
       }
       if ( parseIPv4AddressMask(addr,network,netmask) ) {
-        return (transportRules::Rule*) new builtinIPv4Rule(address_mask,
+        return (transportRules::Rule*) new builtinIPv4Rule(addr,
                                                            network,
                                                            netmask);
       }
 #if defined(OMNI_SUPPORT_IPV6)
       else if ( parseIPv6AddressMask(addr,ip6network,prefix) ) {
-        return (transportRules::Rule*) new builtinIPv6Rule(address_mask,
+        return (transportRules::Rule*) new builtinIPv6Rule(addr,
                                                            ip6network,
                                                            prefix);
       }
