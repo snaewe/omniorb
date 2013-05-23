@@ -148,6 +148,7 @@ OutputValueTracker::
     }
   }
   delete [] pd_table;
+  pd_magic = 0;
 }
 
 
@@ -248,6 +249,7 @@ InputValueTracker::
     }
   }
   delete [] pd_table;
+  pd_magic = 0;
 }
 
 void
