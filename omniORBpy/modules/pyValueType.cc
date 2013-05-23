@@ -107,6 +107,7 @@ public:
 
     omnipyThreadCache::lock _t;
     Py_DECREF(dict_);
+    magic_ = 0;
   }
 
   inline CORBA::Boolean valid()
@@ -195,6 +196,7 @@ public:
 
     omnipyThreadCache::lock _t;
     Py_DECREF(dict_);
+    magic_ = 0;
   }
 
   inline CORBA::Boolean valid()
