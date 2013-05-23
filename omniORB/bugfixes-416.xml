@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.1.6     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.1.6">
+
+<bug id="7" date="Thu May 23 15:36:56 BST 2013" user="dgrisby">
+  <summary>Marshal error sending large exceptions containing valuetypes</summary>
+  <text>
+  When an exception is sent, the message size is pre-calculated. If
+  the message spanned multiple buffers, the current output pointer
+  calculation was wrong, leading to incorrect marshalling of
+  indirections.
+  </text>
+</bug>
+
+<bug id="6" date="Thu May 23 12:54:55 BST 2013" user="dgrisby">
+  <summary>Bidirectional GIOP fails in MAIN_THREAD_POLICY POAs</summary>
+  <text>
+  When an object reference that should have been subject to
+  bidirectional GIOP was unmarshalled on a call destined for a main
+  thread POA, it was not correctly marked for bidirectional.
+  </text>
+</bug>
+
+<bug id="5" date="Thu May 23 12:04:39 BST 2013" user="dgrisby">
+  <summary>Improper handling of transport rules containing names</summary>
+  <text>
+  If a transport rule contains a name, it is resolved to an IP
+  address, but the rule was installed with the original name, rather
+  than the resolved address.
+  </text>
+</bug>
+
+<bug id="4" date="Wed Apr 10 18:13:58 BST 2013" user="dgrisby">
+  <summary>omniNames service startup failure led to a crash</summary>
+  <text>
+  If the omniNames Windows service failed to start, it would crash
+  rather than failing gracefully.
+  </text>
+</bug>
+
+<bug id="3" date="Fri Dec 21 14:08:04 GMT 2012" user="dgrisby">
+  <summary>Invalid generated code for valuetypes with no members</summary>
+  <text>
+  TypeCodes generated for valuetypes with no members were invalid.
+  </text>
+</bug>
+
+<bug id="2" date="Thu Aug 23 15:43:07 BST 2012" user="dgrisby">
+  <summary>Valuetype chunked encoding errors</summary>
+  <text>
+  The chunked encoding for valuetypes could sometimes be incorrect.
+  </text>
+</bug>
+
+<bug id="1" date="Sat Mar 17 20:34:10 GMT 2012" user="dgrisby">
+  <summary>Obtaining IP addresses could fail on Solaris</summary>
+  <text>
+  The Solaris lifconf structure was incorrectly initialised, meaning
+  that the call to obtain IP addresses could fail.
+  </text>
+</bug>
+
+</buglist>

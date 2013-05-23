@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
 <?xml-stylesheet type="text/xml" href="buglayout.xml"?>
 
-<!-- The following bugs have been fixed since the omniORB 4.1.4     -->
+<!-- The following bugs have been fixed since the omniORB 4.1.5     -->
 <!-- release. This file is transformed into html with bugfixes.xsl. -->
 
 <!-- Editors: make sure the content you add is well-formed XML.     -->
 
-<buglist version="4.1.4">
+<buglist version="4.1.5">
 
 <bug id="1" date="Mon Jan 31 23:55:16 GMT 2011" user="dgrisby">
   <summary>Stall in incoming call handling</summary>

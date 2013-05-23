@@ -1,3 +1,19 @@
+Thu May 23 15:36:56 BST 2013 dgrisby
+====================================
+
+- Clear magic values in value tracker destructors.
+
+src/lib/omniORB/dynamic/valueTracker.cc
+
+
+- Incorrect output pointer calculation with known-size messages.
+  Causes invalid indirections when sending exceptions containing
+  duplicated values.
+
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Thu May 23 13:35:26 BST 2013 dgrisby
 ====================================
 

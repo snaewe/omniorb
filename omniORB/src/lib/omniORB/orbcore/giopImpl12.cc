@@ -3,7 +3,7 @@
 // giopImpl12.cc              Created on: 14/02/2001
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 2002-2012 Apasphere Ltd
+//    Copyright (C) 2002-2013 Apasphere Ltd
 //    Copyright (C) 2001 AT&T Laboratories, Cambridge
 //
 //    This file is part of the omniORB library
@@ -25,129 +25,8 @@
 //
 //
 // Description:
-//	*** PROPRIETORY INTERFACE ***
+//	*** PROPRIETARY INTERFACE ***
 //	
-
-/*
-  $Log$
-  Revision 1.1.6.15  2008/12/29 17:31:16  dgrisby
-  Properly handle message size being exceeded in request header.
-
-  Revision 1.1.6.14  2008/08/08 16:52:56  dgrisby
-  Option to validate untransformed UTF-8; correct data conversion minor
-  codes; better logging for MessageErrors.
-
-  Revision 1.1.6.13  2007/12/21 11:39:29  dgrisby
-  Properly align after header in user exception messages. Thanks Jon Biggar.
-
-  Revision 1.1.6.12  2007/04/05 15:06:45  dgrisby
-  Handle CancelRequest without starting a new giopWorker.
-
-  Revision 1.1.6.11  2006/11/09 15:37:45  dgrisby
-  Remove duplicate calls to retrieve addressing mode.
-
-  Revision 1.1.6.10  2006/09/20 13:36:31  dgrisby
-  Descriptive logging for connection and GIOP errors.
-
-  Revision 1.1.6.9  2006/09/17 23:23:16  dgrisby
-  Wrong offsets with indirections spanning GIOP fragments.
-
-  Revision 1.1.6.8  2006/09/01 14:11:52  dgrisby
-  Avoid potential deadlock with call buffering; do not force worker
-  creation when a request is fully buffered.
-
-  Revision 1.1.6.7  2006/06/05 11:28:04  dgrisby
-  Change clientSendRequest interceptor members to a single GIOP_C.
-
-  Revision 1.1.6.6  2005/12/08 14:22:31  dgrisby
-  Better string marshalling performance; other minor optimisations.
-
-  Revision 1.1.6.5  2005/11/17 17:03:26  dgrisby
-  Merge from omni4_0_develop.
-
-  Revision 1.1.6.4  2005/04/11 12:09:42  dgrisby
-  Another merge.
-
-  Revision 1.1.6.3  2005/03/02 12:39:18  dgrisby
-  Merge from omni4_0_develop.
-
-  Revision 1.1.6.2  2005/01/06 23:10:16  dgrisby
-  Big merge from omni4_0_develop.
-
-  Revision 1.1.6.1  2003/03/23 21:02:15  dgrisby
-  Start of omniORB 4.1.x development branch.
-
-  Revision 1.1.4.20  2003/01/22 11:40:12  dgrisby
-  Correct serverSendException interceptor use.
-
-  Revision 1.1.4.19  2002/12/18 17:51:03  dgrisby
-  Respond nicely if we receive a request message on a client strand.
-
-  Revision 1.1.4.18  2002/11/26 16:54:35  dgrisby
-  Fix exception interception.
-
-  Revision 1.1.4.17  2002/11/26 14:51:52  dgrisby
-  Implement missing interceptors.
-
-  Revision 1.1.4.16  2002/07/04 15:14:41  dgrisby
-  Correct usage of MessageErrors, fix log messages.
-
-  Revision 1.1.4.15  2002/03/27 11:44:52  dpg1
-  Check in interceptors things left over from last week.
-
-  Revision 1.1.4.14  2002/03/18 12:38:26  dpg1
-  Lower trace(0) to trace(1), propagate fatalException.
-
-  Revision 1.1.4.13  2001/09/12 19:43:19  sll
-  Enforce GIOP message size limit.
-
-  Revision 1.1.4.12  2001/09/10 17:46:10  sll
-  When a connection is broken, check if it has been shutdown orderly. If so,
-  do a retry.
-
-  Revision 1.1.4.11  2001/09/04 14:38:52  sll
-  Added the boolean argument to notifyCommFailure to indicate if
-  omniTransportLock is held by the caller.
-
-  Revision 1.1.4.10  2001/09/03 16:55:41  sll
-  Modified to match the new signature of the giopStream member functions that
-  previously accept explicit deadline parameters. The deadline is now
-  implicit in the giopStream.
-
-  Revision 1.1.4.9  2001/08/17 17:12:37  sll
-  Modularise ORB configuration parameters.
-
-  Revision 1.1.4.8  2001/07/31 16:20:29  sll
-  New primitives to acquire read lock on a connection.
-
-  Revision 1.1.4.7  2001/07/13 15:23:51  sll
-  Call notifyCallFullyBuffered when a request has arrived and fully buffered.
-
-  Revision 1.1.4.6  2001/06/20 18:35:18  sll
-  Upper case send,recv,connect,shutdown to avoid silly substutition by
-  macros defined in socket.h to rename these socket functions
-  to something else.
-
-  Revision 1.1.4.5  2001/05/11 14:28:56  sll
-  Temporarily replaced all  MARSHAL_MessageSizeExceedLimit with
-  MARSHAL_MessageSizeExceedLimitOnServer.
-
-  Revision 1.1.4.4  2001/05/01 17:56:29  sll
-  Remove user exception check in sendUserException. This has been done by
-  the caller.
-
-  Revision 1.1.4.3  2001/05/01 17:15:17  sll
-  Non-copy input now works correctly.
-
-  Revision 1.1.4.2  2001/05/01 16:07:32  sll
-  All GIOP implementations should now work with fragmentation and abitrary
-  sizes non-copy transfer.
-
-  Revision 1.1.4.1  2001/04/18 18:10:50  sll
-  Big checkin with the brand new internal APIs.
-
-
-*/
 
 #include <omniORB4/CORBA.h>
 #include <giopStream.h>
@@ -2221,11 +2100,19 @@ giopImpl12::currentOutputPtr(const giopStream* g) {
   // Output offset is the sent message so far, plus the current buffer
   // minus 12 byte header.
   CORBA::Long msz = g->outputMessageSize();
+
   if (msz) {
-    // At least one fragment has been output already; message has
-    // been extended by the current fragment size minus its 16 byte
-    // header (12 for GIOP header, plus 4 for request id).
-    return msz + fsz - 16;
+    if (!g->outputFragmentSize()) {
+      // At least one fragment has been output already; message has
+      // been extended by the current fragment size minus its 16 byte
+      // header (12 for GIOP header, plus 4 for request id).
+      return msz + fsz - 16;
+    }
+    else {
+      // Message is not being fragmented. Current pointer is just the
+      // current size plus the size sent so far.
+      return msz + fsz;
+    }
   }
   else {
     // This is the first fragment -- message size is the fragment
