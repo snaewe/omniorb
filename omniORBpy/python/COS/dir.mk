@@ -122,6 +122,10 @@ $(INSTALLPYLIBDIR)/%: %
 omniORB.pth: ;
 	@echo $(subst $(INSTALLPYTHONDIR)/,,$(INSTALLPYLIBDIR)) > $@
 
+# Rule to make empty __init__.py to make the directory a package
+__init__.py:
+	@echo "# Empty file" > $@
+
 
 # Rules for make export
 $(PYLIBROOT)/CosNaming%: CosNaming%
