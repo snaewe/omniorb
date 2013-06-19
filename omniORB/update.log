@@ -1,3 +1,11 @@
+Wed Jun 19 14:36:45 BST 2013 dgrisby
+====================================
+
+- Memory leak in DSI example.
+
+src/examples/dsi/echo_dsiimpl.cc
+
+
 Thu May 23 15:36:56 BST 2013 dgrisby
 ====================================
 
