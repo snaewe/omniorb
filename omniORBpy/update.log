@@ -1,3 +1,17 @@
+Mon Jun 24 11:14:34 BST 2013 dgrisby
+====================================
+
+- Updates for 3.7 release.
+
+ReleaseNotes.txt
+THIS_IS_OMNIORBPY_3_6
+THIS_IS_OMNIORBPY_3_7
+configure.ac
+configure
+contrib/RPMs/omniORBpy.spec
+mk/version.mk
+
+
 Thu May 23 15:33:31 BST 2013 dgrisby
 ====================================
 

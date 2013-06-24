@@ -5,7 +5,7 @@
 
 %define version_major 4
 %define version_minor 1
-%define version_micro 6
+%define version_micro 7
 %define version_full %{version_major}.%{version_minor}.%{version_micro}
 %define version_brief %{version_major}.%{version_minor}
 
@@ -18,7 +18,7 @@
 Summary: Object Request Broker (ORB)
 Name:    omniORB
 Version: %{version_full}
-Release: 2%{?dist}
+Release: 1%{?dist}
 License: GPL / LGPL
 Group:   System/Libraries
 Source0: %{name}-%{version}.tar.bz2
